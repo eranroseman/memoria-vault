@@ -87,6 +87,7 @@ Requirements this plan must satisfy (traced in §5):
   `~/.codex/AGENTS.md`.
 - **Layer 2 + 3 repo edits** (step 16): one worktree, one PR.
 - **Verify** (step 17).
+- **Document the whole stack** (step 18): author `.agents/toolkit.md`.
 
 **Parity ledger** (the R3 answer — Claude | Codex):
 
@@ -97,18 +98,22 @@ Requirements this plan must satisfy (traced in §5):
 | api-design-principles | loose vendor | loose vendor |
 | obsidian-skills | nested plugin | loose vendor |
 | threat-modeling | git clone | git clone (mirrored — same skill) |
-| interface-design | plugin install | loose vendor (skill; slash-commands Claude-only) |
-| frontend-design | enable | — forced asymmetry (no Codex build) |
-| pr-review-toolkit | ✓ | — forced asymmetry (no Codex equivalent) |
-| security-guidance (passive) | ✓ | — codex-security compensates (active) |
-| codex-security | — | ✓ (compensates for security-guidance) |
+| interface-design | plugin install | loose vendor (skill) |
+| frontend-design (distinctive UI) | Anthropic plugin | am-will skill + native GPT-5.5 |
+| PR review | pr-review-toolkit (6-agent plugin) | native Codex review (6-dim map → stack doc) |
+| active security review | security-review playbook + threat-modeling | codex-security + threat-modeling |
+| passive always-on security scan | security-guidance (hooks) | — no equivalent (documented) |
 | tdd, grill-me | retired | retired / never present |
 
-Both tools get the same precedence + vocabulary rules (steps 14–15). The
-only asymmetries are four forced by tool availability (frontend-design,
-pr-review-toolkit, security-guidance Claude-only; codex-security Codex-only)
-plus interface-design's two slash-commands being Claude-only (its skill runs
-on both). Everything else is identical.
+**Capability-parity** (chosen model): a capability counts as covered on a
+tool if a plugin *or* a native feature provides it. Under it, every
+capability is covered on both tools **except passive always-on security
+scanning** (Claude's `security-guidance` hooks; Codex has no passive
+equivalent — active `codex-security` scans instead). Two invocation-surface
+differences remain, not capability gaps: interface-design's slash-commands
+(Claude-only; Codex runs the review inline) and `frontend-design` being an
+Anthropic plugin on Claude vs. a community skill + native model on Codex.
+Both tools get the same precedence + vocabulary rules (steps 14–15).
 
 **Declined (never install):** the official Anthropic `code-review`
 marketplace plugin; `coderabbit@openai-curated`. **Left unedited** (repo
@@ -206,21 +211,28 @@ claude plugin install interface-design@interface-design
 claude plugin enable frontend-design@claude-plugins-official
 ```
 
-Codex — vendor the skill folder loose (no `.codex-plugin` manifest; the
-`agents/openai.yaml` shim inside it is the Codex loader):
+Codex — vendor both skills loose (no `.codex-plugin` manifests). interface-design
+(its `agents/openai.yaml` shim is the Codex loader), plus `am-will/codex-skills`'
+`frontend-design` as the Codex counterpart to Anthropic's frontend-design:
 
 ```bash
 git clone --depth 1 https://github.com/Dammyjay93/interface-design ~/.codex/skills/.ifd-src
 cp -r ~/.codex/skills/.ifd-src/.claude/skills/interface-design ~/.codex/skills/
 rm -rf ~/.codex/skills/.ifd-src
+
+git clone --depth 1 https://github.com/am-will/codex-skills ~/.codex/skills/.fd-src
+cp -r ~/.codex/skills/.fd-src/skills/frontend-design ~/.codex/skills/
+rm -rf ~/.codex/skills/.fd-src
 ```
 
-Decided asymmetries: `frontend-design` is Claude-only (no Codex build); the
-`design-review` / `design-deslop` slash-commands are Claude-only (Codex runs
-the equivalent review inline from the skill, per the skill's own text).
+`am-will/codex-skills` has **no license** — this is a personal-use copy, not
+redistributable; note it in the toolkit doc (final step). Codex's native GPT-5.5
+frontend generation is the always-current fallback. Residual asymmetry:
+interface-design's `design-review`/`design-deslop` slash-commands are
+Claude-only (Codex runs the equivalent review inline from the skill).
 
 Verify: `claude plugin list` shows `interface-design` + `frontend-design`;
-`ls ~/.codex/skills/interface-design/SKILL.md`.
+`ls ~/.codex/skills/interface-design/SKILL.md ~/.codex/skills/frontend-design/SKILL.md`.
 
 ### Step 8 — Port obsidian-skills to Codex
 
@@ -365,7 +377,8 @@ adapted for Codex's toolset, plus the Codex-only security routing.
 - **TDD vs. ponytail:** when `superpowers:test-driven-development` is in effect, its test-first ordering wins over ponytail's code-first default; ponytail still governs size/shape once a test exists.
 - **threat-modeling vs. a single finding:** answer a follow-up about one already-flagged finding (including a codex-security finding) directly, scoped to it — do NOT launch threat-modeling's 8-phase run. Invoke threat-modeling only for a deliberate whole-codebase audit.
 - **caveman vs. the-elements-of-style:** caveman governs live chat terseness only; `the-elements-of-style` governs durable written prose (docs, commit messages, PR/issue text, reports, UI strings) regardless of caveman state.
-- **interface-design (UI):** UI review/critique/audit and new product/dashboard/SaaS/admin/tool UI → interface-design (its slash-commands are Claude-only; on Codex run the equivalent review inline from the skill). There is no frontend-design on Codex.
+- **UI design:** product/dashboard/SaaS/admin/tool UI + review/critique/audit → interface-design (its slash-commands are Claude-only; run the equivalent review inline from the skill). Marketing/landing/brand/distinctive UI → `frontend-design` (am-will skill) or Codex's native frontend generation.
+- **PR review:** Codex's native review is the platform for PR review here; it covers the same dimensions pr-review-toolkit does on Claude (comments, tests, errors, types, quality, security). See the stack/toolkit guide for the dimension mapping.
 
 ## Design vocabulary
 
@@ -502,6 +515,55 @@ gh pr checks --watch
 Run §5 in a fresh Claude Code session and a fresh Codex session (plugin and
 skill changes need a restart to load).
 
+### Step 18 — Author the toolkit stack document (last step)
+
+Once the stack is installed and verified (steps 1–17), document the whole
+thing. **Store it at `.agents/toolkit.md`** on `main` — the repo's
+agent-guidance home, so it's durable, discoverable, and PR-reviewed;
+`AGENTS.md` stays the authority/policy, `toolkit.md` is the "what's
+available and how to use it" map. (Alternative: `scratch/workflow-audit/`
+alongside this plan, if you'd rather scope it as initiative-only working
+material. Recommend `.agents/toolkit.md` for durability.) Author it in a
+worktree and open a PR (`AGENTS.md` §1; `.agents/` is a sensitive path).
+
+The document covers the **entire** stack, grouped by layer:
+
+- **Layer 1 — generic process (`~/.claude/`, `~/.codex/`):** every plugin and
+  skill, one line each on what it does and when to reach for it, with its
+  Claude|Codex coverage — `superpowers` (all 13 skills + `using-superpowers`),
+  `ponytail`, `rethink`, `grilling`, `caveman`, `codebase-design`, `improve`,
+  `interface-design`, `frontend-design`, `the-elements-of-style`,
+  `api-design-principles`, `threat-modeling`, `codex-security`,
+  `pr-review-toolkit`, `security-guidance`, `obsidian-skills`, plus the
+  already-present `dataviz` / `artifact-design` and the Figma MCP.
+- **Layer 2 — repo policy (`.agents/`):** every playbook (`code-review`,
+  `verify-change`, `exec-plan`, `docs-review`, `docs-audit`,
+  `security-review`, `design-history`, `release`), every template
+  (`exec-plan`, `handoff`, `review-report`, `release-plan`), the system maps
+  (`source-of-truth-map`, `change-impact-map`, `test-selection`), and the
+  domain skills (`policy-change-review`, `schema-change`) — what each owns.
+- **Layer 3 — discovery:** `main/CLAUDE.md` → `@AGENTS.md`; `~/.claude/CLAUDE.md`
+  / `~/.codex/AGENTS.md` precedence + vocabulary.
+
+Plus:
+
+- **The parity ledger** (§3) — how each capability is covered on Claude vs.
+  Codex (plugin or native), and the four residual asymmetries.
+- **How the pieces interlock** — the precedence rules (which skill wins when
+  two fire), the "reference by name, don't duplicate" rule, and the
+  never-edit-vendored rule.
+- **Best practices per capability** — e.g. TDD's seam-first discipline;
+  ponytail's ladder; brainstorming's design gate; interface-design's
+  avoid-AI-slop review; the pr-review-toolkit six-dimension ↔ Codex-native
+  review mapping (comments, tests, errors, types, quality, security).
+- **Sourcing + caveats** — which items are marketplace plugins, which are
+  loose-vendored, which are unlicensed (`am-will/codex-skills`
+  personal-use-only); discovery via `openai/plugins` and
+  `hashgraph-online/awesome-codex-plugins`.
+
+Verify: `ls .agents/toolkit.md`; every plugin/skill/playbook/template listed
+above appears; PR checks pass.
+
 ## 5. Validation and acceptance
 
 Presence:
@@ -512,9 +574,11 @@ Presence:
   `superpowers@openai-curated` enabled.
 - **gap plugins present:** `ls` confirms
   `~/.claude/skills/{threat-modeling,api-design-principles}`,
-  `~/.codex/skills/{writing-clearly-and-concisely,api-design-principles}`,
-  the five `~/.codex/skills/obsidian-*`/`json-canvas`/`defuddle` folders,
-  and `interface-design`/`the-elements-of-style` in `claude plugin list`.
+  `~/.codex/skills/{writing-clearly-and-concisely,api-design-principles,
+  threat-modeling,interface-design,frontend-design}`, the five
+  `~/.codex/skills/obsidian-*`/`json-canvas`/`defuddle` folders, and
+  `interface-design`/`frontend-design`/`the-elements-of-style` in
+  `claude plugin list`.
 - **api-design-principles is one skill only:** `find ~/.claude/skills
   ~/.codex/skills -iname SKILL.md` shows no `architecture-patterns`,
   `microservices-patterns`, `cqrs-implementation`, `event-store-design`,
@@ -556,16 +620,24 @@ Repo PR:
 
 - `pr-policy` / `lint` / `cspell` / `markdownlint` pass (docs-only change).
 
+Toolkit doc (step 18):
+
+- `.agents/toolkit.md` exists and lists every Layer-1 plugin/skill, every
+  Layer-2 playbook/template/system-map/domain-skill, and the parity ledger —
+  cross-check each name against `claude plugin list` / `ls ~/.claude/skills
+  ~/.codex/skills .agents/`.
+
 ## 6. Idempotence and recovery
 
 - **Re-runnable:** marketplace-add / install / `cp -r` / `git clone` into an
   existing path are safe to re-run (or a no-op after a `rm -rf` of the
   target first). The `rm -rf` in step 9 is safe to re-run. The text edits
-  (steps 10–16) are no-op diffs when re-applied with the same target text.
+  (steps 10–16) and the doc authoring (step 18) are no-op / overwrite when
+  re-applied with the same target text.
 - **Rollback:** `claude plugin uninstall` / `codex plugin remove` reverse the
   installs; `rm -rf` the vendored/cloned skill folders; restore each edited
-  file's pre-edit text (every edit's exact text is in §4). The repo PR
-  (step 16) reverts by closing unmerged or reverting the squash commit.
+  file's pre-edit text (every edit's exact text is in §4). The repo PRs
+  (steps 16, 18) revert by closing unmerged or reverting the squash commit.
 
 ## 7. Progress
 
@@ -586,6 +658,7 @@ Repo PR:
 - [ ] 15 — `~/.codex/AGENTS.md` written
 - [ ] 16 — repo worktree, CLAUDE.md + AGENTS.md + 8 `.agents/` files, PR merged
 - [ ] 17 — §5 validated in fresh sessions, transcripts in §11
+- [ ] 18 — `.agents/toolkit.md` authored (entire stack), PR merged
 
 ## 8. Execution log
 
@@ -617,12 +690,15 @@ Repo PR:
 - **New tool-config files:** `~/.codex/AGENTS.md` (was empty).
 - **Installed/vendored:** superpowers (both), the-elements-of-style (Claude
   plugin + Codex loose), api-design-principles (loose both), threat-modeling
-  (Claude clone; Codex per step 5), codex-security (Codex), interface-design
-  (Claude; Codex per step 7), frontend-design (Claude enable), obsidian-skills
+  (Claude clone + Codex mirror), codex-security (Codex), interface-design
+  (Claude plugin + Codex loose), frontend-design (Claude enable + Codex
+  `am-will/codex-skills` loose, unlicensed/personal-use), obsidian-skills
   (Codex loose copy).
-- **Repo files (one PR, step 16):** new `CLAUDE.md`; `AGENTS.md`;
+- **Repo files:** new `CLAUDE.md`, `AGENTS.md`,
   `.agents/playbooks/{code-review,verify-change,exec-plan,docs-review,
-  security-review}.md`; `.agents/templates/{exec-plan,handoff}.md`.
+  security-review}.md`, `.agents/templates/{exec-plan,handoff}.md` (one PR,
+  step 16); new `.agents/toolkit.md` documenting the whole stack (a second
+  PR, step 18).
 - **Retired:** `~/.claude/skills/{tdd,grill-me}`, `~/.codex/skills/tdd`.
 - **Declined, never installed:** official Anthropic `code-review` plugin;
   `coderabbit@openai-curated`.

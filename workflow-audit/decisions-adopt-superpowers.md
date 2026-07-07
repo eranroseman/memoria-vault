@@ -319,3 +319,46 @@ it"), this should be described in this repo's own docs as an original
 design, not attributed to an external framework that doesn't exist.
 Evidence: dedicated research workflow (topic: `living-docs-runbook-
 architecture`), full citation list retained in that workflow's journal.
+
+**Y: Cover frontend-design on Codex by vendoring `am-will/codex-skills`'
+`frontend-design` skill loose, alongside relying on Codex's native GPT-5.5
+frontend generation.**
+Because: the user surfaced that a "Frontend Design — Codex Plugin
+Marketplace" entry exists (verified: `am-will/codex-skills`, 958★). It's the
+exact "distinctive, avoid-AI-slop frontend" counterpart to Anthropic's
+Claude-only `frontend-design`. Vendoring it (same loose-skill pattern as the
+other cherry-picks) closes what was a "Claude-only forced asymmetry."
+Caveat, accepted: `am-will/codex-skills` has **no license** — it's a
+personal-use copy, not redistributable; recorded in the toolkit doc. Codex's
+native frontend generation is the always-current fallback. `openai/plugins`
+(official) has no direct `frontend-design` equivalent. Evidence: `gh api`
+on both repos; `codex-marketplace.com/skills`.
+
+**Y: Use a capability-parity model, not plugin-identity, for the Claude vs.
+Codex end-state.**
+Because: the user showed that several capabilities I'd marked "Claude-only"
+(PR review via `pr-review-toolkit`; distinctive frontend via
+`frontend-design`) are in fact covered on Codex by native features (Codex's
+built-in review platform; native GPT-5.5 frontend generation). A capability
+is "covered on a tool" if a plugin OR a native feature provides it. Under
+this model the only genuine residual asymmetry is passive always-on security
+scanning (Claude's `security-guidance` hooks; Codex has no passive
+equivalent, only active `codex-security`). Two invocation-surface
+differences remain (interface-design's slash-commands; frontend-design being
+a plugin on Claude vs. a skill+native on Codex) — not capability gaps.
+Evidence: user-provided sources on Codex native review
+(openai.com/index/introducing-upgrades-to-codex; developertoolkit.ai) and
+native frontend (developers.openai.com/codex/use-cases/frontend-designs).
+
+**Y: The final deliverable is a whole-stack toolkit document at
+`.agents/toolkit.md` (exec-plan step 18).**
+Because: the user asked for one document covering the entire stack — every
+plugin, skill, playbook, template, system map — plus its use and best
+practices, stored inside the repo folder. `.agents/toolkit.md` on `main` is
+the recommended home: durable, PR-reviewed, and the repo's agent-guidance
+directory, so `AGENTS.md` stays the authority and `toolkit.md` is the
+"what's available and how to use it" map. It includes the pr-review-toolkit
+six-dimension ↔ Codex-native-review mapping, the parity ledger, and the
+sourcing caveats (including the `am-will` licensing note). Alternative
+considered: `scratch/workflow-audit/` alongside the plan — rejected as less
+durable/discoverable for a reference meant to outlive this initiative.
