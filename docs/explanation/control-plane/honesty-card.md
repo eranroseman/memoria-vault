@@ -26,7 +26,7 @@ scan, or scheduled job.
 
 The retired durable-card schema note is in [Inbox card fields](../../reference/inbox-card-fields.md).
 Machine recommendations are soft verdicts only; [Request states and the review
-gate](https://eranroseman.github.io/memoria-vault/explanation/control-plane/states.html) owns the "never a gate" rule.
+gate](states.md) owns the "never a gate" rule.
 
 ---
 
@@ -58,7 +58,7 @@ The 30-minute test is owned by [Interaction channels](../architecture/interactio
 ## Related
 
 - Conceptual overview: [Request control plane](README.md)
-- State machine: [Request states and the review gate](https://eranroseman.github.io/memoria-vault/explanation/control-plane/states.html)
+- State machine: [Request states and the review gate](states.md)
 - The decision-kind model the prompt serves: [Decision points](decision-points.md)
 - The attention shapes in the type system: [Document types and epistemic roles](../knowledge/document-types.md)
 - How policy gates writes: [Policy gate](../../reference/policy-mcp.md)

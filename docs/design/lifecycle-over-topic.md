@@ -24,7 +24,7 @@ Alpha.19 file-backed bundle roots are `notes/`, `hubs/`, `projects/`,
 blob-backed source content.
 Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
 Zettelkasten link-first inheritance described in [Intellectual
-foundations](https://eranroseman.github.io/memoria-vault/design/intellectual-foundations.html#luhmanns-zettelkasten).
+foundations](intellectual-foundations.md#luhmanns-zettelkasten).
 
 ---
 

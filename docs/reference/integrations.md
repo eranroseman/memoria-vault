@@ -77,37 +77,12 @@ organization, and venue graph records.
 
 ---
 
-## Planned search and retrieval
-
-These are not current provider calls. They are candidate future inputs
-for broader source discovery.
-
-| API | Coverage |
-|---|---|
-| **OpenAlex** | General academic literature, all fields |
-| **Semantic Scholar** | General academic, strong on CS / ML |
-| **PubMed** | Biomedical and life sciences |
-
----
-
 ## Execution layer
 
 | Integration | Role |
 |---|---|
 | **Kilo Code gateway** | Optional `gateway` model provider for the standalone runner, configured through `<workspace>/.memoria/config/providers.yaml` `runner_providers.gateway` plus its named key env var. No Hermes profile defaults ship in the standalone baseline. |
 | **pydantic-ai runner** | Required operation runner. Operation manifests pin both `runner.test` and `runner.live`; `--mode test\|live` selects the branch, and `memoria doctor --check runner` verifies package/provider construction. Add `--live` for an opt-in dispatch against the configured OpenAI-compatible endpoint. |
-| **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for optional adapter work. It is not invoked by the standalone baseline. |
-
----
-
-## Not adopted
-
-Tools evaluated and not in the current design:
-
-| Tool | Why not |
-|---|---|
-| **ZotLit** | Obsidian-native Zotero integration — not the shipped connector. Its evaluation, status, and how it compares to the bundled `obsidian-citation-plugin` are in [Zotero plugins](zotero-plugins.md). |
-| **PubMed, Scite, DataCite** | Deferred provider integrations. Current DOI enrichment uses Crossref, OpenAlex, Unpaywall, and optional keyed Semantic Scholar. |
 
 ---
 

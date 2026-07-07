@@ -44,7 +44,7 @@ see runtime queue projections underneath.
 Weekly review is the scheduled structural-health pass. It gathers Inbox cleanup,
 Maintenance, new content, and claim state into one deliberate rhythm. The
 step-by-step ritual lives in [Run the weekly
-review](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/run-the-weekly-review.html).
+review](../../how-to-guides/inbox/run-the-weekly-review.md).
 
 ## Related
 

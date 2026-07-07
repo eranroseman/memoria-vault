@@ -16,7 +16,7 @@ it renders the same data — this is for one-off questions and scripting.
 Both logs are append-only JSONL and **read-only** — never edit them; an
 out-of-band edit is exactly what the Linter's tamper detectors exist to catch.
 The two-log design is in [Session
-logging](https://eranroseman.github.io/memoria-vault/explanation/architecture/session-logging.html); the audit field
+logging](../../explanation/architecture/session-logging.md); the audit field
 schema is owned by [Policy audit log](../../reference/policy-audit-log.md).
 
 ## Prerequisites
@@ -95,7 +95,7 @@ decision, and final `after_hash`.
 
 ## Related
 
-- The two-log design and why they stay separate: [Session logging](https://eranroseman.github.io/memoria-vault/explanation/architecture/session-logging.html)
+- The two-log design and why they stay separate: [Session logging](../../explanation/architecture/session-logging.md)
 - The audit field schema and hash pairing: [Policy audit log](../../reference/policy-audit-log.md)
 - The full log inventory and JSONL conventions: [Telemetry & logs](../../reference/telemetry.md)
 - The dashboards over this data: [Dashboards](../../reference/dashboards.md)
