@@ -9,7 +9,7 @@ nav_order: 5
 
 Alpha.18 has file-backed document types for `digest`, `fulltext`, `note`,
 `hub`, and `project`. Wikilinks and `links:` express authored PI relationships
-between Concept documents. Catalog source rows live in SQLite and provider
+between Concept documents. Catalog Work rows live in SQLite and provider
 payloads; they are not `paper`, `person`, or `venue` Concept files.
 
 ---
@@ -50,7 +50,7 @@ Rules:
 - Link for usefulness, not exhaustive coverage.
 - Prefer vault-relative paths over title-only links.
 - A `note` with `mode: claim` needs evidence in its body, anchors, checked
-  digests, or catalog source rows; `links:` records the argument relation, not
+  digests, or catalog Work rows; `links:` records the argument relation, not
   the evidence store.
 - A bare wikilink remains a body reference.
 - A proposed machine edge is not canonical until accepted through the attention
@@ -66,7 +66,7 @@ are given facts from ingest/enrichment, not authored `links:` frontmatter.
 
 ```text
 digest/fulltext
-  -> catalog source row via work_id
+  -> catalog Work row via work_id
   -> note/hub/project when the PI authors a local link
 
 note

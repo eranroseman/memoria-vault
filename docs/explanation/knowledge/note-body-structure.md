@@ -20,7 +20,7 @@ For the frontmatter fields, templates, and field-by-field reference, see [Docume
 
 A source's record has two authorship layers, and the split between them is intentional, not a convenience.
 
-The mechanical layer is the catalog source row: capture populates bibliographic
+The mechanical layer is the catalog Work row: capture populates bibliographic
 facts, identifiers, hashes, source text paths, and source-derived aspects. These
 are derivable from the source metadata and existing corpus without PI judgment.
 

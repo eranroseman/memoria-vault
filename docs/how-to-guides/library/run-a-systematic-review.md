@@ -79,7 +79,7 @@ record the protocol outcome, and resolve the resulting attention item.
 ## Verify
 
 - The protocol note has all PRISMA counts filled in and `lifecycle: current`
-- Every included source has a catalog Work row with a stable `source_id`
+- Every included source has a catalog Work row with a stable `work_id`
 - Every excluded source has a decision and reason recorded in the protocol
 
 ## Related

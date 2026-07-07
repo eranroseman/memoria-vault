@@ -26,7 +26,7 @@ source of truth.
 ## Metadata enrichment APIs
 
 Used during `enrich-source` and `check_source_metadata` to populate or verify
-catalog source metadata and entities.
+catalog Work metadata and entities.
 
 | API | What it provides | Key fields populated |
 |---|---|---|

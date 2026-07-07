@@ -102,10 +102,10 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## Editor configuration
 
-Alpha.16 ships no editor app configuration. Optional editors may keep local
-state beside or inside a working copy, but that state is not part of the
-standalone template, installer skeleton, request lifecycle, or source-of-truth
-layout.
+The standalone runtime ships no editor app configuration. Optional editors may
+keep local state beside or inside a working copy, but that state is not part of
+the standalone template, installer skeleton, request lifecycle, or
+source-of-truth layout.
 
 ## Outside the vault
 

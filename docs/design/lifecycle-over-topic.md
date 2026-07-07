@@ -21,7 +21,7 @@ SQLite-backed catalog state). Where a record stands for reading is
 Topics are many-to-many; a folder is one location. Memoria therefore reserves
 folders for the one fact that is one-to-one: what kind of checked bundle this is.
 Alpha.18 file-backed bundle roots are notes, hubs, projects, digests, and
-fulltext; catalog source records live in SQLite with blob-backed source content.
+fulltext; catalog Work records live in SQLite with blob-backed source content.
 Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
 Zettelkasten link-first inheritance described in [Intellectual
 foundations](https://eranroseman.github.io/memoria-vault/design/intellectual-foundations.html#luhmanns-zettelkasten).
@@ -30,8 +30,8 @@ foundations](https://eranroseman.github.io/memoria-vault/design/intellectual-fou
 
 ## Read state lives with the record
 The vault is organized by **category**
-([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): the alpha.16
-bundle roots hold file-backed Concepts, SQLite holds catalog working state, and
+([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): the file-backed
+bundle roots hold Concepts, SQLite holds catalog working state, and
 packaged product data holds operation manifests. It never mixes lifecycle state
 into folder names. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md).
 A note does not travel when the PI checks it; a catalog Work does not become a
@@ -42,7 +42,7 @@ For every record, read standing lives in SQLite and read-API responses:
 `unchecked -> checked -> quarantined`. File-backed Concept frontmatter carries
 authored meaning only; it never stores `check_status`. Catalog Work rows use the
 same DB-owned verdict. The exact Concept field inventory is defined in
-[Frontmatter fields](../reference/frontmatter.md); catalog source record fields
+[Frontmatter fields](../reference/frontmatter.md); catalog Work record fields
 are defined in [Ingest routing](../reference/ingest.md).
 
 ---
@@ -52,7 +52,7 @@ are defined in [Ingest routing](../reference/ingest.md).
 **Promotion is a record update, not a file move.** A state change does not move
 a file, so it cannot break wikilinks, lose Git history continuity, or invalidate
 saved queries. A note is born in its type-home and dies in its type-home; a
-catalog Work keeps the same `source_id`.
+catalog Work keeps the same `work_id`.
 
 **Links survive every transition.** A claim cited by twelve other notes can be retracted, superseded, and archived without a single inbound link breaking. Provenance — the property the whole system is built to protect — does not depend on link-rewriting tooling getting every move right.
 

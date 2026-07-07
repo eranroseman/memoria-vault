@@ -26,7 +26,7 @@ its schema contract comes from the YAML schemas under `.memoria/schemas/`.
 | Detector | Severity | Catches |
 | --- | --- | --- |
 | `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, undeclared field, bad field kind/enum, bad nested `links:` shape). |
-| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve. Catalog source evidence is checked by catalog and citation sweeps instead. |
+| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve. Catalog Work evidence is checked by catalog and citation sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `.memoria/templates/`, `system/dashboards/`, and `.memoria/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside the declared bundle roots and infrastructure roots. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
