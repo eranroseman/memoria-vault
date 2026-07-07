@@ -373,9 +373,10 @@ zero instructions — it only makes Claude Code read the repo's `AGENTS.md`
 since Claude Code doesn't read `AGENTS.md` natively (Codex does). So the
 bridge serves the rule's intent while tripping its letter. Resolution: a
 one-line carve-out to rule 1 permitting a repo-root CLAUDE.md whose entire
-content is `@AGENTS.md`. This is the user's own global policy — flagged as
-their call; the alternative (drop the bridge, accept a Claude-side Layer-3
-gap) is recorded in exec-plan step 14. Surfaced by external review.
+content is `@AGENTS.md`. **Decided by the user (2026-07-07): keep the loader
+bridge, linking to AGENTS.md only.** The alternative (drop the bridge, accept
+a Claude-side Layer-3 gap) was considered and rejected. Surfaced by external
+review.
 
 **Y: Pin third-party clone installs to reviewed commit SHAs; take a backup
 before any destructive step; make every clone/copy step remove-then-install.**

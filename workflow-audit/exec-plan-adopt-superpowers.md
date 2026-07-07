@@ -394,21 +394,17 @@ trigger.
 
 ### Step 14 — Amend the loader rule + add precedence + vocabulary to `~/.claude/CLAUDE.md`
 
-**First, a policy amendment (your call — it changes your own global rule).**
-`~/.claude/CLAUDE.md` rule 1 says "no local CLAUDE.md files," which the
-step-16a `main/CLAUDE.md` bridge would violate. But that bridge is a pure
-loader (`@AGENTS.md`) — it carries no instructions and doesn't fragment them;
-it just makes Claude Code read the project's `AGENTS.md` (which the same rule
-already says to do: "checks its own folder for context"). Amend rule 1's
+**First, a policy amendment (decided: keep the loader bridge).** The step-16a
+`main/CLAUDE.md` links to `AGENTS.md` only (`@AGENTS.md`) — a pure loader with
+no instructions of its own. `~/.claude/CLAUDE.md` rule 1 says "no local
+CLAUDE.md files"; amend it so a link-only loader is explicitly allowed (it
+just makes Claude Code read the project's `AGENTS.md`, which the same rule
+already endorses: "checks its own folder for context"). Change rule 1's
 "no local CLAUDE.md files" to:
 
 ```
 no local CLAUDE.md files (exception: a repo-root CLAUDE.md whose entire content is `@AGENTS.md` — a loader so Claude Code reads the project's AGENTS.md, since it doesn't read AGENTS.md natively; it holds no instructions of its own)
 ```
-
-If you'd rather not touch the global rule, drop step 16a instead and accept
-that Claude Code won't auto-load `AGENTS.md` in this repo (Codex still does,
-natively) — a documented Layer-3 gap.
 
 **Then**, append both sections:
 
@@ -468,9 +464,8 @@ git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/adopt-superpo
 cd ~/memoria-vault/worktrees/adopt-superpowers
 ```
 
-**16a — new file `CLAUDE.md` at repo root** (depends on step 14's global-rule
-amendment; skip this sub-step if you chose not to amend the rule), containing
-exactly:
+**16a — new file `CLAUDE.md` at repo root** — links to `AGENTS.md` only
+(enabled by step 14's rule-1 carve-out). Its entire content is:
 
 ```markdown
 @AGENTS.md
