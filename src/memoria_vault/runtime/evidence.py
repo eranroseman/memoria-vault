@@ -7,18 +7,29 @@ import secrets
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
-EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit"})
+EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
 EVIDENCE_STATES = frozenset({"complete", "evidence-incomplete"})
 
 _EV_ID_RE = re.compile(r"^ev-[0-9a-f]{8}$")
 _EV_MARKER_RE = re.compile(r"%%ev:\s*(?P<body>.*?)%%")
 _SOURCE_SPAN_RE = re.compile(r"^(?P<work_id>[A-Za-z0-9][A-Za-z0-9._-]*)#\^p(?P<page>\d{4,})$")
+_CODE_WARRANT_RE = re.compile(
+    r"^code-warrant:(?P<run_id>[A-Za-z0-9._:-]+):(?P<artifact_id>[A-Za-z0-9._-]+):"
+    r"(?P<output_sha256>sha256:[0-9a-f]{64})$"
+)
 
 
 @dataclass(frozen=True)
 class SourceSpanRef:
     work_id: str
     page: str
+
+
+@dataclass(frozen=True)
+class CodeWarrantRef:
+    run_id: str
+    artifact_id: str
+    output_sha256: str
 
 
 @dataclass(frozen=True)
@@ -38,8 +49,22 @@ def parse_source_span_ref(ref: str) -> SourceSpanRef:
     return SourceSpanRef(match.group("work_id"), f"p{match.group('page')}")
 
 
+def parse_code_warrant_ref(ref: str) -> CodeWarrantRef:
+    value = ref.strip()
+    match = _CODE_WARRANT_RE.fullmatch(value)
+    if not match:
+        raise ValueError(f"invalid code-warrant ref: {ref!r}")
+    return CodeWarrantRef(
+        match.group("run_id"),
+        match.group("artifact_id"),
+        match.group("output_sha256"),
+    )
+
+
 def evidence_ref_kind(ref: str) -> str:
     value = ref.strip()
+    if _CODE_WARRANT_RE.fullmatch(value):
+        return "code-warrant"
     if _EV_ID_RE.fullmatch(value):
         return "evidence-set"
     parse_source_span_ref(value)

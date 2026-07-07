@@ -100,7 +100,7 @@ navigation page.
 | --- | --- | --- |
 | catalog work | `catalog/sources/<work-id>` | `catalog/sources/personal-informatics-sensemaking` |
 | `digest` | `digests/<work-id>.md` | `digests/personal-informatics-sensemaking.md` |
-| `fulltext` | `fulltext/<work-id>.md` | `fulltext/personal-informatics-sensemaking.md` |
+| `fulltext` | `fulltexts/<work-id>.md` | `fulltexts/personal-informatics-sensemaking.md` |
 | `note` | `notes/<claim-or-question>.md` | `receptivity-decreases-under-high-burden.md` |
 | `hub` | `hubs/<topic>.md` | `jitai.md` |
 | `project` | `projects/<project>/project.md` | `projects/dissertation/project.md` |

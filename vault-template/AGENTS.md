@@ -27,7 +27,7 @@ check/verdict state before anything becomes readable as checked knowledge.
 ## Where things live
 
 `notes/` claims/questions · `hubs/` topic hubs · `projects/`
-project evidence and gaps · `digests/` generated work digests · `fulltext/`
+project evidence and gaps · `digests/` generated work digests · `fulltexts/`
 generated full-text reproductions · `inbox/` transient attention projections · `system/`
 visible manifests, incidents, metrics, templates, and eval fixtures. Product
 operation manifests live in the installed `memoria_vault` package, not in a

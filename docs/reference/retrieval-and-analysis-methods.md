@@ -54,6 +54,27 @@ edges without requiring search to rediscover the source.
 
 ---
 
+### Alpha.19 derived query substrate
+
+**For:** evaluating lexical, vector, and hybrid retrieval candidates without
+making them the default answer path.
+
+**Used by:** `memoria_vault.runtime.indexing` and
+`memoria_vault.runtime.retrieval` tests/fixtures. Product Ask still reports
+`bm25` unless a future fixture beats the active baseline.
+
+**Implementation:** fresh schema v8 creates `passages`, `passage_fts`,
+`passage_vec`, `file_index_state`, and `concept_edges`. Passage rows are derived
+from checked documents and generated checked Work text. `passage_vec` stores the
+embedding model id, vector dimension, cosine metric, text hash, and vector JSON;
+`sqlite-vec` remains an optional `[vector]` extra and dense production
+capability fails closed when it is absent.
+
+**Cost:** local SQLite writes and candidate ranking. Determinism: total for the
+hash-based fixture embedder.
+
+---
+
 ### Graph algorithms (BFS, PageRank, shortest path)
 
 **For:** orphan detection, hub identification, dependency walks, link density measurement.
@@ -71,7 +92,7 @@ edges without requiring search to rediscover the source.
 **For:** metadata enrichment, retraction monitoring, citation graph traversal.
 
 **Used by:** source enrichment, metadata checks, retraction sweep operations, and
-external metadata lookups. Zotero is not a live API dependency in alpha.18;
+external metadata lookups. Zotero is not a live API dependency in alpha.19;
 portable BibTeX/CSL exports are file inputs.
 
 **Cost:** per-call API budget. Determinism: most APIs are stable; some return ranked results that drift across calls.

@@ -7,7 +7,7 @@ nav_order: 5
 
 # The Engineer
 
-The Engineer is not an installed alpha.18 profile or code runner. It is the
+The Engineer is not an installed alpha.19 profile or direct code runner. It is the
 handoff posture for external coding work: Memoria can prepare and record a
 handoff, but the external coding agent does the coding
 ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).

@@ -10,7 +10,7 @@ nav_order: 20
 Two organizational decisions shape the vault: **a Concept's position in the
 system is its type, never its topic**, and **read state is record state, not a
 folder**. Folders encode one thing only: the category and type home declared in
-`folders.yaml` (`notes/`, `hubs/`, `projects/`, `digests/`, and `fulltext/`, with
+`folders.yaml` (`notes/`, `hubs/`, `projects/`, `digests/`, and `fulltexts/`, with
 SQLite-backed catalog state). Where a record stands for reading is
 `check_status`, not a path move.
 

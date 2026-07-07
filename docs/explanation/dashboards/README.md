@@ -8,7 +8,7 @@ permalink: /explanation/dashboards/
 
 # Surfaces and dashboards
 
-The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `inbox/`, `system/dashboards/`, and the alpha.18 corpus roots, are consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
+The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `inbox/`, `system/dashboards/`, and the alpha.19 corpus roots, are consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
 
 | Group                                              | Dashboards                                                      | When you look                                     |
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |

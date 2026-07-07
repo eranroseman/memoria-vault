@@ -22,7 +22,7 @@ cssclasses: memoria-nav
 
 `digests/`
 
-`fulltext/`
+`fulltexts/`
 
 ---
 

@@ -33,7 +33,7 @@ The identifiers and drift check are in the reference.
 - Direct edits are observed by the same scan/check loop as other authored
   Markdown.
 - Future generated callout content would need to enter through the request and
-  trusted-writer path; alpha.18 does not ship that generator.
+  trusted-writer path; alpha.19 does not ship that generator.
 
 ---
 

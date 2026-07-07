@@ -49,7 +49,7 @@ provider, scope, lifespan, backing store, and contents.
 | The PI's preferences and style | Program memory (`steering.md`) or checked preference notes | Adapter chat/session history |
 | Cross-session retrieval | search + SQLite over checked workspace state | Adapter memory (not authoritative) |
 | Audit trail of all decisions | Audit memory (`system/logs/audit.jsonl`) | Working memory (wrong granularity) |
-| Durable synthesized knowledge | Checked Concepts under `notes/`, `hubs/`, `projects/`, `digests/`, and `fulltext/` | Any of the above |
+| Durable synthesized knowledge | Checked Concepts under `notes/`, `hubs/`, `projects/`, `digests/`, and `fulltexts/` | Any of the above |
 
 ---
 

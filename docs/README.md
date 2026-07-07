@@ -17,7 +17,7 @@ If you want a guided first experience, start with the
 something, see [How-to guides](how-to-guides/). If you need exact values, field
 names, or configuration formats, see [Reference](reference/).
 
-**Status: v0.1 alpha source install** — alpha.18 is the latest closed
+**Status: v0.1 alpha source install** — alpha.19 is the latest closed
 checkpoint; the formal package/tag release gate remains open. ·
 [GitHub](https://github.com/eranroseman/memoria-vault) ·
 [Install](https://github.com/eranroseman/memoria-vault#install) ·
@@ -165,7 +165,7 @@ engine are being validated as a standalone local product. What is not working to
   provider/package run before release.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
-- **Broad writability scoring is not implemented** — alpha.18 has structural
+- **Broad writability scoring is not implemented** — alpha.19 has structural
   draft verification and project export readiness, but it does not decide
   whether developed claims are ready to become prose.
 - **Single-user only** — team and multi-user review are out of scope by design.

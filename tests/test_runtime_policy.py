@@ -104,7 +104,7 @@ def test_runtime_policy_core():
             allow_write=[],
             deny_write=[
                 "digests/**",
-                "fulltext/**",
+                "fulltexts/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -121,7 +121,7 @@ def test_runtime_policy_core():
             allow_write=[],
             deny_write=[
                 "digests/**",
-                "fulltext/**",
+                "fulltexts/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -139,7 +139,7 @@ def test_runtime_policy_core():
             allow_write=["projects/**"],
             deny_write=[
                 "digests/**",
-                "fulltext/**",
+                "fulltexts/**",
                 "notes/**",
                 "hubs/**",
                 "catalog/**",
@@ -157,7 +157,7 @@ def test_runtime_policy_core():
                 "inbox/**",
                 "catalog/**",
                 "digests/**",
-                "fulltext/**",
+                "fulltexts/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -171,7 +171,7 @@ def test_runtime_policy_core():
             allow_write=[],
             deny_write=[
                 "digests/**",
-                "fulltext/**",
+                "fulltexts/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -183,7 +183,7 @@ def test_runtime_policy_core():
             ],
             require=["audit_log"],
             write_scope=[
-                ".memoria/staging/fulltext/",
+                ".memoria/staging/fulltexts/",
                 ".memoria/staging/digests/",
                 ".memoria/staging/notes/",
             ],
@@ -193,7 +193,7 @@ def test_runtime_policy_core():
             allow_write=[],
             deny_write=[
                 "digests/**",
-                "fulltext/**",
+                "fulltexts/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",

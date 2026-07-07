@@ -8,7 +8,7 @@ permalink: /explanation/obsidian/
 
 # Obsidian
 
-Obsidian is optional in alpha.18. The required human surface is the `memoria`
+Obsidian is optional in alpha.19. The required human surface is the `memoria`
 CLI plus Markdown files. This section keeps the editor-facing rationale that
 still applies when Obsidian is used as a plain Markdown editor or future adapter
 host.

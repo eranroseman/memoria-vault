@@ -8,13 +8,14 @@ import yaml
 from memoria_vault.runtime.subsystems.lib import schema
 
 SCHEMA_TYPES = {
+    "code-artifact",
     "digest",
     "fulltext",
     "note",
     "hub",
     "project",
 }
-CONCEPT_ROOTS = {"notes", "hubs", "projects", "digests", "fulltext"}
+CONCEPT_ROOTS = {"notes", "hubs", "projects", "digests", "fulltexts"}
 
 
 def _md(path: Path, frontmatter: dict, body: str = "Body.\n") -> None:
@@ -100,13 +101,16 @@ def test_portable_fields_declared():
         required = sc.get("required") or {}
         optional = sc.get("optional") or {}
         assert required["title"] == "str", name
-        assert required["id"] == ("str" if name in {"digest", "fulltext"} else "ulid"), name
+        assert required["id"] == (
+            "str" if name in {"code-artifact", "digest", "fulltext"} else "ulid"
+        ), name
         assert required["tags"] == "list", name
         assert required["links"] == "links", name
         assert optional.get("archived") == "bool", name
     assert optional.get("x") == "map", name
     assert types["digest"]["required"]["work_id"] == "str"
     assert types["fulltext"]["required"]["work_id"] == "str"
+    assert types["code-artifact"]["required"]["artifact_id"] == "str"
     assert types["hub"]["required"]["tag"] == "str"
 
 

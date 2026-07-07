@@ -7,7 +7,7 @@ nav_order: 3
 
 # CLI
 
-`memoria` is the alpha.18 product surface. It operates on a standalone workspace
+`memoria` is the alpha.19 product surface. It operates on a standalone workspace
 through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 ## Core

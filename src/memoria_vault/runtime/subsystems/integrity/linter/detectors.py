@@ -43,13 +43,13 @@ TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
 TYPE_HOME = {
     "digest": "digests/",
-    "fulltext": "fulltext/",
+    "fulltext": "fulltexts/",
     "note": "notes/",
     "hub": "hubs/",
     "project": "projects/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
-KNOWN_TOP_DIRS = {"notes", "hubs", "projects", "digests", "fulltext", "system", "inbox"}
+KNOWN_TOP_DIRS = {"notes", "hubs", "projects", "digests", "fulltexts", "system", "inbox"}
 # Scaffolding, not authored documents: skeleton folders, assets, and the
 # templates (raw Markdown full of placeholder [[links]]). Detectors that assert
 # things about *real* documents (broken wikilinks, type schema) skip these.
@@ -115,7 +115,7 @@ DATAVIEW_KEYWORDS = {
 }
 # Only queries over these folders read *Concept frontmatter*; queries over logs
 # or metrics drift on different schemas, not this one.
-NOTE_FOLDERS = ("notes", "hubs", "projects", "digests", "fulltext")
+NOTE_FOLDERS = ("notes", "hubs", "projects", "digests", "fulltexts")
 # Canonical schemas (ADR-122): when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
 # the dependency-free fallback so the operation still runs without PyYAML.
@@ -481,7 +481,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
             if tgt in indeg:
                 indeg[tgt] += 1
     out = []
-    synth = ("notes/", "hubs/", "projects/", "digests/", "fulltext/")
+    synth = ("notes/", "hubs/", "projects/", "digests/", "fulltexts/")
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):

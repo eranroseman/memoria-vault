@@ -12,4 +12,4 @@ Generated workspace projection. Edit catalog rows or Concept files, not this fil
 - [Topic hubs](hubs/)
 - [Projects](projects/)
 - [Work digests](digests/)
-- [Full text](fulltext/)
+- [Full text](fulltexts/)

@@ -37,6 +37,8 @@ TEST_LEVELS = {
     "test_alpha18_renames.py": "contract",
     "test_alpha18_schema_doc_lint.py": "static",
     "test_alpha18_schema_version.py": "contract",
+    "test_alpha19_code_lane.py": "runtime",
+    "test_alpha19_query_substrate.py": "contract",
     "test_bases.py": "contract",
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",

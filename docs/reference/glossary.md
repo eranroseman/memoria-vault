@@ -49,7 +49,7 @@ and adapters are presentation layers over the same contracts. The older
 seven-layer architecture is historical context in [the standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 **Workspace** — the runtime vault root containing `notes/`, `hubs/`,
-`projects/`, `digests/`, `fulltext/`, `inbox/`, `system/`, and `.memoria/`.
+`projects/`, `digests/`, `fulltexts/`, `inbox/`, `system/`, and `.memoria/`.
 Optional editors open this root; the top-level bundle roots are the checked
 corpus homes.
 
@@ -63,7 +63,7 @@ corpus homes.
 queue** (your Inbox queue) and **Drift** (open integrity flags).
 
 **Places** — the rail's lower band over durable corpus homes: Library
-(`digests/`, `fulltext/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
+(`digests/`, `fulltexts/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
 Project (`projects/`).
 
 **Space** — historical name for the Library, Knowledge, and Project navigation

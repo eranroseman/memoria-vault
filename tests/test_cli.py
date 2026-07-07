@@ -753,7 +753,7 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
     assert {source["path"] for source in answer["result"]["sources"]} & {
         digest_path,
         note_path,
-        "fulltext/doi-10.1000_alpha.md",
+        "fulltexts/doi-10.1000_alpha.md",
     }
 
     project_answer = run_json(

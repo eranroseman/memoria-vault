@@ -11,7 +11,7 @@ Memoria separates orchestration, execution, and settled knowledge into distinct
 layers. This is not a layering convention; it is the mechanism that makes
 retries safe, handoffs lossless, and review enforceable. The
 [standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
-decision records the older layered version of this rule; alpha.18 implements the same separation
+decision records the older layered version of this rule; alpha.19 implements the same separation
 through the standalone CLI, SQLite request table, worker operations, and checked
 workspace.
 

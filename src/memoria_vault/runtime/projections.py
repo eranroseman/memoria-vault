@@ -10,7 +10,7 @@ from typing import Any
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
 
-BUNDLE_ROOTS = ("notes", "hubs", "projects", "digests", "fulltext")
+BUNDLE_ROOTS = ("notes", "hubs", "projects", "digests", "fulltexts")
 INDEX_PATHS = ("index.md",)
 TRACKED_PROJECTION_PATHS = (
     *INDEX_PATHS,
@@ -194,7 +194,7 @@ def _workspace_index() -> str:
         "hubs": "Topic hubs",
         "projects": "Projects",
         "digests": "Work digests",
-        "fulltext": "Full text",
+        "fulltexts": "Full text",
     }
     rows = "\n".join(f"- [{labels[root]}]({root}/)" for root in BUNDLE_ROOTS)
     return _generated(

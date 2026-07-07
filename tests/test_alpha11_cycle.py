@@ -244,7 +244,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
 
     manifest = run_operation(vault, "rebuild-checked-search-index", key="rebuild-search")
     indexed_paths = {row["path"] for row in manifest["documents"]}
-    assert f"fulltext/{work_id}.md" in indexed_paths
+    assert f"fulltexts/{work_id}.md" in indexed_paths
     assert digest["digest_path"] in indexed_paths
     assert note_path in indexed_paths
 

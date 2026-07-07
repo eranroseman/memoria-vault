@@ -10,7 +10,7 @@ allowed_paths:
 - catalog/
 - inbox/
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

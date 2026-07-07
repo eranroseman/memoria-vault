@@ -11,7 +11,7 @@ allowed_paths:
 - inbox/
 - .memoria/journal/
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

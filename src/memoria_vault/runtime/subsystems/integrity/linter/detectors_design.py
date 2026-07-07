@@ -27,7 +27,7 @@ _DESIGN_SCAN_PREFIXES = (
     "notes/",
     "hubs/",
     "digests/",
-    "fulltext/",
+    "fulltexts/",
     "inbox/",
     "projects/",
     ".obsidian/snippets/",

@@ -16,6 +16,7 @@ from memoria_vault.runtime.evidence import (
     EvidenceMarker,
     evidence_ref_kind,
     extract_evidence_markers,
+    parse_code_warrant_ref,
     parse_source_span_ref,
 )
 from memoria_vault.runtime.paths import safe_filename
@@ -26,12 +27,13 @@ from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 WORK_ASPECT_TYPES = frozenset(
     {"context", "key_idea", "method", "outcome", "limitation", "assumption"}
 )
+EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
 
 
 def db_path(vault: Path) -> Path:
@@ -1107,6 +1109,409 @@ def replace_work_aspects(vault: Path, source_ref: str, rows: Iterable[dict[str, 
             )
 
 
+def replace_indexed_passages(
+    vault: Path,
+    rows: Iterable[dict[str, Any]],
+    *,
+    paths: Iterable[str] | None = None,
+) -> dict[str, int]:
+    rows = [dict(row) for row in rows]
+    target_paths = {normalize_path(path) for path in paths or []}
+    now = now_iso()
+    with connect(vault) as conn:
+        if target_paths:
+            for path in sorted(target_paths):
+                conn.execute("DELETE FROM passages WHERE path = ?", (path,))
+                conn.execute("DELETE FROM file_index_state WHERE path = ?", (path,))
+        else:
+            conn.execute("DELETE FROM passages")
+            conn.execute("DELETE FROM file_index_state")
+        for row in rows:
+            text = str(row["text"])
+            path = normalize_path(str(row["path"]))
+            check_status = _check_status(str(row.get("check_status") or "unchecked"))
+            text_sha256 = str(row.get("text_sha256") or _sha256_text(text))
+            passage_id = str(row.get("passage_id") or _passage_id(path, text_sha256))
+            vector = row.get("vector")
+            conn.execute(
+                """
+                INSERT INTO passages(
+                    passage_id,
+                    origin,
+                    concept_id,
+                    work_id,
+                    path,
+                    anchor,
+                    page,
+                    byte_start,
+                    byte_end,
+                    text_sha256,
+                    text,
+                    check_status,
+                    mode,
+                    question_status,
+                    source_mtime_ns,
+                    indexed_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    passage_id,
+                    str(row.get("origin") or "file"),
+                    normalize_path(str(row.get("concept_id") or path)),
+                    str(row.get("work_id") or ""),
+                    path,
+                    str(row.get("anchor") or ""),
+                    str(row.get("page") or ""),
+                    int(row.get("byte_start") or 0),
+                    int(row.get("byte_end") or len(text.encode())),
+                    text_sha256,
+                    text,
+                    check_status,
+                    str(row.get("mode") or ""),
+                    str(row.get("question_status") or ""),
+                    int(row.get("source_mtime_ns") or 0),
+                    now,
+                ),
+            )
+            if isinstance(vector, list) and vector:
+                conn.execute(
+                    """
+                    INSERT INTO passage_vec(
+                        passage_id,
+                        text_sha256,
+                        embedding_model_id,
+                        vector_dim,
+                        vector_json,
+                        updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        passage_id,
+                        text_sha256,
+                        str(row.get("embedding_model_id") or "memoria-hash-test-v1"),
+                        int(row.get("vector_dim") or len(vector)),
+                        _json(vector),
+                        now,
+                    ),
+                )
+            conn.execute(
+                """
+                INSERT INTO file_index_state(
+                    path,
+                    source_mtime_ns,
+                    source_sha256,
+                    check_status,
+                    indexed_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(path) DO UPDATE SET
+                    source_mtime_ns = excluded.source_mtime_ns,
+                    source_sha256 = excluded.source_sha256,
+                    check_status = excluded.check_status,
+                    indexed_at = excluded.indexed_at
+                """,
+                (
+                    path,
+                    int(row.get("source_mtime_ns") or 0),
+                    text_sha256,
+                    check_status,
+                    now,
+                ),
+            )
+    return {"inserted": len(rows), "paths": len({str(row["path"]) for row in rows})}
+
+
+def indexed_passages(vault: Path, *, checked_only: bool = False) -> list[dict[str, Any]]:
+    if not db_path(vault).is_file():
+        return []
+    with connect(vault) as conn:
+        if checked_only:
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM passages
+                WHERE check_status = 'checked'
+                ORDER BY path, passage_id
+                """
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM passages
+                ORDER BY path, passage_id
+                """
+            ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def file_index_states(vault: Path) -> dict[str, dict[str, Any]]:
+    if not db_path(vault).is_file():
+        return {}
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT path, source_mtime_ns, source_sha256, check_status, indexed_at
+            FROM file_index_state
+            ORDER BY path
+            """
+        ).fetchall()
+    return {str(row["path"]): dict(row) for row in rows}
+
+
+def replace_concept_edges(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
+    rows = list(rows)
+    with connect(vault) as conn:
+        deleted = conn.execute("DELETE FROM concept_edges").rowcount
+        for row in rows:
+            conn.execute(
+                """
+                INSERT INTO concept_edges(
+                    source_concept_id,
+                    relation_type,
+                    target_concept_id,
+                    check_status,
+                    source_path,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    normalize_path(str(row["source_concept_id"])),
+                    _concept_edge_relation(str(row["relation_type"])),
+                    normalize_path(str(row["target_concept_id"])),
+                    _check_status(str(row.get("check_status") or "unchecked")),
+                    normalize_path(str(row.get("source_path") or "")),
+                    now_iso(),
+                ),
+            )
+    return {"deleted": int(deleted), "inserted": len(rows)}
+
+
+def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:
+    if not db_path(vault).is_file():
+        return []
+    with connect(vault) as conn:
+        if checked_only:
+            rows = conn.execute(
+                """
+                SELECT source_concept_id, relation_type, target_concept_id, check_status, source_path
+                FROM concept_edges
+                WHERE check_status = 'checked'
+                ORDER BY source_concept_id, relation_type, target_concept_id
+                """
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT source_concept_id, relation_type, target_concept_id, check_status, source_path
+                FROM concept_edges
+                ORDER BY source_concept_id, relation_type, target_concept_id
+                """
+            ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def upsert_code_artifact(
+    vault: Path,
+    *,
+    artifact_id: str,
+    project_path: str,
+    record_path: str,
+    source_dir: str,
+    output_dir: str,
+    purpose: str,
+    approved_command: Iterable[str],
+    declared_inputs: Iterable[str] = (),
+    declared_outputs: Iterable[str] = (),
+    dependency_notes: str = "",
+    status: str = "draft",
+) -> dict[str, Any]:
+    now = now_iso()
+    artifact = safe_filename(artifact_id).strip("._-")
+    if not artifact:
+        raise ValueError("artifact_id is required")
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO code_artifacts(
+                artifact_id,
+                project_path,
+                record_path,
+                source_dir,
+                output_dir,
+                purpose,
+                approved_command_json,
+                declared_inputs_json,
+                declared_outputs_json,
+                dependency_notes,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(artifact_id) DO UPDATE SET
+                project_path = excluded.project_path,
+                record_path = excluded.record_path,
+                source_dir = excluded.source_dir,
+                output_dir = excluded.output_dir,
+                purpose = excluded.purpose,
+                approved_command_json = excluded.approved_command_json,
+                declared_inputs_json = excluded.declared_inputs_json,
+                declared_outputs_json = excluded.declared_outputs_json,
+                dependency_notes = excluded.dependency_notes,
+                status = excluded.status,
+                updated_at = excluded.updated_at
+            """,
+            (
+                artifact,
+                normalize_path(project_path),
+                normalize_path(record_path),
+                normalize_path(source_dir),
+                normalize_path(output_dir),
+                _code_purpose(purpose),
+                _json([str(part) for part in approved_command]),
+                _json([normalize_path(path) for path in declared_inputs]),
+                _json([normalize_path(path) for path in declared_outputs]),
+                dependency_notes,
+                _code_artifact_status(status),
+                now,
+                now,
+            ),
+        )
+    artifact_row = code_artifact(vault, artifact)
+    if artifact_row is None:
+        raise RuntimeError(f"code artifact was not stored: {artifact}")
+    return artifact_row
+
+
+def code_artifact(vault: Path, artifact_id: str) -> dict[str, Any] | None:
+    if not db_path(vault).is_file():
+        return None
+    artifact = safe_filename(artifact_id).strip("._-")
+    with connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT *
+            FROM code_artifacts
+            WHERE artifact_id = ?
+            """,
+            (artifact,),
+        ).fetchone()
+    return None if row is None else _code_artifact_row(row)
+
+
+def record_code_run(
+    vault: Path,
+    *,
+    run_id: str,
+    artifact_id: str,
+    command: Iterable[str],
+    cwd: str,
+    sanitized_env: Iterable[str] = (),
+    input_hashes: dict[str, str] | None = None,
+    output_hashes: dict[str, str] | None = None,
+    stdout_sha256: str = "",
+    stderr_sha256: str = "",
+    stdout_path: str = "",
+    stderr_path: str = "",
+    exit_status: int | None = None,
+    timeout_result: str = "",
+    sandbox_backend: str = "",
+    sandbox_profile_hash: str = "",
+    run_state: str = "pending",
+    started_at: str | None = None,
+    ended_at: str | None = None,
+) -> dict[str, Any]:
+    run = safe_filename(run_id).strip("._-")
+    if not run:
+        raise ValueError("run_id is required")
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO code_runs(
+                run_id,
+                artifact_id,
+                command_json,
+                cwd,
+                sanitized_env_json,
+                input_hashes_json,
+                output_hashes_json,
+                stdout_sha256,
+                stderr_sha256,
+                stdout_path,
+                stderr_path,
+                exit_status,
+                timeout_result,
+                sandbox_backend,
+                sandbox_profile_hash,
+                state,
+                started_at,
+                ended_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(run_id) DO UPDATE SET
+                command_json = excluded.command_json,
+                cwd = excluded.cwd,
+                sanitized_env_json = excluded.sanitized_env_json,
+                input_hashes_json = excluded.input_hashes_json,
+                output_hashes_json = excluded.output_hashes_json,
+                stdout_sha256 = excluded.stdout_sha256,
+                stderr_sha256 = excluded.stderr_sha256,
+                stdout_path = excluded.stdout_path,
+                stderr_path = excluded.stderr_path,
+                exit_status = excluded.exit_status,
+                timeout_result = excluded.timeout_result,
+                sandbox_backend = excluded.sandbox_backend,
+                sandbox_profile_hash = excluded.sandbox_profile_hash,
+                state = excluded.state,
+                ended_at = excluded.ended_at
+            """,
+            (
+                run,
+                safe_filename(artifact_id).strip("._-"),
+                _json([str(part) for part in command]),
+                normalize_path(cwd),
+                _json([str(name) for name in sanitized_env]),
+                _json(input_hashes or {}),
+                _json(output_hashes or {}),
+                stdout_sha256,
+                stderr_sha256,
+                normalize_path(stdout_path) if stdout_path else "",
+                normalize_path(stderr_path) if stderr_path else "",
+                exit_status,
+                timeout_result,
+                sandbox_backend,
+                sandbox_profile_hash,
+                _code_run_state(run_state),
+                started_at or now_iso(),
+                ended_at,
+            ),
+        )
+    run_row = code_run(vault, run)
+    if run_row is None:
+        raise RuntimeError(f"code run was not stored: {run}")
+    return run_row
+
+
+def code_run(vault: Path, run_id: str) -> dict[str, Any] | None:
+    if not db_path(vault).is_file():
+        return None
+    run = safe_filename(run_id).strip("._-")
+    with connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT *
+            FROM code_runs
+            WHERE run_id = ?
+            """,
+            (run,),
+        ).fetchone()
+    return None if row is None else _code_run_row(row)
+
+
 def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
     rows = list(rows)
     with connect(vault) as conn:
@@ -1280,6 +1685,47 @@ def _evidence_set_row(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def _code_artifact_row(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "artifact_id": row["artifact_id"],
+        "project_path": row["project_path"],
+        "record_path": row["record_path"],
+        "source_dir": row["source_dir"],
+        "output_dir": row["output_dir"],
+        "purpose": row["purpose"],
+        "approved_command": json.loads(row["approved_command_json"] or "[]"),
+        "declared_inputs": json.loads(row["declared_inputs_json"] or "[]"),
+        "declared_outputs": json.loads(row["declared_outputs_json"] or "[]"),
+        "dependency_notes": row["dependency_notes"],
+        "status": row["status"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def _code_run_row(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "run_id": row["run_id"],
+        "artifact_id": row["artifact_id"],
+        "command": json.loads(row["command_json"] or "[]"),
+        "cwd": row["cwd"],
+        "sanitized_env": json.loads(row["sanitized_env_json"] or "[]"),
+        "input_hashes": json.loads(row["input_hashes_json"] or "{}"),
+        "output_hashes": json.loads(row["output_hashes_json"] or "{}"),
+        "stdout_sha256": row["stdout_sha256"],
+        "stderr_sha256": row["stderr_sha256"],
+        "stdout_path": row["stdout_path"],
+        "stderr_path": row["stderr_path"],
+        "exit_status": row["exit_status"],
+        "timeout_result": row["timeout_result"],
+        "sandbox_backend": row["sandbox_backend"],
+        "sandbox_profile_hash": row["sandbox_profile_hash"],
+        "state": row["state"],
+        "started_at": row["started_at"],
+        "ended_at": row["ended_at"],
+    }
+
+
 def _evidence_marker_rows(vault: Path, *, run_id: str) -> list[dict[str, Any]]:
     found: list[tuple[str, EvidenceMarker]] = []
     for path in sorted(vault.rglob("*.md")):
@@ -1294,7 +1740,12 @@ def _evidence_marker_rows(vault: Path, *, run_id: str) -> list[dict[str, Any]]:
     source_spans = _source_span_pages(vault)
     return [
         _derived_evidence_row(
-            rel, marker, marker_ids=marker_ids, source_spans=source_spans, run_id=run_id
+            vault,
+            rel,
+            marker,
+            marker_ids=marker_ids,
+            source_spans=source_spans,
+            run_id=run_id,
         )
         for rel, marker in found
     ]
@@ -1305,6 +1756,7 @@ def _skip_evidence_scan_path(rel: Path) -> bool:
 
 
 def _derived_evidence_row(
+    vault: Path,
     rel: str,
     marker: EvidenceMarker,
     *,
@@ -1320,7 +1772,7 @@ def _derived_evidence_row(
         "items": items,
         "type": evidence_type,
         "state": "complete"
-        if _evidence_items_resolve(items, marker_ids=marker_ids, source_spans=source_spans)
+        if _evidence_items_resolve(vault, items, marker_ids=marker_ids, source_spans=source_spans)
         else "evidence-incomplete",
         "review_required": evidence_type in {"implicit", "multi-hop"},
         "run_id": run_id,
@@ -1330,12 +1782,15 @@ def _derived_evidence_row(
 def _derived_evidence_type(items: list[str]) -> str:
     if not items:
         return "implicit"
+    if any(evidence_ref_kind(item) == "code-warrant" for item in items):
+        return "computed"
     if any(evidence_ref_kind(item) == "evidence-set" for item in items):
         return "multi-hop"
     return "single-span" if len(items) == 1 else "multi-span"
 
 
 def _evidence_items_resolve(
+    vault: Path,
     items: list[str],
     *,
     marker_ids: set[str],
@@ -1344,7 +1799,12 @@ def _evidence_items_resolve(
     if not items:
         return False
     for item in items:
-        if evidence_ref_kind(item) == "evidence-set":
+        kind = evidence_ref_kind(item)
+        if kind == "code-warrant":
+            if not _code_warrant_resolves(vault, item):
+                return False
+            continue
+        if kind == "evidence-set":
             if item not in marker_ids:
                 return False
             continue
@@ -1352,6 +1812,18 @@ def _evidence_items_resolve(
         if source.page not in source_spans.get(source.work_id, set()):
             return False
     return True
+
+
+def _code_warrant_resolves(vault: Path, item: str) -> bool:
+    from memoria_vault.runtime.code.runs import code_warrant_complete
+
+    warrant = parse_code_warrant_ref(item)
+    return code_warrant_complete(
+        vault,
+        run_id=warrant.run_id,
+        artifact_id=warrant.artifact_id,
+        output_sha256=warrant.output_sha256,
+    )
 
 
 def _source_span_pages(vault: Path) -> dict[str, set[str]]:
@@ -1403,6 +1875,25 @@ def _set_concept_verdict_conn(
         """,
         (concept_id, _check_status(check_status)),
     )
+    _cascade_passage_check_status_conn(conn, concept_id, check_status)
+
+
+def _cascade_passage_check_status_conn(
+    conn: sqlite3.Connection,
+    concept_id: str,
+    check_status: str,
+) -> None:
+    status = _check_status(check_status)
+    conn.execute(
+        """
+        UPDATE passages
+        SET check_status = ?
+        WHERE concept_id = ?
+           OR path = ?
+           OR ('catalog/sources/' || work_id) = ?
+        """,
+        (status, concept_id, concept_id, concept_id),
+    )
 
 
 def _check_status(check_status: str) -> str:
@@ -1417,6 +1908,38 @@ def _work_aspect_type(value: str) -> str:
     if aspect_type not in WORK_ASPECT_TYPES:
         raise ValueError(f"unknown work aspect type: {value}")
     return aspect_type
+
+
+def _concept_edge_relation(value: str) -> str:
+    relation = value.strip().lower().replace("_", "-")
+    if relation not in {"supports", "contradicts", "extends", "tension"}:
+        raise ValueError(f"unknown concept edge relation: {value}")
+    return relation
+
+
+def _code_purpose(value: str) -> str:
+    purpose = value.strip().lower()
+    if purpose not in {"warrant", "deliverable", "both"}:
+        raise ValueError(f"invalid code artifact purpose: {value!r}")
+    return purpose
+
+
+def _code_artifact_status(value: str) -> str:
+    status = value.strip().lower()
+    if status not in {"draft", "ready", "failed", "retired"}:
+        raise ValueError(f"invalid code artifact status: {value!r}")
+    return status
+
+
+def _code_run_state(value: str) -> str:
+    run_state = value.strip().lower()
+    if run_state not in {"pending", "running", "succeeded", "failed", "unavailable"}:
+        raise ValueError(f"invalid code run state: {value!r}")
+    return run_state
+
+
+def _passage_id(path: str, text_sha256: str) -> str:
+    return hashlib.sha256(f"{path}\0{text_sha256}".encode()).hexdigest()[:24]
 
 
 def _work_id(value: str) -> str:

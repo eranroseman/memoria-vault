@@ -1,12 +1,13 @@
-# Canonical alpha.18 workspace layout.
+# Canonical alpha.19 workspace layout.
 # Read by: schema validators, the installer skeleton, and worker/promotion code.
-categories: [notes, hubs, projects, digests, fulltext]
-bundle_roots: [notes, hubs, projects, digests, fulltext]
+categories: [notes, hubs, projects, digests, fulltexts]
+bundle_roots: [notes, hubs, projects, digests, fulltexts]
 
 # type → folder-home (relative to the vault root)
 homes:
+  code-artifact: projects
   digest: digests
-  fulltext: fulltext
+  fulltext: fulltexts
   note: notes
   hub: hubs
   project: projects
@@ -16,7 +17,7 @@ machine_staging_roots:
   - .memoria/staging/hubs
   - .memoria/staging/projects
   - .memoria/staging/digests
-  - .memoria/staging/fulltext
+  - .memoria/staging/fulltexts
 
 quarantine_root: .memoria/quarantine
 
@@ -41,14 +42,14 @@ skeleton:
   - .memoria/staging/hubs
   - .memoria/staging/projects
   - .memoria/staging/digests
-  - .memoria/staging/fulltext
+  - .memoria/staging/fulltexts
   - .memoria/templates
   - inbox
   - notes
   - hubs
   - projects
   - digests
-  - fulltext
+  - fulltexts
   - system
   - system/incidents
   - system/metrics

@@ -13,7 +13,7 @@ from typing import Any
 import yaml
 
 DEFAULT_SKIP_DIRS = frozenset({".git", ".memoria", ".obsidian", "node_modules"})
-UNIVERSAL_CONCEPT_BUNDLES = frozenset({"notes", "hubs", "projects", "digests", "fulltext"})
+UNIVERSAL_CONCEPT_BUNDLES = frozenset({"notes", "hubs", "projects", "digests", "fulltexts"})
 UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "digest", "hub", "project", "fulltext"})
 ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 RETIRED_FRONTMATTER_FIELDS = frozenset(

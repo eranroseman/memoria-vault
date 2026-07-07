@@ -15,7 +15,7 @@ Markdown files are the keep-set you can read and edit with any editor.
 ## Start here
 
 - **Capture a source** - `memoria work add --workspace . --doi <doi>`; checked sources
-  are catalog rows; generated digests and full text land under `digests/` and `fulltext/`.
+  are catalog rows; generated digests and full text land under `digests/` and `fulltexts/`.
 - **Import a bibliography** - `memoria work import --workspace . --format bibtex --file <file>`
   or `--format csl`.
 - **Ask the workspace** - `memoria ask --workspace . --question "<question>"`.
@@ -28,6 +28,6 @@ Markdown files are the keep-set you can read and edit with any editor.
 - `hubs/` — topic hubs with human salience.
 - `projects/` — project questions, evidence, and gaps.
 - `digests/` — machine-generated per-work digests.
-- `fulltext/` — generated full-text reproductions for checked works.
+- `fulltexts/` — generated full-text reproductions for checked works.
 
 Anything waiting on a decision collects in `inbox/`; clearing it to empty is the goal.

@@ -7,7 +7,7 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

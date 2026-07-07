@@ -18,7 +18,7 @@ says whether it is readable as checked knowledge.
 | Store | Holds | Types |
 | --- | --- | --- |
 | Catalog state | Source rows, source blobs, provider payloads, external IDs, and graph edges. | SQLite catalog rows and `.memoria/blobs/**`, not frontmatter Concept types |
-| `notes/`, `hubs/`, `projects/`, `digests/`, `fulltext/` | Durable corpus files and PI curation. | `note`, `hub`, `project`, `digest`, `fulltext` |
+| `notes/`, `hubs/`, `projects/`, `digests/`, `fulltexts/` | Durable corpus files and PI curation. | `note`, `hub`, `project`, `digest`, `fulltext` |
 | Packaged capability bundle | Operation manifests and product capability metadata. | Packaged data under `memoria_vault.product.capabilities`, not runtime-vault Concepts |
 
 The exhaustive field lists live in [Document types](../../reference/document-types.md).

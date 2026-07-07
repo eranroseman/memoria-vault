@@ -7,7 +7,7 @@ allowed_tools:
 - integrity_checker
 allowed_paths:
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

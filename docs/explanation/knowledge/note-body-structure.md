@@ -25,7 +25,7 @@ facts, identifiers, hashes, source text paths, and source-derived aspects. These
 are derivable from the source metadata and existing corpus without PI judgment.
 
 The knowledge layer is checked `digest`, `fulltext`, `note`, `hub`, and
-`project` documents under the alpha.18 corpus roots. Digests and generated
+`project` documents under the alpha.19 corpus roots. Digests and generated
 full text hold source-derived material keyed by `work_id`; notes, hubs, and
 project curation carry PI judgment. A useful note captures the thesis, the key
 findings that will actually be cited, and the source's relevance to the research

@@ -7,7 +7,7 @@ allowed_tools:
 - read_checked_concepts
 allowed_paths:
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

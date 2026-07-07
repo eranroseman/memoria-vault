@@ -10,7 +10,7 @@ allowed_paths:
 - .memoria/eval/
 - catalog/
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/
