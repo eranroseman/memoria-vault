@@ -66,3 +66,12 @@ def within_scope(path: str, scopes: list[str]) -> bool:
         ):
             return True
     return False
+
+
+def require_policy_path(policy: dict, path: str) -> str:
+    """Return normalized path if an operation policy allows it."""
+    rel = normalize_path(path)
+    scopes = [normalize_path(str(raw)).rstrip("/") for raw in policy.get("allowed_paths") or []]
+    if within_scope(rel, scopes):
+        return rel
+    raise PermissionError(f"operation {policy['operation_id']} cannot access {rel}")

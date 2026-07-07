@@ -12,15 +12,12 @@ import pytest
 from memoria_vault.cli import main
 from memoria_vault.runtime import mcp_transport, state
 from memoria_vault.runtime.mcp_transport import make_mcp_app
-from memoria_vault.runtime.policy.audit import sha256_file
+from tests.helpers import init_cli_workspace, write_checked_note
 
 
 @pytest.fixture
 def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
-    workspace = tmp_path / "workspace"
-    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
-    capsys.readouterr()
-    return workspace
+    return init_cli_workspace(tmp_path, capsys)
 
 
 def test_cli_mcp_requires_read_scope(workspace: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -181,8 +178,8 @@ def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
     pytest.importorskip("mcp")
     tool_error = pytest.importorskip("mcp.server.fastmcp.exceptions").ToolError
 
-    _write_note(workspace, "notes/alpha.md", "Alpha")
-    _write_note(workspace, "notes/beta.md", "Beta")
+    write_checked_note(workspace, "notes/alpha.md", "Alpha")
+    write_checked_note(workspace, "notes/beta.md", "Beta")
     app = make_mcp_app(workspace, read_scope=["notes/alpha.md"], actor="agent")
 
     listed = _call(app, "concepts")
@@ -230,16 +227,3 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
 
 def _call(app: Any, name: str, **arguments: Any) -> dict[str, Any]:
     return asyncio.run(app._tool_manager.call_tool(name, arguments, convert_result=False))
-
-
-def _write_note(workspace: Path, rel: str, title: str) -> None:
-    path = workspace / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\nBody.\n")
-    state.record_observed_file_edit(
-        workspace,
-        output_id=rel,
-        concept_type="note",
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(workspace, rel, "checked")

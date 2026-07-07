@@ -14,6 +14,15 @@ from memoria_vault.runtime.policy.audit import sha256_file
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def init_cli_workspace(tmp_path: Path, capsys: Any) -> Path:
+    from memoria_vault.cli import main
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    return workspace
+
+
 def copy_memoria_dirs(vault: Path, *names: str) -> None:
     for name in names:
         shutil.copytree(
@@ -54,6 +63,28 @@ def mark_file_status(
         output_sha256=sha256_file(workspace / rel),
     )
     state.set_concept_verdict(workspace, rel, status)
+
+
+def write_checked_concept(
+    workspace: Path,
+    rel: str,
+    frontmatter: str,
+    concept_type: str = "note",
+    *,
+    body: str = "Body.",
+) -> None:
+    path = workspace / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\n{frontmatter}---\n{body}\n", encoding="utf-8")
+    mark_file_status(workspace, rel, concept_type)
+
+
+def write_checked_note(workspace: Path, rel: str, title: str) -> None:
+    write_checked_concept(
+        workspace,
+        rel,
+        f"type: note\ntitle: {title}\ntags: []\nlinks: {{}}\n",
+    )
 
 
 def patch_pydantic_ai(

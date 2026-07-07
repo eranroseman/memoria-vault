@@ -12,15 +12,12 @@ from memoria_vault.cli import main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.http_transport import _dispatch, is_authorized
 from memoria_vault.runtime.jsonl import iter_jsonl
-from memoria_vault.runtime.policy.audit import sha256_file
+from tests.helpers import init_cli_workspace, write_checked_note
 
 
 @pytest.fixture
 def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
-    workspace = tmp_path / "workspace"
-    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
-    capsys.readouterr()
-    return workspace
+    return init_cli_workspace(tmp_path, capsys)
 
 
 def test_serve_http_once_reports_loopback_token(
@@ -111,8 +108,8 @@ def test_http_transport_reads_attention_view_spec(workspace: Path) -> None:
 
 
 def test_http_transport_passes_read_scope_to_engine_reads(workspace: Path) -> None:
-    _write_note(workspace, "notes/alpha.md", "Alpha")
-    _write_note(workspace, "notes/beta.md", "Beta")
+    write_checked_note(workspace, "notes/alpha.md", "Alpha")
+    write_checked_note(workspace, "notes/beta.md", "Beta")
 
     response, http_status = _dispatch(workspace, "GET", "/concepts?read_scope=notes/alpha.md", dict)
 
@@ -207,16 +204,3 @@ def _write_attention(workspace: Path, name: str) -> None:
         ),
         encoding="utf-8",
     )
-
-
-def _write_note(workspace: Path, rel: str, title: str) -> None:
-    path = workspace / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\nBody.\n")
-    state.record_observed_file_edit(
-        workspace,
-        output_id=rel,
-        concept_type="note",
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(workspace, rel, "checked")

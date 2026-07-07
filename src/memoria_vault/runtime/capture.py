@@ -38,6 +38,12 @@ _ASPECT_HEADING_ALIASES = {
 }
 
 
+def payload_doi(payload: dict[str, Any]) -> str:
+    identifiers = payload.get("identifiers") if isinstance(payload.get("identifiers"), dict) else {}
+    csl_json = payload.get("csl_json") if isinstance(payload.get("csl_json"), dict) else {}
+    return str(identifiers.get("doi") or csl_json.get("DOI") or "").strip()
+
+
 def _normalize_text_status(value: str) -> str:
     status = str(value or "full-text").strip().lower()
     if status not in {"full-text", "abstract-only", "metadata-only"}:

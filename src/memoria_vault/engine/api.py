@@ -1,4 +1,4 @@
-"""Verdict-tagged engine API used by CLI and future transports."""
+"""Verdict-tagged engine API used by CLI and optional transports."""
 
 from __future__ import annotations
 
@@ -83,7 +83,7 @@ def read_requests(
     sql += " ORDER BY created_at, request_id"
     with state.connect(workspace) as conn:
         requests = [
-            _request_summary(row)
+            state.request_summary(row)
             for row in conn.execute(sql, params)
             if _request_in_scope(row, read_scope, require_all=False)
         ]
@@ -93,12 +93,12 @@ def read_requests(
 def read_request(
     workspace: Path, request_id: str, *, read_scope: list[str] | None = None
 ) -> dict[str, Any]:
-    row = _request_row(Path(workspace), request_id)
+    row = state.request_row(Path(workspace), request_id)
     if row is None:
         raise FileNotFoundError(f"request not found: {request_id}")
     if not _request_in_scope(row, read_scope, require_all=True):
         raise FileNotFoundError(f"request not found: {request_id}")
-    return _read_payload(request=_request_detail(row))
+    return _read_payload(request=state.request_detail(row))
 
 
 def read_attention(
@@ -748,29 +748,6 @@ def _workspace_file(workspace: Path, value: str) -> tuple[str, Path]:
     return rel, resolved
 
 
-def _request_row(workspace: Path, request_id: str) -> Any | None:
-    with state.connect(workspace) as conn:
-        return conn.execute(
-            """
-            SELECT *
-            FROM operation_requests
-            WHERE request_id = ?
-            """,
-            (request_id,),
-        ).fetchone()
-
-
-def _request_summary(row: Any) -> dict[str, Any]:
-    return {
-        "request_id": row["request_id"],
-        "operation_id": row["operation_id"],
-        "status": row["status"],
-        "created_at": row["created_at"],
-        "completed_at": row["completed_at"],
-        "error": row["error"],
-    }
-
-
 def _request_in_scope(row: Any, read_scope: list[str] | None, *, require_all: bool) -> bool:
     if read_scope is None:
         return True
@@ -799,24 +776,6 @@ def _request_paths(row: Any) -> list[str]:
             if value:
                 paths.extend([value, f"catalog/sources/{value}"])
     return [path for path in paths if path]
-
-
-def _request_detail(row: Any) -> dict[str, Any]:
-    return {
-        **_request_summary(row),
-        "args": json.loads(row["args_json"]),
-        "idempotency_key": row["idempotency_key"],
-        "input_refs": json.loads(row["input_refs_json"]),
-        "output_intents": json.loads(row["output_intents_json"]),
-        "primary_target": row["primary_target"],
-        "precondition_hashes": json.loads(row["precondition_hashes_json"]),
-        "causal_refs": json.loads(row["causal_refs_json"]),
-        "actor": row["actor"],
-        "provenance": json.loads(row["provenance_json"]),
-        "schedule_id": row["schedule_id"],
-        "kind": row["kind"],
-        "job": json.loads(row["job_json"]),
-    }
 
 
 def _journal_row(row: Any) -> dict[str, Any]:

@@ -18,7 +18,7 @@ from memoria_vault.runtime.capabilities import read_capability_manifest
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
@@ -288,7 +288,7 @@ def run_prompt_operation(
     if input_refs:
         parts = []
         for rel in input_refs:
-            _require_path(policy, rel)
+            require_policy_path(policy, rel)
             text, input_row = _checked_prompt_input(vault, rel)
             parts.append(f"## {rel}\n\n{text}")
             inputs.append(input_row)
@@ -446,11 +446,11 @@ def compile_source_digest(
         raise FileNotFoundError(content_path)
 
     digest_rel = f"works/{source_id}/digest.md"
-    _require_path(policy, source_ref)
-    _require_path(policy, content_rel)
-    _require_path(policy, digest_rel)
+    require_policy_path(policy, source_ref)
+    require_policy_path(policy, content_rel)
+    require_policy_path(policy, digest_rel)
     for topic in topics:
-        _require_path(policy, f"hubs/{_topic_slug(topic)}.md")
+        require_policy_path(policy, f"hubs/{_topic_slug(topic)}.md")
 
     run_id = run_id or f"{operation_id}:{source_id}"
     started = append_journal_event(
@@ -772,15 +772,6 @@ def _prompt_fixture_body(policy: dict[str, Any], input_text: str) -> str:
 def _require_tool(policy: dict[str, Any], tool: str) -> None:
     if tool not in (policy.get("allowed_tools") or []):
         raise PermissionError(f"operation {policy['operation_id']} does not allow {tool}")
-
-
-def _require_path(policy: dict[str, Any], path: str) -> None:
-    rel = normalize_path(path)
-    for raw_prefix in policy.get("allowed_paths") or []:
-        prefix = normalize_path(str(raw_prefix)).rstrip("/")
-        if rel == prefix or rel.startswith(prefix + "/"):
-            return
-    raise PermissionError(f"operation {policy['operation_id']} cannot access {rel}")
 
 
 def _source_id(value: str) -> str:
