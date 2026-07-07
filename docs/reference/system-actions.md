@@ -134,8 +134,8 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Observe PI edits | `memoria workspace scan` / `memoria serve --watch` | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. `serve --watch` is only a stdlib polling trigger; the scan worker remains the correctness boundary. |
 | Resolve attention | `memoria attention resolve (--apply\|--reject\|--defer)` | Runs the attention-disposition request, records routing class plus PI resolution outcome, and closes or defers the attention projection in the committed journal row. |
 | Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
-| Serve local HTTP | `memoria serve --http` | Starts an on-demand loopback HTTP server with bearer-token auth; handlers only marshal to `engine/api` reads and request-envelope writes. Remote/OAuth transport is not implemented. |
-| Serve MCP stdio | `memoria mcp --read-scope <path>` | Starts the optional FastMCP stdio transport. It requires a non-root read scope, exposes only engine read tools plus request-envelope writes, and records MCP provenance. |
+| Serve local HTTP | `memoria serve --http` | Starts an on-demand loopback HTTP server with bearer-token auth; handlers only marshal selected `engine/api` reads and request-envelope writes. Remote/OAuth transport is not implemented. |
+| Serve MCP stdio | `memoria mcp --workspace <path> --read-scope <path>` | Starts the optional FastMCP stdio transport. It requires a non-root read scope, exposes only engine read tools plus request-envelope writes, and records MCP provenance. |
 
 ## Optional external adapters
 

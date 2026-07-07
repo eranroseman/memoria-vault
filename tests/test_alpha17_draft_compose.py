@@ -7,7 +7,7 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.knowledge import compose_project_draft, read_project_draft
-from memoria_vault.runtime.policy.audit import sha256_file
+from tests.helpers import write_checked_concept
 
 
 def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
@@ -22,20 +22,20 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
         content_path=".memoria/blobs/source-content/source-alpha.md",
     )
     _source_span(vault, "source-alpha")
-    _checked(
+    write_checked_concept(
         vault,
         "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\nthesis: notes/thesis.md\n",
         "project",
     )
-    _checked(
+    write_checked_concept(
         vault,
         "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
         "note",
         body="The thesis claim needs human evidence review.",
     )
-    _checked(
+    write_checked_concept(
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
@@ -81,7 +81,7 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
 
 def test_compose_project_draft_requires_outline_members(tmp_path: Path) -> None:
     vault = tmp_path
-    _checked(
+    write_checked_concept(
         vault,
         "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n",
@@ -90,26 +90,6 @@ def test_compose_project_draft_requires_outline_members(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="outline has no checked members"):
         compose_project_draft(vault, "project-alpha")
-
-
-def _checked(
-    vault: Path,
-    rel: str,
-    frontmatter: str,
-    concept_type: str,
-    *,
-    body: str = "Body.",
-) -> None:
-    path = vault / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\n{frontmatter}---\n{body}\n", encoding="utf-8")
-    state.record_observed_file_edit(
-        vault,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(vault, rel, "checked")
 
 
 def _source_span(vault: Path, source_id: str) -> None:

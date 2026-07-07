@@ -11,7 +11,7 @@ from memoria_vault.runtime.knowledge import (
     verify_project_draft,
     write_project_export,
 )
-from memoria_vault.runtime.policy.audit import sha256_file
+from tests.helpers import write_checked_concept
 
 
 def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path: Path) -> None:
@@ -25,7 +25,7 @@ def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path:
     )
     _source_span(vault, "source-alpha")
     _project(vault)
-    _checked(
+    write_checked_concept(
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
@@ -50,7 +50,7 @@ def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path:
 def test_unclean_draft_refuses_export_with_evidence_reason(tmp_path: Path) -> None:
     vault = tmp_path
     _project(vault)
-    _checked(
+    write_checked_concept(
         vault,
         "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
@@ -82,7 +82,7 @@ def test_draft_verification_flags_broken_structural_reference(tmp_path: Path) ->
     )
     _source_span(vault, "source-alpha")
     _project(vault)
-    _checked(
+    write_checked_concept(
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
@@ -126,7 +126,7 @@ def test_draft_verification_flags_deterministic_number_mismatch(tmp_path: Path) 
     )
     _source_span(vault, "source-alpha")
     _project(vault)
-    _checked(
+    write_checked_concept(
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
@@ -172,7 +172,7 @@ def test_draft_verification_routes_analysis_code_numbers_to_incomplete(
     )
     _source_span(vault, "source-alpha")
     _project(vault)
-    _checked(
+    write_checked_concept(
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
@@ -199,7 +199,7 @@ def test_draft_verification_routes_analysis_code_numbers_to_incomplete(
 def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
     vault = tmp_path
     _project(vault)
-    _checked(
+    write_checked_concept(
         vault,
         "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
@@ -218,7 +218,7 @@ def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
 
 
 def _project(vault: Path) -> None:
-    _checked(
+    write_checked_concept(
         vault,
         "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n",
@@ -230,26 +230,6 @@ def _outline(vault: Path, content: str) -> None:
     path = vault / "projects/project-alpha/outline.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
-
-
-def _checked(
-    vault: Path,
-    rel: str,
-    frontmatter: str,
-    concept_type: str,
-    *,
-    body: str = "Body.",
-) -> None:
-    path = vault / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\n{frontmatter}---\n{body}\n", encoding="utf-8")
-    state.record_observed_file_edit(
-        vault,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(vault, rel, "checked")
 
 
 def _source_span(vault: Path, source_id: str) -> None:

@@ -8,10 +8,25 @@ nav_order: 22
 # Engine read API
 
 `memoria_vault.engine.api` is the host-neutral read/write boundary used by the
-CLI and future transports. It returns verdict-tagged payloads with
+CLI and optional HTTP/MCP transports. It returns verdict-tagged payloads with
 `api_version: engine-read-api.v1` and view data in `view-spec.v1`.
 
-Alpha.17 adds project WRITE reads and wrappers:
+## Core reads and writes
+
+| Function | Contract |
+| --- | --- |
+| `read_status(workspace)` | Reads request-status counts and DB location. |
+| `read_operations(workspace)` | Reads packaged operation manifests from the capability index. |
+| `read_requests(workspace, status="", read_scope=None)` | Lists operation requests, optionally filtered by execution status and read scope. |
+| `read_request(workspace, request_id, read_scope=None)` | Reads one request detail payload. |
+| `read_attention(...)` / `read_attention_card(...)` | Reads Inbox attention projections plus table/card view specs. |
+| `read_concepts(...)` / `read_concept(...)` | Reads Concept summaries or one verdict-tagged Concept body. |
+| `read_work(workspace, work_id, read_scope=None)` | Reads one catalog Work record. |
+| `read_journal(...)` / `read_journal_event(...)` | Reads journal rows with operation, request, path, decision, date, and scope filters. |
+| `run_operation(workspace, operation_id, payload, ...)` | Queues and runs one request-envelope operation. |
+| `write_new_concept(...)` | Queues a PI or CLI-agent `note`, `hub`, or `project` Concept creation request. |
+
+## Project WRITE views
 
 | Function | Contract |
 | --- | --- |

@@ -24,7 +24,7 @@ from memoria_vault.runtime.operations import (
 )
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.trusted_writer import (
@@ -189,7 +189,7 @@ def emit_note_candidates(
     promotion_checks = required_promotion_checks(policy)
 
     digest_rel = _digest_rel(digest_path)
-    _require_path(policy, digest_rel)
+    require_policy_path(policy, digest_rel)
     digest_fm = _checked_frontmatter(vault, digest_rel, "digest")
     rows = list(candidates)
     if not rows:
@@ -234,7 +234,7 @@ def emit_note_candidates(
         title = _required_text(row, "title")
         body = _required_text(row, "body")
         note_rel = _unique_note_rel(vault, title)
-        _require_path(policy, note_rel)
+        require_policy_path(policy, note_rel)
         frontmatter = {
             "type": "note",
             "title": title,
@@ -3218,15 +3218,6 @@ def _has_checked_verdict(vault: Path, relpath: str) -> bool:
 def _require_tool(policy: dict[str, Any], tool: str) -> None:
     if tool not in (policy.get("allowed_tools") or []):
         raise PermissionError(f"operation {policy['operation_id']} does not allow {tool}")
-
-
-def _require_path(policy: dict[str, Any], path: str) -> None:
-    rel = normalize_path(path)
-    for raw_prefix in policy.get("allowed_paths") or []:
-        prefix = normalize_path(str(raw_prefix)).rstrip("/")
-        if rel == prefix or rel.startswith(prefix + "/"):
-            return
-    raise PermissionError(f"operation {policy['operation_id']} cannot access {rel}")
 
 
 def _unique_note_rel(vault: Path, title: str) -> str:

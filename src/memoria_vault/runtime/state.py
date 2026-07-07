@@ -157,6 +157,47 @@ def request_job(vault: Path, request_id: str) -> dict[str, Any] | None:
     return json.loads(row["job_json"]) if row is not None else None
 
 
+def request_row(vault: Path, request_id: str) -> Any | None:
+    with connect(vault) as conn:
+        return conn.execute(
+            """
+            SELECT *
+            FROM operation_requests
+            WHERE request_id = ?
+            """,
+            (safe_filename(request_id),),
+        ).fetchone()
+
+
+def request_summary(row: Any) -> dict[str, Any]:
+    return {
+        "request_id": row["request_id"],
+        "operation_id": row["operation_id"],
+        "status": row["status"],
+        "created_at": row["created_at"],
+        "completed_at": row["completed_at"],
+        "error": row["error"],
+    }
+
+
+def request_detail(row: Any) -> dict[str, Any]:
+    return {
+        **request_summary(row),
+        "args": json.loads(row["args_json"]),
+        "idempotency_key": row["idempotency_key"],
+        "input_refs": json.loads(row["input_refs_json"]),
+        "output_intents": json.loads(row["output_intents_json"]),
+        "primary_target": row["primary_target"],
+        "precondition_hashes": json.loads(row["precondition_hashes_json"]),
+        "causal_refs": json.loads(row["causal_refs_json"]),
+        "actor": row["actor"],
+        "provenance": json.loads(row["provenance_json"]),
+        "schedule_id": row["schedule_id"],
+        "kind": row["kind"],
+        "job": json.loads(row["job_json"]),
+    }
+
+
 def next_pending_job(vault: Path) -> dict[str, Any] | None:
     with connect(vault) as conn:
         row = conn.execute(

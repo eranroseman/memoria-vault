@@ -7,23 +7,19 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.cli import main
 from memoria_vault.engine import api
 from memoria_vault.runtime import state
-from memoria_vault.runtime.policy.audit import sha256_file
+from tests.helpers import init_cli_workspace, write_checked_concept, write_checked_note
 
 
 @pytest.fixture
 def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
-    workspace = tmp_path / "workspace"
-    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
-    capsys.readouterr()
-    return workspace
+    return init_cli_workspace(tmp_path, capsys)
 
 
 def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
-    _write_note(workspace, "notes/alpha.md", "Alpha")
-    _write_note(workspace, "notes/beta.md", "Beta")
+    write_checked_note(workspace, "notes/alpha.md", "Alpha")
+    write_checked_note(workspace, "notes/beta.md", "Beta")
 
     listed = api.read_concepts(workspace, read_scope=["notes/alpha.md"])
     visible = api.read_concept(workspace, "notes/alpha.md", read_scope=["notes/"])
@@ -38,7 +34,7 @@ def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
 
 def test_engine_read_concept_refuses_tampered_checked_file(workspace: Path) -> None:
     path = workspace / "notes/alpha.md"
-    _write_note(workspace, path.relative_to(workspace).as_posix(), "Alpha")
+    write_checked_note(workspace, path.relative_to(workspace).as_posix(), "Alpha")
     path.write_text(
         "---\ntype: note\ntitle: Alpha\ntags: []\nlinks: {}\n---\nTampered.\n",
         encoding="utf-8",
@@ -140,18 +136,18 @@ def test_engine_read_scope_filters_and_blocks_requests(workspace: Path) -> None:
 
 
 def test_engine_read_slice_returns_project_slice_view(workspace: Path) -> None:
-    _write_checked_concept(
+    write_checked_concept(
         workspace,
         "projects/project-alpha/project.md",
         "type: project\ntitle: Alpha project\ntags: []\nlinks: {}\nthesis: notes/thesis.md\n",
         concept_type="project",
     )
-    _write_checked_concept(
+    write_checked_concept(
         workspace,
         "notes/thesis.md",
         "type: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB1\ntitle: Thesis\ntags: []\nlinks: {}\n",
     )
-    _write_checked_concept(
+    write_checked_concept(
         workspace,
         "notes/support.md",
         "type: note\n"
@@ -183,13 +179,13 @@ def test_engine_read_slice_returns_project_slice_view(workspace: Path) -> None:
 
 
 def test_engine_compose_and_read_draft_returns_project_draft_view(workspace: Path) -> None:
-    _write_checked_concept(
+    write_checked_concept(
         workspace,
         "projects/project-alpha/project.md",
         "type: project\ntitle: Alpha project\ntags: []\nlinks: {}\nthesis: notes/thesis.md\n",
         concept_type="project",
     )
-    _write_checked_concept(
+    write_checked_concept(
         workspace,
         "notes/thesis.md",
         "type: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB1\ntitle: Thesis\ntags: []\nlinks: {}\n",
@@ -219,38 +215,6 @@ def test_engine_compose_and_read_draft_returns_project_draft_view(workspace: Pat
     assert "%%ev:" in readback["draft"]["content"]
     assert readback["view"]["kind"] == "project-draft"
     assert readback["view"]["blocks"][0]["rows"][0]["cells"]["state"] == "evidence-incomplete"
-
-
-def _write_note(workspace: Path, rel: str, title: str) -> None:
-    path = workspace / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\nBody.\n")
-    state.record_observed_file_edit(
-        workspace,
-        output_id=rel,
-        concept_type="note",
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(workspace, rel, "checked")
-
-
-def _write_checked_concept(
-    workspace: Path,
-    rel: str,
-    frontmatter: str,
-    *,
-    concept_type: str = "note",
-) -> None:
-    path = workspace / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
-    state.record_observed_file_edit(
-        workspace,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(workspace, rel, "checked")
 
 
 def _write_attention(workspace: Path, name: str, *, target: str) -> None:

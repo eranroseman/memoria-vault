@@ -1171,7 +1171,7 @@ def _cmd_request_resume(args: argparse.Namespace) -> int:
 
 def _cmd_request_answer(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    row = _request_row(workspace, args.request_id)
+    row = state.request_row(workspace, args.request_id)
     if row is None:
         return _fail(f"request not found: {args.request_id}", json_output=args.json)
     answers = _key_values(args.answers)
@@ -1189,14 +1189,13 @@ def _cmd_request_answer(args: argparse.Namespace) -> int:
         },
         machine="memoria-cli",
     )
-    return _emit(
-        {"ok": True, "request": _request_detail(_request_row(workspace, args.request_id))}, args
-    )
+    updated = state.request_row(workspace, args.request_id)
+    return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
 def _cmd_request_amend(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    row = _request_row(workspace, args.request_id)
+    row = state.request_row(workspace, args.request_id)
     if row is None:
         return _fail(f"request not found: {args.request_id}", json_output=args.json)
     updates = _key_values(args.updates)
@@ -1216,14 +1215,13 @@ def _cmd_request_amend(args: argparse.Namespace) -> int:
         },
         machine="memoria-cli",
     )
-    return _emit(
-        {"ok": True, "request": _request_detail(_request_row(workspace, args.request_id))}, args
-    )
+    updated = state.request_row(workspace, args.request_id)
+    return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
 def _cmd_request_cancel(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    row = _request_row(workspace, args.request_id)
+    row = state.request_row(workspace, args.request_id)
     if row is None:
         return _fail(f"request not found: {args.request_id}", json_output=args.json)
     job = json.loads(row["job_json"])
@@ -1239,14 +1237,13 @@ def _cmd_request_cancel(args: argparse.Namespace) -> int:
         },
         machine="memoria-cli",
     )
-    return _emit(
-        {"ok": True, "request": _request_detail(_request_row(workspace, args.request_id))}, args
-    )
+    updated = state.request_row(workspace, args.request_id)
+    return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
 def _cmd_request_retry(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    row = _request_row(workspace, args.request_id)
+    row = state.request_row(workspace, args.request_id)
     if row is None:
         return _fail(f"request not found: {args.request_id}", json_output=args.json)
     if row["status"] not in {"failed", "cancelled"}:
@@ -1263,9 +1260,8 @@ def _cmd_request_retry(args: argparse.Namespace) -> int:
         {"event": "request_retried", "request_id": args.request_id},
         machine="memoria-cli",
     )
-    return _emit(
-        {"ok": True, "request": _request_detail(_request_row(workspace, args.request_id))}, args
-    )
+    updated = state.request_row(workspace, args.request_id)
+    return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
 def _cmd_attention_list(args: argparse.Namespace) -> int:
@@ -1643,10 +1639,12 @@ def _enqueue_and_run(
 def _queue_import_enrichment(
     args: argparse.Namespace, payload: dict[str, Any], output: dict[str, Any]
 ) -> dict[str, Any] | None:
+    from memoria_vault.runtime.capture import payload_doi
+
     result = output.get("result")
     if not isinstance(result, dict) or result.get("status") != "done":
         return None
-    if not _payload_doi(payload):
+    if not payload_doi(payload):
         return None
     source_id = str(result.get("source_id") or "").strip()
     if not source_id:
@@ -1663,12 +1661,6 @@ def _queue_import_enrichment(
         provenance={"surface": "memoria-cli", "command": "work-import"},
         schedule_id=args.schedule_id,
     )
-
-
-def _payload_doi(payload: dict[str, Any]) -> str:
-    identifiers = payload.get("identifiers") if isinstance(payload.get("identifiers"), dict) else {}
-    csl_json = payload.get("csl_json") if isinstance(payload.get("csl_json"), dict) else {}
-    return str(identifiers.get("doi") or csl_json.get("DOI") or "").strip()
 
 
 def _workspace(args: argparse.Namespace) -> Path:
@@ -2155,18 +2147,6 @@ def _any_workspace_file(workspace: Path, relpaths: list[str]) -> bool:
     return any((workspace / rel).is_file() for rel in relpaths)
 
 
-def _request_row(workspace: Path, request_id: str) -> Any | None:
-    with state.connect(workspace) as conn:
-        return conn.execute(
-            """
-            SELECT *
-            FROM operation_requests
-            WHERE request_id = ?
-            """,
-            (request_id,),
-        ).fetchone()
-
-
 def _write_request_job(workspace: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
     args = _request_job_args(job)
     with state.connect(workspace) as conn:
@@ -2419,35 +2399,6 @@ def _next_heading(lines: list[str], start: int) -> int:
         if lines[index].startswith("## "):
             return index
     return len(lines)
-
-
-def _request_summary(row: Any) -> dict[str, Any]:
-    return {
-        "request_id": row["request_id"],
-        "operation_id": row["operation_id"],
-        "status": row["status"],
-        "created_at": row["created_at"],
-        "completed_at": row["completed_at"],
-        "error": row["error"],
-    }
-
-
-def _request_detail(row: Any) -> dict[str, Any]:
-    return {
-        **_request_summary(row),
-        "args": json.loads(row["args_json"]),
-        "idempotency_key": row["idempotency_key"],
-        "input_refs": json.loads(row["input_refs_json"]),
-        "output_intents": json.loads(row["output_intents_json"]),
-        "primary_target": row["primary_target"],
-        "precondition_hashes": json.loads(row["precondition_hashes_json"]),
-        "causal_refs": json.loads(row["causal_refs_json"]),
-        "actor": row["actor"],
-        "provenance": json.loads(row["provenance_json"]),
-        "schedule_id": row["schedule_id"],
-        "kind": row["kind"],
-        "job": json.loads(row["job_json"]),
-    }
 
 
 def _read_csl_item(text: str) -> dict[str, Any]:

@@ -98,12 +98,6 @@ def _workspace_lock(vault: Path):
         yield
 
 
-def _payload_doi(payload: dict[str, Any]) -> str:
-    identifiers = payload.get("identifiers") if isinstance(payload.get("identifiers"), dict) else {}
-    csl_json = payload.get("csl_json") if isinstance(payload.get("csl_json"), dict) else {}
-    return str(identifiers.get("doi") or csl_json.get("DOI") or "").strip()
-
-
 def enqueue_trusted_write(
     vault: Path,
     target_path: str,
@@ -1182,7 +1176,11 @@ def _run_enrich_source_operation(
 def _run_capture_bibtex_source_operation(
     vault: Path, payload: dict[str, Any], job: dict[str, Any], machine: str | None
 ) -> dict[str, Any]:
-    from memoria_vault.runtime.capture import bibtex_capture_payload, stage_capture_payload
+    from memoria_vault.runtime.capture import (
+        bibtex_capture_payload,
+        payload_doi,
+        stage_capture_payload,
+    )
 
     bibtex_value = payload.get("bibtex")
     if bibtex_value is not None and not isinstance(bibtex_value, str):
@@ -1218,7 +1216,7 @@ def _run_capture_bibtex_source_operation(
     )
     output = _source_result(result)
     output["enrichment_job"] = None
-    if _payload_doi(capture_payload):
+    if payload_doi(capture_payload):
         output["enrichment_job"] = enqueue_operation(
             vault,
             "enrich-source",
