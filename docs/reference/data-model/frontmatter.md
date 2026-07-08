@@ -130,7 +130,7 @@ checked against the generated `bibliography.bib`.
 | Field | Kind | Notes |
 | --- | --- | --- |
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
-| `id` | `str` | Required ULID for note/hub/project Concepts; digest uses its `work_id`. |
+| `id` | `str` | Required ULID for note/hub/project Concepts; digest/fulltext use their `work_id`. |
 | `title` | `str` | Human-readable Concept title. |
 | `links` | `links` | Required for knowledge Concepts, even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |

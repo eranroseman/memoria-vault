@@ -132,7 +132,7 @@ def check_design_history(root: Path) -> list[str]:
     if not match:
         errors.append(
             "design-history/README.md: missing latest checkpoint marker "
-            "(example line: Latest completed checkpoint: `alpha.16`)"
+            "(example line: Latest completed checkpoint: `alpha.20`)"
         )
         return errors
 

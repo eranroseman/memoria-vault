@@ -556,7 +556,7 @@ def note_curation_status(vault: Path, concept_id: str) -> str:
     status = ""
     with connect(vault) as conn:
         rows = conn.execute("SELECT payload_json FROM event_log ORDER BY event_id").fetchall()
-    # ponytail: journal scan is fine for alpha.16; project if candidate volume matters.
+    # ponytail: journal scan is fine at current volume; project if candidate volume matters.
     for row in rows:
         try:
             payload = json.loads(row["payload_json"])

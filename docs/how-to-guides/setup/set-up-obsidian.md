@@ -42,7 +42,7 @@ Direct edits are observed, checked, and promoted by the engine. Obsidian is not 
 write-policy boundary, scheduler, or model runner.
 
 If you created a workspace directly with `memoria init --no-obsidian`, rerun
-`memoria doctor --repair --workspace .` to restore the default Obsidian profile
+`memoria doctor --repair --workspace .` to restore the default Obsidian settings
 before following this page.
 
 ## Verify

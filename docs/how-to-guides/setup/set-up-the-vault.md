@@ -43,7 +43,7 @@ bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 
 The installer is standalone-only. It does not install external search tooling,
 external agent runtimes, the Obsidian app, or Zotero integration. Direct
-`memoria init` calls can skip the seeded Obsidian profile with `--no-obsidian`;
+`memoria init` calls can skip the seeded Obsidian settings with `--no-obsidian`;
 the bootstrap path keeps the default.
 
 **3. Make your first git checkpoint** (recommended).

@@ -1,4 +1,4 @@
-"""Packaged alpha.16 capability catalog helpers."""
+"""Packaged capability catalog helpers."""
 
 from __future__ import annotations
 

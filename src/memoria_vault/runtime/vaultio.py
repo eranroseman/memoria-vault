@@ -92,7 +92,7 @@ def frontmatter_doc(frontmatter: dict[str, Any], body: str) -> str:
 def apply_universal_concept_frontmatter(
     frontmatter: dict[str, Any], rel_path: str
 ) -> dict[str, Any]:
-    """Add alpha.16 universal meaning fields for knowledge Concepts."""
+    """Add universal meaning fields for knowledge Concepts."""
     normalized = rel_path.replace("\\", "/")
     if not normalized.endswith(".md"):
         return frontmatter
