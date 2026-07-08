@@ -26,7 +26,7 @@ Scan all files in memoria-vault/main and identify duplicate or near-duplicate co
 
 ## Fidelity Scan fix repeat
 
-Scan all files in memoria-vault/main (excluding _* folders), identify duplicate or near-duplicate content, paraphrased restatements, contradictions, inconsistencies, implementation documentaion gaps, design conformance, overloaded terms used in conflicting contexts, idiosyncratic and non-standard terminology — including subtle ones across documents. Treat this as a fresh analysis: do not reference or carry over any prior findings. For each issue found, cite the relevant files and explain your reasoning. Be thorough and systematic; consistency across this vault is a high-priority concern. Resolve all issues. Repeat until no major findings. 
+Scan all files in memoria-vault/main, identify duplicate or near-duplicate content, paraphrased restatements, contradictions, inconsistencies, implementation documentaion gaps, design conformance, overloaded terms used in conflicting contexts, idiosyncratic and non-standard terminology — including subtle ones across documents. Treat this as a fresh analysis: do not reference or carry over any prior findings. For each issue found, cite the relevant files and explain your reasoning. Be thorough and systematic; consistency across this vault is a high-priority concern. Resolve all issues. Repeat until no major findings. 
 
 ## Diátaxis
 
