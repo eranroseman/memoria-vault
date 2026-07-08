@@ -83,6 +83,15 @@ enough for agents without moving state out of the engine.
   dashboard/template and design-system drift detectors were removed; remaining
   checks now either validate the actual seed or assert deleted payload classes
   stay absent.
+- **What:** the package seed is intentionally exact: `.githooks/pre-commit`,
+  `.gitignore`, `.memoria/config/providers.yaml`,
+  `.memoria/eval/alpha15-seeded-errors.json`,
+  `.memoria/patterns/_preamble.md`, `.memoria/schemas/**`, `steering.md`, and
+  `system/vocabulary.md`. Generated files such as `index.md`,
+  `bibliography.bib`, `system/manifest.jsonl`, SQLite state, journals, indexes,
+  blobs, and content directories are created by `memoria init` or runtime code.
+  **Why:** this keeps the shipped seed tied to actual runtime readers instead
+  of carrying empty or historical workspace artifacts.
 
 - **What:** the sandbox remains the inspection environment for a non-Python
   runtime vault, but it is produced by installer/CLI initialization instead of
