@@ -18,6 +18,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
     expected = {
         "status.read",
         "operations.list",
+        "surface.openapi",
         "requests.list",
         "requests.get",
         "attention.list",
@@ -43,6 +44,7 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
     assert http_routes() == {
         ("GET", "/status"),
         ("GET", "/operations"),
+        ("GET", "/openapi.json"),
         ("GET", "/requests"),
         ("GET", "/request"),
         ("GET", "/attention"),
@@ -50,6 +52,11 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
         ("GET", "/concepts"),
         ("GET", "/concept"),
         ("GET", "/work"),
+        ("GET", "/journal"),
+        ("GET", "/journal/event"),
+        ("GET", "/project/slice"),
+        ("GET", "/project/draft"),
+        ("GET", "/exploration"),
         ("POST", "/operation/run"),
     }
     assert mcp_tools() == {
@@ -68,11 +75,11 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
     }
 
 
-def test_surface_contract_keeps_future_reads_unbound_until_transports_land() -> None:
+def test_surface_contract_keeps_future_mcp_reads_unbound_until_mcp_lands() -> None:
     actions = actions_by_id()
 
     for action_id in ("exploration.list", "project.slice.read", "project.draft.read"):
-        assert "http" not in actions[action_id]
+        assert "http" in actions[action_id]
         assert "mcp" not in actions[action_id]
     assert [action["id"] for action in SURFACE_ACTIONS if action["kind"] == "write"] == [
         "operation.run"

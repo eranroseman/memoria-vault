@@ -92,6 +92,7 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--http", action="store_true")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8765)
+    serve.add_argument("--read-scope", action="append", default=[])
     serve.add_argument("--once", action="store_true")
     serve.add_argument("--poll-interval", type=float, default=1.0)
     serve.set_defaults(handler=_cmd_serve)
@@ -658,7 +659,16 @@ def _cmd_serve_http(args: argparse.Namespace) -> int:
         return _fail("serve --http only binds loopback hosts", json_output=args.json)
     env_token = os.environ.get("MEMORIA_HTTP_TOKEN")
     token = env_token or secrets.token_urlsafe(32)
-    server = make_http_server(_workspace(args), host=args.host, port=args.port, token=token)
+    try:
+        server = make_http_server(
+            _workspace(args),
+            host=args.host,
+            port=args.port,
+            token=token,
+            read_scope=args.read_scope,
+        )
+    except ValueError as exc:
+        return _fail(str(exc), json_output=args.json)
     port = int(server.server_address[1])
     payload = {
         "ok": True,

@@ -17,7 +17,8 @@ state owner.
 memoria serve --workspace <path> --http --host 127.0.0.1 --port 8765
 ```
 
-`--host` must be `127.0.0.1`, `localhost`, or `::1`. If
+`--host` must be `127.0.0.1`, `localhost`, or `::1`. `--read-scope <path>` may
+be repeated to set the maximum readable workspace scope for the server. If
 `MEMORIA_HTTP_TOKEN` is set, the server uses it and does not print the token. If
 it is unset, the CLI generates one token for that server run and prints it. Use
 `--json` when an adapter needs to parse the selected URL and token source.
@@ -44,6 +45,7 @@ Only `GET` and `POST` are implemented.
 | --- | --- | --- | --- |
 | `GET` | `/status` | none | `read_status(workspace)` |
 | `GET` | `/operations` | none | `read_operations(workspace)` |
+| `GET` | `/openapi.json` | none | surface contract schema |
 | `GET` | `/requests` | `status`, `read_scope` or `scope` | `read_requests(...)` |
 | `GET` | `/request` | `id`, `read_scope` or `scope` | `read_request(...)` |
 | `GET` | `/attention` | `status`, `kind`, `worklist=true`, `read_scope` or `scope` | `read_attention(...)` |
@@ -51,16 +53,21 @@ Only `GET` and `POST` are implemented.
 | `GET` | `/concepts` | `type`, `read_scope` or `scope` | `read_concepts(...)` |
 | `GET` | `/concept` | `target`, `read_scope` or `scope` | `read_concept(...)` |
 | `GET` | `/work` | `id`, `read_scope` or `scope` | `read_work(...)` |
+| `GET` | `/journal` | `operation`, `request_id`, `path`, `decision`, `date`, `limit`, `read_scope` or `scope` | `read_journal(...)` |
+| `GET` | `/journal/event` | `event_id`, `read_scope` or `scope` | `read_journal_event(...)` |
+| `GET` | `/project/slice` | `project_path`, `read_scope` or `scope` | `read_slice(...)` |
+| `GET` | `/project/draft` | `project_path`, `read_scope` or `scope` | `read_draft(...)` |
+| `GET` | `/exploration` | `limit`, `read_scope` or `scope` | `read_exploration(...)` |
 | `POST` | `/operation/run` | JSON object; see below | `run_operation(...)` |
 
-Journal, project slice/draft, and exploration reads are available in the engine
-API but are not exposed through HTTP yet. Use the CLI or add an explicit HTTP
-route when an adapter needs them.
+`GET /openapi.json` is generated from the surface contract registry; it is the
+machine-readable route and parameter mirror.
 
 ## Read Scope
 
-HTTP reads accept optional `read_scope` query parameters. `scope` is an alias.
-Each value may be repeated or comma-separated:
+HTTP can be started with `--read-scope <path>` to set the maximum readable
+scope. HTTP reads also accept optional `read_scope` query parameters; `scope` is
+an alias. Query values may be repeated or comma-separated:
 
 ```text
 /concepts?read_scope=notes/alpha.md&read_scope=projects/demo
@@ -68,8 +75,11 @@ Each value may be repeated or comma-separated:
 ```
 
 Scopes are normalized as workspace-relative paths. Root scope (`/` or `.`) and
-path traversal are rejected. If no scope is supplied, HTTP reads are unscoped;
-that is appropriate only for a trusted local adapter.
+path traversal are rejected. If startup scope and query scope are both present,
+the effective scope is their intersection: a request may narrow the startup
+scope, never widen it. Disjoint scope intersection returns no scoped rows or a
+not-found response. If no startup or query scope is supplied, HTTP reads are
+unscoped; that is appropriate only for a trusted local adapter.
 
 ## Operation Writes
 
@@ -107,8 +117,10 @@ Current status behavior is intentionally small:
 | Case | HTTP status | Body |
 | --- | --- | --- |
 | Missing or wrong bearer token | `401` | `{"ok": false, "error": "unauthorized"}` |
-| Handler exception, bad JSON, missing required parameter, root scope | `400` | `{"ok": false, "error": "..."}` |
-| Unknown implemented-route path | `200` | `{"ok": false, "error": "not found"}` |
+| Bad JSON, non-object body, missing or invalid parameter, root/traversing scope | `400` | `{"ok": false, "error": "..."}` |
+| Unknown route or engine not-found | `404` | `{"ok": false, "error": "..."}` |
+| Known route with unsupported method | `405` | `{"ok": false, "error": "method not allowed"}` |
+| Body over `MAX_BODY_BYTES` | `413` | `{"ok": false, "error": "request body too large"}` |
 | Operation ran but worker failed it | `200` | `{"ok": false, "job": ..., "result": ...}` |
 
 No CORS, `OPTIONS`, SSE, or WebSocket behavior is implemented.
