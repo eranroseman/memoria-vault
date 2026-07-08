@@ -2,7 +2,7 @@
 title: Discuss a paper
 parent: Library
 grand_parent: How-to guides
-nav_order: 5
+nav_order: 2
 ---
 
 # Discuss a paper
@@ -59,4 +59,4 @@ memoria workspace scan --workspace .
 
 - Capture and ingest a source: [Capture and ingest a source](capture-and-ingest.md)
 - Query the vault: [Query the vault](../knowledge/query-the-vault.md)
-- System actions: [System actions](../../reference/system-actions.md)
+- System actions: [System actions](../../reference/commands-and-transports/system-actions.md)

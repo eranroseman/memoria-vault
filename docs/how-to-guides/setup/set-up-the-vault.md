@@ -38,10 +38,11 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `vault-template/` (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, wires local hooks, and prints the vault-local CLI commands.
+**2. Confirm the installer finished.**
 
-The installer is standalone-only. It does not install external search tooling, Hermes, profiles, lane
-overrides, profile skills, Hermes crons, Obsidian setup, or Zotero integration.
+The installer creates the runtime vault, installs Memoria into
+`.memoria/.venv`, wires local hooks, and prints the vault-local CLI commands.
+It does not install optional adapters such as Obsidian or Zotero.
 
 **3. Make your first git checkpoint** (recommended).
 
@@ -53,12 +54,7 @@ git remote add origin git@github.com:<your-handle>/<your-vault-repo>.git   # opt
 git push -u origin main                                                    # if you added a remote
 ```
 
-The remote (your own, not the starter repo) backs tracked Markdown, projections,
-and history. It is only one part of recoverability: `memoria doctor` also reports
-whether SQLite replication config and blob-sync config are present for
-`.memoria/memoria.sqlite` and `.memoria/blobs/`. A sandbox without a real `git`
-binary is an unsupported degraded runtime, because the commit hooks and
-rollback/history assumptions cannot run.
+The remote is your own vault repository, not the starter repo.
 
 ## Verify
 

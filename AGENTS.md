@@ -389,8 +389,7 @@ install a project-local search index.
 | Tutorial | `docs/tutorials/` | "How do I learn X by doing it?" |
 | How-to | `docs/how-to-guides/` | "How do I accomplish X?" |
 | Reference | `docs/reference/` | "What is the exact value/command?" |
-| Explanation | `docs/explanation/` | "How does this part of the system work?" |
-| Design Book | `docs/design/` | "Why is it designed this way?" |
+| Explanation | `docs/explanation/` | "How does this part of the system work, and why is it designed this way?" |
 
 Mixed-purpose pages are wrong — split them.
 
@@ -400,7 +399,7 @@ Mixed-purpose pages are wrong — split them.
   - **Decision-history references** belong only in **explanation** prose (inline, or an optional per-page footer "Decisions" list), always as title-text links to `design-history/` — never bare `(ADR-NN)` codes, and not in tutorial / how-to / reference body text.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
-- **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth.
+- **Citations:** new works go in `reference/evidence-and-integrations/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth.
 - **Spelling:** American English only — `-ize`/`-or` endings, not `-ise`/`-our` (write "behavior", "normalize"). `cspell` is the gate. Never suppress a flag with an inline `<!-- cspell:words … -->` / `<!-- cspell:ignore … -->` tag — for each unknown word, either **reword the prose** or, if it's a real term (proper noun, tool name, code token, jargon), **add it to `project-words.txt`** (one lowercase word per line, sorted; a lowercase entry matches every casing).
 
 ### Decision records

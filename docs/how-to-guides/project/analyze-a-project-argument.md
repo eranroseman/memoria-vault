@@ -49,10 +49,12 @@ nodes and edges it followed.
 
 **4. Render the Canvas when useful.**
 
-Run export with the same project path when a generated output is useful:
+Run the packaged Canvas operation with the same project path when a generated
+output is useful:
 
 ```bash
-memoria project export --workspace <vault> projects/my-project/project.md
+memoria operation run --workspace <vault> render-project-argument-canvas \
+  --payload-json '{"project_path":"projects/my-project/project.md"}'
 ```
 
 The worker writes generated project output beside the project, including:
@@ -73,5 +75,5 @@ then render it again.
 ## Related
 
 - Link the checked notes first: [Link checked notes](../knowledge/link-checked-notes.md)
-- Operation contract: [System actions](../../reference/system-actions.md)
-- Project type: [Document types](../../reference/document-types.md)
+- Operation contract: [System actions](../../reference/commands-and-transports/system-actions.md)
+- Project type: [Document types](../../reference/data-model/document-types.md)

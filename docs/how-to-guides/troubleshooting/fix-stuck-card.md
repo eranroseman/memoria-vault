@@ -35,8 +35,14 @@ Cancel obsolete work instead of retrying forever:
 memoria request cancel --workspace <workspace> <request-id>
 ```
 
+## Verify
+
+- `memoria request show --workspace <workspace> <request-id>` no longer reports a stale `running` or unresolved `failed` state
+- Any related attention item has been resolved or deliberately deferred
+- `memoria status --workspace <workspace>` reflects the current queue state
+
 ## Related
 
 - Safe mode: [Safe mode](safe-mode.md)
-- Request commands: [CLI](../../reference/cli.md)
-- Failure catalog: [Failure modes](../../reference/failure-modes.md)
+- Request commands: [CLI](../../reference/commands-and-transports/cli.md)
+- Failure catalog: [Failure modes](../../reference/system/failure-modes.md)

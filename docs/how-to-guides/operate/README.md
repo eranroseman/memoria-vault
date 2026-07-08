@@ -1,7 +1,7 @@
 ---
 title: Operate
 parent: How-to guides
-nav_order: 8
+nav_order: 7
 has_children: true
 permalink: /how-to-guides/operate/
 ---

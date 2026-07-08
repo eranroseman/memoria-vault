@@ -9,7 +9,7 @@ updated: 2026-07-01
 
 The one help note kept in-vault for offline recovery. Full recipes live in the
 [troubleshooting how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/);
-the complete failure catalog is [failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
+the complete failure catalog is [failure modes](https://eranroseman.github.io/memoria-vault/reference/system/failure-modes).
 
 ## Verify the Runtime
 

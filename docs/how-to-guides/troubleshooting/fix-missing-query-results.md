@@ -2,7 +2,7 @@
 title: Fix missing query results
 parent: Troubleshooting
 grand_parent: How-to guides
-nav_order: 10
+nav_order: 6
 ---
 
 # Fix missing query results
@@ -58,13 +58,13 @@ For Work `research_area` or `methodology`, inspect the Work through
 `memoria work export --workspace . <work-id>` or the corresponding read API
 payload instead of looking for source frontmatter.
 
-**2. Compare the list against the controlled vocabulary.** Every value in the output should appear verbatim in [Vocabulary](../../reference/vocabulary.md) (the live list is `system/vocabulary.md`). Any value that *doesn't* — a variant spelling, wrong case, a space where there should be a hyphen, a term not in the list at all — is an offender, and the notes grouped under it are your missing notes.
+**2. Compare the list against the controlled vocabulary.** Every value in the output should appear verbatim in [Vocabulary](../../reference/data-model/vocabulary.md) (the live list is `system/vocabulary.md`). Any value that *doesn't* — a variant spelling, wrong case, a space where there should be a hyphen, a term not in the list at all — is an offender, and the notes grouped under it are your missing notes.
 
 ## Fix
 
 **1. Correct the record to the exact term.** Open each offending note and set
 `topics` to the controlled value exactly — kebab-case, exact spelling, scalar vs
-list as the schema requires ([Frontmatter fields](../../reference/frontmatter.md)).
+list as the schema requires ([Frontmatter fields](../../reference/data-model/frontmatter.md)).
 For Work metadata, use `memoria work update`. The record re-appears once the
 query source is refreshed.
 
@@ -87,8 +87,8 @@ query source is refreshed.
 
 ## Related
 
-- The controlled values: [Vocabulary](../../reference/vocabulary.md)
+- The controlled values: [Vocabulary](../../reference/data-model/vocabulary.md)
 - Why the vocabulary is kept tight and how drift fails silently: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)
 - Adding or consolidating a term: [Manage vocabulary](../knowledge/manage-vocabulary.md)
 - The YAML-error look-alike: [Fix broken frontmatter](fix-broken-frontmatter.md)
-- Full failure-modes catalog: [Failure modes](../../reference/failure-modes.md)
+- Full failure-modes catalog: [Failure modes](../../reference/system/failure-modes.md)

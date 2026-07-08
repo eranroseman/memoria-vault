@@ -17,7 +17,7 @@ request envelope, checks, quarantine, and read barrier before they are trusted.
 ---
 
 For the system model, start at [Home](docs/README.md). For the command surface,
-see [CLI](docs/reference/cli.md).
+see [CLI](docs/reference/commands-and-transports/cli.md).
 
 ## How it works
 
@@ -26,7 +26,7 @@ The installer copies `vault-template/` to your chosen runtime folder (default
 installs the `memoria` package, and wires Git hooks. It does not install Hermes,
 profiles, Obsidian setup, Zotero integration, a host scheduler, or external
 search tooling. See
-[Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
+[Installer (bootstrap)](docs/reference/system/installer.md) for exactly what it does.
 
 The CLI and thin transports call one engine API. Product reads return checked
 verdicts; product writes enqueue requests and land unchecked until the required
@@ -59,7 +59,7 @@ cd memoria-vault
 bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 ```
 
-For the full flag list, see [Installer (bootstrap)](docs/reference/installer.md).
+For the full flag list, see [Installer (bootstrap)](docs/reference/system/installer.md).
 
 ### Requirements
 
@@ -87,7 +87,7 @@ for `memoria doctor bundle`, `memoria workspace rebuild --search`, and
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/memoria_vault/` | The installable Python package |
 | `vault-template/` | The workspace source tree — the installer copies it out as a standalone Memoria workspace |
-| `docs/` | Product and system documentation: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`) and maintained design arguments (`design/`) |
+| `docs/` | Product and system documentation: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), with maintained design rationale under `explanation/rationale/` |
 | `design-history/` | Frozen release-history chapters plus the maintained design arcs and decision-record rules |
 
 ## Documentation
@@ -112,7 +112,7 @@ For fast system-file iteration on the disposable sandbox, run
 proof, rebuild the disposable vault from scratch with
 `bash scripts/sandbox/install-test-vault-local-llm.sh`; it installs into
 `~/memoria-vault/sandbox/vault` and runs package, detector, and CLI doctor checks. Full
-flags: [Installer (bootstrap)](docs/reference/installer.md).
+flags: [Installer (bootstrap)](docs/reference/system/installer.md).
 
 ## Citation
 
