@@ -7,8 +7,9 @@ nav_order: 3
 
 # Set up Obsidian
 
-Obsidian is optional. Use this page if you want Obsidian as a
-plain Markdown editor for the workspace keep-set.
+Obsidian is optional. New Memoria workspaces already include Memoria's Obsidian
+plugin files and core Obsidian settings; use this page when you want to open the
+workspace in Obsidian and enable the local adapter.
 
 ## Prerequisites
 
@@ -17,9 +18,12 @@ plain Markdown editor for the workspace keep-set.
 
 ## Steps
 
-1. Open the workspace folder in Obsidian.
-2. Do not install or enable Memoria-specific plugins for the standalone baseline.
-3. Use the terminal for Memoria actions:
+1. Install Obsidian if it is not already installed.
+2. Open the workspace folder in Obsidian.
+3. Enable community plugins for this vault if Obsidian prompts for confirmation.
+4. Open the Memoria plugin settings and enter the local HTTP server URL/token
+   only when you want adapter actions or empirical event recording.
+5. Use the terminal for Memoria actions:
 
 ```bash
 memoria work add --workspace . --doi <doi>
@@ -28,7 +32,7 @@ memoria ask --workspace . --question "<question>"
 memoria workspace check --workspace .
 ```
 
-4. If you edit Markdown directly, run:
+6. If you edit Markdown directly, run:
 
 ```bash
 memoria workspace scan --workspace .
@@ -37,12 +41,17 @@ memoria workspace scan --workspace .
 Direct edits are observed, checked, and promoted by the engine. Obsidian is not a
 write-policy boundary, scheduler, model runner, or operation API.
 
+If you created a workspace directly with `memoria init --no-obsidian`, rerun
+`memoria doctor --repair --workspace .` to restore the default Obsidian profile
+before following this page.
+
 ## Verify
 
 - `memoria doctor --workspace .` passes from the terminal.
 - `memoria workspace check --workspace .` reports the same workspace you opened
   in Obsidian.
-- No Memoria plugin setup is required.
+- `.obsidian/plugins/memoria-obsidian/manifest.json` exists in the workspace.
+- No extra community plugin is required.
 
 ## Related
 

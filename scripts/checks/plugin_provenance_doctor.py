@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate alpha.20 keeps plugin payloads out of the baseline package seed."""
+"""Validate alpha.20 ships only the bundled Memoria Obsidian adapter."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 FORBIDDEN_REL = (
-    Path("src/memoria_vault/product/workspace_seed/.obsidian"),
     Path("src/memoria_vault/product/workspace_seed/.memoria/plugins"),
     Path("src/memoria_vault/product/workspace_seed/system/scripts"),
     Path("src/.obsidian"),
@@ -24,6 +23,15 @@ FORBIDDEN_GLOBS = (
     "tests/**/test_*obsidian_adapter*.py",
     "tests/**/test_*obsidian_plugin*.py",
 )
+SEED_OBSIDIAN = Path("src/memoria_vault/product/workspace_seed/.obsidian")
+ALLOWED_SEED_OBSIDIAN_FILES = {
+    Path("app.json"),
+    Path("community-plugins.json"),
+    Path("core-plugins.json"),
+    Path("plugins/memoria-obsidian/main.js"),
+    Path("plugins/memoria-obsidian/manifest.json"),
+    Path("plugins/memoria-obsidian/styles.css"),
+}
 
 
 def check(root: Path = ROOT) -> list[str]:
@@ -40,6 +48,16 @@ def check(root: Path = ROOT) -> list[str]:
                     f"{path.relative_to(root).as_posix()}: "
                     "Obsidian plugin or adapter implementation is excluded from core runtime"
                 )
+    seed_obsidian = root / SEED_OBSIDIAN
+    if seed_obsidian.exists():
+        for path in sorted(seed_obsidian.rglob("*")):
+            if path.is_file():
+                rel = path.relative_to(seed_obsidian)
+                if rel not in ALLOWED_SEED_OBSIDIAN_FILES:
+                    findings.append(
+                        f"{path.relative_to(root).as_posix()}: "
+                        "only bundled Memoria Obsidian seed files are allowed"
+                    )
     return findings
 
 
@@ -54,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
         for finding in findings:
             print(f"  - {finding}", file=sys.stderr)
         return 1
-    print("plugin-provenance-doctor: clean (no forbidden Obsidian plugin payload)")
+    print("plugin-provenance-doctor: clean (only bundled Memoria Obsidian seed files)")
     return 0
 
 

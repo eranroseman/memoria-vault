@@ -13,7 +13,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria init` | Create/scaffold a workspace. |
+| `memoria init [--no-obsidian]` | Create/scaffold a workspace. By default it seeds Memoria's Obsidian plugin and core settings; `--no-obsidian` skips `.obsidian/`. |
 | `memoria status` | Show workspace state. |
 | `memoria surface schema --json` | Print the shared surface-contract action registry used by CLI/HTTP/MCP drift checks. |
 | `memoria doctor --check search` | Check local search index state. |

@@ -70,9 +70,10 @@ writable runtime directories are created from `folders.yaml`:
 
 Alpha.20 deliberately does **not** ship dashboards, note templates, hidden
 operation-package homes, installed profile packages, lane override packages,
-adapter plugin payloads, cron wrappers, or profile tool registries. Operation
-manifests live under `memoria_vault.product.capabilities.operations`; operation
-code lives in the installed `memoria_vault` package.
+cron wrappers, or profile tool registries. It does ship the Memoria Obsidian
+adapter as the one default editor plugin. Operation manifests live under
+`memoria_vault.product.capabilities.operations`; operation code lives in the
+installed `memoria_vault` package.
 
 ## Packaged Seed Inventory
 
@@ -88,13 +89,16 @@ The package seed contains only files with direct runtime readers:
 | `.memoria/schemas/calibration.yaml` | Runtime thresholds for classification, matching, and drift-sensitive checks. |
 | `.memoria/schemas/folders.yaml` | Type homes, staging roots, quarantine root, and `memoria init` skeleton. |
 | `.memoria/schemas/types/*.yaml` | Per-type frontmatter contracts used by schema validation, linter, and pre-commit. |
+| `.obsidian/app.json` | Obsidian file/link defaults chosen to avoid root clutter and frontmatter UI rewriting. |
+| `.obsidian/core-plugins.json` | Core plugin profile for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
+| `.obsidian/community-plugins.json` | Enables the bundled `memoria-obsidian` plugin. |
+| `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. |
 | `steering.md` | Standing program memory read and edited through the CLI and knowledge runtime. |
 | `system/vocabulary.md` | Controlled vocabulary read by schema/linter and knowledge runtime. |
 
 The policy gate's stable implementation lives in the installed
-`memoria_vault.runtime.policy` package. Optional adapters may ship their own
-thin entrypoints, but the baseline workspace does not contain a hidden adapter
-code home.
+`memoria_vault.runtime.policy` package. The seeded Obsidian plugin is an editor
+entrypoint only; the baseline workspace still has no hidden adapter code home.
 
 ## `.githooks/` - source hooks
 
@@ -114,9 +118,10 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## Editor configuration
 
-The standalone runtime ships no editor app configuration. Optional editors may
-keep local state beside or inside a working copy, but that state is not part of
-the package seed, request lifecycle, or source-of-truth layout.
+`memoria init` seeds a small `.obsidian/` profile for users who open the
+workspace in Obsidian. That profile installs only the Memoria plugin and core
+Obsidian settings. Per-machine Obsidian state, tokens, saved workspaces, and
+non-Memoria plugins remain local user configuration and are not source of truth.
 
 ## Outside the vault
 

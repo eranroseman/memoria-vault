@@ -58,40 +58,53 @@ enough for agents without moving state out of the engine.
 
 ### 5. Obsidian proof adapter
 
-- **What:** `packages/memoria-obsidian/` is a minimal standalone proof adapter.
-  It uses SecretStorage for the bearer token, stores only token presence in
-  settings, connects to loopback HTTP, renders status/attention/Concept reads,
-  queues operations through `/operation/run`, spools offline events, and records
-  empirical events through the same operation path. It writes no Memoria-owned
-  Concepts, projections, journal files, or SQLite state directly. **Why:** this
-  tests the thin-editor-adapter hypothesis without making Obsidian a second
-  source of truth.
-- **What:** the provenance doctor now permits only this standalone package
-  while still banning plugin payloads in the baseline package seed. **Why:**
-  the optional adapter must not re-enter the required source-install baseline.
+- **What:** `packages/memoria-obsidian/` is the source package for a minimal
+  proof adapter, and `memoria init` installs its built release files into new
+  workspaces at `.obsidian/plugins/memoria-obsidian/` with default Obsidian core
+  settings. The plugin uses SecretStorage for the bearer token, stores only
+  token presence in settings, connects to loopback HTTP, renders
+  status/attention/Concept reads, queues operations through `/operation/run`,
+  spools offline events, and records empirical events through the same operation
+  path. It writes no Memoria-owned Concepts, projections, journal files, or
+  SQLite state directly. **Why:** Obsidian is the intended default human editor,
+  so a fresh workspace should open with the safe Memoria adapter already present
+  while still keeping the engine as the source of truth.
+- **What:** `memoria init --no-obsidian` skips the `.obsidian/` seed while
+  leaving the default unchanged. **Why:** Obsidian is the intended default
+  editor, but server-side tests, non-Obsidian users, and minimal workspace
+  fixtures need a first-class opt-out instead of deleting seeded files by hand.
+- **What:** the provenance doctor now allows only the seeded Memoria Obsidian
+  files plus the source package, while still banning extra plugins, hidden
+  `.memoria/plugins`, and legacy adapter code paths. **Why:** the default
+  adapter is useful only if it remains narrow and auditable.
 
 ### 6. Package seed pruning
 
-- **What:** `vault-template/` is retired. The package now ships only the runtime
-  seed files under `memoria_vault.product.workspace_seed`: schemas, provider
+- **What:** `vault-template/` is retired. The package now ships the default
+  workspace seed under `memoria_vault.product.workspace_seed`: schemas, provider
   config, pre-commit hook, seeded-error bundle, prompt preamble, steering,
-  vocabulary, and `.gitignore`. `memoria init` creates writable skeleton
-  directories from `folders.yaml` and regenerates projections. **Why:** the old
-  template preserved empty directories, historical dashboards, markdown eval
-  tasks, note templates, adapter plugin payloads, cron wrappers, and other
-  files mainly so drift checks could keep finding them. The old
+  vocabulary, `.gitignore`, Obsidian core settings, and the built Memoria
+  Obsidian plugin. `memoria init` creates writable skeleton directories from
+  `folders.yaml`, copies the Obsidian defaults, and regenerates projections.
+  **Why:** the old template preserved empty directories, historical dashboards,
+  markdown eval tasks, note templates, broad adapter payloads, cron wrappers,
+  and other files mainly so drift checks could keep finding them. The old
   dashboard/template and design-system drift detectors were removed; remaining
   checks now either validate the actual seed or assert deleted payload classes
   stay absent.
 - **What:** the package seed is intentionally exact: `.githooks/pre-commit`,
   `.gitignore`, `.memoria/config/providers.yaml`,
   `.memoria/eval/alpha15-seeded-errors.json`,
-  `.memoria/patterns/_preamble.md`, `.memoria/schemas/**`, `steering.md`, and
-  `system/vocabulary.md`. Generated files such as `index.md`,
-  `bibliography.bib`, `system/manifest.jsonl`, SQLite state, journals, indexes,
-  blobs, and content directories are created by `memoria init` or runtime code.
-  **Why:** this keeps the shipped seed tied to actual runtime readers instead
-  of carrying empty or historical workspace artifacts.
+  `.memoria/patterns/_preamble.md`, `.memoria/schemas/**`,
+  `.obsidian/app.json`, `.obsidian/core-plugins.json`,
+  `.obsidian/community-plugins.json`,
+  `.obsidian/plugins/memoria-obsidian/{manifest.json,main.js,styles.css}`,
+  `steering.md`, and `system/vocabulary.md`. Generated files such as
+  `index.md`, `bibliography.bib`, `system/manifest.jsonl`, SQLite state,
+  journals, indexes, blobs, and content directories are created by
+  `memoria init` or runtime code. **Why:** this keeps the shipped seed tied to
+  actual runtime/editor readers instead of carrying empty or historical
+  workspace artifacts.
 
 - **What:** the sandbox remains the inspection environment for a non-Python
   runtime vault, but it is produced by installer/CLI initialization instead of

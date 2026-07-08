@@ -65,7 +65,7 @@ alpha.6 is an internal, untagged checkpoint (`status: complete`, `released: fals
 
 - **What:** ADR-38/41/35 trigger text corrected in the cadence review (commit 06de3f66): ADR-38 trigger (a) "live qmd index in retrieval" marked **now met**; ADR-41 noted the review_mode/schema_version attribution stamp already shipped; ADR-35 classify-miss instrumentation now exists; ADR-59 ID-first record-linkage pass already ships in `link.py`; ADR-76 step-1 tooling marked landed in alpha.4. **Why:** same skeptical re-verification — leaving only the genuinely-remaining slice of each deferred ADR as its trigger.
 
-- **What:** Cut-time ADR status maintenance (release plan §7): the audit's accepted-ADR gaps recorded as moving PARTIAL→implemented (ADR-31, -78, -10, -70, -77, -07, -73); ADR-74 stays `deferred` with the static-manifest precursor + remaining updater/CI-doctor work recorded. Retire-sweep expected no-op ("no question is dissolved by alpha.6"). **Why:** keep ADR status honest against built state — the whole raison d'être of the release.
+- **What:** Cut-time ADR status maintenance (release plan §7): the audit's accepted-ADR gaps recorded as moving PARTIAL→implemented (ADR-31, -78, -10, -70, -77, -07, -73); ADR-74 stays `deferred` with the static-manifest precursor + remaining updater/CI-doctor work recorded. Retire-sweep expected no-op ("no question is dissolved by alpha.6"). **Why:** keep ADR status honest against built state — the whole reason for the release.
 
 ### Removed / retired
 

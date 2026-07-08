@@ -389,6 +389,62 @@ def test_memoria_new_defaults_include_description_key(
     assert frontmatter["description"] == ""
 
 
+def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    core_plugins = json.loads((workspace / ".obsidian/core-plugins.json").read_text("utf-8"))
+    app = json.loads((workspace / ".obsidian/app.json").read_text("utf-8"))
+    community_plugins = json.loads(
+        (workspace / ".obsidian/community-plugins.json").read_text("utf-8")
+    )
+    manifest = json.loads(
+        (workspace / ".obsidian/plugins/memoria-obsidian/manifest.json").read_text("utf-8")
+    )
+
+    assert rc == 0
+    assert core_plugins["command-palette"] is True
+    assert core_plugins["global-search"] is True
+    assert core_plugins["backlink"] is True
+    assert core_plugins["canvas"] is True
+    assert core_plugins["bases"] is True
+    assert core_plugins["properties"] is False
+    assert core_plugins["daily-notes"] is False
+    assert core_plugins["templates"] is False
+    assert app["propertiesInDocument"] == "source"
+    assert app["alwaysUpdateLinks"] is True
+    assert community_plugins == ["memoria-obsidian"]
+    assert manifest["id"] == "memoria-obsidian"
+    assert (workspace / ".obsidian/plugins/memoria-obsidian/main.js").is_file()
+    assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()
+
+
+def test_cli_init_no_obsidian_skips_obsidian_seed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    dry_workspace = tmp_path / "dry-workspace"
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--no-obsidian", "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert not (workspace / ".obsidian").exists()
+    assert (workspace / ".memoria/schemas/folders.yaml").is_file()
+    assert (workspace / "steering.md").is_file()
+
+    rc = main(["init", "--workspace", str(dry_workspace), "--dry-run", "--no-obsidian", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert ".obsidian" not in output["package"]["seed_trees"]
+    assert not dry_workspace.exists()
+
+
 def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

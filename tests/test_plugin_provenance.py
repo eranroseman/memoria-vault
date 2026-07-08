@@ -23,7 +23,10 @@ def test_plugin_scope_doctor_allows_memoria_obsidian_package(tmp_path):
 
 def test_plugin_scope_doctor_flags_removed_payloads(tmp_path):
     root = tmp_path / "repo"
-    (root / "src/memoria_vault/product/workspace_seed/.obsidian").mkdir(parents=True)
+    (root / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra").mkdir(parents=True)
+    (
+        root / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra/manifest.json"
+    ).write_text("{}", encoding="utf-8")
     (root / "src/memoria_vault/product/workspace_seed/.memoria/plugins").mkdir(parents=True)
     (root / "src/memoria_vault/product/workspace_seed/system/scripts").mkdir(parents=True)
     (root / "src/.obsidian").mkdir(parents=True)
@@ -41,7 +44,7 @@ def test_plugin_scope_doctor_flags_removed_payloads(tmp_path):
         "packages/obsidian-plugin",
         "src/memoria_vault/obsidian_adapter",
         "src/memoria_vault/product/workspace_seed/.memoria/plugins",
-        "src/memoria_vault/product/workspace_seed/.obsidian",
+        "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra/manifest.json",
         "src/memoria_vault/product/workspace_seed/system/scripts",
         "src/memoria_vault/runtime/agent_client.py",
         "src/.obsidian",

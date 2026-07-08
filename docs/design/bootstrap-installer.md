@@ -6,7 +6,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) install the `memoria` package into the vault-local venv, initialize the workspace from the package seed, and wire local integrity hooks. Alpha.20 does not install external search tooling, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) install the `memoria` package into the vault-local venv, initialize the workspace from the package seed, and wire local integrity hooks. Alpha.20 seeds Memoria's Obsidian adapter files and core Obsidian settings; it does not install the Obsidian app, external search tooling, Hermes profiles, Hermes crons, or live Zotero integration.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -22,16 +22,17 @@ The distribution mechanism is the installed Memoria package, including its minim
 | --- | --- |
 | Prepare target | Create or reuse an empty target folder and refuse an existing Memoria workspace. |
 | Install package | Create the vault-local venv and install the Memoria package. |
-| Initialize workspace | Run `memoria init` so the package seed copies runtime-required files and creates schema-owned folders. |
+| Initialize workspace | Run `memoria init` so the package seed copies runtime-required files, Obsidian defaults, and schema-owned folders. |
 | Wire hooks | Copy `.githooks/pre-commit` into `.git/hooks/pre-commit`. |
 
 Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately
 *left* the installer — it is an optional import/export adapter, not core
-provisioning, so its setup lives in the dedicated Zotero how-to. Hermes likewise left the
-installer baseline: optional adapters may wrap the CLI/engine later, but this
-bootstrap path is standalone.
+provisioning, so its setup lives in the dedicated Zotero how-to. Hermes likewise
+left the installer baseline. The Obsidian exception is intentionally small:
+`memoria init` seeds the Memoria adapter payload and safe core settings, while
+installing Obsidian and entering local tokens remain user-owned steps.
 
 The install contract is narrow: fresh install, detect-then-install, no
 clobbering user content, no writing secrets, and no in-place release migration.

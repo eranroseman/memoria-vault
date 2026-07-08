@@ -24,8 +24,11 @@ see [CLI](docs/reference/cli.md).
 The installer creates your chosen runtime folder (default `~/Memoria`,
 deliberately off OneDrive), creates a workspace-local venv, installs the
 `memoria` package, initializes the workspace from the packaged seed, and wires
-Git hooks. It does not install Hermes, profiles, Obsidian setup, Zotero
-integration, a host scheduler, or external search tooling. See
+Git hooks. The seed includes Memoria's Obsidian adapter files and core Obsidian
+settings for users who open the workspace there. It does not install the
+Obsidian app, Hermes, profiles, Zotero integration, a host scheduler, or
+external search tooling. Direct `memoria init --no-obsidian` is available for
+non-Obsidian workspaces. See
 [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
 
 The CLI and thin transports call one engine API. Product reads return checked

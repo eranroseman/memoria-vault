@@ -17,7 +17,6 @@
   ],
   "ignorePaths": [
     "docs/reference/bibliography.md",
-    "design-history/**",
     "_papers/**",
     "_notes/**",
     "scratch/**",

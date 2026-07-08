@@ -32,6 +32,7 @@ def test_cspell_json_owns_the_scope():
     assert config.get("files") == ["**/*.md"], "cspell.json must select all markdown"
     assert config.get("enableGlobDot") is True, "dot-dirs (.agents/, .codex/) need enableGlobDot"
     assert config.get("ignorePaths"), "exclusions must live in cspell.json ignorePaths"
+    assert "design-history/**" not in config["ignorePaths"]
 
 
 def test_workflow_defers_to_cspell_json():

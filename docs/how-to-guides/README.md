@@ -26,8 +26,9 @@ through the `memoria` CLI. The Markdown workspace is the keep-set and can be
 opened in any editor.
 
 **Optional editor use.**
-Obsidian may be used as a plain Markdown editor, but it is not the product
-surface, scheduler, model runner, operation API, or write-policy boundary.
+New workspaces include Memoria's Obsidian adapter/config, and Obsidian may also
+be used as a plain Markdown editor. It is not the scheduler, model runner,
+operation API, or write-policy boundary.
 
 ---
 
@@ -40,7 +41,7 @@ surface, scheduler, model runner, operation API, or write-policy boundary.
 | [Library]({{ site.baseurl }}/how-to-guides/library/) | Finding, capturing, ingesting, reading, classifying, and archiving sources |
 | [Knowledge]({{ site.baseurl }}/how-to-guides/knowledge/) | Writing, linking, promoting, refactoring, querying, and pattern-running over knowledge notes |
 | [Project]({{ site.baseurl }}/how-to-guides/project/) | Scoping, framing, drafting, verifying, and exporting |
-| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Optional plain-editor guidance and adapter boundary notes |
+| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Obsidian guidance and adapter boundary notes |
 | [Operate]({{ site.baseurl }}/how-to-guides/operate/) | Terminal-side upkeep: linter, sweeps, search, eval, and logs |
 | [Troubleshooting]({{ site.baseurl }}/how-to-guides/troubleshooting/) | Detect-fix-verify recipes for operational failures |
 

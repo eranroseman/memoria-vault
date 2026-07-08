@@ -1,0 +1,10 @@
+{
+  "alwaysUpdateLinks": true,
+  "newFileFolderPath": "notes",
+  "newFileLocation": "folder",
+  "newLinkFormat": "absolute",
+  "propertiesInDocument": "source",
+  "readableLineLength": true,
+  "showInlineTitle": false,
+  "useMarkdownLinks": false
+}

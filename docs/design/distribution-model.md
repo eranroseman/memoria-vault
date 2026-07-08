@@ -14,9 +14,9 @@ bootstrap installer at the repo root deploys the standalone workspace.
 | Path | Contents | Audience |
 | --- | --- | --- |
 | `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both install the standalone CLI/runtime package and call `memoria init`. | End users (run once). |
-| `src/memoria_vault/product/workspace_seed/` | The **minimal runtime seed** packaged with `memoria`: schemas, provider config, pre-commit hook, seeded-error bundle, prompt preamble, steering, vocabulary, and `.gitignore`. | The CLI initializer and tests. |
+| `src/memoria_vault/product/workspace_seed/` | The **runtime seed** packaged with `memoria`: schemas, provider config, pre-commit hook, seeded-error bundle, prompt preamble, steering, vocabulary, `.gitignore`, and Memoria's Obsidian adapter/default settings. | The CLI initializer and tests. |
 | `src/memoria_vault/` | The installable Python package for runtime helpers, operation manifests, policy logic, and the workspace seed. | Memoria operations, optional adapter servers, tests, and contributors. |
-| `packages/memoria-obsidian/` | Optional alpha.20 proof adapter for Obsidian. It consumes the local HTTP surface and is not installed into the baseline vault. | Adapter testers and contributors. |
+| `packages/memoria-obsidian/` | Source package for the alpha.20 Obsidian proof adapter. Its built release files are copied into the package seed so new workspaces have the Memoria plugin installed by default. | Adapter testers and contributors. |
 | `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
 The installer derives the running workspace by installing the package and
@@ -30,9 +30,9 @@ bootstrap is the clone/entry point; installing requires the whole repo. See
 
 The old `vault-template/` tree was removed in alpha.20. A second source tree had
 become a retention mechanism for empty directories, historical files, dashboards,
-templates, and adapter payloads. The package seed keeps only files the runtime
-actually reads; writable and generated paths are created by code from schema or
-projection contracts.
+templates, and broad adapter payloads. The package seed keeps files the runtime
+or default Obsidian workspace reads; writable and generated paths are created by
+code from schema or projection contracts.
 
 ---
 
@@ -63,10 +63,9 @@ checks.
 
 The repo deliberately does not ship `.memoria/profiles/`,
 `.memoria/lane-overrides/`, or a profile-rendering script. The
-standalone `memoria` CLI and engine are the product surface. Optional adapters,
-including the Obsidian proof adapter, may call the same CLI/engine, but they are
-not the source of truth for capabilities and they do not belong in the runtime
-vault bootstrap.
+standalone `memoria` CLI and engine are the product surface. The seeded Obsidian
+adapter may call the same CLI/engine, but it is not the source of truth for
+capabilities and does not write Memoria-owned state outside `/operation/run`.
 
 The absence is test-pinned by Installed profiles and
 `scripts/checks/alpha14_negative_gate.py`.
