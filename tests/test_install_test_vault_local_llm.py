@@ -47,6 +47,8 @@ def test_harness_initializes_git_before_install_and_exercises_commit_gate() -> N
     text = _script()
     assert text.index('git -C "$VAULT" init -q') < text.index('bash "$ROOT/scripts/install.sh"')
     assert 'git -C "$VAULT" add -A' in text
+    assert 'git -C "$VAULT" diff --cached --quiet' in text
+    assert "baseline already committed by installer" in text
     assert 'git -C "$VAULT" commit -qm "Initial Memoria test workspace"' in text
 
 

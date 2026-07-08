@@ -140,7 +140,11 @@ run env MEMORIA_ENV=test bash "$ROOT/scripts/install.sh" --vault "$VAULT" --yes
 
 hdr "Baseline commit"
 run git -C "$VAULT" add -A
-run git -C "$VAULT" commit -qm "Initial Memoria test workspace"
+if git -C "$VAULT" diff --cached --quiet; then
+  say "  baseline already committed by installer"
+else
+  run git -C "$VAULT" commit -qm "Initial Memoria test workspace"
+fi
 
 PY="$VAULT/.memoria/.venv/bin/python"
 [ -x "$PY" ] || die "installed venv python not found: $PY"
