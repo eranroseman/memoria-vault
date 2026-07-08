@@ -59,14 +59,14 @@ queue** (your Inbox queue) and **Drift** (open integrity flags).
 (`digests/`, `fulltexts/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
 Project (`projects/`).
 
-**Queue** — the **Inbox** (`projection: queue`): the daily attention surface
+**Queue** — the **Inbox** (`projection: attention`): the daily attention surface
 reached from **Now -> Action queue**. It shows in-process Activity, then
 open attention projections such as `candidate`, `gap`, and `work-prompt`.
 Clearing it to empty is the goal.
 
-**Maintenance** — the weekly structural-debt surface
-(`projection: maintenance`): Drift watch, loose ends, queue state, and
-"new this week".
+**Maintenance** — the weekly structural-debt surface: Drift watch, loose ends,
+queue state, and "new this week". It is a read-API/CLI/editor view over request,
+attention, linter, and log state, not a persisted projection type.
 
 **Rail health band** — the count the rail's **Now** shows for open `flag` /
 `alert` attention projections; non-zero means structural debt is waiting in

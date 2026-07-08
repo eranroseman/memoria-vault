@@ -46,17 +46,18 @@ attention item or Concept can produce audit and request-state races.
 
 ---
 
-## Why spaces are notes, not workspaces
+## Why places are corpus homes, not saved workspaces
 
 The current design maps work modes to corpus folders, CLI/read-API views, and
-Markdown notes rather than to saved editor pane layouts
-([the alpha.20 control-surface checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/20-alpha.20.md)). A space is content the vault can
-diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
-state made navigation heavier than the job required.
+Markdown entry points rather than to saved editor pane layouts
+([the alpha.20 control-surface checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/20-alpha.20.md)). Corpus homes and entry notes are content the vault can
+diff, lint, link, and restore. A workspace is pane state. Treating every mode as
+pane state made navigation heavier than the job required.
 
 Memoria ships no saved Obsidian workspace. Navigation happens through Markdown
-space notes plus CLI/read-API views. The proof adapter is a control surface over
-local HTTP, not a saved workspace layout. The historical
+entry points plus CLI/read-API views; the retired `spaces/` projection root is
+not part of the current seed. The proof adapter is a control surface over local
+HTTP, not a saved workspace layout. The historical
 workspace-swap model lives in [UI / navigation design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md#i-ui--navigation--the-alpha7-clean-slate);
 the current boundary is the engine/read-API surface.
 

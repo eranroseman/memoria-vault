@@ -42,7 +42,7 @@ connections (cross-check Knowledge's **Open questions** view).
 
 **Step 5 — Clear unchecked note backlog (10–15 min).**
 
-Return to the Knowledge space's unchecked notes. Accept, edit, or archive each
+Return to the Knowledge view's unchecked notes. Accept, edit, or archive each
 one. Target: zero unchecked PI notes older than a week.
 
 **Step 6 — Curate settled clusters (5 min).**
