@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 from http import HTTPStatus
 from pathlib import Path
 
@@ -414,6 +415,65 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
         "command": "http:create-concept",
     }
     assert json.loads(row["args_json"])["target_path"] == "notes/http.md"
+
+
+def test_http_transport_operation_run_records_empirical_event_once(workspace: Path) -> None:
+    event_id = str(uuid.uuid4())
+    event = {
+        "event_id": event_id,
+        "event_type": "disposition.recorded",
+        "timestamp": "2026-07-08T00:00:00Z",
+        "session_id": str(uuid.uuid4()),
+        "surface": "obsidian",
+        "workflow": "gap",
+        "decision": "defer",
+        "reason_code": "other",
+    }
+
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "empirical-event-record",
+            "payload": event,
+            "idempotency_key": f"empirical-event:{event_id}",
+            "actor": "agent",
+        },
+    )
+    replay, replay_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "empirical-event-record",
+            "payload": event,
+            "idempotency_key": f"empirical-event:{event_id}",
+            "actor": "agent",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert replay_status == HTTPStatus.OK
+    assert response["ok"] is True
+    assert replay["job"]["status"] == "done"
+    assert replay["job"]["job_id"] == response["job"]["job_id"]
+    with state.connect(workspace) as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM event_log WHERE event_type = 'empirical-event'"
+        ).fetchone()[0]
+        request = conn.execute(
+            "SELECT operation_id, provenance_json FROM operation_requests WHERE request_id = ?",
+            (response["job"]["job_id"],),
+        ).fetchone()
+    assert count == 1
+    assert request["operation_id"] == "empirical-event-record"
+    assert json.loads(request["provenance_json"]) == {
+        "surface": "memoria-http",
+        "command": "http:empirical-event-record",
+    }
+    assert not list((workspace / "notes").glob("*.md"))
+    assert not list((workspace / "projects").glob("**/*.md"))
 
 
 def test_http_transport_unknown_write_does_not_create_request(workspace: Path) -> None:
