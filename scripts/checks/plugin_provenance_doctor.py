@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that alpha.16 ships no Obsidian plugin implementation payload."""
+"""Validate alpha.20 keeps plugin payloads out of the baseline vault template."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ FORBIDDEN_REL = (
     Path("vault-template/system/scripts"),
     Path("src/.obsidian"),
     Path("packages/obsidian-plugin"),
-    Path("packages/memoria-obsidian"),
     Path("tests/test_memoria_inspector.py"),
 )
 FORBIDDEN_GLOBS = (
@@ -32,13 +31,13 @@ def check(root: Path = ROOT) -> list[str]:
     for rel in FORBIDDEN_REL:
         path = root / rel
         if path.exists():
-            findings.append(f"{rel.as_posix()}: not shipped in alpha.16")
+            findings.append(f"{rel.as_posix()}: forbidden baseline-vault plugin payload")
     for pattern in FORBIDDEN_GLOBS:
         for path in sorted(root.glob(pattern)):
             if path.exists():
                 findings.append(
                     f"{path.relative_to(root).as_posix()}: "
-                    "Obsidian plugin or adapter implementation is excluded from alpha.16"
+                    "Obsidian plugin or adapter implementation is excluded from core runtime"
                 )
     return findings
 
@@ -54,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         for finding in findings:
             print(f"  - {finding}", file=sys.stderr)
         return 1
-    print("plugin-provenance-doctor: clean (no Obsidian plugin implementation payload)")
+    print("plugin-provenance-doctor: clean (no forbidden Obsidian plugin payload)")
     return 0
 
 

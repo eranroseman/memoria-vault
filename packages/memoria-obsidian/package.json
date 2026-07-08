@@ -1,0 +1,14 @@
+{
+  "name": "memoria-obsidian",
+  "version": "0.1.0-alpha.20",
+  "private": true,
+  "description": "Minimal local Memoria control surface and empirical-use recorder for Obsidian.",
+  "type": "commonjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
