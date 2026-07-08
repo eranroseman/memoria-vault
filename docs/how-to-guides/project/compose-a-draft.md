@@ -49,7 +49,7 @@ memoria project resolve-evidence --workspace <vault> projects/<project>/project.
   --reason "Reviewed source span"
 ```
 
-Then edit the draft or source notes and run verification again.
+Then edit the draft or supporting checked notes and run verification again.
 
 ## Promote reusable prose
 

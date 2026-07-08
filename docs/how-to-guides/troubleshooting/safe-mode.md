@@ -61,5 +61,5 @@ git -C <workspace> status --short
 ## Related
 
 - Return-to-work checklist: [Return to work](../inbox/return-to-work.md)
-- Fix stuck request: [Fix a stuck card](fix-stuck-card.md)
+- Fix stuck request: [Fix a stuck request](fix-stuck-card.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)

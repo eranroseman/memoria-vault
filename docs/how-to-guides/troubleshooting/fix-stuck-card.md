@@ -1,11 +1,11 @@
 ---
-title: Fix a stuck card
+title: Fix a stuck request
 parent: Troubleshooting
 grand_parent: How-to guides
 nav_order: 2
 ---
 
-# Fix a stuck card
+# Fix a stuck request
 
 Memoria tracks CLI/engine work as operation requests. If old docs or adapters
 call this a "card", diagnose the corresponding request.
