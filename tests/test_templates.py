@@ -5,12 +5,12 @@ from pathlib import Path
 
 import yaml
 
+from memoria_vault.engine.api import CONCEPT_HOMES
 from memoria_vault.runtime.subsystems.lib import schema
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "vault-template" / ".memoria" / "templates"
 
 _PLACEHOLDER = re.compile(r"\{\{[^}]*\}\}")
-PI_CREATED_TYPES = {"note", "hub", "project"}
 VALID_ULID = "01KBN6V6KX0000000000000001"
 
 
@@ -33,7 +33,7 @@ def _frontmatter_text(path: Path) -> str:
 
 def test_alpha16_templates_are_only_pi_created_types():
     names = {p.stem for p in TEMPLATES.glob("*.md")}
-    assert names == PI_CREATED_TYPES
+    assert names == set(CONCEPT_HOMES)
 
 
 def test_templates_conform_to_schemas():

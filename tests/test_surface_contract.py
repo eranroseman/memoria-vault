@@ -19,6 +19,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "status.read",
         "operations.list",
         "surface.openapi",
+        "surface.schema",
         "requests.list",
         "requests.get",
         "attention.list",
@@ -93,6 +94,7 @@ def test_surface_contract_cli_commands_are_current_parser_commands() -> None:
     commands = cli_commands()
 
     assert commands <= _cli_command_surface()
+    assert "memoria surface schema" in commands
     assert "memoria workspace scan" not in commands
 
 

@@ -43,6 +43,16 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
+        "id": "surface.schema",
+        "summary": "Print the shared surface contract schema.",
+        "engine": "read_surface_schema",
+        "kind": "read",
+        "scope": "workspace",
+        "params": {},
+        "cli": {"commands": ["memoria surface schema"]},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
         "id": "requests.list",
         "summary": "List operation requests.",
         "engine": "read_requests",
