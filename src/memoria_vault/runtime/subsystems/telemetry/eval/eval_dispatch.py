@@ -14,7 +14,7 @@ reported back as JSON, never written directly to the vault). A dispatch record
 is written to ``.memoria/eval/last-run.md``.
 
     python eval_dispatch.py --vault <path>             # dispatch (cron + on-demand)
-    python eval_dispatch.py --vault <path> --dry-run   # print the card set, create nothing
+    python eval_dispatch.py --vault <path> --dry-run   # print payloads, create nothing
 """
 
 from __future__ import annotations
@@ -44,12 +44,12 @@ CREATED_BY = "memoria-eval"
 EVAL_PREAMBLE = (
     "**Eval context (vault-eval — diagnostic, never gating).** This is a "
     "gold-set capability check, not real work. Do NOT write to the vault: keep "
-    "any working notes in scratch and report your answer and reasoning on this "
-    "card. Score yourself against the rubric below honestly — a wrong answer "
+    "any working notes in scratch and report your answer and reasoning in this "
+    "payload. Score yourself against the rubric below honestly — a wrong answer "
     "reported plainly is a useful data point; a polished non-answer is not."
 )
 
-# the machine-readable result drop the scorer (eval_score.py) reads off the card
+# the machine-readable result drop the scorer (eval_score.py) reads from the payload
 RESULT_BLOCK_TEMPLATE = """\
 **Machine-readable result (required).** End your report with exactly one fenced
 `json` block in this shape so the deterministic scorer can score this run —
@@ -115,8 +115,8 @@ def load_gold_tasks(vault: Path) -> list[dict]:
     return out
 
 
-def card_for(task: dict, quarter: str) -> dict:
-    """The card payload for one gold task in one quarter (pure; easy to test)."""
+def payload_for(task: dict, quarter: str) -> dict:
+    """The eval payload for one gold task in one quarter (pure; easy to test)."""
     goal = f"vault-eval {quarter}: {task['title']} [{task['workflow']}]"
     result_block = RESULT_BLOCK_TEMPLATE.format(task=task["id"], quarter=quarter)
     body = f"{EVAL_PREAMBLE}\n\n{result_block}\n\n---\n\n{task['body']}"
@@ -129,9 +129,9 @@ def card_for(task: dict, quarter: str) -> dict:
     }
 
 
-def create_card(card: dict) -> str:
-    """Return the local planned-card id for one eval task."""
-    return f"planned:{card['idempotency_key']}"
+def create_task_intent(payload: dict) -> str:
+    """Return the local planned-intent id for one eval task."""
+    return f"planned:{payload['idempotency_key']}"
 
 
 def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
@@ -146,13 +146,13 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
         "",
         f"- **When:** {now}",
         f"- **Quarter (idempotency window):** {quarter}",
-        f"- **Cards:** {len(rows)}",
+        f"- **Payloads:** {len(rows)}",
         "",
-        "| Gold task | Workflow | Eval role | Assignee | Card |",
+        "| Gold task | Workflow | Eval role | Assignee | Intent |",
         "| --- | --- | --- | --- | --- |",
     ]
     lines += [
-        f"| {r['task']} | {r['workflow']} | {r['eval_role']} | {r['assignee']} | {r['card_id']} |"
+        f"| {r['task']} | {r['workflow']} | {r['eval_role']} | {r['assignee']} | {r['intent_id']} |"
         for r in rows
     ]
     out = vault / EVAL_DIR / LAST_RUN
@@ -161,25 +161,28 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
 
 
 def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = None) -> dict:
-    """Fan the gold set out: one idempotent card per (current task, quarter)."""
+    """Fan the gold set out: one idempotent intent per (current task, quarter)."""
     quarter = quarter_of(today)
     tasks = load_gold_tasks(vault)
     rows: list[dict] = []
     for t in tasks:
-        card = card_for(t, quarter)
+        payload = payload_for(t, quarter)
         if dry_run:
-            print(f"[dry-run] {card['idempotency_key']} -> {card['assignee']}: {card['goal']}")
-            card_id = "DRY"
+            print(
+                f"[dry-run] {payload['idempotency_key']} -> "
+                f"{payload['assignee']}: {payload['goal']}"
+            )
+            intent_id = "DRY"
         else:
-            card_id = create_card(card)
+            intent_id = create_task_intent(payload)
         rows.append(
             {
                 "task": t["id"],
                 "workflow": t["workflow"],
                 "eval_role": t["eval_role"],
-                "assignee": card["assignee"],
-                "card_id": card_id,
-                "idempotency_key": card["idempotency_key"],
+                "assignee": payload["assignee"],
+                "intent_id": intent_id,
+                "idempotency_key": payload["idempotency_key"],
             }
         )
     if not dry_run:
@@ -195,7 +198,7 @@ def main() -> None:
     ap.add_argument(
         "--dry-run",
         action="store_true",
-        help="print the card set without creating cards or writing last-run.md",
+        help="print payloads without creating intents or writing last-run.md",
     )
     args = ap.parse_args()
     vault = Path(args.vault).expanduser()

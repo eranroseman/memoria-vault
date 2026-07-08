@@ -62,7 +62,7 @@ def test_exploration_channel_surfaces_uncaptured_citation_candidate(tmp_path: Pa
             "title": "Contrary",
             "target": "notes/thesis.md",
             "why": (
-                "Contrary lane: checked concept `notes/contrary.md` declares "
+                "Contrary channel: checked concept `notes/contrary.md` declares "
                 "contradiction `notes/thesis.md`."
             ),
         }
@@ -113,7 +113,7 @@ def test_exploration_channel_surfaces_nli_refuted_contrary_candidate(
             "title": "Left",
             "target": "notes/right.md",
             "why": (
-                "Contrary lane: NLI REFUTED candidate between `notes/left.md` "
+                "Contrary channel: NLI REFUTED candidate between `notes/left.md` "
                 "and `notes/right.md` (high lexical overlap with opposite negation)."
             ),
         }

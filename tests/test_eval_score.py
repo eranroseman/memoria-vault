@@ -1,5 +1,5 @@
 """Vault-eval scoring turns the results
-reported on eval cards into machine metrics — recall@k, support-rate, FAMA —
+reported in eval payloads into machine metrics — recall@k, support-rate, FAMA —
 appends them to system/metrics/eval/runs.jsonl, and never fakes a score: a
 task with no result block stays `unscored`."""
 
@@ -67,10 +67,10 @@ def _vault(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _result_card(task: str, quarter: str, **fields) -> dict:
+def _result_payload(task: str, quarter: str, **fields) -> dict:
     block = json.dumps({"vault_eval": "result", "task": task, "quarter": quarter, **fields})
     return {
-        "request_id": f"card-{task}",
+        "request_id": f"eval-{task}",
         "status": "done",
         "runs": [{"summary": f"Report.\n\n```json\n{block}\n```\n"}],
     }
@@ -166,18 +166,18 @@ def test_no_inputs_means_no_metrics_not_fake_ones(tmp_path):
 
 
 def test_extract_results_filters_by_quarter_and_marker():
-    cards = [
-        _result_card("find-x", "2026-Q2", retrieved=["a"]),
-        _result_card("find-x", "2026-Q1", retrieved=["stale"]),  # other quarter
+    payloads = [
+        _result_payload("find-x", "2026-Q2", retrieved=["a"]),
+        _result_payload("find-x", "2026-Q1", retrieved=["stale"]),  # other quarter
         {"request_id": "noise", "runs": [{"summary": '```json\n{"foo": 1}\n```'}]},
         {"request_id": "broken", "runs": [{"summary": "```json\n{not json\n```"}]},
     ]
-    out = eval_score.extract_results(cards, "2026-Q2")
+    out = eval_score.extract_results(payloads, "2026-Q2")
     assert set(out) == {"find-x"} and out["find-x"]["retrieved"] == ["a"]
 
 
 def test_extract_results_newest_block_wins_and_reads_all_summary_fields():
-    card = {
+    payload = {
         "request_id": "c1",
         "runs": [
             {
@@ -218,15 +218,15 @@ def test_extract_results_newest_block_wins_and_reads_all_summary_fields():
         )
         + "\n```",
     }
-    out = eval_score.extract_results([card], "2026-Q2")
+    out = eval_score.extract_results([payload], "2026-Q2")
     assert out["find-x"]["retrieved"] == ["second"]  # later field supersedes
     assert out["verify-y"]["cited"] == ["devlin2019bert"]
 
 
 def test_score_run_per_task_statuses_and_aggregate(tmp_path):
     v = _vault(tmp_path)
-    cards = [
-        _result_card(
+    payloads = [
+        _result_payload(
             "find-x",
             "2026-Q2",
             retrieved=["vaswani2017attention"],
@@ -235,9 +235,9 @@ def test_score_run_per_task_statuses_and_aggregate(tmp_path):
             self_score=1.0,
         ),
         # verify-y reports nothing computable -> "reported", never faked
-        _result_card("verify-y", "2026-Q2", self_score=0.5),
+        _result_payload("verify-y", "2026-Q2", self_score=0.5),
     ]
-    run = eval_score.score_run(v, cards, "2026-Q2")
+    run = eval_score.score_run(v, payloads, "2026-Q2")
     rows = {t["task"]: t for t in run["tasks"]}
     assert rows["find-x"]["status"] == "scored"
     assert rows["find-x"]["metrics"] == {"recall_at_k": 1.0, "support_rate": 1.0, "fama_clean": 1.0}
@@ -266,7 +266,7 @@ def test_missing_results_stay_unscored(tmp_path):
 def test_append_run_is_one_jsonl_line_per_run(tmp_path):
     v = _vault(tmp_path)
     run = eval_score.score_run(
-        v, [_result_card("find-x", "2026-Q2", retrieved=["vaswani2017attention"])], "2026-Q2"
+        v, [_result_payload("find-x", "2026-Q2", retrieved=["vaswani2017attention"])], "2026-Q2"
     )
     out = eval_score.append_run(v, run)
     eval_score.append_run(v, run)
@@ -277,8 +277,8 @@ def test_append_run_is_one_jsonl_line_per_run(tmp_path):
 
 def test_cli_skips_the_log_when_no_results_exist(tmp_path, monkeypatch, capsys):
     v = _vault(tmp_path)
-    cards_file = tmp_path / "cards.json"
-    cards_file.write_text("[]", encoding="utf-8")
+    results_file = tmp_path / "results.json"
+    results_file.write_text("[]", encoding="utf-8")
     monkeypatch.setattr(
         sys,
         "argv",
@@ -289,7 +289,7 @@ def test_cli_skips_the_log_when_no_results_exist(tmp_path, monkeypatch, capsys):
             "--quarter",
             "2026-Q2",
             "--from-json",
-            str(cards_file),
+            str(results_file),
         ],
     )
     eval_score.main()
@@ -299,9 +299,9 @@ def test_cli_skips_the_log_when_no_results_exist(tmp_path, monkeypatch, capsys):
 
 def test_cli_scores_and_appends_from_json(tmp_path, monkeypatch, capsys):
     v = _vault(tmp_path)
-    cards_file = tmp_path / "cards.json"
-    cards_file.write_text(
-        json.dumps([_result_card("find-x", "2026-Q2", retrieved=["vaswani2017attention"])]),
+    results_file = tmp_path / "results.json"
+    results_file.write_text(
+        json.dumps([_result_payload("find-x", "2026-Q2", retrieved=["vaswani2017attention"])]),
         encoding="utf-8",
     )
     monkeypatch.setattr(
@@ -314,7 +314,7 @@ def test_cli_scores_and_appends_from_json(tmp_path, monkeypatch, capsys):
             "--quarter",
             "2026-Q2",
             "--from-json",
-            str(cards_file),
+            str(results_file),
         ],
     )
     eval_score.main()
@@ -333,16 +333,16 @@ def test_resolve_quarter():
         eval_score.resolve_quarter("Q3", today)
 
 
-def test_card_body_instructs_the_result_block(tmp_path):
+def test_payload_body_instructs_the_result_block(tmp_path):
     """The dispatcher tells the eval role exactly what the scorer will read."""
     v = _vault(tmp_path)
     task = eval_dispatch.load_gold_tasks(v)[0]
-    card = eval_dispatch.card_for(task, "2026-Q2")
-    assert '"vault_eval": "result"' in card["body"]
-    assert f'"task": "{task["id"]}"' in card["body"]
-    assert '"quarter": "2026-Q2"' in card["body"]
-    # the non-committing contract still leads the card
-    assert "Do NOT write to the vault" in card["body"]
+    payload = eval_dispatch.payload_for(task, "2026-Q2")
+    assert '"vault_eval": "result"' in payload["body"]
+    assert f'"task": "{task["id"]}"' in payload["body"]
+    assert '"quarter": "2026-Q2"' in payload["body"]
+    # the non-committing contract still leads the payload
+    assert "Do NOT write to the vault" in payload["body"]
 
 
 def test_load_gold_tasks_carries_references(tmp_path):
