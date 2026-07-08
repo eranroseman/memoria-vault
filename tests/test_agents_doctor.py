@@ -13,6 +13,31 @@ def test_change_impact_registry_has_paths_and_checks():
     assert all(row["paths"] and row["checks"] for row in data["areas"])
 
 
+def test_change_impact_registry_rejects_duplicate_items():
+    data = {
+        "version": 1,
+        "areas": [
+            {
+                "area": "Testing",
+                "paths": ["scripts/verify", "scripts/verify"],
+                "inspect": ["Checks"],
+                "checks": ["python3 scripts/verify"],
+            }
+        ],
+    }
+
+    assert (
+        "change-impact.yaml: Testing paths contains duplicate scripts/verify"
+        in agents_doctor._impact_errors(data)
+    )
+
+
+def test_change_impact_registry_rejects_malformed_shape():
+    errors = agents_doctor._impact_errors({"version": 1, "areas": []})
+
+    assert "change-impact.yaml: must contain a non-empty areas list" in errors
+
+
 def test_required_ci_checks_are_parsed_from_agents_table():
     text = """## Required CI checks
 

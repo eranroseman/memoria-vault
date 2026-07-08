@@ -29,6 +29,22 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 
 ---
 
+## Authority stack
+
+1. Global tool files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`) carry
+   cross-project tool routing only.
+2. This file owns repository policy: worktrees, PRs, verification, source of
+   truth, security boundaries, and documentation routing.
+3. [`.agents/playbooks/`](.agents/playbooks/) owns repeatable procedures.
+4. [`.agents/skills/`](.agents/skills/) owns narrow reusable methods.
+5. Generated maps under [`.agents/system/`](.agents/system/) are owned by their
+   source files and guarded by repo doctors.
+
+Plugins, connectors, and skills provide capability. They do not override this
+policy or bypass scripts, hooks, CI, or GitHub rulesets.
+
+---
+
 ## ExecPlans — for complex, multi-hour work
 
 For a complex feature, significant refactor, or multi-step migration, work from
@@ -78,9 +94,10 @@ without explicit permission.
   disposable caches may live in normal OS cache locations such as
   `~/.cache/pre-commit`; keep them untracked, and only place them under
   `~/memoria-vault/.cache` when a sandbox or local permission rule requires it.
-- Alpha.16's required surface is the `memoria` CLI plus the local workspace
-  engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
-  concerns only.
+- The required baseline is the local `memoria` CLI/runtime workspace. The
+  `memoria init` command seeds Obsidian defaults and the bundled Memoria
+  Obsidian plugin unless `--no-obsidian` is used; external editors, MCP hosts,
+  and installed profiles remain optional adapter concerns.
 - Test only against disposable workspaces under `~/memoria-vault/sandbox`; never use a
   personal workspace as a test target.
 - Provider keys and optional adapter secrets live in local, gitignored config or
@@ -357,9 +374,10 @@ against the "never commit `OBSIDIAN_API_KEY`/`.env`" rule.
 
 ## Platform & runtime facts
 
-- **Standalone baseline:** alpha.16 is a local `memoria` CLI/runtime workspace.
-  Hermes, Obsidian, Zotero live APIs, installed profiles, and external adapter
-  APIs are optional edges, not required product dependencies.
+- **Standalone baseline:** Memoria is a local `memoria` CLI/runtime workspace.
+  `memoria init` seeds Obsidian defaults and the bundled Memoria Obsidian plugin
+  by default; Hermes, Zotero live APIs, installed profiles, external editor
+  APIs, and MCP hosts are optional edges, not required product dependencies.
 - **Hermes adapter decisions:** if a future optional Hermes adapter is discussed,
   consult the local docs at `~/.hermes/hermes-agent/website/docs/`,
   `cli-config.yaml.example`, and the skills catalogs before making claims. Do

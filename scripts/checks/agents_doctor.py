@@ -135,14 +135,54 @@ def _required_ci_errors() -> list[str]:
 
 def _impact_errors(data: dict) -> list[str]:
     errors = []
+    if data.get("version") != 1:
+        errors.append("change-impact.yaml: must contain version: 1")
+    areas = data.get("areas")
+    if not isinstance(areas, list) or not areas:
+        errors.append("change-impact.yaml: must contain a non-empty areas list")
+        return errors
+
     reference_re = re.compile(r"(?:tests|scripts|src)/[A-Za-z0-9_./*-]+")
-    for row in data["areas"]:
-        for pattern in row["paths"]:
+    seen_areas: set[str] = set()
+    for index, row in enumerate(areas, start=1):
+        if not isinstance(row, dict):
+            errors.append(f"change-impact.yaml: area #{index} must be a mapping")
+            continue
+        area = row.get("area")
+        if not isinstance(area, str) or not area.strip():
+            errors.append(f"change-impact.yaml: area #{index} missing area")
+            area = f"area #{index}"
+        elif area in seen_areas:
+            errors.append(f"change-impact.yaml: duplicate area {area}")
+        else:
+            seen_areas.add(area)
+
+        for key in ("paths", "inspect", "checks"):
+            values = row.get(key)
+            if not isinstance(values, list) or not values:
+                errors.append(f"change-impact.yaml: {area} {key} must be a non-empty list")
+                continue
+            seen_values: set[str] = set()
+            for value in values:
+                if not isinstance(value, str) or not value.strip():
+                    errors.append(f"change-impact.yaml: {area} {key} contains a blank item")
+                    continue
+                if value in seen_values:
+                    errors.append(f"change-impact.yaml: {area} {key} contains duplicate {value}")
+                seen_values.add(value)
+
+        paths = row.get("paths") if isinstance(row.get("paths"), list) else []
+        checks = row.get("checks") if isinstance(row.get("checks"), list) else []
+        for pattern in paths:
+            if not isinstance(pattern, str):
+                continue
             prefix = re.split(r"[*?[]", pattern, maxsplit=1)[0].rstrip("/")
             candidate = ROOT / prefix
             if prefix and not candidate.exists():
                 errors.append(f"change-impact.yaml: missing path prefix {prefix}")
-        for command in row["checks"]:
+        for command in checks:
+            if not isinstance(command, str):
+                continue
             for reference in reference_re.findall(command):
                 if "*" not in reference and not (ROOT / reference).exists():
                     errors.append(f"change-impact.yaml: command references missing {reference}")
@@ -157,10 +197,9 @@ def check(write: bool = False) -> list[str]:
     try:
         errors.extend(_required_ci_errors())
         data = yaml.safe_load(IMPACT_SOURCE.read_text(encoding="utf-8")) or {}
-        errors.extend(_impact_errors(data))
-        if data.get("version") != 1 or not data.get("areas"):
-            raise ValueError("change-impact.yaml must contain version: 1 and non-empty areas")
-        rendered = {IMPACT_DOC: _render_impact(data)}
+        impact_errors = _impact_errors(data)
+        errors.extend(impact_errors)
+        rendered = {} if impact_errors else {IMPACT_DOC: _render_impact(data)}
     except (OSError, ValueError, yaml.YAMLError) as exc:
         return [*errors, str(exc)]
     for path, expected in rendered.items():

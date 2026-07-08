@@ -64,11 +64,13 @@ contracts unless the repo needs a local precedence rule.
 
 ## Layer 3 — discovery
 
-`CLAUDE.md` at the repo root contains only `@AGENTS.md`, so Claude Code loads
-the same repo policy Codex already reads. Global `~/.claude/CLAUDE.md` and
-`~/.codex/AGENTS.md` carry cross-skill precedence, vocabulary, and Codex-only
-security routing. The repo loader is allowed only because it has no instructions
-of its own.
+`main/CLAUDE.md` contains only `@AGENTS.md`, so Claude Code loads the same repo
+policy Codex already reads. The project-container root files
+`~/memoria-vault/AGENTS.md` and `~/memoria-vault/CLAUDE.md` may be symlinks to
+`main/AGENTS.md` for tools launched from the container root. Global
+`~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` carry cross-skill precedence,
+vocabulary, and Codex-only security routing. Loader files are allowed only when
+they add no independent repo policy.
 
 ## Parity ledger
 
