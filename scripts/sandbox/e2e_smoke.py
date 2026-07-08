@@ -8,7 +8,6 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -220,6 +219,23 @@ def _python() -> str:
     return os.environ.get("PYTHON", sys.executable)
 
 
+def _sandbox_root() -> Path:
+    return Path(os.environ.get("MEMORIA_TEST_ROOT", "~/memoria-vault/sandbox")).expanduser()
+
+
+def _reset_sandbox_vault(vault: Path) -> Path:
+    vault = vault.resolve()
+    if vault in {Path.home().resolve(), Path("/")}:
+        _fail(f"refusing to wipe unsafe sandbox path: {vault}")
+    vault.mkdir(parents=True, exist_ok=True)
+    for child in vault.iterdir():
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
+    return vault
+
+
 def _detector_verdict(vault: Path, env: dict[str, str]) -> str:
     result = _run(
         [
@@ -281,18 +297,21 @@ def _commit_gate(vault: Path, env: dict[str, str]) -> None:
     )
     assert_executable(vault / ".git/hooks/pre-commit", "pre-commit hook")
     _git_or_fail(vault, "add", "-A", message="baseline add failed", env=env)
-    _git_or_fail(
-        vault,
-        "-c",
-        "user.email=e2e@ci",
-        "-c",
-        "user.name=e2e",
-        "commit",
-        "-qm",
-        "init",
-        message="baseline commit blocked",
-        env=env,
-    )
+    if _git(vault, "diff", "--cached", "--quiet", env=env).returncode == 0:
+        print("   baseline already committed")
+    else:
+        _git_or_fail(
+            vault,
+            "-c",
+            "user.email=e2e@ci",
+            "-c",
+            "user.name=e2e",
+            "commit",
+            "-qm",
+            "init",
+            message="baseline commit blocked",
+            env=env,
+        )
     bad = vault / "notes/bad.md"
     bad.write_text('---\ntype: note\ntitle: "Bad"\n---\nx\n', encoding="utf-8")
     _git_or_fail(vault, "add", "notes/bad.md", message="bad note add failed", env=env)
@@ -370,17 +389,12 @@ def _final_integrity(vault: Path, env: dict[str, str]) -> None:
 def run_smoke(root: Path = ROOT) -> None:
     root = root.resolve()
     env = _env(root)
-    vault = Path(
-        tempfile.mkdtemp(prefix="memoria-e2e-", dir=os.environ.get("TMPDIR", tempfile.gettempdir()))
-    )
-    try:
-        _vault_assembly(root, vault, env)
-        _commit_gate(vault, env)
-        _offline_ingest(root, vault)
-        _workflow_replay(root, vault, env)
-        _final_integrity(vault, env)
-    finally:
-        shutil.rmtree(vault, ignore_errors=True)
+    vault = _reset_sandbox_vault(_sandbox_root())
+    _vault_assembly(root, vault, env)
+    _commit_gate(vault, env)
+    _offline_ingest(root, vault)
+    _workflow_replay(root, vault, env)
+    _final_integrity(vault, env)
     print("e2e-smoke: all gates green")
 
 

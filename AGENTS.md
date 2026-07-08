@@ -68,8 +68,8 @@ without explicit permission.
 - Permanent files go in `~/memoria-vault/main`; temporary tracked files go in
   `~/memoria-vault/scratch`; task checkouts go in `~/memoria-vault/worktrees/`;
   disposable test workspaces go in `~/memoria-vault/sandbox`.
-- The only nested standalone `.git` expected under this tree is a disposable
-  installed vault such as `~/memoria-vault/sandbox/vault`; it is runtime state,
+- The only nested standalone `.git` expected under this tree is the disposable
+  installed vault at `~/memoria-vault/sandbox`; it is runtime state,
   not repository source.
 - Tool caches are not source-of-truth content. Pre-commit, pip, npm, and similar
   disposable caches may live in normal OS cache locations such as

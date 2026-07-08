@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # Disposable standalone-install smoke for the local Memoria test workspace.
 #
-# The target root may contain tool-managed mounts, so the actual workspace
-# defaults to ~/memoria-vault/sandbox/vault and that child directory is wiped on every run.
+# The workspace defaults to ~/memoria-vault/sandbox and is wiped on every run.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/sandbox}"
-VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT/vault}"
+VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT}"
 BASE_URL="${MEMORIA_TEST_LLM_BASE_URL:-http://127.0.0.1:11434/v1}"
 MODEL="${MEMORIA_TEST_LLM_MODEL:-memoria-qwen2.5:7b-64k}"
 CHECK_LOCAL_LLM=0
@@ -26,8 +25,8 @@ check only verifies that an OpenAI-compatible endpoint is reachable; alpha.16
 does not install Hermes profiles or drive a Hermes dispatch.
 
 Options:
-  --root DIR          Disposable test root (default: ~/memoria-vault/sandbox)
-  --vault DIR         Actual workspace path; must be below --root (default: DIR/vault)
+  --root DIR          Disposable vault root (default: ~/memoria-vault/sandbox)
+  --vault DIR         Workspace path; must be at or below --root (default: DIR)
   --check-local-llm   Check the configured OpenAI-compatible endpoint
   --base-url URL      Endpoint used by --check-local-llm (default: http://127.0.0.1:11434/v1)
   --model NAME        Model label printed with --check-local-llm
@@ -72,7 +71,7 @@ while [ "$#" -gt 0 ]; do
       [ "$#" -ge 2 ] || die "--root needs a directory"
       TEST_ROOT="$(expand_path "$2")"
       if [ -z "${MEMORIA_TEST_VAULT:-}" ]; then
-        VAULT="$TEST_ROOT/vault"
+        VAULT="$TEST_ROOT"
       fi
       shift 2
       ;;
@@ -109,12 +108,17 @@ TEST_ROOT="$(expand_path "$TEST_ROOT")"
 VAULT="$(expand_path "$VAULT")"
 
 case "$VAULT" in
+  "$TEST_ROOT") ;;
   "$TEST_ROOT"/*) ;;
-  *) die "--vault must be below --root; refusing to wipe $VAULT" ;;
+  *) die "--vault may not be above --root; refusing to wipe $VAULT" ;;
 esac
-[ "$VAULT" != "$TEST_ROOT" ] || die "--vault must be a child of --root, not the root itself"
 [ "$VAULT" != "$HOME" ] || die "refusing to use HOME as the disposable workspace"
 [ "$VAULT" != "/" ] || die "refusing to use / as the disposable workspace"
+case "$VAULT" in
+  "$HOME/memoria-vault"|"$HOME/memoria-vault/main"|"$HOME/memoria-vault/scratch"|"$HOME/memoria-vault/worktrees"|"$HOME/memoria-vault/worktrees"/*)
+    die "refusing to use a source checkout or worktree as the disposable workspace: $VAULT"
+    ;;
+esac
 
 need git
 

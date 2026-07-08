@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fast local repair for the disposable ~/memoria-vault/sandbox/vault workspace.
+# Fast local repair for the disposable ~/memoria-vault/sandbox workspace.
 #
 # This reinstalls the current package into the vault-local venv and lets
 # `memoria doctor --repair` refresh package-seeded files. It preserves user and
@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-VAULT="$HOME/memoria-vault/sandbox/vault"
+VAULT="$HOME/memoria-vault/sandbox"
 DRY_RUN=0
 
 say() { printf '%s\n' "$*"; }
@@ -21,7 +21,7 @@ Usage: scripts/sandbox/refresh-test-vault.sh [--vault DIR] [--dry-run]
 Fast-repair an existing disposable Memoria test vault from the package seed.
 
 Options:
-  --vault DIR                 Target vault (default: ~/memoria-vault/sandbox/vault)
+  --vault DIR                 Target vault (default: ~/memoria-vault/sandbox)
   --dry-run                   Print the actions without writing
   -h, --help                  Show this help
 

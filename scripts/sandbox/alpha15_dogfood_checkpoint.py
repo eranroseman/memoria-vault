@@ -270,7 +270,7 @@ def _clean_limits(limits: dict[str, int | None] | None) -> dict[str, int]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--workspace", type=Path, default=Path("~/memoria-vault/sandbox/vault").expanduser()
+        "--workspace", type=Path, default=Path("~/memoria-vault/sandbox").expanduser()
     )
     parser.add_argument("--previous-report", type=Path)
     parser.add_argument("--output", type=Path)
