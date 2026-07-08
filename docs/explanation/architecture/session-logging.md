@@ -28,7 +28,7 @@ These are different artifacts written by different components with different lif
 | **Per-request summaries** | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (`runtime/subsystems/integrity/linter/session_summary.py`, scheduled integrity run) | One file per request; never rotated; accumulate indefinitely |
 
 The audit log is what the audit-log
-[dashboard](../dashboards/README.md) reads. The per-request summaries are
+[dashboard](../surfaces/dashboards/README.md) reads. The per-request summaries are
 **deterministic digests** of what happened in a session — the Linter is zero-LLM,
 so the digest is derived from the audit trail, not narrated: a header (request,
 actor, start/end, counts by action and decision) plus one record per
@@ -46,7 +46,7 @@ owned by [Policy audit log](../../reference/policy-audit-log.md)), a write can b
 and an edit made outside the trail is detectable; the Linter closes the loop over
 this log with its `audit-unpaired-writes` and `vault-hash-drift` detectors (a
 legitimate human edit in an optional editor can surface on the latter too, by
-design — see [Operations](../operations.md)). Per-request summaries answer "what
+design — see [Operations](../execution/operations.md)). Per-request summaries answer "what
 did the request accomplish?" — they are per-request digests.
 
 Combining them would make the audit log verbose (request detail) and would make
@@ -67,6 +67,6 @@ the workspace accumulates them from all machines without conflict.
 
 ## Related
 
-- The Linter operation (reads `system/logs/`; runs the integrity checks; writes the request digests): [Operations](../operations.md)
+- The Linter operation (reads `system/logs/`; runs the integrity checks; writes the request digests): [Operations](../execution/operations.md)
 - Session-log granularity (per-request files, not per-action): [Memory substrates](../../reference/memory-substrates.md)
 - Audit log (the other log): [Policy gate](../../reference/policy-mcp.md)

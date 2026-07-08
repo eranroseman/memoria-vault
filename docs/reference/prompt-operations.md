@@ -15,7 +15,7 @@ contract.
   reads checked input refs, selects the manifest-pinned runner branch, records
   request/journal provenance, and stages one unchecked report note.
 - To inspect the available pattern actions, see [System actions](system-actions.md).
-- For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
+- For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/evidence/why-pattern-provenance.md).
 
 ---
 
@@ -111,7 +111,7 @@ and commits those staged writer changes.
 
 ## Related
 
-- Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md)
+- Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../design/evidence/why-pattern-provenance.md)
 - CLI command boundary: [CLI](cli.md)
 - Every action the system performs: [System actions](system-actions.md)
 - The picker view over the library: [Dashboards](dashboards.md)

@@ -8,7 +8,7 @@ nav_order: 22
 
 Deterministic methods Memoria uses, organized by purpose. This page is the current lookup surface; deferred method ideas live in the active release decision ledger, design history, and explanation pages, not in the active reference contract.
 
-For the rationale — why deterministic over LLM, cost, and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md).
+For the rationale — why deterministic over LLM, cost, and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/boundaries/why-deterministic-methods.md).
 
 ---
 
@@ -101,8 +101,8 @@ portable BibTeX/CSL exports are file inputs.
 
 ## Related
 
-- Operation postures that use these methods: [Librarian](../explanation/operation-postures/librarian.md),
-  [Peer-reviewer](../explanation/operation-postures/peer-reviewer.md), and
-  [Operations - the deterministic layer](../explanation/operations.md)
+- Operation postures that use these methods: [Librarian](../explanation/execution/operation-postures/librarian.md),
+  [Peer-reviewer](../explanation/execution/operation-postures/peer-reviewer.md), and
+  [Operations - the deterministic layer](../explanation/execution/operations.md)
   (Linter, retrieval, sweeps)
-- Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md)
+- Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../design/boundaries/why-deterministic-methods.md)

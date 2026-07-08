@@ -123,4 +123,4 @@ hand-authored frontmatter vocabulary.
 - How-to for setting authored links: [Link checked notes](../how-to-guides/knowledge/link-checked-notes.md)
 - Field contract: [Frontmatter fields](frontmatter.md)
 - Current Concept types: [Document types](document-types.md)
-- Why notes are filed by lifecycle, not topic: [Lifecycle, not topic — and state, not folders](../design/lifecycle-over-topic.md)
+- Why notes are filed by lifecycle, not topic: [Lifecycle, not topic — and state, not folders](../design/knowledge-rationale/lifecycle-over-topic.md)

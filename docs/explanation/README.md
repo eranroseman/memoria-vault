@@ -8,8 +8,7 @@ permalink: /explanation/
 # Explanation
 
 This section is Memoria's operational overview: architecture, knowledge,
-operation postures, operations, dashboards, deployment, and optional editor
-surfaces.
+execution, surfaces, and deployment.
 It explains how the system is shaped so you can use and evaluate it without
 reading the full design argument.
 
@@ -29,12 +28,9 @@ history, see [Design](../design/README.md).
 
 1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
 2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
-3. **[Operation postures](operation-postures/README.md)** — how old profile language maps to standalone requests and operations.
-4. **[Operations](operations.md)** — the deterministic layer below the agents.
-5. **[Request control plane](control-plane/README.md)** — request state, attention, and the old board boundary.
-6. **[Obsidian](obsidian/README.md)** — optional editor integration boundaries.
-7. **[Surfaces and dashboards](dashboards/README.md)** — how health, queues, and maintenance surface.
-8. **[Deployment](deployment.md)** — how Memoria is packaged and installed.
+3. **[Execution](execution/README.md)** — operations, operation postures, requests, attention, and review state.
+4. **[Surfaces](surfaces/README.md)** — dashboards and optional editor integration boundaries.
+5. **[Deployment](deployment/README.md)** — how Memoria is packaged and installed.
 
 ---
 
@@ -42,14 +38,14 @@ history, see [Design](../design/README.md).
 
 **New to Memoria:** Read [Home](../README.md), then
 [Architecture](architecture/README.md), [Knowledge](knowledge/README.md), and
-[Request control plane](control-plane/README.md). Design explains why those choices
+[Request control plane](execution/control-plane/README.md). Design explains why those choices
 were made.
 
 **Coming from another agent system:** The key differences are checked request
 rows, operation ceilings, a structural human gate, and no reasoning orchestrator.
-Start with [Operation postures](operation-postures/README.md), [Request control plane](control-plane/README.md),
-then the design pages on [operation postures](../design/why-specialist-postures.md)
-and [the review gate](../design/why-review-gate-is-structural.md).
+Start with [Operation postures](execution/operation-postures/README.md), [Request control plane](execution/control-plane/README.md),
+then the design pages on [operation postures](../design/boundaries/why-specialist-postures.md)
+and [the review gate](../design/boundaries/why-review-gate-is-structural.md).
 
 ## For decisions and direction
 

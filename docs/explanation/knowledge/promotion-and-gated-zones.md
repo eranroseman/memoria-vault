@@ -58,10 +58,10 @@ evidence, links, and hub/project context.
 **Explanation**
 
 - The types involved: [Document types and epistemic roles](document-types.md)
-- Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
-- The attention prompt in detail: [The honesty prompt](../control-plane/honesty-card.md)
-- Review gates vs work prompts: [Decision points](../control-plane/decision-points.md)
-- The operations behind the boundary: [Operations](../operations.md)
+- Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/knowledge-rationale/lifecycle-over-topic.md)
+- The attention prompt in detail: [The honesty prompt](../execution/control-plane/honesty-card.md)
+- Review gates vs work prompts: [Decision points](../execution/control-plane/decision-points.md)
+- The operations behind the boundary: [Operations](../execution/operations.md)
 
 **Decisions**
 

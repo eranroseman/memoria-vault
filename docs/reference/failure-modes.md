@@ -35,7 +35,7 @@ Sorted by severity, then topic.
 | Future editor adapter can't connect | MEDIUM | An external adapter added outside the standalone baseline has a stale command path or local app configuration | Use the standalone `memoria` CLI first, then repair the adapter configuration outside the core installer. |
 | Classification attention not appearing | MEDIUM | The source was added but enrichment/classification did not run or did not produce a checked result | Run `memoria work enrich <id>` and inspect the request with `memoria request show`. |
 | Unsupported sync topology reading partial projections | MEDIUM | A deferred second-device or VPS setup reads files while sync is mid-transfer | Return to the supported local install; any future sync topology needs its own validation before support. |
-| Deferred always-on bridge unreachable | MEDIUM | Unsupported `always-on` topology drifted or the single dispatcher is offline | Return to the supported local install, or follow the deferred topology notes in [Always-on VPS design](../design/always-on-vps-design.md). |
+| Deferred always-on bridge unreachable | MEDIUM | Unsupported `always-on` topology drifted or the single dispatcher is offline | Return to the supported local install, or follow the deferred topology notes in [Always-on VPS design](../design/deployment/always-on-vps-design.md). |
 | Schema mismatch in Dataview | MEDIUM | A hand-authored note or stale sandbox fixture does not match the current schema | Repair the specific note or reinitialize the sandbox from the current template, then validate with `python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .`. |
 | Scheduled task did not run | MEDIUM | Host scheduler is disabled, asleep, or pointing at a stale workspace path | Run the same `memoria` command manually, then repair the operator-managed scheduler entry. |
 | Same request fails after explicit retry | MEDIUM | Brittle prompt, broken input payload, or unavailable dependency | Inspect `memoria request show`, amend or cancel the request, then retry only after the underlying error is fixed. |
@@ -49,4 +49,4 @@ Sorted by severity, then topic.
 ## Related
 
 - The troubleshooting how-to guides: [Troubleshooting](../how-to-guides/troubleshooting/README.md)
-- Why the CRITICAL self-review failure can't happen: [Why the review gate is structural](../design/why-review-gate-is-structural.md)
+- Why the CRITICAL self-review failure can't happen: [Why the review gate is structural](../design/boundaries/why-review-gate-is-structural.md)

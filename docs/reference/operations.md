@@ -38,7 +38,7 @@ Shared dependency-light helpers for operation code live under `memoria_vault.run
 
 ## Related
 
-- Why operations are separate from agents: [Operations — the deterministic layer](../explanation/operations.md)
+- Why operations are separate from agents: [Operations — the deterministic layer](../explanation/execution/operations.md)
 - Ingest command details: [Ingest routing](ingest.md)
 - Runtime state boundary: [SQLite working state behind the checked-concept boundary](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 - DOI enrichment gate: [DOI catalog enrichment gates checked source promotion](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)

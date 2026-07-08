@@ -41,6 +41,6 @@ vault](vault.md#actor-kinds-and-the-write-path).
 
 ## Where to go next
 
-- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/why-layered-architecture.md)
-- **The operation postures** -> [Operation postures](../operation-postures/README.md)
-- **The deterministic operations** -> [Operations](../operations.md)
+- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/boundaries/why-layered-architecture.md)
+- **The operation postures** -> [Operation postures](../execution/operation-postures/README.md)
+- **The deterministic operations** -> [Operations](../execution/operations.md)

@@ -77,4 +77,4 @@ A retraction sometimes resolves — or creates — a contradiction. Glance at Kn
 
 - The pipeline context: [Ingest routing](../../reference/ingest.md)
 - Archiving the fallout: [Archive a source](../library/archive-a-source.md)
-- Why the operation never flips a note: [The Peer-reviewer](../../explanation/operation-postures/peer-reviewer.md)
+- Why the operation never flips a note: [The Peer-reviewer](../../explanation/execution/operation-postures/peer-reviewer.md)

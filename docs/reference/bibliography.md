@@ -160,7 +160,7 @@ Zhengxin Zhang, Ning Wang, Sainyam Galhotra, and Claire Cardie. 2026. How Far Ar
 
 ## Broader literature foundations
 
-Selected works from the wider literature review (`_papers/`, reviewed 2026-06; Zotero export `_papers/Exported Items.bib`). Design synthesis lives in [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md), with the pattern table in [Pattern provenance table](pattern-provenance.md), and [Intellectual foundations](../design/intellectual-foundations.md).
+Selected works from the wider literature review (`_papers/`, reviewed 2026-06; Zotero export `_papers/Exported Items.bib`). Design synthesis lives in [Pattern provenance: borrow, adapt, ignore](../design/evidence/why-pattern-provenance.md), with the pattern table in [Pattern provenance table](pattern-provenance.md), and [Intellectual foundations](../design/foundations/intellectual-foundations.md).
 
 <a id="abdallah2026tempo"></a>
 Abdelrahman Abdallah, Mohammed Ali, Muhammad Abdul-Mageed, and Adam Jatowt. 2026. TEMPO: A Realistic Multi-Domain Benchmark for Temporal Reasoning-Intensive Retrieval. arXiv:2601.09523. Retrieved from https://arxiv.org/abs/2601.09523
@@ -206,5 +206,5 @@ James Thorne, Andreas Vlachos, Christos Christodoulopoulos, and Arpit Mittal. 20
 
 ## Related
 
-- Foundations that cite these works: [Intellectual foundations](../design/intellectual-foundations.md)
+- Foundations that cite these works: [Intellectual foundations](../design/foundations/intellectual-foundations.md)
 - The pattern-provenance survey citing this list: [Pattern provenance table](pattern-provenance.md)

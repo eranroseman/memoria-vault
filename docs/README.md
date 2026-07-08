@@ -36,7 +36,7 @@ keeps the work visible, traceable, and review-gated.
 | Term | Meaning |
 | --- | --- |
 | PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
-| Co-PI | The read-only conversational posture behind `memoria ask`. See [The Co-PI](explanation/operation-postures/co-pi.md) for its full mission. |
+| Co-PI | The read-only conversational posture behind `memoria ask`. See [The Co-PI](explanation/execution/operation-postures/co-pi.md) for its full mission. |
 | Operations | Checked capability-backed units of work such as capture, enrich, digest, ask, verify, and export. |
 | Request table | The SQLite control plane. It records operation requests, status, blockers, review, and completion. |
 | Workspace | The local folder tree. It holds knowledge bundles, catalog state, attention projections, and system outputs. |
@@ -94,19 +94,19 @@ Design foundations, then the Explanation pages in this order.
 **Understand the system (read in order)**
 
 1. [The model](#the-model) — the shared vocabulary and working loop
-2. [What Memoria is](design/what-memoria-is.md) — the central insight, and what it deliberately is not
-3. [Intellectual foundations](design/intellectual-foundations.md) — where the design comes from
-4. [Design principles](design/design-principles.md) — the rules the framing produces
+2. [What Memoria is](design/foundations/what-memoria-is.md) — the central insight, and what it deliberately is not
+3. [Intellectual foundations](design/foundations/intellectual-foundations.md) — where the design comes from
+4. [Design principles](design/foundations/design-principles.md) — the rules the framing produces
 5. [Architecture](explanation/architecture/README.md) — the layered structure
 6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
 7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
 8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why the workspace is durable memory
-9. [Operation postures](explanation/operation-postures/README.md) — how old profile language maps to requests and operations
-10. [Operations](explanation/operations.md) — the deterministic and checked operation layer
-11. [The control plane](explanation/control-plane/README.md) — request state, attention, and review boundaries
-12. [Decision points](explanation/control-plane/decision-points.md) — how approvals, prompts, worklists, and triggers differ
+9. [Operation postures](explanation/execution/operation-postures/README.md) — how old profile language maps to requests and operations
+10. [Operations](explanation/execution/operations.md) — the deterministic and checked operation layer
+11. [The control plane](explanation/execution/control-plane/README.md) — request state, attention, and review boundaries
+12. [Decision points](explanation/execution/control-plane/decision-points.md) — how approvals, prompts, worklists, and triggers differ
 13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
-14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
+14. [Obsidian — the human surface](explanation/surfaces/obsidian/README.md) — where you actually work
 15. [Design](design/README.md) — why each major decision went the way it did
 
 **Then learn it by doing**
@@ -148,7 +148,7 @@ Design foundations, then the Explanation pages in this order.
 
 Deterministic **operations** do the mechanical work, behind the policy gate.
 
-→ [Operation-posture rationale](explanation/operation-postures/README.md) · No-installed-profile contract
+→ [Operation-posture rationale](explanation/execution/operation-postures/README.md) · No-installed-profile contract
 
 ---
 

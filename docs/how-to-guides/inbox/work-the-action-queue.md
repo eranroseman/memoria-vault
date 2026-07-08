@@ -77,4 +77,4 @@ evidence until a standalone runtime summary exists ([Dashboards](../../reference
 - CLI command reference: [CLI](../../reference/cli.md)
 - Attention projections: [Inbox card fields](../../reference/inbox-card-fields.md)
 - Current Concept types: [Document types](../../reference/document-types.md)
-- Why review is structural, not a convention: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
+- Why review is structural, not a convention: [Why the review gate is structural](../../design/boundaries/why-review-gate-is-structural.md)

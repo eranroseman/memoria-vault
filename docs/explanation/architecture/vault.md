@@ -70,7 +70,7 @@ The "is it an agent or an operation?" question is decided by posture and LLM
 judgment, not invocation style. Agents propose; only the trusted worker
 materializes checked outputs, and the PI separately disposes attention/curation
 decisions. Why that boundary is structural rather than a convention is [Why the
-review gate is structural](../../design/why-review-gate-is-structural.md).
+review gate is structural](../../design/boundaries/why-review-gate-is-structural.md).
 
 The strict each-layer-depends-only-on-the-one-below contract holds along this
 machine write path only — it doesn't extend above to the PI's direct file
@@ -101,5 +101,5 @@ Bases has no schema or constraints. The **Linter operation** supplies that layer
 ## Related
 
 - The full stack the vault sits under: [Architecture](README.md)
-- The operations that maintain the vault: [Operations](../operations.md)
+- The operations that maintain the vault: [Operations](../execution/operations.md)
 - The write boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)

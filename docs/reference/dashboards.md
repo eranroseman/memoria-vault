@@ -29,7 +29,7 @@ navigation.
 The **Surface** column names the space, queue, maintenance collection, or support context where a dashboard is reached.
 The explanation site groups the support dashboards by the *kind of attention* they
 demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational
-health** ([Dashboards](../explanation/dashboards/README.md)).
+health** ([Dashboards](../explanation/surfaces/dashboards/README.md)).
 
 ---
 
@@ -60,4 +60,4 @@ The scoring contract is owned by [Vault eval](vault-eval.md).
 - The detectors behind Maintenance drift watch: [Linter: detectors and auto-fix](linter.md)
 - The audit-log schema the audit-log dashboard reads: [Memory substrates](memory-substrates.md)
 - Current Concept types: [Document types](document-types.md)
-- Dashboard design rationale: [Dashboards](../explanation/dashboards/README.md)
+- Dashboard design rationale: [Dashboards](../explanation/surfaces/dashboards/README.md)

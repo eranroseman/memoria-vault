@@ -8,7 +8,7 @@ nav_order: 41
 
 Lookup table for the AI-research-system patterns Memoria borrowed, adapted,
 used as framing, or rejected. The design argument is
-[Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
+[Pattern provenance: borrow, adapt, ignore](../design/evidence/why-pattern-provenance.md).
 
 ## Borrow
 
