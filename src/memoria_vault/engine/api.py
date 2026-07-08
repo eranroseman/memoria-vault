@@ -452,7 +452,13 @@ def write_new_concept(
     else:
         rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}.md")
     frontmatter = {"type": concept_type, "title": title, "tags": tags, "links": {}}
-    frontmatter.update({key: value for key, value in extra.items() if value not in (None, "")})
+    frontmatter.update(
+        {
+            key: value
+            for key, value in extra.items()
+            if value is not None and (value != "" or key == "description")
+        }
+    )
     apply_universal_concept_frontmatter(frontmatter, rel)
     content = frontmatter_doc(frontmatter, body)
     job = enqueue_operation(

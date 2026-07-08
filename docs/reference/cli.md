@@ -6,7 +6,7 @@ nav_order: 10
 
 # CLI
 
-`memoria` is the alpha.19 product surface. It operates on a standalone workspace
+`memoria` is the alpha.20 product surface. It operates on a standalone workspace
 through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 ## Core
@@ -15,6 +15,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | --- | --- |
 | `memoria init` | Create/scaffold a workspace. |
 | `memoria status` | Show workspace state. |
+| `memoria surface schema --json` | Print the shared surface-contract action registry used by CLI/HTTP/MCP drift checks. |
 | `memoria doctor --check search` | Check local search index state. |
 | `memoria doctor --check runner [--provider local\|gateway]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. |
 | `memoria doctor` | Report local runtime checks plus the three-store backup contract: Git remote, SQLite replication config, and blob-sync config. Backup tools are reported, not runtime dependencies. |
@@ -52,7 +53,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria new note/hub/project` | Author new Concepts. |
+| `memoria new note/hub/project` | Author new Concepts through the shipped `.memoria/templates/{note,hub,project}.md` contract. |
 | `memoria link` | Curate a typed relation between checked Concepts. |
 | `memoria check` | Mark a Concept checked, or run workspace checks when no target is given. |
 | `memoria show/list/export` | Inspect and export Concepts. |
@@ -70,6 +71,11 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria eval seeded-error-verdict [--mode test\|live]` | Run the seeded-error verdict gate for the selected manifest-pinned runner branch. |
 
 Run `memoria <command> --help` for exact flags.
+
+`memoria new note` accepts `--description` plus `--body` or `--file`; `memoria
+new hub` accepts `--description` plus optional `--body`; `memoria new project`
+accepts `--description` plus optional `--direction`. The generated files include
+the same frontmatter defaults and body heading shape as the shipped templates.
 
 Common runtime flags include `--workspace <path>`, `--json`, and
 `--actor pi|agent`. The default actor is `pi`; shell agents should pass

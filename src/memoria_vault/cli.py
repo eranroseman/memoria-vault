@@ -18,6 +18,7 @@ from typing import Any
 
 from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
+from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.worker import (
     _workspace_lock,
@@ -37,6 +38,17 @@ SEED_FILES = (
     ("vault-template/steering.md", "steering.md"),
     ("vault-template/system/vocabulary.md", "system/vocabulary.md"),
 )
+NEW_CONCEPT_TEMPLATE_FIELDS: dict[str, tuple[str, ...]] = {
+    "note": ("note title", "ulid", "note description", "note body"),
+    "hub": ("hub title", "ulid", "hub description", "tag id", "hub body"),
+    "project": (
+        "project title",
+        "ulid",
+        "project description",
+        "project direction",
+    ),
+}
+SURFACE_ACTION = actions_by_id()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -51,7 +63,10 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="memoria")
+    parser = argparse.ArgumentParser(
+        prog="memoria",
+        description="Memoria standalone engine control surface.",
+    )
     parser.add_argument("--version", action="version", version=f"memoria {_package_version()}")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -61,7 +76,7 @@ def _build_parser() -> argparse.ArgumentParser:
     init.add_argument("--dry-run", action="store_true")
     init.set_defaults(handler=_cmd_init)
 
-    status = sub.add_parser("status")
+    status = sub.add_parser("status", **_surface_help("status.read"))
     _common(status)
     status.set_defaults(handler=_cmd_status)
 
@@ -108,6 +123,7 @@ def _build_parser() -> argparse.ArgumentParser:
     mcp.add_argument("--actor", default="agent")
     mcp.set_defaults(handler=_cmd_mcp)
 
+    _surface_commands(sub)
     _new_commands(sub)
     _work_commands(sub)
     _lifecycle_commands(sub)
@@ -130,6 +146,7 @@ def _new_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> N
     note = new_sub.add_parser("note")
     _common(note)
     note.add_argument("title")
+    note.add_argument("--description", default="")
     body = note.add_mutually_exclusive_group(required=True)
     body.add_argument("--body")
     body.add_argument("--file")
@@ -142,13 +159,27 @@ def _new_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> N
     hub.add_argument("tag")
     hub.add_argument("--title")
     hub.add_argument("--description", default="")
+    hub.add_argument("--body", default="")
     hub.set_defaults(handler=_cmd_new_hub)
 
     project = new_sub.add_parser("project")
     _common(project)
     project.add_argument("name")
     project.add_argument("--description", default="")
+    project.add_argument("--direction", default="")
     project.set_defaults(handler=_cmd_new_project)
+
+
+def _surface_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    surface = sub.add_parser(
+        "surface",
+        help="Inspect Memoria surface contracts.",
+        description="Inspect Memoria surface contracts.",
+    )
+    surface_sub = surface.add_subparsers(dest="surface_command", required=True)
+    schema = surface_sub.add_parser("schema", **_surface_help("surface.schema"))
+    _common(schema, workspace_required=False)
+    schema.set_defaults(handler=_cmd_surface_schema)
 
 
 def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -233,12 +264,12 @@ def _lifecycle_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     check.add_argument("--shadow", action="store_true", default=True)
     check.set_defaults(handler=_cmd_check)
 
-    show = sub.add_parser("show")
+    show = sub.add_parser("show", **_surface_help("concepts.get"))
     _common(show)
     show.add_argument("target")
     show.set_defaults(handler=_cmd_show)
 
-    list_cmd = sub.add_parser("list")
+    list_cmd = sub.add_parser("list", **_surface_help("concepts.list"))
     _common(list_cmd)
     list_cmd.add_argument("--type", choices=("note", "work", "hub", "project"))
     list_cmd.set_defaults(handler=_cmd_list)
@@ -323,11 +354,11 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
 def _request_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     request = sub.add_parser("request")
     request_sub = request.add_subparsers(dest="request_command", required=True)
-    list_cmd = request_sub.add_parser("list")
+    list_cmd = request_sub.add_parser("list", **_surface_help("requests.list"))
     _common(list_cmd)
     list_cmd.add_argument("--status", choices=("pending", "running", "done", "failed", "cancelled"))
     list_cmd.set_defaults(handler=_cmd_request_list)
-    show = request_sub.add_parser("show")
+    show = request_sub.add_parser("show", **_surface_help("requests.get"))
     _common(show)
     show.add_argument("request_id")
     show.set_defaults(handler=_cmd_request_show)
@@ -359,12 +390,12 @@ def _request_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
 def _attention_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     attention = sub.add_parser("attention")
     attention_sub = attention.add_subparsers(dest="attention_command", required=True)
-    list_cmd = attention_sub.add_parser("list")
+    list_cmd = attention_sub.add_parser("list", **_surface_help("attention.list"))
     _common(list_cmd)
     list_cmd.add_argument("--status")
     list_cmd.add_argument("--kind")
     list_cmd.set_defaults(handler=_cmd_attention_list)
-    show = attention_sub.add_parser("show")
+    show = attention_sub.add_parser("show", **_surface_help("attention.get"))
     _common(show)
     show.add_argument("attention_path")
     show.set_defaults(handler=_cmd_attention_show)
@@ -379,7 +410,7 @@ def _attention_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     outcome.add_argument("--defer", action="store_const", const="defer", dest="resolution_outcome")
     resolve.add_argument("--reason")
     resolve.set_defaults(handler=_cmd_attention_resolve)
-    worklist = attention_sub.add_parser("worklist")
+    worklist = attention_sub.add_parser("worklist", **_surface_help("attention.list"))
     _common(worklist)
     worklist.set_defaults(handler=_cmd_attention_worklist)
 
@@ -387,10 +418,10 @@ def _attention_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
 def _operation_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     operation = sub.add_parser("operation")
     operation_sub = operation.add_subparsers(dest="operation_command", required=True)
-    list_cmd = operation_sub.add_parser("list")
+    list_cmd = operation_sub.add_parser("list", **_surface_help("operations.list"))
     _common(list_cmd)
     list_cmd.set_defaults(handler=_cmd_operation_list)
-    run = operation_sub.add_parser("run")
+    run = operation_sub.add_parser("run", **_surface_help("operation.run"))
     _common(run)
     run.add_argument("operation_id")
     run.add_argument("--mode", choices=("test", "live"), default="test")
@@ -457,7 +488,8 @@ def _simple_resource(
     resource = sub.add_parser(name)
     resource_sub = resource.add_subparsers(dest=f"{name}_command", required=True)
     for action in sorted(actions):
-        cmd = resource_sub.add_parser(action)
+        parser_help = _resource_action_help(name, action)
+        cmd = resource_sub.add_parser(action, **parser_help)
         _common(cmd)
         if name == "steering" and action == "show":
             cmd.set_defaults(handler=_cmd_steering_show)
@@ -483,6 +515,7 @@ def _simple_resource(
             cmd.add_argument("new")
             cmd.set_defaults(handler=_cmd_vocabulary_merge)
         elif name == "journal" and action == "tail":
+            cmd.description = _surface_summary("journal.list")
             cmd.add_argument("--operation")
             cmd.add_argument("--request-id")
             cmd.add_argument("--path")
@@ -491,10 +524,19 @@ def _simple_resource(
             cmd.add_argument("--limit", type=int, default=50)
             cmd.set_defaults(handler=_cmd_journal_tail)
         elif name == "journal" and action == "show":
+            cmd.description = _surface_summary("journal.get")
             cmd.add_argument("event_id", type=int)
             cmd.set_defaults(handler=_cmd_journal_show)
         else:
             raise ValueError(f"unsupported resource action: {name} {action}")
+
+
+def _resource_action_help(name: str, action: str) -> dict[str, str]:
+    if name == "journal" and action == "tail":
+        return _surface_help("journal.list")
+    if name == "journal" and action == "show":
+        return _surface_help("journal.get")
+    return {}
 
 
 def _common(parser: argparse.ArgumentParser, *, workspace_required: bool = True) -> None:
@@ -505,6 +547,15 @@ def _common(parser: argparse.ArgumentParser, *, workspace_required: bool = True)
     parser.add_argument("--idempotency-key")
     parser.add_argument("--schedule-id")
     parser.add_argument("--actor", choices=("pi", "agent"), default="pi")
+
+
+def _surface_help(action_id: str) -> dict[str, str]:
+    summary = _surface_summary(action_id)
+    return {"description": summary, "help": summary}
+
+
+def _surface_summary(action_id: str) -> str:
+    return str(SURFACE_ACTION[action_id]["summary"])
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
@@ -520,6 +571,21 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
 def _cmd_status(args: argparse.Namespace) -> int:
     return _emit(engine_api.read_status(_workspace(args)), args)
+
+
+def _cmd_surface_schema(args: argparse.Namespace) -> int:
+    workspace = Path(args.workspace or ".").resolve()
+    payload = engine_api.read_surface_schema(workspace)
+    if not args.quiet:
+        print(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                indent=None if args.json else 2,
+                sort_keys=True,
+            )
+        )
+    return 0
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
@@ -729,9 +795,9 @@ def _cmd_new_note(args: argparse.Namespace) -> int:
             _workspace(args),
             "note",
             args.title,
-            body=body,
+            body=_concept_template_body(args.title, body),
             tags=args.tag,
-            extra=extra,
+            extra={"description": args.description, **extra},
             idempotency_key=args.idempotency_key,
             schedule_id=args.schedule_id,
             actor=args.actor,
@@ -742,7 +808,7 @@ def _cmd_new_note(args: argparse.Namespace) -> int:
 
 def _cmd_new_hub(args: argparse.Namespace) -> int:
     title = args.title or args.tag
-    body = f"# {title}\n\n"
+    body = _concept_template_body(title, args.body)
     return _emit(
         engine_api.write_new_concept(
             _workspace(args),
@@ -760,7 +826,7 @@ def _cmd_new_hub(args: argparse.Namespace) -> int:
 
 
 def _cmd_new_project(args: argparse.Namespace) -> int:
-    body = f"# {args.name}\n\n"
+    body = _concept_template_body(args.name, args.direction)
     return _emit(
         engine_api.write_new_concept(
             _workspace(args),
@@ -768,13 +834,18 @@ def _cmd_new_project(args: argparse.Namespace) -> int:
             args.name,
             body=body,
             tags=[],
-            extra={"description": args.description},
+            extra={"description": args.description, "outcome_frame": {}, "paper_plan": {}},
             idempotency_key=args.idempotency_key,
             schedule_id=args.schedule_id,
             actor=args.actor,
         ),
         args,
     )
+
+
+def _concept_template_body(title: str, body: str) -> str:
+    body = body.strip("\n")
+    return f"# {title}\n\n{body}\n" if body else f"# {title}\n\n"
 
 
 def _cmd_work_add(args: argparse.Namespace) -> int:

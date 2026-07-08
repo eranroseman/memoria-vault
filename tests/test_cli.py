@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import tomllib
 from pathlib import Path
 
 import pytest
 
 from memoria_vault import __version__
-from memoria_vault.cli import _build_parser, main
+from memoria_vault.cli import NEW_CONCEPT_TEMPLATE_FIELDS, _build_parser, main
+from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.trusted_writer import append_journal_event
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write
 from tests.helpers import ROOT, git, mark_file_status, patch_pydantic_ai
 
@@ -69,6 +71,38 @@ def _cli_command_surface() -> set[str]:
     return commands
 
 
+def _parser_for_command(parser: argparse.ArgumentParser, command: str) -> argparse.ArgumentParser:
+    parts = command.split()
+    if not parts or parts[0] != parser.prog:
+        raise AssertionError(f"command must start with {parser.prog}: {command}")
+    current = parser
+    for part in parts[1:]:
+        sub = next(
+            action for action in current._actions if isinstance(action, argparse._SubParsersAction)
+        )
+        current = sub.choices[part]
+    return current
+
+
+def _parser_dests(command: str) -> set[str]:
+    parser = _parser_for_command(_build_parser(), command)
+    return {
+        str(action.dest)
+        for action in parser._actions
+        if action.dest not in {argparse.SUPPRESS, "help"}
+    }
+
+
+def _subparser_help(parser: argparse.ArgumentParser, command: str) -> str:
+    parts = command.split()
+    parent = _parser_for_command(parser, " ".join(parts[:-1]))
+    sub = next(
+        action for action in parent._actions if isinstance(action, argparse._SubParsersAction)
+    )
+    choice = next(action for action in sub._choices_actions if action.dest == parts[-1])
+    return str(choice.help or "")
+
+
 def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         main(["--help"])
@@ -95,6 +129,7 @@ def test_alpha17_cli_command_surface_is_exact() -> None:
     assert _cli_command_surface() == {
         "memoria init",
         "memoria status",
+        "memoria surface schema",
         "memoria doctor",
         "memoria doctor bundle",
         "memoria doctor self-test",
@@ -161,6 +196,207 @@ def test_alpha17_cli_command_surface_is_exact() -> None:
         "memoria eval seeded-error-verdict",
         "memoria eval select-models",
     }
+
+
+def test_cli_surface_schema_prints_contract_json(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = main(["surface", "schema", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["surface_contract_version"] == "surface-contract.v1"
+    assert {action["id"] for action in output["actions"]} >= {
+        "status.read",
+        "surface.schema",
+    }
+
+
+def test_cli_surface_schema_prints_contract_without_json(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    rc = main(["surface", "schema"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["surface_contract_version"] == "surface-contract.v1"
+
+
+def test_cli_shared_surface_help_uses_registry_summaries() -> None:
+    parser = _build_parser()
+    actions = actions_by_id()
+
+    for action in SURFACE_ACTIONS:
+        cli = action.get("cli")
+        if not isinstance(cli, dict):
+            continue
+        for command in cli.get("commands") or []:
+            command_parser = _parser_for_command(parser, str(command))
+            assert command_parser.description == actions[str(action["id"])]["summary"]
+
+
+def test_cli_parent_help_exposes_shared_surface_summaries() -> None:
+    parser = _build_parser()
+
+    assert _subparser_help(parser, "memoria surface") == "Inspect Memoria surface contracts."
+    assert (
+        _subparser_help(parser, "memoria journal tail")
+        == actions_by_id()["journal.list"]["summary"]
+    )
+    assert (
+        _subparser_help(parser, "memoria journal show") == actions_by_id()["journal.get"]["summary"]
+    )
+
+
+def test_cli_new_template_contract_matches_shipped_templates() -> None:
+    template_root = ROOT / "vault-template/.memoria/templates"
+
+    assert {
+        path.stem: set(re.findall(r"{{VALUE:([^}]+)}}", path.read_text(encoding="utf-8")))
+        for path in sorted(template_root.glob("*.md"))
+    } == {concept_type: set(fields) for concept_type, fields in NEW_CONCEPT_TEMPLATE_FIELDS.items()}
+
+
+def test_cli_new_template_contract_fields_are_exposed_by_parser() -> None:
+    assert _parser_dests("memoria new note") >= {"title", "description", "body", "file"}
+    assert _parser_dests("memoria new hub") >= {"tag", "title", "description", "body"}
+    assert _parser_dests("memoria new project") >= {"name", "description", "direction"}
+
+
+@pytest.mark.parametrize(
+    (
+        "argv",
+        "expected_type",
+        "expected_title",
+        "expected_frontmatter_keys",
+        "expected_body",
+    ),
+    [
+        (
+            [
+                "new",
+                "note",
+                "Template Note",
+                "--description",
+                "Note description.",
+                "--body",
+                "Note body.",
+            ],
+            "note",
+            "Template Note",
+            {"title", "type", "id", "description", "tags", "links"},
+            "# Template Note\n\nNote body.\n",
+        ),
+        (
+            [
+                "new",
+                "hub",
+                "template-tag",
+                "--title",
+                "Template Hub",
+                "--description",
+                "Hub description.",
+                "--body",
+                "Hub body.",
+            ],
+            "hub",
+            "Template Hub",
+            {"title", "type", "id", "description", "tags", "links", "tag"},
+            "# Template Hub\n\nHub body.\n",
+        ),
+        (
+            [
+                "new",
+                "project",
+                "Template Project",
+                "--description",
+                "Project description.",
+                "--direction",
+                "Project direction.",
+            ],
+            "project",
+            "Template Project",
+            {
+                "title",
+                "type",
+                "id",
+                "description",
+                "tags",
+                "links",
+                "outcome_frame",
+                "paper_plan",
+            },
+            "# Template Project\n\nProject direction.\n",
+        ),
+    ],
+)
+def test_memoria_new_commands_follow_shipped_template_contract(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    argv: list[str],
+    expected_type: str,
+    expected_title: str,
+    expected_frontmatter_keys: set[str],
+    expected_body: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            *argv,
+            "--workspace",
+            str(workspace),
+            "--json",
+            "--idempotency-key",
+            f"template-{expected_type}",
+        ]
+    )
+    created = json.loads(capsys.readouterr().out)
+    frontmatter, body = split_frontmatter((workspace / created["path"]).read_text(encoding="utf-8"))
+
+    assert rc == 0
+    assert set(frontmatter) >= expected_frontmatter_keys
+    assert frontmatter["type"] == expected_type
+    assert frontmatter["title"] == expected_title
+    assert body == expected_body
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected_type"),
+    [
+        (["new", "note", "Default Description Note", "--body", "Body."], "note"),
+        (["new", "hub", "default-description-hub"], "hub"),
+        (["new", "project", "Default Description Project"], "project"),
+    ],
+)
+def test_memoria_new_defaults_include_template_description_key(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    argv: list[str],
+    expected_type: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            *argv,
+            "--workspace",
+            str(workspace),
+            "--json",
+            "--idempotency-key",
+            f"default-description-{expected_type}",
+        ]
+    )
+    created = json.loads(capsys.readouterr().out)
+    frontmatter = read_frontmatter(workspace / created["path"])
+
+    assert rc == 0
+    assert "description" in frontmatter
+    assert frontmatter["description"] == ""
 
 
 def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
@@ -1195,6 +1431,8 @@ def test_cli_new_note_check_and_link_flow(
             str(workspace),
             "--body",
             "The source reframes the problem before measuring outcomes.",
+            "--description",
+            "A framing note.",
             "--tag",
             "framing",
             "--json",
@@ -1210,6 +1448,7 @@ def test_cli_new_note_check_and_link_flow(
     note_path = created["path"]
     assert created["result"]["check_status"] == "unchecked"
     note_fm = read_frontmatter(workspace / note_path)
+    assert note_fm["description"] == "A framing note."
     assert "check_status" not in note_fm
     assert state.concept_check_status(workspace, note_path) == "unchecked"
     with state.connect(workspace) as conn:
@@ -1224,7 +1463,10 @@ def test_cli_new_note_check_and_link_flow(
     assert shown["check_status"] == "unchecked"
     assert shown["body_data"] == {
         "kind": "untrusted_text",
-        "text": "The source reframes the problem before measuring outcomes.\n",
+        "text": (
+            "# Framing changes the question\n\n"
+            "The source reframes the problem before measuring outcomes.\n"
+        ),
     }
     assert (
         main(
@@ -1296,19 +1538,39 @@ def test_cli_new_note_check_and_link_flow(
 
 
 @pytest.mark.parametrize(
-    ("argv", "request_id", "concept_type", "path_prefix"),
+    ("argv", "request_id", "concept_type", "path_prefix", "expected_body"),
     [
         (
-            ["new", "hub", "framing", "--title", "Framing Hub", "--description", "Frame work."],
+            [
+                "new",
+                "hub",
+                "framing",
+                "--title",
+                "Framing Hub",
+                "--description",
+                "Frame work.",
+                "--body",
+                "Hub body from the template contract.",
+            ],
             "hub-new",
             "hub",
             "hubs/",
+            "# Framing Hub\n\nHub body from the template contract.\n",
         ),
         (
-            ["new", "project", "Alpha Project", "--description", "Project brief."],
+            [
+                "new",
+                "project",
+                "Alpha Project",
+                "--description",
+                "Project brief.",
+                "--direction",
+                "Project direction from the template contract.",
+            ],
             "project-new",
             "project",
             "projects/",
+            "# Alpha Project\n\nProject direction from the template contract.\n",
         ),
     ],
 )
@@ -1319,6 +1581,7 @@ def test_cli_new_hub_project_use_create_concept_request_boundary(
     request_id: str,
     concept_type: str,
     path_prefix: str,
+    expected_body: str,
 ) -> None:
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
@@ -1345,6 +1608,9 @@ def test_cli_new_hub_project_use_create_concept_request_boundary(
     frontmatter = read_frontmatter(workspace / concept_path)
     assert frontmatter["type"] == concept_type
     assert "check_status" not in frontmatter
+    assert (workspace / concept_path).read_text(encoding="utf-8").split("---\n", 2)[-1] == (
+        expected_body
+    )
     assert state.concept_check_status(workspace, concept_path) == "unchecked"
     with state.connect(workspace) as conn:
         request = conn.execute(
