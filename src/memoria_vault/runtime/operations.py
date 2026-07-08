@@ -103,6 +103,44 @@ def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
     return policy
 
 
+def record_empirical_event(
+    vault: Path,
+    payload: dict[str, Any],
+    *,
+    request_id: str = "",
+    actor: str = "pi",
+    machine: str | None = None,
+) -> dict[str, Any]:
+    """Validate and append one empirical-use event."""
+    from memoria_vault.engine.empirical_events import (
+        EMPIRICAL_EVENT_RECORD_OPERATION,
+        EMPIRICAL_EVENT_SCHEMA,
+        JOURNAL_EVENT_REF_SCHEMA,
+        validate_empirical_event,
+    )
+
+    event = validate_empirical_event(payload)
+    journal_event = {
+        "event": "empirical-event",
+        "operation": EMPIRICAL_EVENT_RECORD_OPERATION,
+        "schema": EMPIRICAL_EVENT_SCHEMA,
+        "request_id": request_id,
+        "actor": actor.strip() or "pi",
+        **event,
+    }
+    stored = append_journal_event(vault, journal_event, machine=machine)
+    journal_event_id = _empirical_journal_event_id(vault, event["event_id"])
+    commit = commit_writer_changes(vault, "record empirical event", [], machine=machine)
+    return {
+        "event_id": event["event_id"],
+        "journal_event_id": journal_event_id,
+        "schema": JOURNAL_EVENT_REF_SCHEMA,
+        "event": stored,
+        "commit": commit,
+        "outputs": [],
+    }
+
+
 def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict[str, Any]:
     """Validate one operation policy frontmatter map."""
     if policy.get("type") != "operation":
@@ -1010,3 +1048,21 @@ def _network_target(target_url: str) -> str:
 
 def _sha256_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode()).hexdigest()
+
+
+def _empirical_journal_event_id(vault: Path, event_id: str) -> int:
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT event_id
+            FROM event_log
+            WHERE json_extract(payload_json, '$.operation') = 'empirical-event-record'
+              AND json_extract(payload_json, '$.event_id') = ?
+            ORDER BY event_id DESC
+            LIMIT 1
+            """,
+            (event_id,),
+        ).fetchone()
+    if row is None:
+        raise RuntimeError(f"empirical event was not stored: {event_id}")
+    return int(row["event_id"])
