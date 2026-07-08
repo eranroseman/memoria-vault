@@ -8,20 +8,24 @@ grand_parent: Reference
 # Vault eval
 
 `vault-eval` ([vault-eval as a maintenance capability](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) is Memoria's system-level evaluation.
-It uses a small, hand-curated gold set per workflow to check whether the
-deployed vault finds, extracts, links, and verifies correctly. It is diagnostic,
-not gating.
+It can use a small, workspace-authored gold set per workflow to check whether
+the deployed vault finds, extracts, links, and verifies correctly. It is
+diagnostic, not gating.
 
 ---
 
 ## The gold set
 
-Gold tasks live in `.memoria/eval/` as diagnostic markdown fixtures. They carry
-`type: eval-task` frontmatter for eval dispatch, but `eval-task` is not an
-Concept type and has no schema under
-`src/memoria_vault/product/workspace_seed/.memoria/schemas/types/`. Each fixture is self-contained: an
-`## Input`, an `## Expected behavior`, and an `## Scoring rubric` section, so a
-runtime eval operation can run and score it with nothing but the file.
+Markdown gold tasks are optional workspace-authored diagnostic fixtures under
+`.memoria/eval/`. The package seed ships no markdown gold tasks by default; it
+ships the separate seeded-error bundle at
+`.memoria/eval/alpha15-seeded-errors.json`. When a workspace adds markdown gold
+tasks, they carry `type: eval-task` frontmatter for eval dispatch, but
+`eval-task` is not a Concept type and has no schema under
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/types/`. Each fixture
+is self-contained: an `## Input`, an `## Expected behavior`, and an
+`## Scoring rubric` section, so a runtime eval operation can run and score it
+with nothing but the file.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |
@@ -33,17 +37,7 @@ runtime eval operation can run and score it with nothing but the file.
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 
-The shipped set (nine tasks) references well-known papers — the Transformer, BERT, ResNet, Adam, Dropout — so it works on any vault once those papers are ingested:
-
-| Workflow | Eval role | Gold tasks |
-| --- | --- | --- |
-| `find` | `catalog` | locate the Transformer paper; resolve a paraphrase to the ResNet paper |
-| `extract` | `extract` | claim stubs from the Transformer paper; Adam's exact default hyperparameters |
-| `link` | `link` | propose BERT builds-on Transformer; *decline* a strong dropout↔ResNet edge (negative control) |
-| `verify` | `verify` | a supported BLEU figure (positive control); a contradicted positional-encoding claim; a BERT-Base/Large parameter swap |
-
-Eval tasks are authored directly — the files *are* the instances, no template.
-They are shipped template files; product-file repair is package/template refresh.
+Eval tasks are authored directly: the files are the instances, not templates.
 A gold task whose wikilinked target no longer resolves surfaces as a
 broken-reference finding; gold-set rot is caught by machinery already running.
 
@@ -56,7 +50,7 @@ broken-reference finding; gold-set rot is caught by machinery already running.
 idempotent local eval task plans. It is deterministic and no-LLM; the runtime
 request queue handles serialization and deduplication ([machine judgments are layered proposals, never authorities](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
-- One local eval task plan per `lifecycle: current` gold task.
+- One local eval task plan per workspace-authored `lifecycle: current` gold task.
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the scheduled wrapper and any on-demand re-runs inside a quarter converge to one request per task; a new quarter re-opens the window.
 - The task body wraps the task in the **non-committing eval task contract**: scratch-only task work, results reported as JSON, and no Concept or catalog writes. Dispatch itself writes `.memoria/eval/last-run.md`.
 - The dispatch record is written to `.memoria/eval/last-run.md` (plain markdown, overwritten each run).

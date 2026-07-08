@@ -24,5 +24,5 @@ links: {}
 
 # Operation
 
-Read checked `.memoria/eval/` task Concepts, create local idempotent eval task
+Read current `.memoria/eval/` eval-task fixtures, create local idempotent eval task
 plans, and write `.memoria/eval/last-run.md` unless the request is a dry run.

@@ -93,8 +93,8 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Eval dispatch | telemetry operation (`eval_dispatch.py`, scheduled task or `memoria eval run`) | Fans the gold set out as one idempotent local eval task per current task ([Vault eval](../analysis-and-surfaces/vault-eval.md)). |
-| Eval score | telemetry operation (`eval_score.py`, scheduled task) | Computes recall@k / support-rate / FAMA-clean from local result blocks; appends to `system/metrics/eval/runs.jsonl`. |
+| Eval dispatch | telemetry operation (`eval_dispatch.py`, operator-managed scheduled task or `memoria eval run`) | Fans workspace-authored gold tasks out as one idempotent local eval task per current task ([Vault eval](../analysis-and-surfaces/vault-eval.md)). |
+| Eval score | telemetry operation (`eval_score.py`, operator-managed scheduled task) | Computes recall@k / support-rate / FAMA-clean from local result blocks; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | retraction operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
 | Retraction sweep | retraction operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
 | Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed worklist projections and one aggregate `work-prompt` attention projection. |

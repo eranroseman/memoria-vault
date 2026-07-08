@@ -12,18 +12,20 @@ operator-managed scheduled run. The eval is diagnostic, never gating.
 
 ## When to run it by hand
 
-- After installing a fresh release vault, to confirm capability didn't regress
+- After adding or updating local eval-task fixtures
 - When the eval-trend dashboard shows a dip you want to reproduce immediately
-- To smoke-test a fresh vault once the gold-set papers (Transformer, BERT, ResNet, Adam, Dropout) are ingested
+- To compare a local workflow against a workspace-authored gold set
 
 ## Prerequisites
 
-- The gold-set papers ingested
+- At least one `lifecycle: current` markdown eval task under `.memoria/eval/`
+  (`memoria init` ships none by default)
 - The local runtime installed and `memoria` available on `PATH`
 
 ## Steps
 
-**1. Preview the dispatch.** See which `lifecycle: current` gold tasks would enqueue, creating nothing:
+**1. Preview the dispatch.** See which `lifecycle: current` gold tasks would
+enqueue, creating nothing. A package-seed-only workspace reports zero tasks.
 
 ```bash
 cd <vault>
@@ -62,7 +64,7 @@ Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute
 
 ## Related
 
-- The gold set, metrics, and result contract: [Vault eval](../../reference/analysis-and-surfaces/vault-eval.md)
+- Local gold-task fixtures, metrics, and result contract: [Vault eval](../../reference/analysis-and-surfaces/vault-eval.md)
 - Eval metric bands: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
 - The sibling deterministic maintenance job: [Run the Linter](run-the-linter.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](../../reference/system/installer.md)
