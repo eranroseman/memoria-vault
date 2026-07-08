@@ -1,4 +1,4 @@
-"""Alpha.16 stdlib CLI entry point."""
+"""Stdlib CLI entry point."""
 
 from __future__ import annotations
 
@@ -779,7 +779,7 @@ def _cmd_migrate(args: argparse.Namespace) -> int:
     if not source.is_dir():
         return _fail(f"alpha.15 workspace not found: {source}", json_output=args.json)
     if workspace == source:
-        return _fail("migrate requires a separate alpha.16 workspace", json_output=args.json)
+        return _fail("migrate requires a separate target workspace", json_output=args.json)
     if not (workspace / ".memoria/schemas/folders.yaml").is_file():
         _initialize_workspace_files(workspace)
     result = _import_alpha15_workspace(source, workspace)

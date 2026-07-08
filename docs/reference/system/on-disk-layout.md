@@ -91,7 +91,7 @@ The package seed contains only files with direct runtime readers:
 | `.memoria/schemas/folders.yaml` | Type homes, staging roots, quarantine root, and `memoria init` skeleton. |
 | `.memoria/schemas/types/*.yaml` | Per-type frontmatter contracts used by schema validation, linter, and pre-commit. |
 | `.obsidian/app.json` | Obsidian file/link defaults chosen to avoid root clutter and frontmatter UI rewriting. |
-| `.obsidian/core-plugins.json` | Core plugin profile for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
+| `.obsidian/core-plugins.json` | Core plugin settings for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
 | `.obsidian/community-plugins.json` | Enables the bundled `memoria-obsidian` plugin. |
 | `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. |
 | `steering.md` | Standing program memory read and edited through the CLI and knowledge runtime. |
@@ -119,8 +119,8 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## Editor configuration
 
-`memoria init` seeds a small `.obsidian/` profile for users who open the
-workspace in Obsidian. That profile installs only the Memoria plugin and core
+`memoria init` seeds a small `.obsidian/` settings bundle for users who open the
+workspace in Obsidian. That bundle installs only the Memoria plugin and core
 Obsidian settings. Per-machine Obsidian state, tokens, saved workspaces, and
 non-Memoria plugins remain local user configuration and are not source of truth.
 

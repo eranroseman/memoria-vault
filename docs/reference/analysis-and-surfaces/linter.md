@@ -34,10 +34,11 @@ its schema contract comes from the YAML schemas under `.memoria/schemas/`.
 | `skeleton-drift` | MEDIUM | A directory from `.memoria/schemas/folders.yaml` `skeleton` is missing from an installed vault. |
 | `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one; report-only, never auto-created. |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` crossed the 50 MB advisory threshold. |
-| `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
-| `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
+| `fama-exposure` | HIGH | A downstream note wikilinking a superseded note (`status: superseded` or `superseded_by` set) — reuse of obsolete memory. |
+| `graph-analyze` | LOW | Orphan synthesis files under `notes/`, `hubs/`, `projects/`, `digests/`, or `fulltexts/` with zero inlinks. |
 | `orphan-working-files` | LOW | Leftover working files (`*.tmp.*`, `*.bak`, `*.orig`, …) outside transient zones. |
-| `stale-fleeting` | LOW | Fleeting notes older than 7 days — promote or discard. |
+| `stale-fleeting` | LOW | Legacy files under `notes/fleeting/` older than 7 days — promote or discard. |
+| `stale-answer-drafts` | LOW | Answer drafts older than 90 days under `inbox/_answers/` — keep, promote, or discard. |
 
 Detector notes:
 

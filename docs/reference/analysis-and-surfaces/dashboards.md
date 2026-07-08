@@ -44,7 +44,7 @@ governed by the decision that [standalone catalog is the citation authority](htt
 
 | View | Lives at | View over |
 | --- | --- | --- |
-| Optional adapter views | Adapter-owned profile files | Digest, fulltext, note, hub, and project documents by home. Verdicts stay in SQLite/read API. |
+| Optional adapter views | Adapter-owned view files | Digest, fulltext, note, hub, and project documents by home. Verdicts stay in SQLite/read API. |
 
 ## Verdict band (Maintenance drift watch)
 

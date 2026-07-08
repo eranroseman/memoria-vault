@@ -21,8 +21,8 @@ Usage: scripts/sandbox/install-test-vault-local-llm.sh [options]
 
 Rebuild the disposable Memoria test workspace and run the standalone installer,
 package, detector, and CLI doctor checks. The optional local-LLM
-check only verifies that an OpenAI-compatible endpoint is reachable; alpha.16
-does not install Hermes profiles or drive a Hermes dispatch.
+check only verifies that an OpenAI-compatible endpoint is reachable; the
+installer does not install Hermes profiles or drive a Hermes dispatch.
 
 Options:
   --root DIR          Disposable vault root (default: ~/memoria-vault/sandbox)
