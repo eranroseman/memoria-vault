@@ -334,6 +334,24 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "check_status": state.concept_check_status(vault, target),
             "materialized": materialized,
         }
+    if operation_id == "empirical-event-record":
+        from memoria_vault.engine.empirical_events import validate_empirical_event
+        from memoria_vault.runtime.operations import record_empirical_event
+
+        event = validate_empirical_event(payload)
+        expected_key = f"empirical-event:{event['event_id']}"
+        envelope = (
+            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
+        )
+        if envelope.get("idempotency_key") != expected_key:
+            raise ValueError(f"empirical-event-record requires idempotency_key={expected_key}")
+        return record_empirical_event(
+            vault,
+            event,
+            request_id=str(envelope.get("request_id") or job.get("job_id") or ""),
+            actor=str(envelope.get("actor") or "pi"),
+            machine=machine,
+        )
     if operation_id in {
         "integrity-evidence-check",
         "integrity-claim-quote-check",
