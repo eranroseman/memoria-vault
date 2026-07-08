@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from memoria_vault.cli import main
+from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import mcp_transport, state
 from memoria_vault.runtime.mcp_transport import make_mcp_app
 from tests.helpers import init_cli_workspace, write_checked_note
@@ -98,15 +99,31 @@ def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
         "attention_card",
         "concept",
         "concepts",
+        "exploration",
         "journal",
         "journal_event",
         "operation_run",
         "operations",
+        "project_draft",
+        "project_slice",
         "request",
         "requests",
         "status",
         "work",
     ]
+
+
+def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
+    pytest.importorskip("mcp")
+
+    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    actions = actions_by_id()
+    tools = {tool.name: tool for tool in app._tool_manager.list_tools()}
+
+    for action in actions.values():
+        mcp = action.get("mcp")
+        if mcp:
+            assert tools[mcp["tool"]].description == action["summary"]
 
 
 def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> None:
@@ -144,6 +161,9 @@ def test_mcp_read_tools_pass_session_scope(
         "read_work",
         "read_journal",
         "read_journal_event",
+        "read_slice",
+        "read_draft",
+        "read_exploration",
     ):
         monkeypatch.setattr(mcp_transport.engine_api, name, record(name))
 
@@ -158,6 +178,9 @@ def test_mcp_read_tools_pass_session_scope(
         "work": {"work_id": "w1"},
         "journal": {},
         "journal_event": {"event_id": 1},
+        "project_slice": {"project_path": "projects/a/project.md"},
+        "project_draft": {"project_path": "projects/a/project.md"},
+        "exploration": {},
     }.items():
         _call(app, tool_name, **arguments)
 
@@ -171,6 +194,9 @@ def test_mcp_read_tools_pass_session_scope(
         ("read_work", ["notes"]),
         ("read_journal", ["notes"]),
         ("read_journal_event", ["notes"]),
+        ("read_slice", ["notes"]),
+        ("read_draft", ["notes"]),
+        ("read_exploration", ["notes"]),
     ]
 
 
