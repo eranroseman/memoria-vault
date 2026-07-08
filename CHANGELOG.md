@@ -14,6 +14,38 @@ versions are minted until the first real release is cut. The earlier
 `v0.1.0`–`v0.3.2` tags were release-please artifacts, not real releases, and have
 been removed.
 
+## [0.1.0a20] - 2026-07-08
+
+Alpha.20 is a source-install checkpoint, not a formal tag or GitHub Release.
+It makes the CLI, loopback HTTP, and MCP surfaces contractual enough for local
+editor and agent adapters while keeping the engine as the state owner.
+
+### Changed
+
+- Added the data-only surface contract registry plus drift checks for shared
+  CLI, HTTP, MCP, and reference-doc surface details.
+- Hardened local HTTP with startup read-scope caps, adapter-grade status
+  responses, `/openapi.json`, and read parity for journal, project slice/draft,
+  and exploration data.
+- Added MCP tool descriptions and scoped read tools for project slice, project
+  draft, and exploration; added CLI surface schema inspection and clearer shared
+  surface help.
+- Added the strict `empirical_event.v1` schema and `empirical-event-record`
+  operation so local use events can be recorded without body text or absolute
+  paths.
+- Added the optional `packages/memoria-obsidian` proof adapter, seeded it by
+  default through `memoria init`, and added `memoria init --no-obsidian` for
+  non-Obsidian workspaces.
+- Retired `vault-template/` in favor of the packaged workspace seed under
+  `src/memoria_vault/product/workspace_seed/`.
+
+### Release management
+
+- `release-please` remains `workflow_dispatch`-only and was not dispatched for
+  this checkpoint; no tag or GitHub Release is cut.
+- Formal release-please versioning, generated release notes, tags, and GitHub
+  Releases remain deferred until the first real release.
+
 ## [0.1.0a19] - 2026-07-07
 
 Alpha.19 is a source-install checkpoint, not a formal tag or GitHub Release.
@@ -74,5 +106,6 @@ the implemented checkpoint.
   Releases remain deferred until the first real release.
 
 [Unreleased]: https://github.com/eranroseman/memoria-vault/commits/main
-[0.1.0a19]: https://github.com/eranroseman/memoria-vault/compare/d9394c7a4caae20f3e5cbfa62b00cd8308373ef7...main
-[0.1.0a18]: https://github.com/eranroseman/memoria-vault/compare/b650483f2c9236e6484365f6e43f14f15865d3d5...main
+[0.1.0a20]: https://github.com/eranroseman/memoria-vault/compare/c5af51be3da69d1e6b4e212734f2c829d680f158...bc0cd4de81bf9a35e7370965b443c620fc087a8e
+[0.1.0a19]: https://github.com/eranroseman/memoria-vault/compare/d9394c7a4caae20f3e5cbfa62b00cd8308373ef7...c5af51be3da69d1e6b4e212734f2c829d680f158
+[0.1.0a18]: https://github.com/eranroseman/memoria-vault/compare/b650483f2c9236e6484365f6e43f14f15865d3d5...d9394c7a4caae20f3e5cbfa62b00cd8308373ef7

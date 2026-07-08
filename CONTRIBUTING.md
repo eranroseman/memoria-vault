@@ -13,14 +13,15 @@ installer, runtime package, packaged workspace seed, and docs are welcome.
 
 ## Development setup
 
-**Requirements:** Git, WSL2 or Linux, Python 3.12+ with venv support, Node 22 for
-contributor prose tools, and any provider keys needed for the flow you are testing.
+**Requirements:** Git, WSL2 or Linux, Python 3.12+ with venv support, and any
+provider keys needed for the flow you are testing. Node 22 is needed only when
+developing the optional `packages/memoria-obsidian` adapter package.
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 
-# One-time contributor tooling: dev requirements, pre-commit hooks, prose tools.
+# One-time contributor tooling: dev requirements and pre-commit hooks.
 bash scripts/dev/setup.sh
 
 # Installer syntax and dry-run checks.
@@ -31,6 +32,8 @@ bash scripts/install.sh --dry-run
 `scripts/dev/setup.sh` sets up the contributor toolchain only; it does not install or run
 Memoria. Runtime package dependencies come from `pyproject.toml` and install into
 the workspace-local `.memoria/.venv`.
+The `cspell` and `markdownlint` hooks run in pre-commit-managed Node
+environments; do not run `npm ci` at the repo root for prose checks.
 Recommended VS Code extensions are listed in [.vscode/extensions.json](.vscode/extensions.json).
 
 See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install walkthrough.
