@@ -1,7 +1,7 @@
 ---
 title: Record empirical event
 type: operation
-description: Validate and append one alpha.20 empirical-use event to the journal.
+description: Validate and append one empirical-use event to the journal.
 operation_id: empirical-event-record
 allowed_tools:
 - trusted_writer
@@ -16,7 +16,6 @@ io_schema:
 risk_class: low
 required_checks: []
 tags:
-- alpha20
 - empirical-use
 id: operations/empirical-event-record
 links: {}

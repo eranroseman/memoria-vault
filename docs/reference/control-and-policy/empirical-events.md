@@ -7,8 +7,8 @@ grand_parent: Reference
 
 # Empirical events
 
-Empirical events are local, allowlisted records for alpha.20 self-use
-measurement. The schema owner is `src/memoria_vault/engine/empirical_events.py`;
+Empirical events are local, allowlisted records for self-use measurement. The
+schema owner is `src/memoria_vault/engine/empirical_events.py`;
 this page is a guarded mirror checked by `check_reference_rosters`.
 
 The only storage operation is `empirical-event-record`. Call it through
