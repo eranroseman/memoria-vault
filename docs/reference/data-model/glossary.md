@@ -57,7 +57,10 @@ corpus homes.
 
 ## Surfaces and navigation
 
-**Navigator rail** — the Markdown navigation note for everyday navigation (`_nav.md`, [thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
+**Navigator rail** — the read-API navigation model for everyday navigation
+([thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)):
+**Now** over **Places**. It replaces the older per-dashboard nav rows without
+requiring a shipped navigation note.
 
 **Now** — the rail's top band: what is waiting on you right now — **Action
 queue** (your Inbox queue) and **Drift** (open integrity flags).
@@ -86,8 +89,6 @@ Maintenance.
 **System dashboard** — a read-only view over metrics, request state, attention
 state, or linter findings. Alpha.20 does not ship `system/dashboards/*.md`;
 `inbox/` and CLI request/attention views carry the action surfaces.
-
-**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [the thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ---
 

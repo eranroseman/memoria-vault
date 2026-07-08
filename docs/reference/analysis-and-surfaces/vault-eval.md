@@ -106,7 +106,7 @@ aggregated - only the machine metrics trend.
 `fama_clean` uses the same superseded-reuse rule as the Linter's detector; a
 test guards parity with [Linter: detectors and auto-fix](linter.md#the-detectors).
 
-**The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. The **eval-trend dashboard** (`system/dashboards/eval-trend.md`) renders the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
+**The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. Optional dashboard/editor views can render the newest line per quarter plus the latest run's per-task breakdown; see [Dashboards](dashboards.md).
 
 ```sh
 python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --from-json results.json
@@ -116,8 +116,8 @@ python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <v
 
 ## Cadence
 
-An operator-managed scheduler may call `.memoria/scripts/cron-runner.sh eval`.
-The installer does not register the schedule; see
+An operator-managed scheduler may call the same scoring command explicitly. The
+installer does not register the schedule; see
 [Installer (bootstrap)](../system/installer.md#host-scheduler-wiring). Scoring is explicit
 and uses `eval_score --from-json` once result payloads exist.
 
@@ -127,5 +127,5 @@ and uses `eval_score --from-json` once result payloads exist.
 
 - The decision: [vault-eval as a maintenance capability](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
-- The trend dashboard and metric bands: [Dashboards](dashboards.md)
+- Eval metric bands: [Dashboards](dashboards.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](../system/installer.md)

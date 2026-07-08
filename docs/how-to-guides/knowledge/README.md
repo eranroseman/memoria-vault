@@ -8,7 +8,7 @@ permalink: /how-to-guides/knowledge/
 
 # Knowledge
 
-Build durable synthesis. Alpha.19 uses checked Concepts under `notes/`, `hubs/`,
+Build durable synthesis. Memoria uses checked Concepts under `notes/`, `hubs/`,
 `digests/`, `fulltexts/`, and `projects/`; machine-written candidates become visible
 only after the worker checks them, and PI edits are direct then
 observed/backfilled.

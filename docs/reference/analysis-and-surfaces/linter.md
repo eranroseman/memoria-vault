@@ -27,15 +27,13 @@ its schema contract comes from the YAML schemas under `.memoria/schemas/`.
 | --- | --- | --- |
 | `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, undeclared field, bad field kind/enum, bad nested `links:` shape). |
 | `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve. Catalog Work evidence is checked by catalog and citation sweeps instead. |
-| `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `.memoria/templates/`, `system/dashboards/`, and `.memoria/patterns/` is skipped). |
+| `broken-wikilink` | MEDIUM | A body wikilink resolving to no note; scaffolding under `.memoria/patterns/` is skipped. |
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside declared bundle, infrastructure, runtime, or work-in-flight roots. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest logged `after_hash` no longer matches the on-disk SHA-256 — an out-of-band change or unpaired edit. |
 | `skeleton-drift` | MEDIUM | A directory from `.memoria/schemas/folders.yaml` `skeleton` is missing from an installed vault. |
 | `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one; report-only, never auto-created. |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` crossed the 50 MB advisory threshold. |
-| `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
-| `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: palette, type scale, title emoji, callout variant, or terminology/capitalization violations. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
 | `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
 | `orphan-working-files` | LOW | Leftover working files (`*.tmp.*`, `*.bak`, `*.orig`, …) outside transient zones. |
@@ -54,7 +52,7 @@ Detector notes:
 CLI entry point:
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault <vault> [--json] [--gate dashboard-field-drift,design-system-drift]
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault <vault> [--json] [--gate detector-name]
 python3 -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault <vault> [--threshold 15] [--json]
 ```
 

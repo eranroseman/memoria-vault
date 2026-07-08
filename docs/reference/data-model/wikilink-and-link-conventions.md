@@ -7,7 +7,7 @@ grand_parent: Reference
 
 # Wikilink and link conventions
 
-Alpha.19 has file-backed document types for `digest`, `fulltext`, `note`,
+Memoria has file-backed document types for `digest`, `fulltext`, `note`,
 `hub`, and `project`. Wikilinks and `links:` express authored PI relationships
 between Concept documents. Catalog Work rows live in SQLite and provider
 payloads; they are not `paper`, `person`, or `venue` Concept files.

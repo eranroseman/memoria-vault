@@ -1,11 +1,11 @@
 ---
-title: Surfaces, Bases, and dashboards
+title: Surfaces and dashboards
 parent: Analysis and surfaces
 nav_order: 5
 grand_parent: Reference
 ---
 
-# Surfaces, Bases, and dashboards
+# Surfaces and dashboards
 
 Dashboard and view inventory for the standalone workspace. Dashboards are
 consumers: they render workspace state and logs, never write. Alpha.20 does not
@@ -35,14 +35,14 @@ health** ([Dashboards](../../explanation/surfaces/dashboards/README.md)).
 
 ---
 
-## The Bases views
+## Optional editor views
 
-Obsidian Bases (`.base` files), when present, are optional views over the same
-workspace files. Bases are views only; Concept frontmatter is governed by
-the YAML schemas under `.memoria/schemas/`, and SQLite catalog rows are
+Optional editor views, when present, read the same workspace files. They are
+views only; Concept frontmatter is governed by the YAML schemas under
+`.memoria/schemas/`, and SQLite catalog rows are
 governed by the decision that [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
-| Base | Lives at | View over |
+| View | Lives at | View over |
 | --- | --- | --- |
 | Optional adapter views | Adapter-owned profile files | Digest, fulltext, note, hub, and project documents by home. Verdicts stay in SQLite/read API. |
 

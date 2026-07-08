@@ -14,4 +14,4 @@ permalink: /reference/analysis-and-surfaces/
 | [Vault eval](vault-eval.md) |
 | [Retrieval and analysis methods](retrieval-and-analysis-methods.md) |
 | [Calibration](calibration.md) |
-| [Surfaces, Bases, and dashboards](dashboards.md) |
+| [Surfaces and dashboards](dashboards.md) |

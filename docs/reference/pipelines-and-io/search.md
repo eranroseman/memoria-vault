@@ -8,7 +8,7 @@ grand_parent: Reference
 # Search
 
 The workspace retrieval surface is a checked-only BM25 answer path plus the
-alpha.19 derived passage substrate owned by the Memoria runtime. BM25 remains
+derived passage substrate owned by the Memoria runtime. BM25 remains
 the selected product answer mode. To rebuild a stale index, see
 [Rebuild the search index](../../how-to-guides/operate/rebuild-the-search-index.md);
 to query conversationally, see

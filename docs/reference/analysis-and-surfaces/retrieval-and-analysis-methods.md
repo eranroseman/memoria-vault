@@ -57,7 +57,7 @@ edges without requiring search to rediscover the source.
 
 ---
 
-### Alpha.19 derived query substrate
+### Derived query substrate
 
 **For:** evaluating lexical, vector, and hybrid retrieval candidates without
 making them the default answer path.

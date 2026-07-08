@@ -35,13 +35,13 @@ Sorted by severity, then topic.
 | Broken frontmatter YAML | MEDIUM | YAML parse error: unclosed string, list indentation error, missing closing `---` | Fix raw YAML outside Obsidian; verify with the Linter. |
 | Optional editor adapter can't connect | MEDIUM | The local HTTP server, token, read scope, or adapter configuration is stale | Use the standalone `memoria` CLI first, then repair the adapter configuration outside the core installer. |
 | Classification attention not appearing | MEDIUM | The source was added but enrichment/classification did not run or did not produce a checked result | Run `memoria work enrich <id>` and inspect the request with `memoria request show`. |
-| Schema mismatch in Dataview | MEDIUM | A hand-authored note or stale sandbox fixture does not match the current schema | Repair the specific note or reinitialize the sandbox from the current template, then validate with `python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .`. |
+| Schema mismatch in Dataview | MEDIUM | A hand-authored note or stale sandbox fixture does not match the current schema | Repair the specific note or reinitialize the sandbox from the current package seed, then validate with `python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .`. |
 | Scheduled task did not run | MEDIUM | Host scheduler is disabled, asleep, or pointing at a stale workspace path | Run the same `memoria` command manually, then repair the operator-managed scheduler entry. |
 | Same request fails after explicit retry | MEDIUM | Brittle prompt, broken input payload, or unavailable dependency | Inspect `memoria request show`, amend or cancel the request, then retry only after the underlying error is fixed. |
 | Request not progressing (`pending` / `running` / `failed`) | MEDIUM | Worker has not run, crashed mid-run, or recovery marked an interrupted run failed for explicit retry | See full recipe in [Fix a stuck card](../../how-to-guides/troubleshooting/fix-stuck-card.md). |
 | Citekey alias not found at ingest | LOW | Import payload or catalog row lacks the alias | Re-import the BibTeX/CSL file or capture the source by DOI/file path. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
-| Removed profile directory appears | LOW | A pre-alpha.14 profile package or lane override was copied into the template/workspace | Delete the profile/lane package and run `python3 scripts/checks/alpha14_negative_gate.py`. |
+| Removed profile directory appears | LOW | A pre-alpha.14 profile package or lane override was copied into the package seed or workspace | Delete the profile/lane package and run `python3 scripts/checks/alpha14_negative_gate.py`. |
 
 ---
 

@@ -19,7 +19,7 @@ used as framing, or rejected. The design argument is
 | Explicit roles per operation | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), [LatteReview](bibliography.md#rouzrokh2026lattereview), [Agent Laboratory](bibliography.md#schmidgall2025agentlaboratory) | Permission-scoped operation manifests and request rows. |
 | Strong schema at handoffs | AI Scientist, AutoResearchClaw | Typed frontmatter catches mismatches that free-text handoffs would compound. |
 | Persistent knowledge graph | [OmegaWiki](bibliography.md#qian2026omegawiki), [Idea2Story](bibliography.md#xu2026idea2story) | Wikilinks, typed relations, hubs, and entity notes. |
-| Reviewable organization artifacts | LitLLM, [LatteReview](bibliography.md#rouzrokh2026lattereview) | Canvases, hubs, and Bases views keep synthesis visible. |
+| Reviewable organization artifacts | LitLLM, [LatteReview](bibliography.md#rouzrokh2026lattereview) | Canvases, hubs, and optional editor views keep synthesis visible. |
 | Persistent work queue | Hermes Agent | Historical inspiration; the standalone runtime uses operation requests in the workspace DB. |
 | Durable-state thesis | [Chen et al. 2026](bibliography.md#chen2026autonomous), [MetaGPT](bibliography.md#hong2024metagpt), [PARNESS](bibliography.md#wang2026parness) | Thin control over thick state. |
 | Claim-to-evidence chain | [ScientistOne](bibliography.md#meng2026scientistone), [AutoResearchClaw](bibliography.md#liu2026autoresearchclaw) | Peer-reviewer claim-trace and citation checks. |

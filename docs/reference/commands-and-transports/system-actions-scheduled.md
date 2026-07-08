@@ -11,10 +11,9 @@ Optional scheduled jobs wrap the CLI/runtime package. They are operator wiring,
 not a separate product authority. For the guarded operation ID list, see
 [System actions](system-actions.md).
 
-## Scheduled tasks (`.memoria/scripts/`)
+## Scheduled tasks
 
 The deterministic scheduled jobs are optional operator wiring around the CLI and
-runtime package. `.memoria/scripts/cron-runner.sh` dispatches `worker`, `lint`,
-`eval`, and `retraction-refresh`. No scheduler is required for a one-shot CLI
-workflow; a systemd timer, cron entry, launchd job, or another local scheduler
-can call the runner when always-on maintenance is desired.
+runtime package. No scheduler is required for a one-shot CLI workflow; a systemd
+timer, cron entry, launchd job, Task Scheduler entry, or another local scheduler
+can call the same `memoria` commands when always-on maintenance is desired.
