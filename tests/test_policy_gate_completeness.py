@@ -66,7 +66,7 @@ def test_process_is_blocked_regression():
 
 
 def test_egress_tools_are_blocked_regression():
-    """alpha.9: disabled toolsets are schema-hiding, so direct invocation by name
+    """Disabled toolsets are schema-hiding, so direct invocation by name
     must hit the gate for egress/messaging/browser families."""
     for tool in ("web_search", "browser_navigate", "send_message", "delegate_task"):
         assert tool in _m.DENY_DIRECT_TOOLS

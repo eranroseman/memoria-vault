@@ -1,4 +1,4 @@
-"""Alpha.19 bundle-root and fulltexts contract tests."""
+"""Bundle-root and fulltext contract tests."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib import schema
 
 
-def test_alpha19_bundle_roots_and_fulltexts_schema() -> None:
+def test_bundle_roots_and_fulltexts_schema() -> None:
     folders = schema.load_folders()
     types = schema.load_types()
 

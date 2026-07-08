@@ -16,7 +16,7 @@
       "args": {
         "path": "projects/harness/project.md",
         "verdict": "checked",
-        "content": "---\ntype: project\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC0\ntags: []\nlinks: {}\ntitle: Harness project\ndescription: Package-gate alpha.16 project.\nthesis: notes/harness-thesis.md\n---\n\n# Harness project\n"
+        "content": "---\ntype: project\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC0\ntags: []\nlinks: {}\ntitle: Harness project\ndescription: Package-gate project.\nthesis: notes/harness-thesis.md\n---\n\n# Harness project\n"
       },
       "expect": {
         "writes": ["projects/harness/project.md"]

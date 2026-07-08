@@ -4,11 +4,13 @@ Pytest suite for the repo's test levels (see AGENTS.md → *Test before opening 
 PR*). Tests live here as standalone files, not inline in shipped modules, so the
 deployed vault carries no test code.
 
-- `test_*.py` — one per module under test; imports the module and asserts its contract
-  on synthetic fixtures (no vault runtime, no network).
+- `test_*.py` — behavior, contract, or subsystem tests. Name files for the
+  current behavior they protect, not for the release that introduced it.
 - `pyproject.toml` — declares install metadata for `memoria.*` plus pytest
   `pythonpath` entries and registered level markers.
 - `tests/conftest.py` — assigns every `test_*.py` file to exactly one level.
+- `tests/helpers.py` and `tests/cli_test_helpers.py` — shared fixture builders
+  and CLI-surface helpers used by several test modules.
 
 | Level | Purpose | Runs |
 | --- | --- | --- |
@@ -38,6 +40,9 @@ bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sand
 Coverage is a review signal, not a repo-wide merge gate yet. Prefer focused
 contract tests over chasing a global percentage:
 
+- Add small unit or contract tests near the seam when a focused seam exists.
+  Use runtime tests only for worker loops, recovery, idempotence, or full
+  workflow behavior that cannot be proven cheaper.
 - Any changed governance or doctor script must add positive and negative cases for
   each new rule, including malformed input and "should be ignored" paths.
 - Any changed runtime module should cover the main success path, fail-closed/error

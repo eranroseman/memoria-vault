@@ -27,7 +27,7 @@ def test_schema_skeleton_covers_every_type_home():
         assert home in skeleton, f"type {concept_type} home {home} not in skeleton"
 
 
-def test_alpha20_package_seed_is_runtime_minimum():
+def test_package_seed_is_runtime_minimum():
     expected_files = {
         ".githooks/pre-commit",
         ".gitignore",

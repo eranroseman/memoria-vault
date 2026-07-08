@@ -1,0 +1,244 @@
+{
+  "search_roots": [
+    ".agents",
+    ".github",
+    ".pre-commit-config.yaml",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "docs",
+    "scripts",
+    "src",
+    "tests"
+  ],
+  "allow_text_files": [
+    "scripts/checks/plugin_provenance_doctor.py",
+    "scripts/checks/removed_surface_gate.py",
+    "scripts/checks/removed_surfaces.json",
+    "tests/test_plugin_provenance.py"
+  ],
+  "rules": [
+    {
+      "kind": "path",
+      "needle": "vault-template",
+      "owner": "package seed",
+      "reason": "retired root vault template must not reappear"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/operations",
+      "owner": "package seed",
+      "reason": "operations moved out of the packaged workspace seed"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/mcp",
+      "owner": "package seed",
+      "reason": "MCP wiring is not a baseline workspace payload"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/profiles",
+      "owner": "package seed",
+      "reason": "installed profiles are no longer shipped in the seed"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/lane-overrides",
+      "owner": "package seed",
+      "reason": "lane override runtime state is retired"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/tool-registry.yaml",
+      "owner": "package seed",
+      "reason": "tool registry allowlist is retired"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/system/dashboards/fleet-health.md",
+      "owner": "package seed",
+      "reason": "fleet health dashboard is not a shipped baseline surface"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/system/scripts",
+      "owner": "package seed",
+      "reason": "QuickAdd command scripts are not a shipped baseline surface"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/.githooks/post-commit",
+      "owner": "package seed",
+      "reason": "post-commit workspace hook is retired"
+    },
+    {
+      "kind": "path",
+      "needle": "src/memoria_vault/product/workspace_seed/capabilities/operations/capture-zotero-source.md",
+      "owner": "package seed",
+      "reason": "legacy capture operation is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/operations",
+      "owner": "package seed",
+      "reason": "retired operation home should not be documented"
+    },
+    {
+      "kind": "text",
+      "needle": ".memoria/operations/",
+      "owner": "package seed",
+      "reason": "retired operation home should not be documented"
+    },
+    {
+      "kind": "text",
+      "needle": "src/memoria_vault/product/workspace_seed/.memoria/mcp",
+      "owner": "package seed",
+      "reason": "retired MCP package home should not be documented"
+    },
+    {
+      "kind": "text",
+      "needle": ".memoria/mcp/",
+      "owner": "package seed",
+      "reason": "retired MCP package home should not be documented"
+    },
+    {
+      "kind": "text",
+      "needle": "QuickAdd: Memoria",
+      "owner": "package seed",
+      "reason": "QuickAdd command surface is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "system/scripts/capture-note.js",
+      "owner": "package seed",
+      "reason": "QuickAdd command script is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "system/scripts/open-inbox.js",
+      "owner": "package seed",
+      "reason": "QuickAdd command script is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "system/scripts/record-exploration-trace.js",
+      "owner": "package seed",
+      "reason": "QuickAdd command script is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "system/scripts/resolve-inbox-card.js",
+      "owner": "package seed",
+      "reason": "QuickAdd command script is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "system/scripts/restore-memoria-shell.js",
+      "owner": "package seed",
+      "reason": "QuickAdd command script is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "system/dashboards/fleet-health",
+      "owner": "package seed",
+      "reason": "fleet health dashboard is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "system/metrics/lane-",
+      "owner": "runtime policy",
+      "reason": "lane metrics are retired"
+    },
+    {
+      "kind": "text",
+      "needle": "type = \"lane-metric\"",
+      "owner": "runtime policy",
+      "reason": "lane metrics are retired"
+    },
+    {
+      "kind": "text",
+      "needle": "capture-zotero-source",
+      "owner": "package seed",
+      "reason": "legacy capture operation is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "capture_zotero_source",
+      "owner": "package seed",
+      "reason": "legacy capture function is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "zotero-export",
+      "owner": "package seed",
+      "reason": "legacy Zotero export route is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "LANE_OVERRIDE_RELDIR",
+      "owner": "runtime policy",
+      "reason": "lane override runtime state is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "LanePolicy",
+      "owner": "runtime policy",
+      "reason": "lane policy code is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "load_lane(",
+      "owner": "runtime policy",
+      "reason": "lane policy code is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "parse_lane(",
+      "owner": "runtime policy",
+      "reason": "lane policy code is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "tool-registry allowlist",
+      "owner": "runtime policy",
+      "reason": "tool registry allowlist is retired"
+    },
+    {
+      "kind": "text",
+      "needle": ".githooks/post-commit",
+      "owner": "package seed",
+      "reason": "post-commit workspace hook is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "hermes kanban create",
+      "owner": "optional adapters",
+      "reason": "Hermes Kanban command surface is not baseline"
+    },
+    {
+      "kind": "text",
+      "needle": "--lane verify",
+      "owner": "runtime policy",
+      "reason": "lane CLI routing is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "\"task_id\": \"HARNESS-PACKAGE\"",
+      "owner": "runtime policy",
+      "reason": "old harness lane fixture is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "\"lane\": \"memoria-writer\"",
+      "owner": "runtime policy",
+      "reason": "old lane fixture is retired"
+    },
+    {
+      "kind": "text",
+      "needle": "fm.get(\"lane\")",
+      "owner": "runtime policy",
+      "reason": "old lane frontmatter lookup is retired"
+    }
+  ]
+}

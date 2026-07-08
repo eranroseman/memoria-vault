@@ -12,3 +12,7 @@ def test_each_pytest_file_has_one_testing_level() -> None:
 
     assert set(test_config.TEST_LEVELS) == test_files
     assert set(test_config.TEST_LEVELS.values()) <= test_config.TEST_LEVEL_NAMES
+
+
+def test_pytest_files_are_named_by_behavior_not_release_checkpoint() -> None:
+    assert not list((ROOT / "tests").glob("test_alpha*.py"))

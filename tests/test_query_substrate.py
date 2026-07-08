@@ -11,7 +11,7 @@ from memoria_vault.runtime.search_index import answer_query
 from tests.helpers import copy_memoria_dirs, write_checked_concept
 
 
-def test_alpha19_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
+def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         names = {
             row["name"]

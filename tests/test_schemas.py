@@ -148,7 +148,7 @@ def test_validate_frontmatter_round_trip():
     assert any("id" in e for e in schema.validate_frontmatter(dict(good, id=123), digest))
 
 
-def test_schema_accepts_undeclared_meaning_fields_during_alpha16_migration():
+def test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration():
     note = schema.load_types()["note"]
     good = {
         "id": "01KBN6V6KX0000000000000001",

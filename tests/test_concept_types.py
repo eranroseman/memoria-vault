@@ -1,4 +1,4 @@
-"""Alpha.18 concept-type normalization contract tests."""
+"""Concept-type normalization contract tests."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ DB_CONCEPT_TYPES = {
 }
 
 
-def test_fresh_schema_accepts_only_alpha18_db_concept_types(tmp_path: Path) -> None:
+def test_fresh_schema_accepts_only_current_db_concept_types(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         for concept_type in sorted(DB_CONCEPT_TYPES):
             conn.execute(

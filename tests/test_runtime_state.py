@@ -22,7 +22,7 @@ from tests.helpers import copy_memoria_dirs, git, init_git
 
 def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas")
-    init_git(tmp_path, "alpha12@example.invalid", "Alpha12")
+    init_git(tmp_path, "state@example.invalid", "State Tests")
     return tmp_path
 
 
@@ -161,7 +161,7 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
         idempotency_key="sqlite-worker",
     )
 
-    done = run_next_job(vault, machine="alpha12-machine")
+    done = run_next_job(vault, machine="state-machine")
 
     assert done is not None
     assert done["status"] == "done"

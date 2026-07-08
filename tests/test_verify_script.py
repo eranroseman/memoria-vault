@@ -70,7 +70,7 @@ def test_verify_live_dry_run_includes_standalone_runtime_gates(tmp_path: Path) -
     assert summary["result"] == "dry-run"
     assert summary["gates"] == ["l0", "l1", "package", "runtime", "live"]
     displays = [step["display"] for step in summary["steps"]]
-    assert "python3 -m pytest tests/test_alpha15_runtime_gate.py -q" in displays
+    assert "python3 -m pytest tests/test_runtime_gate_replay.py -q" in displays
     assert "env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/ -q -m live" in displays
 
 
@@ -95,7 +95,7 @@ def test_verify_runtime_dry_run_keeps_gate_order(tmp_path: Path) -> None:
     assert summary["gates"] == ["l0", "l1", "package", "runtime"]
     displays = [step["display"] for step in summary["steps"]]
     assert displays.index("python3 scripts/sandbox/e2e_smoke.py") < displays.index(
-        "python3 -m pytest tests/test_alpha15_runtime_gate.py -q"
+        "python3 -m pytest tests/test_runtime_gate_replay.py -q"
     )
 
 

@@ -1,4 +1,4 @@
-"""The retired alpha.10 sample vault is not shipped in the alpha.11 skeleton."""
+"""The retired sample vault is not shipped in the workspace skeleton."""
 
 from tests.helpers import ROOT, WORKSPACE_SEED
 

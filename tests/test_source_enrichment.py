@@ -41,9 +41,9 @@ def sha_text(text: str) -> str:
 
 def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas", "config")
-    init_git(tmp_path, "alpha13@example.invalid", "Alpha13")
+    init_git(tmp_path, "enrichment@example.invalid", "Enrichment Tests")
     git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
-    git(tmp_path, "commit", "-m", "seed alpha13 workspace")
+    git(tmp_path, "commit", "-m", "seed enrichment workspace")
     return tmp_path
 
 

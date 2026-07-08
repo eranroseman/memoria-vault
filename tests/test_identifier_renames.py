@@ -6,7 +6,7 @@ from memoria_vault.runtime import state
 from tests.helpers import ROOT
 
 
-def test_alpha18_sqlite_schema_uses_work_id_and_event_log(tmp_path: Path) -> None:
+def test_sqlite_schema_uses_work_id_and_event_log(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         tables = {
             row["name"]
@@ -26,7 +26,7 @@ def test_alpha18_sqlite_schema_uses_work_id_and_event_log(tmp_path: Path) -> Non
         assert "work_id" in _columns(conn, "work_aspects")
 
 
-def test_alpha18_catalog_state_api_persists_work_id(tmp_path: Path) -> None:
+def test_catalog_state_api_persists_work_id(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
         work_id="alpha-work",
@@ -51,7 +51,7 @@ def test_alpha18_catalog_state_api_persists_work_id(tmp_path: Path) -> None:
         assert conn.execute("SELECT work_id FROM enrichment_runs").fetchone()[0] == "alpha-work"
 
 
-def test_alpha18_old_identifier_tokens_do_not_remain_in_implementation() -> None:
+def test_old_identifier_tokens_do_not_remain_in_implementation() -> None:
     old_tokens = ("source" + "_id", "source" + "_type", "journal" + "_events", "journal" + "_id")
     roots = [ROOT / "src", ROOT / "scripts"]
     offenders = []

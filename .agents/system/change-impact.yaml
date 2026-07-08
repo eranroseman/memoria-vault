@@ -22,15 +22,17 @@ areas:
       - python3 -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_runtime_policy.py tests/test_patterns.py tests/test_detectors.py
   - area: Dropped installed profile package
     paths:
-      - scripts/checks/alpha14_negative_gate.py
+      - scripts/checks/removed_surface_gate.py
+      - scripts/checks/removed_surfaces.json
       - tests/test_profiles.py
       - tests/test_installer_skeleton.py
     inspect:
-      - Alpha.14 no-profile negative tests
+      - Removed-surface negative gate
       - Installer/profile-mode text
       - Current docs that still describe shipped installed profiles
       - Optional adapter follow-up scope
     checks:
+      - python3 scripts/checks/removed_surface_gate.py
       - python3 -m pytest tests/test_profiles.py tests/test_installer_skeleton.py
   - area: Runtime policy
     paths:
@@ -90,8 +92,9 @@ areas:
       - Baseline package seed ships only approved Memoria Obsidian files
       - QuickAdd command scripts and Obsidian workspace files stay absent
       - Optional adapter wording does not become baseline behavior
-      - Alpha.14 negative gate covers deleted payload contracts
+      - Removed-surface gate covers deleted payload contracts
     checks:
+      - python3 scripts/checks/removed_surface_gate.py
       - python3 scripts/checks/plugin_provenance_doctor.py
       - python3 -m pytest tests/test_plugin_provenance.py
   - area: Offline e2e smoke harness

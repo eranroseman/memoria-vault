@@ -1,4 +1,4 @@
-"""Alpha.16 runtime-local gate replay."""
+"""Runtime-local gate replay tests."""
 
 from __future__ import annotations
 
@@ -17,10 +17,10 @@ from memoria_vault.runtime.trusted_writer import (
 from tests.helpers import patch_pydantic_ai
 
 
-def test_alpha16_runtime_gate_replays_user_facing_commands(
+def test_runtime_gate_replays_user_facing_commands(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    workspace = tmp_path / "workspace-alpha16"
+    workspace = tmp_path / "workspace-runtime-gate"
     provider_replay = tmp_path / "providers.json"
     provider_replay.write_text(json.dumps(_provider_payloads()), encoding="utf-8")
     interview = tmp_path / "interview.json"

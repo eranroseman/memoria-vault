@@ -67,7 +67,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
             "---\n"
             "type: project\n"
             "title: Sleep memory project\n"
-            "description: A disposable alpha.11 cycle project.\n"
+            "description: A disposable knowledge-cycle project.\n"
             "tags: []\n"
             "links: {}\n"
             "thesis: notes/thesis.md\n"
@@ -102,7 +102,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
             "bibtex": bibtex,
             "content_text": (
                 "Sleep memory consolidation improves recall in the fixture study. "
-                "The result is relevant to the alpha.11 project."
+                "The result is relevant to the knowledge-cycle project."
             ),
         },
         key="capture-source",
