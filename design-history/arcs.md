@@ -1,6 +1,6 @@
-# Part IV — Synthesis: evolution arcs (alpha.1 -> alpha.19)
+# Part IV — Synthesis: evolution arcs (alpha.1 -> alpha.20)
 
-## Evolution arcs (alpha.1 -> alpha.19)
+## Evolution arcs (alpha.1 -> alpha.20)
 
 Memoria's alpha series is not a feature-accretion history; it is a sequence of **re-derivations**, three of which (alpha.7, alpha.11, alpha.14) discarded a standing architecture and rebuilt from requirements. The through-line is a steady transfer of authority away from autonomous agents and configurable runtime toward a **deterministic, gated, single-writer engine** whose safety rests on traceability rather than approval. The dates below are the release-folder/design-doc authoring dates in git; the "biggest change" is the one decision that reframed the product at that step.
 
@@ -27,14 +27,15 @@ Memoria's alpha series is not a feature-accretion history; it is a sequence of *
 | alpha.17 | 2026-07-06 | WRITE half: host-neutral text output loop | **Adds the first text WRITE loop** over the alpha.16 substrate: project slice -> `outline.md` -> `draft.md` -> verify/export -> draft passage write-back, with evidence-set markers, exploration channel, and seeded-gate calibration |
 | alpha.18 | 2026-07-07 | Data-structure normalization | **Normalizes Work identity, concept types, frontmatter, bundle roots, and schema-version policy** while deferring the derived query substrate to `query-architecture` |
 | alpha.19 | 2026-07-07 | Query substrate + code-output lane | **Adds derived passages/FTS/vector-cache tables, optional vector packaging, fail-closed code artifacts/runs, and computed evidence** while keeping BM25 as the selected answer path |
+| alpha.20 | 2026-07-07/08 | Contract spine + surface expansion | **Makes CLI, loopback HTTP, and MCP drift-checked control surfaces** with a data-only registry, OpenAPI/read-scope/status hardening, MCP/CLI parity, empirical-event recording, and an optional Obsidian proof adapter |
 
-The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 resets the *UI*; alpha.8-10 harden the *runtime*; alpha.11 resets the *architecture*; alpha.12-14 progressively strip the runtime down to a standalone engine; alpha.15 hardens and consolidates it; alpha.16 turns that baseline toward an end-to-end READ workflow; alpha.17 closes the first host-neutral text WRITE loop without taking on UI-host or code-execution scope; alpha.18 normalizes the data shape; alpha.19 adds the first derived query substrate and fail-closed code-output lane.
+The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 resets the *UI*; alpha.8-10 harden the *runtime*; alpha.11 resets the *architecture*; alpha.12-14 progressively strip the runtime down to a standalone engine; alpha.15 hardens and consolidates it; alpha.16 turns that baseline toward an end-to-end READ workflow; alpha.17 closes the first host-neutral text WRITE loop without taking on UI-host or code-execution scope; alpha.18 normalizes the data shape; alpha.19 adds the first derived query substrate and fail-closed code-output lane; alpha.20 makes the three control surfaces contractual enough for optional editor and agent adapters without moving state out of the engine.
 
 ---
 
 ### (a) Seven specialist profiles → five → no agent autonomy at all
 
-**Lineage:** [01-alpha.1-baseline](01-alpha.1-baseline.md), [07-alpha.7](07-alpha.7.md), [14-alpha.14](14-alpha.14.md), [15-alpha.15](15-alpha.15.md), [16-alpha.16](16-alpha.16.md), [17-alpha.17](17-alpha.17.md), [18-alpha.18](18-alpha.18.md).
+**Lineage:** [01-alpha.1-baseline](01-alpha.1-baseline.md), [07-alpha.7](07-alpha.7.md), [14-alpha.14](14-alpha.14.md), [15-alpha.15](15-alpha.15.md), [16-alpha.16](16-alpha.16.md), [17-alpha.17](17-alpha.17.md), [18-alpha.18](18-alpha.18.md), [20-alpha.20](20-alpha.20.md).
 
 
 **What:** The agent model collapsed in three moves. It began as **seven specialist Hermes profiles over one generalist** (ADR-02, `_notes/docs-exports/adr-full.md`: "Seven specialist profiles over one generalist agent"). At the **alpha.7-era clean-slate (ADR-48)** it flipped to **"one Co-PI fronts everything; specialists consolidate to posture-defined agents"** — five profiles, the retriever/scout profile (ADR-37) and profile-compilation (ADR-42) both folded in (`adr-full.md`: 37 and 42 "superseded → ADR-48"). By **alpha.14/15 the profile system was deleted from the product entirely** (ADR-125 supersedes 26, 48, 120; "Dropped from the product, not deferred: … installed profiles and lane/fleet (26, 48, 120)"). What survives is a single **read-only Co-PI posture plus capability-backed operation postures**, where "the dividing line is posture and write-permission, not capability or tool" (`docs/design/why-specialist-postures.md`).
@@ -42,9 +43,9 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** A generalist agent has "unclear responsibility … ambiguous permissions … no separation of stances" (`why-specialist-postures.md`), which is why roles were split in the first place. But finer role-splitting fragments the system: "more routing, more permission matrices, and — decisively — a fragmented learning loop" (same doc), so seven collapsed to postures-per-family. The deeper flip — removing *autonomy* — is forced by the autonomous-loop analysis: Karpathy's keep/revert loop is only safe when "the metric is monotonic … changes are reversible … experiments are independent," and knowledge work fails all three because "synthesis quality is not scalar," "synthesis errors compound," and "later sources reinterpret earlier ones" (`docs/design/why-not-autonomous.md`). Confidence-routing (SmartPause) was refused because "confident-wrong is the failure mode" (same doc; `why-review-gate-is-structural.md`). The literature review corroborated the *mechanics* but stripped the autonomy: the ~47-system survey found the useful patterns are "structural: stage gates, explicit roles, typed handoffs, persistent graphs" while the refused ones are "scalar-optimization loops: autonomous keep/revert, tournament evolution, confidence-routed gate bypass" (`docs/design/why-pattern-provenance.md`). Net effect: "from agent-assisted to bounded, phase-gated knowledge production" (same). The alpha.11 design states the destination bluntly — "the PI is a director + spot-corrector, not an approval queue … Trust shifts from 'a human approved this' to 'the system guarantees this trace'" (`scratch/releases/0.1.0-alpha.11/…-design.md` §4). ADR-125 keeps only the posture invariant with the runtime gone: "Memoria never grants an agent file, terminal, code-execution, or send tools."
 
 
-**Current (as of alpha.19):** No agent autonomy is part of the product baseline; models and agents may propose, but the engine owns writes, Guard owns egress, `VaultWriter` owns machine file changes, and code execution routes through one fail-closed `bwrap` availability gate rather than direct agent shell authority.
+**Current (as of alpha.20):** No agent autonomy is part of the product baseline; models and agents may propose, but the engine owns writes, Guard owns egress, `VaultWriter` owns machine file changes, MCP remains a scoped optional stdio surface, and code execution routes through one fail-closed `bwrap` availability gate rather than direct agent shell authority.
 
-**Pending (unreleased):** Future coding/code-execution modules must not grant agents direct file, shell, network, or export authority.
+**Pending (unreleased):** Future SRD/code-module work must not grant agents direct file, shell, network, or export authority.
 
 ### (b) Numbered folders (10-inbox / 02-answers) → type-first folders → state-not-folders
 
@@ -56,7 +57,7 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** Numbered lifecycle folders forced a **file move on every state change**, which breaks the one property the system exists to protect. The current doc makes the argument: "Topics are many-to-many; a folder is one location," so folders are reserved "for the one fact that is one-to-one: what kind of checked bundle this is" (`lifecycle-over-topic.md`). Moving state into a record instead of a path is "strictly better" because "a state change does not move a file, so it cannot break wikilinks, lose Git history continuity, or invalidate saved queries," and "a claim cited by twelve other notes can be retracted, superseded, and archived without a single inbound link breaking" (same doc). This is the same provenance-first logic (design principle 5, `design-principles.md`) that later drove `check_status` out of frontmatter (arc d).
 
 
-**Current (as of alpha.19):** The Memoria-born vault root uses file-backed homes `notes/`, `hubs/`, `projects/`, `digests/`, and `fulltexts/`, while catalog Work records and lifecycle/verdict state remain database state; project `outline.md`/`draft.md` and code-artifact companion files live under the project rather than encoding state in folders.
+**Current (as of alpha.20):** The Memoria-born vault root uses file-backed homes `notes/`, `hubs/`, `projects/`, `digests/`, and `fulltexts/`, while catalog Work records and lifecycle/verdict state remain database state; project `outline.md`/`draft.md` and code-artifact companion files live under the project rather than encoding state in folders.
 
 **Pending (unreleased):** No pending folder-state decision is released.
 
@@ -70,7 +71,7 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** "The multiplicity itself caused drift and confusion" (ADR-126 Context). The discriminator was tightened to "a fundamentally different artifact" — a flippable check regime is a *mode*, not a type, and a layer-difference is not a knowledge type. That test dissolved most of the zoo into relocations ("excerpt → a `anchor` on a note/work; index → generated views; fleeting → an unchecked note; steering → the `instructions` config; thesis → a role, not a type"). The four earn their place by *creating distinct obligations the gap engine feeds on*: a `claim` mode without evidence is an `under-warranted` gap; an open `question` is a compose-flow lead — "field-derived typing could not tell a plain thought from a claim missing its evidence" (ADR-126). The model is genealogically Luhmann's: catalog work ≈ literature note, note = permanent note, hub = structure note/Map-of-Content (`docs/design/intellectual-foundations.md`, `hubs-and-navigation.md`), with the net-new machine-digest role borrowed from Karpathy's compiler.
 
 
-**Current (as of alpha.19):** The model keeps human `note`/`hub`/`project` Concepts, keeps catalog Works in SQLite, stores source-derived files as `digests/<work_id>.md` and `fulltexts/<work_id>.md`, and folds human Work interpretation into `note` with `mode: work`; code artifacts are typed project companion records, not human knowledge Concepts.
+**Current (as of alpha.20):** The model keeps human `note`/`hub`/`project` Concepts, keeps catalog Works in SQLite, stores source-derived files as `digests/<work_id>.md` and `fulltexts/<work_id>.md`, and folds human Work interpretation into `note` with `mode: work`; code artifacts and empirical events are typed runtime/project records, not human knowledge Concepts.
 
 **Pending (unreleased):** Future richer writing and code-output flows must preserve the catalog/knowledge graph split.
 
@@ -84,7 +85,7 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** The alpha.14 universal enforcement was the natural endpoint of read-barrier logic — a consumer must be able to trust every file's status, so every file must declare it. But that created the exact hazard ADR-126 names: "`check_status` lived in frontmatter, so checking a note rewrote it, hand-edits forged status, and every consumer had to distrust the file it was reading." The fix is the split-authority rule of ADR-125: "files own meaning, the DB owns verdicts and records." This is enforced structurally, not by convention, because the value only holds if it *can't* be forged — `checked_terminology_gate.py` even "blocks checked = approved/verified/trusted drift" (exec-plan PR-L). Fail-closed follows: "rebuild-from-files starts fully `unchecked` and ignores frontmatter status" (PR-B). The move is the same provenance-integrity principle as arc (b), applied to state instead of location.
 
 
-**Current (as of alpha.19):** Frontmatter remains meaning-only; Memoria-born markers identify machine material, while verdicts, derived state, checks, and run records live outside authored prose. Evidence sets remain body markers plus rebuildable SQLite rows, and computed evidence now uses `code-warrant` items resolved against code-run output hashes.
+**Current (as of alpha.20):** Frontmatter remains meaning-only; Memoria-born markers identify machine material, while verdicts, derived state, checks, run records, and empirical events live outside authored prose. Evidence sets remain body markers plus rebuildable SQLite rows, and computed evidence uses `code-warrant` items resolved against code-run output hashes.
 
 **Pending (unreleased):** No pending decision may put check/verdict state back in authored files without a new release decision.
 
@@ -98,13 +99,13 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** OKF solved Memoria's "least-defined layer … its outbound layer" — it "supplies exactly that missing unit: the Knowledge Bundle … consumable without Memoria's gates, MCPs, or Hermes runtime" (ADR-107). But OKF's permissive-consumer thesis is "the inverse of Memoria's thesis," which needs the relationship type *on the edge* for graph queries and enforces "strict schemas, controlled vocabularies, and category-error rejection." So the interchange format could not become the internal contract without discarding the integrity model. The retreat from workspace-wide OKF (alpha.11) to export-only (alpha.15) tracks the broader alpha.12 keep-test: only the keep-set must be portable markdown; working state is SQLite (arc g).
 
 
-**Current (as of alpha.19):** OKF remains an interchange/keep-test boundary, not the internal representation; `fulltext` is an OKF-like frontmatter label for generated reproductions under `fulltexts/`, while the runtime's DB Concept set stays narrower. Draft export is a verified project output path, not a full publication/interchange release gate.
+**Current (as of alpha.20):** OKF remains an interchange/keep-test boundary, not the internal representation; `fulltext` is an OKF-like frontmatter label for generated reproductions under `fulltexts/`, while the runtime's DB Concept set stays narrower. Draft export is a verified project output path, not a full publication/interchange release gate.
 
 **Pending (unreleased):** Future release work still needs the full output-readiness export gate if interchange is in MVP scope.
 
 ### (f) The Hermes runtime's rise (alpha.9/10) and its role by alpha.15
 
-**Lineage:** [01-alpha.1-baseline](01-alpha.1-baseline.md), [09-alpha.9](09-alpha.9.md), [10-alpha.10](10-alpha.10.md), [14-alpha.14](14-alpha.14.md), [15-alpha.15](15-alpha.15.md), [16-alpha.16](16-alpha.16.md), [17-alpha.17](17-alpha.17.md), [18-alpha.18](18-alpha.18.md).
+**Lineage:** [01-alpha.1-baseline](01-alpha.1-baseline.md), [09-alpha.9](09-alpha.9.md), [10-alpha.10](10-alpha.10.md), [14-alpha.14](14-alpha.14.md), [15-alpha.15](15-alpha.15.md), [16-alpha.16](16-alpha.16.md), [17-alpha.17](17-alpha.17.md), [18-alpha.18](18-alpha.18.md), [20-alpha.20](20-alpha.20.md).
 
 
 **What:** Hermes was the *foundation* of the product from alpha.1: ADR-22 "Build on the Hermes Agent runtime rather than a bespoke one," ADR-26 "The repo is the install unit; profiles are hand-authored," ADR-27/28 the write-gate as a Hermes plugin, ADR-32 external access over MCP, ADR-46 the seven-layer architecture on Hermes. Its **peak was alpha.9/10**, whose themes are literally "Hermes-version decision" (alpha.9 README) and "Hermes/runtime governance" (alpha.10 README), with cost/session accounting read straight from the Hermes session store (ADR-106: "hermes kanban show … `~/.hermes/profiles/<lane>/state.db`"). Then it was demoted, then removed. **Alpha.11** kept Hermes only "as a specialized adapter … where a specific Hermes feature pays for itself," with a **direct OpenAI-compatible API as the default runner** (`0.1.0-alpha.11-design.md` §8). **Alpha.12** made the engine standalone and CLI-first. **Alpha.14** put Hermes explicitly "Outside the baseline" (`0.1.0-alpha.14-design.md` §0). **Alpha.15/ADR-125 dropped it from the product**: "Dropped from the product, not deferred: Hermes (22, 35, 43, 80's Hermes-flavored harness)." By alpha.15 the runtime is Python 3.12 + uv + Typer + stdlib sqlite3 + pydantic-ai + git CLI (ADR-125); "Hermes is not part of the runtime" (exec-plan PR-AG). Hermes plays **no role** in shipped alpha.15.
@@ -112,7 +113,7 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** The rise was pragmatic reuse — "a durable state machine across sessions and retries — the runtime Memoria builds on" (`_notes/ai-research-systems-survey.md`). The fall was driven by the same alpha.9 literature correction that reset the model tier: the review "was run assuming `qwen2.5:7b` (local) is Memoria's production engine. It is not: `qwen2.5:7b` is the local test fixture; the live … engines call an LLM API" (`_notes/REVIEW-SUMMARY.md`, `REVIEW-REFUTATIONS.md`). Once the live engine is an API, the Hermes control-plane DB, profiles, Kanban, and MCP-as-required-API become weight the single-user local tool doesn't need — the alpha.11 design lists them among what to "deliberately shed": "per-write approval … profiles/fleet as the primary runtime model, the Hermes control-plane DB, the seven-layer ceremony" (`_notes/0.1.0-alpha.11-design.md`). ADR-125 turns the reuse argument back on itself: "The engineering ADR-22 warned against (durable state, retries, crash recovery) is now owned in-house — ADR-127 is where that obligation is paid." The consequence is the design goal all along: "One install command, no external runtime, no always-on process."
 
 
-**Current (as of alpha.19):** Hermes is not part of the runtime; the process model is a standalone engine plus on-demand `memoria serve`, CLI/read-API operations, and credential-free workers behind Guard.
+**Current (as of alpha.20):** Hermes is not part of the runtime; the process model is a standalone engine plus CLI, loopback HTTP, optional MCP-stdio, on-demand `memoria serve`, and credential-free workers behind Guard. The optional Obsidian proof adapter is a client over loopback HTTP, not a runtime host.
 
 **Pending (unreleased):** Any future adapter must be optional and must not become the product runtime by accident.
 
@@ -126,7 +127,7 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** The alpha.11 all-files rule was honest about ownership but wrong about *relational* state: a passive file-index cannot give "records, queues, and verdicts a transactional home markdown cannot provide" (ADR-125). The keep-test replaced "the fuzzy 'ownership feels important'" with an objective question — "does the user need this to keep thinking and writing outside Memoria" (`0.1.0-alpha.12-design.md` §1) — so ownership is preserved exactly where it matters and SQLite is used everywhere it doesn't. Two enabling constraints were relaxed to make this affordable: "no multi-device sync (single machine)" and "ownership/portability scoped to the keep-set + bibliography export, not the whole workspace" (same doc §0). Alpha.15 then paid the durability bill this boundary implies: WAL + `synchronous=FULL`, write-ahead fsync ordering, crash-at-each-boundary recovery, and fail-closed-to-`unchecked` on DB loss (exec-plan PR-D2, §1; ADR-127).
 
 
-**Current (as of alpha.19):** SQLite owns catalog Work records, derived passage/query indexes, checks, code artifacts/runs, jobs, costs, incidents, Guard logs, provider payload metadata, `event_log`, and rebuildable `evidence_sets`; markdown/PDF/BibTeX own the human keep-set and survival artifacts, with evidence markers as the canonical draft-side source for evidence-set rows. The runtime schema is `user_version = 8` and legacy DB versions fail fast.
+**Current (as of alpha.20):** SQLite owns catalog Work records, derived passage/query indexes, checks, code artifacts/runs, jobs, costs, incidents, Guard logs, provider payload metadata, `event_log`, empirical-event journal mirrors, and rebuildable `evidence_sets`; markdown/PDF/BibTeX own the human keep-set and survival artifacts, with evidence markers as the canonical draft-side source for evidence-set rows. The runtime schema is `user_version = 8` and legacy DB versions fail fast.
 
 **Pending (unreleased):** Future output work must keep proving crash/rebuild behavior on the full read/write path.
 
@@ -140,13 +141,13 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** Zotero-as-authority conflicted with the standalone direction — ADR-124 made the catalog its own citation authority so the product no longer *requires* an external reference manager (Zotero survives only "as importers, not authority," `0.1.0-alpha.11-design.md` §8). Multi-provider enrichment is forced by the requirement "every catalog item is enriched from multiple scholarly APIs" (`0.1.0-alpha.13-design.md` method), and per-field provenance follows directly from design principle 5, "provenance everywhere" (`design-principles.md`): "Each provider call is a journal `api_call` event … so every field is traceable to who supplied it." The capture→enrich split exists to keep the checked boundary narrow — a DOI source cannot be promoted to `checked` until enrichment and the retraction check pass (`0.1.0-alpha.13-design.md` capture-boundary table). Importantly, merge stays **deterministic** and **never auto-merges identities**: record-linkage collisions "emit one stable `inbox/` work prompt … and do not merge records" (exec-plan PR-V), because the ingest engine must "never merge identities silently" (ADR-56) and the enrichment path is worker-only ("agents never get network or code-execution").
 
 
-**Current (as of alpha.19):** Capture is land-first and provider-provenanced; Zotero/DOI/PDF/GitHub/local sources land immutable artifacts or visible triage stubs, enrichment still never silently merges identities, Work identity is `work_id`, and venue edges are `published_in`. Query work now has derived `passages`, FTS5, vector-cache, file-index state, and concept-edge tables while BM25 remains the selected answer path.
+**Current (as of alpha.20):** Capture is land-first and provider-provenanced; Zotero/DOI/PDF/GitHub/local sources land immutable artifacts or visible triage stubs, enrichment still never silently merges identities, Work identity is `work_id`, and venue edges are `published_in`. Query work has derived `passages`, FTS5, vector-cache, file-index state, and concept-edge tables while BM25 remains the selected answer path.
 
 **Pending (unreleased):** Future discovery and query work must decide the minimum provider/discovery set and prove any dense/vector/graph candidate before replacing BM25.
 
 ### (i) UI / navigation — the alpha.7 clean-slate
 
-**Lineage:** [07-alpha.7](07-alpha.7.md), [14-alpha.14](14-alpha.14.md), [15-alpha.15](15-alpha.15.md), [16-alpha.16](16-alpha.16.md), [17-alpha.17](17-alpha.17.md), [18-alpha.18](18-alpha.18.md).
+**Lineage:** [07-alpha.7](07-alpha.7.md), [14-alpha.14](14-alpha.14.md), [15-alpha.15](15-alpha.15.md), [16-alpha.16](16-alpha.16.md), [17-alpha.17](17-alpha.17.md), [18-alpha.18](18-alpha.18.md), [20-alpha.20](20-alpha.20.md).
 
 
 **What:** The UI was rebuilt from scratch at **alpha.7**, "Clean-slate Obsidian UI & navigation." It landed "the Bases view layer, capture forms, the persistent-shell gate model (Inbox/Library/Knowledge/Project, switched by a nav row — retiring the ADR-68 workspace-swap), Portals folder navigation … and the Memoria-tuned Obsidian config + CSS" (alpha.7 README), formalized in ADR-81 (which superseded the ADR-68 Desk/Library/Studio workspaces). The general projector engine, projected telemetry, and the Canvas/argument-graph spatial axis were **deferred** into ADR-102/103. Later refinements: ADR-101 fixed the vocabulary ("navigation surfaces are 'spaces'; 'gate' is reserved for the approval gate"). By **alpha.14/15 the entire Obsidian UI was removed from the required product** — ADR-125 drops "the Obsidian-hosted policy plugin (28, 31)," and alpha.15 is explicitly "an engine and integrity checkpoint, not an Obsidian plugin release … No alpha.15 slice adds … an Obsidian plugin, plugin manifest, command-palette command, Inspector panel" (`0.1.0-alpha.15-design.md` Scope Boundary); the shipped surfaces are "CLI, scoped MCP, and loopback HTTP" (exec-plan PR-AG).
@@ -154,17 +155,17 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 **Why:** The pre-alpha.7 workspace-swap model (ADR-68) treated navigation as *mode switching* between whole workspaces, which fought the way a researcher actually moves between activities; the persistent-shell "nav row" made the four spaces (which map onto the four jobs — Library/Knowledge/Project + the Inbox queue, `docs/design/what-memoria-is.md`: "you bring sources into the Library, build them into connected claims in Knowledge, and drive an inquiry to output in a Project") always-present instead of exclusive. The UI stayed deliberately thin — "thin in code, but load-bearing" — with the hard rule that the plugin "is a control panel, not a writer": it "never writes canonical Concepts … it enqueues; the worker commits" (`0.1.0-alpha.11-design.md` §8.1), and surfaces "show raw evidence/derivation first, any suggestion second — never an 'agent verdict' (Jacobs)." That write-boundary discipline is exactly what let the whole Obsidian surface be *removed* by alpha.14 without touching the integrity core: because the UI never owned truth, dropping it cost the engine nothing, and the read/view/action contracts could be re-expressed over CLI/HTTP/MCP. Any future editor adapter now "require[s] their own ADR instead of inheriting an alpha.15 commitment" (exec-plan PR-AG).
 
 
-**Current (as of alpha.19):** The required surface remains engine/read-API first; slice, compose, verify, export, exploration, write-back, query substrate, code-artifact records, and normalized catalog/Work operations all have host-neutral CLI/read-API paths. A future Obsidian plugin is recommended as a thin rendering adapter, not shipped alpha.19 scope.
+**Current (as of alpha.20):** The required surface remains engine/read-API first; slice, compose, verify, export, exploration, write-back, query substrate, code-artifact records, normalized catalog/Work operations, and empirical-event recording all have host-neutral CLI/HTTP/MCP contracts where they belong. The shipped Obsidian proof adapter is optional, HTTP-only for editor UI, and does not write Memoria-owned files directly.
 
-**Pending (unreleased):** The host/stack and workspace/gate model remain future work on the plugin/workspace-topology track.
+**Pending (unreleased):** The full host/stack and workspace/gate model remain future work on the plugin/workspace-topology track; a dedicated agent app remains deferred behind empirical adoption and workflow evidence.
 
 ---
 
 **The single sentence that ties all ten arcs together:** every flip moves a guarantee from something a human or agent *does* (approve a write, choose a folder, set a status field, run a profile, host a UI, trust a reference manager) to something the system *structurally enforces* (a trace, a type-home, a DB verdict, a deterministic operation, a scoped read API, an in-house enriched catalog) — because the design's founding thesis is that when "the human directs but does not author or approve each change," integrity "rests on a tamper-evident derivation graph + continuous structural checks + cascade rollback, with a human gate only where an action is irreversible" (`0.1.0-alpha.11-design.md` §0, §2).
 
 Key durable sources for this synthesis are the frozen chapters in
-`design-history/`, especially `17-alpha.17.md`, `18-alpha.18.md`, and
-`19-alpha.19.md`; the current design pages under `docs/design/`; and the
+`design-history/`, especially `18-alpha.18.md`, `19-alpha.19.md`, and
+`20-alpha.20.md`; the current design pages under `docs/design/`; and the
 superseded ADRs under `docs/adr/`. Older scratch design and release files were
 working inputs, not permanent records; deleted scratch or `docs/releasing/`
 material is historical evidence recoverable from git, not a current source to
@@ -172,12 +173,12 @@ follow.
 
 ### (j) Decision-record mechanism — ADRs -> living design history
 
-**Lineage:** [00-origins](00-origins.md) through [19-alpha.19](19-alpha.19.md), plus this living synthesis.
+**Lineage:** [00-origins](00-origins.md) through [20-alpha.20](20-alpha.20.md), plus this living synthesis.
 
 **What:** Historical ADRs are evidence, not authority. Durable decisions now belong in release decision ledgers while they are being made, then close into the frozen design-history chapter and this synthesis when the release closes.
 
 **Why:** The alpha history shows repeated architectural reversals. A live ADR set made older opinions look authoritative after the implementation and product thesis had moved on. The safer mechanism is a dated release decision with typed pointers to implementation, tests, and evidence, followed by a frozen release chapter.
 
-**Current (as of alpha.19):** Alpha.19 is the current closed checkpoint technical baseline. Its close-out durable record is the frozen chapter, updated arcs, updated latest-checkpoint marker in `design-history/README.md`, and retired scratch release workspace.
+**Current (as of alpha.20):** Alpha.20 is the current closed checkpoint technical baseline. Its close-out durable record is the frozen chapter, updated arcs, updated latest-checkpoint marker in `design-history/README.md`, and retired scratch release workspace.
 
 **Pending (unreleased):** The beta.1 release workspace must carry open Y-statement decisions until they are implemented, rejected, or folded into the next frozen chapter.
