@@ -39,4 +39,4 @@ projection to edit.
 
 - Exact shipped surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
 - Operating the Inbox: [Work the action queue](../../../how-to-guides/inbox/work-the-action-queue.md)
-- Troubleshooting stuck work: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)
+- Troubleshooting stuck work: [Fix a stuck request](../../../how-to-guides/troubleshooting/fix-stuck-card.md)

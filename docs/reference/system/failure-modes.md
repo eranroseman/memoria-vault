@@ -38,7 +38,7 @@ Sorted by severity, then topic.
 | Schema mismatch in filtered views | MEDIUM | A hand-authored note or stale sandbox fixture does not match the current schema | Repair the specific note or reinitialize the sandbox from the current package seed, then validate with `python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .`. |
 | Scheduled task did not run | MEDIUM | Host scheduler is disabled, asleep, or pointing at a stale workspace path | Run the same `memoria` command manually, then repair the operator-managed scheduler entry. |
 | Same request fails after explicit retry | MEDIUM | Brittle prompt, broken input payload, or unavailable dependency | Inspect `memoria request show`, amend or cancel the request, then retry only after the underlying error is fixed. |
-| Request not progressing (`pending` / `running` / `failed`) | MEDIUM | Worker has not run, crashed mid-run, or recovery marked an interrupted run failed for explicit retry | See full recipe in [Fix a stuck card](../../how-to-guides/troubleshooting/fix-stuck-card.md). |
+| Request not progressing (`pending` / `running` / `failed`) | MEDIUM | Worker has not run, crashed mid-run, or recovery marked an interrupted run failed for explicit retry | See full recipe in [Fix a stuck request](../../how-to-guides/troubleshooting/fix-stuck-card.md). |
 | Citekey alias not found at ingest | LOW | Import payload or catalog row lacks the alias | Re-import the BibTeX/CSL file or capture the source by DOI/file path. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
 

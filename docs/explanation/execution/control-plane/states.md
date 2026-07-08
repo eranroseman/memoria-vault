@@ -108,7 +108,7 @@ a task tracker.
 
 **How-to**
 
-- Troubleshooting for stuck work: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)
+- Troubleshooting for stuck work: [Fix a stuck request](../../../how-to-guides/troubleshooting/fix-stuck-card.md)
 
 **Reference**
 
