@@ -68,7 +68,10 @@ For the full flag list, see [Installer (bootstrap)](docs/reference/system/instal
 
 - **Git** on your `PATH`. **Supported platforms:** native Windows 10/11, Ubuntu/Debian, and WSL2. macOS is not supported.
 - **Python 3.12+ with venv support** for the workspace-local runtime package.
-- **Node 22** only for contributor prose tools (`cspell`, `markdownlint`).
+- Contributor prose hooks provision `cspell` and `markdownlint` through
+  pre-commit; no root `node_modules/` install is required.
+- **Node 22** only when developing the optional `packages/memoria-obsidian`
+  adapter package.
 - Provider keys only for the flows you use; replay fixtures and local files cover
   offline development.
 
