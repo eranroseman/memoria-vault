@@ -8,14 +8,10 @@ permalink: /explanation/surfaces/dashboards/synthesis-agenda/
 
 # Synthesis agenda
 
-Library and Knowledge views that surface what to read, discuss, and reconcile — the queue of synthesis work. These are the *PI's* unfinished thinking; the structural-health group is the Linter's structural debt, and the actor-split rationale is in [Dashboards](../README.md).
-
-| View | Question it answers |
-|---|---|
-| Reading pipeline | What's awaiting reading and distillation, and what claim-bearing notes came out of it? |
-| Discuss queue | Which read sources are worth a pass with the Co-PI before the notes firm up? |
-| Open questions | Which claim-bearing notes are still unconnected — the synthesis backlog? |
-| Contradictions | Which claim-bearing notes disagree with each other? |
+Library and Knowledge views surface what remains to read, discuss, and
+reconcile. These are the PI's unfinished thinking; the structural-health group
+is the Linter's structural debt, and the actor-split rationale is in
+[Surfaces and dashboards](README.md).
 
 ## Reading pipeline
 
@@ -28,17 +24,16 @@ It is not a board view. It reads note state, not cards.
 
 ## Discuss queue
 
-Discuss queue is the narrower read-but-not-distilled slice: checked Works with
-no digest yet. A long queue means intake is outrunning thought; the next move is
-a Co-PI discussion followed by PI-authored notes.
+Discuss queue is the narrower read-but-not-distilled slice. A long queue means
+intake is outrunning thought.
 
 ## Open questions
 
 Open questions surfaces current claim-bearing notes with no inbound links. These
 are notes captured but not yet integrated into hubs or other notes.
 
-It does not propose links or track a separate resolved state. A note drops off
-the list when the corpus links to it.
+It does not propose links or track a separate resolved state. Integration, not a
+dashboard disposition, resolves the question.
 
 ## Contradictions
 

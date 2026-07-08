@@ -9,16 +9,6 @@ nav_order: 7
 
 Ask a grounded question over checked workspace knowledge with `memoria ask`.
 
-## Which retrieval path?
-
-| You want | Use | Output |
-| --- | --- | --- |
-| A synthesized answer grounded in checked knowledge | `memoria ask` | CLI answer with sources and unknowns |
-| A project-scoped question | `memoria project ask <project-id>` | Same answer contract plus checked project context |
-| Project-specific missing evidence | `memoria project gaps <project-id>` | gap report |
-| Durable synthesis to keep | `memoria work digest <work-id>` or `memoria new note` | checked digest or PI-authored note |
-| Fast exact lookup | editor search or `rg` | matching files |
-
 ## Prerequisites
 
 - Checked sources, digests, or notes in the workspace.
@@ -32,6 +22,11 @@ Ask a grounded question over checked workspace knowledge with `memoria ask`.
 memoria ask --workspace . --question "What predicts JITAI receptivity?"
 memoria ask --workspace . --question "Which checked claims would the 2024 papers contradict?"
 memoria ask --workspace . --question "What methods have my sources used to measure EMA compliance?"
+```
+
+For a project-scoped question, use the project command instead:
+
+```bash
 memoria project ask project-alpha --workspace . --question "What matters for this project?"
 ```
 

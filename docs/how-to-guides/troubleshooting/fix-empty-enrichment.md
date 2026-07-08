@@ -36,7 +36,7 @@ request exists for the work at all.
 reads `OPENALEX_API_KEY` and `NCBI_EMAIL` from the workspace runtime
 environment, declared in `<workspace>/.memoria/config/providers.yaml`; Semantic
 Scholar is optional and only called when `SEMANTIC_SCHOLAR_API_KEY` is present.
-Confirm these are set — see [Set up Zotero → API keys for enrichment](../setup/set-up-zotero.md#api-keys-for-enrichment).
+Confirm these are set — see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
 
 **2. Rerun enrichment.**
 

@@ -7,13 +7,9 @@ nav_order: 3
 
 # Interaction channels
 
-Memoria has one required PI surface and optional secondary channels:
-
-| Channel | Mode | Purpose |
-| --- | --- | --- |
-| **CLI** (`memoria ...`) | Required daily and operator work | Capture, enrich, digest, ask, request recovery, audit queries, rebuilds, and checks. |
-| **Editor files** | Focused desktop work | Reading, writing, dashboards, and review decisions over the workspace files. |
-| **Telegram** | Optional mobile async signal | Urgent push notifications when configured; mobile capture remains planned work. |
+Memoria has one required PI surface: the CLI over a local workspace. Editor
+files are the durable working surface, and optional notification channels can
+draw attention to urgent items. They do not become the source of authority.
 
 An optional adapter is not the source of authority. Programs may wrap the CLI or
 watch files, but the request queue, operation manifests, policy gate, and journal

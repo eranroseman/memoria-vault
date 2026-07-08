@@ -10,22 +10,12 @@ nav_order: 22
 
 Not every agent output belongs on a dashboard. Some context is only useful while looking at a specific note — the comparative read on a paper matters when you open it to read the source, not in a daily roll-up. Dashboards surface *decisions across notes*; callouts surface *context inside one note*.
 
-Memoria uses three plain Markdown callout identifiers in shipped template notes.
-The alpha.20 Obsidian proof adapter does not add callout plugins, CSS snippets,
-or generated callout content; editors that do not understand callouts still show
-them as quoted text.
+Memoria uses plain Markdown callouts in shipped template notes. The Obsidian
+adapter does not make them special product state: editors that do not understand
+callouts still show them as quoted text. That is why callouts are safe as local
+reading context but unsuitable as workflow state.
 
-For the exact shipped-vs-deferred contract, see the reference: Obsidian callouts.
-
-## The three callouts and what they represent
-
-| Callout | Current use | Default |
-| --- | --- | --- |
-| `[!brief]` | Orientation blocks on space notes. | Expanded |
-| `[!suggestions]` | Collapsed first-action blocks on space notes. | Collapsed |
-| `[!verification]` | Read-barrier guidance on the Knowledge space. | Expanded |
-
-The identifiers and drift check are in the reference.
+For the exact shipped identifiers, see [Design system](../../../design/surfaces/design-system.md).
 
 ## Ownership and updates
 

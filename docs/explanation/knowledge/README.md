@@ -29,6 +29,8 @@ section develops in [Requests and notes are different things](../execution/contr
 | [Why promotion is gated](promotion-and-gated-zones.md)                       | What promotion means, what canonical zones are gated, and why the human gate sits at the synthesis boundary.         |
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
+| [Project slice](project-slice.md) | Why project drafting starts from an explicit checked-note set. |
+| [Exploration channel](exploration-channel.md) | Why exploratory candidate discovery stays separate from ranked search. |
 
 For the complete document-type reference (fields, templates, lifecycle tables),
 see [Document types](../../reference/document-types.md). For the current task

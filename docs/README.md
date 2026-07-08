@@ -77,50 +77,34 @@ PI-directed and policy-gated.
 
 ---
 
-## New here? Start with the tutorial path
+## New here?
 
 Start with [Quickstart](how-to-guides/setup/quickstart.md), then walk through
-the [Tutorials](tutorials/README.md). The tutorials use the current standalone
+the [Tutorials](tutorials/README.md). The tutorials use the standalone
 CLI/runtime path and point to task guides when you need more detail.
 
 ---
 
-## Prefer to read it straight through?
+## Reading path
 
-The sections below are organized by what you're trying to do, not as a syllabus.
-If you'd rather understand the system before touching it, read the model above, the
-Design foundations, then the Explanation pages in this order.
+Use this path when you want the system model before doing a full workflow.
 
-**Understand the system (read in order)**
+1. [What Memoria is](design/foundations/what-memoria-is.md)
+2. [Architecture](explanation/architecture/README.md)
+3. [The vault](explanation/architecture/vault.md)
+4. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md)
+5. [The control plane](explanation/execution/control-plane/README.md)
+6. [Design](design/README.md)
 
-1. [The model](#the-model) — the shared vocabulary and working loop
-2. [What Memoria is](design/foundations/what-memoria-is.md) — the central insight, and what it deliberately is not
-3. [Intellectual foundations](design/foundations/intellectual-foundations.md) — where the design comes from
-4. [Design principles](design/foundations/design-principles.md) — the rules the framing produces
-5. [Architecture](explanation/architecture/README.md) — the layered structure
-6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
-7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
-8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why the workspace is durable memory
-9. [Operation postures](explanation/execution/operation-postures/README.md) — how old profile language maps to requests and operations
-10. [Operations](explanation/execution/operations.md) — the deterministic and checked operation layer
-11. [The control plane](explanation/execution/control-plane/README.md) — request state, attention, and review boundaries
-12. [Decision points](explanation/execution/control-plane/decision-points.md) — how approvals, prompts, worklists, and triggers differ
-13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
-14. [Obsidian — the human surface](explanation/surfaces/obsidian/README.md) — where you actually work
-15. [Design](design/README.md) — why each major decision went the way it did
-
-**Then learn it by doing**
-
-16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
-17. [Tutorials](tutorials/README.md) — learn the current workflow in order
-18. [Current task guides](how-to-guides/README.md) — work from the implemented CLI surfaces
+Then use [Quickstart](how-to-guides/setup/quickstart.md) and
+[Tutorials](tutorials/README.md) to learn the current workflow by doing it.
 
 ---
 
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · Reset workspace
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md)
 
 **Daily work — sources**
 [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
@@ -133,22 +117,6 @@ Design foundations, then the Explanation pages in this order.
 
 **Troubleshooting**
 [Safe mode](how-to-guides/troubleshooting/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)
-
----
-
-## Operation postures
-
-| Posture           | What it does                                                                  |
-| ----------------- | ----------------------------------------------------------------------------- |
-| **Co-PI**         | The read-only conversational posture for questions, explanation, and request routing |
-| **Librarian**     | Intake, extraction, linking, and mapping operations from source capture to corpus maps |
-| **Writer**        | Draft-proposal posture for prose generation over checked evidence |
-| **Peer-reviewer** | Verification posture for citation, source, and claim-support checks |
-| **Engineer**      | Handoff posture for external coding work without making Memoria a code runner |
-
-Deterministic **operations** do the mechanical work, behind the policy gate.
-
-→ [Operation-posture rationale](explanation/execution/operation-postures/README.md) · No-installed-profile contract
 
 ---
 

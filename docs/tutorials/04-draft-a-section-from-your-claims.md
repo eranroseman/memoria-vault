@@ -21,6 +21,7 @@ memoria new project "Tutorial project" \
 ```
 
 Save the created project path.
+Notice that the path is under `projects/`.
 
 **2. Propose a slice.**
 
@@ -30,11 +31,14 @@ memoria project slice --workspace . <project-path> --query "jitai receptivity"
 
 The slice writes `projects/<project>/outline.md`. It is a proposal, not a final
 argument map.
+Notice the outline path printed by the command.
 
 **3. Edit the outline.**
 
 Open the outline and keep only the notes that belong in the draft. The line
 order is the draft order.
+For this tutorial, keep the two checked notes from Tutorial 03 and put the
+receptivity note first.
 
 **4. Compose and verify.**
 
@@ -45,6 +49,8 @@ memoria project verify --workspace . <project-path>
 
 Verification reports evidence markers, missing support, and review-required
 items. Treat those as work to resolve before export.
+Notice the draft path and the verification output. The next lesson will create
+one explicit review item and resolve it.
 
 ## What you should have seen
 

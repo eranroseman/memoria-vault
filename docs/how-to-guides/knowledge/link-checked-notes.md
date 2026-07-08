@@ -7,11 +7,8 @@ nav_order: 2
 
 # Link checked notes
 
-Add a typed `supports` / `contradicts` / `extends` link between checked
-`note` Concepts. The PI chooses whether a relationship is real; the worker only
-records and traces the accepted edit.
-
-> **`links:` vs catalog relations.** `links:` are authored edges on knowledge Concepts (your thinking); catalog relations are given facts from ingest/enrichment records ([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+Add a typed link between two checked notes when the relationship will help later
+reading, querying, or drafting.
 
 ## Prerequisites
 
@@ -26,11 +23,8 @@ Link for usefulness, not completeness. Add a typed link only when "*what contrad
 
 **2. Pick the link type.**
 
-| Link | Meaning | Direction |
-| --- | --- | --- |
-| `supports` | This note supports the linked note | Directional — set it on the supporting note |
-| `contradicts` | The two notes disagree | Symmetric — set it on either; the graph reads both ways |
-| `extends` | This note elaborates the linked note | Directional — set it on the elaborating note |
+Use `supports` when one note strengthens another, `contradicts` when the notes
+disagree, and `extends` when one note elaborates another.
 
 **3. Record the link through the CLI or edit directly.**
 
@@ -52,12 +46,6 @@ links:
 ```
 
 Both keys can carry lists — a claim may support one claim and contradict another.
-
-Plain-editor shorthand is also available: writing
-`[[supports::notes/target.md]]` in a checked Concept body creates an
-unchecked Inbox prompt for review. It does not update `links:` until you curate
-it; a bare `[[wikilink]]` never becomes a `supports`, `contradicts`, or
-`extends` edge automatically.
 
 **4. Point with the exact note name.**
 
@@ -83,5 +71,5 @@ typed edge should appear with its label.
 ## Related
 
 - Analyze the resulting graph: [Analyze a project argument](../project/analyze-a-project-argument.md)
-- The two edge kinds: [Frontmatter fields](../../reference/frontmatter.md)
+- Exact link fields: [Frontmatter fields](../../reference/frontmatter.md)
 - Why connections are load-bearing: [Note body structure](../../explanation/knowledge/note-body-structure.md)

@@ -24,7 +24,7 @@ Rationale: [the vault-eval-benchmark-first publication path](https://github.com/
   `eval_role` for diagnostic role grouping.
 - **Encoding.** UTF-8, `ensure_ascii=false`.
 
-## Log Inventory
+## Log inventory
 
 | File | Writer | Cadence | One row = |
 | --- | --- | --- | --- |

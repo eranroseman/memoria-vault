@@ -29,7 +29,7 @@ You add a paper to Zotero, the ingest operation catalogs it, wikilinks form acro
 
 The reason this is silent: Obsidian doesn't warn about broken wikilinks; it just shows them as unresolved. Without the Linter's `lint:analyze-graph` check, the breakage is invisible until you're actively looking for a specific note. The failure compounds over time because new notes continue linking to the broken citekey, not knowing it has changed.
 
-The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [Capture and ingest a source](../../how-to-guides/library/capture-and-ingest.md) for the pinning procedure.
+The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [Set up Zotero](../../how-to-guides/setup/set-up-zotero.md) for the pinning procedure.
 
 ## Vocabulary drift
 

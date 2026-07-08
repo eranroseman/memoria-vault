@@ -17,13 +17,10 @@ and for maintained rationale see the design links below.
 
 ## Current operating model
 
-| Piece | Current posture |
-| --- | --- |
-| Workspace | Local folder populated from `vault-template/` by the installer. |
-| Runtime | Standalone `memoria` CLI/engine plus workspace-local `.memoria/memoria.sqlite`. |
-| Bibliography | Memoria generates tracked `bibliography.bib` from checked SQLite catalog rows. |
-| Dispatch | CLI commands, file-change observers, and operator-managed scheduled tasks call the same engine. |
-| Secrets | Per-machine environment/provider config, never committed or synced. |
+The current model is deliberately local: the workspace, runtime state, generated
+projections, and provider configuration all belong to one machine. Git records
+history; it does not coordinate live writers. Operator-managed scheduled tasks
+may call the same engine, but they do not create a second authority.
 
 Multi-machine patterns are not the current operating model. A future second-device
 or always-on topology needs a new deployment decision before support.
@@ -34,10 +31,10 @@ one engine instance writes task state for a workspace at a time.
 
 ---
 
-## Related
+## Where to go next
 
-- The steps to actually install: [Setup how-to guides](../../how-to-guides/setup/README.md)
-- Installer inventories (what gets copied where): [Installer (bootstrap)](../../reference/installer.md)
-- Distribution rationale: [Distribution model](../../design/deployment/distribution-model.md)
-- Installer rationale: [Bootstrap installer](../../design/deployment/bootstrap-installer.md)
-- The repo-as-install-unit decision: [standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- To install: [Setup how-to guides](../../how-to-guides/setup/README.md)
+- To inspect what the installer copies: [Installer (bootstrap)](../../reference/installer.md)
+- To understand why the repo ships this way: [Distribution model](../../design/deployment/distribution-model.md)
+- To understand why bootstrap is narrow: [Bootstrap installer](../../design/deployment/bootstrap-installer.md)
+- To track future sync or always-on work: [Always-on VPS design](../../design/deployment/always-on-vps-design.md)

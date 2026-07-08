@@ -30,6 +30,8 @@ memoria work add --workspace . \
 The command creates a worker request, writes a catalog row, stores source blobs
 under `.memoria/blobs/source-content/`, and journals the capture. It does not
 create a legacy source-note Markdown file.
+In the JSON output, notice the `work_id`. You will use that stable ID in the
+next command.
 
 **3. Inspect the Work record.**
 
@@ -41,6 +43,7 @@ memoria work export --workspace . <work-id>
 
 Look for `check_status`, `content_path`, `raw_path`, and hash fields. Those are
 the provenance anchors the rest of the system reads.
+The paths should point under `.memoria/blobs/source-content/`.
 
 **4. Compile a digest when the source is ready.**
 
@@ -50,6 +53,8 @@ memoria work digest --workspace . <work-id> --mode test
 
 The digest path uses the manifest-pinned runner for the selected mode. Use
 `--mode live` only after provider config and the seeded-error gate support it.
+Notice the digest path or request result. The digest is the first source-derived
+artifact you can inspect.
 
 ## What you should have seen
 

@@ -13,6 +13,6 @@ postures constrain agent-like behavior.
 
 | Page | What it covers |
 | --- | --- |
-| [Operations](operations.md) | The deterministic layer below the agents |
-| [Operation postures](operation-postures/README.md) | The read-only and request-scoped stances used by the CLI and operations |
-| [Request control plane](control-plane/README.md) | Request state, attention, review, and WIP pressure |
+| [Operations](operations.md) | Read this when you need to understand why deterministic work is not an agent. |
+| [Operation postures](operation-postures/README.md) | Read this when a task involves LLM judgment or a named stance such as Writer or Peer-reviewer. |
+| [Request control plane](control-plane/README.md) | Read this when you need to understand request state, attention, review, or WIP pressure. |

@@ -31,7 +31,7 @@ Unchecked, quarantined, stale, missing, or non-retrieval paths are hidden by
 default. This is the retrieval side of the same read barrier that keeps machine
 writes in staging until worker checks pass.
 
-## Current Baseline
+## Baseline contract
 
 `memoria_vault.runtime.search_index.rebuild_checked_search_index()` writes
 checked retrieval documents into `.memoria/index/search/checked/`, records

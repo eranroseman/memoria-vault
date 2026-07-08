@@ -21,7 +21,7 @@ staging path. The PDF adapter `capture_pdf_source()` uses the optional PyMuPDF
 parser when it is installed to extract page text. URL snapshots use
 `capture_url_source()` with stdlib HTML text extraction.
 
-## Current Pipeline
+## Pipeline contract
 
 | Step | Owner | Output |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ Unchecked staged catalog rows, provider payloads, source-content blobs,
 quarantined files, and raw blobs are not indexed by the checked-only search
 input rebuild.
 
-## Deferred Work
+## Not shipped
 
 - ISBN URL-depth enrichment.
 - Live URL smoke beyond mocked single-page fetch tests.

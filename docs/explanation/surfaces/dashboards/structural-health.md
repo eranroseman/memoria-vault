@@ -8,15 +8,10 @@ permalink: /explanation/surfaces/dashboards/structural-health/
 
 # Structural health
 
-Views that surface drift, loose ends, board state, and the weekly maintenance agenda — the *Linter operation's* structural debt plus the worker-board view. The Maintenance collection lives under `system/dashboards/` and the request/attention CLI views. The synthesis-agenda group is the PI's unfinished thinking; the actor-split rationale is in [Surfaces and dashboards](README.md).
-
-| View | Question it answers |
-|---|---|
-| Maintenance collection | Which weekly structural-debt views should I review together? |
-| Drift watch | What drift have the Linter and the sweeps detected — which `flag`/`alert` attention items are open? |
-| Loose ends | Which `notice`-loudness `flag` findings are batched for the weekly pass? |
-| Board state | What work is in flight below the action queue? |
-| Weekly review | What Friday sequence keeps Inbox, Maintenance, and Knowledge from aging? |
+Structural health surfaces drift, loose ends, board state, and the weekly
+maintenance agenda: the Linter operation's structural debt plus the worker-board
+view. The synthesis-agenda group is the PI's unfinished thinking; this group is
+the system's visible maintenance debt.
 
 ## Drift watch
 
@@ -35,9 +30,9 @@ work stays quiet without losing the debt.
 
 ## Board state
 
-Board state is the full maintenance/debugging view over the Inbox board and worker
-projections. Use it when the Inbox Activity strip is too compact and you need to
-see runtime queue projections underneath.
+Board state is the full maintenance/debugging view under the compact Inbox
+activity strip. It exists so runtime queue state can be inspected without
+turning the daily Inbox into a debugging surface.
 
 ## Weekly review
 

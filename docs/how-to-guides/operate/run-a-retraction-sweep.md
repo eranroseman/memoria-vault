@@ -7,7 +7,8 @@ nav_order: 2
 
 # Run a retraction sweep
 
-Check the papers in your Catalog against retraction registries and act on the hits. The sweep is part of the **sweeps operation** — deterministic, read-only runtime code in `memoria_vault.runtime.subsystems.integrity.retraction.retraction`; flag-don't-fix: it raises Inbox **`alert`** attention items and never flips a note.
+Check catalog papers against retraction registries and act on any hits. The
+sweep raises attention items; it never rewrites claims for you.
 
 ## When it runs without you
 
@@ -32,7 +33,7 @@ Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
 python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --sweep --vault .
 ```
 
-The sweep scans the Catalog's DOIs against three sources, most authoritative first: the local Retraction Watch index, the live Crossref `update-to` delta, and Open Retractions as a cross-check. Each hit raises one finding-first **`alert`** attention item.
+Each hit raises one alert attention item.
 
 **3. Read the alert item.**
 
@@ -41,7 +42,9 @@ Inspect the catalog Work with `memoria work export` and open the checked notes
 that cite it through `work_id`, body evidence markers, or compact citation
 payloads.
 
-**4. Decide per affected claim.** Three honest options:
+**4. Decide per affected claim.**
+
+Use one of three outcomes:
 
 - **Soften** — rewrite to hedge: "X was suggested by [author], though the paper was subsequently retracted."
 - **Supersede** — find a cleaner source, write a new claim-bearing note on it, set `superseded_by` on the old one and archive it.

@@ -8,17 +8,10 @@ permalink: /explanation/execution/operation-postures/
 
 # Operation postures
 
-Operation postures are the current replacement for the old installed-profile
-language — drafting and review stances the CLI and its operations adopt. The
-old profile language maps to them this way:
-
-| Old profile concept | Alpha.19 replacement |
-| --- | --- |
-| Co-PI profile | `memoria ask` / `memoria project ask` query flow |
-| Background lane profile | Checked operation manifest plus request row |
-| Profile skill | Capability manifest or operation implementation |
-| Lane override | Operation `allowed_paths` / optional adapter policy |
-| Kanban card | Operation request and attention item |
+Operation postures replace the old installed-profile language with drafting and
+review stances the CLI and operations adopt. The important change is ownership:
+posture describes behavior, while operation manifests and request rows own the
+runtime contract.
 
 The durable source of truth is now
 `src/memoria_vault/product/capabilities/operations/` plus the standalone

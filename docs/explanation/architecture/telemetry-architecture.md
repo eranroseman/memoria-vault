@@ -15,11 +15,10 @@ forensic value. This page explains the operating model. Exact schemas live in
 [the content-light diagnostic plane](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
 [cost and disposition capture](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
-| Plane | What it answers | Where it lives |
-| --- | --- | --- |
-| **Audit** | Did an authorized write happen, and what changed? | Vault audit log plus session digests. |
-| **Analytics** | How is the system performing over time? | Content-free event streams and derived metric notes. |
-| **Diagnostic** | Why did Memoria-side code fail? | Local OS state, outside the vault and outside Git. |
+The three planes answer different questions. Audit asks whether an authorized
+write happened and what changed. Analytics asks how the system is performing
+over time. Diagnostics asks why Memoria-side code failed. They stay separate
+because each plane has a different retention, privacy, and trust requirement.
 
 ## How the planes differ
 

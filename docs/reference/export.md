@@ -7,7 +7,7 @@ nav_order: 30
 # Export routes and formats
 
 Citation states, export routes, editor feature comparison, and deliverable
-folder targets. For choosing between routes and failure modes see
+folder targets. Task steps live in
 [Export a draft](../how-to-guides/project/export-a-draft.md).
 
 `memoria project export` is the checked-project export surface. By default it
@@ -18,8 +18,8 @@ Pandoc citekeys and block anchors are stripped from the exported artifact.
 `.docx`, `.pdf`, and `.odt` remain available when Pandoc is installed. Add
 `--ready-only` when the export must fail closed unless the project has required
 paper framing and checked support. For citation-rich manuscript drafts, live
-Zotero field workflows, or custom CSL routes, use the direct Pandoc routes
-below.
+Zotero field workflows, or custom CSL routes, use Pandoc outside the
+checked-project export surface.
 
 ---
 
@@ -65,9 +65,6 @@ The final editor is effectively fixed at drafting time: switching from Obsidian 
 
 ---
 
-Failure recipes live in [Export a draft](../how-to-guides/project/export-a-draft.md).
-
-
 ## Export target folder
 
 Drafts live under the project folder in `projects/<project>/`, and
@@ -85,9 +82,8 @@ self-contained. There is no separate top-level deliverables tree.
 
 ## Pandoc command shape
 
-Use this shape for hand-authored manuscript drafts that need citation processing
-or live-citation conversion beyond the deterministic checked-project or draft
-export.
+Shape for hand-authored manuscript drafts that need citation processing beyond
+the deterministic checked-project or draft export:
 
 ```bash
 pandoc projects/<project>/<draft>.md \

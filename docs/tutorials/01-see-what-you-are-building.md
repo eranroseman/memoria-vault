@@ -25,6 +25,7 @@ memoria doctor bundle --workspace .
 
 `status` is the quick health read. `doctor bundle` checks the local runtime and
 prints the backup contract without requiring Hermes, Obsidian, or Zotero.
+Notice the workspace path and the absence of adapter requirements in the output.
 
 **2. Rebuild the checked search projection.**
 
@@ -35,6 +36,7 @@ memoria workspace rebuild --workspace . --search
 An empty index is normal in a new vault. The command is still useful because it
 shows that checked-read projections are rebuilt by the engine, not by an editor
 plugin.
+Notice that the command completes even before you have added research material.
 
 **3. Inspect the durable roots.**
 
@@ -47,6 +49,8 @@ memoria list --workspace . --type work
 The durable file-backed Concept types are `note`, `hub`, `project`, `digest`,
 and `fulltexts`. Source catalog state lives in SQLite and blobs, not as source
 Markdown files.
+Notice that `notes`, `hubs`, and `projects` are visible folders, while Work
+records come from the runtime catalog.
 
 ## What you should have seen
 

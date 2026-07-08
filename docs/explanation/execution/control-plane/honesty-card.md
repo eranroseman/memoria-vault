@@ -18,11 +18,11 @@ scan, or scheduled job.
 
 ## The three prompt shapes
 
-| Shape | Types | Carries | Deliberately omits | Why |
-| --- | --- | --- | --- | --- |
-| Proposal | candidate/gap attention | evidence for, evidence against, uncertainty, and the source/gap facts | Verdict | The prompt already implies "consider this"; the PI needs decision material, not a rubber stamp. |
-| Verification | flag/alert attention | `finding`, evidence marker context, and any soft `agent_recommendation` | Automatic disposal | The point is what the check found; even a `clean` flag closes nothing on its own. Human accept/reject dispositions are recorded separately. |
-| Work prompt | work-prompt attention | The work waiting on the PI | Verdict | It is a review or worklist handle, not a proposal to accept. |
+Attention prompts have three broad shapes. Proposals carry the case for and
+against an action, plus uncertainty. Verification prompts lead with the finding
+because the PI needs to inspect what the check found. Work prompts point to work
+waiting on the PI. None of the three turns an automated recommendation into a
+human disposition.
 
 The retired durable-card schema note is in [Inbox card fields](../../../reference/inbox-card-fields.md).
 Machine recommendations are soft verdicts only; [Request states and the review
@@ -32,13 +32,9 @@ gate](states.md) owns the "never a gate" rule.
 
 ## Graded loudness
 
-`loudness` decides where an attention prompt appears:
-
-| Loudness | Surface |
-| --- | --- |
-| `quiet`, `notice` | Pull-only. |
-| `alert` | Push-worthy. |
-| `block` | Push-worthy and pauses delegation or worker promotion until resolved. |
+Loudness decides whether attention stays pull-only or becomes push-worthy. The
+point is not notification decoration; it is preserving the PI's attention for
+items that can change near-term work.
 
 The 30-minute test is owned by [Interaction channels](../../architecture/interaction-channels.md): does this change what the PI should do in the next 30 minutes?
 
@@ -46,12 +42,9 @@ The 30-minute test is owned by [Interaction channels](../../architecture/interac
 
 ## What deliberately isn't an attention prompt
 
-| Not an attention prompt | Why |
-| --- | --- |
-| Classification | It is audited, correctable metadata; gating it would be a rubber stamp ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
-| High-cardinality screening | It becomes a Bases-backed worklist plus one aggregate work-prompt, not dozens of prompts. |
-| Seeded-error probes | They are calibration checks surfaced through review; the probe result never silently rewrites or promotes the underlying artifact. |
-| `review-request` | Any request awaiting the PI is represented as attention, pointing at the artifact under review. |
+Routine classification, high-cardinality screening, and seeded-error probes do
+not become verdict prompts. They are either metadata, worklists, or calibration
+signals. Turning them into accept/reject prompts would create rubber-stamp work.
 
 ---
 

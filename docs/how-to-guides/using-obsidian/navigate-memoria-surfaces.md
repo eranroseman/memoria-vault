@@ -9,13 +9,21 @@ nav_order: 5
 
 Use Obsidian as a Markdown reader/editor if you like; use `memoria` for actions.
 
-| Situation | Open | Run |
-| --- | --- | --- |
-| What needs attention? | `inbox/` | `memoria request list --workspace .` |
-| What should I read next? | `digests/` and `fulltexts/` | `memoria work add` or `memoria work import` |
-| What does the checked corpus say? | `notes/` and `hubs/` | `memoria ask --workspace . --question "<question>"` |
-| What gaps remain? | `projects/<slug>/project.md` | `memoria project gaps project-alpha --workspace .` |
-| Is the workspace healthy? | `system/dashboards/` | `memoria workspace check --workspace .` |
+## Steps
+
+**1. Open the right Markdown area for the question.**
+
+- Need attention: open `inbox/`
+- Reading sources: open `digests/` and `fulltexts/`
+- Checked claims: open `notes/` and `hubs/`
+- Project work: open `projects/<slug>/project.md`
+- Workspace health: open `system/dashboards/`
+
+**2. Run the matching CLI action.**
+
+Use `memoria request list`, `memoria work add` or `memoria work import`,
+`memoria ask`, `memoria project gaps`, and `memoria workspace check` from the
+same workspace folder.
 
 `_nav.md` links the same Markdown pages. It is a convenience file, not a runtime
 control surface.

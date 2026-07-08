@@ -55,5 +55,5 @@ This is the class of failure the Linter's `schema-check` pass is designed to cat
 
 - The operation that validates the vocabulary: [Operations](../execution/operations.md)
 - The common-pitfalls scenario this addresses: [Common pitfalls](common-pitfalls.md)
-- The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/knowledge/manage-vocabulary.md)
+- The vocabulary guide: [Add or rename a topic vocabulary term](../../how-to-guides/knowledge/manage-vocabulary.md)
 - Field definitions: [Frontmatter fields](../../reference/frontmatter.md)

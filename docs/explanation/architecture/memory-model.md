@@ -44,17 +44,13 @@ workspace content, not remembered profile context.
 
 ## Why each substrate has its scope
 
-Store facts at the narrowest scope that can safely own them:
+Store facts at the narrowest scope that can safely own them. Program steering
+can guide the whole workspace; project memory should not leak into other
+projects; request memory should not become standing strategy; working memory
+should disappear with the run. Audit memory is the exception: it is append-only
+because write provenance must survive every session.
 
-| Substrate | Scope choice | Why it matters |
-| --- | --- | --- |
-| Program memory | Program-wide, persistent | Holds standing strategy: what to pursue and how to screen. |
-| Project memory | One project, archived with it | Keeps a project's working state separate from program strategy. |
-| Audit memory | Append-only record | Preserves hash-paired write provenance; see [Policy gate](../../reference/policy-mcp.md). |
-| Request memory | One operation request | Carries context across retries and recovery without sharing session state. |
-| Adapter memory | Adapter-defined | May help a chat adapter, but never outranks checked workspace state. |
-| Session history | Optional searchable recall | Helps answer "did we discuss this?" when an adapter has it, but never outranks the vault. |
-| Working memory | One live operation | Keeps active reasoning from leaking across operations or sessions. |
+The exact substrate table belongs in [Memory substrates](../../reference/memory-substrates.md).
 
 ---
 

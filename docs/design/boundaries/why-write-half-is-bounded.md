@@ -25,18 +25,15 @@ artifact that matters is the one the PI can open, review, cite, and export.
 
 ## What the engine may do
 
-| Step | Output | Boundary |
-| --- | --- | --- |
-| Slice | `projects/<project>/outline.md` | Proposes checked notes and order; the PI edits membership. |
-| Compose | `projects/<project>/draft.md` | Writes prose from the checked outline with evidence markers. |
-| Verify | Evidence findings | Checks marker resolution and structural refs, not semantic truth. |
-| Export | Markdown or Pandoc output | Refuses unclean drafts instead of stripping uncertainty. |
-| Promote | Unchecked note proposal | Moves selected draft insight back into review, not checked knowledge. |
-
 The engine can propose a slice, compose draft text, verify evidence markers,
 and refuse unsafe export. It does not decide that a claim is true, promote a
 draft passage to checked knowledge, run analysis code, or hide uncertainty
 behind a score.
+
+That is the important boundary: the engine may make work visible and repeatable,
+but the PI still decides what belongs in the argument and what can become
+checked knowledge. Exact file names and command contracts live in the project
+how-to guides and reference pages.
 
 ## Failure modes this prevents
 

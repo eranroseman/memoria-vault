@@ -7,12 +7,16 @@ nav_order: 8
 
 # Exploration channel
 
-The exploration channel is separate from relevance-ranked search. It surfaces
-coverage candidates from citation-graph edges and contrary items from checked
-contradiction declarations or the existing REFUTED tension detector.
+The exploration channel is separate from relevance-ranked search because the PI
+needs two different questions answered. Search asks, "what checked material
+already matches this question?" Exploration asks, "what should I inspect next
+because the graph suggests a gap, contrary item, or nearby candidate?"
 
-`memoria project explore` returns data only. An empty result is valid: it means
-the checked graph did not expose a genuine coverage or contrary candidate.
+That distinction keeps exploration from polluting answers. A ranked answer
+should stay grounded in checked material; exploration may point outside the
+current argument so the PI can decide whether the candidate belongs.
 
 Every surfaced item carries a `why` string so the PI can decide whether it is
 worth action.
+
+The command contract belongs in [CLI](../../reference/cli.md) and [Operations](../../reference/operations.md).

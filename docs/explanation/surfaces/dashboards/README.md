@@ -8,14 +8,13 @@ permalink: /explanation/surfaces/dashboards/
 
 # Surfaces and dashboards
 
-The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `inbox/`, `system/dashboards/`, and the alpha.19 corpus roots, are consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
+The **Inbox** is the action queue: discrete things that need you now.
+**Dashboards** are browsable health views: where things stand. They are
+consumer-only, and a healthy vault shows them near-empty.
 
-| Group                                              | Dashboards                                                      | When you look                                     |
-| -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
-| [Daily glance](daily-glance.md)                    | Rail Now, Inbox queue action view                            | Start of every session — "what needs me?"         |
-| [Synthesis agenda](synthesis-agenda.md)            | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
-| [Structural health](structural-health.md)          | Maintenance collection, Drift watch, Loose ends, Board state  | Weekly maintenance and drift checks               |
-| [Operational health](operational-health.md)        | Audit log, Eval trend                                      | When checking runtime decisions and eval trends   |
+The pages in this section explain four kinds of surface: daily attention,
+synthesis agenda, structural health, and operational health. The exact shipped
+views, sources, and sort orders are in [Dashboards](../../../reference/dashboards.md).
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.
@@ -26,11 +25,6 @@ links to, not the Inbox action queue itself. The Project space's gate is its own
 collection. The synthesis-vs-structural split is by *actor*:
 open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and
 drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
-
-The exact shipped views, sources, and sort orders are in
-[Dashboards](../../../reference/dashboards.md).
-
----
 
 ## Related
 

@@ -9,10 +9,8 @@ nav_order: 1
 
 Two organizational decisions shape the vault: **a Concept's position in the
 system is its type, never its topic**, and **read state is record state, not a
-folder**. Folders encode one thing only: the category and type home declared in
-`folders.yaml` (`notes/`, `hubs/`, `projects/`, `digests/`, and `fulltexts/`, with
-SQLite-backed catalog state). Where a record stands for reading is
-`check_status`, not a path move.
+folder**. Folders encode type homes; state records whether something is usable
+for checked reads.
 
 ---
 
@@ -20,10 +18,9 @@ SQLite-backed catalog state). Where a record stands for reading is
 
 Topics are many-to-many; a folder is one location. Memoria therefore reserves
 folders for the one fact that is one-to-one: what kind of checked bundle this is.
-Alpha.19 file-backed bundle roots are `notes/`, `hubs/`, `projects/`,
-`digests/`, and `fulltexts/`; catalog Work records live in SQLite with
-blob-backed source content.
-Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
+File-backed Concepts and catalog Work records therefore have different homes,
+but the same principle: type belongs to storage, topic belongs to metadata and
+links. Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
 Zettelkasten link-first inheritance described in [Intellectual
 foundations](../foundations/intellectual-foundations.md#luhmanns-zettelkasten).
 
@@ -31,20 +28,16 @@ foundations](../foundations/intellectual-foundations.md#luhmanns-zettelkasten).
 
 ## Read state lives with the record
 The vault is organized by **category**
-([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)): the file-backed
-bundle roots hold Concepts, SQLite holds catalog working state, and
-packaged product data holds operation manifests. It never mixes lifecycle state
+([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)): Concepts, catalog state, and packaged product data have different homes. It never mixes lifecycle state
 into folder names. The full tree is catalogued in [On-disk layout](../../reference/on-disk-layout.md).
 A note does not travel when the PI checks it; a catalog Work does not become a
 different kind of thing when it is read. What changes is its read state, and read
 state is a property, not a location.
 
-For every record, read standing lives in SQLite and read-API responses:
-`unchecked -> checked -> quarantined`. File-backed Concept frontmatter carries
-authored meaning only; it never stores `check_status`. Catalog Work rows use the
-same DB-owned verdict. The exact Concept field inventory is defined in
-[Frontmatter fields](../../reference/frontmatter.md); catalog Work record fields
-are defined in [Ingest routing](../../reference/ingest.md).
+For every record, read standing lives in runtime state and read-API responses.
+File-backed Concept frontmatter carries authored meaning only. The exact field
+inventories are defined in [Frontmatter fields](../../reference/frontmatter.md)
+and [Ingest routing](../../reference/ingest.md).
 
 ---
 
@@ -78,12 +71,10 @@ One consequence to know: attention projections are separate from checked Concept
 
 ## Topics in frontmatter, not folders
 
-With folders carrying the type and record state carrying the verdict, topics are
-encoded as **facets** on catalog Work rows and note Concepts:
-
-- `research_area` — seeded from OpenAlex topics by the ingest/enrichment operation
-- `methodology` — a controlled vocabulary covering method and study design
-- `topics` on notes where the local schema supports them
+With folders carrying type and record state carrying verdict, topics become
+facets on catalog Work rows and note Concepts. The exact fields belong in the
+schema reference; the design point is that topic can be many-to-many without
+moving files.
 
 Topical *navigation* is built on top by **hubs** (`hubs/`): curated
 notes that link the relevant Works and notes for an area, regardless of state or

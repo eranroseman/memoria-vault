@@ -6,8 +6,8 @@ nav_order: 3
 
 # Tutorial 03: Build notes and connect them
 
-Alpha.19 has one durable `note` type. A note can carry `mode: claim`, but there
-is no separate `claim` document type.
+In this lesson, you will create two atomic notes, check them, and add one typed
+link between them.
 
 ## Steps
 
@@ -22,6 +22,7 @@ memoria new note "JITAI receptivity varies by burden" \
 ```
 
 Save the created note path from the command output.
+Notice that the path is under `notes/`.
 
 **2. Write a second note that can relate to it.**
 
@@ -32,6 +33,7 @@ memoria new note "Burden is partly contextual" \
   --tag jitai \
   --body "Burden changes with context, recent prompts, and task demands."
 ```
+Save this note path too. The link command needs both paths.
 
 **3. Check or repair the notes.**
 
@@ -42,6 +44,7 @@ memoria check --workspace . <second-note-path>
 ```
 
 Unchecked notes can exist, but checked-read surfaces use checked material.
+After each `check`, the note should be available to checked-read operations.
 
 **4. Curate a typed link.**
 
@@ -55,6 +58,8 @@ memoria link --workspace . \
 
 Links are authored graph structure. They are different from search results or
 similarity suggestions because the PI chooses the relationship.
+Notice that the link is directional: the contextual-burden note supports the
+receptivity note.
 
 ## What you should have seen
 

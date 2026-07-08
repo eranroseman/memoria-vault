@@ -21,6 +21,7 @@ memoria attention worklist --workspace .
 
 Requests are operation state. Attention items are PI-facing work. They are
 different surfaces over the same control plane.
+Notice whether the rejected evidence item from Tutorial 05 still appears.
 
 **2. Resolve attention items you have handled.**
 
@@ -29,6 +30,8 @@ memoria attention resolve --workspace . <attention-path> --apply --reason "Handl
 ```
 
 Use `--reject` or `--defer` when that is the true disposition.
+If there are no attention items, continue. An empty queue is a successful
+result in this tutorial.
 
 **3. Refresh projections before you commit.**
 
@@ -37,6 +40,7 @@ memoria workspace scan --workspace .
 memoria workspace rebuild --workspace . --search
 memoria status --workspace .
 ```
+Notice that `status` reports the refreshed workspace after the scan and rebuild.
 
 **4. Commit the vault state.**
 
@@ -48,6 +52,8 @@ git commit -m "Update Memoria workspace"
 
 Stage only the paths you intentionally changed. Do not commit raw provider
 secrets or unrelated local files.
+For this tutorial, seeing the intentional changed paths in `git status --short`
+is enough; commit only when you are ready to keep the sample workspace.
 
 ## What you should have seen
 

@@ -11,16 +11,10 @@ closed FastMCP stdio server over `memoria_vault.engine.api`; it is not the
 product state layer and it does not grant raw file, SQLite, terminal, browser,
 or network tools.
 
-## Install and Start
+## Startup command shape
 
-The MCP SDK is optional. Install Memoria with the `mcp` extra before starting
-the server:
-
-```bash
-pip install ".[mcp]"
-```
-
-Run one server for one workspace and one startup read scope:
+The MCP SDK is optional. The server command shape is one server for one
+workspace and one startup read scope:
 
 ```bash
 memoria mcp --workspace <path> --read-scope notes --actor agent
@@ -94,7 +88,7 @@ server's `--actor` flag. The worker owns operation validation, staging, checks,
 journal rows, and final materialization. New Concepts created through
 `create-concept` remain unchecked until the normal check path promotes them.
 
-## Host Configuration Shape
+## Host configuration shape
 
 MCP hosts vary, but a stdio configuration normally needs the executable and
 arguments:

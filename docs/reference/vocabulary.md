@@ -118,6 +118,6 @@ fits.
 
 ## Related
 
-- How to edit the lists: [Manage your topic vocabulary](../how-to-guides/knowledge/manage-vocabulary.md)
+- How to edit the lists: [Add or rename a topic vocabulary term](../how-to-guides/knowledge/manage-vocabulary.md)
 - Why this exists: [Vocabulary discipline](../explanation/knowledge/vocabulary-discipline.md)
 - Frontmatter field grammar: [Frontmatter fields](frontmatter.md)

@@ -8,12 +8,11 @@ permalink: /explanation/execution/control-plane/
 
 # The request control plane
 
-The alpha.19 control plane is the operation request table in
-`.memoria/memoria.sqlite`, surfaced through the `memoria request`,
-`memoria workspace`, and `memoria attention` commands. A CLI command, an
-observed file change, or an operator-managed scheduled job creates the same kind
-of durable request row; the worker runs it; the result resurfaces as an
-attention signal when the PI needs to decide something.
+The control plane is the durable request-and-attention layer between PI intent
+and worker execution. A CLI command, an observed file change, or an
+operator-managed scheduled job creates the same kind of durable request; the
+worker runs it; the result resurfaces as attention when the PI needs to decide
+something.
 
 Old profile and lane names survive only as operation-posture vocabulary. Intake,
 extraction, linking, mapping, and verification are capability-backed operations
@@ -31,12 +30,12 @@ A request is *work*
 
 ## Documents in this section
 
-| Page                                                          | What it covers                                                                                                                                                                          |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Request states and the review gate](states.md)                 | What a request carries; why execution, review, and PI-facing attention state are separate; and why rejected work gets a new request. |
-| [The honesty prompt](honesty-card.md)                            | The attention prompt the PI actually reads: argument for, argument against, what tipped it, certainty, and no automatic verdict on proposals.               |
-| [Decision points](decision-points.md)                         | Review gates, work prompts, batch worklists, and automated steps. |
-| [WIP limits and back-pressure](wip-limits.md)                 | Why request concurrency and review caps intentionally slow work before review quality degrades. |
+| Page | What it covers |
+| --- | --- |
+| [Request states and the review gate](states.md) | Why execution, review, and PI-facing attention state are separate. |
+| [The honesty prompt](honesty-card.md) | Why attention prompts provide decision material instead of verdicts. |
+| [Decision points](decision-points.md) | Why review gates, work prompts, batch worklists, and automated steps differ. |
+| [WIP limits and back-pressure](wip-limits.md) | Why request concurrency and review caps intentionally slow work. |
 
 For the current control-plane command lookup, see the
 [Control plane reference](../../../reference/control-plane.md).

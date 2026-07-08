@@ -13,6 +13,11 @@ structured prose through `memoria project compose`. Its posture remains
 nothing becomes canonical synthesis or a deliverable without verification and
 the PI.
 
+Draft-only matters because prose is persuasive. Once an agent turns checked
+notes into fluent paragraphs, the paragraph can feel more settled than its
+evidence. Keeping Writer output in draft state forces the review question to
+remain visible: does this sentence actually follow from the checked material?
+
 ---
 
 ## What the Writer is not

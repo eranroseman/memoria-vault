@@ -9,7 +9,7 @@ nav_order: 26
 Alpha.19 keeps graph-aware retrieval and gap analysis in the standalone runtime,
 but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 
-## Current Baseline
+## Shipped capabilities
 
 | Capability | Current owner |
 | --- | --- |
@@ -18,7 +18,7 @@ but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 | Argument graph inspection | `memoria project trace` and `render-project-argument-canvas`. |
 | Retrieval ranking | BM25-selected search over checked retrieval documents, with the derived passage substrate in `memoria_vault.runtime.indexing` and `memoria_vault.runtime.retrieval`. |
 
-## Not Shipped In Alpha.19
+## Not shipped in Alpha.19
 
 NetworkX community detection, BERTopic topic modeling, and generated cluster
 Canvas adapters are not baseline commands. If they return later, they should be

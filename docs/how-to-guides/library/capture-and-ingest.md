@@ -7,53 +7,60 @@ nav_order: 1
 
 # Capture and ingest a source
 
-Capture always enters through a SQLite worker request. DOI, BibTeX, CSL JSON,
-URL, PDF, and local text imports create catalog Work rows under
-`.memoria/memoria.sqlite` plus durable blobs under `.memoria/blobs/source-content/`.
+Capture one source into the catalog so you can read, enrich, digest, and cite it
+later.
 
-**1. Capture a URL from the CLI.**
+## Prerequisites
+
+- A working vault and `memoria` on your `PATH`
+- A DOI, URL, local file, BibTeX file, or CSL JSON file for the source
+
+## Steps
+
+**1. Capture one source from the CLI.**
 
 ```bash
 memoria work add --workspace <vault> --url https://example.test/source
 ```
 
-The CLI writes one SQLite request for `capture-url-source`; the worker fetches,
-normalizes, stores blobs, writes the catalog row, and journals the capture.
+Use `--doi <doi>` or `--file <path>` instead when that is the source you have.
 
-**2. Import portable bibliographic files.**
+**2. Import portable bibliographic files when you have a batch.**
 
 Use `memoria work import --format bibtex|csl --file <path>` for portable
-metadata, including records that carry ISBN metadata. Imports write unchecked
-Work rows and queue DOI enrichment when a DOI is present. They do not fetch from
-a reference-manager API, create source/entity Markdown, or update
-`bibliography.bib` at import time. There is no standalone `memoria work add
---isbn` route.
+metadata:
 
-**3. Confirm the catalog row and blobs.**
+```bash
+memoria work import --workspace <vault> --format bibtex --file sources.bib
+```
+
+**3. Confirm the catalog row.**
 
 Use JSON output or `memoria work export` to inspect the Work:
 
 ```bash
-memoria work add --workspace <vault> --file paper.txt --title "Paper title" --json
 memoria work export --workspace <vault> <work-id>
 ```
 
-The output includes `check_status`, `text_status`, `content_path`, `raw_path`,
-`normalized_text_sha256`, and `raw_text_sha256`. Paths are workspace-relative
-and live under `.memoria/blobs/source-content/<work_id>/`.
+Copy the `work_id`; you will use it for enrichment, digesting, citation, and
+troubleshooting.
 
-**4. Confirm the trace.**
+**4. Enrich or fix missing metadata.**
 
-The journal has `run`, `derived`, and `check-fired` events. Source-content blobs
-are gitignored; tracked projections such as `bibliography.bib` are committed only
-when enrichment or projection refresh makes them current.
+If provider evidence or full text is missing, finish the enrichment pass before
+depending on the source in a checked note.
 
-## Deferred UI
+```bash
+memoria work enrich --workspace <vault> <work-id>
+```
 
-Reference-manager adapters are not part of the standalone runtime.
+## Verify
+
+- `memoria work export --workspace <vault> <work-id>` returns the captured Work
+- The Work has enough metadata and text for your next step
+- Any attention item raised by capture or enrichment is resolved or deliberately deferred
 
 ## Related
 
 - Pipeline details: [Ingest routing](../../reference/ingest.md)
-- Source record fields: [Ingest routing](../../reference/ingest.md)
 - Trusted writer: [System actions](../../reference/system-actions.md)

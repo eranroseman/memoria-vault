@@ -23,16 +23,9 @@ installed profile packages.
 
 ## The operation family
 
-The table below is an orienting illustration of what each operation family does
-and the attention signal it can raise. [Operations](../../../reference/operations.md)
-owns the concrete command and manifest surface.
-
-| Operation family | Work | Attention signal |
-| --- | --- | --- |
-| **catalog** | find sources, propose intake, the comparative `[!brief]`, draft classifications | `candidate` |
-| **extract** | claim-stubs and distill nudges from kept sources | work prompt |
-| **link** | note-link candidates with evidence and stance reasoning | link proposal |
-| **map** | corpus maps, coverage reports, cluster maps, graph/canvas proposals, gap analysis | `gap` |
+The Librarian posture shows up in catalog, extraction, linking, and mapping
+work. [Operations](../../../reference/operations.md) owns the concrete command
+and manifest surface; this page owns the reason those tasks share a posture.
 
 Like all delegable tasks, these operations are individually triggered, not a
 pipeline — see [The knowledge cycle](../../knowledge/knowledge-cycle.md) for the

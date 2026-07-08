@@ -25,10 +25,9 @@ rather than mirroring every field and count.
 | [Document types](document-types.md) | Schema-owned document types and owning files | Source-owned |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
-| [Control plane reference](control-plane.md) | Request-control commands and state | Manual |
 | [Glossary](glossary.md) | Term definitions, alphabetical | Manual |
 
-## Agents and control
+## Commands and transports
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -38,19 +37,30 @@ rather than mirroring every field and count.
 | [Engine read API](read-api.md) | Host-neutral read/write API functions and project WRITE views | Manual |
 | [Local HTTP transport](local-http-transport.md) | REST-like loopback adapter surface, auth, endpoints, scope, write payload, and limits | Manual |
 | [MCP transport](mcp-transport.md) | Optional FastMCP stdio agent surface, required read scope, tool roster, and write provenance | Manual |
+| [Prompt operations](prompt-operations.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
+
+## Request, review, and policy contracts
+
+| File | What it covers | Source |
+| --- | --- | --- |
+| [Control plane reference](control-plane.md) | Request-control commands and state | Manual |
 | [Empirical events](empirical-events.md) | Alpha.20 empirical-use event schema, enums, required fields, and privacy boundary | Guarded mirror |
 | [Evidence sets](evidence-sets.md) | Draft evidence marker and derived-store contract | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
-| [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
-| [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
 | [Policy gate](policy-mcp.md) | Runtime policy hook, optional adapter contract, audit pairing, and fail-closed behavior | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
+
+## Analysis, diagnostics, and surfaces
+
+| File | What it covers | Source |
+| --- | --- | --- |
+| [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
+| [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
 | [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, API calls, and graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
-| [Prompt operations](prompt-operations.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
 | [Clustering](clustering.md) | Graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
 
 ## Pipelines and I/O

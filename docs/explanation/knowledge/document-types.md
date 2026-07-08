@@ -13,13 +13,12 @@ says whether it is readable as checked knowledge.
 
 ---
 
-## Stores and Bundles
+## Stores and bundles
 
-| Store | Holds | Types |
-| --- | --- | --- |
-| Catalog state | Source rows, source blobs, provider payloads, external IDs, and graph edges. | SQLite catalog rows and `.memoria/blobs/**`, not frontmatter Concept types |
-| `notes/`, `hubs/`, `projects/`, `digests/`, `fulltexts/` | Durable corpus files and PI curation. | `note`, `hub`, `project`, `digest`, `fulltext` |
-| Packaged capability bundle | Operation manifests and product capability metadata. | Packaged data under `memoria_vault.product.capabilities`, not runtime-vault Concepts |
+Memoria separates source catalog state, durable knowledge Concepts, and packaged
+operation metadata. That split keeps objective imported records, PI-curated
+knowledge, and product capabilities from pretending to be the same kind of
+thing.
 
 The exhaustive field lists live in [Document types](../../reference/document-types.md).
 
@@ -27,15 +26,10 @@ The exhaustive field lists live in [Document types](../../reference/document-typ
 
 ## Read state
 
-Every Concept and catalog row has a DB/read-API `check_status`:
-
-- `unchecked`: captured or generated, but not promoted as checked.
-- `checked`: usable by checked read surfaces.
-- `quarantined`: failed validation, provenance, or foreign-write checks.
-
-The value is not frontmatter. Machine writes and promotions go through the
+Read state is not frontmatter. Machine writes and promotions go through the
 worker path. PI edits are direct edits, then observed and backfilled. Foreign
-writes are quarantined by scan instead of silently accepted.
+writes are quarantined by scan instead of silently accepted. The exact state
+values belong in the reference.
 
 ---
 

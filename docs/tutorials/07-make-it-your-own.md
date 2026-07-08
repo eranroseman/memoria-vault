@@ -6,54 +6,63 @@ nav_order: 7
 
 # Tutorial 07: Make it your own
 
-After the first loop works, customize only the pieces that reduce real friction:
-provider config, vocabulary, steering, and optional editor/reference-manager
-adapters.
+Now that one loop works, make one small, reversible customization and confirm
+that Memoria reads it back. We will change the workspace steering note, then
+create one project that uses the new intent.
 
 ## Steps
 
-**1. Set provider config only where you need live model work.**
-
-Runner providers live in `.memoria/config/providers.yaml`; secrets stay in
-environment variables named by that config. Check the runner before using live
-mode:
-
-```bash
-memoria doctor --workspace . --check runner --provider gateway
-memoria eval select-models --workspace . --mode live
-```
-
-**2. Keep vocabulary deliberate.**
-
-```bash
-memoria vocab list --workspace .
-memoria vocab add --workspace . topics jitai
-memoria vocab rename --workspace . topics old-term new-term
-```
-
-Vocabulary changes affect search, gap analysis, and project slices. Rename or
-merge terms instead of letting spelling variants accumulate.
-
-**3. Put project-level intent in steering and projects.**
+**1. Read the current steering note.**
 
 ```bash
 memoria steering show --workspace .
-memoria steering edit --workspace . --body "Current research focus and constraints."
-memoria new project "Next project" --workspace . --description "Scope in one sentence."
 ```
 
-Steering is durable workspace guidance. Project Concepts carry narrower scope.
+Notice that steering is workspace guidance, not a chat message. It lives with
+the vault.
 
-**4. Add optional adapters last.**
+**2. Replace it with one concrete research focus.**
 
-- Use [Obsidian](../how-to-guides/setup/set-up-obsidian.md) as a plain Markdown editor if it helps.
-- Use [Zotero](../how-to-guides/setup/set-up-zotero.md) for stable citekeys and portable BibTeX/CSL exports.
-- Use [Add a second vault](../how-to-guides/setup/add-a-second-vault.md) only when you really need another workspace.
+```bash
+memoria steering edit --workspace . \
+  --body "Focus this tutorial workspace on JITAI receptivity and participant burden."
+```
+
+Run the read command again:
+
+```bash
+memoria steering show --workspace .
+```
+
+You should see the new sentence. That is the first customization: durable
+workspace intent.
+
+**3. Create a second, narrower project.**
+
+```bash
+memoria new project "Burden follow-up" \
+  --workspace . \
+  --description "A follow-up question about participant burden in JITAIs."
+```
+
+Notice the difference: steering says what the workspace is about; the project
+says what one piece of work is about.
+
+**4. Check what changed.**
+
+```bash
+memoria workspace scan --workspace .
+memoria status --workspace .
+git status --short
+```
+
+The changed files should be ordinary workspace files. Nothing about this step
+requires Obsidian, Zotero, or a live model provider.
 
 ## What you should have seen
 
-- Customization is mostly configuration and vocabulary, not new product paths.
-- Optional adapters do not replace the CLI/engine boundary.
-- Your durable system is the checked workspace plus Git history.
+- Customization starts with one durable file, not a new product path.
+- Workspace steering and project scope are different levels of intent.
+- The CLI remains the surface that reads, checks, and reports the change.
 
-For exact commands, continue with [How-to guides](../how-to-guides/README.md).
+For optional setup, continue with [How-to guides](../how-to-guides/README.md).

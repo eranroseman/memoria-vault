@@ -18,23 +18,16 @@ explains the two-log design and why they stay separate.
 
 ---
 
-## Two logs in `system/logs/`
+## Two logs
 
-These are different artifacts written by different components with different lifecycles. Don't conflate them.
+The audit log and per-request summaries are different artifacts written for
+different readers. The audit log records gated writes for forensic review. The
+per-request summaries digest what a request accomplished so the PI can inspect a
+session without reading the whole audit trail.
 
-| Log | Path | Writer | Lifecycle |
-| --- | --- | --- | --- |
-| **Policy gate audit log** | `system/logs/audit.jsonl` | Policy gate | Append-only **forever** — never rotated ([quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)); growth is surfaced by the Linter's `audit-log-size` advisory (50 MB) |
-| **Per-request summaries** | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (`runtime/subsystems/integrity/linter/session_summary.py`, scheduled integrity run) | One file per request; never rotated; accumulate indefinitely |
-
-The audit log is what the audit-log
-[dashboard](../surfaces/dashboards/README.md) reads. The per-request summaries are
-**deterministic digests** of what happened in a session — the Linter is zero-LLM,
-so the digest is derived from the audit trail, not narrated: a header (request,
-actor, start/end, counts by action and decision) plus one record per
-touched path (actions, final decision, final `after_hash`). The writer is
-idempotent (a digested request is never rewritten) and only digests requests
-quiet for 24 h, so in-flight requests are never summarized early.
+The exact paths, writers, and retention contract belong in [Memory
+substrates](../../reference/memory-substrates.md) and [Policy audit
+log](../../reference/policy-audit-log.md).
 
 ---
 

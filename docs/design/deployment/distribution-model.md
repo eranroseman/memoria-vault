@@ -9,16 +9,8 @@ nav_order: 1
 
 Memoria ships from the `memoria-vault` repo as a workspace template plus an
 installable Python package ([alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)).
-You clone it, or run the one-line bootstrap that clones it for you, and the
-bootstrap installer at the repo root deploys the standalone workspace.
-
-| Path | Contents | Audience |
-| --- | --- | --- |
-| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both derive the workspace from `vault-template/` and install the standalone CLI/runtime package. | End users (run once). |
-| `vault-template/` | **Source files only, never a live vault**: templates, OKF knowledge bundles, capability manifests, schemas, dashboards, and patterns. The installer scaffolds the vault tree and populates it from here. | The installer (and contributors). |
-| `src/memoria_vault/` | The installable Python package for shared runtime helpers and policy logic. | Memoria operations, optional adapter servers, tests, and contributors. |
-| `packages/memoria-obsidian/` | Optional alpha.20 proof adapter for Obsidian. It consumes the local HTTP surface and is not installed into the baseline vault. | Adapter testers and contributors. |
-| `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
+You clone it, or run the bootstrap that clones it for you, and the installer
+deploys the standalone workspace.
 
 The installer derives the running workspace from `vault-template/` at a working
 location. The deployed workspace is self-contained - it does not carry `docs/`,
@@ -37,12 +29,13 @@ system files are structurally distinct from the first minute.
 
 ---
 
-## What ships in `vault-template/`
+## What the template owns
 
-`vault-template/` carries the **workspace skeleton** and **`.memoria/` scaffold**.
-The full directory catalog is [On-disk layout](../../reference/on-disk-layout.md);
-the category-tree rationale is [The vault](../../explanation/architecture/vault.md).
-Empty content dirs are recreated from `.memoria/schemas/folders.yaml`.
+`vault-template/` is source material for new workspaces, not a live vault. The
+full directory catalog belongs in [On-disk layout](../../reference/on-disk-layout.md);
+the category-tree rationale belongs in [The vault](../../explanation/architecture/vault.md).
+This page only records the distribution choice: ship source files and generate
+the user's running workspace from them.
 
 ## Product-file refresh
 

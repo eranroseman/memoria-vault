@@ -14,6 +14,8 @@ empirical-event capture, but bootstrap still installs a standalone workspace
 that works without Obsidian.
 
 One principle runs through every page below: **the architecture is invisible during normal use and legible when something goes wrong.** The vault should feel like a writing environment; the machinery surfaces only when it needs a decision.
+That is why Obsidian stays optional. A pleasant editor can make Markdown work
+feel better, but it cannot become the place where workflow truth lives.
 
 ## The surfaces
 

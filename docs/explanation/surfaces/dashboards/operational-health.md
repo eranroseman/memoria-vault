@@ -8,12 +8,9 @@ permalink: /explanation/surfaces/dashboards/operational-health/
 
 # Operational health
 
-Dashboards that track runtime decisions and evaluation trends.
-
-| Dashboard | Question it answers |
-|---|---|
-| Audit log | What did the policy gate decide, and why? |
-| Eval trend | Is the deployed system still finding, extracting, linking, and verifying correctly on this vault? |
+Operational health surfaces runtime decisions and evaluation trends. It is
+separate from structural health because "the runtime did X" and "the vault has
+drift" are different claims.
 
 ## Audit log vs eval trend vs Drift watch
 
@@ -32,9 +29,8 @@ watch is aggregated structural debt.
 
 ## Audit log
 
-Audit log reads `system/logs/audit.jsonl`, the append-only policy-gate event
-stream. Open it when a worker behaved unexpectedly, a write did not land, or a
-scheduled run needs forensic review.
+Audit log is the append-only policy-gate event stream. It explains write
+decisions and preserves the evidence needed for forensic review.
 
 It is not editable. The audit log records before/after hash pairs for gated
 writes; editing the log would defeat the tamper signal. The field schema and
@@ -42,10 +38,9 @@ hash-pairing contract live in [Policy gate](../../../reference/policy-mcp.md).
 
 ## Eval trend
 
-Eval trend reads `system/metrics/eval/runs.jsonl` and shows per-quarter vault-eval
-capability scores: `recall@k`, support-rate, and FAMA-clean. It is diagnostic,
-never a gate; capability scores are noisy enough that blocking work on them would
-invite false halts.
+Eval trend shows whether the deployed system's retrieval, extraction, linking,
+and verification behavior is moving. It is diagnostic, never a gate; capability
+scores are noisy enough that blocking work on them would invite false halts.
 
 The scoring contract is in [Vault eval](../../../reference/vault-eval.md).
 

@@ -7,7 +7,8 @@ nav_order: 8
 
 # Run the vault eval
 
-Run Memoria's system-level evaluation on demand — dispatch the gold-set tasks through the local runtime and score reported results — instead of waiting for the scheduled run. The eval measures whether the *deployed system* finds, extracts, links, and verifies correctly on your vault; its verdict is diagnostic, never gating. For the gold set, the metrics, and the result contract, see [Vault eval](../../reference/vault-eval.md).
+Run Memoria's system-level evaluation on demand instead of waiting for the
+scheduled run. The eval is diagnostic, never gating.
 
 ## When to run it by hand
 
@@ -17,7 +18,7 @@ Run Memoria's system-level evaluation on demand — dispatch the gold-set tasks 
 
 ## Prerequisites
 
-- The gold-set papers ingested — the shipped tasks reference well-known papers so they work on any vault once those are present
+- The gold-set papers ingested
 - The local runtime installed and `memoria` available on `PATH`
 
 ## Steps
@@ -29,15 +30,17 @@ cd <vault>
 memoria eval run --workspace . --dry-run --json
 ```
 
-**2. Dispatch the tasks.** One idempotent local eval task per gold task. The idempotency key is per `(task, quarter)`, so re-running inside the same quarter converges to one task per fixture rather than duplicating:
+**2. Dispatch the tasks.**
 
 ```bash
 memoria eval run --workspace . --json
 ```
 
-**3. Run the eval work.** Each eval task follows the non-committing contract — scratch-only writes, results reported as JSON; a run never mutates the vault.
+**3. Run the eval work.**
 
-**4. Score the run.** The deterministic, zero-LLM scorer reads reported result payloads and computes only what each result makes computable — no faked scores:
+Each eval task reports results as JSON and does not mutate the vault.
+
+**4. Score the run.**
 
 ```bash
 python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --from-json results.json
@@ -54,14 +57,6 @@ Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute
 - The eval-trend dashboard shows the run, with `recall@k` / `support-rate` / `FAMA-clean` per task
 - A task with no machine-readable result shows as **unscored** — never a faked score
 - `.memoria/eval/last-run.md` reflects the dispatch you just ran
-
-## Scheduled equivalent
-
-The `memoria-eval` wrapper dispatches the current quarter's local eval tasks when
-an operator-managed scheduler calls it. Scoring is explicit: run the scorer with
-`--from-json` once result payloads exist. The installer ships the wrapper
-boundary but does not register a host schedule; see
-[Installer (bootstrap)](../../reference/installer.md#host-scheduler-wiring).
 
 ## Related
 

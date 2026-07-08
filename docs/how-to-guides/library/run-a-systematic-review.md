@@ -7,17 +7,18 @@ nav_order: 7
 
 # Run a systematic review
 
-Set up a PRISMA-compliant screening protocol and process the results into
-Memoria. Use this when you need a defensible, reproducible literature search;
-for ordinary exploratory work, capture sources one at a time.
+Set up a PRISMA-style screening protocol and process included sources into
+Memoria. Use this when you need a defensible literature search; for ordinary
+exploration, capture sources one at a time.
 
-> **Status: a manual procedure.** There is no "run systematic review" command and no screening template. The workflow composes existing pieces — a protocol note you author, your own database searches, optional [ASReview](https://asreview.nl/) for large pools, and the standard capture pipeline. Every step below works today; the protocol discipline is yours to keep.
+This is a manual procedure. Memoria captures the included sources, but you own
+the search strategy, screening decisions, and protocol record.
 
 ## Prerequisites
 
 - Memoria installed with a working CLI/runtime workspace
 - A defined, written research question
-- Access to at least two literature databases (PubMed, ACM DL, Scopus, arXiv, …)
+- Access to at least two literature databases such as PubMed, ACM DL, Scopus, or arXiv
 - Exportable BibTeX or CSL files from your literature databases or reference
   manager — stable citekeys and source metadata keep batch capture reproducible
 - [ASReview](https://asreview.nl/) installed if the title/abstract pool exceeds ~200 records
@@ -27,8 +28,7 @@ for ordinary exploratory work, capture sources one at a time.
 **1. Create a protocol note.**
 
 Author it as a project note or protocol note attached to the review work.
-Record: review title, protocol date, reviewer, review type (Scoping /
-Systematic / Rapid).
+Record the review title, protocol date, reviewer, and review type.
 
 **2. Write your research question and criteria.**
 
@@ -46,7 +46,8 @@ Run your search string in each database. Record in a protocol table: database, s
 
 **4. Screen titles and abstracts.**
 
-**Under ~200 records — screen manually:** apply your criteria per record; log decisions in the protocol note's decision table (`Citekey / DOI | Decision | Exclusion reason`).
+Under roughly 200 records, screen manually: apply your criteria per record and
+log each decision in the protocol note.
 
 **200+ records — use ASReview:**
 
@@ -65,7 +66,9 @@ For each record marked relevant at the abstract stage: retrieve the full text, r
 
 **6. Update the PRISMA counts.**
 
-Complete the protocol's flow table: identified → duplicates removed → screened → excluded (title/abstract) → full-text assessed → excluded (full text) → **included**.
+Complete the protocol's flow counts: identified, duplicates removed, screened,
+title/abstract exclusions, full-text assessed, full-text exclusions, and
+included.
 
 **7. Capture the included sources.**
 

@@ -21,13 +21,10 @@ agent.
 
 ## Invocation rule
 
-The path follows the caller:
-
-| Caller | Path |
-| --- | --- |
-| CLI / PI | Request row, worker operation, trusted writer. |
-| Scheduled task / CI | Direct command or scheduled script using the same runtime package. |
-| Optional adapter | Runtime policy hook, then CLI/worker request. |
+The path follows the caller, but the authority does not change. CLI work,
+scheduled work, CI, and optional adapters all use the same runtime package and
+must end at the same worker/trusted-writer boundary when they materialize vault
+state.
 
 Processing, integrity, telemetry, and maintenance operations are runtime package
 entry points. Optional adapters are transport edges, not implementation owners.

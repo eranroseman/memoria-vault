@@ -24,28 +24,15 @@ dispatch and scheduled writes. The PI's desktop remains the human review
 surface, and the VPS is infrastructure: it runs deterministic maintenance and
 background operation requests against the synced runtime workspace.
 
-## Required properties
+## Required boundary
 
-| Property | Reason |
-| --- | --- |
-| One dispatcher per workspace | Two machines dispatching the same request queue can race on request state and produce conflicting audit rows. |
-| Desktop owns review and optional reference-manager UI | The human review surface and any desktop-only reference tooling stay local to the PI's machine. |
-| VPS owns scheduled CLI invocations and dispatch | Scheduled work needs an always-awake host. |
-| Workspace files sync between machines | The PI must see the results locally, while the VPS can process background work. |
-| Worker-generated projections avoid mid-transfer reads | The ingest path depends on stable source/citekey metadata; partial sync is a real failure mode. |
-| Audit rows remain content-free and append-only | Multi-machine topology must not weaken the audit-memory contract. |
+The topology only works if one host owns dispatch for a workspace. Two machines
+running the same queue would race request state and audit rows. The desktop
+keeps the human review surface and optional desktop-only tools; the persistent
+host owns scheduled CLI work. Synced files are just the substrate between them,
+not permission to run two writers.
 
-## Boundary
-
-| Component | Required owner |
-| --- | --- |
-| Review UI and optional reference-manager UI | Desktop |
-| `memoria workspace run` and scheduled CLI commands | VPS |
-| search index for background work | VPS |
-| Co-PI query flow | Either desktop or VPS through explicit CLI/API invocation |
-| Runtime workspace files | Synced between desktop and VPS |
-
-The owner split above is a boundary, not an install recipe. Platform details stay in the implementation issue until the topology is proven.
+Platform details stay in the implementation issue until the topology is proven.
 
 ## Validation before support
 
@@ -57,13 +44,9 @@ silent drift.
 
 ## Failure modes to design against
 
-| Failure mode | Design response |
-| --- | --- |
-| Host sleeps through a timer | Put dispatch on an always-on host rather than a laptop. |
-| User services die on logout | The VPS runtime must keep user timers alive across SSH logout. |
-| Secrets drift between hosts | Provider and optional-adapter config must be copied through an explicit operator-owned secret process. |
-| Two dispatchers run at once | The topology requires a single active dispatcher per vault. |
-| Bibliography projection sync is partial | `bibliography.bib` needs a worker-owned regeneration path, not a half-written sync read. |
+The design must survive sleeping desktops, logout-killed services, secret drift,
+double dispatch, and partial synced projections. Those failures are why the
+topology remains deferred: each needs a live proof before support.
 
 ## Related
 
