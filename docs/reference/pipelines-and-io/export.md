@@ -88,7 +88,8 @@ pandoc projects/<project>/<draft>.md \
   -o projects/<project>/exports/<draft>.docx
 ```
 
-CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placeholder; place your `.csl` files there before export.
+CSL files for direct Pandoc routes live in user-created `.memoria/csl/`; place
+your `.csl` files there before export.
 
 ---
 
