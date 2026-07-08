@@ -13,7 +13,7 @@ installer, runtime package, packaged workspace seed, and docs are welcome.
 
 ## Development setup
 
-**Requirements:** Git, WSL2 or Linux, Python 3 with venv support, Node 22 for
+**Requirements:** Git, WSL2 or Linux, Python 3.12+ with venv support, Node 22 for
 contributor prose tools, and any provider keys needed for the flow you are testing.
 
 ```bash

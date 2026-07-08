@@ -13,7 +13,7 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 ## Prerequisites
 
-- Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
+- Git and Python 3.12+ with venv support on your `PATH`; sandbox images must include Git too.
 - Runtime provider keys for the CLI features you plan to use.
 - Obsidian is optional as an app; the workspace seed already includes Memoria's
   Obsidian adapter files and core settings. Generic BibTeX/CSL files exported
