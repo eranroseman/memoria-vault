@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Vault-eval dispatcher: diagnostic, never gating.
 
-Fans the hand-curated gold set in ``.memoria/eval/`` into one local eval payload
-per ``lifecycle: current`` gold task, routed to the eval role named in frontmatter.
+Fans the workspace-authored gold set in ``.memoria/eval/`` into one local eval
+payload per ``lifecycle: current`` gold task, routed to the eval role named in
+frontmatter.
 It lives with the sweeps operations because it has exactly their shape — a
 deterministic, no-LLM detector-over-the-vault that creates idempotent work
 intents for the local engine.
@@ -13,7 +14,7 @@ gold task in the non-committing eval task contract (scratch-only task work;
 results are reported back as JSON, never written directly to Concepts or
 catalog data). A dispatch record is written to ``.memoria/eval/last-run.md``.
 
-    python eval_dispatch.py --vault <path>             # dispatch (cron + on-demand)
+    python eval_dispatch.py --vault <path>             # dispatch (scheduled + on-demand)
     python eval_dispatch.py --vault <path> --dry-run   # print payloads, create nothing
 """
 

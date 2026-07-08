@@ -71,7 +71,7 @@ operation** supplies that layer: it validates records against
 pre-commit, and monitors live edits through manual, operator-managed, or CI
 sweeps. A bad in-app edit can briefly appear in an optional view before the next
 sweep; that window is accepted under the solo premise. Shipped product-file
-repair comes from package/template refresh, not an in-vault restore baseline.
+repair comes from package-seed refresh, not an in-vault restore baseline.
 
 ---
 

@@ -18,7 +18,7 @@ ordinary Concept documents. Most are visible to the PI; hidden entries under
 | `projects/<slug>/code/<artifact-id>.md` | Typed `code-artifact` record for project companion code, approved argv, declared inputs, and declared outputs. | [Evidence sets](../control-and-policy/evidence-sets.md) |
 | `projects/<slug>/code/<artifact-id>/src/` and `outputs/` | Companion source and generated output directories for a code artifact. | [Evidence sets](../control-and-policy/evidence-sets.md) |
 | `system/vocabulary.md` | Controlled vocabulary for Work `research_area`/`methodology` metadata and claim-bearing note `topics`. | [Vocabulary](../data-model/vocabulary.md) |
-| `.memoria/eval/` | Gold-task fixtures for vault-eval dispatch and scoring. | [Vault eval](../analysis-and-surfaces/vault-eval.md) |
+| `.memoria/eval/` | Seeded-error bundle, optional workspace-authored vault-eval fixtures, and `last-run.md`. | [Vault eval](../analysis-and-surfaces/vault-eval.md) |
 | `.memoria/code-runs/<run-id>/` | Runtime stdout/stderr materialization for a recorded code run. | [Evidence sets](../control-and-policy/evidence-sets.md) |
 
 The source copies are tracked in
