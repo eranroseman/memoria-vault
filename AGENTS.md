@@ -36,8 +36,7 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 2. This file owns repository policy: worktrees, PRs, verification, source of
    truth, security boundaries, and documentation routing.
 3. [`.agents/playbooks/`](.agents/playbooks/) owns repeatable procedures.
-4. [`.agents/skills/`](.agents/skills/) owns narrow reusable methods.
-5. Generated maps under [`.agents/system/`](.agents/system/) are owned by their
+4. Generated maps under [`.agents/system/`](.agents/system/) are owned by their
    source files and guarded by repo doctors.
 
 Plugins, connectors, and skills provide capability. They do not override this
@@ -343,9 +342,8 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 ## Playbooks and Skills
 
 Use [`.agents/README.md`](.agents/README.md) to find portable playbooks,
-templates, system maps, and repo-local skills. Use
-[`.agents/toolkit.md`](.agents/toolkit.md) only for Claude/Codex routing
-asymmetries.
+templates, and system maps. Use [`.agents/toolkit.md`](.agents/toolkit.md) only
+for Claude/Codex routing asymmetries.
 
 Skills and plugins are accelerators, not policy. If a named command is
 unavailable, use the matching portable playbook and repository checks. The

@@ -29,8 +29,7 @@ precedence, vocabulary, and tool-specific security routing. Keep repo policy in
 
 - `AGENTS.md` wins for worktrees, branches, source of truth, verification,
   documentation routing, PRs, and merge discipline.
-- `.agents/README.md` indexes portable playbooks, templates, system maps, and
-  repo-local skills.
+- `.agents/README.md` indexes portable playbooks, templates, and system maps.
 - Active skills govern their own procedure unless `AGENTS.md` names a repo
   exception.
 - Durable prose uses the prose-clarity skill when available; chat-compression

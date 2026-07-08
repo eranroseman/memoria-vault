@@ -19,7 +19,6 @@ copying their implementation details.
 | Playbook | Use |
 |---|---|
 | [Code review](playbooks/code-review.md) | Review a patch for defects, regressions, complexity, and missing tests |
-| [Design history](playbooks/design-history.md) | Capture release decisions and close them into frozen design-history chapters |
 | [Documentation audit](playbooks/docs-audit.md) | Run a fresh whole-docs consistency, Diátaxis, generated-reference, terminology, coverage, and live-link audit |
 | [Documentation review](playbooks/docs-review.md) | Check Diátaxis placement, links, indexing, and terminology |
 | [ExecPlan](playbooks/exec-plan.md) | Author and run a self-contained living plan for a complex, multi-hour task |
@@ -36,17 +35,6 @@ copying their implementation details.
 | [Release plan](templates/release-plan.md) | Draft body for release parent issues and checkpoint prose |
 | [Review report](templates/review-report.md) | Report findings first with evidence and residual risk |
 
-## Skills
-
-These are portable procedure packages with `SKILL.md` entry points. An agent can
-load them directly; they are not automatically installed into Hermes, Claude
-Code, or Codex unless that client explicitly supports `.agents/skills/`.
-
-| Skill | Use |
-|---|---|
-| [Policy change review](skills/policy-change-review/SKILL.md) | Check capabilities, path ceilings, enforcement, delegation, audit, and privileged workflow consistency |
-| [Schema change](skills/schema-change/SKILL.md) | Implement or review schema, folder, template, Bases, linter, installer, and documentation changes together |
-
 ## System maps
 
 | Map | Use |
@@ -62,5 +50,4 @@ Code, or Codex unless that client explicitly supports `.agents/skills/`.
 - Do not duplicate architecture or product documentation from `docs/`.
 - Prefer repository commands such as `python3 scripts/verify` over hand-written command lists.
 - Keep examples generic; never include real API keys, profile `.env` values, or runtime-vault content.
-- Skills must reference the system maps instead of copying their dependency tables.
 - Regenerate derived maps with `python3 scripts/checks/agents_doctor.py --write`.

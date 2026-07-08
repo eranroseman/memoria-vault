@@ -44,7 +44,7 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
         ".github/scripts/pr_policy.py",
         ".github/CODEOWNERS",
         "AGENTS.md",
-        ".agents/skills/schema-change/SKILL.md",
+        ".agents/playbooks/security-review.md",
         old_agent_tmp,
         ".claude/skills/release/SKILL.md",
         ".codex/agents-doctor.md",
