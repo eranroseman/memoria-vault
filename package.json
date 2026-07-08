@@ -2,16 +2,5 @@
   "name": "memoria-vault-devtools",
   "version": "0.0.0",
   "private": true,
-  "description": "Contributor-only dev tooling for the memoria-vault repo. NOT the Memoria product (that is scripts/install.sh + vault-template/.memoria/). Pins repo-local prose checks; never deployed to a vault.",
-  "engines": {
-    "node": ">=22"
-  },
-  "scripts": {
-    "markdownlint": "markdownlint --config .markdownlint.json \"docs/**/*.md\"",
-    "spellcheck": "cspell lint --no-progress --no-must-find-files --gitignore \"**/*.md\""
-  },
-  "devDependencies": {
-    "cspell": "10.0.1",
-    "markdownlint-cli": "0.49.0"
-  }
+  "description": "Stub package.json required by pre-commit language: node hooks; hook tool versions live in .pre-commit-config.yaml."
 }
