@@ -62,7 +62,7 @@ every field and count.
 | [Vault eval](analysis-and-surfaces/vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
 | [Retrieval and analysis methods](analysis-and-surfaces/retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, API calls, and graph algorithms | Manual |
 | [Calibration](analysis-and-surfaces/calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
-| [Dashboards](analysis-and-surfaces/dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
+| [Dashboards](analysis-and-surfaces/dashboards.md) | Space views, Inbox, Maintenance, support views, verdict bands, and rail badges | Manual |
 
 ## Pipelines and I/O
 
@@ -82,7 +82,7 @@ every field and count.
 | --- | --- | --- |
 | [Memoria configuration](system/configuration.md) | Configuration surfaces, source/installed ownership, redeploy triggers, and secret boundaries | Manual |
 | [On-disk layout](system/on-disk-layout.md) | Vault folder tree, `.memoria/` layout, skeleton notes, naming conventions | Manual |
-| [System artifacts](system/system-artifacts.md) | Visible `system/` files, eval fixtures, and shipped Bases views | Manual |
+| [System artifacts](system/system-artifacts.md) | Visible `system/` files, eval fixtures, and optional view artifacts | Manual |
 | [Installer (bootstrap)](system/installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables | Manual |
 | [Failure modes](system/failure-modes.md) | Failure modes by severity: symptom, cause, fix | Manual |
 

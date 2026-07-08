@@ -55,9 +55,9 @@ cd ~/Memoria && git add -A && git commit -m "Initial Memoria vault"
 
 The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 
-On a fresh vault, empty tables are normal. The Inbox, Library, Knowledge, and
-Project spaces each show a **First actions** callout above their Bases views; use
-those commands as the day-1 path for the space you are in.
+On a fresh vault, empty results are normal. Start with the CLI commands above
+and the top-level workspace folders: `inbox/`, `digests/`, `fulltexts/`,
+`notes/`, `hubs/`, and `projects/`.
 
 ## Verify
 

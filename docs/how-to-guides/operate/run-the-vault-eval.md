@@ -49,18 +49,18 @@ python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . 
 
 Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute without appending to the log.
 
-**5. Read the trend.** Open the **eval-trend** dashboard (`system/dashboards/eval-trend.md`) — it renders the newest run per quarter plus the latest run's per-task breakdown ([Dashboards](../../reference/analysis-and-surfaces/dashboards.md)).
+**5. Read the trend.** Inspect `system/metrics/eval/runs.jsonl` or an optional dashboard/editor view. The newest line per quarter carries the trend; the latest run carries the per-task breakdown ([Dashboards](../../reference/analysis-and-surfaces/dashboards.md)).
 
 ## Verify
 
 - `system/metrics/eval/runs.jsonl` has a new line (timestamp, quarter, k, per-task records, per-metric aggregates) — written only when at least one result payload is reported
-- The eval-trend dashboard shows the run, with `recall@k` / `support-rate` / `FAMA-clean` per task
+- `system/metrics/eval/runs.jsonl` or your chosen view shows the run, with `recall@k` / `support-rate` / `FAMA-clean` per task
 - A task with no machine-readable result shows as **unscored** — never a faked score
 - `.memoria/eval/last-run.md` reflects the dispatch you just ran
 
 ## Related
 
 - The gold set, metrics, and result contract: [Vault eval](../../reference/analysis-and-surfaces/vault-eval.md)
-- The trend dashboard and metric bands: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
+- Eval metric bands: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
 - The sibling deterministic maintenance job: [Run the Linter](run-the-linter.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](../../reference/system/installer.md)

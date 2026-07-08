@@ -19,10 +19,9 @@ views, sources, and sort orders are in [Dashboards](../../../reference/analysis-
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.
-**Board state is the standalone worker-debug dashboard**
-(`system/dashboards/board-state.md`) — request and attention state for the local
-worker, surfaced via the `memoria` request/attention commands — that the Inbox
-links to, not the Inbox action queue itself. The Project space's gate is its own steering surface, not part of the dashboard
+Board state is the worker-debug view over request and attention state, surfaced
+through `memoria request list` and `memoria attention list`, not a shipped
+dashboard file. The Project space's gate is its own steering surface, not part of the dashboard
 collection. The synthesis-vs-structural split is by *actor*:
 open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and
 drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
