@@ -48,6 +48,9 @@ Engine payloads also tag authored body text as `{"kind": "untrusted_text",
 
 ## Tools
 
+This table mirrors the MCP bindings in
+`src/memoria_vault/engine/surface_contract.py`.
+
 | Tool | Arguments | Contract |
 | --- | --- | --- |
 | `status` | none | Reads request-status counts and DB location. |
@@ -61,6 +64,9 @@ Engine payloads also tag authored body text as `{"kind": "untrusted_text",
 | `work` | `work_id` | Reads one catalog Work if one of its paths is inside scope. |
 | `journal` | `operation=""`, `decision=""`, `date=""`, `limit=50` | Reads scoped journal rows. |
 | `journal_event` | `event_id` | Reads one scoped journal row. |
+| `project_slice` | `project_path` | Reads one scoped project slice. |
+| `project_draft` | `project_path` | Reads one scoped project draft. |
+| `exploration` | `limit=10` | Reads scoped exploration-channel items. |
 | `operation_run` | `operation_id`, `payload=null`, `idempotency_key=""`, `schedule_id=""` | Queues and runs one engine operation through the request envelope. |
 
 The tool roster is closed in tests. Additions should be deliberate API changes,

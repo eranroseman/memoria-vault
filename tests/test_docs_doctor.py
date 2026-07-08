@@ -538,7 +538,7 @@ def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
         encoding="utf-8",
     )
     (repo / "src" / "memoria_vault" / "runtime" / "mcp_transport.py").write_text(
-        "@app.tool()\ndef status():\n    pass\n",
+        '@app.tool(description="Read status.")\ndef status():\n    pass\n',
         encoding="utf-8",
     )
     (ops / "capture-source.md").write_text(

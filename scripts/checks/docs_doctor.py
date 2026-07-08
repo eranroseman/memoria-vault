@@ -34,6 +34,7 @@ One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import sys
 from pathlib import Path
@@ -742,11 +743,32 @@ def check_reference_rosters(repo: Path, errors: list[str]) -> None:
     mcp_source = repo / "src" / "memoria_vault" / "runtime" / "mcp_transport.py"
     _require_doc_codes(
         reference / "mcp-transport.md",
-        set(re.findall(r"@app\.tool\(\)\n\s*def ([A-Za-z_][A-Za-z0-9_]*)\(", read(mcp_source)))
-        if mcp_source.is_file()
-        else set(),
+        _mcp_tool_names(mcp_source),
         "MCP tool",
         errors,
+    )
+
+
+def _mcp_tool_names(source: Path) -> set[str]:
+    if not source.is_file():
+        return set()
+    tree = ast.parse(read(source), filename=str(source))
+    tools: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        if any(_is_app_tool_decorator(decorator) for decorator in node.decorator_list):
+            tools.add(node.name)
+    return tools
+
+
+def _is_app_tool_decorator(decorator: ast.expr) -> bool:
+    target = decorator.func if isinstance(decorator, ast.Call) else decorator
+    return (
+        isinstance(target, ast.Attribute)
+        and target.attr == "tool"
+        and isinstance(target.value, ast.Name)
+        and target.value.id == "app"
     )
 
 

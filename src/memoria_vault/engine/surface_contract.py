@@ -176,6 +176,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "scope": "optional-read-scope",
         "params": {"limit": {"type": "integer", "default": 10}},
         "http": {"method": "GET", "path": "/exploration"},
+        "mcp": {"tool": "exploration"},
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
@@ -186,6 +187,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "scope": "optional-read-scope",
         "params": {"project_path": {"type": "string", "required": True}},
         "http": {"method": "GET", "path": "/project/slice"},
+        "mcp": {"tool": "project_slice"},
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
@@ -196,6 +198,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "scope": "optional-read-scope",
         "params": {"project_path": {"type": "string", "required": True}},
         "http": {"method": "GET", "path": "/project/draft"},
+        "mcp": {"tool": "project_draft"},
         "response_version": ENGINE_READ_API_VERSION,
     },
     {

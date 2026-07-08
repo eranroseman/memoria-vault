@@ -71,16 +71,19 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
         "work",
         "journal",
         "journal_event",
+        "exploration",
+        "project_slice",
+        "project_draft",
         "operation_run",
     }
 
 
-def test_surface_contract_keeps_future_mcp_reads_unbound_until_mcp_lands() -> None:
+def test_surface_contract_binds_project_reads_to_http_and_mcp() -> None:
     actions = actions_by_id()
 
-    for action_id in ("exploration.list", "project.slice.read", "project.draft.read"):
-        assert "http" in actions[action_id]
-        assert "mcp" not in actions[action_id]
+    assert actions["exploration.list"]["mcp"]["tool"] == "exploration"
+    assert actions["project.slice.read"]["mcp"]["tool"] == "project_slice"
+    assert actions["project.draft.read"]["mcp"]["tool"] == "project_draft"
     assert [action["id"] for action in SURFACE_ACTIONS if action["kind"] == "write"] == [
         "operation.run"
     ]
