@@ -2,7 +2,7 @@
 title: Work the action queue
 parent: Inbox
 grand_parent: How-to guides
-nav_order: 3
+nav_order: 2
 ---
 
 # Work the action queue
@@ -64,7 +64,7 @@ attention items before adding more requests.
 
 ## Related
 
-- CLI command reference: [CLI](../../reference/cli.md)
-- Attention projections: [Inbox card fields](../../reference/inbox-card-fields.md)
-- Current Concept types: [Document types](../../reference/document-types.md)
-- Why review is structural, not a convention: [Why the review gate is structural](../../design/boundaries/why-review-gate-is-structural.md)
+- CLI command reference: [CLI](../../reference/commands-and-transports/cli.md)
+- Attention projections: [Document types](../../reference/data-model/document-types.md#retired-inbox-card-schemas)
+- Current Concept types: [Document types](../../reference/data-model/document-types.md)
+- Why review is structural, not a convention: [Why the review gate is structural](../../explanation/rationale/boundaries/why-review-gate-is-structural.md)

@@ -1,8 +1,8 @@
 ---
 title: The Engineer
-parent: Execution
-grand_parent: Explanation
-nav_order: 25
+parent: Operation postures
+grand_parent: Execution
+nav_order: 5
 ---
 
 # The Engineer
@@ -45,5 +45,5 @@ through documented handoff artifacts, not an agent-control plane.
 
 - Where the handoff lives: [The vault](../../architecture/vault.md)
 - How far each posture may delegate: [Operation postures](README.md#delegation-posture)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../../design/boundaries/why-specialist-postures.md)
-- The autonomy boundary it tests: [Why Memoria doesn't pursue full autonomy](../../../design/boundaries/why-not-autonomous.md)
+- Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
+- The autonomy boundary it tests: [Why Memoria doesn't pursue full autonomy](../../rationale/boundaries/why-not-autonomous.md)

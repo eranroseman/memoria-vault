@@ -32,7 +32,7 @@ forever per [quarantine-and-verify with durable, audit-logged crash recovery](ht
 when an optional adapter exists, and **working memory** (the live operation run's
 in-context reasoning).
 
-What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/memory-substrates.md); the rest of this page explains *why* each has the scope it does.
+What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/pipelines-and-io/memory-substrates.md); the rest of this page explains *why* each has the scope it does.
 
 **Why the workspace carries durable memory.** The current standalone baseline
 makes the workspace the authority. Optional adapters can have chat memory, but
@@ -50,7 +50,7 @@ projects; request memory should not become standing strategy; working memory
 should disappear with the run. Audit memory is the exception: it is append-only
 because write provenance must survive every session.
 
-The exact substrate table belongs in [Memory substrates](../../reference/memory-substrates.md).
+The exact substrate table belongs in [Memory substrates](../../reference/pipelines-and-io/memory-substrates.md).
 
 ---
 
@@ -73,7 +73,7 @@ configuration is read as rules.** "Use this local model endpoint" is config;
 steering or preference state.
 
 For the exact "what lives where" lookup table, use [Memory
-substrates](../../reference/memory-substrates.md). This page owns the rationale, not the
+substrates](../../reference/pipelines-and-io/memory-substrates.md). This page owns the rationale, not the
 field-by-field routing matrix.
 
 ---
@@ -87,8 +87,8 @@ field-by-field routing matrix.
 
 **Reference**
 
-- Audit log format: [Policy gate](../../reference/policy-mcp.md)
-- The substrate table as reference: [Memory substrates](../../reference/memory-substrates.md)
+- Audit log format: [Policy gate](../../reference/control-and-policy/policy-mcp.md)
+- The substrate table as reference: [Memory substrates](../../reference/pipelines-and-io/memory-substrates.md)
 
 **Background**
 

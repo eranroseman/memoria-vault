@@ -2,7 +2,7 @@
 title: Return to work
 parent: Inbox
 grand_parent: How-to guides
-nav_order: 5
+nav_order: 1
 ---
 
 # Return to work
@@ -64,4 +64,4 @@ sync completes; check Git/sync status before blaming retrieval.
 
 - Safe mode: [Safe mode](../troubleshooting/safe-mode.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- Failure catalog: [Failure modes](../../reference/failure-modes.md)
+- Failure catalog: [Failure modes](../../reference/system/failure-modes.md)

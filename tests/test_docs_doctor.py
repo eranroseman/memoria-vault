@@ -223,16 +223,18 @@ def test_check_broken_vault_wikilinks_validates_note_targets_and_ignores_assets_
 
 def test_reference_readme_index_flags_missing_reference_pages(tmp_path):
     reference = tmp_path / "docs" / "reference"
-    reference.mkdir(parents=True)
-    (reference / "README.md").write_text("[A](a.md)\n", encoding="utf-8")
-    (reference / "a.md").write_text("# A\n", encoding="utf-8")
-    (reference / "b.md").write_text("# B\n", encoding="utf-8")
+    group = reference / "group"
+    group.mkdir(parents=True)
+    (reference / "README.md").write_text("[A](group/a.md)\n", encoding="utf-8")
+    (group / "README.md").write_text("# Group\n", encoding="utf-8")
+    (group / "a.md").write_text("# A\n", encoding="utf-8")
+    (group / "b.md").write_text("# B\n", encoding="utf-8")
 
     errors: list[str] = []
     check_reference_readme_index(tmp_path, errors)
 
     assert len(errors) == 1
-    assert "reference index omits page(s): b.md" in errors[0]
+    assert "reference index omits page(s): group/b.md" in errors[0]
 
 
 def test_check_doc_refs_accepts_pages_html_urls(tmp_path):
@@ -489,27 +491,29 @@ def test_check_vocabulary_reference_mirror_compares_source_terms(tmp_path):
 def test_reference_source_contract_requires_guard_checks_and_generated_markers(tmp_path):
     repo = tmp_path
     ref = repo / "docs" / "reference"
-    ref.mkdir(parents=True)
+    group = ref / "group"
+    group.mkdir(parents=True)
     (ref / "README.md").write_text(
         "| File | What | Source |\n"
         "| --- | --- | --- |\n"
-        "| [A](a.md) | A | Manual |\n"
-        "| [B](b.md) | B | Guarded mirror |\n"
-        "| [C](c.md) | C | Generated |\n",
+        "| [A](group/a.md) | A | Manual |\n"
+        "| [B](group/b.md) | B | Guarded mirror |\n"
+        "| [C](group/c.md) | C | Generated |\n",
         encoding="utf-8",
     )
-    (ref / "a.md").write_text("# A\n", encoding="utf-8")
-    (ref / "b.md").write_text("# B\n", encoding="utf-8")
-    (ref / "c.md").write_text("# C\n", encoding="utf-8")
+    (group / "README.md").write_text("# Group\n", encoding="utf-8")
+    (group / "a.md").write_text("# A\n", encoding="utf-8")
+    (group / "b.md").write_text("# B\n", encoding="utf-8")
+    (group / "c.md").write_text("# C\n", encoding="utf-8")
     (ref / "_sources.yml").write_text(
         "pages:\n"
-        "  a.md:\n"
+        "  group/a.md:\n"
         "    status: Manual\n"
-        "    owner: docs/reference/a.md\n"
-        "  b.md:\n"
+        "    owner: docs/reference/group/a.md\n"
+        "  group/b.md:\n"
         "    status: Guarded mirror\n"
         "    owner: src/b.py\n"
-        "  c.md:\n"
+        "  group/c.md:\n"
         "    status: Generated\n"
         "    owner: scripts/c.py\n",
         encoding="utf-8",
@@ -518,13 +522,13 @@ def test_reference_source_contract_requires_guard_checks_and_generated_markers(t
     errs: list[str] = []
     check_reference_source_contract(repo, errs)
 
-    assert any("b.md guarded mirror must name a drift check" in err for err in errs)
-    assert any("c.md: source status is Generated" in err for err in errs)
+    assert any("group/b.md guarded mirror must name a drift check" in err for err in errs)
+    assert any("group/c.md: source status is Generated" in err for err in errs)
 
 
 def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
     repo = tmp_path
-    ref = repo / "docs" / "reference"
+    ref = repo / "docs" / "reference" / "commands"
     ref.mkdir(parents=True)
     (repo / "src" / "memoria_vault").mkdir(parents=True)
     (repo / "src" / "memoria_vault" / "__init__.py").write_text("", encoding="utf-8")

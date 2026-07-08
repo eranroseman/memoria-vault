@@ -1,8 +1,8 @@
 ---
 title: Decision points
-parent: Execution
-grand_parent: Explanation
-nav_order: 33
+parent: Request control plane
+grand_parent: Execution
+nav_order: 3
 ---
 
 # Decision points

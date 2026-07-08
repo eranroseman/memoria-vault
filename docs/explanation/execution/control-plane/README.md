@@ -2,7 +2,8 @@
 title: Request control plane
 parent: Execution
 grand_parent: Explanation
-nav_order: 30
+nav_order: 3
+has_children: true
 permalink: /explanation/execution/control-plane/
 ---
 
@@ -24,7 +25,7 @@ The central design move is still to keep three dimensions separate: execution
 status, PI-facing attention state, and any machine recommendation. A worker
 finishing never silently becomes a PI disposition. Why those dimensions stay
 separate is developed in [Request states and the review gate](states.md); the
-current command lookup is in the [Control plane reference](../../../reference/control-plane.md).
+current command lookup is in the [Control plane reference](../../../reference/control-and-policy/control-plane.md).
 A request is *work*
 (transient, closed when done); a vault note is *knowledge* (durable).
 
@@ -38,15 +39,15 @@ A request is *work*
 | [WIP limits and back-pressure](wip-limits.md) | Why concurrency belongs in the engine/scheduler layer, not Hermes board caps. |
 
 For the current control-plane command lookup, see the
-[Control plane reference](../../../reference/control-plane.md).
+[Control plane reference](../../../reference/control-and-policy/control-plane.md).
 
 ## Related
 
 **Explanation**
 
-- Why review is structural: [Why the review gate is structural](../../../design/boundaries/why-review-gate-is-structural.md)
+- Why review is structural: [Why the review gate is structural](../../rationale/boundaries/why-review-gate-is-structural.md)
 - The decision model behind attention prompts: [Decision points](decision-points.md)
-- Attention projections and retired Inbox-card schema: [Inbox card fields](../../../reference/inbox-card-fields.md)
+- Attention projections and retired Inbox-card schema: [Document types](../../../reference/data-model/document-types.md#retired-inbox-card-schemas)
 
 **Dashboards**
 

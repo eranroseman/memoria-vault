@@ -1,8 +1,8 @@
 ---
 title: WIP limits and back-pressure
-parent: Execution
-grand_parent: Explanation
-nav_order: 35
+parent: Request control plane
+grand_parent: Execution
+nav_order: 4
 ---
 
 # WIP limits and back-pressure
@@ -11,7 +11,7 @@ Back-pressure exists to make overload visible before it becomes rubber-stamping.
 In the standalone baseline, concurrency belongs to the engine/runner and to any
 operator-managed scheduler that invokes it. The current reference records that
 Hermes board WIP caps are not a baseline control:
-[Control plane reference](../../../reference/control-plane.md#wip-limits).
+[Control plane reference](../../../reference/control-and-policy/control-plane.md#wip-limits).
 
 ## Why collision domains still matter
 
@@ -44,5 +44,5 @@ quality, not throughput.
 ## Related
 
 - State-machine explanation: [Request states and the review gate](states.md)
-- Control plane commands: [Control plane reference](../../../reference/control-plane.md)
-- Why review remains human-owned: [Why the review gate is structural](../../../design/boundaries/why-review-gate-is-structural.md)
+- Control plane commands: [Control plane reference](../../../reference/control-and-policy/control-plane.md)
+- Why review remains human-owned: [Why the review gate is structural](../../rationale/boundaries/why-review-gate-is-structural.md)

@@ -13,7 +13,7 @@ half the corpus on a topic while the PI believes coverage is thin. This document
 explains why the classification facets are separate, how vocabulary drift
 happens, and why stabilization happens in stages.
 
-For the exact field definitions and allowed values, see [Frontmatter fields](../../reference/frontmatter.md).
+For the exact field definitions and allowed values, see [Frontmatter fields](../../reference/data-model/frontmatter.md).
 
 ## Why separate facets, not one tag field
 
@@ -67,5 +67,5 @@ scenario and how it compounds over time.
 
 - The operation that validates the vocabulary: [Operations](../execution/operations.md)
 - The common-pitfalls scenario this addresses: [Common pitfalls](common-pitfalls.md)
-- The vocabulary guide: [Add or rename a topic vocabulary term](../../how-to-guides/knowledge/manage-vocabulary.md)
-- Field definitions: [Frontmatter fields](../../reference/frontmatter.md)
+- The vocabulary guide: [Manage vocabulary](../../how-to-guides/knowledge/manage-vocabulary.md)
+- Field definitions: [Frontmatter fields](../../reference/data-model/frontmatter.md)

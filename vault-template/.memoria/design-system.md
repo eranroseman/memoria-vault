@@ -179,7 +179,7 @@ brand:
 
 ---
 
-**Companion to** [Design system](https://eranroseman.github.io/memoria-vault/design/surfaces/design-system) — that page describes the schema and discipline; this file *implements* it for this vault.
+**Companion to** [Design system](https://eranroseman.github.io/memoria-vault/explanation/rationale/surfaces/design-system) — that page describes the schema and discipline; this file *implements* it for this vault.
 
 **Consumers of this file:**
 

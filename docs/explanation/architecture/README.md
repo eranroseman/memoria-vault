@@ -22,18 +22,38 @@ Who the three actor-kinds are (PI, Agents, Operations), and why the layering
 contract binds only the machine write path, are covered in [The
 vault](vault.md#actor-kinds-and-the-write-path).
 
+## Interaction channels
+
+Memoria has one required PI surface: the CLI over a local workspace. Editor
+files are the durable working surface, and optional notification channels can
+draw attention to urgent items. They do not become the source of authority.
+
+An optional adapter is not authoritative. Programs may wrap the CLI or watch
+files, but the request queue, operation manifests, policy gate, and journal
+remain the write boundary.
+
+### Signal routing
+
+Every finding has a loudness. Quiet and notice-level events wait in dashboards
+or Maintenance. Alert and block-level events may push to Telegram because they
+can change what the PI does soon.
+
+Routine events should not push to the phone. If they do, the loudness policy is
+wrong.
+
 ## Documents in this section
 
 | Page | What it covers |
 | --- | --- |
 | [The vault](vault.md) | Why durable knowledge lives in the workspace and why writes pass through the worker boundary. |
 | [The memory model](memory-model.md) | Why different kinds of memory have different scopes. |
-| [Interaction channels](interaction-channels.md) | Why the CLI is required and other channels are secondary. |
 | [Session logging](session-logging.md) | Why audit logs and request summaries stay separate. |
 | [Telemetry architecture](telemetry-architecture.md) | Why audit, analytics, and diagnostics are separate planes. |
 
 ## Where to go next
 
-- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/boundaries/why-layered-architecture.md)
+- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../rationale/boundaries/why-layered-architecture.md)
 - **The operation postures** -> [Operation postures](../execution/operation-postures/README.md)
 - **The deterministic operations** -> [Operations](../execution/operations.md)
+- **CLI commands** -> [CLI](../../reference/commands-and-transports/cli.md)
+- **The policy boundary** -> [Policy gate](../../reference/control-and-policy/policy-mcp.md)

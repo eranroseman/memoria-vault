@@ -1,8 +1,8 @@
 ---
 title: Request states and the review gate
-parent: Execution
-grand_parent: Explanation
-nav_order: 31
+parent: Request control plane
+grand_parent: Execution
+nav_order: 1
 ---
 
 # Request states and the review gate
@@ -11,7 +11,7 @@ This page explains why the control-plane state machine is shaped the way it is:
 why execution state stays separate from PI attention, and why rejected work
 creates a new request instead of rewriting the old one. For the current command
 lookup, see the
-[Control plane reference](../../../reference/control-plane.md).
+[Control plane reference](../../../reference/control-and-policy/control-plane.md).
 
 ---
 
@@ -103,7 +103,7 @@ a task tracker.
 - Why WIP limits exist: [WIP limits and back-pressure](wip-limits.md)
 - Why the Co-PI is not a lane: [Operation postures](../operation-postures/README.md)
 - Why operations are not lanes: [Operations](../operations.md)
-- Why review is human-only: [Why the review gate is structural](../../../design/boundaries/why-review-gate-is-structural.md)
+- Why review is human-only: [Why the review gate is structural](../../rationale/boundaries/why-review-gate-is-structural.md)
 - The decision-kind model the gate implements: [Decision points](decision-points.md)
 
 **How-to**
@@ -112,4 +112,4 @@ a task tracker.
 
 **Reference**
 
-- Board-states lookup table: [Control plane reference](../../../reference/control-plane.md)
+- Board-states lookup table: [Control plane reference](../../../reference/control-and-policy/control-plane.md)

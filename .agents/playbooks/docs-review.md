@@ -48,9 +48,9 @@ Distinguish blocking failures from known advisory warnings.
 
 ## 4. Check terminology and claims
 
-- Use the repository vocabulary from `AGENTS.md` and `docs/reference/glossary.md`.
+- Use the repository vocabulary from `AGENTS.md` and `docs/reference/data-model/glossary.md`.
 - Keep spaces, queues, and agent lanes distinct.
-- Put new citations in `docs/reference/bibliography.md` using the existing format.
+- Put new citations in `docs/reference/evidence-and-integrations/bibliography.md` using the existing format.
 - Verify commands, paths, profile names, counts, and release references against
   current source files rather than copying older prose.
 - If a reference page repeats generated or source-owned contracts, run the

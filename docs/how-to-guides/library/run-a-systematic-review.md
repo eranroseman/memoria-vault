@@ -2,7 +2,7 @@
 title: Run a systematic review
 parent: Library
 grand_parent: How-to guides
-nav_order: 7
+nav_order: 3
 ---
 
 # Run a systematic review

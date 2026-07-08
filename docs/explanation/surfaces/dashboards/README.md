@@ -2,7 +2,8 @@
 title: Surfaces and dashboards
 parent: Surfaces
 grand_parent: Explanation
-nav_order: 10
+nav_order: 1
+has_children: true
 permalink: /explanation/surfaces/dashboards/
 ---
 
@@ -14,7 +15,7 @@ consumer-only, and a healthy vault shows them near-empty.
 
 The pages in this section explain four kinds of surface: daily attention,
 synthesis agenda, structural health, and operational health. The exact shipped
-views, sources, and sort orders are in [Dashboards](../../../reference/dashboards.md).
+views, sources, and sort orders are in [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md).
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.
@@ -28,5 +29,5 @@ drift-watch are the **Linter operation's** structural debt — kept separate, no
 
 ## Related
 
-- How to operate the dashboards: [Navigate Memoria surfaces](../../../how-to-guides/using-obsidian/navigate-memoria-surfaces.md)
+- How to operate the dashboards: [Using Obsidian](../../../how-to-guides/using-obsidian/README.md)
 - The primary weekly entry point: [Run the weekly review](../../../how-to-guides/inbox/run-the-weekly-review.md)

@@ -1,8 +1,8 @@
 ---
 title: Operational health
-parent: Surfaces
-nav_order: 14
-grand_parent: Explanation
+parent: Surfaces and dashboards
+nav_order: 4
+grand_parent: Surfaces
 permalink: /explanation/surfaces/dashboards/operational-health/
 ---
 
@@ -34,7 +34,7 @@ decisions and preserves the evidence needed for forensic review.
 
 It is not editable. The audit log records before/after hash pairs for gated
 writes; editing the log would defeat the tamper signal. The field schema and
-hash-pairing contract live in [Policy gate](../../../reference/policy-mcp.md).
+hash-pairing contract live in [Policy gate](../../../reference/control-and-policy/policy-mcp.md).
 
 ## Eval trend
 
@@ -42,9 +42,9 @@ Eval trend shows whether the deployed system's retrieval, extraction, linking,
 and verification behavior is moving. It is diagnostic, never a gate; capability
 scores are noisy enough that blocking work on them would invite false halts.
 
-The scoring contract is in [Vault eval](../../../reference/vault-eval.md).
+The scoring contract is in [Vault eval](../../../reference/analysis-and-surfaces/vault-eval.md).
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
-- Policy log schema: [Policy gate](../../../reference/policy-mcp.md)
+- Exact shipped surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
+- Policy log schema: [Policy gate](../../../reference/control-and-policy/policy-mcp.md)

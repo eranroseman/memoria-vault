@@ -2,7 +2,7 @@
 title: Build a hub
 parent: Knowledge
 grand_parent: How-to guides
-nav_order: 4
+nav_order: 2
 ---
 
 # Build a hub
@@ -74,6 +74,6 @@ not overwrite curated hub judgment.
 
 ## Related
 
-- The note links that fill it: [Link checked notes](../knowledge/link-checked-notes.md)
-- The hub type and schema: [Document types](../../reference/document-types.md)
+- The note links that fill it: [Link checked notes](link-checked-notes.md)
+- The hub type and schema: [Document types](../../reference/data-model/document-types.md)
 - Why hubs matter to the cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

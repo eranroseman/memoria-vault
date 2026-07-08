@@ -1,8 +1,8 @@
 ---
 title: Daily glance
-parent: Surfaces
-nav_order: 11
-grand_parent: Explanation
+parent: Surfaces and dashboards
+nav_order: 1
+grand_parent: Surfaces
 permalink: /explanation/surfaces/dashboards/daily-glance/
 ---
 
@@ -37,6 +37,6 @@ projection to edit.
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
+- Exact shipped surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
 - Operating the Inbox: [Work the action queue](../../../how-to-guides/inbox/work-the-action-queue.md)
 - Troubleshooting stuck work: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)

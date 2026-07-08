@@ -61,5 +61,5 @@ memoria workspace check --workspace . --schedule-id lint-manual --json
 
 - Weekly review (the structural-health step): [Run the weekly review](../inbox/run-the-weekly-review.md)
 - Fix broken frontmatter: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
-- The detector inventory and gate flags: [Linter: detectors and auto-fix](../../reference/linter.md)
-- Where findings surface: [Dashboards](../../reference/dashboards.md)
+- The detector inventory and gate flags: [Linter: detectors and auto-fix](../../reference/analysis-and-surfaces/linter.md)
+- Where findings surface: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)

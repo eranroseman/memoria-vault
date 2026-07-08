@@ -1,8 +1,8 @@
 ---
 title: The Co-PI
-parent: Execution
-grand_parent: Explanation
-nav_order: 21
+parent: Operation postures
+grand_parent: Execution
+nav_order: 1
 ---
 
 # The Co-PI
@@ -50,5 +50,5 @@ only when it stays read-only until the PI chooses a durable action.
 
 ## Related
 
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../../design/boundaries/why-specialist-postures.md)
-- Why one conversational front: [Why operation postures, not a generalist agent](../../../design/boundaries/why-specialist-postures.md)
+- Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
+- Why one conversational front: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)

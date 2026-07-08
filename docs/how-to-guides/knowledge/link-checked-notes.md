@@ -2,7 +2,7 @@
 title: Link checked notes
 parent: Knowledge
 grand_parent: How-to guides
-nav_order: 2
+nav_order: 1
 ---
 
 # Link checked notes
@@ -71,5 +71,5 @@ typed edge should appear with its label.
 ## Related
 
 - Analyze the resulting graph: [Analyze a project argument](../project/analyze-a-project-argument.md)
-- Exact link fields: [Frontmatter fields](../../reference/frontmatter.md)
+- Exact link fields: [Frontmatter fields](../../reference/data-model/frontmatter.md)
 - Why connections are load-bearing: [Note body structure](../../explanation/knowledge/note-body-structure.md)

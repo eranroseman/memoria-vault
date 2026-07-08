@@ -31,6 +31,6 @@ entry points. Optional adapters are transport edges, not implementation owners.
 
 ## Related
 
-- Exact entry points and responsibilities: [Operations](../../reference/operations.md)
+- Exact entry points and responsibilities: [Operations](../../reference/commands-and-transports/operations.md)
 - The architecture layer operations occupy: [Architecture](../architecture/README.md)
 - The vault operations maintain: [The vault](../architecture/vault.md)

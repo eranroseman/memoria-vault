@@ -7,10 +7,13 @@ topic: overview
 
 # Memoria
 
-A research operating system for a single researcher (the PI): a standalone local
-CLI and engine that capture, enrich, map, verify, and ask over a checked
-workspace under a structural review gate that records proposed changes and PI
-dispositions before they become checked knowledge.
+A local research operating system for one principal investigator: capture
+sources, turn them into checked knowledge, and draft from a review-gated
+workspace.
+
+The standalone CLI and engine handle capture, enrichment, mapping, verification,
+and checked retrieval. The PI keeps judgment: proposed changes and dispositions
+are recorded before material enters checked knowledge.
 
 If you want a guided first experience, start with the
 [Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
@@ -72,8 +75,8 @@ PI-directed and policy-gated.
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
 | **Understand how the system fits together** | [Explanation](explanation/README.md)                                                              |
-| **Understand why it is designed this way** | [Design](design/README.md)                                                                        |
-| **Fix something broken**                    | [Failure modes](reference/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
+| **Understand why it is designed this way** | [Design rationale](explanation/rationale/README.md)                                                |
+| **Fix something broken**                    | [Failure modes](reference/system/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
 
 ---
 
@@ -89,12 +92,12 @@ CLI/runtime path and point to task guides when you need more detail.
 
 Use this path when you want the system model before doing a full workflow.
 
-1. [What Memoria is](design/foundations/what-memoria-is.md)
+1. [What Memoria is](explanation/rationale/foundations/what-memoria-is.md)
 2. [Architecture](explanation/architecture/README.md)
 3. [The vault](explanation/architecture/vault.md)
 4. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md)
 5. [The control plane](explanation/execution/control-plane/README.md)
-6. [Design](design/README.md)
+6. [Design rationale](explanation/rationale/README.md)
 
 Then use [Quickstart](how-to-guides/setup/quickstart.md) and
 [Tutorials](tutorials/README.md) to learn the current workflow by doing it.
@@ -116,7 +119,7 @@ Then use [Quickstart](how-to-guides/setup/quickstart.md) and
 [Return to work](how-to-guides/inbox/return-to-work.md) · [Weekly review](how-to-guides/inbox/run-the-weekly-review.md) · [Run the Linter](how-to-guides/operate/run-the-linter.md)
 
 **Troubleshooting**
-[Safe mode](how-to-guides/troubleshooting/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)
+[Safe mode](how-to-guides/troubleshooting/safe-mode.md) · [Failure modes reference](reference/system/failure-modes.md)
 
 ---
 
@@ -129,7 +132,7 @@ engine are being validated as a standalone local product. What is not working to
   replays capture, enrich, digest, ask, project writing/export, recovery, and
   seeded-error evidence (`scripts/verify pr`), but the RC still needs a live
   provider/package run before release.
-- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
+- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Architecture](explanation/architecture/README.md#interaction-channels).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
 - **Broad writability scoring is not implemented** — the current alpha baseline
   has structural draft verification and project export readiness, but it does not decide
@@ -150,6 +153,4 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 [**Reference**](reference/README.md) — Exact fields, commands, schemas, settings, and paths.
 
-[**Explanation**](explanation/README.md) — Architecture, workflows, and conceptual model.
-
-[**Design**](design/README.md) — Maintained arguments and links to decision history.
+[**Explanation**](explanation/README.md) — Architecture, workflows, conceptual model, and design rationale.

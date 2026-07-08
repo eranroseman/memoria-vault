@@ -1,11 +1,11 @@
 ---
-title: Add or rename a topic vocabulary term
+title: Manage vocabulary
 parent: Knowledge
 grand_parent: How-to guides
-nav_order: 6
+nav_order: 4
 ---
 
-# Add or rename a topic vocabulary term
+# Manage vocabulary
 
 Keep the `research_area`, `methodology`, and `topics` values consistent across
 your corpus so CLI/read-API queries and optional editor views stay reliable.

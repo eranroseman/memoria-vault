@@ -36,7 +36,7 @@ request exists for the work at all.
 reads `OPENALEX_API_KEY` and `NCBI_EMAIL` from the workspace runtime
 environment, declared in `<workspace>/.memoria/config/providers.yaml`; Semantic
 Scholar is optional and only called when `SEMANTIC_SCHOLAR_API_KEY` is present.
-Confirm these are set — see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
+Confirm these are set — see [External integrations → API keys and rate limits](../../reference/evidence-and-integrations/integrations.md#api-keys-and-rate-limits).
 
 **2. Rerun enrichment.**
 
@@ -58,6 +58,6 @@ instead of enriching again from scratch.
 
 ## Related
 
-- API keys and rate limits: [External integrations](../../reference/integrations.md#api-keys-and-rate-limits)
-- Request commands: [CLI](../../reference/cli.md)
-- Failure catalog: [Failure modes](../../reference/failure-modes.md)
+- API keys and rate limits: [External integrations](../../reference/evidence-and-integrations/integrations.md#api-keys-and-rate-limits)
+- Request commands: [CLI](../../reference/commands-and-transports/cli.md)
+- Failure catalog: [Failure modes](../../reference/system/failure-modes.md)

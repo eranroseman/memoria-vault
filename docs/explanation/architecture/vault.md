@@ -21,8 +21,8 @@ runtime state. The knowledge graph is a network, not a pipeline: direction lives
 in steering, project framing, typed links, and read state, not in lifecycle
 folders.
 
-The full folder map lives in [On-disk layout](../../reference/on-disk-layout.md)
-and [Document types](../../reference/document-types.md). This page owns the
+The full folder map lives in [On-disk layout](../../reference/system/on-disk-layout.md)
+and [Document types](../../reference/data-model/document-types.md). This page owns the
 rationale: type homes give the policy gate stable write boundaries, while links
 and state carry the facts that change.
 
@@ -41,7 +41,7 @@ and optional adapters may propose; deterministic operations may report or
 materialize bounded outputs. Only the trusted worker materializes outputs after
 runtime checks, and the PI separately disposes attention and curation decisions. Why
 that boundary is structural rather than a convention is [Why the review gate is
-structural](../../design/boundaries/why-review-gate-is-structural.md).
+structural](../rationale/boundaries/why-review-gate-is-structural.md).
 
 The strict each-layer-depends-only-on-the-one-below contract holds along this
 machine write path only — it doesn't extend above to the PI's direct file
@@ -55,7 +55,7 @@ Archive/retraction state is runtime state, not a folder move. Current readers us
 the DB/read API `check_status = checked` verdict; unchecked and quarantined Concepts stay out of the
 checked index and Ask path.
 
-The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest. Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
+The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest. Field contracts live in [Frontmatter fields](../../reference/data-model/frontmatter.md).
 
 ## Generated views; the Linter keeps them sound
 

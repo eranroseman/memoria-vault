@@ -1,8 +1,8 @@
 ---
 title: Synthesis agenda
-parent: Surfaces
-nav_order: 12
-grand_parent: Explanation
+parent: Surfaces and dashboards
+nav_order: 2
+grand_parent: Surfaces
 permalink: /explanation/surfaces/dashboards/synthesis-agenda/
 ---
 
@@ -46,6 +46,6 @@ resolved temporal replacement.
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
+- Exact shipped surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
 - Discussing a source: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)
 - Linking claim tensions: [Link related claims](../../../how-to-guides/knowledge/link-checked-notes.md)

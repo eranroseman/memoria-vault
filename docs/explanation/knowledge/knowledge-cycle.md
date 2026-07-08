@@ -7,64 +7,101 @@ nav_order: 2
 
 # The knowledge cycle
 
-Every note in the vault is somewhere in a long-term progression from catalogued source to written output. Understanding the cycle as a whole — what it is for, where it gets stuck, and what makes it compound — is the conceptual foundation for understanding why the vault is structured the way it is.
+Every note in the vault sits somewhere between catalogued source and written
+output. The cycle explains what that progression is for, where it stalls, and
+why the vault compounds instead of merely accumulating files.
 
 ## Delegable tasks are not a pipeline
 
-The PI works at the three spaces — **Library**, **Knowledge**, and **Project** —
-plus the **Inbox** queue. Beneath them, capability-backed operations can capture,
-enrich, extract, link, map, digest, and verify; the concrete operation surface
-lives in [Operations](../../reference/operations.md).
+The PI works in **Library**, **Knowledge**, and **Project**, with **Inbox** as
+the queue. Beneath those surfaces, operations capture, enrich, extract, link,
+map, digest, and verify; the concrete roster lives in
+[Operations](../../reference/commands-and-transports/operations.md).
 
 These tasks are **individually triggered, not a set**. A human gate — often a
 long gap — sits between each: a source is catalogued; much later, if ever,
 extracted; only after a claim-bearing note exists does linking fire.
 
-A new source typically arrives as a catalog row plus a `candidate` attention
-item, is kept or rejected by the PI, and becomes checked source state only after
-the required enrichment and review checks pass. The PI reads it, distills claims
-in their own words, and confirms the links that connect them into the graph.
-Those claims mature and cross-link; once enough accumulate, a project maps the
-corpus into an `outline.md` slice, composes `draft.md`, verifies the evidence
-markers, exports clean drafts, and promotes selected passages back into
-unchecked notes for review.
+A source arrives as a catalog row plus a `candidate` attention item. The PI
+keeps or rejects it. It becomes checked source state only after enrichment and
+review checks pass. The PI then reads it, distills claims, and confirms links
+into the graph. Once enough claims accumulate, a project maps them into
+`outline.md`, composes `draft.md`, verifies evidence markers, exports clean
+drafts, and promotes selected passages back into unchecked notes for review.
 
-**The loop that compounds:** gaps found in mapping and verification raise Inbox
-attention that can trigger new capture/catalog work. The output end of the cycle
-feeds the intake end - what you write exposes what you're missing, and what you
-catalog next is shaped by what you tried to write.
+**The loop compounds** because mapping and verification expose gaps. Those gaps
+raise Inbox attention, which can trigger new capture work. What you write shows
+what is missing; what you catalog next is shaped by what you tried to write.
 
 ## Why the cycle is not a linear path
 
-The cycle describes the intended direction of flow, not a timeline or a required
-sequence. A note can remain underdeveloped for months — that is normal, not
-broken. A checked source work can sit for a year before there is enough
-surrounding context to extract claim-bearing notes from it. A new paper may arrive and
-retroactively change what an older claim was arguing.
+The cycle describes direction, not a required timeline. A note can remain
+underdeveloped for months. A checked source can sit for a year before there is
+enough context to extract claim-bearing notes from it. A new paper can also
+change what an older claim means.
 
-What the cycle prevents is the two failure modes at opposite ends: notes that are captured but never synthesized (the vault grows but never compounds), and claims that are synthesized but never written from (the knowledge accumulates but never produces output). The cycle's shape names these as distinct failure modes because they look identical from the outside — both appear as an active vault — but indicate different structural problems.
+The cycle distinguishes two failures that look alike from the outside: capture
+without synthesis, and synthesis without output. Both look like an active vault.
+Only the first means the vault is not compounding; the second means the
+knowledge is not reaching drafts.
 
 ## Why the vault compounds rather than accumulates
 
-The distinction between a vault that compounds and one that merely accumulates
-is in the density of claim-bearing notes. A vault with 500 catalog entities and
-10 claim-bearing notes is a sophisticated reading list — useful for finding
-sources but not for writing from. A vault with 50 checked source works and 40
-claim-bearing notes that link to each other and to hubs is a structure the PI
-can write from directly, navigating the graph of connected ideas rather than
-remembering what they read.
+Claim density separates a compounding vault from an accumulating one. A vault
+with 500 catalog entities and 10 claim-bearing notes is a reading list. A vault
+with 50 checked source works and 40 linked claims is a writing structure: the PI
+navigates connected ideas instead of remembering what they read.
 
-A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes. Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [Intellectual foundations](../../design/foundations/intellectual-foundations.md#luhmanns-zettelkasten)).
+A source's value is what it contributes to existing claims: connections,
+contradictions, and open questions. This is the **Zettelkasten** wager: a dense
+claim graph becomes a thinking partner instead of a filing cabinet. Luhmann's
+slip-box depended on the same density (see [Intellectual foundations](../rationale/foundations/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ## Where the cycle gets stuck
 
-The Inbox and space dashboards surface exactly where work has stopped. Sources awaiting reading and distillation surface in the Library reading pipeline. Unconnected claims surface in Knowledge's Open questions view; low-stakes structural debt surfaces in Maintenance's Loose ends view. Open verification findings surface as Inbox `flag`/`alert` attention items in Maintenance. The correspondence between stuck points and views is not accidental — they were designed to make the cycle's failure modes visible before they compound.
+The Inbox and dashboards show where work stopped. Sources awaiting reading
+appear in the Library pipeline. Unconnected claims appear in Knowledge's Open
+questions view. Low-stakes structural debt appears in Maintenance's Loose ends
+view. Open verification findings appear as Inbox `flag`/`alert` attention items.
+The views exist to expose these failures before they harden.
 
 The project transition is now explicit: `memoria project slice` proposes a
 checked outline, `compose` writes a draft, `verify` gates the evidence markers,
 and `promote` turns selected passages into unchecked notes. Broad writability
 scoring remains out of scope; the shipped signal is concrete file state and
 verification findings, not a synthetic score.
+
+## Project slices
+
+A project slice is the bridge between checked knowledge and draft prose. It
+names the notes the draft may use, and it puts them in the order the PI wants
+the draft to follow.
+
+The slice matters because project writing should not pull from the whole vault
+opportunistically. Search can propose relevant notes, but the PI chooses which
+checked notes belong in the argument. That choice keeps the draft traceable:
+when the prose is wrong, review starts from a small, explicit evidence set
+instead of an opaque chat transcript.
+
+The slice is narrower than an argument map. It records membership and sequence;
+it does not restate every relationship among the notes. Memoria can recompute
+in-slice links from checked notes, so the project outline stays editable by a
+human while the graph remains grounded in authored note links.
+
+## Exploration channel
+
+The exploration channel is separate from relevance-ranked search because the PI
+needs two different questions answered. Search asks, "what checked material
+already matches this question?" Exploration asks, "what should I inspect next
+because the graph suggests a gap, contrary item, or nearby candidate?"
+
+That distinction keeps exploration from polluting answers. A ranked answer stays
+grounded in checked material; exploration may point outside the current argument
+so the PI can decide whether the candidate belongs.
+
+Every surfaced item carries a `why` string so the PI can decide whether it is
+worth action. The command contract belongs in [CLI](../../reference/commands-and-transports/cli.md) and
+[Operations](../../reference/commands-and-transports/operations.md).
 
 ## Why archiving preserves the cycle's integrity
 
@@ -89,6 +126,8 @@ every actor but the PI.
 - The epistemic roles of document types: [Document types and epistemic roles](document-types.md)
 - Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
 - The folder structure the cycle flows through: [The vault](../architecture/vault.md)
+- The project drafting task flow: [Compose a draft](../../how-to-guides/project/compose-a-draft.md)
+- The read contract behind project slices: [Engine read API](../../reference/commands-and-transports/read-api.md)
 
 **How-to**
 

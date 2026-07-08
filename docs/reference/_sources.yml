@@ -1,144 +1,143 @@
-# Source-status contract for docs/reference. Keep statuses aligned with README.md.
 pages:
-  bibliography.md:
-    status: Manual
-    owner: docs/reference/bibliography.md
-  calibration.md:
+  analysis-and-surfaces/calibration.md:
     status: Source-owned
     owner: vault-template/.memoria/schemas/calibration.yaml
-  cli.md:
+  analysis-and-surfaces/dashboards.md:
+    status: Manual
+    owner: docs/reference/analysis-and-surfaces/dashboards.md
+  analysis-and-surfaces/linter.md:
+    status: Manual
+    owner: docs/reference/analysis-and-surfaces/linter.md
+  analysis-and-surfaces/retrieval-and-analysis-methods.md:
+    status: Manual
+    owner: docs/reference/analysis-and-surfaces/retrieval-and-analysis-methods.md
+  analysis-and-surfaces/vault-eval.md:
+    status: Manual
+    owner: docs/reference/analysis-and-surfaces/vault-eval.md
+  commands-and-transports/cli.md:
     status: Guarded mirror
     owner: src/memoria_vault/cli.py
     check: check_reference_rosters
-  clustering.md:
-    status: Manual
-    owner: docs/reference/clustering.md
-  configuration.md:
-    status: Manual
-    owner: docs/reference/configuration.md
-  control-plane.md:
-    status: Manual
-    owner: docs/reference/control-plane.md
-  dashboards.md:
-    status: Manual
-    owner: docs/reference/dashboards.md
-  diagnostics.md:
-    status: Manual
-    owner: docs/reference/diagnostics.md
-  document-types.md:
-    status: Source-owned
-    owner: vault-template/.memoria/schemas/types/*.yaml
-    check: check_document_type_reference_mirror
-  evidence-sets.md:
-    status: Manual
-    owner: docs/reference/evidence-sets.md
-  empirical-events.md:
-    status: Guarded mirror
-    owner: src/memoria_vault/engine/empirical_events.py
-    check: check_reference_rosters
-  export.md:
-    status: Manual
-    owner: docs/reference/export.md
-  failure-modes.md:
-    status: Manual
-    owner: docs/reference/failure-modes.md
-  frontmatter.md:
-    status: Source-owned
-    owner: vault-template/.memoria/schemas/types/*.yaml
-    check: check_document_type_reference_mirror
-  glossary.md:
-    status: Manual
-    owner: docs/reference/glossary.md
-  inbox-card-fields.md:
-    status: Manual
-    owner: docs/reference/inbox-card-fields.md
-  ingest.md:
-    status: Manual
-    owner: docs/reference/ingest.md
-  installer.md:
-    status: Manual
-    owner: docs/reference/installer.md
-  integrations.md:
-    status: Manual
-    owner: docs/reference/integrations.md
-  linter.md:
-    status: Manual
-    owner: docs/reference/linter.md
-  local-http-transport.md:
+  commands-and-transports/local-http-transport.md:
     status: Manual
     owner: src/memoria_vault/runtime/http_transport.py
     check: check_reference_rosters
-  mcp-transport.md:
+  commands-and-transports/mcp-transport.md:
     status: Manual
     owner: src/memoria_vault/runtime/mcp_transport.py
     check: check_reference_rosters
-  memory-substrates.md:
-    status: Manual
-    owner: docs/reference/memory-substrates.md
-  on-disk-layout.md:
-    status: Manual
-    owner: docs/reference/on-disk-layout.md
-  operations.md:
+  commands-and-transports/operations.md:
     status: Manual
     owner: src/memoria_vault/product/capabilities/operations/*.md
-  pattern-provenance.md:
-    status: Manual
-    owner: docs/reference/pattern-provenance.md
-  policy-audit-log.md:
-    status: Manual
-    owner: src/memoria_vault/runtime/policy/audit.py
-  policy-auto-fix.md:
-    status: Manual
-    owner: src/memoria_vault/runtime/policy/decision.py
-  policy-mcp.md:
-    status: Manual
-    owner: src/memoria_vault/runtime/policy/
-  project-structural-impact.md:
-    status: Manual
-    owner: docs/reference/project-structural-impact.md
-  prompt-operations.md:
+  commands-and-transports/prompt-operations.md:
     status: Manual
     owner: src/memoria_vault/product/capabilities/operations/*.md
     check: check_reference_rosters
-  read-api.md:
+  commands-and-transports/read-api.md:
     status: Manual
     owner: src/memoria_vault/engine/api.py
     check: check_reference_rosters
-  retrieval-and-analysis-methods.md:
+  commands-and-transports/system-actions-adapters.md:
     status: Manual
-    owner: docs/reference/retrieval-and-analysis-methods.md
-  search.md:
+    owner: docs/reference/commands-and-transports/system-actions-adapters.md
+  commands-and-transports/system-actions-cli-and-pi.md:
     status: Manual
-    owner: src/memoria_vault/runtime/search_index.py
-  sweeps.md:
+    owner: docs/reference/commands-and-transports/system-actions-cli-and-pi.md
+  commands-and-transports/system-actions-operations.md:
     status: Manual
-    owner: docs/reference/sweeps.md
-  system-actions.md:
+    owner: docs/reference/commands-and-transports/system-actions-operations.md
+  commands-and-transports/system-actions-scheduled.md:
+    status: Manual
+    owner: docs/reference/commands-and-transports/system-actions-scheduled.md
+  commands-and-transports/system-actions.md:
     status: Guarded mirror
     owner: src/memoria_vault/product/capabilities/operations/*.md
     check: check_reference_rosters
-  system-artifacts.md:
+  control-and-policy/control-plane.md:
     status: Manual
-    owner: docs/reference/system-artifacts.md
-  telemetry-logs.md:
+    owner: docs/reference/control-and-policy/control-plane.md
+  control-and-policy/empirical-events.md:
+    status: Guarded mirror
+    owner: src/memoria_vault/engine/empirical_events.py
+    check: check_reference_rosters
+  control-and-policy/evidence-sets.md:
     status: Manual
-    owner: docs/reference/telemetry-logs.md
-  telemetry.md:
+    owner: docs/reference/control-and-policy/evidence-sets.md
+  control-and-policy/policy-audit-log.md:
     status: Manual
-    owner: docs/reference/telemetry.md
-  vault-eval.md:
+    owner: src/memoria_vault/runtime/policy/audit.py
+  control-and-policy/policy-mcp.md:
     status: Manual
-    owner: docs/reference/vault-eval.md
-  vocabulary.md:
+    owner: src/memoria_vault/runtime/policy/
+  control-and-policy/project-structural-impact.md:
+    status: Manual
+    owner: docs/reference/control-and-policy/project-structural-impact.md
+  control-and-policy/worklists.md:
+    status: Manual
+    owner: docs/reference/control-and-policy/worklists.md
+  data-model/document-types.md:
+    status: Source-owned
+    owner: vault-template/.memoria/schemas/types/*.yaml
+    check: check_document_type_reference_mirror
+  data-model/frontmatter.md:
+    status: Source-owned
+    owner: vault-template/.memoria/schemas/types/*.yaml
+    check: check_document_type_reference_mirror
+  data-model/glossary.md:
+    status: Manual
+    owner: docs/reference/data-model/glossary.md
+  data-model/vocabulary.md:
     status: Guarded mirror
     owner: vault-template/system/vocabulary.md
     check: check_vocabulary_reference_mirror
-  wikilink-and-link-conventions.md:
+  data-model/wikilink-and-link-conventions.md:
     status: Manual
-    owner: docs/reference/wikilink-and-link-conventions.md
-  worklists.md:
+    owner: docs/reference/data-model/wikilink-and-link-conventions.md
+  evidence-and-integrations/bibliography.md:
     status: Manual
-    owner: docs/reference/worklists.md
-  zotero-plugins.md:
+    owner: docs/reference/evidence-and-integrations/bibliography.md
+  evidence-and-integrations/integrations.md:
     status: Manual
-    owner: docs/reference/zotero-plugins.md
+    owner: docs/reference/evidence-and-integrations/integrations.md
+  evidence-and-integrations/pattern-provenance.md:
+    status: Manual
+    owner: docs/reference/evidence-and-integrations/pattern-provenance.md
+  evidence-and-integrations/zotero-plugins.md:
+    status: Manual
+    owner: docs/reference/evidence-and-integrations/zotero-plugins.md
+  pipelines-and-io/diagnostics.md:
+    status: Manual
+    owner: docs/reference/pipelines-and-io/diagnostics.md
+  pipelines-and-io/export.md:
+    status: Manual
+    owner: docs/reference/pipelines-and-io/export.md
+  pipelines-and-io/ingest.md:
+    status: Manual
+    owner: docs/reference/pipelines-and-io/ingest.md
+  pipelines-and-io/memory-substrates.md:
+    status: Manual
+    owner: docs/reference/pipelines-and-io/memory-substrates.md
+  pipelines-and-io/search.md:
+    status: Manual
+    owner: src/memoria_vault/runtime/search_index.py
+  pipelines-and-io/sweeps.md:
+    status: Manual
+    owner: docs/reference/pipelines-and-io/sweeps.md
+  pipelines-and-io/telemetry.md:
+    status: Manual
+    owner: docs/reference/pipelines-and-io/telemetry.md
+  system/configuration.md:
+    status: Manual
+    owner: docs/reference/system/configuration.md
+  system/failure-modes.md:
+    status: Manual
+    owner: docs/reference/system/failure-modes.md
+  system/installer.md:
+    status: Manual
+    owner: docs/reference/system/installer.md
+  system/on-disk-layout.md:
+    status: Manual
+    owner: docs/reference/system/on-disk-layout.md
+  system/system-artifacts.md:
+    status: Manual
+    owner: docs/reference/system/system-artifacts.md

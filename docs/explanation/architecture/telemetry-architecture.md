@@ -2,7 +2,7 @@
 title: Telemetry architecture
 parent: Architecture
 grand_parent: Explanation
-nav_order: 5
+nav_order: 4
 ---
 
 # Telemetry architecture
@@ -10,7 +10,7 @@ nav_order: 5
 Memoria telemetry is split into three planes because the same event stream cannot
 serve audit, product-health, and debugging needs without leaking data or losing
 forensic value. This page explains the operating model. Exact schemas live in
-[Telemetry log schemas](../../reference/telemetry-logs.md); the decisions are
+[Telemetry & logs](../../reference/pipelines-and-io/telemetry.md#log-schemas); the decisions are
 [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
 [the content-light diagnostic plane](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
 [cost and disposition capture](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
@@ -41,6 +41,6 @@ request exists, the event is intentionally local to its plane.
 
 ## Related
 
-- Exact event and metric schemas: [Telemetry log schemas](../../reference/telemetry-logs.md)
-- Log inventory: [Telemetry & logs](../../reference/telemetry.md)
+- Exact event and metric schemas: [Telemetry & logs](../../reference/pipelines-and-io/telemetry.md#log-schemas)
+- Log inventory: [Telemetry & logs](../../reference/pipelines-and-io/telemetry.md)
 - Audit/session digest model: [Session logging](session-logging.md)

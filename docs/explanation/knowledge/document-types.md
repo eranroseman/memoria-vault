@@ -21,8 +21,8 @@ knowledge, and product capabilities from pretending to be the same kind of
 thing.
 
 The schema YAML owns exhaustive fields. The reader-facing roster lives in
-[Document types](../../reference/document-types.md), and field grammar lives in
-[Frontmatter fields](../../reference/frontmatter.md).
+[Document types](../../reference/data-model/document-types.md), and field grammar lives in
+[Frontmatter fields](../../reference/data-model/frontmatter.md).
 
 ---
 
@@ -63,7 +63,7 @@ capability files are knowledge Concepts.
 
 ## Related
 
-- Complete type reference: [Document types](../../reference/document-types.md)
-- Field grammar and verdict state: [Frontmatter fields](../../reference/frontmatter.md)
+- Complete type reference: [Document types](../../reference/data-model/document-types.md)
+- Field grammar and verdict state: [Frontmatter fields](../../reference/data-model/frontmatter.md)
 - How material crosses the review gate: [Why promotion is gated](promotion-and-gated-zones.md)
 - The how of note bodies: [Note body structure](note-body-structure.md)

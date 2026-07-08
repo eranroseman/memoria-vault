@@ -69,5 +69,5 @@ not part of the standalone runtime.
 ## Related
 
 - What capture does with Zotero metadata: [Capture and ingest a source](../library/capture-and-ingest.md)
-- Generated bibliography behavior: [System actions](../../reference/system-actions.md)
-- API keys for enrichment: [External integrations](../../reference/integrations.md#api-keys-and-rate-limits)
+- Generated bibliography behavior: [System actions](../../reference/commands-and-transports/system-actions.md)
+- API keys for enrichment: [External integrations](../../reference/evidence-and-integrations/integrations.md#api-keys-and-rate-limits)

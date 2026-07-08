@@ -1,8 +1,8 @@
 ---
 title: The Writer
-parent: Execution
-grand_parent: Explanation
-nav_order: 23
+parent: Operation postures
+grand_parent: Execution
+nav_order: 3
 ---
 
 # The Writer
@@ -37,5 +37,5 @@ selected passage; review/check promotion stays separate.
 
 - The posture that checks its output: [The Peer-reviewer](peer-reviewer.md)
 - Where its drafts live: [The vault](../../architecture/vault.md)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../../design/boundaries/why-specialist-postures.md)
-- Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../../../design/boundaries/why-not-autonomous.md)
+- Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
+- Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../../rationale/boundaries/why-not-autonomous.md)

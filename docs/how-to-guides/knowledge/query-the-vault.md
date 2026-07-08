@@ -2,7 +2,7 @@
 title: Query the vault
 parent: Knowledge
 grand_parent: How-to guides
-nav_order: 7
+nav_order: 3
 ---
 
 # Query the vault
@@ -57,6 +57,6 @@ memoria workspace scan --workspace .
 
 ## Related
 
-- Search engine: [Search](../../reference/search.md)
+- Search engine: [Search](../../reference/pipelines-and-io/search.md)
 - Rebuild the search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- System actions: [System actions](../../reference/system-actions.md)
+- System actions: [System actions](../../reference/commands-and-transports/system-actions.md)

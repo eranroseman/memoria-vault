@@ -1,8 +1,8 @@
 ---
 title: Structural health
-parent: Surfaces
-nav_order: 13
-grand_parent: Explanation
+parent: Surfaces and dashboards
+nav_order: 3
+grand_parent: Surfaces
 permalink: /explanation/surfaces/dashboards/structural-health/
 ---
 
@@ -43,6 +43,6 @@ review](../../../how-to-guides/inbox/run-the-weekly-review.md).
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
-- Detector severity reference: [Linter: detectors and auto-fix](../../../reference/linter.md)
+- Exact shipped surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
+- Detector severity reference: [Linter: detectors and auto-fix](../../../reference/analysis-and-surfaces/linter.md)
 - The attention prompt format behind `flag` and `alert`: [The honesty prompt](../../execution/control-plane/honesty-card.md)

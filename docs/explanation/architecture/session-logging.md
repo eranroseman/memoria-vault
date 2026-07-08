@@ -2,7 +2,7 @@
 title: Session logging
 parent: Architecture
 grand_parent: Explanation
-nav_order: 4
+nav_order: 3
 ---
 
 # Session logging
@@ -28,8 +28,8 @@ what worker-controlled work accomplished so the PI can inspect a session without
 reading every event.
 
 The exact paths, writers, and retention contract belong in [Memory
-substrates](../../reference/memory-substrates.md) and [Policy audit
-log](../../reference/policy-audit-log.md).
+substrates](../../reference/pipelines-and-io/memory-substrates.md) and [Policy audit
+log](../../reference/control-and-policy/policy-audit-log.md).
 
 ---
 
@@ -38,7 +38,7 @@ log](../../reference/policy-audit-log.md).
 The policy audit log answers "did this adapter write happen and was it
 authorized?" — it is forensic and append-only. Because each policy write is
 hash-paired (the mechanism is owned by
-[Policy audit log](../../reference/policy-audit-log.md)), a write can be
+[Policy audit log](../../reference/control-and-policy/policy-audit-log.md)), a write can be
 reversed and an edit made outside the trail is detectable; the Linter closes the
 loop over this evidence with audit and hash-drift detectors. Worker request rows,
 journal events, and per-request summaries answer "what did the request
@@ -63,5 +63,5 @@ multi-machine sync needs its own deployment decision before support.
 ## Related
 
 - The Linter operation (reads `system/logs/`; runs the integrity checks; writes the request digests): [Operations](../execution/operations.md)
-- Session-log granularity (per-request files, not per-action): [Memory substrates](../../reference/memory-substrates.md)
-- Audit log (the other log): [Policy gate](../../reference/policy-mcp.md)
+- Session-log granularity (per-request files, not per-action): [Memory substrates](../../reference/pipelines-and-io/memory-substrates.md)
+- Audit log (the other log): [Policy gate](../../reference/control-and-policy/policy-mcp.md)

@@ -12,8 +12,8 @@ have distinct body structures because they answer different questions and serve
 different epistemic purposes. Understanding why each section exists helps explain
 what makes a note function as knowledge rather than as accumulated text.
 
-For the type roster, see [Document types](../../reference/document-types.md). For
-frontmatter fields and grammar, see [Frontmatter fields](../../reference/frontmatter.md).
+For the type roster, see [Document types](../../reference/data-model/document-types.md). For
+frontmatter fields and grammar, see [Frontmatter fields](../../reference/data-model/frontmatter.md).
 
 ---
 
@@ -52,7 +52,7 @@ The `## Evidence and argument` section is what distinguishes a claim from an ass
 
 The `## Links` section is the most structurally significant. A claim with no `links:` to other claims has not made it into the knowledge graph — it exists in isolation, where it cannot compound. The `links:` here are *authored* connections (as distinct from the *given* `relationships` on entities — that distinction is explained in [Document types and epistemic roles](document-types.md)), and they are what make the vault a graph rather than a collection. A note that supports, contradicts, or extends another note has been integrated; one without links has not.
 
-This is the **Zettelkasten** principle at the center of the method: a note's value comes from its links, not its contents — an unlinked note is, in Luhmann's terms, lost to the box. The required Links section makes that discipline structural rather than aspirational (see [Intellectual foundations](../../design/foundations/intellectual-foundations.md#luhmanns-zettelkasten)).
+This is the **Zettelkasten** principle at the center of the method: a note's value comes from its links, not its contents — an unlinked note is, in Luhmann's terms, lost to the box. The required Links section makes that discipline structural rather than aspirational (see [Intellectual foundations](../rationale/foundations/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 
@@ -74,5 +74,5 @@ The three questions a hub body should answer — what is this area about, what b
 - Why the Links section compounds: [The knowledge cycle](knowledge-cycle.md)
 - What goes wrong without this structure: [Common pitfalls](common-pitfalls.md)
 - How to use the reading workflow: [Discuss a paper](../../how-to-guides/library/discuss-a-paper.md)
-- Document-type roster: [Document types](../../reference/document-types.md)
-- Field grammar: [Frontmatter fields](../../reference/frontmatter.md)
+- Document-type roster: [Document types](../../reference/data-model/document-types.md)
+- Field grammar: [Frontmatter fields](../../reference/data-model/frontmatter.md)

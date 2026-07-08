@@ -9,9 +9,9 @@ is_sensitive = _m.is_sensitive
 
 
 def test_is_safe_accepts_safe_prose_prefixes():
-    assert is_safe("docs/reference/policy-mcp.md")
-    assert is_safe("docs/explanation/deployment.md")
-    assert is_safe("docs/explanation/architecture/interaction-channels.md")
+    assert is_safe("docs/reference/control-and-policy/policy-mcp.md")
+    assert is_safe("docs/explanation/deployment/README.md")
+    assert is_safe("docs/explanation/architecture/vault.md")
     assert is_safe("_notes/scratch.md")
 
 
@@ -34,7 +34,7 @@ def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
 def test_is_main_excluded_flags_scratch_branch_material():
     assert is_main_excluded("scratch/notes/0.1.0-alpha.12/design.md")
     assert is_main_excluded("scratch/notes/0.1.0-alpha.12/preimpl_spikes/run.py")
-    assert not is_main_excluded("docs/reference/policy-mcp.md")
+    assert not is_main_excluded("docs/reference/control-and-policy/policy-mcp.md")
 
 
 def test_is_sensitive_flags_policy_and_runtime_surfaces():
@@ -64,9 +64,9 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
 
 
 def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensitive():
-    assert not is_sensitive("docs/explanation/deployment.md")
-    assert not is_sensitive("docs/reference/policy-mcp.md")
-    assert not is_sensitive("docs/design/what-memoria-is.md")
+    assert not is_sensitive("docs/explanation/deployment/README.md")
+    assert not is_sensitive("docs/reference/control-and-policy/policy-mcp.md")
+    assert not is_sensitive("docs/explanation/rationale/foundations/what-memoria-is.md")
     assert not is_sensitive("scratch/notes/0.1.0-alpha.12/design.md")
     assert not is_sensitive("scratch/notes/0.1.0-alpha.12/preimpl_spikes/run.py")
     assert not is_sensitive("README.md")
@@ -74,7 +74,10 @@ def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensit
 
 def test_decide_auto_approves_trusted_safe_prose_only():
     decision, _reason = decide(
-        ["docs/reference/policy-mcp.md", "docs/reference/profile-capabilities.md"],
+        [
+            "docs/reference/control-and-policy/policy-mcp.md",
+            "docs/reference/data-model/glossary.md",
+        ],
         "eranroseman",
         False,
     )
@@ -84,11 +87,16 @@ def test_decide_auto_approves_trusted_safe_prose_only():
 
 def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
     sensitive_decision, reason = decide(
-        ["scripts/install.sh", "docs/reference/policy-mcp.md"], "eranroseman", False
+        ["scripts/install.sh", "docs/reference/control-and-policy/policy-mcp.md"],
+        "eranroseman",
+        False,
     )
     design_history_decision, _ = decide(["design-history/arcs.md"], "eranroseman", False)
     mixed_decision, _ = decide(
-        ["docs/reference/glossary.md", "vault-template/.memoria/schemas/types/note.yaml"],
+        [
+            "docs/reference/data-model/glossary.md",
+            "vault-template/.memoria/schemas/types/note.yaml",
+        ],
         "eranroseman",
         False,
     )
@@ -103,7 +111,7 @@ def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
 
 def test_decide_blocks_untrusted_sensitive_changes_but_reviews_safe_changes():
     blocked, _ = decide(["scripts/install.sh"], "random-user", False)
-    safe_review, reason = decide(["docs/reference/glossary.md"], "random-user", False)
+    safe_review, reason = decide(["docs/reference/data-model/glossary.md"], "random-user", False)
     agents_block, _ = decide(["AGENTS.md"], "random-user", False)
 
     assert blocked == "block"
@@ -127,7 +135,9 @@ def test_decide_blocks_scratch_prs_to_main_for_any_author():
 
 
 def test_decide_drafts_and_empty_changesets_need_human_review():
-    draft, draft_reason = decide(["docs/reference/policy-mcp.md"], "eranroseman", True)
+    draft, draft_reason = decide(
+        ["docs/reference/control-and-policy/policy-mcp.md"], "eranroseman", True
+    )
     empty, _ = decide([], "eranroseman", False)
 
     assert draft == "needs_human"

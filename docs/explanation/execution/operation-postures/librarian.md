@@ -1,8 +1,8 @@
 ---
 title: The Librarian
-parent: Execution
-grand_parent: Explanation
-nav_order: 22
+parent: Operation postures
+grand_parent: Execution
+nav_order: 2
 ---
 
 # The Librarian
@@ -24,7 +24,7 @@ operation manifests and request rows, not installed profile packages.
 ## The operation family
 
 The Librarian posture shows up in catalog, extraction, linking, and mapping
-work. [Operations](../../../reference/operations.md) owns the concrete command
+work. [Operations](../../../reference/commands-and-transports/operations.md) owns the concrete command
 and manifest surface; this page owns the reason those tasks share a posture.
 
 Like all delegable tasks, these operations are individually triggered, not a
@@ -50,5 +50,5 @@ Catalog state lives in SQLite and blobs; source digests live under `digests/`.
 
 - The mechanical counterpart: [Operations](../operations.md)
 - The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../../design/boundaries/why-specialist-postures.md)
-- Why intake is separated from verification: [Why operation postures, not a generalist agent](../../../design/boundaries/why-specialist-postures.md)
+- Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
+- Why intake is separated from verification: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)

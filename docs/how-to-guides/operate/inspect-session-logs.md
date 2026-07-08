@@ -2,7 +2,7 @@
 title: Inspect session logs
 parent: Operate
 grand_parent: How-to guides
-nav_order: 9
+nav_order: 5
 ---
 
 # Inspect session logs
@@ -69,7 +69,7 @@ jq . "system/logs/sessions/$(ls -t system/logs/sessions/ | head -1)"
 ## Related
 
 - The two-log design and why they stay separate: [Session logging](../../explanation/architecture/session-logging.md)
-- The audit field schema and hash pairing: [Policy audit log](../../reference/policy-audit-log.md)
-- The full log inventory and JSONL conventions: [Telemetry & logs](../../reference/telemetry.md)
-- The dashboards over this data: [Dashboards](../../reference/dashboards.md)
+- The audit field schema and hash pairing: [Policy audit log](../../reference/control-and-policy/policy-audit-log.md)
+- The full log inventory and JSONL conventions: [Telemetry & logs](../../reference/pipelines-and-io/telemetry.md)
+- The dashboards over this data: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
 - Diagnosing a write that was denied: [Diagnose a denied or blocked write](../troubleshooting/diagnose-a-denied-write.md)

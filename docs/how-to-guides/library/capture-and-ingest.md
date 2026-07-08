@@ -62,5 +62,5 @@ memoria work enrich --workspace <vault> <work-id>
 
 ## Related
 
-- Pipeline details: [Ingest routing](../../reference/ingest.md)
-- Trusted writer: [System actions](../../reference/system-actions.md)
+- Pipeline details: [Ingest routing](../../reference/pipelines-and-io/ingest.md)
+- Trusted writer: [System actions](../../reference/commands-and-transports/system-actions.md)

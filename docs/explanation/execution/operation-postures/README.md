@@ -2,7 +2,8 @@
 title: Operation postures
 parent: Execution
 grand_parent: Explanation
-nav_order: 20
+nav_order: 2
+has_children: true
 permalink: /explanation/execution/operation-postures/
 ---
 
@@ -37,5 +38,5 @@ manifest's authority.
 
 ## Related
 
-- Current command surface: [CLI](../../../reference/cli.md)
-- Operation manifests: [Operations](../../../reference/operations.md)
+- Current command surface: [CLI](../../../reference/commands-and-transports/cli.md)
+- Operation manifests: [Operations](../../../reference/commands-and-transports/operations.md)

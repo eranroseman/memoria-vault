@@ -1,8 +1,8 @@
 ---
 title: The Peer-reviewer
-parent: Execution
-grand_parent: Explanation
-nav_order: 24
+parent: Operation postures
+grand_parent: Execution
+nav_order: 4
 ---
 
 # The Peer-reviewer
@@ -38,5 +38,5 @@ an operation, and findings reach the PI the same way - as attention.
 
 - The deterministic half of verification: [Operations](../operations.md)
 - The proposer it stays independent of: [The Librarian](librarian.md)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../../design/boundaries/why-specialist-postures.md)
-- Why review is human-driven: [Why the review gate is structural](../../../design/boundaries/why-review-gate-is-structural.md)
+- Why the posture boundaries are strict: [Why operation postures](../../rationale/boundaries/why-operation-postures.md)
+- Why review is human-driven: [Why the review gate is structural](../../rationale/boundaries/why-review-gate-is-structural.md)

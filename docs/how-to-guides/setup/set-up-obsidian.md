@@ -48,6 +48,6 @@ write-policy boundary, scheduler, or model runner.
 
 ## Related
 
-- CLI command reference: [Memoria CLI](../../reference/cli.md)
-- Optional proof adapter contract: [External integrations](../../reference/integrations.md#obsidian-proof-adapter)
-- On-disk layout: [On-disk layout](../../reference/on-disk-layout.md)
+- CLI command reference: [Memoria CLI](../../reference/commands-and-transports/cli.md)
+- Optional proof adapter contract: [External integrations](../../reference/evidence-and-integrations/integrations.md#obsidian-proof-adapter)
+- On-disk layout: [On-disk layout](../../reference/system/on-disk-layout.md)

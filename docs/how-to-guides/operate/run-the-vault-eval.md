@@ -2,7 +2,7 @@
 title: Run the vault eval
 parent: Operate
 grand_parent: How-to guides
-nav_order: 8
+nav_order: 4
 ---
 
 # Run the vault eval
@@ -49,7 +49,7 @@ python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . 
 
 Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute without appending to the log.
 
-**5. Read the trend.** Open the **eval-trend** dashboard (`system/dashboards/eval-trend.md`) — it renders the newest run per quarter plus the latest run's per-task breakdown ([Dashboards](../../reference/dashboards.md)).
+**5. Read the trend.** Open the **eval-trend** dashboard (`system/dashboards/eval-trend.md`) — it renders the newest run per quarter plus the latest run's per-task breakdown ([Dashboards](../../reference/analysis-and-surfaces/dashboards.md)).
 
 ## Verify
 
@@ -60,7 +60,7 @@ Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute
 
 ## Related
 
-- The gold set, metrics, and result contract: [Vault eval](../../reference/vault-eval.md)
-- The trend dashboard and metric bands: [Dashboards](../../reference/dashboards.md)
+- The gold set, metrics, and result contract: [Vault eval](../../reference/analysis-and-surfaces/vault-eval.md)
+- The trend dashboard and metric bands: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
 - The sibling deterministic maintenance job: [Run the Linter](run-the-linter.md)
-- Scheduler wiring boundary: [Installer (bootstrap)](../../reference/installer.md)
+- Scheduler wiring boundary: [Installer (bootstrap)](../../reference/system/installer.md)
