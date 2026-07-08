@@ -45,7 +45,7 @@ Only `GET` and `POST` are implemented.
 | --- | --- | --- | --- |
 | `GET` | `/status` | none | `read_status(workspace)` |
 | `GET` | `/operations` | none | `read_operations(workspace)` |
-| `GET` | `/openapi.json` | none | surface contract schema |
+| `GET` | `/openapi.json` | none | OpenAPI 3.1 document generated from the surface contract |
 | `GET` | `/requests` | `status`, `read_scope` or `scope` | `read_requests(...)` |
 | `GET` | `/request` | `id`, `read_scope` or `scope` | `read_request(...)` |
 | `GET` | `/attention` | `status`, `kind`, `worklist=true`, `read_scope` or `scope` | `read_attention(...)` |

@@ -747,6 +747,14 @@ def check_reference_rosters(repo: Path, errors: list[str]) -> None:
         "MCP tool",
         errors,
     )
+    _require_doc_codes(
+        reference / "empirical-events.md",
+        _empirical_event_schema_values(
+            repo / "src" / "memoria_vault" / "engine" / "empirical_events.py"
+        ),
+        "empirical event schema",
+        errors,
+    )
 
 
 def _mcp_tool_names(source: Path) -> set[str]:
@@ -760,6 +768,63 @@ def _mcp_tool_names(source: Path) -> set[str]:
         if any(_is_app_tool_decorator(decorator) for decorator in node.decorator_list):
             tools.add(node.name)
     return tools
+
+
+def _empirical_event_schema_values(source: Path) -> set[str]:
+    if not source.is_file():
+        return set()
+    wanted = {
+        "BASE_REQUIRED_FIELDS",
+        "SURFACES",
+        "WORKFLOWS",
+        "DECISIONS",
+        "OUTCOMES",
+        "REASON_CODES",
+        "EVENT_REQUIRED_FIELDS",
+        "ALLOWED_FIELDS",
+    }
+    tree = ast.parse(read(source), filename=str(source))
+    constants: dict[str, set[str]] = {}
+    values: set[str] = set()
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        extracted = _literal_string_values(node.value, constants)
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                constants[target.id] = set(extracted)
+        if not any(isinstance(target, ast.Name) and target.id in wanted for target in node.targets):
+            continue
+        values.update(extracted)
+    return values
+
+
+def _literal_string_values(node: ast.AST, constants: dict[str, set[str]]) -> set[str]:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return {node.value}
+    if isinstance(node, ast.Name):
+        return set(constants.get(node.id, set()))
+    if isinstance(node, ast.Starred):
+        return _literal_string_values(node.value, constants)
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "frozenset"
+    ):
+        return _literal_string_values(node.args[0], constants) if node.args else set()
+    if isinstance(node, ast.Set | ast.List | ast.Tuple):
+        out: set[str] = set()
+        for item in node.elts:
+            out.update(_literal_string_values(item, constants))
+        return out
+    if isinstance(node, ast.Dict):
+        out = set()
+        for key, value in zip(node.keys, node.values, strict=False):
+            if key is not None:
+                out.update(_literal_string_values(key, constants))
+            out.update(_literal_string_values(value, constants))
+        return out
+    return set()
 
 
 def _is_app_tool_decorator(decorator: ast.expr) -> bool:

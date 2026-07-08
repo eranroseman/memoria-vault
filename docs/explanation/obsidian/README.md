@@ -8,10 +8,10 @@ permalink: /explanation/obsidian/
 
 # Obsidian
 
-Obsidian is optional in alpha.19. The required human surface is the `memoria`
-CLI plus Markdown files. This section keeps the editor-facing rationale that
-still applies when Obsidian is used as a plain Markdown editor or future adapter
-host.
+Obsidian is optional. The required human surface is the `memoria` CLI plus
+Markdown files. Alpha.20 adds a proof adapter for local HTTP views and
+empirical-event capture, but bootstrap still installs a standalone workspace
+that works without Obsidian.
 
 One principle runs through every page below: **the architecture is invisible during normal use and legible when something goes wrong.** The vault should feel like a writing environment; the machinery surfaces only when it needs a decision.
 

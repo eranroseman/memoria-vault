@@ -20,6 +20,7 @@ check_template_frontmatter = _m.check_template_frontmatter
 check_vocabulary_reference_mirror = _m.check_vocabulary_reference_mirror
 check_wikilink_aliases = _m.check_wikilink_aliases
 check_wikilinks = _m.check_wikilinks
+empirical_event_schema_values = _m._empirical_event_schema_values
 gh_slug = _m.gh_slug
 heading_slugs = _m.heading_slugs
 site_excluded_dirs = _m._site_excluded_dirs
@@ -541,6 +542,16 @@ def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
         '@app.tool(description="Read status.")\ndef status():\n    pass\n',
         encoding="utf-8",
     )
+    (repo / "src" / "memoria_vault" / "engine" / "empirical_events.py").write_text(
+        "SURFACES = frozenset({'obsidian'})\n"
+        "WORKFLOWS = frozenset({'gap'})\n"
+        "DECISIONS = frozenset({'accept'})\n"
+        "OUTCOMES = frozenset({'queued'})\n"
+        "REASON_CODES = frozenset({'useful'})\n"
+        "EVENT_REQUIRED_FIELDS = {'disposition.recorded': frozenset({'workflow'})}\n"
+        "ALLOWED_FIELDS = frozenset({'event_id', 'workflow'})\n",
+        encoding="utf-8",
+    )
     (ops / "capture-source.md").write_text(
         "---\noperation_id: capture-source\n---\n# Operation\n",
         encoding="utf-8",
@@ -551,6 +562,7 @@ def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
         "read-api.md",
         "local-http-transport.md",
         "mcp-transport.md",
+        "empirical-events.md",
     ):
         (ref / name).write_text("# Empty\n", encoding="utf-8")
 
@@ -561,3 +573,20 @@ def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
     assert any("engine API roster omits: read_status" in err for err in errs)
     assert any("HTTP endpoint roster omits: /status" in err for err in errs)
     assert any("MCP tool roster omits: status" in err for err in errs)
+    assert any(
+        "empirical event schema roster omits: accept, disposition.recorded" in err for err in errs
+    )
+
+
+def test_empirical_event_schema_roster_extracts_starred_required_fields(tmp_path):
+    source = tmp_path / "empirical_events.py"
+    source.write_text(
+        "BASE_REQUIRED_FIELDS = frozenset({'event_id', 'event_type', 'timestamp'})\n"
+        "EVENT_REQUIRED_FIELDS = {'session.started': frozenset({'workflow'})}\n"
+        "ALLOWED_FIELDS = frozenset({*BASE_REQUIRED_FIELDS, 'workflow'})\n",
+        encoding="utf-8",
+    )
+
+    values = empirical_event_schema_values(source)
+
+    assert {"event_id", "event_type", "timestamp", "session.started", "workflow"} <= values

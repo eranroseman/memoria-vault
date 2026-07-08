@@ -16,6 +16,7 @@ bootstrap installer at the repo root deploys the standalone workspace.
 | `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both derive the workspace from `vault-template/` and install the standalone CLI/runtime package. | End users (run once). |
 | `vault-template/` | **Source files only, never a live vault**: templates, OKF knowledge bundles, capability manifests, schemas, dashboards, and patterns. The installer scaffolds the vault tree and populates it from here. | The installer (and contributors). |
 | `src/memoria_vault/` | The installable Python package for shared runtime helpers and policy logic. | Memoria operations, optional adapter servers, tests, and contributors. |
+| `packages/memoria-obsidian/` | Optional alpha.20 proof adapter for Obsidian. It consumes the local HTTP surface and is not installed into the baseline vault. | Adapter testers and contributors. |
 | `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
 The installer derives the running workspace from `vault-template/` at a working
@@ -44,7 +45,7 @@ Empty content dirs are recreated from `.memoria/schemas/folders.yaml`.
 
 ## Product-file refresh
 
-Alpha.19 does not maintain an in-vault product-file restore baseline. Product
+Memoria does not maintain an in-vault product-file restore baseline. Product
 files come from `vault-template/` and the installed `memoria_vault` package;
 repair is a fresh workspace refresh or package reinstall, not migration or
 three-way reconciliation inside the vault.
@@ -53,7 +54,7 @@ three-way reconciliation inside the vault.
 
 ## Capabilities, Not Installed Profiles
 
-Alpha.19 ships capability manifests inside the Python package under
+Memoria ships capability manifests inside the Python package under
 `src/memoria_vault/product/capabilities/`, with one checked Markdown file per
 operation. Those manifests are the runtime
 allowlist: they describe the operation id, input/output schema, allowed tools,
@@ -62,9 +63,10 @@ checks.
 
 The repo deliberately does not ship `vault-template/.memoria/profiles/`,
 `vault-template/.memoria/lane-overrides/`, or a profile-rendering script. The
-standalone `memoria` CLI and engine are the product surface. Optional future
-adapters may call the same CLI/engine, but they are not the source of truth for
-capabilities and they do not belong in the runtime vault bootstrap.
+standalone `memoria` CLI and engine are the product surface. Optional adapters,
+including the Obsidian proof adapter, may call the same CLI/engine, but they are
+not the source of truth for capabilities and they do not belong in the runtime
+vault bootstrap.
 
 The absence is test-pinned by Installed profiles and
 `scripts/checks/alpha14_negative_gate.py`.
@@ -75,9 +77,8 @@ The absence is test-pinned by Installed profiles and
 
 Nothing in the distribution model is single-vault by design. The rule is simple:
 give each workspace its own directory, `.memoria/memoria.sqlite`, search index
-state, Git history, and provider config. If an optional app adapter is added
-later, it must attach to one workspace at a time and preserve the CLI/engine as
-the write path.
+state, Git history, and provider config. Optional app adapters must attach to
+one workspace at a time and preserve the CLI/engine as the write path.
 
 ---
 

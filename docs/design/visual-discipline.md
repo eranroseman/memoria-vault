@@ -26,10 +26,11 @@ Emoji in note *titles* break filename portability across operating systems — a
 ## Why chrome is hidden by default
 
 Earlier designs reserved a standalone status line for a one-second ambient answer
-to "is everything roughly fine?" That widget is not part of the current Obsidian
-surface. The current answer lives in the rail's **Now**: the Inbox action count
-and Maintenance drift band stay visible without adding a separate always-on
-indicator.
+to "is everything roughly fine?" The alpha.20 proof adapter uses Obsidian's
+status bar only for recording/offline state; it is not a workspace-health
+indicator. The current health answer lives in the rail's **Now**: the Inbox
+action count and Maintenance drift band stay visible without adding a separate
+always-on indicator.
 
 One editor window per workspace is a technical constraint as much as a discipline.
 The engine assumes one active workspace view; multiple editors updating the same
@@ -45,9 +46,10 @@ Knowledge, and Project — rather than to saved Obsidian workspaces
 diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
 state made navigation heavier than the job required.
 
-Alpha.19 ships no saved Obsidian workspace. Daily mode switching happens through
-Markdown space notes and CLI/read-API commands. The exact boundary is reference
-material: Obsidian workspaces.
+Memoria ships no saved Obsidian workspace. Daily mode switching happens through
+Markdown space notes and CLI/read-API commands. The proof adapter is a control
+surface over local HTTP, not a saved workspace layout. The exact boundary is
+reference material: Obsidian workspaces.
 
 ---
 

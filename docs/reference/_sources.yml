@@ -31,6 +31,10 @@ pages:
   evidence-sets.md:
     status: Manual
     owner: docs/reference/evidence-sets.md
+  empirical-events.md:
+    status: Guarded mirror
+    owner: src/memoria_vault/engine/empirical_events.py
+    check: check_reference_rosters
   export.md:
     status: Manual
     owner: docs/reference/export.md
