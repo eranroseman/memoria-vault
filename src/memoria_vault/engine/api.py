@@ -64,8 +64,34 @@ def read_operations(workspace: Path) -> dict[str, Any]:
     return _read_payload(operations=operations)
 
 
-def read_exploration(workspace: Path, *, limit: int = 10) -> dict[str, Any]:
-    return _read_payload(exploration=_exploration_channel(Path(workspace), limit=limit))
+def read_surface_schema(workspace: Path) -> dict[str, Any]:
+    from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_CONTRACT_VERSION
+
+    return _read_payload(
+        surface_contract_version=SURFACE_CONTRACT_VERSION,
+        actions=[dict(action) for action in SURFACE_ACTIONS],
+    )
+
+
+def read_exploration(
+    workspace: Path, *, limit: int = 10, read_scope: list[str] | None = None
+) -> dict[str, Any]:
+    workspace = Path(workspace)
+    exploration = _exploration_channel(workspace, limit=limit)
+    if read_scope is not None:
+        items = [
+            item
+            for item in exploration.get("items") or []
+            if _exploration_item_in_scope(workspace, item, read_scope)
+        ]
+        contrary_items = [
+            item
+            for item in exploration.get("contrary_items") or []
+            if _contrary_item_in_scope(item, read_scope)
+        ]
+        exploration = {**exploration, "items": items, "contrary_items": contrary_items}
+        exploration["empty"] = not items and not contrary_items
+    return _read_payload(exploration=exploration)
 
 
 def read_requests(
@@ -531,6 +557,18 @@ def _work_paths(work: dict[str, Any]) -> list[str]:
         str(work.get("content_path") or ""),
         str(work.get("raw_path") or ""),
     ]
+
+
+def _exploration_item_in_scope(
+    workspace: Path, item: dict[str, Any], read_scope: list[str] | None
+) -> bool:
+    work = state.catalog_source(workspace, str(item.get("work_id") or ""))
+    return work is not None and any(_scope_allows(path, read_scope) for path in _work_paths(work))
+
+
+def _contrary_item_in_scope(item: dict[str, Any], read_scope: list[str] | None) -> bool:
+    paths = [str(item.get("path") or ""), str(item.get("target") or "")]
+    return all(_scope_allows(path, read_scope) for path in paths if path)
 
 
 def _untrusted_text(text: str) -> dict[str, str]:
