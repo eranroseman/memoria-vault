@@ -13,11 +13,11 @@ The non-committing result contract: an eval run never writes the vault
     {
       "vault_eval": "result",
       "task": "<gold-task id, the note stem>",
-      "quarter": "<the quarter in the card title, e.g. 2026-Q2>",
+      "quarter": "<the eval quarter, e.g. 2026-Q2>",
       "retrieved": ["citekey", "..."],   // ranked results, best first (find tasks)
       "cited": ["citekey", "..."],       // citekeys offered as evidence
       "claims": ["note-stem", "..."],    // claim notes used or produced
-      "self_score": 1.0                  // the rubric self-score from the card
+      "self_score": 1.0                  // the rubric self-score from the report
     }
     ```
 
@@ -47,7 +47,7 @@ scorer prints that and appends nothing (an empty run is noise, not data).
     python eval_score.py --vault <path> --from-json results.json
     python eval_score.py --vault <path> --quarter previous --from-json results.json
     python eval_score.py --vault <path> --quarter 2026-Q2 --from-json results.json
-    python eval_score.py --vault <path> --from-json cards.json --dry-run
+    python eval_score.py --vault <path> --from-json results.json --dry-run
 """
 
 from __future__ import annotations
@@ -95,22 +95,22 @@ def superseded_claims(vault: Path) -> set[str]:
     return out
 
 
-def load_cards(from_json: Path) -> list[dict]:
+def load_result_payloads(from_json: Path) -> list[dict]:
     """Read local eval result payloads from a JSON file."""
     raw = from_json.read_text(encoding="utf-8")
     data = json.loads(raw)
-    cards = data.get("tasks", data) if isinstance(data, dict) else data
-    return [c for c in cards if isinstance(c, dict)]
+    payloads = data.get("tasks", data) if isinstance(data, dict) else data
+    return [item for item in payloads if isinstance(item, dict)]
 
 
-def _card_texts(card: dict) -> list[str]:
+def _payload_texts(payload: dict) -> list[str]:
     """Every text field a worker's report can land in, oldest first: run
-    summaries, then the metadata/summary fallbacks board_export.py also reads."""
+    summaries, then metadata/summary fallbacks from local result exports."""
     texts: list[str] = []
-    for r in card.get("runs") or []:
+    for r in payload.get("runs") or []:
         if isinstance(r, dict) and r.get("summary"):
             texts.append(str(r["summary"]))
-    md = card.get("metadata")
+    md = payload.get("metadata")
     if isinstance(md, str):
         try:
             md = json.loads(md)
@@ -118,18 +118,18 @@ def _card_texts(card: dict) -> list[str]:
             md = {}
     if isinstance(md, dict) and md.get("summary"):
         texts.append(str(md["summary"]))
-    if card.get("summary"):
-        texts.append(str(card["summary"]))
+    if payload.get("summary"):
+        texts.append(str(payload["summary"]))
     return texts
 
 
-def extract_results(cards: list[dict], quarter: str) -> dict[str, dict]:
-    """task id -> its result block for `quarter`. Scans every card text for
+def extract_results(payloads: list[dict], quarter: str) -> dict[str, dict]:
+    """task id -> its result block for `quarter`. Scans every payload text for
     fenced json blocks marked `"vault_eval": "result"`; the newest block per
     task wins (a re-run inside the quarter supersedes the earlier report)."""
     out: dict[str, dict] = {}
-    for card in cards:
-        for text in _card_texts(card):
+    for payload in payloads:
+        for text in _payload_texts(payload):
             for m in _FENCED_JSON.finditer(text):
                 try:
                     obj = json.loads(m.group(1))
@@ -173,11 +173,11 @@ def score_task(
     return metrics
 
 
-def score_run(vault: Path, cards: list[dict], quarter: str, k: int = DEFAULT_K) -> dict:
+def score_run(vault: Path, payloads: list[dict], quarter: str, k: int = DEFAULT_K) -> dict:
     """Score one quarter's eval run: per-task records + the aggregate."""
     catalog = catalog_citekeys(vault)
     superseded = superseded_claims(vault)
-    results = extract_results(cards, quarter)
+    results = extract_results(payloads, quarter)
     tasks_out: list[dict] = []
     sums: dict[str, list[float]] = {}
     counts = {"scored": 0, "reported": 0, "unscored": 0}
@@ -286,12 +286,13 @@ def main() -> None:
     if not vault.is_dir():
         sys.exit(f"not a directory: {vault}")
     quarter = resolve_quarter(args.quarter)
-    cards = load_cards(args.from_json)
-    run = score_run(vault, cards, quarter, k=args.k)
+    payloads = load_result_payloads(args.from_json)
+    run = score_run(vault, payloads, quarter, k=args.k)
     agg = run["aggregate"]
     if agg["tasks_scored"] == 0 and agg["tasks_reported"] == 0:
         print(
-            f"[eval-score] {quarter}: no result blocks on the board — nothing scored, log untouched"
+            f"[eval-score] {quarter}: no result blocks in the payloads — "
+            "nothing scored, log untouched"
         )
         return
     if args.dry_run:

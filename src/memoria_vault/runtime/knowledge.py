@@ -1451,7 +1451,10 @@ def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
                     "path": rel,
                     "title": str(frontmatter.get("title") or Path(rel).stem),
                     "target": target_ref,
-                    "why": f"Contrary lane: checked concept `{rel}` declares contradiction `{target_ref}`.",
+                    "why": (
+                        f"Contrary channel: checked concept `{rel}` "
+                        f"declares contradiction `{target_ref}`."
+                    ),
                 }
             )
     rows = sorted(rows, key=lambda row: (row["path"], row["target"]))
@@ -1485,7 +1488,7 @@ def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, st
                 "title": str(candidate.get("left_title") or left),
                 "target": right,
                 "why": (
-                    "Contrary lane: NLI REFUTED candidate between "
+                    "Contrary channel: NLI REFUTED candidate between "
                     f"`{left}` and `{right}` ({candidate.get('warrant')})."
                 ),
             }
