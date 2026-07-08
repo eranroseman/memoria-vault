@@ -20,13 +20,12 @@ find the owning file, then fix the stale consumer rather than the source.
 | Shared schema validation | `src/memoria_vault/runtime/subsystems/lib/schema.py` | Linter, pre-commit, installer and schema tests |
 | Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations that raise attention items; Home/Telegram push; request and policy block checks |
 | Packaged workspace seed | `src/memoria_vault/product/workspace_seed/` | `memoria init`, installers, package smoke tests, on-disk layout docs |
-| Dropped Obsidian baseline payload | `scripts/checks/alpha14_negative_gate.py` + `scripts/checks/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
+| Obsidian package seed boundary | `scripts/checks/alpha14_negative_gate.py` + `scripts/checks/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
 | Installer behavior and flags | `scripts/install.sh` and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/checks/ruleset_doctor.py`, and `AGENTS.md` |
 | Offline e2e smoke stages | `scripts/sandbox/e2e_smoke.py` | `scripts/sandbox/e2e_smoke.py`, design-history/testing docs, release stage evidence |
 | Standalone disposable install harness | `scripts/sandbox/install-test-vault-local-llm.sh` | `tests/test_install_test_vault_local_llm.py`, testing verification matrix |
 | Contributor Python tooling | `requirements-dev.txt` + `.pre-commit-config.yaml` | Dev setup, lint workflows, python-selftest, Dependabot |
-| Contributor code search (qmd) | `package.json` + `scripts/qmd-codebase-index.sh` / `scripts/qmd-install-hooks.sh` | AGENTS.md "Searching the codebase (qmd)", dev setup |
 | GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/checks/github_doctor.py`, issue tracking docs |
 | Agent change-impact registry | `.agents/system/change-impact.yaml` | Generated change-impact map and agent doctor |
 | PR trust classification | `.github/scripts/pr_policy.py` | `.github/workflows/pr-review-gate.yml`, policy tests |
@@ -35,7 +34,6 @@ find the owning file, then fix the stale consumer rather than the source.
 | Release scope | GitHub milestone + Memoria Issue Tracker view | Release plan prose and release parent issue |
 | Release readiness | `Release <version>` parent issue + gate/stage sub-issues | Release plan and release playbook |
 | Release design scratch | `scratch` branch, under `releases/<version>/` while in progress | Release playbook, ExecPlan playbook |
-| Release scope/readiness | GitHub milestone, Memoria Issue Tracker, and "Release <version>" parent issue/sub-issues | Release playbook and release template |
 | Product decisions | Active release decision ledger, then `design-history/` | Current docs and implementation |
 | Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation, Design |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |

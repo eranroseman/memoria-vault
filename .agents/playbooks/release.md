@@ -18,9 +18,7 @@ Release state lives in GitHub; this playbook is the portable agent procedure.
 - **Scope cuts** live as GitHub issues with Readiness `Later`; release decision
   entries record the decision or rationale only when there is one.
 - **Version and notes** are owned by release-please.
-- **In-work release design notes** live on the `scratch` branch under
-  `releases/<version>/` on the `scratch` branch while the release is being shaped and are deleted
-  before the release/checkpoint is done.
+- **In-work release design notes** follow `AGENTS.md` → "Scratch branch flow".
 
 Do not create a second markdown state table for gate or stage progress.
 
@@ -48,8 +46,8 @@ Do not create a second markdown state table for gate or stage progress.
 5. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
    owner, close condition, and an evidence record: command or interaction,
    artifact or output link, result, and skip reason when skipped.
-6. Put temporary tracked design scratch on the `scratch` branch under
-   `releases/<version>/` on the `scratch` branch only when it must survive handoff.
+6. Put temporary tracked design scratch on the `scratch` branch only when it
+   must survive handoff.
 
 ## 3. Cut a release or checkpoint
 

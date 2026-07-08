@@ -26,28 +26,10 @@ do the change.
 
 ## Where the plan lives (Memoria routing)
 
-An ExecPlan is a **working artifact**, not a new committed deliverable. Memoria
-retired standalone proposal and design-doc folders. Decisions live in the active
-release decision ledger and then `design-history/`; state lives in issues. An
-ExecPlan must never become another permanent record.
-
-Put the instance on the **`scratch` branch**, under
-**`releases/<version>/`** on the `scratch` branch for the current release or checkpoint: tracked
-so it can be linked and handed off, and deleted before that release/checkpoint
-closes (see `AGENTS.md` → "Scratch branch flow" and "Release process"). This is
-the repository's only home for tracked in-work release design scratch — `_notes/`
-is gitignored and invisible to other agents, so a plan meant to be resumed or
-handed off never lives there.
-
-The ExecPlan **orchestrates** the work; it does not replace the records that work
-produces. Durable outputs route as usual:
-
-| Output | Goes to |
-|---|---|
-| An architectural or product decision | the active release decision ledger — the plan links it |
-| Release readiness / gate / stage state | the "Release <version>" parent issue and its sub-issues |
-| A scope cut | a GitHub issue with Readiness `Later`; add a release decision entry only when the cut records a decision or durable rationale |
-| A bug, gap, or follow-up | a GitHub issue in the Memoria Issue Tracker |
+An ExecPlan is a **working artifact**, not a permanent record. Put live plan
+instances on the `scratch` branch under `releases/<version>/`, delete them
+before the release/checkpoint closes, and route durable outputs per `AGENTS.md`
+"Scratch branch flow", "Decision records", and "Work routing".
 
 ## Five mandates (non-negotiable)
 
@@ -69,8 +51,8 @@ produces. Durable outputs route as usual:
 
 ## Authoring
 
-1. Copy [`templates/exec-plan.md`](../templates/exec-plan.md) to its home (see
-   "Where the plan lives").
+1. Copy [`templates/exec-plan.md`](../templates/exec-plan.md) to its scratch
+   home.
 2. Research thoroughly first, then fill every section. Read the whole scope —
    no sampling (`AGENTS.md` → "Working principles").
 3. Use [Source-of-truth map](../system/source-of-truth-map.md),
@@ -86,10 +68,8 @@ produces. Durable outputs route as usual:
 ## Running
 
 1. **Worktree and branch first.** The first concrete step is always the
-   `AGENTS.md` §1 setup (`git worktree add … -b … origin/main`); every edit,
-   commit, and PR happens from that worktree on that branch. For the ExecPlan
-   file itself, use `AGENTS.md` → "Scratch branch flow" and push the
-   `releases/<version>/...` change directly to `origin/scratch`.
+   `AGENTS.md` §1 setup. For the ExecPlan file itself, use `AGENTS.md` →
+   "Scratch branch flow".
 2. Execute the Concrete steps in order. Do not stop to ask for the next step —
    the plan is the instruction set; proceed autonomously to the next milestone.
 3. At every stopping point, update Progress (timestamped), the Execution log,

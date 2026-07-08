@@ -29,6 +29,21 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 
 ---
 
+## Authority stack
+
+1. Global tool files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`) carry
+   cross-project tool routing only.
+2. This file owns repository policy: worktrees, PRs, verification, source of
+   truth, security boundaries, and documentation routing.
+3. [`.agents/playbooks/`](.agents/playbooks/) owns repeatable procedures.
+4. Generated maps under [`.agents/system/`](.agents/system/) are owned by their
+   source files and guarded by repo doctors.
+
+Plugins, connectors, and skills provide capability. They do not override this
+policy or bypass scripts, hooks, CI, or GitHub rulesets.
+
+---
+
 ## ExecPlans — for complex, multi-hour work
 
 For a complex feature, significant refactor, or multi-step migration, work from
@@ -78,9 +93,10 @@ without explicit permission.
   disposable caches may live in normal OS cache locations such as
   `~/.cache/pre-commit`; keep them untracked, and only place them under
   `~/memoria-vault/.cache` when a sandbox or local permission rule requires it.
-- Alpha.16's required surface is the `memoria` CLI plus the local workspace
-  engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
-  concerns only.
+- The required baseline is the local `memoria` CLI/runtime workspace. The
+  `memoria init` command seeds Obsidian defaults and the bundled Memoria
+  Obsidian plugin unless `--no-obsidian` is used; external editors, MCP hosts,
+  and installed profiles remain optional adapter concerns.
 - Test only against disposable workspaces under `~/memoria-vault/sandbox`; never use a
   personal workspace as a test target.
 - Provider keys and optional adapter secrets live in local, gitignored config or
@@ -323,43 +339,28 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 ---
 
-## Skills
+## Playbooks and Skills
 
-| Stage | Skill | Use when |
-|---|---|---|
-| Whole-docs audit | [`docs-audit`](.agents/playbooks/docs-audit.md) | Fresh Diátaxis, consistency, generated-reference, terminology, coverage, and live-link audit across `docs/` |
-| Any docs PR | [`docs-review`](.agents/playbooks/docs-review.md), plus `the-elements-of-style` for prose clarity | Before opening — quadrant fit, links, indexing, terminology, sentence-level clarity |
-| Any PR | [`code-review`](.agents/playbooks/code-review.md), which invokes `superpowers:requesting-code-review` (both tools) plus, **on Claude**, `pr-review-toolkit:code-reviewer`, and **on Codex**, native review — run independently, don't substitute one for another | Before opening — bugs, compliance, plan alignment, production-readiness |
-| Deeper review on a dimension | **Claude:** `pr-review-toolkit` agents (`silent-failure-hunter`, `pr-test-analyzer`, `code-simplifier`, `comment-analyzer`, `type-design-analyzer`). **Codex:** native review covers the same six dimensions (see `.agents/toolkit.md` for the mapping) | After the above — probe one lens |
-| Sensitive-path changes | [`security-review`](.agents/playbooks/security-review.md), plus `security-guidance` (passive) and `threat-modeling` (full audit, only when escalation is warranted) | PRs touching `scripts/`, `.github/`, `src/memoria_vault/product/workspace_seed/`, `design-history/`, `AGENTS.md`, or agent guidance |
-| Confirming a fix | [`verify-change`](.agents/playbooks/verify-change.md), plus `superpowers:verification-before-completion` | After a change — confirm actual behavior |
-| New or cut release | [`release`](.agents/playbooks/release.md) | Scaffolds the release folder/plan, milestone, and parent issue; release-please owns version/notes |
+Use [`.agents/README.md`](.agents/README.md) to find portable playbooks,
+templates, and system maps. Use [`.agents/toolkit.md`](.agents/toolkit.md) only
+for Claude/Codex routing asymmetries.
 
-This repo's own Critical/High/Medium/Low severity vocabulary is lighter than
-`requesting-code-review`'s Critical/Important/Minor scale — never mix the two
-inside one persisted report, issue, or PR comment.
-
-Skills and plugins are accelerators, not prerequisites. If a named command is
-unavailable, use the matching portable playbook under
-[`.agents/playbooks/`](.agents/playbooks/) and the checks in
-[`.agents/system/`](.agents/system/). They implement this file's policy; they do
-not override it.
-
-**Passive, when installed:** `security-guidance` (Claude, passive) runs
-automatic security scans as you work — a per-edit pattern check plus an LLM
-review on `git commit`/`push` (secret leaks, injection, SSRF, weak crypto).
-`codex-security` (Codex, active) covers explicit security scans, and
-`threat-modeling` (both tools, on demand) covers full audits when escalation is
-warranted. These complement the manual security review and are a first line
-against the "never commit `OBSIDIAN_API_KEY`/`.env`" rule.
+Skills and plugins are accelerators, not policy. If a named command is
+unavailable, use the matching portable playbook and repository checks. The
+report format and severity vocabulary in
+[`.agents/templates/review-report.md`](.agents/templates/review-report.md) stay
+authoritative for persisted reviews. Changes to sensitive paths listed under
+`pr-policy` tiers also use the
+[security-review playbook](.agents/playbooks/security-review.md).
 
 ---
 
 ## Platform & runtime facts
 
-- **Standalone baseline:** alpha.16 is a local `memoria` CLI/runtime workspace.
-  Hermes, Obsidian, Zotero live APIs, installed profiles, and external adapter
-  APIs are optional edges, not required product dependencies.
+- **Standalone baseline:** Memoria is a local `memoria` CLI/runtime workspace.
+  `memoria init` seeds Obsidian defaults and the bundled Memoria Obsidian plugin
+  by default; Hermes, Zotero live APIs, installed profiles, external editor
+  APIs, and MCP hosts are optional edges, not required product dependencies.
 - **Hermes adapter decisions:** if a future optional Hermes adapter is discussed,
   consult the local docs at `~/.hermes/hermes-agent/website/docs/`,
   `cli-config.yaml.example`, and the skills catalogs before making claims. Do

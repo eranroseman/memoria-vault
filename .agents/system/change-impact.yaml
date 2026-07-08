@@ -87,7 +87,7 @@ areas:
       - packages/memoria-obsidian/**
       - scripts/checks/plugin_provenance_doctor.py
     inspect:
-      - Baseline package seed does not ship editor plugin bundles
+      - Baseline package seed ships only approved Memoria Obsidian files
       - QuickAdd command scripts and Obsidian workspace files stay absent
       - Optional adapter wording does not become baseline behavior
       - Alpha.14 negative gate covers deleted payload contracts
@@ -96,7 +96,6 @@ areas:
       - python3 -m pytest tests/test_plugin_provenance.py
   - area: Offline e2e smoke harness
     paths:
-      - scripts/sandbox/e2e_smoke.py
       - scripts/sandbox/e2e_smoke.py
       - scripts/sandbox/test_env_harness.py
       - tests/fixtures/test-env/**
@@ -161,4 +160,4 @@ areas:
       - python3 scripts/checks/docs_doctor.py --vault-links
       - python3 scripts/checks/status_doctor.py
       - python3 scripts/checks/agents_doctor.py
-      - npm run spellcheck
+      - pre-commit run cspell --all-files
