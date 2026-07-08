@@ -9,11 +9,14 @@ grand_parent: Reference
 
 The frontmatter contract for every typed document. The single source is
 `.memoria/schemas/`: per-document-type field schemas in
-`vault-template/.memoria/schemas/types`, the type-to-folder map in
-`vault-template/.memoria/schemas/folders.yaml`, and calibrated thresholds in
-`vault-template/.memoria/schemas/calibration.yaml`. The shared loader/validator is
-`src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit hook,
-and installer-skeleton tests all read it.
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/types`, the
+type-to-folder map in
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml`, and
+calibrated thresholds in
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml`.
+The shared loader/validator is
+`src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit
+hook, and package-seed tests all read it.
 
 Per-type schemas currently exist for `code-artifact`, `digest`, `fulltext`,
 `hub`, `note`, and `project`.

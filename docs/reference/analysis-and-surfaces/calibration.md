@@ -7,8 +7,9 @@ grand_parent: Reference
 
 # Calibration
 
-`vault-template/.memoria/schemas/calibration.yaml` is the source of truth for shared
-thresholds and scorer versions. This page states the rule; the YAML owns the values.
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml` is
+the source of truth for shared thresholds and scorer versions. This page states
+the rule; the YAML owns the values.
 
 ## Production rule
 

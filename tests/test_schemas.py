@@ -127,9 +127,9 @@ def test_skeleton_contains_every_home_and_barrier_root():
     folders = schema.load_folders()
     skeleton = set(folders["skeleton"])
     for home in folders["homes"].values():
-        assert home in skeleton, f"home {home} missing from installer skeleton"
+        assert home in skeleton, f"home {home} missing from schema skeleton"
     for root in folders["bundle_roots"] + folders["machine_staging_roots"]:
-        assert root in skeleton, f"root {root} missing from installer skeleton"
+        assert root in skeleton, f"root {root} missing from schema skeleton"
     assert folders["quarantine_root"] in skeleton
 
 

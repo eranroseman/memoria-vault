@@ -21,8 +21,9 @@ Read the full documentation surface:
 - root `CONTRIBUTING.md`
 
 Scan the rest of the repository only where needed to verify implementation
-truth: `vault-template/`, `scripts/`, schemas, generated-reference inputs, commands,
-fields, profile names, and Hermes or Obsidian claims.
+truth: packaged seed files under `src/memoria_vault/product/workspace_seed/`,
+`scripts/`, schemas, generated-reference inputs, commands, fields, profile
+names, and Hermes or Obsidian claims.
 
 ## 2. Audit
 

@@ -29,19 +29,33 @@ include = ["memoria_vault*"]
 [tool.setuptools.package-data]
 memoria_vault = ["runtime/*.sql"]
 "memoria_vault.product.capabilities.operations" = ["*.md"]
+"memoria_vault.product.workspace_seed" = [
+  ".githooks/*",
+  ".memoria/config/*",
+  ".memoria/eval/*",
+  ".memoria/patterns/*",
+  ".memoria/schemas/*.yaml",
+  ".memoria/schemas/types/*.yaml",
+  ".obsidian/*.json",
+  ".obsidian/plugins/memoria-obsidian/*.js",
+  ".obsidian/plugins/memoria-obsidian/*.json",
+  ".obsidian/plugins/memoria-obsidian/*.css",
+  ".gitignore",
+  "steering.md",
+  "system/*.md",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [
   "src",
-  "vault-template/.memoria",
   "scripts",
   ".github/scripts",
 ]
 markers = [
   "static: formatting, lint, schema, docs refs, spell, design history, workflow safety",
   "unit: deterministic Python behavior with no runtime fixture",
-  "contract: CLI, operations, manifests, templates, projections, and compatibility contracts",
+  "contract: CLI, operations, manifests, concept writers, projections, and compatibility contracts",
   "package: build/install/smoke and installer-facing behavior",
   "runtime: worker loops, recovery, idempotence, migrations, and long local checks",
   "live: real external services/providers; never required for normal PR merge",
@@ -116,6 +130,4 @@ ignore = [
 "tests/**" = ["S", "E402"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
 "scripts/sandbox/e2e_smoke.py" = ["S101"]
-# vault-template/.memoria scripts run with a custom sys.path set before imports.
-"vault-template/.memoria/**" = ["E402"]
 "scripts/**" = ["E402"]

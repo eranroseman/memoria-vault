@@ -16,12 +16,11 @@ def test_local_llm_full_install_harness_exists_and_is_executable() -> None:
     assert _script().startswith("#!/usr/bin/env bash\n")
 
 
-def test_harness_uses_child_vault_and_refuses_unsafe_wipes() -> None:
+def test_harness_uses_sandbox_as_vault_root_and_refuses_unsafe_wipes() -> None:
     text = _script()
     assert 'TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/sandbox}"' in text
-    assert 'VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT/vault}"' in text
-    assert "--vault must be below --root; refusing to wipe $VAULT" in text
-    assert "--vault must be a child of --root" in text
+    assert 'VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT}"' in text
+    assert "--vault may not be above --root" in text
     assert 'rm -rf "$VAULT"' in text
 
 
@@ -47,6 +46,8 @@ def test_harness_initializes_git_before_install_and_exercises_commit_gate() -> N
     text = _script()
     assert text.index('git -C "$VAULT" init -q') < text.index('bash "$ROOT/scripts/install.sh"')
     assert 'git -C "$VAULT" add -A' in text
+    assert 'git -C "$VAULT" diff --cached --quiet' in text
+    assert "baseline already committed by installer" in text
     assert 'git -C "$VAULT" commit -qm "Initial Memoria test workspace"' in text
 
 

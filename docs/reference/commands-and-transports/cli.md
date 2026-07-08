@@ -16,7 +16,7 @@ checks the command roster.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria init` | Create/scaffold a workspace. |
+| `memoria init [--no-obsidian]` | Create/scaffold a workspace. By default it seeds Memoria's Obsidian plugin and core settings; `--no-obsidian` skips `.obsidian/`. |
 | `memoria status` | Show workspace state. |
 | `memoria surface schema --json` | Print the shared surface-contract action registry used by CLI/HTTP/MCP drift checks. |
 | `memoria doctor --check search` | Check local search index state. |
@@ -56,7 +56,7 @@ checks the command roster.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria new note/hub/project` | Author new Concepts through the shipped `.memoria/templates/{note,hub,project}.md` contract. |
+| `memoria new note/hub/project` | Author new Concepts through the CLI's code-owned frontmatter/body contract. |
 | `memoria link` | Curate a typed relation between checked Concepts. |
 | `memoria check` | Mark a Concept checked, or run workspace checks when no target is given. |
 | `memoria show/list/export` | Inspect and export Concepts. |
@@ -150,7 +150,7 @@ Run `memoria <command> --help` for exact flags.
 `memoria new note` accepts `--description` plus `--body` or `--file`; `memoria
 new hub` accepts `--description` plus optional `--body`; `memoria new project`
 accepts `--description` plus optional `--direction`. The generated files include
-the same frontmatter defaults and body heading shape as the shipped templates.
+the same frontmatter defaults and body heading shape as the CLI concept writers.
 
 Most workspace commands accept `--workspace <path>` and `--json`. Mutating
 workspace commands that expose `--actor` default to `pi`; shell agents should

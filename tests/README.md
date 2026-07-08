@@ -14,8 +14,8 @@ deployed vault carries no test code.
 | --- | --- | --- |
 | `static` | formatting, lint, schema, docs refs, spell, design history, workflow safety | local hook, every PR |
 | `unit` | deterministic Python behavior | every PR |
-| `contract` | CLI, operations, capability manifests, templates, projections | every PR |
-| `package` | wheel build/install smoke, installer/e2e smoke helpers | package-facing PRs, release PRs |
+| `contract` | CLI, operations, capability manifests, concept writers, projections | every PR |
+| `package` | wheel build/install smoke, e2e smoke, and package-facing helper tests | package-facing PRs, release PRs |
 | `runtime` | worker loops, recovery, idempotence, state transitions, long checks | nightly, release candidate |
 | `live` | real external services/providers | manual or scheduled only |
 
@@ -24,6 +24,14 @@ Target a level with `python3 -m pytest tests/ -q -m unit` or `python3 scripts/ve
 Use `python3 -m pytest tests/ -q -m "not slow"` for the fast local loop.
 Higher-gate procedure lives in
 [verify-change](../.agents/playbooks/verify-change.md).
+
+`scripts/verify package` builds the wheel, installs it into a disposable venv,
+and runs `scripts/sandbox/e2e_smoke.py`. The installer end-to-end harness is a
+separate disposable-vault check:
+
+```bash
+bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox
+```
 
 ## Coverage guidance
 

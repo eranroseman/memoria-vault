@@ -9,8 +9,8 @@ grand_parent: Reference
 
 The authoritative document-type contract is the schema directory, not this page:
 
-- Type schemas: `vault-template/.memoria/schemas/types/*.yaml`
-- Type homes and skeleton folders: `vault-template/.memoria/schemas/folders.yaml`
+- Type schemas: `src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml`
+- Type homes and skeleton folders: `src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml`
 - Loader and validator: `src/memoria_vault/runtime/subsystems/lib/schema.py`
 
 Each type schema declares its category, folder home, initial read state, required
@@ -30,7 +30,8 @@ in [Evidence sets](../control-and-policy/evidence-sets.md).
 ## Retired Inbox card schemas
 
 The standalone runtime has no durable Inbox-card Concept family in the vault
-skeleton. The source of truth remains `vault-template/.memoria/schemas/types/`;
+skeleton. The source of truth remains
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/types/`;
 attention and action state are generated operational surfaces, not checked
 Concept types.
 

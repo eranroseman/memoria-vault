@@ -18,6 +18,7 @@ from memoria_vault.runtime.policy import (
     path_matches,
     sha256_file,
 )
+from tests.helpers import WORKSPACE_SEED
 
 
 def test_runtime_policy_core():
@@ -421,9 +422,9 @@ def test_runtime_policy_core():
     _run()
 
 
-def test_template_no_longer_ships_adapter_policy_config():
-    """The standalone template ships no adapter policy config."""
-    src = Path(__file__).resolve().parent.parent / "vault-template"
+def test_package_seed_no_longer_ships_adapter_policy_config():
+    """The standalone package seed ships no adapter policy config."""
+    src = WORKSPACE_SEED
     assert not (src / POLICY_CONFIG_RELPATH).exists()
     with pytest.raises(FileNotFoundError):
         load_actor_policy(src, "adapter")

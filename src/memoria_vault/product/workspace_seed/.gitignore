@@ -1,0 +1,33 @@
+# Local runtime and editor state.
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.memoria/.venv/
+.memoria/locks/
+.memoria/journal/
+.memoria/memoria.sqlite
+.memoria/memoria.sqlite-*
+
+# Regenerable runtime data.
+.memoria/index/
+.memoria/staging/
+.memoria/quarantine/
+.memoria/queue/
+.memoria/blobs/
+.memoria/data/
+
+# Local secrets and scratch.
+.env
+*.tmp.*
+*.bak
+*.swp
+*~
+.#*
+*.orig
+*.rej
+
+# Python and OS noise.
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+desktop.ini

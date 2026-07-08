@@ -7,7 +7,7 @@
 - [ ] Bug fix
 - [ ] CLI / engine behavior
 - [ ] Optional adapter
-- [ ] Vault template / structure change
+- [ ] Package seed / workspace structure change
 - [ ] Documentation
 - [ ] Install script
 - [ ] Other: <!-- describe -->

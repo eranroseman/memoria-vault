@@ -2,16 +2,17 @@
 
 from pathlib import Path
 
+from tests.helpers import WORKSPACE_SEED
+
 ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE = ROOT / "vault-template"
 
 
 def test_installed_profile_packages_are_not_shipped():
-    assert not (TEMPLATE / ".memoria/profiles").exists()
+    assert not (WORKSPACE_SEED / ".memoria/profiles").exists()
 
 
 def test_lane_override_packages_are_not_shipped():
-    assert not (TEMPLATE / ".memoria/lane-overrides").exists()
+    assert not (WORKSPACE_SEED / ".memoria/lane-overrides").exists()
 
 
 def test_profile_generator_is_retired():
@@ -19,4 +20,4 @@ def test_profile_generator_is_retired():
 
 
 def test_profile_tool_registry_is_not_shipped():
-    assert not (TEMPLATE / ".memoria/tool-registry.yaml").exists()
+    assert not (WORKSPACE_SEED / ".memoria/tool-registry.yaml").exists()

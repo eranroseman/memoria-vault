@@ -1,0 +1,7 @@
+.memoria-setting-warning {
+  color: var(--text-warning);
+}
+
+.memoria-event-modal textarea {
+  min-height: 7rem;
+}

@@ -13,7 +13,7 @@ for you.
 
 ## When it runs without you
 
-- **Operator-managed schedule** — wire `.memoria/scripts/cron-runner.sh lint` through cron, systemd, launchd, Task Scheduler, or another local scheduler if you want unattended checks. The installer does not register that schedule.
+- **Operator-managed schedule** — wire the `memoria workspace check --workspace . --json` command through cron, systemd, launchd, Task Scheduler, or another local scheduler if you want unattended checks. The installer does not register that schedule.
 - **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed document blocks the commit.
 
 Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
@@ -48,14 +48,13 @@ Every detector is report-only — fixes are yours, in Obsidian or the editor. Th
 **4. Confirm scheduled wiring is alive** (if you configured it):
 
 ```bash
-.memoria/scripts/cron-runner.sh lint
 memoria workspace check --workspace . --schedule-id lint-manual --json
 ```
 
 ## Verify
 
 - A re-run reports no CRITICAL or HIGH findings
-- Maintenance's Drift watch and Loose ends views show the improvement after the next scheduled or manual pass
+- Request/attention and linter views show the improvement after the next scheduled or manual pass
 
 ## Related
 

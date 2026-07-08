@@ -11,7 +11,9 @@ grand_parent: Reference
 values used by catalog Work `research_area`/`methodology` metadata and
 claim-bearing note `topics`.
 
-The shipped file lives at [`vault-template/system/vocabulary.md`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/system/vocabulary.md). In a runtime vault, edit `system/vocabulary.md` directly and keep note frontmatter values in lockstep with it.
+The shipped file lives at `src/memoria_vault/product/workspace_seed/system/vocabulary.md`.
+In a runtime vault, edit `system/vocabulary.md` directly and keep note
+frontmatter values in lockstep with it.
 
 ## Fields
 
@@ -23,7 +25,9 @@ The shipped file lives at [`vault-template/system/vocabulary.md`](https://github
 
 ## Allowed values
 
-The tables below mirror the shipped [`vault-template/system/vocabulary.md`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/system/vocabulary.md). That note is the single source of truth — if these tables and the shipped note ever disagree, the shipped note wins. Each field takes **many values per note**.
+The tables below mirror the shipped package-seed `system/vocabulary.md`. That
+note is the single source of truth — if these tables and the shipped note ever
+disagree, the shipped note wins. Each field takes **many values per note**.
 
 ### `research_area`
 

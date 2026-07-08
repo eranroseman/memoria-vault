@@ -12,8 +12,8 @@ sweep raises attention items; it never rewrites claims for you.
 
 ## When it runs without you
 
-An operator-managed monthly schedule can call `.memoria/scripts/cron-runner.sh
-retraction-refresh` to refresh the local Retraction Watch dataset and sweep.
+An operator-managed monthly schedule can call the retraction refresh and sweep
+CLI commands to refresh the local Retraction Watch dataset and sweep.
 Run it by hand before citing a cluster of older papers in a draft, or right
 after hearing of a retraction in your field.
 

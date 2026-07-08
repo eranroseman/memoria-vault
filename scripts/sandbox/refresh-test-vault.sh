@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Fast local refresh for the disposable ~/memoria-vault/sandbox/vault workspace.
-# cspell:words pathlib
+# Fast local repair for the disposable ~/memoria-vault/sandbox workspace.
 #
-# This updates source-owned vault files from vault-template/ without doing a fresh install.
-# It preserves runtime state (.git, venv, logs, exports) and refreshes the golden
-# copy so drift checks match the new source.
+# This reinstalls the current package into the vault-local venv and lets
+# `memoria doctor --repair` refresh package-seeded files. It preserves user and
+# runtime state; it does not copy a source scaffold.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-VAULT="$HOME/memoria-vault/sandbox/vault"
+VAULT="$HOME/memoria-vault/sandbox"
 DRY_RUN=0
 
 say() { printf '%s\n' "$*"; }
@@ -19,10 +18,10 @@ usage() {
   cat <<'EOF'
 Usage: scripts/sandbox/refresh-test-vault.sh [--vault DIR] [--dry-run]
 
-Fast-refresh an existing disposable Memoria test vault from vault-template/.
+Fast-repair an existing disposable Memoria test vault from the package seed.
 
 Options:
-  --vault DIR                 Target vault (default: ~/memoria-vault/sandbox/vault)
+  --vault DIR                 Target vault (default: ~/memoria-vault/sandbox)
   --dry-run                   Print the actions without writing
   -h, --help                  Show this help
 
@@ -46,10 +45,6 @@ run() {
   [ "$DRY_RUN" -eq 1 ] || "$@"
 }
 
-need() {
-  command -v "$1" >/dev/null 2>&1 || die "$1 is required on PATH"
-}
-
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --vault)
@@ -71,83 +66,24 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-SRC="$ROOT/vault-template"
-[ -d "$SRC/.memoria" ] || die "cannot find vault-template/.memoria under $ROOT"
 [ -d "$VAULT/.memoria" ] || die "$VAULT is not an existing Memoria vault; run scripts/install.sh first"
-need rsync
 
-sync_dir() {
-  local rel="$1"
-  run mkdir -p "$VAULT/$rel"
-  run rsync -a --delete "$SRC/$rel"/ "$VAULT/$rel"/
-}
+PY="$VAULT/.memoria/.venv/bin/python"
+MEMORIA="$VAULT/.memoria/.venv/bin/memoria"
+[ "$DRY_RUN" -eq 1 ] || [ -x "$PY" ] || die "vault-local Python not found: $PY"
 
-sync_file() {
-  local rel="$1"
-  run mkdir -p "$(dirname "$VAULT/$rel")"
-  run rsync -a "$SRC/$rel" "$VAULT/$rel"
-}
+hdr "Refresh package"
+run "$PY" -m pip install --quiet "$ROOT"
 
-hdr "Refresh source-owned vault files"
-# Runtime content is preserved by omission: this script never syncs logs,
-# corpus roots, or active inbox projections.
-for rel in \
-  .githooks \
-  .memoria/plugins \
-  .memoria/schemas \
-  .memoria/scripts \
-  .memoria/eval \
-  .memoria/patterns \
-  .memoria/templates \
-  system/dashboards \
-  system/incidents \
-  system/metrics
-do
-  sync_dir "$rel"
-done
-
-for rel in \
-  .memoria/design-system.md \
-  .gitignore \
-  AGENTS.md \
-  home.md \
-  _nav.md \
-  index.md \
-  steering.md \
-  troubleshooting.md \
-  bibliography.bib \
-  system/vocabulary.md
-do
-  sync_file "$rel"
-done
-
-hdr "Remove dropped standalone baseline payloads"
-run rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts" "$VAULT/catalog" "$VAULT/knowledge" "$VAULT/spaces" "$VAULT/references.bib"
+hdr "Repair package-seeded files"
+run "$MEMORIA" doctor --workspace "$VAULT" --repair
 
 hdr "Wire git hook"
-if [ -d "$VAULT/.git" ] && [ -f "$VAULT/.githooks/pre-commit" ]; then
+if [ -d "$VAULT/.git" ] || [ "$DRY_RUN" -eq 1 ]; then
   run mkdir -p "$VAULT/.git/hooks"
   run cp "$VAULT/.githooks/pre-commit" "$VAULT/.git/hooks/pre-commit"
   run chmod +x "$VAULT/.git/hooks/pre-commit"
 fi
 
-hdr "Ensure empty-folder skeleton"
-python_cmd="python3"
-if [ -x "$VAULT/.memoria/.venv/bin/python" ]; then
-  python_cmd="$VAULT/.memoria/.venv/bin/python"
-fi
-PYTHONPATH_VALUE="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
-run env PYTHONPATH="$PYTHONPATH_VALUE" "$python_cmd" - "$VAULT" <<'PY'
-import sys
-from pathlib import Path
-
-import yaml
-
-vault = Path(sys.argv[1])
-folders = yaml.safe_load((vault / ".memoria/schemas/folders.yaml").read_text(encoding="utf-8"))
-for rel in folders.get("skeleton", []):
-    (vault / rel).mkdir(parents=True, exist_ok=True)
-PY
-
 hdr "Done"
-say "Refreshed $VAULT from $SRC"
+say "Repaired $VAULT from the installed package seed"

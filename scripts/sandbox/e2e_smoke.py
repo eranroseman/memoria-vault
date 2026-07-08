@@ -8,10 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
-
-import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 for path in (ROOT / "src", ROOT):
@@ -19,7 +16,7 @@ for path in (ROOT / "src", ROOT):
         sys.path.insert(0, str(path))
 
 STAGE_LABELS = {
-    "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from vault-template/)",
+    "vault-assembly-1": "1. vault-assembly: initialize from package seed",
     "vault-assembly-2": "2. vault-assembly: git hook wiring",
     "vault-assembly-3": "3. vault-assembly: fresh-vault integrity",
     "commit-gate": "4. commit-gate: malformed note blocks, valid note passes",
@@ -32,18 +29,25 @@ STAGE_ORDER = tuple(STAGE_LABELS)
 
 
 def assert_vault_skeleton(root: Path, vault: Path) -> None:
-    folders = yaml.safe_load((root / "vault-template/.memoria/schemas/folders.yaml").read_text())
-    for folder in folders["skeleton"]:
-        (vault / folder).mkdir(parents=True, exist_ok=True)
+    from memoria_vault.runtime.subsystems.lib import schema
+
+    folders = schema.load_folders(vault / ".memoria/schemas")
     missing = [folder for folder in folders["skeleton"] if not (vault / folder).is_dir()]
     assert not missing, f"skeleton missing {missing}"
-    print(f"   skeleton ensured ({len(folders['skeleton'])} dirs); tree matches folders.yaml")
+    print(f"   skeleton present ({len(folders['skeleton'])} dirs); tree matches folders.yaml")
 
 
-def assert_no_obsidian_bundle(vault: Path) -> None:
-    assert not (vault / ".obsidian").exists(), "standalone vault shipped .obsidian payload"
+def assert_obsidian_seed(vault: Path) -> None:
+    assert (vault / ".obsidian/app.json").is_file(), "missing Obsidian app defaults"
+    assert (vault / ".obsidian/core-plugins.json").is_file(), "missing Obsidian core defaults"
+    assert (vault / ".obsidian/community-plugins.json").is_file(), (
+        "missing Memoria plugin enablement"
+    )
+    assert (vault / ".obsidian/plugins/memoria-obsidian/manifest.json").is_file(), (
+        "missing Memoria Obsidian plugin"
+    )
     assert not (vault / "system/scripts").exists(), "standalone vault shipped QuickAdd scripts"
-    print("   git repo, hooks, and standalone no-Obsidian baseline asserted")
+    print("   git repo, hooks, and Obsidian seed asserted")
 
 
 def assert_executable(path: Path, label: str) -> None:
@@ -53,7 +57,7 @@ def assert_executable(path: Path, label: str) -> None:
 
 
 def add_repo_paths(root: Path) -> None:
-    for path in (root, root / "vault-template/.memoria"):
+    for path in (root, root / "src"):
         if str(path) not in sys.path:
             sys.path.insert(0, str(path))
 
@@ -222,6 +226,23 @@ def _python() -> str:
     return os.environ.get("PYTHON", sys.executable)
 
 
+def _sandbox_root() -> Path:
+    return Path(os.environ.get("MEMORIA_TEST_ROOT", "~/memoria-vault/sandbox")).expanduser()
+
+
+def _reset_sandbox_vault(vault: Path) -> Path:
+    vault = vault.resolve()
+    if vault in {Path.home().resolve(), Path("/")}:
+        _fail(f"refusing to wipe unsafe sandbox path: {vault}")
+    vault.mkdir(parents=True, exist_ok=True)
+    for child in vault.iterdir():
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
+    return vault
+
+
 def _detector_verdict(vault: Path, env: dict[str, str]) -> str:
     result = _run(
         [
@@ -240,24 +261,27 @@ def _detector_verdict(vault: Path, env: dict[str, str]) -> str:
     return (result.stdout or "").strip().splitlines()[-1]
 
 
-def _copy_vault_template(root: Path, vault: Path) -> None:
-    shutil.copytree(
-        root / "vault-template",
-        vault,
-        dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(".git"),
-    )
-
-
 def _vault_assembly(root: Path, vault: Path, env: dict[str, str]) -> None:
     _stage("vault-assembly-1")
     if shutil.which("git") is None:
         _fail("git is required for vault-assembly and commit-gate checks")
-    _copy_vault_template(root, vault)
+    _run_or_fail(
+        [
+            _python(),
+            "-m",
+            "memoria_vault.cli",
+            "init",
+            "--workspace",
+            str(vault),
+            "--yes",
+            "--quiet",
+        ],
+        "memoria init failed",
+        env=env,
+    )
     assert_vault_skeleton(root, vault)
 
     _stage("vault-assembly-2")
-    _git_or_fail(vault, "init", "-q", message="git init failed")
     _git_or_fail(vault, "config", "user.email", "e2e@example.invalid", message="git config failed")
     _git_or_fail(vault, "config", "user.name", "Memoria E2E Smoke", message="git config failed")
     _git_or_fail(vault, "rev-parse", "--is-inside-work-tree", message="not a git repository")
@@ -266,7 +290,7 @@ def _vault_assembly(root: Path, vault: Path, env: dict[str, str]) -> None:
     shutil.copy2(vault / ".githooks/pre-commit", hook)
     hook.chmod(0o755)
     assert_executable(hook, "pre-commit hook")
-    assert_no_obsidian_bundle(vault)
+    assert_obsidian_seed(vault)
 
     _stage("vault-assembly-3")
     if "PASS" not in _detector_verdict(vault, env):
@@ -280,18 +304,21 @@ def _commit_gate(vault: Path, env: dict[str, str]) -> None:
     )
     assert_executable(vault / ".git/hooks/pre-commit", "pre-commit hook")
     _git_or_fail(vault, "add", "-A", message="baseline add failed", env=env)
-    _git_or_fail(
-        vault,
-        "-c",
-        "user.email=e2e@ci",
-        "-c",
-        "user.name=e2e",
-        "commit",
-        "-qm",
-        "init",
-        message="baseline commit blocked",
-        env=env,
-    )
+    if _git(vault, "diff", "--cached", "--quiet", env=env).returncode == 0:
+        print("   baseline already committed")
+    else:
+        _git_or_fail(
+            vault,
+            "-c",
+            "user.email=e2e@ci",
+            "-c",
+            "user.name=e2e",
+            "commit",
+            "-qm",
+            "init",
+            message="baseline commit blocked",
+            env=env,
+        )
     bad = vault / "notes/bad.md"
     bad.write_text('---\ntype: note\ntitle: "Bad"\n---\nx\n', encoding="utf-8")
     _git_or_fail(vault, "add", "notes/bad.md", message="bad note add failed", env=env)
@@ -369,17 +396,12 @@ def _final_integrity(vault: Path, env: dict[str, str]) -> None:
 def run_smoke(root: Path = ROOT) -> None:
     root = root.resolve()
     env = _env(root)
-    vault = Path(
-        tempfile.mkdtemp(prefix="memoria-e2e-", dir=os.environ.get("TMPDIR", tempfile.gettempdir()))
-    )
-    try:
-        _vault_assembly(root, vault, env)
-        _commit_gate(vault, env)
-        _offline_ingest(root, vault)
-        _workflow_replay(root, vault, env)
-        _final_integrity(vault, env)
-    finally:
-        shutil.rmtree(vault, ignore_errors=True)
+    vault = _reset_sandbox_vault(_sandbox_root())
+    _vault_assembly(root, vault, env)
+    _commit_gate(vault, env)
+    _offline_ingest(root, vault)
+    _workflow_replay(root, vault, env)
+    _final_integrity(vault, env)
     print("e2e-smoke: all gates green")
 
 

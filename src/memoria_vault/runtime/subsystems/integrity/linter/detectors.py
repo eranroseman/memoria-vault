@@ -32,7 +32,6 @@ from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
     audit_unpaired_writes,
     vault_hash_drift,
 )
-from memoria_vault.runtime.subsystems.integrity.linter.detectors_design import design_system_drift
 from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter_field_errors
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
@@ -50,11 +49,9 @@ TYPE_HOME = {
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
 KNOWN_TOP_DIRS = {"notes", "hubs", "projects", "digests", "fulltexts", "system", "inbox"}
-# Scaffolding, not authored documents: skeleton folders, assets, and the
-# templates (raw Markdown full of placeholder [[links]]). Detectors that assert
-# things about *real* documents (broken wikilinks, type schema) skip these.
-# Hidden templates/patterns and visible dashboards are scaffolding, not authored docs.
-SCAFFOLD_PREFIXES = (".memoria/templates/", ".memoria/patterns/", "system/dashboards/")
+# Optional prompt scaffolding, not authored documents. Detectors that assert
+# things about real documents skip these when present.
+SCAFFOLD_PREFIXES = (".memoria/patterns/",)
 
 
 def is_untyped_infra(rp: str) -> bool:
@@ -81,41 +78,6 @@ REQUIRED_FIELDS = {
     "hub": ["id", "title", "tags", "links", "tag"],
     "project": ["id", "title", "tags", "links"],
 }
-DATAVIEW_BUILTINS = {
-    "file",
-    "rows",
-    "type",
-    "tags",
-    "tag",
-    "true",
-    "false",
-    "null",
-}
-# Dataview query keywords -- not fields. (TABLE WITHOUT ID ..., FROM, WHERE, AS, ...)
-DATAVIEW_KEYWORDS = {
-    "without",
-    "id",
-    "from",
-    "where",
-    "as",
-    "flatten",
-    "group",
-    "by",
-    "sort",
-    "limit",
-    "asc",
-    "desc",
-    "table",
-    "list",
-    "task",
-    "and",
-    "or",
-    "not",
-    "reverse",
-}
-# Only queries over these folders read *Concept frontmatter*; queries over logs
-# or metrics drift on different schemas, not this one.
-NOTE_FOLDERS = ("notes", "hubs", "projects", "digests", "fulltexts")
 # Canonical schemas (ADR-122): when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
 # the dependency-free fallback so the operation still runs without PyYAML.
@@ -135,7 +97,6 @@ try:
         for path in _FOLDERS.get("transient_prefixes") or []
         if str(path).strip("/")
     }
-    NOTE_FOLDERS = tuple(_FOLDERS.get("bundle_roots") or NOTE_FOLDERS)
 except Exception:  # noqa: BLE001 -- dependency-free fallback when schemas cannot load
     _schema = None
 
@@ -198,20 +159,6 @@ def all_frontmatter_keys(text: str) -> set[str]:
     if end == -1:
         return set()
     return set(_FM_KEY.findall(text[3:end]))
-
-
-_CODE_BLOCK = re.compile(r"```[a-zA-Z]*\n(.*?)```", re.S)
-
-
-def template_field_names(text: str) -> set[str]:
-    """Field names a template declares. Memoria templates are raw notes (leading
-    frontmatter); the code-block scan is kept as a fallback for any template that
-    still carries a ```yaml frontmatter example."""
-    keys = all_frontmatter_keys(text)
-    for block in _CODE_BLOCK.findall(text):
-        if "type:" in block or "---" in block:  # a frontmatter example block
-            keys |= set(_FM_KEY.findall(block))
-    return keys
 
 
 def orphan_working_files(vault: Path) -> list[Finding]:
@@ -404,62 +351,6 @@ def broken_wikilinks(vault: Path) -> list[Finding]:
     return out
 
 
-_DV_FIELD_LINE = re.compile(r"^\s*(TABLE|SORT|GROUP BY|FLATTEN)\s+(.*)$", re.I)
-_IDENT = re.compile(r"[A-Za-z_][\w-]*")
-
-
-def dashboard_field_drift(vault: Path) -> list[Finding]:
-    dash = vault / "system" / "dashboards"
-    tmpl = vault / ".memoria" / "templates"
-    if not dash.is_dir() or not tmpl.is_dir():
-        return []
-    known = set(DATAVIEW_BUILTINS)
-    for t in tmpl.glob("*.md"):
-        known |= template_field_names(read(t))
-    out = []
-    block_re = re.compile(r"```dataview\b(.*?)```", re.S | re.I)
-    for d in dash.glob("*.md"):
-        for block in block_re.findall(read(d)):
-            frm = re.search(r'FROM\s+"([^"]+)"', block, re.I)
-            if not (frm and frm.group(1).strip().startswith(NOTE_FOLDERS)):
-                continue  # only note-folder queries can drift on note frontmatter fields
-            for line in block.splitlines():
-                m = _DV_FIELD_LINE.match(line)
-                if not m:
-                    continue
-                # TABLE col1 AS "x", col2  -> leading identifier of each column
-                cols = m.group(2).split(",") if m.group(1).upper() == "TABLE" else [m.group(2)]
-                for col in cols:
-                    col = re.split(r"\bAS\b", col, flags=re.I)[0]
-                    ids = _IDENT.findall(col)
-                    if not ids:
-                        continue
-                    field = ids[0]
-                    if field in known or field.lower() in DATAVIEW_KEYWORDS:
-                        continue
-                    if re.search(
-                        rf"\b{re.escape(field)}\.", col
-                    ):  # dotted built-in, e.g. file.mtime
-                        continue
-                    if re.search(
-                        rf"\.{re.escape(field)}\b", col
-                    ):  # property access, e.g. rows.length
-                        continue
-                    if re.search(
-                        rf"\b{re.escape(field)}\s*\(", col
-                    ):  # function call, e.g. length(...)
-                        continue
-                    out.append(
-                        Finding(
-                            "dashboard-field-drift",
-                            "HIGH",
-                            relpath(vault, d),
-                            f"query references field '{field}' not in any template",
-                        )
-                    )
-    return out
-
-
 def graph_analyze(vault: Path) -> list[Finding]:
     """Knowledge-graph health: orphan synthesis notes (zero inlinks).
 
@@ -630,7 +521,7 @@ def _catalog_source_terms(source: dict[str, object]) -> list[str]:
 
 
 def skeleton_drift(vault: Path) -> list[Finding]:
-    """A folder from the installer skeleton is missing from the vault.
+    """A folder from the schema skeleton is missing from the vault.
 
     Verifies the `skeleton` list of `.memoria/schemas/folders.yaml` exists as
     directories in the vault. The fix is mechanical -- re-run the installer or create the dir --
@@ -666,13 +557,11 @@ DETECTORS = [
     frontmatter_schema_check,
     frontmatter_link_check,
     broken_wikilinks,
-    dashboard_field_drift,
     graph_analyze,
     fama_exposure,
     misplaced_note,
     audit_unpaired_writes,
     vault_hash_drift,
-    design_system_drift,
     audit_log_size,
     hub_threshold,
     skeleton_drift,
@@ -720,7 +609,7 @@ def main() -> None:
         "--gate",
         metavar="DETECTORS",
         help="comma-separated detector names that MUST be zero; exit 1 if any "
-        "such finding exists (e.g. dashboard-field-drift). All other "
+        "such finding exists (for example, vault-hash-drift). All other "
         "findings stay advisory — printed, not fatal.",
     )
     args = ap.parse_args()

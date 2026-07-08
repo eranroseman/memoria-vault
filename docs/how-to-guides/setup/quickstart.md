@@ -15,9 +15,9 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 - Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
 - Runtime provider keys for the CLI features you plan to use.
-- Optional adapters are outside the bootstrap. Generic
-  BibTeX/CSL files exported from Zotero can be imported when you need them
-  ([Set up Zotero](set-up-zotero.md)).
+- Obsidian is optional as an app; the workspace seed already includes Memoria's
+  Obsidian adapter files and core settings. Generic BibTeX/CSL files exported
+  from Zotero can be imported when you need them ([Set up Zotero](set-up-zotero.md)).
 
 ## Steps
 
@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, and wires local hooks. It does not install external search tooling.
+The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, seeds the Memoria Obsidian adapter/config, and wires local hooks. It does not install external search tooling or the Obsidian app.
 
 **2. Verify the CLI runtime.**
 
@@ -68,6 +68,6 @@ those commands as the day-1 path for the space you are in.
 ## Related
 
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
-- Optional plain-editor setup: [Set up Obsidian](set-up-obsidian.md)
+- Obsidian adapter setup: [Set up Obsidian](set-up-obsidian.md)
 - First source task: [Capture and ingest a source](../library/capture-and-ingest.md)
 - Optional Zotero export setup: [Set up Zotero](set-up-zotero.md)

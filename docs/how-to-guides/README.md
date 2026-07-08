@@ -26,8 +26,9 @@ through the `memoria` CLI. The Markdown workspace is the keep-set and can be
 opened in any editor.
 
 **Optional editor use.**
-Obsidian may be used as a plain Markdown editor, but it is not the product
-surface, scheduler, model runner, operation API, or write-policy boundary.
+New workspaces include Memoria's Obsidian adapter/config, and Obsidian may also
+be used as a plain Markdown editor. It is not the scheduler, model runner,
+operation API, or write-policy boundary.
 
 ---
 

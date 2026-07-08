@@ -1,7 +1,7 @@
 # Contributing to Memoria
 
 Memoria is a standalone local research CLI and runtime. Contributions to the
-installer, runtime package, workspace template, and docs are welcome.
+installer, runtime package, packaged workspace seed, and docs are welcome.
 
 ## Before you start
 
@@ -77,14 +77,14 @@ installers against the real `~/Memoria`.
 ## Coding conventions
 
 - **Python:** Ruff is both linter and formatter for repo tooling and runtime code
-  (`src/memoria_vault/`, `scripts/`, `.github/scripts/`, `vault-template/.memoria/`, and `tests/`). `ruff format`
+  (`src/memoria_vault/`, `scripts/`, `.github/scripts/`, and `tests/`). `ruff format`
   owns layout at line length 100.
 - **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Run `shellcheck`
   before submitting installer changes.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
   Windows when the change affects Windows behavior.
 - **Optional adapters:** do not add installed profile packages or lane overrides
-  to `vault-template/`; adapters must wrap the standalone CLI/engine boundary.
+  to the package seed; adapters must wrap the standalone CLI/engine boundary.
 - **Docs:** follow [Diátaxis](https://diataxis.fr/): tutorials teach, how-to
   guides direct, reference informs, and explanation discusses.
 - **Markdown:** `.markdownlint.json` holds the structural rules enforced locally

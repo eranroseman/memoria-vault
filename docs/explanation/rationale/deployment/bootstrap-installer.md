@@ -7,7 +7,7 @@ nav_order: 2
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, install the `memoria` package into the vault-local venv, and wire local integrity hooks. The standalone baseline does not install external search tooling, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) create the workspace, install the `memoria` package into the vault-local venv, initialize the vault from the packaged workspace seed, and wire local integrity hooks. The standalone baseline does not install external search tooling, Hermes profiles, Hermes crons, the Obsidian app, or live Zotero integration; the package seed does include Memoria's default Obsidian plugin/settings.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../../../reference/system/installer.md).
 
@@ -17,8 +17,8 @@ Before the bootstrap, the shipped installer did only one of the setup steps — 
 
 ## The shape of the flow
 
-The distribution mechanism is `vault-template/` plus the installed Memoria package ([Distribution model](distribution-model.md)). The installer adds the flow:
-create a workspace, populate it from the template, and wire the local runtime.
+The distribution mechanism is the packaged workspace seed plus the installed Memoria package ([Distribution model](distribution-model.md)). The installer adds the flow:
+create a workspace, initialize it from the package seed, and wire the local runtime.
 Ordered steps and the component checklist are owned by [Installer (bootstrap)](../../../reference/system/installer.md).
 
 One installer-specific sequencing choice worth calling out: Zotero stays outside

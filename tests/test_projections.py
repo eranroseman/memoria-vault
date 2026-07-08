@@ -14,7 +14,7 @@ from memoria_vault.runtime.projections import (
     write_workspace_indexes,
 )
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-from tests.helpers import ROOT, git, init_git
+from tests.helpers import git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -51,8 +51,11 @@ def add_catalog_work(vault: Path, work_id: str = "db-source") -> str:
     return f"catalog/sources/{work_id}"
 
 
-def test_shipped_workspace_indexes_are_current() -> None:
-    vault = ROOT / "vault-template"
+def test_initialized_workspace_indexes_are_current(tmp_path: Path) -> None:
+    from memoria_vault.cli import main
+
+    vault = tmp_path / "vault"
+    assert main(["init", "--workspace", str(vault), "--yes", "--quiet"]) == 0
 
     assert check_workspace_indexes(vault)
     assert check_tracked_projections(vault)["ok"]

@@ -7,8 +7,8 @@ import yaml
 
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
+from tests.helpers import WORKSPACE_SEED
 
-SRC = Path(__file__).resolve().parent.parent / "vault-template"
 OPERATIONS = (
     Path(__file__).resolve().parent.parent / "src/memoria_vault/product/capabilities/operations"
 )
@@ -33,9 +33,9 @@ def _targeted_operation_files() -> list[Path]:
 
 def test_shipped_operations_validate_against_policy_loader():
     shipped = _operation_files()
-    assert len(shipped) >= 6, "the vault ships checked operation policies"
+    assert len(shipped) >= 6, "the package ships checked operation policies"
     for p in shipped:
-        load_operation_policy(SRC, p.stem)
+        load_operation_policy(WORKSPACE_SEED, p.stem)
 
 
 def test_no_shipped_prompt_operation_targets_a_gated_zone():

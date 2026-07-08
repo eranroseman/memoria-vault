@@ -22,7 +22,7 @@ only when you need the extra detail.
 
 | Guide | What it covers |
 | --- | --- |
-| [Set up Obsidian](set-up-obsidian.md) | Open the workspace in Obsidian as a plain Markdown editor |
+| [Set up Obsidian](set-up-obsidian.md) | Open the workspace in Obsidian and configure the seeded Memoria plugin |
 | [Set up Zotero](set-up-zotero.md) | Better BibTeX citekey shape and portable export imports |
 
 ## Advanced setup

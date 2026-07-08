@@ -29,10 +29,10 @@ repos:
     rev: v0.15.20
     hooks:
       - id: ruff
-        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^vault-template/\.memoria/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
+        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
 
       - id: ruff-format
-        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^vault-template/\.memoria/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
+        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
@@ -61,8 +61,8 @@ repos:
       - id: bash-syntax
         name: bash-syntax
         language: system
-        entry: bash -n scripts/install.sh scripts/install/manifest.sh
-        files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
+        entry: bash -n scripts/install.sh
+        files: ^scripts/install\.sh$
         pass_filenames: false
 
       # Block 3 partial: fast pytest collection. Full tests run in scripts/verify pr and CI.
@@ -81,14 +81,6 @@ repos:
         files: \.(md|py|ya?ml)$
         exclude: ^design-history/
         pass_filenames: true
-
-      # Block 6: dashboard schema-drift
-      - id: dashboard-schema-drift
-        name: dashboard-schema-drift
-        language: system
-        entry: env PYTHONPATH=src python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault vault-template --gate dashboard-field-drift
-        files: ^vault-template/system/dashboards/.*\.md$|^vault-template/\.memoria/templates/.*\.md$
-        pass_filenames: false
 
       # Block 9: markdownlint structural rules
       - id: markdownlint-structural
@@ -138,5 +130,5 @@ repos:
         name: plugin-provenance-doctor
         language: system
         entry: python3 scripts/checks/plugin_provenance_doctor.py
-        files: ^vault-template/\.obsidian/(community-plugins\.json|plugin-provenance-lock\.json|plugins/)|^scripts/checks/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
+        files: ^src/memoria_vault/product/workspace_seed/|^packages/memoria-obsidian/|^scripts/checks/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
         pass_filenames: false

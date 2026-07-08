@@ -46,8 +46,8 @@ Detector notes:
 - `vault-hash-drift` includes legitimate human edits: the finding means the
   audit trail no longer pins the file. Completed deletes record the empty-bytes
   hash, so a deleted-and-still-absent file stays clean.
-- `skeleton-drift` runs only in installed vaults (`.git` present); the repo's
-  `vault-template/` ships no empty directories.
+- `skeleton-drift` runs only in installed vaults (`.git` present); the package
+  seed ships no empty directories.
 - `audit-log-size` is advisory because the audit log is append-only and never
   rotated ([quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
@@ -64,7 +64,7 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault
 
 ## The pre-commit hook
 
-The installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The installer wires the package seed's `.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 

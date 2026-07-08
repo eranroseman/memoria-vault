@@ -9,19 +9,19 @@ find the owning file, then fix the stale consumer rather than the source.
 | Contract | Authoritative source | Important consumers and checks |
 |---|---|---|
 | Repository agent policy | `AGENTS.md` | `.agents/`, contributor docs |
-| Vault document types and fields | `vault-template/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
-| Type homes, staging/quarantine roots, skeleton | `vault-template/.memoria/schemas/folders.yaml` | Installer, linter, templates, dashboards, worker promotion tests |
-| Calibrated thresholds | `vault-template/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
+| Vault document types and fields | `src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml` | Schema loader, linter, pre-commit, Bases tests, docs mirrors |
+| Type homes, staging/quarantine roots, skeleton | `src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml` | `memoria init`, linter, installer tests, worker promotion tests, docs mirrors |
+| Calibrated thresholds | `src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
 | Installed profile absence | `tests/test_profiles.py` + `scripts/checks/alpha14_negative_gate.py` | Installer tests, profile reference page |
 | Runtime path and glob semantics | `src/memoria_vault/runtime/policy/` | Runtime policy tests and optional adapter policy hooks |
 | Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | Runtime subsystems, operations, test harnesses |
-| Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,workspace,audit,engine}.py` | `src/memoria_vault/runtime/policy/hook.py`, optional policy gate plugin, audit log |
-| Write interception for optional adapters | `src/memoria_vault/runtime/policy/hook.py` and `vault-template/.memoria/plugins/memoria-policy-gate/` | Optional adapter plugin tests |
+| Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,workspace,audit,engine}.py` | `src/memoria_vault/runtime/policy/hook.py`, optional adapter policy hooks, audit log |
+| Write interception for optional adapters | `src/memoria_vault/runtime/policy/hook.py` | Optional adapter policy tests |
 | Shared schema validation | `src/memoria_vault/runtime/subsystems/lib/schema.py` | Linter, pre-commit, installer and schema tests |
 | Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations that raise attention items; Home/Telegram push; request and policy block checks |
-| Runtime vault image | `vault-template/` | `scripts/install.sh`, golden-copy staging |
+| Packaged workspace seed | `src/memoria_vault/product/workspace_seed/` | `memoria init`, installers, package smoke tests, on-disk layout docs |
 | Dropped Obsidian baseline payload | `scripts/checks/alpha14_negative_gate.py` + `scripts/checks/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
-| Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
+| Installer behavior and flags | `scripts/install.sh` and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/checks/ruleset_doctor.py`, and `AGENTS.md` |
 | Offline e2e smoke stages | `scripts/sandbox/e2e_smoke.py` | `scripts/sandbox/e2e_smoke.py`, design-history/testing docs, release stage evidence |
 | Standalone disposable install harness | `scripts/sandbox/install-test-vault-local-llm.sh` | `tests/test_install_test_vault_local_llm.py`, testing verification matrix |

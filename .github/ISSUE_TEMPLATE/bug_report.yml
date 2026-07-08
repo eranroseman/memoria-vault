@@ -19,7 +19,7 @@ body:
         - CLI / engine behavior
         - Optional adapter
         - Agent guidance (AGENTS.md / .agents)
-        - Vault structure / templates
+        - Package seed / workspace structure
         - Documentation
         - Other
     validations:

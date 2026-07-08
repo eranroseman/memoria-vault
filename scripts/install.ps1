@@ -7,10 +7,10 @@
     Sets up a standalone Memoria CLI/runtime workspace.
 
     This script:
-      1. Copies vault-template/ into the runtime vault.
+      1. Creates an empty runtime vault folder.
       2. Creates the vault-local runtime venv.
       3. Installs the Memoria package.
-      4. Ensures the folder skeleton and wires Git hooks.
+      4. Initializes the workspace from the package seed and wires Git hooks.
       5. Prints CLI next steps.
 
 .PARAMETER Vault
@@ -58,22 +58,6 @@ function Invoke-Logged {
     }
 }
 
-function Invoke-Robocopy {
-    param(
-        [Parameter(Mandatory=$true)][string]$Source,
-        [Parameter(Mandatory=$true)][string]$Destination,
-        [string[]]$ExtraArgs = @()
-    )
-    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
-    $copyArgs = @($Source, $Destination, '/E', '/NFL', '/NDL', '/NJH', '/NJS', '/NP') + $ExtraArgs
-    Write-Line ("  + robocopy {0}" -f ($copyArgs -join ' '))
-    if ($DryRun) { return }
-    & robocopy @copyArgs | Out-Null
-    if ($LASTEXITCODE -gt 7) {
-        Stop-Install "robocopy failed with code $LASTEXITCODE."
-    }
-}
-
 function Assert-RequiredCommands {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         Stop-Install 'Git is required on PATH. Install Git for Windows, open a new PowerShell so PATH refreshes, then rerun the installer.'
@@ -84,7 +68,7 @@ function Get-RepoRoot {
     if ($PSCommandPath) {
         $scriptRoot = Split-Path -Parent $PSCommandPath
         $localRoot = Split-Path -Parent $scriptRoot
-        if (Test-Path (Join-Path $localRoot 'vault-template/.memoria')) {
+        if (Test-Path (Join-Path $localRoot 'pyproject.toml')) {
             return $localRoot
         }
     }
@@ -141,29 +125,13 @@ function Assert-PythonRuntime {
     }
 }
 
-function Copy-VaultSource {
-    param([string]$RepoRoot)
-    Write-Header 'Scaffold and populate vault'
-    $src = Join-Path $RepoRoot 'vault-template'
-    if (-not (Test-Path $src)) { Stop-Install "Missing vault-template tree at $src." }
+function Initialize-WorkspaceTarget {
+    Write-Header 'Runtime vault'
     if (Test-Path (Join-Path $Vault '.memoria')) {
         Stop-Install "$Vault is already a Memoria vault. This installer is fresh-install only; choose an empty target or move the existing vault aside."
     }
     New-Item -ItemType Directory -Path $Vault -Force | Out-Null
-    Invoke-Robocopy -Source $src -Destination $Vault -ExtraArgs @('/XD', '.git', '/XF', '.env', 'data.json', 'appearance.json')
-    Write-Ok "Vault populated at $Vault"
-}
-
-function Initialize-VaultGit {
-    Write-Header 'Vault Git repo'
-    $gitDir = Join-Path $Vault '.git'
-    if (Test-Path $gitDir) {
-        Write-Ok "Git repo already present at $Vault"
-        return
-    }
-    Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'init', '-q')
-    Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'branch', '-M', 'main')
-    Write-Ok 'Git repo initialized for checkpoints and hooks'
+    Write-Ok "Workspace target ready at $Vault"
 }
 
 function Install-VaultHooks {
@@ -200,22 +168,18 @@ function Install-RuntimeDeps {
     Write-Ok "Runtime deps installed in $venv"
 }
 
-function Install-RuntimeScaffold {
-    Write-Header 'Runtime scaffold'
+function Initialize-WorkspaceFromPackage {
+    Write-Header 'Workspace seed'
     $script:VenvPython = if ($script:VenvPython) { $script:VenvPython } else { Join-Path $Vault '.memoria/.venv/Scripts/python.exe' }
-    $schema = Join-Path $Vault '.memoria/schemas/folders.yaml'
+    $memoria = Join-Path (Split-Path -Parent $script:VenvPython) 'memoria.exe'
     if ($DryRun) {
-        Write-Line "  + ensure skeleton directories from $schema"
+        Write-Line "  + `"$memoria`" init --workspace `"$Vault`" --yes"
         return
     }
     if (-not (Test-Path $script:VenvPython)) { Stop-Install "Missing venv Python at $script:VenvPython" }
-    if (-not (Test-Path $schema)) { Stop-Install "Missing folders schema at $schema" }
-    $code = "import sys,yaml; from pathlib import Path; " +
-        "v=Path(sys.argv[1]); " +
-        "data=yaml.safe_load((v/'.memoria/schemas/folders.yaml').read_text(encoding='utf-8')) or {}; " +
-        "[(v/d).mkdir(parents=True, exist_ok=True) for d in (data.get('skeleton') or [])]"
-    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-c', $code, $Vault)
-    Write-Ok 'Folder skeleton ensured from folders.yaml'
+    if (-not (Test-Path $memoria)) { Stop-Install "Missing memoria CLI at $memoria" }
+    Invoke-Logged -FilePath $memoria -ArgumentList @('init', '--workspace', $Vault, '--yes')
+    Write-Ok 'Workspace initialized from package seed'
 }
 
 function Write-CliNextSteps {
@@ -226,7 +190,7 @@ function Write-CliNextSteps {
     Write-Line "  1. Check the bundle:  `"$memoria`" doctor bundle --workspace `"$Vault`""
     Write-Line "  2. Rebuild search:    `"$memoria`" workspace rebuild --workspace `"$Vault`" --search"
     Write-Line "  3. Ask from CLI:      `"$memoria`" ask --workspace `"$Vault`" --question `"What needs attention?`""
-    Write-Line "  4. First checkpoint:  cd `"$Vault`"; git add -A; git commit -m `"Initial Memoria vault`""
+    Write-Line "  4. Next checkpoint:   cd `"$Vault`"; git status --short"
     if ($DryRun) { Write-Warn 'This was a DRY RUN -- nothing above was actually changed.' }
 }
 
@@ -236,10 +200,9 @@ function Invoke-Main {
 
     Assert-RequiredCommands
     $repoRoot = Get-RepoRoot
-    Copy-VaultSource -RepoRoot $repoRoot
+    Initialize-WorkspaceTarget
     Install-RuntimeDeps -RepoRoot $repoRoot
-    Install-RuntimeScaffold
-    Initialize-VaultGit
+    Initialize-WorkspaceFromPackage
     Install-VaultHooks
     Write-CliNextSteps
     Write-Header 'Done'

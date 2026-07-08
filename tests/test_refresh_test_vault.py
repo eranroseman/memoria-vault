@@ -1,4 +1,4 @@
-"""Fast sandbox refresh helper keeps runtime state out of the blast radius."""
+"""Fast sandbox refresh repairs package-seeded files without a source scaffold."""
 
 from pathlib import Path
 
@@ -16,38 +16,29 @@ def test_refresh_test_vault_helper_exists_and_is_executable():
     assert _script().startswith("#!/usr/bin/env bash\n")
 
 
-def test_refresh_helper_preserves_runtime_only_state():
+def test_refresh_helper_preserves_runtime_state_by_repairing_seed_files():
     text = _script()
-    for marker in (
-        ".memoria/.venv/bin/python",
-        "corpus roots",
-        "active inbox projections",
-    ):
-        assert marker in text
-    assert 'rsync -a --delete "$SRC"/ "$VAULT"/' not in text
+    assert ".memoria/.venv/bin/python" in text
+    assert '-m pip install --quiet "$ROOT"' in text
+    assert 'doctor --workspace "$VAULT" --repair' in text
+    assert "rsync" not in text
+    assert "vault-template" not in text
+    assert "rm -rf" not in text
 
 
-def test_refresh_helper_updates_source_owned_surfaces():
+def test_refresh_helper_wires_only_the_git_hook():
     text = _script()
+    assert ".git/hooks/pre-commit" in text
+    assert ".githooks/pre-commit" in text
     for marker in (
         "system/dashboards",
         "system/incidents",
-        "system/metrics",
         "system/scripts",
         ".memoria/templates",
-        ".git/hooks/pre-commit",
-        "PYTHONPATH_VALUE",
         "index.md",
         "bibliography.bib",
     ):
-        assert marker in text
-
-
-def test_refresh_helper_removes_dropped_obsidian_payloads():
-    text = _script()
-    assert '"$VAULT/catalog" "$VAULT/knowledge" "$VAULT/spaces" "$VAULT/references.bib"' in text
-    assert '"$SRC/.obsidian"/' not in text
-    assert "obsidian-local-rest-api" not in text
+        assert marker not in text
 
 
 def test_refresh_helper_has_no_profile_redeploy_mode():

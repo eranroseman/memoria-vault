@@ -1,7 +1,7 @@
 pages:
   analysis-and-surfaces/calibration.md:
     status: Source-owned
-    owner: vault-template/.memoria/schemas/calibration.yaml
+    owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml
   analysis-and-surfaces/dashboards.md:
     status: Manual
     owner: docs/reference/analysis-and-surfaces/dashboards.md
@@ -77,18 +77,18 @@ pages:
     owner: docs/reference/control-and-policy/worklists.md
   data-model/document-types.md:
     status: Source-owned
-    owner: vault-template/.memoria/schemas/types/*.yaml
+    owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml
     check: check_document_type_reference_mirror
   data-model/frontmatter.md:
     status: Source-owned
-    owner: vault-template/.memoria/schemas/types/*.yaml
+    owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml
     check: check_document_type_reference_mirror
   data-model/glossary.md:
     status: Manual
     owner: docs/reference/data-model/glossary.md
   data-model/vocabulary.md:
     status: Guarded mirror
-    owner: vault-template/system/vocabulary.md
+    owner: src/memoria_vault/product/workspace_seed/system/vocabulary.md
     check: check_vocabulary_reference_mirror
   data-model/wikilink-and-link-conventions.md:
     status: Manual

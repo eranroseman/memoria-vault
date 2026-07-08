@@ -22,7 +22,7 @@ def test_alpha19_bundle_roots_and_fulltexts_schema() -> None:
     assert "sources" not in folders["skeleton"]
     assert "system/eval" not in folders["skeleton"]
     assert ".memoria/eval" in folders["skeleton"]
-    assert ".memoria/templates" in folders["skeleton"]
+    assert ".memoria/templates" not in folders["skeleton"]
     assert ".memoria/patterns" in folders["skeleton"]
     assert ".memoria/journal" in folders["skeleton"]
     assert "fulltext" in types

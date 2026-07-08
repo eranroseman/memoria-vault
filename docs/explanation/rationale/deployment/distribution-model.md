@@ -7,42 +7,49 @@ nav_order: 3
 
 # Distribution model
 
-Memoria ships from the `memoria-vault` repo as a workspace template plus an
-installable Python package ([alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)).
-You clone it, or run the bootstrap that clones it for you, and the installer
-deploys the standalone workspace.
+Memoria ships from the `memoria-vault` repo as a packaged workspace seed plus an
+installable Python package ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+You clone it, or run the one-line bootstrap that clones it for you, and the
+bootstrap installer at the repo root deploys the standalone workspace.
 
-The installer derives the running workspace from `vault-template/` at a working
-location. The deployed workspace is self-contained - it does not carry `docs/`,
-so any reference from a workspace-resident file to `docs/` is a **GitHub Pages
-URL, never a relative path**. The installers live at the repo root (not inside
-`src/`) because the bootstrap is the clone/entry point; installing requires the
-whole repo. See [Bootstrap installer](bootstrap-installer.md) for the installer's
-design and [Installer (bootstrap)](../../../reference/system/installer.md) for the component
-inventories.
+| Path | Contents | Audience |
+| --- | --- | --- |
+| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both install the standalone CLI/runtime package and call `memoria init`. | End users (run once). |
+| `src/memoria_vault/product/workspace_seed/` | The **runtime seed** packaged with `memoria`: schemas, provider config, pre-commit hook, seeded-error bundle, prompt preamble, steering, vocabulary, `.gitignore`, and Memoria's Obsidian adapter/default settings. | The CLI initializer and tests. |
+| `src/memoria_vault/` | The installable Python package for runtime helpers, operation manifests, policy logic, and the workspace seed. | Memoria operations, optional adapter servers, tests, and contributors. |
+| `packages/memoria-obsidian/` | Source package for the alpha.20 Obsidian proof adapter. Its built release files are copied into the package seed so new workspaces have the Memoria plugin installed by default. | Adapter testers and contributors. |
+| `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
-Shipping `vault-template/` rather than a live `vault/` template is deliberate:
-a live-vault template blurs "source of truth" with "a running instance" and
-invites accidental edits to the template. With `vault-template/`, authoring
-(the repo/package) and runtime use stay cleanly separate, and user content and
-system files are structurally distinct from the first minute.
+The installer derives the running workspace by installing the package and
+calling `memoria init` at a working location. The deployed workspace is
+self-contained - it does not carry `docs/`, so any reference from a
+workspace-resident file to `docs/` is a **GitHub Pages URL, never a relative
+path**. The installers live at the repo root (not inside `src/`) because the
+bootstrap is the clone/entry point; installing requires the whole repo. See
+[Bootstrap installer](bootstrap-installer.md) for the installer's design and
+[Installer (bootstrap)](../../../reference/system/installer.md) for the component inventories.
+
+The old `vault-template/` tree was removed in alpha.20. A second source tree had
+become a retention mechanism for empty directories, historical files, dashboards,
+templates, and broad adapter payloads. The package seed keeps files the runtime
+or default Obsidian workspace reads; writable and generated paths are created by
+code from schema or projection contracts.
 
 ---
 
-## What the template owns
+## What Ships In The Package Seed
 
-`vault-template/` is source material for new workspaces, not a live vault. The
-full directory catalog belongs in [On-disk layout](../../../reference/system/on-disk-layout.md);
-the category-tree rationale belongs in [The vault](../../architecture/vault.md).
-This page only records the distribution choice: ship source files and generate
-the user's running workspace from them.
+`src/memoria_vault/product/workspace_seed/` carries only runtime seed files. The
+full directory catalog is [On-disk layout](../../../reference/system/on-disk-layout.md); the
+category-tree rationale is [The vault](../../architecture/vault.md).
+Empty content dirs are recreated from `.memoria/schemas/folders.yaml`.
 
 ## Product-file refresh
 
 Memoria does not maintain an in-vault product-file restore baseline. Product
-files come from `vault-template/` and the installed `memoria_vault` package;
-repair is a fresh workspace refresh or package reinstall, not migration or
-three-way reconciliation inside the vault.
+files come from the installed `memoria_vault` package; repair is
+`memoria doctor --repair` or package reinstall, not migration or three-way
+reconciliation inside the vault.
 
 ---
 
@@ -55,12 +62,11 @@ allowlist: they describe the operation id, input/output schema, allowed tools,
 allowed paths, network ceiling, runner test/live branch policy, and required
 checks.
 
-The repo deliberately does not ship `vault-template/.memoria/profiles/`,
-`vault-template/.memoria/lane-overrides/`, or a profile-rendering script. The
-standalone `memoria` CLI and engine are the product surface. Optional adapters,
-including the Obsidian proof adapter, may call the same CLI/engine, but they are
-not the source of truth for capabilities and they do not belong in the runtime
-vault bootstrap.
+The repo deliberately does not ship `.memoria/profiles/`,
+`.memoria/lane-overrides/`, or a profile-rendering script. The
+standalone `memoria` CLI and engine are the product surface. The seeded Obsidian
+adapter may call the same CLI/engine, but it is not the source of truth for
+capabilities and does not write Memoria-owned state outside `/operation/run`.
 
 The absence is test-pinned by `tests/test_profiles.py` and
 `scripts/checks/alpha14_negative_gate.py`.

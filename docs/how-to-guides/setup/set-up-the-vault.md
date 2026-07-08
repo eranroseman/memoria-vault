@@ -8,13 +8,14 @@ nav_order: 2
 
 # Set up the vault
 
-Run the bootstrap installer to provision the standalone CLI/runtime workspace and lay the vault down. This is the foundation step — optional adapter setup builds on it.
+Run the bootstrap installer to provision the standalone CLI/runtime workspace and lay the vault down. This is the foundation step; the package seed also includes the default Memoria Obsidian adapter/config.
 
 ## Prerequisites
 
 - Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
 - Windows PowerShell 5.1+ on Windows, or Ubuntu/Debian/WSL for the Linux path — macOS is not supported.
-- Hermes and Obsidian are optional adapter dependencies, not prerequisites for the standalone CLI/runtime.
+- Hermes is optional. Obsidian is optional as an app, but the workspace seed
+  includes Memoria's Obsidian adapter files and core settings.
 
 ## Steps
 
@@ -38,11 +39,12 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. Confirm the installer finished.**
+**2. What it does.** With your confirmation at each external step, the installer creates the runtime vault folder (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, initializes the workspace from the package seed, including Obsidian defaults, wires local hooks, and prints the vault-local CLI commands.
 
-The installer creates the runtime vault, installs Memoria into
-`.memoria/.venv`, wires local hooks, and prints the vault-local CLI commands.
-It does not install optional adapters such as Obsidian or Zotero.
+The installer is standalone-only. It does not install external search tooling,
+Hermes, profiles, lane overrides, profile skills, Hermes crons, the Obsidian
+app, or Zotero integration. Direct `memoria init` calls can skip the seeded
+Obsidian profile with `--no-obsidian`; the bootstrap path keeps the default.
 
 **3. Make your first git checkpoint** (recommended).
 
@@ -65,4 +67,4 @@ The remote is your own vault repository, not the starter repo.
 
 ## Related
 
-- Optional UI adapter: [Set up Obsidian](set-up-obsidian.md)
+- Obsidian adapter setup: [Set up Obsidian](set-up-obsidian.md)

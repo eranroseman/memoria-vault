@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -28,7 +27,6 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 DEFAULT_CASSETTE = Path("tests/fixtures/test-env/cassettes/package-gate-golden-path.json")
-SKIP_COPY = {".git"}
 
 
 class HarnessError(RuntimeError):
@@ -67,19 +65,22 @@ def load_cassette(path: Path) -> dict[str, Any]:
 
 
 def add_operation_paths(root: Path) -> None:
-    for rel in ("vault-template/.memoria",):
+    for rel in ("src",):
         path = str(root / rel)
         if path not in sys.path:
             sys.path.insert(0, path)
 
 
 def populate_vault(root: Path, vault: Path) -> None:
-    src = root / "vault-template"
-    if not vault.exists() or not any(vault.iterdir()):
-        shutil.copytree(src, vault, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*SKIP_COPY))
+    if not (vault / ".memoria/schemas").is_dir():
+        from memoria_vault.cli import main as cli_main
+
+        rc = cli_main(["init", "--workspace", str(vault), "--yes", "--quiet"])
+        if rc != 0:
+            raise HarnessError(f"memoria init failed with exit {rc}")
     from memoria_vault.runtime.subsystems.lib import schema
 
-    folders = schema.load_folders(root / "vault-template/.memoria/schemas")
+    folders = schema.load_folders(vault / ".memoria/schemas")
     for folder in folders["skeleton"]:
         (vault / folder).mkdir(parents=True, exist_ok=True)
 

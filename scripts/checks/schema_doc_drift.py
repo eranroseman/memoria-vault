@@ -194,7 +194,11 @@ def _list_subset_errors(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--schemas", type=Path, default=ROOT / "vault-template/.memoria/schemas")
+    parser.add_argument(
+        "--schemas",
+        type=Path,
+        default=ROOT / "src/memoria_vault/product/workspace_seed/.memoria/schemas",
+    )
     parser.add_argument("--docs", type=Path, default=ROOT / "docs/reference")
     return parser.parse_args()
 

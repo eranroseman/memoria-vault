@@ -5,7 +5,7 @@ description: Review changes to Memoria operation capabilities, write policy enfo
 
 # Policy change review
 
-Use this skill when a diff touches `vault-template/capabilities/operations/`,
+Use this skill when a diff touches `src/memoria_vault/product/capabilities/operations/`,
 runtime policy code, policy gate/hook code, the write-gate plugin, task delegation,
 provider ceilings, or PR policy.
 

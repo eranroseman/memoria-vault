@@ -13,6 +13,7 @@ import sys
 import tempfile
 import time
 import uuid
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
@@ -28,26 +29,20 @@ from memoria_vault.runtime.worker import (
 )
 
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
+WORKSPACE_SEED_PACKAGE = "memoria_vault.product.workspace_seed"
 SEED_TREES = (
-    ("vault-template/.memoria/schemas", ".memoria/schemas"),
-    ("vault-template/.memoria/config", ".memoria/config"),
-    ("vault-template/.memoria/eval", ".memoria/eval"),
+    (".githooks", ".githooks"),
+    (".memoria/config", ".memoria/config"),
+    (".memoria/eval", ".memoria/eval"),
+    (".memoria/patterns", ".memoria/patterns"),
+    (".memoria/schemas", ".memoria/schemas"),
+    (".obsidian", ".obsidian"),
 )
 SEED_FILES = (
-    ("vault-template/.gitignore", ".gitignore"),
-    ("vault-template/steering.md", "steering.md"),
-    ("vault-template/system/vocabulary.md", "system/vocabulary.md"),
+    (".gitignore", ".gitignore"),
+    ("steering.md", "steering.md"),
+    ("system/vocabulary.md", "system/vocabulary.md"),
 )
-NEW_CONCEPT_TEMPLATE_FIELDS: dict[str, tuple[str, ...]] = {
-    "note": ("note title", "ulid", "note description", "note body"),
-    "hub": ("hub title", "ulid", "hub description", "tag id", "hub body"),
-    "project": (
-        "project title",
-        "ulid",
-        "project description",
-        "project direction",
-    ),
-}
 SURFACE_ACTION = actions_by_id()
 
 
@@ -74,6 +69,11 @@ def _build_parser() -> argparse.ArgumentParser:
     _common(init, workspace_required=False)
     init.add_argument("--yes", action="store_true")
     init.add_argument("--dry-run", action="store_true")
+    init.add_argument(
+        "--no-obsidian",
+        action="store_true",
+        help="Skip seeded Obsidian settings and the Memoria Obsidian plugin.",
+    )
     init.set_defaults(handler=_cmd_init)
 
     status = sub.add_parser("status", **_surface_help("status.read"))
@@ -561,11 +561,14 @@ def _surface_summary(action_id: str) -> str:
 def _cmd_init(args: argparse.Namespace) -> int:
     workspace = Path(args.workspace or ".").resolve()
     created = _workspace_plan(workspace)
+    include_obsidian = not args.no_obsidian
     if args.dry_run:
-        return _emit(_init_dry_run_report(workspace, created), args)
+        return _emit(
+            _init_dry_run_report(workspace, created, include_obsidian=include_obsidian), args
+        )
     if not args.yes and workspace.exists() and any(workspace.iterdir()):
         return _fail("init on a non-empty workspace requires --yes", json_output=args.json)
-    _initialize_workspace_files(workspace)
+    _initialize_workspace_files(workspace, include_obsidian=include_obsidian)
     return _emit({"ok": True, "workspace": str(workspace), "created": created}, args)
 
 
@@ -1843,35 +1846,23 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
 
 
 def _workspace_plan(workspace: Path) -> list[str]:
-    return [
-        "inbox",
-        "notes",
-        "hubs",
-        "projects",
-        "digests",
-        "fulltexts",
-        "system",
-        "system/incidents",
-        "system/metrics",
-        ".memoria/blobs",
-        ".memoria/config",
-        ".memoria/eval",
-        ".memoria/index/search/checked",
-        ".memoria/journal",
-        ".memoria/patterns",
-        ".memoria/staging/notes",
-        ".memoria/staging/hubs",
-        ".memoria/staging/projects",
-        ".memoria/staging/digests",
-        ".memoria/staging/fulltexts",
-        ".memoria/templates",
-    ]
+    from memoria_vault.runtime.subsystems.lib import schema
+
+    return list(schema.load_folders()["skeleton"])
 
 
-def _init_dry_run_report(workspace: Path, planned_dirs: list[str]) -> dict[str, Any]:
+def _active_seed_trees(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]:
+    if include_obsidian:
+        return SEED_TREES
+    return tuple(pair for pair in SEED_TREES if pair[1] != ".obsidian")
+
+
+def _init_dry_run_report(
+    workspace: Path, planned_dirs: list[str], *, include_obsidian: bool = True
+) -> dict[str, Any]:
     from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
 
-    seed_trees = [target for _, target in SEED_TREES]
+    seed_trees = [target for _, target in _active_seed_trees(include_obsidian=include_obsidian)]
     seed_files = [target for _, target in SEED_FILES]
     search = {
         "engine": "bm25",
@@ -1919,8 +1910,8 @@ def _init_dry_run_report(workspace: Path, planned_dirs: list[str]) -> dict[str, 
     }
 
 
-def _seed_workspace(workspace: Path, *, overwrite: bool) -> None:
-    for source_rel, target_rel in SEED_TREES:
+def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
+    for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
         _copy_seed_tree(source_rel, workspace / target_rel, overwrite=overwrite)
     for source_rel, target_rel in SEED_FILES:
         _copy_seed_file(source_rel, workspace / target_rel, overwrite=overwrite)
@@ -1931,11 +1922,13 @@ def _repair_workspace(workspace: Path) -> list[str]:
     return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
 
 
-def _initialize_workspace_files(workspace: Path, *, overwrite: bool = False) -> None:
+def _initialize_workspace_files(
+    workspace: Path, *, overwrite: bool = False, include_obsidian: bool = True
+) -> None:
     workspace.mkdir(parents=True, exist_ok=True)
     for rel in _workspace_plan(workspace):
         (workspace / rel).mkdir(parents=True, exist_ok=True)
-    _seed_workspace(workspace, overwrite=overwrite)
+    _seed_workspace(workspace, overwrite=overwrite, include_obsidian=include_obsidian)
     state.connect(workspace).close()
     _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections
@@ -2030,19 +2023,30 @@ def _write_no_overwrite(target: Path, frontmatter: dict[str, Any], body: str) ->
 
 
 def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
-    source = _repo_root() / source_rel
+    source = _seed_resource(source_rel)
     if not source.is_dir():
         return
     if target.exists() and any(target.iterdir()) and not overwrite:
         return
-    shutil.copytree(source, target, dirs_exist_ok=True)
+    target.mkdir(parents=True, exist_ok=True)
+    for child in source.iterdir():
+        child_target = target / child.name
+        if child.is_dir():
+            _copy_seed_tree(f"{source_rel}/{child.name}", child_target, overwrite=overwrite)
+        elif overwrite or not child_target.exists():
+            child_target.parent.mkdir(parents=True, exist_ok=True)
+            child_target.write_bytes(child.read_bytes())
 
 
 def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None:
-    source = _repo_root() / source_rel
+    source = _seed_resource(source_rel)
     if source.is_file() and (overwrite or not target.exists()):
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
+        target.write_bytes(source.read_bytes())
+
+
+def _seed_resource(source_rel: str):
+    return files(WORKSPACE_SEED_PACKAGE).joinpath(*source_rel.split("/"))
 
 
 def _ensure_control_files(workspace: Path) -> None:
@@ -2583,10 +2587,6 @@ def _fail(message: str, *, json_output: bool) -> int:
     else:
         print(f"memoria: error: {message}", file=sys.stderr)
     return 2
-
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
 
 
 def _package_version() -> str:

@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCAN_ROOTS = ("docs", "src/memoria_vault", "scripts", "vault-template")
+SCAN_ROOTS = ("docs", "src/memoria_vault", "scripts")
 SKIP_PARTS = {
     ".git",
     ".mypy_cache",

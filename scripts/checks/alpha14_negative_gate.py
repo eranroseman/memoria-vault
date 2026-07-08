@@ -7,24 +7,24 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+SEED = "src/memoria_vault/product/workspace_seed"
 FORBIDDEN_PATHS = (
-    "vault-template/.memoria/operations",
-    "vault-template/.memoria/mcp",
-    "vault-template/.memoria/profiles",
-    "vault-template/.memoria/lane-overrides",
-    "vault-template/.memoria/tool-registry.yaml",
-    "vault-template/.obsidian",
-    "vault-template/system/dashboards/fleet-health.md",
-    "vault-template/system/scripts",
-    "vault-template/.githooks/post-commit",
-    "vault-template/capabilities/operations/capture-zotero-source.md",
+    "vault-template",
+    f"{SEED}/.memoria/operations",
+    f"{SEED}/.memoria/mcp",
+    f"{SEED}/.memoria/profiles",
+    f"{SEED}/.memoria/lane-overrides",
+    f"{SEED}/.memoria/tool-registry.yaml",
+    f"{SEED}/system/dashboards/fleet-health.md",
+    f"{SEED}/system/scripts",
+    f"{SEED}/.githooks/post-commit",
+    f"{SEED}/capabilities/operations/capture-zotero-source.md",
 )
 FORBIDDEN_TEXT = (
-    "vault-template/.memoria/operations",
+    f"{SEED}/.memoria/operations",
     ".memoria/operations/",
-    "vault-template/.memoria/mcp",
+    f"{SEED}/.memoria/mcp",
     ".memoria/mcp/",
-    "vault-template/.obsidian",
     "QuickAdd: Memoria",
     "system/scripts/capture-note.js",
     "system/scripts/open-inbox.js",
@@ -60,7 +60,6 @@ SEARCH_ROOTS = (
     "scripts",
     "src",
     "tests",
-    "vault-template",
 )
 SKIP_PARTS = {
     ".git",

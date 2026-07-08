@@ -26,7 +26,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import rebuild_checked_search_index
 from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
+from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -569,7 +569,8 @@ def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path)
 
 def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) -> None:
     vault = workspace(tmp_path / "vault")
-    shutil.copytree(ROOT / "vault-template/system", vault / "system")
+    (vault / "system").mkdir()
+    shutil.copyfile(WORKSPACE_SEED / "system/vocabulary.md", vault / "system/vocabulary.md")
     work_rel = "digests/source-alpha.md"
     work = vault / work_rel
     work.parent.mkdir(parents=True, exist_ok=True)

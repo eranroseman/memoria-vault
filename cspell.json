@@ -17,8 +17,6 @@
   ],
   "ignorePaths": [
     "docs/reference/evidence-and-integrations/bibliography.md",
-    "design-history/**",
-    "vault-template/.obsidian/**",
     "_papers/**",
     "_notes/**",
     "scratch/**",

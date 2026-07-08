@@ -25,6 +25,17 @@ This release is done when every gate/stage sub-issue below is closed.
 | Product | The product workflow produces reviewable value, telemetry, GUI evidence, and output-quality evidence when claimed. | Product/manual sub-issue |
 | Release | Blockers, docs, versioning, notes, and close-out are ready. | Release parent/sub-issues |
 
+## Evidence ledger
+
+Each gate/stage sub-issue must record a concrete evidence row.
+
+| Gate/stage | Command or interaction | Artifact or output | Result | Skip reason |
+|---|---|---|---|---|
+| Source | `scripts/verify pr` | {{ CI run or `summary.json` link }} | {{ pass/fail }} | {{ n/a or reason }} |
+| Package | `scripts/verify package` | {{ `summary.json` link }} | {{ pass/fail }} | {{ n/a or reason }} |
+| Runtime | `scripts/verify runtime` | {{ `summary.json` link }} | {{ pass/fail }} | {{ n/a or reason }} |
+| Product | {{ manual workflow or GUI check }} | {{ issue comment, log, screenshot, or output }} | {{ pass/fail }} | {{ n/a or reason }} |
+
 ## Known limitations
 
 - Limitation: {{ user-visible limitation }}. Impact: {{ practical impact }}.
@@ -33,7 +44,8 @@ This release is done when every gate/stage sub-issue below is closed.
 ## Candidate checks
 
 1. Required CI is green on `main`.
-2. `scripts/verify rc` passes, or Runtime is skipped with a concrete reason.
+2. `scripts/verify rc --evidence-dir <release-evidence-dir>` passes, or Runtime
+   is skipped with a concrete reason and replacement evidence.
 3. Fresh install or runtime replay succeeds against a disposable workspace under
    `~/memoria-vault/sandbox`, never a personal workspace.
 4. Product, manual GUI, failure/recovery, and runtime checks required by the

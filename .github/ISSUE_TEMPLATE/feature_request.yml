@@ -17,7 +17,7 @@ body:
         - Optional adapter
         - Operation or capability
         - Install / setup experience
-        - Vault templates or structure
+        - Package seed or workspace structure
         - AGENTS.md / .agents guidance
         - Documentation (docs/)
         - Tooling / scripts

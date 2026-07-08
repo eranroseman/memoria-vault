@@ -71,8 +71,8 @@ without explicit permission.
 - Permanent files go in `~/memoria-vault/main`; temporary tracked files go in
   `~/memoria-vault/scratch`; task checkouts go in `~/memoria-vault/worktrees/`;
   disposable test workspaces go in `~/memoria-vault/sandbox`.
-- The only nested standalone `.git` expected under this tree is a disposable
-  installed vault such as `~/memoria-vault/sandbox/vault`; it is runtime state,
+- The only nested standalone `.git` expected under this tree is the disposable
+  installed vault at `~/memoria-vault/sandbox`; it is runtime state,
   not repository source.
 - Tool caches are not source-of-truth content. Pre-commit, pip, npm, and similar
   disposable caches may live in normal OS cache locations such as
@@ -219,7 +219,7 @@ git push origin HEAD:scratch
 Run repo audits and implementation analysis from a worktree of the code branch
 under review (`main` by default), never from the scratch worktree. The scratch
 worktree has no tracked `.agents/`, `.github/`, `docs/`, `scripts/`, `src/`,
-`tests/`, or `vault-template/` tree to analyze.
+or `tests/` tree to analyze.
 
 Never merge the `scratch` branch into `main`. Promote durable content by copying
 it into `docs/`, `design-history/`, issues, or release notes on a normal `main` PR.
@@ -238,7 +238,7 @@ a reader mirror guarded by `python3 scripts/checks/agents_doctor.py`.
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | Runs `python scripts/verify l0`: pinned pre-commit `ruff` and `ruff-format`, `docs-doctor` (docs link text/frontmatter/README plus `vault-template/` docs refs), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), syntax checks, generated-reference checks, and schema/design drift checks |
+| `lint` | Runs `python scripts/verify l0`: pinned pre-commit `ruff` and `ruff-format`, `docs-doctor` (docs link text/frontmatter/README plus package-seed mirrors), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), syntax checks, generated-reference checks, and schema/design drift checks |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
@@ -274,7 +274,8 @@ This reader mirror is owned by `.github/scripts/pr_policy.py` and covered by
 
 Sensitive paths: `.github/`, `.agents/`, `.claude/`, `.codex/`, `.kilo/`,
 `scripts/`, `src/memoria_vault/runtime/policy/`,
-`src/memoria_vault/runtime/subsystems/`, `vault-template/.memoria/`,
+`src/memoria_vault/runtime/subsystems/`,
+`src/memoria_vault/product/workspace_seed/`,
 `design-history/` (the durable design record), and `AGENTS.md`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
@@ -316,7 +317,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
 - **Python** (vault tooling + repo scripts): `python3 -m pytest tests/` (or `python3 scripts/verify l1`). The L1 tests live in `tests/`, not inline in the modules.
-- **Standard PR verification:** `python3 scripts/verify pr` runs the source checks and writes a JSON evidence bundle. Use `python3 scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `python3 scripts/verify runtime` / `python3 scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
+- **Standard PR verification:** `python3 scripts/verify pr` runs the source checks and writes a JSON evidence bundle. Use `python3 scripts/verify package` for changes that affect the package seed, installer, hooks, optional adapters, or workflow replay; `python3 scripts/verify runtime` / `python3 scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
 - **Installer end-to-end:** `bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox` — never test against the real `~/Memoria`.
 
@@ -330,7 +331,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 | Any docs PR | [`docs-review`](.agents/playbooks/docs-review.md), plus `the-elements-of-style` for prose clarity | Before opening — quadrant fit, links, indexing, terminology, sentence-level clarity |
 | Any PR | [`code-review`](.agents/playbooks/code-review.md), which invokes `superpowers:requesting-code-review` (both tools) plus, **on Claude**, `pr-review-toolkit:code-reviewer`, and **on Codex**, native review — run independently, don't substitute one for another | Before opening — bugs, compliance, plan alignment, production-readiness |
 | Deeper review on a dimension | **Claude:** `pr-review-toolkit` agents (`silent-failure-hunter`, `pr-test-analyzer`, `code-simplifier`, `comment-analyzer`, `type-design-analyzer`). **Codex:** native review covers the same six dimensions (see `.agents/toolkit.md` for the mapping) | After the above — probe one lens |
-| Sensitive-path changes | [`security-review`](.agents/playbooks/security-review.md), plus `security-guidance` (passive) and `threat-modeling` (full audit, only when escalation is warranted) | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `design-history/`, `AGENTS.md`, or agent guidance |
+| Sensitive-path changes | [`security-review`](.agents/playbooks/security-review.md), plus `security-guidance` (passive) and `threat-modeling` (full audit, only when escalation is warranted) | PRs touching `scripts/`, `.github/`, `src/memoria_vault/product/workspace_seed/`, `design-history/`, `AGENTS.md`, or agent guidance |
 | Confirming a fix | [`verify-change`](.agents/playbooks/verify-change.md), plus `superpowers:verification-before-completion` | After a change — confirm actual behavior |
 | New or cut release | [`release`](.agents/playbooks/release.md) | Scaffolds the release folder/plan, milestone, and parent issue; release-please owns version/notes |
 
@@ -367,9 +368,9 @@ against the "never commit `OBSIDIAN_API_KEY`/`.env`" rule.
 - **Runtime deps:** install into `<workspace>/.memoria/.venv` from
   `pyproject.toml`; the runtime package owns policy hooks, worker operations, and
   deterministic subsystems.
-- **Scheduled wrappers:** shared wrappers live under
-  `vault-template/.memoria/scripts/` and call the CLI/runtime package. A local
-  scheduler may invoke them, but no scheduler is required for one-shot CLI use.
+- **Scheduled wrappers:** the baseline seed ships no cron wrappers. A local
+  scheduler may invoke `memoria ...` commands directly, but no scheduler is
+  required for one-shot CLI use.
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
   and [milestones](https://github.com/eranroseman/memoria-vault/milestones) for
   current blockers, checkpoint scope, and known limitations.
@@ -394,9 +395,11 @@ install a project-local search index.
 
 Mixed-purpose pages are wrong — split them.
 
-- **Links:** `docs/` files → relative links for published docs pages; `vault-template/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
+- **Links:** `docs/` files → relative links for published docs pages. Package
+  seed files under `src/memoria_vault/product/workspace_seed/` are source files,
+  not published Pages routes.
   - From `docs/`, cross-folder references follow the target's **Pages route**. Root files such as `CONTRIBUTING.md`, `design-history/`, agent playbooks, and other unpublished targets use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`).
-  - Never relative-link into `src/` from a published page — those paths 404 on the site. Cite a source file as an **inline-code path** (`` `vault-template/.memoria/…` ``), or an absolute tag-pinned `blob/<tag>/…` URL only when a click genuinely adds value.
+  - Never relative-link into `src/` from a published page — those paths 404 on the site. Cite a source file as an **inline-code path** (`` `src/memoria_vault/product/workspace_seed/…` ``), or an absolute tag-pinned `blob/<tag>/…` URL only when a click genuinely adds value.
   - **Decision-history references** belong only in **explanation** prose (inline, or an optional per-page footer "Decisions" list), always as title-text links to `design-history/` — never bare `(ADR-NN)` codes, and not in tutorial / how-to / reference body text.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.

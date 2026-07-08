@@ -12,6 +12,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
 
 ROOT = Path(__file__).resolve().parents[1]
+WORKSPACE_SEED = ROOT / "src/memoria_vault/product/workspace_seed"
 
 
 def init_cli_workspace(tmp_path: Path, capsys: Any) -> Path:
@@ -26,7 +27,7 @@ def init_cli_workspace(tmp_path: Path, capsys: Any) -> Path:
 def copy_memoria_dirs(vault: Path, *names: str) -> None:
     for name in names:
         shutil.copytree(
-            ROOT / "vault-template/.memoria" / name,
+            WORKSPACE_SEED / ".memoria" / name,
             vault / ".memoria" / name,
         )
 

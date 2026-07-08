@@ -19,9 +19,15 @@ navigate.
 
 ## Steps
 
-**1. Create the note from the template.**
+**1. Create the hub.**
 
-In `hubs/`, create a new note from `.memoria/templates/hub.md`:
+Use the CLI:
+
+```bash
+memoria new hub receptivity-timing --workspace .
+```
+
+Or create a Markdown file in `hubs/` with the same required shape:
 
 ```yaml
 type: hub

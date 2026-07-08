@@ -34,7 +34,7 @@ from memoria_vault.runtime.worker import (
 from memoria_vault.runtime.worker import (
     main as worker_main,
 )
-from tests.helpers import ROOT, copy_memoria_dirs, git, init_git, mark_file_status
+from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git, mark_file_status
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -1348,7 +1348,7 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     eval_dir = vault / ".memoria/eval"
     eval_dir.mkdir(parents=True)
     shutil.copyfile(
-        ROOT / "vault-template/.memoria/eval/alpha15-seeded-errors.json",
+        WORKSPACE_SEED / ".memoria/eval/alpha15-seeded-errors.json",
         eval_dir / "alpha15-seeded-errors.json",
     )
 
@@ -1382,7 +1382,7 @@ def test_seeded_error_verdict_resolves_target_operation_runner(
     eval_dir = vault / ".memoria/eval"
     eval_dir.mkdir(parents=True)
     shutil.copyfile(
-        ROOT / "vault-template/.memoria/eval/alpha15-seeded-errors.json",
+        WORKSPACE_SEED / ".memoria/eval/alpha15-seeded-errors.json",
         eval_dir / "alpha15-seeded-errors.json",
     )
     resolved = []
