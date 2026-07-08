@@ -37,10 +37,17 @@ def assert_vault_skeleton(root: Path, vault: Path) -> None:
     print(f"   skeleton present ({len(folders['skeleton'])} dirs); tree matches folders.yaml")
 
 
-def assert_no_obsidian_bundle(vault: Path) -> None:
-    assert not (vault / ".obsidian").exists(), "standalone vault shipped .obsidian payload"
+def assert_obsidian_seed(vault: Path) -> None:
+    assert (vault / ".obsidian/app.json").is_file(), "missing Obsidian app defaults"
+    assert (vault / ".obsidian/core-plugins.json").is_file(), "missing Obsidian core defaults"
+    assert (vault / ".obsidian/community-plugins.json").is_file(), (
+        "missing Memoria plugin enablement"
+    )
+    assert (vault / ".obsidian/plugins/memoria-obsidian/manifest.json").is_file(), (
+        "missing Memoria Obsidian plugin"
+    )
     assert not (vault / "system/scripts").exists(), "standalone vault shipped QuickAdd scripts"
-    print("   git repo, hooks, and standalone no-Obsidian baseline asserted")
+    print("   git repo, hooks, and Obsidian seed asserted")
 
 
 def assert_executable(path: Path, label: str) -> None:
@@ -283,7 +290,7 @@ def _vault_assembly(root: Path, vault: Path, env: dict[str, str]) -> None:
     shutil.copy2(vault / ".githooks/pre-commit", hook)
     hook.chmod(0o755)
     assert_executable(hook, "pre-commit hook")
-    assert_no_obsidian_bundle(vault)
+    assert_obsidian_seed(vault)
 
     _stage("vault-assembly-3")
     if "PASS" not in _detector_verdict(vault, env):
