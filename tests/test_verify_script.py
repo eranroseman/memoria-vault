@@ -43,8 +43,8 @@ def test_verify_dry_run_writes_evidence(tmp_path: Path) -> None:
     assert "python3 scripts/sandbox/e2e_smoke.py" in displays
     assert summary["artifacts"] == []
     assert summary["versions"] == {
-        "package_init": "0.1.0a19",
-        "pyproject": "0.1.0a19",
+        "package_init": "0.1.0a20",
+        "pyproject": "0.1.0a20",
     }
 
 
@@ -127,7 +127,7 @@ def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
 def test_artifact_hashes_reports_built_distribution(tmp_path: Path) -> None:
     dist = tmp_path / "dist"
     dist.mkdir()
-    artifact = dist / "memoria_vault-0.1.0a19-py3-none-any.whl"
+    artifact = dist / "memoria_vault-0.1.0a20-py3-none-any.whl"
     artifact.write_bytes(b"wheel bytes")
     namespace = runpy.run_path(str(ROOT / "scripts/verify"))
 
