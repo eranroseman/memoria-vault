@@ -70,7 +70,7 @@ Code is the one domain where the three preconditions could hold:
 
 So a bounded code-experiment loop could be admissible in principle.
 
-**But no autonomy exception exists anywhere in the current system** ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md) and [the code-output lane decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/19-alpha.19.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
+**But no autonomy exception exists anywhere in the current system** ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and [the code-output lane decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
 
 The synthesis gate remains structurally untouched. The request envelope,
 trusted-writer checks, read barrier, and optional adapter policy hook block
