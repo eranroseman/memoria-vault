@@ -11,87 +11,108 @@ Failure modes that recur in research vaults built this way. Most of them look li
 
 ## Treating agent output as verified content
 
-The Writer posture or a generative draft operation produces prose from checked
-evidence. It looks good. A paragraph gets copied into a composition.
-Later it emerges that the draft cited paper X for a claim that paper X does not
-actually make - the semantic similarity was there, but the specific claim
-wasn't.
+**Failure:** generated prose cites a real paper for a claim the paper does not
+make. The draft looks polished because semantic similarity was enough to fool
+the generator.
 
-This is the failure the Peer-reviewer posture and verification operations exist
-to catch, but citation-resolution checks only verify that citekeys resolve; they
-do not prove that the source actually supports the specific claim in the prose.
-That final check is irreducibly human. The system's design treats machine output
-as a proposal that requires verification, not a draft that requires only polish.
+**Why it happens:** citation-resolution checks prove that citekeys resolve. They
+do not prove that a source supports the exact claim in the prose.
+
+**What prevents it:** the Peer-reviewer posture and verification operations
+surface trace problems, but the PI still owns the final support judgment.
+Machine output remains a proposal, not checked content waiting only for polish.
 
 ## Unpinned citekeys
 
-You add a paper to Zotero, the ingest operation catalogs it, wikilinks form across the vault pointing to `mamykina2010sense`. Then you correct a metadata field in Zotero — the author's name, the year, a typo in the title — and Better BibTeX regenerates the citekey. Every wikilink in the vault is now broken, silently.
+You import a BibTeX or CSL export from Zotero, the ingest operation catalogs it,
+and draft citations or bibliography exports use `mamykina2010sense` as the
+citekey alias. Then you correct a metadata field in Zotero — the author's name,
+the year, a typo in the title — and Better BibTeX regenerates the citekey. The
+stable `work_id` still points at the Work row, but citation/export workflows that
+depend on the old alias can miss or render unresolved citations until you
+re-import or repair the alias.
 
-The reason this is silent: Obsidian doesn't warn about broken wikilinks; it just shows them as unresolved. Without the Linter's `lint:analyze-graph` check, the breakage is invisible until you're actively looking for a specific note. The failure compounds over time because new notes continue linking to the broken citekey, not knowing it has changed.
+**Failure:** a corrected Zotero record regenerates a citekey, and citation or
+export workflows keep looking for the old alias.
 
-The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [Capture and ingest a source](../../how-to-guides/library/capture-and-ingest.md) for the pinning procedure.
+**Why it happens:** the durable Work identity still works, so the graph looks
+healthy. The break appears only at the citation/export edge.
+
+**What prevents it:** pin citekeys in Better BibTeX so the key is treated as an
+identifier, not a metadata derivation. See [Set up Zotero](../../how-to-guides/setup/set-up-zotero.md).
 
 ## Vocabulary drift
 
-The same concept gets two names across notes — `topics: receptivity-detection`
-on one claim-bearing note, `topics: opportune-moments` on another — so a query
-returns half the corpus and the PI infers thin coverage that isn't real. The
-failure is invisible because it produces no errors, only incomplete results, and
-the Linter cannot catch it until a canonical vocabulary exists. The full
-scenario, why consolidation is deliberately deferred, and how the failure
-compounds are in [Vocabulary discipline](vocabulary-discipline.md).
+**Failure:** the same concept gets two names, such as
+`topics: receptivity-detection` and `topics: opportune-moments`, so filtered
+queries return only part of the corpus.
+
+**Why it happens:** off-vocabulary values are well-formed strings. They produce
+incomplete results, not errors.
+
+**What prevents it:** maintain the controlled vocabulary and consolidate variants
+once the intended term is clear. The staged stabilization model is in
+[Vocabulary discipline](vocabulary-discipline.md).
 
 ## Summary without synthesis
 
-A source summary records findings and methods but contains no wikilinks to
-related notes, no tension with alternative views, and no statement of why the
-finding matters to current work. In six months it is useless because it doesn't
-connect to anything.
+**Failure:** a source summary records findings and methods but links to nothing,
+names no tension, and says nothing about why the finding matters.
 
-The failure is that summary and synthesis look identical in the moment of writing but diverge drastically in usefulness over time. A summary records what the source says. Synthesis connects what the source says to what you already believe — it is what makes the note compounding rather than merely stored.
+**Why it happens:** summary and synthesis look similar while writing. Over time
+they diverge: summary stores what the source says; synthesis connects it to what
+the vault already knows.
+
+**What prevents it:** make every durable note earn its place through links,
+tensions, or a claim about current work.
 
 ## Distilling before triaging
 
-The Librarian operation posture proposes a classification that often surfaces
-project connections that were not obvious at intake - connections that should
-appear in the note's `work_id`, `topics`, and typed `links`, with evidence
-markers and compact citation payloads where source support is needed. Writing
-the note before reviewing that proposal means missing those connections, because
-the classification pass is also when the system discovers what the Work has to
-do with your existing graph.
+**Failure:** a note cites a paper but misses the `work_id`, `topics`, typed
+links, evidence markers, or citation payloads that would connect it to current
+work.
 
-The deeper reason: classification (automated, audited, correctable) is how the
-system integrates a source into the existing graph. Bypassing it produces a
-claim-bearing note that cites a paper but is not connected to the web of context
-that would have been visible from the review.
+**Why it happens:** classification is where the system discovers how a Work
+touches the existing graph. Writing before reviewing that proposal bypasses the
+integration step.
+
+**What prevents it:** review classification before distilling. It is automated,
+audited, and correctable; skipping it turns a claim into an isolated citation.
 
 ## Queue accumulation
 
-The Inbox grows week over week. Source rows sit unchecked for months. Candidate
-attention accumulates without triage. The dashboards show activity - sources are
-being catalogued - but claim-bearing notes are not growing.
+**Failure:** the Inbox grows, source rows sit unchecked, and candidate attention
+ages without triage while dashboards still show catalog activity.
 
-This is a systemic failure because the Inbox and the reading queue are
-processing surfaces, not storage. The vault is compounding only when sources
-move through reading into checked synthesis notes. A queue that grows without
-shrinking is capture without synthesis — a sophisticated reading list, not a
-knowledge system. The weekly review exists precisely to catch this before it
-hardens into months of backlog.
+**Why it happens:** Inbox and reading queues are processing surfaces, not
+storage. A queue that grows without shrinking is capture without synthesis.
+
+**What prevents it:** the weekly review keeps queues moving before they become a
+months-long reading list.
 
 ## Hub-as-folder-dump
 
-A hub grows to hundreds of lines with no structure, annotations, or curation. It becomes unusable because it takes too long to parse.
+**Failure:** a hub grows into hundreds of unstructured lines and takes too long
+to parse.
 
-The structural issue is a confusion between indexing and curating. A hub's value is in what it leaves out and how it annotates what it keeps — it is a perspective on a topic, not an enumeration. When a hub becomes an index, it duplicates what a Base already does automatically. The embedded query handles volume; the static curated list handles meaning. When the curated list grows past 20–30 entries without structure, the hub needs child hubs or heavy pruning.
+**Why it happens:** the hub has become an index. Query surfaces already handle
+volume; a hub should curate meaning.
+
+**What prevents it:** prune hard, annotate what remains, or create child hubs
+when a curated list grows past roughly 20-30 entries.
 
 ## The automation boundary
 
-The failures above share a root, and naming it directly is the best defense. A recurring class of mistake is asking agents to make judgment calls. The distinction between what the agent can do reliably and what requires human judgment is not a question of capability — it is a question of what kind of decision is being made.
+The failures above share one root: asking agents to make judgment calls.
 
-Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the PI. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is why Memoria separates checked materialization from PI attention and curation.
+API enrichment, link-candidate proposals, structural lint checks, and citation
+trace checks are deterministic or checkable. Promotion, merge/archive decisions,
+synthesis quality, and reading priorities require epistemic judgment. Agents can
+prepare those decisions; they cannot make them on behalf of the PI. That is why
+Memoria separates checked materialization from PI attention and curation.
 
 For the explicit mapping of current operation surfaces, see
-[Operations](../../reference/operations.md).
+[Operations](../../reference/commands-and-transports/operations.md).
 
 ---
 
@@ -100,4 +121,4 @@ For the explicit mapping of current operation surfaces, see
 - Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
 - The repair surface for overloaded note graphs: [Link checked notes](../../how-to-guides/knowledge/link-checked-notes.md)
 - Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
-- Current operation surfaces: [Operations](../../reference/operations.md)
+- Current operation surfaces: [Operations](../../reference/commands-and-transports/operations.md)

@@ -18,6 +18,7 @@ from memoria_vault.runtime.operations import (
     validate_operation_policy,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
+from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import copy_memoria_dirs, git, init_git, patch_pydantic_ai
 
 
@@ -46,23 +47,6 @@ def patch_compile_policy(monkeypatch: pytest.MonkeyPatch, **updates) -> dict:
         lambda _vault, _operation_id: policy,
     )
     return policy
-
-
-def write_runner_provider_config(vault: Path, *, local_url: str = "http://model.test/v1") -> None:
-    config = vault / ".memoria/config/providers.yaml"
-    config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(
-        "\n".join(
-            [
-                "version: 1",
-                "runner_providers:",
-                f"  local: {{url: {local_url}, key_env: null}}",
-                "  gateway: {url: https://gateway.test/v1, key_env: KILOCODE_API_KEY}",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
 
 
 def test_load_operation_policy_requires_io_schema_shape() -> None:

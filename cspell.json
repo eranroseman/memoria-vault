@@ -16,7 +16,7 @@
     "**/*.md"
   ],
   "ignorePaths": [
-    "docs/reference/bibliography.md",
+    "docs/reference/evidence-and-integrations/bibliography.md",
     "design-history/**",
     "vault-template/.obsidian/**",
     "_papers/**",

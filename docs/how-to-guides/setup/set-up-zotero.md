@@ -8,9 +8,8 @@ nav_order: 4
 
 # Set up Zotero
 
-Optional setup for users who keep references in Zotero. Memoria generates
-`bibliography.bib` from checked SQLite catalog rows; Zotero does not write a live
-bibliography file into the vault and is not required for the standalone runtime.
+Optional setup for users who keep references in Zotero. This guide makes Zotero
+citekeys stable before you export metadata into Memoria.
 
 ## Prerequisites
 
@@ -32,19 +31,13 @@ Citation Keys tab → Citation key formula:
 [auth.lower][year][shorttitle1_0]
 ```
 
-This produces keys in the `mamykina2010sense` shape — lowercase author, year,
-and the first significant title word (`shorttitle(1,0)`) — which keeps Zotero
-aliases stable for imports, citations, and exports. Memoria's durable source
-identity remains the SQLite `work_id`; citekeys are aliases. This
-matches the canonical formula per [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
+This produces keys in the `mamykina2010sense` shape: lowercase author, year, and
+the first significant title word.
 
-**3. Leave bibliography generation to Memoria.**
+**3. Do not auto-export into the vault.**
 
-Do not create a Better BibTeX auto-export into the vault. Export generic BibTeX
-or CSL files outside the workspace, then import them explicitly. Portable
-BibTeX/CSL files are standalone imports: they stage unchecked SQLite Work rows
-and queue DOI enrichment; `bibliography.bib` is regenerated only after enrichment
-checks the Work.
+Export generic BibTeX or CSL files outside the workspace, then import them
+explicitly with `memoria work import`.
 
 **4. Pin citekeys for existing items.**
 
@@ -52,7 +45,9 @@ For any item already in Zotero whose citekey might change if the formula is appl
 
 **5. Pin the key for every new item immediately after adding it.**
 
-Better BibTeX keys are **dynamic by default** — a generated key can change when you later correct an item's author, year, or title, silently breaking any catalog citekey alias or citation already using the old key. Pin each new item right after adding it: right-click → Better BibTeX → Pin BibTeX key. The lock icon in Zotero's item list confirms it.
+Better BibTeX keys are dynamic by default. Pin each new item right after adding
+it: right-click → Better BibTeX → Pin BibTeX key. The lock icon in Zotero's item
+list confirms it.
 
 **6. Verify the key is stable.**
 
@@ -64,31 +59,15 @@ Zotero and that the item's Extra field contains `bibtex: <citekey>`.
 - The citekey matches the `mamykina2010sense` shape.
 - The key is pinned (shown with a lock icon in Zotero's item list, and `extra: bibtex: mamykina2010sense` in the item's Extra field).
 
-## Export an item snapshot
+## Import a Zotero export
 
 Memoria capture reads portable files. Export a Zotero item to generic CSL JSON
 or copy BibTeX for the item, then import it with `memoria work import --format
 csl` or `memoria work import --format bibtex`. Live Zotero Local API capture is
 not part of the standalone runtime.
 
-## MarkDB-Connect
-
-Do not configure MarkDB-Connect as a standalone setup path. It assumes flat
-citekey-named note files, while Memoria source authority lives in SQLite catalog
-rows plus source-content blobs.
-
-## API keys for enrichment
-
-DOI enrichment calls Crossref, OpenAlex, and Unpaywall. OpenAlex requires
-`OPENALEX_API_KEY`; Crossref and Unpaywall use the contact email from
-`NCBI_EMAIL`. Configure them in the workspace runtime environment. Semantic
-Scholar is optional and default-on only when `SEMANTIC_SCHOLAR_API_KEY` is
-present or a replay fixture supplies the payload. PubMed enrichment is deferred.
-
-For each service's registration URL and the with-/without-key rate limits, see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
-
 ## Related
 
 - What capture does with Zotero metadata: [Capture and ingest a source](../library/capture-and-ingest.md)
-- Generated bibliography behavior: [System actions](../../reference/system-actions.md)
-- Citekey naming convention: [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- Generated bibliography behavior: [System actions](../../reference/commands-and-transports/system-actions.md)
+- API keys for enrichment: [External integrations](../../reference/evidence-and-integrations/integrations.md#api-keys-and-rate-limits)

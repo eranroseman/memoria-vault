@@ -2,7 +2,7 @@
 title: Add a second vault
 parent: Setup
 grand_parent: How-to guides
-nav_order: 7
+nav_order: 5
 ---
 
 # Add a second vault
@@ -51,4 +51,4 @@ state, SQLite state, or provider config between workspaces.
 ## Related
 
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
-- Runtime layout: [On-disk layout](../../reference/on-disk-layout.md)
+- Runtime layout: [On-disk layout](../../reference/system/on-disk-layout.md)

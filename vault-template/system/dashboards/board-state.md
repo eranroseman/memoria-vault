@@ -6,7 +6,7 @@ title: Board State
 # Board State
 
 Request and attention state for debugging the local worker. Attention items are
-waiting on you; the queue converges to empty. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/#board-state-support).
+waiting on you; the queue converges to empty. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/surfaces/dashboards/daily-glance/#board-state-support).
 
 ## Requests
 

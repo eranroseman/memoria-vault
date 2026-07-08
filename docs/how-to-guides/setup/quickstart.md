@@ -15,7 +15,7 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 - Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
 - Runtime provider keys for the CLI features you plan to use.
-- Optional adapters come later and are not part of the bootstrap. Generic
+- Optional adapters are outside the bootstrap. Generic
   BibTeX/CSL files exported from Zotero can be imported when you need them
   ([Set up Zotero](set-up-zotero.md)).
 

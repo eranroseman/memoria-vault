@@ -2,7 +2,7 @@
 title: Rebuild the search index
 parent: Operate
 grand_parent: How-to guides
-nav_order: 5
+nav_order: 3
 ---
 
 # Rebuild the search index
@@ -47,6 +47,6 @@ Confirm the expected checked retrieval documents now appear.
 
 ## Related
 
-- Stale-index failure mode: [Failure modes](../../reference/failure-modes.md)
+- Stale-index failure mode: [Failure modes](../../reference/system/failure-modes.md)
 - Querying the vault: [Query the vault](../knowledge/query-the-vault.md)
-- Search reference: [Search](../../reference/search.md)
+- Search reference: [Search](../../reference/pipelines-and-io/search.md)

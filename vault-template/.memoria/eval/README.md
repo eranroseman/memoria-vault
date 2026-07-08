@@ -37,4 +37,4 @@ When you add vault-specific gold tasks, prefer plain citekeys over wikilinks in
 the body unless the target note is permanent — the Linter treats a broken
 wikilink here as gold-set rot (a finding, by design).
 
-Full reference: https://eranroseman.github.io/memoria-vault/reference/vault-eval
+Full reference: https://eranroseman.github.io/memoria-vault/reference/analysis-and-surfaces/vault-eval

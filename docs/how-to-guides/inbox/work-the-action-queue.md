@@ -2,33 +2,29 @@
 title: Work the action queue
 parent: Inbox
 grand_parent: How-to guides
-nav_order: 3
+nav_order: 2
 ---
 
 # Work the action queue
 
-Clear the decisions waiting on you. The daily action surface is the **Inbox**:
-task status stays in **Activity**, and only work needing your judgment lands in
-**Needs me** as attention projections (`candidate` / `gap` / `work-prompt`) with
-`attention_status: open`. Flags and alerts live in **Maintenance** unless they
-emit a same-day work prompt. Machine writes go through worker staging and
-promotion; PI edits are direct and then observed/backfilled.
+Clear the Inbox items waiting on your judgment. Work this guide when **Needs
+me** has open proposals, gaps, or work prompts.
 
 ## Prerequisites
 
-- Open `candidate`, `gap`, or `work-prompt` attention projections in **Needs me**; task-only status belongs in **Activity**
+- Open `candidate`, `gap`, or `work-prompt` attention items in **Needs me**
 
 ## Steps
 
 **1. Open the queue and work it as one batch.**
 
-Sit down once and sweep the action queue — high-cardinality decisions belong in one worklist worked in one sitting, never N attention items trickling at you ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+Sweep the action queue in one sitting when you can. Many tiny review prompts are
+easier to judge consistently as one worklist.
 
-**2. Read each item the right way round.**
+**2. Read the reason before the recommendation.**
 
-- **Proposals** (`candidate`, `gap`) carry the honesty body — read `argument_against` and `certainty` first; the item existing *is* the recommendation, so there is no verdict field.
-- **Work prompts** (`work-prompt`) tell you what finished, blocked, or needs a batch pass. Read the reason, inspect the target, then dismiss it when no action remains.
-- **Verification attention** (`flag`, `alert`) is not part of daily **Needs me**. Work it from Maintenance's Drift watch unless it also raises a work prompt for same-day action.
+For a proposal, read the uncertainty and counterargument before accepting it. For
+a work prompt, inspect the target and the reason it needs attention.
 
 **3. Act, then resolve.**
 
@@ -46,35 +42,29 @@ Use `--reject` when the proposed action should not land, or `--defer --reason
 command records the PI disposition and stamps resolution metadata, so the Inbox
 converges to empty; empty is success.
 
-**4. Reject cleanly.**
+**4. Reject cleanly when the proposal is wrong.**
 
 Rejecting costs one decision and leaves nothing behind — the proposed write
 never landed. If the request behind an item was mis-specified and should be
 redone, amend or retry a corrected request through the CLI rather than rewriting
 history.
 
-**5. Mind the back-pressure.**
+**5. Clear back-pressure before adding more work.**
 
 The action queue intentionally back-pressures new work when too many finished
 requests still need your judgment. That's the system protecting your review
 capacity, not a malfunction. If work appears stalled, clear or resolve the open
 attention items before adding more requests.
 
-**6. Watch your own accept/reject pattern.**
-
-Very high acceptance reads as rubber-stamping; very low acceptance means
-candidate scoring needs tuning. Use the audit log and action-queue history as
-evidence until a standalone runtime summary exists ([Dashboards](../../reference/dashboards.md)).
-
 ## Verify
 
-- No Needs me attention projection sits at `attention_status: open` longer than your review cadence (the weekly review is the backstop)
+- No Needs me item sits open longer than your review cadence
 - Every accepted proposal resulted in a checked worker promotion or a change made by your hand; rejected items left nothing behind
 - the Inbox's **Needs me** view is empty at the end of the pass
 
 ## Related
 
-- CLI command reference: [CLI](../../reference/cli.md)
-- Attention projections: [Inbox card fields](../../reference/inbox-card-fields.md)
-- Current Concept types: [Document types](../../reference/document-types.md)
-- Why review is structural, not a convention: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
+- CLI command reference: [CLI](../../reference/commands-and-transports/cli.md)
+- Attention projections: [Document types](../../reference/data-model/document-types.md#retired-inbox-card-schemas)
+- Current Concept types: [Document types](../../reference/data-model/document-types.md)
+- Why review is structural, not a convention: [Why the review gate is structural](../../explanation/rationale/boundaries/why-review-gate-is-structural.md)

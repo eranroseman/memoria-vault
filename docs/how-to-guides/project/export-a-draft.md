@@ -2,15 +2,14 @@
 title: Export a draft
 parent: Project
 grand_parent: How-to guides
-nav_order: 7
+nav_order: 3
 ---
 
 # Export a draft
 
 Use `memoria project export` for a checked project composition or review packet.
-Use direct Pandoc when you are converting a hand-authored manuscript draft with
-custom CSL, live Zotero fields, or route-specific citation behavior. Export is a
-terminal operation you run yourself — there is no export lane or palette command.
+Use direct Pandoc only when you are converting a hand-authored manuscript draft
+outside the project export flow.
 
 ## Prerequisites
 
@@ -19,9 +18,7 @@ terminal operation you run yourself — there is no export lane or palette comma
   `.docx`, `.pdf`, `.odt`, or direct manuscript routes
 - A checked project Concept under `projects/`; author it as Markdown,
   then run `memoria workspace scan --workspace <vault>`
-- For readiness-gated exports, a paper frame recorded with
-  `memoria project frame-paper --frame-file <json>` and the project checked
-  afterward
+- For readiness-gated exports, a paper frame recorded and checked
 - For composed drafts, `projects/<project>/outline.md` and `draft.md` created
   with `memoria project slice`, `compose`, and `verify`
 - `bibliography.bib` current (generated from checked SQLite catalog rows)
@@ -29,9 +26,10 @@ terminal operation you run yourself — there is no export lane or palette comma
 
 ## Steps
 
-**1. Decide the final editor before exporting.**
+**1. Decide the output format before exporting.**
 
-Citations convert mostly one-way (see [Export routes and formats](../../reference/export.md)). Static Pandoc citations are frozen; live Word/LibreOffice fields stay restylable; Google Docs has no automated route at all.
+Use Markdown for review, `.docx` for Word, `.odt` for LibreOffice, and `.pdf`
+only when the paper is ready for fixed-page review.
 
 **2. Export the checked project composition.**
 
@@ -52,7 +50,7 @@ For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
 `--draft` to export the composed `draft.md`; Memoria refuses unclean drafts
 with evidence-incomplete or review-required markers.
 
-**3. Export a manuscript draft to Word (`.docx`) — the default static route.**
+**3. Export a manuscript draft to Word with Pandoc when needed.**
 
 Run from the vault root; keep project drafts under the project folder:
 
@@ -66,7 +64,7 @@ pandoc projects/<project>/<draft>.md \
   --output projects/<project>/exports/<output>.docx
 ```
 
-**4. Export a manuscript draft to PDF.**
+**4. Export a manuscript draft to PDF when needed.**
 
 Requires a LaTeX operation (`pdflatex` or `lualatex` on your `PATH`):
 
@@ -81,7 +79,7 @@ pandoc projects/<project>/<draft>.md \
   --output projects/<project>/exports/<output>.pdf
 ```
 
-**5. Export a manuscript draft to clean Markdown** (conference systems, CMS upload):
+**5. Export a manuscript draft to clean Markdown when needed.**
 
 ```bash
 pandoc projects/<project>/<draft>.md \
@@ -94,31 +92,6 @@ pandoc projects/<project>/<draft>.md \
 
 Pandoc does not understand `[[wikilink]]` syntax. Convert any body wikilinks to plain text (or standard Markdown links) before export, or use a Pandoc Lua filter.
 
-## Live Word citations via `zotero.lua` (optional)
-
-The routes above produce static citations. For live, restylable Zotero fields in Word:
-
-**Prerequisites:** Pandoc ≥ 2.16.2; Zotero running; the `zotero.lua` filter from the [Better BibTeX documentation](https://retorque.re/zotero-better-bibtex/exporting/zotero.lua).
-
-**Do not add `--citeproc`** — `zotero.lua` handles citation conversion:
-
-```bash
-pandoc projects/<project>/<draft>.md \
-  --from markdown+smart --to docx \
-  --lua-filter=/path/to/zotero.lua \
-  --output projects/<project>/exports/<output>.docx
-```
-
-Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live fields and a bibliography is inserted.
-
-**Known failures:** the `lpeg` Lua dependency often needs build tools on Windows — test on a one-citation document first; a corrupt `.docx` on first open is known behavior — rerun Pandoc; the filter does not work for LibreOffice — use the ODT route below.
-
-## Live LibreOffice citations via ODF scan (optional)
-
-1. Export to `.odt` without `--citeproc`.
-2. Zotero: Tools → RTF/ODF Scan (add-on) → select the `.odt` → scan. Zotero rewrites it with live Reference Mark citations.
-3. Open in LibreOffice — citations are live via the Zotero plugin.
-
 ## Verify
 
 - The output file opens cleanly and the bibliography renders at the end
@@ -128,6 +101,6 @@ Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live f
 
 ## Related
 
-- Routes, states, and failure modes: [Export routes and formats](../../reference/export.md)
+- Routes, states, and failure modes: [Export routes and formats](../../reference/pipelines-and-io/export.md)
 - The generated `.bib` behind the bibliography: [Set up Zotero](../setup/set-up-zotero.md)
-- The works-cited projection: [Bibliography](../../reference/bibliography.md)
+- The works-cited projection: [Bibliography](../../reference/evidence-and-integrations/bibliography.md)

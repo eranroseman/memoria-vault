@@ -7,10 +7,13 @@ topic: overview
 
 # Memoria
 
-A research operating system for a single researcher (the PI): a standalone local
-CLI and engine that capture, enrich, map, verify, and ask over a checked
-workspace under a structural review gate that records proposed changes and PI
-dispositions before they become checked knowledge.
+A local research operating system for one principal investigator: capture
+sources, turn them into checked knowledge, and draft from a review-gated
+workspace.
+
+The standalone CLI and engine handle capture, enrichment, mapping, verification,
+and checked retrieval. The PI keeps judgment: proposed changes and dispositions
+are recorded before material enters checked knowledge.
 
 If you want a guided first experience, start with the
 [Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
@@ -36,7 +39,7 @@ keeps the work visible, traceable, and review-gated.
 | Term | Meaning |
 | --- | --- |
 | PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
-| Co-PI | The read-only conversational posture behind `memoria ask`. See [The Co-PI](explanation/operation-postures/co-pi.md) for its full mission. |
+| Co-PI | The read-only conversational posture behind `memoria ask`. See [The Co-PI](explanation/execution/operation-postures/co-pi.md) for its full mission. |
 | Operations | Checked capability-backed units of work such as capture, enrich, digest, ask, verify, and export. |
 | Request table | The SQLite control plane. It records operation requests, status, blockers, review, and completion. |
 | Workspace | The local folder tree. It holds knowledge bundles, catalog state, attention projections, and system outputs. |
@@ -72,55 +75,39 @@ PI-directed and policy-gated.
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
 | **Understand how the system fits together** | [Explanation](explanation/README.md)                                                              |
-| **Understand why it is designed this way** | [Design](design/README.md)                                                                        |
-| **Fix something broken**                    | [Failure modes](reference/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
+| **Understand why it is designed this way** | [Design rationale](explanation/rationale/README.md)                                                |
+| **Fix something broken**                    | [Failure modes](reference/system/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
 
 ---
 
-## New here? Start with the tutorial path
+## New here?
 
 Start with [Quickstart](how-to-guides/setup/quickstart.md), then walk through
-the [Tutorials](tutorials/README.md). The tutorials use the current standalone
+the [Tutorials](tutorials/README.md). The tutorials use the standalone
 CLI/runtime path and point to task guides when you need more detail.
 
 ---
 
-## Prefer to read it straight through?
+## Reading path
 
-The sections below are organized by what you're trying to do, not as a syllabus.
-If you'd rather understand the system before touching it, read the model above, the
-Design foundations, then the Explanation pages in this order.
+Use this path when you want the system model before doing a full workflow.
 
-**Understand the system (read in order)**
+1. [What Memoria is](explanation/rationale/foundations/what-memoria-is.md)
+2. [Architecture](explanation/architecture/README.md)
+3. [The vault](explanation/architecture/vault.md)
+4. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md)
+5. [The control plane](explanation/execution/control-plane/README.md)
+6. [Design rationale](explanation/rationale/README.md)
 
-1. [The model](#the-model) — the shared vocabulary and working loop
-2. [What Memoria is](design/what-memoria-is.md) — the central insight, and what it deliberately is not
-3. [Intellectual foundations](design/intellectual-foundations.md) — where the design comes from
-4. [Design principles](design/design-principles.md) — the rules the framing produces
-5. [Architecture](explanation/architecture/README.md) — the layered structure
-6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
-7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
-8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why the workspace is durable memory
-9. [Operation postures](explanation/operation-postures/README.md) — how old profile language maps to requests and operations
-10. [Operations](explanation/operations.md) — the deterministic and checked operation layer
-11. [The control plane](explanation/control-plane/README.md) — request state, attention, and review boundaries
-12. [Decision points](explanation/control-plane/decision-points.md) — how approvals, prompts, worklists, and triggers differ
-13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
-14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
-15. [Design](design/README.md) — why each major decision went the way it did
-
-**Then learn it by doing**
-
-16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
-17. [Tutorials](tutorials/README.md) — learn the current workflow in order
-18. [Current task guides](how-to-guides/README.md) — work from the implemented CLI surfaces
+Then use [Quickstart](how-to-guides/setup/quickstart.md) and
+[Tutorials](tutorials/README.md) to learn the current workflow by doing it.
 
 ---
 
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · Reset workspace
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md)
 
 **Daily work — sources**
 [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
@@ -132,23 +119,7 @@ Design foundations, then the Explanation pages in this order.
 [Return to work](how-to-guides/inbox/return-to-work.md) · [Weekly review](how-to-guides/inbox/run-the-weekly-review.md) · [Run the Linter](how-to-guides/operate/run-the-linter.md)
 
 **Troubleshooting**
-[Safe mode](how-to-guides/troubleshooting/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)
-
----
-
-## Operation postures
-
-| Posture           | What it does                                                                  |
-| ----------------- | ----------------------------------------------------------------------------- |
-| **Co-PI**         | The read-only conversational posture for questions, explanation, and request routing |
-| **Librarian**     | Intake, extraction, linking, and mapping operations from source capture to corpus maps |
-| **Writer**        | Draft-proposal posture for prose generation over checked evidence |
-| **Peer-reviewer** | Verification posture for citation, source, and claim-support checks |
-| **Engineer**      | Handoff posture for external coding work without making Memoria a code runner |
-
-Deterministic **operations** do the mechanical work, behind the policy gate.
-
-→ [Operation-posture rationale](explanation/operation-postures/README.md) · No-installed-profile contract
+[Safe mode](how-to-guides/troubleshooting/safe-mode.md) · [Failure modes reference](reference/system/failure-modes.md)
 
 ---
 
@@ -161,7 +132,7 @@ engine are being validated as a standalone local product. What is not working to
   replays capture, enrich, digest, ask, project writing/export, recovery, and
   seeded-error evidence (`scripts/verify pr`), but the RC still needs a live
   provider/package run before release.
-- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
+- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Architecture](explanation/architecture/README.md#interaction-channels).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
 - **Broad writability scoring is not implemented** — the current alpha baseline
   has structural draft verification and project export readiness, but it does not decide
@@ -182,6 +153,4 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 [**Reference**](reference/README.md) — Exact fields, commands, schemas, settings, and paths.
 
-[**Explanation**](explanation/README.md) — Architecture, workflows, and conceptual model.
-
-[**Design**](design/README.md) — Maintained arguments and links to decision history.
+[**Explanation**](explanation/README.md) — Architecture, workflows, conceptual model, and design rationale.

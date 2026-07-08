@@ -5,7 +5,7 @@ title: Audit log
 
 # Audit log
 
-Policy-gate write decisions, from `system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Contract: [Policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) · rationale: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#audit-log).
+Policy-gate write decisions, from `system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Contract: [Policy gate](https://eranroseman.github.io/memoria-vault/reference/control-and-policy/policy-mcp) · rationale: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/surfaces/dashboards/operational-health/#audit-log).
 
 ## Recent denies and dry-runs
 
@@ -115,7 +115,7 @@ dv.table(["Last write", "Actor", "Path", "Recorded after_hash"], rows);
 
 ## Anomalies
 
-Patterns the query flags — each is a configuration bug; see [Policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
+Patterns the query flags — each is a configuration bug; see [Policy gate](https://eranroseman.github.io/memoria-vault/reference/control-and-policy/policy-mcp) for why:
 
 - Any allowed adapter write missing `before_hash`, or completion row missing `after_hash`.
 - Any adapter write allowed under `.memoria/`.
