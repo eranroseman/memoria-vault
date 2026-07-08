@@ -160,4 +160,4 @@ areas:
       - python3 scripts/checks/docs_doctor.py --vault-links
       - python3 scripts/checks/status_doctor.py
       - python3 scripts/checks/agents_doctor.py
-      - npm run spellcheck
+      - pre-commit run cspell --all-files

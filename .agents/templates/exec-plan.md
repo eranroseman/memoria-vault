@@ -1,31 +1,8 @@
 # ExecPlan — {{ task title }}
 
-<!-- ===========================================================================
-  THIS IS A TEMPLATE. Copy it, then fill every {{ placeholder }} and delete the
-  guidance comments. See ../playbooks/exec-plan.md for when and how to use it.
-
-  ── Where this instance lives ───────────────────────────────────────────────
-  scratch branch, releases/<version>/ — under the current
-  release/checkpoint; tracked for linking and handoff, deleted before that
-  release closes.
-  (_notes/ is gitignored, so a plan meant to be resumed or handed off never
-  lives there.)
-  Never keep an ExecPlan as a permanent record; it is a working artifact.
-
-  ── The mandates this file must satisfy ─────────────────────────────────────
-  1. Self-contained — embed every needed fact; full repo-relative paths; no
-     pointers to chat history or external blogs.
-  2. Living — update Progress / Execution log / Surprises at every stop.
-  3. Novice-executable — define every term the first time it appears.
-  4. Demonstrably working — validation is observable behavior with transcripts.
-  5. Decisions go to the release decision ledger — link them; the Execution log
-     holds only tactics.
-
-  ── Formatting ──────────────────────────────────────────────────────────────
-  Prose first; the ONLY checklist is Progress (§7). If you paste this whole plan
-  inside one fenced code block in a prompt, indent inner code instead of nesting
-  fences.
-============================================================================ -->
+<!-- Copy this template, fill every {{ placeholder }}, and delete guidance
+     comments. See ../playbooks/exec-plan.md for the routing, mandates, and
+     formatting rules. -->
 
 ## 0. Metadata
 
