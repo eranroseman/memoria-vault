@@ -1,4 +1,4 @@
-"""Strict empirical-use event schema for alpha.20 data collection."""
+"""Strict empirical-use event schema for local data collection."""
 
 from __future__ import annotations
 

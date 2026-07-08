@@ -17,7 +17,7 @@ bootstrap installer at the repo root deploys the standalone workspace.
 | `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both install the standalone CLI/runtime package and call `memoria init`. | End users (run once). |
 | `src/memoria_vault/product/workspace_seed/` | The **runtime seed** packaged with `memoria`: schemas, provider config, pre-commit hook, seeded-error bundle, prompt preamble, steering, vocabulary, `.gitignore`, and Memoria's Obsidian adapter/default settings. | The CLI initializer and tests. |
 | `src/memoria_vault/` | The installable Python package for runtime helpers, operation manifests, policy logic, and the workspace seed. | Memoria operations, optional adapter servers, tests, and contributors. |
-| `packages/memoria-obsidian/` | Source package for the alpha.20 Obsidian proof adapter. Its built release files are copied into the package seed so new workspaces have the Memoria plugin installed by default. | Adapter testers and contributors. |
+| `packages/memoria-obsidian/` | Source package for the Obsidian proof adapter. Its built release files are copied into the package seed so new workspaces have the Memoria plugin installed by default. | Adapter testers and contributors. |
 | `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
 The installer derives the running workspace by installing the package and

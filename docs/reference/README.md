@@ -47,7 +47,7 @@ every field and count.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Control plane reference](control-and-policy/control-plane.md) | Request-control commands and state | Manual |
-| [Empirical events](control-and-policy/empirical-events.md) | Alpha.20 empirical-use event schema, enums, required fields, and privacy boundary | Guarded mirror |
+| [Empirical events](control-and-policy/empirical-events.md) | Empirical-use event schema, enums, required fields, and privacy boundary | Guarded mirror |
 | [Evidence sets](control-and-policy/evidence-sets.md) | Draft evidence marker and derived-store contract | Manual |
 | [Project structural impact](control-and-policy/project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](control-and-policy/worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |

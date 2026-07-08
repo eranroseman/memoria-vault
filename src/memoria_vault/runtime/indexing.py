@@ -1,4 +1,4 @@
-"""Derived passage index for alpha.19 query substrates."""
+"""Derived passage index for query substrates."""
 
 from __future__ import annotations
 
@@ -116,7 +116,7 @@ def _passage_row(vault: Path, document: dict[str, Any]) -> dict[str, Any]:
 
 def _concept_edges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     # ponytail: explicit concept-edge extraction waits for curated link rows; this keeps
-    # the alpha.19 table rebuildable without inventing edges from prose.
+    # the table rebuildable without inventing edges from prose.
     return []
 
 
