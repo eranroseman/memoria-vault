@@ -28,7 +28,8 @@ navigation.
 | Runtime ops | Audit log | `system/logs/audit.jsonl` | Recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
 | Runtime ops | Eval trend | `system/metrics/eval/runs.jsonl` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) — diagnostic, never gating. |
 
-The **Surface** column names the space, queue, maintenance collection, or support context where a dashboard is reached.
+The **Surface** column names the corpus home, queue, maintenance collection, or
+support context where a dashboard is reached.
 The explanation site groups the support dashboards by the *kind of attention* they
 demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational
 health** ([Dashboards](../../explanation/surfaces/dashboards/README.md)).

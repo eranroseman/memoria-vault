@@ -62,7 +62,7 @@ every field and count.
 | [Vault eval](analysis-and-surfaces/vault-eval.md) | Workspace-authored vault-eval gold tasks, quarterly dispatch, idempotency keys, and diagnostic scoring | Manual |
 | [Retrieval and analysis methods](analysis-and-surfaces/retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, API calls, and graph algorithms | Manual |
 | [Calibration](analysis-and-surfaces/calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
-| [Dashboards](analysis-and-surfaces/dashboards.md) | Space views, Inbox, Maintenance, support views, verdict bands, and rail badges | Manual |
+| [Dashboards](analysis-and-surfaces/dashboards.md) | CLI/read-API surface inventory: Inbox, Maintenance, corpus views, support views, verdict bands, and rail badges | Manual |
 
 ## Pipelines and I/O
 

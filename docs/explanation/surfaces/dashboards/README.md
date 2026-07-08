@@ -21,7 +21,7 @@ The daily glance starts in the rail's **Now**: the Inbox is the daily action que
 and Maintenance is the weekly structural-debt collection behind the health band.
 Board state is the worker-debug view over request and attention state, surfaced
 through `memoria request list` and `memoria attention list`, not a shipped
-dashboard file. The Project space's gate is its own steering surface, not part of the dashboard
+dashboard file. The Project gate is its own steering surface, not part of the dashboard
 collection. The synthesis-vs-structural split is by *actor*:
 open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and
 drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
