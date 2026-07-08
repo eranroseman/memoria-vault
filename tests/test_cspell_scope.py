@@ -17,7 +17,6 @@ CSPELL_JSON = ROOT / "cspell.json"
 CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
 CONTRACT = ROOT / ".github/ruleset-contract.yaml"
-PACKAGE_JSON = ROOT / "package.json"
 
 
 def _cspell_hook() -> dict:
@@ -42,15 +41,7 @@ def test_workflow_defers_to_cspell_json():
     assert "docs/|vault-template/" not in run, (
         "scope must not be re-split across docs/vault-template/root"
     )
-    assert "npm run spellcheck" in run
-
-
-def test_package_script_defers_to_cspell_json():
-    package = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
-    assert package["devDependencies"]["cspell"] == "10.0.1"
-    assert package["scripts"]["spellcheck"] == (
-        'cspell lint --no-progress --no-must-find-files --gitignore "**/*.md"'
-    )
+    assert "pre-commit run cspell --all-files" in run
 
 
 def test_precommit_hook_triggers_on_any_markdown():
@@ -58,8 +49,9 @@ def test_precommit_hook_triggers_on_any_markdown():
     assert hook["files"] == r"\.md$", (
         "pre-commit must trigger on any .md, not a docs/src/root allow-list"
     )
-    assert hook["entry"].startswith("scripts/dev/run-node-tool.sh cspell ")
-    assert "cspell lint --no-progress --no-must-find-files" in hook["entry"]
+    assert hook["language"] == "node"
+    assert hook["entry"] == "cspell lint --no-progress --no-must-find-files"
+    assert hook["additional_dependencies"] == ["cspell@10.0.1"]
     assert "npx" not in hook["entry"]
 
 

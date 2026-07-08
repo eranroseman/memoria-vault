@@ -94,12 +94,13 @@ without explicit permission.
 git -C ~/memoria-vault/main fetch origin
 git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/<session> -b agent/<session> origin/main
 cd ~/memoria-vault/worktrees/<session>          # all edits, commits, PRs from here
-npm ci --silent                                # per-worktree cspell/markdownlint for hooks
+pre-commit install --install-hooks             # per-worktree hook shim; tool envs are cached
 ```
 
 Keep all session worktrees under one parent on ext4 — `~/memoria-vault/worktrees/<session>` — never under `/mnt/c`. The canonical main checkout stays at `~/memoria-vault/main`; `~/memoria-vault/worktrees/` holds task worktrees, so one project container is easy to list and prune.
-Run `npm ci --silent` in each task worktree because `node_modules/` is untracked
-and not shared across worktrees; do not skip `cspell` for missing local tooling.
+Do not run `npm ci` just to satisfy commit hooks. `cspell` and `markdownlint`
+are pre-commit-managed Node hooks; missing `node_modules/` is not a reason to
+skip them.
 
 Prefer a worktree **per branch** even working solo: switching becomes `cd`, and a `reset --hard` in one worktree can't reach another's uncommitted work (§4).
 
