@@ -71,7 +71,6 @@ areas:
   - area: Installer
     paths:
       - scripts/install.sh
-      - scripts/install/**
       - scripts/install.ps1
     inspect:
       - Installer reference docs
