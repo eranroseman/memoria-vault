@@ -120,6 +120,6 @@ and uses `eval_score --from-json` once result payloads exist.
 ## Related
 
 - The decision: [vault-eval as a maintenance capability](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
-- The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
+- The machinery that guards local gold tasks: [Linter: detectors and auto-fix](linter.md)
 - Eval metric bands: [Dashboards](dashboards.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](../system/installer.md)

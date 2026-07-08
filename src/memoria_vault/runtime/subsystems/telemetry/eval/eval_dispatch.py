@@ -10,9 +10,10 @@ intents for the local engine.
 
 Each payload carries ``eval:<task-id>:<quarter>``, so scheduled and on-demand
 re-runs inside the same quarter converge to one task intent. The body wraps the
-gold task in the non-committing eval task contract (scratch-only task work;
-results are reported back as JSON, never written directly to Concepts or
-catalog data). A dispatch record is written to ``.memoria/eval/last-run.md``.
+workspace-authored gold task in the non-committing eval task contract
+(scratch-only task work; results are reported back as JSON, never written
+directly to Concepts or catalog data). A dispatch record is written to
+``.memoria/eval/last-run.md``.
 
     python eval_dispatch.py --vault <path>             # dispatch (scheduled + on-demand)
     python eval_dispatch.py --vault <path> --dry-run   # print payloads, create nothing
@@ -44,7 +45,7 @@ CREATED_BY = "memoria-eval"
 # the non-committing eval task contract: task work never mutates Concepts/catalog data
 EVAL_PREAMBLE = (
     "**Eval context (vault-eval — diagnostic, never gating).** This is a "
-    "gold-set capability check, not real work. Do NOT write to the vault: keep "
+    "workspace-authored eval check, not real work. Do NOT write to the vault: keep "
     "any working notes in scratch and report your answer and reasoning in this "
     "payload. Score yourself against the rubric below honestly — a wrong answer "
     "reported plainly is a useful data point; a polished non-answer is not."
@@ -80,7 +81,7 @@ def quarter_of(today: datetime.date | None = None) -> str:
 
 
 def load_gold_tasks(vault: Path) -> list[dict]:
-    """Read the gold set: every `type: eval-task` note in .memoria/eval/.
+    """Read current workspace-authored `type: eval-task` notes in .memoria/eval/.
 
     Skips non-task files (README, last-run, underscore-prefixed) and tasks not
     at `lifecycle: current` — retired/proposed gold items don't dispatch.
@@ -162,7 +163,7 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
 
 
 def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = None) -> dict:
-    """Fan the gold set out: one idempotent intent per (current task, quarter)."""
+    """Fan current local gold tasks out: one idempotent intent per task and quarter."""
     quarter = quarter_of(today)
     tasks = load_gold_tasks(vault)
     rows: list[dict] = []
