@@ -11,6 +11,9 @@ Release state lives in GitHub; this playbook is the portable agent procedure.
   sub-issues.
 - **Release prose** lives in the release parent issue. Use
   [the release plan template](../templates/release-plan.md) as a drafting aid.
+- **Release gate evidence** lives in one `scripts/verify rc --evidence-dir <dir>`
+  summary plus the gate/stage sub-issues that link to it. Manual checks live in
+  their own sub-issues with the command, artifact, result, or skip reason.
 - **Build gaps** live as GitHub issues.
 - **Scope cuts** live as GitHub issues with Readiness `Later`; release decision
   entries record the decision or rationale only when there is one.
@@ -43,7 +46,8 @@ Do not create a second markdown state table for gate or stage progress.
 4. Open the **"Release <version>"** parent issue with label `release` and milestone
    `<version>`.
 5. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
-   own evidence, owner, comments, and close condition.
+   owner, close condition, and an evidence record: command or interaction,
+   artifact or output link, result, and skip reason when skipped.
 6. Put temporary tracked design scratch on the `scratch` branch under
    `releases/<version>/` on the `scratch` branch only when it must survive handoff.
 
@@ -51,8 +55,15 @@ Do not create a second markdown state table for gate or stage progress.
 
 1. Confirm every gate/stage sub-issue is closed, required CI is green on `main`,
    and no release-milestone issue has `Readiness: Blocked`.
-2. Re-run the relevant Release Gate checks from a fresh clone or record why a
-   check is not applicable.
+2. Re-run the release-candidate gate from a fresh clone and store its evidence:
+
+   ```bash
+   python3 scripts/verify rc --evidence-dir <release-evidence-dir>
+   ```
+
+   Link `<release-evidence-dir>/summary.json` from the release parent issue. If a
+   runtime prerequisite is unavailable, record the skipped command, concrete
+   reason, and replacement evidence in the relevant sub-issue.
 3. Fold accepted/rejected release decisions into `design-history/`, update
    `design-history/arcs.md` with current and pending lines, and update
    `design-history/README.md`'s latest completed checkpoint marker.
