@@ -7,7 +7,9 @@ nav_order: 1
 
 # Run the Linter
 
-Run a structural health check on the vault, or review the scheduled report. The Linter is an **operation, not an agent** — deterministic, zero-LLM runtime code under `memoria_vault.runtime.subsystems.integrity.linter`, report-only by design: findings surface for you to act on; nothing is auto-moved or auto-archived ([Linter: detectors and auto-fix](../../reference/linter.md)).
+Run a structural health check on the vault, or review the scheduled report.
+Findings surface for you to act on; the Linter does not move or archive files
+for you.
 
 ## When it runs without you
 
@@ -26,7 +28,7 @@ From the vault root:
 python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .
 ```
 
-Add `--json` for machine-readable output. The detectors cover schema validity, broken frontmatter and body wikilinks, misplaced typed documents, dashboard field drift, superseded-claim reuse (`fama-exposure`), broken extract paths, orphan synthesis notes, leftover working files, and stale fleeting notes.
+Add `--json` for machine-readable output.
 
 **2. Read the report by severity.**
 
@@ -37,7 +39,7 @@ Add `--json` for machine-readable output. The detectors cover schema validity, b
 | MEDIUM | Real drift, will compound | Address in the weekly review |
 | LOW | Cosmetic or easily recovered | Defer or accept |
 
-The verdict band rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM or HIGH) / **FAIL** (any CRITICAL) — the same band Maintenance's Drift watch shows.
+The verdict band rolls up to PASS, REVIEW, or FAIL.
 
 **3. Fix findings by hand.**
 
@@ -58,5 +60,5 @@ memoria workspace check --workspace . --schedule-id lint-manual --json
 
 - Weekly review (the structural-health step): [Run the weekly review](../inbox/run-the-weekly-review.md)
 - Fix broken frontmatter: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
-- The detector inventory and gate flags: [Linter: detectors and auto-fix](../../reference/linter.md)
-- Where findings surface: [Dashboards](../../reference/dashboards.md)
+- The detector inventory and gate flags: [Linter: detectors and auto-fix](../../reference/analysis-and-surfaces/linter.md)
+- Where findings surface: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)

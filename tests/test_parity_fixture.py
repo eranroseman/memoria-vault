@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 
 import pytest
 
-from memoria_vault.cli import _build_parser, main
+from memoria_vault.cli import main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.vaultio import read_frontmatter
+from tests.cli_test_helpers import _cli_command_surface
 from tests.helpers import mark_file_status
 
 ADAPTER_ENV_VARS = (
@@ -182,30 +182,6 @@ def test_operation_parity_is_manifest_derived_and_dispatchable(
             unsupported[operation_id] = error
 
     assert unsupported == {}
-
-
-def _cli_command_surface() -> set[str]:
-    parser = _build_parser()
-    command_action = next(
-        action for action in parser._actions if getattr(action, "dest", None) == "command"
-    )
-    commands: set[str] = set()
-    for name, subparser in command_action.choices.items():
-        child_action = next(
-            (
-                action
-                for action in subparser._actions
-                if isinstance(action, argparse._SubParsersAction)
-            ),
-            None,
-        )
-        if child_action is None:
-            commands.add(f"memoria {name}")
-            continue
-        if not getattr(child_action, "required", False):
-            commands.add(f"memoria {name}")
-        commands.update(f"memoria {name} {child}" for child in child_action.choices)
-    return commands
 
 
 def _operation_manifest_rows(workspace: Path) -> list[dict[str, object]]:

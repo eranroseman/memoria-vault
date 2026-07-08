@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 parent: How-to guides
-nav_order: 9
+nav_order: 8
 has_children: true
 permalink: /how-to-guides/troubleshooting/
 ---
@@ -29,4 +29,4 @@ Work highest-impact failures first:
 4. Batch `MEDIUM` issues into the weekly review ritual.
 5. Batch `LOW` issues monthly unless they block current work.
 
-The severity definitions and full failure table live in [Failure modes](../../reference/failure-modes.md).
+The severity definitions and full failure table live in [Failure modes](../../reference/system/failure-modes.md).

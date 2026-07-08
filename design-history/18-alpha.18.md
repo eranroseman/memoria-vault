@@ -84,9 +84,12 @@ could drift from schema YAML. alpha.18 shipped those corrections through PRs
   be speculative until real deduplication or browsing needs appear.
 
 - **What:** `scripts/checks/schema_doc_drift.py` compares the live schema YAML
-  with the field/enum claims in `docs/reference/frontmatter.md` and
-  `docs/reference/document-types.md`. **Why:** this is the cheap guard that
-  catches stale schema docs without generating the docs from YAML yet.
+  with the field/enum claims in the data-model reference pages, currently
+  `docs/reference/data-model/frontmatter.md` and
+  `docs/reference/data-model/document-types.md`. The check is path-aware so the
+  reference IA can be grouped without weakening the drift guard. **Why:** this
+  is the cheap guard that catches stale schema docs without generating the docs
+  from YAML yet.
 
 ### 6. Migration and release management
 
@@ -121,7 +124,7 @@ could drift from schema YAML. alpha.18 shipped those corrections through PRs
 | `fulltext` | Added as a frontmatter schema label, not a DB Concept type. |
 | `required_when` schema primitive | Adopted in the shared schema validator. |
 | `analyze_gaps` entity handling | Free-join over existing graph edges; no entity table yet. |
-| Schema-doc drift prevention | Adopted as a lint; generated docs remain deferred. |
+| Schema-doc drift prevention | Adopted as a path-aware lint over the data-model reference docs; generated docs remain deferred. |
 | SQLite migration path | No alpha.18 migration function; delete-and-rebuild for local dev vaults. |
 | Future real-row migrations | Numbered `ALTER` migration required once durable installed rows exist. |
 | Formal release-please release | Not cut; workflow stays manual-only/pre-tag. |

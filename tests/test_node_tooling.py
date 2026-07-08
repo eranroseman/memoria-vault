@@ -1,8 +1,6 @@
 """Guards repo-local tooling used by required checks."""
 
 import json
-import os
-import subprocess
 import tomllib
 from pathlib import Path
 
@@ -10,6 +8,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_JSON = ROOT / "package.json"
+PACKAGE_LOCK = ROOT / "package-lock.json"
 PYPROJECT = ROOT / "pyproject.toml"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
 REQUIREMENTS_DEV = ROOT / "requirements-dev.txt"
@@ -17,7 +16,6 @@ CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
 MARKDOWNLINT_WORKFLOW = ROOT / ".github/workflows/markdownlint.yml"
 CONTRACT = ROOT / ".github/ruleset-contract.yaml"
 DOCS_CONFIG = ROOT / "docs" / "_config.yml"
-NODE_TOOL_WRAPPER = ROOT / "scripts" / "dev" / "run-node-tool.sh"
 
 
 def _hook(hook_id: str) -> dict:
@@ -30,21 +28,33 @@ def _hook(hook_id: str) -> dict:
 def test_required_node_checks_use_pinned_local_tools():
     package = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
 
-    assert package["devDependencies"]["cspell"] == "10.0.1"
-    assert package["devDependencies"]["markdownlint-cli"] == "0.49.0"
-    assert package["scripts"]["spellcheck"] == (
-        'cspell lint --no-progress --no-must-find-files --gitignore "**/*.md"'
-    )
-    assert package["scripts"]["markdownlint"] == (
-        'markdownlint --config .markdownlint.json "docs/**/*.md"'
-    )
+    assert "devDependencies" not in package
+    assert "scripts" not in package
+    assert not PACKAGE_LOCK.exists()
+
+    cspell = _hook("cspell")
+    assert cspell["language"] == "node"
+    assert cspell["entry"] == "cspell lint --no-progress --no-must-find-files"
+    assert cspell["additional_dependencies"] == ["cspell@10.0.1"]
+
+    markdownlint = _hook("markdownlint-structural")
+    assert markdownlint["language"] == "node"
+    assert markdownlint["entry"] == "markdownlint --config .markdownlint.json"
+    assert markdownlint["additional_dependencies"] == ["markdownlint-cli@0.49.0"]
 
 
-def test_node_workflows_do_not_download_cli_packages_at_run_time():
-    for path in (CSPELL_WORKFLOW, MARKDOWNLINT_WORKFLOW):
-        text = path.read_text(encoding="utf-8")
-        assert "npx --yes" not in text
-        assert "npm ci --ignore-scripts" in text
+def test_node_workflows_run_the_same_precommit_hooks():
+    cspell = CSPELL_WORKFLOW.read_text(encoding="utf-8")
+    markdownlint = MARKDOWNLINT_WORKFLOW.read_text(encoding="utf-8")
+
+    for text in (cspell, markdownlint):
+        assert "npx" not in text
+        assert "npm ci" not in text
+        assert "npm run" not in text
+        assert "pre-commit==4.6.0" in text
+
+    assert "pre-commit run cspell --all-files" in cspell
+    assert "pre-commit run markdownlint-structural --all-files" in markdownlint
 
 
 def test_precommit_hooks_use_pinned_tool_environments():
@@ -75,34 +85,6 @@ def test_runtime_package_declares_yaml_dependency():
     pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
 
     assert "PyYAML>=6.0" in pyproject["project"]["dependencies"]
-
-
-def test_precommit_node_hooks_fail_fast_without_network_downloads():
-    wrapper = "scripts/dev/run-node-tool.sh"
-    for hook_id, command in (
-        ("cspell", "cspell lint --no-progress --no-must-find-files"),
-        ("markdownlint-structural", "markdownlint --config .markdownlint.json"),
-    ):
-        entry = _hook(hook_id)["entry"]
-        assert entry.startswith(f"{wrapper} ")
-        assert command in entry
-        assert "npx" not in entry
-
-    assert os.access(NODE_TOOL_WRAPPER, os.X_OK)
-
-
-def test_node_tool_wrapper_fails_with_setup_hint(tmp_path):
-    result = subprocess.run(
-        [str(NODE_TOOL_WRAPPER), "cspell", "--version"],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert result.returncode == 127
-    assert "Run npm ci in this worktree" in result.stderr
-    assert "SKIP=cspell" in result.stderr
 
 
 def test_local_precommit_python_hooks_use_python3():

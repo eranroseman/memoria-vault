@@ -56,12 +56,7 @@ git remote add origin git@github.com:<your-handle>/<your-vault-repo>.git   # opt
 git push -u origin main                                                    # if you added a remote
 ```
 
-The remote (your own, not the starter repo) backs tracked Markdown, projections,
-and history. It is only one part of recoverability: `memoria doctor` also reports
-whether SQLite replication config and blob-sync config are present for
-`.memoria/memoria.sqlite` and `.memoria/blobs/`. A sandbox without a real `git`
-binary is an unsupported degraded runtime, because the commit hooks and
-rollback/history assumptions cannot run.
+The remote is your own vault repository, not the starter repo.
 
 ## Verify
 

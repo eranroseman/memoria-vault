@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import argparse
-
-from memoria_vault.cli import _build_parser
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import (
     SURFACE_ACTIONS,
@@ -12,6 +9,7 @@ from memoria_vault.engine.surface_contract import (
     http_routes,
     mcp_tools,
 )
+from tests.cli_test_helpers import _cli_command_surface
 
 
 def test_surface_contract_registry_is_minimal_and_unique() -> None:
@@ -96,27 +94,3 @@ def test_surface_contract_cli_commands_are_current_parser_commands() -> None:
     assert commands <= _cli_command_surface()
     assert "memoria surface schema" in commands
     assert "memoria workspace scan" not in commands
-
-
-def _cli_command_surface() -> set[str]:
-    parser = _build_parser()
-    command_action = next(
-        action for action in parser._actions if getattr(action, "dest", None) == "command"
-    )
-    commands: set[str] = set()
-    for name, subparser in command_action.choices.items():
-        child_action = next(
-            (
-                action
-                for action in subparser._actions
-                if isinstance(action, argparse._SubParsersAction)
-            ),
-            None,
-        )
-        if child_action is None:
-            commands.add(f"memoria {name}")
-            continue
-        if not getattr(child_action, "required", False):
-            commands.add(f"memoria {name}")
-        commands.update(f"memoria {name} {child}" for child in child_action.choices)
-    return commands

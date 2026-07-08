@@ -85,8 +85,9 @@ repos:
       # Block 9: markdownlint structural rules
       - id: markdownlint-structural
         name: markdownlint-structural
-        language: system
-        entry: scripts/dev/run-node-tool.sh markdownlint --config .markdownlint.json
+        language: node
+        entry: markdownlint --config .markdownlint.json
+        additional_dependencies: [markdownlint-cli@0.49.0]
         files: ^docs/.*\.md$
         exclude: (^|/)tmp/   # scratch dirs: tracked, not linted (see .markdownlintignore)
         pass_filenames: true
@@ -97,8 +98,9 @@ repos:
       # against .github/workflows/cspell.yml.
       - id: cspell
         name: cspell
-        language: system
-        entry: scripts/dev/run-node-tool.sh cspell lint --no-progress --no-must-find-files
+        language: node
+        entry: cspell lint --no-progress --no-must-find-files
+        additional_dependencies: [cspell@10.0.1]
         files: \.md$
         pass_filenames: true
 

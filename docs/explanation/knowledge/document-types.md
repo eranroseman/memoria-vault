@@ -7,35 +7,31 @@ nav_order: 1
 
 # Document types and epistemic roles
 
-Alpha.19 treats durable knowledge files as **Concepts**. The folder root and
+Memoria treats durable knowledge files as **Concepts**. The folder root and
 frontmatter say what kind of Concept the file is; SQLite/read-API verdict state
 says whether it is readable as checked knowledge.
 
 ---
 
-## Stores and Bundles
+## Stores and bundles
 
-| Store | Holds | Types |
-| --- | --- | --- |
-| Catalog state | Source rows, source blobs, provider payloads, external IDs, and graph edges. | SQLite catalog rows and `.memoria/blobs/**`, not frontmatter Concept types |
-| `notes/`, `hubs/`, `projects/`, `digests/`, `fulltexts/` | Durable corpus files and PI curation. | `note`, `hub`, `project`, `digest`, `fulltext` |
-| Packaged capability bundle | Operation manifests and product capability metadata. | Packaged data under `memoria_vault.product.capabilities`, not runtime-vault Concepts |
+Memoria separates source catalog state, durable knowledge Concepts, and packaged
+operation metadata. That split keeps objective imported records, PI-curated
+knowledge, and product capabilities from pretending to be the same kind of
+thing.
 
-The exhaustive field lists live in [Document types](../../reference/document-types.md).
+The schema YAML owns exhaustive fields. The reader-facing roster lives in
+[Document types](../../reference/data-model/document-types.md), and field grammar lives in
+[Frontmatter fields](../../reference/data-model/frontmatter.md).
 
 ---
 
 ## Read state
 
-Every Concept and catalog row has a DB/read-API `check_status`:
-
-- `unchecked`: captured or generated, but not promoted as checked.
-- `checked`: usable by checked read surfaces.
-- `quarantined`: failed validation, provenance, or foreign-write checks.
-
-The value is not frontmatter. Machine writes and promotions go through the
+Read state is not frontmatter. Machine writes and promotions go through the
 worker path. PI edits are direct edits, then observed and backfilled. Foreign
-writes are quarantined by scan instead of silently accepted.
+writes are quarantined by scan instead of silently accepted. The exact state
+values belong in the reference.
 
 ---
 
@@ -67,7 +63,7 @@ capability files are knowledge Concepts.
 
 ## Related
 
-- Complete type reference: [Document types](../../reference/document-types.md)
-- Field grammar and verdict state: [Frontmatter fields](../../reference/frontmatter.md)
+- Complete type reference: [Document types](../../reference/data-model/document-types.md)
+- Field grammar and verdict state: [Frontmatter fields](../../reference/data-model/frontmatter.md)
 - How material crosses the review gate: [Why promotion is gated](promotion-and-gated-zones.md)
 - The how of note bodies: [Note body structure](note-body-structure.md)

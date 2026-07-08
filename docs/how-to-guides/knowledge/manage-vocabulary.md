@@ -1,33 +1,25 @@
 ---
-title: Manage your topic vocabulary
+title: Manage vocabulary
 parent: Knowledge
 grand_parent: How-to guides
-nav_order: 6
+nav_order: 4
 ---
 
-# Manage your topic vocabulary
+# Manage vocabulary
 
 Keep the `research_area`, `methodology`, and `topics` values consistent across
 your corpus so CLI/read-API queries and optional editor views stay reliable.
 The controlled lists live in **`system/vocabulary.md`**, which ships with the
 vault and is checked by the schema/linter surfaces once you've made it yours.
 
-These vocabularies are deliberately **open** — yours to define. The fixed
-Memoria vocabularies, such as lifecycle, maturity, certainty, and attention
-routes, are schema-enforced and not yours to extend.
+Use this guide when you need to add one useful term or rename one that has
+drifted.
 
-## When to do each task
+## Steps
 
-| Trigger | Task |
-| --- | --- |
-| Starting a new corpus | Define your initial lists |
-| The active list exceeds ~30 terms | Prune and consolidate |
-| A term's meaning has drifted or split | Rename it safely |
-| Annually, or after a major reading batch | Full vocabulary review |
+**1. Open `system/vocabulary.md`.**
 
-## Step 1 — Make `system/vocabulary.md` yours
-
-Open it and structure one section per field:
+Keep one section per field:
 
 ```markdown
 ## research_area
@@ -45,24 +37,16 @@ Open it and structure one section per field:
 - sensemaking
 ```
 
-Keep each list to **~30 terms**. A tighter vocabulary produces more consistent classification and more reliable queries ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
+Keep each list to roughly 30 terms. If a section is already long, prefer
+renaming or merging before adding another near-duplicate.
 
-Note the consumers: ingest/enrichment rolls OpenAlex topics into catalog Work
-metadata ([Ingest routing](../../reference/ingest.md)); you carry the same terms
-into claim-bearing notes with `topics`. Your list is what keeps the human side
-consistent with the automated side.
-
-## Step 2 — Add a new term
+**2. Add a new term only after checking the list.**
 
 1. Check the relevant section first — the term may already exist under another name. That check is the whole discipline.
 2. Add it to `system/vocabulary.md`, then use it in the note you're classifying.
 3. If the list is already at ~30, ask whether an existing term covers the ground before adding.
 
-`memoria project gaps` can surface repeated off-vocabulary Work phrases as Inbox
-tag candidates; review those attention items, then add only the terms you want
-to keep.
-
-## Step 3 — Rename a term safely
+**3. Rename a term safely.**
 
 Renaming a vocabulary value across a fresh standalone workspace is a
 git-disciplined manual pass: commit, enumerate, edit, lint, and commit. The two
@@ -74,17 +58,15 @@ vocabulary-specific points:
   "old-term" digests/ fulltexts/ notes/ hubs/ projects/ system/` before editing
   Concepts. Use `memoria work export` for catalog Work metadata.
 
-## Step 4 — Annual vocabulary review
+**4. Prune as you rename.**
 
-Once a year (or after a major reading batch), walk each list:
-
-1. **Prune** terms appearing on fewer than ~3 notes — they're not load-bearing.
-2. **Consolidate** terms that drifted to mean the same thing (rename the smaller into the larger, per Step 3).
-3. **Split** a term that now covers two distinct concepts.
+When a term appears on only a few notes, decide whether it is really
+load-bearing. Merge it into a broader term if queries do not need the narrower
+distinction.
 
 ## Verify
 
-- `system/vocabulary.md` reflects the current active lists, each ≤ ~30 terms
+- `system/vocabulary.md` reflects the current active lists, each roughly 30 terms or fewer
 - A grep for each removed term returns no frontmatter hits
 - The Linter's `schema-check` detector reports nothing new
 

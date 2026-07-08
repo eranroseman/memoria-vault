@@ -39,7 +39,7 @@ memoria workspace scan --workspace .
 ```
 
 Direct edits are observed, checked, and promoted by the engine. Obsidian is not a
-write-policy boundary, scheduler, model runner, or operation API.
+write-policy boundary, scheduler, or model runner.
 
 If you created a workspace directly with `memoria init --no-obsidian`, rerun
 `memoria doctor --repair --workspace .` to restore the default Obsidian profile
@@ -55,5 +55,6 @@ before following this page.
 
 ## Related
 
-- CLI command reference: [Memoria CLI](../../reference/cli.md)
-- On-disk layout: [On-disk layout](../../reference/on-disk-layout.md)
+- CLI command reference: [Memoria CLI](../../reference/commands-and-transports/cli.md)
+- Optional proof adapter contract: [External integrations](../../reference/evidence-and-integrations/integrations.md#obsidian-proof-adapter)
+- On-disk layout: [On-disk layout](../../reference/system/on-disk-layout.md)

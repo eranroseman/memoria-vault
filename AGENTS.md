@@ -12,6 +12,9 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 - **Cover the whole scope.** Read, verify, and audit completely — every file and line in scope, no sampling or grep-standing-in-for-a-read. Verify a sub-agent's claimed coverage before reporting done.
 - **Zero tolerated contradictions.** Docs must agree with each other and with the implementation — a stale page or a doc describing unbuilt behavior is a defect to fix, not log. Sweep the full surface with [`source-of-truth-map`](.agents/system/source-of-truth-map.md) + [`change-impact-map`](.agents/system/change-impact-map.md); no doc outranks another — research to the true source of truth and fix the stale side. Mirrors are allowed only as consumer views: they must name the owning source, avoid restating more contract detail than the reader needs, and be generated or covered by a drift check whenever they repeat machine-readable contracts (counts, rosters, fields, scopes, commands, lifecycle values, or required checks).
 - **Verify hard conclusions independently.** For an uncertain runtime/architecture call, re-diagnose with a fresh agent (prefer two) and live-test the allowed/denied/fail-closed path before declaring done — don't ship solo reasoning. Ground Hermes claims in the `~/.hermes` docs first.
+- **Use subagents by default whenever useful.** Dispatch independent research,
+  review, verification, or implementation slices to subagents; keep trivial
+  local edits in-process.
 - **Enforcement is a mechanism, not a label.** A boundary is real only where code
   stops the disallowed path — a gate hook, a path glob, profile/dir isolation.
   A classification, config key, or denylist only describes intent until an
@@ -94,12 +97,13 @@ without explicit permission.
 git -C ~/memoria-vault/main fetch origin
 git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/<session> -b agent/<session> origin/main
 cd ~/memoria-vault/worktrees/<session>          # all edits, commits, PRs from here
-npm ci --silent                                # per-worktree cspell/markdownlint for hooks
+pre-commit install --install-hooks             # per-worktree hook shim; tool envs are cached
 ```
 
 Keep all session worktrees under one parent on ext4 — `~/memoria-vault/worktrees/<session>` — never under `/mnt/c`. The canonical main checkout stays at `~/memoria-vault/main`; `~/memoria-vault/worktrees/` holds task worktrees, so one project container is easy to list and prune.
-Run `npm ci --silent` in each task worktree because `node_modules/` is untracked
-and not shared across worktrees; do not skip `cspell` for missing local tooling.
+Do not run `npm ci` just to satisfy commit hooks. `cspell` and `markdownlint`
+are pre-commit-managed Node hooks; missing `node_modules/` is not a reason to
+skip them.
 
 Prefer a worktree **per branch** even working solo: switching becomes `cd`, and a `reset --hard` in one worktree can't reach another's uncommitted work (§4).
 
@@ -387,8 +391,7 @@ install a project-local search index.
 | Tutorial | `docs/tutorials/` | "How do I learn X by doing it?" |
 | How-to | `docs/how-to-guides/` | "How do I accomplish X?" |
 | Reference | `docs/reference/` | "What is the exact value/command?" |
-| Explanation | `docs/explanation/` | "How does this part of the system work?" |
-| Design Book | `docs/design/` | "Why is it designed this way?" |
+| Explanation | `docs/explanation/` | "How does this part of the system work, and why is it designed this way?" |
 
 Mixed-purpose pages are wrong — split them.
 
@@ -400,7 +403,7 @@ Mixed-purpose pages are wrong — split them.
   - **Decision-history references** belong only in **explanation** prose (inline, or an optional per-page footer "Decisions" list), always as title-text links to `design-history/` — never bare `(ADR-NN)` codes, and not in tutorial / how-to / reference body text.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
-- **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth.
+- **Citations:** new works go in `reference/evidence-and-integrations/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth.
 - **Spelling:** American English only — `-ize`/`-or` endings, not `-ise`/`-our` (write "behavior", "normalize"). `cspell` is the gate. Never suppress a flag with an inline `<!-- cspell:words … -->` / `<!-- cspell:ignore … -->` tag — for each unknown word, either **reword the prose** or, if it's a real term (proper noun, tool name, code token, jargon), **add it to `project-words.txt`** (one lowercase word per line, sorted; a lowercase entry matches every casing).
 
 ### Decision records

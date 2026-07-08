@@ -2,7 +2,7 @@
 title: Run the weekly review
 parent: Inbox
 grand_parent: How-to guides
-nav_order: 4
+nav_order: 3
 ---
 
 # Run the weekly review
@@ -25,7 +25,7 @@ Open `steering.md`. Confirm or update the active questions and reading focus —
 Open the Inbox queue's **Needs me** view, or run `memoria attention list`, and
 work the proposed action items as one batch: candidates kept or skipped, gaps
 turned into discovery tasks or archived, and work prompts dismissed once no
-action remains ([Work the action queue](../inbox/work-the-action-queue.md)). The
+action remains ([Work the action queue](work-the-action-queue.md)). The
 weekly review is the backstop that keeps the queue from aging past a week.
 
 **Step 3 — Notice-level findings (5 min).**
@@ -68,6 +68,6 @@ it isn't. To re-check after fixes, run the detectors directly
 
 ## Related
 
-- The Inbox discipline: [Work the action queue](../inbox/work-the-action-queue.md)
+- The Inbox discipline: [Work the action queue](work-the-action-queue.md)
 - The detectors behind Maintenance drift watch: [Run the Linter](../operate/run-the-linter.md)
-- The dashboard inventory: [Dashboards](../../reference/dashboards.md)
+- The dashboard inventory: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)

@@ -17,7 +17,6 @@ Read the full documentation surface:
 - `docs/how-to-guides/`
 - `docs/reference/`
 - `docs/explanation/`
-- `docs/design/`
 - `design-history/`
 - root `CONTRIBUTING.md`
 
@@ -41,9 +40,10 @@ For each page, record:
 Apply the [Documentation review](docs-review.md) checks to every page changed by
 the audit.
 
-Treat `docs/explanation/` and `docs/design/` as one conceptual surface split by
-"how it works" vs. "why this design." Ordinary docs describe the current system;
-decision history belongs in `design-history/`; release state lives in GitHub.
+Treat `docs/explanation/` as the conceptual surface. Its operational pages
+describe how the system works; `docs/explanation/rationale/` explains why the
+design takes its current shape. Decision history belongs in `design-history/`;
+release state lives in GitHub.
 
 Use subagents only for independent audit slices. Verify their claimed coverage
 before relying on it.
@@ -54,7 +54,7 @@ Make the smallest durable change:
 
 - Align pages with Diátaxis: tutorials teach by doing; how-to guides perform a
   task; reference pages give exact values; explanation pages describe how the
-  system works; design pages explain why it is designed that way.
+  system works and why it is designed that way.
 - Remove hidden compatibility pages, redirects, stale mirrors, duplicate pages,
   route-preservation pages, and common-knowledge pages.
 - Prefer moving, renaming, merging, or deleting over preserving bad historical

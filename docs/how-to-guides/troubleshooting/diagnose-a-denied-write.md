@@ -65,3 +65,9 @@ authoritative.
 | `dry_run` | The target is gated or missing a recorded promotion path; inspect the staged output. |
 | failed request | Fix the payload/provider/runner error, then retry or resume the request. |
 | quarantined external edit | Review the scan result, then accept/promote through the checked workflow. |
+
+## Verify
+
+- `memoria request list --workspace <workspace> --json` no longer shows the request as failed or stuck
+- `memoria workspace scan --workspace <workspace> --json` reports no unresolved quarantine for the target
+- The expected file, projection, or journal event is present

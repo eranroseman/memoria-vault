@@ -36,10 +36,17 @@ def load_types(schemas_dir: Path) -> dict[str, dict[str, Any]]:
 def check_schema_docs(schemas_dir: Path, docs_dir: Path) -> list[str]:
     schemas = load_types(schemas_dir)
     errors: list[str] = []
-    errors.extend(_check_type_roster(docs_dir / "document-types.md", schemas))
-    for path in (docs_dir / "frontmatter.md", docs_dir / "document-types.md"):
+    document_types = _find_doc(docs_dir, "document-types.md")
+    frontmatter = _find_doc(docs_dir, "frontmatter.md")
+    errors.extend(_check_type_roster(document_types, schemas))
+    for path in (frontmatter, document_types):
         errors.extend(_check_schema_examples(path, schemas))
     return errors
+
+
+def _find_doc(docs_dir: Path, filename: str) -> Path:
+    matches = sorted(docs_dir.rglob(filename))
+    return matches[0] if len(matches) == 1 else docs_dir / filename
 
 
 def _check_type_roster(path: Path, schemas: dict[str, dict[str, Any]]) -> list[str]:

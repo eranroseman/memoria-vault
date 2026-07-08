@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""docs-doctor — structural linter for docs/ plus package-seed mirrors.
+"""docs-doctor — structural linter for docs/ plus workspace-seed link text.
 
 Enforces the conventions from the mode-first refactor plan. These are all
 *structural* checks; classifying a file by reading mode is a human concern and
@@ -14,10 +14,10 @@ Checks:
                         (GitHub does not auto-heal links when files move).
   3. Frontmatter policy — no file carries a disallowed key (`mode:`/`audience:`
                         dropped in the refactor; `tags:` unsanctioned). Enforced on
-                        docs and on optional note-template fenced frontmatter.
+                        docs and on the vault note templates' fenced frontmatter.
   4. No wikilinks     — a [[wikilink]] that resolves to a docs file must be a
                         relative Markdown link (GitHub does not render wikilinks).
-  5. Link text        — across docs/ and any packaged seed notes, a link's visible text
+  5. Link text        — across docs/ and the package seed, a link's visible text
                         must be the target's page title, not its filename; bare
                         [[wikilinks]] in vault notes must be aliased with the title.
   6. Vault wikilinks  — a vault [[note]]/[[note|alias]] must resolve to an existing
@@ -35,6 +35,8 @@ from __future__ import annotations
 
 import argparse
 import ast
+import importlib.util
+import posixpath
 import re
 import sys
 from pathlib import Path
@@ -499,12 +501,8 @@ def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
             )
 
 
-def _workspace_seed(repo: Path) -> Path:
-    return repo / "src" / "memoria_vault" / "product" / "workspace_seed"
-
-
 def _load_schema_types(repo: Path) -> dict[str, dict]:
-    schema_dir = _workspace_seed(repo) / ".memoria" / "schemas" / "types"
+    schema_dir = repo / "src/memoria_vault/product/workspace_seed/.memoria/schemas/types"
     out: dict[str, dict] = {}
     for path in sorted(schema_dir.glob("*.yaml")):
         try:
@@ -529,9 +527,32 @@ def _markdown_code_symbols(text: str) -> set[str]:
     return out
 
 
+def _reference_dir(repo: Path) -> Path:
+    return repo / "docs" / "reference"
+
+
+def _reference_content_pages(reference_dir: Path) -> list[str]:
+    return sorted(
+        path.relative_to(reference_dir).as_posix()
+        for path in reference_dir.rglob("*.md")
+        if path.name != "README.md"
+    )
+
+
+def _reference_named_page(repo: Path, filename: str) -> Path:
+    reference = _reference_dir(repo)
+    matches = sorted(reference.rglob(filename))
+    return matches[0] if len(matches) == 1 else reference / filename
+
+
+def _reference_index_target(target: str) -> str:
+    path = target.partition("#")[0]
+    return posixpath.normpath(path)
+
+
 def check_document_type_reference_mirror(repo: Path, errors: list[str]) -> None:
-    doc = repo / "docs" / "reference" / "document-types.md"
-    frontmatter = repo / "docs" / "reference" / "frontmatter.md"
+    doc = _reference_named_page(repo, "document-types.md")
+    frontmatter = _reference_named_page(repo, "frontmatter.md")
     types = _load_schema_types(repo)
     if not types or not doc.is_file() or not frontmatter.is_file():
         return
@@ -584,8 +605,8 @@ def _vocabulary_terms(path: Path) -> dict[str, set[str]]:
 
 
 def check_vocabulary_reference_mirror(repo: Path, errors: list[str]) -> None:
-    source = _workspace_seed(repo) / "system" / "vocabulary.md"
-    doc = repo / "docs" / "reference" / "vocabulary.md"
+    source = repo / "src/memoria_vault/product/workspace_seed/system/vocabulary.md"
+    doc = _reference_named_page(repo, "vocabulary.md")
     if not source.is_file() or not doc.is_file():
         return
     source_terms = _vocabulary_terms(source)
@@ -595,40 +616,41 @@ def check_vocabulary_reference_mirror(repo: Path, errors: list[str]) -> None:
             missing = sorted(source_terms[field] - doc_terms[field])
             extra = sorted(doc_terms[field] - source_terms[field])
             errors.append(
-                f"{doc}: {field} vocabulary mirror differs from package-seed system/vocabulary.md"
+                f"{doc}: {field} vocabulary mirror differs from "
+                "src/memoria_vault/product/workspace_seed/system/vocabulary.md"
                 f" (missing: {missing or 'none'}; extra: {extra or 'none'})"
             )
 
 
 def check_reference_readme_index(repo: Path, errors: list[str]) -> None:
-    index = repo / "docs" / "reference" / "README.md"
+    index = _reference_dir(repo) / "README.md"
     reference_dir = index.parent
     if not index.is_file() or not reference_dir.is_dir():
         return
     linked = {
-        Path(target.partition("#")[0]).name
+        _reference_index_target(target)
         for target in re.findall(r"\]\(([^)]+\.md(?:#[^)]+)?)\)", read(index))
     }
-    expected = sorted(path.name for path in reference_dir.glob("*.md") if path.name != "README.md")
+    expected = _reference_content_pages(reference_dir)
     missing = [name for name in expected if name not in linked]
     if missing:
         errors.append(f"{index}: reference index omits page(s): {', '.join(missing)}")
 
 
 def _reference_readme_statuses(repo: Path) -> dict[str, str]:
-    index = repo / "docs" / "reference" / "README.md"
+    index = _reference_dir(repo) / "README.md"
     if not index.is_file():
         return {}
     out: dict[str, str] = {}
     for line in read(index).splitlines():
         match = re.match(r"\| \[[^\]]+\]\(([^)#]+\.md)(?:#[^)]*)?\) \| [^|]+ \| ([^|]+) \|", line)
         if match:
-            out[Path(match.group(1)).name] = match.group(2).strip()
+            out[_reference_index_target(match.group(1))] = match.group(2).strip()
     return out
 
 
 def check_reference_source_contract(repo: Path, errors: list[str]) -> None:
-    reference_dir = repo / "docs" / "reference"
+    reference_dir = _reference_dir(repo)
     contract_path = reference_dir / "_sources.yml"
     if not reference_dir.is_dir():
         return
@@ -644,7 +666,7 @@ def check_reference_source_contract(repo: Path, errors: list[str]) -> None:
     if not isinstance(pages, dict):
         errors.append(f"{contract_path}: pages must be a mapping")
         return
-    expected = sorted(path.name for path in reference_dir.glob("*.md") if path.name != "README.md")
+    expected = _reference_content_pages(reference_dir)
     listed = sorted(str(name) for name in pages)
     missing = sorted(set(expected) - set(listed))
     extra = sorted(set(listed) - set(expected))
@@ -705,6 +727,39 @@ def _public_defs(path: Path) -> set[str]:
     }
 
 
+def _cli_command_leaves(repo: Path) -> set[str]:
+    cli = repo / "src" / "memoria_vault" / "cli.py"
+    if not cli.is_file():
+        return set()
+    src = str(repo / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    spec = importlib.util.spec_from_file_location("_docs_doctor_memoria_cli", cli)
+    if spec is None or spec.loader is None:
+        return set()
+    try:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        build_parser = module._build_parser
+    except (AttributeError, ImportError):
+        return set()
+    out: set[str] = set()
+
+    def walk(parser: argparse.ArgumentParser, parts: list[str]) -> None:
+        subparsers = [
+            action for action in parser._actions if isinstance(action, argparse._SubParsersAction)
+        ]
+        if not subparsers:
+            out.add(" ".join(parts))
+            return
+        for subparser in subparsers:
+            for name, child in subparser.choices.items():
+                walk(child, [*parts, name])
+
+    walk(build_parser(), ["memoria"])
+    return out
+
+
 def _require_doc_codes(doc: Path, expected: set[str], label: str, errors: list[str]) -> None:
     if not expected or not doc.is_file():
         return
@@ -716,28 +771,33 @@ def _require_doc_codes(doc: Path, expected: set[str], label: str, errors: list[s
 
 
 def check_reference_rosters(repo: Path, errors: list[str]) -> None:
-    reference = repo / "docs" / "reference"
     _require_doc_codes(
-        reference / "system-actions.md",
+        _reference_named_page(repo, "cli.md"),
+        _cli_command_leaves(repo),
+        "CLI command",
+        errors,
+    )
+    _require_doc_codes(
+        _reference_named_page(repo, "system-actions.md"),
         _operation_manifest_ids(repo),
         "operation manifest",
         errors,
     )
     _require_doc_codes(
-        reference / "prompt-operations.md",
+        _reference_named_page(repo, "prompt-operations.md"),
         _operation_manifest_ids(repo, prompt_only=True),
         "prompt operation",
         errors,
     )
     _require_doc_codes(
-        reference / "read-api.md",
+        _reference_named_page(repo, "read-api.md"),
         _public_defs(repo / "src" / "memoria_vault" / "engine" / "api.py"),
         "engine API",
         errors,
     )
     http_source = repo / "src" / "memoria_vault" / "runtime" / "http_transport.py"
     _require_doc_codes(
-        reference / "local-http-transport.md",
+        _reference_named_page(repo, "local-http-transport.md"),
         set(re.findall(r"path\s*==\s*\"([^\"]+)\"", read(http_source)))
         if http_source.is_file()
         else set(),
@@ -746,13 +806,13 @@ def check_reference_rosters(repo: Path, errors: list[str]) -> None:
     )
     mcp_source = repo / "src" / "memoria_vault" / "runtime" / "mcp_transport.py"
     _require_doc_codes(
-        reference / "mcp-transport.md",
+        _reference_named_page(repo, "mcp-transport.md"),
         _mcp_tool_names(mcp_source),
         "MCP tool",
         errors,
     )
     _require_doc_codes(
-        reference / "empirical-events.md",
+        _reference_named_page(repo, "empirical-events.md"),
         _empirical_event_schema_values(
             repo / "src" / "memoria_vault" / "engine" / "empirical_events.py"
         ),
@@ -873,12 +933,14 @@ def _pages_targets(text: str) -> list[str]:
     )
 
 
-def check_seed_docs_refs(repo: Path, errors: list[str]) -> None:
-    seed = _workspace_seed(repo)
-    if not seed.is_dir():
-        return
+def check_vault_docs_refs(repo: Path, errors: list[str]) -> None:
+    vault = repo / "src/memoria_vault/product/workspace_seed"
     for path in sorted(
-        p for p in seed.rglob("*") if p.is_file() and p.suffix in {".md", ".py", ".yaml", ".yml"}
+        p
+        for p in vault.rglob("*")
+        if p.is_file()
+        and p.suffix in {".md", ".py", ".yaml", ".yml"}
+        and ".obsidian" not in p.parts
     ):
         text = read(path)
         for ref in sorted(set(re.findall(r"docs/[A-Za-z0-9/_.-]+\.md", text))):
@@ -955,7 +1017,7 @@ def main() -> int:
     if args.vault_links or args.doc_refs is not None:
         errors: list[str] = []
         if args.vault_links:
-            check_seed_docs_refs(repo, errors)
+            check_vault_docs_refs(repo, errors)
         if args.doc_refs is not None:
             check_doc_refs(repo, args.doc_refs, errors)
         if errors:
@@ -984,11 +1046,16 @@ def main() -> int:
         check_wikilinks(md, errors, doc_md_names)
         check_link_text(md, errors)
 
-    # Guard optional packaged seed notes too; historical template helpers used
-    # fenced YAML and this helper remains useful for fixtures.
-    # Link-text discipline extends to any packaged seed notes: cross-links must use the page
+    # Guard the vault note templates too: their frontmatter lives in a ```yaml fence,
+    # and a banned key there propagates to every note created from the template.
+    tmpl_dir = root.parent / "src/memoria_vault/product/workspace_seed/system/templates"
+    if tmpl_dir.is_dir():
+        for md in sorted(tmpl_dir.glob("*.md")):
+            check_template_frontmatter(md, errors)
+
+    # Link-text discipline extends to the vault notes: cross-links must use the page
     # title — markdown link text and wikilink aliases — never the bare filename.
-    vault = _workspace_seed(root.parent)
+    vault = root.parent / "src/memoria_vault/product/workspace_seed"
     if vault.is_dir():
         vault_stems = {
             p.stem.lower()

@@ -2,7 +2,7 @@
 title: Archive a source
 parent: Library
 grand_parent: How-to guides
-nav_order: 8
+nav_order: 4
 ---
 
 # Archive a source
@@ -66,6 +66,6 @@ is done.
 ## Related
 
 - Weekly review (surfaces stale sources): [Run the weekly review](../inbox/run-the-weekly-review.md)
-- Lifecycle field values: [Frontmatter fields](../../reference/frontmatter.md)
+- Lifecycle field values: [Frontmatter fields](../../reference/data-model/frontmatter.md)
 - Why archived notes aren't deleted: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)
 - What happens on a retraction hit: [Run a retraction sweep](../operate/run-a-retraction-sweep.md)
