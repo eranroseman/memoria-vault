@@ -15,9 +15,9 @@ Its posture is **faithful**: include generously, report state accurately, and le
 
 A research librarian does both intake and literature search, so corpus work
 (scope reports, gap analysis, cluster maps) belongs with the same faithful
-posture ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Alpha.19
-implements that posture through checked operation manifests and request rows, not
-installed profile packages.
+posture ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+The current standalone baseline implements that posture through checked
+operation manifests and request rows, not installed profile packages.
 
 ---
 

@@ -17,10 +17,13 @@ The vault organizes notes by type and carries topic in links and frontmatter, no
 
 | Surface | Answers | Lifespan |
 | --- | --- | --- |
-| Search, graph/gap reports, Bases | "What notes touch this topic?" | Re-derived on demand. |
+| Search, graph/gap reports, optional editor views | "What notes touch this topic?" | Re-derived on demand. |
 | Hub | "What does this topic hold, and where should I look first?" | Durable, curated note. |
 
-A hub adds perspective a query cannot produce: framing, curation, and a diagnosis of thin or contested areas ([Note body structure](../../explanation/knowledge/note-body-structure.md#why-hubs-answer-three-distinct-questions)). A flat link list is a failed hub; a Base can list links faster.
+A hub adds perspective a query cannot produce: framing, curation, and a
+diagnosis of thin or contested areas ([Note body structure](../../explanation/knowledge/note-body-structure.md#why-hubs-answer-three-distinct-questions)).
+A flat link list is a failed hub; a CLI/read-API query or optional editor view
+can list links faster.
 
 ---
 
@@ -44,7 +47,10 @@ The human writes the framing, curates membership, and names gaps.
 | Too late | The cluster is already hard to navigate. |
 | Threshold crossing | The Linter can prompt the human without auto-creating the hub. |
 
-The current threshold is roughly **15-20 notes** ([Wikilink and link conventions](../../reference/wikilink-and-link-conventions.md#hub-thresholds)). It is advisory only: when one branch grows too large, the human splits it into a child hub rather than letting one map become a dumping ground.
+The advisory hub-threshold detector owns the current number
+([Wikilink and link conventions](../../reference/wikilink-and-link-conventions.md#hub-thresholds)).
+It is advisory only: when one branch grows too large, the human splits it into a
+child hub rather than letting one map become a dumping ground.
 
 ---
 

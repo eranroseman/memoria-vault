@@ -34,10 +34,10 @@ in-context reasoning).
 
 What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/memory-substrates.md); the rest of this page explains *why* each has the scope it does.
 
-**Why the workspace carries durable memory.** Alpha.19 makes the standalone
-workspace the authority. Optional adapters can have chat memory, but anything
-durable must become checked workspace state, request/journal evidence, or a
-project record. Operation runs ground on request input refs and checked
+**Why the workspace carries durable memory.** The current standalone baseline
+makes the workspace the authority. Optional adapters can have chat memory, but
+anything durable must become checked workspace state, request/journal evidence,
+or a project record. Operation runs ground on request input refs and checked
 workspace content, not remembered profile context.
 
 ---

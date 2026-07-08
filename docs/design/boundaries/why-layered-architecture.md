@@ -11,9 +11,9 @@ Memoria separates orchestration, execution, and settled knowledge into distinct
 layers. This is not a layering convention; it is the mechanism that makes
 retries safe, handoffs lossless, and review enforceable. The
 [alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)
-records the older layered version of this rule; alpha.19 implements the same
-separation through the standalone CLI, SQLite request table, worker operations,
-and checked workspace.
+records the older layered version of this rule; the current standalone baseline
+implements the same separation through the CLI, SQLite request table, worker
+operations, and checked workspace.
 
 For the current shared vocabulary, start with [Home](../README.md).
 

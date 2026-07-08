@@ -35,7 +35,7 @@ A request is *work*
 | [Request states and the review gate](states.md) | Why execution, review, and PI-facing attention state are separate. |
 | [The honesty prompt](honesty-card.md) | Why attention prompts provide decision material instead of verdicts. |
 | [Decision points](decision-points.md) | Why review gates, work prompts, batch worklists, and automated steps differ. |
-| [WIP limits and back-pressure](wip-limits.md) | Why request concurrency and review caps intentionally slow work. |
+| [WIP limits and back-pressure](wip-limits.md) | Why concurrency belongs in the engine/scheduler layer, not Hermes board caps. |
 
 For the current control-plane command lookup, see the
 [Control plane reference](../../../reference/control-plane.md).

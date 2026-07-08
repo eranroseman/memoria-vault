@@ -8,10 +8,10 @@ permalink: /explanation/surfaces/dashboards/structural-health/
 
 # Structural health
 
-Structural health surfaces drift, loose ends, board state, and the weekly
-maintenance agenda: the Linter operation's structural debt plus the worker-board
-view. The synthesis-agenda group is the PI's unfinished thinking; this group is
-the system's visible maintenance debt.
+Structural health surfaces drift, loose ends, request state, and the weekly
+maintenance agenda: the Linter operation's structural debt plus the
+request/attention view. The synthesis-agenda group is the PI's unfinished
+thinking; this group is the system's visible maintenance debt.
 
 ## Drift watch
 
@@ -36,9 +36,9 @@ turning the daily Inbox into a debugging surface.
 
 ## Weekly review
 
-Weekly review is the scheduled structural-health pass. It gathers Inbox cleanup,
-Maintenance, new content, and claim state into one deliberate rhythm. The
-step-by-step ritual lives in [Run the weekly
+Weekly review is the operator-run structural-health ritual. It gathers Inbox
+cleanup, Maintenance, new content, and claim state into one deliberate rhythm.
+The step-by-step ritual lives in [Run the weekly
 review](../../../how-to-guides/inbox/run-the-weekly-review.md).
 
 ## Related

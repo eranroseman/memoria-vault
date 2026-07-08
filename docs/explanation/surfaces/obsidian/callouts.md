@@ -22,8 +22,9 @@ For the exact shipped identifiers, see [Design system](../../../design/surfaces/
 - Template callouts are normal Markdown note content.
 - Direct edits are observed by the same scan/check loop as other authored
   Markdown.
-- Future generated callout content would need to enter through the request and
-  trusted-writer path; the proof adapter does not ship that generator.
+- Generated callout content is not a current product mode. If it is added, it
+  must enter through the request and trusted-writer path; the proof adapter does
+  not ship that generator.
 
 ---
 

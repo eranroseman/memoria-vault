@@ -65,7 +65,13 @@ the YAML schemas under `.memoria/schemas/`, and catalog rows that feed
 bibliography/materialization are governed by the decision that
 [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
-Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through scheduled or CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. Shipped product-file repair comes from package/template refresh, not an in-vault restore baseline.
+Optional editor views have no schema or constraints of their own. The **Linter
+operation** supplies that layer: it validates records against
+`.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at
+pre-commit, and monitors live edits through manual, operator-managed, or CI
+sweeps. A bad in-app edit can briefly appear in an optional view before the next
+sweep; that window is accepted under the solo premise. Shipped product-file
+repair comes from package/template refresh, not an in-vault restore baseline.
 
 ---
 

@@ -67,9 +67,9 @@ and temporal retrieval. The published evidence is the cited
 
 Its main result is convergence. Separate research lines re-derive the structural
 review gate, durable vault-as-memory, explicit tool/write boundaries,
-deterministic ingest, and stage-gated handoffs. Alpha.19 implements that through
-the standalone CLI/engine, read API, request envelope, runtime policy, and
-trusted writer; MCP is optional transport context, not the core sandbox. The
+deterministic ingest, and stage-gated handoffs. The current standalone product
+implements that through the CLI/engine, read API, request envelope, runtime
+policy, and trusted writer; MCP is optional transport context, not the core sandbox. The
 review also scopes what Memoria rejects: advisory-only LLM review, scalar
 keep/revert loops, and tree search over synthesis.
 

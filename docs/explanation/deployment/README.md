@@ -22,12 +22,12 @@ projections, and provider configuration all belong to one machine. Git records
 history; it does not coordinate live writers. Operator-managed scheduled tasks
 may call the same engine, but they do not create a second authority.
 
-Multi-machine patterns are not the current operating model. A future second-device
+Multi-machine patterns are outside the current operating model. A second-device
 or always-on topology needs a new deployment decision before support.
 
-Any future sync pattern keeps the same boundaries: the vault is the knowledge
-store, runtime state remains workspace-local unless explicitly promoted, and only
-one engine instance writes task state for a workspace at a time.
+Any sync pattern must keep the same boundaries: the vault is the knowledge store,
+runtime state remains workspace-local unless explicitly promoted, and only one
+engine instance writes task state for a workspace at a time.
 
 ---
 
@@ -37,4 +37,4 @@ one engine instance writes task state for a workspace at a time.
 - To inspect what the installer copies: [Installer (bootstrap)](../../reference/installer.md)
 - To understand why the repo ships this way: [Distribution model](../../design/deployment/distribution-model.md)
 - To understand why bootstrap is narrow: [Bootstrap installer](../../design/deployment/bootstrap-installer.md)
-- To track future sync or always-on work: [Always-on VPS design](../../design/deployment/always-on-vps-design.md)
+- To understand why always-on is outside support: [Always-on VPS design](../../design/deployment/always-on-vps-design.md)

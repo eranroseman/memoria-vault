@@ -25,9 +25,18 @@ as a proposal that requires verification, not a draft that requires only polish.
 
 ## Unpinned citekeys
 
-You add a paper to Zotero, the ingest operation catalogs it, wikilinks form across the vault pointing to `mamykina2010sense`. Then you correct a metadata field in Zotero — the author's name, the year, a typo in the title — and Better BibTeX regenerates the citekey. Every wikilink in the vault is now broken, silently.
+You import a BibTeX or CSL export from Zotero, the ingest operation catalogs it,
+and draft citations or bibliography exports use `mamykina2010sense` as the
+citekey alias. Then you correct a metadata field in Zotero — the author's name,
+the year, a typo in the title — and Better BibTeX regenerates the citekey. The
+stable `work_id` still points at the Work row, but citation/export workflows that
+depend on the old alias can miss or render unresolved citations until you
+re-import or repair the alias.
 
-The reason this is silent: Obsidian doesn't warn about broken wikilinks; it just shows them as unresolved. Without the Linter's `lint:analyze-graph` check, the breakage is invisible until you're actively looking for a specific note. The failure compounds over time because new notes continue linking to the broken citekey, not knowing it has changed.
+The reason this is quiet: the durable Work identity is still valid, so the graph
+does not look broken. The failure appears at the citation/export edge, when a
+draft, bibliography projection, or external citation workflow expects the old
+citekey.
 
 The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [Set up Zotero](../../how-to-guides/setup/set-up-zotero.md) for the pinning procedure.
 
@@ -37,8 +46,8 @@ The same concept gets two names across notes — `topics: receptivity-detection`
 on one claim-bearing note, `topics: opportune-moments` on another — so a query
 returns half the corpus and the PI infers thin coverage that isn't real. The
 failure is invisible because it produces no errors, only incomplete results, and
-the Linter cannot catch it until a canonical vocabulary exists. The full
-scenario, why consolidation is deliberately deferred, and how the failure
+the Linter catches it only after the controlled vocabulary names the intended
+term. The full scenario, why stabilization is staged, and how the failure
 compounds are in [Vocabulary discipline](vocabulary-discipline.md).
 
 ## Summary without synthesis
@@ -82,7 +91,13 @@ hardens into months of backlog.
 
 A hub grows to hundreds of lines with no structure, annotations, or curation. It becomes unusable because it takes too long to parse.
 
-The structural issue is a confusion between indexing and curating. A hub's value is in what it leaves out and how it annotates what it keeps — it is a perspective on a topic, not an enumeration. When a hub becomes an index, it duplicates what a Base already does automatically. The embedded query handles volume; the static curated list handles meaning. When the curated list grows past 20–30 entries without structure, the hub needs child hubs or heavy pruning.
+The structural issue is a confusion between indexing and curating. A hub's value
+is in what it leaves out and how it annotates what it keeps — it is a perspective
+on a topic, not an enumeration. When a hub becomes an index, it duplicates what
+CLI/read-API queries or optional editor views already list automatically. Query
+surfaces handle volume; the static curated list handles meaning. When the
+curated list grows past 20–30 entries without structure, the hub needs child hubs
+or heavy pruning.
 
 ## The automation boundary
 

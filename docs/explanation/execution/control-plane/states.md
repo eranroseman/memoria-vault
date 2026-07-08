@@ -28,12 +28,12 @@ attention item raised by that work has been handled.
 
 ## The execution chain is the hidden mechanic
 
-The runtime moves each request through machine-facing states: `pending`,
-`running`, `done`, `failed`, or `cancelled`. Recovery marks interrupted
-`running` requests as `failed` so they can be retried explicitly, and pending
-materialization payloads replay through `workspace recover`. This chain is
-load-bearing for the worker and recovery code, but the **PI does not treat it as
-approval**. It is plumbing, and its design serves execution:
+The runtime moves each request through machine-facing states owned by the control
+plane reference and worker code. Recovery marks interrupted running work as
+failed so it can be retried explicitly, and pending materialization payloads
+replay through `workspace recover`. This chain is load-bearing for the worker and
+recovery code, but the **PI does not treat it as approval**. It is plumbing, and
+its design serves execution:
 
 **Pending work exists so dispatch never starts before scope is explicit.** A
 request carries input refs, output intents, and checks before execution. A file
@@ -64,7 +64,8 @@ A request or attention prompt carries three independent signals, and keeping
 them separate is what prevents a machine verdict from rubber-stamping a human
 decision:
 
-- **execution status** — did the worker run, finish, or get stuck?
+- **execution status** — did the worker run, finish, or get stuck? Exact values
+  belong to the reference and request table.
 - **attention state** — the PI's decision: has the human acted on this?
 - **machine recommendation** — a soft verdict such as inconclusive, issues-found,
   or clean; never a gate.

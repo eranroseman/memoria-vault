@@ -21,11 +21,11 @@ The distribution mechanism is `vault-template/` plus the installed Memoria packa
 create a workspace, populate it from the template, and wire the local runtime.
 Ordered steps and the component checklist are owned by [Installer (bootstrap)](../../reference/installer.md).
 
-One installer-specific sequencing choice worth calling out: Zotero deliberately
-*left* the installer — it is an optional import/export adapter, not core
-provisioning, so its setup lives in the dedicated Zotero how-to. Hermes likewise left the
-installer baseline: optional adapters may wrap the CLI/engine later, but this
-bootstrap path is standalone.
+One installer-specific sequencing choice worth calling out: Zotero stays outside
+the installer. It is an optional import/export workflow, not core provisioning,
+so its setup lives in the dedicated Zotero how-to. Hermes also stays outside the
+installer baseline: optional adapters may wrap the CLI/engine, but this bootstrap
+path is standalone.
 
 The install contract is narrow: fresh install, detect-then-install, no
 clobbering user content, no writing secrets, and no in-place release migration.
@@ -39,9 +39,9 @@ dry-run possible, and stop instead of silently escalating privileges.
 ## Standalone-only bootstrap
 
 Both supported installer entry points install the standalone CLI/runtime
-workspace. Any future editor adapter or external runtime experiment is separate
-from the bootstrap contract and must not reintroduce installed profiles or
-profile-only redeploy modes into the core installer.
+workspace. Editor adapters and external runtime experiments are separate from the
+bootstrap contract and must not reintroduce installed profiles or profile-only
+redeploy modes into the core installer.
 
 ## Simplifying decisions
 
@@ -52,12 +52,12 @@ Those are setup choices the user can make after the core workspace works.
 ## Trade-offs
 
 The accepted cost is clear: users who want optional adapters, live-provider
-secrets, or future migration behavior need separate setup. The benefit is a core
-install path with one mental model.
+secrets, or migration behavior need separate setup. The benefit is a core install
+path with one mental model.
 
 ## Related
 
 - **Reference:** [Installer (bootstrap)](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md) (standalone CLI + engine; absorbs the former repo-as-install-unit decision).
-- **Design:** [Distribution model](distribution-model.md), Hermes boundary.
+- **Design:** [Distribution model](distribution-model.md).
 - **How-to:** [Quickstart](../../how-to-guides/setup/quickstart.md), [Set up the vault](../../how-to-guides/setup/set-up-the-vault.md).

@@ -17,7 +17,14 @@ to transient _work_: work lives as operation requests and attention, while
 knowledge lives in the vault and persists — a distinction the control-plane
 section develops in [Requests and notes are different things](../execution/control-plane/states.md#requests-and-notes-are-different-things).
 
-> **Lineage.** This section's core ideas — atomic notes, links over folders, maturing notes, and Maps of Content — descend directly from Luhmann's **Zettelkasten** method and its modern ["evergreen notes"](../../reference/bibliography.md#matuschak-evergreen) successors. Memoria's contribution is not the method but its _delegation_: agents do the Zettelkasten bookkeeping (linking, classifying, drift detection) the method demands while the human keeps the intellectual work. The full intellectual debt is traced in [Intellectual foundations](../../design/foundations/intellectual-foundations.md#luhmanns-zettelkasten); the pages below note where each specific idea is borrowed.
+> **Lineage.** This section's core ideas — atomic notes, links over folders,
+> checked read boundaries, and Maps of Content — descend directly from Luhmann's
+> **Zettelkasten** method and its modern ["evergreen notes"](../../reference/bibliography.md#matuschak-evergreen)
+> successors. Memoria's contribution is not the method but its _delegation_:
+> agents do the Zettelkasten bookkeeping (linking, classifying, drift detection)
+> the method demands while the human keeps the intellectual work. The full
+> intellectual debt is traced in [Intellectual foundations](../../design/foundations/intellectual-foundations.md#luhmanns-zettelkasten);
+> the pages below note where each specific idea is borrowed.
 
 ## Documents in this section
 
@@ -26,13 +33,13 @@ section develops in [Requests and notes are different things](../execution/contr
 | [Document types and epistemic roles](document-types.md)                    | The three epistemic roles (source / synthesis / working) behind the document types, and why agent permissions follow from them.              |
 | [The knowledge cycle](knowledge-cycle.md)                          | The progression from ingested source to written output, and why the vault compounds rather than merely accumulates.                      |
 | [Note body structure](note-body-structure.md)                      | Why works, notes, hubs, and projects have distinct bodies, and what each structure makes the Concept able to do.                  |
-| [Why promotion is gated](promotion-and-gated-zones.md)                       | What promotion means, what canonical zones are gated, and why the human gate sits at the synthesis boundary.         |
-| [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
+| [Why promotion is gated](promotion-and-gated-zones.md)                       | What promotion means, how the trusted writer protects checked readers, and why PI curation sits at the synthesis boundary.         |
+| [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary stabilization is staged, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
 | [Project slice](project-slice.md) | Why project drafting starts from an explicit checked-note set. |
 | [Exploration channel](exploration-channel.md) | Why exploratory candidate discovery stays separate from ranked search. |
 
-For the complete document-type reference (fields, templates, lifecycle tables),
-see [Document types](../../reference/document-types.md). For the current task
-surface that follows from this model, see the [Knowledge how-to
+For the document-type roster, see [Document types](../../reference/document-types.md).
+For field grammar, see [Frontmatter fields](../../reference/frontmatter.md). For
+the current task surface that follows from this model, see the [Knowledge how-to
 guides](../../how-to-guides/knowledge/).

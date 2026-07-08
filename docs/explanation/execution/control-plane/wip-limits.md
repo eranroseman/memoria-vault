@@ -7,35 +7,38 @@ nav_order: 35
 
 # WIP limits and back-pressure
 
-Back-pressure exists to make overload visible before it becomes
-rubber-stamping. In the standalone engine, request concurrency and review-queue
-limits protect auditability, human review, and synthesis quality. The current
-reference records that Hermes board WIP caps are not a baseline control:
+Back-pressure exists to make overload visible before it becomes rubber-stamping.
+In the standalone baseline, concurrency belongs to the engine/runner and to any
+operator-managed scheduler that invokes it. The current reference records that
+Hermes board WIP caps are not a baseline control:
 [Control plane reference](../../../reference/control-plane.md#wip-limits).
 
-## One active request per collision domain
+## Why collision domains still matter
 
 Parallel runs that write the same output family would contend for the same write
 scope and make the audit trail ambiguous about which request touched which file.
-Serializing those collision domains keeps each write attributable to one request.
+The design principle is to keep each write attributable to one request; exact
+runtime concurrency rules belong to the worker/runner contract and reference.
 
-This also serializes idempotent-but-not-output-stable work such as source
+The same pressure applies to idempotent-but-not-output-stable work such as source
 ingest: repeated runs may refresh metadata, but they should not race each other.
 
-## Review queue cap
+## Why review pressure must stay visible
 
 The bottleneck is human attention, not machine capacity. If completed prompts
 pile up faster than the PI can review them, "reviewed" quietly turns into "machine
-finished." The review cap creates back-pressure: when the review queue is full,
-new work slows until the PI clears the queue.
+finished." The design goal is visible pressure: dashboards, attention views, and
+weekly review make overload explicit instead of letting machine output silently
+accumulate.
 
-That delay is the point. A visible bottleneck is better than an invisible loss of
-review quality.
+That visibility is the point. A visible bottleneck is better than an invisible
+loss of review quality.
 
-## Draft-work bound
+## Why draft-work should stay bounded
 
 Too many drafts in flight lowers synthesis quality because evidence cannot be
-integrated across parallel compositions. The draft-work cap protects argument
+integrated across parallel compositions. The practice is to keep draft work
+bounded even when the runtime can queue more requests; this protects argument
 quality, not throughput.
 
 ## Related

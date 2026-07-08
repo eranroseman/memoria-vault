@@ -58,7 +58,7 @@ Code is the one domain where the three preconditions could hold:
 
 So a bounded code experiment loop could be admissible in principle.
 
-**But no autonomy exception exists anywhere in the current system** ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md) and [alpha.19 code-output lane](https://github.com/eranroseman/memoria-vault/blob/main/design-history/19-alpha.19.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
+**But no autonomy exception exists anywhere in the current system** ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md) and [the code-output lane decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/19-alpha.19.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
 
 The synthesis gate remains structurally untouched. The request envelope,
 trusted-writer checks, read barrier, and optional adapter policy hook still block
@@ -75,11 +75,13 @@ reopening it requires a superseding decision, not an incremental relaxation.
 The design produces a bounded, phase-gated, human-in-the-loop operating cadence:
 
 - Operations propose, classify, draft, and verify — but do not own PI judgment.
-- Scheduled and overnight operations create requests and attention. Checked
-  materialization can occur only through declared worker checks; PI disposition
-  remains separate attention state.
-- The discovery loop can run autonomously (finding and ingesting candidates) because the human reviews candidates before they enter the canonical vault.
-- The cost discipline ("$1–3/day API budget for the nightly loop") matters because there's no scalar payoff to optimize against. Budget discipline replaces metric discipline.
+- Operator-managed scheduled operations can create requests and attention.
+  Checked materialization can occur only through declared worker checks; PI
+  disposition remains separate attention state.
+- Discovery work can run unattended when the operator schedules it, but the
+  human reviews candidates before they enter checked readers.
+- Cost discipline matters because there is no scalar payoff to optimize against.
+  Budget discipline replaces metric discipline.
 
 ---
 

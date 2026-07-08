@@ -13,7 +13,10 @@ Every task Memoria performs is classified as deterministic, hybrid, or generativ
 
 **Deterministic** tasks have a single right answer derivable from rules, regex, math, or graph algorithms. Citation token extraction, schema-version checking, link-candidate ranking, duplicate detection, and structural drift detection are all deterministic. The same vault state produces the same result on every run.
 
-**Hybrid** tasks use a deterministic step to narrow the problem, then an LLM to handle the residual judgment on the narrow result. Classification attention, cite checks, and digest/report generation all follow this pattern: a classifier or similarity search produces a ranked candidate set; an LLM composes over that small set rather than the whole vault.
+**Hybrid** tasks use a deterministic step to narrow the problem, then an LLM to
+handle the residual judgment on the narrow result. Classification attention and
+digest/report generation follow this pattern: metadata checks, checked input
+refs, or ranked candidate sets bound what the runner may compose over.
 
 **Generative** tasks have no fixed output and require open-ended composition. The Co-PI's conversation, the Writer's drafting, counter-outlines, and comparative-brief prose are generative. These are LLM-required and irreducibly so.
 
@@ -38,9 +41,14 @@ This matters beyond cost:
 
 Concrete examples:
 
-- **`[!suggestions]`**: 5,000 vault notes → top-10 candidates by weighted similarity → optional LLM explanation per candidate. The LLM works on 10, not 5,000.
-- **`cite-check`**: 80 claims in a draft → citekey resolution + embedding similarity score per pair → LLM judges only the middle band (similarity 0.4–0.75). Above 0.75 auto-clean; below 0.4 auto-fail.
-- **Classification attention**: new catalog Work row → deterministic metadata signals propose labels or flag ambiguity → the PI applies accepted values with `memoria work update`.
+- **Checked BM25 retrieval**: checked retrieval documents -> deterministic BM25
+  ranking -> bounded answer context.
+- **DOI enrichment**: captured DOI or portable import -> provider metadata,
+  field provenance, and graph edges -> checked catalog row or attention.
+- **Digest/report generation**: DB-verdict-passing input refs -> runner output ->
+  deterministic section and source-grounding checks before materialization.
+- **Draft verification**: evidence markers, source-span refs, and code-warrant
+  refs -> concrete findings or export readiness.
 
 ## Why this classification exists in the design
 
@@ -48,7 +56,6 @@ Without an explicit classification, there is pressure to route every task to an 
 
 ## Related
 
-- [Callouts](../../explanation/surfaces/obsidian/callouts.md) — how the hybrid pattern produces callout content
 - Which posture handles which task type: [Why operation postures, not a generalist agent](why-specialist-postures.md)
 - The zero-LLM operation this rationale produces: [The Linter](../../explanation/execution/operations.md)
 - [Retrieval and analysis methods](../../reference/retrieval-and-analysis-methods.md) — the catalog of specific deterministic methods Memoria uses

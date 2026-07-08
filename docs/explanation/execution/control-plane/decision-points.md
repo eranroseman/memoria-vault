@@ -29,7 +29,8 @@ They are handles into work, not proposals to accept.
 
 High-cardinality decisions become one worklist, not many prompts. When a coverage
 report finds forty sources to screen, the Inbox gets one aggregate prompt that
-points to a Bases-backed worklist where each row carries its own decision field.
+points to a file-backed worklist where each row carries its own decision field.
+Optional editor views may render the same rows, but they do not own the worklist.
 Forty prompts would flood a queue meant to converge to zero.
 
 ## Automated steps

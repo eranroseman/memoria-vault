@@ -7,7 +7,7 @@ nav_order: 1
 
 # Document types and epistemic roles
 
-Alpha.19 treats durable knowledge files as **Concepts**. The folder root and
+Memoria treats durable knowledge files as **Concepts**. The folder root and
 frontmatter say what kind of Concept the file is; SQLite/read-API verdict state
 says whether it is readable as checked knowledge.
 
@@ -20,7 +20,9 @@ operation metadata. That split keeps objective imported records, PI-curated
 knowledge, and product capabilities from pretending to be the same kind of
 thing.
 
-The exhaustive field lists live in [Document types](../../reference/document-types.md).
+The schema YAML owns exhaustive fields. The reader-facing roster lives in
+[Document types](../../reference/document-types.md), and field grammar lives in
+[Frontmatter fields](../../reference/frontmatter.md).
 
 ---
 

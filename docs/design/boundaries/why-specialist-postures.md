@@ -107,8 +107,9 @@ operation families. Embedding similarity drives mapping, duplicate adjudication,
 and intake briefs. Memoria takes the duplication on purpose - a shared
 capability-agent would need the union of every caller's access, dissolving the
 write boundaries the split exists to make legible. The reconciliation is
-layering: capability lives in **operations and shared optional adapters**; the
-postures stay pure - write zone and stance, not tools.
+layering: capability lives in **package-owned operations**; optional adapters are
+presentation or transport over the CLI/engine. The postures stay pure - write
+zone and stance, not tools.
 
 ---
 
