@@ -41,8 +41,8 @@ repair is a package/template reinstall or fresh workspace refresh.
 
 The installer does not register a host scheduler. Scheduled work is run
 through ordinary CLI commands by whatever local scheduler the operator chooses.
-The shipped `.memoria/scripts/` wrappers remain template inputs for that later
-wiring; they are not installed as Hermes cron jobs.
+The shipped `.memoria/scripts/` wrappers are operator-run template helpers; they
+are not installed as Hermes cron jobs.
 
 ## Host Scheduler Wiring
 

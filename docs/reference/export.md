@@ -32,7 +32,6 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | Citekey | `[@smith2020]` | Obsidian Markdown draft | — (source form; always editable here) |
 | Pandoc-static | Rendered text string | `.docx` / `.odt` | ❌ Frozen — no restyling |
 | Word field | Binary field code | Word (live) | ✅ Live; restyle via Zotero Word plugin |
-| Google Docs NamedRange | Hidden citation ID | Google Docs (live) | ✅ Live; restyle via Zotero Connector |
 
 ---
 
@@ -45,23 +44,18 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography bibliography.bib --csl .memoria/csl/<style>.csl` |
 | **B — Live Word fields** | `.docx` with Zotero fields | Advisor feedback rounds on Word | Pandoc + `zotero.lua` filter → Word + Zotero plugin |
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |
-| **D — Google Docs** | (manual) | Real-time co-authoring only | No Pandoc route; insert citations manually via Zotero Connector |
-
-The final editor is effectively fixed at drafting time: switching from Obsidian → Google Docs late means re-inserting every citation by hand.
 
 ---
 
 ## Editor feature comparison
 
-| Feature | Word + Zotero | LibreOffice + Zotero | Google Docs + Zotero |
-| --- | --- | --- | --- |
-| Live citation fields | ✅ | ✅ | ✅ |
-| Citation restyling | ✅ | ✅ | ✅ |
-| Pandoc automation route | ✅ (via `zotero.lua`) | ✅ (via ODF Scan) | ❌ (manual only) |
-| Real-time co-editing | ❌ | ❌ | ✅ |
-| Track changes | ✅ | ✅ | ✅ |
-| 100+ citation performance | ✅ | ✅ | ⚠️ Slow |
-| Journal template availability | ✅ (wide) | ⚠️ Limited | ❌ |
+| Feature | Word + Zotero | LibreOffice + Zotero |
+| --- | --- | --- |
+| Live citation fields | Yes | Yes |
+| Citation restyling | Yes | Yes |
+| Pandoc automation route | `zotero.lua` | ODF Scan |
+| Track changes | Yes | Yes |
+| Journal template availability | Wide | Limited |
 
 ---
 

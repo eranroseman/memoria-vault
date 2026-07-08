@@ -18,7 +18,9 @@ plain Markdown editor for the workspace keep-set.
 ## Steps
 
 1. Open the workspace folder in Obsidian.
-2. Do not install or enable Memoria-specific plugins for the standalone baseline.
+2. Do not install a plugin for ordinary Markdown editing. The optional
+   `packages/memoria-obsidian/` proof adapter exists for local HTTP control and
+   empirical-event capture, but it is not installed by bootstrap.
 3. Use the terminal for Memoria actions:
 
 ```bash
@@ -35,16 +37,17 @@ memoria workspace scan --workspace .
 ```
 
 Direct edits are observed, checked, and promoted by the engine. Obsidian is not a
-write-policy boundary, scheduler, model runner, or operation API.
+write-policy boundary, scheduler, or model runner.
 
 ## Verify
 
 - `memoria doctor --workspace .` passes from the terminal.
 - `memoria workspace check --workspace .` reports the same workspace you opened
   in Obsidian.
-- No Memoria plugin setup is required.
+- No Memoria plugin setup is required for this plain-editor path.
 
 ## Related
 
 - CLI command reference: [Memoria CLI](../../reference/cli.md)
+- Optional proof adapter contract: [External integrations](../../reference/integrations.md#obsidian-proof-adapter)
 - On-disk layout: [On-disk layout](../../reference/on-disk-layout.md)

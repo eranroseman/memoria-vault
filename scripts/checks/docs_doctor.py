@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -701,6 +702,39 @@ def _public_defs(path: Path) -> set[str]:
     }
 
 
+def _cli_command_leaves(repo: Path) -> set[str]:
+    cli = repo / "src" / "memoria_vault" / "cli.py"
+    if not cli.is_file():
+        return set()
+    src = str(repo / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    spec = importlib.util.spec_from_file_location("_docs_doctor_memoria_cli", cli)
+    if spec is None or spec.loader is None:
+        return set()
+    try:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        build_parser = module._build_parser
+    except (AttributeError, ImportError):
+        return set()
+    out: set[str] = set()
+
+    def walk(parser: argparse.ArgumentParser, parts: list[str]) -> None:
+        subparsers = [
+            action for action in parser._actions if isinstance(action, argparse._SubParsersAction)
+        ]
+        if not subparsers:
+            out.add(" ".join(parts))
+            return
+        for subparser in subparsers:
+            for name, child in subparser.choices.items():
+                walk(child, [*parts, name])
+
+    walk(build_parser(), ["memoria"])
+    return out
+
+
 def _require_doc_codes(doc: Path, expected: set[str], label: str, errors: list[str]) -> None:
     if not expected or not doc.is_file():
         return
@@ -713,6 +747,12 @@ def _require_doc_codes(doc: Path, expected: set[str], label: str, errors: list[s
 
 def check_reference_rosters(repo: Path, errors: list[str]) -> None:
     reference = repo / "docs" / "reference"
+    _require_doc_codes(
+        reference / "cli.md",
+        _cli_command_leaves(repo),
+        "CLI command",
+        errors,
+    )
     _require_doc_codes(
         reference / "system-actions.md",
         _operation_manifest_ids(repo),

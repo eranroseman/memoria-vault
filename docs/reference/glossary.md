@@ -25,8 +25,8 @@ to a Hermes profile; the standalone runtime does not ship that profile.
 the CLI/engine. Operations compute and propose; the PI decides. The shipped
 operations are listed in [Operations](operations.md).
 
-**Hermes** — an optional external agent runtime that may wrap the CLI/engine in
-future adapter work. It is not required by the standalone runtime.
+**Hermes** — an external agent runtime. It is not required by the standalone
+runtime and no Hermes profile setup ships in the baseline.
 
 **Memoria** — the whole system: the OKF knowledge bundles, capability manifests,
 standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`

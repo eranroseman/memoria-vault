@@ -21,6 +21,4 @@ but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 ## Not shipped in Alpha.19
 
 NetworkX community detection, BERTopic topic modeling, and generated cluster
-Canvas adapters are not baseline commands. If they return later, they should be
-runtime operations or optional adapters around the CLI/engine, not hidden
-workspace-side servers.
+Canvas adapters are not baseline commands.

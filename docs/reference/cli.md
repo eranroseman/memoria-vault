@@ -8,6 +8,8 @@ nav_order: 10
 
 `memoria` is the alpha.20 product surface. It operates on a standalone workspace
 through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
+This page is a guarded mirror of `src/memoria_vault/cli.py`; `docs_doctor.py`
+checks the command roster.
 
 ## Core
 
@@ -69,6 +71,78 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria operation list/run [--mode test\|live]` | List and invoke capability operations with the selected manifest-pinned runner branch. |
 | `memoria eval run` | Run the vault eval. |
 | `memoria eval seeded-error-verdict [--mode test\|live]` | Run the seeded-error verdict gate for the selected manifest-pinned runner branch. |
+
+## Complete command roster
+
+`docs_doctor.py` checks this roster against the live argparse tree:
+
+- `memoria ask`
+- `memoria attention list`
+- `memoria attention resolve`
+- `memoria attention show`
+- `memoria attention worklist`
+- `memoria check`
+- `memoria doctor bundle`
+- `memoria doctor self-test`
+- `memoria eval run`
+- `memoria eval seeded-error-verdict`
+- `memoria eval select-models`
+- `memoria export`
+- `memoria init`
+- `memoria journal show`
+- `memoria journal tail`
+- `memoria link`
+- `memoria list`
+- `memoria mcp`
+- `memoria migrate`
+- `memoria new hub`
+- `memoria new note`
+- `memoria new project`
+- `memoria operation list`
+- `memoria operation run`
+- `memoria project ask`
+- `memoria project compose`
+- `memoria project explore`
+- `memoria project export`
+- `memoria project frame-paper`
+- `memoria project gaps`
+- `memoria project promote`
+- `memoria project resolve-evidence`
+- `memoria project slice`
+- `memoria project suggest-hubs`
+- `memoria project trace`
+- `memoria project verify`
+- `memoria request amend`
+- `memoria request answer`
+- `memoria request cancel`
+- `memoria request list`
+- `memoria request resume`
+- `memoria request retry`
+- `memoria request show`
+- `memoria serve`
+- `memoria show`
+- `memoria status`
+- `memoria steering edit`
+- `memoria steering show`
+- `memoria surface schema`
+- `memoria vocab add`
+- `memoria vocab list`
+- `memoria vocab merge`
+- `memoria vocab rename`
+- `memoria work add`
+- `memoria work digest`
+- `memoria work enrich`
+- `memoria work export`
+- `memoria work import`
+- `memoria work interview`
+- `memoria work update`
+- `memoria workspace check`
+- `memoria workspace export`
+- `memoria workspace rebuild`
+- `memoria workspace recover`
+- `memoria workspace rollback`
+- `memoria workspace run`
+- `memoria workspace scan`
 
 Run `memoria <command> --help` for exact flags.
 

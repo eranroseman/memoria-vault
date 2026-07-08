@@ -88,7 +88,7 @@ output; no Hermes scheduler is required.
 
 ## Auto-fix classes
 
-Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy auto-fix](policy-auto-fix.md). The Linter operation is report-only; any future fixer must go through that gate.
+Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy auto-fix](policy-auto-fix.md). The Linter operation is report-only.
 
 ---
 

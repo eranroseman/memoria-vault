@@ -526,10 +526,24 @@ def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
     repo = tmp_path
     ref = repo / "docs" / "reference"
     ref.mkdir(parents=True)
+    (repo / "src" / "memoria_vault").mkdir(parents=True)
+    (repo / "src" / "memoria_vault" / "__init__.py").write_text("", encoding="utf-8")
     (repo / "src" / "memoria_vault" / "engine").mkdir(parents=True)
     (repo / "src" / "memoria_vault" / "runtime").mkdir(parents=True)
     ops = repo / "src" / "memoria_vault" / "product" / "capabilities" / "operations"
     ops.mkdir(parents=True)
+    (repo / "src" / "memoria_vault" / "cli.py").write_text(
+        "import argparse\n"
+        "def _build_parser():\n"
+        "    parser = argparse.ArgumentParser()\n"
+        "    sub = parser.add_subparsers(dest='command', required=True)\n"
+        "    sub.add_parser('status')\n"
+        "    request = sub.add_parser('request')\n"
+        "    request_sub = request.add_subparsers(dest='request_command', required=True)\n"
+        "    request_sub.add_parser('list')\n"
+        "    return parser\n",
+        encoding="utf-8",
+    )
     (repo / "src" / "memoria_vault" / "engine" / "api.py").write_text(
         "def read_status(workspace):\n    pass\ndef _helper():\n    pass\n",
         encoding="utf-8",
@@ -557,6 +571,7 @@ def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
         encoding="utf-8",
     )
     for name in (
+        "cli.md",
         "system-actions.md",
         "prompt-operations.md",
         "read-api.md",
@@ -569,6 +584,9 @@ def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
     errs: list[str] = []
     check_reference_rosters(repo, errs)
 
+    assert any(
+        "CLI command roster omits: memoria request list, memoria status" in err for err in errs
+    )
     assert any("operation manifest roster omits: capture-source" in err for err in errs)
     assert any("engine API roster omits: read_status" in err for err in errs)
     assert any("HTTP endpoint roster omits: /status" in err for err in errs)

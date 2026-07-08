@@ -33,7 +33,7 @@ rather than mirroring every field and count.
 | --- | --- | --- |
 | [System actions](system-actions.md) | Every action the system performs — operations, scheduled tasks, optional adapters, and PI actions — with performer and purpose | Guarded mirror |
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
-| [CLI](cli.md) | Alpha.20 `memoria` command surface | Manual |
+| [CLI](cli.md) | Alpha.20 `memoria` command surface | Guarded mirror |
 | [Engine read API](read-api.md) | Host-neutral read/write API functions and project WRITE views | Manual |
 | [Local HTTP transport](local-http-transport.md) | REST-like loopback adapter surface, auth, endpoints, scope, write payload, and limits | Manual |
 | [MCP transport](mcp-transport.md) | Optional FastMCP stdio agent surface, required read scope, tool roster, and write provenance | Manual |

@@ -7,8 +7,9 @@ pages:
     status: Source-owned
     owner: vault-template/.memoria/schemas/calibration.yaml
   cli.md:
-    status: Manual
-    owner: docs/reference/cli.md
+    status: Guarded mirror
+    owner: src/memoria_vault/cli.py
+    check: check_reference_rosters
   clustering.md:
     status: Manual
     owner: docs/reference/clustering.md

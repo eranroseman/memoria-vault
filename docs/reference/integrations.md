@@ -17,7 +17,7 @@ source of truth.
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Generic CSL JSON and BibTeX files exported from Zotero are standalone imports that stage unchecked SQLite Work rows and queue DOI enrichment. Live Zotero API and annotation import remain deferred. See [Citekey naming convention](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md). |
+| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Generic CSL JSON and BibTeX files exported from Zotero are standalone imports that stage unchecked SQLite Work rows and queue DOI enrichment. Live Zotero API and annotation import are outside the standalone import path. See [Citekey naming convention](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md). |
 | **`bibliography.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized after bibliography-changing captures or enrichment; never hand-maintained. |
 
 ---
@@ -73,8 +73,21 @@ organization, and venue graph records.
 | **search** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the selected answer path while derived passage/vector candidates remain evaluation substrate. |
 | **Obsidian proof adapter** | Optional alpha.20 package under `packages/memoria-obsidian/`; calls the local HTTP transport, stores tokens with Obsidian SecretStorage, and writes Memoria-owned state only through `/operation/run`. |
 | **Optional editor adapters** | Presentation surfaces may call the CLI/engine, but they do not own source authority, policy, checks, or state. |
-| **MarkDB-Connect** (Zotero add-on) | Not a standalone setup path. It assumes flat citekey-named note files, while Memoria's source authority is SQLite catalog state plus source-content blobs. |
 | **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` in the local runtime environment if the push adapter is installed. |
+
+### Obsidian proof adapter
+
+The optional package at `packages/memoria-obsidian/` is a local HTTP client and
+empirical-use recorder. It is not installed by bootstrap and does not replace the
+CLI.
+
+| Surface | Current behavior |
+|---|---|
+| Settings | Enable collection, server URL, bearer token in Obsidian SecretStorage, default project ID, retention days. |
+| Reads | `GET /status`, `GET /attention`, and `GET /concept?target=<path>` through the local HTTP transport. |
+| Writes | `POST /operation/run` only, with actor `agent`; empirical events use operation `empirical-event-record` and idempotency key `empirical-event:<event_id>`. |
+| Commands | Connect to local server, show attention count, show active Concept, queue operation, start/stop data collection session, record disposition, record fallback, flush queued events, delete queued events. |
+| Offline behavior | Validated empirical-event payloads queue locally and are pruned by the configured retention window. |
 
 ---
 

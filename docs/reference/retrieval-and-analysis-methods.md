@@ -6,7 +6,10 @@ nav_order: 22
 
 # Retrieval and analysis methods
 
-Deterministic methods Memoria uses, organized by purpose. This page is the current lookup surface; deferred method ideas live in the active release decision ledger, design history, and explanation pages, not in the active reference contract.
+Deterministic methods Memoria uses, organized by purpose. This page is the
+current lookup surface; non-active method ideas belong in release decision
+ledgers, design history, or explanation pages, not in the active reference
+contract.
 
 For the rationale — why deterministic over LLM, cost, and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/boundaries/why-deterministic-methods.md).
 
@@ -40,8 +43,8 @@ writes checked Concepts plus generated checked Work text and graph neighborhoods
 DB/read API `check_status = checked` verdict. `answer_query()` uses deterministic Python BM25.
 For project-scoped Ask, it expands the query with checked project scope/facet
 terms and checked linked thesis terms before ranking. `run_bm25_eval()`
-provides the eval harness. Rerank and broader global query expansion are later
-Ask/retrieval eval work; they count only after they beat the BM25 baseline.
+provides the eval harness. Rerank and broader global query expansion are not
+active product modes.
 
 Project gap analysis also reads SQLite catalog Work terms, checked project
 scope/facet terms, checked linked thesis terms, and first-order reference/related
@@ -59,8 +62,7 @@ edges without requiring search to rediscover the source.
 making them the default answer path.
 
 **Used by:** `memoria_vault.runtime.indexing` and
-`memoria_vault.runtime.retrieval` tests/fixtures. Product Ask still reports
-`bm25` unless a future fixture beats the active baseline.
+`memoria_vault.runtime.retrieval` tests/fixtures. Product Ask reports `bm25`.
 
 **Implementation:** fresh schema v8 creates `passages`, `passage_fts`,
 `passage_vec`, `file_index_state`, and `concept_edges`. Passage rows are derived

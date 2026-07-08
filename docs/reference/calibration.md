@@ -27,8 +27,8 @@ merge, block, or reorder canonical work.
 
 Seeded-error probes follow the same rule. They can surface calibration findings
 in the ordinary review stream, and reviewers can record accept/reject
-dispositions on those findings, but those dispositions train future threshold
-work rather than changing the canonical artifact automatically.
+dispositions on those findings, but those dispositions do not change the
+canonical artifact automatically.
 
 ## Drift
 

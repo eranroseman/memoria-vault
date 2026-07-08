@@ -49,10 +49,12 @@ nodes and edges it followed.
 
 **4. Render the Canvas when useful.**
 
-Run export with the same project path when a generated output is useful:
+Run the packaged Canvas operation with the same project path when a generated
+output is useful:
 
 ```bash
-memoria project export --workspace <vault> projects/my-project/project.md
+memoria operation run --workspace <vault> render-project-argument-canvas \
+  --payload-json '{"project_path":"projects/my-project/project.md"}'
 ```
 
 The worker writes generated project output beside the project, including:

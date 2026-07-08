@@ -22,7 +22,7 @@ used as framing, or rejected. The design argument is
 | Persistent work queue | Hermes Agent | Historical inspiration; the standalone runtime uses operation requests in the workspace DB. |
 | Durable-state thesis | [Chen et al. 2026](bibliography.md#chen2026autonomous), [MetaGPT](bibliography.md#hong2024metagpt), [PARNESS](bibliography.md#wang2026parness) | Thin control over thick state. |
 | Claim-to-evidence chain | [ScientistOne](bibliography.md#meng2026scientistone), [AutoResearchClaw](bibliography.md#liu2026autoresearchclaw) | Peer-reviewer claim-trace and citation checks. |
-| Point-of-action discovery | Karpathy Autoresearch | Deferred nightly Librarian discovery with bounded batch size. |
+| Point-of-action discovery | Karpathy Autoresearch | Provider-discovered Work candidates surface as unchecked attention and exploration-channel items. |
 
 ## Adapt
 
@@ -34,7 +34,7 @@ used as framing, or rejected. The design argument is
 | Inspiration retrieval before drafting | [SciMON](bibliography.md#wang2024scimon) | Novelty optimizer. |
 | Hypothesis-feedback taxonomy | [MOOSE](bibliography.md#yang2026moose) | Autonomous judgment; used as a verification rubric. |
 | Chain-of-Evidence taxonomy | [ScientistOne](bibliography.md#meng2026scientistone) | Score-as-gate; reserved for Peer-reviewer claim trace. |
-| Scenario-typed retrieval | [PARNESS](bibliography.md#wang2026parness) | Extended relation vocabulary remains deferred. |
+| Scenario-typed retrieval | [PARNESS](bibliography.md#wang2026parness) | Memoria keeps the current authored relation vocabulary narrow: `supports`, `contradicts`, and `extends`. |
 | Per-paper structured representation | [MASSW](bibliography.md#zhang2024massw), [Knows](bibliography.md#yu2026knows) | Five-aspect schema (context/key-idea/method/outcome/projected-impact) drives automatic ingest population; `work_aspects` read-model rows are queryable. |
 | Consensus pre-filter, benchmarks, shared synthesis pool, trace capture, systematic review mode | [AI-Supervisor](bibliography.md#long2026aisupervisor), [CiteME](bibliography.md#press2024citeme), [AutoResearchBench](bibliography.md#xiong2026autoresearchbench), [AgentRxiv](bibliography.md#schmidgall2025agentrxiv), LatteReview, LitLLM | Scores can change what reaches the gate, never where the gate sits. |
 
@@ -48,7 +48,7 @@ used as framing, or rejected. The design argument is
 | [Gridach et al. 2025](bibliography.md#gridach2025agentic), [Bisht et al. 2026](bibliography.md#bisht2026agentic) | Collaborative rather than autonomous positioning; persistent world-model support. |
 | [Yue et al. 2026](bibliography.md#yue2026mcpnative) | Durable shared artifacts in MCP-native ecosystems; Memoria applies the same artifact discipline through the standalone engine/read API, with MCP only as an optional scoped transport. |
 | [Zhang et al. 2026](bibliography.md#zhang2026howfar) | Artifact-aware review supports the evidence-grounded Peer-reviewer and blocking gate. |
-| [Qi et al. 2023](bibliography.md#qi2023hypothesis), [Ren et al. 2025](bibliography.md#ren2025scientific) | Narrow inputs for future domain-science or diversity-tuning work. |
+| [Qi et al. 2023](bibliography.md#qi2023hypothesis), [Ren et al. 2025](bibliography.md#ren2025scientific) | Boundary examples for domain-science and diversity-tuning work outside the current product scope. |
 
 ## Ignore
 
