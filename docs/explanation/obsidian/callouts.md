@@ -11,9 +11,9 @@ nav_order: 3
 Not every agent output belongs on a dashboard. Some context is only useful while looking at a specific note — the comparative read on a paper matters when you open it to read the source, not in a daily roll-up. Dashboards surface *decisions across notes*; callouts surface *context inside one note*.
 
 Memoria uses three plain Markdown callout identifiers in shipped template notes.
-Alpha.19 does not ship Obsidian integrations, callout plugins, CSS snippets, or
-runtime adapters; editors that do not understand callouts still show them as
-quoted text.
+The alpha.20 Obsidian proof adapter does not add callout plugins, CSS snippets,
+or generated callout content; editors that do not understand callouts still show
+them as quoted text.
 
 For the exact shipped-vs-deferred contract, see the reference: Obsidian callouts.
 
@@ -33,7 +33,7 @@ The identifiers and drift check are in the reference.
 - Direct edits are observed by the same scan/check loop as other authored
   Markdown.
 - Future generated callout content would need to enter through the request and
-  trusted-writer path; alpha.19 does not ship that generator.
+  trusted-writer path; the proof adapter does not ship that generator.
 
 ---
 

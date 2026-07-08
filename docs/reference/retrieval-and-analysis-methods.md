@@ -91,7 +91,7 @@ hash-based fixture embedder.
 **For:** metadata enrichment, retraction monitoring, citation graph traversal.
 
 **Used by:** source enrichment, metadata checks, retraction sweep operations, and
-external metadata lookups. Zotero is not a live API dependency in alpha.19;
+external metadata lookups. Zotero is not a live API dependency in the standalone baseline;
 portable BibTeX/CSL exports are file inputs.
 
 **Cost:** per-call API budget. Determinism: most APIs are stable; some return ranked results that drift across calls.

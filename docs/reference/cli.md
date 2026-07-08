@@ -77,7 +77,8 @@ new hub` accepts `--description` plus optional `--body`; `memoria new project`
 accepts `--description` plus optional `--direction`. The generated files include
 the same frontmatter defaults and body heading shape as the shipped templates.
 
-Common runtime flags include `--workspace <path>`, `--json`, and
-`--actor pi|agent`. The default actor is `pi`; shell agents should pass
-`--actor agent` so queued writes record the correct request-envelope actor while
-still landing unchecked.
+Most workspace commands accept `--workspace <path>` and `--json`. Mutating
+workspace commands that expose `--actor` default to `pi`; shell agents should
+pass `--actor agent` so queued writes record the correct request-envelope actor
+while still landing unchecked. `memoria mcp` is the exception: it has no `--json`
+mode, requires `--read-scope`, and defaults `--actor` to `agent`.

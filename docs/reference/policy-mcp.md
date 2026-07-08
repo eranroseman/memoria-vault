@@ -6,16 +6,15 @@ nav_order: 19
 
 # Policy gate
 
-The alpha.19 write boundary is the standalone CLI/engine: operation manifests,
-request rows, staging, checks, promotion, and journal entries control machine
-mutations. Optional adapters may call
-`memoria_vault.runtime.policy.hook` before and after tool calls so external writes
-reuse the same fail-closed policy and audit behavior.
+The write boundary is the standalone CLI/engine: operation manifests, request
+rows, staging, checks, promotion, and journal entries control machine
+mutations. Optional adapters may call `memoria_vault.runtime.policy.hook` before
+and after tool calls so external writes reuse the same fail-closed policy and
+audit behavior.
 
-The baseline workspace does not ship adapter servers, lane override packages, or
-installed profiles. If an optional adapter supplies
-`.memoria/config/policy.yaml`,
-missing or invalid policy still fails closed.
+The baseline workspace does not install adapter servers, lane override packages,
+or installed profiles. If an optional adapter supplies
+`.memoria/config/policy.yaml`, missing or invalid policy still fails closed.
 
 ## Request Flow
 
