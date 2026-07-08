@@ -8,7 +8,7 @@ grand_parent: Reference
 # CLI
 
 `memoria` is the alpha.20 product surface. It operates on a standalone workspace
-through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
+through `--workspace <path>` and does not require optional adapters.
 This page is a guarded mirror of `src/memoria_vault/cli.py`; `docs_doctor.py`
 checks the command roster.
 

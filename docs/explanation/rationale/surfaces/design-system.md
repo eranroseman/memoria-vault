@@ -57,7 +57,7 @@ visual design doc. It's there because Memoria content travels through contexts
 where visual and verbal choices are equally load-bearing: operation prompts,
 Pandoc-generated exports, and note bodies are all authored against the same
 system. A terminology inconsistency (`"permanent note"` vs `"claim-note"`,
-`"Hermes profile"` vs `"agent"`) is as disruptive to coherence as a color
+`"adapter profile"` vs `"agent"`) is as disruptive to coherence as a color
 inconsistency. The design system is the place where both kinds of discipline are
 declared together.
 

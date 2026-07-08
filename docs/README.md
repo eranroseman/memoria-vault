@@ -139,9 +139,8 @@ engine are being validated as a standalone local product. What is not working to
   whether developed claims are ready to become prose.
 - **Single-user only** — team and multi-user review are out of scope by design.
 - **macOS is not supported** — only Linux (including WSL2) and Windows are tested.
-- **Some integrations are planned, not shipped** — e.g. expanded reference-manager support.
-
-Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; nothing here implies they work yet.
+Throughout the docs, unshipped capabilities are marked *planned* or *deferred*;
+nothing here implies they work yet.
 
 ---
 

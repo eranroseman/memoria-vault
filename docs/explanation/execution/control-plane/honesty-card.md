@@ -24,7 +24,6 @@ because the PI needs to inspect what the check found. Work prompts point to work
 waiting on the PI. None of the three turns an automated recommendation into a
 human disposition.
 
-The retired durable-card schema note is in [Document types](../../../reference/data-model/document-types.md#retired-inbox-card-schemas).
 Machine recommendations are soft verdicts only; [Request states and the review
 gate](states.md) owns the "never a gate" rule.
 

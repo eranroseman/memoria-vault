@@ -8,8 +8,8 @@ grand_parent: Reference
 # Surfaces and dashboards
 
 Dashboard and view inventory for the standalone workspace. Dashboards are
-consumers: they render workspace state and logs, never write. Alpha.20 does not
-ship `system/dashboards/*.md`; views are CLI/read-API surfaces and optional
+consumers: they render workspace state and logs, never write. The standalone
+baseline does not ship `system/dashboards/*.md`; views are CLI/read-API surfaces and optional
 editor adapters may render them later without owning state, checks, or
 navigation.
 

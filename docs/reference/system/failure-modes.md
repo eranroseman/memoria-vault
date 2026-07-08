@@ -13,7 +13,7 @@ All known failure modes, sorted by severity. Each entry: symptom, severity, caus
 
 | Severity | Escalates to |
 | --- | --- |
-| `CRITICAL` | Raises `loudness: block`: blocks new delegation or worker promotion until acknowledged, surfaces in the rail's **Now**, and records a Telegram push attempt when the bot environment is configured ([Document types](../data-model/document-types.md#retired-inbox-card-schemas)). |
+| `CRITICAL` | Raises `loudness: block`: blocks new delegation or worker promotion until acknowledged, surfaces in the rail's **Now**, and records a Telegram push attempt when the bot environment is configured ([Control plane](../control-and-policy/control-plane.md)). |
 | `HIGH` | Surfaced in the rail's **Now** and in Maintenance's Drift watch. |
 | `MEDIUM` | Surfaced in Maintenance during the weekly review. |
 | `LOW` | Aggregated weekly. |
@@ -41,7 +41,6 @@ Sorted by severity, then topic.
 | Request not progressing (`pending` / `running` / `failed`) | MEDIUM | Worker has not run, crashed mid-run, or recovery marked an interrupted run failed for explicit retry | See full recipe in [Fix a stuck card](../../how-to-guides/troubleshooting/fix-stuck-card.md). |
 | Citekey alias not found at ingest | LOW | Import payload or catalog row lacks the alias | Re-import the BibTeX/CSL file or capture the source by DOI/file path. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
-| Removed profile directory appears | LOW | A pre-alpha.14 profile package or lane override was copied into the package seed or workspace | Delete the profile/lane package and run `python3 scripts/checks/alpha14_negative_gate.py`. |
 
 ---
 

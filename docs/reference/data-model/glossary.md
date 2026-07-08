@@ -15,19 +15,12 @@ For the short version of the core terms, see [Home](../../README.md).
 
 ## System
 
-**ACP** (Agent Client Protocol) — an optional editor-level protocol for external
-chat adapters. The standalone runtime does not ship an ACP/Hermes profile setup.
-
 **Co-PI** — the research-partner role exposed through the standalone
-`memoria ask` / `memoria project ask` commands. Older designs mapped this role
-to a Hermes profile; the standalone runtime does not ship that profile.
+`memoria ask` / `memoria project ask` commands.
 
 **Operation** — a checked capability manifest plus runner behavior invoked by
 the CLI/engine. Operations compute and propose; the PI decides. The shipped
 operations are listed in [Operations](../commands-and-transports/operations.md).
-
-**Hermes** — an external agent runtime. It is not required by the standalone
-runtime and no Hermes profile setup ships in the baseline.
 
 **Memoria** — the whole system: the OKF knowledge bundles, capability manifests,
 standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`
@@ -35,18 +28,15 @@ runtime state.
 
 **PI** — the human principal investigator who owns and runs the vault. Makes
 every triage, disposition, and promotion decision. Single-user by design.
-(Older pages say "the human".)
 
 **Agent** — a model-backed process doing work. Memoria exposes agents through
 the standalone CLI/engine and optional adapters; it does not ship installed
 profile packages or lane assignments.
 
 **Standalone engine architecture** — PI · CLI · Engine · Operations · Storage ·
-Vault · Optional adapters ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
-[thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): PI intent enters through
-the CLI or observed file edits, the engine owns request/write/recovery state,
-and adapters are presentation layers over the same contracts. The older
-seven-layer architecture is historical context in [the standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+Vault · Optional adapters. PI intent enters through the CLI or observed file
+edits, the engine owns request/write/recovery state, and adapters are
+presentation layers over the same contracts.
 
 **Workspace** — the runtime vault root containing `notes/`, `hubs/`,
 `projects/`, `digests/`, `fulltexts/`, `inbox/`, `system/`, and `.memoria/`.
@@ -69,10 +59,6 @@ queue** (your Inbox queue) and **Drift** (open integrity flags).
 (`digests/`, `fulltexts/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
 Project (`projects/`).
 
-**Space** — historical name for the Library, Knowledge, and Project navigation
-surfaces. The standalone runtime stores their content directly in the corpus
-roots instead of shipping `spaces/*.md` dashboard notes.
-
 **Queue** — the **Inbox** (`projection: queue`): the daily attention surface
 reached from **Now -> Action queue**. It shows in-process Activity, then
 open attention projections such as `candidate`, `gap`, and `work-prompt`.
@@ -87,7 +73,7 @@ Clearing it to empty is the goal.
 Maintenance.
 
 **System dashboard** — a read-only view over metrics, request state, attention
-state, or linter findings. Alpha.20 does not ship `system/dashboards/*.md`;
+state, or linter findings. The standalone baseline does not ship `system/dashboards/*.md`;
 `inbox/` and CLI request/attention views carry the action surfaces.
 
 ---

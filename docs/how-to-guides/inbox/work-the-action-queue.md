@@ -65,6 +65,6 @@ attention items before adding more requests.
 ## Related
 
 - CLI command reference: [CLI](../../reference/commands-and-transports/cli.md)
-- Attention projections: [Document types](../../reference/data-model/document-types.md#retired-inbox-card-schemas)
+- Request and attention state: [Control plane reference](../../reference/control-and-policy/control-plane.md)
 - Current Concept types: [Document types](../../reference/data-model/document-types.md)
 - Why review is structural, not a convention: [Why the review gate is structural](../../explanation/rationale/boundaries/why-review-gate-is-structural.md)

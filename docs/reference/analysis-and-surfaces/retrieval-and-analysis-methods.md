@@ -34,9 +34,9 @@ schema validation, and ingest type-detection dispatch.
 **For:** finding checked retrieval documents by exact terms, citekeys, rare tokens, and short query text.
 
 **Used by:** `memoria ask`, project gap analysis, prompt-operation evidence
-pulls, and integrity sub-check candidate pulls. No QuickAdd pre-file similarity
-telemetry, standalone `similarity-check`, or `find-duplicates` command ships
-today.
+pulls, and integrity sub-check candidate pulls. The standalone baseline ships no
+pre-file similarity telemetry, standalone `similarity-check`, or
+`find-duplicates` command.
 
 **Implementation:** `memoria_vault.runtime.search_index.rebuild_checked_search_index()`
 writes checked Concepts plus generated checked Work text and graph neighborhoods into

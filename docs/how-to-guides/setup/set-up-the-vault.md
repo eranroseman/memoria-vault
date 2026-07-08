@@ -14,8 +14,8 @@ Run the bootstrap installer to provision the standalone CLI/runtime workspace an
 
 - Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
 - Windows PowerShell 5.1+ on Windows, or Ubuntu/Debian/WSL for the Linux path — macOS is not supported.
-- Hermes is optional. Obsidian is optional as an app, but the workspace seed
-  includes Memoria's Obsidian adapter files and core settings.
+- Obsidian is optional as an app, but the workspace seed includes Memoria's
+  Obsidian adapter files and core settings.
 
 ## Steps
 
@@ -42,9 +42,9 @@ bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 **2. What it does.** With your confirmation at each external step, the installer creates the runtime vault folder (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, initializes the workspace from the package seed, including Obsidian defaults, wires local hooks, and prints the vault-local CLI commands.
 
 The installer is standalone-only. It does not install external search tooling,
-Hermes, profiles, lane overrides, profile skills, Hermes crons, the Obsidian
-app, or Zotero integration. Direct `memoria init` calls can skip the seeded
-Obsidian profile with `--no-obsidian`; the bootstrap path keeps the default.
+external agent runtimes, the Obsidian app, or Zotero integration. Direct
+`memoria init` calls can skip the seeded Obsidian profile with `--no-obsidian`;
+the bootstrap path keeps the default.
 
 **3. Make your first git checkpoint** (recommended).
 

@@ -28,4 +28,4 @@ not directly promote Concept files.
 
 - The capture stage that creates the Work records these sweeps monitor: [Ingest routing](ingest.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](../system/installer.md)
-- The retired Inbox card contract: [Document types](../data-model/document-types.md#retired-inbox-card-schemas)
+- Request and attention state: [Control plane](../control-and-policy/control-plane.md)

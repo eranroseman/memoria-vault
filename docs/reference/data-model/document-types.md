@@ -19,6 +19,8 @@ trusted writer, and tests read those YAML files directly.
 
 The current schema defines 6 document types: `code-artifact`, `digest`,
 `fulltext`, `hub`, `note`, and `project`.
+Attention and action state are generated request/queue surfaces, not Concept
+types in the vault schema.
 
 For field grammar and validation behavior, see [Frontmatter fields](frontmatter.md).
 
@@ -26,14 +28,6 @@ Project `outline.md`, `draft.md`, and `code-artifact` records are project
 artifacts, not new human knowledge Concept types. Evidence-set markers inside
 drafts derive SQLite `evidence_sets` rows; the marker/DB contract is documented
 in [Evidence sets](../control-and-policy/evidence-sets.md).
-
-## Retired Inbox card schemas
-
-The standalone runtime has no durable Inbox-card Concept family in the vault
-skeleton. The source of truth remains
-`src/memoria_vault/product/workspace_seed/.memoria/schemas/types/`;
-attention and action state are generated operational surfaces, not checked
-Concept types.
 
 ## Related
 

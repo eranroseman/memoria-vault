@@ -7,7 +7,7 @@ grand_parent: Reference
 
 # Project structural impact
 
-`memoria_vault.runtime.subsystems.processing.project.structural_impact` computes the thesis-rooted argument graph for one Project and writes a generated Project gate index note. It is deterministic operation code, not a Hermes chat skill.
+`memoria_vault.runtime.subsystems.processing.project.structural_impact` computes the thesis-rooted argument graph for one Project and writes a generated Project gate index note. It is deterministic operation code, not a chat skill.
 
 ## Command
 

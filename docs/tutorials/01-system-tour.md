@@ -24,7 +24,7 @@ memoria doctor bundle --workspace .
 ```
 
 `status` is the quick health read. `doctor bundle` checks the local runtime and
-prints the backup contract without requiring Hermes, Obsidian, or Zotero.
+prints the backup contract without requiring optional adapters.
 Notice the workspace path and the absence of adapter requirements in the output.
 
 **2. Rebuild the checked search projection.**

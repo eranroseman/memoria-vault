@@ -7,13 +7,15 @@ nav_order: 2
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) create the workspace, install the `memoria` package into the vault-local venv, initialize the vault from the packaged workspace seed, and wire local integrity hooks. The standalone baseline does not install external search tooling, Hermes profiles, Hermes crons, the Obsidian app, or live Zotero integration; the package seed does include Memoria's default Obsidian plugin/settings.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) create the workspace, install the `memoria` package into the vault-local venv, initialize the vault from the packaged workspace seed, and wire local integrity hooks. The standalone baseline does not install external search tooling, external agent runtimes, the Obsidian app, or live Zotero integration; the package seed does include Memoria's default Obsidian plugin/settings.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../../../reference/system/installer.md).
 
 ## Why a bootstrap
 
-Before the bootstrap, the shipped installer did only one of the setup steps — register the Hermes profiles from an already-cloned repo. Everything else was manual and spread across five how-to guides, and a new user had to already have the whole stack installed before any of it worked. The gap was a single, guided first-run path — which is what the bootstrap is.
+The bootstrap exists because setup needs one guided first-run path. A new user
+should not need to assemble package installation, workspace initialization,
+hooks, and first-check commands from separate guides before Memoria can run.
 
 ## The shape of the flow
 
@@ -23,9 +25,8 @@ Ordered steps and the component checklist are owned by [Installer (bootstrap)](.
 
 One installer-specific sequencing choice worth calling out: Zotero stays outside
 the installer. It is an optional import/export workflow, not core provisioning,
-so its setup lives in the dedicated Zotero how-to. Hermes also stays outside the
-installer baseline: optional adapters may wrap the CLI/engine, but this bootstrap
-path is standalone.
+so its setup lives in the dedicated Zotero how-to. Optional adapters may wrap the
+CLI/engine, but this bootstrap path is standalone.
 
 The install contract is narrow: fresh install, detect-then-install, no
 clobbering user content, no writing secrets, and no in-place release migration.
@@ -40,8 +41,8 @@ dry-run possible, and stop instead of silently escalating privileges.
 
 Both supported installer entry points install the standalone CLI/runtime
 workspace. Editor adapters and external runtime experiments are separate from the
-bootstrap contract and must not reintroduce installed profiles or profile-only
-redeploy modes into the core installer.
+bootstrap contract and must not reintroduce adapter-only redeploy modes into the
+core installer.
 
 ## Simplifying decisions
 
