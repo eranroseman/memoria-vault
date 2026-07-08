@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Deterministic vault-eval scorer: diagnostic, never gating.
 
-Closes the loop ``eval_dispatch.py`` opens: where the dispatcher fans the gold
-set out as one local eval task per gold item, this operation reads the **reported
-results** and turns them into machine scores — zero-LLM, report-only, the same
-deterministic detector-over-the-vault shape as the dispatcher.
+Closes the loop ``eval_dispatch.py`` opens: where the dispatcher fans
+workspace-authored gold tasks out as local eval tasks, this operation reads the
+**reported results** and turns them into machine scores — zero-LLM,
+report-only, the same deterministic detector-over-the-vault shape as the
+dispatcher.
 
 The non-committing task result contract: eval task work never writes Concepts
 or catalog data — it ends its report with one fenced ``json`` block::
@@ -62,7 +63,7 @@ from pathlib import Path
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.subsystems.telemetry.eval import (
-    eval_dispatch,  # sibling: gold-set loader, frontmatter parser, quarter_of
+    eval_dispatch,  # sibling: local gold-task loader, frontmatter parser, quarter_of
 )
 
 METRICS_RELDIR = "system/metrics/eval"
