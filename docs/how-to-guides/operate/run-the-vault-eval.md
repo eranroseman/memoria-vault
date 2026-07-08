@@ -7,8 +7,8 @@ nav_order: 4
 
 # Run the vault eval
 
-Run Memoria's system-level evaluation on demand instead of waiting for the
-scheduled run. The eval is diagnostic, never gating.
+Run Memoria's system-level evaluation on demand instead of an
+operator-managed scheduled run. The eval is diagnostic, never gating.
 
 ## When to run it by hand
 
@@ -38,7 +38,9 @@ memoria eval run --workspace . --json
 
 **3. Run the eval work.**
 
-Each eval task reports results as JSON and does not mutate the vault.
+Each eval task keeps its work in scratch and reports results as JSON; it does
+not write Concepts or catalog data. The dispatcher and scorer still update eval
+state: `.memoria/eval/last-run.md` and, after scoring, `system/metrics/eval/runs.jsonl`.
 
 **4. Score the run.**
 

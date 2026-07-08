@@ -6,8 +6,8 @@ set out as one local eval task per gold item, this operation reads the **reporte
 results** and turns them into machine scores — zero-LLM, report-only, the same
 deterministic detector-over-the-vault shape as the dispatcher.
 
-The non-committing result contract: an eval run never writes the vault
-— it ends its report with one fenced ``json`` block::
+The non-committing task result contract: eval task work never writes Concepts
+or catalog data — it ends its report with one fenced ``json`` block::
 
     ```json
     {
