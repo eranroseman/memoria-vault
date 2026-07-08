@@ -9,10 +9,9 @@ state or design-repo git. All checks are REPORT-ONLY; none mutates the vault.
     python detectors.py --vault <path> --json
     python detectors.py --vault <path> --jsonl-out system/logs/lint-findings.jsonl
 
-The drift procedures in scope here (ADR-67): skeleton-drift and vault-hash-drift
-need only the vault tree and live here. Profile-install-drift and
-command-vocab-drift are out of scope -- they are repo/package concerns, not
-vault-side linter checks.
+The drift procedures in scope here, skeleton-drift and vault-hash-drift, need
+only the vault tree and live here. Profile-install-drift and command-vocab-drift
+are out of scope -- they are repo/package concerns, not vault-side linter checks.
 """
 
 from __future__ import annotations
@@ -78,7 +77,7 @@ REQUIRED_FIELDS = {
     "hub": ["id", "title", "tags", "links", "tag"],
     "project": ["id", "title", "tags", "links"],
 }
-# Canonical schemas (ADR-122): when .memoria/schemas/ + PyYAML are available the
+# Canonical schemas: when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
 # the dependency-free fallback so the operation still runs without PyYAML.
 TYPE_SCHEMAS: dict | None = None
@@ -210,8 +209,7 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
     REPORT-ONLY by design: the human decides keep / promote / discard in the
     weekly review. Never auto-archive -- the most useful drafts are often the
     ones not yet gotten to, so silent archival would hide them exactly when
-    they're most likely to be needed. (Formerly proposed as ADR-128, answer-draft
-    retention; realized here as a report-only check rather than a decision.)"""
+    they're most likely to be needed."""
     out, cutoff = [], time.time() - days * 86400
     folder = vault / "inbox" / "_answers"
     if not folder.is_dir():
@@ -284,7 +282,7 @@ _WIKI_VAL = re.compile(r"\[\[([^\]|#]+)")
 
 
 def frontmatter_link_check(vault: Path) -> list[Finding]:
-    """Authored connections must resolve (ADR-126): every wikilink inside the
+    """Authored connections must resolve: every wikilink inside the
     `links:` map and the `entity` field points at a real note. Citekeys in
     `sources` are bibliographic, not note links -- checked by the sweeps, not here."""
     notes = list(iter_notes(vault))
@@ -456,7 +454,7 @@ def misplaced_note(vault: Path) -> list[Finding]:
 
 
 def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
-    """A topic crossed the hub-creation threshold with no hub (ADR-126 Tier 1).
+    """A topic crossed the hub-creation threshold with no hub.
 
     Report-only: counts catalog Works and notes per topic/tag term and flags
     any term with >= `threshold` records that no existing hub already covers.

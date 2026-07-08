@@ -41,7 +41,7 @@ def write_proposal(
     citekey: str = "",
     url: str = "",
 ) -> Path:
-    """Write a candidate/gap card with the honesty body (D49). Returns the path."""
+    """Write a candidate/gap card with the honesty body."""
     if card_type not in PROPOSAL_TYPES:
         raise ValueError(f"not a proposal type: {card_type}")
     if certainty not in CERTAINTY:
@@ -84,7 +84,7 @@ def write_finding(
     loudness: str = "alert",
     evidence: str = "",
 ) -> Path:
-    """Write a flag/alert card that leads with the finding (ADR-51)."""
+    """Write a flag/alert card that leads with the finding."""
     if card_type not in VERIFICATION_TYPES:
         raise ValueError(f"not a verification type: {card_type}")
     if agent_recommendation not in RECOMMENDATION:
@@ -126,11 +126,13 @@ def write_work_prompt(
     dedupe_slug: str = "",
     prompt_kind: str = "",
 ) -> Path | None:
-    """Write a `work-prompt` card (ADR-51 honesty rules: action + what happened +
-    where to look — never a verdict). A prompt must point somewhere: `target`
-    (output path) and/or `request_id`. With `dedupe_slug` the filename
-    is stable (`work-prompt-<slug>.md`) and an already-present card is left
-    untouched — returns None instead of a path (idempotent emit)."""
+    """Write a `work-prompt` card.
+
+    Honesty rules: action + what happened + where to look, never a verdict. A
+    prompt must point somewhere: `target` (output path) and/or `request_id`.
+    With `dedupe_slug` the filename is stable (`work-prompt-<slug>.md`) and an
+    already-present card is left untouched — returns None instead of a path.
+    """
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
     if not (target or request_id):

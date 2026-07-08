@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""eval_dispatch.py — the vault-eval dispatcher (ADR-11: diagnostic, never gating).
+"""Vault-eval dispatcher: diagnostic, never gating.
 
 Fans the hand-curated gold set in ``.memoria/eval/`` into one local eval payload
 per ``lifecycle: current`` gold task, routed to the eval role named in frontmatter.
@@ -26,7 +26,7 @@ from pathlib import Path
 
 from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter
 
-# eval role -> the local role label that owns it (ADR-125 §4.1).
+# eval role -> the local role label that owns it.
 # Kept local so vault-eval can run without importing adapter or profile code.
 EVAL_ROLE_ASSIGNEE = {
     "catalog": "memoria-librarian",
@@ -40,9 +40,9 @@ EVAL_DIR = ".memoria/eval"
 LAST_RUN = "last-run.md"
 CREATED_BY = "memoria-eval"
 
-# the non-committing eval contract (ADR-11): a run never mutates the vault
+# the non-committing eval contract: a run never mutates the vault
 EVAL_PREAMBLE = (
-    "**Eval context (ADR-11 vault-eval — diagnostic, never gating).** This is a "
+    "**Eval context (vault-eval — diagnostic, never gating).** This is a "
     "gold-set capability check, not real work. Do NOT write to the vault: keep "
     "any working notes in scratch and report your answer and reasoning on this "
     "card. Score yourself against the rubric below honestly — a wrong answer "
@@ -141,7 +141,7 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
         "# vault-eval — last dispatch",
         "",
         "Written by `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` "
-        "(ADR-11). Do not edit;",
+        "using the non-committing eval contract. Do not edit;",
         "the next dispatch overwrites this file.",
         "",
         f"- **When:** {now}",

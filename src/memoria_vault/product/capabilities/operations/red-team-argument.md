@@ -40,4 +40,4 @@ links: {}
 Make the strongest honest case AGAINST {{input}}: the best alternative explanation for
 the evidence; the weakest load-bearing inference; what the argument needs to be true
 that it never states; and the single piece of evidence that would most damage it.
-Steelman, don't strawman -- the PI needs the real counter-case (D49), not a softball.
+Steelman, don't strawman -- the PI needs the real counter-case, not a softball.
