@@ -69,7 +69,7 @@ adapter may call the same CLI/engine, but it is not the source of truth for
 capabilities and does not write Memoria-owned state outside `/operation/run`.
 
 The absence is test-pinned by `tests/test_profiles.py` and
-`scripts/checks/alpha14_negative_gate.py`.
+`scripts/checks/removed_surface_gate.py`.
 
 ---
 

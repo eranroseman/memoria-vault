@@ -1,4 +1,4 @@
-"""Alpha.16 user-facing parity fixture."""
+"""User-facing parity fixture."""
 
 from __future__ import annotations
 

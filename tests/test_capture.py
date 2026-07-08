@@ -88,7 +88,7 @@ def test_capture_source_populates_work_aspect_read_model(tmp_path: Path) -> None
             "memoria": {
                 "aspects": {
                     "key_idea": "Coordination work is visible in local traces.",
-                    "projected_impact": "Excluded from the alpha.16 aspect model.",
+                    "projected_impact": "Excluded from the current aspect model.",
                 }
             },
         },

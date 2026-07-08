@@ -1,4 +1,4 @@
-"""Opt-in live runner checks for alpha.16."""
+"""Opt-in live runner checks."""
 
 from __future__ import annotations
 

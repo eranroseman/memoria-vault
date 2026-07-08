@@ -1,4 +1,4 @@
-"""Alpha.18 analyze_gaps free-join contract tests."""
+"""Analyze-gaps free-join contract tests."""
 
 from __future__ import annotations
 

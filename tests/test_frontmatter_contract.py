@@ -1,4 +1,4 @@
-"""Alpha.18 frontmatter normalization contract tests."""
+"""Frontmatter normalization contract tests."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ def test_note_modes_certainty_item_type_and_retired_fields() -> None:
         )
 
 
-def test_digest_hub_project_alpha18_fields() -> None:
+def test_digest_hub_project_current_fields() -> None:
     types = schema.load_types()
     digest = {
         "type": "digest",

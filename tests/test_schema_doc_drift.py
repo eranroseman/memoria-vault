@@ -1,4 +1,4 @@
-"""Alpha.18 schema-documentation drift lint tests."""
+"""Schema-documentation drift tests."""
 
 from __future__ import annotations
 

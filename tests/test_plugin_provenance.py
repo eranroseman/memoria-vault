@@ -1,4 +1,4 @@
-"""Alpha.20 allows only the standalone Obsidian proof-adapter package."""
+"""Only the standalone Obsidian proof-adapter package is allowed."""
 
 import sys
 from pathlib import Path
