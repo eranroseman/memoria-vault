@@ -9,9 +9,9 @@ intents for the local engine.
 
 Each payload carries ``eval:<task-id>:<quarter>``, so scheduled and on-demand
 re-runs inside the same quarter converge to one task intent. The body wraps the
-gold task in the non-committing eval contract (scratch-only writes; results are
-reported back as JSON, never written directly to the vault). A dispatch record
-is written to ``.memoria/eval/last-run.md``.
+gold task in the non-committing eval task contract (scratch-only task work;
+results are reported back as JSON, never written directly to Concepts or
+catalog data). A dispatch record is written to ``.memoria/eval/last-run.md``.
 
     python eval_dispatch.py --vault <path>             # dispatch (cron + on-demand)
     python eval_dispatch.py --vault <path> --dry-run   # print payloads, create nothing
@@ -40,7 +40,7 @@ EVAL_DIR = ".memoria/eval"
 LAST_RUN = "last-run.md"
 CREATED_BY = "memoria-eval"
 
-# the non-committing eval contract: a run never mutates the vault
+# the non-committing eval task contract: task work never mutates Concepts/catalog data
 EVAL_PREAMBLE = (
     "**Eval context (vault-eval — diagnostic, never gating).** This is a "
     "gold-set capability check, not real work. Do NOT write to the vault: keep "

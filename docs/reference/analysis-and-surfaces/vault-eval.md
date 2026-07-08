@@ -58,7 +58,7 @@ request queue handles serialization and deduplication ([machine judgments are la
 
 - One local eval task plan per `lifecycle: current` gold task.
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the scheduled wrapper and any on-demand re-runs inside a quarter converge to one request per task; a new quarter re-opens the window.
-- The task body wraps the task in the **non-committing eval contract**: scratch-only writes, results reported as JSON — a run never mutates the vault.
+- The task body wraps the task in the **non-committing eval task contract**: scratch-only task work, results reported as JSON, and no Concept or catalog writes. Dispatch itself writes `.memoria/eval/last-run.md`.
 - The dispatch record is written to `.memoria/eval/last-run.md` (plain markdown, overwritten each run).
 
 ```sh
@@ -72,7 +72,7 @@ memoria eval run --workspace <vault> --dry-run --json  # print, create nothing
 deterministic, report-only scorer. It turns each quarter's result payloads into
 machine scores.
 
-**The result contract.** An eval run never writes the vault; it ends its report with one fenced `json` block (the task body shows the exact template, pre-filled with the task id and quarter):
+**The result contract.** Eval task work never writes Concepts or catalog data; it ends its report with one fenced `json` block (the task body shows the exact template, pre-filled with the task id and quarter):
 
 ```json
 {
