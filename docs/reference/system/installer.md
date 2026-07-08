@@ -9,10 +9,10 @@ grand_parent: Reference
 
 The bootstrap installers (`scripts/install.sh` for Linux/WSL and
 `scripts/install.ps1` for Windows) create a standalone Memoria CLI/runtime
-workspace. They do not install Hermes profiles, lane overrides, the Obsidian
-desktop app, or live Zotero integration. They do seed Memoria's Obsidian plugin
-files and core Obsidian settings as part of `memoria init`; entering local
-adapter tokens remains a user action. Direct CLI initialization can opt out with
+workspace. They do not install external agent runtimes, the Obsidian desktop
+app, or live Zotero integration. They do seed Memoria's Obsidian plugin files
+and core Obsidian settings as part of `memoria init`; entering local adapter
+tokens remains a user action. Direct CLI initialization can opt out with
 `memoria init --no-obsidian`; the bootstrap installers use the default.
 
 The install model is **prepare target -> install package -> initialize
@@ -49,8 +49,7 @@ wrapper payload ships in the baseline workspace.
 
 ## Host Scheduler Wiring
 
-None. The installer does not wire Hermes cron jobs or any other host scheduler during
-bootstrap.
+None. The installer does not wire host scheduler entries during bootstrap.
 
 ## User-Supplied Values
 

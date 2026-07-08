@@ -91,7 +91,7 @@ The standalone baseline can run linter checks on demand through
 systemd timers, launchd, Task Scheduler, or another local scheduler. The lint
 wrapper runs the detectors, the per-session digests, and the worker
 `integrity-sweep` over the vault. Findings surface in Maintenance views and CLI
-output; no Hermes scheduler is required.
+output; no external scheduler is required.
 
 ---
 

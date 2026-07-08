@@ -25,8 +25,9 @@ memoria attention list --workspace <workspace>
 
 ## WIP Limits
 
-The standalone runtime does not enforce Hermes board WIP limits. Concurrency belongs to the
-standalone engine/runner and any operator-managed scheduler that invokes it.
+The standalone runtime does not enforce external board WIP limits. Concurrency
+belongs to the standalone engine/runner and any operator-managed scheduler that
+invokes it.
 
 ## Related
 

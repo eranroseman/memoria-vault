@@ -21,7 +21,7 @@ every field and count.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Frontmatter fields](data-model/frontmatter.md) | Schema-owned YAML frontmatter field grammar and ownership | Source-owned |
-| [Document types](data-model/document-types.md) | Schema-owned document types, owning files, and retired Inbox-card Concept status | Source-owned |
+| [Document types](data-model/document-types.md) | Schema-owned document types and owning files | Source-owned |
 | [Vocabulary](data-model/vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
 | [Wikilink and link conventions](data-model/wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
 | [Glossary](data-model/glossary.md) | Term definitions, alphabetical | Manual |

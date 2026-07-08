@@ -10,7 +10,7 @@ nav_order: 4
 Back-pressure exists to make overload visible before it becomes rubber-stamping.
 In the standalone baseline, concurrency belongs to the engine/runner and to any
 operator-managed scheduler that invokes it. The current reference records that
-Hermes board WIP caps are not a baseline control:
+external-board WIP caps are not a baseline control:
 [Control plane reference](../../../reference/control-and-policy/control-plane.md#wip-limits).
 
 ## Why collision domains still matter
