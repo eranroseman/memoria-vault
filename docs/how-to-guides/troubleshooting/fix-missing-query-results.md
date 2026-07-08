@@ -36,16 +36,17 @@ problems look similar:
 | If… | It's not this — see |
 | --- | --- |
 | The note shows a YAML parse error, or is missing from **un**filtered queries too | [Fix broken frontmatter](fix-broken-frontmatter.md) |
-| The **Co-PI** or semantic search misses notes (not a Dataview/Bases filter) | [Rebuild the search index](../operate/rebuild-the-search-index.md) |
+| The **Co-PI** or semantic search misses notes, not a filtered editor view | [Rebuild the search index](../operate/rebuild-the-search-index.md) |
 
 If the record appears in an unfiltered query but vanishes the moment you filter
 on a vocabulary field, you're in the right place.
 
 ## Detect
 
-**1. List every note `topics` value actually in use.** Drop this into a scratch
-note when using an optional editor — it surfaces the drift at a glance by
-grouping notes under each distinct value:
+**1. List every note `topics` value actually in use.** Run the Linter's
+`schema-check` first. If you installed Dataview in Obsidian yourself, this
+scratch query can also surface drift by grouping notes under each distinct
+value:
 
 ```dataview
 TABLE rows.file.link AS Notes
@@ -83,7 +84,8 @@ query source is refreshed.
 - **Wrong field.** Claim-bearing note subject tags live in `topics`; Work
   metadata uses `research_area` and `methodology`. Querying the wrong surface
   returns nothing even when every value is valid.
-- **Stale Dataview cache.** If a corrected note still won't show, force a re-index (toggle the file, or reload Obsidian) — Dataview occasionally lags a rename.
+- **Stale optional-editor cache.** If a corrected note still won't show in an
+  editor view, force that plugin to re-index or reload Obsidian.
 
 ## Related
 

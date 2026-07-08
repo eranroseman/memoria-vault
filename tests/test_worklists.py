@@ -44,7 +44,7 @@ def test_emit_worklist_writes_projection_rows_and_one_prompt(tmp_path):
     assert prompt_fm["projection"] == "attention"
     assert prompt_fm["attention_kind"] == "work-prompt"
     assert prompt_fm["raised_by"] == "worklists"
-    assert "system/worklists/worklists.base#By worklist" in prompt_fm["target"]
+    assert prompt_fm["target"] == "system/worklists/transformer-screening/"
     assert "lane" not in prompt_fm
     assert "task_id" not in prompt_fm
 

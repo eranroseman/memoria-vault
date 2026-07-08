@@ -16,7 +16,7 @@ for you.
 - **Operator-managed schedule** — wire the `memoria workspace check --workspace . --json` command through cron, systemd, launchd, Task Scheduler, or another local scheduler if you want unattended checks. The installer does not register that schedule.
 - **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed document blocks the commit.
 
-Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
+Run it by hand after a large batch ingest, after structural edits, or when a filtered view returns something unexpected.
 
 ## Steps
 

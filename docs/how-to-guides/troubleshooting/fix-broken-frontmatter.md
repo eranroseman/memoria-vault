@@ -8,10 +8,10 @@ nav_order: 3
 
 # Fix broken frontmatter
 
-**Symptom:** a note disappears from Dataview queries, or Obsidian's Properties panel shows a YAML parse error.
+**Symptom:** a note disappears from filtered views, or Obsidian's Properties panel shows a YAML parse error.
 
 - The Obsidian Properties panel shows a YAML parse error on a note
-- The note does not appear in Dataview queries that should include it
+- The note does not appear in filtered views that should include it
 - The Linter operation reports a schema or YAML finding on this note
 
 **Diagnosis:** the note's frontmatter contains malformed YAML, so the parser skips the whole block. Run the Linter operation to confirm and pinpoint the bad line.
@@ -57,12 +57,14 @@ The Linter's output names the specific line or field. Common fixes:
 
 **3. Save and verify in Obsidian.**
 
-After saving the fix, Obsidian should show no error in the Properties panel. The note should appear in Dataview queries within a few seconds (Dataview re-indexes on file change).
+After saving the fix, Obsidian should show no error in the Properties panel. If
+you installed an optional filtered-view plugin, the note should reappear after
+that plugin re-indexes the file.
 
 ## Verify
 
-In Obsidian, run this Dataview query in a new note to confirm the repaired note
-is visible:
+If you installed Dataview in Obsidian yourself, this scratch query can confirm
+the repaired note is visible:
 
 ```dataview
 FROM "notes"
