@@ -12,7 +12,7 @@ Run the bootstrap installer to provision the standalone CLI/runtime workspace an
 
 ## Prerequisites
 
-- Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
+- Git and Python 3.12+ with venv support on your `PATH`; sandbox images must include Git too.
 - Windows PowerShell 5.1+ on Windows, or Ubuntu/Debian/WSL for the Linux path — macOS is not supported.
 - Obsidian is optional as an app, but the workspace seed includes Memoria's
   Obsidian adapter files and core settings.

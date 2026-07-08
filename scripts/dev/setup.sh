@@ -40,7 +40,7 @@ if [ -n "$PY" ]; then
     note "editable install failed — run manually: $PY -m pip install -e ."
   fi
 else
-  note "python not found — install Python 3 first"
+  note "python not found — install Python 3.12+ first"
 fi
 
 echo "==> Installing pre-commit hooks (git won't do this on clone — it's local config)"
