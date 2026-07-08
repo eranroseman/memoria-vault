@@ -95,7 +95,7 @@ projections are PI-facing views over work that needs review.
 **Worklist** — the batch surface for high-cardinality decisions: instead of one
 attention item per row, like decisions queue into one `system/worklists/` batch
 where each `projection: worklist-item` row has a `decision` field the PI can
-sweep in Bases.
+sweep in any editor or adapter view.
 
 ---
 

@@ -5,7 +5,7 @@
 (ADR-47): per-type frontmatter schemas (`types/<type>.yaml`), the type→folder
 map (`folders.yaml`), and the calibrated thresholds (`calibration.yaml`).
 This module is the reader shared by the Linter, the pre-commit hook,
-`memoria init`, package-spine tests, and Bases tests, so a schema change is a
+`memoria init`, package-spine tests, and no-Bases seed tests, so a schema change is a
 one-file edit, never a hunt across hardcoded lists.
 
 Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.

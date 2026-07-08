@@ -9,7 +9,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Contract | Authoritative source | Important consumers and checks |
 |---|---|---|
 | Repository agent policy | `AGENTS.md` | `.agents/`, contributor docs |
-| Vault document types and fields | `src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml` | Schema loader, linter, pre-commit, Bases tests, docs mirrors |
+| Vault document types and fields | `src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml` | Schema loader, linter, pre-commit, no-Bases seed guard, docs mirrors |
 | Type homes, staging/quarantine roots, skeleton | `src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml` | `memoria init`, linter, installer tests, worker promotion tests, docs mirrors |
 | Calibrated thresholds | `src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
 | Installed profile absence | `tests/test_profiles.py` + `scripts/checks/removed_surface_gate.py` | Installer tests, profile reference page |

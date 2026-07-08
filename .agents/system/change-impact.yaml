@@ -5,7 +5,7 @@ areas:
       - src/memoria_vault/product/workspace_seed/.memoria/schemas/types/**
     inspect:
       - Matching folder home
-      - Bases and read-API field consumers
+      - No-Bases seed guard and read-API field consumers
       - Linter and pre-commit behavior
       - Note-type and frontmatter documentation
     checks:

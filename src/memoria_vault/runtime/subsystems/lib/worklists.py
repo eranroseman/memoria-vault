@@ -3,7 +3,7 @@
 
 A high-cardinality report becomes many worklist projection notes under
 `system/worklists/<worklist>/`, plus exactly one aggregate Inbox attention prompt.
-The PI works the batch in Obsidian Bases by toggling each row's `decision` field.
+The PI works the batch by editing each row's `decision` field.
 
 Usage:
   python3 worklists.py emit --vault VAULT --report report.json --title "Batch title"
@@ -109,12 +109,12 @@ def emit_worklist(
         path.write_text(frontmatter_doc(frontmatter, "\n".join(body)), encoding="utf-8")
         item_paths.append(path)
 
-    target = f"system/worklists/worklists.base#By worklist · system/worklists/{slug}/"
+    target = f"system/worklists/{slug}/"
     prompt = inbox.write_work_prompt(
         vault,
         title=f"Review worklist: {title}",
         action=(
-            "Open the worklist Base, review the grouped rows, and set each "
+            "Open the worklist folder, review the grouped rows, and set each "
             "item's decision to include, exclude, maybe, or archived."
         ),
         what_happened=(
