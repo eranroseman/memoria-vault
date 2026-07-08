@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""retraction.py — the retraction sweep operation (ADR-125/D41).
+"""Retraction sweep operation.
 
 This thin, pure-stdlib checker covers retraction-by-DOI with three sources,
 most-authoritative first:

@@ -1,4 +1,4 @@
-"""ADR-126 Tier 2: hub-threshold findings create map-proposal requests."""
+"""Hub-threshold findings create map-proposal requests."""
 
 from pathlib import Path
 

@@ -131,7 +131,7 @@ Breaking changes use `!` in the header or a `BREAKING CHANGE:` footer, and must
 state what changed, who is affected, what action is required, and the replacement
 path. In Memoria, breaking changes include CLI command or JSON-contract changes,
 vault folder restructuring, provider/config field renames, and required
-ADR-frontmatter changes.
+frontmatter contract changes.
 
 ## Releases and changelog
 

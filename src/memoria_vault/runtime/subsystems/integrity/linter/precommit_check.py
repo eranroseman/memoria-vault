@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""precommit_check — schema-validate staged documents (the D50 pre-commit hook).
+"""Schema-validate staged documents for the pre-commit hook.
 
 Called by the pre-commit hook with the staged .md paths. Each typed document must
 pass its schema; untyped system infra and vault-root nav pages are exempt,

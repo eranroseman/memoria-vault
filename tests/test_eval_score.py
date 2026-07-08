@@ -1,4 +1,4 @@
-"""vault-eval scoring (ADR-11): the deterministic scorer turns the results
+"""Vault-eval scoring turns the results
 reported on eval cards into machine metrics — recall@k, support-rate, FAMA —
 appends them to system/metrics/eval/runs.jsonl, and never fakes a score: a
 task with no result block stays `unscored`."""
@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch, eval_score
 
 
@@ -29,20 +30,22 @@ def _vault(tmp_path: Path) -> Path:
         "## Input\nQ\n## Expected behavior\nE\n## Scoring rubric\nR\n",
         encoding="utf-8",
     )
-    sources = tmp_path / "catalog/sources"
-    (sources / "vaswani2017attention").mkdir(parents=True)
-    (sources / "vaswani2017attention/source.md").write_text(
-        "---\ntype: source\ncheck_status: checked\ntitle: Attention\n"
-        "description: Fixture source.\nwork_id: vaswani2017attention\n"
-        "citekey: vaswani2017attention\n---\n",
-        encoding="utf-8",
+    state.upsert_catalog_record(
+        tmp_path,
+        work_id="vaswani2017attention",
+        title="Attention",
+        description="Fixture source.",
+        citekey="vaswani2017attention",
+        check_status="checked",
     )
-    # a renamed record that still resolves via its `citekey:` frontmatter
-    (sources / "bert-paper").mkdir(parents=True)
-    (sources / "bert-paper/source.md").write_text(
-        "---\ntype: source\ncheck_status: checked\ntitle: BERT\n"
-        "description: Fixture source.\nwork_id: bert-paper\ncitekey: devlinbert\n---\n",
-        encoding="utf-8",
+    # a renamed record that still resolves via its catalog citekey
+    state.upsert_catalog_record(
+        tmp_path,
+        work_id="bert-paper",
+        title="BERT",
+        description="Fixture source.",
+        citekey="devlinbert",
+        check_status="checked",
     )
     notes = tmp_path / "notes"
     notes.mkdir(parents=True)

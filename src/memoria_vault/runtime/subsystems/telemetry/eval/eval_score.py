@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""eval_score.py — the deterministic vault-eval scorer (ADR-11: diagnostic, never gating).
+"""Deterministic vault-eval scorer: diagnostic, never gating.
 
 Closes the loop ``eval_dispatch.py`` opens: where the dispatcher fans the gold
 set out as one local eval task per gold item, this operation reads the **reported
-results** and turns them into machine scores — zero-LLM, report-only, the Linter
-scoring discipline of ADR-11 hosted with the sweeps operations (the same
-deterministic detector-over-the-vault shape as the dispatcher).
+results** and turns them into machine scores — zero-LLM, report-only, the same
+deterministic detector-over-the-vault shape as the dispatcher.
 
-The result contract (non-committing, ADR-11): an eval run never writes the vault
+The non-committing result contract: an eval run never writes the vault
 — it ends its report with one fenced ``json`` block::
 
     ```json
@@ -31,8 +30,8 @@ makes computable — **no fake scores**; a task with no result block is reported
 - ``recall_at_k``  — fraction of the task's gold citekeys (frontmatter
   ``references``) present in the top-*k* of ``retrieved`` (default k=3, the
   rubric's "top 3" window).
-- ``support_rate`` — fraction of ``cited`` citekeys resolving to a real catalog
-  record (note stem or ``citekey:`` frontmatter under ``catalog/``).
+- ``support_rate`` — fraction of ``cited`` citekeys resolving to a real SQLite
+  catalog Work row (``work_id`` or ``citekey``).
 - ``fama_clean``   — 1.0 if no note in ``claims`` is superseded, else 0.0
   (the FAMA check; same classification as the Linter's
   ``fama_exposure`` detector — a parity test guards it). Higher is better,
@@ -60,6 +59,7 @@ import re
 import sys
 from pathlib import Path
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.subsystems.telemetry.eval import (
     eval_dispatch,  # sibling: gold-set loader, frontmatter parser, quarter_of
@@ -73,16 +73,11 @@ _FENCED_JSON = re.compile(r"```(?:json)?\s*\n(\{.*?\})\s*```", re.S)
 
 
 def catalog_citekeys(vault: Path) -> set[str]:
-    """Every citekey/source id the catalog resolves."""
+    """Every citekey/source id the SQLite catalog resolves."""
     keys: set[str] = set()
-    for p in (vault / "catalog").rglob("*.md"):
-        fm = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8"))
-        if p.name == "source.md":
-            keys.add(p.parent.name)
-        else:
-            keys.add(p.stem)
+    for source in state.catalog_sources(vault, checked_only=False):
         for field in ("citekey", "work_id"):
-            value = fm.get(field)
+            value = source.get(field)
             if value:
                 keys.add(str(value))
     return keys

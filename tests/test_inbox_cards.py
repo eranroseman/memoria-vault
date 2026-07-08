@@ -47,7 +47,7 @@ def test_proposal_carries_no_verdict(tmp_path):
         "librarian",
     )
     fm = _frontmatter(p)
-    assert "agent_recommendation" not in fm  # D49: the verdict is a given — omitted
+    assert "agent_recommendation" not in fm  # the verdict is a given — omitted
     assert "finding" not in fm
 
 
@@ -119,7 +119,7 @@ def test_work_prompt_carries_no_verdict(tmp_path):
         request_id="REQ-1",
     )
     text = p.read_text(encoding="utf-8")
-    assert "agent_recommendation" not in text  # ADR-128: never a verdict
+    assert "agent_recommendation" not in text  # work prompts never carry verdicts
     assert "finding" not in _frontmatter(p)
 
 

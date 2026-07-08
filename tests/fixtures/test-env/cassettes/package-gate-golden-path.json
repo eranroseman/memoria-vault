@@ -92,7 +92,7 @@
         "action": "Discuss whether the cassette covers the project handoff path.",
         "argument_for": "The cassette exercises real deterministic operations.",
         "argument_against": "It does not judge live model quality.",
-        "what_tipped_it": "ADR-80 Phase 1 draws the line at model-free package-gate wiring.",
+        "what_tipped_it": "The package gate draws the line at model-free package-gate wiring.",
         "certainty": "likely",
         "raised_by": "test-env-harness"
       },
