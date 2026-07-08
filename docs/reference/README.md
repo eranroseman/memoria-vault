@@ -68,7 +68,7 @@ every field and count.
 
 | File | What it covers | Source |
 | --- | --- | --- |
-| [Ingest routing](pipelines-and-io/ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest | Manual |
+| [Ingest routing](pipelines-and-io/ingest.md) | Capture dispatch, enrichment gates, SQLite catalog rows, and source-content blobs | Manual |
 | [Sweeps](pipelines-and-io/sweeps.md) | Retraction maintenance passes | Manual |
 | [Search](pipelines-and-io/search.md) | search retrieval surface: checked-only BM25 baseline, consumers, index, and limits | Manual |
 | [Export routes and formats](pipelines-and-io/export.md) | Citation states, export routes, editor comparison, deliverable targets | Manual |
