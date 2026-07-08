@@ -8,7 +8,9 @@ nav_order: 23
 
 Memoria outputs travel through multiple renderers — Obsidian's live preview, Pandoc exports (Word, PDF), and open-design's render pipeline. Without a shared visual spec, each consumer makes independent choices that compound over time: the heading scale used in a delivered PDF becomes different from the callout colors in Obsidian, which become different from the CSS in a web export. The design system is the single source that all consumers read.
 
-The vault file `.memoria/design-system.md` *implements* the spec for this vault (the actual values). This page explains the principles behind the choices.
+Alpha.20 does not ship a vault-local `.memoria/design-system.md` implementation
+file. This page preserves the design principles for future export and adapter
+work without adding a non-runtime file to the package seed.
 
 ---
 
@@ -31,8 +33,8 @@ What the design system adds is *scope*: this fixed-palette rule applies to every
 ## Fonts and spacing
 
 System font stacks and a 4px spacing base keep Obsidian, Pandoc, and web renders
-close without shipping fonts or per-consumer spacing overrides. The exact values
-live in `.memoria/design-system.md`.
+close without shipping fonts or per-consumer spacing overrides. Exact token
+values are deferred until a renderer needs them.
 
 ---
 
@@ -44,15 +46,11 @@ The voice section — person, formality, terminology — might seem misplaced in
 
 ## Drift discipline
 
-The vault file is the live implementation; this page explains the philosophy.
-When the brand evolves, the vault file changes first — the docs follow. The
-Linter's `design-system-drift` detector reports consumer drift: off-palette
-colors, font sizes outside the scale, emoji in note titles, ad-hoc callout
-variants, and terminology/capitalization drift. The standalone baseline does not ship CSS
-snippets or editor-plugin link styling; optional editor adapters may render the
-same design tokens later, but they are not part of the baseline.
-
-This asymmetry is intentional: the vault file is the spec; consumers are subordinate to it. When they diverge, the answer is always "update the consumer to match the spec," never "update the spec to match a stray consumer."
+This page explains the philosophy only. Alpha.20 removed the vault-local design
+system file and the historical drift detector with it. The standalone baseline
+also does not ship CSS snippets or editor-plugin link styling; optional editor
+adapters may render shared design tokens later, but they are not part of the
+baseline.
 
 ---
 
@@ -60,4 +58,4 @@ This asymmetry is intentional: the vault file is the spec; consumers are subordi
 
 - The visual discipline this system enables: [Visual discipline](visual-discipline.md)
 - The callout types and their fixed three-color palette: [Callouts](../explanation/obsidian/callouts.md)
-- Vault implementation file: `.memoria/design-system.md`
+- Runtime implementation file: none in alpha.20

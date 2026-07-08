@@ -6,49 +6,49 @@ nav_order: 24
 
 # Distribution model
 
-Memoria ships from the `memoria-vault` repo as a workspace template plus an
+Memoria ships from the `memoria-vault` repo as a packaged workspace seed plus an
 installable Python package ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 You clone it, or run the one-line bootstrap that clones it for you, and the
 bootstrap installer at the repo root deploys the standalone workspace.
 
 | Path | Contents | Audience |
 | --- | --- | --- |
-| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both derive the workspace from `vault-template/` and install the standalone CLI/runtime package. | End users (run once). |
-| `vault-template/` | **Source files only, never a live vault**: templates, OKF knowledge bundles, capability manifests, schemas, dashboards, and patterns. The installer scaffolds the vault tree and populates it from here. | The installer (and contributors). |
-| `src/memoria_vault/` | The installable Python package for shared runtime helpers and policy logic. | Memoria operations, optional adapter servers, tests, and contributors. |
+| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both install the standalone CLI/runtime package and call `memoria init`. | End users (run once). |
+| `src/memoria_vault/product/workspace_seed/` | The **minimal runtime seed** packaged with `memoria`: schemas, provider config, pre-commit hook, seeded-error bundle, prompt preamble, steering, vocabulary, and `.gitignore`. | The CLI initializer and tests. |
+| `src/memoria_vault/` | The installable Python package for runtime helpers, operation manifests, policy logic, and the workspace seed. | Memoria operations, optional adapter servers, tests, and contributors. |
 | `packages/memoria-obsidian/` | Optional alpha.20 proof adapter for Obsidian. It consumes the local HTTP surface and is not installed into the baseline vault. | Adapter testers and contributors. |
 | `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
-The installer derives the running workspace from `vault-template/` at a working
-location. The deployed workspace is self-contained - it does not carry `docs/`,
-so any reference from a workspace-resident file to `docs/` is a **GitHub Pages
-URL, never a relative path**. The installers live at the repo root (not inside
-`src/`) because the bootstrap is the clone/entry point; installing requires the
-whole repo. See [Bootstrap installer](bootstrap-installer.md) for the installer's
-design and [Installer (bootstrap)](../reference/installer.md) for the component
-inventories.
+The installer derives the running workspace by installing the package and
+calling `memoria init` at a working location. The deployed workspace is
+self-contained - it does not carry `docs/`, so any reference from a
+workspace-resident file to `docs/` is a **GitHub Pages URL, never a relative
+path**. The installers live at the repo root (not inside `src/`) because the
+bootstrap is the clone/entry point; installing requires the whole repo. See
+[Bootstrap installer](bootstrap-installer.md) for the installer's design and
+[Installer (bootstrap)](../reference/installer.md) for the component inventories.
 
-Shipping `vault-template/` rather than a live `vault/` template is deliberate:
-a live-vault template blurs "source of truth" with "a running instance" and
-invites accidental edits to the template. With `vault-template/`, authoring
-(the repo/package) and runtime use stay cleanly separate, and user content and
-system files are structurally distinct from the first minute.
+The old `vault-template/` tree was removed in alpha.20. A second source tree had
+become a retention mechanism for empty directories, historical files, dashboards,
+templates, and adapter payloads. The package seed keeps only files the runtime
+actually reads; writable and generated paths are created by code from schema or
+projection contracts.
 
 ---
 
-## What ships in `vault-template/`
+## What Ships In The Package Seed
 
-`vault-template/` carries the **workspace skeleton** and **`.memoria/` scaffold**.
-The full directory catalog is [On-disk layout](../reference/on-disk-layout.md);
-the category-tree rationale is [The vault](../explanation/architecture/vault.md).
+`src/memoria_vault/product/workspace_seed/` carries only runtime seed files. The
+full directory catalog is [On-disk layout](../reference/on-disk-layout.md); the
+category-tree rationale is [The vault](../explanation/architecture/vault.md).
 Empty content dirs are recreated from `.memoria/schemas/folders.yaml`.
 
 ## Product-file refresh
 
 Memoria does not maintain an in-vault product-file restore baseline. Product
-files come from `vault-template/` and the installed `memoria_vault` package;
-repair is a fresh workspace refresh or package reinstall, not migration or
-three-way reconciliation inside the vault.
+files come from the installed `memoria_vault` package; repair is
+`memoria doctor --repair` or package reinstall, not migration or three-way
+reconciliation inside the vault.
 
 ---
 
@@ -61,8 +61,8 @@ allowlist: they describe the operation id, input/output schema, allowed tools,
 allowed paths, network ceiling, runner test/live branch policy, and required
 checks.
 
-The repo deliberately does not ship `vault-template/.memoria/profiles/`,
-`vault-template/.memoria/lane-overrides/`, or a profile-rendering script. The
+The repo deliberately does not ship `.memoria/profiles/`,
+`.memoria/lane-overrides/`, or a profile-rendering script. The
 standalone `memoria` CLI and engine are the product surface. Optional adapters,
 including the Obsidian proof adapter, may call the same CLI/engine, but they are
 not the source of truth for capabilities and they do not belong in the runtime

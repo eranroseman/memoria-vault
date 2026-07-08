@@ -6,7 +6,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, install the `memoria` package into the vault-local venv, and wire local integrity hooks. Alpha.19 does not install external search tooling, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) install the `memoria` package into the vault-local venv, initialize the workspace from the package seed, and wire local integrity hooks. Alpha.20 does not install external search tooling, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -14,15 +14,16 @@ This page explains *why* the installer is shaped the way it is. The concrete inv
 
 Before the bootstrap, the shipped installer did only one of the setup steps — register the Hermes profiles from an already-cloned repo. Everything else was manual and spread across five how-to guides, and a new user had to already have the whole stack installed before any of it worked. The gap was a single, guided first-run path — which is what the bootstrap is.
 
-## The flow: scaffold, populate, install package
+## The flow: prepare, install package, initialize
 
-The distribution mechanism is `vault-template/` plus the installed Memoria package ([Distribution model](distribution-model.md)). The installer adds the flow:
+The distribution mechanism is the installed Memoria package, including its minimal workspace seed ([Distribution model](distribution-model.md)). The installer adds the flow:
 
 | Step | Purpose |
 | --- | --- |
-| Scaffold | Create the folder tree from `.memoria/schemas/folders.yaml`. |
-| Populate | Copy system files from `vault-template/`. |
-| Wire runtime | Initialize Git, add the pre-commit hook, create the vault-local venv, and install the Memoria package. |
+| Prepare target | Create or reuse an empty target folder and refuse an existing Memoria workspace. |
+| Install package | Create the vault-local venv and install the Memoria package. |
+| Initialize workspace | Run `memoria init` so the package seed copies runtime-required files and creates schema-owned folders. |
+| Wire hooks | Copy `.githooks/pre-commit` into `.git/hooks/pre-commit`. |
 
 Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md).
 

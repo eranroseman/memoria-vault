@@ -59,20 +59,8 @@ L0_COMMANDS = [
         "bash",
         "-n",
         "scripts/install.sh",
-        "scripts/install/manifest.sh",
         "scripts/sandbox/refresh-test-vault.sh",
         "scripts/sandbox/install-test-vault-local-llm.sh",
-    ],
-    [
-        "env",
-        "PYTHONPATH=src",
-        "python3",
-        "-m",
-        "memoria_vault.runtime.subsystems.integrity.linter.detectors",
-        "--vault",
-        "vault-template",
-        "--gate",
-        "dashboard-field-drift,design-system-drift",
     ],
 ]
 

@@ -12,7 +12,7 @@ have distinct body structures because they answer different questions and serve
 different epistemic purposes. Understanding why each section exists helps explain
 what makes a note function as knowledge rather than as accumulated text.
 
-For the frontmatter fields, templates, and field-by-field reference, see [Document types](../../reference/document-types.md).
+For the frontmatter fields and field-by-field reference, see [Document types](../../reference/document-types.md).
 
 ---
 
@@ -69,4 +69,4 @@ The three questions a hub body should answer — what is this area about, what b
 - Why the Links section compounds: [The knowledge cycle](knowledge-cycle.md)
 - What goes wrong without this structure: [Common pitfalls](common-pitfalls.md)
 - How to use the reading workflow: [Discuss a paper](../../how-to-guides/library/discuss-a-paper.md)
-- Document-type reference (templates, fields, lifecycle tables): [Document types](../../reference/document-types.md)
+- Document-type reference (fields, lifecycle tables): [Document types](../../reference/document-types.md)

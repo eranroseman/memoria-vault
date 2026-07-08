@@ -5,7 +5,7 @@ pages:
     owner: docs/reference/bibliography.md
   calibration.md:
     status: Source-owned
-    owner: vault-template/.memoria/schemas/calibration.yaml
+    owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml
   cli.md:
     status: Manual
     owner: docs/reference/cli.md
@@ -26,7 +26,7 @@ pages:
     owner: docs/reference/diagnostics.md
   document-types.md:
     status: Source-owned
-    owner: vault-template/.memoria/schemas/types/*.yaml
+    owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml
     check: check_document_type_reference_mirror
   evidence-sets.md:
     status: Manual
@@ -43,7 +43,7 @@ pages:
     owner: docs/reference/failure-modes.md
   frontmatter.md:
     status: Source-owned
-    owner: vault-template/.memoria/schemas/types/*.yaml
+    owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/types/*.yaml
     check: check_document_type_reference_mirror
   glossary.md:
     status: Manual
@@ -130,7 +130,7 @@ pages:
     owner: docs/reference/vault-eval.md
   vocabulary.md:
     status: Guarded mirror
-    owner: vault-template/system/vocabulary.md
+    owner: src/memoria_vault/product/workspace_seed/system/vocabulary.md
     check: check_vocabulary_reference_mirror
   wikilink-and-link-conventions.md:
     status: Manual

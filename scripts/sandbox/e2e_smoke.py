@@ -11,15 +11,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-import yaml
-
 ROOT = Path(__file__).resolve().parents[2]
 for path in (ROOT / "src", ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
 STAGE_LABELS = {
-    "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from vault-template/)",
+    "vault-assembly-1": "1. vault-assembly: initialize from package seed",
     "vault-assembly-2": "2. vault-assembly: git hook wiring",
     "vault-assembly-3": "3. vault-assembly: fresh-vault integrity",
     "commit-gate": "4. commit-gate: malformed note blocks, valid note passes",
@@ -32,12 +30,12 @@ STAGE_ORDER = tuple(STAGE_LABELS)
 
 
 def assert_vault_skeleton(root: Path, vault: Path) -> None:
-    folders = yaml.safe_load((root / "vault-template/.memoria/schemas/folders.yaml").read_text())
-    for folder in folders["skeleton"]:
-        (vault / folder).mkdir(parents=True, exist_ok=True)
+    from memoria_vault.runtime.subsystems.lib import schema
+
+    folders = schema.load_folders(vault / ".memoria/schemas")
     missing = [folder for folder in folders["skeleton"] if not (vault / folder).is_dir()]
     assert not missing, f"skeleton missing {missing}"
-    print(f"   skeleton ensured ({len(folders['skeleton'])} dirs); tree matches folders.yaml")
+    print(f"   skeleton present ({len(folders['skeleton'])} dirs); tree matches folders.yaml")
 
 
 def assert_no_obsidian_bundle(vault: Path) -> None:
@@ -53,7 +51,7 @@ def assert_executable(path: Path, label: str) -> None:
 
 
 def add_repo_paths(root: Path) -> None:
-    for path in (root, root / "vault-template/.memoria"):
+    for path in (root, root / "src"):
         if str(path) not in sys.path:
             sys.path.insert(0, str(path))
 
@@ -240,24 +238,27 @@ def _detector_verdict(vault: Path, env: dict[str, str]) -> str:
     return (result.stdout or "").strip().splitlines()[-1]
 
 
-def _copy_vault_template(root: Path, vault: Path) -> None:
-    shutil.copytree(
-        root / "vault-template",
-        vault,
-        dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(".git"),
-    )
-
-
 def _vault_assembly(root: Path, vault: Path, env: dict[str, str]) -> None:
     _stage("vault-assembly-1")
     if shutil.which("git") is None:
         _fail("git is required for vault-assembly and commit-gate checks")
-    _copy_vault_template(root, vault)
+    _run_or_fail(
+        [
+            _python(),
+            "-m",
+            "memoria_vault.cli",
+            "init",
+            "--workspace",
+            str(vault),
+            "--yes",
+            "--quiet",
+        ],
+        "memoria init failed",
+        env=env,
+    )
     assert_vault_skeleton(root, vault)
 
     _stage("vault-assembly-2")
-    _git_or_fail(vault, "init", "-q", message="git init failed")
     _git_or_fail(vault, "config", "user.email", "e2e@example.invalid", message="git config failed")
     _git_or_fail(vault, "config", "user.name", "Memoria E2E Smoke", message="git config failed")
     _git_or_fail(vault, "rev-parse", "--is-inside-work-tree", message="not a git repository")

@@ -6,8 +6,8 @@ nav_order: 2
 
 # Inbox card fields
 
-Alpha.19 has no durable Inbox card schemas in the vault skeleton. The source
-of truth remains `vault-template/.memoria/schemas/types/`; this page is kept as a
+Alpha.20 has no durable Inbox card schemas in the package seed. The source
+of truth remains `.memoria/schemas/types/`; this page is kept as a
 stable reference target and now records that no Inbox card Concept family ships.
 
 Inbox card Concept types do not ship. Attention and action state are

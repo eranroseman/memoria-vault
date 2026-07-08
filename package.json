@@ -2,7 +2,7 @@
   "name": "memoria-vault-devtools",
   "version": "0.0.0",
   "private": true,
-  "description": "Contributor-only dev tooling for the memoria-vault repo. NOT the Memoria product (that is scripts/install.sh + vault-template/.memoria/). Pins repo-local prose checks; never deployed to a vault.",
+  "description": "Contributor-only dev tooling for the memoria-vault repo. NOT the Memoria product (that is scripts/install.sh + src/memoria_vault/). Pins repo-local prose checks; never deployed to a vault.",
   "engines": {
     "node": ">=22"
   },

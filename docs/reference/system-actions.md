@@ -159,13 +159,13 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Literature discovery | provider-backed runtime operations | Uses configured provider allowlists and replay fixtures for tests; no live Zotero or required external agent server is authoritative. |
 | Portable bibliography import | `memoria work import --format bibtex` or `--format csl` | Reads local BibTeX or CSL JSON files as input data only; no live reference-manager DB/API is a baseline dependency. |
 
-## Scheduled tasks (`.memoria/scripts/`)
+## Scheduled tasks
 
 The deterministic scheduled jobs are optional operator wiring around the CLI and
-runtime package. `.memoria/scripts/cron-runner.sh` dispatches `worker`, `lint`,
-`eval`, and `retraction-refresh`. No scheduler is required for a one-shot
-CLI workflow; a systemd timer, cron entry, launchd job, or another local
-scheduler can call the runner when always-on maintenance is desired.
+runtime package. No scheduler wrapper ships in the baseline workspace. A systemd
+timer, cron entry, launchd job, Task Scheduler task, or another local scheduler
+can call the relevant `memoria ...` command when always-on maintenance is
+desired.
 
 ## Skills and prompts
 

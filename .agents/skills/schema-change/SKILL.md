@@ -1,6 +1,6 @@
 ---
 name: schema-change
-description: Implement or review changes to Memoria document schemas, folder homes, gated prefixes, calibration, templates, Bases, dashboards, linter validation, and installer skeleton without cross-file drift.
+description: Implement or review changes to Memoria document schemas, folder homes, gated prefixes, calibration, Bases, read surfaces, linter validation, and installer skeleton without cross-file drift.
 ---
 
 # Schema change
@@ -26,15 +26,15 @@ Read:
    - Folder home and whether the type is gated or transient
    - Migration impact on existing vaults
 2. Edit the canonical YAML first:
-   - `schemas/types/<type>.yaml` for fields and enums
-   - `schemas/folders.yaml` for homes, prefixes, and skeleton
-   - `schemas/calibration.yaml` for thresholds
+   - `src/memoria_vault/product/workspace_seed/.memoria/schemas/types/<type>.yaml` for fields and enums
+   - `src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml` for homes, prefixes, and skeleton
+   - `src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml` for thresholds
 3. Inspect and update affected consumers:
-   - Matching `vault-template/system/templates/<type>.md`
-   - `.base` views and dashboard queries
+   - Matching folder home and package-seed inventory
+   - `.base` views and read-API field consumers
    - Shared card writer or engine emitters
    - Linter/pre-commit behavior
-   - Installer skeleton and golden-copy behavior
+   - `memoria init`, installer, and package-spine behavior
    - Policy/pattern fallback constants when gated prefixes change
    - Frontmatter, document-type, layout, and workflow documentation
 4. Preserve invariants:
@@ -42,8 +42,8 @@ Read:
    - Lifecycle values are an ordered subset of the universal chain.
    - A type's `gated` flag agrees with its home under `gated_prefixes`.
    - Every home appears in the installer skeleton.
-   - Templates begin schema-valid.
-   - Bases and dashboards reference fields emitted by schemas/templates.
+   - The package seed stays limited to runtime-required seed files.
+   - Bases and read surfaces reference fields emitted by schemas.
    - Unknown fields remain allowed unless a release decision changes that contract.
    - Proposal, verification, and work-prompt card shapes remain distinct.
 5. Decide whether migration is needed. A breaking schema or folder change

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Memoria bootstrap installer  (Linux/WSL path; Windows uses install.ps1)
-# One command sets up the standalone Memoria CLI/runtime workspace: clones the
-# vault, installs the package into the vault-local venv, wires local integrity
-# hooks. macOS is not supported.
+# One command sets up the standalone Memoria CLI/runtime workspace: fetches the
+# repo when needed, installs the package into a vault-local venv, initializes the
+# workspace from the package seed, and wires local integrity hooks. macOS is not
+# supported.
 #
 # Inspect-first (recommended):
 #   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -40,7 +41,7 @@ REPO_DIR=""
 VAULT_PATH=""
 PYTHON=""
 VENV_PYTHON=""    # interpreter the Memoria runtime package lands in
-STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
+STAGING_REPO=""   # set only when WE clone to temp; removed on exit
 
 # Shell helpers.
 say()  { printf '%s\n' "$*"; }
@@ -96,7 +97,7 @@ python_install_guidance() {
 }
 
 # Remove the temp/staging clone on exit (only the one we created — never the
-# user's own clone when run inspect-first). The runtime vault is the copy.
+# user's own clone when run inspect-first).
 # NB: must return 0 — this is the EXIT trap, and its status becomes the script's
 # exit code. Without the `return 0`, a successful run from a local clone (where
 # STAGING_REPO is empty) would exit 1 on the failed `[ -n "" ]` test.
@@ -131,9 +132,9 @@ print_plan() {
   say "This will set up the standalone CLI/runtime workspace:"
   say "  1. ensure prerequisites (git, Python 3.12+ + venv; pandoc optional for exports)"
   say "  2. fetch the Memoria vault repo"
-  say "  3. copy the runtime vault to your chosen folder"
+  say "  3. create an empty runtime workspace folder"
   say "  4. install runtime dependencies + the memoria CLI into .memoria/.venv"
-  say "  5. initialize git and wire local hooks"
+  say "  5. initialize the workspace from the package seed and wire local hooks"
   say "  6. print CLI next steps"
   [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
   return 0
@@ -183,15 +184,15 @@ ensure_prereqs() {
 # Step 2 — locate or clone the repo  (sets REPO_DIR)
 resolve_repo() {
   hdr "Memoria vault source"
-  # Running from inside a clone? (script dir or cwd has vault-template/.memoria)
+  # Running from inside a clone? (script dir or cwd has pyproject.toml)
   local sdir=""
   if [ -f "${BASH_SOURCE[0]:-}" ]; then
     sdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   fi
-  if [ -n "$sdir" ] && [ -d "$sdir/vault-template/.memoria" ]; then
+  if [ -n "$sdir" ] && [ -f "$sdir/pyproject.toml" ]; then
     REPO_DIR="$sdir"; ok "Using the clone this script lives in: $REPO_DIR"; return
   fi
-  if [ -d "./vault-template/.memoria" ]; then
+  if [ -f "./pyproject.toml" ]; then
     REPO_DIR="$(pwd)"; ok "Using the clone in the current directory: $REPO_DIR"; return
   fi
   # Piped (curl | bash): clone fresh into a temp/staging dir (removed on exit).
@@ -199,12 +200,12 @@ resolve_repo() {
   STAGING_REPO="$REPO_DIR"
   say "Not run from a clone — fetching the repo to a staging dir."
   run git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$REPO_DIR"
-  [ "$DRY_RUN" -eq 1 ] || [ -d "$REPO_DIR/vault-template/.memoria" ] || die "Clone did not contain vault-template/.memoria."
+  [ "$DRY_RUN" -eq 1 ] || [ -f "$REPO_DIR/pyproject.toml" ] || die "Clone did not contain pyproject.toml."
   ok "Cloned to $REPO_DIR"
 }
 
-# Step 4 — copy the runtime vault to its target  (sets VAULT_PATH)
-copy_vault() {
+# Step 3 — create the runtime workspace target  (sets VAULT_PATH)
+prepare_vault() {
   hdr "Runtime vault"
   local target="$VAULT_OVERRIDE"
   if [ -z "$target" ]; then
@@ -215,35 +216,25 @@ copy_vault() {
   case "$target" in "~"/*) target="$HOME/${target#~/}" ;; "~") target="$HOME" ;; esac
   VAULT_PATH="$target"
 
-  local src="$REPO_DIR/vault-template"
-  [ -d "$src/.memoria" ] || die "No vault template at $src (.memoria missing)."
-
   if [ -d "$VAULT_PATH/.memoria" ]; then
     die "$VAULT_PATH is already a Memoria vault. This installer is fresh-install only; choose an empty target or move the existing vault aside."
   fi
 
   run mkdir -p "$VAULT_PATH"
-  if have rsync; then
-    run rsync -a --exclude '.git' "$src"/ "$VAULT_PATH"/
-  else
-    run_sh "cp -R \"$src\"/. \"$VAULT_PATH\"/"
-  fi
-  ok "Vault deployed to $VAULT_PATH"
+  ok "Workspace target ready at $VAULT_PATH"
+}
 
-  # Recreate the empty-folder skeleton. The repo no longer ships `.keep`
-  # placeholders, so these dirs would otherwise be missing on a fresh target.
-  local d
-  for d in "${SKELETON_DIRS[@]}"; do
-    run mkdir -p "$VAULT_PATH/$d"
-  done
-  ok "Folder skeleton ensured (${#SKELETON_DIRS[@]} dirs)"
+initialize_workspace() {
+  hdr "Workspace seed"
+  local memoria_bin
+  memoria_bin="$(dirname "$VENV_PYTHON")/memoria"
+  [ "$DRY_RUN" -eq 1 ] || [ -x "$memoria_bin" ] || die "Missing memoria CLI at $memoria_bin"
+  run "$memoria_bin" init --workspace "$VAULT_PATH" --yes
+  ok "Workspace initialized from package seed"
+}
 
-  if [ ! -d "$VAULT_PATH/.git" ]; then
-    run git -C "$VAULT_PATH" init -q
-    run git -C "$VAULT_PATH" branch -M main
-    ok "Git repo initialized for checkpoints and hooks"
-  fi
-
+wire_vault_hook() {
+  hdr "Git hook"
   if [ -d "$VAULT_PATH/.git" ] || [ "$DRY_RUN" -eq 1 ]; then
     run mkdir -p "$VAULT_PATH/.git/hooks"
     run cp "$VAULT_PATH/.githooks/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
@@ -252,13 +243,6 @@ copy_vault() {
   else
     say "  (vault is not a git repo yet — initialize git, then copy .githooks/pre-commit into .git/hooks/pre-commit)"
   fi
-
-  # The runtime vault is the user's own repo — the installer initializes Git so
-  # hooks can be wired, but it never commits or sets identity/remotes.
-  say "  Create your first checkpoint when ready:"
-  say "      cd \"$VAULT_PATH\""
-  say "      git add -A && git commit -m \"Initial Memoria vault\""
-  say "      git remote add origin <your-repo-url>   # optional — backup / multi-machine sync"
 }
 
 # Step 5 — runtime dependencies
@@ -320,7 +304,7 @@ print_cli_next_steps() {
   say "  1. Check the bundle:  \"$clicmd\" doctor bundle --workspace \"$VAULT_PATH\""
   say "  2. Rebuild search:    \"$clicmd\" workspace rebuild --workspace \"$VAULT_PATH\" --search"
   say "  3. Ask from CLI:      \"$clicmd\" ask --workspace \"$VAULT_PATH\" --question \"What needs attention?\""
-  say "  4. First checkpoint:  cd \"$VAULT_PATH\" && git add -A && git commit -m \"Initial Memoria vault\""
+  say "  4. Next checkpoint:   cd \"$VAULT_PATH\" && git status --short"
   [ "$DRY_RUN" -eq 1 ] && warn "This was a DRY RUN — nothing above was actually changed."
   return 0
 }
@@ -333,11 +317,10 @@ main() {
   confirm "Proceed with the standalone Memoria install?" || die "Aborted — nothing changed."
   ensure_prereqs
   resolve_repo
-  [ -f "$REPO_DIR/scripts/install/manifest.sh" ] || die "Installer manifest not found under $REPO_DIR/scripts/install"
-  # shellcheck source=scripts/install/manifest.sh
-  source "$REPO_DIR/scripts/install/manifest.sh"
-  copy_vault
+  prepare_vault
   install_runtime_deps
+  initialize_workspace
+  wire_vault_hook
   print_cli_next_steps
   hdr "Done"
 }

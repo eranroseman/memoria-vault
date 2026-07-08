@@ -9,8 +9,8 @@ scripts/install.ps1 @eranroseman
 .github/workflows/ @eranroseman
 .github/scripts/ @eranroseman
 
-# Agent profiles and vault machinery — core product logic
-vault-template/.memoria/ @eranroseman
+# Workspace seed and vault machinery — core product logic
+src/memoria_vault/product/workspace_seed/ @eranroseman
 
 # Signed-off design history
 design-history/ @eranroseman

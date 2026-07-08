@@ -37,10 +37,9 @@ PI can do something about it.
 
 ## Board-state support
 
-The full board-state dashboard (`system/dashboards/board-state.md`) is the
-maintenance/debugging entrypoint for the request and attention read APIs. Use
-it when the compact Inbox Activity strip is not enough and you need the exact
-CLI commands for queue state.
+The full board-state view is the maintenance/debugging entrypoint for the
+request and attention read APIs. Use it when the compact Inbox Activity strip is
+not enough and you need the exact CLI commands for queue state.
 
 It is read-only. Runtime queue state lives in SQLite and is surfaced through
 `memoria request ...` and `memoria attention ...`; there is no file-backed board

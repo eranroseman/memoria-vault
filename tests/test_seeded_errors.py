@@ -16,9 +16,9 @@ from memoria_vault.runtime.seeded_errors import (
     seeded_probe_review_batch,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
+from tests.helpers import WORKSPACE_SEED
 
-ROOT = Path(__file__).resolve().parent.parent
-BUNDLE = ROOT / "vault-template/.memoria/eval/alpha15-seeded-errors.json"
+BUNDLE = WORKSPACE_SEED / ".memoria/eval/alpha15-seeded-errors.json"
 
 
 def test_seeded_error_bundle_is_frozen_contract() -> None:
@@ -116,7 +116,7 @@ def test_seeded_error_verdict_key_changes_with_mode_or_model() -> None:
 
 
 def test_seeded_fixture_uses_db_stale_flag_not_csl_standing(tmp_path: Path) -> None:
-    prepare_seeded_error_fixture(tmp_path, ROOT / "vault-template")
+    prepare_seeded_error_fixture(tmp_path, WORKSPACE_SEED)
 
     source = state.catalog_source(tmp_path, "stale-source")
     assert source is not None
@@ -134,7 +134,7 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
 ) -> None:
     result = run_seeded_error_verdict(
         tmp_path,
-        template_root=ROOT / "vault-template",
+        template_root=WORKSPACE_SEED,
         bundle_path=BUNDLE,
     )
 

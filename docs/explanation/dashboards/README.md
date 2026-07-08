@@ -8,7 +8,7 @@ permalink: /explanation/dashboards/
 
 # Surfaces and dashboards
 
-The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `inbox/`, `system/dashboards/`, and the alpha.19 corpus roots, are consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
+The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. In alpha.20 they live as `inbox/`, CLI/read-API views, metrics logs, and corpus roots rather than shipped `system/dashboards/*.md` files. They are consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
 
 | Group                                              | Dashboards                                                      | When you look                                     |
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
@@ -19,9 +19,9 @@ The **Inbox** is the *action queue* — discrete things that need you now. **Das
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.
-**Board state is the standalone worker-debug dashboard**
-(`system/dashboards/board-state.md`) — request and attention state for the local
-worker, surfaced via the `memoria` request/attention commands — that the Inbox
+**Board state is the standalone worker-debug view** — request and attention
+state for the local worker, surfaced via the `memoria` request/attention
+commands — that the Inbox
 links to, not the Inbox action queue itself. The Project space's gate is its own steering surface, not part of the dashboard
 collection. The synthesis-vs-structural split is by *actor*:
 open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and

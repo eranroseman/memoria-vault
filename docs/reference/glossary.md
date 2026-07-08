@@ -82,7 +82,8 @@ Clearing it to empty is the goal.
 `alert` attention projections; non-zero means structural debt is waiting in
 Maintenance.
 
-**System dashboard** — one of the read-only notes in `system/dashboards/`;
+**System dashboard** — a read-only view over metrics, request state, attention
+state, or linter findings. Alpha.20 does not ship `system/dashboards/*.md`;
 `inbox/` and CLI request/attention views carry the action surfaces.
 
 **Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [the thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).

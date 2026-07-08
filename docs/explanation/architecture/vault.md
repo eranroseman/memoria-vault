@@ -28,13 +28,13 @@ project framing, typed links, and `check_status`, not in lifecycle folders.
 ├── hubs/           ← Curated topic hubs
 ├── projects/       ← Project bundles
 ├── inbox/          ← Attention projections
-├── system/         ← visible infrastructure: dashboards, vocabulary, incidents, metrics
-└── .memoria/       ← hidden runtime: schemas, templates, eval, journal, SQLite, staging, quarantine
+├── system/         ← visible infrastructure: vocabulary and metrics
+└── .memoria/       ← hidden runtime: schemas, eval, journal, SQLite, staging, quarantine
 ```
 
 The type to folder-home map is machine-read
 (`.memoria/schemas/folders.yaml`) and is the single source for validators,
-projection generators, installer skeleton, and tests.
+projection generators, package seed, and tests.
 
 ## Types and their homes
 
@@ -45,7 +45,7 @@ in [Document types](../../reference/document-types.md).
 | --- | --- | --- |
 | Catalog | source and entity rows | Objective records from capture/import; checked before consumption. |
 | Knowledge | digest, fulltext, note, hub, project | The working graph. Digests and generated full text can be machine-owned; notes, hubs, and project curation carry PI judgment. |
-| System | dashboards, vocabulary, templates, eval, journal | Visible infrastructure plus hidden runtime fixtures and support files; product operations live in the installed package. |
+| System | vocabulary, eval, journal, metrics | Visible infrastructure plus hidden runtime fixtures and support files; product operations live in the installed package. |
 
 ## Write Boundary
 
@@ -94,7 +94,7 @@ the YAML schemas under `.memoria/schemas/`, and catalog rows that feed
 bibliography/materialization are governed by the decision that
 [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
-Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through scheduled or CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. Shipped product-file repair comes from package/template refresh, not an in-vault restore baseline.
+Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through scheduled or CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. Shipped product-file repair comes from package-seed repair, not an in-vault restore baseline.
 
 ---
 

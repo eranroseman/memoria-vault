@@ -30,7 +30,7 @@ section develops in [Requests and notes are different things](../control-plane/s
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
 
-For the complete document-type reference (fields, templates, lifecycle tables),
+For the complete document-type reference (fields, lifecycle tables),
 see [Document types](../../reference/document-types.md). For the current task
 surface that follows from this model, see the [Knowledge how-to
 guides](../../how-to-guides/knowledge/).

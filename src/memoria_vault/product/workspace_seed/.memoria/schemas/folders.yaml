@@ -1,5 +1,5 @@
-# Canonical alpha.19 workspace layout.
-# Read by: schema validators, the installer skeleton, and worker/promotion code.
+# Canonical alpha.20 workspace layout.
+# Read by: schema validators, `memoria init`, and worker/promotion code.
 categories: [notes, hubs, projects, digests, fulltexts]
 bundle_roots: [notes, hubs, projects, digests, fulltexts]
 
@@ -25,11 +25,11 @@ quarantine_root: .memoria/quarantine
 transient_prefixes:
   - inbox/
 
-# the full installer skeleton (content dirs get .gitkeep; ADR-125)
+# Runtime directories created by `memoria init`. Product seed files create their
+# own parents; this list is only for writable runtime and user-content roots.
 skeleton:
   - .memoria/index
   - .memoria/index/search
-  - .memoria/audit
   - .memoria/config
   - .memoria/eval
   - .memoria/journal
@@ -43,7 +43,6 @@ skeleton:
   - .memoria/staging/projects
   - .memoria/staging/digests
   - .memoria/staging/fulltexts
-  - .memoria/templates
   - inbox
   - notes
   - hubs
@@ -51,5 +50,4 @@ skeleton:
   - digests
   - fulltexts
   - system
-  - system/incidents
   - system/metrics

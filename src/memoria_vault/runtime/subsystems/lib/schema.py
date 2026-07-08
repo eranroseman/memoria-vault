@@ -4,9 +4,9 @@
 `.memoria/schemas/` is the single source for the vault's document-type vocabulary
 (ADR-47): per-type frontmatter schemas (`types/<type>.yaml`), the type→folder
 map (`folders.yaml`), and the calibrated thresholds (`calibration.yaml`).
-This module is the one reader every consumer shares — the Linter, the
-pre-commit hook, the installer-skeleton test, and the template/Bases tests —
-so a schema change is a one-file edit, never a hunt across hardcoded lists.
+This module is the reader shared by the Linter, the pre-commit hook,
+`memoria init`, package-spine tests, and Bases tests, so a schema change is a
+one-file edit, never a hunt across hardcoded lists.
 
 Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.
 `required_any` lists field names of which at least one must be present.
@@ -26,10 +26,10 @@ from memoria_vault.runtime.vaultio import is_ulid, universal_concept_frontmatter
 
 def _default_schemas_dir() -> Path:
     for parent in Path(__file__).resolve().parents:
-        candidate = parent / "vault-template/.memoria/schemas"
+        candidate = parent / "product/workspace_seed/.memoria/schemas"
         if candidate.is_dir():
             return candidate
-    return Path(__file__).resolve().parent.parent.parent / "schemas"
+    return Path(__file__).resolve().parents[3] / "product/workspace_seed/.memoria/schemas"
 
 
 SCHEMAS_DIR = _default_schemas_dir()

@@ -51,12 +51,10 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
         ".kilo/config.md",
         "scripts/install.sh",
         "scripts/README.md",
-        "vault-template/.memoria/profiles/memoria-linter/detectors.py",
         "src/memoria_vault/runtime/policy/hook.py",
-        "vault-template/.memoria/lane-overrides/coder.yaml",
         "src/memoria_vault/runtime/subsystems/processing/project/structural_impact.py",
-        "vault-template/.memoria/schemas/folders.yaml",
-        "vault-template/.memoria/design-system.md",
+        "src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml",
+        "src/memoria_vault/product/workspace_seed/.memoria/config/providers.yaml",
         "design-history/arcs.md",
     ]
 
@@ -88,7 +86,10 @@ def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
     )
     design_history_decision, _ = decide(["design-history/arcs.md"], "eranroseman", False)
     mixed_decision, _ = decide(
-        ["docs/reference/glossary.md", "vault-template/.memoria/schemas/types/note.yaml"],
+        [
+            "docs/reference/glossary.md",
+            "src/memoria_vault/product/workspace_seed/.memoria/schemas/types/note.yaml",
+        ],
         "eranroseman",
         False,
     )

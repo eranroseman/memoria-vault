@@ -86,7 +86,7 @@ Once a year (or after a major reading batch), walk each list:
 
 - `system/vocabulary.md` reflects the current active lists, each ≤ ~30 terms
 - A grep for each removed term returns no frontmatter hits
-- The Linter's `schema-check` and `dashboard-field-drift` detectors report nothing new
+- The Linter's `schema-check` detector reports nothing new
 
 ## Related
 

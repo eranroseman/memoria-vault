@@ -1,59 +1,10 @@
-"""vault-eval (ADR-11): the shipped gold set validates; dispatch fans it out
-as one idempotent local eval task per (current task, quarter), never gating."""
+"""vault-eval dispatches local eval tasks when a workspace authors them."""
 
 import datetime
-import re
 from pathlib import Path
 
-import yaml
-
 from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
-
-SRC = Path(__file__).resolve().parent.parent / "vault-template"
-EVAL = SRC / ".memoria" / "eval"
-
-REQUIRED_SECTIONS = ("## Input", "## Expected behavior", "## Scoring rubric")
-
-
-def _gold_files():
-    return [
-        p
-        for p in sorted(EVAL.glob("*.md"))
-        if not p.name.startswith("_") and p.name not in ("README.md", "last-run.md")
-    ]
-
-
-def _frontmatter(path: Path) -> dict:
-    m = re.match(r"^---\n(.*?)\n---", path.read_text(encoding="utf-8"), re.S)
-    assert m, f"{path.name}: no frontmatter block"
-    return yaml.safe_load(m.group(1))
-
-
-def test_shipped_gold_tasks_have_valid_dispatch_shape():
-    files = _gold_files()
-    assert len(files) >= 8, "the gold set ships ≥ 2 tasks per workflow"
-    for p in files:
-        fm = _frontmatter(p)
-        assert fm["type"] == "eval-task", p.name
-        assert fm["eval_role"] in eval_dispatch.EVAL_ROLE_ASSIGNEE, p.name
-        assert fm["lifecycle"] in {"current", "archived"}, p.name
-
-
-def test_gold_tasks_are_self_contained():
-    """Every task carries input, expected behavior, and a scoring rubric."""
-    for p in _gold_files():
-        body = p.read_text(encoding="utf-8")
-        for section in REQUIRED_SECTIONS:
-            assert section in body, f"{p.name} missing section {section}"
-
-
-def test_gold_set_covers_the_four_minimum_workflows():
-    by_workflow: dict[str, int] = {}
-    for p in _gold_files():
-        fm = _frontmatter(p)
-        by_workflow[fm["workflow"]] = by_workflow.get(fm["workflow"], 0) + 1
-    for wf in ("find", "extract", "link", "verify"):
-        assert by_workflow.get(wf, 0) >= 2, f"workflow {wf} needs ≥ 2 gold tasks"
+from tests.helpers import WORKSPACE_SEED
 
 
 def test_eval_role_assignees_cover_supported_roles():
@@ -66,8 +17,13 @@ def test_eval_role_assignees_cover_supported_roles():
     }
 
 
-def test_gold_task_roles_match_the_routed_roles():
-    roles = {_frontmatter(path)["eval_role"] for path in _gold_files()}
+def test_package_seed_ships_no_markdown_gold_tasks():
+    assert eval_dispatch.load_gold_tasks(WORKSPACE_SEED) == []
+
+
+def test_gold_task_roles_match_the_routed_roles(tmp_path):
+    tasks = eval_dispatch.load_gold_tasks(_fixture_vault(tmp_path))
+    roles = {task["eval_role"] for task in tasks}
     assert roles <= set(eval_dispatch.EVAL_ROLE_ASSIGNEE)
 
 
@@ -138,9 +94,8 @@ def test_dispatch_records_last_run(tmp_path, monkeypatch):
     assert not text.startswith("---")
 
 
-def test_card_body_carries_the_noncommitting_contract():
-    tasks = eval_dispatch.load_gold_tasks(SRC)
-    assert len(tasks) >= 8  # the shipped gold set loads from vault-template/
+def test_card_body_carries_the_noncommitting_contract(tmp_path):
+    tasks = eval_dispatch.load_gold_tasks(_fixture_vault(tmp_path))
     card = eval_dispatch.card_for(tasks[0], "2026-Q2")
     assert "Do NOT write to the vault" in card["body"]
     assert card["goal"].startswith("vault-eval 2026-Q2:")

@@ -13,6 +13,7 @@ import sys
 import tempfile
 import time
 import uuid
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
@@ -28,26 +29,19 @@ from memoria_vault.runtime.worker import (
 )
 
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
+WORKSPACE_SEED_PACKAGE = "memoria_vault.product.workspace_seed"
 SEED_TREES = (
-    ("vault-template/.memoria/schemas", ".memoria/schemas"),
-    ("vault-template/.memoria/config", ".memoria/config"),
-    ("vault-template/.memoria/eval", ".memoria/eval"),
+    (".githooks", ".githooks"),
+    (".memoria/config", ".memoria/config"),
+    (".memoria/eval", ".memoria/eval"),
+    (".memoria/patterns", ".memoria/patterns"),
+    (".memoria/schemas", ".memoria/schemas"),
 )
 SEED_FILES = (
-    ("vault-template/.gitignore", ".gitignore"),
-    ("vault-template/steering.md", "steering.md"),
-    ("vault-template/system/vocabulary.md", "system/vocabulary.md"),
+    (".gitignore", ".gitignore"),
+    ("steering.md", "steering.md"),
+    ("system/vocabulary.md", "system/vocabulary.md"),
 )
-NEW_CONCEPT_TEMPLATE_FIELDS: dict[str, tuple[str, ...]] = {
-    "note": ("note title", "ulid", "note description", "note body"),
-    "hub": ("hub title", "ulid", "hub description", "tag id", "hub body"),
-    "project": (
-        "project title",
-        "ulid",
-        "project description",
-        "project direction",
-    ),
-}
 SURFACE_ACTION = actions_by_id()
 
 
@@ -1843,29 +1837,9 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
 
 
 def _workspace_plan(workspace: Path) -> list[str]:
-    return [
-        "inbox",
-        "notes",
-        "hubs",
-        "projects",
-        "digests",
-        "fulltexts",
-        "system",
-        "system/incidents",
-        "system/metrics",
-        ".memoria/blobs",
-        ".memoria/config",
-        ".memoria/eval",
-        ".memoria/index/search/checked",
-        ".memoria/journal",
-        ".memoria/patterns",
-        ".memoria/staging/notes",
-        ".memoria/staging/hubs",
-        ".memoria/staging/projects",
-        ".memoria/staging/digests",
-        ".memoria/staging/fulltexts",
-        ".memoria/templates",
-    ]
+    from memoria_vault.runtime.subsystems.lib import schema
+
+    return list(schema.load_folders()["skeleton"])
 
 
 def _init_dry_run_report(workspace: Path, planned_dirs: list[str]) -> dict[str, Any]:
@@ -2030,19 +2004,30 @@ def _write_no_overwrite(target: Path, frontmatter: dict[str, Any], body: str) ->
 
 
 def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
-    source = _repo_root() / source_rel
+    source = _seed_resource(source_rel)
     if not source.is_dir():
         return
     if target.exists() and any(target.iterdir()) and not overwrite:
         return
-    shutil.copytree(source, target, dirs_exist_ok=True)
+    target.mkdir(parents=True, exist_ok=True)
+    for child in source.iterdir():
+        child_target = target / child.name
+        if child.is_dir():
+            _copy_seed_tree(f"{source_rel}/{child.name}", child_target, overwrite=overwrite)
+        elif overwrite or not child_target.exists():
+            child_target.parent.mkdir(parents=True, exist_ok=True)
+            child_target.write_bytes(child.read_bytes())
 
 
 def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None:
-    source = _repo_root() / source_rel
+    source = _seed_resource(source_rel)
     if source.is_file() and (overwrite or not target.exists()):
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
+        target.write_bytes(source.read_bytes())
+
+
+def _seed_resource(source_rel: str):
+    return files(WORKSPACE_SEED_PACKAGE).joinpath(*source_rel.split("/"))
 
 
 def _ensure_control_files(workspace: Path) -> None:
@@ -2583,10 +2568,6 @@ def _fail(message: str, *, json_output: bool) -> int:
     else:
         print(f"memoria: error: {message}", file=sys.stderr)
     return 2
-
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
 
 
 def _package_version() -> str:

@@ -15,10 +15,11 @@ classification, not a required-approval mechanism.
 Block: scratch/ is branch-owned ephemeral working material. It lives on the
 scratch branch and is not merged into main by PR.
 
-Block: any PR touching sensitive paths (.github/, vault-template/.memoria/,
-scripts/, or design-history/) is blocked for untrusted authors; trusted authors
-require a human review. Agent instruction surfaces are also sensitive: they can
-change what future automation is allowed or encouraged to do.
+Block: any PR touching sensitive paths (.github/,
+src/memoria_vault/product/workspace_seed/, scripts/, or design-history/) is
+blocked for untrusted authors; trusted authors require a human review. Agent
+instruction surfaces are also sensitive: they can change what future automation
+is allowed or encouraged to do.
 
 """
 
@@ -54,9 +55,9 @@ SENSITIVE_PREFIXES = (
     ".codex/",
     ".kilo/",
     "scripts/",
+    "src/memoria_vault/product/workspace_seed/",
     "src/memoria_vault/runtime/policy/",
     "src/memoria_vault/runtime/subsystems/",
-    "vault-template/.memoria/",
     "design-history/",
 )
 SENSITIVE_PATHS = {

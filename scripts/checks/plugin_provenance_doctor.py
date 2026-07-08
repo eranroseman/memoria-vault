@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate alpha.20 keeps plugin payloads out of the baseline vault template."""
+"""Validate alpha.20 keeps plugin payloads out of the baseline package seed."""
 
 from __future__ import annotations
 
@@ -9,8 +9,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 FORBIDDEN_REL = (
-    Path("vault-template/.obsidian"),
-    Path("vault-template/system/scripts"),
+    Path("src/memoria_vault/product/workspace_seed/.obsidian"),
+    Path("src/memoria_vault/product/workspace_seed/.memoria/plugins"),
+    Path("src/memoria_vault/product/workspace_seed/system/scripts"),
     Path("src/.obsidian"),
     Path("packages/obsidian-plugin"),
     Path("tests/test_memoria_inspector.py"),

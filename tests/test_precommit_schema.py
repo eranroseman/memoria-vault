@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from memoria_vault.runtime.subsystems.integrity.linter import precommit_check
+from tests.helpers import WORKSPACE_SEED
 
 
 def _vault(tmp_path: Path) -> Path:
@@ -159,7 +160,7 @@ def test_untyped_inbox_attention_projection_exempt(tmp_path):
 
 
 def test_hook_script_ships_executable():
-    hook = Path(__file__).resolve().parent.parent / "vault-template/.githooks/pre-commit"
+    hook = WORKSPACE_SEED / ".githooks/pre-commit"
     assert hook.is_file()
     assert hook.stat().st_mode & 0o111, "pre-commit hook must be executable"
 

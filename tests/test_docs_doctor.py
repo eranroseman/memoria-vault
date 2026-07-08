@@ -467,9 +467,10 @@ def test_heading_slugs_collects_markdown_headings_and_html_ids(tmp_path):
 
 def test_check_vocabulary_reference_mirror_compares_source_terms(tmp_path):
     repo = tmp_path
-    (repo / "vault-template" / "system").mkdir(parents=True)
+    seed_system = repo / "src/memoria_vault/product/workspace_seed/system"
+    seed_system.mkdir(parents=True)
     (repo / "docs" / "reference").mkdir(parents=True)
-    (repo / "vault-template" / "system" / "vocabulary.md").write_text(
+    (seed_system / "vocabulary.md").write_text(
         "## research_area\n\n- alpha — A\n\n## methodology\n\n- beta — B\n",
         encoding="utf-8",
     )

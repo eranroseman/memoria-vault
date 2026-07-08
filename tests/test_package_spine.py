@@ -24,6 +24,17 @@ def test_pyproject_declares_installable_memoria_package():
     assert data["tool"]["setuptools"]["packages"]["find"]["where"] == ["src"]
     assert data["tool"]["setuptools"]["packages"]["find"]["include"] == ["memoria_vault*"]
     assert data["tool"]["setuptools"]["package-data"]["memoria_vault"] == ["runtime/*.sql"]
+    assert data["tool"]["setuptools"]["package-data"]["memoria_vault.product.workspace_seed"] == [
+        ".githooks/*",
+        ".memoria/config/*",
+        ".memoria/eval/*",
+        ".memoria/patterns/*",
+        ".memoria/schemas/*.yaml",
+        ".memoria/schemas/types/*.yaml",
+        ".gitignore",
+        "steering.md",
+        "system/*.md",
+    ]
 
 
 def test_alpha16_stack_dependencies_stay_small_and_no_orm():
@@ -60,5 +71,41 @@ def test_bare_package_import_does_not_need_mcp_sdk():
 
 
 def test_vault_side_policy_package_is_removed():
-    assert not (ROOT / "vault-template/.memoria/memoria_runtime").exists()
+    assert not (ROOT / "src/memoria_vault/product/workspace_seed/.memoria/memoria_runtime").exists()
     assert packaged_policy.normalize_path("./a/b/../c") == "a/c"
+
+
+def test_workspace_seed_is_packaged_runtime_minimum():
+    seed = files("memoria_vault.product.workspace_seed")
+
+    for rel in (
+        ".githooks/pre-commit",
+        ".gitignore",
+        ".memoria/config/providers.yaml",
+        ".memoria/eval/alpha15-seeded-errors.json",
+        ".memoria/patterns/_preamble.md",
+        ".memoria/schemas/calibration.yaml",
+        ".memoria/schemas/folders.yaml",
+        ".memoria/schemas/types/note.yaml",
+        "steering.md",
+        "system/vocabulary.md",
+    ):
+        assert seed.joinpath(*rel.split("/")).is_file(), rel
+
+    for rel in (
+        "AGENTS.md",
+        "AGENTS.override.md",
+        "home.md",
+        "_nav.md",
+        "troubleshooting.md",
+        "index.md",
+        "bibliography.bib",
+        ".memoria/design-system.md",
+        ".memoria/templates/note.md",
+        ".memoria/plugins/memoria-policy-gate/plugin.yaml",
+        ".memoria/scripts/cron-runner.sh",
+        "system/dashboards/board-state.md",
+        "system/manifest.jsonl",
+        "notes/.gitkeep",
+    ):
+        assert not seed.joinpath(*rel.split("/")).is_file(), rel

@@ -7,24 +7,25 @@ nav_order: 24
 # Surfaces, Bases, and dashboards
 
 Dashboard and view inventory for the standalone workspace. Dashboards are
-consumers: they render workspace state and logs, never write. Optional editor
-adapters may render the same files, but they do not own state, checks, or
+consumers: they render workspace state and logs, never write. Alpha.20 does not
+ship `system/dashboards/*.md`; views are CLI/read-API surfaces and optional
+editor adapters may render them later without owning state, checks, or
 navigation.
 
 ---
 
 ## Dashboard inventory
 
-| Surface | Dashboard | File | Shows |
+| Surface | View | Backing surface | Shows |
 | --- | --- | --- | --- |
 | Queue | Inbox | `inbox/` | Daily attention queue (`projection: attention`), surfaced by the request/attention commands. |
-| Maintenance | Maintenance | `system/dashboards/` | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
+| Maintenance | Maintenance | request/attention/linter reads | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
 | Corpus | Library | `digests/`, `fulltexts/`, `bibliography.bib` | Source intake, checked digests, generated full text, and bibliography projection. |
 | Corpus | Knowledge | `notes/`, `hubs/` | Synthesis status, open questions, contradictions, hubs, and patterns. |
 | Corpus | Project | `projects/` | Project steering: active projects, refutation-stamp gate, saturation, and project gaps. |
-| Maintenance support | Board state | `system/dashboards/board-state.md` | Queue and attention projections for debugging worker state and PI-facing prompts. |
-| Runtime ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
-| Runtime ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
+| Maintenance support | Board state | `memoria request list` / `memoria attention list` | Queue and attention projections for debugging worker state and PI-facing prompts. |
+| Runtime ops | Audit log | `system/logs/audit.jsonl` | Recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
+| Runtime ops | Eval trend | `system/metrics/eval/runs.jsonl` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) — diagnostic, never gating. |
 
 The **Surface** column names the space, queue, maintenance collection, or support context where a dashboard is reached.
 The explanation site groups the support dashboards by the *kind of attention* they

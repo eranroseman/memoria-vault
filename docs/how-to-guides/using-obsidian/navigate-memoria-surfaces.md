@@ -15,10 +15,9 @@ Use Obsidian as a Markdown reader/editor if you like; use `memoria` for actions.
 | What should I read next? | `digests/` and `fulltexts/` | `memoria work add` or `memoria work import` |
 | What does the checked corpus say? | `notes/` and `hubs/` | `memoria ask --workspace . --question "<question>"` |
 | What gaps remain? | `projects/<slug>/project.md` | `memoria project gaps project-alpha --workspace .` |
-| Is the workspace healthy? | `system/dashboards/` | `memoria workspace check --workspace .` |
+| Is the workspace healthy? | linter/request views | `memoria workspace check --workspace .` |
 
-`_nav.md` links the same Markdown pages. It is a convenience file, not a runtime
-control surface.
+Navigation files are optional editor conveniences, not runtime control surfaces.
 
 ## Verify
 

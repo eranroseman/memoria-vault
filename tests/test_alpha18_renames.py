@@ -53,7 +53,7 @@ def test_alpha18_catalog_state_api_persists_work_id(tmp_path: Path) -> None:
 
 def test_alpha18_old_identifier_tokens_do_not_remain_in_implementation() -> None:
     old_tokens = ("source" + "_id", "source" + "_type", "journal" + "_events", "journal" + "_id")
-    roots = [ROOT / "src", ROOT / "scripts", ROOT / "vault-template/.memoria"]
+    roots = [ROOT / "src", ROOT / "scripts"]
     offenders = []
     for root in roots:
         for path in _text_files(root):

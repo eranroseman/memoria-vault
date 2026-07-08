@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""docs-doctor — structural linter for docs/ plus vault-template link text.
+"""docs-doctor — structural linter for docs/ plus package-seed mirrors.
 
 Enforces the conventions from the mode-first refactor plan. These are all
 *structural* checks; classifying a file by reading mode is a human concern and
@@ -14,10 +14,10 @@ Checks:
                         (GitHub does not auto-heal links when files move).
   3. Frontmatter policy — no file carries a disallowed key (`mode:`/`audience:`
                         dropped in the refactor; `tags:` unsanctioned). Enforced on
-                        docs and on the vault note templates' fenced frontmatter.
+                        docs and on optional note-template fenced frontmatter.
   4. No wikilinks     — a [[wikilink]] that resolves to a docs file must be a
                         relative Markdown link (GitHub does not render wikilinks).
-  5. Link text        — across docs/ and vault-template/, a link's visible text
+  5. Link text        — across docs/ and any packaged seed notes, a link's visible text
                         must be the target's page title, not its filename; bare
                         [[wikilinks]] in vault notes must be aliased with the title.
   6. Vault wikilinks  — a vault [[note]]/[[note|alias]] must resolve to an existing
@@ -337,7 +337,7 @@ def check_broken_vault_wikilinks(md: Path, errors: list[str], vault_stems: set[s
 def check_site_local_links(md: Path, root: Path, errors: list[str]) -> None:
     # A *published* docs page must not link to a file outside the published site (docs/).
     # The recurring case is a relative link into repository source: it resolves on disk
-    # and on github.com, but paths such as vault-template/ and src/ are siblings of docs/
+    # and on github.com, but paths such as src/ are siblings of docs/
     # and are NOT part of the Jekyll site (docs/_config.yml). Use inline code for a
     # source path, or an absolute github.com/eranroseman/memoria-vault/blob/main/… URL
     # when a click is genuinely wanted.
@@ -499,8 +499,12 @@ def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
             )
 
 
+def _workspace_seed(repo: Path) -> Path:
+    return repo / "src" / "memoria_vault" / "product" / "workspace_seed"
+
+
 def _load_schema_types(repo: Path) -> dict[str, dict]:
-    schema_dir = repo / "vault-template" / ".memoria" / "schemas" / "types"
+    schema_dir = _workspace_seed(repo) / ".memoria" / "schemas" / "types"
     out: dict[str, dict] = {}
     for path in sorted(schema_dir.glob("*.yaml")):
         try:
@@ -580,7 +584,7 @@ def _vocabulary_terms(path: Path) -> dict[str, set[str]]:
 
 
 def check_vocabulary_reference_mirror(repo: Path, errors: list[str]) -> None:
-    source = repo / "vault-template" / "system" / "vocabulary.md"
+    source = _workspace_seed(repo) / "system" / "vocabulary.md"
     doc = repo / "docs" / "reference" / "vocabulary.md"
     if not source.is_file() or not doc.is_file():
         return
@@ -591,7 +595,7 @@ def check_vocabulary_reference_mirror(repo: Path, errors: list[str]) -> None:
             missing = sorted(source_terms[field] - doc_terms[field])
             extra = sorted(doc_terms[field] - source_terms[field])
             errors.append(
-                f"{doc}: {field} vocabulary mirror differs from vault-template/system/vocabulary.md"
+                f"{doc}: {field} vocabulary mirror differs from package-seed system/vocabulary.md"
                 f" (missing: {missing or 'none'}; extra: {extra or 'none'})"
             )
 
@@ -869,14 +873,12 @@ def _pages_targets(text: str) -> list[str]:
     )
 
 
-def check_vault_docs_refs(repo: Path, errors: list[str]) -> None:
-    vault = repo / "vault-template"
+def check_seed_docs_refs(repo: Path, errors: list[str]) -> None:
+    seed = _workspace_seed(repo)
+    if not seed.is_dir():
+        return
     for path in sorted(
-        p
-        for p in vault.rglob("*")
-        if p.is_file()
-        and p.suffix in {".md", ".py", ".yaml", ".yml"}
-        and ".obsidian" not in p.parts
+        p for p in seed.rglob("*") if p.is_file() and p.suffix in {".md", ".py", ".yaml", ".yml"}
     ):
         text = read(path)
         for ref in sorted(set(re.findall(r"docs/[A-Za-z0-9/_.-]+\.md", text))):
@@ -932,7 +934,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--vault-links",
         action="store_true",
-        help="validate vault-template references to published docs.",
+        help="validate package-seed references to published docs.",
     )
     parser.add_argument(
         "--doc-refs",
@@ -953,7 +955,7 @@ def main() -> int:
     if args.vault_links or args.doc_refs is not None:
         errors: list[str] = []
         if args.vault_links:
-            check_vault_docs_refs(repo, errors)
+            check_seed_docs_refs(repo, errors)
         if args.doc_refs is not None:
             check_doc_refs(repo, args.doc_refs, errors)
         if errors:
@@ -982,16 +984,11 @@ def main() -> int:
         check_wikilinks(md, errors, doc_md_names)
         check_link_text(md, errors)
 
-    # Guard the vault note templates too: their frontmatter lives in a ```yaml fence,
-    # and a banned key there propagates to every note created from the template.
-    tmpl_dir = root.parent / "vault-template" / "system" / "templates"
-    if tmpl_dir.is_dir():
-        for md in sorted(tmpl_dir.glob("*.md")):
-            check_template_frontmatter(md, errors)
-
-    # Link-text discipline extends to the vault notes: cross-links must use the page
+    # Guard optional packaged seed notes too; historical template helpers used
+    # fenced YAML and this helper remains useful for fixtures.
+    # Link-text discipline extends to any packaged seed notes: cross-links must use the page
     # title — markdown link text and wikilink aliases — never the bare filename.
-    vault = root.parent / "vault-template"
+    vault = _workspace_seed(root.parent)
     if vault.is_dir():
         vault_stems = {
             p.stem.lower()

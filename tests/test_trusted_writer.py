@@ -22,12 +22,12 @@ from memoria_vault.runtime.trusted_writer import (
     stage_concept,
 )
 from memoria_vault.runtime.vaultio import is_ulid, read_frontmatter
-from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
+from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas")
-    shutil.copyfile(ROOT / "vault-template/.gitignore", tmp_path / ".gitignore")
+    shutil.copyfile(WORKSPACE_SEED / ".gitignore", tmp_path / ".gitignore")
     return tmp_path
 
 

@@ -1,178 +1,80 @@
-"""The installer skeleton cannot drift from the schema home (ADR-125 risk control)."""
+"""The installer initializes from the packaged workspace seed."""
 
 import re
-import subprocess
-from pathlib import Path
 
 from memoria_vault.runtime.subsystems.lib import schema
+from tests.helpers import ROOT, WORKSPACE_SEED
 
-ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "scripts" / "install.sh"
 INSTALL_PS = ROOT / "scripts" / "install.ps1"
-MANIFEST = ROOT / "scripts" / "install" / "manifest.sh"
 
 
-def _skeleton_dirs() -> set[str]:
-    text = MANIFEST.read_text(encoding="utf-8")
-    m = re.search(r"SKELETON_DIRS=\((.*?)\)", text, re.S)
-    assert m, "SKELETON_DIRS not found in scripts/install/manifest.sh"
+def _seed_files() -> set[str]:
     return {
-        line.strip()
-        for line in m.group(1).splitlines()
-        if line.strip() and not line.strip().startswith("#")
+        path.relative_to(WORKSPACE_SEED).as_posix()
+        for path in WORKSPACE_SEED.rglob("*")
+        if path.is_file()
+        and path.name != "__init__.py"
+        and "__pycache__" not in path.relative_to(WORKSPACE_SEED).parts
     }
 
 
-def test_skeleton_covers_the_schema_skeleton():
-    """Every dir folders.yaml declares must be created by the installer."""
-    declared = set(schema.load_folders()["skeleton"])
-    installed = _skeleton_dirs()
-    missing = declared - installed
-    assert not missing, f"installer SKELETON_DIRS missing schema dirs: {sorted(missing)}"
-
-
-def test_skeleton_covers_every_type_home():
+def test_schema_skeleton_covers_every_type_home():
     folders = schema.load_folders()
-    installed = _skeleton_dirs()
-    for t, home in folders["homes"].items():
-        assert home in installed, f"type {t} home {home} not in SKELETON_DIRS"
+    skeleton = set(folders["skeleton"])
+
+    for concept_type, home in folders["homes"].items():
+        assert home in skeleton, f"type {concept_type} home {home} not in skeleton"
 
 
-def test_alpha16_fresh_package_contract_is_shipped():
-    required_dirs = {
-        ".memoria/index/search",
-        ".memoria/config",
-        ".memoria/eval",
-        ".memoria/journal",
-        ".memoria/patterns",
-        ".memoria/quarantine",
-        ".memoria/templates",
-        ".memoria/staging/notes",
-        ".memoria/staging/hubs",
-        ".memoria/staging/projects",
-        ".memoria/staging/digests",
-        ".memoria/staging/fulltexts",
-        "inbox",
-        "notes",
-        "hubs",
-        "projects",
-        "digests",
-        "fulltexts",
-        "system/incidents",
-        "system/metrics",
+def test_alpha20_package_seed_is_runtime_minimum():
+    expected_files = {
+        ".githooks/pre-commit",
+        ".gitignore",
+        ".memoria/config/providers.yaml",
+        ".memoria/eval/alpha15-seeded-errors.json",
+        ".memoria/patterns/_preamble.md",
+        ".memoria/schemas/calibration.yaml",
+        ".memoria/schemas/folders.yaml",
+        ".memoria/schemas/types/code-artifact.yaml",
+        ".memoria/schemas/types/digest.yaml",
+        ".memoria/schemas/types/fulltext.yaml",
+        ".memoria/schemas/types/hub.yaml",
+        ".memoria/schemas/types/note.yaml",
+        ".memoria/schemas/types/project.yaml",
+        "steering.md",
+        "system/vocabulary.md",
     }
-    skeleton = set(schema.load_folders()["skeleton"])
-    installed = _skeleton_dirs()
 
-    assert required_dirs <= skeleton
-    assert required_dirs <= installed
-    for rel in required_dirs:
-        assert (ROOT / "vault-template" / rel).is_dir(), rel
-    for rel in (
+    assert _seed_files() == expected_files
+
+
+def test_package_seed_does_not_ship_removed_payloads():
+    forbidden = (
+        ".memoria/templates",
+        ".memoria/plugins",
+        ".memoria/scripts",
+        ".memoria/profiles",
+        ".memoria/lane-overrides",
+        ".memoria/design-system.md",
+        ".obsidian",
+        "AGENTS.md",
+        "AGENTS.override.md",
+        "_nav.md",
+        "home.md",
         "index.md",
         "bibliography.bib",
+        "troubleshooting.md",
+        "system/dashboards",
+        "system/incidents",
         "system/manifest.jsonl",
-        "steering.md",
-        ".memoria/config/providers.yaml",
-    ):
-        assert (ROOT / "vault-template" / rel).is_file(), rel
-    for rel in (
-        ".memoria/index/search",
-        ".memoria/journal",
-        ".memoria/patterns",
-        ".memoria/quarantine",
-        ".memoria/templates",
-        ".memoria/staging/notes",
-        ".memoria/staging/hubs",
-        ".memoria/staging/projects",
-        ".memoria/staging/digests",
-        ".memoria/staging/fulltexts",
-    ):
-        assert (ROOT / "vault-template" / rel / ".gitkeep").is_file(), rel
-    assert not (ROOT / "vault-template/.memoria/memoria.bib").exists()
-    assert not (ROOT / "vault-template/references.bib").exists()
-
-
-def test_alpha11_template_has_no_removed_alpha10_root_files():
-    removed_roots = (
-        "vault-template/catalog/papers",
-        "vault-template/catalog/people",
-        "vault-template/catalog/organizations",
-        "vault-template/catalog/venues",
-        "vault-template/catalog/datasets",
-        "vault-template/catalog/repositories",
-        "vault-template/system/board",
-        "vault-template/system/worklists",
     )
-    leftovers = [
-        path.relative_to(ROOT).as_posix()
-        for rel in removed_roots
-        for path in (ROOT / rel).rglob("*")
-        if path.is_file()
-    ]
-    assert not leftovers
+    for rel in forbidden:
+        assert not (WORKSPACE_SEED / rel).exists(), rel
+    assert not list(WORKSPACE_SEED.rglob(".gitkeep"))
 
 
-def test_alpha11_template_has_no_removed_alpha10_path_literals():
-    roots = [
-        ROOT / "vault-template/system",
-        ROOT / "vault-template/AGENTS.md",
-    ]
-    retired = (
-        "notes/claims",
-        "notes/hubs",
-        "notes/sources",
-        "notes/fleeting",
-        "catalog/papers",
-        "catalog/repositories",
-        "catalog/datasets",
-        "memoria.bib",
-    )
-    offenders = []
-    for root in roots:
-        if not root.exists():
-            continue
-        paths = (
-            [root] if root.is_file() else sorted(path for path in root.rglob("*") if path.is_file())
-        )
-        for path in paths:
-            text = path.read_text(encoding="utf-8")
-            for token in retired:
-                if token in text:
-                    offenders.append(f"{path.relative_to(ROOT)}: {token}")
-    assert not offenders
-
-
-def test_alpha16_installer_does_not_ship_installed_profiles():
-    text = INSTALL.read_text(encoding="utf-8")
-    assert "ALL_PROFILES" not in text
-    assert "--profiles-only" not in text
-    assert not (ROOT / "vault-template/.memoria/profiles").exists()
-    assert not (ROOT / "vault-template/.memoria/lane-overrides").exists()
-
-
-def test_cron_wrappers_exist_for_wired_jobs():
-    text = INSTALL.read_text(encoding="utf-8")
-    for wrapper in re.findall(r"\.memoria/scripts/([a-z-]+\.sh)", text):
-        assert (ROOT / "vault-template/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
-
-
-def test_standalone_installer_does_not_wire_hermes_cron_jobs():
-    text = INSTALL.read_text(encoding="utf-8")
-
-    for source, dest, schedule, job in (
-        ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
-        ("metrics-cron.sh", "memoria-metrics.sh", "30 6 * * 1", "memoria-metrics"),
-    ):
-        assert source not in text
-        assert dest not in text
-        assert schedule not in text
-        assert job not in text
-    for deleted in ("install_hermes_cron", "hermes cron", "cron create", "HERMES_HOME/scripts"):
-        assert deleted not in text
-
-
-def test_linux_installer_defaults_to_standalone_cli_runtime():
+def test_linux_installer_defaults_to_package_seed_runtime():
     text = INSTALL.read_text(encoding="utf-8")
 
     assert "--with-hermes" not in text
@@ -183,12 +85,23 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
     for required in (
         "ensure_prereqs",
         "resolve_repo",
-        'source "$REPO_DIR/scripts/install/manifest.sh"',
-        "copy_vault",
+        "prepare_vault",
         "install_runtime_deps",
+        "initialize_workspace",
+        "wire_vault_hook",
         "print_cli_next_steps",
     ):
         assert required in text
+    for removed in (
+        "scripts/install/manifest.sh",
+        "SKELETON_DIRS",
+        "copy_vault",
+        "rsync -a",
+        "cp -R",
+        "vault-template",
+        ".memoria/scripts/cron-runner.sh",
+    ):
+        assert removed not in text
     for adapter_only in (
         "ensure_hermes",
         "install_profiles",
@@ -205,7 +118,7 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
         assert adapter_only not in text
 
 
-def test_windows_installer_defaults_to_standalone_cli_runtime():
+def test_windows_installer_defaults_to_package_seed_runtime():
     text = INSTALL_PS.read_text(encoding="utf-8")
 
     assert "[switch]$WithHermes" not in text
@@ -218,14 +131,22 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
     for required in (
         "Assert-RequiredCommands",
         "Get-RepoRoot",
-        "Copy-VaultSource",
+        "Initialize-WorkspaceTarget",
         "Install-RuntimeDeps",
-        "Install-RuntimeScaffold",
-        "Initialize-VaultGit",
+        "Initialize-WorkspaceFromPackage",
         "Install-VaultHooks",
         "Write-CliNextSteps",
     ):
         assert required in text
+    for removed in (
+        "Copy-VaultSource",
+        "Install-RuntimeScaffold",
+        "Initialize-VaultGit",
+        "Invoke-Robocopy",
+        "vault-template",
+        ".memoria/scripts/cron-runner.sh",
+    ):
+        assert removed not in text
     for adapter_only in (
         "Install-Hermes",
         "Enable-MemoriaCssSnippets",
@@ -235,47 +156,6 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
         "Install-WingetApp",
     ):
         assert adapter_only not in text
-
-
-def test_lint_cron_writes_lint_findings_telemetry():
-    text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
-    assert 'PYTHONPATH="$vault/.memoria:${PYTHONPATH:-}"' in text
-    assert "--jsonl-out" in text
-    assert "$vault/system/logs/lint-findings.jsonl" in text
-    assert (
-        '-m memoria_vault.cli workspace check --workspace "$vault" '
-        "--schedule-id lint-integrity --json"
-    ) in text
-
-
-def test_worker_cron_runs_pi_observer_and_pending_queue():
-    text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
-    assert (
-        '-m memoria_vault.cli workspace scan --workspace "$vault" --schedule-id worker-scan --json'
-    ) in text
-    assert (
-        '-m memoria_vault.cli workspace run --workspace "$vault" '
-        "--schedule-id worker-drain --limit 10 --json"
-    ) in text
-
-
-def test_eval_cron_dispatches_through_cli_with_schedule_id():
-    text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
-    assert (
-        '-m memoria_vault.cli eval run --workspace "$vault" --schedule-id eval-dispatch --json'
-    ) in text
-
-
-def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):
-    runner = ROOT / "vault-template/.memoria/scripts/cron-runner.sh"
-    result = subprocess.run(
-        ["bash", str(runner), "worker"],
-        env={"MEMORIA_PYTHON": "/bin/true", "MEMORIA_VAULT": str(tmp_path)},
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stderr
 
 
 def test_installer_does_not_install_or_register_search_binaries():
@@ -366,29 +246,11 @@ def test_installers_install_memoria_package_non_editable():
 
 
 def test_installers_refuse_existing_vaults_instead_of_refreshing():
-    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    sh = INSTALL.read_text(encoding="utf-8")
     ps = INSTALL_PS.read_text(encoding="utf-8")
     assert "This installer is fresh-install only" in sh
     assert "Refresh it from the repo" not in sh
     assert "This installer is fresh-install only" in ps
-
-
-def test_fresh_installer_copies_the_runtime_src_tree():
-    text = INSTALL.read_text(encoding="utf-8")
-    ps = INSTALL_PS.read_text(encoding="utf-8")
-    assert (ROOT / "vault-template" / "_nav.md").is_file()
-    assert 'rsync -a --exclude \'.git\' "$src"/ "$VAULT_PATH"/' in text
-    assert 'cp -R \\"$src\\"/. \\"$VAULT_PATH\\"/' in text
-    assert 'run git -C "$VAULT_PATH" init -q' in text
-    assert 'run git -C "$VAULT_PATH" branch -M main' in text
-    assert 'git -C "$VAULT_PATH" commit' not in text
-    assert "Invoke-Robocopy -Source $src -Destination $Vault" in ps
-    assert "Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'init', '-q')" in ps
-    assert (
-        "Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'branch', '-M', 'main')" in ps
-    )
-    assert "Install-RuntimeScaffold" in ps
-    assert "Install-VaultHooks" in ps
 
 
 def test_windows_installer_uv_fallback_is_standalone():

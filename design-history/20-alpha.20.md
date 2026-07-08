@@ -38,10 +38,10 @@ enough for agents without moving state out of the engine.
   users may bring an agent through MCP, but the agent surface must stay closed
   and scoped.
 - **What:** the CLI gains clearer shared-surface help, `memoria surface schema`,
-  and a template-backed `memoria new note|hub|project` contract with drift tests
-  against `vault-template/.memoria/templates/`. **Why:** CLI is still the
-  broadest local maintenance surface, but the subset shared with HTTP/MCP now
-  has one visible contract.
+  and `memoria new note|hub|project` writes from code-owned field contracts
+  instead of seeded markdown templates. **Why:** CLI is still the broadest local
+  maintenance surface, but alpha.20 removes unused template files from the
+  runtime seed instead of preserving them for drift tests.
 
 ### 4. Empirical events
 
@@ -67,10 +67,29 @@ enough for agents without moving state out of the engine.
   tests the thin-editor-adapter hypothesis without making Obsidian a second
   source of truth.
 - **What:** the provenance doctor now permits only this standalone package
-  while still banning plugin payloads in the baseline vault template. **Why:**
+  while still banning plugin payloads in the baseline package seed. **Why:**
   the optional adapter must not re-enter the required source-install baseline.
 
-### 6. Deferred scope
+### 6. Package seed pruning
+
+- **What:** `vault-template/` is retired. The package now ships only the runtime
+  seed files under `memoria_vault.product.workspace_seed`: schemas, provider
+  config, pre-commit hook, seeded-error bundle, prompt preamble, steering,
+  vocabulary, and `.gitignore`. `memoria init` creates writable skeleton
+  directories from `folders.yaml` and regenerates projections. **Why:** the old
+  template preserved empty directories, historical dashboards, markdown eval
+  tasks, note templates, adapter plugin payloads, cron wrappers, and other
+  files mainly so drift checks could keep finding them. The old
+  dashboard/template and design-system drift detectors were removed; remaining
+  checks now either validate the actual seed or assert deleted payload classes
+  stay absent.
+
+- **What:** the sandbox remains the inspection environment for a non-Python
+  runtime vault, but it is produced by installer/CLI initialization instead of
+  copying a source template. **Why:** the value is in inspecting a real deployed
+  vault, not in maintaining a second source scaffold.
+
+### 7. Deferred scope
 
 - **Dedicated agent app:** deferred until Obsidian+MCP proves unable to provide
   understandable approval flows, multiple editors need one complex shared UI,

@@ -12,12 +12,12 @@ Run Memoria's system-level evaluation on demand — dispatch the gold-set tasks 
 ## When to run it by hand
 
 - After installing a fresh release vault, to confirm capability didn't regress
-- When the eval-trend dashboard shows a dip you want to reproduce immediately
-- To smoke-test a fresh vault once the gold-set papers (Transformer, BERT, ResNet, Adam, Dropout) are ingested
+- When eval metrics show a dip you want to reproduce immediately
+- To smoke-test a vault after you have authored local eval-task fixtures
 
 ## Prerequisites
 
-- The gold-set papers ingested — the shipped tasks reference well-known papers so they work on any vault once those are present
+- Local `.memoria/eval/*.md` eval-task fixtures authored for the workflows you want to test
 - The local runtime installed and `memoria` available on `PATH`
 
 ## Steps
@@ -46,21 +46,22 @@ python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . 
 
 Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute without appending to the log.
 
-**5. Read the trend.** Open the **eval-trend** dashboard (`system/dashboards/eval-trend.md`) — it renders the newest run per quarter plus the latest run's per-task breakdown ([Dashboards](../../reference/dashboards.md)).
+**5. Read the trend.** Inspect `system/metrics/eval/runs.jsonl` or an optional
+adapter view; the log renders the newest run per quarter plus the latest run's
+per-task breakdown ([Dashboards](../../reference/dashboards.md)).
 
 ## Verify
 
 - `system/metrics/eval/runs.jsonl` has a new line (timestamp, quarter, k, per-task records, per-metric aggregates) — written only when at least one result payload is reported
-- The eval-trend dashboard shows the run, with `recall@k` / `support-rate` / `FAMA-clean` per task
+- The eval metrics log shows the run, with `recall@k` / `support-rate` / `FAMA-clean` per task
 - A task with no machine-readable result shows as **unscored** — never a faked score
 - `.memoria/eval/last-run.md` reflects the dispatch you just ran
 
 ## Scheduled equivalent
 
-The `memoria-eval` wrapper dispatches the current quarter's local eval tasks when
-an operator-managed scheduler calls it. Scoring is explicit: run the scorer with
-`--from-json` once result payloads exist. The installer ships the wrapper
-boundary but does not register a host schedule; see
+An operator-managed scheduler may call `memoria eval run --workspace . --json`.
+Scoring is explicit: run the scorer with `--from-json` once result payloads
+exist. The installer does not register a host schedule; see
 [Installer (bootstrap)](../../reference/installer.md#host-scheduler-wiring).
 
 ## Related

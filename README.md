@@ -21,11 +21,11 @@ see [CLI](docs/reference/cli.md).
 
 ## How it works
 
-The installer copies `vault-template/` to your chosen runtime folder (default
-`~/Memoria`, deliberately off OneDrive), creates a workspace-local venv,
-installs the `memoria` package, and wires Git hooks. It does not install Hermes,
-profiles, Obsidian setup, Zotero integration, a host scheduler, or external
-search tooling. See
+The installer creates your chosen runtime folder (default `~/Memoria`,
+deliberately off OneDrive), creates a workspace-local venv, installs the
+`memoria` package, initializes the workspace from the packaged seed, and wires
+Git hooks. It does not install Hermes, profiles, Obsidian setup, Zotero
+integration, a host scheduler, or external search tooling. See
 [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
 
 The CLI and thin transports call one engine API. Product reads return checked
@@ -86,7 +86,7 @@ for `memoria doctor bundle`, `memoria workspace rebuild --search`, and
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/memoria_vault/` | The installable Python package |
-| `vault-template/` | The workspace source tree — the installer copies it out as a standalone Memoria workspace |
+| `src/memoria_vault/product/workspace_seed/` | The minimal runtime workspace seed packaged with `memoria` |
 | `docs/` | Product and system documentation: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`) and maintained design arguments (`design/`) |
 | `design-history/` | Frozen release-history chapters plus the maintained design arcs and decision-record rules |
 
@@ -107,9 +107,9 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 ## Development
 
 For fast system-file iteration on the disposable sandbox, run
-`bash scripts/sandbox/refresh-test-vault.sh` to update `~/memoria-vault/sandbox/vault` from
-`vault-template/` while preserving runtime state. For release-candidate installer
-proof, rebuild the disposable vault from scratch with
+`bash scripts/sandbox/refresh-test-vault.sh` to repair the package-seeded files
+in `~/memoria-vault/sandbox/vault` while preserving runtime state. For
+release-candidate installer proof, rebuild the disposable vault from scratch with
 `bash scripts/sandbox/install-test-vault-local-llm.sh`; it installs into
 `~/memoria-vault/sandbox/vault` and runs package, detector, and CLI doctor checks. Full
 flags: [Installer (bootstrap)](docs/reference/installer.md).

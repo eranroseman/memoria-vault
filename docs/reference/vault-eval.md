@@ -12,12 +12,13 @@ nav_order: 18
 
 ## The gold set
 
-Gold tasks live in `.memoria/eval/` as diagnostic markdown fixtures. They carry
-`type: eval-task` frontmatter for eval dispatch, but `eval-task` is not an
-Concept type and has no schema under
-`vault-template/.memoria/schemas/types/`. Each fixture is self-contained: an
-`## Input`, an `## Expected behavior`, and an `## Scoring rubric` section, so a
-runtime eval operation can run and score it with nothing but the file.
+Alpha.20 ships the seeded-error verdict bundle in `.memoria/eval/`. Markdown
+gold tasks are supported for local diagnostics but are not part of the baseline
+package seed. When authored, they carry `type: eval-task` frontmatter for eval
+dispatch, but `eval-task` is not a Concept type and has no schema under
+`.memoria/schemas/types/`. Each fixture should be self-contained: an `## Input`,
+an `## Expected behavior`, and an `## Scoring rubric` section, so a runtime eval
+operation can run and score it with nothing but the file.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |
@@ -29,7 +30,10 @@ runtime eval operation can run and score it with nothing but the file.
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 
-The shipped set (nine tasks) references well-known papers — the Transformer, BERT, ResNet, Adam, Dropout — so it works on any vault once those papers are ingested:
+Historical alpha gold sets referenced well-known papers — the Transformer, BERT,
+ResNet, Adam, Dropout — so they worked on any vault once those papers were
+ingested. Alpha.20 does not ship those historical markdown tasks in the package
+seed.
 
 | Workflow | Eval role | Gold tasks |
 | --- | --- | --- |
@@ -39,7 +43,6 @@ The shipped set (nine tasks) references well-known papers — the Transformer, B
 | `verify` | `verify` | a supported BLEU figure (positive control); a contradicted positional-encoding claim; a BERT-Base/Large parameter swap |
 
 Eval tasks are authored directly — the files *are* the instances, no template.
-They are shipped template files; product-file repair is package/template refresh.
 A gold task whose wikilinked target no longer resolves surfaces as a
 broken-reference finding; gold-set rot is caught by machinery already running.
 
@@ -94,7 +97,7 @@ reported `unscored`, and a result with no computable field is `reported`.
 The task rubric's `self_score` is recorded per task for comparison but never
 aggregated - only the machine metrics trend.
 
-**The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. The **eval-trend dashboard** (`system/dashboards/eval-trend.md`) renders the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
+**The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. Optional dashboard/adapters can render the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
 
 ```sh
 python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --from-json results.json
@@ -104,7 +107,7 @@ python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <v
 
 ## Cadence
 
-An operator-managed scheduler may call `.memoria/scripts/cron-runner.sh eval`.
+An operator-managed scheduler may call `memoria eval run --workspace . --json`.
 The installer does not register the schedule; see
 [Installer (bootstrap)](installer.md#host-scheduler-wiring). Scoring is explicit
 and uses `eval_score --from-json` once result payloads exist.

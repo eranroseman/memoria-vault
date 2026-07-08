@@ -108,7 +108,6 @@ done
 TEST_ROOT="$(expand_path "$TEST_ROOT")"
 VAULT="$(expand_path "$VAULT")"
 
-[ -d "$ROOT/vault-template/.memoria" ] || die "cannot find vault-template/.memoria under $ROOT"
 case "$VAULT" in
   "$TEST_ROOT"/*) ;;
   *) die "--vault must be below --root; refusing to wipe $VAULT" ;;

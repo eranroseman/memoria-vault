@@ -24,8 +24,9 @@ match their filename and index link text.
 ## 2. Check links and publication boundaries
 
 - Links between `docs/` pages are relative.
-- Published pages must not use relative links into `vault-template/` or other unpublished
-  repository paths. Prefer inline paths or an absolute GitHub blob/tree URL.
+- Published pages must not use relative links into unpublished repository paths
+  such as `src/memoria_vault/product/workspace_seed/`. Prefer inline paths or
+  an absolute GitHub blob/tree URL.
 - Excluded `tmp/` directories may link to repository files.
 - Root `CONTRIBUTING.md` and agent playbooks are not published.
 - Link text should name the destination concept, not merely repeat a filename.

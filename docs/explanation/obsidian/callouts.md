@@ -10,7 +10,8 @@ nav_order: 3
 
 Not every agent output belongs on a dashboard. Some context is only useful while looking at a specific note — the comparative read on a paper matters when you open it to read the source, not in a daily roll-up. Dashboards surface *decisions across notes*; callouts surface *context inside one note*.
 
-Memoria uses three plain Markdown callout identifiers in shipped template notes.
+Memoria uses three plain Markdown callout identifiers in authored notes and
+future adapter views.
 The alpha.20 Obsidian proof adapter does not add callout plugins, CSS snippets,
 or generated callout content; editors that do not understand callouts still show
 them as quoted text.

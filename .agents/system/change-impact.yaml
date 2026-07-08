@@ -2,22 +2,22 @@ version: 1
 areas:
   - area: Type schema
     paths:
-      - vault-template/.memoria/schemas/types/**
+      - src/memoria_vault/product/workspace_seed/.memoria/schemas/types/**
     inspect:
-      - Matching template and folder home
-      - Bases and dashboard queries
+      - Matching folder home
+      - Bases and read-API field consumers
       - Linter and pre-commit behavior
       - Note-type and frontmatter documentation
     checks:
-      - python3 -m pytest tests/test_schemas.py tests/test_templates.py tests/test_bases.py tests/test_precommit_schema.py tests/test_detectors.py
+      - python3 -m pytest tests/test_schemas.py tests/test_bases.py tests/test_precommit_schema.py tests/test_detectors.py tests/test_package_spine.py
   - area: Folder home, staging/quarantine root, or skeleton
     paths:
-      - vault-template/.memoria/schemas/folders.yaml
+      - src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml
     inspect:
-      - Type schemas and templates
+      - Type schemas and package seed
       - Review-gate and pattern fallback constants
-      - Installer scaffold and golden-copy behavior
-      - Dashboards and links
+      - memoria init and installer scaffold behavior
+      - Read surfaces and links
     checks:
       - python3 -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_runtime_policy.py tests/test_patterns.py tests/test_detectors.py
   - area: Dropped installed profile package
@@ -34,7 +34,6 @@ areas:
       - python3 -m pytest tests/test_profiles.py tests/test_installer_skeleton.py
   - area: Runtime policy
     paths:
-      - vault-template/.memoria/plugins/memoria-policy-gate/**
       - src/memoria_vault/runtime/policy/**
     inspect:
       - Actor policy config loading
@@ -43,7 +42,7 @@ areas:
       - Optional adapter tool mappings
       - Fail-closed direct tool denial
     checks:
-      - python3 -m pytest tests/test_runtime_policy.py tests/test_policy_hook.py tests/test_policy_gate_plugin.py tests/test_policy_gate_completeness.py tests/test_schemas.py
+      - python3 -m pytest tests/test_runtime_policy.py tests/test_policy_hook.py tests/test_policy_gate_completeness.py tests/test_schemas.py
   - area: Runtime helpers
     paths:
       - src/memoria_vault/runtime/vaultio.py
@@ -66,7 +65,7 @@ areas:
       - Calibration and schemas
       - Inbox card contract and shared writers
       - Source catalog state and content/blob writes
-      - Scheduled-task wrappers and dashboard fields
+      - Scheduled-task behavior and generated surfaces
     checks:
       - python3 -m pytest tests/test_capture.py tests/test_inbox_cards.py tests/test_detectors.py
   - area: Installer
@@ -83,12 +82,13 @@ areas:
       - bash -n scripts/install.sh
       - python3 -m pytest tests/test_installer_skeleton.py
       - bash scripts/sandbox/e2e_smoke.py
-  - area: Dropped Obsidian baseline payload
+  - area: Package seed or optional adapter boundary
     paths:
-      - vault-template/**
+      - src/memoria_vault/product/workspace_seed/**
+      - packages/memoria-obsidian/**
       - scripts/checks/plugin_provenance_doctor.py
     inspect:
-      - Standalone template does not ship editor plugin bundles
+      - Baseline package seed does not ship editor plugin bundles
       - QuickAdd command scripts and Obsidian workspace files stay absent
       - Optional adapter wording does not become baseline behavior
       - Alpha.14 negative gate covers deleted payload contracts
@@ -116,7 +116,7 @@ areas:
       - Disposable workspace isolation and guarded wipe checks
       - Standalone installer invocation and package import checks
       - Optional OpenAI-compatible endpoint preflight wording
-      - Golden-copy, detector, and CLI doctor assertions
+      - Package-seed, detector, and CLI doctor assertions
     checks:
       - bash scripts/sandbox/install-test-vault-local-llm.sh --help
       - python3 -m pytest tests/test_install_test_vault_local_llm.py

@@ -18,7 +18,7 @@ from memoria_vault.runtime.enrichment import (
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
+from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git
 
 
 @pytest.fixture(autouse=True)
@@ -236,7 +236,7 @@ def test_capture_source_stages_doi_unchecked_without_references(tmp_path: Path) 
 
 
 def test_enrich_source_manifest_and_provider_allowlist_agree() -> None:
-    vault = ROOT / "vault-template"
+    vault = WORKSPACE_SEED
 
     policy = load_operation_policy(vault, "enrich-source")
     config = load_provider_config(vault)
@@ -265,7 +265,7 @@ def test_provider_allowlist_rejects_host_prefix_bypass() -> None:
 
 
 def test_provider_endpoint_uses_configured_env_query_params(monkeypatch) -> None:
-    config = load_provider_config(ROOT / "vault-template")
+    config = load_provider_config(WORKSPACE_SEED)
     monkeypatch.setenv("NCBI_EMAIL", "pi@example.test")
     monkeypatch.setenv("OPENALEX_API_KEY", "openalex-key")
 
@@ -282,7 +282,7 @@ def test_provider_endpoint_uses_configured_env_query_params(monkeypatch) -> None
 def test_semantic_scholar_optional_provider_is_default_on_only_when_keyed(
     monkeypatch,
 ) -> None:
-    config = load_provider_config(ROOT / "vault-template")
+    config = load_provider_config(WORKSPACE_SEED)
 
     monkeypatch.delenv("SEMANTIC_SCHOLAR_API_KEY", raising=False)
     assert _optional_providers(config, "doi", {}) == []

@@ -8,10 +8,16 @@ nav_order: 37
 
 Where every file lives.
 
-- The repo ships the vault source under **`vault-template/`**.
-- The installer scaffolds a runtime vault, then populates it from `vault-template/`.
-- Product operation manifests ship inside the installed Python package, not the runtime vault.
-- The legal root categories come from `vault-template/.memoria/schemas/folders.yaml`.
+- The installed Python package ships the minimal workspace seed under
+  `memoria_vault.product.workspace_seed`.
+- `memoria init` copies only runtime-required seed files, then creates writable
+  runtime and content directories from `.memoria/schemas/folders.yaml`. It also
+  initializes generated control/projection files such as `index.md`,
+  `bibliography.bib`, `.memoria/overrides.jsonl`, `.memoria/journal-head`, and
+  `system/manifest.jsonl`.
+- Product operation manifests ship inside the installed Python package, not the
+  runtime vault.
+- The legal root categories come from `.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
 ---
@@ -21,10 +27,7 @@ Where every file lives.
 ```text
 <vault>/
 ├── index.md                 generated workspace index
-├── home.md                  launch/reset welcome note
 ├── steering.md              program memory; the PI's standing steering
-├── AGENTS.md                ground rules for any agent in the vault
-├── troubleshooting.md       vault-root nav page
 ├── bibliography.bib         generated portable bibliography
 ├── notes/                   claim and question notes
 ├── hubs/                    topic hubs with human salience
@@ -34,8 +37,7 @@ Where every file lives.
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
-    ├── incidents/             visible incident copies
-    ├── manifest.jsonl         visible audit manifest
+    ├── manifest.jsonl         generated visible audit manifest
     └── metrics/               exported metrics
 ```
 
@@ -48,34 +50,46 @@ What the Concept homes mean is in [Document types](document-types.md).
 
 ## `.memoria/` - the runtime tooling layer
 
-Hidden runtime infrastructure; everything agents and operations need, shipped in
-`vault-template/.memoria`:
+Hidden runtime infrastructure. Seed files are copied from the installed package;
+writable runtime directories are created from `folders.yaml`:
 
 ```text
 .memoria/
-├── schemas/                 THE single schema source (ADR-126)
+├── schemas/                 single source for schema contracts
 │   ├── types/<type>.yaml      per-type Concept schemas
 │   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores)
 ├── config/                  provider and runtime policy (`providers.yaml`)
-├── blobs/                   gitignored provider payloads and staged source content
-├── plugins/memoria-policy-gate/   fail-closed write-gate package for optional adapters
-├── scripts/                 cron-runner for operator-managed scheduled tasks
-├── templates/               starter notes per type
-├── eval/                    the vault-eval gold set and last-run.md
+├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
+├── blobs/                   gitignored provider payloads and staged source content
 ├── journal/                 per-machine JSONL file journal
 ├── memoria.sqlite           SQLite working-state DB
-├── state/                   runtime state owned by the CLI/engine
-├── audit/                   git-trackable audit anchors
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
-├── design-system.md
 ```
 
-Alpha.19 deliberately does **not** ship hidden operation-package homes, installed
-profile packages, lane override packages, or profile tool registries. Operation
+Alpha.20 deliberately does **not** ship dashboards, note templates, hidden
+operation-package homes, installed profile packages, lane override packages,
+adapter plugin payloads, cron wrappers, or profile tool registries. Operation
 manifests live under `memoria_vault.product.capabilities.operations`; operation
 code lives in the installed `memoria_vault` package.
+
+## Packaged Seed Inventory
+
+The package seed contains only files with direct runtime readers:
+
+| Seed path | Runtime reader |
+| --- | --- |
+| `.githooks/pre-commit` | Installer copies it to `.git/hooks/pre-commit`; the hook runs schema/frontmatter checks before commit. |
+| `.gitignore` | `memoria init` installs it so generated DBs, journals, indexes, blobs, and local caches stay out of git. |
+| `.memoria/config/providers.yaml` | Provider config for enrichment and operation runners. |
+| `.memoria/eval/alpha15-seeded-errors.json` | Seeded-error verdict bundle read by CLI, worker, and seeded-error runtime tests. |
+| `.memoria/patterns/_preamble.md` | Shared operation prompt preamble read by operation prompt assembly. |
+| `.memoria/schemas/calibration.yaml` | Runtime thresholds for classification, matching, and drift-sensitive checks. |
+| `.memoria/schemas/folders.yaml` | Type homes, staging roots, quarantine root, and `memoria init` skeleton. |
+| `.memoria/schemas/types/*.yaml` | Per-type frontmatter contracts used by schema validation, linter, and pre-commit. |
+| `steering.md` | Standing program memory read and edited through the CLI and knowledge runtime. |
+| `system/vocabulary.md` | Controlled vocabulary read by schema/linter and knowledge runtime. |
 
 The policy gate's stable implementation lives in the installed
 `memoria_vault.runtime.policy` package. Optional adapters may ship their own
@@ -84,16 +98,15 @@ code home.
 
 ## `.githooks/` - source hooks
 
-Shipped in `vault-template/.githooks`: the canonical pre-commit schema gate that
-the installer copies into the runtime vault's `.git/hooks/` after the user
-initializes the vault repository. File-change work is observed through
-`memoria workspace scan`, not a Hermes-backed post-commit queue.
+Seeded from the installed package: the canonical pre-commit schema gate that the
+installer copies into the runtime vault's `.git/hooks/`. File-change work is
+observed through `memoria workspace scan`, not a post-commit queue.
 
 Runtime-only (created in the deployed vault, never shipped):
 
 | Path | Created by | Holds |
 | --- | --- | --- |
-| `.memoria/data/retraction_watch.csv` | retraction refresh wrapper | The local Retraction Watch index. |
+| `.memoria/data/retraction_watch.csv` | retraction refresh command | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
 | `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |
 
@@ -103,8 +116,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 The standalone runtime ships no editor app configuration. Optional editors may
 keep local state beside or inside a working copy, but that state is not part of
-the standalone template, installer skeleton, request lifecycle, or
-source-of-truth layout.
+the package seed, request lifecycle, or source-of-truth layout.
 
 ## Outside the vault
 
@@ -118,6 +130,6 @@ source-of-truth layout.
 
 ## Related
 
-- How `vault-template/` becomes a runtime vault: [Installer (bootstrap)](installer.md)
+- How the package seed becomes a runtime vault: [Installer (bootstrap)](installer.md)
 - The type → folder homes in table form: [Document types](document-types.md)
 - What keeps the deployed tree honest: [Linter: detectors and auto-fix](linter.md)
