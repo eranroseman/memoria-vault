@@ -112,7 +112,12 @@ Verify: that PR merges under the new single check.
    markers retire with the test-selection policy) + ruff + shellcheck +
    PSScriptAnalyzer (when pwsh) + yamllint/JSON syntax over runtime config +
    the four kept product gates from step 6 + cspell/markdownlint scoped to
-   `docs/` minus `docs/superpowers/`. Delete its evidence-bundle machinery
+   `docs/` minus `docs/superpowers/`. Mechanism for the lint tools: keep
+   ruff/cspell/markdownlint in `.pre-commit-config.yaml` as
+   **manual-stage hooks** (never fire on commit; `verify` invokes them via
+   `pre-commit run --hook-stage manual`) — version pinning, env caching,
+   dependabot's pre-commit ecosystem, and the stub `package.json` host all
+   survive unchanged. Delete its evidence-bundle machinery
    (hashes/timestamps served the retired RC-readiness process; nothing
    reads it) and the `l0`/`pr`/`check` tiers (`check`'s only consumer was
    the pre-commit pytest-collect hook, which goes). Same PR, the test
@@ -133,7 +138,12 @@ Verify: that PR merges under the new single check.
    `verify`'s roster and goes. Delete `.github/CODEOWNERS` (solo repo — every
    rule assigns the owner `*` already assigns; earn-back: a second
    maintainer). Sweep `.github/` prose for retired references (dependabot.yml
-   header comment, issue/PR templates). Update `.vscode/settings.json`
+   header comment, issue/PR templates), plus root-file rot: CHANGELOG.md's
+   header cites the deleted release-please workflow (the changelog itself
+   stays — hand-curated dated record); the pre-commit comment references a
+   nonexistent `.markdownlintignore`; CITATION.cff's "phase-gated" wording
+   predates the checked/read-barrier vocabulary (verify and align). Update
+   `.vscode/settings.json`
    excludes for the Phase 3 layout: drop `_papers/**`, rename `_notes/**` →
    `.notes/**`, and add `.worktrees/**` + `sandbox/**` to search and watcher
    excludes (otherwise searches double-hit sibling worktrees and the watcher
