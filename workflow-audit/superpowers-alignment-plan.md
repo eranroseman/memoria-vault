@@ -29,12 +29,22 @@ Verify: `git worktree list` shows only main + scratch; tag on origin.
 
 ## Phase 1 — GitHub gate: eight checks → one
 
-4. Settings → Rulesets → "main": required checks = `verify` only; keep
-   require-PR. (UI first — avoids the policy-code deadlock.)
-5. One PR: replace all workflows with `verify.yml` (`pull_request` +
-   `push: main`, concurrency group) running `scripts/verify`; fold shellcheck
-   into that script. Delete `pr-review-gate.yml` and `pr_policy.py` + tests.
-   **Keep release-please** (ships the product; not governance).
+4. Settings → Rulesets → "main": required checks = `verify` + `gitleaks`;
+   keep require-PR. (UI first — avoids the policy-code deadlock.)
+5. One PR: replace the check workflows with `verify.yml` (`pull_request` +
+   `push: main`, concurrency group) running `scripts/verify`, which absorbs
+   python-selftest, lint (kept gates), lint-installers (shellcheck **and**
+   PSScriptAnalyzer — pwsh in CI, graceful skip locally), scoped
+   cspell/markdownlint, and lint-config's product half (yamllint + JSON
+   syntax over runtime config; actionlint drops — one workflow left to
+   lint). **Keep:** `gitleaks.yml` (secrets are the one failure class where
+   post-merge detection is too late — it backstops `--no-verify` commits
+   and web edits) and `release-please.yml` (ships the product). **Delete:**
+   `pr-review-gate.yml` + `pr_policy.py` + tests, `ruleset-audit.yml`
+   (dies with ruleset-doctor), `dependabot-auto-merge.yml` (keep
+   `dependabot.yml` itself; with one workflow, bump PRs are rare — a manual
+   click replaces a `pull_request_target` write-token workflow; earn-back:
+   bump volume), and the absorbed standalone check workflows.
 
 Verify: that PR merges under the new single check.
 
@@ -66,8 +76,13 @@ Verify: that PR merges under the new single check.
    Obsidian seeded-not-required. No process content. `CLAUDE.md` stays the
    `@AGENTS.md` loader.
 8. Slim `scripts/verify` to the single gate: pytest + ruff + shellcheck +
+   PSScriptAnalyzer (when pwsh) + yamllint/JSON syntax over runtime config +
    the four kept product gates from step 6 + cspell/markdownlint scoped to
-   `docs/` minus `docs/superpowers/`. Gitignore `sandbox/` and
+   `docs/` minus `docs/superpowers/`. Slim `.pre-commit-config.yaml` to the
+   two hooks CI cannot replace: `gitleaks` (block secrets *before* they
+   enter history — post-push detection on a public repo is rotation, not
+   prevention) and `no-commit-to-branch main`; every other hook duplicates
+   `verify`'s roster and goes. Gitignore `sandbox/` and
    `.worktrees/`. Trim CONTRIBUTING.md references to retired machinery.
    `docs/` and `design-history/` content untouched (dated history cannot
    drift; only its enforcement machinery leaves).
