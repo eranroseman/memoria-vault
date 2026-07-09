@@ -40,13 +40,28 @@ Verify: that PR merges under the new single check.
 
 ## Phase 2 — Repo teardown (one PR)
 
-6. Delete `.agents/` entirely, `scripts/checks/` doctors,
-   `ruleset-contract.yaml`, cspell/markdownlint configs, `project-words.txt`.
+6. Delete `.agents/` entirely and `ruleset-contract.yaml`,
+   cspell/markdownlint configs, `project-words.txt`. In `scripts/checks/`,
+   split by subject matter, not wholesale:
+   - **Delete the governance doctors** (their subject retires with the
+     apparatus): `agents_doctor.py`, `ruleset_doctor.py`,
+     `status_doctor.py`, `github_doctor.py`, and `docs_doctor.py`
+     (convention linting; earn-back for link rot on published Pages is a
+     stock markdown link checker, not a bespoke doctor).
+   - **Keep the product gates as tests** (they check what ships, not how
+     work happens): `plugin_provenance_doctor.py` (seed supply-chain
+     integrity), `removed_surface_gate.py` (retired-surface regression),
+     `schema_doc_drift.py` (reference docs vs live schemas — the one
+     justified mirror, so the one justified drift check),
+     `checked_terminology_gate.py` (product-honesty wording gate).
+     Rehome under `tests/` or as `scripts/verify` steps; drop the "doctor"
+     naming.
 7. Rewrite `AGENTS.md` as the facts file (~15 lines): what Memoria is,
    `scripts/verify` as the correctness command, test only against `sandbox/`,
    Obsidian seeded-not-required. No process content. `CLAUDE.md` stays the
    `@AGENTS.md` loader.
-8. Slim `scripts/verify` to the single gate. Gitignore `sandbox/` and
+8. Slim `scripts/verify` to the single gate: pytest + ruff + shellcheck +
+   the four kept product gates from step 6. Gitignore `sandbox/` and
    `.worktrees/`. Trim CONTRIBUTING.md references to retired machinery.
    `docs/` and `design-history/` content untouched (dated history cannot
    drift; only its enforcement machinery leaves).
