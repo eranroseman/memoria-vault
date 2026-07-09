@@ -39,7 +39,13 @@ Verify: `git worktree list` shows only main + scratch; tag on origin.
    syntax over runtime config; actionlint drops — one workflow left to
    lint). **Keep:** `gitleaks.yml` (secrets are the one failure class where
    post-merge detection is too late — it backstops `--no-verify` commits
-   and web edits) and `release-please.yml` (ships the product). **Delete:**
+   and web edits). **Delete `release-please.yml` + its config/manifest** —
+   zero releases have ever been published and nothing consumes them (the
+   installer clones `main`, no PyPI, no version-pinned readers); it is
+   machinery ahead of need whose standing cost is the conventional-PR-title
+   constraint. Earn-back: the first real distribution moment — installer
+   pinning a tag, a package publish, or users needing per-version
+   changelogs. **Also delete:**
    `pr-review-gate.yml` + `pr_policy.py` + tests, `ruleset-audit.yml`
    (dies with ruleset-doctor), `dependabot-auto-merge.yml` (keep
    `dependabot.yml` itself; with one workflow, bump PRs are rare — a manual
@@ -75,13 +81,13 @@ Verify: that PR merges under the new single check.
    `scripts/verify` as the correctness command, test only against `sandbox/`
    (which has its own nested `.git`), Obsidian seeded-not-required. Plus the
    facts that are load-bearing but stated nowhere else after teardown:
-   - **Conventional Commits for PR titles; squash-merge stays** (decided) —
-     superpowers delegates merge method to the repo (its finish flow only
-     specifies plain `git merge` for the local option). Squash composes
-     with release-please: the spine's TDD/SDD flows produce granular
-     per-task commits that would otherwise all feed the changelog; squash
-     collapses each feature to one conventional PR-title commit, and the
-     granular history stays visible on the PR. Task commits stay free-form.
+   - **Squash-merge stays** (decided) — superpowers delegates merge method
+     to the repo (its finish flow only specifies plain `git merge` for the
+     local option); squash keeps `main` linear with one-commit revert per
+     feature while the spine's granular TDD/SDD commits stay visible on the
+     PR. With release-please deleted (step 5), PR titles and commits carry
+     **no required format** — descriptive is enough; Conventional Commits
+     earns back together with release tooling.
    - **Concurrent sessions each work in their own `.worktrees/` checkout** —
      the git index is shared per checkout, so two simultaneous sessions
      (Claude planning + Codex executing) in the clone root can capture each
@@ -92,9 +98,10 @@ Verify: that PR merges under the new single check.
    No process content beyond that. `CLAUDE.md` stays the `@AGENTS.md`
    loader.
    **Decided:** (a) retire the "Release <version>" parent-issue/readiness
-   ceremony — the milestone plus release-please's release PR is the
-   readiness view for one person; earn-back: a release that slips from
-   invisible scope. (b) drop the Memoria Issue Tracker Project's custom
+   ceremony — the milestone alone is the readiness view for one person
+   (with release-please also deleted, "releasing" is currently just closing
+   the milestone; tagging returns with release tooling when distribution
+   needs it); earn-back: a release that slips from invisible scope. (b) drop the Memoria Issue Tracker Project's custom
    Status/Readiness fields — superpowers tracks per-feature state inside
    the plan document (task checkboxes), and issues + milestone own the
    cross-feature backlog; the fields were a third state layer with no
