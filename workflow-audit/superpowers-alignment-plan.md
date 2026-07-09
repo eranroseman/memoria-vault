@@ -107,10 +107,26 @@ Verify: that PR merges under the new single check.
    cross-feature backlog; the fields were a third state layer with no
    enforcing mechanism. The board itself is optional glass over the same
    issues — keep or drop per taste.
-8. Slim `scripts/verify` to the single gate: pytest + ruff + shellcheck +
+8. Rewrite `scripts/verify` as a flat single gate — run the command list,
+   exit nonzero on failure: pytest (full suite; the `-m static` tier
+   markers retire with the test-selection policy) + ruff + shellcheck +
    PSScriptAnalyzer (when pwsh) + yamllint/JSON syntax over runtime config +
    the four kept product gates from step 6 + cspell/markdownlint scoped to
-   `docs/` minus `docs/superpowers/`. Slim `.pre-commit-config.yaml` to the
+   `docs/` minus `docs/superpowers/`. Delete its evidence-bundle machinery
+   (hashes/timestamps served the retired RC-readiness process; nothing
+   reads it) and the `l0`/`pr`/`check` tiers (`check`'s only consumer was
+   the pre-commit pytest-collect hook, which goes). Same PR, the test
+   cascade: **delete** the orphaned doctor tests (`test_docs_doctor`,
+   `test_agents_doctor`, `test_github_doctor`, `test_ruleset_doctor`,
+   `test_status_doctor`; `test_pr_policy` per step 5); **update**
+   `test_verify_script.py` (pins the new roster — the one legitimate
+   roster mirror, as a test), `test_cspell_scope.py` (one consumer now),
+   `test_node_tooling.py` (required-check coupling). **Do not touch the
+   false friends:** `test_precommit_schema.py` tests Memoria's own vault
+   pre-commit hook (product), and `scripts/sandbox/*` +
+   `test_test_env_harness`/`test_refresh_test_vault` are test-environment
+   infrastructure. Update `scripts/dev/setup.sh` for the slimmed
+   pre-commit config. Slim `.pre-commit-config.yaml` to the
    two hooks CI cannot replace: `gitleaks` (block secrets *before* they
    enter history — post-push detection on a public repo is rotation, not
    prevention) and `no-commit-to-branch main`; every other hook duplicates
