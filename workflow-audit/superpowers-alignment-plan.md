@@ -110,9 +110,14 @@ passes from the new root.
     (the properly-nested copies also serve Codex, which has no environment
     plugin).
 16. `~/.claude/CLAUDE.md`: delete the precedence table and the six behavioral
-    sections — superpowers hosts on AGENTS.md. Keep at most a simplified
-    write-perimeter hook (outside-project *ask* only; drop the
-    CLAUDE.md-police logic).
+    sections — superpowers hosts on AGENTS.md. Delete the PreToolUse
+    write-perimeter hook entirely: half enforces the retired
+    no-local-CLAUDE.md policy; the other half failed the empirical test
+    (silently allowed main/scratch/other-worktree writes, denied a legal
+    loader edit), never covered shell writes, and duplicates native
+    permission prompts + bash sandboxing (Claude) and sandbox
+    `writable_roots` (Codex). Earn-back: a real incident of a harmful
+    durable write outside the repo that native permissions missed.
 17. **Codex parity (parity by default; asymmetry only with justification):**
     - `~/.codex/AGENTS.md`: delete the precedence copy (nothing left to
       arbitrate).
