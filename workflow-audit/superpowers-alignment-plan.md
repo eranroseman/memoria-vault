@@ -75,9 +75,13 @@ Verify: that PR merges under the new single check.
    `scripts/verify` as the correctness command, test only against `sandbox/`
    (which has its own nested `.git`), Obsidian seeded-not-required. Plus the
    facts that are load-bearing but stated nowhere else after teardown:
-   - **Conventional Commits, including PR titles** — squash-merge makes the
-     PR title the commit message, and release-please derives versions and
-     the changelog from it; releases silently stop computing without this.
+   - **Conventional Commits for PR titles; squash-merge stays** (decided) —
+     superpowers delegates merge method to the repo (its finish flow only
+     specifies plain `git merge` for the local option). Squash composes
+     with release-please: the spine's TDD/SDD flows produce granular
+     per-task commits that would otherwise all feed the changelog; squash
+     collapses each feature to one conventional PR-title commit, and the
+     granular history stays visible on the PR. Task commits stay free-form.
    - **Concurrent sessions each work in their own `.worktrees/` checkout** —
      the git index is shared per checkout, so two simultaneous sessions
      (Claude planning + Codex executing) in the clone root can capture each
@@ -87,13 +91,15 @@ Verify: that PR merges under the new single check.
      changes") since the pr-policy sensitive-path list is deleted.
    No process content beyond that. `CLAUDE.md` stays the `@AGENTS.md`
    loader.
-   **Decide at execution (recommendations):** (a) retire the "Release
-   <version>" parent-issue/readiness ceremony — the milestone plus
-   release-please's release PR is the readiness view for one person;
-   earn-back: a release that slips from invisible scope. (b) drop the
-   Memoria Issue Tracker Project's custom Status/Readiness fields — plain
-   open/closed + milestone is enough state solo; keep or drop the board
-   itself per taste.
+   **Decided:** (a) retire the "Release <version>" parent-issue/readiness
+   ceremony — the milestone plus release-please's release PR is the
+   readiness view for one person; earn-back: a release that slips from
+   invisible scope. (b) drop the Memoria Issue Tracker Project's custom
+   Status/Readiness fields — superpowers tracks per-feature state inside
+   the plan document (task checkboxes), and issues + milestone own the
+   cross-feature backlog; the fields were a third state layer with no
+   enforcing mechanism. The board itself is optional glass over the same
+   issues — keep or drop per taste.
 8. Slim `scripts/verify` to the single gate: pytest + ruff + shellcheck +
    PSScriptAnalyzer (when pwsh) + yamllint/JSON syntax over runtime config +
    the four kept product gates from step 6 + cspell/markdownlint scoped to
