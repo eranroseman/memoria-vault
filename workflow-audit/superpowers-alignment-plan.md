@@ -81,7 +81,15 @@ Verify: that PR merges under the new single check.
      `checked_terminology_gate.py` (product-honesty wording gate).
      Rehome under `tests/` or as `scripts/verify` steps; drop the "doctor"
      naming.
-7. Rewrite `AGENTS.md` as the facts file (~20 lines): what Memoria is,
+7. Rewrite `AGENTS.md` as the facts file (~20 lines). What Memoria is,
+   distilled from the canonical product statement
+   (`product-statement.md`, same folder): *an opinionated, phase-gated,
+   personal knowledge-production tool — a durable research vault for one
+   researcher who owns all judgment; sources enter the catalog, become
+   connected claims in Knowledge Bundles (a Toulmin argument graph parallel
+   to the catalog graph), and drive to output in Projects; built on
+   Karpathy's LLM-Wiki and Luhmann's Zettelkasten, expanded with agentic
+   capabilities; it should feel like a co-PI, not a knowledge base.* Plus:
    `scripts/verify` as the correctness command, test only against `sandbox/`
    (which has its own nested `.git`), Obsidian seeded-not-required. Plus the
    facts that are load-bearing but stated nowhere else after teardown:
@@ -160,8 +168,9 @@ Verify: that PR merges under the new single check.
    header comment, issue/PR templates), plus root-file rot: CHANGELOG.md's
    header cites the deleted release-please workflow (the changelog itself
    stays — hand-curated dated record); the pre-commit comment references a
-   nonexistent `.markdownlintignore`; CITATION.cff's "phase-gated" wording
-   predates the checked/read-barrier vocabulary (verify and align). Update
+   nonexistent `.markdownlintignore`. (A prior draft flagged CITATION.cff's
+   "phase-gated" as stale — retracted: it is the canonical product term per
+   `product-statement.md`; CITATION.cff is correct as-is.) Update
    `.vscode/settings.json`
    excludes for the Phase 3 layout: drop `_papers/**`, rename `_notes/**` →
    `.notes/**`, and add `.worktrees/**` + `sandbox/**` to search and watcher
@@ -176,7 +185,9 @@ Verify: that PR merges under the new single check.
    final close-out); open questions become GitHub issues; live design docs
    (e.g. `releases/0.1.0-beta.1/0.1.0-beta.1-design.md`) land as dated
    records in `docs/superpowers/specs/`; `workflow-audit/` (this plan and
-   its audit) lands in `docs/superpowers/plans/`. Exclude
+   its audit) lands in `docs/superpowers/plans/` — except
+   `product-statement.md`, which is product doctrine, not a working
+   record: it becomes a `docs/` explanation page (published). Exclude
    `docs/superpowers/` from the GitHub Pages build (one config line) —
    working records are tracked, not published. `design-history/` itself
    stays frozen at the repo root as the pre-alignment museum — do not move
