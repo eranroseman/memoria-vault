@@ -82,7 +82,14 @@ Verify: that PR merges under the new single check.
    two hooks CI cannot replace: `gitleaks` (block secrets *before* they
    enter history — post-push detection on a public repo is rotation, not
    prevention) and `no-commit-to-branch main`; every other hook duplicates
-   `verify`'s roster and goes. Gitignore `sandbox/` and
+   `verify`'s roster and goes. Delete `.github/CODEOWNERS` (solo repo — every
+   rule assigns the owner `*` already assigns; earn-back: a second
+   maintainer). Sweep `.github/` prose for retired references (dependabot.yml
+   header comment, issue/PR templates). Update `.vscode/settings.json`
+   excludes for the Phase 3 layout: drop `_papers/**`, rename `_notes/**` →
+   `.notes/**`, and add `.worktrees/**` + `sandbox/**` to search and watcher
+   excludes (otherwise searches double-hit sibling worktrees and the watcher
+   churns on test-vault runs). Gitignore `sandbox/` and
    `.worktrees/`. Trim CONTRIBUTING.md references to retired machinery.
    `docs/` and `design-history/` content untouched (dated history cannot
    drift; only its enforcement machinery leaves).
