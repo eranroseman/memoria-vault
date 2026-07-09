@@ -199,8 +199,11 @@ passes from the new root.
     while it's active (step 18's cross-harness "same version" is only
     stable if pinned). Leave ponytail deliberately tracking (waiting on
     the upstream sticky-mode fix); rethink needs no pin (own upstream —
-    every update is already a decision). Record versions + SHAs here on
-    execution. Mechanics to verify at execution: a pin must actually stop
+    every update is already a decision). Disabled plugins (frontend-design,
+    pr-review-toolkit) need no pin; any that earns back re-enters this
+    policy on re-enable (frontend-design: pinned while active, same version
+    across harnesses, like interface-design). Record versions + SHAs here
+    on execution. Mechanics to verify at execution: a pin must actually stop
     marketplace auto-refresh (observed live — ponytail auto-updated the
     night before this audit), via version-pinned install path or per-
     marketplace auto-update off.
