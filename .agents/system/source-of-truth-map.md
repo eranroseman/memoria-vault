@@ -35,7 +35,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Release readiness | `Release <version>` parent issue + gate/stage sub-issues | Release plan and release playbook |
 | Release design scratch | `scratch` branch, under `releases/<version>/` while in progress | Release playbook, ExecPlan playbook |
 | Product decisions | Active release decision ledger, then `design-history/` | Current docs and implementation |
-| Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation, Design |
+| Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |
 
 ## Mirrors and Cached Views

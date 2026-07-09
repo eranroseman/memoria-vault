@@ -6,8 +6,10 @@ validation. It is written so that a stateless agent — or a human novice with n
 prior knowledge of this repository — can read it top to bottom and produce a
 working, observable result without asking for the next step.
 
-Adapted for Memoria from the OpenAI Codex "ExecPlans" approach. The skeleton to
-copy is [`templates/exec-plan.md`](../templates/exec-plan.md).
+Use installed planning/execution skills for generic plan quality. This playbook
+only maps that method onto Memoria's worktree, scratch-branch, decision, and
+verification rules. The skeleton to copy is
+[`templates/exec-plan.md`](../templates/exec-plan.md).
 
 ## When to use one
 
@@ -26,28 +28,10 @@ do the change.
 
 ## Where the plan lives (Memoria routing)
 
-An ExecPlan is a **working artifact**, not a permanent record. Put live plan
-instances on the `scratch` branch under `releases/<version>/`, delete them
-before the release/checkpoint closes, and route durable outputs per `AGENTS.md`
-"Scratch branch flow", "Decision records", and "Work routing".
-
-## Five mandates (non-negotiable)
-
-1. **Self-contained.** Embed every fact the executor needs. Do not point to
-   external blogs or chat history; if knowledge is required, write it into the
-   plan. Name every file by its full repository-relative path.
-2. **Living.** Update Progress, the Execution log, and Surprises at every
-   stopping point — honestly, splitting tasks that turned out larger than
-   planned. A plan that drifts from reality is a defect, like any stale doc.
-3. **Novice-executable.** Assume the reader knows nothing about this repo.
-   Define every specialized term in plain language the first time it appears.
-4. **Demonstrably working.** Validation is not optional. Acceptance is phrased
-   as observable behavior, with the exact commands, inputs, and expected output
-   transcripts — not "the code compiles."
-5. **Decisions go to release ledgers.** The plan's Execution log records only
-   tactical, sequencing choices made while running. Any architectural or product
-   decision is written in the active release decision ledger and linked — never
-   recorded only here.
+`AGENTS.md` owns the path rules. In short: live plan instances are working
+artifacts on the `scratch` branch under `releases/<version>/`; delete them
+before the release/checkpoint closes and route durable outputs through
+`AGENTS.md` "Scratch branch flow", "Decision records", and "Work routing".
 
 ## Authoring
 
@@ -61,9 +45,8 @@ before the release/checkpoint closes, and route durable outputs per `AGENTS.md`
    inspect together, and which checks to run.
 4. Write the "Concrete steps" as exact commands with their expected output, in
    the order they must run. Prose first; the only checklist is Progress.
-5. Size tasks using `superpowers:writing-plans`' right-sizing rule (each task
-   independently testable and revertable) — but the deliverable still lands in
-   this file's own template, never a new `docs/superpowers/plans/` file.
+5. Size tasks with the installed planning skill when available. The deliverable
+   still lands in this template, never a new `docs/superpowers/plans/` file.
 
 ## Running
 
@@ -77,7 +60,7 @@ before the release/checkpoint closes, and route durable outputs per `AGENTS.md`
 4. Keep steps **idempotent and recoverable**: a re-run from the top must be
    safe, and each step states how to undo it.
 
-## Reusing superpowers execution techniques
+## Reusing installed execution skills
 
 An ExecPlan's Concrete steps may be executed via
 `superpowers:subagent-driven-development` (per-task implementer + two-stage
@@ -88,14 +71,10 @@ this file's record.
 
 ## Validating
 
-Validation follows the [verify-change](verify-change.md) playbook:
-
-1. State each acceptance as an observable claim:
-   `Given <state>, when <action>, then <result>.`
-2. Prove it with the lowest-cost evidence (focused test → CLI repro → smoke
-   test → disposable-vault install → runtime), using `python3 scripts/verify`.
-3. Paste the actual command transcript into Artifacts & notes. "Tests pass" is
-   supporting evidence, not the whole report.
+Validation follows [Verify a change](verify-change.md) and
+[Test selection](../system/test-selection.md). Paste the actual command
+transcript into Artifacts & notes. "Tests pass" is supporting evidence, not the
+whole report.
 
 ## Closing
 

@@ -10,7 +10,8 @@
 
 - **Task:** {{ one line }}
 - **Worktree / branch:** `~/memoria-vault/worktrees/<name>` · `feat/<name>` for implementation;
-  `scratch/<name>` pushed to `origin/scratch` for this plan file
+  `~/memoria-vault/scratch/releases/<version>/<name>.md` on the shared
+  `scratch` branch for this plan file
 - **Related decisions:** {{ release decision entry / design-history link, or — }}
 - **Related issues / milestone:** {{ #NN + intended disposition:
   refs/closes/folded into #NN/no tracker change; 0.1.0 or — }}
@@ -48,7 +49,7 @@
 1. **Isolate the session** (`AGENTS.md` §1):
 
    ```bash
-   git fetch origin
+   git -C ~/memoria-vault/main fetch origin
    git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/{{ name }} -b feat/{{ name }} origin/main
    cd ~/memoria-vault/worktrees/{{ name }}
    ```

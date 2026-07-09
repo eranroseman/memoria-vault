@@ -55,6 +55,28 @@ def test_agents_required_ci_table_matches_ruleset_contract():
     assert agents_doctor._required_ci_errors() == []
 
 
+def test_agent_guidance_consistency_literals_are_current():
+    assert agents_doctor._guidance_consistency_errors() == []
+
+
+def test_toolkit_parity_table_is_current():
+    assert agents_doctor._toolkit_parity_errors() == []
+
+
+def test_toolkit_parity_table_requires_fallback_and_check():
+    text = """## Tooling Parity
+
+| Task | Claude path | Codex path | Shared fallback | Required check |
+|---|---|---|---|---|
+| Skill routing | Claude | Codex | n/a | `python3 scripts/checks/agents_doctor.py` |
+"""
+
+    errors = agents_doctor._toolkit_parity_errors(text)
+
+    assert ".agents/toolkit.md: Skill routing missing Shared fallback" in errors
+    assert ".agents/toolkit.md: tooling parity table missing PR review" in errors
+
+
 def test_optional_agent_client_docs_are_link_checked(tmp_path, monkeypatch):
     root = tmp_path
     (root / ".agents" / "system").mkdir(parents=True)
