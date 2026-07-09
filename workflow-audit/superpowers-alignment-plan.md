@@ -191,10 +191,19 @@ passes from the new root.
 
 ## Phase 4 — Harness teardown (global layer)
 
-13. **Pin superpowers to a tagged release** instead of the `superpowers-dev`
-    channel: reinstall from the stable marketplace/tag if obra publishes one,
-    otherwise pin by commit SHA; record version + SHA here on execution.
-    Upgrades become deliberate acts, aligned with filing issues upstream.
+13. **Pinning policy — pin what stands or enforces; track what you're
+    waiting on or own.** Pin superpowers (the spine; drop the
+    `superpowers-dev` channel for a tagged release, else a commit SHA),
+    security-guidance (always-on enforcement — silent upstream change
+    alters security behavior without a decision), and interface-design
+    while it's active (step 18's cross-harness "same version" is only
+    stable if pinned). Leave ponytail deliberately tracking (waiting on
+    the upstream sticky-mode fix); rethink needs no pin (own upstream —
+    every update is already a decision). Record versions + SHAs here on
+    execution. Mechanics to verify at execution: a pin must actually stop
+    marketplace auto-refresh (observed live — ponytail auto-updated the
+    night before this audit), via version-pinned install path or per-
+    marketplace auto-update off.
 14. `~/.claude/settings.json`: disable pr-review-toolkit and frontend-design
     (earn-back: marketing/landing work, which has no near-term surface).
     Keep **superpowers**, **security-guidance**, and **interface-design** —
