@@ -299,16 +299,26 @@ passes from the new root.
       Anything else non-parallel is a defect.
 19. Delete the ponytail 4.7.0 cache, and — after a skim (**second
     irreversible eyeball**) — the ten orphaned plans in `~/.claude/plans`.
+20. **Remove the account-level claude.ai connector pile from coding
+    sessions** (Clinical Trials, PubMed, Canva, Gmail, Calendar, Drive,
+    Notion, Figma, Hugging Face, Microsoft Learn, plus the pending-auth
+    set) — their tool rosters and instructions tax every session's context.
+    Two paths: full disconnect in claude.ai → Settings → Connectors
+    (removes them from claude.ai chats too — fine only for connectors
+    unused everywhere), or exclude account connectors from Claude Code
+    sessions via its MCP settings, keeping them for chat (exact setting:
+    verify at execution). GitKraken is a local VSCode MCP, not part of
+    this — disposition separately if wanted.
 
 Verify: fresh session in the collapsed repo; only injected mode is
 superpowers' using-superpowers.
 
 ## Phase 5 — Acceptance test + upstream debts
 
-20. Run one real feature end-to-end through the spine: brainstorm → spec in
+21. Run one real feature end-to-end through the spine: brainstorm → spec in
     `docs/superpowers/specs/` → plan → SDD → PR → `verify` → squash-merge →
     finish flow (answer "PR"). This exercises every adopted convention.
-21. File upstream superpowers issues instead of patching locally: (a) SDD
+22. File upstream superpowers issues instead of patching locally: (a) SDD
     task-reviewer "do not re-run the suite" vs verification-before-completion;
     (b) orphaned spec/plan reviewer prompt templates.
 
