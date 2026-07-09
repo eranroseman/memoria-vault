@@ -8,28 +8,14 @@ For a fresh whole-docs audit and repair pass, use
 [Documentation audit](docs-audit.md). This playbook is for reviewing a docs
 change or PR.
 
-## 1. Route by reader intent
+## 1. Apply AGENTS.md routing
 
-For each published page, choose exactly one Diátaxis purpose:
-
-- Tutorial: learn by doing
-- How-to guide: accomplish a task
-- Reference: look up exact information
-- Explanation: understand how the system works
-- Design: understand why a design choice was made
-
-Flag mixed-purpose pages for splitting. How-to titles must be concise and must
-match their filename and index link text.
+Use `AGENTS.md` -> "Writing docs" as the source for documentation categories,
+linking, indexing, citations, spelling, and decision-history placement. Flag
+mixed-purpose pages, stale mirrors, and pages whose filename, title, index link,
+frontmatter, or route disagree.
 
 ## 2. Check links and publication boundaries
-
-- Links between `docs/` pages are relative.
-- Published pages must not use relative links into unpublished repository paths
-  such as `src/memoria_vault/product/workspace_seed/`. Prefer inline paths or
-  an absolute GitHub blob/tree URL.
-- Excluded `tmp/` directories may link to repository files.
-- Root `CONTRIBUTING.md` and agent playbooks are not published.
-- Link text should name the destination concept, not merely repeat a filename.
 
 Run:
 
@@ -40,33 +26,22 @@ python3 scripts/checks/docs_doctor.py --vault-links
 
 Distinguish blocking failures from known advisory warnings.
 
-## 3. Check navigation
+## 3. Check source-backed claims
 
-- Every new page appears in its section `README.md`.
-- Every how-to page also appears in `docs/how-to-guides/README.md`.
-- `nav_order`, `parent`, `has_children`, and `permalink` match neighboring pages.
-- Section indexes stay concise and order children consistently with the sidebar.
-
-## 4. Check terminology and claims
-
-- Use the repository vocabulary from `AGENTS.md` and `docs/reference/data-model/glossary.md`.
-- Keep spaces, queues, and agent lanes distinct.
-- Put new citations in `docs/reference/evidence-and-integrations/bibliography.md` using the existing format.
 - Verify commands, paths, profile names, counts, and release references against
   current source files rather than copying older prose.
 - If a reference page repeats generated or source-owned contracts, run the
   matching generator or drift check. Decision-history changes should update
   `design-history/arcs.md` and the active release decision ledger when they
   change the current or pending design line.
-- If `the-elements-of-style` is installed, apply its
-  `writing-clearly-and-concisely` rules (active voice, omit needless words) as a
-  prose-clarity pass over changed pages — complementary to this section's
-  terminology and citation checks.
+- If `writing-clearly-and-concisely` is installed, apply its prose rules as a
+  clarity pass over changed pages — complementary to this section's terminology
+  and citation checks.
 - If routes, navigation, `baseurl`-sensitive links, or public outbound links
   changed, run the live docs link checker after deploy or record why it was not
   applicable.
 
-## 5. Report
+## 4. Report
 
 Report findings by severity with file and line references. Name the violated
 rule: quadrant, link, navigation, terminology, factual drift, or citation.

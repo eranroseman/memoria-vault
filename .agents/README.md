@@ -46,6 +46,9 @@ copying their implementation details.
 ## Maintenance rules
 
 - Keep procedures portable across Codex, Claude Code, Hermes, and other agents.
+- Let installed skills and plugins own generic agent methods. Use `.agents/`
+  only for Memoria-specific routing, paths, checks, templates, and tool-neutral
+  adapters.
 - Do not put secrets, runtime state, task tracking, or tool-specific settings here.
 - Do not duplicate architecture or product documentation from `docs/`.
 - Prefer repository commands such as `python3 scripts/verify` over hand-written command lists.

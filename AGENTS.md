@@ -39,8 +39,12 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 4. Generated maps under [`.agents/system/`](.agents/system/) are owned by their
    source files and guarded by repo doctors.
 
-Plugins, connectors, and skills provide capability. They do not override this
-policy or bypass scripts, hooks, CI, or GitHub rulesets.
+Plugins, connectors, and skills provide the default method for generic agent
+work: planning, debugging, reviews, security scans, UI critique, prose cleanup,
+and other reusable procedures. This repo records only Memoria-specific
+constraints, precedence exceptions, required paths, checks, and tool
+asymmetries. They do not override this policy or bypass scripts, hooks, CI, or
+GitHub rulesets.
 
 ---
 
@@ -331,11 +335,17 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 ## Test before opening a PR
 
-- **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
-- **Python** (vault tooling + repo scripts): `python3 -m pytest tests/` (or `python3 scripts/verify l1`). The L1 tests live in `tests/`, not inline in the modules.
-- **Standard PR verification:** `python3 scripts/verify pr` runs the source checks and writes a JSON evidence bundle. Use `python3 scripts/verify package` for changes that affect the package seed, installer, hooks, optional adapters, or workflow replay; `python3 scripts/verify runtime` / `python3 scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
-- **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
-- **Installer end-to-end:** `bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox` — never test against the real `~/Memoria`.
+Use [`.agents/system/test-selection.md`](.agents/system/test-selection.md) to
+choose focused checks, the source gate, package/runtime gates, and release
+candidate evidence. Hard rules:
+
+- Standard PR verification is `python3 scripts/verify pr`.
+- Python L1 tests live in `tests/`, not inline in modules.
+- Installer tests use disposable workspaces under `~/memoria-vault/sandbox`;
+  never test against the real `~/Memoria`.
+- PowerShell changes use `Invoke-ScriptAnalyzer` when `pwsh` is available; CI
+  enforces it otherwise.
+- Record any skipped check with the concrete missing prerequisite.
 
 ---
 
@@ -345,9 +355,10 @@ Use [`.agents/README.md`](.agents/README.md) to find portable playbooks,
 templates, and system maps. Use [`.agents/toolkit.md`](.agents/toolkit.md) only
 for Claude/Codex routing asymmetries.
 
-Skills and plugins are accelerators, not policy. If a named command is
-unavailable, use the matching portable playbook and repository checks. The
-report format and severity vocabulary in
+Use installed skills and plugins for their domain procedures instead of
+forking shared methodology into this repo. If a named command is unavailable,
+use the matching portable playbook and repository checks. The report format and
+severity vocabulary in
 [`.agents/templates/review-report.md`](.agents/templates/review-report.md) stay
 authoritative for persisted reviews. Changes to sensitive paths listed under
 `pr-policy` tiers also use the

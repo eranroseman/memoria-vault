@@ -6,7 +6,7 @@ generated references, implementation drift, coverage gaps, and public-site
 links. Do not reuse prior findings.
 
 [`AGENTS.md`](../../AGENTS.md) owns the documentation rules; this file is the
-portable procedure for applying them end to end.
+whole-surface pass for applying them end to end.
 
 ## 1. Scope
 
@@ -25,11 +25,11 @@ truth: packaged seed files under `src/memoria_vault/product/workspace_seed/`,
 `scripts/`, schemas, generated-reference inputs, commands, fields, profile
 names, and Hermes or Obsidian claims.
 
-## 2. Audit
+## 2. Audit against AGENTS.md
 
 For each page, record:
 
-- Expected Diátaxis type and actual type.
+- Documentation category expected by `AGENTS.md` and the page's actual shape.
 - Duplicate or near-duplicate content.
 - Contradictions, stale implementation claims, or missing implementation docs.
 - Overloaded, idiosyncratic, or non-standard terms.
@@ -52,9 +52,6 @@ before relying on it.
 
 Make the smallest durable change:
 
-- Align pages with Diátaxis: tutorials teach by doing; how-to guides perform a
-  task; reference pages give exact values; explanation pages describe how the
-  system works and why it is designed that way.
 - Remove hidden compatibility pages, redirects, stale mirrors, duplicate pages,
   route-preservation pages, and common-knowledge pages.
 - Prefer moving, renaming, merging, or deleting over preserving bad historical
@@ -63,16 +60,10 @@ Make the smallest durable change:
   detail while trimming verbose prose.
 - Keep filenames, titles, README link text, frontmatter, nav order, and routes
   consistent.
-- Keep `docs/how-to-guides/` and `docs/reference/` current with implemented
-  system functionality.
-- Keep project, code, Hermes, and Obsidian names self-explanatory and standard.
 - Generate reference pages from their source of truth when a source exists.
   Manual reference pages must not restate machine-readable contracts unless a
   generator or drift check guards them.
-- Use public-safe links: published Pages routes must resolve after Jekyll
-  `baseurl` rewriting; site-excluded docs and repo files use GitHub blob/tree
-  URLs; private GitHub Project URLs are not published; access-blocked outbound
-  URLs are replaced or left as plain source text.
+- Use the link and citation rules in `AGENTS.md`; do not repeat them here.
 
 ## 4. Verify
 

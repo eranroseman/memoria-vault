@@ -2,53 +2,44 @@
 
 Use this playbook for changes touching `scripts/`, `.github/`,
 `src/memoria_vault/product/workspace_seed/`,
-secrets, external integrations, or another trust boundary. It complements
-available security tools; it does not depend on a particular plugin.
+secrets, external integrations, or another trust boundary. Use installed
+security skills for generic vulnerability discovery; this playbook names the
+Memoria boundaries and evidence to check in a diff.
 
-## 1. Define the boundary
+## 1. Scope the boundary
 
 1. Read [`AGENTS.md`](../../AGENTS.md), especially secrets, sensitive paths, and
    runtime facts.
 2. Resolve the exact diff and identify changed privileged surfaces.
-3. List relevant assets: vault contents, canonical notes, API keys, audit logs,
-   GitHub permissions, profile capabilities, and runtime configuration.
-4. Identify attacker- or model-controlled inputs and the operations they reach.
+3. List the repo assets the diff can affect: vault contents, canonical notes,
+   API keys, audit logs, GitHub permissions, optional-adapter capabilities, and
+   runtime configuration.
+4. Identify attacker-, contributor-, model-, or adapter-controlled inputs and
+   the operations they reach.
 
-## 2. Trace changed paths
+## 2. Check Memoria controls
 
-For each changed entry point, follow data to its control and side effect:
+For each changed entry point, prove the enforcing line still gates the side
+effect:
 
 ```text
 source -> normalization/validation -> authorization/policy -> sink -> audit/recovery
 ```
 
-Check for:
-
-- Secret exposure in files, logs, commands, errors, fixtures, or documentation
-- Path traversal, unsafe archive/file handling, and writes outside intended scopes
-- Shell, template, query, YAML, or command injection
-- SSRF or unrestricted external destinations
-- Missing authentication or authorization
-- Fail-open behavior in policy gates, hooks, CI, and plugin loading
-- Untrusted code execution in privileged GitHub Actions events
-- Lane/tool permissions that widen instead of narrow authority
-- Destructive operations without explicit authorization or recovery
-- Audit gaps, incomplete before/after records, or mutable evidence
-
-Treat MCP as a policy boundary, not an operating-system sandbox.
-
-## 3. Verify controls
-
-- Read the closest tests and add or request regression cases for each changed
-  security invariant.
 - For `.github/`, verify event type, token permissions, checkout target,
   expression handling, dependency pinning, and concurrency behavior.
 - For `src/memoria_vault/product/workspace_seed/`, verify package-data scope and
   baseline-vault payload boundaries separately.
 - For installer changes, use dry-run and a disposable vault, never `~/Memoria`.
-- Run the narrow tests and `python3 scripts/verify pr` when practical.
+- For policy or hook changes, test the allowed, denied, and fail-closed paths.
+- For MCP or optional-adapter changes, treat MCP as a policy boundary, not an
+  operating-system sandbox.
+- For secret-bearing paths, verify secrets stay in gitignored config or
+  environment files and are not printed in logs, errors, fixtures, or docs.
+- Use [Test selection](../system/test-selection.md) for focused checks and
+  `scripts/verify` gate promotion.
 
-## 4. Report
+## 3. Report
 
 Only report a vulnerability when there is a plausible source-to-impact path.
 For each finding include:
@@ -62,7 +53,7 @@ For each finding include:
 If no finding survives, record reviewed surfaces, tests run, and any unresolved
 environmental limitation.
 
-## 5. Escalate to a full audit
+## 4. Escalate to a full audit
 
 This playbook is scoped to the current diff. If review surfaces something beyond
 one change — systemic exposure, unclear trust boundaries, or a request for a

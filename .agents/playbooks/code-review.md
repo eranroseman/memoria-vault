@@ -2,9 +2,10 @@
 
 Use this playbook for a branch, commit, pull request, or working-tree diff. A
 review identifies problems; it does not silently rewrite the patch unless the
-user also asks for fixes.
+user also asks for fixes. Use the installed review skill for generic review
+method; this playbook adds Memoria-specific scope, checks, and reporting.
 
-## 1. Establish scope
+## 1. Scope
 
 1. Read [`AGENTS.md`](../../AGENTS.md).
 2. Resolve the exact base and head or local patch being reviewed.
@@ -13,59 +14,32 @@ user also asks for fixes.
    affected behavior.
 5. Treat commit messages and PR descriptions as context, not proof.
 
-**Dispatching this as an isolated review.** When reviewing your own recent work,
-follow `superpowers:requesting-code-review`'s context-isolation mechanic:
-dispatch reviewers given only the base/head SHAs and requirements, never your
-session history. Run `superpowers:requesting-code-review` on both tools. On
-Claude, also run `pr-review-toolkit:code-reviewer` independently for compliance
-and bug scan; on Codex, use native review for that role. Do not substitute one for
-another. This playbook's own criteria and report format stay authoritative over
-all reviewers.
+When reviewing your own recent work, use `superpowers:requesting-code-review`
+for context isolation: give reviewers only the base/head SHAs and requirements,
+never your session history. Use [Agent Toolkit](../toolkit.md) for Claude/Codex
+review routing.
 
-## 2. Review behavior
+## 2. Memoria checks
 
-For every changed behavior, trace:
+- Use [Source-of-truth map](../system/source-of-truth-map.md) and
+  [Change-impact map](../system/change-impact-map.md) to find drift-prone
+  consumers.
+- For sensitive paths from `AGENTS.md` `pr-policy` tiers, also use
+  [Security review](security-review.md).
+- For docs, generated maps, release state, issue state, and required-check
+  contracts, verify the owner named by `AGENTS.md`, not a mirror.
+- Choose checks with [Test selection](../system/test-selection.md), then report
+  evidence with [Verify a change](verify-change.md).
 
-- Inputs and callers
-- State transitions and side effects
-- Error and retry paths
-- Output and compatibility contracts
-- Permissions and trust boundaries
-- Existing tests and untested edges
+## 3. Report
 
-Prioritize:
-
-1. Data loss, security regressions, and broken invariants
-2. Incorrect behavior and silent failure
-3. Compatibility and operational regressions
-4. Missing tests for plausible failures
-5. Complexity that obscures correctness
-
-Do not report personal style preferences unless they create a concrete
-maintenance or correctness risk. Confirm that apparent problems are reachable
-before presenting them as findings.
-
-## 3. Run checks
-
-Run the narrowest relevant tests first. Use the repository gate when the change
-has broad or shared impact:
-
-```bash
-python3 scripts/verify pr
-```
-
-Also run language- or component-specific checks required by `AGENTS.md`. Record
-commands that could not be run and why.
-
-## 4. Report
-
-Use [the review report template](../templates/review-report.md).
-
+- Use [the review report template](../templates/review-report.md).
 - Findings come first, ordered Critical, High, Medium, Low.
 - Every finding names an exact file and line, user-visible impact, and evidence.
 - Separate confirmed findings from open questions.
 - If there are no findings, say so explicitly and state remaining test gaps or
   environmental limitations.
-- After presenting findings, apply `superpowers:receiving-code-review`'s
-  discipline: fix Critical immediately, Important before proceeding, note Minor
-  for later, and push back (with reasoning) on a finding that looks wrong.
+- Do not report personal style preferences unless they create a concrete
+  maintenance or correctness risk.
+- After presenting findings, use `superpowers:receiving-code-review` when it is
+  installed.

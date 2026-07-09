@@ -1,7 +1,9 @@
 # Test selection
 
 Choose tests by risk and blast radius. Focused tests provide fast diagnosis; the
-full gate proves repository integration.
+full gate proves repository integration. This file owns which verification
+commands to run; [verify-change](../playbooks/verify-change.md) owns
+claim/evidence reporting.
 
 ## Baseline
 
