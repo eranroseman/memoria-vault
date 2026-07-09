@@ -74,11 +74,18 @@ passes from the new root.
     channel: reinstall from the stable marketplace/tag if obra publishes one,
     otherwise pin by commit SHA; record version + SHA here on execution.
     Upgrades become deliberate acts, aligned with filing issues upstream.
-13. `~/.claude/settings.json`: disable pr-review-toolkit and interface-design.
-    Keep **superpowers**, **security-guidance**, and **frontend-design**
-    (invoke-scoped; the only design-craft source — superpowers has none;
-    interface-design earns back at real product-UI work). Delete the dead
-    `plansDirectory` line.
+13. `~/.claude/settings.json`: disable pr-review-toolkit and frontend-design
+    (earn-back: marketing/landing work, which has no near-term surface).
+    Keep **superpowers**, **security-guidance**, and **interface-design** —
+    the Obsidian plugin's interface is the next task, so the product-UI
+    design skill stays; superpowers itself has no design-craft content.
+    Keeping exactly one design skill also avoids resurrecting the
+    interface-vs-frontend routing rule. Known interface-design caveats to
+    manage in use: treat `.interface-design/system.md` as the *authored
+    design-decision source that code follows* (one direction of authority —
+    then it is a record, not a mirror); ignore its bundled `reference/`
+    examples (they contradict the skill's own typography rules). Delete the
+    dead `plansDirectory` line.
 14. **Ponytail and rethink become audit-only** (standing modes retired,
     one-shot audit commands kept):
     - ponytail: keep installed; set the default mode off
@@ -106,11 +113,26 @@ passes from the new root.
     sections — superpowers hosts on AGENTS.md. Keep at most a simplified
     write-perimeter hook (outside-project *ask* only; drop the
     CLAUDE.md-police logic).
-17. `~/.codex/AGENTS.md`: delete the precedence copy; prune mirrored
-    `~/.codex/skills` to the kept set (audit tools, caveman, grilling,
-    obsidian-skills); `config.toml`: remove stale `writable_roots`
-    (`~/Memoria-test`, `~/mv`), delete the `~/mv` skeleton. Codex otherwise
-    runs on repo AGENTS.md alone.
+17. **Codex parity (parity by default; asymmetry only with justification):**
+    - `~/.codex/AGENTS.md`: delete the precedence copy (nothing left to
+      arbitrate).
+    - Skills: replace the hand-copied `~/.codex/skills/*` with symlinks to
+      the canonical `~/.claude/skills/*` — one source, zero drift, full
+      parity (verify Codex resolves symlinks at execution; fallback: a
+      one-line rsync in a shell alias, never hand-copies).
+    - Plugins: install the same pinned superpowers release on Codex (it
+      ships `.codex-plugin` packaging) and the same interface-design version
+      (ships `openai.yaml`); delete the stale Codex copies (old maximalist
+      frontend-design, hand-neutralized improve).
+    - `config.toml`: remove stale `writable_roots` (`~/Memoria-test`,
+      `~/mv`), delete the `~/mv` skeleton.
+    - **Justified asymmetries (the only tolerated ones), recorded as two
+      lines in the new AGENTS.md:** (a) always-on security review — Claude
+      via security-guidance hooks, Codex has no passive-hook equivalent, so
+      Codex runs explicit `codex-security` scans on sensitive diffs;
+      (b) write perimeter — Claude via PreToolUse hook, Codex via sandbox
+      `writable_roots`. Same outcome, platform-appropriate mechanism.
+      Anything else non-parallel is a defect.
 18. Delete the ponytail 4.7.0 cache, and — after a skim (**second
     irreversible eyeball**) — the ten orphaned plans in `~/.claude/plans`.
 
@@ -141,5 +163,8 @@ superpowers' using-superpowers.
   (step 14) but cannot return as standing modes while brainstorming's gate
   is law (structural conflict); ponytail's `/ponytail-review` additionally
   waits on the upstream sticky-mode fix.
-- interface-design — earns back at real product-UI work (Obsidian plugin
-  interface); frontend-design covers design craft until then.
+- frontend-design — earns back at marketing/landing/brand work;
+  interface-design (kept — the Obsidian plugin UI is the next task) covers
+  product-UI craft.
+- Hand-copied cross-harness mirrors — never; parity is by symlink or same
+  pinned install, and any asymmetry must carry a written justification.

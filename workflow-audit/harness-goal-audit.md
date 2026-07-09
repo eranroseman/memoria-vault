@@ -27,8 +27,11 @@ flagship tenant:
   proving ground for its own philosophy.
 - **Minimal artifacts, unconstrained verification spend** (Eran's explicit
   answer: minimalism is about artifact shape / correctness, not cost).
-- **Division of labor, not generic parity**: Claude plans, Codex executes,
-  Kilo test-drives models only.
+- **Division of labor**: Claude plans, Codex executes, Kilo test-drives
+  models only. *(Amended later same day: full tool parity between Claude and
+  Codex is preferable — asymmetry only where platform-justified and written
+  down; parity via symlinked skills and same pinned plugin versions, never
+  hand-copies.)*
 - **Reuse upstream** — adopt maintained plugins, arbitrate locally, keep
   upstream improvements for the major ones.
 
