@@ -40,9 +40,14 @@ Verify: that PR merges under the new single check.
 
 ## Phase 2 — Repo teardown (one PR)
 
-6. Delete `.agents/` entirely and `ruleset-contract.yaml`,
-   cspell/markdownlint configs, `project-words.txt`. In `scripts/checks/`,
-   split by subject matter, not wholesale:
+6. Delete `.agents/` entirely and `ruleset-contract.yaml` (its only reader
+   is the retired ruleset-doctor; the one fact it holds — main requires
+   PR + `verify` — becomes a line in the new AGENTS.md). **Keep**
+   cspell/markdownlint configs and `project-words.txt`, rescoped: they run
+   inside `scripts/verify`, limited to `docs/` **excluding
+   `docs/superpowers/`** — published prose stays polished, working
+   artifacts stay ungated; their standalone CI checks retire. In
+   `scripts/checks/`, split by subject matter, not wholesale:
    - **Delete the governance doctors** (their subject retires with the
      apparatus): `agents_doctor.py`, `ruleset_doctor.py`,
      `status_doctor.py`, `github_doctor.py`, and `docs_doctor.py`
@@ -61,23 +66,33 @@ Verify: that PR merges under the new single check.
    Obsidian seeded-not-required. No process content. `CLAUDE.md` stays the
    `@AGENTS.md` loader.
 8. Slim `scripts/verify` to the single gate: pytest + ruff + shellcheck +
-   the four kept product gates from step 6. Gitignore `sandbox/` and
+   the four kept product gates from step 6 + cspell/markdownlint scoped to
+   `docs/` minus `docs/superpowers/`. Gitignore `sandbox/` and
    `.worktrees/`. Trim CONTRIBUTING.md references to retired machinery.
    `docs/` and `design-history/` content untouched (dated history cannot
    drift; only its enforcement machinery leaves).
+9. **Migrate the scratch branch's keepers into the repo** (same PR):
+   copy via `git show scratch:<path>` — accepted-and-implemented decisions
+   from `releases/<version>/decisions.md` fold into `design-history/` (one
+   final close-out); open questions become GitHub issues; live design docs
+   (e.g. `releases/0.1.0-beta.1/0.1.0-beta.1-design.md`) land as dated
+   records in `docs/superpowers/specs/`; `workflow-audit/` (this plan and
+   its audit) lands in `docs/superpowers/plans/`. Exclude
+   `docs/superpowers/` from the GitHub Pages build (one config line) —
+   working records are tracked, not published.
 
 Verify: `scripts/verify` green locally + CI;
 `rg -l 'agents_doctor|pr_policy|ruleset-contract'` → nothing.
 
 ## Phase 3 — Container collapse (local, after Phase 2 merges)
 
-9. Delete the `scratch` branch + worktree; remove remaining worktrees; prune.
-10. Collapse to a single ordinary clone at `~/memoria-vault`: clone fresh to a
+10. Delete the `scratch` branch + worktree; remove remaining worktrees; prune.
+11. Collapse to a single ordinary clone at `~/memoria-vault`: clone fresh to a
     temp path, verify, swap in. Remove the decoy empty `.git`, the
     `AGENTS.md`/`CLAUDE.md` symlinks, `.kilo/` (unowned firebase MCP;
     recreate when actually test-driving), container `.codex`/`.venv`/`.cache`
     residue.
-11. Move `papers/` out of the repo tree (personal research, not product);
+12. Move `papers/` out of the repo tree (personal research, not product);
     `sandbox/` lives inside the clone, gitignored.
 
 Verify: `git -C ~/memoria-vault status` clean on `main`; `scripts/verify`
@@ -85,11 +100,11 @@ passes from the new root.
 
 ## Phase 4 — Harness teardown (global layer)
 
-12. **Pin superpowers to a tagged release** instead of the `superpowers-dev`
+13. **Pin superpowers to a tagged release** instead of the `superpowers-dev`
     channel: reinstall from the stable marketplace/tag if obra publishes one,
     otherwise pin by commit SHA; record version + SHA here on execution.
     Upgrades become deliberate acts, aligned with filing issues upstream.
-13. `~/.claude/settings.json`: disable pr-review-toolkit and frontend-design
+14. `~/.claude/settings.json`: disable pr-review-toolkit and frontend-design
     (earn-back: marketing/landing work, which has no near-term surface).
     Keep **superpowers**, **security-guidance**, and **interface-design** —
     the Obsidian plugin's interface is the next task, so the product-UI
@@ -101,7 +116,7 @@ passes from the new root.
     then it is a record, not a mirror); ignore its bundled `reference/`
     examples (they contradict the skill's own typography rules). Delete the
     dead `plansDirectory` line.
-14. **Ponytail and rethink become audit-only** (standing modes retired,
+15. **Ponytail and rethink become audit-only** (standing modes retired,
     one-shot audit commands kept):
     - ponytail: keep installed; set the default mode off
       (`~/.config/ponytail/config.json` or `PONYTAIL_DEFAULT_MODE` — verify
@@ -113,7 +128,7 @@ passes from the new root.
     - rethink: remove the SessionStart injection upstream (own repo — gate or
       drop the hook, ship as next release); `/rethink` and `/rethink-audit`
       stay as explicit lenses.
-15. `~/.claude/skills/`: delete `api-design-principles` and `threat-modeling`
+16. `~/.claude/skills/`: delete `api-design-principles` and `threat-modeling`
     (earn-back: reinstall on demonstrated need). Keep `caveman`, `grilling`.
     Keep **`improve` as an audit-only tool**: retarget its hard-coded output
     path from repo-root `plans/` to `docs/superpowers/plans/` (local one-line
@@ -124,7 +139,7 @@ passes from the new root.
     environment-provided `obsidian:*` plugin skills so both don't trigger
     (the properly-nested copies also serve Codex, which has no environment
     plugin).
-16. `~/.claude/CLAUDE.md`: delete the precedence table and the six behavioral
+17. `~/.claude/CLAUDE.md`: delete the precedence table and the six behavioral
     sections — superpowers hosts on AGENTS.md. Delete the PreToolUse
     write-perimeter hook entirely: half enforces the retired
     no-local-CLAUDE.md policy; the other half failed the empirical test
@@ -133,7 +148,7 @@ passes from the new root.
     permission prompts + bash sandboxing (Claude) and sandbox
     `writable_roots` (Codex). Earn-back: a real incident of a harmful
     durable write outside the repo that native permissions missed.
-17. **Codex parity (parity by default; asymmetry only with justification):**
+18. **Codex parity (parity by default; asymmetry only with justification):**
     - `~/.codex/AGENTS.md`: delete the precedence copy (nothing left to
       arbitrate).
     - Skills: replace the hand-copied `~/.codex/skills/*` with symlinks to
@@ -153,7 +168,7 @@ passes from the new root.
       (b) write perimeter — Claude via PreToolUse hook, Codex via sandbox
       `writable_roots`. Same outcome, platform-appropriate mechanism.
       Anything else non-parallel is a defect.
-18. Delete the ponytail 4.7.0 cache, and — after a skim (**second
+19. Delete the ponytail 4.7.0 cache, and — after a skim (**second
     irreversible eyeball**) — the ten orphaned plans in `~/.claude/plans`.
 
 Verify: fresh session in the collapsed repo; only injected mode is
@@ -161,10 +176,10 @@ superpowers' using-superpowers.
 
 ## Phase 5 — Acceptance test + upstream debts
 
-19. Run one real feature end-to-end through the spine: brainstorm → spec in
+20. Run one real feature end-to-end through the spine: brainstorm → spec in
     `docs/superpowers/specs/` → plan → SDD → PR → `verify` → squash-merge →
     finish flow (answer "PR"). This exercises every adopted convention.
-20. File upstream superpowers issues instead of patching locally: (a) SDD
+21. File upstream superpowers issues instead of patching locally: (a) SDD
     task-reviewer "do not re-run the suite" vs verification-before-completion;
     (b) orphaned spec/plan reviewer prompt templates.
 
@@ -180,7 +195,7 @@ superpowers' using-superpowers.
   handoff fails for lack of them.
 - Second standing behavioral plugin — never two at once; everything beyond
   superpowers is invoke-only. Ponytail and rethink stay as audit lenses
-  (step 14) but cannot return as standing modes while brainstorming's gate
+  (step 15) but cannot return as standing modes while brainstorming's gate
   is law (structural conflict); ponytail's `/ponytail-review` additionally
   waits on the upstream sticky-mode fix.
 - frontend-design — earns back at marketing/landing/brand work;
