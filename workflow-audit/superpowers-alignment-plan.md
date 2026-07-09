@@ -68,7 +68,11 @@ Verify: that PR merges under the new single check.
      apparatus): `agents_doctor.py`, `ruleset_doctor.py`,
      `status_doctor.py`, `github_doctor.py`, and `docs_doctor.py`
      (convention linting; earn-back for link rot on published Pages is a
-     stock markdown link checker, not a bespoke doctor).
+     stock markdown link checker, not a bespoke doctor). **Before deleting
+     docs_doctor, extract its workspace-seed validation slice** (seed link
+     text / seed mirrors) into a product test — the seed is shipped
+     product, and `plugin_provenance` guards its file roster but not its
+     content links.
    - **Keep the product gates as tests** (they check what ships, not how
      work happens): `plugin_provenance_doctor.py` (seed supply-chain
      integrity), `removed_surface_gate.py` (retired-surface regression),
@@ -95,8 +99,17 @@ Verify: that PR merges under the new single check.
    - The two justified parity asymmetries (step 18), with the Codex
      security line naming its own trigger ("installer or runtime-policy
      changes") since the pr-policy sensitive-path list is deleted.
-   No process content beyond that. `CLAUDE.md` stays the `@AGENTS.md`
-   loader.
+   Plus five lines that are the conscious exception to "facts only" — each
+   preserves a function with no other home in the end state:
+   - Code shape (3 lines): smallest change that solves the problem; no
+     speculative abstractions or unrequested flexibility; match existing
+     style. (With ponytail audit-only and the global CLAUDE.md gone, this
+     is the only standing counterweight to over-building.)
+   - Options are presented with pros/cons and a recommendation, never a
+     bare list.
+   - The admission rule: an addition must name the expensive, occurring
+     failure it prevents; prefer deletion > mechanism > rule > checker.
+   No other process content. `CLAUDE.md` stays the `@AGENTS.md` loader.
    **Decided:** (a) retire the "Release <version>" parent-issue/readiness
    ceremony — the milestone alone is the readiness view for one person
    (with release-please also deleted, "releasing" is currently just closing
@@ -108,8 +121,10 @@ Verify: that PR merges under the new single check.
    enforcing mechanism. The board itself is optional glass over the same
    issues — keep or drop per taste.
 8. Rewrite `scripts/verify` as a flat single gate — run the command list,
-   exit nonzero on failure: pytest (full suite; the `-m static` tier
-   markers retire with the test-selection policy) + ruff + shellcheck +
+   exit nonzero on failure, and still **print skipped checks** (e.g. no
+   pwsh) rather than passing silently: pytest (full suite; the `-m static`
+   tier markers retire with the test-selection policy) + compileall +
+   `bash -n` on the installer + ruff + shellcheck +
    PSScriptAnalyzer (when pwsh) + yamllint/JSON syntax over runtime config +
    the four kept product gates from step 6 + cspell/markdownlint scoped to
    `docs/` minus `docs/superpowers/`. Mechanism for the lint tools: keep
@@ -168,7 +183,9 @@ Verify: `scripts/verify` green locally + CI;
 
 ## Phase 3 — Container collapse (local, after Phase 2 merges)
 
-10. Delete the `scratch` branch + worktree; remove remaining worktrees; prune.
+10. **Tag the scratch tip first** (`scratch-final` — scratch is an orphan
+    branch, so deletion without a tag is irreversible), then delete the
+    `scratch` branch + worktree; remove remaining worktrees; prune.
 11. Collapse to a single ordinary clone at `~/memoria-vault`: clone fresh to a
     temp path, verify, swap in. Remove the decoy empty `.git`, the
     `AGENTS.md`/`CLAUDE.md` symlinks, and container `.codex`/`.venv`/`.cache`
