@@ -71,10 +71,29 @@ Verify: that PR merges under the new single check.
      `checked_terminology_gate.py` (product-honesty wording gate).
      Rehome under `tests/` or as `scripts/verify` steps; drop the "doctor"
      naming.
-7. Rewrite `AGENTS.md` as the facts file (~15 lines): what Memoria is,
-   `scripts/verify` as the correctness command, test only against `sandbox/`,
-   Obsidian seeded-not-required. No process content. `CLAUDE.md` stays the
-   `@AGENTS.md` loader.
+7. Rewrite `AGENTS.md` as the facts file (~20 lines): what Memoria is,
+   `scripts/verify` as the correctness command, test only against `sandbox/`
+   (which has its own nested `.git`), Obsidian seeded-not-required. Plus the
+   facts that are load-bearing but stated nowhere else after teardown:
+   - **Conventional Commits, including PR titles** — squash-merge makes the
+     PR title the commit message, and release-please derives versions and
+     the changelog from it; releases silently stop computing without this.
+   - **Concurrent sessions each work in their own `.worktrees/` checkout** —
+     the git index is shared per checkout, so two simultaneous sessions
+     (Claude planning + Codex executing) in the clone root can capture each
+     other's staged files. One line of fact, not a process override.
+   - The two justified parity asymmetries (step 18), with the Codex
+     security line naming its own trigger ("installer or runtime-policy
+     changes") since the pr-policy sensitive-path list is deleted.
+   No process content beyond that. `CLAUDE.md` stays the `@AGENTS.md`
+   loader.
+   **Decide at execution (recommendations):** (a) retire the "Release
+   <version>" parent-issue/readiness ceremony — the milestone plus
+   release-please's release PR is the readiness view for one person;
+   earn-back: a release that slips from invisible scope. (b) drop the
+   Memoria Issue Tracker Project's custom Status/Readiness fields — plain
+   open/closed + milestone is enough state solo; keep or drop the board
+   itself per taste.
 8. Slim `scripts/verify` to the single gate: pytest + ruff + shellcheck +
    PSScriptAnalyzer (when pwsh) + yamllint/JSON syntax over runtime config +
    the four kept product gates from step 6 + cspell/markdownlint scoped to
