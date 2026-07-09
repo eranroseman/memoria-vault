@@ -79,7 +79,9 @@ Verify: that PR merges under the new single check.
    records in `docs/superpowers/specs/`; `workflow-audit/` (this plan and
    its audit) lands in `docs/superpowers/plans/`. Exclude
    `docs/superpowers/` from the GitHub Pages build (one config line) —
-   working records are tracked, not published.
+   working records are tracked, not published. `design-history/` itself
+   stays frozen at the repo root as the pre-alignment museum — do not move
+   it under `docs/superpowers/`; new design history accrues as dated specs.
 
 Verify: `scripts/verify` green locally + CI;
 `rg -l 'agents_doctor|pr_policy|ruleset-contract'` → nothing.
@@ -89,11 +91,14 @@ Verify: `scripts/verify` green locally + CI;
 10. Delete the `scratch` branch + worktree; remove remaining worktrees; prune.
 11. Collapse to a single ordinary clone at `~/memoria-vault`: clone fresh to a
     temp path, verify, swap in. Remove the decoy empty `.git`, the
-    `AGENTS.md`/`CLAUDE.md` symlinks, `.kilo/` (unowned firebase MCP;
-    recreate when actually test-driving), container `.codex`/`.venv`/`.cache`
-    residue.
-12. Move `papers/` out of the repo tree (personal research, not product);
-    `sandbox/` lives inside the clone, gitignored.
+    `AGENTS.md`/`CLAUDE.md` symlinks, and container `.codex`/`.venv`/`.cache`
+    residue. `.kilo/` survives in minimal form (see step 18).
+12. Relocate the non-repo content: `papers/` → `~/papers` (personal research
+    corpus; its eventual home is a Memoria workspace once the product can
+    dogfood it); `scratch/.notes/` → `.notes/` inside the clone, gitignored
+    (add `.notes/` to `.gitignore` in step 8); `sandbox/` stays inside the
+    clone, gitignored (tests default to a repo-relative path; Codex
+    workspace-write covers it with no extra roots).
 
 Verify: `git -C ~/memoria-vault status` clean on `main`; `scripts/verify`
 passes from the new root.
@@ -148,7 +153,16 @@ passes from the new root.
     permission prompts + bash sandboxing (Claude) and sandbox
     `writable_roots` (Codex). Earn-back: a real incident of a harmful
     durable write outside the repo that native permissions missed.
-18. **Codex parity (parity by default; asymmetry only with justification):**
+18. **Cross-harness parity — Codex and Kilo (parity by default; asymmetry
+    only with justification):**
+    - Kilo: reads repo AGENTS.md natively — the facts file covers it for
+      free. Symlink the canonical skills dir if Kilo supports one (verify
+      at execution). Superpowers ships no Kilo packaging today —
+      **justified asymmetry:** Kilo runs plan-driven execution only, so the
+      spine's process reaches it through the plan artifact itself (plans
+      written so execution degrades to transcription). Keep `.kilo/` as a
+      minimal config; drop the firebase MCP (no justified consumer) and its
+      node_modules scaffolding.
     - `~/.codex/AGENTS.md`: delete the precedence copy (nothing left to
       arbitrate).
     - Skills: replace the hand-copied `~/.codex/skills/*` with symlinks to
