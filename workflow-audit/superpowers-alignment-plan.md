@@ -70,34 +70,59 @@ passes from the new root.
 
 ## Phase 4 — Harness teardown (global layer)
 
-12. `~/.claude/settings.json`: disable ponytail, rethink, pr-review-toolkit,
-    interface-design, frontend-design. Keep **superpowers** and
-    **security-guidance**. Delete the dead `plansDirectory` line.
-13. `~/.claude/skills/`: delete `obsidian-skills` clone,
-    `api-design-principles`, `improve`, `threat-modeling` (earn-back:
-    reinstall on demonstrated need). Keep `caveman`, `grilling` (orthogonal
-    to the spine).
-14. `~/.claude/CLAUDE.md`: delete the precedence table and the six behavioral
+12. **Pin superpowers to a tagged release** instead of the `superpowers-dev`
+    channel: reinstall from the stable marketplace/tag if obra publishes one,
+    otherwise pin by commit SHA; record version + SHA here on execution.
+    Upgrades become deliberate acts, aligned with filing issues upstream.
+13. `~/.claude/settings.json`: disable pr-review-toolkit and interface-design.
+    Keep **superpowers**, **security-guidance**, and **frontend-design**
+    (invoke-scoped; the only design-craft source — superpowers has none;
+    interface-design earns back at real product-UI work). Delete the dead
+    `plansDirectory` line.
+14. **Ponytail and rethink become audit-only** (standing modes retired,
+    one-shot audit commands kept):
+    - ponytail: keep installed; set the default mode off
+      (`~/.config/ponytail/config.json` or `PONYTAIL_DEFAULT_MODE` — verify
+      the exact knob at execution); delete `~/.claude/.ponytail-active`.
+      `/ponytail-audit` stays available. **Caveat:** until the upstream
+      sticky-mode bug is fixed, `/ponytail-review` re-arms subagent injection
+      for the rest of the session — run ponytail reviews in throwaway
+      sessions, or check/reset the flag file afterward.
+    - rethink: remove the SessionStart injection upstream (own repo — gate or
+      drop the hook, ship as next release); `/rethink` and `/rethink-audit`
+      stay as explicit lenses.
+15. `~/.claude/skills/`: delete `api-design-principles` and `threat-modeling`
+    (earn-back: reinstall on demonstrated need). Keep `caveman`, `grilling`.
+    Keep **`improve` as an audit-only tool**: retarget its hard-coded output
+    path from repo-root `plans/` to `docs/superpowers/plans/` (local one-line
+    edit; the spine has exactly one plan home). Keep **`obsidian-skills`** —
+    but fix the installation so it actually loads: the current clone nests
+    `skills/*/SKILL.md` one level too deep and is never discovered; flatten
+    to `~/.claude/skills/<name>/SKILL.md`, and dedupe against the
+    environment-provided `obsidian:*` plugin skills so both don't trigger
+    (the properly-nested copies also serve Codex, which has no environment
+    plugin).
+16. `~/.claude/CLAUDE.md`: delete the precedence table and the six behavioral
     sections — superpowers hosts on AGENTS.md. Keep at most a simplified
     write-perimeter hook (outside-project *ask* only; drop the
     CLAUDE.md-police logic).
-15. `~/.codex/AGENTS.md`: delete the precedence copy; prune mirrored
-    `~/.codex/skills`; `config.toml`: remove stale `writable_roots`
-    (`~/Memoria-test`, `~/mv`), delete the `~/mv` skeleton. Codex runs on
-    repo AGENTS.md alone.
-16. Delete `~/.claude/.ponytail-active`, ponytail 4.7.0 cache, and — after a
-    skim (**second irreversible eyeball**) — the ten orphaned plans in
-    `~/.claude/plans`.
+17. `~/.codex/AGENTS.md`: delete the precedence copy; prune mirrored
+    `~/.codex/skills` to the kept set (audit tools, caveman, grilling,
+    obsidian-skills); `config.toml`: remove stale `writable_roots`
+    (`~/Memoria-test`, `~/mv`), delete the `~/mv` skeleton. Codex otherwise
+    runs on repo AGENTS.md alone.
+18. Delete the ponytail 4.7.0 cache, and — after a skim (**second
+    irreversible eyeball**) — the ten orphaned plans in `~/.claude/plans`.
 
 Verify: fresh session in the collapsed repo; only injected mode is
 superpowers' using-superpowers.
 
 ## Phase 5 — Acceptance test + upstream debts
 
-17. Run one real feature end-to-end through the spine: brainstorm → spec in
+19. Run one real feature end-to-end through the spine: brainstorm → spec in
     `docs/superpowers/specs/` → plan → SDD → PR → `verify` → squash-merge →
     finish flow (answer "PR"). This exercises every adopted convention.
-18. File upstream superpowers issues instead of patching locally: (a) SDD
+20. File upstream superpowers issues instead of patching locally: (a) SDD
     task-reviewer "do not re-run the suite" vs verification-before-completion;
     (b) orphaned spec/plan reviewer prompt templates.
 
@@ -112,5 +137,9 @@ superpowers' using-superpowers.
 - Scratch branch / ExecPlan playbook / Project fields — a real multi-session
   handoff fails for lack of them.
 - Second standing behavioral plugin — never two at once; everything beyond
-  superpowers is invoke-only. Ponytail in particular cannot return as a
-  standing mode while brainstorming's gate is law (structural conflict).
+  superpowers is invoke-only. Ponytail and rethink stay as audit lenses
+  (step 14) but cannot return as standing modes while brainstorming's gate
+  is law (structural conflict); ponytail's `/ponytail-review` additionally
+  waits on the upstream sticky-mode fix.
+- interface-design — earns back at real product-UI work (Obsidian plugin
+  interface); frontend-design covers design craft until then.
