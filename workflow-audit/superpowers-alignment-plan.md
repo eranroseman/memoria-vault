@@ -101,10 +101,14 @@ Verify: that PR merges under the new single check.
      changes") since the pr-policy sensitive-path list is deleted.
    Plus five lines that are the conscious exception to "facts only" — each
    preserves a function with no other home in the end state:
-   - Code shape (3 lines): smallest change that solves the problem; no
+   - Code shape (4 lines): smallest change that solves the problem; no
      speculative abstractions or unrequested flexibility; match existing
-     style. (With ponytail audit-only and the global CLAUDE.md gone, this
-     is the only standing counterweight to over-building.)
+     style; tests attach to agreed interfaces/seams, not incidental
+     internals. (With ponytail audit-only and the global CLAUDE.md gone,
+     this is the only standing counterweight to over-building — and the
+     seam line patches the one gap superpowers' TDD has: it says test
+     first, never where. Origin: preserved from the retired local tdd
+     skill, kept on merit, not provenance.)
    - Options are presented with pros/cons and a recommendation, never a
      bare list.
    - The admission rule: an addition must name the expensive, occurring
