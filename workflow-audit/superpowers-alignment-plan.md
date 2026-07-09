@@ -97,8 +97,14 @@ Verify: `scripts/verify` green locally + CI;
     corpus; its eventual home is a Memoria workspace once the product can
     dogfood it); `scratch/.notes/` → `.notes/` inside the clone, gitignored
     (add `.notes/` to `.gitignore` in step 8); `sandbox/` stays inside the
-    clone, gitignored (tests default to a repo-relative path; Codex
-    workspace-write covers it with no extra roots).
+    clone, gitignored — noting it is an installed Memoria vault with **its
+    own nested `.git`** (vault versioning is product behavior). Gitignored
+    nesting is safe: the outer repo skips it, and the inner `.git`
+    self-isolates git commands run inside it. Record one line in the facts
+    AGENTS.md: "`sandbox/` is a disposable installed vault with its own
+    `.git`; `git clean -fdx` destroys it — it must always be
+    reconstructible." Tests keep the repo-relative default; Codex
+    workspace-write covers it with no extra roots.
 
 Verify: `git -C ~/memoria-vault status` clean on `main`; `scripts/verify`
 passes from the new root.
