@@ -107,7 +107,17 @@ posture rules as skill law (never dispose without an explicit PI decision,
 file with true actor, present contradictions as both claims with quoted
 evidence, `context.read` when the PI says "this"); the async
 enqueue-then-poll pattern taught once. Same skill content ships to both
-agents.
+agents. **Plugin contents — skills plus MCP registration, nothing else:**
+one skill with stage playbooks as on-demand references (not eight skills —
+roster context tax; skills already double as slash commands), plus the MCP
+server wiring so install is one step. Deliberately excluded: hooks (an
+unscoped SessionStart injection is the standing-mode pattern the harness
+audit dismantled; earn-back is a cwd-scoped status hook if missed-inbox
+evidence appears), subagent definitions (operations are one-shot MCP
+calls), and client-side enforcement (posture rules are prose; the hard
+boundaries — closed roster, gates, actor recording, export refusal — live
+in the engine). Two packagings, same content, pinned to the same version
+per the parity rule.
 
 **The handoff bus:** "quick in the plugin, substantive with the agent"
 requires escalatable cards — implemented with *no plugin↔agent channel*:
