@@ -139,6 +139,18 @@ superpowers-spine acceptance run (alignment-plan step 21).
       graph-owner module (item 8) for per-file edge upserts;
       `.memoria/`-internal ignore rules + debounce/coalescing for write
       storms.
+    - **Surface-contract gaps** (verified against the 17-action registry,
+      2026-07-09): agent integration is ~90% served today
+      (`operation.run` + `requests.get` covers the whole co-PI loop);
+      plugin ~60%. Additive actions needed: `works.list` (catalog
+      enumeration — the T0 CLI fix lands here too), `context.read`/set
+      (shared editor state), `status.paths` (bulk path→verdict for badges;
+      must report verdict *without* content, bypassing the consumption
+      gate), one `observe-file-event` operation manifest. The one new
+      transport concept: an SSE/long-poll events endpoint for sub-second
+      badge updates (registry binds synchronous actions only; polling is
+      the v1 fallback). Grounding-query read (`graph.read`) waits on
+      item 8's filled `concept_edges`.
 13. **Semantic upgrades where axioms allow** — replace the tier-1
     lexical-NLI stand-in and hash-fake embeddings: grounding-relationship
     detection, never truth scoring. Verify the runner-resolution path at
