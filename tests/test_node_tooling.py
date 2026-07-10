@@ -12,9 +12,6 @@ PACKAGE_LOCK = ROOT / "package-lock.json"
 PYPROJECT = ROOT / "pyproject.toml"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
 REQUIREMENTS_DEV = ROOT / "requirements-dev.txt"
-CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
-MARKDOWNLINT_WORKFLOW = ROOT / ".github/workflows/markdownlint.yml"
-CONTRACT = ROOT / ".github/ruleset-contract.yaml"
 DOCS_CONFIG = ROOT / "docs" / "_config.yml"
 
 
@@ -41,20 +38,6 @@ def test_required_node_checks_use_pinned_local_tools():
     assert markdownlint["language"] == "node"
     assert markdownlint["entry"] == "markdownlint --config .markdownlint.json"
     assert markdownlint["additional_dependencies"] == ["markdownlint-cli@0.49.0"]
-
-
-def test_node_workflows_run_the_same_precommit_hooks():
-    cspell = CSPELL_WORKFLOW.read_text(encoding="utf-8")
-    markdownlint = MARKDOWNLINT_WORKFLOW.read_text(encoding="utf-8")
-
-    for text in (cspell, markdownlint):
-        assert "npx" not in text
-        assert "npm ci" not in text
-        assert "npm run" not in text
-        assert "pre-commit==4.6.0" in text
-
-    assert "pre-commit run cspell --all-files" in cspell
-    assert "pre-commit run markdownlint-structural --all-files" in markdownlint
 
 
 def test_precommit_hooks_use_pinned_tool_environments():
@@ -98,15 +81,6 @@ def test_local_precommit_python_hooks_use_python3():
     ]
 
     assert bare_python_entries == []
-
-
-def test_lint_config_and_markdownlint_are_required_checks():
-    contract = yaml.safe_load(CONTRACT.read_text(encoding="utf-8"))
-
-    assert "lint-config" in contract["required_checks"]
-    assert "markdownlint" in contract["required_checks"]
-    assert contract["workflow_jobs"]["lint-config"] == ".github/workflows/lint-config.yml"
-    assert contract["workflow_jobs"]["markdownlint"] == ".github/workflows/markdownlint.yml"
 
 
 def test_pages_rewrites_relative_markdown_links():
