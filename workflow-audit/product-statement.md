@@ -23,7 +23,10 @@ sanitizes it. The design assumes one human who owns judgment: review
 decisions, synthesis choices, and scope priorities all belong to that
 researcher. This is not a team tool. Thinking itself is ungated; the
 knowledge graph is gated; promotion is the boundary between them — so
-"unfiltered" and "gated" never apply to the same act.
+"unfiltered" and "gated" never apply to the same act. The zones are
+**states, not places**: promotion is a record update, never a file move —
+a note is born in its type home and dies there, so state changes cannot
+break links or sever history.
 
 **Opinionated** — it enforces specific workflows and eliminates setup
 paralysis. The vault structure, the document types, and the review gates
@@ -108,11 +111,18 @@ axiom 2 follows from axiom 1.
    checks passed, never a truth verdict; dispositions record judgment
    events, they do not adjudicate content.
 2. **The origin of a change — human, machine, LLM — does not affect its
-   consequences.** Origin is provenance, not authorization. The central
-   operation this axiom serves: when the researcher decides a claim is
-   wrong, the system's job is to propagate the grounding consequences
-   across the entire knowledge graph — and that blast radius is the same
-   whoever authored the claim.
+   consequences.** Origin is provenance, not authorization. Scope
+   (formalized after reconciling with the decision record): the axiom
+   governs **epistemic consequences** — flags, demotions, gap findings,
+   blast radius are origin-blind; write and revert **authority** remains
+   origin-gated (human-authored spans are never auto-destroyed; machine
+   material auto-reverts). The central operation this axiom serves: when
+   the researcher decides a claim is wrong, the system propagates the
+   grounding consequences across the entire knowledge graph — and that
+   blast radius is the same whoever authored the claim. Propagation is
+   lazy and impact-ranked (stale-marking, on-path re-confirmation) —
+   eager re-confirmation of every downstream edge is the sunk-cost trap
+   inverted.
 
 **The master pattern** (it resolved every design fork it was tested on):
 *the fluent, judging half of any capability stays with the human — or the

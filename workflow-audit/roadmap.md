@@ -14,20 +14,20 @@ propagation and a self-calibrating instrument.
 ## Tier −1 — The supersession pass (before any implementation)
 
 0. **Reconcile the dossier with the decision record** (2026-07-09
-   blind-spot sweeps over docs/explanation/ + all 21 design-history
-   chapters — see `blind-spots-review.md`). The dossier reverses or
-   re-opens roughly a dozen recorded verdicts (daemon, fulltext v2,
-   OKF-bundle scope, warrant unlock condition, six-role typing,
-   origin-blind propagation scope, journal consolidation, editor-plugin
-   status, context bus, decisions-as-claims authority) — most were
-   deliberate owner calls today, but per the repo's own rule supersession
-   is a decision, not drift: write each as a dated superseding decision
-   answering the recorded reasons. Absorb Section B's richer prior
+   blind-spot sweeps; see `blind-spots-review.md`). Owner ruling: most
+   recorded verdicts the dossier reverses were convenient decisions at
+   the time — those supersessions are light-touch (record today's
+   reasoning against the old entry: daemon, OKF-bundle scope, six-role
+   typing as roles-not-types, editor plugin as pure renderer, context
+   bus with enqueue-only discipline, decisions-as-claims authority,
+   origin scoping). **Two need genuine design engagement: fulltext v2
+   (the anchor substrate + keep-test — see item 12 note, now an open
+   design question) and the journal repair (redesigned in item 2 to keep
+   the multi-log plane decomposition).** Absorb Section B's richer prior
    formulations and merge Section C's blind spots into the items they
    gate — most urgently: **disposition telemetry before the bulk import**
-   (non-backfillable), the **anchor-substrate migration** inside fulltext
-   v2, **bulk-admission flood mechanics** in onboarding, and the
-   **seeded-error license gate** before item 19.
+   (non-backfillable), **bulk-admission flood mechanics** in onboarding,
+   and the **seeded-error license gate** before item 19.
 
 ## Tier 0 — Make the delivered machinery true and visible (first)
 
@@ -47,15 +47,22 @@ propagation and a self-calibrating instrument.
    in the memory-model doc. Under axiom 2, provenance is origin's entire
    job; cascade/demotion already branch on this field, so it must be
    faithful before Tier 1 builds on it.
-2. **Journal trust repair.** The hash-chained `event_log` is ornamental:
-   every trust-critical read (quarantine, PI-edit detection, blast radius)
-   reads the un-chained, gitignored JSONL copy, no chain verifier exists,
-   and the dual write is non-atomic. Add a chain verifier (integrity
-   check), make `event_log` the substrate trust paths read (or reconcile
-   the two on every sweep), and define the crash story between the two
-   appends. While in there: `event_log` has no index on
-   `event_type`/`timestamp` — journal queries scan at years scale; add
-   them when it becomes the read substrate.
+2. **Journal trust repair — within the recorded multi-log design**
+   (redesigned per the blind-spot review; the owner ruled the event-log
+   reversal one of two needing real engagement). ADR-25/104's plane
+   decomposition stands: separate logs with opposite requirements
+   (forensic permanence / content-free analytics / disposable
+   diagnostics), per-machine JSONL files kept sync-ready, and the
+   git-tracked `.memoria/journal-head` anchor the alpha.12 spike proved
+   necessary for tamper evidence. The actual defects to fix inside that
+   design: **trust-critical reads (quarantine, PI-edit detection, blast
+   radius) must consume the hash-chained `event_log`, not the un-chained
+   JSONL copy**; add the missing chain verifier (walk the chain, check
+   against journal-head); define the crash story for the dual append
+   (order + reconciliation sweep); and add `event_type`/`timestamp`
+   indexes when event_log becomes the trust-read substrate. "Sole
+   authoritative journal" is retired as the goal; "one authoritative
+   trust-read path" replaces it.
 3. **Grounds durability.** `.memoria/blobs/` — captured source content,
    the evidential grounds of the whole Toulmin stack — is gitignored as
    "regenerable runtime data" and is not regenerable. Resolved by the
@@ -115,8 +122,12 @@ superpowers-spine acceptance run (alignment-plan step 21).
    bridge* so claim→work edges cross the substrate boundary (the address
    space already exists — the verdict-cascade triggers already translate
    it; three code gates block it). Then extend to the
-   Toulmin six: warrant nodes with backing edges; qualifier/certainty made
-   live; rebuttal able to target warrants. Add the missing
+   Toulmin six — **as roles carried by relations and demandable slots,
+   not node types** (per ADR-126 roles-not-types, superseded lightly;
+   ADR-65's earn-each-type applies to the relation vocabulary: add each
+   relation when used, never all six on day one): warrant nodes with
+   backing edges; qualifier/certainty made live; rebuttal able to target
+   warrants. Add the missing
    **graph architecture page** — the central substrate is currently
    undocumented.
 9. **Redesign propagation, then wire the central operation.** The
@@ -190,12 +201,22 @@ superpowers-spine acceptance run (alignment-plan step 21).
       retires as a bundle root entirely** (decision v2 in
       `user-workflow.md`: external material doesn't belong in the
       knowledge bundle; the PDF is the human reading surface, the engine
-      serves passages on demand for quote-in-context). Cheaper than first
-      assumed: the schema analysis found `'fulltext'` was **never a
-      concept type** (fulltexts exist only as generated passages plus
-      outputs rows), so retirement is folders.yaml/CONCEPT_HOMES plus
-      index code — no concept-roster migration; quote anchors reference
-      content-hash space. Bonus from the same analysis:
+      serves passages on demand for quote-in-context). **Status: open
+      design question, not a settled decision** (owner ruling in the
+      blind-spot review — fulltext is one of two reversals where the
+      recorded reasoning has real force): the `work_id#^pNNNN` anchor
+      substrate that evidence markers, digest anchor-checks, and
+      three-way `mc` trust point into lives as block anchors in
+      fulltext.md files, and the keep-test (what survives when Memoria
+      disappears) weakens if anchored verbatim text exists only in the
+      DB. v2 remains the preferred direction *conditional on*: a
+      replacement locator contract in content-hash space, migration of
+      existing `%%ev%%` markers and anchor checks, the fate of `digests/`
+      anchor-checking, and a stated post-v2 keep-set (PDF + exported
+      spans). Cheaper than first assumed on the schema side: `'fulltext'`
+      was **never a concept type**, so retirement is
+      folders.yaml/CONCEPT_HOMES plus index code. Bonus from the same
+      analysis:
       `file_index_state` (mtime+sha per path) already exists — Tier A's
       incremental-indexing substrate is built, not new.
     - **Surface-contract gaps** (verified against the 17-action registry,

@@ -12,8 +12,13 @@ supersession is a decision, not drift.
 
 ## A. The supersession ledger — reversals needing explicit superseding decisions
 
-Most of these were deliberate owner calls today; the task is to *write the
-superseding decision answering the recorded reasons*, not to retreat.
+**Owner ruling (same day):** most of the recorded verdicts below were
+convenient decisions at the time — today's reversals stand, and their
+supersession is light-touch (record today's reasoning against the old
+entry, done). **Two exceptions where the recorded reasoning has real force
+and the reversal needs genuine design engagement: fulltext (item 2 below —
+the anchor substrate and keep-test) and event log (item 7 below — the
+multi-log plane decomposition and tamper-evidence anchor).**
 
 1. **The daemon (item 12/reactive substrate)** reverses: ADR-49
    (file-watcher write-gate daemon deliberately not built), alpha.14 ("no
