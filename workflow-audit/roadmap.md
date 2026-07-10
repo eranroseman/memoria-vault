@@ -112,7 +112,11 @@ superpowers-spine acceptance run (alignment-plan step 21).
    decision is expensive to reverse after accumulation. Evidence-gated:
    the empirical plan's *warrant touch budget* row carries the
    pre-registered decision rule, and no warrant-node schema work happens
-   before that observation.
+   before that observation. The brainstorm must also resolve a
+   **terminology collision**: the beta.1 design (§1.4) uses "warrant = a
+   typed evidence-set" — under the Toulmin pillar that is *grounds*;
+   warrant is the inference license. Rename one before the six-role
+   vocabulary ships pre-confused.
 8. **Give the graph one owner, then extend to the six-role basis.** The
    architecture review found five substrates, four parsers, three
    contradictory relation rosters, and the designed join point —
@@ -211,8 +215,12 @@ superpowers-spine acceptance run (alignment-plan step 21).
       blind-spot review — fulltext is one of two reversals where the
       recorded reasoning has real force): the `work_id#^pNNNN` anchor
       substrate that evidence markers, digest anchor-checks, and
-      three-way `mc` trust point into lives as block anchors in
-      fulltext.md files (evidence-gated: the empirical plan's
+      three-way `mc` trust point into — **though the beta.1 design
+      (§12.1) already decoupled resolution: `work_id#^pNNNN` resolves
+      through `passages.anchor` page metadata, not literal block markers
+      in fulltext files, so the v2 migration is substantially smaller
+      than the design-history sweep feared** (evidence-gated: the
+      empirical plan's
       *fulltext-consultation* row decides full v2 vs partial retirement,
       and its *staleness_hit* row decides Tier A's priority), and the
       keep-test (what survives when Memoria
