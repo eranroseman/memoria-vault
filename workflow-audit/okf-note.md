@@ -29,6 +29,36 @@ references travel; copyrighted sources do not. Durability splits cleanly:
 the bundle survives anything; `.memoria/` loss costs trust state, never
 knowledge (blobs backed up as data; verdicts/journal restore or rebuild).
 
+## Data placement doctrine (same day)
+
+**Files hold what the PI authors or ratifies; the DB holds judgments and
+machinery about that content; "both" is legal only as
+authority-plus-projection — one direction, generated, drift-checkable —
+never two authorities.**
+
+- **Files only (bundle):** claim notes, hubs, projects, outlines, drafts;
+  digests (machine-compiled, PI-ratified via sealed interviews); typed
+  frontmatter links (the argument graph's authoring surface);
+  steering.md (PI intent); inbox cards (machine proposals awaiting
+  judgment, disposable after disposition).
+- **DB/engine only (`.memoria/`):** verdicts (files may never self-assert
+  status — the retired-fields rejection is the enforcing line); journal /
+  event_log / derivations; operation queue and envelopes; blobs (raw
+  artifacts + derived textual layers, per fulltext v2); provider payloads
+  and catalog rows; passage index / FTS / vectors / work_graph_edges;
+  code_runs and eval telemetry.
+- **Both, with declared direction:** catalog → `bibliography.bib`
+  (DB→file, self-containment); frontmatter edges → `concept_edges`
+  (files→DB, traversal substrate); concept metadata → concepts mirror
+  (files→DB); bundle contents → `index.md` (files→file, OKF §6); evidence
+  markers (authored in files) vs their dispositions (judged in DB); ULIDs
+  (born in frontmatter, keyed in DB — immutable, so drift-free).
+
+**Litmus:** delete `.memoria/` → trust state and machinery lost, zero
+knowledge (restore or rebuild); delete the bundle → everything lost.
+Any datum violating that sentence is in the wrong store (known violator,
+on the roadmap: blobs don't rebuild — hence backup-as-data, Tier 0).
+
 ## Nested project bundles (owner clarification, same day)
 
 **Each project is its own nested knowledge bundle — and detachable.**
