@@ -6,11 +6,19 @@ warrant question), `autoresearch-note.md` (self-improvement loops),
 `architecture-review.md` (structural findings — "rim-strong, center-soft"),
 `okf-note.md` (bundle boundary, placement doctrine, consistency model),
 `schema-analysis.md` (column-level sharpening of items 1, 2, 6, 8, 9, 20),
-`blind-spots-review.md` (the record sweeps + owner rulings), and — the
-dossier's empirical arm —
-`../releases/0.1.0-beta.1/empirical-use-action-plan.md` (v2: license gate,
-telemetry-first, instrumented staged onboarding, and pre-registered
-decision rules for the open questions).
+`blind-spots-review.md` (the record sweeps + owner rulings), and the
+release-workspace companions: `../releases/0.1.0-beta.1/`
+`empirical-use-action-plan.md` (the empirical arm: license gate,
+telemetry-first, instrumented onboarding, pre-registered decision rules),
+`0.1.0-beta.1-design.md` (the operative product design — reviewed
+2026-07-10, mostly survived; the dossier builds above it),
+`query-mechanism-analysis.md` (query mechanics; §4.11 and §5 are cited by
+items 9/12/13), and `data-structure-analysis.md` (the resolved schema
+source — **the one governing document not yet reviewed against the
+dossier**; residual review debt). Decision authority: the release ledger
+`decisions.md` is the decision-time record per its own header; the
+dossier's durable decisions fold into it (bridging entry recorded
+2026-07-10; full folding at release close per the normal flow).
 Shape: make the delivered half honest and visible, repair the trust
 substrates the architecture review exposed, build the graph the statement
 promises, add initiative and a voice, then exceed via typed blast-radius

@@ -7,6 +7,33 @@ fact basis is stated here or in an active top-level release file. The
 implemented system and this release ledger are the decision-time record until
 the release closes into `design-history/`.
 
+## 2026-07-10 - Design dossier adopted as decision annex
+
+Y: The design dossier on the scratch branch (`scratch/workflow-audit/`:
+product statement v2, roadmap, promise/architecture/schema audits, storage
+constitution, blind-spots review, plus this workspace's
+`empirical-use-action-plan.md`) is the working decision record for the
+2026-07-09/10 harness-alignment and product-doctrine session; its durable
+decisions fold into this ledger and `design-history/` at release close.
+
+Because: the session produced roughly thirty owner-ratified decisions
+(four pillars, grounding axioms and master pattern, bundle boundary and
+placement doctrine, reactive substrate, surface strategy, source-type
+roster, evidence-gated open questions) faster than per-entry capture, and
+two live decision records would recreate the dual-authority problem this
+ledger's first entry retired. This entry declares the relationship: the
+ledger remains the decision-time record; the dossier is its annex until
+folded.
+
+Pointers:
+- Context: `scratch/workflow-audit/` (all documents; `roadmap.md` is the
+  entry point and names the release-workspace companions)
+- Open questions carried by the annex: warrant ontology and fulltext v2
+  final shape, both with pre-registered decision rules in
+  `empirical-use-action-plan.md`
+
+Status: accepted; folding due at release close.
+
 ## 2026-07-05 - Living design history replaces ADRs
 
 Y: Memoria will retire `docs/adr/` as the live decision mechanism and use
