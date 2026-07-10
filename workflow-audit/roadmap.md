@@ -366,7 +366,8 @@ with the agents the user already runs.
     `argument.canvas` declares `required_checks: [projection-drift]` but
     is absent from `TRACKED_PROJECTION_PATHS`
     (`runtime/projections.py:15-18` lists only index.md and
-    bibliography.bib) — the check silently doesn't cover it. Canvas as an
+    bibliography.bib) — the check silently doesn't cover it (issue
+    #1351). Canvas as an
     *authoring* surface (drag claims into an outline) is a scoped
     reopening of rejected ADR-103 — the rejection was
     spatial-as-primary-axis-at-scale; a dozen-node project worksheet is a
@@ -416,7 +417,7 @@ with the agents the user already runs.
     `./schema` but the seed ships no `schema.js` (it exists only in
     `packages/memoria-obsidian/`; `memoria init` copies the seed tree
     verbatim) — ship the built file in the seed plus a drift check
-    against the package build output; needs a GitHub issue. Watch items,
+    against the package build output; filed as issue #1350. Watch items,
     not adoptions: AG-UI/SSE streaming (item 12's events endpoint is the
     earn-back path), and Obsidian 1.10's Bases plugin API as alternative
     panel chrome.
