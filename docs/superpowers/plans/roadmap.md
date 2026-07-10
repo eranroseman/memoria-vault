@@ -296,6 +296,21 @@ superpowers-spine acceptance run (alignment-plan step 21).
     'article' — schema analysis). Also widen `work_aspects` PK when
     textual layers make aspects load-bearing: `(work_id, aspect_type)`
     currently forces one key idea and one limitation per work.
+    **Software products as works (decided 2026-07-10):** a `software`
+    work (Zotero, Obsidian, a library) is the *product identity*, and it
+    behaves hub-like — it has no single fulltext; its evidence surface is
+    the set of captured artifacts edged to it via `work_graph_edges`
+    (docs pages as article/URL captures, release notes, the source repo
+    at a pinned tag) plus first-party usage observations authored as
+    notes. **Version is a required qualifier on claims about software**
+    — an unversioned claim about a mutating product is an unqualified
+    claim (the repo-at-pinned-commit rule generalized); item 20(d) drift
+    detection applies doubly, flagging staleness when the live product
+    diverges from the version a claim pinned. No new mechanism — this
+    composes the roster's `software` type, version pinning, work-graph
+    anchoring, and drift detection. First external consumer: the
+    emotiv-bci repo (its readiness plan Part G captures it as a work at
+    phase tags).
 
 ## Tier 3 — The conversational co-PI (method, never belief)
 
@@ -429,12 +444,29 @@ with the agents the user already runs.
     seeded-error battery. Harness fixes first, from the architecture
     review: route the runner-under-test through the measured behavior
     (today fixture prep ignores the runner, so the experiment's subject
-    cannot affect the measurement), include `prompt_version` in
-    `verdict_key`, and tie prompt body hashes to `prompt_version` so
+    cannot affect the measurement), include `prompt_version` **and
+    `model_id`** in `verdict_key` (same defect, same repair: an
+    experiment unit that omits the model cannot detect the model
+    changing), and tie prompt body hashes to `prompt_version` so
     silent pattern edits can't change the experiment unit.
 17. **Prompt autoresearch** — fill the `eval_dispatch` stub (it returns a
     `planned:` string; nothing enqueues) with gold tasks from real use;
-    grind operation prompts against `support_rate`.
+    grind operation prompts against `support_rate`. **Model selection
+    rides the same harness (decided 2026-07-10):** the model is an
+    instrument variable, chosen and evaluated exactly like prompts.
+    (a) Pin model IDs, never aliases — a `latest` alias changes the
+    instrument without a decision (the pinning policy extended to
+    models). (b) Choose per call-site via the operation manifest, not
+    globally — digest compilation, the tier-2 judge, and question
+    generation sit on different cost/quality frontiers. (c) Promotion is
+    shadow-first against the call-site's gold set on pre-registered
+    *structural* metrics (grounding-validation pass rate, `support_rate`,
+    schema conformance, judge agreement) — never truth-agreement with
+    the PI; incumbent stays until beaten (the BM25-until-beaten rule,
+    third instance). Fencing makes this cheap: sealed inputs + manifests
+    make any past operation replayable against a candidate model — the
+    A/B substrate already exists by design. The empirical plan's "LLM
+    call-site" row carries the corresponding decision rule.
 18. **Warrant inventory as explicit methodology** (free once Tier 1
     lands): "show me everything resting on inference-type X, because I no
     longer accept it" — a years-horizon capability no notes system offers.
@@ -476,6 +508,25 @@ item 15's native ring: seeded `.base` views, `graph.json`, `types.json`,
 and the wikilink-preferred typed-link form are seed-file reshapes that
 are trivial while vaults are empty and reconciliation work after the
 import — land them in the same batch.
+
+**Digest stays a separate concept type (decided 2026-07-10, in the cheap
+window):** examined precisely because schema-before-corpus makes now the
+only cheap moment to merge it into `note` — decision: no change, and the
+rationale is recorded so it doesn't reopen casually. A digest differs
+from a note on every axis a concept type encodes: production process
+(machine-compiled and interview-sealed — gate-produced hybrid
+provenance, vs PI-authored), granularity (a document with sections and
+the sealed interview, vs ZK-atomic — folding it into `note.mode` would
+give the type a non-atomic member and break the invariant for every
+consumer), and lifecycle (per-work engagement record superseded
+wholesale on re-digest, vs individually-living notes). Master-pattern
+cut: the digest is the structural half of reading, notes the fluent
+half. The real overlap sits between digest and `mode:work` notes (both
+work-anchored); the seam: digest = the sealed compiled engagement with
+a source, work-mode note = an atomic PI judgment about the work,
+extracted claims = `mode:claim` with quote/anchor. If any type is on
+probation it is `mode:work`, already under empirical observation via
+the plan's "mode: work creation" blocker row.
 
 Tier 0 (items 1–5, with 1–3 as the trust-substrate repairs) → Tier 1
 (design-heavy; item 6 unblocks 7–9) → Tiers 2–4 parallelize once the
