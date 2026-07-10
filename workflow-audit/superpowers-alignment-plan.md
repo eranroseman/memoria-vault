@@ -109,9 +109,9 @@ Verify: that PR merges under the new single check.
      changes") since the pr-policy sensitive-path list is deleted.
    - The layer-disagreement heuristic (from `insights.md`): **when layers
      disagree, trust order is schema → tests → code → docs.**
-   - **Design-history is historical reference only** — never
-     justification, never evidence; arguments stand on current facts and
-     merit (owner ruling, 2026-07-09).
+   - **The past is a teacher, not a prison.** Design-history is
+     historical reference only — never justification, never evidence;
+     arguments stand on current facts and merit (owner ruling).
    Plus five lines that are the conscious exception to "facts only" — each
    preserves a function with no other home in the end state:
    - Code shape (4 lines): smallest change that solves the problem; no

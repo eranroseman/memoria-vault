@@ -15,7 +15,8 @@ supersession is a decision, not drift.
 **Owner rulings (same day):** (1) most of the recorded verdicts below
 were convenient decisions at the time — today's reversals stand;
 (2) **ADRs and their unlock conditions are historical reference only —
-never justification, never evidence.** No dossier decision owes a
+never justification, never evidence. The past is a teacher, not a
+prison.** No dossier decision owes a
 "superseding decision" to any ADR; this ledger is therefore a *reference
 map of where today diverges from history*, not a list of obligations.
 The only sweep findings retaining force are those standing on **current

@@ -124,6 +124,14 @@ axiom 2 follows from axiom 1.
    eager re-confirmation of every downstream edge is the sunk-cost trap
    inverted.
 
+**The past is a teacher, not a prison.** History is preserved completely
+and binds nothing: the journal is append-only forever, superseded claims
+archive in place, design-history freezes how the system got here — and
+none of it is authority. Verdicts speak only for the present; reopening
+anything is always allowed, as a decision. This governs the vault's
+treatment of the researcher's own record and the project's treatment of
+its own design history alike.
+
 **The master pattern** (it resolved every design fork it was tested on):
 *the fluent, judging half of any capability stays with the human — or the
 human's chosen agent; the structural, inspectable half goes into the
