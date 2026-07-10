@@ -54,6 +54,20 @@ never two authorities.**
   markers (authored in files) vs their dispositions (judged in DB); ULIDs
   (born in frontmatter, keyed in DB — immutable, so drift-free).
 
+**Frontmatter corollary** (all file metadata lives in frontmatter — the
+current design, affirmed): frontmatter is part of the authored artifact,
+which is what makes concepts self-describing and OKF-portable. Same
+admission rule as the bundle: **authored** metadata → frontmatter (type,
+claim_text, quote/annotation_ref, qualifier, certainty, links, tags,
+provenance-at-birth); **judged** → DB only (verdicts/dispositions —
+already enforced by retired-fields rejection); **derived** → neither,
+computed on read (argument_stage, saturation, confidence, counts — in
+frontmatter they'd be self-asserted judgments wearing metadata's
+clothes). Hygiene item: the undeclared `contradictions` frontmatter list
+must be schema-declared or removed. The six-role work evolves
+frontmatter's shape (link entries as objects or warrant-node refs), never
+abandons it as the authoring surface.
+
 **Litmus:** delete `.memoria/` → trust state and machinery lost, zero
 knowledge (restore or rebuild); delete the bundle → everything lost.
 Any datum violating that sentence is in the wrong store (known violator,
