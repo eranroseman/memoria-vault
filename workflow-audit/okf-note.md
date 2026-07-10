@@ -10,6 +10,27 @@ exactly what OKF leaves out (typed links, phase gates, verdicts,
 provenance, the argument graph). Complementary by construction: OKF's
 non-goals are Memoria's value.
 
+## The bundle boundary (owner clarification, same day)
+
+**The bundle is the vault minus `.memoria/`; it is self-contained and
+contains all the user's knowledge and thoughts.** `.memoria/` is
+engine-space (verdicts, journal, blobs, queue) — trust state, not
+knowledge. This boundary is why `bibliography.bib` exists: the catalog's
+canonical store is SQLite (engine-space), so the catalog projects its
+portable essence into the bundle as a standard .bib file, each entry
+carrying `memoria_work_id` as the join key back to engine-space. Any OKF
+consumer — or Zotero, LaTeX, a bare human — resolves the bundle's
+citations with no Memoria present; Memoria rejoins bundle and catalog via
+the work_id. (This supersedes the `references/`-as-concepts suggestion
+below: the bib file is the chosen catalog projection — more compact, more
+standard.) The knowledge/sources line follows: full texts are external
+material, engine-space blobs; the user's *engagement* with them (digests
+with sealed interviews, claim notes, links) is bundle knowledge. Bonus:
+the distributable bundle carries no third-party full texts — thinking and
+references travel; copyrighted sources do not. Durability splits cleanly:
+the bundle survives anything; `.memoria/` loss costs trust state, never
+knowledge (blobs backed up as data; verdicts/journal restore or rebuild).
+
 ## The vault as a conformant bundle
 
 - The workspace already matches §2/§3: concept documents with typed

@@ -177,7 +177,10 @@ files-first doctrine correctly scoped to PI-authored knowledge; axiom-1
 inspectability preserved because the pulled source is a file in front of
 you. Consequences: the 1000-paper import doesn't melt Obsidian's cache or
 bloat git (git holds knowledge, not corpora — the blobs' durability story
-is backup, not tracking); indexing must decouple from the markdown
+is backup, not tracking); the bundle boundary confirms it (full texts are
+external material in engine-space; `bibliography.bib` with
+`memoria_work_id` is the bundle-resident catalog projection — see
+`okf-note.md`); indexing must decouple from the markdown
 projection (read passages from the store directly); verify quote anchors
 reference blob/content-hash space, not file offsets, so they survive
 dematerialization.
