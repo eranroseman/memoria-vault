@@ -48,7 +48,10 @@ never two authorities.**
   and catalog rows; passage index / FTS / vectors / work_graph_edges;
   code_runs and eval telemetry.
 - **Both, with declared direction:** catalog → `bibliography.bib`
-  (DB→file, self-containment); frontmatter edges → `concept_edges`
+  (DB→file, self-containment); read-contract → `AGENTS.md` (product→file,
+  written by init and regenerated on upgrade, never PI-edited — the
+  agent-facing "how to read me safely" note, decided 2026-07-10);
+  frontmatter edges → `concept_edges`
   (files→DB, traversal substrate); concept metadata → concepts mirror
   (files→DB); bundle contents → `index.md` (files→file, OKF §6); evidence
   markers (authored in files) vs their dispositions (judged in DB); ULIDs

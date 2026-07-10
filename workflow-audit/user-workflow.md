@@ -142,6 +142,22 @@ insufficient, the mechanical earn-back is the existing policy hook
 covering reads on gated zones, engine-side and opt-in). Two packagings,
 same content, pinned to the same version per the parity rule.
 
+**The vault's AGENTS.md (decided 2026-07-10): a generated projection, not
+a bundle document — the bibliography.bib pattern applied to the
+read-contract.** The plugin owns the authoritative, rich guidance (skill
+playbooks + the vault-scoped session hook); the bundle carries only a
+thin, engine-generated `AGENTS.md` written by `memoria init` and
+regenerated on upgrade (release-wins; never PI-edited): this is a Memoria
+vault, every file carries epistemic status, use the MCP/read API, inbox
+items are undispositioned proposals, and — for detached bundles — without
+Memoria present treat all content as unverified. Rationale: hand-authored
+guidance in the bundle is a drifting product mirror in user-space;
+plugin-only guidance misses exactly the dangerous case (any agent
+*without* the plugin, reading `AGENTS.md` natively from cwd). Generated
+projection covers every agent class with zero drift and zero dual
+authority, and gives detached bundles a "how to read me safely" note —
+the durability pitch improved.
+
 **The handoff bus:** "quick in the plugin, substantive with the agent"
 requires escalatable cards — implemented with *no plugin↔agent channel*:
 the plugin writes the attention id into shared context (`context.set`),

@@ -313,6 +313,12 @@ free under this shape (agents already run inside it; thin status extension
 later). Embedded-chat-panel earn-back: once engine-authored interrogation
 exists the panel is thin (render questions, collect answers, user's own
 provider); trigger — evidence the two-window experience blocks daily use.
+Companion (decided 2026-07-10): `memoria init` seeds — and upgrades
+regenerate — a thin `AGENTS.md` in the vault root as a generated
+projection of the read-contract (the bibliography.bib pattern; never
+PI-edited), so plugin-less agents reading `AGENTS.md` natively from cwd
+still get the raw-read warning; the plugin's hook + skill remain the
+authoritative rich guidance (see `user-workflow.md`).
 Rationale (corrected 2026-07-09 — Memoria does make LLM API calls): the
 engine owns model calls as **fenced one-shot operations** (pydantic-ai
 digest compilation with grounding validation, tier-2 judge, the
