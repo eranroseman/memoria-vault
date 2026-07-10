@@ -1,15 +1,21 @@
-# Memoria — product statement (canonical, 2026-07-09)
+# Memoria — product statement (canonical, v2 — composed 2026-07-09)
 
-Authored by Eran in the superpowers-alignment review. This is the
-authoritative "what Memoria is" statement. Migration destination: a docs/
-explanation page (step 9 routes it to `docs/`, not `docs/superpowers/`);
-the facts AGENTS.md carries the distilled version (plan step 7).
+Authored by Eran; composed from the day's ratified understandings
+(v1's accretion history is in git). This is the authoritative "what
+Memoria is." Migration destination: a docs/ explanation page. Companions:
+`okf-note.md` (storage constitution), `roadmap.md` (the change program),
+`user-workflow.md` (the lived experience).
 
 ---
 
 Memoria is an opinionated, phase-gated, personal knowledge-production tool
 for thinking and writing — a durable research vault that compounds over
 months and years.
+
+The unifying idea: **all trust is placed in inspectable grounding
+structure, never in any author — human or machine.** That is what frees
+machines to do every non-judgment task, and what reserves judgment, by
+construction, to the one human.
 
 **Personal** — thinking is private and separate from communication; notes
 stay unfiltered, preserving raw reasoning before audience-aware editing
@@ -33,65 +39,69 @@ over time as new sources connect to existing claims, synthesis sharpens as
 evidence accumulates, and structural maintenance keeps the graph coherent.
 That is the difference between a research vault and a notes pile.
 
-Day-to-day, that work happens in three spaces: you bring sources into the
-catalog, build them into connected claims in a Knowledge Bundle, and drive
-an inquiry to output in a Project. (Clarified 2026-07-09, grounded in the
-Open Knowledge Format: **the vault — excluding `.memoria/` — is one
-self-contained OKF Knowledge Bundle** holding all the user's knowledge and
-thoughts, with `bibliography.bib` + `memoria_work_id` as the catalog's
-bundle-resident projection. **Each project is its own nested, detachable
-bundle** per the ZK project-notes concept: the vault must live without
-its projects' bundles, so permanent knowledge never links into
-`projects/`, and project close harvests durable claims into the vault
-before the working bundle archives. Memoria is an opinionated OKF
-producer profile; see `okf-note.md`.)
+## The bundle and the three spaces
 
-## Lineage — four pillars (elevated 2026-07-09)
+The vault — excluding `.memoria/` — is **one self-contained Knowledge
+Bundle** in the Open Knowledge Format's sense: the unit of distribution,
+holding all the researcher's knowledge and thoughts, readable by anything
+(`cat` works) with no Memoria present. Memoria is an opinionated OKF
+producer profile; `.memoria/` is engine-space — verdicts, provenance,
+queues, blobs: trust state *about* the knowledge, never the knowledge
+itself. `bibliography.bib` is the catalog's bundle-resident projection,
+each entry carrying `memoria_work_id` as the join key back to
+engine-space. Full texts are external material and live in engine-space;
+the bundle carries the researcher's *engagement* with them — digests,
+claims, links — plus the pointers that resolve anywhere.
+
+Day-to-day, work happens in three spaces — regions of the one bundle, not
+separate containers: sources enter the **catalog**, become connected
+claims in the **knowledge** region, and drive an inquiry to output in a
+**Project**. Each project is its own **nested, detachable bundle** per the
+Zettelkasten project-notes concept: projects reference vault knowledge
+freely, permanent knowledge never links into `projects/`, and project
+close harvests durable claims into the vault before the working bundle
+archives. The vault must live without its projects' bundles.
+
+## Four pillars
 
 Memoria stands on four pillars, each owning one layer with no overlap:
-**LLM-Wiki** (Karpathy) owns the inflow — extract, digest, index, lint;
-**Zettelkasten** (Luhmann) owns the topology — atomic notes, links, hubs,
-disposable project bundles; **Toulmin** owns the logic — what an argument
-is and what grounding means (the six components are the graph basis, the
-gates' criteria, and the co-PI's question taxonomy: grounds/warrant/
-backing/qualifier/rebuttal generate its five question types); and
-**autoresearch** (Karpathy) owns the self-improvement — fixed harness,
-one metric, keep/discard, overnight. Knowledge gets its shape from ZK,
-its supply from LLM-Wiki, its meaning from Toulmin, its sharpening from
-autoresearch. The original expansion notes:
 
-- The ZK bibliography box is augmented into the catalog knowledge graph.
-- Every new source follows the LLM-Wiki pattern: extracted (raw sources),
-  digested, and indexed.
-- ZK and LLM-Wiki align in a few places: they share the index, and some
-  digest products are ZK notes.
-- The ZK project-notes concept becomes the nested Knowledge Bundle.
-- The Toulmin Model is overlaid on claim notes to create an argument
-  knowledge graph, connected to and parallel with the catalog knowledge
-  graph.
-- The LLM-Wiki lint concept is expanded to cover all housekeeping and
-  bookkeeping aspects of the system.
+- **LLM-Wiki** (Karpathy) owns the **inflow** — every source is extracted
+  (raw kept), digested, and indexed; the lint concept is expanded to all
+  housekeeping and bookkeeping.
+- **Zettelkasten** (Luhmann) owns the **topology** — atomic notes, typed
+  links, hubs (the bibliography box augmented into the catalog knowledge
+  graph), and disposable project bundles.
+- **Toulmin** owns the **logic** — the six components (Claim, Grounds,
+  Warrant, Backing, Qualifier, Rebuttal) are the basis of the knowledge
+  graph, the gates' criteria, and the co-PI's question taxonomy.
+- **autoresearch** (Karpathy) owns the **self-improvement** — fixed
+  harness, one metric, keep/discard, overnight; applied to Memoria's own
+  instruments, never to the knowledge they assess.
+
+Knowledge gets its shape from ZK, its supply from LLM-Wiki, its meaning
+from Toulmin, its sharpening from autoresearch. ZK and LLM-Wiki align in
+places: they share the index, and some digest products are ZK notes.
+
+## The co-PI
 
 The end result should feel like a co-PI, not a knowledge base. The co-PI's
-expertise is method, never belief: it interrogates grounding, sets agendas,
-and surfaces contradictions, but by the axioms below it can never tell the
-researcher what to believe.
+expertise is **method, never belief**: it interrogates grounding, sets
+agendas, and surfaces contradictions, but by the axioms below it can never
+tell the researcher what to believe. The engine owns LLM calls as **fenced
+one-shot operations** — sealed inputs, manifest fencing, prompt and model
+provenance, validated outputs; what it deliberately does not own is an
+**agent loop** (multi-turn, tool-using, initiating). The conversation loop
+belongs to the researcher's agent of choice, speaking from engine-authored
+method.
 
-## Design axioms (added 2026-07-09, same review)
+## Design axioms
 
 **The kernel:** we never read a claim and ask whether we think it is true.
-We read a claim and ask how it is grounded in the evidence. Truth-assessment
-is replaced by grounding-assessment — and grounding is a property of the
-artifact, inspectable and author-independent, which is why axiom 2 follows
-from axiom 1.
-
-**The master pattern** (named 2026-07-09, after it resolved every design
-fork of the day): *the fluent, judging half of any capability stays with
-the human — or the human's chosen agent; the structural, inspectable half
-goes into the engine.* Truth/grounding, judgment/method, brain/protocol,
-agent-loop/fenced-operation, knowledge/trust-state, bundle/engine are all
-this one cut. A fork that resists resolution has usually not been cut
-along this line yet.
+We read a claim and ask how it is grounded in the evidence.
+Truth-assessment is replaced by grounding-assessment — and grounding is a
+property of the artifact, inspectable and author-independent, which is why
+axiom 2 follows from axiom 1.
 
 1. **No single node is judged true or false.** The system only asserts how
    a change affects knowledge-graph integrity. "Checked" means integrity
@@ -99,63 +109,46 @@ along this line yet.
    events, they do not adjudicate content.
 2. **The origin of a change — human, machine, LLM — does not affect its
    consequences.** Origin is provenance, not authorization. The central
-   operation this axiom serves: when the PI decides a claim is wrong, the
-   system's job is to propagate the grounding consequences across the
-   entire knowledge graph — and that blast radius is the same whoever
-   authored the claim. (Rollback/quarantine of machine derivations is a
-   cleanup utility, not the epistemic core.)
+   operation this axiom serves: when the researcher decides a claim is
+   wrong, the system's job is to propagate the grounding consequences
+   across the entire knowledge graph — and that blast radius is the same
+   whoever authored the claim.
 
-**The graph basis:** the Toulmin model's six components — Claim, Grounds,
-Warrant, Backing, Qualifier, Rebuttal — are the basis of the project's
-knowledge graph. The roles are what make consequence propagation typed:
-losing grounds, losing a warrant, a qualifier bounding regression, and a
-rebuttal strengthening when its target falls are different graph events.
+**The master pattern** (it resolved every design fork it was tested on):
+*the fluent, judging half of any capability stays with the human — or the
+human's chosen agent; the structural, inspectable half goes into the
+engine.* Truth/grounding, judgment/method, brain/protocol,
+agent-loop/fenced-operation, knowledge/trust-state, bundle/engine are all
+this one cut. A fork that resists resolution has usually not been cut
+along this line yet.
 
-Consequences for the roadmap: (a) the shipped 3-relation link graph
-(supports/contradicts/extends, with warrant/backing excluded by
-LINK_RELATIONS and qualifier/certainty unread) can propagate only support
-counts — closing the gap to the six-role basis is the core substrate work,
-the largest design-to-implementation gap in the product; (b)
-structural_impact (impact-by-lost-reachability, articulation points,
-fragility — built, orphaned, awaiting fields nothing writes) is the
-"decided wrong → blast radius" engine and should be wired first; today
-only source-level falls propagate (retraction sweep, fama-exposure); (c)
-the co-PI's conversational half is grounding interrogation ("what grounds
-this? where does this quote anchor? is this warrant stated?"), never truth
-adjudication.
+## The graph basis
 
-## Open design question — warrant ontology (must precede the substrate work)
+The Toulmin six are the knowledge graph's basis because the roles make
+consequence propagation **typed**: losing grounds, losing a warrant, a
+qualifier bounding regression, and a rebuttal strengthening when its
+target falls are different graph events. The argument graph is authored in
+note frontmatter (files-first), indexed for traversal, and connected to
+the catalog graph through the work-identity namespace.
 
-When a warrant becomes explicit, what is it in the graph: a property of a
-link, or a node of its own? Warrants are general inference licenses ("RCT
-meta-analyses license causal claims") that recur across many arguments and
-normally stay implicit until challenged (Toulmin's own observation).
+## Open design question — warrant ontology (decide before extending the graph)
 
-- **Edge property**: simple, fits current typed-link storage — but a
-  warrant decided wrong cannot be dispositioned (fifty drifting strings on
-  fifty edges, no traversal), backing has nowhere to attach, rebuttals
-  cannot target it, and lint cannot see it. The central operation is
-  unimplementable for warrants.
-- **First-class node**: dispose one warrant → one node event → blast-radius
-  traversal degrades every argument it licenses; backing and rebuttal get
-  their real target; over years the warrant inventory becomes the
-  researcher's explicit, versioned methodology. Cost: a three-way relation
-  (evidence supports claim *via* warrant) needs reification the binary link
-  schema lacks — plausibly why alpha.5 deferred it — plus authoring
-  friction and warrant-identity maintenance.
-- **Standing recommendation — hybrid**: warrants are nodes when explicit,
-  absent when implicit, and *demandable on challenge*. No warrant required
-  at authoring; the existing under-warranted pressure plus a "state the
-  warrant" operation promote implicit → explicit at the points that matter
-  (thesis-path saturation, draft verification), and lint proposes a shared
-  node when the same implicit inference recurs — machine proposes, PI
-  disposes.
-
-The choice sets the ontology's center of gravity — whether the graph is
-about claims with annotated justifications, or equally about inferences as
-research objects of the same rank as findings — and migrating between the
-two after years of accumulation is expensive. Decide before extending
-LINK_RELATIONS. (Added weight for nodes, 2026-07-09: OKF links are untyped,
-so edge-borne warrant semantics survive bundle export only as prose, while
-a warrant-as-concept exports as a first-class document any OKF consumer
-can read — see `okf-note.md`.)
+When a warrant becomes explicit, is it a link property or a node? Warrants
+are general inference licenses that recur across arguments and normally
+stay implicit until challenged. Edge-properties are simple but make the
+central operation unimplementable for warrants (no node to dispose, no
+backing target, invisible to lint) and evaporate at bundle export.
+Warrant-as-node makes one disposition propagate to every argument it
+licenses, gives backing and rebuttal their true targets, and — over
+years — turns the warrant inventory into the researcher's explicit,
+versioned methodology; its cost is reifying a three-way relation and
+authoring friction. **Standing recommendation — hybrid:** warrants are
+nodes when explicit, absent when implicit, and *demandable on challenge*;
+the under-warranted pressure and gates promote implicit → explicit at the
+points that matter, and lint proposes shared nodes when the same inference
+recurs — machine proposes, researcher disposes. Four independent weights
+now favor nodes (typed propagation, methodology inventory, OKF
+exportability, frontmatter evolvability); the choice sets whether the
+graph is about claims with annotated justifications or equally about
+inferences as research objects, and migrating after years of accumulation
+is expensive.
