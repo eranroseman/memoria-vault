@@ -35,7 +35,11 @@ That is the difference between a research vault and a notes pile.
 
 Day-to-day, that work happens in three spaces: you bring sources into the
 catalog, build them into connected claims in a Knowledge Bundle, and drive
-an inquiry to output in a Project.
+an inquiry to output in a Project. (Clarified 2026-07-09, grounded in the
+Open Knowledge Format: **the entire vault is one Knowledge Bundle** in
+OKF's sense — the unit of distribution; projects nest within it, and the
+three spaces are regions of one bundle, not separate containers. Memoria
+is an opinionated OKF producer profile; see `okf-note.md`.)
 
 ## Lineage
 
@@ -129,4 +133,7 @@ The choice sets the ontology's center of gravity — whether the graph is
 about claims with annotated justifications, or equally about inferences as
 research objects of the same rank as findings — and migrating between the
 two after years of accumulation is expensive. Decide before extending
-LINK_RELATIONS.
+LINK_RELATIONS. (Added weight for nodes, 2026-07-09: OKF links are untyped,
+so edge-borne warrant semantics survive bundle export only as prose, while
+a warrant-as-concept exports as a first-class document any OKF consumer
+can read — see `okf-note.md`.)

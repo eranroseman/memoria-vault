@@ -61,7 +61,11 @@ superpowers-spine acceptance run (alignment-plan step 21).
    wall first. Build the minimal migration layer before touching relation
    vocabularies. While in there: move toward **ULID-keyed provenance**
    (verdicts/derivations currently key on file paths; renames silently
-   sever provenance — fatal to "compounds over years").
+   sever provenance — fatal to "compounds over years"). OKF
+   reconciliation: OKF's concept ID *is* the path, so ULID is the internal
+   identity and the path is the OKF-facing address, with rename tracking
+   mapping between them — conformance is not an argument for path-keyed
+   internal provenance (`okf-note.md`).
 7. **Decide the warrant ontology** (standing recommendation: hybrid —
    nodes when explicit, demandable on challenge) **before** touching
    `LINK_RELATIONS`. Spend the brainstorming/grilling budget here: the
