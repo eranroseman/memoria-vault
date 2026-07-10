@@ -150,6 +150,24 @@ superpowers-spine acceptance run (alignment-plan step 21).
 
 ## Tier 3 — The conversational co-PI (method, never belief)
 
+**Surface strategy (standing recommendation, 2026-07-09):** editor plugin +
+agent-of-choice, not Memoria-as-agent. Memoria is designed to work with a
+text editor (Obsidian first, VS Code probable second); the fork — plugin +
+agent-integration vs an embedded CopilotKit-style copilot — resolves via
+the co-PI qualifier: **the engine authors the method (deterministic
+question cards, interrogation agendas, read off the graph); the user's
+agent voices it** (via MCP + a shipped Memoria skill, dispositions filed
+through the envelope with true actor). Borrow CopilotKit's one good idea —
+shared app state — as an MCP read action exposing current-note/selection
+context from the plugin, so conversation is situated. VS Code is nearly
+free under this shape (agents already run inside it; thin status extension
+later). Embedded-chat-panel earn-back: once engine-authored interrogation
+exists the panel is thin (render questions, collect answers, user's own
+provider); trigger — evidence the two-window experience blocks daily use.
+Rationale: preserves bring-your-own-brain, the L3 cap, the deterministic
+default, provenance-clean entry, and solo-maintainer economics; avoids
+competing with the agents the user already runs.
+
 14. **Grounding interrogation** — generate questions from `analyze_gaps`
     findings ("what grounds this? is this warrant stated? what contradicts
     it?"); replace the static interview prompt; make `memoria ask` honest
