@@ -114,7 +114,8 @@ tax; skills already double as slash commands); the MCP server wiring so
 install is one step; and a SessionStart hook that fires **only when the
 workspace contains `.memoria/`**, injecting a few lines: this is a Memoria
 vault — answer vault-content questions through the MCP tools, because raw
-files under notes//digests/ include unchecked and quarantined content the
+files anywhere in the knowledge bundle (notes/, hubs/, projects/,
+digests/, fulltexts/) include unchecked and quarantined content the
 engine's verdict layer filters; check `attention.list` for open items. The
 hook earns its place by the admission rule: without it, a file-capable
 agent's *default* behavior answers vault questions by grepping raw notes,
