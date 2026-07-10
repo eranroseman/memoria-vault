@@ -4,14 +4,19 @@ The change program synthesized from the day's record: `promise-audit.md`
 (feature verdicts and defects), `product-statement.md` (axioms, graph basis,
 warrant question), `autoresearch-note.md` (self-improvement loops),
 `architecture-review.md` (structural findings — "rim-strong, center-soft"),
-`okf-note.md` (bundle boundary, placement doctrine, consistency model), and
-`schema-analysis.md` (column-level sharpening of items 1, 2, 6, 8, 9, 20).
+`okf-note.md` (bundle boundary, placement doctrine, consistency model),
+`schema-analysis.md` (column-level sharpening of items 1, 2, 6, 8, 9, 20),
+`blind-spots-review.md` (the record sweeps + owner rulings), and — the
+dossier's empirical arm —
+`../releases/0.1.0-beta.1/empirical-use-action-plan.md` (v2: license gate,
+telemetry-first, instrumented staged onboarding, and pre-registered
+decision rules for the open questions).
 Shape: make the delivered half honest and visible, repair the trust
 substrates the architecture review exposed, build the graph the statement
 promises, add initiative and a voice, then exceed via typed blast-radius
 propagation and a self-calibrating instrument.
 
-## Tier −1 — The supersession pass (before any implementation)
+## Tier −1 — Absorb the record sweeps (before any implementation)
 
 0. **Absorb the blind-spot sweeps** (2026-07-09; see
    `blind-spots-review.md`). Owner rulings: the dossier IS the current
@@ -104,7 +109,10 @@ superpowers-spine acceptance run (alignment-plan step 21).
 7. **Decide the warrant ontology** (standing recommendation: hybrid —
    nodes when explicit, demandable on challenge) **before** touching
    `LINK_RELATIONS`. Spend the brainstorming/grilling budget here: the
-   decision is expensive to reverse after accumulation.
+   decision is expensive to reverse after accumulation. Evidence-gated:
+   the empirical plan's *warrant touch budget* row carries the
+   pre-registered decision rule, and no warrant-node schema work happens
+   before that observation.
 8. **Give the graph one owner, then extend to the six-role basis.** The
    architecture review found five substrates, four parsers, three
    contradictory relation rosters, and the designed join point —
@@ -204,7 +212,10 @@ superpowers-spine acceptance run (alignment-plan step 21).
       recorded reasoning has real force): the `work_id#^pNNNN` anchor
       substrate that evidence markers, digest anchor-checks, and
       three-way `mc` trust point into lives as block anchors in
-      fulltext.md files, and the keep-test (what survives when Memoria
+      fulltext.md files (evidence-gated: the empirical plan's
+      *fulltext-consultation* row decides full v2 vs partial retirement,
+      and its *staleness_hit* row decides Tier A's priority), and the
+      keep-test (what survives when Memoria
       disappears) weakens if anchored verbatim text exists only in the
       DB. v2 remains the preferred direction *conditional on*: a
       replacement locator contract in content-hash space, migration of

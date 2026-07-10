@@ -169,4 +169,6 @@ now favor nodes (typed propagation, methodology inventory, OKF
 exportability, frontmatter evolvability); the choice sets whether the
 graph is about claims with annotated justifications or equally about
 inferences as research objects, and migrating after years of accumulation
-is expensive.
+is expensive. The decision is evidence-gated: the empirical-use plan's
+warrant touch-budget observation (one real project loop) carries the
+pre-registered decision rule.

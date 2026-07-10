@@ -10,7 +10,7 @@ recorded verdicts without superseding them*; and the record holds ~15
 genuine blind spots the dossier must absorb. Per the repo's own rule,
 supersession is a decision, not drift.
 
-## A. The supersession ledger — reversals needing explicit superseding decisions
+## A. Historical divergences — a reference map, not obligations
 
 **Owner rulings (same day):** (1) most of the recorded verdicts below
 were convenient decisions at the time — today's reversals stand;
@@ -206,8 +206,11 @@ was not in the loop — 21 chapters of dated verdicts, none consulted at
 decision time. This is the strongest possible argument for item 19's
 Memoria-inside-Memoria: a decision graph with gap analysis would have
 surfaced ADR-79 the moment the warrant discussion began, and ADR-127 the
-moment axiom 2 was drafted. The immediate fix is procedural: **a
-supersession pass before implementation** — each Section-A reversal
-becomes a dated superseding decision answering the recorded reasons (most
-of today's reasoning suffices; writing it down is the work), and the
-Section C blind spots merge into the roadmap items they gate.
+moment axiom 2 was drafted — not as authority (the past is a teacher, not
+a prison) but as teaching in the loop. The fix, per the owner rulings: no
+supersession ceremony — the dossier is the current record; Section C's
+blind spots merge into the roadmap items they gate, and the two
+merit-bearing exceptions (fulltext, event log) plus the open questions
+now carry pre-registered decision rules in the empirical-use action plan
+(`../releases/0.1.0-beta.1/empirical-use-action-plan.md`), so the next
+decisions are made with the data in the loop.

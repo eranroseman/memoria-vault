@@ -170,7 +170,11 @@ prerequisite) → open project #1 → first gap run against the full library →
 pull. Do this after Tier 0 lands (today the catalog is un-enumerable and
 failures print `ok` — a bad pairing with a 1000-item import). This
 onboarding **is** roadmap item 19: the staged import doubles as the
-product's first real acceptance test.
+product's first real acceptance test — and it is operationalized in
+`releases/0.1.0-beta.1/empirical-use-action-plan.md` v2 (Phase 0:
+seeded-error license + disposition telemetry verified first, because the
+baseline is non-backfillable; Phase 1: the instrumented 10→100→1000
+import with per-stage flood metrics).
 
 **Fulltext storage (decided 2026-07-09, v2 — no fulltext files at all):**
 `fulltexts/` retires as a bundle root. Full text is external material, not

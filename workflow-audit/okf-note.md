@@ -97,11 +97,15 @@ and it fails closed.**
   an outbox/saga: SQLite coordinates cross-substrate operations
   (stage → validate → promote → journal → git) with fail-closed recovery
   as compensation.
-- **The broken piece (Tier 0 item 2, sharpened):** the journal dual-write
-  is non-atomic and trust paths read the un-chained JSONL copy. Fix:
-  the hash-chained `event_log` inside the ACID store is the single
-  authoritative journal write; JSONL becomes a derived export or retires.
-  Provenance is trust-plane data and gets trust-plane guarantees.
+- **The broken piece (Tier 0 item 2, redesigned after the record sweep):**
+  the journal dual-write is non-atomic and trust paths read the un-chained
+  JSONL copy. Fix — within the multi-log plane decomposition, which stands
+  on merit (planes serve opposing requirements; the git-tracked
+  `journal-head` anchor is spike-proven): trust-critical reads move to the
+  hash-chained `event_log` (one authoritative **trust-read path**, not a
+  sole journal), a chain verifier walks against the anchor, and the dual
+  append gets a defined crash/reconciliation story. Provenance is
+  trust-plane data and gets trust-plane guarantees.
 
 ## Nested project bundles (owner clarification, same day)
 
