@@ -73,6 +73,36 @@ knowledge (restore or rebuild); delete the bundle → everything lost.
 Any datum violating that sentence is in the wrong store (known violator,
 on the roadmap: blobs don't rebuild — hence backup-as-data, Tier 0).
 
+## Consistency model (same day): ACID trust plane, BASE knowledge plane
+
+Neither ACID nor BASE globally — layered: **SQLite is ACID and
+coordinates; files are BASE and free; the read barrier is the adapter,
+and it fails closed.**
+
+- **Knowledge plane (bundle files, index, projections): BASE by design.**
+  Files-first makes cross-substrate transactions impossible on purpose —
+  no transaction spans a human's editor. Soft state (unchecked, pending
+  scans), eventual consistency (demotion scans, reactive-substrate
+  chains), basic availability (the bundle is always readable/editable —
+  which OKF portability requires).
+- **The twist — fail-closed BASE:** when consistency is uncertain (hash
+  mismatch, unscanned edit, unmaterialized output), reads deny rather
+  than serve. Eventual consistency never becomes epistemic inconsistency:
+  **eventual freshness, immediate honesty.** The phase gates are
+  application-level consistency assertions; demotion chooses C over A on
+  the trust plane only.
+- **Trust plane (verdicts, journal, queue): ACID**, mostly delivered (WAL
+  + synchronous=FULL, CHECK constraints, append-only triggers, workspace
+  flock, idempotent queue). The outputs/materialization state machine is
+  an outbox/saga: SQLite coordinates cross-substrate operations
+  (stage → validate → promote → journal → git) with fail-closed recovery
+  as compensation.
+- **The broken piece (Tier 0 item 2, sharpened):** the journal dual-write
+  is non-atomic and trust paths read the un-chained JSONL copy. Fix:
+  the hash-chained `event_log` inside the ACID store is the single
+  authoritative journal write; JSONL becomes a derived export or retires.
+  Provenance is trust-plane data and gets trust-plane guarantees.
+
 ## Nested project bundles (owner clarification, same day)
 
 **Each project is its own nested knowledge bundle — and detachable.**
