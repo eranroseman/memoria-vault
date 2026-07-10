@@ -477,6 +477,27 @@ and the wikilink-preferred typed-link form are seed-file reshapes that
 are trivial while vaults are empty and reconciliation work after the
 import — land them in the same batch.
 
+**The output stage is deliberately the thinnest tier (recorded
+2026-07-10, owner observation):** the project/writing/code portion —
+slice → outline → compose → verify → export → capture-back, plus the SRD
+and `code_artifacts`/`code_runs` path — is the least-developed region of
+the system, and this roadmap gives it only item 11's project-close line
+and a share of item 14. Three roots: no pillar owns the output layer
+(the four pillars generate requirements for inflow/topology/logic/
+sharpening; nothing demands machinery from output); the master pattern
+keeps the *fluent* half with the PI but does not excuse the thin
+*structural* half (slice correctness, outline round-trip, export
+refusal, capture-back, reproducible runs as grounds — all engine
+territory); and the circle has never closed — no real project has run
+inquiry-loop steps 7–8. This is sequenced uncertainty, not neglect: the
+empirical plan routes Phase 2's two full loops through the output stage
+and pre-registers its decision rules there (SRD contract, draft
+write-back, export target, evidence-review UI, canvas threshold), so the
+stage's requirements come from evidence. **Landing slot:** the
+output-stage hardening item enters this roadmap at Phase 3's decision
+review, shaped by those rows — thinness here is a scheduled decision,
+not an oversight.
+
 Tier 0 (items 1–5, with 1–3 as the trust-substrate repairs) → Tier 1
 (design-heavy; item 6 unblocks 7–9) → Tiers 2–4 parallelize once the
 substrate lands, with item 10 as Tier 2's enabler. All of it runs through
