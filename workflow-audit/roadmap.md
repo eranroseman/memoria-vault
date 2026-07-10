@@ -11,6 +11,24 @@ substrates the architecture review exposed, build the graph the statement
 promises, add initiative and a voice, then exceed via typed blast-radius
 propagation and a self-calibrating instrument.
 
+## Tier −1 — The supersession pass (before any implementation)
+
+0. **Reconcile the dossier with the decision record** (2026-07-09
+   blind-spot sweeps over docs/explanation/ + all 21 design-history
+   chapters — see `blind-spots-review.md`). The dossier reverses or
+   re-opens roughly a dozen recorded verdicts (daemon, fulltext v2,
+   OKF-bundle scope, warrant unlock condition, six-role typing,
+   origin-blind propagation scope, journal consolidation, editor-plugin
+   status, context bus, decisions-as-claims authority) — most were
+   deliberate owner calls today, but per the repo's own rule supersession
+   is a decision, not drift: write each as a dated superseding decision
+   answering the recorded reasons. Absorb Section B's richer prior
+   formulations and merge Section C's blind spots into the items they
+   gate — most urgently: **disposition telemetry before the bulk import**
+   (non-backfillable), the **anchor-substrate migration** inside fulltext
+   v2, **bulk-admission flood mechanics** in onboarding, and the
+   **seeded-error license gate** before item 19.
+
 ## Tier 0 — Make the delivered machinery true and visible (first)
 
 1. **Provenance faithfulness — structural, not spot fixes.** The
