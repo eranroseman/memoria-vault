@@ -67,17 +67,28 @@ from axiom 1.
    checks passed, never a truth verdict; dispositions record judgment
    events, they do not adjudicate content.
 2. **The origin of a change — human, machine, LLM — does not affect its
-   consequences.** Origin is provenance, not authorization; the same edit
-   produces the same integrity effects whoever made it. Apparent
-   origin-asymmetries (cascade rollback quarantines machine-derived content,
-   routes PI-authored content to "ask") track derivation-chain topology,
-   not authorship: journal-derived content's grounding breaks mechanically
-   when its source is poisoned; authored content merely cites, so "ask" is
-   the only honest verdict.
+   consequences.** Origin is provenance, not authorization. The central
+   operation this axiom serves: when the PI decides a claim is wrong, the
+   system's job is to propagate the grounding consequences across the
+   entire knowledge graph — and that blast radius is the same whoever
+   authored the claim. (Rollback/quarantine of machine derivations is a
+   cleanup utility, not the epistemic core.)
 
-Consequences for the roadmap: the co-PI's conversational half is grounding
-interrogation ("what grounds this? where does this quote anchor? what
-contradicts it?"), never truth adjudication; and the deferred warrant field
-is the most axiom-central unbuilt piece — the warrant is the grounding
-relation made explicit, and without it grounding is assessed only by edge
-existence and lexical overlap, never by stated justification.
+**The graph basis:** the Toulmin model's six components — Claim, Grounds,
+Warrant, Backing, Qualifier, Rebuttal — are the basis of the project's
+knowledge graph. The roles are what make consequence propagation typed:
+losing grounds, losing a warrant, a qualifier bounding regression, and a
+rebuttal strengthening when its target falls are different graph events.
+
+Consequences for the roadmap: (a) the shipped 3-relation link graph
+(supports/contradicts/extends, with warrant/backing excluded by
+LINK_RELATIONS and qualifier/certainty unread) can propagate only support
+counts — closing the gap to the six-role basis is the core substrate work,
+the largest design-to-implementation gap in the product; (b)
+structural_impact (impact-by-lost-reachability, articulation points,
+fragility — built, orphaned, awaiting fields nothing writes) is the
+"decided wrong → blast radius" engine and should be wired first; today
+only source-level falls propagate (retraction sweep, fama-exposure); (c)
+the co-PI's conversational half is grounding interrogation ("what grounds
+this? where does this quote anchor? is this warrant stated?"), never truth
+adjudication.

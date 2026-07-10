@@ -110,11 +110,20 @@ provenance, not authorization.
   refutation structure is the permitted assertion surface. The
   axiom-compatible co-PI roadmap is: questioning, initiative, conversation,
   and stronger tension *detection* — not truth scoring.
-- One tension recorded for the owner: cascade rollback and the write gates
-  do let origin affect consequences (quarantine vs "ask"; adapter blocks vs
-  direct PI edits). Reconciling reading: axiom 2 scopes to epistemic
-  consequences; remediation authority respects artifact ownership. Confirm
-  or amend.
+- The rollback tension is resolved by the owner: rollback is a cleanup
+  utility, not the epistemic core. The central operation is *claim decided
+  wrong → propagate grounding consequences across the entire graph*,
+  origin-blind.
+- Owner clarification re-weights two verdicts: the **six Toulmin
+  components are the basis of the knowledge graph**, so the shipped
+  3-relation link graph (warrant/backing excluded by LINK_RELATIONS,
+  qualifier/certainty unread) is the largest design-to-implementation gap
+  in the product — the roles are what make consequence propagation typed
+  (grounds lost vs warrant lost vs qualifier-bounded regression vs
+  rebuttal strengthened). And **structural_impact re-ranks from orphan to
+  the axiom-central engine**: it is the built "decided wrong → blast
+  radius" computation, unwired and awaiting fields nothing writes; today
+  only source-level falls propagate (retraction sweep, fama-exposure).
 - Findings 2, 3, 4, 8, 9, 10 are unaffected and stand.
 
 ## Bottom line
