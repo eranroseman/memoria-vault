@@ -45,3 +45,7 @@ TODO*
 # .git; always reconstructible — never source of truth).
 .worktrees/
 /sandbox/
+
+# Local tool + harness state at the repo root, never committed.
+.kilo/
+claude-plans/
