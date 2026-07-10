@@ -56,13 +56,28 @@ The end result should feel like a co-PI, not a knowledge base.
 
 ## Design axioms (added 2026-07-09, same review)
 
+**The kernel:** we never read a claim and ask whether we think it is true.
+We read a claim and ask how it is grounded in the evidence. Truth-assessment
+is replaced by grounding-assessment — and grounding is a property of the
+artifact, inspectable and author-independent, which is why axiom 2 follows
+from axiom 1.
+
 1. **No single node is judged true or false.** The system only asserts how
    a change affects knowledge-graph integrity. "Checked" means integrity
    checks passed, never a truth verdict; dispositions record judgment
    events, they do not adjudicate content.
 2. **The origin of a change — human, machine, LLM — does not affect its
    consequences.** Origin is provenance, not authorization; the same edit
-   produces the same integrity effects whoever made it. (Open scoping
-   question, owner to confirm: whether remediation authority — e.g.
-   cascade rollback quarantining machine-derived content while routing
-   PI-authored content to "ask" — sits inside or outside this axiom.)
+   produces the same integrity effects whoever made it. Apparent
+   origin-asymmetries (cascade rollback quarantines machine-derived content,
+   routes PI-authored content to "ask") track derivation-chain topology,
+   not authorship: journal-derived content's grounding breaks mechanically
+   when its source is poisoned; authored content merely cites, so "ask" is
+   the only honest verdict.
+
+Consequences for the roadmap: the co-PI's conversational half is grounding
+interrogation ("what grounds this? where does this quote anchor? what
+contradicts it?"), never truth adjudication; and the deferred warrant field
+is the most axiom-central unbuilt piece — the warrant is the grounding
+relation made explicit, and without it grounding is assessed only by edge
+existence and lexical overlap, never by stated justification.
