@@ -117,6 +117,28 @@ handoff as it mediates everything; either front-end is replaceable without
 the other noticing. The context action pair is the integration seam of the
 three-component experience.
 
+## Onboarding (the Zotero question, ~1000 papers)
+
+**Admit all to the catalog; admit none to knowledge; let projects pull.**
+Bulk-import the full library as bibliographic capture (BibTeX + PDFs as
+local full text — mints checked, correctly: the artifact is the evidence;
+metadata-only entries stay unchecked pending enrichment, paced overnight).
+This makes the first gap run genuinely informed — discovery proposes from
+the citation neighborhoods of the whole library. Do **not** bulk-digest:
+a thousand digests with zero interview turns is machine reading without
+PI reading, exactly what the interview-sealed-digest design prevents;
+digestion is pulled per-project, single digits a week, by design.
+
+Sequence: init → write steering.md **before** importing (discovery ranking
+reads it) → staged import 10 → 100 → 1000 (the pipeline has never run at
+volume; watch enrichment provider load, journal/DB growth, and index
+rebuild time — the O(vault) refresh may promote the incremental-indexing
+prerequisite) → open project #1 → first gap run against the full library →
+pull. Do this after Tier 0 lands (today the catalog is un-enumerable and
+failures print `ok` — a bad pairing with a 1000-item import). This
+onboarding **is** roadmap item 19: the staged import doubles as the
+product's first real acceptance test.
+
 ## What's real when
 
 - **Today:** the agent workflow substantially works (MCP + `operation.run`
