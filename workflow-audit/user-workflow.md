@@ -161,6 +161,21 @@ failures print `ok` — a bad pairing with a 1000-item import). This
 onboarding **is** roadmap item 19: the staged import doubles as the
 product's first real acceptance test.
 
+**Fulltext storage (decided 2026-07-09): DB/blob as truth, files as pulled
+projections.** Fulltext is catalog-space content, not knowledge-bundle
+content — machine-generated, never legitimately edited, canonical in the
+blob store + catalog row. `fulltexts/<id>.md` demotes from
+always-materialized bundle root to on-demand projection, materialized when
+a source is pulled into active reading (the interview/digest moment) —
+files-first doctrine correctly scoped to PI-authored knowledge; axiom-1
+inspectability preserved because the pulled source is a file in front of
+you. Consequences: the 1000-paper import doesn't melt Obsidian's cache or
+bloat git (git holds knowledge, not corpora — the blobs' durability story
+is backup, not tracking); indexing must decouple from the markdown
+projection (read passages from the store directly); verify quote anchors
+reference blob/content-hash space, not file offsets, so they survive
+dematerialization.
+
 ## What's real when
 
 - **Today:** the agent workflow substantially works (MCP + `operation.run`
