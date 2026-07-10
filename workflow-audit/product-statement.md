@@ -46,10 +46,19 @@ its projects' bundles, so permanent knowledge never links into
 before the working bundle archives. Memoria is an opinionated OKF
 producer profile; see `okf-note.md`.)
 
-## Lineage
+## Lineage — four pillars (elevated 2026-07-09)
 
-Memoria builds on Karpathy's LLM-Wiki pattern and Luhmann's Zettelkasten,
-and expands them with agentic AI capabilities:
+Memoria stands on four pillars, each owning one layer with no overlap:
+**LLM-Wiki** (Karpathy) owns the inflow — extract, digest, index, lint;
+**Zettelkasten** (Luhmann) owns the topology — atomic notes, links, hubs,
+disposable project bundles; **Toulmin** owns the logic — what an argument
+is and what grounding means (the six components are the graph basis, the
+gates' criteria, and the co-PI's question taxonomy: grounds/warrant/
+backing/qualifier/rebuttal generate its five question types); and
+**autoresearch** (Karpathy) owns the self-improvement — fixed harness,
+one metric, keep/discard, overnight. Knowledge gets its shape from ZK,
+its supply from LLM-Wiki, its meaning from Toulmin, its sharpening from
+autoresearch. The original expansion notes:
 
 - The ZK bibliography box is augmented into the catalog knowledge graph.
 - Every new source follows the LLM-Wiki pattern: extracted (raw sources),

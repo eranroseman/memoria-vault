@@ -259,10 +259,20 @@ the user's agent (or a thin panel later). Preserves the L3 cap,
 provenance-clean entry, and solo-maintainer economics; avoids competing
 with the agents the user already runs.
 
-14. **Grounding interrogation** — generate questions from `analyze_gaps`
-    findings ("what grounds this? is this warrant stated? what contradicts
-    it?"); replace the static interview prompt; make `memoria ask` honest
-    or genuinely conversational via the live path. A question-generation
+14. **Grounding interrogation** — the question taxonomy comes from the
+    Toulmin pillar (product-statement lineage): grounds ("what
+    evidence?"), warrant ("why does that evidence license this claim?"),
+    backing ("what supports the inference rule?"), qualifier ("how strong,
+    how scoped?"), rebuttal ("under what conditions is this false?") —
+    one taxonomy feeding the interview, red-team, and gap operations.
+    Generate questions from `analyze_gaps` findings; replace the static
+    interview prompt; make `memoria ask` honest or genuinely
+    conversational via the live path. Companion honesty fix: rename
+    findings so "unstated-warrant" fires only when a warrant is genuinely
+    absent (today it fires on supports==0 — Toulmin words on non-Toulmin
+    checks). Argument health becomes a per-role completeness profile, and
+    `argument.canvas` renders as an actual Toulmin diagram in the project
+    panel. A question-generation
     *operation* is the cheapest extension in the system (the
     prompt-operation family needs only a manifest); a conversational
     *surface* is not — the surface contract has one synchronous write
