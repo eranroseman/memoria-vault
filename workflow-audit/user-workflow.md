@@ -1,86 +1,101 @@
 # User workflow — agent, editor, Memoria plugin — 2026-07-09
 
-The target day-to-day experience across the three components, under the
-decided architecture (`roadmap.md` item 12 reactive substrate + Tier 3
-surface strategy; `architecture-review.md` write topology). Division of
-labor: **the editor is where judgment lives, the plugin is how the vault
-looks back at you, the agent is the voice and hands.** Everything all
-three do funnels through the same envelope and queue; the plugin and
-agent never write files directly; direct PI edits are observed and
+The target experience across the three components, under the decided
+architecture (`roadmap.md` item 12 reactive substrate + Tier 3 surface
+strategy). Two views, deliberately distinct: the **inquiry loop** (the
+researcher's arc — how a project actually proceeds) and the **daily
+rhythm** (the moment-to-moment interaction pattern inside it). An earlier
+draft of this document narrated the system's information-flow topology
+(capture → export) as the workflow; corrected by the owner — the
+researcher's workflow is pull-driven: inquiry first, capture fourth.
+
+Division of labor throughout: **the editor is where judgment lives, the
+plugin is how the vault looks back at you, the agent is the voice and
+hands.** Everything funnels through the same envelope and queue; plugin
+and agent never write files directly; direct PI edits are observed and
 revalidated.
+
+## The inquiry loop (the arc)
+
+1. **A project opens.** A question worth months: new project, thesis stub
+   in the editor, steering.md updated with the inquiry's priorities — the
+   one file that mechanically re-aims the whole system's attention.
+2. **Gap analysis before any reading.** "What do I already have, and what's
+   missing?" — analyze_gaps against the *existing* vault: which prior
+   claims bear on this thesis, what's under-warranted, which topics sit
+   undigested, where the argument is thin. This is where compounding shows:
+   project N starts from everything projects 1…N−1 built, not from zero.
+   (Also the best-built co-PI machinery in the product today — the first
+   thing a new project experiences is the strongest thing Memoria has.)
+3. **Discovery.** The citation neighborhood and steering-ranked candidates
+   propose what to read; the exploration channel adds coverage and — by
+   design — the contrary channel surfaces what disagrees with the thesis.
+   Triage in the inbox: capture-worthy, defer, reject.
+4. **Capture — pulled, not pushed.** Now sources enter: the DOIs and PDFs
+   the gaps and discovery pointed at, not whatever crossed a feed. Capture
+   → enrichment → checked → engine-authored interview (grounding questions
+   about *this* source against *this* thesis) → digest with the interview
+   sealed in.
+5. **Knowledge building.** Digests → claim notes → typed links; tensions
+   surface as contradiction candidates; argument health on the project
+   updates as edges accumulate.
+6. **Iterate 2→5.** Re-run gaps: the argument stage advances, new gaps
+   open, discovery refreshes against the grown graph. The project drives
+   repeated passes; the loop narrows as saturation approaches (which
+   requires counter-evidence by mechanism — the system will not call an
+   argument saturated until it has survived refutation).
+7. **Output.** Slice → outline (reordered by hand — it is the PI's) →
+   compose → verify → evidence dispositions → export refuses until every
+   finding is dispositioned.
+8. **Close the circle.** The deliverable is captured back into the catalog
+   as a work: its claims join the graph, future gap analyses see the PI's
+   own published positions, and the same integrity machinery now applies
+   to them — fama-exposure will flag reuse of one's own superseded claim.
+   Project N+1's step 2 is richer because of project N's step 8. This is
+   "compounds over months and years" as a mechanism, not a slogan.
+
+## The daily rhythm (inside the loop)
+
+- **Morning triage.** Overnight Tier C ran gaps, tensions, digestion, the
+  integrity sweep. The plugin badge shows the inbox count; quick items get
+  one-click dispositions in the plugin; substantive ones go to the agent
+  ("walk me through the inbox") — it shows a contradiction's both claims
+  with evidence, the PI decides, it files with `actor=agent`.
+- **Thinking.** A claim note is written raw in the editor. On save, the
+  Tier-A chain: badge flips unchecked, template validates (broken
+  frontmatter is an inline card now, not a discovery three weeks later),
+  index updates, a `[[supports::…]]` link becomes an edge candidate. A
+  second later: checked. Search and ask already know the note.
+- **Situated questioning.** Select a paragraph, ask the agent "what
+  contradicts this?" — `context.read` tells it which claim is on screen;
+  it queries the graph and answers with grounded items; files nothing
+  unless told.
+- **A claim falls.** One "decided wrong" disposition → the typed blast
+  radius returns ("three notes lost their only grounds; the thesis
+  regressed; two warrants now unstated"); downstream badges flip in the
+  editor; the agent walks through what to repair first. The central
+  operation as a lived experience.
 
 ## Roles
 
 | Component | Job | Never does |
 |---|---|---|
-| **Editor** (Obsidian first, VS Code probable second) | Reading, writing, thinking — notes, drafts, outlines, steering.md. The only surface the PI must touch | Gating, chatting |
-| **Memoria plugin** | Ambient layer: status badges, inbox count, question/finding cards, one-click dispositions, context sharing, editor-event push | Conversation, inference, direct file writes |
-| **Agent** (user's choice via MCP + shipped Memoria skill) | Fluent layer: converses from engine-authored payloads, runs operations, triages with the PI | Deciding anything — every disposition it files is the PI's, journaled with `actor=agent` |
-| *Daemon (invisible fourth)* | Watches, validates, indexes, checks, re-promotes (Tier A/B/C chains) | Anything requiring judgment |
-
-## Morning: triage
-
-Overnight, Tier C ran gaps, tensions, digestion, and the integrity sweep.
-The plugin badge shows the inbox count. Quick items are handled in the
-plugin directly (one-click reject/defer on cards). Substantive items go to
-the agent: "walk me through the inbox" — it reads `attention.list`, shows
-a contradiction card's both claims with their evidence, the PI decides,
-the agent files the disposition. The journal records the decision as the
-PI's, filed by the agent.
-
-## Capturing and reading a source
-
-Paste a DOI into the agent chat → capture → enrichment; the plugin shows
-the work land in the Library. The agent offers the interview — its
-questions are engine-authored grounding interrogation generated for this
-source, not improvisation. Answers become journaled interview turns,
-sealed into digest compilation. The digest lands as a file in the editor,
-badge already checked.
-
-## Thinking (the core loop)
-
-Write a claim note — raw, ungated. On save, the Tier-A chain: badge flips
-to unchecked, template validates (a broken frontmatter field surfaces as
-an inline card immediately, not on some later read), index updates, a
-`[[supports::…]]` link becomes an edge candidate for confirmation. A
-second later the badge is checked again; search and `ask` already reflect
-the note. The vault keeps up with typing instead of discovering work when
-something reads it.
-
-## Writing (project → deliverable)
-
-Edit the thesis in the project file. Ask the agent "where does the
-argument stand?" — trace + gaps, spoken: stage, saturation, the
-under-warranted claims, next actions; the plugin shows the same argument
-health as a project-view panel. Slice → `outline.md` in the editor,
-reordered by hand (the outline is the PI's). Compose → `draft.md`. Verify
-findings arrive as evidence cards, each needing accept/reject (plugin or
-agent). Export refuses until all are dispositioned — the vault holding the
-PI's own standard.
-
-## Two signature moments
-
-- **Situated questioning:** select a paragraph, ask the agent "what
-  contradicts this?" It calls `context.read`, knows which claim is on
-  screen, queries the graph, answers with grounded items — files nothing
-  unless told. CopilotKit's shared-state idea without an embedded copilot.
-- **A claim falls:** one "decided wrong" disposition → the typed blast
-  radius returns ("three notes lost their only grounds; the thesis
-  regressed to developing; two warrants now unstated"); downstream badges
-  flip in the editor; the agent walks through what to repair first. The
-  central operation as a lived experience.
+| **Editor** (Obsidian first, VS Code probable second) | Reading, writing, thinking — notes, drafts, outlines, steering.md | Gating, chatting |
+| **Memoria plugin** | Ambient layer: badges, inbox count, question/finding cards, one-click dispositions, context share, editor-event push | Conversation, inference, direct file writes |
+| **Agent** (user's choice via MCP + shipped Memoria skill) | Fluent layer: converses from engine-authored payloads, runs operations, triages with the PI | Deciding anything — every disposition is the PI's, journaled with true actor |
+| *Daemon (invisible fourth)* | Watches, validates, indexes, checks, re-promotes (Tier A/B/C) | Anything requiring judgment |
 
 ## What's real when
 
 - **Today:** the agent workflow substantially works (MCP + `operation.run`
-  + `requests.get` carry the whole loop); the plugin shows counts;
-  statuses update on read.
+  + `requests.get`); gap analysis and discovery — the loop's steps 2–3 —
+  are among the best-built machinery; the plugin shows counts; statuses
+  update on read. Step 8's import-back is ordinary capture (local full
+  text) — a workflow, not new machinery.
 - **After the reactive substrate (roadmap item 12):** live badges, on-save
-  validation, the morning inbox actually populated overnight.
-- **After Tier 3 (items 14–15):** question cards, the argument-health
-  panel, situated context.
+  validation, the overnight inbox.
+- **After Tier 3 (items 14–15):** engine-authored interview questions,
+  the argument-health panel, situated context.
 
-Every element above traces to a numbered roadmap item; this narrative is
-the end state, not a new commitment. API gaps between here and there are
-listed in roadmap item 12 (five additive surface-contract actions + one
-SSE/long-poll events endpoint).
+Every element traces to a numbered roadmap item; API gaps between here and
+there are listed in roadmap item 12.
