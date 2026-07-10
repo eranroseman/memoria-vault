@@ -9,7 +9,7 @@ installer, runtime package, packaged workspace seed, and docs are welcome.
 - Open an issue first for significant changes: new operation surfaces, installer
   overhauls, schema changes, provider integrations, or architecture decisions.
 - Small docs, typo, script, and test fixes can go straight to a PR.
-- AI agents must follow [AGENTS.md](AGENTS.md); it is authoritative for worktrees, branch safety, PR flow, docs routing, and required checks.
+- AI agents follow [AGENTS.md](AGENTS.md) for repo facts and the installed superpowers skills for how work happens.
 
 ## Development setup
 
@@ -43,45 +43,31 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 | Work | Home |
 |---|---|
 | Bugs, enhancements, docs fixes, and questions | [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) |
-| Live planning state | Memoria Issue Tracker project fields |
-| Release scope | GitHub milestones |
-| Release readiness | The parent "Release <version>" issue and its sub-issues |
+| Release scope | GitHub milestones (a milestone is a release) |
+| Working specs and plans | `docs/superpowers/` (tracked, not published) |
 | Decisions and durable rationale | [Design history](design-history/README.md) |
 
-The Project carries two fields:
-
-| Field | Values | Rule |
-|---|---|---|
-| Status | `Backlog`, `In progress`, `In review`, `Done` | Workflow state only |
-| Readiness | `Ready`, `Needs shaping`, `Blocked`, `Later` | Why work is or is not ready |
-
 Labels stay minimal: use `bug` and `documentation` for repo-wide search, plus
-bot-managed labels such as `dependencies`, `python`, `github_actions`, `release`,
-and `autorelease:*`. Do not recreate status, readiness, priority, or subsystem
-taxonomies as labels.
+bot-managed labels such as `dependencies`, `python`, and `github_actions`. Do not
+recreate status, priority, or subsystem taxonomies as labels.
 
 ## Testing and verification
 
-Testing is organized by promotion gate, not by tool. Use the cheapest gate that
-proves the change, then run the normal PR gate before handoff when the change is
-broader than a narrow doc edit.
+`python scripts/verify` is the one gate. It runs lint, the product-integrity
+checks, the `static`/`unit`/`contract` test suite, an offline end-to-end smoke,
+and syntax checks; CI requires it plus `gitleaks`. Target a subset while
+iterating with `python3 -m pytest tests/ -q -m unit` (or `contract`, `static`).
+The `package`, `runtime`, and `live` test markers need a built wheel, a
+disposable workspace, or a live provider and are run on demand, not in the gate.
 
-| Gate | Proves | Front door |
-|---|---|---|
-| Source | Repo contracts, docs, schemas, Python tests, and static checks are coherent. | `scripts/verify pr` |
-| Package | A disposable vault assembles and the offline workflow replay works. | `scripts/verify package` |
-| Runtime | Live model endpoint, optional transports, scheduled-task wrappers, and policy boundaries work in a disposable workspace. | `scripts/verify runtime` |
-| Release candidate | Source, Package, and Runtime run as a candidate prefix. Product/manual evidence still belongs in release issues. | `scripts/verify rc` |
-
-Product, manual GUI, failure/recovery, and release cut evidence lives in the
-relevant release parent issue or sub-issues, not in repository docs. Do not test
-installers against the real `~/Memoria`.
+Do not test installers against the real `~/Memoria`; use a disposable vault
+under `sandbox/`.
 
 ## Coding conventions
 
 - **Python:** Ruff is both linter and formatter for repo tooling and runtime code
-  (`src/memoria_vault/`, `scripts/`, `.github/scripts/`, and `tests/`). `ruff format`
-  owns layout at line length 100.
+  (`src/memoria_vault/`, `scripts/`, and `tests/`). `ruff format` owns layout at
+  line length 100.
 - **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Run `shellcheck`
   before submitting installer changes.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
@@ -95,53 +81,37 @@ installers against the real `~/Memoria`.
 
 ## Pull requests
 
-Keep one scope per branch and PR. For agents, branch creation happens through the
-worktree flow in [AGENTS.md](AGENTS.md#1-session-isolation--git-worktree).
+Keep one scope per branch and PR. Each session works in its own worktree (see
+[AGENTS.md](AGENTS.md)).
 
 Before opening a PR:
 
 - Claim or reference the issue when one exists.
 - Rebase on `origin/main`.
 - Stage only files you changed.
-- Run the smallest relevant check, then the standard repo check when the change
-  is broader: `scripts/verify pr`.
+- Run `python scripts/verify`.
 - Open the PR against `main` and fill out the template.
 
-Required CI checks and merge discipline are defined in [AGENTS.md](AGENTS.md).
+`main` requires a PR plus the `verify` and `gitleaks` checks, and merges by squash.
 
 ## Commit style
 
-Use short, lowercase imperative subject lines following
-[Conventional Commits](https://www.conventionalcommits.org/):
+No commit-message format is required. Clear, lowercase, imperative subjects are
+encouraged; [Conventional Commits](https://www.conventionalcommits.org/) prefixes
+(`feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `research`) are a fine
+convention and earn back a required role if release automation returns.
 
-```text
-fix: installer fails when KILOCODE_API_KEY is unset
-docs: add WSL2 troubleshooting section
-feat: add semantic scholar enrichment replay
-```
-
-| Type | Use for | Version intent |
-|---|---|---|
-| `feat` | New capability or integration | Minor |
-| `fix` | Bug fix, regression, broken automation | Patch |
-| `docs` | Documentation only | - |
-| `refactor` | Code change with no behavior change | - |
-| `chore` | Tooling, deps, config, maintenance | - |
-| `test` | Test plans or self-test coverage | - |
-| `research` | Evaluation or investigation outcomes | - |
-
-Breaking changes use `!` in the header or a `BREAKING CHANGE:` footer, and must
-state what changed, who is affected, what action is required, and the replacement
-path. In Memoria, breaking changes include CLI command or JSON-contract changes,
+Call out breaking changes explicitly — CLI command or JSON-contract changes,
 vault folder restructuring, provider/config field renames, and required
-frontmatter contract changes.
+frontmatter contract changes — stating what changed, who is affected, what action
+is required, and the replacement path.
 
 ## Releases and changelog
 
-Milestones are releases. Versioning, release notes, tags, GitHub Releases, and
-`CHANGELOG.md` are release-maintainer work owned by release-please when formal
-release automation is active. Do not hand-cut a release, hand-tag, or hand-edit
-the changelog as part of an ordinary PR.
+A milestone is a release. There is no release automation right now:
+`CHANGELOG.md` is a hand-curated dated record, and versioning, tags, and GitHub
+Releases return with release tooling when distribution needs them. Do not
+hand-cut a release or hand-tag as part of an ordinary PR.
 
 ## Questions?
 

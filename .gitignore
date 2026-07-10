@@ -34,9 +34,14 @@ desktop.ini
 *~
 
 
-# Scratch at repo root — underscore-prefixed working dirs/files, never committed.
-# Root-anchored (leading /) and listed explicitly, NOT a `_*` glob: docs/_config.yml
-# (Jekyll) and other docs/_* files must stay tracked.
+# Scratch / per-machine working state, never committed. Root-anchored where it
+# could shadow tracked paths (docs/_config.yml etc. stay tracked).
+/.notes/
 /_notes/
 /_papers/
 TODO*
+
+# Per-branch worktrees and the disposable installed sandbox vault (its own nested
+# .git; always reconstructible — never source of truth).
+.worktrees/
+/sandbox/

@@ -9,10 +9,9 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Memoria is in **early pre-alpha development — there is no formal tagged release yet.**
 The install path runs from current `main` as an alpha source install.
 
-Release automation is paused (see `.github/workflows/release-please.yml`) so no
-versions are minted until the first real release is cut. The earlier
-`v0.1.0`–`v0.3.2` tags were release-please artifacts, not real releases, and have
-been removed.
+There is no release automation and no formal tagged release yet; installs run
+from current `main`. The earlier `v0.1.0`–`v0.3.2` tags were artifacts of the
+removed release-please setup, not real releases, and have been deleted.
 
 ## [0.1.0a20] - 2026-07-08
 

@@ -9,8 +9,7 @@ grand_parent: Reference
 
 `memoria` is the standalone product surface. It operates on a workspace through
 `--workspace <path>` and does not require optional adapters.
-This page is a guarded mirror of `src/memoria_vault/cli.py`; `docs_doctor.py`
-checks the command roster.
+This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 
 ## Core
 
@@ -75,7 +74,7 @@ checks the command roster.
 
 ## Complete command roster
 
-`docs_doctor.py` checks this roster against the live argparse tree:
+This roster mirrors the live argparse tree:
 
 - `memoria ask`
 - `memoria attention list`

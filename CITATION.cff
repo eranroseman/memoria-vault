@@ -8,6 +8,5 @@ repository-code: "https://github.com/eranroseman/memoria-vault"
 url: "https://eranroseman.github.io/memoria-vault/"
 license: MIT
 # Development version. No formal release has been cut yet (see CHANGELOG.md):
-# installs run from current `main`, release automation is paused, and the
-# release-please manifest stays at 0.0.0 until the first real release. No
+# installs run from current `main` and there is no release automation. No
 # `date-released` or `version` is set because nothing has been released.

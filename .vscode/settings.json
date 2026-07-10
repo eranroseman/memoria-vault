@@ -3,14 +3,16 @@
     "**/_site/**": true,
     "docs/_site/**": true,
     "docs/.jekyll-cache/**": true,
-    "_notes/**": true,
-    "_papers/**": true
+    ".notes/**": true,
+    ".worktrees/**": true,
+    "sandbox/**": true
   },
   "files.watcherExclude": {
     "**/_site/**": true,
     "docs/_site/**": true,
-    "_papers/**": true,
-    "_notes/**": true,
+    ".notes/**": true,
+    ".worktrees/**": true,
+    "sandbox/**": true,
     "docs/.jekyll-cache/**": true
   },
   "shellcheck.customArgs": ["--severity=warning"],

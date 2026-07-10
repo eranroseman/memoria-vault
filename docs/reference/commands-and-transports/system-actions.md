@@ -13,10 +13,9 @@ adapters** (external surfaces that call the same engine), and the **PI** (CLI
 commands and review decisions). Where a topic has its own reference page, that
 page is authoritative for the details — this catalog is the map.
 
-This page is a guarded mirror, not the source of truth. Action implementation
-lives in the referenced Python modules, capability manifests, and linked
-reference pages; `docs_doctor.py` `check_reference_rosters` keeps the packaged
-operation manifest roster linked.
+This page mirrors the source, not the reverse. Action implementation lives in
+the referenced Python modules, capability manifests, and linked reference pages;
+keep the operation manifest roster in sync by hand.
 
 ## Operation manifest roster
 

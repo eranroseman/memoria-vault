@@ -130,7 +130,7 @@ engine are being validated as a standalone local product. What is not working to
 
 - **Release-candidate validation is still pending** — the offline runtime gate
   replays capture, enrich, digest, ask, project writing/export, recovery, and
-  seeded-error evidence (`scripts/verify pr`), but the RC still needs a live
+  seeded-error evidence (`scripts/verify`), but the RC still needs a live
   provider/package run before release.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Architecture](explanation/architecture/README.md#interaction-channels).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
@@ -153,3 +153,23 @@ nothing here implies they work yet.
 [**Reference**](reference/README.md) — Exact fields, commands, schemas, settings, and paths.
 
 [**Explanation**](explanation/README.md) — Architecture, workflows, conceptual model, and design rationale.
+
+---
+
+## Documentation conventions
+
+For contributors editing these docs. Generic Diátaxis craft is a separate,
+invoke-only skill; the rules below are the Memoria-specific ones.
+
+- **Routing:** tutorials teach, how-to guides direct, reference informs,
+  explanation discusses. Mixed-purpose pages are wrong — split them.
+- **Links:** inside `docs/`, use relative links following the target's Pages
+  route. Link unpublished targets (root files, `design-history/`) by GitHub blob
+  URL. Never relative-link into `src/` (those 404 on the site) — cite a source
+  file as an inline-code path.
+- **Indexing:** every new page goes in its section README (how-to pages also in
+  `how-to-guides/README.md`); set `nav_order` for a logical sequence.
+- **Citations:** new works go in `reference/evidence-and-integrations/bibliography.md`
+  (ACM author-date, `<a id>` anchor); link in-text mentions to the published anchor.
+- **Spelling:** American English (`-ize`/`-or`); `cspell` is the gate. Add a real
+  unknown term to `project-words.txt` (lowercase, sorted) — never inline-suppress.
