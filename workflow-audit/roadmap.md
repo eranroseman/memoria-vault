@@ -13,21 +13,18 @@ propagation and a self-calibrating instrument.
 
 ## Tier −1 — The supersession pass (before any implementation)
 
-0. **Reconcile the dossier with the decision record** (2026-07-09
-   blind-spot sweeps; see `blind-spots-review.md`). Owner ruling: most
-   recorded verdicts the dossier reverses were convenient decisions at
-   the time — those supersessions are light-touch (record today's
-   reasoning against the old entry: daemon, OKF-bundle scope, six-role
-   typing as roles-not-types, editor plugin as pure renderer, context
-   bus with enqueue-only discipline, decisions-as-claims authority,
-   origin scoping). **Two need genuine design engagement: fulltext v2
-   (the anchor substrate + keep-test — see item 12 note, now an open
-   design question) and the journal repair (redesigned in item 2 to keep
-   the multi-log plane decomposition).** Absorb Section B's richer prior
-   formulations and merge Section C's blind spots into the items they
-   gate — most urgently: **disposition telemetry before the bulk import**
-   (non-backfillable), **bulk-admission flood mechanics** in onboarding,
-   and the **seeded-error license gate** before item 19.
+0. **Absorb the blind-spot sweeps** (2026-07-09; see
+   `blind-spots-review.md`). Owner rulings: the dossier IS the current
+   decision record; **ADRs and design-history are historical reference
+   only — never justification, never evidence, unlock conditions
+   ignored.** No supersession ceremony. What survives on current facts or
+   merit: **fulltext v2's anchor-substrate dependency** (item 12 note —
+   open design question) and the **journal repair within the multi-log
+   planes** (item 2, spike-proven anchor). Merge Section C's blind spots
+   into the items they gate — most urgently: **disposition telemetry
+   before the bulk import** (non-backfillable), **bulk-admission flood
+   mechanics** in onboarding, and the **seeded-error license gate**
+   before item 19. Adopt Section B formulations where better on merit.
 
 ## Tier 0 — Make the delivered machinery true and visible (first)
 
@@ -123,11 +120,11 @@ superpowers-spine acceptance run (alignment-plan step 21).
    space already exists — the verdict-cascade triggers already translate
    it; three code gates block it). Then extend to the
    Toulmin six — **as roles carried by relations and demandable slots,
-   not node types** (per ADR-126 roles-not-types, superseded lightly;
-   ADR-65's earn-each-type applies to the relation vocabulary: add each
-   relation when used, never all six on day one): warrant nodes with
-   backing edges; qualifier/certainty made live; rebuttal able to target
-   warrants. Add the missing
+   not node types**, and with the relation vocabulary earned one relation
+   at a time as each is actually used (a half-populated typed field
+   returns incomplete answers — the principle stands on its own merit):
+   warrant nodes with backing edges; qualifier/certainty made live;
+   rebuttal able to target warrants. Add the missing
    **graph architecture page** — the central substrate is currently
    undocumented.
 9. **Redesign propagation, then wire the central operation.** The

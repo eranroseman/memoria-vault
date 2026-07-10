@@ -12,13 +12,20 @@ supersession is a decision, not drift.
 
 ## A. The supersession ledger — reversals needing explicit superseding decisions
 
-**Owner ruling (same day):** most of the recorded verdicts below were
-convenient decisions at the time — today's reversals stand, and their
-supersession is light-touch (record today's reasoning against the old
-entry, done). **Two exceptions where the recorded reasoning has real force
-and the reversal needs genuine design engagement: fulltext (item 2 below —
-the anchor substrate and keep-test) and event log (item 7 below — the
-multi-log plane decomposition and tamper-evidence anchor).**
+**Owner rulings (same day):** (1) most of the recorded verdicts below
+were convenient decisions at the time — today's reversals stand;
+(2) **ADRs and their unlock conditions are historical reference only —
+never justification, never evidence.** No dossier decision owes a
+"superseding decision" to any ADR; this ledger is therefore a *reference
+map of where today diverges from history*, not a list of obligations.
+The only sweep findings retaining force are those standing on **current
+facts or current merit**: fulltext (the `work_id#^pNNNN` anchor substrate
+is a fact of today's code; the keep-test is a live design value) and
+event log (the journal-head tamper anchor was spike-proven; the plane
+decomposition serves requirements that still differ). Everything else in
+Section A is context, Section B survives only where a formulation is
+better *on its merits*, and Section C's blind spots are facts regardless
+of provenance.
 
 1. **The daemon (item 12/reactive substrate)** reverses: ADR-49
    (file-watcher write-gate daemon deliberately not built), alpha.14 ("no
