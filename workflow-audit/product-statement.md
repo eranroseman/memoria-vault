@@ -36,10 +36,15 @@ That is the difference between a research vault and a notes pile.
 Day-to-day, that work happens in three spaces: you bring sources into the
 catalog, build them into connected claims in a Knowledge Bundle, and drive
 an inquiry to output in a Project. (Clarified 2026-07-09, grounded in the
-Open Knowledge Format: **the entire vault is one Knowledge Bundle** in
-OKF's sense — the unit of distribution; projects nest within it, and the
-three spaces are regions of one bundle, not separate containers. Memoria
-is an opinionated OKF producer profile; see `okf-note.md`.)
+Open Knowledge Format: **the vault — excluding `.memoria/` — is one
+self-contained OKF Knowledge Bundle** holding all the user's knowledge and
+thoughts, with `bibliography.bib` + `memoria_work_id` as the catalog's
+bundle-resident projection. **Each project is its own nested, detachable
+bundle** per the ZK project-notes concept: the vault must live without
+its projects' bundles, so permanent knowledge never links into
+`projects/`, and project close harvests durable claims into the vault
+before the working bundle archives. Memoria is an opinionated OKF
+producer profile; see `okf-note.md`.)
 
 ## Lineage
 

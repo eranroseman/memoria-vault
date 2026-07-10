@@ -109,7 +109,12 @@ superpowers-spine acceptance run (alignment-plan step 21).
     by the worker, not opted into per call site.
 11. **Wire the orphans** (worklists; hub_handoff so it actually enqueues;
     session_summary) as manifest-backed operations; add **digestion
-    pressure** — a surface for checked-but-undigested sources.
+    pressure** — a surface for checked-but-undigested sources. Add the
+    **detachability detector** (2026-07-09 clarification: projects are
+    nested, detachable bundles per ZK project notes): permanent knowledge
+    (notes/, hubs/, digests/) must never link into `projects/` — flag any
+    such edge; and a **project-close operation** (harvest durable claims,
+    export, capture deliverable to catalog, archive the bundle).
 12. **The reactive substrate — three execution tiers, one queue** (owner
     decision, 2026-07-09: move from do-on-read to do-on-write for capacity
     and UX). Principle: **on-write accelerates, on-read enforces** — the

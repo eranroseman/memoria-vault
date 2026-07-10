@@ -31,6 +31,24 @@ references travel; copyrighted sources do not. Durability splits cleanly:
 the bundle survives anything; `.memoria/` loss costs trust state, never
 knowledge (blobs backed up as data; verdicts/journal restore or rebuild).
 
+## Nested project bundles (owner clarification, same day)
+
+**Each project is its own nested knowledge bundle — and detachable.**
+Following the ZK project-notes concept: project bundles are working
+material; the vault's permanent knowledge (notes/, hubs/, digests/, the
+bib-projected catalog) must survive their removal. Consequences:
+- **One-way dependency rule (new, mechanically checkable):** projects may
+  reference vault knowledge; permanent knowledge must never link into
+  `projects/` — such an edge breaks detachability. A lint detector, cheap
+  and deterministic (added to roadmap).
+- **Project close lifecycle:** harvest what persists (promote-draft-passage
+  already distills draft prose into notes/), export the deliverable,
+  capture it into the catalog, then archive or delete the project bundle —
+  vault keeps the claims, catalog keeps the work, working material goes.
+- Re-reads the promise audit's "nested bundle: no general mechanism"
+  verdict: the hardcoded `projects/<name>/` shape *is* the mechanism —
+  opinionated, not missing.
+
 ## The vault as a conformant bundle
 
 - The workspace already matches §2/§3: concept documents with typed
