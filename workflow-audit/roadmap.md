@@ -182,6 +182,29 @@ superpowers-spine acceptance run (alignment-plan step 21).
     Decide who may author machine edges (the `tension` relation exists in
     the DB CHECK but no write path can produce it).
 
+20. **Source-type generalization** (added 2026-07-09; lives in Tier 2 —
+    numbering kept stable). The pipeline spine (capture → immutable blob →
+    textual layer → index → digest+interview → claims) is type-generic;
+    generalizing beyond academic papers costs four type-specific adapters:
+    (a) **identity + enrichment per type** — DOI+providers for papers,
+    URL-with-no-providers for blogs (the local-full-text capture path is
+    the mechanism, not a bypass), feed/episode for podcasts, DOI-or-URL
+    for datasets, URL+commit for repos; the enrichment gate becomes
+    type-conditional. (b) **Textual-layer derivation** — extraction /
+    transcription (fenced one-shot operation) / dataset profile / repo map
+    at pinned commit; everything downstream consumes the textual layer
+    unchanged. (c) **Anchor locators** — (artifact hash, locator):
+    char-offset, timestamp span, row/query, file:line@commit; engine
+    serves spans on demand per the fulltext-v2 decision. (d) **Drift
+    detection for mutable sources** — the retraction sweep generalized:
+    re-fetch, hash-compare, attention flag ("snapshot diverges from
+    live"); flag-don't-fix, PI disposes. Free rides: biblatex covers
+    @online/@software/@dataset/@audio in the bib projection; the existing
+    code_artifacts/code_runs machinery is the seed for
+    reproducible-run-as-grounds. Keep a **closed source-type roster**
+    (paper, article, audio, dataset, software) — types are schema; schema
+    is the design.
+
 ## Tier 3 — The conversational co-PI (method, never belief)
 
 **Surface strategy (standing recommendation, 2026-07-09):** editor plugin +
