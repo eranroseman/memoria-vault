@@ -57,6 +57,15 @@ never two authorities.**
   markers (authored in files) vs their dispositions (judged in DB); ULIDs
   (born in frontmatter, keyed in DB — immutable, so drift-free).
 
+**Seeded-config corollary (2026-07-10):** files Memoria writes into the
+workspace fall into two lifecycle classes. **View preferences** —
+`.base` views, `graph.json`, `types.json` — are seeded once and then
+PI-owned, like steering.md: they encode how the researcher likes to look
+at things, and upgrades must not clobber them. **Data projections** —
+`bibliography.bib`, generated canvases, the vault `AGENTS.md` — are
+regenerated always and never PI-edited. Every seeded file declares its
+class; a file that can't be classified is a design smell.
+
 **Frontmatter corollary** (all file metadata lives in frontmatter — the
 current design, affirmed): frontmatter is part of the authored artifact,
 which is what makes concepts self-describing and OKF-portable. Same

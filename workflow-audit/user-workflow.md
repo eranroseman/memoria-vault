@@ -158,6 +158,45 @@ projection covers every agent class with zero drift and zero dual
 authority, and gives detached bundles a "how to read me safely" note —
 the durability pitch improved.
 
+**The surface program (decided 2026-07-10) — three rings, one principle:**
+everything native in Obsidian renders *data in files* (frontmatter →
+Bases/Properties/search/graph coloring; wikilinks → backlinks/graph;
+`.canvas` → Canvas; `.base` → Bases), and Memoria's doctrine already
+produces exactly that shape — so generative UI means the engine authors
+data artifacts that Obsidian renders natively, and the custom plugin
+shrinks to the one thing native machinery cannot do: display live trust
+state and file dispositions through the envelope. The doctrine draws the
+ring boundary: **verdicts never appear in files** (retired-fields
+rejection), so native surfaces render authored/structural facets only and
+verdict display concentrates in the plugin, honest by construction.
+*Ring 1 — the vault as UI:* seeded `.base` views (catalog, claims,
+questions, and the inbox — attention items are already files with
+`projection: attention` frontmatter, so they render as native Bases cards
+with zero plugin code, the plugin adding only live badges and one-click
+dispositions on top); wikilink-wrapped typed-link targets preferred so
+backlinks and graph view see the argument edges; `graph` + `properties`
+core plugins enabled with seeded `graph.json` groups on authored facets
+and `types.json`; a CSS snippet per type home; community-plugin
+dependencies near zero (Dataview is dormant; the engine owns templates,
+retrieval, and git). Seeded-config lifecycle has two classes: **view
+preferences** (`.base`, `graph.json` — seed once, then PI-owned, like
+steering.md) vs **data projections** (`bibliography.bib`, canvases, the
+vault AGENTS.md — regenerated always, never PI-edited).
+*Ring 2 — canvas as the engine's spatial voice:* the Toulmin-layout,
+blast-radius, and layout-preserving-regeneration program, with role
+colors never verdict colors — detailed in roadmap item 14; canvas as an
+*authoring* surface stays evidence-gated (outline-friction observation).
+*Ring 3 — the plugin as view-spec renderer:* `view-spec.v1` already is
+the closed-catalog declarative generative-UI pattern the 2025-26 prior
+art converged on (A2UI, json-render) — re-derived from the master
+pattern, axiom-1 inspectability, and Obsidian's no-generated-code policy,
+not from ADR-130's authority; the sandboxed-iframe tier (MCP Apps) is
+ruled out for this host. The missing half is the renderer (zero consumers
+today) and admission-rule catalog growth — roadmap item 15. The engine,
+including its fenced one-shot operations, composes layouts *from* the
+catalog; it never emits components — generative composition, never
+generative code.
+
 **The handoff bus:** "quick in the plugin, substantive with the agent"
 requires escalatable cards — implemented with *no plugin↔agent channel*:
 the plugin writes the attention id into shared context (`context.set`),

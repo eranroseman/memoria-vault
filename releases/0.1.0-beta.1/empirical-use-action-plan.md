@@ -118,6 +118,11 @@ After each session: the five-line diary. After each gate item: the
 disposition event. On any fallback to the null workflow: log why. Log
 every `staleness_hit` (do-on-read pain) and every fulltext-consultation
 event (opened PDF vs read extracted text vs needed an anchored span).
+During outline work, log outline-composition friction: markdown-list
+reorder sufficed vs the PI reached for spatial arrangement (opened
+`argument.canvas` to reorder, or worked around the list) — the trigger
+observation for canvas-as-authoring (the scoped ADR-103 reopening,
+dossier roadmap item 14).
 
 Exit: every blocker has at least one real event trail, or is explicitly
 still unobservable because its mechanism does not exist.
@@ -155,6 +160,7 @@ has a pass/defer/simplify decision and the evidence path.
 | **Warrant touch budget** | under-warranted findings raised, "state the warrant" demands, PI minutes per warrant made explicit | one full project loop | If explicit warrants stay under budget and get demanded, ratify hybrid-with-nodes; if never demanded, keep demandable-only and defer nodes |
 | **Reactive-substrate priority** | `staleness_hit` count, index-refresh latency at 1000 works, on-read wait time | all sessions | Frequent staleness or painful refresh promotes the daemon (Tier A) up the roadmap; silence defers it behind Tier C nightly only |
 | **Two-window friction** | context switches between editor and agent per session, dropped handoffs, context.read misses | all Phase 2 sessions | Repeated friction triggers the embedded-panel earn-back; otherwise plugin+agent stands |
+| **Canvas authoring (scoped ADR-103 reopen)** | outline-composition friction events: list reorder sufficed vs reached for spatial arrangement | every outline session in Phase 2 | Repeated spatial reaching admits canvas-as-authoring (read `.canvas` back as authored input); silence keeps canvases projection-only |
 | **Attention loudness** | items per loudness level, push-worthy events, triage deferrals | all sessions | Calibrate the loudness policy; any routine push means the policy is wrong |
 
 ## 5. Validation Metric Plan

@@ -345,7 +345,33 @@ with the agents the user already runs.
     absent (today it fires on supports==0 — Toulmin words on non-Toulmin
     checks). Argument health becomes a per-role completeness profile, and
     `argument.canvas` renders as an actual Toulmin diagram in the project
-    panel. A question-generation
+    panel. **The canvas program (2026-07-10)** — the writer exists
+    (`render-project-argument-canvas` emits real JSON Canvas,
+    git-committed and journaled) but lays a naive 3-column grid; upgrade
+    it, cheapest first: (a) Toulmin-shaped layout — claim file-node
+    center, grounds as a group node below, warrants bridging with labeled
+    edges, qualifier attached as a text node, rebuttals grouped with
+    `contradicts` edges; colors carry *role*, never verdict (verdicts may
+    not appear in files — the retired-fields boundary applies to
+    projections too); file nodes render the live note, so the canvas
+    carries structure only and cannot drift from content. (b)
+    Layout-preserving regeneration: node ids are already stable
+    (`n-<sha256[:12]>` of path) — merge keeps the PI's x/y for surviving
+    nodes and grid-places only new ones; without it every Tier-B refresh
+    clobbers the researcher's arrangement. (c) Blast-radius canvas: on
+    "decided wrong," generate `impact-<claim>.canvas` — epicenter node,
+    one group per typed consequence, edges labeled with the typed event;
+    the lazy impact-ranked worklist made spatial. (d) Question text nodes
+    placed adjacent to the claim they interrogate. Fix en route:
+    `argument.canvas` declares `required_checks: [projection-drift]` but
+    is absent from `TRACKED_PROJECTION_PATHS`
+    (`runtime/projections.py:15-18` lists only index.md and
+    bibliography.bib) — the check silently doesn't cover it. Canvas as an
+    *authoring* surface (drag claims into an outline) is a scoped
+    reopening of rejected ADR-103 — the rejection was
+    spatial-as-primary-axis-at-scale; a dozen-node project worksheet is a
+    different claim — evidence-gated on the empirical plan's
+    outline-friction observation, not decided now. A question-generation
     *operation* is the cheapest extension in the system (the
     prompt-operation family needs only a manifest); a conversational
     *surface* is not — the surface contract has one synchronous write
@@ -355,7 +381,45 @@ with the agents the user already runs.
 15. **A surface where the PI lives** — minimum viable inbox + argument
     health rendering in the Obsidian plugin (the documented Navigator rail
     has no renderer in any layer); a CLI voice that speaks findings
-    instead of `True`.
+    instead of `True`. **The surface program (2026-07-10, from the
+    generative-UI + native-feel research):** the generative-UI pattern is
+    already chosen — `view-spec.v1` (declarative verdict-tagged
+    table/card blocks on four read actions) *is* the closed-catalog
+    declarative tier the 2025-26 prior art converged on (Google A2UI,
+    vercel json-render); it re-derives today from the master pattern,
+    axiom-1 inspectability, and Obsidian's no-generated-code developer
+    policy — not from ADR-130's authority. The sandboxed-iframe tier
+    (MCP Apps) is ruled out for this host: Obsidian plugins run
+    unsandboxed and its policies prohibit executing served code. What is
+    missing is the renderer: view-spec.v1 has **zero consumers** — the
+    current plugin renders engine data only as toast-notice strings. So:
+    (a) build one `ItemView` sidebar panel rendering view-spec blocks
+    with native components — `check_status` as live verdict badges (the
+    one surface where trust state may render), `untrusted_text` inert,
+    card actions as disposition buttons through `/operation/run`; (b)
+    grow the block catalog by admission rule as Tier 3 lands
+    (`question-card`, `health-strip`, `impact-list`) — the engine,
+    including fenced one-shot LLM operations, composes layouts *from*
+    the catalog and never emits components; (c) **the native ring lands
+    first and is cheap-while-empty seed work** (see Sequencing): seeded
+    `.base` views (`catalog`, `claims`, `questions`, and `inbox.base` —
+    attention items are already files with `projection: attention`
+    frontmatter, so the inbox renders as native Bases cards with no
+    plugin code), wikilink-wrapped typed-link targets preferred by
+    lint/templates so backlinks and graph view see the argument edges,
+    `graph` + `properties` core plugins enabled with seeded `graph.json`
+    color groups on authored facets only and `types.json` pinning
+    property types, a CSS snippet per type home. Community-plugin
+    dependencies stay near zero (Dataview is dormant and was never
+    depended on; the engine owns templates, retrieval, and git). Fix en
+    route: the seeded plugin cannot load — seed `main.js:4` requires
+    `./schema` but the seed ships no `schema.js` (it exists only in
+    `packages/memoria-obsidian/`; `memoria init` copies the seed tree
+    verbatim) — ship the built file in the seed plus a drift check
+    against the package build output; needs a GitHub issue. Watch items,
+    not adoptions: AG-UI/SSE streaming (item 12's events endpoint is the
+    earn-back path), and Obsidian 1.10's Bases plugin API as alternative
+    panel chrome.
 
 ## Tier 4 — Exceed the promise
 
@@ -406,7 +470,11 @@ review: 1000 full-text papers ≈ 50k–200k passage rows, brushing the
 brute-force-KNN flip condition's lower bound — the staged import must
 measure Shape-1/Shape-2 query latency per stage (added to the empirical
 plan); and the `db-mirror` passage origin is the designed mechanism for
-fulltext v2's file-less indexing.
+fulltext v2's file-less indexing. The same before-item-19 logic covers
+item 15's native ring: seeded `.base` views, `graph.json`, `types.json`,
+and the wikilink-preferred typed-link form are seed-file reshapes that
+are trivial while vaults are empty and reconciliation work after the
+import — land them in the same batch.
 
 Tier 0 (items 1–5, with 1–3 as the trust-substrate repairs) → Tier 1
 (design-heavy; item 6 unblocks 7–9) → Tiers 2–4 parallelize once the
