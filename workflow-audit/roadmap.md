@@ -106,11 +106,39 @@ superpowers-spine acceptance run (alignment-plan step 21).
 11. **Wire the orphans** (worklists; hub_handoff so it actually enqueues;
     session_summary) as manifest-backed operations; add **digestion
     pressure** — a surface for checked-but-undigested sources.
-12. **Nightly cadence** — one command running the proposal backlog (gaps,
-    tensions, digestion, integrity sweep) on a fixed budget, leaving a
-    morning log + triaged inbox. Baseline stays scheduler-free; the PI
-    adds one cron line. Fix the index-refresh path first: today a rebuild
-    is an O(vault) delete-and-reinsert that also wipes `concept_edges`.
+12. **The reactive substrate — three execution tiers, one queue** (owner
+    decision, 2026-07-09: move from do-on-read to do-on-write for capacity
+    and UX). Principle: **on-write accelerates, on-read enforces** — the
+    fail-closed read barrier stays as the backstop, so a dead daemon
+    degrades gracefully to today's behavior with zero correctness loss.
+    - **Tier A, on-write per-file** (sub-second, debounced): grow
+      `serve --watch` into `memoria daemon` (watcher + HTTP + queue
+      drainer under the existing workspace flock); file event → observed
+      journal event (provenance at edit time) → demote-if-checked →
+      schema/template validation with finding pushed to inbox and editor →
+      incremental index upsert (passages/FTS/`concept_edges`, single
+      file) → cheap local checks (link targets, evidence anchors) →
+      re-promote if checks pass. Every step is an operation through the
+      existing queue — no second execution path; envelope provenance and
+      idempotency preserved (axiom 2: identical chain whoever wrote).
+    - **Tier B, on-quiet per-subgraph**: neighborhood integrity checks,
+      scoped lint, projections/attention regeneration, and the automations
+      (hub thresholds, worklists) — this chain is the natural trigger the
+      orphans (item 11) were missing.
+    - **Tier C, on-schedule**: the nightly deep sweep (whole-vault
+      integrity, retraction, discovery, gaps) — one command, one PI cron
+      line; baseline stays functional daemon-free (the "no background
+      process required" stance survives as a floor, not the experience).
+    - **Event sources — two**: filesystem watcher + the Obsidian plugin
+      pushing editor vault events via `/operation/run` (it already queues
+      events); the same channel feeds the plugin live status
+      (checked/unchecked badges, inbox counts) — Tier 3's surface gets its
+      data feed here.
+    - **Prerequisites**: incremental indexing (fix the O(vault)
+      delete-and-reinsert refresh that also wipes `concept_edges`); the
+      graph-owner module (item 8) for per-file edge upserts;
+      `.memoria/`-internal ignore rules + debounce/coalescing for write
+      storms.
 13. **Semantic upgrades where axioms allow** — replace the tier-1
     lexical-NLI stand-in and hash-fake embeddings: grounding-relationship
     detection, never truth scoring. Requires unpinning the runner:
