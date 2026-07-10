@@ -85,6 +85,38 @@ revalidated.
 | **Agent** (user's choice via MCP + shipped Memoria skill) | Fluent layer: converses from engine-authored payloads, runs operations, triages with the PI | Deciding anything — every disposition is the PI's, journaled with true actor |
 | *Daemon (invisible fourth)* | Watches, validates, indexes, checks, re-promotes (Tier A/B/C) | Anything requiring judgment |
 
+## Component-design implications
+
+**Obsidian plugin — project-centric, attention-centric (not
+capture-centric):** home surface is a two-panel sidebar (Project health:
+argument stage/saturation/under-warranted; Inbox filtered to the inquiry)
+with typed cards (gap, discovery, contradiction, evidence finding,
+blast-radius) and one-click dispositions; file badges as the ambient
+Tier-A layer; two passive duties (publish `context.set`, push
+`observe-file-event`). Ruled out by the workflow: chat, capture forms
+(capture is pulled from gap output — a capture button would re-encourage
+the push habit), dashboard re-creation. Build order: badges + inbox with
+item 12; project panel + question cards with Tier 3. All writes via the
+existing `/operation/run` path.
+
+**Claude/Codex integration — a skill organized by loop stage:** playbooks
+per inquiry-loop stage (open project, triage, discovery review, pulled
+capture, interview, argument standup, verify/disposition, close the
+circle); a session-opening ritual (`status.read` + `attention.list`);
+posture rules as skill law (never dispose without an explicit PI decision,
+file with true actor, present contradictions as both claims with quoted
+evidence, `context.read` when the PI says "this"); the async
+enqueue-then-poll pattern taught once. Same skill content ships to both
+agents.
+
+**The handoff bus:** "quick in the plugin, substantive with the agent"
+requires escalatable cards — implemented with *no plugin↔agent channel*:
+the plugin writes the attention id into shared context (`context.set`),
+the agent's next `context.read` picks it up. The engine mediates the
+handoff as it mediates everything; either front-end is replaceable without
+the other noticing. The context action pair is the integration seam of the
+three-component experience.
+
 ## What's real when
 
 - **Today:** the agent workflow substantially works (MCP + `operation.run`
