@@ -16,6 +16,8 @@ SKIP_PARTS = {
     "__pycache__",
     "node_modules",
     "scratch",
+    # Working records, not product docs: they discuss the "checked" concept freely.
+    "docs/superpowers",
     "scripts/checks/checked_terminology_gate.py",
 }
 SUFFIXES = {".md", ".py", ".sh", ".ps1", ".yaml", ".yml"}

@@ -128,7 +128,7 @@ non-Memoria plugins remain local user configuration and are not source of truth.
 
 | Path | Holds |
 | --- | --- |
-| `<repo>/scripts/` | `install.sh` / `install.ps1`, `docs_doctor.py`, test drivers — install tooling never deploys into the vault. |
+| `<repo>/scripts/` | `install.sh` / `install.ps1`, `verify`, test drivers — install tooling never deploys into the vault. |
 | search index | Generated checked-only BM25 input tree and manifest under `.memoria/index/search/`. |
 | OS diagnostic state directory | Redacted support bundles and raw diagnostic captures; see [Diagnostics](../pipelines-and-io/diagnostics.md). |
 

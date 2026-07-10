@@ -14,22 +14,21 @@ deployed vault carries no test code.
 
 | Level | Purpose | Runs |
 | --- | --- | --- |
-| `static` | formatting, lint, schema, docs refs, spell, design history, workflow safety | local hook, every PR |
-| `unit` | deterministic Python behavior | every PR |
-| `contract` | CLI, operations, capability manifests, concept writers, projections | every PR |
-| `package` | wheel build/install smoke, e2e smoke, and package-facing helper tests | package-facing PRs, release PRs |
-| `runtime` | worker loops, recovery, idempotence, state transitions, long checks | nightly, release candidate |
-| `live` | real external services/providers | manual or scheduled only |
+| `static` | formatting, lint, schema, spell, design history, workflow safety | `scripts/verify`, every PR |
+| `unit` | deterministic Python behavior | `scripts/verify`, every PR |
+| `contract` | CLI, operations, capability manifests, concept writers, projections | `scripts/verify`, every PR |
+| `package` | wheel build/install smoke, e2e smoke, and package-facing helper tests | on demand (built wheel) |
+| `runtime` | worker loops, recovery, idempotence, state transitions, long checks | on demand (disposable workspace) |
+| `live` | real external services/providers | manual only (live provider) |
 
-Run the PR source gate with `python3 scripts/verify pr`.
-Target a level with `python3 -m pytest tests/ -q -m unit` or `python3 scripts/verify l1`.
-Use `python3 -m pytest tests/ -q -m "not slow"` for the fast local loop.
-Higher-gate procedure lives in
-[verify-change](../.agents/playbooks/verify-change.md).
+`python scripts/verify` runs the `static`/`unit`/`contract` levels (plus lint,
+product gates, offline smoke, and syntax checks). Target one level with
+`python3 -m pytest tests/ -q -m unit`; use `-m "not slow"` for the fast local
+loop. The `package`, `runtime`, and `live` levels run on demand after
+`pip install -e .` — e.g. `python3 -m pytest tests/ -q -m package` — never in the
+gate.
 
-`scripts/verify package` builds the wheel, installs it into a disposable venv,
-and runs `scripts/sandbox/e2e_smoke.py`. The installer end-to-end harness is a
-separate disposable-vault check:
+The installer end-to-end harness is a separate disposable-vault check:
 
 ```bash
 bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox
@@ -43,8 +42,8 @@ contract tests over chasing a global percentage:
 - Add small unit or contract tests near the seam when a focused seam exists.
   Use runtime tests only for worker loops, recovery, idempotence, or full
   workflow behavior that cannot be proven cheaper.
-- Any changed governance or doctor script must add positive and negative cases for
-  each new rule, including malformed input and "should be ignored" paths.
+- Any changed check script under `scripts/checks/` must add positive and negative
+  cases for each new rule, including malformed input and "should be ignored" paths.
 - Any changed runtime module should cover the main success path, fail-closed/error
   path, idempotency behavior, and boundary cases for path/schema handling.
 - Use `python3 -m pytest tests/ --cov=. --cov-branch` locally when reviewing risk.

@@ -27,7 +27,7 @@ def _cspell_hook() -> dict:
 def test_cspell_json_owns_the_scope():
     config = json.loads(CSPELL_JSON.read_text(encoding="utf-8"))
     assert config.get("files") == ["**/*.md"], "cspell.json must select all markdown"
-    assert config.get("enableGlobDot") is True, "dot-dirs like .agents/ need enableGlobDot"
+    assert config.get("enableGlobDot") is True, "dot-dirs like .github/ need enableGlobDot"
     assert config.get("ignorePaths"), "exclusions must live in cspell.json ignorePaths"
     assert "design-history/**" not in config["ignorePaths"]
 

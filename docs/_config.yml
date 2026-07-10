@@ -37,6 +37,7 @@ plugins:
   - jekyll-relative-links
   - jekyll-seo-tag
 
-# Scratch dirs under docs/ are never published.
+# Scratch dirs and working records under docs/ are never published.
 exclude:
   - "**/tmp/"
+  - "superpowers/"

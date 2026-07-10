@@ -2,11 +2,7 @@
 # Actions pinned in .github/workflows/, contributor/CI Python tooling at the
 # repo root, and pinned pre-commit hook environments.
 # Monthly + a small PR cap keeps the noise low; commit messages use the `chore`
-# prefix to match Conventional Commits.
-#
-# github-actions PRs auto-merge when green (.github/workflows/dependabot-auto-merge.yml);
-# pip and pre-commit PRs land as needs_human so a person eyeballs API-affecting
-# bumps first.
+# prefix. Every bump PR is reviewed and merged by a person (no auto-merge).
 # (Security-fix PRs from Dependabot alerts are separate and not gated here.)
 version: 2
 updates:
