@@ -1,83 +1,159 @@
 # Roadmap — live up to the promise, then exceed it — 2026-07-09
 
 The change program synthesized from the day's record: `promise-audit.md`
-(verdicts and defects), `product-statement.md` (axioms, graph basis, warrant
-question), and `autoresearch-note.md` (self-improvement loops). Shape: make
-the delivered half honest and visible, build the substrate the statement
+(feature verdicts and defects), `product-statement.md` (axioms, graph basis,
+warrant question), `autoresearch-note.md` (self-improvement loops), and
+`architecture-review.md` (structural findings — "rim-strong, center-soft").
+Shape: make the delivered half honest and visible, repair the trust
+substrates the architecture review exposed, build the graph the statement
 promises, add initiative and a voice, then exceed via typed blast-radius
 propagation and a self-calibrating instrument.
 
-## Tier 0 — Make the delivered machinery true and visible (days, first)
+## Tier 0 — Make the delivered machinery true and visible (first)
 
-1. **Provenance faithfulness** — thread the request envelope's real actor
-   into the journal events that hardcode `actor: "pi"`
-   (`resolve_attention`, `curate_note_candidate`,
-   `record_copi_interview_turn`). Under axiom 2, provenance is origin's
-   entire job and the only mechanism behind "one human owns judgment."
-   Load-bearing fix of the whole program.
-2. **Surface honesty** — `_emit` stops printing `ok` on failed operations
+1. **Provenance faithfulness — structural, not spot fixes.** The
+   architecture review showed the hardcoded `actor: "pi"` journal events
+   are symptoms of a missing layer: only 3 of ~40 operations read the
+   envelope's actor. The fix has a one-choke-point shape: build an
+   operation context once in `worker._run_claimed_job` and consume it in
+   `trusted_writer` (staging + journal), instead of ~20 leaf kwargs. Two
+   schema blockers move first: widen the `derivations` actor CHECK (it
+   actively forbids `'agent'`) and drop `DEFAULT 'pi'` /
+   empty-coerces-to-'pi' so *absence of origin information is never
+   recorded as "the human did it."* Note `observe_pi_edit` attributes all
+   unmediated writes to 'pi' — acceptable for a personal tool, but say so
+   in the memory-model doc. Under axiom 2, provenance is origin's entire
+   job; cascade/demotion already branch on this field, so it must be
+   faithful before Tier 1 builds on it.
+2. **Journal trust repair.** The hash-chained `event_log` is ornamental:
+   every trust-critical read (quarantine, PI-edit detection, blast radius)
+   reads the un-chained, gitignored JSONL copy, no chain verifier exists,
+   and the dual write is non-atomic. Add a chain verifier (integrity
+   check), make `event_log` the substrate trust paths read (or reconcile
+   the two on every sweep), and define the crash story between the two
+   appends.
+3. **Grounds durability.** `.memoria/blobs/` — captured source content,
+   the evidential grounds of the whole Toulmin stack — is gitignored as
+   "regenerable runtime data" and is not regenerable. Track it, or ship a
+   backup/export story. Cheap fix; data-loss class.
+4. **Surface honesty** — `_emit` stops printing `ok` on failed operations
    and prints created paths; the catalog becomes enumerable (`list --type
    work` gets a real SQLite branch, or a `work list` command).
-3. **Docs tell the truth** — tutorials teach the check steps at point of
+5. **Docs tell the truth** — tutorials teach the check steps at point of
    need (02 and 04 fail verbatim today); fix the five doc-code
    contradictions from the promise audit; delete the dead knobs
-   (`calibration.yaml`, the wrong `gated:` keys).
+   (`calibration.yaml`, the wrong `gated:` keys); and make the six
+   enforcement-claim corrections from the architecture review (phantom
+   seven-layer model, block-loudness pause that binds only the uninstalled
+   adapter path, "single attention writer" bypassed by three hand-rolled
+   copies, telemetry logs no code writes, SQLite-backed attention claim,
+   present-tense dashboard rail).
 
-Tier 0 adds no capability — it makes the built product experienceable.
-Ideal first features for the superpowers-spine acceptance run
-(alignment-plan step 21): small, real, verifiable.
+Tier 0 adds no capability — it makes the built product experienceable and
+its trust substrates real. Items 1, 4, 5 are ideal first features for the
+superpowers-spine acceptance run (alignment-plan step 21).
 
 ## Tier 1 — The graph substrate (core gap; everything depends on it)
 
-4. **Decide the warrant ontology** (standing recommendation: hybrid —
+6. **Schema migration machinery — the new prerequisite.** `state._init`
+   hard-fails on any user_version except 0/8; `CREATE TABLE IF NOT
+   EXISTS` only; no ALTER path. Every substantive Tier 1 change hits this
+   wall first. Build the minimal migration layer before touching relation
+   vocabularies. While in there: move toward **ULID-keyed provenance**
+   (verdicts/derivations currently key on file paths; renames silently
+   sever provenance — fatal to "compounds over years").
+7. **Decide the warrant ontology** (standing recommendation: hybrid —
    nodes when explicit, demandable on challenge) **before** touching
    `LINK_RELATIONS`. Spend the brainstorming/grilling budget here: the
    decision is expensive to reverse after accumulation.
-5. **Extend the graph to the six-role Toulmin basis**: warrant nodes with
-   backing edges; qualifier/certainty made live (read by argument health);
-   rebuttal able to target warrants as well as claims.
-6. **Wire `structural_impact` and build the central operation**: a
-   claim-disposition flow — "decided wrong" → typed, origin-blind
-   propagation (grounds lost vs warrant lost vs qualifier-bounded
-   regression) → blast-radius report in the inbox. Today only source-level
-   falls propagate (retraction sweep, fama-exposure).
+8. **Give the graph one owner, then extend to the six-role basis.** The
+   architecture review found five substrates, four parsers, three
+   contradictory relation rosters, and the designed join point —
+   `concept_edges` — permanently empty and wiped on every index refresh.
+   Create a single edge module that owns the relation roster and all
+   parsing; fill `concept_edges` (fix the stub, stop the wipe) as the
+   queryable argument-graph index; promote the existing
+   `catalog/sources/<work_id>` identity namespace to the *documented
+   bridge* so claim→work edges cross the substrate boundary (the address
+   space already exists; three gates block it). Then extend to the
+   Toulmin six: warrant nodes with backing edges; qualifier/certainty made
+   live; rebuttal able to target warrants. Add the missing
+   **graph architecture page** — the central substrate is currently
+   undocumented.
+9. **Redesign propagation, then wire the central operation.** The
+   blast-radius engine walks the derivation DAG only — supports/contradicts
+   edges are invisible to it — and it branches consequences on actor
+   (origin as authorization, against axiom 2, keyed on the unreliable
+   field item 1 fixes). Redesign: traversal over *grounding edges* with
+   typed, origin-blind consequences (grounds lost vs warrant lost vs
+   qualifier-bounded regression); the actor branches are either
+   owner-ratified explicitly as remediation-authority or removed. Then the
+   claim-disposition flow: "decided wrong" → typed propagation →
+   blast-radius report in the inbox. Wiring `structural_impact` means
+   bringing it **on-substrate** — today it bypasses both the read barrier
+   (reads quarantined notes) and the trusted writer (raw `write_text`) and
+   reads fields nothing writes.
 
 ## Tier 2 — Close the loops (make it compound)
 
-7. **Wire the orphans** (worklists; hub_handoff so it actually enqueues;
-   session_summary) into worker jobs and CLI; add **digestion pressure** —
-   a surface for checked-but-undigested sources.
-8. **Nightly cadence** — one command running the proposal backlog (gaps,
-   tensions, digestion, integrity sweep) on a fixed budget, leaving a
-   morning log + triaged inbox. Baseline stays scheduler-free; the PI adds
-   one cron line. Closes the "nothing initiates" finding.
-9. **Semantic upgrades where axioms allow** — replace the tier-1
-   lexical-NLI stand-in and hash-fake embeddings: grounding-relationship
-   detection, never truth scoring.
+10. **Manifest-driven dispatch — the enabler.** The worker is an ~800-line
+    if/elif chain with hand-rolled payload validation because `io_schema`
+    is a decorative string, and manifest `allowed_paths`/`allowed_tools`
+    are consulted by ~6 of ~40 implementations. Make `io_schema` real and
+    dispatch from a registry so every wired orphan and future operation is
+    manifest + function — and the fencing the manifests promise is imposed
+    by the worker, not opted into per call site.
+11. **Wire the orphans** (worklists; hub_handoff so it actually enqueues;
+    session_summary) as manifest-backed operations; add **digestion
+    pressure** — a surface for checked-but-undigested sources.
+12. **Nightly cadence** — one command running the proposal backlog (gaps,
+    tensions, digestion, integrity sweep) on a fixed budget, leaving a
+    morning log + triaged inbox. Baseline stays scheduler-free; the PI
+    adds one cron line. Fix the index-refresh path first: today a rebuild
+    is an O(vault) delete-and-reinsert that also wipes `concept_edges`.
+13. **Semantic upgrades where axioms allow** — replace the tier-1
+    lexical-NLI stand-in and hash-fake embeddings: grounding-relationship
+    detection, never truth scoring. Requires unpinning the runner:
+    `DEFAULT_RUNNER_POLICY` package-pins deterministic-fixture on *both*
+    test and live branches with a CI test forbidding overrides — a
+    sanctioned live-model knob is a source-tree change today. Decide who
+    may author machine edges (the `tension` relation exists in the DB
+    CHECK but no write path can produce it).
 
 ## Tier 3 — The conversational co-PI (method, never belief)
 
-10. **Grounding interrogation** — generate questions from `analyze_gaps`
+14. **Grounding interrogation** — generate questions from `analyze_gaps`
     findings ("what grounds this? is this warrant stated? what contradicts
     it?"); replace the static interview prompt; make `memoria ask` honest
-    or genuinely conversational via the live path. Mechanizable because of
-    the axioms: grounding questions read off the graph.
-11. **A surface where the PI lives** — minimum viable inbox + argument
-    health rendering in the Obsidian plugin (the Navigator rail has no
-    renderer anywhere); a CLI voice that speaks findings instead of
-    `True`.
+    or genuinely conversational via the live path. A question-generation
+    *operation* is the cheapest extension in the system (the
+    prompt-operation family needs only a manifest); a conversational
+    *surface* is not — the surface contract has one synchronous write
+    action and no session concept, so plan new contract actions. The query
+    side inherits Tier 1: "how is this claim grounded" needs the filled
+    `concept_edges` index as its single query surface.
+15. **A surface where the PI lives** — minimum viable inbox + argument
+    health rendering in the Obsidian plugin (the documented Navigator rail
+    has no renderer in any layer); a CLI voice that speaks findings
+    instead of `True`.
 
 ## Tier 4 — Exceed the promise
 
-12. **Instrument autoresearch** (per `autoresearch-note.md`): the
+16. **Instrument autoresearch** (per `autoresearch-note.md`): the
     overnight org that measurably sharpens detectors against the
-    seeded-error battery — a knowledge system that self-calibrates.
-13. **Prompt autoresearch** — fill the `eval_dispatch` stub with gold
-    tasks from real use; grind operation prompts against `support_rate`.
-14. **Warrant inventory as explicit methodology** (free once Tier 1
+    seeded-error battery. Harness fixes first, from the architecture
+    review: route the runner-under-test through the measured behavior
+    (today fixture prep ignores the runner, so the experiment's subject
+    cannot affect the measurement), include `prompt_version` in
+    `verdict_key`, and tie prompt body hashes to `prompt_version` so
+    silent pattern edits can't change the experiment unit.
+17. **Prompt autoresearch** — fill the `eval_dispatch` stub (it returns a
+    `planned:` string; nothing enqueues) with gold tasks from real use;
+    grind operation prompts against `support_rate`.
+18. **Warrant inventory as explicit methodology** (free once Tier 1
     lands): "show me everything resting on inference-type X, because I no
     longer accept it" — a years-horizon capability no notes system offers.
-15. **Live in it.** Seed the vault with the real research corpus (the
+19. **Live in it.** Seed the vault with the real research corpus (the
     relocated `papers/` library is the dogfood corpus). "Compounds over
     months and years" can only be demonstrated; the sandbox evidence says
     the write loop has never run on real work. Cheapest item; the only one
@@ -85,9 +161,11 @@ Ideal first features for the superpowers-spine acceptance run
 
 ## Sequencing
 
-Tier 0 → Tier 1 (design-heavy) → Tiers 2–4 parallelize once the substrate
-lands. All of it runs through the new spine after the
-superpowers-alignment plan executes. One-sentence version: Tier 0 makes it
-honest, Tier 1 makes it the product the statement describes, Tier 2 makes
-it compound, Tier 3 makes it converse, Tier 4 makes it the only thing of
-its kind — and item 15 is where the promise stops being prose.
+Tier 0 (items 1–5, with 1–3 as the trust-substrate repairs) → Tier 1
+(design-heavy; item 6 unblocks 7–9) → Tiers 2–4 parallelize once the
+substrate lands, with item 10 as Tier 2's enabler. All of it runs through
+the new spine after the superpowers-alignment plan executes. One-sentence
+version: Tier 0 makes it honest, Tier 1 makes it the product the statement
+describes, Tier 2 makes it compound, Tier 3 makes it converse, Tier 4
+makes it the only thing of its kind — and item 19 is where the promise
+stops being prose.
