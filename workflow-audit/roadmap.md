@@ -2,8 +2,10 @@
 
 The change program synthesized from the day's record: `promise-audit.md`
 (feature verdicts and defects), `product-statement.md` (axioms, graph basis,
-warrant question), `autoresearch-note.md` (self-improvement loops), and
-`architecture-review.md` (structural findings — "rim-strong, center-soft").
+warrant question), `autoresearch-note.md` (self-improvement loops),
+`architecture-review.md` (structural findings — "rim-strong, center-soft"),
+`okf-note.md` (bundle boundary, placement doctrine, consistency model), and
+`schema-analysis.md` (column-level sharpening of items 1, 2, 6, 8, 9, 20).
 Shape: make the delivered half honest and visible, repair the trust
 substrates the architecture review exposed, build the graph the statement
 promises, add initiative and a voice, then exceed via typed blast-radius
@@ -17,10 +19,12 @@ propagation and a self-calibrating instrument.
    envelope's actor. The fix has a one-choke-point shape: build an
    operation context once in `worker._run_claimed_job` and consume it in
    `trusted_writer` (staging + journal), instead of ~20 leaf kwargs. Two
-   schema blockers move first: widen the `derivations` actor CHECK (it
-   actively forbids `'agent'`) and drop `DEFAULT 'pi'` /
-   empty-coerces-to-'pi' so *absence of origin information is never
-   recorded as "the human did it."* Note `observe_pi_edit` attributes all
+   schema blockers move first — and the schema analysis showed the actor
+   vocabulary fails in both directions at once: `operation_requests.actor`
+   is unconstrained TEXT with `DEFAULT 'pi'` while `derivations.actor`
+   CHECK actively forbids `'agent'`. Define **one actor enum, one CHECK,
+   applied to both tables, no default** — so *absence of origin
+   information is never recorded as "the human did it."* Note `observe_pi_edit` attributes all
    unmediated writes to 'pi' — acceptable for a personal tool, but say so
    in the memory-model doc. Under axiom 2, provenance is origin's entire
    job; cascade/demotion already branch on this field, so it must be
@@ -31,7 +35,9 @@ propagation and a self-calibrating instrument.
    and the dual write is non-atomic. Add a chain verifier (integrity
    check), make `event_log` the substrate trust paths read (or reconcile
    the two on every sweep), and define the crash story between the two
-   appends.
+   appends. While in there: `event_log` has no index on
+   `event_type`/`timestamp` — journal queries scan at years scale; add
+   them when it becomes the read substrate.
 3. **Grounds durability.** `.memoria/blobs/` — captured source content,
    the evidential grounds of the whole Toulmin stack — is gitignored as
    "regenerable runtime data" and is not regenerable. Resolved by the
@@ -63,9 +69,12 @@ superpowers-spine acceptance run (alignment-plan step 21).
    hard-fails on any user_version except 0/8; `CREATE TABLE IF NOT
    EXISTS` only; no ALTER path. Every substantive Tier 1 change hits this
    wall first. Build the minimal migration layer before touching relation
-   vocabularies. While in there: move toward **ULID-keyed provenance**
-   (verdicts/derivations currently key on file paths; renames silently
-   sever provenance — fatal to "compounds over years"). OKF
+   vocabularies. While in there: move toward **ULID-keyed provenance** —
+   the schema analysis names the exact columns: `derivations.input_id/
+   output_id` and `outputs.target_path` key on paths, and the schema's
+   five identity vocabularies (concept_id, output_id, work_id, passage_id,
+   path) have only three FKs total; renames silently sever provenance —
+   fatal to "compounds over years". OKF
    reconciliation: OKF's concept ID *is* the path, so ULID is the internal
    identity and the path is the OKF-facing address, with rename tracking
    mapping between them — conformance is not an argument for path-keyed
@@ -80,10 +89,14 @@ superpowers-spine acceptance run (alignment-plan step 21).
    `concept_edges` — permanently empty and wiped on every index refresh.
    Create a single edge module that owns the relation roster and all
    parsing; fill `concept_edges` (fix the stub, stop the wipe) as the
-   queryable argument-graph index; promote the existing
+   queryable argument-graph index — and reshape it for the six-role
+   future: the schema analysis found PK `(source, relation, target)` with
+   **no edge_id and no attribute columns**, nothing to hang a warrant
+   reference or qualifier on; promote the existing
    `catalog/sources/<work_id>` identity namespace to the *documented
    bridge* so claim→work edges cross the substrate boundary (the address
-   space already exists; three gates block it). Then extend to the
+   space already exists — the verdict-cascade triggers already translate
+   it; three code gates block it). Then extend to the
    Toulmin six: warrant nodes with backing edges; qualifier/certainty made
    live; rebuttal able to target warrants. Add the missing
    **graph architecture page** — the central substrate is currently
@@ -95,7 +108,10 @@ superpowers-spine acceptance run (alignment-plan step 21).
    field item 1 fixes). Redesign: traversal over *grounding edges* with
    typed, origin-blind consequences (grounds lost vs warrant lost vs
    qualifier-bounded regression); the actor branches are either
-   owner-ratified explicitly as remediation-authority or removed. Then the
+   owner-ratified explicitly as remediation-authority or removed. Add the
+   **reverse-traversal indexes first**: `concept_edges(target_concept_id)`
+   and `work_graph_edges(target_id)` have no index, and "what supports X"
+   is the blast-radius direction (schema analysis). Then the
    claim-disposition flow: "decided wrong" → typed propagation →
    blast-radius report in the inbox. Wiring `structural_impact` means
    bringing it **on-substrate** — today it bypasses both the read barrier
@@ -156,9 +172,14 @@ superpowers-spine acceptance run (alignment-plan step 21).
       retires as a bundle root entirely** (decision v2 in
       `user-workflow.md`: external material doesn't belong in the
       knowledge bundle; the PDF is the human reading surface, the engine
-      serves passages on demand for quote-in-context). The
-      folders.yaml/CONCEPT_HOMES/type-roster change rides item 6's
-      migration batch; quote anchors reference content-hash space.
+      serves passages on demand for quote-in-context). Cheaper than first
+      assumed: the schema analysis found `'fulltext'` was **never a
+      concept type** (fulltexts exist only as generated passages plus
+      outputs rows), so retirement is folders.yaml/CONCEPT_HOMES plus
+      index code — no concept-roster migration; quote anchors reference
+      content-hash space. Bonus from the same analysis:
+      `file_index_state` (mtime+sha per path) already exists — Tier A's
+      incremental-indexing substrate is built, not new.
     - **Surface-contract gaps** (verified against the 17-action registry,
       2026-07-09): agent integration is ~90% served today
       (`operation.run` + `requests.get` covers the whole co-PI loop);
@@ -203,7 +224,11 @@ superpowers-spine acceptance run (alignment-plan step 21).
     code_artifacts/code_runs machinery is the seed for
     reproducible-run-as-grounds. Keep a **closed source-type roster**
     (paper, article, audio, dataset, software) — types are schema; schema
-    is the design.
+    is the design, and the enforcing line is a CHECK on
+    `catalog_sources.item_type` (today unconstrained TEXT defaulting
+    'article' — schema analysis). Also widen `work_aspects` PK when
+    textual layers make aspects load-bearing: `(work_id, aspect_type)`
+    currently forces one key idea and one limitation per work.
 
 ## Tier 3 — The conversational co-PI (method, never belief)
 
