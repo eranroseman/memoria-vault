@@ -15,7 +15,9 @@ months and years.
 stay unfiltered, preserving raw reasoning before audience-aware editing
 sanitizes it. The design assumes one human who owns judgment: review
 decisions, synthesis choices, and scope priorities all belong to that
-researcher. This is not a team tool.
+researcher. This is not a team tool. Thinking itself is ungated; the
+knowledge graph is gated; promotion is the boundary between them — so
+"unfiltered" and "gated" never apply to the same act.
 
 **Opinionated** — it enforces specific workflows and eliminates setup
 paralysis. The vault structure, the document types, and the review gates
@@ -52,7 +54,10 @@ and expands them with agentic AI capabilities:
 - The LLM-Wiki lint concept is expanded to cover all housekeeping and
   bookkeeping aspects of the system.
 
-The end result should feel like a co-PI, not a knowledge base.
+The end result should feel like a co-PI, not a knowledge base. The co-PI's
+expertise is method, never belief: it interrogates grounding, sets agendas,
+and surfaces contradictions, but by the axioms below it can never tell the
+researcher what to believe.
 
 ## Design axioms (added 2026-07-09, same review)
 
@@ -92,3 +97,36 @@ only source-level falls propagate (retraction sweep, fama-exposure); (c)
 the co-PI's conversational half is grounding interrogation ("what grounds
 this? where does this quote anchor? is this warrant stated?"), never truth
 adjudication.
+
+## Open design question — warrant ontology (must precede the substrate work)
+
+When a warrant becomes explicit, what is it in the graph: a property of a
+link, or a node of its own? Warrants are general inference licenses ("RCT
+meta-analyses license causal claims") that recur across many arguments and
+normally stay implicit until challenged (Toulmin's own observation).
+
+- **Edge property**: simple, fits current typed-link storage — but a
+  warrant decided wrong cannot be dispositioned (fifty drifting strings on
+  fifty edges, no traversal), backing has nowhere to attach, rebuttals
+  cannot target it, and lint cannot see it. The central operation is
+  unimplementable for warrants.
+- **First-class node**: dispose one warrant → one node event → blast-radius
+  traversal degrades every argument it licenses; backing and rebuttal get
+  their real target; over years the warrant inventory becomes the
+  researcher's explicit, versioned methodology. Cost: a three-way relation
+  (evidence supports claim *via* warrant) needs reification the binary link
+  schema lacks — plausibly why alpha.5 deferred it — plus authoring
+  friction and warrant-identity maintenance.
+- **Standing recommendation — hybrid**: warrants are nodes when explicit,
+  absent when implicit, and *demandable on challenge*. No warrant required
+  at authoring; the existing under-warranted pressure plus a "state the
+  warrant" operation promote implicit → explicit at the points that matter
+  (thesis-path saturation, draft verification), and lint proposes a shared
+  node when the same implicit inference recurs — machine proposes, PI
+  disposes.
+
+The choice sets the ontology's center of gravity — whether the graph is
+about claims with annotated justifications, or equally about inferences as
+research objects of the same rank as findings — and migrating between the
+two after years of accumulation is expensive. Decide before extending
+LINK_RELATIONS.
