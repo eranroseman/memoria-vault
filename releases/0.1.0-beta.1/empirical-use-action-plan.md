@@ -85,6 +85,10 @@ Measure at each stage:
 
 - import wall-clock, enrichment provider load, index rebuild time (the
   O(vault) refresh — data that sizes the incremental-indexing priority);
+- Shape-1 and Shape-2 query latency per stage (1000 papers ≈ 50k–200k
+  passage rows, brushing the brute-force-KNN flip condition in
+  `query-mechanism-analysis.md` §5 — >200ms interactive queries at any
+  stage triggers the substrate re-comparison early);
 - attention items minted per 100 works, and whether triage stays inside a
   bounded batch (~60 min) — the bulk-admission flood question;
 - duplicate-triage and retraction-flag counts (merge-prompt volume);

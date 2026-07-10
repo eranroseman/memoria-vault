@@ -255,8 +255,12 @@ superpowers-spine acceptance run (alignment-plan step 21).
     calls demonstrably exist (digest compilation, tier-2 judge via
     `providers.yaml`) — establish exactly which knob enables live mode
     per operation and whether the pin is a stance or an incomplete wiring.
-    Decide who may author machine edges (the `tension` relation exists in
-    the DB CHECK but no write path can produce it).
+    The machine-edge authorship question is already decided
+    (`query-mechanism-analysis.md` §4.11): **nobody** authors `tension`
+    via frontmatter or automation — the `surface_tensions`
+    PI-confirmation step persists the edge; existence is the confirmation
+    signal, no provisional rows. The audits' "no write path" finding is
+    that analysis's phase 4 unwired — a task, not a decision.
 
 20. **Source-type generalization** (added 2026-07-09; lives in Tier 2 —
     numbering kept stable). The pipeline spine (capture → immutable blob →
@@ -377,6 +381,18 @@ with the agents the user already runs.
     demonstrated; this is the item that proves the promise.
 
 ## Sequencing
+
+**Schema before corpus (2026-07-10, from the query-mechanism-analysis
+review):** Q11's migration-cost-is-zero fact expires the day item 19's
+import lands durable rows — thereafter every table-shape change ships as
+a numbered ALTER migration. All cheap-while-empty reshapes (actor enum,
+`concept_edges` edge_id/attribute columns, `item_type` CHECK, ULID keys,
+reverse indexes) should land **before** the bulk import. Also from that
+review: 1000 full-text papers ≈ 50k–200k passage rows, brushing the
+brute-force-KNN flip condition's lower bound — the staged import must
+measure Shape-1/Shape-2 query latency per stage (added to the empirical
+plan); and the `db-mirror` passage origin is the designed mechanism for
+fulltext v2's file-less indexing.
 
 Tier 0 (items 1–5, with 1–3 as the trust-substrate repairs) → Tier 1
 (design-heavy; item 6 unblocks 7–9) → Tiers 2–4 parallelize once the
