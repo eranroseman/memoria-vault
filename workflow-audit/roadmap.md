@@ -141,12 +141,14 @@ superpowers-spine acceptance run (alignment-plan step 21).
       storms.
 13. **Semantic upgrades where axioms allow** — replace the tier-1
     lexical-NLI stand-in and hash-fake embeddings: grounding-relationship
-    detection, never truth scoring. Requires unpinning the runner:
-    `DEFAULT_RUNNER_POLICY` package-pins deterministic-fixture on *both*
-    test and live branches with a CI test forbidding overrides — a
-    sanctioned live-model knob is a source-tree change today. Decide who
-    may author machine edges (the `tension` relation exists in the DB
-    CHECK but no write path can produce it).
+    detection, never truth scoring. Verify the runner-resolution path at
+    implementation: the architecture sweep read `DEFAULT_RUNNER_POLICY` as
+    package-pinning deterministic-fixture even on live, but live provider
+    calls demonstrably exist (digest compilation, tier-2 judge via
+    `providers.yaml`) — establish exactly which knob enables live mode
+    per operation and whether the pin is a stance or an incomplete wiring.
+    Decide who may author machine edges (the `tension` relation exists in
+    the DB CHECK but no write path can produce it).
 
 ## Tier 3 — The conversational co-PI (method, never belief)
 
@@ -164,9 +166,18 @@ free under this shape (agents already run inside it; thin status extension
 later). Embedded-chat-panel earn-back: once engine-authored interrogation
 exists the panel is thin (render questions, collect answers, user's own
 provider); trigger — evidence the two-window experience blocks daily use.
-Rationale: preserves bring-your-own-brain, the L3 cap, the deterministic
-default, provenance-clean entry, and solo-maintainer economics; avoids
-competing with the agents the user already runs.
+Rationale (corrected 2026-07-09 — Memoria does make LLM API calls): the
+engine owns model calls as **fenced one-shot operations** (pydantic-ai
+digest compilation with grounding validation, tier-2 judge, the
+prompt-operation family — sealed inputs, manifest fencing, prompt/model
+provenance); what it deliberately does not own is an **agent loop**
+(multi-turn, tool-using, initiating). The surface split follows that
+line, not a no-LLM line: engine-authored method may itself be LLM-powered
+under existing fencing — item 14's question generation can be a prompt
+operation like red-team-argument — while the conversation loop stays with
+the user's agent (or a thin panel later). Preserves the L3 cap,
+provenance-clean entry, and solo-maintainer economics; avoids competing
+with the agents the user already runs.
 
 14. **Grounding interrogation** — generate questions from `analyze_gaps`
     findings ("what grounds this? is this warrant stated? what contradicts
