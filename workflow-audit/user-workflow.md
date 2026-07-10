@@ -113,10 +113,16 @@ stage playbooks as on-demand references (not eight skills — roster context
 tax; skills already double as slash commands); the MCP server wiring so
 install is one step; and a SessionStart hook that fires **only when the
 workspace contains `.memoria/`**, injecting a few lines: this is a Memoria
-vault — answer vault-content questions through the MCP tools, because raw
-files anywhere in the knowledge bundle (notes/, hubs/, projects/,
-digests/, fulltexts/) include unchecked and quarantined content the
-engine's verdict layer filters; check `attention.list` for open items. The
+vault, and **the entire vault is the knowledge bundle** — every file
+carries epistemic status, so answer content questions through the MCP
+tools. Three classes: concept files (notes/, hubs/, projects/, digests/,
+fulltexts/) carry verdicts the engine filters — raw reads see unchecked
+and quarantined content; inbox/ items are machine proposals awaiting PI
+disposition — by nature undispositioned, never citable as established
+knowledge (a contradiction card or discovery summary *looks* like
+knowledge; treating it as such launders a proposal into a conclusion);
+steering.md is PI intent — authoritative as agenda, grounding nothing.
+Check `attention.list` for open items. The
 hook earns its place by the admission rule: without it, a file-capable
 agent's *default* behavior answers vault questions by grepping raw notes,
 silently bypassing the read barrier (which binds engine reads, not agent
