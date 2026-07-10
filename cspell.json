@@ -17,6 +17,7 @@
   ],
   "ignorePaths": [
     "docs/reference/evidence-and-integrations/bibliography.md",
+    "docs/superpowers/**",
     "_papers/**",
     "_notes/**",
     "scratch/**",

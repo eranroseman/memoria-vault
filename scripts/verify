@@ -1,38 +1,33 @@
 #!/usr/bin/env python3
-"""Run Memoria verification gates and write a small evidence bundle."""
+"""Run Memoria's single verification gate.
+
+One flat gate, no tiers: lint (the pinned manual-stage pre-commit hooks), the
+product-integrity checks, the test suite, an offline end-to-end smoke, and
+syntax checks. Runs the roster in order, prints each step, skips (does not
+fail) a check whose local tool is absent (e.g. PowerShell), and exits nonzero
+on the first hard failure.
+"""
 
 from __future__ import annotations
 
-import argparse
-import hashlib
 import json
-import os
-import platform
-import re
-import shlex
 import shutil
 import subprocess
 import sys
-import tempfile
-import time
-import tomllib
-from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-L0_COMMANDS = [
-    ["pre-commit", "run", "ruff", "--all-files"],
-    ["pre-commit", "run", "ruff-format", "--all-files"],
-    ["python3", "scripts/checks/docs_doctor.py", "docs"],
+# Source of truth for what "verified" means; tests/test_verify_script.py mirrors
+# this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
+# yamllint, shellcheck, cspell, markdownlint); the commit-stage hooks
+# (gitleaks, no-commit-to-branch) are pinned out of the manual stage so this
+# never trips no-commit-to-branch on the post-merge main run.
+GATES: list[list[str]] = [
+    ["pre-commit", "run", "--hook-stage", "manual", "--all-files"],
     ["python3", "scripts/checks/schema_doc_drift.py"],
     ["python3", "scripts/checks/removed_surface_gate.py"],
     ["python3", "scripts/checks/checked_terminology_gate.py"],
-    ["python3", "scripts/checks/docs_doctor.py", "--vault-links"],
-    ["python3", "scripts/checks/status_doctor.py"],
-    ["python3", "scripts/checks/agents_doctor.py"],
-    ["python3", "scripts/checks/github_doctor.py"],
-    ["python3", "scripts/checks/ruleset_doctor.py"],
     ["python3", "scripts/checks/plugin_provenance_doctor.py"],
     [
         "env",
@@ -43,8 +38,9 @@ L0_COMMANDS = [
         "tests/",
         "-q",
         "-m",
-        "static",
+        "static or unit or contract",
     ],
+    ["python3", "scripts/sandbox/e2e_smoke.py"],
     [
         "python3",
         "-m",
@@ -64,316 +60,69 @@ L0_COMMANDS = [
     ],
 ]
 
-L1_COMMANDS = [
-    [
-        "env",
-        "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
-        "python3",
-        "-m",
-        "pytest",
-        "tests/",
-        "-q",
-        "-m",
-        "unit or contract",
-    ],
-]
-
-GATE_COMMANDS = {
-    "check": [
-        [
-            "env",
-            "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
-            "python3",
-            "-m",
-            "pytest",
-            "tests/",
-            "--co",
-            "-q",
-        ],
-    ],
-    "l0": L0_COMMANDS,
-    "l1": L1_COMMANDS,
-    "package": [
-        [
-            "python3",
-            "-m",
-            "pip",
-            "wheel",
-            "--no-build-isolation",
-            "--wheel-dir",
-            "{evidence_dir}/dist",
-            ".",
-        ],
-        ["python3", "-m", "venv", "--clear", "{evidence_dir}/venv"],
-        [
-            "{evidence_dir}/venv/bin/python",
-            "-m",
-            "pip",
-            "install",
-            "--force-reinstall",
-            "--no-index",
-            "--find-links",
-            "{evidence_dir}/dist",
-            "memoria-vault",
-        ],
-        [
-            "{evidence_dir}/venv/bin/python",
-            "-c",
-            "import memoria_vault; print(memoria_vault.__version__)",
-        ],
-        ["python3", "scripts/sandbox/e2e_smoke.py"],
-    ],
-    "runtime": [
-        ["python3", "-m", "pytest", "tests/test_runtime_gate_replay.py", "-q"],
-        ["python3", "-m", "pytest", "tests/test_worker_knowledge_cycle.py", "-q"],
-        [
-            "python3",
-            "-m",
-            "pytest",
-            "tests/test_cli.py",
-            "tests/test_seeded_errors.py",
-            "tests/test_worker_queue.py",
-            "-q",
-        ],
-    ],
-    "live": [
-        [
-            "env",
-            "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
-            "python3",
-            "-m",
-            "pytest",
-            "tests/",
-            "-q",
-            "-m",
-            "live",
-        ]
-    ],
-}
-
-MODES = {
-    "check": ["check"],
-    "l0": ["l0"],
-    "l1": ["l1"],
-    "pr": ["l0", "l1"],
-    "package": ["l0", "l1", "package"],
-    "runtime": ["l0", "l1", "package", "runtime"],
-    "rc": ["l0", "l1", "package", "runtime"],
-    "live": ["l0", "l1", "package", "runtime", "live"],
-}
-
-MANUAL_FOLLOW_UP = {
-    "rc": [
-        "Complete product/manual release evidence in the release parent issue.",
-        "Follow .agents/playbooks/release.md for release cut checks.",
-    ],
-    "live": [
-        "Complete runtime/product manual checks from .agents/playbooks/verify-change.md.",
-    ],
-}
+# Self-skips when the analyzer module is absent (exit 2), so a machine with pwsh
+# but no PSScriptAnalyzer does not hard-fail the gate.
+PSSA_COMMAND = (
+    "if (-not (Get-Module -ListAvailable -Name PSScriptAnalyzer)) "
+    "{ Write-Host 'PSScriptAnalyzer module not installed'; exit 2 }; "
+    "$r = Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error "
+    "-Settings ./scripts/PSScriptAnalyzerSettings.psd1; "
+    "if ($r) { $r | Format-Table -AutoSize; exit 1 }"
+)
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=sorted(MODES), help="verification gate set to run")
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="write evidence and print commands without running them",
-    )
-    parser.add_argument(
-        "--evidence-dir",
-        type=Path,
-        help="directory for summary.json and command logs; defaults under /tmp",
-    )
-    return parser.parse_args()
+def run(command: list[str]) -> int:
+    print(f"== {' '.join(command)}")
+    return subprocess.run(command, cwd=ROOT, check=False).returncode
 
 
-def git_output(*args: str) -> str:
-    result = subprocess.run(
-        ["git", *args],
+def check_json() -> int:
+    listing = subprocess.run(
+        ["git", "ls-files", "*.json"],
         cwd=ROOT,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        capture_output=True,
         check=False,
     )
-    return result.stdout.strip() if result.returncode == 0 else "unknown"
+    bad: list[str] = []
+    for name in listing.stdout.split():
+        try:
+            json.loads((ROOT / name).read_text(encoding="utf-8"))
+        except (ValueError, OSError) as exc:
+            bad.append(f"{name}: {exc}")
+    print("== authored JSON syntax")
+    for entry in bad:
+        print(f"  invalid JSON: {entry}")
+    return 1 if bad else 0
 
 
-def package_versions() -> dict[str, str]:
-    versions: dict[str, str] = {}
-    pyproject = ROOT / "pyproject.toml"
-    if pyproject.exists():
-        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-        versions["pyproject"] = str(data.get("project", {}).get("version", "unknown"))
-    init_file = ROOT / "src" / "memoria_vault" / "__init__.py"
-    if init_file.exists():
-        match = re.search(r'^__version__ = "([^"]+)"', init_file.read_text(encoding="utf-8"), re.M)
-        versions["package_init"] = match.group(1) if match else "unknown"
-    return versions
-
-
-def artifact_hashes(evidence_dir: Path) -> list[dict[str, object]]:
-    dist = evidence_dir / "dist"
-    if not dist.exists():
-        return []
-    artifacts: list[dict[str, object]] = []
-    for path in sorted(p for p in dist.iterdir() if p.is_file()):
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        artifacts.append({"file": str(path), "bytes": path.stat().st_size, "sha256": digest})
-    return artifacts
-
-
-def cleanup_package_build_artifacts() -> None:
-    for rel in ("build", "src/memoria_vault.egg-info"):
-        path = ROOT / rel
-        if path.is_dir():
-            shutil.rmtree(path)
-
-
-def prepare_package_evidence(evidence_dir: Path) -> None:
-    for rel in ("dist", "venv"):
-        path = evidence_dir / rel
-        if path.is_dir():
-            shutil.rmtree(path)
-        elif path.exists():
-            path.unlink()
-
-
-def default_evidence_dir(mode: str, timestamp: str) -> Path:
-    default_base = Path(tempfile.gettempdir()) / "memoria-verify"
-    base = Path(os.environ.get("MEMORIA_VERIFY_EVIDENCE_DIR", str(default_base)))
-    return base / f"{timestamp}-{mode}"
-
-
-def write_summary(evidence_dir: Path, summary: dict[str, object]) -> None:
-    evidence_dir.mkdir(parents=True, exist_ok=True)
-    (evidence_dir / "summary.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-
-
-def run_step(
-    gate: str,
-    index: int,
-    command_template: list[str],
-    evidence_dir: Path,
-    dry_run: bool,
-) -> dict[str, object]:
-    started = time.monotonic()
-    command = [part.format(evidence_dir=str(evidence_dir)) for part in command_template]
-    display = shlex.join(command)
-    log_path = evidence_dir / f"{index:02d}-{gate}.log"
-    print(f"== {gate}: {display}")
-    if dry_run:
-        log_path.write_text(display + "\n", encoding="utf-8")
-        return {
-            "gate": gate,
-            "command": command,
-            "display": display,
-            "returncode": 0,
-            "result": "dry-run",
-            "duration_seconds": 0,
-            "log": str(log_path),
-        }
-
-    result = subprocess.run(
-        command,
+def check_powershell() -> int:
+    print("== PSScriptAnalyzer scripts/install.ps1")
+    if shutil.which("pwsh") is None:
+        print("  skipped: pwsh not installed")
+        return 0
+    code = subprocess.run(
+        ["pwsh", "-NoProfile", "-Command", PSSA_COMMAND],
         cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
         check=False,
-    )
-    log_path.write_text(result.stdout, encoding="utf-8")
-    print(result.stdout, end="")
-    if gate == "live" and result.returncode == 5:
-        returncode = 0
-        status = "skipped"
-    else:
-        returncode = result.returncode
-        status = "passed" if returncode == 0 else "skipped" if returncode == 77 else "failed"
-    return {
-        "gate": gate,
-        "command": command,
-        "display": display,
-        "returncode": returncode,
-        "result": status,
-        "duration_seconds": round(time.monotonic() - started, 3),
-        "log": str(log_path),
-    }
+    ).returncode
+    if code == 2:
+        print("  skipped: PSScriptAnalyzer module not installed")
+        return 0
+    return code
 
 
 def main() -> int:
-    args = parse_args()
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    evidence_dir = args.evidence_dir or default_evidence_dir(args.mode, timestamp)
-    evidence_dir.mkdir(parents=True, exist_ok=True)
-    if "package" in MODES[args.mode]:
-        prepare_package_evidence(evidence_dir)
-
-    summary: dict[str, object] = {
-        "mode": args.mode,
-        "timestamp_utc": timestamp,
-        "result": "running",
-        "exit_code": None,
-        "repo": {
-            "branch": git_output("branch", "--show-current"),
-            "commit": git_output("rev-parse", "HEAD"),
-            "dirty": bool(git_output("status", "--short")),
-        },
-        "host": {
-            "platform": platform.platform(),
-            "python": platform.python_version(),
-        },
-        "versions": package_versions(),
-        "artifacts": [],
-        "gates": MODES[args.mode],
-        "steps": [],
-        "manual_follow_up": MANUAL_FOLLOW_UP.get(args.mode, []),
-    }
-    write_summary(evidence_dir, summary)
-
-    exit_code = 0
-    steps: list[dict[str, object]] = []
-    step_index = 1
-    for gate in MODES[args.mode]:
-        for command in GATE_COMMANDS[gate]:
-            step = run_step(gate, step_index, command, evidence_dir, args.dry_run)
-            steps.append(step)
-            step_index += 1
-            if step["returncode"] != 0:
-                exit_code = int(step["returncode"])
-                break
-        if exit_code:
-            break
-
-    if args.dry_run:
-        result = "dry-run"
-    elif exit_code == 0:
-        result = "passed"
-    elif exit_code == 77:
-        result = "skipped"
-    else:
-        result = "failed"
-
-    if not args.dry_run and "package" in MODES[args.mode]:
-        cleanup_package_build_artifacts()
-
-    summary["steps"] = steps
-    summary["artifacts"] = artifact_hashes(evidence_dir)
-    summary["result"] = result
-    summary["exit_code"] = exit_code
-    write_summary(evidence_dir, summary)
-
-    print(f"Evidence: {evidence_dir / 'summary.json'}")
-    if summary["manual_follow_up"]:
-        print("Manual follow-up:")
-        for item in summary["manual_follow_up"]:
-            print(f"- {item}")
-    return exit_code
+    for command in GATES:
+        if run(command) != 0:
+            print("verify: FAILED", file=sys.stderr)
+            return 1
+    for step in (check_json, check_powershell):
+        if step() != 0:
+            print("verify: FAILED", file=sys.stderr)
+            return 1
+    print("verify: OK")
+    return 0
 
 
 if __name__ == "__main__":

@@ -1,22 +1,20 @@
 # Memoria pre-commit configuration.
-# Install once per clone:  pre-commit install --install-hooks   (or run scripts/dev/setup.sh)
-# Run manually over all files:  pre-commit run --all-files
-# Skip a single hook once:  SKIP=<hook-id> git commit
-# Bypass everything (rarely):  git commit --no-verify
-
+#
+# Two commit-stage hooks fire on `git commit` (gitleaks, no-commit-to-branch);
+# every other hook is manual-stage and fires only through `scripts/verify`
+# (`pre-commit run --hook-stage manual`). This keeps the pinned/cached hook
+# environments as the single source of the lint tools while `verify` owns the
+# gate order. Install once per clone:  pre-commit install --install-hooks
+# (or run scripts/dev/setup.sh). Bypass everything once:  git commit --no-verify
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-      # Block 0: no direct commits to main (main is PR-protected; block, don't warn)
       - id: no-commit-to-branch
         args: [--branch, main]
         always_run: true
         pass_filenames: false
-
-      # Block 8: JSON syntax check
-      - id: check-json
-        files: \.json$
+        stages: [pre-commit]
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
@@ -24,21 +22,25 @@ repos:
       - id: gitleaks
         always_run: true
         pass_filenames: false
+        stages: [pre-commit]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.20
     hooks:
       - id: ruff
-        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
+        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^tests/.*\.py$
+        stages: [manual]
 
       - id: ruff-format
-        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
+        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^tests/.*\.py$
+        stages: [manual]
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:
       - id: yamllint
         files: \.(yaml|yml)$
+        stages: [manual]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
@@ -46,89 +48,27 @@ repos:
       - id: shellcheck
         args: [--severity=warning]
         files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
+        stages: [manual]
 
   - repo: local
     hooks:
-      # Block 1: docs-doctor
-      - id: docs-doctor
-        name: docs-doctor
-        language: system
-        entry: python3 scripts/checks/docs_doctor.py docs
-        files: ^docs/|^scripts/checks/docs_doctor\.py
-        pass_filenames: false
-
-      # Block 2 partial: bash syntax check for install.sh
-      - id: bash-syntax
-        name: bash-syntax
-        language: system
-        entry: bash -n scripts/install.sh
-        files: ^scripts/install\.sh$
-        pass_filenames: false
-
-      # Block 3 partial: fast pytest collection. Full tests run in scripts/verify pr and CI.
-      - id: pytest
-        name: pytest-collect
-        language: system
-        entry: python3 scripts/verify check
-        files: \.py$
-        pass_filenames: false
-
-      # Block 4: docs reference resolution
-      - id: check-doc-refs
-        name: check-doc-refs
-        language: system
-        entry: python3 scripts/checks/docs_doctor.py --doc-refs
-        files: \.(md|py|ya?ml)$
-        exclude: ^design-history/
-        pass_filenames: true
-
-      # Block 9: markdownlint structural rules
+      # markdownlint + cspell gate published docs prose (not the docs/superpowers
+      # working records). Node hooks; deps pinned so no npx/npm ci is needed.
       - id: markdownlint-structural
         name: markdownlint-structural
         language: node
         entry: markdownlint --config .markdownlint.json
         additional_dependencies: [markdownlint-cli@0.49.0]
         files: ^docs/.*\.md$
-        exclude: (^|/)tmp/   # scratch dirs: tracked, not linted (see .markdownlintignore)
-        pass_filenames: true
+        exclude: ^docs/superpowers/
+        stages: [manual]
 
-      # Block 9b: cspell spell-check (tracked prose markdown)
-      # Triggers on any changed .md; scope/exclusions are owned by cspell.json
-      # (files + ignorePaths + enableGlobDot), so there is no file list to mirror
-      # against .github/workflows/cspell.yml.
+      # Scope/exclusions are owned by cspell.json (files + ignorePaths +
+      # enableGlobDot); there is no file list to mirror here.
       - id: cspell
         name: cspell
         language: node
         entry: cspell lint --no-progress --no-must-find-files
         additional_dependencies: [cspell@10.0.1]
         files: \.md$
-        pass_filenames: true
-
-      # Block 11: status-doctor
-      - id: status-doctor
-        name: status-doctor
-        language: system
-        entry: python3 scripts/checks/status_doctor.py
-        files: ^CONTRIBUTING\.md$|^\.agents/playbooks/(release|verify-change|exec-plan)\.md$|^\.agents/templates/.*\.md$|^releases/.*\.md$|^scripts/checks/status_doctor\.py$
-        pass_filenames: false
-
-      - id: agents-doctor
-        name: agents-doctor
-        language: system
-        entry: python3 scripts/checks/agents_doctor.py
-        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/checks/agents_doctor\.py$)
-        pass_filenames: false
-
-      - id: github-doctor
-        name: github-doctor
-        language: system
-        entry: python3 scripts/checks/github_doctor.py
-        files: ^\.github/(ISSUE_TEMPLATE/|dependabot\.yml$)|^scripts/checks/github_doctor\.py$
-        pass_filenames: false
-
-      - id: plugin-provenance-doctor
-        name: plugin-provenance-doctor
-        language: system
-        entry: python3 scripts/checks/plugin_provenance_doctor.py
-        files: ^src/memoria_vault/product/workspace_seed/|^packages/memoria-obsidian/|^scripts/checks/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
-        pass_filenames: false
+        stages: [manual]

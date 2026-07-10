@@ -1,10 +1,9 @@
-name: lint-installers
+name: verify
 
-# shellcheck + PSScriptAnalyzer are REQUIRED status checks in the branch ruleset,
-# so they must report on EVERY PR — not just install-script changes.
-# A required check that is path-filtered never reports on unrelated PRs, leaving
-# them permanently "blocked". The linters are fast and idempotent, so running them
-# unconditionally is the correct trade-off (same rationale as docs-doctor).
+# The single required code-validation check: scripts/verify (lint, product
+# gates, tests, offline smoke, syntax). No `paths:` filter — a required check
+# must report on every PR, or a path-unrelated PR is permanently blocked. The
+# `push: main` run validates the post-merge state.
 
 on:
   push:
@@ -19,17 +18,23 @@ permissions:
   contents: read
 
 jobs:
-  shellcheck:
-    name: shellcheck (scripts/install.sh)
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
         with:
           python-version: "3.12"
-      - name: Install pre-commit
-        run: python -m pip install --quiet -r requirements-dev.txt
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
+        with:
+          node-version: "22"
+      - name: Install runtime + dev tooling
+        run: |
+          python -m pip install --quiet -r requirements-dev.txt
+          python -m pip install --quiet -e .
       - name: Cache pre-commit environments
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -37,15 +42,6 @@ jobs:
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pre-commit-
-      - name: Run shellcheck
-        run: pre-commit run shellcheck --all-files
-
-  psscriptanalyzer:
-    name: PSScriptAnalyzer (scripts/install.ps1)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Cache PSScriptAnalyzer module
         id: pssa-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
@@ -58,11 +54,5 @@ jobs:
         if: steps.pssa-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
-      - name: Analyze scripts/install.ps1
-        shell: pwsh
-        run: |
-          $results = Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1
-          if ($results) {
-            $results | Format-Table -AutoSize
-            exit 1
-          }
+      - name: Run verify
+        run: python scripts/verify

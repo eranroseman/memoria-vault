@@ -14,9 +14,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 CSPELL_JSON = ROOT / "cspell.json"
-CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
-CONTRACT = ROOT / ".github/ruleset-contract.yaml"
 
 
 def _cspell_hook() -> dict:
@@ -34,13 +32,6 @@ def test_cspell_json_owns_the_scope():
     assert "design-history/**" not in config["ignorePaths"]
 
 
-def test_workflow_defers_to_cspell_json():
-    run = CSPELL_WORKFLOW.read_text(encoding="utf-8")
-    assert "git ls-files" not in run, "scope must not be re-derived from a file list"
-    assert "docs/|" not in run, "scope must not be re-split across roots"
-    assert "pre-commit run cspell --all-files" in run
-
-
 def test_precommit_hook_triggers_on_any_markdown():
     hook = _cspell_hook()
     assert hook["files"] == r"\.md$", (
@@ -50,9 +41,3 @@ def test_precommit_hook_triggers_on_any_markdown():
     assert hook["entry"] == "cspell lint --no-progress --no-must-find-files"
     assert hook["additional_dependencies"] == ["cspell@10.0.1"]
     assert "npx" not in hook["entry"]
-
-
-def test_required_check_is_scope_agnostic():
-    contract = yaml.safe_load(CONTRACT.read_text(encoding="utf-8"))
-    assert "cspell" in contract["required_checks"]
-    assert contract["workflow_jobs"].get("cspell") == ".github/workflows/cspell.yml"

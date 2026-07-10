@@ -1,4 +1,4 @@
-# Python bytecode (docs-doctor + profile scripts)
+# Python bytecode, caches, and editable-install metadata
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -7,6 +7,7 @@ __pycache__/
 .tox/
 .nox/
 .venv/
+*.egg-info/
 
 # Claude Code local worktrees (per-branch checkouts; never part of the repo)
 .claude/worktrees/

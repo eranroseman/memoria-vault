@@ -50,7 +50,6 @@ testpaths = ["tests"]
 pythonpath = [
   "src",
   "scripts",
-  ".github/scripts",
 ]
 markers = [
   "static: formatting, lint, schema, docs refs, spell, design history, workflow safety",
