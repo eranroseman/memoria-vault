@@ -83,6 +83,40 @@ untested by construction.
     `structural_impact` (deepest argument code, unwired, depends on fields
     nothing writes), eval dispatch stub, hash-fake vector embeddings.
 
+## Addendum (same day): re-judgment under the owner's two design axioms
+
+Axioms supplied after the audit: (1) no node is judged true/false — the
+system asserts only graph-integrity effects; (2) origin of a change
+(human/machine/LLM) does not affect its consequences — origin is
+provenance, not authorization.
+
+- Finding 1 (reject==accept at export gate) **flips to design-consistent**:
+  the gate requires a recorded disposition, not a favorable one. Residual:
+  the silently stripped marker (integrity event without a trace) and
+  Tutorial 05's wording.
+- Finding 6 (no actor authorization on judgment operations) **flips to
+  design-consistent**: identity-gating is what axiom 2 rejects; the read
+  barrier's origin-blind demote-and-rescan is the axiom's cleanest
+  implementation.
+- Finding 5 (journals hardcoding `actor: "pi"`) is **elevated**: under
+  axiom 2, provenance is origin's entire job and the sole mechanism behind
+  "one human owns judgment" (by review, not permission). Falsified
+  provenance is this design's worst defect class. Load-bearing fix.
+- Finding 7 (capture minting `checked`) **downgrades** to an intentional
+  path asymmetry worth documenting (axiom 1: checked = checks passed; for
+  locally-supplied full text the artifact itself is the evidence).
+- The "co-PI that can only count edges" criticism **inverts**: semantic
+  truth-grading of claims would violate axiom 1. Edge/contradiction/
+  refutation structure is the permitted assertion surface. The
+  axiom-compatible co-PI roadmap is: questioning, initiative, conversation,
+  and stronger tension *detection* — not truth scoring.
+- One tension recorded for the owner: cascade rollback and the write gates
+  do let origin affect consequences (quarantine vs "ask"; adapter blocks vs
+  direct PI edits). Reconciling reading: axiom 2 scopes to epistemic
+  consequences; remediation authority respects artifact ownership. Confirm
+  or amend.
+- Findings 2, 3, 4, 8, 9, 10 are unaffected and stand.
+
 ## Bottom line
 
 Memoria lives up to **opinionated, phase-gated, personal** almost fully —

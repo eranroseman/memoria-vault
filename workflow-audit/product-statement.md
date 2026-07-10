@@ -53,3 +53,16 @@ and expands them with agentic AI capabilities:
   bookkeeping aspects of the system.
 
 The end result should feel like a co-PI, not a knowledge base.
+
+## Design axioms (added 2026-07-09, same review)
+
+1. **No single node is judged true or false.** The system only asserts how
+   a change affects knowledge-graph integrity. "Checked" means integrity
+   checks passed, never a truth verdict; dispositions record judgment
+   events, they do not adjudicate content.
+2. **The origin of a change — human, machine, LLM — does not affect its
+   consequences.** Origin is provenance, not authorization; the same edit
+   produces the same integrity effects whoever made it. (Open scoping
+   question, owner to confirm: whether remediation authority — e.g.
+   cascade rollback quarantining machine-derived content while routing
+   PI-authored content to "ask" — sits inside or outside this axiom.)
