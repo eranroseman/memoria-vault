@@ -120,9 +120,9 @@ install is one step; and a SessionStart hook that fires **only when the
 workspace contains `.memoria/`**, injecting a few lines: this is a Memoria
 vault, and **the entire vault is the knowledge bundle** — every file
 carries epistemic status, so answer content questions through the MCP
-tools. Three classes: concept files (notes/, hubs/, projects/, digests/,
-fulltexts/) carry verdicts the engine filters — raw reads see unchecked
-and quarantined content; inbox/ items are machine proposals awaiting PI
+tools. Three classes: concept files (notes/, hubs/, projects/, digests/)
+carry verdicts the engine filters — raw reads see unchecked and
+quarantined content; inbox/ items are machine proposals awaiting PI
 disposition — by nature undispositioned, never citable as established
 knowledge (a contradiction card or discovery summary *looks* like
 knowledge; treating it as such launders a proposal into a conclusion);
@@ -172,23 +172,22 @@ failures print `ok` — a bad pairing with a 1000-item import). This
 onboarding **is** roadmap item 19: the staged import doubles as the
 product's first real acceptance test.
 
-**Fulltext storage (decided 2026-07-09): DB/blob as truth, files as pulled
-projections.** Fulltext is catalog-space content, not knowledge-bundle
-content — machine-generated, never legitimately edited, canonical in the
-blob store + catalog row. `fulltexts/<id>.md` demotes from
-always-materialized bundle root to on-demand projection, materialized when
-a source is pulled into active reading (the interview/digest moment) —
-files-first doctrine correctly scoped to PI-authored knowledge; axiom-1
-inspectability preserved because the pulled source is a file in front of
-you. Consequences: the 1000-paper import doesn't melt Obsidian's cache or
-bloat git (git holds knowledge, not corpora — the blobs' durability story
-is backup, not tracking); the bundle boundary confirms it (full texts are
-external material in engine-space; `bibliography.bib` with
-`memoria_work_id` is the bundle-resident catalog projection — see
-`okf-note.md`); indexing must decouple from the markdown
-projection (read passages from the store directly); verify quote anchors
-reference blob/content-hash space, not file offsets, so they survive
-dematerialization.
+**Fulltext storage (decided 2026-07-09, v2 — no fulltext files at all):**
+`fulltexts/` retires as a bundle root. Full text is external material, not
+the user's knowledge — it lives in engine-space (immutable blob + catalog
+row), and the bundle carries only the user's engagement (digests with
+sealed interviews, claim notes) plus the `bibliography.bib` pointer. Every
+consumer is served without files: the machine reads blobs and the passage
+index; the **human reads the PDF** (the actual artifact — figures,
+equations, layout; a plugin/skill "open source" affordance resolves
+work_id → PDF viewer); quote-in-context is a passage the engine serves on
+demand through the agent or plugin. Axiom-1 inspectability *improves*:
+grounds are the captured artifact, not a lossy markdown extraction.
+Consequences: the 1000-paper import adds zero bundle files and zero git
+weight; indexing decouples from the markdown projection (mandatory, not
+optional); quote anchors reference blob/content-hash space; the
+`fulltext` concept type and bundle root retire via the item-6 migration
+batch (see roadmap).
 
 ## What's real when
 

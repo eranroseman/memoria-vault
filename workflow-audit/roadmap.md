@@ -152,10 +152,13 @@ superpowers-spine acceptance run (alignment-plan step 21).
       graph-owner module (item 8) for per-file edge upserts;
       `.memoria/`-internal ignore rules + debounce/coalescing for write
       storms; index decoupled from the `fulltexts/*.md` projection —
-      passages read from the blob store directly, since fulltext files
-      become pulled projections (decision in `user-workflow.md`
-      onboarding section; verify quote anchors reference content-hash
-      space).
+      passages read from the blob store directly, since **`fulltexts/`
+      retires as a bundle root entirely** (decision v2 in
+      `user-workflow.md`: external material doesn't belong in the
+      knowledge bundle; the PDF is the human reading surface, the engine
+      serves passages on demand for quote-in-context). The
+      folders.yaml/CONCEPT_HOMES/type-roster change rides item 6's
+      migration batch; quote anchors reference content-hash space.
     - **Surface-contract gaps** (verified against the 17-action registry,
       2026-07-09): agent integration is ~90% served today
       (`operation.run` + `requests.get` covers the whole co-PI loop);

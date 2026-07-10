@@ -21,9 +21,7 @@ portable essence into the bundle as a standard .bib file, each entry
 carrying `memoria_work_id` as the join key back to engine-space. Any OKF
 consumer — or Zotero, LaTeX, a bare human — resolves the bundle's
 citations with no Memoria present; Memoria rejoins bundle and catalog via
-the work_id. (This supersedes the `references/`-as-concepts suggestion
-below: the bib file is the chosen catalog projection — more compact, more
-standard.) The knowledge/sources line follows: full texts are external
+the work_id. The knowledge/sources line follows: full texts are external
 material, engine-space blobs; the user's *engagement* with them (digests
 with sealed interviews, claim notes, links) is bundle knowledge. Bonus:
 the distributable bundle carries no third-party full texts — thinking and
@@ -84,16 +82,10 @@ is Memoria's business (SQLite verdicts, blob store, typed edges); the
    warrant-as-concept exports as a first-class document any OKF consumer
    reads; a warrant-as-edge-property evaporates at the boundary. Added to
    the open question in `product-statement.md`.
-2. **The catalog bridge, resolved by the bib projection.** §8's
-   `references/` subdirectory was the first-pass suggestion; superseded by
-   the owner's actual mechanism (see boundary section above):
-   `bibliography.bib` with `memoria_work_id` is the catalog's
-   bundle-resident projection, and the `catalog/sources/<work_id>`
-   namespace remains the internal engine-space bridge.
-3. **Broken links are gaps.** §5.3 tolerates broken links as
+2. **Broken links are gaps.** §5.3 tolerates broken links as
    "not-yet-written knowledge"; `analyze_gaps` is the consumer that
    mechanizes what OKF permits.
-4. **Identity tension, reconciled.** OKF concept ID *is* the path (§2);
+3. **Identity tension, reconciled.** OKF concept ID *is* the path (§2);
    the architecture review flagged path-as-identity as the years-scale
    provenance risk. Reconciliation: **ULID is the internal identity; the
    path is the OKF-facing address**; rename tracking maps between them.
