@@ -107,6 +107,8 @@ Verify: that PR merges under the new single check.
    - The two justified parity asymmetries (step 18), with the Codex
      security line naming its own trigger ("installer or runtime-policy
      changes") since the pr-policy sensitive-path list is deleted.
+   - The layer-disagreement heuristic (from `insights.md`): **when layers
+     disagree, trust order is schema → tests → code → docs.**
    Plus five lines that are the conscious exception to "facts only" — each
    preserves a function with no other home in the end state:
    - Code shape (4 lines): smallest change that solves the problem; no

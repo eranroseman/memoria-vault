@@ -76,6 +76,14 @@ is replaced by grounding-assessment — and grounding is a property of the
 artifact, inspectable and author-independent, which is why axiom 2 follows
 from axiom 1.
 
+**The master pattern** (named 2026-07-09, after it resolved every design
+fork of the day): *the fluent, judging half of any capability stays with
+the human — or the human's chosen agent; the structural, inspectable half
+goes into the engine.* Truth/grounding, judgment/method, brain/protocol,
+agent-loop/fenced-operation, knowledge/trust-state, bundle/engine are all
+this one cut. A fork that resists resolution has usually not been cut
+along this line yet.
+
 1. **No single node is judged true or false.** The system only asserts how
    a change affects knowledge-graph integrity. "Checked" means integrity
    checks passed, never a truth verdict; dispositions record judgment
