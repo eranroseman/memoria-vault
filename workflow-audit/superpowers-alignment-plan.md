@@ -109,6 +109,9 @@ Verify: that PR merges under the new single check.
      changes") since the pr-policy sensitive-path list is deleted.
    - The layer-disagreement heuristic (from `insights.md`): **when layers
      disagree, trust order is schema → tests → code → docs.**
+   - `docs/` follows Diátaxis; repo-specific conventions live in
+     `docs/README.md` (one pointer line; the skill and the note carry the
+     content — see steps 8 and 16).
    - **The past is a teacher, not a prison.** Design-history is
      historical reference only — never justification, never evidence;
      arguments stand on current facts and merit (owner ruling).
@@ -182,8 +185,13 @@ Verify: that PR merges under the new single check.
    excludes (otherwise searches double-hit sibling worktrees and the watcher
    churns on test-vault runs). Gitignore `sandbox/` and
    `.worktrees/`. Trim CONTRIBUTING.md references to retired machinery.
-   `docs/` and `design-history/` content untouched (dated history cannot
-   drift; only its enforcement machinery leaves).
+   Write the `docs/README.md` conventions note — the repo-specific docs
+   rules that survive the AGENTS.md teardown (Pages-route vs blob-URL link
+   forms, no relative links into `src/`, section-README indexing,
+   bibliography anchors, American English), companion to step 16's
+   Diátaxis skill.
+   `docs/` and `design-history/` content otherwise untouched (dated
+   history cannot drift; only its enforcement machinery leaves).
 9. **Migrate the scratch branch's keepers into the repo** (same PR):
    copy via `git show scratch:<path>` — accepted-and-implemented decisions
    from `releases/<version>/decisions.md` fold into `design-history/` (one
@@ -278,7 +286,27 @@ passes from the new root.
     to `~/.claude/skills/<name>/SKILL.md`, and dedupe against the
     environment-provided `obsidian:*` plugin skills so both don't trigger
     (the properly-nested copies also serve Codex, which has no environment
-    plugin).
+    plugin). **Add a Diátaxis docs skill** (invoke-only; added 2026-07-10):
+    the teardown orphans the docs-routing knowledge — AGENTS.md's routing
+    table dies with the step-7 rewrite and docs_doctor with step 6 — while
+    `docs/` remains a published product surface that step 9 immediately
+    writes into (the product-statement explanation page). Admission-rule
+    case: misrouted/mixed-purpose pages and stale docs are an occurring
+    failure class (today's record sweeps kept finding them), and post-
+    teardown an agent authoring a docs page would have zero structure
+    guidance. Install an existing community skill rather than authoring —
+    candidates: pfeff/claude-skills `diataxis` (scaffold/write/audit
+    commands), jrjsmrtn/diataxis-skills, sammcj's
+    writing-documentation-with-diataxis; choose at execution for (a) plain
+    SKILL.md form that installs under the flattened skills dir like
+    obsidian-skills, (b) an audit mode (fits the audit-lens pattern).
+    Generic Diátaxis craft only — the repo-specific conventions
+    (Pages-route vs blob-URL link forms, never relative-linking into
+    `src/`, section-README indexing, bibliography anchors, American
+    English) are facts about this repo and move to a short
+    `docs/README.md` conventions note (written in step 8's sweep), living
+    next to the pages they govern. Invoke-only, so no pin per step 13's
+    policy; reaches Codex via the step-18 symlink like every other skill.
 17. `~/.claude/CLAUDE.md`: delete the precedence table and the six behavioral
     sections — superpowers hosts on AGENTS.md. Delete the PreToolUse
     write-perimeter hook entirely: half enforces the retired
