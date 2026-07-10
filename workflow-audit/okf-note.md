@@ -84,10 +84,12 @@ is Memoria's business (SQLite verdicts, blob store, typed edges); the
    warrant-as-concept exports as a first-class document any OKF consumer
    reads; a warrant-as-edge-property evaporates at the boundary. Added to
    the open question in `product-statement.md`.
-2. **The catalog bridge gets a sanctioned address.** §8's `references/`
-   subdirectory ("external material as first-class OKF concepts") is the
-   `catalog/sources/<work_id>` namespace's published convention: on
-   export, catalog works materialize as `references/` concepts.
+2. **The catalog bridge, resolved by the bib projection.** §8's
+   `references/` subdirectory was the first-pass suggestion; superseded by
+   the owner's actual mechanism (see boundary section above):
+   `bibliography.bib` with `memoria_work_id` is the catalog's
+   bundle-resident projection, and the `catalog/sources/<work_id>`
+   namespace remains the internal engine-space bridge.
 3. **Broken links are gaps.** §5.3 tolerates broken links as
    "not-yet-written knowledge"; `analyze_gaps` is the consumer that
    mechanizes what OKF permits.

@@ -34,8 +34,12 @@ propagation and a self-calibrating instrument.
    appends.
 3. **Grounds durability.** `.memoria/blobs/` — captured source content,
    the evidential grounds of the whole Toulmin stack — is gitignored as
-   "regenerable runtime data" and is not regenerable. Track it, or ship a
-   backup/export story. Cheap fix; data-loss class.
+   "regenerable runtime data" and is not regenerable. Resolved by the
+   bundle-boundary decision (`okf-note.md`): **backup as data, not git
+   tracking** — full texts are external material in engine-space, git
+   holds knowledge not corpora, and the bundle stays self-contained via
+   `bibliography.bib`. Ship the backup/restore story. Cheap fix;
+   data-loss class.
 4. **Surface honesty** — `_emit` stops printing `ok` on failed operations
    and prints created paths; the catalog becomes enumerable (`list --type
    work` gets a real SQLite branch, or a `work list` command).
@@ -147,7 +151,11 @@ superpowers-spine acceptance run (alignment-plan step 21).
       delete-and-reinsert refresh that also wipes `concept_edges`); the
       graph-owner module (item 8) for per-file edge upserts;
       `.memoria/`-internal ignore rules + debounce/coalescing for write
-      storms.
+      storms; index decoupled from the `fulltexts/*.md` projection —
+      passages read from the blob store directly, since fulltext files
+      become pulled projections (decision in `user-workflow.md`
+      onboarding section; verify quote anchors reference content-hash
+      space).
     - **Surface-contract gaps** (verified against the 17-action registry,
       2026-07-09): agent integration is ~90% served today
       (`operation.run` + `requests.get` covers the whole co-PI loop);

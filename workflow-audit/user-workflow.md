@@ -47,12 +47,17 @@ revalidated.
 7. **Output.** Slice → outline (reordered by hand — it is the PI's) →
    compose → verify → evidence dispositions → export refuses until every
    finding is dispositioned.
-8. **Close the circle.** The deliverable is captured back into the catalog
-   as a work: its claims join the graph, future gap analyses see the PI's
-   own published positions, and the same integrity machinery now applies
-   to them — fama-exposure will flag reuse of one's own superseded claim.
-   Project N+1's step 2 is richer because of project N's step 8. This is
-   "compounds over months and years" as a mechanism, not a slogan.
+8. **Close the circle — and close the project.** The deliverable is
+   captured back into the catalog as a work: its claims join the graph,
+   future gap analyses see the PI's own published positions, and the same
+   integrity machinery now applies to them — fama-exposure will flag reuse
+   of one's own superseded claim. Then the project bundle closes per the
+   ZK project-notes concept: harvest durable claims into the vault
+   (promote-draft-passage), verify nothing permanent links in
+   (detachability detector), archive or delete the working bundle — the
+   vault keeps the claims, the catalog keeps the work. Project N+1's
+   step 2 is richer because of project N's step 8. This is "compounds over
+   months and years" as a mechanism, not a slogan.
 
 ## The daily rhythm (inside the loop)
 

@@ -46,7 +46,8 @@ exactly two such places, both already built.
    compilation or red-team-argument; `prompt_version` bump = experiment).
    Metric: `eval_score` support_rate / recall@k. Directly raises co-PI
    quality per experiment.
-3. **Nightly cadence — sibling, not autoresearch.** Fixed-budget overnight
+3. **Nightly cadence — sibling, not autoresearch** (now Tier C of the
+   reactive substrate, roadmap item 12). Fixed-budget overnight
    runs of the proposal backlog (gap analysis, surface-tensions,
    undigested-source digestion) with a morning log solve the "nothing
    initiates" finding — but the disposer is the PI at the inbox, not a

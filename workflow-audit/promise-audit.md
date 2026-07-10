@@ -126,6 +126,20 @@ provenance, not authorization.
   only source-level falls propagate (retraction sweep, fama-exposure).
 - Findings 2, 3, 4, 8, 9, 10 are unaffected and stand.
 
+Later same-day corrections (recorded here so the scorecard reads true):
+- **"The brain is bring-your-own" is overdrawn** (co-PI row and signals):
+  Memoria owns LLM calls as *fenced one-shot operations* (pydantic-ai
+  digest compilation with grounding validation, tier-2 judge, the prompt
+  operations — sealed inputs, manifest fencing, provenance-hashed); what
+  it deliberately lacks is an *agent loop* (multi-turn, tool-using,
+  initiating). The default install runs fixtures until providers are
+  configured — that part stands. See roadmap Tier 3 rationale.
+- **"Nested Knowledge Bundle: partial — no general nesting" is re-read**:
+  per the owner (see `okf-note.md`), each project IS its own nested,
+  detachable OKF bundle — the hardcoded `projects/<name>/` shape is the
+  mechanism, opinionated rather than missing; the vault must live without
+  its project bundles (one-way dependency rule added to the roadmap).
+
 ## Bottom line
 
 Memoria lives up to **opinionated, phase-gated, personal** almost fully —
