@@ -300,11 +300,26 @@ with the agents the user already runs.
 18. **Warrant inventory as explicit methodology** (free once Tier 1
     lands): "show me everything resting on inference-type X, because I no
     longer accept it" — a years-horizon capability no notes system offers.
-19. **Live in it.** Seed the vault with the real research corpus (the
-    relocated `papers/` library is the dogfood corpus). "Compounds over
-    months and years" can only be demonstrated; the sandbox evidence says
-    the write loop has never run on real work. Cheapest item; the only one
-    that proves the promise.
+19. **Live in it — including Memoria as a project inside Memoria.** Seed
+    the vault with the real research corpus (the relocated `papers/`
+    library) **and open "Memoria" as a project in the vault**: the repo
+    owns code and shipped artifacts; the vault owns the thinking that
+    produces decisions. The mapping is a convention, not code: design
+    decisions are claim notes (grounds = evidence links, warrant = the
+    licensing design principle, qualifier = scope, rebuttals = the
+    rejected alternatives); design principles (axioms, master pattern)
+    are the shared warrant inventory ("show me everything resting on
+    axiom 2"); a reversed decision is the central operation run on your
+    own architecture; design-history chapters and docs are project
+    exports, captured back on shipping. Prerequisites: Tier 0 plus two
+    item-20 source types (article/URL — exists; repo-at-pinned-commit —
+    missing; pin self-captures to release tags or drift detection fires
+    every commit). Needs nothing from Tier 1 — starts right after Tier 0.
+    This is the strongest form of dogfooding: dev knowledge work is
+    daily, so the vault gets lived in as a byproduct of building it, and
+    the next dossier is claims and drafts instead of a thirteenth
+    markdown file. "Compounds over months and years" can only be
+    demonstrated; this is the item that proves the promise.
 
 ## Sequencing
 

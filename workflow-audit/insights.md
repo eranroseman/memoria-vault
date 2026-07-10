@@ -14,8 +14,11 @@ analysis). Patterns across the day, not facts inside it.
    bundle boundary, and placement doctrine did not exist in writing this
    morning; all came out of interrogation. Strongest empirical evidence
    yet for the co-PI pattern — the product proved its thesis before it is
-   built. Open thread: should the dossier eventually live *in* a Memoria
-   vault (the dev process dogfooding the product's memory model)?
+   built. Open thread — closed same day into roadmap item 19: Memoria
+   lives as a project inside Memoria (decisions as claims, principles as
+   warrants, reversals as blast radius, design-history as exports);
+   prerequisites are Tier 0 + two item-20 source types, nothing from
+   Tier 1.
 2. **One decomposition line resolved every hard fork.** Truth/grounding;
    judgment/method; brain/protocol; agent-loop/fenced-operation;
    knowledge/trust-state; authored/judged/derived; bundle/engine. One
