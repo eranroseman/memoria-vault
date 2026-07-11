@@ -7,7 +7,9 @@ nav_order: 1
 
 # Design principles
 
-Ten principles that settle ambiguous decisions. When a tool choice, workflow step, or architectural question is unclear, these are the tiebreakers.
+Twelve principles that settle ambiguous decisions. When a tool choice, workflow step, or architectural question is unclear, these are the tiebreakers.
+
+Underneath them runs one master pattern: **the fluent, judging half of any capability stays with the human; the structural, inspectable half goes into the engine.** Truth/grounding, judgment/method, agent-loop/fenced-operation, and knowledge/trust-state are all this one cut — a design fork that resists resolution usually has not been cut along this line yet.
 
 ---
 
@@ -70,6 +72,14 @@ Every tool in the stack addresses a specific friction point. Tools that don't ad
 Research, writing, and coding tools may add ergonomic adapters, but Memoria's
 required workflow lives in the CLI/engine. Optional editor presence is useful
 only when it calls the same request lifecycle, checks, and write boundary.
+
+**11. Grounding, not truth.**
+
+Memoria never reads a claim and asks whether it is true; it asks how the claim is grounded in evidence. No single node is judged true or false — the system asserts only how a change affects knowledge-graph integrity. "Checked" means required checks and warrants passed, never a truth verdict; dispositions record judgment events, they do not adjudicate content.
+
+**12. Origin-blind consequences.**
+
+The origin of a change — human, machine, or LLM — does not affect its *epistemic* consequences. When a claim is found wrong, the grounding consequences propagate across the graph identically whoever authored it; flags, demotions, and blast radius are origin-blind. Write and revert *authority*, by contrast, stays origin-gated: human-authored spans are never auto-destroyed, machine material auto-reverts. Origin is provenance, not authorization.
 
 ---
 
