@@ -161,6 +161,7 @@ pyproject
 pytest
 pythonpath
 pyzotero
+qualifier
 quickadd
 qwen
 recalibrated
@@ -290,6 +291,7 @@ pubmed
 rankable
 razlogova
 rebuildable
+rebuttal
 recordability
 regenerable
 rego
