@@ -40,6 +40,19 @@ anything durable must become checked workspace state, request/journal evidence,
 or a project record. Operation runs ground on request input refs and checked
 workspace content, not remembered profile context.
 
+## The placement rule
+
+Every datum has one home, chosen by who authored it: **authored** content
+(notes, frontmatter, steering) lives in files — part of the bundle, portable;
+**judged** state (verdicts, dispositions, provenance) lives in the database —
+engine-space, re-derivable trust; **derived** values (counts, health,
+saturation) are computed on read or projected one-way, never stored as if
+authored. Files may never self-assert judgment (no verdict fields in
+frontmatter), and any "both places" data must be a declared one-direction
+projection — `bibliography.bib` from the catalog, `concept_edges` from
+frontmatter links **(planned: G2, alpha.22/B1)** — so drift is detectable and
+one side is always authority.
+
 ---
 
 ## Why each substrate has its scope

@@ -26,6 +26,17 @@ and [Document types](../../reference/data-model/document-types.md). This page ow
 rationale: type homes give the policy gate stable write boundaries, while links
 and state carry the facts that change.
 
+## Three spaces, one bundle
+
+> **Planned (beta.1 — K1/W2):** Detachability enforcement and the complete project-close harvest/archive lifecycle are target-state.
+
+Catalog (works and sources), knowledge (notes, hubs, digests), and projects
+are regions of one bundle, not separate stores. Each `projects/<slug>/` is a
+nested, detachable bundle: projects reference vault knowledge freely, but
+permanent knowledge never links into `projects/` — the one-way rule that
+keeps a project removable without breaking the vault. Project close harvests
+durable claims into the vault before the working bundle archives.
+
 ## Write Boundary
 
 Machine writes, promotions, generated projections, journal rows, and
