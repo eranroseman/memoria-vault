@@ -6,17 +6,29 @@ product-integrity checks, the test suite, an offline end-to-end smoke, and
 syntax checks. Runs the roster in order, prints each step, skips (does not
 fail) a check whose local tool is absent (e.g. PowerShell), and exits nonzero
 on the first hard failure.
+
+Docs-only narrowing (CI only): when `VERIFY_DOCS_ONLY=1`, the roster drops the
+gates a docs-only diff (`*.md` / `design-history/`) provably cannot affect —
+the unit/contract tests, the e2e smoke, `compileall`, `bash -n`, and the
+JSON/PowerShell syntax checks — and narrows pytest to the `static` marker
+(schema, docs-refs, design-history, spell). CI sets this only for PRs whose
+whole diff is documentation; local runs and the post-merge `main` run always
+execute the full roster.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# CI sets this to "1" only for provably docs-only PRs (see the module docstring).
+DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
 
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
 # this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
@@ -71,6 +83,25 @@ PSSA_COMMAND = (
 )
 
 
+# Gates a docs-only diff cannot affect: they exercise code, not documentation.
+_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n")
+
+
+def _gates_for_run(docs_only: bool) -> list[list[str]]:
+    """The full roster, or its docs-relevant subset when docs_only is set."""
+    if not docs_only:
+        return GATES
+    reduced: list[list[str]] = []
+    for command in GATES:
+        joined = " ".join(command)
+        if any(marker in joined for marker in _DOCS_SKIP):
+            continue
+        if "pytest" in joined:
+            command = ["static" if arg == "static or unit or contract" else arg for arg in command]
+        reduced.append(command)
+    return reduced
+
+
 def run(command: list[str]) -> int:
     print(f"== {' '.join(command)}")
     return subprocess.run(command, cwd=ROOT, check=False).returncode
@@ -113,11 +144,15 @@ def check_powershell() -> int:
 
 
 def main() -> int:
-    for command in GATES:
+    if DOCS_ONLY:
+        print("== verify: docs-only scope — lint, product gates, and static tests only")
+    for command in _gates_for_run(DOCS_ONLY):
         if run(command) != 0:
             print("verify: FAILED", file=sys.stderr)
             return 1
-    for step in (check_json, check_powershell):
+    # The JSON and PowerShell syntax checks test code/config, not documentation.
+    extra_steps = () if DOCS_ONLY else (check_json, check_powershell)
+    for step in extra_steps:
         if step() != 0:
             print("verify: FAILED", file=sys.stderr)
             return 1
