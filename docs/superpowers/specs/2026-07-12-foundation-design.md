@@ -44,8 +44,11 @@ of ~40 operations read the envelope actor — the rest hardcode `"pi"`.
   `envelope.get("actor") or "pi"` fallbacks in `worker.py` (316/352/583) — a
   missing envelope actor **raises**. `worker.py:141/1246` (`"operation"`) stay:
   they are genuinely engine-initiated.
-- **Reject-marker trace:** rejecting a finding that strips a `%%ev%%` marker
-  emits an integrity journal event recording the stripped marker id + block.
+- **Reject-marker trace — N/A (verified 2026-07-12):** reject dispositions
+  never strip the durable inline `%%ev%%` marker. Export rendering strips
+  markers only from its derived output copy, so no `stripped_*` reject event
+  would be truthful. Adding durable-marker removal would change disposition
+  semantics and requires a separate cross-store design.
 - **Doc:** memory-model page states that `observe_pi_edit` attributing
   unmediated edits to `'pi'` is intentional (unmediated = the human's editor).
 - **Out of scope:** the `actor == "pi"` branches in
@@ -54,8 +57,9 @@ of ~40 operations read the envelope actor — the rest hardcode `"pi"`.
   makes the value they read faithful.
 
 Tests: an agent-enveloped operation lands `actor='agent'` in both tables
-end-to-end; enqueue without actor raises; reject leaves the journal trace;
-CHECK rejects out-of-vocabulary values.
+end-to-end; enqueue without actor raises; CHECK rejects out-of-vocabulary
+values. The reject-marker trace test is N/A: reject never strips the durable
+marker, and export strips only its output copy.
 
 ## F2 · Journal trust — one authoritative trust-read path (#1362)
 

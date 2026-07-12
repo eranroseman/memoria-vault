@@ -315,44 +315,16 @@ git commit -m "fix(provenance): thread envelope actor through worker; retire act
 
 ### Task 4: Reject-marker trace
 
-**Files:**
-- Modify: `src/memoria_vault/runtime/knowledge.py` (the `resolve-evidence-review` writer — the journal event at knowledge.py:2153; read the enclosing function fully first)
-- Test: `tests/test_actor_threading.py` (extend) or the existing evidence-review test file if one covers this flow (`rg -ln "resolve-evidence-review" tests/`)
+**Disposition — N/A (verified 2026-07-12):** `resolve_evidence_review`
+has been append-only since commit `0031586b`. A disposition records journal
+provenance but does not edit the durable inline `%%ev%%` marker, as documented
+in `docs/reference/control-and-policy/evidence-sets.md`. Export rendering strips
+markers only from its derived output copy.
 
-**Interfaces:**
-- Consumes: the existing `resolve-evidence-review` journal event shape.
-- Produces: on `decision == "reject"` where the draft's `%%ev%%` marker is removed, the journal event gains two fields: `"stripped_marker": "<full marker text>"` and `"stripped_block_ref": "<block anchor>"`.
-
-- [ ] **Step 1: Read the enclosing function** at knowledge.py:2153 end-to-end; identify where the marker text leaves the draft on reject (if the marker is *not* stripped there, find the strip site via `rg -n "_EV_MARKER_RE|serialize_evidence_marker" src/memoria_vault/runtime/knowledge.py` and confirm against a reject flow test).
-
-- [ ] **Step 2: Write the failing test** — drive a reject through the operation (reuse the fixture pattern of the existing evidence-review tests found in Step 1's `rg`) and assert:
-
-```python
-def test_reject_records_stripped_marker(tmp_path, capsys):
-    # ... existing reject-flow fixture ...
-    with state.connect(workspace) as conn:
-        row = conn.execute(
-            "SELECT payload_json FROM event_log"
-            " WHERE json_extract(payload_json,'$.operation')='resolve-evidence-review'"
-            " AND json_extract(payload_json,'$.decision')='reject'"
-            " ORDER BY event_id DESC LIMIT 1"
-        ).fetchone()
-    event = json.loads(row["payload_json"])
-    assert event["stripped_marker"].startswith("%%ev:")
-    assert event["stripped_block_ref"]
-```
-
-- [ ] **Step 3: Run to verify failure** → KeyError `stripped_marker`.
-
-- [ ] **Step 4: Implement** — capture the marker text and block ref *before* removal in the reject branch; add both fields to the journal event dict. Minimal change; do not alter the disposition logic.
-
-- [ ] **Step 5: Run tests + commit**
-
-```bash
-python -m pytest tests/ -x -q
-git add src/memoria_vault/runtime/knowledge.py tests/
-git commit -m "fix(provenance): record stripped %%ev%% marker on reject disposition"
-```
+The proposed runtime and test steps are superseded and were not executed. A
+`stripped_*` reject event would be false because reject strips nothing. Adding
+durable-marker removal would change disposition semantics and require a
+separately designed cross-store saga to avoid false or untraced mutation.
 
 ### Task 5: Memory-model doc note + PR-F1
 
@@ -369,7 +341,7 @@ git commit -m "fix(provenance): record stripped %%ev%% marker on reject disposit
 python scripts/verify
 git add docs/explanation/architecture/memory-model.md
 git commit -m "docs: state observe_pi_edit's intentional pi attribution"
-gh pr create --title "fix(provenance): faithful actor vocabulary, threading, and reject trace (F1)" --body "Closes #1361. Schema v9 (one actor CHECK on both tables, no default), envelope actor required and threaded through the worker, actor:'pi' hardcodes retired, reject dispositions record the stripped %%ev%% marker. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
+gh pr create --title "fix(provenance): faithful actor vocabulary and threading (F1)" --body "Closes #1361. Schema v9 provides one actor CHECK on both tables with no default; the envelope actor is required and threaded through the worker; actor:'pi' hardcodes are retired. Task 4 is N/A because reject dispositions never strip durable %%ev%% markers; export strips markers only from its output copy. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
 ```
 
 ---
@@ -1177,6 +1149,6 @@ gh pr create --title "fix(cli+docs): honest surfaces (F4)" --body "Closes #1364,
 
 ## Self-review notes
 
-- Spec coverage: F1 → Tasks 1–5; F2 → Tasks 6–8; F3 → Tasks 9–11; F4 → Tasks 12–16; #1351 → Task 15. The spec's "out of scope" items (integrity branch semantics, edge module) appear in no task — correct.
+- Spec coverage: F1 → Tasks 1–3 and 5; Task 4 is N/A because reject never strips durable markers. F2 → Tasks 6–8; F3 → Tasks 9–11; F4 → Tasks 12–16; #1351 → Task 15. The spec's "out of scope" items (integrity branch semantics, edge module) appear in no task — correct.
 - Two tests (Tasks 14/16 Step 2, Task 15 Step 2) carry investigate-then-fill steps because they must reuse existing fixture patterns; each names the exact file to copy the pattern from and forbids leaving `...` in the final test.
 - Function-name confirmations are embedded where the plan touches code not fully read (`catalog_sources` row keys, capture helper name, `_journal_hash` arg order) — each with the exact `rg`/read to run first.
