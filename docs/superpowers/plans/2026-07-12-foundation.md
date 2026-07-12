@@ -341,7 +341,7 @@ separately designed cross-store saga to avoid false or untraced mutation.
 python scripts/verify
 git add docs/explanation/architecture/memory-model.md
 git commit -m "docs: state observe_pi_edit's intentional pi attribution"
-gh pr create --title "fix(provenance): faithful actor vocabulary and threading (F1)" --body "Closes #1361. Schema v9 provides one actor CHECK on both tables with no default; the envelope actor is required and threaded through the worker; actor:'pi' hardcodes are retired. Task 4 is N/A because reject dispositions never strip durable %%ev%% markers; export strips markers only from its output copy. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
+gh pr create --title "fix(provenance): faithful actor vocabulary and threading (F1)" --body "Closes #1361. Schema v9 provides one actor CHECK on both tables with no default; the envelope actor is required and threaded through the worker; the identified mediated actor:'pi' hardcodes are retired. Task 4 is N/A because reject dispositions never strip durable %%ev%% markers; export strips markers only from its output copy. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
 ```
 
 ---
