@@ -15,3 +15,4 @@ permalink: /reference/data-model/
 | [Vocabulary](vocabulary.md) |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) |
 | [Glossary](glossary.md) |
+| [OKF compliance contract](okf-compliance.md) |
