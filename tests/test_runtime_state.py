@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
@@ -446,3 +447,37 @@ def test_sqlite_journal_is_append_only_and_hash_chained(tmp_path: Path) -> None:
     assert first["prev_hash"] == "GENESIS"
     assert first["row_hash"]
     assert "journal is append-only" in blocked
+
+
+def test_private_journal_storage_requires_matching_payload_machine(tmp_path: Path) -> None:
+    with pytest.raises(AssertionError, match="machine"):
+        state._append_journal_row(
+            tmp_path,
+            {"event": "manual", "timestamp": "2026-07-12T00:00:00Z", "machine": "a"},
+            machine="b",
+        )
+
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+
+
+def test_private_journal_storage_does_not_normalize_machine(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_normalization(_value: str) -> str:
+        raise AssertionError("storage must not normalize machine")
+
+    monkeypatch.setattr(state, "safe_filename", fail_normalization)
+    event = {
+        "event": "manual",
+        "timestamp": "2026-07-12T00:00:00Z",
+        "machine": "already_normalized",
+    }
+
+    state._append_journal_row(tmp_path, event, machine="already_normalized")
+
+    with state.connect(tmp_path) as conn:
+        row = conn.execute("SELECT machine, payload_json FROM event_log").fetchone()
+    assert row["machine"] == "already_normalized"
+    assert json.loads(row["payload_json"]) == event

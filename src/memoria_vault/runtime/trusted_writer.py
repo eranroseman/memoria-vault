@@ -52,6 +52,15 @@ class OperationContext:
     machine: str
 
 
+_CONTEXT_EVENT_FIELDS = {
+    "actor": "actor",
+    "run_id": "run_id",
+    "request_id": "request_id",
+    "operation": "operation_id",
+    "machine": "machine",
+}
+
+
 def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> OperationContext:
     """Build the validated provenance context for one claimed request."""
     envelope = job.get("request_envelope")
@@ -134,6 +143,64 @@ def append_journal_event(
     row = dict(event)
     row.setdefault("timestamp", now_iso())
     _append_event(Path(vault), machine, row)
+    return row
+
+
+def _decorate_context_event(event: Mapping[str, Any], context: OperationContext) -> dict[str, Any]:
+    """Copy an event, reject conflicting reserved keys, and add context."""
+    row = dict(event)
+    for event_key, context_field in _CONTEXT_EVENT_FIELDS.items():
+        expected = getattr(context, context_field)
+        if event_key in row and row[event_key] != expected:
+            raise ValueError(f"journal event {event_key} conflicts with operation context")
+        row[event_key] = expected
+    return row
+
+
+def _append_context_event(
+    vault: Path,
+    event: Mapping[str, Any],
+    *,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Append one request event with provenance owned by its operation context."""
+    row = _decorate_context_event(event, context)
+    request = state.request_job(vault, context.request_id)
+    if request is None:
+        raise ValueError(f"journal request does not exist: {context.request_id}")
+    envelope = request.get("request_envelope")
+    provenance = envelope.get("provenance") if isinstance(envelope, Mapping) else None
+    if not isinstance(provenance, Mapping):
+        raise ValueError("journal request provenance must be a mapping")
+    request_provenance = dict(provenance)
+    if "request_provenance" in row and row["request_provenance"] != request_provenance:
+        raise ValueError("journal event request_provenance conflicts with request envelope")
+    row["request_provenance"] = request_provenance
+    row.setdefault("timestamp", now_iso())
+    _append_decorated_event(Path(vault), row, machine=context.machine)
+    return row
+
+
+def append_explicit_journal_event(
+    vault: Path,
+    event: Mapping[str, Any],
+    *,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
+    """Append an event created outside an operation envelope."""
+    if not isinstance(actor, str) or actor not in state.ACTORS:
+        raise ValueError(f"journal actor must be one of {sorted(state.ACTORS)}")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("journal machine must be a nonblank string")
+    machine_name = safe_filename(machine)
+    row = dict(event)
+    for key, expected in (("actor", actor), ("machine", machine_name)):
+        if key in row and row[key] != expected:
+            raise ValueError(f"journal event {key} conflicts with explicit provenance")
+        row[key] = expected
+    row.setdefault("timestamp", now_iso())
+    _append_decorated_event(Path(vault), row, machine=machine_name)
     return row
 
 
@@ -719,13 +786,19 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _append_event(vault: Path, machine: str | None, event: dict[str, Any]) -> None:
-    append_jsonl(_journal_path(vault, machine), [event])
+    # Migration bridge: legacy callers still provide an unnormalized optional machine.
+    journal_machine = safe_filename(machine or platform.node() or "local")
+    append_jsonl(_journal_path(vault, journal_machine), [event])
     state.append_journal_event(vault, event, machine=machine)
 
 
-def _journal_path(vault: Path, machine: str | None) -> Path:
-    name = safe_filename(machine or platform.node() or "local")
-    return vault / ".memoria/journal" / f"{name}.jsonl"
+def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
+    append_jsonl(_journal_path(vault, machine), [event])
+    state._append_journal_row(vault, event, machine=machine)
+
+
+def _journal_path(vault: Path, machine: str) -> Path:
+    return vault / ".memoria/journal" / f"{machine}.jsonl"
 
 
 def _iter_events(vault: Path) -> Iterable[dict[str, Any]]:

@@ -8,7 +8,8 @@ from typing import Any
 
 import pytest
 
-from memoria_vault.runtime import state, worker
+from memoria_vault.runtime import state, trusted_writer, worker
+from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_from_job
 from tests.helpers import init_cli_workspace
 
@@ -32,6 +33,42 @@ def _operation_job(
             "args": args,
         },
     }
+
+
+def _saved_operation_context(
+    vault: Path,
+    *,
+    provenance: dict[str, Any] | None = None,
+) -> OperationContext:
+    context = OperationContext(
+        actor="agent",
+        run_id="run-1",
+        request_id="request-1",
+        operation_id="create-concept",
+        machine="agent_machine",
+    )
+    envelope = state.request_envelope(
+        request_id=context.request_id,
+        operation_id=context.operation_id,
+        actor=context.actor,
+        provenance=provenance or {},
+    )
+    state.save_request(
+        vault,
+        envelope,
+        {
+            "job_id": context.request_id,
+            "kind": "operation",
+            "operation_id": context.operation_id,
+        },
+    )
+    return context
+
+
+def _event_log_payloads(vault: Path) -> list[dict[str, Any]]:
+    with state.connect(vault) as conn:
+        rows = conn.execute("SELECT payload_json FROM event_log ORDER BY event_id").fetchall()
+    return [json.loads(row["payload_json"]) for row in rows]
 
 
 def test_operation_context_is_frozen_and_slotted() -> None:
@@ -145,6 +182,182 @@ def test_context_normalizes_explicit_and_platform_machine_once(
 
     assert explicit.machine == "agent_machine"
     assert fallback.machine == "host_name"
+
+
+def test_context_journal_metadata_comes_from_context_and_saved_request(tmp_path: Path) -> None:
+    context = _saved_operation_context(
+        tmp_path,
+        provenance={"agent_identity": "codex", "surface": "mcp"},
+    )
+
+    row = trusted_writer._append_context_event(
+        tmp_path,
+        {"event": "derived", "output_id": "notes/context.md"},
+        context=context,
+    )
+
+    assert row == {
+        "event": "derived",
+        "output_id": "notes/context.md",
+        "actor": "agent",
+        "run_id": "run-1",
+        "request_id": "request-1",
+        "operation": "create-concept",
+        "machine": "agent_machine",
+        "request_provenance": {"agent_identity": "codex", "surface": "mcp"},
+        "timestamp": row["timestamp"],
+    }
+    jsonl_rows = list(iter_jsonl(tmp_path / ".memoria/journal/agent_machine.jsonl"))
+    assert jsonl_rows == [row]
+    assert _event_log_payloads(tmp_path) == [row]
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT machine FROM event_log").fetchone()["machine"] == row["machine"]
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("actor", None),
+        ("run_id", ""),
+        ("request_id", "other-request"),
+        ("operation", None),
+        ("machine", "other_machine"),
+    ],
+)
+def test_context_journal_reserved_metadata_conflict_changes_neither_store(
+    tmp_path: Path,
+    key: str,
+    value: Any,
+) -> None:
+    context = _saved_operation_context(tmp_path)
+
+    with pytest.raises(ValueError, match=key):
+        trusted_writer._append_context_event(
+            tmp_path,
+            {"event": "derived", key: value},
+            context=context,
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
+def test_context_journal_request_provenance_conflict_changes_neither_store(
+    tmp_path: Path,
+) -> None:
+    context = _saved_operation_context(tmp_path, provenance={"agent_identity": "codex"})
+
+    with pytest.raises(ValueError, match="request_provenance"):
+        trusted_writer._append_context_event(
+            tmp_path,
+            {"event": "derived", "request_provenance": None},
+            context=context,
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
+def test_context_journal_rejects_non_mapping_request_provenance_before_mutation(
+    tmp_path: Path,
+) -> None:
+    context = OperationContext(
+        actor="agent",
+        run_id="run-1",
+        request_id="request-1",
+        operation_id="create-concept",
+        machine="agent_machine",
+    )
+    envelope = state.request_envelope(
+        request_id=context.request_id,
+        operation_id=context.operation_id,
+        actor=context.actor,
+    )
+    envelope["provenance"] = None
+    state.save_request(
+        tmp_path,
+        envelope,
+        {
+            "job_id": context.request_id,
+            "kind": "operation",
+            "operation_id": context.operation_id,
+        },
+    )
+
+    with pytest.raises(ValueError, match=r"provenance.*mapping"):
+        trusted_writer._append_context_event(
+            tmp_path,
+            {"event": "derived"},
+            context=context,
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
+@pytest.mark.parametrize(
+    ("actor", "machine", "match"),
+    [
+        ("bogus", "agent machine", "actor"),
+        ("pi", "", "machine"),
+        ("pi", " ", "machine"),
+    ],
+)
+def test_explicit_journal_rejects_invalid_actor_or_blank_machine_without_mutation(
+    tmp_path: Path,
+    actor: str,
+    machine: str,
+    match: str,
+) -> None:
+    with pytest.raises(ValueError, match=match):
+        trusted_writer.append_explicit_journal_event(
+            tmp_path,
+            {"event": "manual"},
+            actor=actor,
+            machine=machine,
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [("actor", None), ("actor", "agent"), ("machine", None), ("machine", "other")],
+)
+def test_explicit_journal_metadata_conflict_changes_neither_store(
+    tmp_path: Path,
+    key: str,
+    value: Any,
+) -> None:
+    with pytest.raises(ValueError, match=key):
+        trusted_writer.append_explicit_journal_event(
+            tmp_path,
+            {"event": "manual", key: value},
+            actor="pi",
+            machine="PI laptop",
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
+def test_explicit_journal_machine_is_normalized_once_across_both_stores(
+    tmp_path: Path,
+) -> None:
+    row = trusted_writer.append_explicit_journal_event(
+        tmp_path,
+        {"event": "manual"},
+        actor="pi",
+        machine="PI laptop",
+    )
+
+    assert row["actor"] == "pi"
+    assert row["machine"] == "PI_laptop"
+    assert list(iter_jsonl(tmp_path / ".memoria/journal/PI_laptop.jsonl")) == [row]
+    assert _event_log_payloads(tmp_path) == [row]
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT machine FROM event_log").fetchone()["machine"] == "PI_laptop"
 
 
 def test_context_builder_failure_records_failed_request_without_mutation(

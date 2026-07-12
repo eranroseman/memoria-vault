@@ -48,6 +48,20 @@ def events(vault: Path) -> list[dict]:
     return list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
 
 
+def test_journal_path_does_not_normalize_machine(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_normalization(_value: str) -> str:
+        raise AssertionError("journal path must not normalize machine")
+
+    monkeypatch.setattr(trusted_writer, "safe_filename", fail_normalization)
+
+    assert trusted_writer._journal_path(tmp_path, "already_normalized") == (
+        tmp_path / ".memoria/journal/already_normalized.jsonl"
+    )
+
+
 def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 

@@ -264,9 +264,21 @@ def recover_running_requests(vault: Path) -> list[str]:
 
 def append_journal_event(vault: Path, event: dict[str, Any], *, machine: str | None = None) -> None:
     row = dict(event)
+    machine_name = safe_filename(machine or "local")
+    _insert_journal_row(vault, row, machine=machine_name)
+
+
+def _append_journal_row(vault: Path, event: dict[str, Any], *, machine: str) -> None:
+    """Store an already decorated journal event without provenance fallback."""
+    row = dict(event)
+    if row.get("machine") != machine:
+        raise AssertionError("journal payload machine must match row machine")
+    _insert_journal_row(vault, row, machine=machine)
+
+
+def _insert_journal_row(vault: Path, row: dict[str, Any], *, machine: str) -> None:
     timestamp = str(row.get("timestamp") or now_iso())
     event_type = str(row.get("event") or row.get("type") or "event")
-    machine_name = safe_filename(machine or "local")
     payload = _json(row)
     with connect(vault) as conn:
         conn.execute("BEGIN IMMEDIATE")
@@ -275,7 +287,7 @@ def append_journal_event(vault: Path, event: dict[str, Any], *, machine: str | N
         ).fetchone()
         prev_hash = "GENESIS" if last is None else str(last["row_hash"])
         event_id = 1 if last is None else int(last["event_id"]) + 1
-        row_hash = _journal_hash(event_id, timestamp, event_type, machine_name, payload, prev_hash)
+        row_hash = _journal_hash(event_id, timestamp, event_type, machine, payload, prev_hash)
         conn.execute(
             """
             INSERT INTO event_log(
@@ -283,7 +295,7 @@ def append_journal_event(vault: Path, event: dict[str, Any], *, machine: str | N
             )
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (event_id, timestamp, event_type, machine_name, payload, prev_hash, row_hash),
+            (event_id, timestamp, event_type, machine, payload, prev_hash, row_hash),
         )
 
 
