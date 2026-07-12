@@ -49,6 +49,7 @@ wrong.
 | [The memory model](memory-model.md) | Why different kinds of memory have different scopes. |
 | [Session logging](session-logging.md) | Why audit logs and request summaries stay separate. |
 | [Telemetry architecture](telemetry-architecture.md) | Why audit, analytics, and diagnostics are separate planes. |
+| [OKF and portability](okf-and-portability.md) | Why Memoria's plain-file bundles outlive the tool and remain portable. |
 
 ## Where to go next
 
