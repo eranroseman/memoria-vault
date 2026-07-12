@@ -1,0 +1,61 @@
+{
+  "crossref": {
+    "message": {
+      "DOI": "10.1000/alpha15-dogfood",
+      "URL": "https://doi.org/10.1000/alpha15-dogfood",
+      "author": [
+        {
+          "family": "River",
+          "given": "Ada"
+        }
+      ],
+      "container-title": [
+        "Journal of Testable Systems"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            2026
+          ]
+        ]
+      },
+      "relation": {},
+      "title": [
+        "Alpha15 Dogfood Source"
+      ],
+      "type": "journal-article"
+    }
+  },
+  "openalex": {
+    "authorships": [
+      {
+        "author": {
+          "display_name": "Ada River",
+          "id": "https://openalex.org/A123"
+        },
+        "institutions": []
+      }
+    ],
+    "doi": "https://doi.org/10.1000/alpha15-dogfood",
+    "id": "https://openalex.org/W123",
+    "primary_location": {
+      "source": {
+        "display_name": "Journal of Testable Systems"
+      }
+    },
+    "title": "Alpha15 Dogfood Source",
+    "topics": [
+      {
+        "display_name": "Research workflows"
+      }
+    ]
+  },
+  "unpaywall": {
+    "best_oa_location": {
+      "url_for_pdf": "https://example.test/alpha15-dogfood.pdf"
+    },
+    "doi": "10.1000/alpha15-dogfood",
+    "is_oa": true,
+    "oa_status": "gold"
+  }
+}
