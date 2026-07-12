@@ -28,6 +28,7 @@ from memoria_vault.runtime.vaultio import write_text_durable
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
 SCHEMA_VERSION = 9
+ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 WORK_ASPECT_TYPES = frozenset(
@@ -67,13 +68,16 @@ def request_envelope(
     primary_target: str = "",
     precondition_hashes: dict[str, Any] | None = None,
     causal_refs: Iterable[str | dict[str, Any]] = (),
-    actor: str = "pi",
+    actor: str,
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
 ) -> dict[str, Any]:
     operation = operation_id.strip()
     if not operation:
         raise ValueError("operation_id is required")
+    actor = actor.strip()
+    if actor not in ACTORS:
+        raise ValueError(f"envelope actor must be one of {sorted(ACTORS)}, got: {actor!r}")
     return {
         "request_id": safe_filename(request_id),
         "operation_id": operation,
@@ -84,7 +88,7 @@ def request_envelope(
         "primary_target": normalize_path(primary_target) if primary_target else "",
         "precondition_hashes": dict(precondition_hashes or {}),
         "causal_refs": _json_rows(causal_refs),
-        "actor": actor.strip() or "pi",
+        "actor": actor,
         "provenance": dict(provenance or {}),
         "schedule_id": schedule_id or None,
     }

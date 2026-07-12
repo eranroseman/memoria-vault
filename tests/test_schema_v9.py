@@ -58,3 +58,20 @@ def test_event_log_indexes_exist(tmp_path):
         }
     assert "idx_event_log_event_type" in names
     assert "idx_event_log_timestamp" in names
+
+
+def test_request_envelope_requires_actor():
+    with pytest.raises(TypeError):
+        state.request_envelope(request_id="r", operation_id="op")
+
+
+def test_request_envelope_rejects_blank_and_bogus_actor():
+    for bad in ("", "  ", "claude"):
+        with pytest.raises(ValueError):
+            state.request_envelope(request_id="r", operation_id="op", actor=bad)
+
+
+def test_request_envelope_accepts_vocabulary():
+    for good in ("pi", "agent", "operation", "integrity"):
+        env = state.request_envelope(request_id="r", operation_id="op", actor=good)
+        assert env["actor"] == good
