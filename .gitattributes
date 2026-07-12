@@ -1,6 +1,7 @@
 # Line-ending policy.
 #
-# Memoria is authored on Windows but the Hermes runtime executes on Linux/WSL2.
+# Memoria is authored on Windows but its CLI/engine, installer, and git hooks
+# execute on Linux/WSL2.
 # Shell scripts and runtime config MUST be LF: a CRLF in install.sh breaks the
 # WSL2 shebang (`bad interpreter: bash^M`), and a CRLF inside a YAML/JSON value
 # can inject a stray \r into substituted paths. Pin them to LF on every OS,

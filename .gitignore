@@ -37,8 +37,6 @@ desktop.ini
 # Scratch / per-machine working state, never committed. Root-anchored where it
 # could shadow tracked paths (docs/_config.yml etc. stay tracked).
 /.notes/
-/_notes/
-/_papers/
 TODO*
 
 # Per-branch worktrees and the disposable installed sandbox vault (its own nested
