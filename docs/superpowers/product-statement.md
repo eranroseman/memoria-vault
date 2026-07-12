@@ -1,3 +1,10 @@
+> **Superseded (2026-07-11).** This working record's canonical doctrine now lives
+> in the published foundations pages — [What Memoria is](../explanation/rationale/foundations/what-memoria-is.md),
+> [Intellectual foundations](../explanation/rationale/foundations/intellectual-foundations.md),
+> and [Design principles](../explanation/rationale/foundations/design-principles.md).
+> Kept as the dated 2026-07-09 composition. The one open item, warrant ontology,
+> is tracked in [issue #1353](https://github.com/eranroseman/memoria-vault/issues/1353).
+
 # Memoria — product statement (canonical, v2 — composed 2026-07-09)
 
 Authored by Eran; composed from the day's ratified understandings

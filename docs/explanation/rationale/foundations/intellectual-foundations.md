@@ -7,7 +7,12 @@ nav_order: 2
 
 # Intellectual foundations
 
-Memoria is built on four converging ideas and informed by a full review of ~400 papers spanning contemporary AI-research systems and the HCI, extraction, evaluation, and retrieval traditions they build on. Understanding where the design comes from makes it easier to understand why specific choices were made.
+Memoria stands on four pillars — each owning one layer with no overlap — and is
+informed by a full review of ~400 papers spanning contemporary AI-research systems
+and the HCI, extraction, evaluation, and retrieval traditions they build on:
+**LLM-Wiki** (inflow), **Zettelkasten** (topology), **Toulmin** (logic), and
+**autoresearch** (self-improvement). Understanding where the design comes from
+makes it easier to understand why specific choices were made.
 
 ---
 
@@ -22,6 +27,8 @@ doesn't just add documents — it integrates source Works into an existing graph
 of notes. Digest, note, and hub operations do the compilation work.
 
 What Memoria doesn't take from this pattern: Karpathy's framing implies an agent that autonomously decides what to synthesize and what to keep. Memoria refuses that — the human decides what enters the canonical graph. The compiler role belongs to the agent; the editorial role belongs to the human.
+
+The idea is related in spirit to Vannevar Bush's [Memex](../../../reference/evidence-and-integrations/bibliography.md#bush1945) (1945) — a personal, curated knowledge store with associative trails between documents. Bush's vision was closer to this than to what the web became: private, actively curated, with the connections between documents as valuable as the documents themselves. The part he couldn't solve was who does the maintenance. The LLM handles that.
 
 ---
 
@@ -48,12 +55,19 @@ arguments, building hubs) remains human.
 
 ---
 
-## Bush's Memex
+## Toulmin's argument model
 
-[Vannevar Bush](../../../reference/evidence-and-integrations/bibliography.md#bush1945)'s Memex matters here for
-one design move: durable associative trails. Memoria implements that as
-wikilinks, typed relations, entity links, and hubs; folders stay secondary. A
-claim note that has no incoming links has not entered the knowledge graph.
+Stephen Toulmin's model of argument (1958) gives the knowledge graph its logical basis. An argument decomposes into six roles — Claim, Grounds, Warrant, Backing, Qualifier, and Rebuttal — and Memoria makes those roles the *types* of the graph rather than leaving argument structure implicit in prose.
+
+Typing the roles types the consequences: losing grounds, losing a warrant, a qualifier bounding a regression, and a rebuttal that strengthens when its target falls are different graph events with different blast radius. A graph that only stores "claim links to claim" cannot tell them apart; one that stores the Toulmin roles can. This is why Memoria assesses *grounding* rather than truth — the roles are the structure grounding is assessed against.
+
+---
+
+## The autoresearch loop
+
+The fourth pillar is Karpathy's autoresearch framing — a fixed harness, one metric, keep-or-discard, run overnight — the self-improving trial-and-error loop that the contemporary [autoresearch systems](../../../reference/evidence-and-integrations/bibliography.md#liu2026autoresearchclaw) also pursue. Memoria applies it narrowly: to improve its *own instruments* — detectors, prompts, gates — by measuring a change against a frozen benchmark and keeping only what beats the bar.
+
+The boundary is strict and load-bearing: autoresearch tunes the instruments that *assess* knowledge, never the knowledge itself. A self-improving loop pointed at the researcher's claims would optimize the vault toward whatever the metric rewards; pointed at the instruments, it sharpens the tools while the human keeps authorship of what they measure.
 
 ---
 
@@ -79,13 +93,14 @@ The pattern-by-pattern judgment is in [Pattern provenance table](../../../refere
 
 ## The synthesis
 
-Memoria takes Karpathy's compiler insight, Luhmann's typed-note discipline, Bush's associative memory, and the operational patterns of contemporary AI-research systems as a single design stack:
+Memoria takes Karpathy's compiler insight, Luhmann's typed-note discipline, Toulmin's argument roles, and Karpathy's autoresearch loop — together with the operational patterns of contemporary AI-research systems — as a single design stack:
 
-- The wiki is the compiled artifact (Karpathy).
+- The wiki is the compiled artifact, with its associative trails (Karpathy, after Bush's Memex).
 - The document types preserve atomicity and lifespan distinction (Zettelkasten).
-- The associative graph (wikilinks, hubs, entity links) preserves trails (Memex).
+- The argument roles type the knowledge graph and its consequence propagation (Toulmin).
+- The self-improvement loop sharpens Memoria's own instruments, never its knowledge (autoresearch).
 - The stage-gated pipeline and explicit agent roles come from the field survey.
-- The AI agent provides the maintenance discipline that all three earlier traditions required from the human.
+- The AI agent provides the maintenance discipline that the earlier traditions required from the human.
 
 The design is not a novel invention — it is an integration of patterns that already existed, applied to a specific problem (single-researcher knowledge production) that none of the surveyed systems addressed directly.
 

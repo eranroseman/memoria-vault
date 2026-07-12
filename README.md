@@ -26,7 +26,7 @@ deliberately off OneDrive), creates a workspace-local venv, installs the
 `memoria` package, initializes the workspace from the packaged seed, and wires
 Git hooks. The seed includes Memoria's Obsidian adapter files and core Obsidian
 settings for users who open the workspace there. It does not install the
-Obsidian app, Hermes, profiles, Zotero integration, a host scheduler, or
+Obsidian app, profiles, Zotero integration, a host scheduler, or
 external search tooling. Direct `memoria init --no-obsidian` is available for
 non-Obsidian workspaces. See
 [Installer (bootstrap)](docs/reference/system/installer.md) for exactly what it does.
