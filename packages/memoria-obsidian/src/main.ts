@@ -1,4 +1,4 @@
-const { Modal, Notice, Plugin, PluginSettingTab, Setting } = require("obsidian");
+const { Modal, Notice, Plugin, PluginSettingTab, Setting, requestUrl } = require("obsidian");
 const { sanitizeItemId, validateEvent } = require("./schema");
 
 const TOKEN_KEY = "memoria-obsidian-token";
@@ -85,10 +85,10 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
   async setToken(token) {
     const clean = String(token || "").trim();
     if (this.app.secretStorage && clean) {
-      await this.app.secretStorage.set(TOKEN_KEY, clean);
+      await this.app.secretStorage.setSecret(TOKEN_KEY, clean);
       this.settings.hasToken = true;
     } else if (this.app.secretStorage) {
-      await this.app.secretStorage.delete(TOKEN_KEY);
+      await this.app.secretStorage.setSecret(TOKEN_KEY, "");
       this.settings.hasToken = false;
     } else {
       this.settings.hasToken = false;
@@ -101,7 +101,7 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     if (!this.settings.hasToken || !this.app.secretStorage) {
       return "";
     }
-    return (await this.app.secretStorage.get(TOKEN_KEY)) || "";
+    return this.app.secretStorage.getSecret(TOKEN_KEY) || "";
   }
 
   ensureSession() {
@@ -299,29 +299,35 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
   }
 
   async getJson(path) {
-    const response = await fetch(`${this.settings.serverUrl}${path}`, {
+    const response = await requestUrl({
+      url: `${this.settings.serverUrl}${path}`,
+      method: "GET",
       headers: await this.headers(),
+      throw: false,
     });
-    const payload = await response.json();
-    if (!response.ok || payload.ok === false) {
+    const payload = response.json;
+    if (response.status < 200 || response.status >= 300 || payload.ok === false) {
       throw new Error(payload.error || `HTTP ${response.status}`);
     }
     return payload;
   }
 
   async postOperation(operationId, payload, idempotencyKey) {
-    const response = await fetch(`${this.settings.serverUrl}/operation/run`, {
+    const response = await requestUrl({
+      url: `${this.settings.serverUrl}/operation/run`,
       method: "POST",
-      headers: Object.assign({ "Content-Type": "application/json" }, await this.headers()),
+      contentType: "application/json",
+      headers: await this.headers(),
       body: JSON.stringify({
         operation_id: operationId,
         payload,
         idempotency_key: idempotencyKey,
         actor: "agent",
       }),
+      throw: false,
     });
-    const result = await response.json();
-    if (!response.ok || result.ok === false) {
+    const result = response.json;
+    if (response.status < 200 || response.status >= 300 || result.ok === false) {
       throw new Error(result.error || `HTTP ${response.status}`);
     }
     return result;

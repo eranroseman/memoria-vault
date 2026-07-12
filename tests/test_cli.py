@@ -418,6 +418,7 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     assert community_plugins == ["memoria-obsidian"]
     assert manifest["id"] == "memoria-obsidian"
     assert (workspace / ".obsidian/plugins/memoria-obsidian/main.js").is_file()
+    assert (workspace / ".obsidian/plugins/memoria-obsidian/schema.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()
 
 

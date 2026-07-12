@@ -47,6 +47,7 @@ def test_package_seed_is_runtime_minimum():
         ".obsidian/core-plugins.json",
         ".obsidian/plugins/memoria-obsidian/main.js",
         ".obsidian/plugins/memoria-obsidian/manifest.json",
+        ".obsidian/plugins/memoria-obsidian/schema.js",
         ".obsidian/plugins/memoria-obsidian/styles.css",
         "steering.md",
         "system/vocabulary.md",
