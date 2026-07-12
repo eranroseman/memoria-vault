@@ -93,7 +93,7 @@ The pattern-by-pattern judgment is in [Pattern provenance table](../../../refere
 
 ## The synthesis
 
-Memoria takes Karpathy's compiler insight, Luhmann's typed-note discipline, Bush's associative memory, and the operational patterns of contemporary AI-research systems as a single design stack:
+Memoria takes Karpathy's compiler insight, Luhmann's typed-note discipline, Toulmin's argument roles, and Karpathy's autoresearch loop — together with the operational patterns of contemporary AI-research systems — as a single design stack:
 
 - The wiki is the compiled artifact, with its associative trails (Karpathy, after Bush's Memex).
 - The document types preserve atomicity and lifespan distinction (Zettelkasten).
