@@ -4,7 +4,7 @@
 
 **Goal:** Migrate the corpus's durable product doctrine into the published `docs/` Diátaxis tree (consolidation §5 routing map of record), then retire the six held working records — closing #1366 and completing the corpus fold.
 
-**Architecture:** Docs-only. Unifies the subsumed `2026-07-11-foundations-reconcile` plan (Tasks 1–4 here, its prose reused with two dispositions updated) with the remaining §5 routings: three new explanation pages, targeted merges into architecture/knowledge/surfaces pages, one reference contract, and the final retirement. Each task edits few files, runs the gate, commits.
+**Architecture:** Docs-only. Unifies the subsumed `2026-07-11-foundations-reconcile` plan (retired 2026-07-12; its prose is embedded as Tasks 1–4 here, with two dispositions updated) with the remaining §5 routings: three new explanation pages, targeted merges into architecture/knowledge/surfaces pages, one reference contract, and the final retirement. Each task edits few files, runs the gate, commits.
 
 **Tech Stack:** Markdown (Jekyll / just-the-docs); gate is `python scripts/verify` (cspell + markdownlint cover `docs/` excluding `docs/superpowers/`).
 
@@ -526,15 +526,15 @@ git commit -m "docs: inquiry-first cycle, surface division of labor, OKF complia
 
 ---
 
-### Task 10: Retire the six held records + close #1366
+### Task 10: Retire the four held records + close #1366
 
 **Files:**
-- Delete: `docs/superpowers/product-statement.md`, `docs/superpowers/plans/okf-note.md`, `docs/superpowers/plans/user-workflow.md`, `docs/superpowers/plans/autoresearch-note.md`, `docs/superpowers/plans/2026-07-11-foundations-reconcile.md`, `docs/superpowers/specs/2026-07-11-foundations-reconcile-design.md`
+- Delete: `docs/superpowers/product-statement.md`, `docs/superpowers/specs/okf-note.md`, `docs/superpowers/specs/user-workflow.md`, `docs/superpowers/specs/autoresearch-note.md` (the two `foundations-reconcile*` records were already retired 2026-07-12 — their prose is embedded in this plan)
 - Modify: `docs/superpowers/README.md`, `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md` (§7)
 
 - [ ] **Step 1: Verify nothing published links into the retired files:** `rg -l "product-statement|okf-note|user-workflow|autoresearch-note|foundations-reconcile" docs/ --glob '!docs/superpowers/**'` — fix any hit before deleting.
 
-- [ ] **Step 2: Delete the six files** (`git rm` each by explicit path).
+- [ ] **Step 2: Delete the four files** (`git rm` each by explicit path).
 
 - [ ] **Step 3: Update `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md` §7:** change the "**Retire at #1366 close**" bullet to "**Retired <date>** (doc-worthy prose published via #1366): …same file list…". Update `docs/superpowers/README.md` if it names any retired file.
 
