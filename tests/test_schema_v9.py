@@ -53,8 +53,7 @@ def test_derivations_actor_accepts_agent(tmp_path):
 def test_event_log_indexes_exist(tmp_path):
     with _conn(tmp_path) as conn:
         names = {
-            row["name"]
-            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")
+            row["name"] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")
         }
     assert "idx_event_log_event_type" in names
     assert "idx_event_log_timestamp" in names

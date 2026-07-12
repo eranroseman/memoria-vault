@@ -299,11 +299,7 @@ def _run_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str,
 
 
 def _envelope_actor(job: dict[str, Any]) -> str:
-    envelope = (
-        job.get("request_envelope")
-        if isinstance(job.get("request_envelope"), dict)
-        else {}
-    )
+    envelope = job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
     actor = str(envelope.get("actor") or "").strip()
     if not actor:
         raise ValueError("request envelope is missing actor")

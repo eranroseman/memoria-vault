@@ -24,8 +24,7 @@ def test_agent_enveloped_create_concept_lands_agent_actor(tmp_path, capsys) -> N
         {
             "target_path": "notes/actor-test.md",
             "content": (
-                "---\ntype: note\ntitle: Actor test\nmode: claim\n"
-                "claim_text: x\n---\n\nBody.\n"
+                "---\ntype: note\ntitle: Actor test\nmode: claim\nclaim_text: x\n---\n\nBody.\n"
             ),
             "concept_type": "note",
         },
