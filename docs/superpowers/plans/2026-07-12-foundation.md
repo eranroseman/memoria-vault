@@ -1,0 +1,1182 @@
+# Foundation (F1–F4) Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Make alpha.20's delivered machinery true and visible: faithful actor provenance (F1), a verifiable journal with one trust-read path (F2), durable evidential grounds (F3), honest surfaces (F4).
+
+**Architecture:** Four repair packages, each its own squash-merged PR. F1 carries the single v8→v9 schema change (all v9 deltas land together); F2 builds on it; F3/F4 are independent. No propagation-semantics changes (G5), no edge-parsing changes (G2), no new features.
+
+**Tech Stack:** Python 3 stdlib + SQLite (no new dependencies). Tests: pytest via `python scripts/verify`.
+
+Spec: `docs/superpowers/specs/2026-07-12-foundation-design.md`. Milestone `0.1.0-alpha.21`; issues #1361–#1364.
+
+## Global Constraints
+
+- Correctness gate: `python scripts/verify` must pass before each PR.
+- Test only against disposable vaults (pytest `tmp_path` via `tests/helpers.init_cli_workspace`, or `sandbox/`); never a personal vault.
+- Stage explicit paths only — never `git add -A` (shared index rule).
+- Every **new** test file must be registered in `tests/conftest.py` `TEST_LEVELS` (map filename → level; use `"contract"` for CLI/API behavior, `"runtime"` for vault-mutating flows, `"unit"` for pure functions).
+- Actor vocabulary (decided): exactly `'pi' | 'agent' | 'operation' | 'integrity'`. Concrete agent identity stays in envelope/journal metadata, never the enum.
+- Schema mechanics (decided): edit `schema.sql` in place; `SCHEMA_VERSION` 8→9; `state._init` accepts `{0, 9}` (it already computes `{0, SCHEMA_VERSION}`); no migration code. Pre-beta vaults are disposable and rebuild.
+- Surface defaults stay: CLI `--actor` `choices=("pi","agent"), default="pi"` (cli.py:549) and MCP `--actor default="agent"` (cli.py:123) are the *surface* declaring the actor. The **engine** never defaults.
+- PR boundaries: PR-F1 after Task 5, PR-F2 after Task 8, PR-F3 after Task 11, PR-F4 after Task 16. PR titles: `fix(provenance): …` / `fix(journal): …` / `feat(backup): …` / `fix(cli): …`.
+
+---
+
+## PR-F1 · Provenance & actor integrity (#1361)
+
+### Task 1: Schema v9 — actor CHECKs + event_log indexes
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/schema.sql` (lines 12, 342, event_log block, last line)
+- Modify: `src/memoria_vault/runtime/state.py:30` (`SCHEMA_VERSION`)
+- Test: `tests/test_schema_v9.py` (new — register in `tests/conftest.py` as `"unit"`)
+
+**Interfaces:**
+- Consumes: nothing (first task).
+- Produces: DB schema v9 — both `operation_requests.actor` and `derivations.actor` carry `CHECK (actor IN ('pi', 'agent', 'operation', 'integrity'))`, `operation_requests.actor` has **no DEFAULT**; indexes `idx_event_log_event_type`, `idx_event_log_timestamp`. All later tasks assume v9.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+"""tests/test_schema_v9.py — v9 schema contract."""
+
+import sqlite3
+
+import pytest
+
+from memoria_vault.runtime import state
+
+
+def _conn(tmp_path):
+    vault = tmp_path / "vault"
+    (vault / ".memoria").mkdir(parents=True)
+    return state.connect(vault)
+
+
+def test_user_version_is_9(tmp_path):
+    with _conn(tmp_path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 9
+
+
+def test_operation_requests_actor_accepts_agent_and_rejects_bogus(tmp_path):
+    with _conn(tmp_path) as conn:
+        conn.execute(
+            "INSERT INTO operation_requests"
+            "(request_id, operation_id, actor, status, created_at, job_json)"
+            " VALUES ('r1', 'op', 'agent', 'pending', 't', '{}')"
+        )
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO operation_requests"
+                "(request_id, operation_id, actor, status, created_at, job_json)"
+                " VALUES ('r2', 'op', 'bogus', 'pending', 't', '{}')"
+            )
+
+
+def test_operation_requests_actor_has_no_default(tmp_path):
+    with _conn(tmp_path) as conn:
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO operation_requests"
+                "(request_id, operation_id, status, created_at, job_json)"
+                " VALUES ('r3', 'op', 'pending', 't', '{}')"
+            )
+
+
+def test_derivations_actor_accepts_agent(tmp_path):
+    with _conn(tmp_path) as conn:
+        conn.execute(
+            "INSERT INTO derivations(input_id, output_id, actor) VALUES ('a', 'b', 'agent')"
+        )
+
+
+def test_event_log_indexes_exist(tmp_path):
+    with _conn(tmp_path) as conn:
+        names = {
+            row["name"]
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")
+        }
+    assert "idx_event_log_event_type" in names
+    assert "idx_event_log_timestamp" in names
+```
+
+Also add to `tests/conftest.py` `TEST_LEVELS` (alphabetical position): `"test_schema_v9.py": "unit",`
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `python -m pytest tests/test_schema_v9.py -v`
+Expected: FAIL — `test_user_version_is_9` gets 8; agent inserts raise IntegrityError.
+
+- [ ] **Step 3: Implement — schema.sql + SCHEMA_VERSION**
+
+In `src/memoria_vault/runtime/schema.sql`:
+
+Line 12, replace:
+```sql
+    actor TEXT NOT NULL DEFAULT 'pi',
+```
+with:
+```sql
+    actor TEXT NOT NULL CHECK (actor IN ('pi', 'agent', 'operation', 'integrity')),
+```
+
+Line 342, replace:
+```sql
+    actor TEXT NOT NULL CHECK (actor IN ('pi', 'operation', 'integrity')),
+```
+with:
+```sql
+    actor TEXT NOT NULL CHECK (actor IN ('pi', 'agent', 'operation', 'integrity')),
+```
+
+After the `event_log_no_delete` trigger block (after schema.sql:45), insert:
+```sql
+CREATE INDEX IF NOT EXISTS idx_event_log_event_type
+    ON event_log(event_type);
+CREATE INDEX IF NOT EXISTS idx_event_log_timestamp
+    ON event_log(timestamp);
+```
+
+Last line, replace `PRAGMA user_version = 8;` with `PRAGMA user_version = 9;`
+
+In `src/memoria_vault/runtime/state.py:30`: `SCHEMA_VERSION = 9` (`_init` already accepts `{0, SCHEMA_VERSION}` — no change).
+
+- [ ] **Step 4: Run tests**
+
+Run: `python -m pytest tests/test_schema_v9.py -v` → PASS.
+Then run the full suite to catch envelope call sites that relied on the dropped DEFAULT: `python -m pytest tests/ -x -q`. Failures where code inserts without actor are expected — note them; Task 2/3 fix them. If any test fails for that reason, fix the *test's* setup only when the test itself built a raw INSERT; production-code fixes belong to Tasks 2–3.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py tests/test_schema_v9.py tests/conftest.py
+git commit -m "fix(provenance): schema v9 — one actor vocabulary on both tables, event_log indexes"
+```
+
+### Task 2: `request_envelope` requires a valid actor
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/state.py` (`request_envelope`, ~line 59; add `ACTORS` next to `SCHEMA_VERSION`)
+- Test: `tests/test_schema_v9.py` (extend)
+
+**Interfaces:**
+- Consumes: v9 schema (Task 1).
+- Produces: `state.ACTORS = frozenset({"pi", "agent", "operation", "integrity"})`; `state.request_envelope(*, ..., actor: str, ...)` — **required** keyword, raises `ValueError` on missing/out-of-vocabulary. Task 3 relies on both.
+
+- [ ] **Step 1: Write the failing test** (append to `tests/test_schema_v9.py`)
+
+```python
+def test_request_envelope_requires_actor():
+    with pytest.raises(TypeError):
+        state.request_envelope(request_id="r", operation_id="op")
+
+
+def test_request_envelope_rejects_blank_and_bogus_actor():
+    for bad in ("", "  ", "claude"):
+        with pytest.raises(ValueError):
+            state.request_envelope(request_id="r", operation_id="op", actor=bad)
+
+
+def test_request_envelope_accepts_vocabulary():
+    for good in ("pi", "agent", "operation", "integrity"):
+        env = state.request_envelope(request_id="r", operation_id="op", actor=good)
+        assert env["actor"] == good
+```
+
+- [ ] **Step 2: Run to verify failure**
+
+Run: `python -m pytest tests/test_schema_v9.py -k envelope -v`
+Expected: FAIL — no TypeError (default exists), `"claude"` currently accepted.
+
+- [ ] **Step 3: Implement**
+
+In `state.py`, next to `SCHEMA_VERSION`:
+```python
+ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
+```
+
+In `request_envelope`, change the signature line `actor: str = "pi",` to `actor: str,` and replace the dict entry `"actor": actor.strip() or "pi",` with a validation before the `return`:
+```python
+    actor = actor.strip()
+    if actor not in ACTORS:
+        raise ValueError(f"envelope actor must be one of {sorted(ACTORS)}, got: {actor!r}")
+```
+and in the returned dict: `"actor": actor,`
+
+Fix every caller that omitted `actor`: run `rg -n "request_envelope\(" src/ tests/` and pass the envelope's true actor at each site (worker `enqueue_operation` already receives one from `engine_api.run_operation`; internal engine-initiated sites pass `"operation"` or `"integrity"` — match each site's existing journal-event actor).
+
+- [ ] **Step 4: Run tests**
+
+Run: `python -m pytest tests/test_schema_v9.py -v` → PASS. `python -m pytest tests/ -x -q` → PASS (call sites fixed).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/runtime/state.py tests/test_schema_v9.py
+git commit -m "fix(provenance): request_envelope requires a valid actor, never defaults"
+```
+
+### Task 3: Thread envelope actor through worker + retire the hardcodes
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/worker.py` (add `_envelope_actor`; replace the three `envelope.get("actor") or "pi"` sites at ~316/352/583 and every other `or "pi"` fallback found)
+- Modify: `src/memoria_vault/runtime/operations.py:85` (copi-interview `"actor": "pi"`)
+- Modify: `src/memoria_vault/runtime/knowledge.py:323, 387, 2208` (curate-note-candidate, curate-note-link, promote-draft-passage)
+- Test: `tests/test_actor_threading.py` (new — register as `"runtime"`)
+
+**Interfaces:**
+- Consumes: `state.ACTORS` (Task 2).
+- Produces: `worker._envelope_actor(job: dict) -> str` (raises `ValueError` on missing actor); `operations.record_copi_interview(..., *, actor: str, ...)`, `knowledge.curate_note_candidate(..., *, actor: str, ...)`, `knowledge.curate_note_link(..., *, actor: str, ...)`, `knowledge.promote_draft_passage(..., *, actor: str, ...)` — exact current function names to be confirmed at each line before editing; keep the existing name, add the keyword param.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+"""tests/test_actor_threading.py — envelope actor flows end-to-end."""
+
+import json
+
+import pytest
+
+from memoria_vault.runtime import state, worker
+from tests.helpers import init_cli_workspace
+
+
+def test_envelope_actor_helper_raises_on_missing():
+    with pytest.raises(ValueError):
+        worker._envelope_actor({"request_envelope": {}})
+    assert worker._envelope_actor({"request_envelope": {"actor": "agent"}}) == "agent"
+
+
+def test_agent_enveloped_create_concept_lands_agent_actor(tmp_path, capsys):
+    workspace = init_cli_workspace(tmp_path, capsys)
+    from memoria_vault.engine import api as engine_api
+
+    engine_api.run_operation(
+        workspace,
+        "create-concept",
+        {
+            "target": "notes/actor-test.md",
+            "content": "---\ntype: note\ntitle: Actor test\nmode: claim\nclaim_text: x\n---\n\nBody.\n",
+        },
+        actor="agent",
+    )
+    with state.connect(workspace) as conn:
+        req = conn.execute(
+            "SELECT actor FROM operation_requests WHERE operation_id='create-concept'"
+        ).fetchone()
+        assert req["actor"] == "agent"
+        rows = conn.execute(
+            "SELECT payload_json FROM event_log"
+            " WHERE json_extract(payload_json,'$.operation')='create-concept'"
+            "   AND json_extract(payload_json,'$.actor') IS NOT NULL"
+        ).fetchall()
+    actors = {json.loads(r["payload_json"]).get("actor") for r in rows}
+    assert actors, "create-concept journaled no actor-bearing events"
+    assert actors == {"agent"}  # nothing about this run may claim the human did it
+```
+
+Adjust the create-concept payload keys to `worker._create_concept_payload`'s contract (read that function first; use its exact expected keys).
+
+- [ ] **Step 2: Run to verify failure**
+
+Run: `python -m pytest tests/test_actor_threading.py -v`
+Expected: FAIL — `_envelope_actor` doesn't exist.
+
+- [ ] **Step 3: Implement**
+
+In `worker.py`, near the top-level helpers:
+```python
+def _envelope_actor(job: dict[str, Any]) -> str:
+    envelope = (
+        job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
+    )
+    actor = str(envelope.get("actor") or "").strip()
+    if not actor:
+        raise ValueError("request envelope is missing actor")
+    return actor
+```
+
+Replace every `str(envelope.get("actor") or "pi")` (worker.py ~316, ~352, ~583 — re-locate with `rg -n 'envelope.get\("actor"\) or "pi"' src/memoria_vault/runtime/worker.py`) with `_envelope_actor(job)` and delete the now-unused local `envelope =` lines where nothing else reads them. Leave `actor="operation"` at worker.py:141/1246 — genuinely engine-initiated.
+
+In `operations.py` (function enclosing line 85) and `knowledge.py` (functions enclosing 323, 387, 2208): add keyword param `actor: str` (no default), replace the hardcoded `"actor": "pi"` / `actor="pi"` with the param. Update each worker call site (find with `rg -n "<function-name>" src/memoria_vault/runtime/worker.py`) to pass `actor=_envelope_actor(job)`. Update any direct CLI call sites to pass `actor=args.actor`.
+
+- [ ] **Step 4: Run tests**
+
+Run: `python -m pytest tests/test_actor_threading.py tests/test_schema_v9.py -v` → PASS.
+Run: `python -m pytest tests/ -x -q` → PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/runtime/worker.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py tests/test_actor_threading.py tests/conftest.py
+git commit -m "fix(provenance): thread envelope actor through worker; retire actor:'pi' hardcodes"
+```
+
+### Task 4: Reject-marker trace
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/knowledge.py` (the `resolve-evidence-review` writer — the journal event at knowledge.py:2153; read the enclosing function fully first)
+- Test: `tests/test_actor_threading.py` (extend) or the existing evidence-review test file if one covers this flow (`rg -ln "resolve-evidence-review" tests/`)
+
+**Interfaces:**
+- Consumes: the existing `resolve-evidence-review` journal event shape.
+- Produces: on `decision == "reject"` where the draft's `%%ev%%` marker is removed, the journal event gains two fields: `"stripped_marker": "<full marker text>"` and `"stripped_block_ref": "<block anchor>"`.
+
+- [ ] **Step 1: Read the enclosing function** at knowledge.py:2153 end-to-end; identify where the marker text leaves the draft on reject (if the marker is *not* stripped there, find the strip site via `rg -n "_EV_MARKER_RE|serialize_evidence_marker" src/memoria_vault/runtime/knowledge.py` and confirm against a reject flow test).
+
+- [ ] **Step 2: Write the failing test** — drive a reject through the operation (reuse the fixture pattern of the existing evidence-review tests found in Step 1's `rg`) and assert:
+
+```python
+def test_reject_records_stripped_marker(tmp_path, capsys):
+    # ... existing reject-flow fixture ...
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT payload_json FROM event_log"
+            " WHERE json_extract(payload_json,'$.operation')='resolve-evidence-review'"
+            " AND json_extract(payload_json,'$.decision')='reject'"
+            " ORDER BY event_id DESC LIMIT 1"
+        ).fetchone()
+    event = json.loads(row["payload_json"])
+    assert event["stripped_marker"].startswith("%%ev:")
+    assert event["stripped_block_ref"]
+```
+
+- [ ] **Step 3: Run to verify failure** → KeyError `stripped_marker`.
+
+- [ ] **Step 4: Implement** — capture the marker text and block ref *before* removal in the reject branch; add both fields to the journal event dict. Minimal change; do not alter the disposition logic.
+
+- [ ] **Step 5: Run tests + commit**
+
+```bash
+python -m pytest tests/ -x -q
+git add src/memoria_vault/runtime/knowledge.py tests/
+git commit -m "fix(provenance): record stripped %%ev%% marker on reject disposition"
+```
+
+### Task 5: Memory-model doc note + PR-F1
+
+**Files:**
+- Modify: the memory-model explanation page (`docs/explanation/architecture/memory-model.md`)
+
+- [ ] **Step 1:** Add one short paragraph to the provenance/actors section (create the subsection if absent):
+
+> `observe_pi_edit` attributes unmediated file edits to `pi` by design: an edit that arrives outside the operation envelope is, by definition, the human working in their own editor. Every mediated write carries the envelope's true actor (`pi`, `agent`, `operation`, `integrity`); the engine never defaults a missing actor.
+
+- [ ] **Step 2: Gate + PR**
+
+```bash
+python scripts/verify
+git add docs/explanation/architecture/memory-model.md
+git commit -m "docs: state observe_pi_edit's intentional pi attribution"
+gh pr create --title "fix(provenance): faithful actor vocabulary, threading, and reject trace (F1)" --body "Closes #1361. Schema v9 (one actor CHECK on both tables, no default), envelope actor required and threaded through the worker, actor:'pi' hardcodes retired, reject dispositions record the stripped %%ev%% marker. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
+```
+
+---
+
+## PR-F2 · Journal trust (#1362)
+
+### Task 6: Chain verifier + `memoria journal verify`
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/state.py` (add `verify_journal_chain` next to `journal_head`, ~line 286)
+- Modify: `src/memoria_vault/cli.py` (new `journal` subcommand with `verify`)
+- Test: `tests/test_journal_trust.py` (new — register as `"runtime"`)
+
+**Interfaces:**
+- Consumes: `event_log` chain columns, `state._journal_hash(event_id, timestamp, event_type, machine, payload, prev_hash)`, `JOURNAL_HEAD_REL`.
+- Produces: `state.verify_journal_chain(vault: Path) -> dict[str, Any]` returning `{"ok": bool, "events": int, "tip": str, "anchor": str, "error": str}`; CLI `memoria journal verify --workspace <ws>` exiting 0/1 via `_emit`.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+"""tests/test_journal_trust.py — chain verifier + trust reads."""
+
+import json
+
+from memoria_vault.runtime import state
+from tests.helpers import init_cli_workspace
+
+
+def _seed_events(vault, n=3):
+    for i in range(n):
+        state.append_journal_event(vault, {"event": "run", "run_id": f"r{i}", "status": "started"})
+    state.write_journal_head_anchor(vault)
+
+
+def test_verify_passes_on_healthy_chain(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault)
+    report = state.verify_journal_chain(vault)
+    assert report["ok"] is True
+    assert report["events"] >= 3
+    assert report["tip"] == report["anchor"]
+
+
+def test_verify_fails_on_tampered_payload(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault)
+    with state.connect(vault) as conn:
+        conn.execute("DROP TRIGGER event_log_no_update")  # simulate an attacker with DB access
+        conn.execute("UPDATE event_log SET payload_json='{}' WHERE event_id=2")
+    report = state.verify_journal_chain(vault)
+    assert report["ok"] is False
+    assert "event 2" in report["error"]
+
+
+def test_verify_fails_on_broken_anchor(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault)
+    (vault / state.JOURNAL_HEAD_REL).write_text("sha256:bogus\n", encoding="utf-8")
+    report = state.verify_journal_chain(vault)
+    assert report["ok"] is False
+    assert "anchor" in report["error"]
+```
+
+- [ ] **Step 2: Run to verify failure** — `AttributeError: verify_journal_chain`.
+
+- [ ] **Step 3: Implement**
+
+In `state.py`:
+```python
+def verify_journal_chain(vault: Path) -> dict[str, Any]:
+    """Walk event_log recomputing the hash chain; compare the tip to the anchor."""
+    with connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash"
+            " FROM event_log ORDER BY event_id"
+        ).fetchall()
+    prev = "GENESIS"
+    for row in rows:
+        expected = _journal_hash(
+            int(row["event_id"]),
+            str(row["timestamp"]),
+            str(row["event_type"]),
+            str(row["machine"]),
+            str(row["payload_json"]),
+            prev,
+        )
+        if row["prev_hash"] != prev or row["row_hash"] != expected:
+            return {
+                "ok": False,
+                "events": len(rows),
+                "tip": "",
+                "anchor": "",
+                "error": f"journal chain broken at event {row['event_id']}",
+            }
+        prev = str(row["row_hash"])
+    tip = prev if rows else "GENESIS"
+    anchor_path = Path(vault) / JOURNAL_HEAD_REL
+    anchor = anchor_path.read_text(encoding="utf-8").strip() if anchor_path.is_file() else ""
+    if anchor and anchor != tip:
+        return {
+            "ok": False,
+            "events": len(rows),
+            "tip": tip,
+            "anchor": anchor,
+            "error": "journal-head anchor does not match chain tip",
+        }
+    return {"ok": True, "events": len(rows), "tip": tip, "anchor": anchor, "error": ""}
+```
+
+Match `_journal_hash`'s exact parameter order to its definition (state.py:2016) before writing the call.
+
+In `cli.py`, add next to the `workspace` parser (after cli.py:435 block):
+```python
+    journal = sub.add_parser("journal")
+    journal_sub = journal.add_subparsers(dest="journal_command", required=True)
+    jverify = journal_sub.add_parser("verify")
+    _common(jverify)
+    jverify.set_defaults(handler=_cmd_journal_verify)
+```
+and the handler:
+```python
+def _cmd_journal_verify(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import state as runtime_state
+
+    report = runtime_state.verify_journal_chain(_workspace(args))
+    return _emit({**report, "workspace": None}, args)
+```
+(`_emit` returns 1 when `ok` is False — Task 12 makes its printout honest; do not duplicate that fix here. Drop the `"workspace": None` key if `_emit` handles a missing key cleanly — verify against `_emit`'s current body.)
+
+Wire into the existing full-vault pass: locate the `workspace rebuild` handler (`rg -n "_cmd_workspace_rebuild|workspace rebuild" src/memoria_vault/cli.py`) and call `verify_journal_chain` first, failing the command when `ok` is False.
+
+- [ ] **Step 4: Run tests** → `python -m pytest tests/test_journal_trust.py -v` PASS; full suite PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/runtime/state.py src/memoria_vault/cli.py tests/test_journal_trust.py tests/conftest.py
+git commit -m "feat(journal): chain verifier + memoria journal verify"
+```
+
+### Task 7: Authoritative-first append + JSONL reconciliation
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/trusted_writer.py:670-674` (`_append_event`) and add `reconcile_journal_export`
+- Test: `tests/test_journal_trust.py` (extend)
+
+**Interfaces:**
+- Consumes: `state.append_journal_event`, `append_jsonl`, `_journal_path`.
+- Produces: `_append_event` writes `event_log` **first**, JSONL second; `trusted_writer.reconcile_journal_export(vault: Path, *, machine: str | None = None) -> int` re-appends missing JSONL lines from `event_log` (returns count re-emitted). `verify_journal_chain` callers may run it after a passing verify.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_append_event_writes_event_log_first(tmp_path, capsys, monkeypatch):
+    vault = init_cli_workspace(tmp_path, capsys)
+    from memoria_vault.runtime import trusted_writer
+
+    def boom(*a, **k):
+        raise RuntimeError("jsonl append crashed")
+
+    monkeypatch.setattr(trusted_writer, "append_jsonl", boom)
+    try:
+        trusted_writer.append_journal_event(vault, {"event": "run", "run_id": "x", "status": "started"})
+    except RuntimeError:
+        pass
+    with state.connect(vault) as conn:
+        count = conn.execute("SELECT COUNT(*) c FROM event_log").fetchone()["c"]
+    assert count >= 1  # authoritative write survived the JSONL crash
+
+
+def test_reconcile_reemits_missing_jsonl(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    from memoria_vault.runtime import trusted_writer
+
+    state.append_journal_event(vault, {"event": "run", "run_id": "only-db", "status": "started"})
+    emitted = trusted_writer.reconcile_journal_export(vault)
+    assert emitted == 1
+    assert trusted_writer.reconcile_journal_export(vault) == 0  # idempotent
+```
+
+- [ ] **Step 2: Run to verify failure** — first test finds 0 rows (JSONL is written first today); `reconcile_journal_export` doesn't exist.
+
+- [ ] **Step 3: Implement**
+
+```python
+def _append_event(vault: Path, machine: str | None, event: dict[str, Any]) -> None:
+    state.append_journal_event(vault, event, machine=machine)  # authoritative first
+    append_jsonl(_journal_path(vault, machine), [event])  # derived export second
+
+
+def reconcile_journal_export(vault: Path, *, machine: str | None = None) -> int:
+    """Re-emit event_log rows missing from the per-machine JSONL export."""
+    vault = Path(vault)
+    exported = {
+        json.dumps(event, ensure_ascii=False, sort_keys=True) for event in _iter_events(vault)
+    }
+    missing: list[dict[str, Any]] = []
+    with state.connect(vault) as conn:
+        rows = conn.execute("SELECT payload_json FROM event_log ORDER BY event_id").fetchall()
+    for row in rows:
+        event = json.loads(str(row["payload_json"]))
+        if json.dumps(event, ensure_ascii=False, sort_keys=True) not in exported:
+            missing.append(event)
+    for event in missing:
+        append_jsonl(_journal_path(vault, machine), [event])
+    return len(missing)
+```
+Check how `state.append_journal_event` serializes (`payload = _json(row)` — confirm `_json` sorts keys; mirror its exact serialization for the set-membership comparison, importing/reusing it if accessible).
+
+- [ ] **Step 4: Run tests** → PASS; full suite PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/runtime/trusted_writer.py tests/test_journal_trust.py
+git commit -m "fix(journal): event_log first on append; JSONL reconciliation sweep"
+```
+
+### Task 8: Trust reads consume event_log + PR-F2
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/integrity.py:1292-1301` (`_latest_derived`)
+- Modify: `src/memoria_vault/runtime/operations.py:834` (`_source_interviews`)
+- Modify: `src/memoria_vault/runtime/trusted_writer.py:673` (`_iter_events` consumers: `rebuild_trace_state` / `_known_current_hashes` — trust reads too)
+- Test: `tests/test_journal_trust.py` (extend)
+
+**Interfaces:**
+- Consumes: `event_log.payload_json` with `json_extract`.
+- Produces: identical return shapes as today (dicts keyed the same); no JSONL globs remain on trust paths. `_iter_events` stays only for the reconciliation sweep's export-side read.
+
+- [ ] **Step 1: Write the failing test** — equivalence: seed a `derived` event through `trusted_writer.append_journal_event`, then delete the JSONL files and assert the read still sees it:
+
+```python
+def test_trust_reads_survive_jsonl_deletion(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    from memoria_vault.runtime import trusted_writer
+    from memoria_vault.runtime.integrity import _latest_derived
+
+    trusted_writer.append_journal_event(
+        vault,
+        {"event": "derived", "output_id": "notes/x.md", "inputs": [{"id": "notes/y.md"}]},
+    )
+    for path in (vault / ".memoria/journal").glob("*.jsonl"):
+        path.unlink()
+    derived = _latest_derived(vault)
+    assert "notes/x.md" in derived
+```
+Confirm the exact event-type constant first: `rg -n "EVENT_DERIVED\s*=" src/memoria_vault/runtime/` and use its literal value in the seeded event.
+
+- [ ] **Step 2: Run to verify failure** — `_latest_derived` returns `{}` after JSONL deletion.
+
+- [ ] **Step 3: Implement** — `_latest_derived` becomes:
+
+```python
+def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
+    derived: dict[str, dict[str, Any]] = {}
+    with state.connect(Path(vault)) as conn:
+        rows = conn.execute(
+            "SELECT payload_json FROM event_log"
+            " WHERE json_extract(payload_json, '$.event') IN (?, ?)"
+            " ORDER BY event_id",
+            (EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT),
+        ).fetchall()
+    for row in rows:
+        event = json.loads(str(row["payload_json"]))
+        output_id = event.get("output_id")
+        if isinstance(output_id, str):
+            derived[normalize_path(output_id)] = event
+    return derived
+```
+
+`_source_interviews` (operations.py:834): same transformation — `WHERE json_extract(payload_json, '$.event') = 'copi-interview'`, keep the existing per-event filtering logic on the parsed dicts.
+
+`rebuild_trace_state` / `_known_current_hashes` (trusted_writer): replace the `_iter_events(vault)` source with the same `event_log` query pattern (`SELECT payload_json FROM event_log ORDER BY event_id`), parsing each row. Keep `_iter_events` itself — the reconciliation sweep (Task 7) still reads the JSONL side with it.
+
+- [ ] **Step 4: Run tests + gate**
+
+`python -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python scripts/verify` → PASS.
+
+- [ ] **Step 5: Commit + PR**
+
+```bash
+git add src/memoria_vault/runtime/integrity.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/trusted_writer.py tests/test_journal_trust.py
+git commit -m "fix(journal): trust-critical reads consume hash-chained event_log"
+gh pr create --title "fix(journal): one authoritative trust-read path (F2)" --body "Closes #1362. Chain verifier + journal verify CLI, event_log-first append with JSONL reconciliation, trust reads moved off the un-chained JSONL. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
+```
+
+---
+
+## PR-F3 · Durability of grounds (#1363)
+
+### Task 9: `memoria workspace backup <dir>`
+
+**Files:**
+- Modify: `src/memoria_vault/cli.py` (subcommand under `workspace`, handler)
+- Create: `src/memoria_vault/runtime/backup.py`
+- Test: `tests/test_backup_restore.py` (new — register as `"runtime"`)
+
+**Interfaces:**
+- Consumes: `state.DB_REL`, `state.JOURNAL_HEAD_REL`, blob root `.memoria/blobs`.
+- Produces: `backup.create_backup(vault: Path, target: Path) -> dict[str, Any]` returning `{"ok": True, "target": str, "db": True, "blobs": int, "journal_head": bool}`; CLI `memoria workspace backup <target>`. Task 10 consumes `create_backup` + the on-disk layout: `<target>/memoria.sqlite`, `<target>/blobs/**`, `<target>/journal-head`.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+"""tests/test_backup_restore.py — grounds durability round-trip."""
+
+from memoria_vault.runtime import backup, state
+from tests.helpers import init_cli_workspace
+
+
+def _seed(vault):
+    blob = vault / ".memoria/blobs/source-content/w-1/raw/source.txt"
+    blob.parent.mkdir(parents=True)
+    blob.write_text("evidence bytes", encoding="utf-8")
+    state.append_journal_event(vault, {"event": "run", "run_id": "b", "status": "started"})
+    state.write_journal_head_anchor(vault)
+
+
+def test_backup_snapshot_contains_db_blobs_anchor(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "backup-1"
+    report = backup.create_backup(vault, target)
+    assert report["ok"] is True
+    assert (target / "memoria.sqlite").is_file()
+    assert (target / "blobs/source-content/w-1/raw/source.txt").read_text() == "evidence bytes"
+    assert (target / "journal-head").is_file()
+
+
+def test_backup_is_atomic_no_partial_dir_on_rerun(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "backup-1"
+    backup.create_backup(vault, target)
+    report = backup.create_backup(vault, target)  # overwrite path: full replace, no merge
+    assert report["ok"] is True
+    assert not list(tmp_path.glob("backup-1.tmp*"))
+```
+
+- [ ] **Step 2: Run to verify failure** — `ModuleNotFoundError: backup`.
+
+- [ ] **Step 3: Implement** `src/memoria_vault/runtime/backup.py`:
+
+```python
+"""Workspace backup/restore for the non-rebuildable stores (DB, blobs, anchor)."""
+
+from __future__ import annotations
+
+import shutil
+import sqlite3
+import tempfile
+from pathlib import Path
+from typing import Any
+
+from memoria_vault.runtime.state import DB_REL, JOURNAL_HEAD_REL
+
+BLOBS_REL = ".memoria/blobs"
+
+
+def create_backup(vault: Path, target: Path) -> dict[str, Any]:
+    vault, target = Path(vault), Path(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = Path(tempfile.mkdtemp(prefix=f".{target.name}.tmp-", dir=target.parent))
+    try:
+        src = sqlite3.connect(vault / DB_REL)
+        try:
+            dst = sqlite3.connect(tmp / "memoria.sqlite")
+            try:
+                src.backup(dst)
+            finally:
+                dst.close()
+        finally:
+            src.close()
+        blob_count = 0
+        blob_root = vault / BLOBS_REL
+        if blob_root.is_dir():
+            shutil.copytree(blob_root, tmp / "blobs")
+            blob_count = sum(1 for p in (tmp / "blobs").rglob("*") if p.is_file())
+        anchor = vault / JOURNAL_HEAD_REL
+        has_anchor = anchor.is_file()
+        if has_anchor:
+            shutil.copy2(anchor, tmp / "journal-head")
+        if target.exists():
+            shutil.rmtree(target)
+        tmp.replace(target)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    return {
+        "ok": True,
+        "target": str(target),
+        "db": True,
+        "blobs": blob_count,
+        "journal_head": has_anchor,
+    }
+```
+
+CLI wiring, inside the `workspace` subparser block (cli.py:435-438 area):
+```python
+    wbackup = workspace_sub.add_parser("backup")
+    _common(wbackup)
+    wbackup.add_argument("target")
+    wbackup.set_defaults(handler=_cmd_workspace_backup)
+```
+```python
+def _cmd_workspace_backup(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import backup as runtime_backup
+
+    return _emit(runtime_backup.create_backup(_workspace(args), Path(args.target)), args)
+```
+
+- [ ] **Step 4: Run tests** → PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/runtime/backup.py src/memoria_vault/cli.py tests/test_backup_restore.py tests/conftest.py
+git commit -m "feat(backup): workspace backup — DB snapshot + blobs + journal-head, atomic"
+```
+
+### Task 10: `memoria workspace restore <dir>` + round-trip drill
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/backup.py`, `src/memoria_vault/cli.py`
+- Test: `tests/test_backup_restore.py` (extend)
+
+**Interfaces:**
+- Consumes: Task 9's backup layout.
+- Produces: `backup.restore_backup(vault: Path, source: Path, *, force: bool = False) -> dict[str, Any]`; refuses when `<vault>/.memoria/memoria.sqlite` exists and `force` is False; CLI `memoria workspace restore <source> [--force]`.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_round_trip_restores_grounds_and_chain(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "backup-rt"
+    backup.create_backup(vault, target)
+    # wipe the non-rebuildable stores
+    (vault / state.DB_REL).unlink()
+    import shutil as _sh
+
+    _sh.rmtree(vault / backup.BLOBS_REL)
+    (vault / state.JOURNAL_HEAD_REL).unlink()
+    report = backup.restore_backup(vault, target, force=True)
+    assert report["ok"] is True
+    assert (vault / backup.BLOBS_REL / "source-content/w-1/raw/source.txt").read_text() == "evidence bytes"
+    assert state.verify_journal_chain(vault)["ok"] is True  # the drill: chain verifies after restore
+
+
+def test_restore_refuses_live_db_without_force(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "backup-rt2"
+    backup.create_backup(vault, target)
+    report = backup.restore_backup(vault, target)
+    assert report["ok"] is False
+    assert "force" in report["error"]
+```
+
+- [ ] **Step 2: Run to verify failure** — `restore_backup` missing.
+
+- [ ] **Step 3: Implement** (append to `backup.py`):
+
+```python
+def restore_backup(vault: Path, source: Path, *, force: bool = False) -> dict[str, Any]:
+    vault, source = Path(vault), Path(source)
+    if not (source / "memoria.sqlite").is_file():
+        return {"ok": False, "error": f"not a backup directory: {source}"}
+    live_db = vault / DB_REL
+    if live_db.exists() and not force:
+        return {"ok": False, "error": "live DB present; pass --force to overwrite"}
+    live_db.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source / "memoria.sqlite", live_db)
+    blob_root = vault / BLOBS_REL
+    if blob_root.exists():
+        shutil.rmtree(blob_root)
+    if (source / "blobs").is_dir():
+        shutil.copytree(source / "blobs", blob_root)
+    if (source / "journal-head").is_file():
+        shutil.copy2(source / "journal-head", vault / JOURNAL_HEAD_REL)
+    return {"ok": True, "restored_from": str(source)}
+```
+
+CLI: `restore` subparser mirroring `backup` plus `--force` (`action="store_true"`), handler calling `restore_backup(..., force=args.force)`.
+
+- [ ] **Step 4: Run tests** → PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/runtime/backup.py src/memoria_vault/cli.py tests/test_backup_restore.py
+git commit -m "feat(backup): workspace restore + round-trip drill"
+```
+
+### Task 11: Failing doctor on unbacked blobs + durable-write sweep + PR-F3
+
+**Files:**
+- Modify: `src/memoria_vault/cli.py:2169-2199` (`_backup_report`) and its consumer (locate: `rg -n "_backup_report" src/memoria_vault/cli.py`)
+- Modify: any raw write in a product write path (locate: `rg -n "\.write_text\(|\.write_bytes\(" src/memoria_vault/runtime/ | grep -v vaultio` — known case: `knowledge.py:2215` draft write-back)
+- Test: `tests/test_backup_restore.py` (extend)
+
+**Interfaces:**
+- Consumes: Task 9's `create_backup` (its existence makes "no backup ever taken" checkable).
+- Produces: `_backup_report` gains top-level `"ok": bool` — False when `.memoria/blobs` exists non-empty AND no replication config AND no `.memoria/config/last-backup` stamp; `create_backup` writes that stamp (ISO timestamp) on success.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_backup_report_fails_on_unbacked_blobs(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    from memoria_vault.cli import _backup_report
+
+    assert _backup_report(vault)["ok"] is False
+    backup.create_backup(vault, tmp_path / "b")
+    assert _backup_report(vault)["ok"] is True
+```
+
+- [ ] **Step 2: Run to verify failure** — no `"ok"` key.
+
+- [ ] **Step 3: Implement** — in `create_backup`, after the successful `tmp.replace(target)`, write the stamp with the durable helper:
+
+```python
+from memoria_vault.runtime.vaultio import write_text_durable
+from memoria_vault.runtime.time import now_iso
+
+        write_text_durable(vault / ".memoria/config/last-backup", now_iso() + "\n", create_parent=True)
+```
+
+In `_backup_report`, compute and prepend:
+```python
+    blobs_dir = workspace / ".memoria/blobs"
+    has_blobs = blobs_dir.is_dir() and any(blobs_dir.rglob("*"))
+    replicated = _any_workspace_file(workspace, [*litestream_configs, *backup_configs, *blob_sync_configs])
+    stamped = (workspace / ".memoria/config/last-backup").is_file()
+    ok = (not has_blobs) or replicated or stamped
+```
+and include `"ok": ok` in the returned dict. Make the doctor consumer propagate it (it flows through `_emit`, which exits 1 on `ok: False`).
+
+Durable-write sweep: for each hit from the `rg` above that writes product content (skip test fixtures/scratch), replace `path.write_text(content, encoding="utf-8")` with `write_text_durable(path, content)`. Known: `knowledge.py:2215`. List each converted site in the commit message body.
+
+- [ ] **Step 4: Run tests + gate** — `python -m pytest tests/test_backup_restore.py -v` PASS; `python scripts/verify` PASS.
+
+- [ ] **Step 5: Commit + PR**
+
+```bash
+git add src/memoria_vault/cli.py src/memoria_vault/runtime/backup.py src/memoria_vault/runtime/knowledge.py tests/test_backup_restore.py
+git commit -m "feat(backup): doctor fails on unbacked blobs; durable-write sweep"
+gh pr create --title "feat(backup): durable grounds — backup/restore + failing doctor (F3)" --body "Closes #1363. workspace backup/restore (SQLite snapshot + blobs + journal-head, atomic, round-trip drilled), doctor fails on unbacked blobs, raw writes routed through write_text_durable. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
+```
+
+---
+
+## PR-F4 · Surface honesty (#1364, folds #1351)
+
+### Task 12: `_emit` never lies
+
+**Files:**
+- Modify: `src/memoria_vault/cli.py:2576-2581`
+- Test: `tests/test_cli_honesty.py` (new — register as `"contract"`)
+
+**Interfaces:**
+- Produces: failure prints `FAILED: <detail>`; success prints the most meaningful string (`workspace` → `output_path` → `path` → `"ok"`). Exit codes unchanged.
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+"""tests/test_cli_honesty.py — CLI surfaces tell the truth."""
+
+import argparse
+
+from memoria_vault.cli import _emit
+
+
+def _args(json=False, quiet=False):
+    return argparse.Namespace(json=json, quiet=quiet)
+
+
+def test_failed_payload_never_prints_ok(capsys):
+    code = _emit({"ok": False, "error": "check failed: broken evidence"}, _args())
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "ok" != out.strip()
+    assert "FAILED" in out
+    assert "broken evidence" in out
+
+
+def test_success_prints_output_path_over_true(capsys):
+    code = _emit({"ok": True, "output_path": "notes/x.md"}, _args())
+    assert code == 0
+    assert capsys.readouterr().out.strip() == "notes/x.md"
+
+
+def test_bare_success_still_prints_ok(capsys):
+    assert _emit({"ok": True}, _args()) == 0
+    assert capsys.readouterr().out.strip() == "ok"
+```
+
+- [ ] **Step 2: Run to verify failure** — failed payload prints `ok`.
+
+- [ ] **Step 3: Implement**
+
+```python
+def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:
+    ok = bool(payload.get("ok", True))
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+    elif not args.quiet:
+        if not ok:
+            detail = str(
+                payload.get("error") or payload.get("evidence") or payload.get("status") or "operation failed"
+            )
+            print(f"FAILED: {detail}")
+        else:
+            for key in ("workspace", "output_path", "path"):
+                value = payload.get(key)
+                if isinstance(value, str) and value:
+                    print(value)
+                    break
+            else:
+                print("ok")
+    return 0 if ok else 1
+```
+
+- [ ] **Step 4: Run tests** → PASS; full suite (`python -m pytest tests/ -x -q`) — fix any test asserting the old dishonest output.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/cli.py tests/test_cli_honesty.py tests/conftest.py
+git commit -m "fix(cli): _emit prints FAILED + detail on failure, meaningful paths on success"
+```
+
+### Task 13: `list --type work` enumerates the catalog
+
+**Files:**
+- Modify: `src/memoria_vault/engine/api.py` (`read_concepts`, ~line 199)
+- Test: `tests/test_cli_honesty.py` (extend)
+
+**Interfaces:**
+- Consumes: `state.catalog_sources(vault, *, checked_only: bool)` (state.py:822 — read it first and use its exact row keys).
+- Produces: `read_concepts(workspace, concept_type="work")` returns catalog rows in the same `concepts` payload shape (`path`, `type: "work"`, `title`, `check_status`, `verdict`).
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+def test_list_type_work_returns_catalog_rows(tmp_path, capsys):
+    from memoria_vault.engine import api as engine_api
+    from memoria_vault.runtime import capture
+    from tests.helpers import init_cli_workspace
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    capture.capture_text_source(  # verify exact helper name: rg -n "def capture" src/memoria_vault/runtime/capture.py
+        workspace,
+        work_id="w-listtest",
+        title="List test",
+        description="d",
+        content_text="body",
+    )
+    payload = engine_api.read_concepts(workspace, concept_type="work")
+    rows = payload["concepts"]
+    assert any(r["type"] == "work" and "w-listtest" in r["path"] for r in rows)
+```
+Before writing: confirm the capture helper's exact name/required args (`rg -n "^def " src/memoria_vault/runtime/capture.py`) and reuse whatever existing tests use to seed a catalog row (`rg -ln "capture" tests/test_capture.py`).
+
+- [ ] **Step 2: Run to verify failure** — empty list (markdown filter can never yield `work`).
+
+- [ ] **Step 3: Implement** — at the top of `read_concepts`, before the markdown walk:
+
+```python
+    if concept_type == "work":
+        rows = [
+            {
+                "path": str(row["concept_path"]),
+                "type": "work",
+                "title": str(row["title"]),
+                "check_status": str(row["check_status"]),
+                "verdict": str(row["check_status"]),
+            }
+            for row in state.catalog_sources(workspace, checked_only=False)
+            if _scope_allows(str(row["concept_path"]), read_scope)
+        ]
+        return _read_payload(concepts=sorted(rows, key=lambda row: row["path"]))
+```
+Match key names to `catalog_sources`' actual row dict (read state.py:822-840 first; adjust `concept_path`/`title` accessors to what it returns).
+
+- [ ] **Step 4: Run tests** → PASS. Also fix Tutorial 01's step here if it only needed the working command (checked in Task 16).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/engine/api.py tests/test_cli_honesty.py
+git commit -m "fix(cli): list --type work enumerates the catalog"
+```
+
+### Task 14: `new-note --mode work` creatable
+
+**Files:**
+- Modify: `src/memoria_vault/cli.py:153` (choices) and `_cmd_new_note` (locate: `rg -n "_cmd_new_note" src/memoria_vault/cli.py`)
+- Test: `tests/test_cli_honesty.py` (extend)
+
+**Interfaces:**
+- Consumes: seed schema `note.yaml` (`mode` enum already includes `work`; requires `work_id` when `mode=work`).
+- Produces: `memoria new note <title> --mode work --work-id <id> --body ...` creates a valid `mode: work` note.
+
+- [ ] **Step 1: Write the failing test** — drive the CLI path the way `tests/test_cli.py` does (reuse its invocation helper; read it first):
+
+```python
+def test_new_note_mode_work_roundtrip(tmp_path, capsys):
+    # reuse the CLI invocation pattern from tests/test_cli.py (main([...]) or cli_test_helpers)
+    # 1) seed a catalog work (as in Task 13's test)
+    # 2) run: new note "Work note" --mode work --work-id w-listtest --body "judgment about the work"
+    # 3) assert exit 0 and the created file's frontmatter has mode: work and work_id: w-listtest
+    ...
+```
+Write it concretely against the real helper — no `...` left after reading `tests/test_cli.py`'s pattern.
+
+- [ ] **Step 2: Run to verify failure** — argparse rejects `--mode work`.
+
+- [ ] **Step 3: Implement** — cli.py:153: `note.add_argument("--mode", choices=("claim", "question", "definition", "work"))`; add `note.add_argument("--work-id")`; in `_cmd_new_note`, pass `work_id` into the note frontmatter payload the same way `mode` flows (locate the frontmatter assembly; add `"work_id": args.work_id` when set). Schema validation already enforces `work_id` presence for `mode=work` — surface its error through `_fail`.
+
+- [ ] **Step 4: Run tests** → PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/memoria_vault/cli.py tests/test_cli_honesty.py
+git commit -m "fix(cli): new note --mode work creatable with --work-id"
+```
+
+### Task 15: Dead knobs deleted + projection drift covers argument.canvas (#1351)
+
+**Files:**
+- Delete: the seeded `calibration.yaml` (locate: `rg -ln "calibration.yaml" src/ product/ --hidden`) and every reference
+- Modify: type YAMLs carrying `gated:` (locate: `rg -n "gated:" src/memoria_vault/product/ src/memoria_vault/runtime/`) and any loader mention
+- Modify: `src/memoria_vault/runtime/projections.py:15-18`
+- Test: `tests/test_projections_drift.py` (new — register as `"contract"`) or extend the existing projections test (`rg -ln "TRACKED_PROJECTION_PATHS" tests/`)
+
+**Interfaces:**
+- Produces: projection-drift checking covers `argument.canvas` files; `calibration.yaml` and `gated:` no longer exist anywhere (`rg` returns nothing).
+
+- [ ] **Step 1: Investigate** — read `projections.py` fully plus the drift check's consumer (`rg -n "TRACKED_PROJECTION_PATHS" src/`). `argument.canvas` lives per-project (`projects/<slug>/argument.canvas`) — a fixed-path tuple cannot list it. Decide per findings: either a glob-aware companion constant or extending the check to per-project canvases.
+
+- [ ] **Step 2: Write the failing test** — seed a project with an `argument.canvas` via the render operation (reuse the fixture from the existing canvas/projection tests), mutate the canvas file by hand, and assert the drift check reports it:
+
+```python
+def test_projection_drift_covers_argument_canvas(tmp_path, capsys):
+    # seed project + render argument.canvas (reuse existing canvas test fixture)
+    # hand-edit the canvas file (simulate drift)
+    # run the drift check the same way the existing TRACKED_PROJECTION_PATHS test does
+    # assert argument.canvas appears in the drift findings
+    ...
+```
+Fill concretely from the existing tests found in Step 1 — no `...` may remain.
+
+- [ ] **Step 3: Implement** — the minimal shape (adjust to Step 1's findings):
+
+```python
+TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
+```
+and extend the drift-check consumer to iterate `TRACKED_PROJECTION_PATHS` plus `vault.glob(pattern)` matches for each glob.
+
+- [ ] **Step 4: Dead knobs** — delete the seeded `calibration.yaml` file + its seed-roster entry; remove `gated:` keys from type YAMLs and any dead loader branch reading them. Verify: `rg -n "calibration.yaml|gated:" src/` → no hits (except unrelated words; check matches).
+
+- [ ] **Step 5: Run tests + commit**
+
+```bash
+python -m pytest tests/ -x -q
+git status --short  # list every deleted/modified path, then stage each explicitly:
+git add src/memoria_vault/runtime/projections.py tests/test_projections_drift.py tests/conftest.py <each deleted seed/schema path>
+git commit -m "fix(product): projection drift covers argument.canvas (#1351); delete dead knobs"
+```
+(`git add <path>` stages deletions for named paths; never a bare `git add -A`.)
+
+### Task 16: Doc–code contradiction fixes + tutorials + PR-F4
+
+**Files:**
+- Modify: `docs/` pages + tutorials (located per item below)
+- Test: manual verbatim run of tutorials 01/02/04/05 in a disposable sandbox vault
+
+**Interfaces:** none (prose truth).
+
+- [ ] **Step 1: Fix the four doc–code contradictions** (locate each with the given `rg`; correct the claim to match the code as repaired by Tasks 12–14):
+  1. `rg -n "capture-candidate|Library pipeline" docs/` — knowledge-cycle page: remove/correct the capture-candidate stage and "Library pipeline" view that no code implements.
+  2. `rg -n "blocks delegation" docs/` — linter page: the linter reports; it does not block delegation. Correct the verb.
+  3. `rg -n "mode" docs/reference/data-model/frontmatter.md` — re-derive the note-mode/field table from `note.yaml` (source of truth; schema → docs direction).
+  4. `rg -n "provider" docs/**/quickstart*` — quickstart's `ask` claim: `memoria ask` is keyless BM25; correct the provider-keys sentence.
+
+- [ ] **Step 2: Fix the six enforcement-claim corrections** (from the architecture review; locate each with `rg -n` on its phrase in `docs/`): phantom "seven-layer" model description; block-loudness pause described as binding (it binds only the uninstalled adapter path — say so); "single attention writer" claim (three hand-rolled copies exist — describe what code does); telemetry-logging claim (no code writes it — delete the claim); "SQLite-backed attention" claim (correct to files-with-projection); dashboard rail written in present tense (mark planned). For each: the fix is *describe what ships today*, marking unshipped behavior as planned.
+
+- [ ] **Step 3: Tutorials 01/02/04/05 verbatim run** — in a fresh `sandbox/` vault, execute each tutorial's commands exactly as written; fix the tutorial text where a step fails (01: `list --type work` now works — verify the expected output block matches Task 13's real output; 02/04: teach the check step at point of need; 05: reject wording matches Task 12's honest `FAILED:` output).
+
+- [ ] **Step 4: Gate + PR**
+
+```bash
+python scripts/verify
+git add docs/ tests/
+git commit -m "docs: make enforcement claims match shipped code; tutorials run verbatim"
+gh pr create --title "fix(cli+docs): honest surfaces (F4)" --body "Closes #1364, closes #1351. _emit prints FAILED with detail, list --type work enumerates the catalog, note mode:work creatable, dead knobs deleted, projection drift covers argument.canvas, doc claims corrected to shipped behavior, tutorials run verbatim. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
+```
+
+---
+
+## Self-review notes
+
+- Spec coverage: F1 → Tasks 1–5; F2 → Tasks 6–8; F3 → Tasks 9–11; F4 → Tasks 12–16; #1351 → Task 15. The spec's "out of scope" items (integrity branch semantics, edge module) appear in no task — correct.
+- Two tests (Tasks 14/16 Step 2, Task 15 Step 2) carry investigate-then-fill steps because they must reuse existing fixture patterns; each names the exact file to copy the pattern from and forbids leaving `...` in the final test.
+- Function-name confirmations are embedded where the plan touches code not fully read (`catalog_sources` row keys, capture helper name, `_journal_hash` arg order) — each with the exact `rg`/read to run first.
