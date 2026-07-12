@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "packages" / "memoria-obsidian"
+SEED_PLUGIN = ROOT / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian"
 
 
 def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
@@ -24,6 +25,7 @@ def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
     assert package["scripts"]["build"] == "node scripts/build.mjs"
     assert package["scripts"]["test"] == "node scripts/test.mjs"
     assert (PLUGIN / "main.js").is_file()
+    assert (PLUGIN / "schema.js").is_file()
     assert (PLUGIN / "styles.css").is_file()
 
 
@@ -37,6 +39,13 @@ def test_memoria_obsidian_build_artifacts_are_current() -> None:
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_memoria_obsidian_seed_matches_release_artifacts() -> None:
+    for artifact in ("main.js", "schema.js", "manifest.json", "styles.css"):
+        assert (SEED_PLUGIN / artifact).read_text(encoding="utf-8") == (
+            PLUGIN / artifact
+        ).read_text(encoding="utf-8")
 
 
 def test_memoria_obsidian_event_schema_rejects_leaky_fields() -> None:
@@ -55,6 +64,10 @@ def test_memoria_obsidian_uses_memoria_operation_run_only() -> None:
     source = (PLUGIN / "src/main.ts").read_text(encoding="utf-8")
 
     assert "/operation/run" in source
+    assert "requestUrl" in source
+    assert "fetch(" not in source
+    assert "setSecret" in source
+    assert "getSecret" in source
     assert "empirical-event-record" in source
     assert "empirical-event:" in source
     assert "empirical_event.record" not in source
