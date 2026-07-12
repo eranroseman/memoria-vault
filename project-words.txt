@@ -221,9 +221,11 @@ uncited
 undoable
 ungated
 unindexed
+unmaterialized
 unpaywall
 unrequested
 unrun
+unscanned
 unscored
 unsloth
 unsteerable
