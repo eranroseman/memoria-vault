@@ -214,6 +214,7 @@ def test_empirical_event_operation_requires_event_id_idempotency_key(
         event,
         idempotency_key=idempotency_key,
         machine="test-machine",
+        actor="pi",
     )
 
     assert result["ok"] is False

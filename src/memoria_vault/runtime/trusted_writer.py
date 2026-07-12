@@ -7,7 +7,8 @@ import platform
 import re
 import shutil
 import subprocess
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +41,63 @@ TRACE_OUTPUT_EVENTS = frozenset({EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT})
 SUPPORTED_PROMOTION_CHECKS = frozenset({"memoria-runtime"})
 ARGUMENT_EDGE_TYPES = frozenset({"supports", "contradicts", "extends"})
 TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\]\]")
+
+
+@dataclass(frozen=True, slots=True)
+class OperationContext:
+    actor: str
+    run_id: str
+    request_id: str
+    operation_id: str
+    machine: str
+
+
+def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> OperationContext:
+    """Build the validated provenance context for one claimed request."""
+    envelope = job.get("request_envelope")
+    if not isinstance(envelope, Mapping):
+        raise ValueError("request envelope must be a mapping")
+
+    actor_value = envelope.get("actor")
+    actor = actor_value.strip() if isinstance(actor_value, str) else ""
+    if actor not in state.ACTORS:
+        raise ValueError(f"request envelope actor must be one of {sorted(state.ACTORS)}")
+
+    request_id = _required_context_identifier(job, "job_id", "job request")
+    envelope_request_id = _required_context_identifier(envelope, "request_id", "envelope request")
+    if request_id != envelope_request_id:
+        raise ValueError("job and envelope request identifiers must match")
+
+    operation_key = "operation" if job.get("kind") == "trusted_write" else "operation_id"
+    operation_id = _required_context_identifier(job, operation_key, "job operation")
+    envelope_operation_id = _required_context_identifier(
+        envelope, "operation_id", "envelope operation"
+    )
+    if operation_id != envelope_operation_id:
+        raise ValueError("job and envelope operation identifiers must match")
+
+    args = envelope.get("args", {})
+    if not isinstance(args, Mapping):
+        raise ValueError("request envelope args must be a mapping")
+    run_value = args.get("run_id")
+    if run_value is not None and not isinstance(run_value, str):
+        raise ValueError("request envelope run_id must be a string")
+    run_id = run_value.strip() if isinstance(run_value, str) else ""
+
+    return OperationContext(
+        actor=actor,
+        run_id=run_id or request_id,
+        request_id=request_id,
+        operation_id=operation_id,
+        machine=safe_filename(machine or platform.node() or "local"),
+    )
+
+
+def _required_context_identifier(source: Mapping[str, Any], key: str, label: str) -> str:
+    value = source.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{label} identifier must be a nonblank string")
+    return value.strip()
 
 
 def normalize_promotion_checks(

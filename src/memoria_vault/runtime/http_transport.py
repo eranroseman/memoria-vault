@@ -214,6 +214,7 @@ def _write(workspace: Path, path: str, body: dict[str, Any]) -> dict[str, Any]:
         idempotency_key=str(body.get("idempotency_key") or "") or None,
         schedule_id=str(body.get("schedule_id") or "") or None,
         actor=str(body.get("actor") or "agent"),
+        agent_identity=str(body.get("agent_identity") or ""),
         command=f"http:{operation_id}",
         surface="memoria-http",
         machine="memoria-http",

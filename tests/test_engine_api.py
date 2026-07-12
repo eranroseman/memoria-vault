@@ -117,6 +117,7 @@ def test_engine_read_scope_filters_and_blocks_requests(workspace: Path) -> None:
         tags=[],
         extra={},
         idempotency_key="create-alpha",
+        actor="pi",
     )
     api.write_new_concept(
         workspace,
@@ -126,6 +127,7 @@ def test_engine_read_scope_filters_and_blocks_requests(workspace: Path) -> None:
         tags=[],
         extra={},
         idempotency_key="create-beta",
+        actor="pi",
     )
 
     listed = api.read_requests(workspace, read_scope=[alpha["path"]])
@@ -198,11 +200,13 @@ def test_engine_compose_and_read_draft_returns_project_draft_view(workspace: Pat
         "project-alpha",
         token_budget=400,
         idempotency_key="compose-draft",
+        actor="pi",
     )
     verified = api.verify_draft(
         workspace,
         "project-alpha",
         idempotency_key="verify-draft",
+        actor="pi",
     )
     readback = api.read_draft(workspace, "project-alpha")
 

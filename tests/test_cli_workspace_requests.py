@@ -133,6 +133,7 @@ def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
         "analyze-gaps",
         payload={"seed_terms": ["new area"], "dense_threshold": 1},
         idempotency_key="pending-gaps",
+        actor="pi",
     )
 
     rc = main(
@@ -236,6 +237,7 @@ def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(
         "notes/pi-scan.md",
         note,
         idempotency_key="write-pi-scan",
+        actor="operation",
     )
     main(["workspace", "run", "--workspace", str(workspace), "--limit", "1", "--json"])
     capsys.readouterr()
@@ -338,6 +340,7 @@ def test_cli_request_list_show_and_resume_pending_request(
         payload={"seed_terms": ["new area"], "dense_threshold": 1},
         idempotency_key="resume-gaps",
         provenance={"surface": "test"},
+        actor="pi",
     )
 
     assert (
@@ -386,6 +389,7 @@ def test_cli_request_cancel_preserves_trusted_write_envelope_args(
         "notes/queued.md",
         "---\ntype: note\ntitle: Queued\ntags: []\nlinks: {}\n---\nBody.\n",
         idempotency_key="trusted-request",
+        actor="operation",
     )
 
     assert (
@@ -700,6 +704,7 @@ def test_cli_wires_maintenance_and_pi_commands(
         "answer-query",
         payload={"query": "status", "k": 1},
         idempotency_key="recoverable-request",
+        actor="pi",
     )
     assert (
         main(
@@ -986,6 +991,7 @@ def test_cli_workspace_recover_fails_running_requests_for_retry(
         "answer-query",
         payload={"query": "status"},
         idempotency_key="stuck-request",
+        actor="pi",
     )
     state.set_request_running(workspace, "stuck-request", job)
 

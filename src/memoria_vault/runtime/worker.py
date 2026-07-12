@@ -29,8 +29,10 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
     commit_writer_changes,
     materialize_unchecked,
+    operation_context_from_job,
     promote_checked,
     stage_concept,
 )
@@ -107,6 +109,7 @@ def enqueue_trusted_write(
     operation: str = "trusted-write",
     run_id: str | None = None,
     idempotency_key: str | None = None,
+    actor: str,
 ) -> dict[str, Any]:
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
@@ -138,7 +141,7 @@ def enqueue_trusted_write(
         input_refs=inputs or [],
         output_intents=[{"id": target_path, "kind": "trusted_write"}],
         primary_target=target_path,
-        actor="operation",
+        actor=actor,
         provenance={"surface": "worker"},
     )
     return state.save_request(vault, envelope, job)
@@ -155,7 +158,7 @@ def enqueue_operation(
     primary_target: str = "",
     precondition_hashes: dict[str, Any] | None = None,
     causal_refs: list[str | dict[str, Any]] | None = None,
-    actor: str = "pi",
+    actor: str,
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
 ) -> dict[str, Any]:
@@ -217,7 +220,8 @@ def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> 
 
 def _run_claimed_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
     try:
-        result = _run_job(vault, job, machine)
+        context = operation_context_from_job(job, machine)
+        result = _run_job(vault, job, context)
     except Exception as exc:  # noqa: BLE001 -- worker records failed jobs instead of losing them.
         job.update({"status": "failed", "failed_at": now_iso(), "error": str(exc)})
         _finish_job(vault, "failed", job)
@@ -258,6 +262,7 @@ def enqueue_integrity_sweep(
             payload={"shadow": shadow},
             idempotency_key=f"{operation_id}-{key}",
             schedule_id=key,
+            actor="integrity",
             provenance={"surface": "worker-schedule"},
         )
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
@@ -278,9 +283,9 @@ def run_integrity_sweep(
     return {"jobs": jobs, "results": results}
 
 
-def _run_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
+def _run_job(vault: Path, job: dict[str, Any], context: OperationContext) -> dict[str, Any]:
     if job.get("kind") == "operation":
-        return _run_operation_job(vault, job, machine)
+        return _run_operation_job(vault, job, context)
     if job.get("kind") != "trusted_write":
         raise ValueError(f"unsupported worker job kind: {job.get('kind')!r}")
     target = str(job["target_path"])
@@ -289,25 +294,23 @@ def _run_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str,
         target,
         str(job["content"]),
         inputs=job.get("inputs") or [],
-        operation=str(job.get("operation") or "trusted-write"),
-        run_id=str(job.get("run_id") or job["job_id"]),
-        machine=machine,
+        operation=context.operation_id,
+        run_id=context.run_id,
+        actor=context.actor,
+        machine=context.machine,
     )
-    promote_checked(vault, target, machine=machine)
-    commit = commit_writer_changes(vault, f"trusted write {target}", [target], machine=machine)
+    promote_checked(vault, target, machine=context.machine)
+    commit = commit_writer_changes(
+        vault, f"trusted write {target}", [target], machine=context.machine
+    )
     return {"commit": commit, "outputs": [target]}
 
 
-def _envelope_actor(job: dict[str, Any]) -> str:
-    envelope = job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-    actor = str(envelope.get("actor") or "").strip()
-    if not actor:
-        raise ValueError("request envelope is missing actor")
-    return actor
-
-
-def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
-    operation_id = str(job.get("operation_id") or "")
+def _run_operation_job(
+    vault: Path, job: dict[str, Any], context: OperationContext
+) -> dict[str, Any]:
+    operation_id = context.operation_id
+    machine = context.machine
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
     from memoria_vault.runtime.operations import (
         load_operation_policy,
@@ -323,8 +326,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             target,
             content,
             operation=operation_id,
-            run_id=str(job.get("job_id") or ""),
-            actor=_envelope_actor(job),
+            run_id=context.run_id,
+            actor=context.actor,
             machine=machine,
         )
         materialized = materialize_unchecked(vault, target)
@@ -352,8 +355,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         return record_empirical_event(
             vault,
             event,
-            request_id=str(envelope.get("request_id") or job.get("job_id") or ""),
-            actor=_envelope_actor(job),
+            request_id=context.request_id,
+            actor=context.actor,
             machine=machine,
         )
     if operation_id in {
@@ -416,7 +419,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             [topic.strip() for topic in hub_topics],
             mode=str(payload.get("mode") or "test"),
             machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
+            run_id=context.run_id,
         )
         return {
             "commit": result["commit"],
@@ -438,11 +441,11 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             work_id,
             response,
-            actor=_envelope_actor(job),
+            actor=context.actor,
             prompt=str(payload.get("prompt") or "What matters about this source?"),
             project_id=str(payload.get("project_id") or ""),
             machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
+            run_id=context.run_id,
         )
         return {
             "commit": result["commit"],
@@ -466,7 +469,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             candidates,
             mode=str(payload.get("mode") or "test"),
             machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
+            run_id=context.run_id,
         )
         return {
             "commit": result["commit"],
@@ -485,7 +488,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             note_path,
             status,
-            actor=_envelope_actor(job),
+            actor=context.actor,
             reason=str(payload.get("reason") or ""),
             machine=machine,
         )
@@ -511,7 +514,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             source_note_path,
             link_type,
             target_path,
-            actor=_envelope_actor(job),
+            actor=context.actor,
             reason=str(payload.get("reason") or ""),
             machine=machine,
         )
@@ -583,8 +586,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             project_path,
             paper_plan=payload,
-            run_id=str(job.get("job_id") or ""),
-            actor=_envelope_actor(job),
+            run_id=context.run_id,
+            actor=context.actor,
             machine=machine,
         )
         return {
@@ -720,7 +723,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             title=str(payload.get("title") or ""),
             passage=str(payload.get("passage") or ""),
             work_id=str(payload.get("work_id") or ""),
-            actor=_envelope_actor(job),
+            actor=context.actor,
             commit=True,
             machine=machine,
         )
@@ -949,7 +952,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             payload,
             mode=str(payload.get("mode") or "test"),
             machine=machine,
-            run_id=str(job["job_id"]),
+            run_id=context.run_id,
         )
     if operation_id == "update-work":
         work_id = str(payload.get("work_id") or "").strip()
@@ -1055,15 +1058,15 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "commit": commit,
         }
     if operation_id == "capture-source":
-        return _run_capture_source_operation(vault, payload, machine)
+        return _run_capture_source_operation(vault, payload, context)
     if operation_id == "enrich-source":
-        return _run_enrich_source_operation(vault, payload, policy, machine)
+        return _run_enrich_source_operation(vault, payload, policy, context)
     if operation_id == "capture-bibtex-source":
-        return _run_capture_bibtex_source_operation(vault, payload, job, machine)
+        return _run_capture_bibtex_source_operation(vault, payload, context)
     if operation_id == "capture-url-source":
-        return _run_capture_url_source_operation(vault, payload, policy, machine)
+        return _run_capture_url_source_operation(vault, payload, policy, context)
     if operation_id == "capture-pdf-source":
-        return _run_capture_pdf_source_operation(vault, payload, machine)
+        return _run_capture_pdf_source_operation(vault, payload, context)
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
 
@@ -1134,7 +1137,7 @@ def _source_result(result: dict[str, Any]) -> dict[str, Any]:
 
 
 def _run_capture_source_operation(
-    vault: Path, payload: dict[str, Any], machine: str | None
+    vault: Path, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_capture_payload
 
@@ -1169,14 +1172,17 @@ def _run_capture_source_operation(
             "identifiers": identifiers,
             "csl_json": csl_json,
         },
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
+        machine=context.machine,
+        run_id=context.run_id,
     )
     return _source_result(result)
 
 
 def _run_enrich_source_operation(
-    vault: Path, payload: dict[str, Any], policy: dict[str, Any], machine: str | None
+    vault: Path,
+    payload: dict[str, Any],
+    policy: dict[str, Any],
+    context: OperationContext,
 ) -> dict[str, Any]:
     from memoria_vault.runtime.enrichment import enrich_source
 
@@ -1191,13 +1197,13 @@ def _run_enrich_source_operation(
         work_id,
         policy=policy,
         provider_payloads=provider_payloads,
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
+        machine=context.machine,
+        run_id=context.run_id,
     )
 
 
 def _run_capture_bibtex_source_operation(
-    vault: Path, payload: dict[str, Any], job: dict[str, Any], machine: str | None
+    vault: Path, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import (
         bibtex_capture_payload,
@@ -1216,25 +1222,21 @@ def _run_capture_bibtex_source_operation(
         raise ValueError("capture-bibtex-source content_text must be a string")
     work_id = payload.get("work_id")
     description = payload.get("description")
-    run_id = payload.get("run_id")
     if work_id is not None and not isinstance(work_id, str):
         raise ValueError("capture-bibtex-source work_id must be a string")
     if description is not None and not isinstance(description, str):
         raise ValueError("capture-bibtex-source description must be a string")
-    if run_id is not None and not isinstance(run_id, str):
-        raise ValueError("capture-bibtex-source run_id must be a string")
     capture_payload = bibtex_capture_payload(
         bibtex,
         content_text=content_text,
         work_id=work_id or None,
         description=description or None,
     )
-    if run_id:
-        capture_payload["run_id"] = run_id
+    capture_payload["run_id"] = context.run_id
     result = stage_capture_payload(
         vault,
         capture_payload,
-        machine=machine,
+        machine=context.machine,
         workflow="capture_bibtex_source",
     )
     output = _source_result(result)
@@ -1247,7 +1249,7 @@ def _run_capture_bibtex_source_operation(
             idempotency_key=f"enrich-{result['work_id']}",
             input_refs=[{"id": result["work_id"], "kind": "catalog_source"}],
             primary_target=f"catalog/sources/{result['work_id']}",
-            causal_refs=[str(job["job_id"])],
+            causal_refs=[context.request_id],
             actor="operation",
             provenance={"surface": "worker", "command": "capture-bibtex-source"},
         )
@@ -1255,7 +1257,10 @@ def _run_capture_bibtex_source_operation(
 
 
 def _run_capture_url_source_operation(
-    vault: Path, payload: dict[str, Any], policy: dict[str, Any], machine: str | None
+    vault: Path,
+    payload: dict[str, Any],
+    policy: dict[str, Any],
+    context: OperationContext,
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_url_source
     from memoria_vault.runtime.operations import require_allowed_network
@@ -1273,14 +1278,14 @@ def _run_capture_url_source_operation(
         title=str(payload.get("title") or "") or None,
         description=str(payload.get("description") or "") or None,
         timeout=float(timeout),
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
+        machine=context.machine,
+        run_id=context.run_id,
     )
     return _source_result(result)
 
 
 def _run_capture_pdf_source_operation(
-    vault: Path, payload: dict[str, Any], machine: str | None
+    vault: Path, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_pdf_source
 
@@ -1315,8 +1320,8 @@ def _run_capture_pdf_source_operation(
         csl_json=csl_json,
         provider_coverage=str(payload.get("provider_coverage") or "partial"),
         citekey=str(payload.get("citekey") or ""),
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
+        machine=context.machine,
+        run_id=context.run_id,
     )
     return _source_result(result)
 
@@ -1399,12 +1404,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--payload", default="{}")
     parser.add_argument("--idempotency-key", default=None)
     parser.add_argument("--schedule-id", default=None)
+    parser.add_argument("--actor", choices=sorted(state.ACTORS), default=None)
     args = parser.parse_args(argv)
 
     vault = Path(args.vault)
     if args.command == "enqueue-operation":
         if not args.operation_id:
             parser.error("enqueue-operation requires --operation-id")
+        if not args.actor:
+            parser.error("enqueue-operation requires --actor")
         payload = json.loads(args.payload)
         if not isinstance(payload, dict):
             parser.error("--payload must be a JSON object")
@@ -1415,6 +1423,7 @@ def main(argv: list[str] | None = None) -> int:
                     args.operation_id,
                     payload=payload,
                     idempotency_key=args.idempotency_key,
+                    actor=args.actor,
                 ),
                 ensure_ascii=False,
                 sort_keys=True,
@@ -1426,6 +1435,7 @@ def main(argv: list[str] | None = None) -> int:
             vault,
             "observe-pi-edits",
             idempotency_key=args.idempotency_key or f"scan-{now_iso()}",
+            actor="integrity",
             provenance={"surface": "worker-scan"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)
@@ -1442,6 +1452,7 @@ def main(argv: list[str] | None = None) -> int:
             payload=payload,
             idempotency_key=args.idempotency_key or f"{args.operation_id}-{args.schedule_id}",
             schedule_id=args.schedule_id,
+            actor="operation",
             provenance={"surface": "worker-schedule"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)

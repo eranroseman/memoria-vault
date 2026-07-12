@@ -95,6 +95,7 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
         note_text(status="checked"),
         inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
         idempotency_key="write-worker",
+        actor="operation",
     )
 
     assert queued["status"] == "pending"
@@ -177,12 +178,14 @@ def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path
         "notes/worker.md",
         note_text(),
         idempotency_key="same-job",
+        actor="operation",
     )
     second = enqueue_trusted_write(
         vault,
         "notes/worker.md",
         note_text(),
         idempotency_key="same-job",
+        actor="operation",
     )
 
     assert first == second
@@ -193,6 +196,7 @@ def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path
         "notes/worker.md",
         note_text(),
         idempotency_key="same-job",
+        actor="operation",
     )
     assert after_done["status"] == "done"
     assert after_done["commit"] == done["commit"]
@@ -207,6 +211,7 @@ def test_worker_runs_prompt_operation_manifest_jobs(tmp_path: Path) -> None:
         "analyze-claims",
         payload={"input_ref": "notes/claim.md"},
         idempotency_key="analyze-claims",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -242,6 +247,8 @@ def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
             '{"query":"alpha","k":1}',
             "--idempotency-key",
             "ask-alpha",
+            "--actor",
+            "agent",
         ]
     )
 
@@ -249,6 +256,7 @@ def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
     output = json.loads(capsys.readouterr().out)
     assert output["job_id"] == "ask-alpha"
     assert output["payload"] == {"query": "alpha", "k": 1}
+    assert output["request_envelope"]["actor"] == "agent"
 
 
 def test_worker_requires_valid_operation_policy_before_dispatch(
@@ -269,6 +277,7 @@ def test_worker_requires_valid_operation_policy_before_dispatch(
         "answer-query",
         payload={"query": "alpha"},
         idempotency_key="unchecked-policy",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -285,6 +294,7 @@ def test_worker_marks_invalid_job_failed_without_bundle_write(tmp_path: Path) ->
         "notes/bad.md",
         "---\ntype: note\ntags: []\nlinks: {}\n---\nBody.\n",
         idempotency_key="bad-job",
+        actor="operation",
     )
 
     failed = run_next_job(vault, machine="test-machine")

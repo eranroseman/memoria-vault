@@ -84,6 +84,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
             "mode": "live",
         },
         idempotency_key="compile-alpha",
+        actor="pi",
     )
     digest_done = run_next_job(vault, machine="test-machine")
 
@@ -121,6 +122,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
             "run_id": "notes-alpha",
         },
         idempotency_key="notes-alpha",
+        actor="pi",
     )
     note_done = run_next_job(vault, machine="test-machine")
 
@@ -140,6 +142,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
         "curate-note-candidate",
         payload={"note_path": note_rel, "status": "accepted", "reason": "PI approved"},
         idempotency_key="curate-note-alpha",
+        actor="pi",
     )
     curate_done = run_next_job(vault, machine="test-machine")
 
@@ -162,6 +165,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
             "reason": "PI linked notes",
         },
         idempotency_key="link-note-alpha",
+        actor="pi",
     )
     link_done = run_next_job(vault, machine="test-machine")
 
@@ -195,6 +199,7 @@ def test_worker_records_copi_interview_operation_jobs(tmp_path: Path) -> None:
             "project_id": "projects/project-alpha/project.md",
         },
         idempotency_key="copi-interview-alpha",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -261,6 +266,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         "analyze-gaps",
         payload={"seed_terms": ["new area"], "dense_threshold": 1},
         idempotency_key="gap-analysis",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -324,6 +330,7 @@ def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
         "analyze-gaps",
         payload={"project_path": "project-alpha", "seed_terms": [], "dense_threshold": 2},
         idempotency_key="project-gap-analysis",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -382,6 +389,7 @@ def test_worker_runs_frame_paper_operation(tmp_path: Path) -> None:
             "limitations": "Single-corpus dogfood run.",
         },
         idempotency_key="frame-paper",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -432,6 +440,7 @@ def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) ->
         "analyze-project-argument",
         payload={"project_path": "project-alpha"},
         idempotency_key="project-argument",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -456,6 +465,7 @@ def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) ->
         "render-project-argument-canvas",
         payload={"project_path": "project-alpha"},
         idempotency_key="project-argument-canvas",
+        actor="pi",
     )
     canvas_done = run_next_job(vault, machine="test-machine")
 
@@ -478,6 +488,7 @@ def test_worker_runs_checked_search_index_rebuild_operation_jobs(tmp_path: Path)
         vault,
         "rebuild-checked-search-index",
         idempotency_key="rebuild-search",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -500,6 +511,7 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
         "answer-query",
         payload={"query": "alpha", "k": 3},
         idempotency_key="answer-query",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -525,6 +537,7 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
         "run-seeded-error-verdict",
         payload={"mode": "live", "target_operation_id": "compile-source-digest"},
         idempotency_key="seeded-verdict",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -595,6 +608,7 @@ def test_seeded_error_verdict_resolves_target_operation_runner(
         "run-seeded-error-verdict",
         payload={"mode": "live", "target_operation_id": "compile-source-digest"},
         idempotency_key="seeded-target-runner",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -617,6 +631,7 @@ def test_worker_seeded_error_verdict_requires_alpha15_bundle(tmp_path: Path) -> 
         "run-seeded-error-verdict",
         payload={"mode": "test"},
         idempotency_key="seeded-no-removed-fallback",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -632,6 +647,7 @@ def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
         "notes/rollback.md",
         note_text(),
         idempotency_key="write-rollback",
+        actor="operation",
     )
     run_next_job(vault, machine="test-machine")
 
@@ -644,6 +660,7 @@ def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
             "include_target": True,
         },
         idempotency_key="rollback-worker",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -667,6 +684,7 @@ def test_worker_runs_attention_resolution_operation_jobs(tmp_path: Path) -> None
         "acknowledge-attention",
         payload={"target_id": "notes/attention.md", "reason": "PI saw it"},
         idempotency_key="ack-attention",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -689,6 +707,7 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
         "notes/pi.md",
         note_text(),
         idempotency_key="write-pi",
+        actor="operation",
     )
     run_next_job(vault, machine="test-machine")
     (vault / "notes/pi.md").write_text(note_text() + "\nPI edit.\n", encoding="utf-8")
@@ -697,6 +716,7 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
         vault,
         "observe-pi-edits",
         idempotency_key="observe-pi",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -729,7 +749,9 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     depth_two_rel = "digests/depth-two.md"
     pi_rel = "notes/pi-downstream.md"
 
-    enqueue_trusted_write(vault, source_rel, note_text(), idempotency_key="write-source")
+    enqueue_trusted_write(
+        vault, source_rel, note_text(), idempotency_key="write-source", actor="operation"
+    )
     run_next_job(vault, machine="test-machine")
     enqueue_trusted_write(
         vault,
@@ -737,6 +759,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         work_text("direct", "Direct digest from source."),
         inputs=[{"id": source_rel, "sha256": sha256_file(vault / source_rel)}],
         idempotency_key="write-direct",
+        actor="operation",
     )
     run_next_job(vault, machine="test-machine")
     enqueue_trusted_write(
@@ -745,6 +768,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         work_text("depth-two", "Depth two keeps the depthtwomarker answer."),
         inputs=[{"id": direct_rel, "sha256": sha256_file(vault / direct_rel)}],
         idempotency_key="write-depth-two",
+        actor="operation",
     )
     run_next_job(vault, machine="test-machine")
 
@@ -765,7 +789,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
 
     source_path = vault / source_rel
     source_path.write_text(note_text() + "\nEdited source.\n", encoding="utf-8")
-    enqueue_operation(vault, "observe-pi-edits", idempotency_key="observe-source-edit")
+    enqueue_operation(vault, "observe-pi-edits", idempotency_key="observe-source-edit", actor="pi")
     done = run_next_job(vault, machine="test-machine")
 
     assert done is not None
@@ -804,7 +828,9 @@ def test_observe_pi_edits_quarantines_changed_tracked_projection(tmp_path: Path)
         encoding="utf-8",
     )
 
-    enqueue_operation(vault, "observe-pi-edits", idempotency_key="observe-projection-edit")
+    enqueue_operation(
+        vault, "observe-pi-edits", idempotency_key="observe-projection-edit", actor="pi"
+    )
     done = run_next_job(vault, machine="test-machine")
 
     assert done is not None
@@ -823,6 +849,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
         "notes/pi.md",
         note_text(),
         idempotency_key="write-pi",
+        actor="operation",
     )
     run_next_job(vault, machine="test-machine")
     (vault / "notes/pi.md").write_text(note_text() + "\nPI edit.\n", encoding="utf-8")
@@ -830,6 +857,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
         vault,
         "observe-pi-edits",
         idempotency_key="observe-pi",
+        actor="pi",
     )
     run_next_job(vault, machine="test-machine")
 
@@ -838,6 +866,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
         "mark-checked",
         payload={"target_path": "notes/pi.md", "check": "memoria-runtime"},
         idempotency_key="mark-pi-checked",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -874,6 +903,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
             "research_area": ["personal-informatics"],
         },
         idempotency_key="update-alpha",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -925,6 +955,7 @@ def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) ->
         vault,
         "regenerate-references-bib",
         idempotency_key="references-bib",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -945,6 +976,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
         "notes/foreign.md",
         note_text(),
         idempotency_key="write-foreign-before-sweep",
+        actor="operation",
     )
     run_next_job(vault, machine="test-machine")
     foreign = vault / "notes/foreign.md"
@@ -962,6 +994,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
         "---\n"
         "# Bad evidence\n",
         idempotency_key="write-bad-evidence-before-sweep",
+        actor="operation",
     )
     run_next_job(vault, machine="test-machine")
 

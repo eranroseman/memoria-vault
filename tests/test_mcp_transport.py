@@ -50,11 +50,19 @@ def test_cli_mcp_rejects_root_and_traversal_scope(
     assert message in captured.err
 
 
-def test_cli_mcp_passes_scope_and_actor(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_mcp_passes_scope_and_agent_identity(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     captured: dict[str, Any] = {}
 
-    def fake_server(workspace_arg: Path, *, read_scope: list[str], actor: str) -> None:
-        captured.update({"workspace": workspace_arg, "read_scope": read_scope, "actor": actor})
+    def fake_server(workspace_arg: Path, *, read_scope: list[str], agent_identity: str) -> None:
+        captured.update(
+            {
+                "workspace": workspace_arg,
+                "read_scope": read_scope,
+                "agent_identity": agent_identity,
+            }
+        )
 
     monkeypatch.setattr("memoria_vault.runtime.mcp_transport.run_mcp_server", fake_server)
 
@@ -74,7 +82,7 @@ def test_cli_mcp_passes_scope_and_actor(workspace: Path, monkeypatch: pytest.Mon
     assert captured == {
         "workspace": workspace,
         "read_scope": ["notes"],
-        "actor": "review-agent",
+        "agent_identity": "review-agent",
     }
 
 
@@ -92,7 +100,7 @@ def test_mcp_app_requires_non_root_read_scope(workspace: Path) -> None:
 def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
     assert sorted(tool.name for tool in app._tool_manager.list_tools()) == [
         "attention",
@@ -116,7 +124,7 @@ def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
 def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     actions = actions_by_id()
     tools = {tool.name: tool for tool in app._tool_manager.list_tools()}
 
@@ -128,7 +136,7 @@ def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
 
 def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> None:
     pytest.importorskip("mcp")
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
     content, structured = asyncio.run(app.call_tool("status", {}))
 
@@ -167,7 +175,7 @@ def test_mcp_read_tools_pass_session_scope(
     ):
         monkeypatch.setattr(mcp_transport.engine_api, name, record(name))
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     for tool_name, arguments in {
         "requests": {},
         "request": {"request_id": "r1"},
@@ -206,7 +214,7 @@ def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
 
     write_checked_note(workspace, "notes/alpha.md", "Alpha")
     write_checked_note(workspace, "notes/beta.md", "Beta")
-    app = make_mcp_app(workspace, read_scope=["notes/alpha.md"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes/alpha.md"], agent_identity="agent")
 
     listed = _call(app, "concepts")
 
@@ -218,7 +226,7 @@ def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
 def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="review-agent")
 
     response = _call(
         app,
@@ -247,6 +255,7 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
     assert json.loads(row["provenance_json"]) == {
         "surface": "memoria-mcp",
         "command": "mcp:create-concept",
+        "agent_identity": "review-agent",
     }
     assert json.loads(row["args_json"])["target_path"] == "notes/mcp.md"
 

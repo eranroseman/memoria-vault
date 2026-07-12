@@ -28,7 +28,9 @@ def run_operation(
     *,
     key: str,
 ) -> dict:
-    job = enqueue_operation(vault, operation_id, payload=payload or {}, idempotency_key=key)
+    job = enqueue_operation(
+        vault, operation_id, payload=payload or {}, idempotency_key=key, actor="pi"
+    )
     done = run_request(vault, str(job["job_id"]), machine="cycle-machine")
     assert done is not None
     assert done["status"] == "done"
@@ -36,7 +38,7 @@ def run_operation(
 
 
 def run_trusted_write(vault: Path, target: str, content: str, *, key: str) -> dict:
-    enqueue_trusted_write(vault, target, content, idempotency_key=key)
+    enqueue_trusted_write(vault, target, content, idempotency_key=key, actor="operation")
     done = run_next_job(vault, machine="cycle-machine")
     assert done is not None
     assert done["status"] == "done"

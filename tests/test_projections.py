@@ -172,6 +172,7 @@ def test_worker_runs_workspace_index_projection_operation_jobs(tmp_path: Path) -
         vault,
         "regenerate-indexes",
         idempotency_key="workspace-indexes",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -190,6 +191,7 @@ def test_worker_runs_tracked_projection_operation_jobs(tmp_path: Path) -> None:
         vault,
         "regenerate-tracked-projections",
         idempotency_key="tracked-projections",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 

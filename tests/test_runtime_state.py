@@ -106,6 +106,7 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         causal_refs=[{"id": "journal:1"}],
         provenance={"surface": "workspace-scan", "source": "pytest"},
         schedule_id="manual-scan",
+        actor="pi",
     )
 
     envelope = job["request_envelope"]
@@ -159,6 +160,7 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
         "notes/sqlite-worker.md",
         note_text("SQLite worker"),
         idempotency_key="sqlite-worker",
+        actor="operation",
     )
 
     done = run_next_job(vault, machine="state-machine")

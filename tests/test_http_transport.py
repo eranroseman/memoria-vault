@@ -390,6 +390,7 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
             },
             "idempotency_key": "http-create",
             "actor": "agent",
+            "agent_identity": "review-agent",
         },
     )
 
@@ -413,6 +414,7 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
     assert json.loads(row["provenance_json"]) == {
         "surface": "memoria-http",
         "command": "http:create-concept",
+        "agent_identity": "review-agent",
     }
     assert json.loads(row["args_json"])["target_path"] == "notes/http.md"
 

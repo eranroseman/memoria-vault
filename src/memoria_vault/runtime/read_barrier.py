@@ -38,4 +38,5 @@ def _enqueue_scan(vault: Path, relpath: str, reason: str, current_hash: str) -> 
         payload={"reason": reason, "target_path": relpath},
         idempotency_key=f"read-guard-scan-{digest}",
         schedule_id="read-guard",
+        actor="integrity",
     )

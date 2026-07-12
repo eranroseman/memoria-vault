@@ -255,9 +255,9 @@ def compose_draft(
     project_path: str,
     *,
     token_budget: int = 4000,
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     return run_operation(
         workspace,
@@ -274,9 +274,9 @@ def verify_draft(
     workspace: Path,
     project_path: str,
     *,
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     return run_operation(
         workspace,
@@ -295,10 +295,10 @@ def promote_draft_passage(
     *,
     title: str,
     passage: str,
+    actor: str,
     work_id: str = "",
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     return run_operation(
         workspace,
@@ -403,19 +403,23 @@ def run_operation(
     operation_id: str,
     payload: dict[str, Any],
     *,
+    actor: str,
+    agent_identity: str = "",
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
     command: str = "",
     surface: str = "memoria-cli",
     machine: str = "memoria-cli",
 ) -> dict[str, Any]:
+    provenance = {"surface": surface, "command": command or operation_id}
+    if agent_identity:
+        provenance["agent_identity"] = agent_identity
     job = enqueue_operation(
         workspace,
         operation_id,
         payload=payload,
         idempotency_key=idempotency_key,
-        provenance={"surface": surface, "command": command or operation_id},
+        provenance=provenance,
         schedule_id=schedule_id,
         actor=actor,
     )
@@ -439,9 +443,9 @@ def write_new_concept(
     body: str,
     tags: list[str],
     extra: dict[str, Any],
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     workspace = Path(workspace)
     if concept_type not in CONCEPT_HOMES:
@@ -506,9 +510,9 @@ def resolve_attention(
     *,
     outcome: str,
     reason: str,
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     card_payload = read_attention_card(workspace, attention_path)
     card = card_payload["attention"]

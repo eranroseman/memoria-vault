@@ -36,6 +36,7 @@ def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
             "run_id": "capture-alpha",
         },
         idempotency_key="capture-alpha",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -81,6 +82,7 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
             "run_id": "capture-pdf",
         },
         idempotency_key="capture-pdf",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -114,6 +116,7 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
             "run_id": "capture-pdf-missing-selector",
         },
         idempotency_key="capture-pdf-missing-selector",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -140,6 +143,7 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
         "capture-bibtex-source",
         payload={"bibtex": bibtex, "run_id": "capture-bibtex-harness"},
         idempotency_key="capture-bibtex-harness",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -191,6 +195,7 @@ def test_worker_runs_capture_url_source_operation_jobs(tmp_path: Path, monkeypat
             "run_id": "capture-url",
         },
         idempotency_key="capture-url",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -229,6 +234,7 @@ def test_worker_rejects_capture_url_source_outside_allowed_network(
         "capture-url-source",
         payload={"url": "http://blocked.test/source", "run_id": "capture-blocked-url"},
         idempotency_key="capture-blocked-url",
+        actor="pi",
     )
 
     done = run_next_job(vault, machine="test-machine")

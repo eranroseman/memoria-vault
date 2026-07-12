@@ -769,7 +769,7 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
 
     if not args.read_scope:
         return _fail("mcp requires at least one --read-scope", json_output=False)
-    run_mcp_server(_workspace(args), read_scope=args.read_scope, actor=args.actor)
+    run_mcp_server(_workspace(args), read_scope=args.read_scope, agent_identity=args.actor)
     return 0
 
 
@@ -1746,6 +1746,7 @@ def _queue_import_enrichment(
         input_refs=[{"id": work_id, "kind": "catalog_source"}],
         primary_target=f"catalog/sources/{work_id}",
         causal_refs=[str(output["job"]["job_id"])],
+        actor="operation",
         provenance={"surface": "memoria-cli", "command": "work-import"},
         schedule_id=args.schedule_id,
     )
