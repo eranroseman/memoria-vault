@@ -30,7 +30,7 @@ def test_harness_runs_standalone_installer_without_profile_adapter() -> None:
         "MEMORIA_ENV=test",
         'bash "$ROOT/scripts/install.sh" --vault "$VAULT" --yes',
         "--check-local-llm",
-        "does not install Hermes profiles",
+        "does not install external agent profiles",
     ):
         assert marker in text
     for stale in (
