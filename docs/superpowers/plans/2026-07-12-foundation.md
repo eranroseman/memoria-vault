@@ -13,7 +13,7 @@ Spec: `docs/superpowers/specs/2026-07-12-foundation-design.md`. Milestone `0.1.0
 ## Global Constraints
 
 - Correctness gate: `python scripts/verify` must pass before each PR.
-- Test only against disposable vaults (pytest `tmp_path` via `tests/helpers.init_cli_workspace`, or `sandbox/`); never a personal vault.
+- Test only against disposable vaults (pytest `tmp_path` via `tests/helpers.init_cli_workspace`, or `test-vault/` — renamed from `sandbox/` by #1368); never a personal vault.
 - Stage explicit paths only — never `git add -A` (shared index rule).
 - Every **new** test file must be registered in `tests/conftest.py` `TEST_LEVELS` (map filename → level; use `"contract"` for CLI/API behavior, `"runtime"` for vault-mutating flows, `"unit"` for pure functions).
 - Actor vocabulary (decided): exactly `'pi' | 'agent' | 'operation' | 'integrity'`. Concrete agent identity stays in envelope/journal metadata, never the enum.
@@ -1162,7 +1162,7 @@ git commit -m "fix(product): projection drift covers argument.canvas (#1351); de
 
 - [ ] **Step 2: Fix the six enforcement-claim corrections** (from the architecture review; locate each with `rg -n` on its phrase in `docs/`): phantom "seven-layer" model description; block-loudness pause described as binding (it binds only the uninstalled adapter path — say so); "single attention writer" claim (three hand-rolled copies exist — describe what code does); telemetry-logging claim (no code writes it — delete the claim); "SQLite-backed attention" claim (correct to files-with-projection); dashboard rail written in present tense (mark planned). For each: the fix is *describe what ships today*, marking unshipped behavior as planned.
 
-- [ ] **Step 3: Tutorials 01/02/04/05 verbatim run** — in a fresh `sandbox/` vault, execute each tutorial's commands exactly as written; fix the tutorial text where a step fails (01: `list --type work` now works — verify the expected output block matches Task 13's real output; 02/04: teach the check step at point of need; 05: reject wording matches Task 12's honest `FAILED:` output).
+- [ ] **Step 3: Tutorials 01/02/04/05 verbatim run** — in a fresh `test-vault/` vault, execute each tutorial's commands exactly as written; fix the tutorial text where a step fails (01: `list --type work` now works — verify the expected output block matches Task 13's real output; 02/04: teach the check step at point of need; 05: reject wording matches Task 12's honest `FAILED:` output).
 
 - [ ] **Step 4: Gate + PR**
 
