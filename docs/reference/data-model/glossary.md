@@ -43,6 +43,14 @@ presentation layers over the same contracts.
 Optional editors open this root; the top-level bundle roots are the checked
 corpus homes.
 
+**<a id="open-knowledge-format-okf"></a>Open Knowledge Format (OKF)** — the plain-files bundle format Memoria produces: a self-contained, tool-agnostic Knowledge Bundle readable without Memoria present. The vault (excluding `.memoria/`) is one OKF bundle; each project is a nested one.
+
+**Knowledge Bundle** — an OKF unit of distribution: the plain-file tree holding the researcher's knowledge, separable from the `.memoria/` engine state.
+
+**Toulmin roles** — the six argument components (Claim, Grounds, Warrant, Backing, Qualifier, Rebuttal) that type the knowledge graph and its consequence propagation.
+
+**autoresearch** — the self-improvement loop (fixed harness, one metric, keep-or-discard) applied to Memoria's own instruments — detectors, prompts, gates — never to the knowledge they assess.
+
 ---
 
 ## Surfaces and navigation

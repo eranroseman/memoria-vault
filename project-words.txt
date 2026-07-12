@@ -137,6 +137,7 @@ neur
 niklas
 noqa
 numba
+okf
 oldclaim
 ollama
 oneshot
@@ -161,6 +162,7 @@ pyproject
 pytest
 pythonpath
 pyzotero
+qualifier
 quickadd
 qwen
 recalibrated
@@ -290,6 +292,7 @@ pubmed
 rankable
 razlogova
 rebuildable
+rebuttal
 recordability
 regenerable
 rego
