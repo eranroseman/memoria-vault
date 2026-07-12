@@ -32,7 +32,7 @@ judgment to the one human. It should feel like a co-PI, not a knowledge base.
   versioning is product behavior) and must stay reconstructible — `git clean
   -fdx` destroys it.
 - **Obsidian** is seeded by `memoria init` unless `--no-obsidian`; it is not
-  required. Hermes, Zotero, MCP hosts, and external editors are optional adapters.
+  required. Zotero, MCP hosts, and external editors are optional adapters.
 - **When layers disagree, trust order is schema → tests → code → docs.**
 
 ## Code shape
