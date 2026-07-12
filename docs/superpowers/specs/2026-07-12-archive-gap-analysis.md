@@ -1,7 +1,7 @@
 # Archive → specs gap analysis (of record)
 
 Date: 2026-07-12. Status: **analysis of record + routing.** A full gap analysis
-of `design-history/archive/releases/0.1.0-beta.1/` (53 files, ~2.5 MB) against
+of `design-history/archive/0.1.0-beta.1/` (53 files, ~2.5 MB) against
 the live `docs/superpowers/specs/` corpus, by 8 parallel cluster readers each
 classifying content as CAPTURED / MATERIAL-GAP / HISTORICAL against the
 consolidation (`2026-07-12-beta.1-consolidation.md`).
