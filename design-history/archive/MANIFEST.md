@@ -32,7 +32,7 @@ release-engineering and redundant artifacts below.
 
 ## What's here (105 files)
 
-### `releases/0.1.0-beta.1/` (53) — the beta.1 research + adjudication layer
+### `0.1.0-beta.1/` (53) — the beta.1 research + adjudication layer
 The largest pocket of unique content. `main`'s beta.1 work **restarted from the
 alpha.20 code baseline**, so this evidentiary/adjudication layer was never carried
 forward. Highlights:
@@ -46,12 +46,12 @@ forward. Highlights:
   + `gap-adjudication.md` (1,680 lines); only terminal conclusions of a few threads
   survive on `main` in `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md`
 
-### `sources/prealpha-docs-design/` (27) — early explorations / roads not taken
+### `prealpha-docs-design/` (27) — early explorations / roads not taken
 21 PARAPHRASED into `01-alpha.1-baseline.md` + 6 UNIQUE. Notable: `publication-strategy.md`
 (four-path publication map behind ADR-20) and `graph-visualization.md` (typed-projection
 view layer) — both now summarized in [`arcs.md` → "Roads worked out and set aside"](../arcs.md).
 
-### `sources/notes/` + misc (~24) — raw data, exports, fact-check trail
+### `notes/` + misc (~24) — raw data, exports, fact-check trail
 - `notes/paper-review-verdicts.json` (401-entry raw verdicts) + `notes/bibliography.bib`
 - `notes/docs-exports/*.md` (~38.8k lines — the only surviving copy of the retired
   `docs/adr/` subsystem and the pre-reorg docs site)
@@ -60,7 +60,7 @@ view layer) — both now summarized in [`arcs.md` → "Roads worked out and set 
   curated history's accuracy)
 
 ### alpha.7 UI design exploration (2)
-`sources/versions/0.1.0-alpha.7/tmp__ui-architecture-design.md` (1,123-line clean-slate
+`versions/0.1.0-alpha.7/tmp__ui-architecture-design.md` (1,123-line clean-slate
 UI architecture) and `tmp__ui-architecture-future.md` (the deferred projector/Canvas
 engine) — first-principles design not carried into the record.
 
