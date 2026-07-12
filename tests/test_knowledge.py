@@ -181,6 +181,7 @@ def test_curate_note_candidate_accepts_checked_candidate_with_journal(tmp_path: 
         vault,
         notes["note_paths"][0],
         "accepted",
+        actor="pi",
         reason="PI approved",
         machine="curator",
     )
@@ -236,6 +237,7 @@ def test_pi_can_edit_candidate_text_before_accepting(tmp_path: Path) -> None:
         vault,
         note_rel,
         "accepted",
+        actor="pi",
         reason="PI edited then accepted",
         machine="curator",
     )
@@ -256,7 +258,7 @@ def test_curate_note_candidate_rejects_non_candidate_status(tmp_path: Path) -> N
     )
 
     try:
-        curate_note_candidate(vault, "already", "rejected", machine="curator")
+        curate_note_candidate(vault, "already", "rejected", actor="pi", machine="curator")
     except ValueError as exc:
         assert "not a candidate note" in str(exc)
     else:
@@ -279,6 +281,7 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
         "source",
         "supports",
         "target",
+        actor="pi",
         reason="PI linked claims",
         machine="curator",
     )

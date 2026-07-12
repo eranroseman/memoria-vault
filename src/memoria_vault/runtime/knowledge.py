@@ -297,6 +297,7 @@ def curate_note_candidate(
     note_path: str,
     status: str,
     *,
+    actor: str,
     reason: str = "",
     machine: str | None = None,
 ) -> dict[str, Any]:
@@ -320,7 +321,7 @@ def curate_note_candidate(
         vault,
         {
             "event": "resolved",
-            "actor": "pi",
+            "actor": actor,
             "operation": "curate-note-candidate",
             "target_id": note_rel,
             "target_sha256": sha256_file(note),
@@ -341,6 +342,7 @@ def curate_note_link(
     link_type: str,
     target_path: str,
     *,
+    actor: str,
     reason: str = "",
     machine: str | None = None,
 ) -> dict[str, Any]:
@@ -384,7 +386,7 @@ def curate_note_link(
         vault,
         {
             "event": "resolved",
-            "actor": "pi",
+            "actor": actor,
             "operation": "curate-note-link",
             "target_id": source_rel,
             "linked_id": target_rel,
@@ -2165,6 +2167,7 @@ def promote_draft_passage(
     *,
     title: str,
     passage: str,
+    actor: str,
     work_id: str = "",
     commit: bool = False,
     machine: str | None = None,
@@ -2205,7 +2208,7 @@ def promote_draft_passage(
         inputs=[{"id": draft_rel, "sha256": sha256_file(draft_path)}],
         operation="promote-draft-passage",
         run_id=run_id,
-        actor="pi",
+        actor=actor,
         machine=machine,
     )
     materialized = materialize_unchecked(vault, note_rel)

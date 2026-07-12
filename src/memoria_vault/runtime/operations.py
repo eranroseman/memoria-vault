@@ -55,6 +55,7 @@ def record_copi_interview_turn(
     work_id: str,
     response: str,
     *,
+    actor: str,
     prompt: str = "What matters about this source?",
     project_id: str = "",
     machine: str | None = None,
@@ -82,7 +83,7 @@ def record_copi_interview_turn(
             "response": answer,
             "turn_id": f"journal:copi-interview:{turn_sha.removeprefix('sha256:')}",
             "turn_sha256": turn_sha,
-            "actor": "pi",
+            "actor": actor,
         },
         machine=machine,
     )

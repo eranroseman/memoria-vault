@@ -298,6 +298,18 @@ def _run_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str,
     return {"commit": commit, "outputs": [target]}
 
 
+def _envelope_actor(job: dict[str, Any]) -> str:
+    envelope = (
+        job.get("request_envelope")
+        if isinstance(job.get("request_envelope"), dict)
+        else {}
+    )
+    actor = str(envelope.get("actor") or "").strip()
+    if not actor:
+        raise ValueError("request envelope is missing actor")
+    return actor
+
+
 def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
     operation_id = str(job.get("operation_id") or "")
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
@@ -310,17 +322,13 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     policy = load_operation_policy(vault, operation_id)
     if operation_id == "create-concept":
         target, content = _create_concept_payload(payload)
-        envelope = (
-            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-        )
-        actor = str(envelope.get("actor") or "pi")
         stage_concept(
             vault,
             target,
             content,
             operation=operation_id,
             run_id=str(job.get("job_id") or ""),
-            actor=actor,
+            actor=_envelope_actor(job),
             machine=machine,
         )
         materialized = materialize_unchecked(vault, target)
@@ -349,7 +357,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             event,
             request_id=str(envelope.get("request_id") or job.get("job_id") or ""),
-            actor=str(envelope.get("actor") or "pi"),
+            actor=_envelope_actor(job),
             machine=machine,
         )
     if operation_id in {
@@ -434,6 +442,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             work_id,
             response,
+            actor=_envelope_actor(job),
             prompt=str(payload.get("prompt") or "What matters about this source?"),
             project_id=str(payload.get("project_id") or ""),
             machine=machine,
@@ -480,6 +489,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             note_path,
             status,
+            actor=_envelope_actor(job),
             reason=str(payload.get("reason") or ""),
             machine=machine,
         )
@@ -505,6 +515,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             source_note_path,
             link_type,
             target_path,
+            actor=_envelope_actor(job),
             reason=str(payload.get("reason") or ""),
             machine=machine,
         )
@@ -572,15 +583,12 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         project_path = str(payload.get("project_path") or "").strip()
         if not project_path:
             raise ValueError("frame-paper requires project_path")
-        envelope = (
-            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-        )
         result = frame_project_paper(
             vault,
             project_path,
             paper_plan=payload,
             run_id=str(job.get("job_id") or ""),
-            actor=str(envelope.get("actor") or "pi"),
+            actor=_envelope_actor(job),
             machine=machine,
         )
         return {
@@ -716,6 +724,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             title=str(payload.get("title") or ""),
             passage=str(payload.get("passage") or ""),
             work_id=str(payload.get("work_id") or ""),
+            actor=_envelope_actor(job),
             commit=True,
             machine=machine,
         )

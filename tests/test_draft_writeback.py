@@ -22,6 +22,7 @@ def test_promote_draft_passage_creates_unchecked_note_and_links_draft(tmp_path: 
         "project-alpha",
         title="Selected Claim",
         passage="Selected claim text.",
+        actor="pi",
         work_id="source-alpha",
     )
 

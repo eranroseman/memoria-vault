@@ -325,6 +325,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
         vault,
         "source-alpha",
         "The PI cares about the methods caveat.",
+        actor="pi",
         project_id="projects/project-alpha/project.md",
         machine="copi-machine",
     )
