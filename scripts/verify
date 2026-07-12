@@ -40,7 +40,7 @@ GATES: list[list[str]] = [
         "-m",
         "static or unit or contract",
     ],
-    ["python3", "scripts/sandbox/e2e_smoke.py"],
+    ["python3", "scripts/test_vault/e2e_smoke.py"],
     [
         "python3",
         "-m",
@@ -48,15 +48,15 @@ GATES: list[list[str]] = [
         "-q",
         "src/memoria_vault",
         "scripts/checks",
-        "scripts/sandbox",
+        "scripts/test_vault",
         "scripts/verify",
     ],
     [
         "bash",
         "-n",
         "scripts/install.sh",
-        "scripts/sandbox/refresh-test-vault.sh",
-        "scripts/sandbox/install-test-vault-local-llm.sh",
+        "scripts/test_vault/refresh-test-vault.sh",
+        "scripts/test_vault/install-test-vault-local-llm.sh",
     ],
 ]
 

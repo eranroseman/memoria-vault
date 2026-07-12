@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.sandbox import e2e_smoke
+from scripts.test_vault import e2e_smoke
 
 
 def test_stage_labels_preserve_e2e_smoke_order() -> None:
@@ -42,29 +42,29 @@ def test_assert_executable_reports_missing_path(tmp_path) -> None:
         e2e_smoke.assert_executable(tmp_path / "missing", "missing helper")
 
 
-def test_sandbox_root_defaults_to_named_sandbox(monkeypatch) -> None:
+def test_test_vault_root_defaults_to_named_test_vault(monkeypatch) -> None:
     monkeypatch.delenv("MEMORIA_TEST_ROOT", raising=False)
 
-    assert e2e_smoke._sandbox_root() == Path("~/memoria-vault/sandbox").expanduser()
+    assert e2e_smoke._test_vault_root() == Path("~/memoria-vault/test-vault").expanduser()
 
 
-def test_sandbox_root_honors_memoria_test_root(monkeypatch, tmp_path) -> None:
+def test_test_vault_root_honors_memoria_test_root(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("MEMORIA_TEST_ROOT", str(tmp_path))
 
-    assert e2e_smoke._sandbox_root() == tmp_path
+    assert e2e_smoke._test_vault_root() == tmp_path
 
 
-def test_run_smoke_rebuilds_and_leaves_named_sandbox_root(monkeypatch, tmp_path) -> None:
-    sandbox = tmp_path / "sandbox"
-    sandbox.mkdir()
-    (sandbox / "stale.txt").write_text("old", encoding="utf-8")
+def test_run_smoke_rebuilds_and_leaves_named_test_vault_root(monkeypatch, tmp_path) -> None:
+    test_vault = tmp_path / "test_vault"
+    test_vault.mkdir()
+    (test_vault / "stale.txt").write_text("old", encoding="utf-8")
     seen: list[Path] = []
 
     def record_stage(root: Path, vault: Path, env: dict[str, str]) -> None:
         seen.append(vault)
         (vault / "smoke-marker.txt").write_text("new", encoding="utf-8")
 
-    monkeypatch.setattr(e2e_smoke, "_sandbox_root", lambda: sandbox)
+    monkeypatch.setattr(e2e_smoke, "_test_vault_root", lambda: test_vault)
     monkeypatch.setattr(e2e_smoke, "_env", lambda root: {})
     monkeypatch.setattr(e2e_smoke, "_vault_assembly", record_stage)
     monkeypatch.setattr(e2e_smoke, "_commit_gate", lambda vault, env: None)
@@ -74,6 +74,6 @@ def test_run_smoke_rebuilds_and_leaves_named_sandbox_root(monkeypatch, tmp_path)
 
     e2e_smoke.run_smoke(root=tmp_path)
 
-    assert seen == [sandbox]
-    assert not (sandbox / "stale.txt").exists()
-    assert (sandbox / "smoke-marker.txt").read_text(encoding="utf-8") == "new"
+    assert seen == [test_vault]
+    assert not (test_vault / "stale.txt").exists()
+    assert (test_vault / "smoke-marker.txt").read_text(encoding="utf-8") == "new"

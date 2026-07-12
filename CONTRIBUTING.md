@@ -61,7 +61,7 @@ The `package`, `runtime`, and `live` test markers need a built wheel, a
 disposable workspace, or a live provider and are run on demand, not in the gate.
 
 Do not test installers against the real `~/Memoria`; use a disposable vault
-under `sandbox/`.
+under `test-vault/`.
 
 ## Coding conventions
 
