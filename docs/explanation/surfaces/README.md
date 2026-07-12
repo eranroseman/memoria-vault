@@ -18,7 +18,7 @@ researcher reading, writing, and deciding in plain files; the **plugin** is an
 ambient layer — status, inbox cards, one-click dispositions — that only
 enqueues through the engine, never writes on its own. The **agent** is voice
 and hands — it converses and files dispositions through the same operation
-envelope with its true actor. **Planned: F1 alpha.21; U1/U4 beta.1.** A fourth,
+envelope with its true actor. **Planned: F1 alpha.21; U1/U3/U4 beta.1.** A fourth,
 invisible role (the engine's own jobs) validates and indexes behind them all.
 Every surface goes through the same queue; none is a second authority.
 

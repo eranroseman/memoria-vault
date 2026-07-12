@@ -13,6 +13,14 @@ The alpha.17 write loop deliberately shipped as text output only: project slice,
 outline, draft, verification, export, and selected passage back into the
 knowledge graph.
 
+## The master pattern
+
+The [design principles](../foundations/design-principles.md) name the master
+pattern: the fluent, judging half stays with the human; the structural,
+inspectable half goes into the engine. The WRITE boundary applies that cut:
+the PI judges the argument; the engine materializes inspectable plain-file
+stages and checks.
+
 ## Why files first
 
 The write half has to help the PI move from checked knowledge to a deliverable
