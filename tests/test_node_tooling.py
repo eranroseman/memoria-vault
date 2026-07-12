@@ -48,7 +48,7 @@ def test_precommit_hooks_use_pinned_tool_environments():
     assert pinned_repos == {
         "https://github.com/pre-commit/pre-commit-hooks": "v6.0.0",
         "https://github.com/gitleaks/gitleaks": "v8.30.1",
-        "https://github.com/astral-sh/ruff-pre-commit": "v0.15.20",
+        "https://github.com/astral-sh/ruff-pre-commit": "v0.15.21",
         "https://github.com/adrienverge/yamllint": "v1.38.0",
         "https://github.com/shellcheck-py/shellcheck-py": "v0.11.0.1",
     }
@@ -59,7 +59,7 @@ def test_precommit_hooks_use_pinned_tool_environments():
         "pre-commit-hooks==6.0.0",
     ):
         assert package in requirements
-    assert "ruff==0.15.20" not in requirements
+    assert "ruff==0.15.21" not in requirements
     assert "shellcheck-py==0.11.0.1" not in requirements
     assert "yamllint==1.38.0" not in requirements
 
