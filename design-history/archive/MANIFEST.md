@@ -30,7 +30,7 @@ release-engineering and redundant artifacts below.
 
 ---
 
-## What's here (116 files)
+## What's here (109 files)
 
 ### `releases/0.1.0-beta.1/` (53) — the beta.1 research + adjudication layer
 The largest pocket of unique content. `main`'s beta.1 work **restarted from the
@@ -59,10 +59,10 @@ view layer) — both now summarized in [`arcs.md` → "Roads worked out and set 
 - `verification-findings.md` + `corrections-to-apply.md` (fact-check evidence behind the
   curated history's accuracy); `build/assemble*.py` (the scripts that compiled the records)
 
-### Scattered alpha UNIQUE design docs (9)
-`sources/versions/0.1.0-alpha.7/tmp__ui-architecture-{design,future}.md` (deferred
-projector/Canvas engine); `.../alpha.8/tmp__{alpha7-docs-audit-report,deferred-adr-implementability-alpha6,refactor-no-compat-exec-plan}.md`;
-`.../alpha.10/tmp__{current-state-baseline,hermes-017-feature-eval-codex,hermes-017-feature-eval}.md` + `validation-log.md`.
+### alpha.7 UI design exploration (2)
+`sources/versions/0.1.0-alpha.7/tmp__ui-architecture-design.md` (1,123-line clean-slate
+UI architecture) and `tmp__ui-architecture-future.md` (the deferred projector/Canvas
+engine) — first-principles design not carried into the record.
 
 ---
 
@@ -75,5 +75,6 @@ projector/Canvas engine); `.../alpha.8/tmp__{alpha7-docs-audit-report,deferred-a
 | **alpha.15 ADRs 125–130** | **redundant** — full text is in git history at `docs/adr/125-*.md … 130-*.md` (`git log --all -- 'docs/adr/12*'`); the record's §11 summarizes the consolidation |
 | **release-plans + exec-plans** (alpha.12/13/16 …) | release-engineering process; no lasting design-history value |
 | **alpha.12 spike scripts + fixtures, alpha.15 dogfood** | ephemeral test data + disposable spike code; conclusions are in `12`/`15-alpha.*.md` |
+| **alpha.8/10 version working files** (exec-plan, ADR/docs audits, Hermes eval drafts, validation log, baseline) | process/audit/superseded artifacts; decisions in `08`/`10-alpha.*.md` |
 
 The complete 290-file snapshot (everything above) is in the `scratch-final` tag.
