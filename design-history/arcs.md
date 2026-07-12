@@ -182,3 +182,10 @@ follow.
 **Current (as of alpha.20):** Alpha.20 is the current closed checkpoint technical baseline. Its close-out durable record is the frozen chapter, updated arcs, updated latest-checkpoint marker in `design-history/README.md`, and retired scratch release workspace.
 
 **Pending (unreleased):** The beta.1 release workspace must carry open Y-statement decisions until they are implemented, rejected, or folded into the next frozen chapter.
+
+### (k) Roads worked out and set aside
+
+Not every worked-out direction shipped. Two pre-alpha explorations were carried far enough to decide against, then filed rather than built — kept, like the historical ADRs, so the reasoning is not re-derived. Both survive in full under [`archive/sources/prealpha-docs-design/`](archive/sources/prealpha-docs-design/):
+
+- **Publication strategy** — a four-path map for turning Memoria into a published contribution (a vault-CiteME benchmark; a higher-novelty "does *this* vault pay off as it grows?" vault-eval framing; a capability-anchored system paper; an open-artifact release), ordered by tractability on the premise that no surveyed system published on design alone. Only Path 1 was adopted ([ADR-20](00-origins.md)); the rest was kept as the menu for the *second* paper, to be chosen against data rather than re-derived. [Source](archive/sources/prealpha-docs-design/publication-strategy.md).
+- **Graph visualization** — a typed-projection view layer over the two-graph model: a claim-debate map (consensus / tension / isolation) and a hub-structure map, emitted as native Obsidian Canvas artifacts into staging for the human to promote, never drawn as one undifferentiated hairball. Only the typed claim graph shipped (`cluster_emit_canvas`, #345); the renderer catalog and a deferred discovery pane were left as exploration. [Source](archive/sources/prealpha-docs-design/graph-visualization.md).

@@ -1,5 +1,0 @@
-{
-  "project_id": "knowledge/projects/alpha15-dogfood-project.md",
-  "prompt": "What matters about this source?",
-  "response": "The PI cares about whether a CLI-first research loop can produce checked work, notes, citations, and project export without Obsidian, Zotero, Hermes, or MCP."
-}
