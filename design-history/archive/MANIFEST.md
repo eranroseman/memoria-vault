@@ -30,7 +30,7 @@ release-engineering and redundant artifacts below.
 
 ---
 
-## What's here (109 files)
+## What's here (105 files)
 
 ### `releases/0.1.0-beta.1/` (53) — the beta.1 research + adjudication layer
 The largest pocket of unique content. `main`'s beta.1 work **restarted from the
@@ -51,13 +51,13 @@ forward. Highlights:
 (four-path publication map behind ADR-20) and `graph-visualization.md` (typed-projection
 view layer) — both now summarized in [`arcs.md` → "Roads worked out and set aside"](../arcs.md).
 
-### `sources/notes/` + build + misc (~28) — raw data, exports, fact-check trail
+### `sources/notes/` + misc (~24) — raw data, exports, fact-check trail
 - `notes/paper-review-verdicts.json` (401-entry raw verdicts) + `notes/bibliography.bib`
 - `notes/docs-exports/*.md` (~38.8k lines — the only surviving copy of the retired
   `docs/adr/` subsystem and the pre-reorg docs site)
 - `notes/ai-research-systems-survey.md`, `notes/publication-path-report.md`, `notes/REVIEW-*.md`
 - `verification-findings.md` + `corrections-to-apply.md` (fact-check evidence behind the
-  curated history's accuracy); `build/assemble*.py` (the scripts that compiled the records)
+  curated history's accuracy)
 
 ### alpha.7 UI design exploration (2)
 `sources/versions/0.1.0-alpha.7/tmp__ui-architecture-design.md` (1,123-line clean-slate
@@ -76,5 +76,6 @@ engine) — first-principles design not carried into the record.
 | **release-plans + exec-plans** (alpha.12/13/16 …) | release-engineering process; no lasting design-history value |
 | **alpha.12 spike scripts + fixtures, alpha.15 dogfood** | ephemeral test data + disposable spike code; conclusions are in `12`/`15-alpha.*.md` |
 | **alpha.8/10 version working files** (exec-plan, ADR/docs audits, Hermes eval drafts, validation log, baseline) | process/audit/superseded artifacts; decisions in `08`/`10-alpha.*.md` |
+| **build scripts + old compiled-history front-matter** | dead one-off assembly glue (session-specific inputs gone); `part-0-front.md`'s Method note folded into `../README.md` |
 
 The complete 290-file snapshot (everything above) is in the `scratch-final` tag.

@@ -26,3 +26,17 @@ Latest completed checkpoint: `alpha.20`
 
 - `00-origins.md` through `20-alpha.20.md`: frozen release-history chapters.
 - `arcs.md`: maintained cross-release synthesis and current/pending state.
+- `archive/`: primary-source research and explorations behind the chapters (see `archive/MANIFEST.md`).
+
+## How this history was reconstructed
+
+The chapters were rebuilt from the record, not from memory. Each version's design
+state was reconstructed from its release-boundary commit on `main` (there are no
+git tags — boundary commits are named per chapter), and every version-to-version
+delta was produced by diffing that boundary against the prior across `docs/`,
+`vault-template/`, and `src/`, cross-read against that version's own
+release/design/exec-plan documents. The *why* was mined from the design docs, the
+`why-*.md` essays, ADR Context/Decision sections, full commit-message bodies, and
+the 401-paper literature review that drove many bets. **ADRs were reference, never
+authority** — the shipped design, the `vault-template`/`src` substrate, and the
+researcher's notes are the sources of truth.
