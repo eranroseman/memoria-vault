@@ -137,6 +137,7 @@ neur
 niklas
 noqa
 numba
+okf
 oldclaim
 ollama
 oneshot
