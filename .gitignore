@@ -32,6 +32,7 @@ Thumbs.db
 desktop.ini
 *.swp
 *~
+*:Zone.Identifier
 
 
 # Scratch / per-machine working state, never committed. Root-anchored where it
