@@ -128,5 +128,5 @@ ignore = [
 # E402: test helpers do sys.path manipulation before imports.
 "tests/**" = ["S", "E402"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
-"scripts/sandbox/e2e_smoke.py" = ["S101"]
+"scripts/test_vault/e2e_smoke.py" = ["S101"]
 "scripts/**" = ["E402"]

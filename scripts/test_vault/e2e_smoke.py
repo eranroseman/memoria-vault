@@ -226,14 +226,14 @@ def _python() -> str:
     return os.environ.get("PYTHON", sys.executable)
 
 
-def _sandbox_root() -> Path:
-    return Path(os.environ.get("MEMORIA_TEST_ROOT", "~/memoria-vault/sandbox")).expanduser()
+def _test_vault_root() -> Path:
+    return Path(os.environ.get("MEMORIA_TEST_ROOT", "~/memoria-vault/test-vault")).expanduser()
 
 
-def _reset_sandbox_vault(vault: Path) -> Path:
+def _reset_test_vault(vault: Path) -> Path:
     vault = vault.resolve()
     if vault in {Path.home().resolve(), Path("/")}:
-        _fail(f"refusing to wipe unsafe sandbox path: {vault}")
+        _fail(f"refusing to wipe unsafe test-vault path: {vault}")
     vault.mkdir(parents=True, exist_ok=True)
     for child in vault.iterdir():
         if child.is_dir() and not child.is_symlink():
@@ -372,7 +372,7 @@ def _workflow_replay(root: Path, vault: Path, env: dict[str, str]) -> None:
     _run_or_fail(
         [
             _python(),
-            str(root / "scripts/sandbox/test_env_harness.py"),
+            str(root / "scripts/test_vault/test_env_harness.py"),
             "replay",
             "--root",
             str(root),
@@ -396,7 +396,7 @@ def _final_integrity(vault: Path, env: dict[str, str]) -> None:
 def run_smoke(root: Path = ROOT) -> None:
     root = root.resolve()
     env = _env(root)
-    vault = _reset_sandbox_vault(_sandbox_root())
+    vault = _reset_test_vault(_test_vault_root())
     _vault_assembly(root, vault, env)
     _commit_gate(vault, env)
     _offline_ingest(root, vault)

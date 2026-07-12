@@ -30,7 +30,7 @@ linked reference pages and schema files.
 | Schema or workspace source config | reinstall or run `memoria doctor --repair`, then run the linter |
 | Search index inputs | `memoria workspace rebuild --search` |
 
-Use a disposable workspace under `~/memoria-vault/sandbox` for development verification.
+Use a disposable workspace under `~/memoria-vault/test-vault` for development verification.
 
 ## Never commit
 

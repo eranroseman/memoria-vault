@@ -27,8 +27,8 @@ judgment to the one human. It should feel like a co-PI, not a knowledge base.
 - **Sessions each work in their own worktree.** The git index is shared per
   checkout, so two sessions in one checkout can sweep each other's staged files
   into a commit — stage explicit paths, never `git add -A`.
-- **Test only against disposable vaults under `sandbox/`** (never a personal
-  vault). The installed sandbox vault carries its own nested `.git` (vault
+- **Test only against disposable vaults under `test-vault/`** (never a personal
+  vault). The installed test-vault carries its own nested `.git` (vault
   versioning is product behavior) and must stay reconstructible — `git clean
   -fdx` destroys it.
 - **Obsidian** is seeded by `memoria init` unless `--no-obsidian`; it is not

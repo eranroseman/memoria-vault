@@ -112,12 +112,12 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 
 ## Development
 
-For fast system-file iteration on the disposable sandbox, run
-`bash scripts/sandbox/refresh-test-vault.sh` to repair the package-seeded files
-in `~/memoria-vault/sandbox/vault` while preserving runtime state. For
+For fast system-file iteration on the disposable test-vault, run
+`bash scripts/test_vault/refresh-test-vault.sh` to repair the package-seeded files
+in `~/memoria-vault/test-vault/vault` while preserving runtime state. For
 release-candidate installer proof, rebuild the disposable vault from scratch with
-`bash scripts/sandbox/install-test-vault-local-llm.sh`; it installs into
-`~/memoria-vault/sandbox/vault` and runs package, detector, and CLI doctor checks. Full
+`bash scripts/test_vault/install-test-vault-local-llm.sh`; it installs into
+`~/memoria-vault/test-vault/vault` and runs package, detector, and CLI doctor checks. Full
 flags: [Installer (bootstrap)](docs/reference/system/installer.md).
 
 ## Citation

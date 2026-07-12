@@ -31,7 +31,7 @@ gate.
 The installer end-to-end harness is a separate disposable-vault check:
 
 ```bash
-bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox
+bash scripts/test_vault/install-test-vault-local-llm.sh --root ~/memoria-vault/test-vault
 ```
 
 ## Coverage guidance

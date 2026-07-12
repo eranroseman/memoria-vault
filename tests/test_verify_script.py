@@ -22,7 +22,7 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
         "python3 scripts/checks/removed_surface_gate.py",
         "python3 scripts/checks/checked_terminology_gate.py",
         "python3 scripts/checks/plugin_provenance_doctor.py",
-        "python3 scripts/sandbox/e2e_smoke.py",
+        "python3 scripts/test_vault/e2e_smoke.py",
     ):
         assert gate in flat
     assert any("pytest" in f and "static or unit or contract" in f for f in flat)
