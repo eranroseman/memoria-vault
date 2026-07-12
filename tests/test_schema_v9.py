@@ -1,5 +1,6 @@
 """tests/test_schema_v9.py — v9 schema contract."""
 
+import hashlib
 import sqlite3
 
 import pytest
@@ -11,6 +12,21 @@ def _conn(tmp_path):
     vault = tmp_path / "vault"
     (vault / ".memoria").mkdir(parents=True)
     return state.connect(vault)
+
+
+def _record_derivation(vault, *, input_id, output_id="concepts/output.md", actor):
+    payload_text = "---\ntype: note\n---\n\nOutput.\n"
+    state.record_file_output(
+        vault,
+        output_id=output_id,
+        concept_type="note",
+        check_status="unchecked",
+        output_sha256="sha256:" + hashlib.sha256(payload_text.encode()).hexdigest(),
+        staging_id=f".memoria/staging/{output_id}",
+        payload_text=payload_text,
+        actor=actor,
+        inputs=[{"id": input_id}],
+    )
 
 
 def test_user_version_is_9(tmp_path):
@@ -48,6 +64,43 @@ def test_derivations_actor_accepts_agent(tmp_path):
         conn.execute(
             "INSERT INTO derivations(input_id, output_id, actor) VALUES ('a', 'b', 'agent')"
         )
+
+
+def test_record_file_output_keeps_latest_derivation_actor(tmp_path):
+    vault = tmp_path / "vault"
+    _record_derivation(vault, input_id="sources/input.md", actor="pi")
+    _record_derivation(vault, input_id="sources/input.md", actor="agent")
+
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT actor FROM derivations WHERE input_id = ? AND output_id = ?",
+            ("sources/input.md", "concepts/output.md"),
+        ).fetchall()
+
+    assert [row["actor"] for row in rows] == ["agent"]
+
+
+def test_record_file_output_rejects_invalid_actor_on_new_derivation(tmp_path):
+    vault = tmp_path / "vault"
+
+    with pytest.raises(sqlite3.IntegrityError):
+        _record_derivation(vault, input_id="sources/input.md", actor="bogus")
+
+
+def test_failed_derivation_actor_update_preserves_valid_actor(tmp_path):
+    vault = tmp_path / "vault"
+    _record_derivation(vault, input_id="sources/input.md", actor="pi")
+
+    with pytest.raises(sqlite3.IntegrityError):
+        _record_derivation(vault, input_id="sources/input.md", actor="bogus")
+
+    with state.connect(vault) as conn:
+        actor = conn.execute(
+            "SELECT actor FROM derivations WHERE input_id = ? AND output_id = ?",
+            ("sources/input.md", "concepts/output.md"),
+        ).fetchone()["actor"]
+
+    assert actor == "pi"
 
 
 def test_event_log_indexes_exist(tmp_path):

@@ -423,8 +423,10 @@ def record_file_output(
             if isinstance(input_id, str) and input_id.strip():
                 conn.execute(
                     """
-                    INSERT OR IGNORE INTO derivations(input_id, output_id, actor)
+                    INSERT INTO derivations(input_id, output_id, actor)
                     VALUES (?, ?, ?)
+                    ON CONFLICT(input_id, output_id)
+                    DO UPDATE SET actor = excluded.actor
                     """,
                     (normalize_path(input_id), target, actor),
                 )
