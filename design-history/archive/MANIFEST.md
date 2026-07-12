@@ -30,7 +30,7 @@ release-engineering and redundant artifacts below.
 
 ---
 
-## What's here (105 files)
+## What's here (97 files)
 
 ### `0.1.0-beta.1/` (53) — the beta.1 research + adjudication layer
 The largest pocket of unique content. `main`'s beta.1 work **restarted from the
@@ -51,16 +51,19 @@ forward. Highlights:
 (four-path publication map behind ADR-20) and `graph-visualization.md` (typed-projection
 view layer) — both now summarized in [`arcs.md` → "Roads worked out and set aside"](../arcs.md).
 
-### `notes/` + misc (~24) — raw data, exports, fact-check trail
-- `notes/paper-review-verdicts.json` (401-entry raw verdicts) + `notes/bibliography.bib`
-- `notes/docs-exports/*.md` (~38.8k lines — the only surviving copy of the retired
-  `docs/adr/` subsystem and the pre-reorg docs site)
-- `notes/ai-research-systems-survey.md`, `notes/publication-path-report.md`, `notes/REVIEW-*.md`
-- `verification-findings.md` + `corrections-to-apply.md` (fact-check evidence behind the
-  curated history's accuracy)
+### `notes/` + misc (~14) — research, design reasoning, fact-check trail
+- `notes/paper-review-verdicts.json` (401-entry raw verdicts) + `notes/bibliography.bib` — the literature-review data
+- `notes/docs-exports/adr-full.md` — the consolidated ADR reference the curated `arcs.md` cites for the ADR-consolidation arc
+- `notes/REVIEW-SUMMARY.md` + `notes/REVIEW-REFUTATIONS.md`, `notes/ai-research-systems-survey.md`,
+  `notes/publication-path-report.md` — the 401-paper review findings that drove the design
+- `notes/clean-slate-design.md`, `notes/clean-slate-application-design.md`,
+  `notes/0.1.0-alpha.11-design.md` — the reasoning behind the alpha.11 reset;
+  `notes/project-starter.md` (deferred Project gate)
+- `verification-findings.md` + `corrections-to-apply.md` + `researcher-notes.md`
+  (fact-check evidence + the researcher's own round-by-round notes)
 
 ### alpha.7 UI design exploration (2)
-`versions/0.1.0-alpha.7/tmp__ui-architecture-design.md` (1,123-line clean-slate
+`0.1.0-alpha.7/tmp__ui-architecture-design.md` (1,123-line clean-slate
 UI architecture) and `tmp__ui-architecture-future.md` (the deferred projector/Canvas
 engine) — first-principles design not carried into the record.
 
@@ -77,5 +80,7 @@ engine) — first-principles design not carried into the record.
 | **alpha.12 spike scripts + fixtures, alpha.15 dogfood** | ephemeral test data + disposable spike code; conclusions are in `12`/`15-alpha.*.md` |
 | **alpha.8/10 version working files** (exec-plan, ADR/docs audits, Hermes eval drafts, validation log, baseline) | process/audit/superseded artifacts; decisions in `08`/`10-alpha.*.md` |
 | **build scripts + old compiled-history front-matter** | dead one-off assembly glue (session-specific inputs gone); `part-0-front.md`'s Method note folded into `../README.md` |
+| **notes/docs-exports/{docs-full,docs-merged}** (~28k lines) | **redundant** — snapshots of the old `docs/` tree, which is in git history (`git log --all -- 'docs/**'`); uncited (`adr-full.md` kept — `arcs.md` cites it) |
+| **notes operational scratch** (TODO, TODO-archive, check-docs, prompts, Communities, repos) | personal task lists, docs-review prompt tooling, and outreach notes — not design history |
 
 The complete 290-file snapshot (everything above) is in the `scratch-final` tag.
