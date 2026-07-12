@@ -48,3 +48,31 @@ def test_json_and_powershell_are_gate_steps() -> None:
 
     assert callable(namespace["check_json"])
     assert callable(namespace["check_powershell"])
+
+
+def test_docs_only_scope_narrows_the_roster() -> None:
+    namespace = _verify_namespace()
+    gates_for_run = namespace["_gates_for_run"]
+
+    full = [" ".join(cmd) for cmd in gates_for_run(False)]
+    docs = [" ".join(cmd) for cmd in gates_for_run(True)]
+
+    # Full scope is the unchanged roster.
+    assert full == [" ".join(cmd) for cmd in namespace["GATES"]]
+
+    # Docs scope keeps lint + every product gate.
+    assert docs[0] == "pre-commit run --hook-stage manual --all-files"
+    for gate in (
+        "python3 scripts/checks/schema_doc_drift.py",
+        "python3 scripts/checks/removed_surface_gate.py",
+        "python3 scripts/checks/checked_terminology_gate.py",
+        "python3 scripts/checks/plugin_provenance_doctor.py",
+    ):
+        assert gate in docs
+
+    # Docs scope narrows pytest to `static` and drops the code-only gates.
+    assert any("pytest" in d and d.endswith("-m static") for d in docs)
+    assert not any("static or unit or contract" in d for d in docs)
+    assert not any("e2e_smoke.py" in d for d in docs)
+    assert not any("compileall" in d for d in docs)
+    assert not any(d.startswith("bash -n") for d in docs)

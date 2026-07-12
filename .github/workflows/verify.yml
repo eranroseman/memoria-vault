@@ -4,6 +4,12 @@ name: verify
 # gates, tests, offline smoke, syntax). No `paths:` filter — a required check
 # must report on every PR, or a path-unrelated PR is permanently blocked. The
 # `push: main` run validates the post-merge state.
+#
+# Two fast paths keep the job reporting while doing less when it provably can:
+#   - PSScriptAnalyzer is installed only when a `.ps1` file changed.
+#   - A docs-only PR (whole diff is `*.md` / `design-history/`) sets
+#     VERIFY_DOCS_ONLY=1, narrowing verify to the checks a docs change can
+#     affect. The `push: main` run always runs the full roster.
 
 on:
   push:
@@ -16,6 +22,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read  # the change-scope step reads a PR's changed files
 
 jobs:
   verify:
@@ -35,6 +42,25 @@ jobs:
         run: |
           python -m pip install --quiet -r requirements-dev.txt
           python -m pip install --quiet -e .
+      - name: Detect change scope
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path' || true)"
+          printf 'changed files:\n%s\n' "$files"
+          # Safe defaults: if the diff can't be read, run everything (full verify).
+          ps1=true
+          docs_only=false
+          if [ -n "$files" ]; then
+            printf '%s\n' "$files" | grep -qE '\.ps1$' || ps1=false
+            printf '%s\n' "$files" | grep -qvE '(^design-history/|\.md$)' || docs_only=true
+          fi
+          echo "ps1=$ps1" >> "$GITHUB_OUTPUT"
+          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+          echo "scope -> ps1=$ps1 docs_only=$docs_only"
       - name: Cache pre-commit environments
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
@@ -42,8 +68,11 @@ jobs:
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pre-commit-
+      # Only bother with PSScriptAnalyzer when a .ps1 changed (empty scope output
+      # on the push:main run means "run it" — full validation of the merged state).
       - name: Cache PSScriptAnalyzer module
         id: pssa-cache
+        if: steps.scope.outputs.ps1 != 'false'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.local/share/powershell/Modules/PSScriptAnalyzer
@@ -51,8 +80,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-psscriptanalyzer-v1-
       - name: Install PSScriptAnalyzer
-        if: steps.pssa-cache.outputs.cache-hit != 'true'
+        if: steps.scope.outputs.ps1 != 'false' && steps.pssa-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
       - name: Run verify
+        env:
+          VERIFY_DOCS_ONLY: ${{ steps.scope.outputs.docs_only == 'true' && '1' || '0' }}
         run: python scripts/verify
