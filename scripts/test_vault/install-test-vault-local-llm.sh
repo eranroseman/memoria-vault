@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Disposable standalone-install smoke for the local Memoria test workspace.
 #
-# The workspace defaults to ~/memoria-vault/sandbox and is wiped on every run.
+# The workspace defaults to ~/memoria-vault/test-vault and is wiped on every run.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/sandbox}"
+TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/test-vault}"
 VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT}"
 BASE_URL="${MEMORIA_TEST_LLM_BASE_URL:-http://127.0.0.1:11434/v1}"
 MODEL="${MEMORIA_TEST_LLM_MODEL:-memoria-qwen2.5:7b-64k}"
@@ -17,7 +17,7 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Usage: scripts/sandbox/install-test-vault-local-llm.sh [options]
+Usage: scripts/test_vault/install-test-vault-local-llm.sh [options]
 
 Rebuild the disposable Memoria test workspace and run the standalone installer,
 package, detector, and CLI doctor checks. The optional local-LLM
@@ -25,7 +25,7 @@ check only verifies that an OpenAI-compatible endpoint is reachable; the
 installer does not install external agent profiles or drive an external dispatch.
 
 Options:
-  --root DIR          Disposable vault root (default: ~/memoria-vault/sandbox)
+  --root DIR          Disposable vault root (default: ~/memoria-vault/test-vault)
   --vault DIR         Workspace path; must be at or below --root (default: DIR)
   --check-local-llm   Check the configured OpenAI-compatible endpoint
   --base-url URL      Endpoint used by --check-local-llm (default: http://127.0.0.1:11434/v1)

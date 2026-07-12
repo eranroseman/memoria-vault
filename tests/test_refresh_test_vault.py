@@ -1,9 +1,9 @@
-"""Fast sandbox refresh repairs package-seeded files without a source scaffold."""
+"""Fast test-vault refresh repairs package-seeded files without a source scaffold."""
 
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts" / "sandbox" / "refresh-test-vault.sh"
+SCRIPT = ROOT / "scripts" / "test_vault" / "refresh-test-vault.sh"
 
 
 def _script() -> str:

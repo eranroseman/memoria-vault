@@ -7,14 +7,14 @@
 # design.
 #
 # Never lint vendored or scratch areas: any `.obsidian/` holds vendored plugin
-# files, and `.notes/` / `sandbox/` are local gitignored scratch. This guards a
+# files, and `.notes/` / `test-vault/` are local gitignored scratch. This guards a
 # bare `yamllint .` too — the CI/hook invocations additionally scope to tracked,
 # non-.obsidian YAML.
 extends: relaxed
 ignore: |
   **/.obsidian/
   .notes/
-  sandbox/
+  test-vault/
 rules:
   line-length: disable
   colons: disable   # values are intentionally column-aligned (e.g. tool-registry.yaml)

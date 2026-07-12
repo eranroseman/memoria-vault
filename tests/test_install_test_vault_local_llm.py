@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts" / "sandbox" / "install-test-vault-local-llm.sh"
+SCRIPT = ROOT / "scripts" / "test_vault" / "install-test-vault-local-llm.sh"
 
 
 def _script() -> str:
@@ -16,9 +16,9 @@ def test_local_llm_full_install_harness_exists_and_is_executable() -> None:
     assert _script().startswith("#!/usr/bin/env bash\n")
 
 
-def test_harness_uses_sandbox_as_vault_root_and_refuses_unsafe_wipes() -> None:
+def test_harness_uses_test_vault_as_root_and_refuses_unsafe_wipes() -> None:
     text = _script()
-    assert 'TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/sandbox}"' in text
+    assert 'TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/test-vault}"' in text
     assert 'VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT}"' in text
     assert "--vault may not be above --root" in text
     assert 'rm -rf "$VAULT"' in text

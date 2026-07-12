@@ -40,10 +40,10 @@ desktop.ini
 /.notes/
 TODO*
 
-# Per-branch worktrees and the disposable installed sandbox vault (its own nested
+# Per-branch worktrees and the disposable installed test-vault (its own nested
 # .git; always reconstructible — never source of truth).
 .worktrees/
-/sandbox/
+/test-vault/
 
 # Local tool + harness state at the repo root, never committed.
 .kilo/

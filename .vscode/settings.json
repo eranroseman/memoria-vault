@@ -5,14 +5,14 @@
     "docs/.jekyll-cache/**": true,
     ".notes/**": true,
     ".worktrees/**": true,
-    "sandbox/**": true
+    "test-vault/**": true
   },
   "files.watcherExclude": {
     "**/_site/**": true,
     "docs/_site/**": true,
     ".notes/**": true,
     ".worktrees/**": true,
-    "sandbox/**": true,
+    "test-vault/**": true,
     "docs/.jekyll-cache/**": true
   },
   "shellcheck.customArgs": ["--severity=warning"],
