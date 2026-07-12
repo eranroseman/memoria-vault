@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -43,8 +44,18 @@ def assert_obsidian_seed(vault: Path) -> None:
     assert (vault / ".obsidian/community-plugins.json").is_file(), (
         "missing Memoria plugin enablement"
     )
+    community_plugins = json.loads(
+        (vault / ".obsidian/community-plugins.json").read_text(encoding="utf-8")
+    )
+    assert "memoria-obsidian" in community_plugins, "Memoria Obsidian plugin is not enabled"
     assert (vault / ".obsidian/plugins/memoria-obsidian/manifest.json").is_file(), (
         "missing Memoria Obsidian plugin"
+    )
+    assert (vault / ".obsidian/plugins/memoria-obsidian/main.js").is_file(), (
+        "missing Memoria Obsidian entrypoint"
+    )
+    assert (vault / ".obsidian/plugins/memoria-obsidian/schema.js").is_file(), (
+        "missing Memoria Obsidian event schema"
     )
     assert not (vault / "system/scripts").exists(), "standalone vault shipped QuickAdd scripts"
     print("   git repo, hooks, and Obsidian seed asserted")

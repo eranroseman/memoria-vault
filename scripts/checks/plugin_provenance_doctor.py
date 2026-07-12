@@ -30,6 +30,7 @@ ALLOWED_SEED_OBSIDIAN_FILES = {
     Path("core-plugins.json"),
     Path("plugins/memoria-obsidian/main.js"),
     Path("plugins/memoria-obsidian/manifest.json"),
+    Path("plugins/memoria-obsidian/schema.js"),
     Path("plugins/memoria-obsidian/styles.css"),
 }
 

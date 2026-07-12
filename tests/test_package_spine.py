@@ -96,6 +96,7 @@ def test_workspace_seed_is_packaged_runtime_minimum():
         ".obsidian/community-plugins.json",
         ".obsidian/plugins/memoria-obsidian/main.js",
         ".obsidian/plugins/memoria-obsidian/manifest.json",
+        ".obsidian/plugins/memoria-obsidian/schema.js",
         ".obsidian/plugins/memoria-obsidian/styles.css",
         "steering.md",
         "system/vocabulary.md",
