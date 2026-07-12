@@ -20,30 +20,67 @@ parsing changes (G2).
    the enum.
 2. **Schema mechanics (pre-G1):** edit `schema.sql` in place, bump
    `SCHEMA_VERSION` 8→9, `state._init` accepts `{0, 9}`. No migration code:
-   pre-beta there are zero durable vaults (sandbox is disposable by rule), so
-   old DBs rebuild. This is the migration-cost-is-zero window working as
-   intended; numbered ALTER migrations begin with G1.
+   pre-beta there are zero durable vaults (`test-vault/` is disposable by
+   rule), so old DBs rebuild. This is the migration-cost-is-zero window working
+   as intended; numbered ALTER migrations begin with G1.
 3. **Blob backup:** real `workspace backup` / `workspace restore` commands, not
    report-only and not git-tracked blobs (okf-note: git holds knowledge, not
    corpora). K3 (beta.1) formalizes the full restore matrix on top.
 
 ## F1 · Provenance & actor integrity (#1361)
 
-Falsified provenance is the design's worst defect class: today
-`operation_requests.actor` is `DEFAULT 'pi'` with no CHECK (schema.sql:12),
-`derivations.actor` CHECK **forbids** `'agent'` (schema.sql:342), and only ~3
-of ~40 operations read the envelope actor — the rest hardcode `"pi"`.
+Falsified provenance is the design's worst defect class. F1 gives both actor
+columns one vocabulary and requires every mediated request to carry one
+validated provenance context from claim through mutation and journaling.
 
 - **Schema (rides v9):** `CHECK (actor IN ('pi','agent','operation','integrity'))`
   on both `operation_requests.actor` and `derivations.actor`. Drop
   `DEFAULT 'pi'` — a missing actor is an error, never silently "the human did it."
-- **Context threading:** build the operation context once in
-  `worker._run_claimed_job` from the envelope (actor, run_id); consume it in
-  `trusted_writer` (staging + journal). Remove the hardcoded `"actor": "pi"` at
+- **Operation context:** one immutable `OperationContext` is the provenance
+  interface for a claimed request. It lives at the existing `trusted_writer`
+  seam and contains exactly five normalized strings: `actor`, `run_id`,
+  `request_id`, `operation_id`, and `machine`. The type is frozen and slotted;
+  it has no fallback values or actor-changing helper.
+- **Construct once:** `worker._run_claimed_job` builds the context inside its
+  failure-recording block before dispatch. The builder requires an envelope,
+  validates `actor` against `state.ACTORS`, rejects blank identifiers, and
+  rejects disagreement between the job and envelope request or operation ids.
+  An explicit nonblank envelope `args.run_id` wins; otherwise `run_id` is the
+  request id. The builder normalizes `machine` once as
+  `safe_filename(machine or platform.node() or "local")` so the JSONL filename
+  and SQLite event row cannot disagree.
+- **Consume at the writer seam:** every request-mediated mutation or journal
+  append receives the context. `trusted_writer` derives actor, run, request,
+  operation, and machine metadata from it; leaf-supplied conflicting metadata
+  raises. Request-mediated writer and state functions require the context.
+  Functions outside a request envelope require an explicit actor and machine;
+  neither interface supplies a provenance default. Domain arguments remain
+  domain arguments; the context replaces distributed actor, run, request,
+  operation, and machine keyword parameters.
+- **Declare actors at request creation:** CLI, MCP, and HTTP adapters keep their
+  declared `pi` or `agent` defaults and pass them explicitly. Engine and worker
+  interfaces require an actor. Engine-created child requests declare
+  `operation`; integrity sweeps and read-barrier scans declare `integrity`.
+  `observe_pi_edit` remains explicitly `pi` because it records an unmediated
+  edit from the researcher's editor.
+- **Respect authority:** `resolve-attention` and `acknowledge-attention` are
+  PI-only judgment operations. The worker rejects a non-`pi` context instead
+  of relabeling an agent action as human; the runtime helper records the
+  validated actor it receives. Supporting an agent-submitted PI decision would
+  require separate `submitted_by` and `decided_by` provenance and is out of
+  scope.
+- **Current derivation projection:** `derivations` stores the actor of the most
+  recent write for each `(input_id, output_id)` pair. Repeated staging upserts
+  that actor; append-only `event_log` rows retain the complete history. The
+  production write path validates the actor and lets the schema CHECK fail on
+  an invalid value — it never uses `INSERT OR IGNORE` to suppress the error.
+  F1 updates only the actor on an existing pair; changing which derivation
+  edges exist belongs to G5.
+- **Named hardcodes retire:** remove the hardcoded `"actor": "pi"` at
   `operations.py:85`, `knowledge.py:323/387/2208`, and the
-  `envelope.get("actor") or "pi"` fallbacks in `worker.py` (316/352/583) — a
-  missing envelope actor **raises**. `worker.py:141/1246` (`"operation"`) stay:
-  they are genuinely engine-initiated.
+  `envelope.get("actor") or "pi"` fallbacks in `worker.py` (316/352/583).
+  Genuine unmediated and internal actors remain explicit at their request or
+  observation seam.
 - **Reject-marker trace — N/A (verified 2026-07-12):** reject dispositions
   never strip the durable inline `%%ev%%` marker. Export rendering strips
   markers only from its derived output copy, so no `stripped_*` reject event
@@ -56,10 +93,16 @@ of ~40 operations read the envelope actor — the rest hardcode `"pi"`.
   protection); making them origin-blind on the epistemic side is G5. F1 only
   makes the value they read faithful.
 
-Tests: an agent-enveloped operation lands `actor='agent'` in both tables
-end-to-end; enqueue without actor raises; CHECK rejects out-of-vocabulary
-values. The reject-marker trace test is N/A: reject never strips the durable
-marker, and export strips only its output copy.
+Tests prove the context builder rejects missing, invalid, blank, and mismatched
+provenance; applies the run-id fallback; and normalizes one machine identity.
+Engine and queue calls without actor raise. Input-backed agent, operation, and
+integrity requests preserve their actor in `operation_requests`, journal
+events, and `derivations`; the JSONL filename and `event_log.machine` agree.
+PI-only attention operations reject an agent context. Repeating one derivation
+as `pi` and then `agent` leaves one current `agent` row while the journal keeps
+both events. Production and raw-SQL paths reject an out-of-vocabulary actor.
+The reject-marker trace test is N/A: reject never strips the durable marker,
+and export strips only its output copy.
 
 ## F2 · Journal trust — one authoritative trust-read path (#1362)
 
@@ -142,7 +185,7 @@ tutorial commands smoke-run.
 F1 and F2 share the v9 schema change: **F1 lands first** (schema + threading),
 **F2 on top** (verifier + read migration + indexes). F3 and F4 are independent
 and can run in parallel with either. Each package is its own PR through
-`scripts/verify`; sandbox vaults rebuild after v9 (disposable by rule).
+`scripts/verify`; `test-vault/` vaults rebuild after v9 (disposable by rule).
 
 ## Acceptance (alpha.21 exit for Foundation)
 
