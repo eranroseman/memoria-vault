@@ -55,7 +55,13 @@ one side is always authority.
 
 ### Provenance actors
 
-`observe_pi_edit` attributes unmediated file edits to `pi` by design: an edit that arrives outside the operation envelope is, by definition, the human working in their own editor. Every mediated write carries the envelope's true actor (`pi`, `agent`, `operation`, `integrity`); the engine never defaults a missing actor.
+`observe_pi_edit` attributes unmediated file edits to `pi` by design: an edit
+that arrives outside the operation envelope is, by definition, the human
+working in their own editor.
+
+**Planned — F1 (alpha.21):** Every mediated write consumes one validated
+`OperationContext`, whose actor is one of `pi`, `agent`, `operation`, or
+`integrity`; engine and worker interfaces never default a missing actor.
 
 ---
 
