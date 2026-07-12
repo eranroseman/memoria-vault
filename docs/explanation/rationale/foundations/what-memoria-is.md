@@ -43,7 +43,11 @@ Day to day, that work happens at three spaces: you bring sources into the **Libr
 
 ## The bundle constitution
 
+> **Planned beta.1 — K1:** strict OKF conformance and copyable bundle boundary are target-state.
+
 The vault — everything except `.memoria/` — is one self-contained **Knowledge Bundle** in the [Open Knowledge Format](../../../reference/data-model/glossary.md#open-knowledge-format-okf) sense: the unit of distribution, readable by anything with no Memoria present (`cat` works). Memoria is an opinionated OKF producer; `.memoria/` is engine-space — verdicts, provenance, queues, blobs: trust state *about* the knowledge, never the knowledge itself.
+
+> **Planned beta.1 — K1/W2:** detachability enforcement and complete project-close harvest/archive lifecycle are target-state.
 
 Each project is its own nested, detachable bundle: projects reference vault knowledge freely, permanent knowledge never links into a project, and project close harvests durable claims into the vault before the working bundle archives. The vault must live without its projects.
 

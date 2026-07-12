@@ -11,6 +11,19 @@ Every note in the vault sits somewhere between catalogued source and written
 output. The cycle explains what that progression is for, where it stalls, and
 why the vault compounds instead of merely accumulating files.
 
+## Pull, not push
+
+> **Planned beta.1 — O2/W2:** Project-pulled admission and the complete
+> project-close harvest loop described below are target-state.
+
+The cycle is inquiry-first: a project opens with a question or thesis, gap
+analysis runs over what the vault already holds *before* new reading, and
+capture is pulled by identified gaps rather than pushed by whatever arrives.
+Sources are admitted to the catalog freely, but nothing enters knowledge
+until a project pulls it through digestion and judgment. At project close,
+durable claims harvest back into the vault — each project leaves the
+permanent knowledge richer than it found it.
+
 ## Delegable tasks are not a pipeline
 
 The PI works in **Library**, **Knowledge**, and **Project**, with **Inbox** as
