@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS operation_requests (
     primary_target TEXT NOT NULL DEFAULT '',
     precondition_hashes_json TEXT NOT NULL DEFAULT '{}',
     causal_refs_json TEXT NOT NULL DEFAULT '[]',
-    actor TEXT NOT NULL DEFAULT 'pi',
+    actor TEXT NOT NULL CHECK (actor IN ('pi', 'agent', 'operation', 'integrity')),
     provenance_json TEXT NOT NULL DEFAULT '{}',
     schedule_id TEXT,
     status TEXT NOT NULL
@@ -43,6 +43,10 @@ BEFORE DELETE ON event_log
 BEGIN
     SELECT RAISE(ABORT, 'journal is append-only');
 END;
+CREATE INDEX IF NOT EXISTS idx_event_log_event_type
+    ON event_log(event_type);
+CREATE INDEX IF NOT EXISTS idx_event_log_timestamp
+    ON event_log(timestamp);
 
 CREATE TABLE IF NOT EXISTS concepts (
     concept_id TEXT PRIMARY KEY,
@@ -339,7 +343,7 @@ CREATE INDEX IF NOT EXISTS idx_evidence_sets_block_ref
 CREATE TABLE IF NOT EXISTS derivations (
     input_id TEXT NOT NULL,
     output_id TEXT NOT NULL,
-    actor TEXT NOT NULL CHECK (actor IN ('pi', 'operation', 'integrity')),
+    actor TEXT NOT NULL CHECK (actor IN ('pi', 'agent', 'operation', 'integrity')),
     PRIMARY KEY (input_id, output_id)
 );
 CREATE VIEW IF NOT EXISTS consumable_outputs AS
@@ -350,4 +354,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 8;
+PRAGMA user_version = 9;

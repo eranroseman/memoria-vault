@@ -27,7 +27,7 @@ from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 WORK_ASPECT_TYPES = frozenset(
