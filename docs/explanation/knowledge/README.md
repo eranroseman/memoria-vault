@@ -36,6 +36,7 @@ section develops in [Requests and notes are different things](../execution/contr
 | [Why promotion is gated](promotion-and-gated-zones.md)                       | What promotion means, how the trusted writer protects checked readers, and why PI curation sits at the synthesis boundary.         |
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary stabilization is staged, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
+| [Consequence propagation](consequence-propagation.md)              | How typed graph edges expose the blast radius of knowledge changes and route each dependent to the right disposition.                    |
 
 For the document-type roster, see [Document types](../../reference/data-model/document-types.md).
 For field grammar, see [Frontmatter fields](../../reference/data-model/frontmatter.md). For
