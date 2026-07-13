@@ -1339,7 +1339,13 @@ git commit -m "docs: make enforcement claims match shipped code; tutorials run v
 gh pr create --title "fix(cli+docs): honest surfaces (F4)" --body "Closes #1364, closes #1351. _emit prints FAILED with detail, list --type work enumerates the catalog, note mode:work creatable, dead knobs deleted, projection drift covers argument.canvas, doc claims corrected to shipped behavior, tutorials run verbatim. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
 ```
 
-- [ ] **Step 5: Publish, pass required checks, and squash-merge PR-F4**
+- [x] **Step 5: Approved local squash integration and required checks** — the
+  user explicitly approved local integration in place of PR publication.
+  `foundation-f4` was squash-merged into `main` as `113f414d`; its 82 staged
+  paths exactly matched the reviewed branch diff. The final merged-tree
+  `python3 scripts/verify` passed (`495 passed, 9 skipped, 523 deselected`),
+  including offline smoke, syntax, and installer checks; `pre-commit run
+  gitleaks --all-files` also passed. No remote publication was performed.
 
 ---
 
