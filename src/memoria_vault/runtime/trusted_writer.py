@@ -8,6 +8,7 @@ import platform
 import re
 import shutil
 import subprocess
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -902,8 +903,9 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
-    append_jsonl(_journal_path(vault, machine), [event])
     state._append_journal_row(vault, event, machine=machine)
+    state.write_journal_head_anchor(vault)
+    append_jsonl(_journal_path(vault, machine), [event])
 
 
 def _journal_path(vault: Path, machine: str) -> Path:
@@ -911,8 +913,52 @@ def _journal_path(vault: Path, machine: str) -> Path:
 
 
 def _iter_events(vault: Path) -> Iterable[dict[str, Any]]:
+    for _machine, event in _iter_journal_exports(vault):
+        yield event
+
+
+def _iter_journal_exports(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
     for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
-        yield from iter_jsonl(path)
+        for event in iter_jsonl(path):
+            yield path.stem, event
+
+
+def reconcile_journal_export(vault: Path) -> int:
+    """Re-emit authoritative rows missing from per-machine JSONL exports."""
+    vault = Path(vault)
+    exported = Counter(
+        (machine, _canonical_journal_event(event))
+        for machine, event in _iter_journal_exports(vault)
+    )
+    missing: list[tuple[str, dict[str, Any]]] = []
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT machine, payload_json FROM event_log ORDER BY event_id"
+        ).fetchall()
+    for row in rows:
+        machine = str(row["machine"])
+        event = json.loads(str(row["payload_json"]))
+        if not isinstance(event, dict):
+            raise ValueError("event_log payload must be a JSON object")
+        if event.get("machine") != machine:
+            raise ValueError("event_log payload machine does not match its row")
+        key = (machine, _canonical_journal_event(event))
+        if exported[key]:
+            exported[key] -= 1
+        else:
+            missing.append((machine, event))
+    extra_count = sum(exported.values())
+    if extra_count:
+        raise ValueError(
+            f"journal JSONL export contains {extra_count} row(s) absent from event_log"
+        )
+    for machine, event in missing:
+        append_jsonl(_journal_path(vault, machine), [event])
+    return len(missing)
+
+
+def _canonical_journal_event(event: dict[str, Any]) -> str:
+    return json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _known_current_hashes(vault: Path) -> dict[str, str]:

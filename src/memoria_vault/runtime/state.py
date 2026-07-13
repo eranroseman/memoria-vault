@@ -7,6 +7,7 @@ import json
 import re
 import sqlite3
 import subprocess
+from collections import Counter
 from collections.abc import Iterable
 from importlib.resources import files
 from pathlib import Path
@@ -461,6 +462,14 @@ def verify_journal_chain(vault: Path) -> dict[str, Any]:
             anchor=anchor,
             error="journal-head anchor does not match chain tip",
         )
+    export_error = _journal_export_subset_error(Path(vault), rows)
+    if export_error:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            anchor=anchor,
+            error=export_error,
+        )
     return {
         "ok": True,
         "events": len(rows),
@@ -468,6 +477,48 @@ def verify_journal_chain(vault: Path) -> dict[str, Any]:
         "anchor": anchor,
         "error": "",
     }
+
+
+def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
+    authoritative: Counter[tuple[str, str]] = Counter()
+    for row in rows:
+        try:
+            event = json.loads(str(row["payload_json"]))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return f"event_log contains invalid payload JSON at event {row['event_id']}"
+        if not isinstance(event, dict):
+            return f"event_log payload is not an object at event {row['event_id']}"
+        machine = str(row["machine"])
+        if event.get("machine") != machine:
+            return f"event_log machine conflicts with payload at event {row['event_id']}"
+        authoritative[(machine, _json(event))] += 1
+
+    root = vault / ".memoria/journal"
+    for path in sorted(root.glob("*.jsonl")):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError) as exc:
+            return f"journal JSONL export is unreadable: {path.name}: {exc}"
+        machine = path.stem
+        for line_number, line in enumerate(lines, start=1):
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                return f"invalid JSONL in {path.name} at line {line_number}"
+            if not isinstance(event, dict):
+                return f"invalid JSONL object in {path.name} at line {line_number}"
+            if event.get("machine") != machine:
+                return f"JSONL machine mismatch in {path.name} at line {line_number}"
+            key = (machine, _json(event))
+            if not authoritative[key]:
+                return (
+                    f"JSONL event in {path.name} at line {line_number} "
+                    "has no authoritative event_log row"
+                )
+            authoritative[key] -= 1
+    return ""
 
 
 def _journal_verification_failure(

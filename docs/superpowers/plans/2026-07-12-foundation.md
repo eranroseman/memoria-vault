@@ -429,7 +429,8 @@ git commit -m "feat(journal): chain verifier + memoria journal verify"
 **Interfaces:**
 - Consumes: `state._append_journal_row`, `append_jsonl`, `_journal_path`, and
   F1's context/explicit trusted-writer append paths.
-- Produces: `_append_decorated_event` writes `event_log` **first**, JSONL second;
+- Produces: `_append_decorated_event` writes `event_log` first, durably advances
+  the live `journal-head` to that authoritative tip, then writes JSONL;
   `trusted_writer.reconcile_journal_export(vault: Path) -> int` re-appends
   missing JSONL lines from `event_log` to each event's recorded machine file
   (returns count re-emitted). `verify_journal_chain` also proves the opposite
@@ -437,7 +438,14 @@ git commit -m "feat(journal): chain verifier + memoria journal verify"
   ownership; any JSONL-only row is a verification failure. After a passing
   verify, `workspace scan` repairs DB-only export rows before other work.
 
-- [ ] **Step 1: Write the failing test**
+This strict-tip implementation makes the anchor describe the latest
+authoritative SQLite row, including explicit lifecycle events that do not make
+a separate Git commit. A JSONL failure is repairable because the DB row and
+anchor already agree. A physical failure between the DB commit and durable
+anchor replacement remains fail-closed and requires operator recovery rather
+than silently accepting an unanchored suffix.
+
+- [x] **Step 1: Write the failing test**
 
 ```python
 def test_append_event_writes_event_log_first(tmp_path, capsys, monkeypatch):
@@ -496,17 +504,20 @@ def test_reconcile_counts_duplicate_payloads(tmp_path, capsys):
     assert trusted_writer.reconcile_journal_export(vault) == 0
 ```
 
-Also test that an extra JSONL-only event makes `verify_journal_chain` fail,
-that duplicate counts are compared as a multiset, and that a DB-only row is
-re-emitted to the machine recorded in `event_log`.
+Also test both explicit and request-mediated append crashes, an extra
+JSONL-only event, malformed and wrong-machine exports, multiset duplicate
+counts, and DB-only re-emission to the machine recorded in `event_log`.
 
-- [ ] **Step 2: Run to verify failure** — first test finds 0 rows (JSONL is written first today); `reconcile_journal_export` doesn't exist.
+- [x] **Step 2: Run to verify failure** — six new tests failed on JSONL-first
+  append, the missing reconciler, absent subset validation, and absent scan
+  repair reporting.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```python
 def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
     state._append_journal_row(vault, event, machine=machine)  # authoritative first
+    state.write_journal_head_anchor(vault)  # strict live-tip evidence
     append_jsonl(_journal_path(vault, machine), [event])  # derived export second
 
 
@@ -531,10 +542,14 @@ def reconcile_journal_export(vault: Path) -> int:
 Use one canonical JSON helper for both multiset directions. Read authoritative
 rows with their `machine` column and require it to match the payload and target
 JSONL filename. Do not refresh or rewrite an extra JSONL-only row into the DB.
+The reconciler computes both multiset differences before writing and rejects
+any export-only count before repairing DB-only counts.
 
-- [ ] **Step 4: Run tests** → PASS; full suite PASS.
+- [x] **Step 4: Run tests** — 15 journal-trust tests pass; the journal, CLI,
+  trusted-writer slice passes 51, and the broader state/writer/worker/CLI slice
+  passes 248.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/trusted_writer.py tests/test_journal_trust.py

@@ -1745,6 +1745,9 @@ def _workspace_scan_payload(
             "needs_check_count": 0,
             "needs_check_paths": [],
         }
+    from memoria_vault.runtime.trusted_writer import reconcile_journal_export
+
+    journal_reconciled = reconcile_journal_export(workspace)
     fixture_name = getattr(args, "fixture", "")
     fixture = _workspace_scan_fixture(workspace, fixture_name) if fixture_name else None
     projection_paths = _changed_generated_projection_paths(workspace)
@@ -1777,6 +1780,7 @@ def _workspace_scan_payload(
         "needs_check_count": len(needs_check_paths),
         "needs_check_paths": needs_check_paths,
         "journal": journal,
+        "journal_reconciled": journal_reconciled,
     }
     if quarantine is not None:
         payload["quarantine"] = quarantine["result"]
