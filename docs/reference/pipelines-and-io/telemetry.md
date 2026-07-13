@@ -17,7 +17,9 @@ Rationale: [the vault-eval-benchmark-first publication path](https://github.com/
 ## Conventions
 
 - **Format.** One JSON object per line (JSONL). A partial last line is the only
-  acceptable corruption and is dropped on read.
+  acceptable corruption. Journal verification ignores that fragment, and the
+  serialized reconciliation sweep removes it before restoring complete rows
+  from the authoritative event log.
 - **Append-only.** Writers append rows; rotation is an explicit authorized
   operation.
 - **Time.** Every row carries `timestamp` in ISO-8601 UTC with a trailing `Z`.
@@ -47,8 +49,9 @@ The write-gate's decision trail. Its full schema is owned by
 [Policy audit log](../control-and-policy/policy-audit-log.md).
 
 Every denied, dry-run, policy-load failure, and paired optional-adapter write
-appends a row. Worker-owned CLI mutations also write `.memoria/journal/` request
-evidence in `.memoria/memoria.sqlite`; the audit log is the adapter/write-boundary
+appends a row. Worker-owned CLI mutations write authoritative request evidence
+to `event_log` in `.memoria/memoria.sqlite`, with derived per-machine JSONL
+exports under `.memoria/journal/`; the audit log is the adapter/write-boundary
 evidence stream.
 
 ### lint-findings.jsonl

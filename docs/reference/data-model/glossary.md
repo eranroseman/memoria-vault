@@ -111,7 +111,8 @@ sweep in any editor or adapter view.
 
 **Attention projection** — a generated Inbox row (`candidate`, `gap`, `flag`,
 `alert`, `work-prompt`) carrying PI-facing work. It is not a durable Concept;
-the owning state is `.memoria/journal/`, check, and queue data.
+the owning state is SQLite event-log, check, and queue data. Per-machine journal
+JSONL files are derived synchronization exports.
 
 **Hub** — a checked `hub` Concept in `hubs/` aggregating a topic's
 members and links. Machine-curated hub changes are suggestions until the PI

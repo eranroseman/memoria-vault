@@ -129,6 +129,8 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     mark_checked(vault, pi_note, machine="pi-machine")
     commit_writer_changes(vault, "observe pi note", [pi_note], machine="pi-machine")
 
+    for path in (vault / ".memoria/journal").glob("*.jsonl"):
+        path.unlink()
     downstream = {event["output_id"] for event in trace_downstream(vault, digest["digest_path"])}
     assert notes["note_paths"][0] in downstream
     assert pi_note in downstream

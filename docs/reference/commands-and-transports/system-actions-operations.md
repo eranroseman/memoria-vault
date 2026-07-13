@@ -82,7 +82,7 @@ matrix before payload validation or domain mutation.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Emit note candidates | worker operation `propose-note-candidates` + runtime helper (`emit_note_candidates`) | Reads one checked digest, records resolved runner provenance in `model_call`, promotes checked `note` Concepts, and records note-candidate state in `.memoria/journal/` and SQLite state rather than frontmatter. |
+| Emit note candidates | worker operation `propose-note-candidates` + runtime helper (`emit_note_candidates`) | Reads one checked digest, records resolved runner provenance in `model_call`, promotes checked `note` Concepts, and records note-candidate state in SQLite's authoritative event log rather than frontmatter. |
 | Curate note candidate | worker operation `curate-note-candidate` + runtime helper (`curate_note_candidate`) | Records a PI accept/reject decision for one checked candidate `note` as a journal `resolved` row without mutating Concept frontmatter. |
 | Curate note link | worker operation `curate-note-link` + runtime helper (`curate_note_link`) | Records one PI-authored `supports`, `contradicts`, or `extends` link from a checked note to a checked Concept, updating the note's `links` map and committing it with a journal `resolved` row. |
 | Analyze gaps | worker operation `analyze-gaps` + runtime helper (`analyze_gaps`) | Reports topic, digest, warrant, and project argument gaps from checked state; provider candidates and tag candidates surface as unchecked attention, never direct writes. |

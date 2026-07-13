@@ -8,6 +8,7 @@ import platform
 import re
 import shutil
 import subprocess
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,7 +17,7 @@ from typing import Any
 import yaml
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -31,6 +32,7 @@ from memoria_vault.runtime.vaultio import (
     retired_frontmatter_field_errors,
     split_frontmatter,
     universal_concept_frontmatter_errors,
+    write_bytes_durable,
     write_frontmatter_doc,
 )
 
@@ -722,9 +724,12 @@ def quarantine_untraced_from_status(
 
 
 def rebuild_trace_state(vault: Path) -> dict[str, dict[str, Any]]:
-    """Rebuild the latest known output/check state from all per-machine journals."""
+    """Rebuild the latest known output/check state from the authoritative event log."""
     outputs: dict[str, dict[str, Any]] = {}
-    for event in _iter_events(Path(vault)):
+    for event in state.read_event_log(
+        Path(vault),
+        event_types=(*TRACE_OUTPUT_EVENTS, EVENT_CHECK_FIRED),
+    ):
         if event.get("event") in TRACE_OUTPUT_EVENTS:
             output_id = event.get("output_id")
         elif event.get("event") == EVENT_CHECK_FIRED:
@@ -902,17 +907,111 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
-    append_jsonl(_journal_path(vault, machine), [event])
-    state._append_journal_row(vault, event, machine=machine)
+    with state.workspace_lock(vault):
+        if _has_unterminated_journal_export_tail(vault):
+            reconcile_journal_export(vault)
+        state._append_journal_row(vault, event, machine=machine)
+        state.write_journal_head_anchor(vault)
+        append_jsonl(_journal_path(vault, machine), [event])
 
 
 def _journal_path(vault: Path, machine: str) -> Path:
     return vault / ".memoria/journal" / f"{machine}.jsonl"
 
 
-def _iter_events(vault: Path) -> Iterable[dict[str, Any]]:
+def _iter_journal_exports(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
     for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
-        yield from iter_jsonl(path)
+        try:
+            raw = path.read_bytes()
+        except OSError as exc:
+            raise ValueError(f"journal JSONL export is unreadable: {path.name}: {exc}") from exc
+        raw = state.journal_export_complete_prefix(raw)
+        machine = path.stem
+        for line_number, raw_line in enumerate(raw.splitlines(), start=1):
+            try:
+                line = raw_line.decode("utf-8").strip()
+            except UnicodeDecodeError as exc:
+                raise ValueError(f"invalid UTF-8 in {path.name} at line {line_number}") from exc
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"invalid JSONL in {path.name} at line {line_number}") from exc
+            if not isinstance(event, dict):
+                raise ValueError(f"invalid JSONL object in {path.name} at line {line_number}")
+            if event.get("machine") != machine:
+                raise ValueError(f"JSONL machine mismatch in {path.name} at line {line_number}")
+            yield path.stem, event
+
+
+def reconcile_journal_export(vault: Path) -> int:
+    """Re-emit authoritative rows missing from per-machine JSONL exports."""
+    vault = Path(vault)
+    with state.workspace_lock(vault):
+        exported = Counter(
+            (machine, _canonical_journal_event(event))
+            for machine, event in _iter_journal_exports(vault)
+        )
+        missing: list[tuple[str, dict[str, Any]]] = []
+        with state.connect(vault) as conn:
+            rows = conn.execute(
+                "SELECT machine, payload_json FROM event_log ORDER BY event_id"
+            ).fetchall()
+        for row in rows:
+            machine = str(row["machine"])
+            event = json.loads(str(row["payload_json"]))
+            if not isinstance(event, dict):
+                raise ValueError("event_log payload must be a JSON object")
+            if event.get("machine") != machine:
+                raise ValueError("event_log payload machine does not match its row")
+            key = (machine, _canonical_journal_event(event))
+            if exported[key]:
+                exported[key] -= 1
+            else:
+                missing.append((machine, event))
+        extra_count = sum(exported.values())
+        if extra_count:
+            raise ValueError(
+                f"journal JSONL export contains {extra_count} row(s) absent from event_log"
+            )
+        _normalize_journal_export_tails(vault)
+        for machine, event in missing:
+            append_jsonl(_journal_path(vault, machine), [event])
+        return len(missing)
+
+
+def _canonical_journal_event(event: dict[str, Any]) -> str:
+    return json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _normalize_journal_export_tails(vault: Path) -> bool:
+    normalized = False
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
+        normalized = _truncate_partial_jsonl_tail(path) or normalized
+    return normalized
+
+
+def _has_unterminated_journal_export_tail(vault: Path) -> bool:
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
+        try:
+            data = path.read_bytes()
+        except FileNotFoundError:
+            continue
+        if data and not data.endswith((b"\n", b"\r")):
+            return True
+    return False
+
+
+def _truncate_partial_jsonl_tail(path: Path) -> bool:
+    try:
+        data = path.read_bytes()
+    except FileNotFoundError:
+        return False
+    if not data or data.endswith((b"\n", b"\r")):
+        return False
+    write_bytes_durable(path, state.journal_export_complete_prefix(data))
+    return True
 
 
 def _known_current_hashes(vault: Path) -> dict[str, str]:
@@ -926,8 +1025,8 @@ def _known_current_hashes(vault: Path) -> dict[str, str]:
 
 def _latest_derived_inputs(vault: Path, target: str) -> list[dict[str, Any]]:
     inputs: list[dict[str, Any]] = []
-    for event in _iter_events(vault):
-        if event.get("event") in TRACE_OUTPUT_EVENTS and event.get("output_id") == target:
+    for event in state.read_event_log(vault, event_types=TRACE_OUTPUT_EVENTS):
+        if event.get("output_id") == target:
             inputs = _input_rows(event.get("inputs") or [])
     return inputs
 

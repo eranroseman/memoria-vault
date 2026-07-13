@@ -43,8 +43,9 @@ came from. `digest` and `fulltext` files hold source-derived material keyed by
 suggestions until accepted.
 
 **Note candidates.** `note` is the single atomic note type. Machine-proposed
-notes are checked Concepts whose candidate state lives in `.memoria/journal/` and SQLite state;
-the PI still decides whether to accept, edit, reject, or link them.
+notes are checked Concepts whose candidate state lives in SQLite's authoritative
+event log; per-machine JSONL files are derived synchronization exports. The PI
+still decides whether to accept, edit, reject, or link them.
 
 **Gap analysis.** The runtime compares checked catalog, fulltext, and digest
 signals with checked notes. `new-topic` means no checked material exists for a

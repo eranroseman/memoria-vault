@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+import os
 import re
 import sqlite3
 import subprocess
+import threading
+import time
+from collections import Counter
 from collections.abc import Iterable
 from importlib.resources import files
 from pathlib import Path
@@ -25,6 +30,16 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_text_durable
 
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows fallback is exercised only on Windows.
+    fcntl = None
+
+try:
+    import msvcrt
+except ImportError:  # pragma: no cover - POSIX path is exercised in CI.
+    msvcrt = None
+
 if TYPE_CHECKING:
     from memoria_vault.runtime.trusted_writer import OperationContext
 
@@ -38,6 +53,80 @@ WORK_ASPECT_TYPES = frozenset(
     {"context", "key_idea", "method", "outcome", "limitation", "assumption"}
 )
 EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
+_WORKSPACE_LOCKS_GUARD = threading.Lock()
+_WORKSPACE_LOCKS: dict[str, threading.RLock] = {}
+_WORKSPACE_LOCK_DEPTH = threading.local()
+_WORKSPACE_LOCK_PID = os.getpid()
+
+
+def _workspace_lock_key(vault: Path) -> str:
+    return str((Path(vault) / ".memoria/locks/worker.lock").resolve())
+
+
+def _workspace_thread_lock(key: str) -> threading.RLock:
+    global _WORKSPACE_LOCK_DEPTH, _WORKSPACE_LOCK_PID
+    with _WORKSPACE_LOCKS_GUARD:
+        if _WORKSPACE_LOCK_PID != os.getpid():
+            _WORKSPACE_LOCKS.clear()
+            _WORKSPACE_LOCK_DEPTH = threading.local()
+            _WORKSPACE_LOCK_PID = os.getpid()
+        return _WORKSPACE_LOCKS.setdefault(key, threading.RLock())
+
+
+@contextlib.contextmanager
+def workspace_lock(vault: Path):
+    """Serialize one workspace while allowing same-thread nested calls."""
+    lock_key = _workspace_lock_key(vault)
+    thread_lock = _workspace_thread_lock(lock_key)
+    with thread_lock:
+        depths = getattr(_WORKSPACE_LOCK_DEPTH, "depths", None)
+        if depths is None:
+            depths = {}
+            _WORKSPACE_LOCK_DEPTH.depths = depths
+        depth = int(depths.get(lock_key, 0))
+        if depth:
+            depths[lock_key] = depth + 1
+            try:
+                yield
+            finally:
+                depths[lock_key] = depth
+            return
+
+        lock_path = Path(lock_key)
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        with lock_path.open("a+b") as lock_file:
+            if fcntl is not None:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+                try:
+                    depths[lock_key] = 1
+                    yield
+                finally:
+                    depths.pop(lock_key, None)
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                return
+            if msvcrt is not None:
+                lock_file.write(b"\0")
+                lock_file.flush()
+                lock_file.seek(0)
+                while True:
+                    try:
+                        msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+                        break
+                    except OSError:
+                        time.sleep(0.05)
+                try:
+                    depths[lock_key] = 1
+                    yield
+                finally:
+                    depths.pop(lock_key, None)
+                    lock_file.seek(0)
+                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+                return
+            depths[lock_key] = 1
+            try:
+                yield
+            finally:
+                depths.pop(lock_key, None)
 
 
 def db_path(vault: Path) -> Path:
@@ -402,6 +491,219 @@ def journal_head_anchor(vault: Path) -> str:
 def write_journal_head_anchor(vault: Path) -> str:
     write_text_durable(Path(vault) / JOURNAL_HEAD_REL, journal_head_anchor(vault) + "\n")
     return JOURNAL_HEAD_REL
+
+
+def verify_journal_chain(vault: Path) -> dict[str, Any]:
+    """Verify the authoritative event chain and its tracked head anchor."""
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT event_id, timestamp, event_type, machine,
+                   payload_json, prev_hash, row_hash
+            FROM event_log
+            ORDER BY event_id
+            """
+        ).fetchall()
+
+    previous = "GENESIS"
+    row_hashes: set[str] = set()
+    for row in rows:
+        event_id = int(row["event_id"])
+        try:
+            event = json.loads(str(row["payload_json"]))
+            if not isinstance(event, dict):
+                raise ValueError("journal payload must be an object")
+            expected = _journal_hash(
+                event_id,
+                str(row["timestamp"]),
+                str(row["event_type"]),
+                str(row["machine"]),
+                str(row["payload_json"]),
+                previous,
+            )
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return _journal_verification_failure(
+                rows, error=f"journal chain has invalid payload JSON at event {event_id}"
+            )
+        payload_type = str(event.get("event") or event.get("type") or "event")
+        if payload_type != str(row["event_type"]):
+            return _journal_verification_failure(
+                rows, error=f"journal event type conflicts with payload at event {event_id}"
+            )
+        if event.get("machine") != str(row["machine"]):
+            return _journal_verification_failure(
+                rows, error=f"journal machine conflicts with payload at event {event_id}"
+            )
+        if str(row["prev_hash"]) != previous or str(row["row_hash"]) != expected:
+            return _journal_verification_failure(
+                rows, error=f"journal chain broken at event {event_id}"
+            )
+        previous = str(row["row_hash"])
+        row_hashes.add(previous)
+
+    tip = previous
+    anchor_path = Path(vault) / JOURNAL_HEAD_REL
+    try:
+        anchor = anchor_path.read_text(encoding="utf-8").strip() if anchor_path.is_file() else ""
+    except (OSError, UnicodeError) as exc:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            error=f"journal-head anchor is unreadable: {exc}",
+        )
+    if rows and not anchor:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            error="journal-head anchor is missing for a nonempty chain",
+        )
+    if anchor and anchor != tip:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            anchor=anchor,
+            error="journal-head anchor does not match chain tip",
+        )
+    committed_anchor = _committed_journal_head_anchor(Path(vault))
+    if committed_anchor is not None and committed_anchor not in {"GENESIS", *row_hashes}:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            anchor=anchor,
+            error="committed journal-head anchor is not a prefix of the live chain",
+        )
+    export_error = _journal_export_subset_error(Path(vault), rows)
+    if export_error:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            anchor=anchor,
+            error=export_error,
+        )
+    return {
+        "ok": True,
+        "events": len(rows),
+        "tip": tip,
+        "anchor": anchor,
+        "error": "",
+    }
+
+
+def read_event_log(
+    vault: Path,
+    *,
+    event_types: Iterable[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Read authoritative journal payloads in event order."""
+    selected = sorted({str(value) for value in event_types or ()})
+    query = "SELECT event_type, machine, payload_json FROM event_log"
+    params: tuple[str, ...] = ()
+    if selected:
+        query += f" WHERE event_type IN ({','.join('?' for _ in selected)})"
+        params = tuple(selected)
+    query += " ORDER BY event_id"
+    with connect(vault) as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    events: list[dict[str, Any]] = []
+    for row in rows:
+        try:
+            event = json.loads(str(row["payload_json"]))
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ValueError("event_log payload must be valid JSON") from exc
+        if not isinstance(event, dict):
+            raise ValueError("event_log payload must be a JSON object")
+        if event.get("machine") != str(row["machine"]):
+            raise ValueError("event_log payload machine does not match its row")
+        payload_type = str(event.get("event") or event.get("type") or "event")
+        if payload_type != str(row["event_type"]):
+            raise ValueError("event_log payload type does not match its row")
+        events.append(event)
+    return events
+
+
+def journal_export_complete_prefix(raw: bytes) -> bytes:
+    """Return the complete CR/LF-delimited journal export records in ``raw``."""
+    if not raw or raw.endswith((b"\n", b"\r")):
+        return raw
+    return raw[: max(raw.rfind(b"\n"), raw.rfind(b"\r")) + 1]
+
+
+def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
+    authoritative: Counter[tuple[str, str]] = Counter()
+    for row in rows:
+        try:
+            event = json.loads(str(row["payload_json"]))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return f"event_log contains invalid payload JSON at event {row['event_id']}"
+        if not isinstance(event, dict):
+            return f"event_log payload is not an object at event {row['event_id']}"
+        machine = str(row["machine"])
+        if event.get("machine") != machine:
+            return f"event_log machine conflicts with payload at event {row['event_id']}"
+        authoritative[(machine, _json(event))] += 1
+
+    root = vault / ".memoria/journal"
+    for path in sorted(root.glob("*.jsonl")):
+        try:
+            raw = path.read_bytes()
+        except OSError as exc:
+            return f"journal JSONL export is unreadable: {path.name}: {exc}"
+        lines = journal_export_complete_prefix(raw).splitlines()
+        machine = path.stem
+        for line_number, raw_line in enumerate(lines, start=1):
+            try:
+                line = raw_line.decode("utf-8")
+            except UnicodeDecodeError:
+                return f"invalid UTF-8 in {path.name} at line {line_number}"
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                return f"invalid JSONL in {path.name} at line {line_number}"
+            if not isinstance(event, dict):
+                return f"invalid JSONL object in {path.name} at line {line_number}"
+            if event.get("machine") != machine:
+                return f"JSONL machine mismatch in {path.name} at line {line_number}"
+            key = (machine, _json(event))
+            if not authoritative[key]:
+                return (
+                    f"JSONL event in {path.name} at line {line_number} "
+                    "has no authoritative event_log row"
+                )
+            authoritative[key] -= 1
+    return ""
+
+
+def _committed_journal_head_anchor(vault: Path) -> str | None:
+    try:
+        proc = subprocess.run(
+            ["git", "show", f"HEAD:{JOURNAL_HEAD_REL}"],
+            cwd=vault,
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+    except OSError:
+        return None
+    return None if proc.returncode else proc.stdout.strip()
+
+
+def _journal_verification_failure(
+    rows: list[Any],
+    *,
+    error: str,
+    tip: str = "",
+    anchor: str = "",
+) -> dict[str, Any]:
+    return {
+        "ok": False,
+        "events": len(rows),
+        "tip": tip,
+        "anchor": anchor,
+        "error": error,
+    }
 
 
 def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None:

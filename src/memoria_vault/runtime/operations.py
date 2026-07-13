@@ -15,7 +15,6 @@ import yaml
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import read_capability_manifest
-from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
@@ -817,20 +816,19 @@ def _topic_slug(value: str) -> str:
 def _source_interviews(vault: Path, source_ref: str) -> list[dict[str, Any]]:
     work_id = _work_id(source_ref)
     rows: list[dict[str, Any]] = []
-    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
-        for event in iter_jsonl(path):
-            event_source = event.get("work_id")
-            if event.get("event") != "copi-interview" or not isinstance(event_source, str):
-                continue
-            try:
-                matches_source = _work_id(event_source) == work_id
-            except ValueError:
-                matches_source = False
-            if not matches_source:
-                continue
-            if isinstance(event.get("turn_id"), str) and isinstance(event.get("turn_sha256"), str):
-                rows.append(event)
-    return sorted(rows, key=lambda row: str(row.get("timestamp") or ""))
+    for event in state.read_event_log(vault, event_types=("copi-interview",)):
+        event_source = event.get("work_id")
+        if not isinstance(event_source, str):
+            continue
+        try:
+            matches_source = _work_id(event_source) == work_id
+        except ValueError:
+            matches_source = False
+        if not matches_source:
+            continue
+        if isinstance(event.get("turn_id"), str) and isinstance(event.get("turn_sha256"), str):
+            rows.append(event)
+    return rows
 
 
 def _compile_input_hash(content_path: Path, interviews: list[dict[str, Any]]) -> str:

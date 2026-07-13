@@ -182,6 +182,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria vocab rename",
         "memoria journal tail",
         "memoria journal show",
+        "memoria journal verify",
         "memoria workspace scan",
         "memoria workspace run",
         "memoria workspace recover",

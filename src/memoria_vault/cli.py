@@ -135,7 +135,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _operation_commands(sub)
     _simple_resource(sub, "steering", {"show", "edit"})
     _simple_resource(sub, "vocab", {"list", "add", "merge", "rename"})
-    _simple_resource(sub, "journal", {"show", "tail"})
+    _simple_resource(sub, "journal", {"show", "tail", "verify"})
     _workspace_commands(sub)
     _eval_commands(sub)
     return parser
@@ -529,6 +529,9 @@ def _simple_resource(
             cmd.description = _surface_summary("journal.get")
             cmd.add_argument("event_id", type=int)
             cmd.set_defaults(handler=_cmd_journal_show)
+        elif name == "journal" and action == "verify":
+            cmd.description = "Verify the authoritative journal chain and head anchor."
+            cmd.set_defaults(handler=_cmd_journal_verify)
         else:
             raise ValueError(f"unsupported resource action: {name} {action}")
 
@@ -1734,6 +1737,18 @@ def _workspace_scan_payload(
         return operation_args
 
     workspace = _workspace(args)
+    with _workspace_lock(workspace):
+        journal = state.verify_journal_chain(workspace)
+        if not journal["ok"]:
+            return {
+                "ok": False,
+                "journal": journal,
+                "needs_check_count": 0,
+                "needs_check_paths": [],
+            }
+        from memoria_vault.runtime.trusted_writer import reconcile_journal_export
+
+        journal_reconciled = reconcile_journal_export(workspace)
     fixture_name = getattr(args, "fixture", "")
     fixture = _workspace_scan_fixture(workspace, fixture_name) if fixture_name else None
     projection_paths = _changed_generated_projection_paths(workspace)
@@ -1765,6 +1780,8 @@ def _workspace_scan_payload(
         "result": observed["result"],
         "needs_check_count": len(needs_check_paths),
         "needs_check_paths": needs_check_paths,
+        "journal": journal,
+        "journal_reconciled": journal_reconciled,
     }
     if quarantine is not None:
         payload["quarantine"] = quarantine["result"]
@@ -1983,6 +2000,13 @@ def _cmd_journal_show(args: argparse.Namespace) -> int:
         return _emit(engine_api.read_journal_event(_workspace(args), args.event_id), args)
     except FileNotFoundError:
         return _fail(f"journal event not found: {args.event_id}", json_output=args.json)
+
+
+def _cmd_journal_verify(args: argparse.Namespace) -> int:
+    workspace = _workspace(args)
+    with _workspace_lock(workspace):
+        report = state.verify_journal_chain(workspace)
+    return _emit(report, args)
 
 
 def _enqueue_and_run(

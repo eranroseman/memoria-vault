@@ -163,6 +163,8 @@ def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) ->
     assert event["event"] == "check-fired"
     assert event["status"] == "passed"
     assert event["output_sha256"] == sha256_file(target)
+    for path in (vault / ".memoria/journal").glob("*.jsonl"):
+        path.unlink()
     assert rebuild_trace_state(vault)["notes/alpha.md"] == event
     assert quarantine_untraced(vault, ["notes/alpha.md"], machine="test-machine") == []
 
@@ -339,6 +341,8 @@ def test_observe_pi_edit_from_head_keeps_prior_upstream_inputs(tmp_path: Path) -
         note_text(title="PI note") + "\nPI edit.\n",
         encoding="utf-8",
     )
+    for path in (vault / ".memoria/journal").glob("*.jsonl"):
+        path.unlink()
 
     event = observe_pi_edit_from_head(vault, "notes/pi.md", machine="test-machine")
 
