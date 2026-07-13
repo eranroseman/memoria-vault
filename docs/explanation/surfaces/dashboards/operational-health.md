@@ -8,9 +8,9 @@ permalink: /explanation/surfaces/dashboards/operational-health/
 
 # Operational health
 
-Operational health surfaces runtime decisions and evaluation trends. It is
-separate from structural health because "the runtime did X" and "the vault has
-drift" are different claims.
+Operational-health evidence ships as runtime logs and evaluation metrics. A
+planned adapter may render them separately from structural health because "the
+runtime did X" and "the vault has drift" are different claims.
 
 ## Audit log vs eval trend vs Drift watch
 
@@ -22,10 +22,12 @@ layers — keeping them distinct is deliberate:
 - **Eval trend** is diagnostic capability evidence over the checked eval set. It
   tells you whether retrieval/extraction/linking/verification quality has moved,
   not whether the request queue should pause.
-- **[Drift watch](structural-health.md#drift-watch)** is *structural*, not operational: it is the Maintenance view over the Linter operation's open integrity findings, headlined by the verdict band — a different cadence and abstraction layer from the other two.
+- **[Drift watch](structural-health.md#drift-watch)** is a planned structural
+  Maintenance view over the Linter operation's open integrity findings. Today,
+  the linter verdict and file-backed attention provide that evidence directly.
 
-In short: audit log is per-decision, eval trend is capability drift, and Drift
-watch is aggregated structural debt.
+In short: audit log is per-decision, eval trend is capability drift, and a
+planned Drift watch would aggregate structural debt.
 
 ## Audit log
 
@@ -38,13 +40,14 @@ hash-pairing contract live in [Policy gate](../../../reference/control-and-polic
 
 ## Eval trend
 
-Eval trend shows whether the deployed system's retrieval, extraction, linking,
-and verification behavior is moving. It is diagnostic, never a gate; capability
-scores are noisy enough that blocking work on them would invite false halts.
+The eval log records whether the deployed system's retrieval, extraction,
+linking, and verification behavior is moving. A planned Eval trend view may
+render it. The evidence is diagnostic, never a gate; capability scores are
+noisy enough that blocking work on them would invite false halts.
 
 The scoring contract is in [Vault eval](../../../reference/analysis-and-surfaces/vault-eval.md).
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
+- Availability and backing surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
 - Policy log schema: [Policy gate](../../../reference/control-and-policy/policy-mcp.md)

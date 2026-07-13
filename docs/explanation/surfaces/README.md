@@ -14,13 +14,13 @@ but they do not own workflow state or write authority.
 ## The division of labor
 
 Three surfaces, one envelope: the **editor** is where judgment happens — the
-researcher reading, writing, and deciding in plain files; the **plugin** is an
-ambient layer — status, inbox cards, one-click dispositions — that only
-enqueues through the engine, never writes on its own; the **agent** is voice
-and hands — it converses and files dispositions through the same operation
-envelope with its true actor. **Planned: F1 alpha.21; U1/U3/U4 beta.1.** A fourth,
-invisible role (the engine's own jobs) validates and indexes behind them all.
-Every surface goes through the same queue; none is a second authority.
+researcher reads, writes, and decides in plain files; the **plugin** is an
+ambient layer — status, inbox cards, and one-click requests — that enqueues
+through the engine but never writes on its own; the **agent** converses and
+proposes through the same operation envelope with its true actor. The PI alone
+disposes attention and curation decisions. A fourth, invisible role (the
+engine's own jobs) validates and indexes behind them all. Every surface goes
+through the same queue; none is a second authority.
 
 **Planned beta.1 — U1.** Five jobs organize the work regardless of surface:
 Read, Knowledge, Project, Review, and Upkeep.
@@ -33,5 +33,5 @@ deep-work artifact is a plain file; the plugin is never the only way in.
 
 | Page | What it covers |
 | --- | --- |
-| [Dashboards](dashboards/README.md) | How health, queues, and maintenance surface |
+| [Dashboards](dashboards/README.md) | How shipped health data and planned composite views relate |
 | [Obsidian](obsidian/README.md) | Optional editor integration boundaries |

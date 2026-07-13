@@ -43,14 +43,19 @@ Notice that the command completes even before you have added research material.
 ```bash
 ls notes hubs projects digests fulltexts .memoria
 memoria list --workspace . --type note
-memoria list --workspace . --type work
+memoria list --workspace . --type work --json
 ```
 
 The durable file-backed Concept types are `note`, `hub`, `project`, `digest`,
-and `fulltexts`. Source catalog state lives in SQLite and blobs, not as source
-Markdown files.
+and `fulltext`; `fulltexts/` is the `fulltext` folder. Source catalog state
+lives in SQLite and blobs, not as source Markdown files.
 Notice that `notes`, `hubs`, and `projects` are visible folders, while Work
-records come from the runtime catalog.
+records come from the runtime catalog. In a fresh vault, the Work command's
+catalog-backed result is:
+
+```json
+{"api_version": "engine-read-api.v1", "concepts": [], "ok": true}
+```
 
 ## What you should have seen
 

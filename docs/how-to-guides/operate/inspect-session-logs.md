@@ -64,12 +64,12 @@ jq . "system/logs/sessions/$(ls -t system/logs/sessions/ | head -1)"
 
 - Your filter returns rows (an empty result usually means the field value or date
   did not match -- check `actor` and the date is `YYYY-MM-DD`)
-- Counts you compute by hand match what the audit-log dashboard shows for the same window
+- Counts you compute from the raw log match the per-request summary for the same window
 
 ## Related
 
 - The two-log design and why they stay separate: [Session logging](../../explanation/architecture/session-logging.md)
 - The audit field schema and hash pairing: [Policy audit log](../../reference/control-and-policy/policy-audit-log.md)
 - The full log inventory and JSONL conventions: [Telemetry & logs](../../reference/pipelines-and-io/telemetry.md)
-- The dashboards over this data: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
+- Optional views over this data: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
 - Diagnosing a write that was denied: [Diagnose a denied or blocked write](../troubleshooting/diagnose-a-denied-write.md)

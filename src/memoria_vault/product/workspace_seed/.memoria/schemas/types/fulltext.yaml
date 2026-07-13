@@ -1,6 +1,5 @@
 type: fulltext
 category: fulltext
-gated: false
 required:
   type: literal:fulltext
   id: str

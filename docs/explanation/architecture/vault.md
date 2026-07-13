@@ -8,7 +8,7 @@ nav_order: 1
 # The vault
 
 The vault is where durable knowledge lives. Everything else in Memoria - the
-CLI, worker, operations, dashboards, and optional adapters - exists to serve it.
+CLI, worker, operations, read surfaces, and optional adapters - exists to serve it.
 This page explains why the workspace is the durable knowledge substrate and why
 machine writes pass through a worker boundary.
 

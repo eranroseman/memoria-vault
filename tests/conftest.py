@@ -23,6 +23,7 @@ TEST_LEVELS = {
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",
     "test_cli.py": "contract",
+    "test_cli_honesty.py": "contract",
     "test_cli_doctor_eval.py": "contract",
     "test_cli_work_project.py": "contract",
     "test_cli_workspace_requests.py": "contract",

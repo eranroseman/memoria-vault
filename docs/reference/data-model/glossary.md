@@ -33,10 +33,10 @@ every triage, disposition, and promotion decision. Single-user by design.
 the standalone CLI/engine and optional adapters; it does not ship installed
 profile packages or lane assignments.
 
-**Standalone engine architecture** — PI · CLI · Engine · Operations · Storage ·
-Vault · Optional adapters. PI intent enters through the CLI or observed file
-edits, the engine owns request/write/recovery state, and adapters are
-presentation layers over the same contracts.
+**Standalone runtime** — the `memoria` CLI, SQLite state, worker operations,
+runtime policy, and file workspace. PI intent enters through the CLI or
+observed file edits; optional adapters use the same contracts without owning
+runtime state.
 
 **Workspace** — the runtime vault root containing `notes/`, `hubs/`,
 `projects/`, `digests/`, `fulltexts/`, `inbox/`, `system/`, and `.memoria/`.
@@ -55,30 +55,31 @@ corpus homes.
 
 ## Surfaces and navigation
 
-**Navigator rail** — the read-API navigation model for everyday navigation
+**Navigator rail** — a planned optional-adapter navigation model
 ([thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)):
-**Now** over **Places**. It replaces the older per-dashboard nav rows without
-requiring a shipped navigation note.
+**Now** over **Places**. It requires no persisted navigation note. The
+standalone CLI does not render it.
 
-**Now** — the rail's top band: what is waiting on you right now — **Action
+**Now** — the planned rail's top band: what is waiting on you right now — **Action
 queue** (your Inbox queue) and **Drift** (open integrity flags).
 
-**Places** — the rail's lower band over durable corpus homes: Library
+**Places** — the planned rail's lower band over durable corpus homes: Library
 (`digests/`, `fulltexts/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
 Project (`projects/`).
 
-**Queue** — the **Inbox** (`projection: attention`): the daily attention surface
-reached from **Now -> Action queue**. It shows in-process Activity, then
-open attention projections such as `candidate`, `gap`, and `work-prompt`.
-Clearing it to empty is the goal.
+**Queue** — the **Inbox** (`projection: attention`): the shipped file-backed
+daily attention surface, read through CLI/read-API views. A planned rail reaches
+it from **Now -> Action queue**. It shows open attention projections such as
+`candidate`, `gap`, and `work-prompt`; clearing it to empty is the goal.
 
-**Maintenance** — the weekly structural-debt surface: Drift watch, loose ends,
-queue state, and "new this week". It is a read-API/CLI/editor view over request,
-attention, linter, and log state, not a persisted projection type.
+**Maintenance** — a planned optional-adapter weekly structural-debt surface:
+Drift watch, loose ends, queue state, and "new this week". Today, its source
+state is available separately through request/attention commands, linter
+output, logs, and corpus reads; no combined Maintenance view ships.
 
-**Rail health band** — the count the rail's **Now** shows for open `flag` /
-`alert` attention projections; non-zero means structural debt is waiting in
-Maintenance.
+**Rail health band** — the planned count the rail's **Now** shows for open `flag` /
+`alert` attention projections; non-zero would point to structural debt in the
+planned Maintenance view.
 
 **System dashboard** — a read-only view over metrics, request state, attention
 state, or linter findings. The standalone baseline does not ship `system/dashboards/*.md`;
@@ -140,9 +141,13 @@ SQLite. Prefer the precise field name over a bare "state".
 
 ## Policy and audit
 
-**Audit log** — the append-only JSONL trail of every policy decision at `system/logs/audit.jsonl`. Feeds the audit-log dashboard.
+**Audit log** — the append-only JSONL trail of every policy decision at
+`system/logs/audit.jsonl`. It feeds tamper checks and may feed a planned
+audit-log view.
 
-**Extraction-uncertainty flag** — the near-tie rule ([machine judgments are layered proposals, never authorities](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): when cross-Work identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
+**Extraction-uncertainty flag** — planned diagnostic: a future cross-Work
+identity near-tie rule may raise an Inbox `flag` for PI review. Memoria ships no
+cross-Work identity calibration floor or automatic merge decision today.
 
 **Policy gate** — optional adapter decision shim: returns `allow` /
 `allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails

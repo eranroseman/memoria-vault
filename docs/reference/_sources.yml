@@ -1,7 +1,7 @@
 pages:
   analysis-and-surfaces/calibration.md:
-    status: Source-owned
-    owner: src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml
+    status: Manual
+    owner: docs/reference/analysis-and-surfaces/calibration.md
   analysis-and-surfaces/dashboards.md:
     status: Manual
     owner: docs/reference/analysis-and-surfaces/dashboards.md

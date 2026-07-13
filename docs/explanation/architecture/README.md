@@ -34,12 +34,14 @@ remain the write boundary.
 
 ### Signal routing
 
-Every finding has a loudness. Quiet and notice-level events wait in dashboards
-or Maintenance. Alert and block-level events may push to Telegram because they
-can change what the PI does soon.
+Linter findings and attention cards are separate signals. Linter findings have
+severity, which orders their output and determines the linter verdict. Operations
+that create file-backed Inbox attention assign loudness: quiet and notice cards
+remain pull-only, while alert and block cards may push to Telegram when configured.
+A planned Maintenance adapter may collect both sources without conflating them.
 
-Routine events should not push to the phone. If they do, the loudness policy is
-wrong.
+Routine attention should not push to the phone. If it does, the card's loudness
+is wrong.
 
 ## Documents in this section
 

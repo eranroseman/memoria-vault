@@ -45,6 +45,8 @@ memoria project resolve-evidence --workspace . <project-path> \
 ```
 
 Then remove or rewrite the unsupported sentence and verify again.
+Reject records the PI disposition; it does not silently rewrite the draft or
+remove its durable evidence marker.
 
 **4. Promote reusable prose deliberately.**
 
@@ -53,11 +55,13 @@ If a draft passage should become durable knowledge:
 ```bash
 memoria project promote --workspace . <project-path> \
   --title "Reusable synthesis title" \
-  --passage "Exact draft passage to preserve."
+  --passage "Burden changes with context, recent prompts, and task demands."
 ```
 
 The promoted note starts unchecked. Review it before relying on it as checked
-knowledge.
+knowledge. The passage must match the draft exactly. If it does not, the CLI
+exits 1 and prints `FAILED: draft passage was not found in the project draft`
+instead of claiming success.
 
 ## What you should have seen
 

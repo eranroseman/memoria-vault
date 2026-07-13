@@ -23,7 +23,8 @@ nav_order: 3
 Run the Linter operation — report-only, zero-LLM — to confirm and identify the specific error ([Run the Linter](../operate/run-the-linter.md)):
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .
+./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+  --vault .
 ```
 
 Common YAML errors:
@@ -76,7 +77,8 @@ Source metadata lives in SQLite catalog rows, not source frontmatter files. Use
 confirm the repaired Concept with the Linter operation:
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .
+./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+  --vault .
 ```
 
 No YAML or schema findings reported for this note.

@@ -14,7 +14,8 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 ## Prerequisites
 
 - Git and Python 3.12+ with venv support on your `PATH`; sandbox images must include Git too.
-- Runtime provider keys for the CLI features you plan to use.
+- Provider keys are optional and needed only for live model-backed operations.
+  `memoria ask` uses the local checked-only BM25 index and needs no provider key.
 - Obsidian is optional as an app; the workspace seed already includes Memoria's
   Obsidian adapter files and core settings. Generic BibTeX/CSL files exported
   from Zotero can be imported when you need them ([Set up Zotero](set-up-zotero.md)).
@@ -62,7 +63,7 @@ and the top-level workspace folders: `inbox/`, `digests/`, `fulltexts/`,
 ## Verify
 
 - `~/Memoria/.memoria/.venv/bin/memoria status --workspace ~/Memoria` returns workspace status
-- `~/Memoria/.memoria/.venv/bin/memoria ask --workspace ~/Memoria --question "What needs attention?"` reaches the CLI ask path once provider keys are configured
+- `~/Memoria/.memoria/.venv/bin/memoria ask --workspace ~/Memoria --question "What needs attention?"` queries the local checked-only BM25 index without provider keys
 - The runtime vault has a `.git/` directory after install
 
 ## Related

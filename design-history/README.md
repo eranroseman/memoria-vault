@@ -6,6 +6,9 @@ implemented.
 
 Latest completed checkpoint: `alpha.20`
 
+Open release work: `alpha.21` (unreleased). Its working plans are not a
+frozen history chapter.
+
 ## Rules
 
 1. Per-version chapters are frozen evidence after the release closes. Correct

@@ -1,6 +1,5 @@
 type: code-artifact
 category: projects
-gated: false
 required:
   type: literal:code-artifact
   id: str

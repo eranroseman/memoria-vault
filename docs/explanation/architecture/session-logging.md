@@ -46,8 +46,8 @@ accomplish?" — they are request evidence, not policy-gate evidence.
 
 Combining them would make the audit log verbose (request detail) and would make
 request summaries harder to query (mixed with per-write events). Each log has a
-different reader: the audit log feeds dashboards and tamper detection; request
-summaries are for the PI reviewing what happened. The decision is
+different reader: the audit log feeds tamper detection and may feed optional
+dashboards; request summaries are for the PI reviewing what happened. The decision is
 [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 ---

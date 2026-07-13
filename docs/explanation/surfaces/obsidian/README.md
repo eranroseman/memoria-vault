@@ -31,9 +31,9 @@ make Obsidian a required product surface.
 
 ## Callouts
 
-Not every agent output belongs on a dashboard. Some context is only useful while
-looking at a specific note. Dashboards surface decisions across notes; callouts
-surface context inside one note.
+Not every agent output belongs in a cross-note attention surface. Some context
+is useful only while looking at a specific note. File-backed attention and
+planned dashboards span notes; callouts stay inside one note.
 
 Memoria treats plain Markdown callouts as note content. The Obsidian adapter
 does not make them special product state: editors that do not understand
@@ -52,7 +52,7 @@ trusted-writer path.
 | [Visual discipline](../../rationale/surfaces/visual-discipline.md) | The restraint that makes the above work — bounded visual signals, hidden chrome, and why each default is deliberate.                                    |
 | [Design system](../../rationale/surfaces/design-system.md)               | The cross-context visual and voice spec — why a portable design system exists, and why the specific choices are what they are. |
 
-The **dashboards** are Markdown/read-model surfaces, but they have their own
+The shipped CLI/read-model data and planned **dashboards** have their own
 section: [explanation/surfaces/dashboards/](../dashboards/README.md).
 
 ---

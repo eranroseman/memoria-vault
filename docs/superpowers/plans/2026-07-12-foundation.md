@@ -254,7 +254,8 @@ mutation.
 - [x] Complete Task 5 of
   `docs/superpowers/plans/2026-07-12-foundation-f1-operation-context.md`,
   including the current-truth doc updates, full gate, code review, security
-  diff scan, sync, PR checks, and squash merge.
+  diff scan, sync, PR checks, and squash merge. PR #1386 squash-merged as
+  `9b4bfd93` after the required checks passed.
 
 PR #1386 passed both required checks and squash-merged as `9b4bfd93`.
 
@@ -995,8 +996,9 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
     product gates, offline smoke, syntax, and installer checks passed with
     `verify: OK`.
 
-- [x] **Step 6: Commit + PR** — implementation and hardening commits are
-  published in [PR #1390](https://github.com/eranroseman/memoria-vault/pull/1390).
+- [x] **Step 6: Commit + PR** — implementation and hardening were squash-merged
+  through [PR #1390](https://github.com/eranroseman/memoria-vault/pull/1390) as
+  `772fbf28` after `verify` and `gitleaks` passed.
 
 ```bash
 git add src/memoria_vault/cli.py src/memoria_vault/runtime/backup.py src/memoria_vault/runtime/knowledge.py tests/test_backup_restore.py docs/reference/system/backup-and-recovery.md docs/reference/system/README.md
@@ -1015,9 +1017,11 @@ gh pr create --title "feat(backup): durable grounds — backup/restore + failing
 - Test: `tests/test_cli_honesty.py` (new — register as `"contract"`)
 
 **Interfaces:**
-- Produces: failure prints `FAILED: <detail>`; success prints the most meaningful string (`workspace` → `output_path` → `path` → `"ok"`). Exit codes unchanged.
+- Produces: failure prints `FAILED: <detail>`; success prints an allowlisted
+  path, identifier, count, or status. Only a detail-free success prints `ok`;
+  opaque structured results point to `--json`. Exit codes are unchanged.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """tests/test_cli_honesty.py — CLI surfaces tell the truth."""
@@ -1051,9 +1055,10 @@ def test_bare_success_still_prints_ok(capsys):
     assert capsys.readouterr().out.strip() == "ok"
 ```
 
-- [ ] **Step 2: Run to verify failure** — failed payload prints `ok`.
+- [x] **Step 2: Run to verify failure** — failed payload printed `ok`; the
+  nested worker case also hid `result.error` behind a generic status.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```python
 def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:
@@ -1073,18 +1078,25 @@ def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:
                     print(value)
                     break
             else:
-                print("ok")
+                print(_success_detail(payload))
     return 0 if ok else 1
 ```
 
-- [ ] **Step 4: Run tests** → PASS; full suite (`python3 -m pytest tests/ -x -q`) — fix any test asserting the old dishonest output.
+- [x] **Step 4: Run tests** → `tests/test_cli_honesty.py tests/test_cli.py`
+  PASS (24 tests); full suite PASS (825 tests, 10 skipped).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_cli_honesty.py tests/conftest.py
 git commit -m "fix(cli): _emit prints FAILED + detail on failure, meaningful paths on success"
 ```
+
+- [x] **Post-review security correction:** generic non-JSON output is a bounded,
+  allowlisted summary. It never serializes arbitrary worker/read payloads,
+  which can contain captured source text or PDF bytes. Real worker, Work-read,
+  collection-count, opaque-result, JSON, and quiet-mode canaries pass; full
+  structured details remain available through explicit `--json`.
 
 ### Task 13: `list --type work` enumerates the catalog
 
@@ -1096,7 +1108,9 @@ git commit -m "fix(cli): _emit prints FAILED + detail on failure, meaningful pat
 - Consumes: `state.catalog_sources(vault, *, checked_only: bool)` (state.py:822 — read it first and use its exact row keys).
 - Produces: `read_concepts(workspace, concept_type="work")` returns catalog rows in the same `concepts` payload shape (`path`, `type: "work"`, `title`, `check_status`, `verdict`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test** — seeded the catalog through
+  `engine_api.run_operation(..., "capture-source", ...)`, preserving the
+  worker-created `OperationContext` boundary.
 
 ```python
 def test_list_type_work_returns_catalog_rows(tmp_path, capsys):
@@ -1118,9 +1132,11 @@ def test_list_type_work_returns_catalog_rows(tmp_path, capsys):
 ```
 Before writing: confirm the capture helper's exact name/required args (`rg -n "^def " src/memoria_vault/runtime/capture.py`) and reuse whatever existing tests use to seed a catalog row (`rg -ln "capture" tests/test_capture.py`).
 
-- [ ] **Step 2: Run to verify failure** — empty list (markdown filter can never yield `work`).
+- [x] **Step 2: Run to verify failure** — the worker-created catalog row
+  produced an empty list because the markdown filter can never yield `work`.
 
-- [ ] **Step 3: Implement** — at the top of `read_concepts`, before the markdown walk:
+- [x] **Step 3: Implement** — added the catalog-backed branch at the top of
+  `read_concepts`, before the markdown walk:
 
 ```python
     if concept_type == "work":
@@ -1139,9 +1155,11 @@ Before writing: confirm the capture helper's exact name/required args (`rg -n "^
 ```
 Match key names to `catalog_sources`' actual row dict (read state.py:822-840 first; adjust `concept_path`/`title` accessors to what it returns).
 
-- [ ] **Step 4: Run tests** → PASS. Also fix Tutorial 01's step here if it only needed the working command (checked in Task 16).
+- [x] **Step 4: Run tests** → `tests/test_cli_honesty.py`
+  and `tests/test_engine_api.py` PASS (16 tests). Tutorial 01 remains queued
+  for its verbatim Task 16 run.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/engine/api.py tests/test_cli_honesty.py
@@ -1158,7 +1176,8 @@ git commit -m "fix(cli): list --type work enumerates the catalog"
 - Consumes: seed schema `note.yaml` (`mode` enum already includes `work`; requires `work_id` when `mode=work`).
 - Produces: `memoria new note <title> --mode work --work-id <id> --body ...` creates a valid `mode: work` note.
 
-- [ ] **Step 1: Write the failing test** — drive the CLI path the way `tests/test_cli.py` does (reuse its invocation helper; read it first):
+- [x] **Step 1: Write the failing test** — drove the real CLI for both a
+  worker-backed Work-note round trip and a missing-`work_id` schema failure.
 
 ```python
 def test_new_note_mode_work_roundtrip(tmp_path, capsys):
@@ -1170,13 +1189,17 @@ def test_new_note_mode_work_roundtrip(tmp_path, capsys):
 ```
 Write it concretely against the real helper — no `...` left after reading `tests/test_cli.py`'s pattern.
 
-- [ ] **Step 2: Run to verify failure** — argparse rejects `--mode work`.
+- [x] **Step 2: Run to verify failure** — argparse rejected `--mode work` in
+  both tests.
 
-- [ ] **Step 3: Implement** — cli.py:153: `note.add_argument("--mode", choices=("claim", "question", "definition", "work"))`; add `note.add_argument("--work-id")`; in `_cmd_new_note`, pass `work_id` into the note frontmatter payload the same way `mode` flows (locate the frontmatter assembly; add `"work_id": args.work_id` when set). Schema validation already enforces `work_id` presence for `mode=work` — surface its error through `_fail`.
+- [x] **Step 3: Implement** — added the `work` choice, `--work-id`, and the
+  conditional frontmatter field. Existing worker/schema validation enforces
+  the conditional requirement; `_emit` surfaces its nested error honestly.
 
-- [ ] **Step 4: Run tests** → PASS.
+- [x] **Step 4: Run tests** → honesty, CLI, concept-type, and Work/project
+  suites PASS (47 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_cli_honesty.py
@@ -1192,11 +1215,18 @@ git commit -m "fix(cli): new note --mode work creatable with --work-id"
 - Test: `tests/test_projections_drift.py` (new — register as `"contract"`) or extend the existing projections test (`rg -ln "TRACKED_PROJECTION_PATHS" tests/`)
 
 **Interfaces:**
-- Produces: projection-drift checking covers `argument.canvas` files; `calibration.yaml` and `gated:` no longer exist anywhere (`rg` returns nothing).
+- Produces: projection-drift checking covers `argument.canvas` files;
+  `calibration.yaml` and schema `gated:` keys no longer exist in packaged or
+  runtime source (`rg` under `src/` returns nothing).
 
-- [ ] **Step 1: Investigate** — read `projections.py` fully plus the drift check's consumer (`rg -n "TRACKED_PROJECTION_PATHS" src/`). `argument.canvas` lives per-project (`projects/<slug>/argument.canvas`) — a fixed-path tuple cannot list it. Decide per findings: either a glob-aware companion constant or extending the check to per-project canvases.
+- [x] **Step 1: Investigate** — full review found that drift detection,
+  quarantine, and regeneration all share `runtime/projections.py`; because
+  quarantine moves the canvas before regeneration, the pre-quarantine dynamic
+  path must be carried through both CLI and worker callers.
 
-- [ ] **Step 2: Write the failing test** — seed a project with an `argument.canvas` via the render operation (reuse the fixture from the existing canvas/projection tests), mutate the canvas file by hand, and assert the drift check reports it:
+- [x] **Step 2: Write the failing test** — seeded a real project Canvas through
+  the worker operation, then proved stale-canvas drift, CLI scan recovery, and
+  direct `observe-pi-edits` recovery all failed before implementation.
 
 ```python
 def test_projection_drift_covers_argument_canvas(tmp_path, capsys):
@@ -1208,16 +1238,25 @@ def test_projection_drift_covers_argument_canvas(tmp_path, capsys):
 ```
 Fill concretely from the existing tests found in Step 1 — no `...` may remain.
 
-- [ ] **Step 3: Implement** — the minimal shape (adjust to Step 1's findings):
+- [x] **Step 3: Implement** — added the glob-aware projection inventory,
+  exact `projects/<slug>/argument.canvas` validation, deterministic rendering,
+  and explicit restore paths for post-quarantine regeneration:
 
 ```python
 TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
 ```
 and extend the drift-check consumer to iterate `TRACKED_PROJECTION_PATHS` plus `vault.glob(pattern)` matches for each glob.
 
-- [ ] **Step 4: Dead knobs** — delete the seeded `calibration.yaml` file + its seed-roster entry; remove `gated:` keys from type YAMLs and any dead loader branch reading them. Verify: `rg -n "calibration.yaml|gated:" src/` → no hits (except unrelated words; check matches).
+- [x] **Step 4: Dead knobs** — deleted the seeded `calibration.yaml`, removed
+  every type-schema `gated:` key and live reference, and updated schema/source
+  documentation. `rg --hidden -n "calibration\\.yaml|^[[:space:]]*gated:" src`
+  returns no matches.
 
-- [ ] **Step 5: Run tests + commit**
+- [x] **Step 5: Run tests + commit** — 113 focused projection, workspace,
+  worker, schema, package, installer, and doc-drift tests passed; the full
+  suite passed (834 tests, 10 skipped). The required security diff scan sealed
+  a zero-finding report at
+  `/tmp/codex-security-scans/memoria-vault/e6fc68f2_20260713T074649Z/report.md`.
 
 ```bash
 python3 -m pytest tests/ -x -q
@@ -1234,33 +1273,73 @@ git commit -m "fix(product): projection drift covers argument.canvas (#1351); de
 - Modify: `src/memoria_vault/cli.py`
 - Modify: `src/memoria_vault/runtime/worker.py`
 - Modify: `tests/test_cli_work_project.py`
+- Modify: `tests/test_runtime_gate_replay.py`
 - Test: manual verbatim run of tutorials 01/02/04/05 in a disposable vault
   under `test-vault/`
 
 **Interfaces:** aligns `work update` classification flags and persistence with
 the approved vocabulary model; the remaining work is prose truth.
 
-- [ ] **Step 1: Fix the five doc–code contradictions** (locate each with the given `rg`; correct the claim to match the code as repaired by Tasks 12–14 and the implementation below):
+- [x] **Step 1: Fix the five doc–code contradictions** — corrected capture and
+  catalog language, re-derived the note-mode table from `note.yaml`, documented
+  keyless BM25 `ask`, and aligned Work mutation and tests with repeatable
+  `research_area` / `methodology` lists and no Work `topic` field. The linter
+  page already described reporting and its explicit `--gate` path accurately.
+
+  (Locate each with the given `rg`; correct the claim to match the code as repaired by Tasks 12–14 and the implementation below):
   1. `rg -n "capture-candidate|Library pipeline" docs/` — knowledge-cycle page: remove/correct the capture-candidate stage and "Library pipeline" view that no code implements.
   2. `rg -n "blocks delegation" docs/` — linter page: the linter reports; it does not block delegation. Correct the verb.
   3. `rg -n "mode" docs/reference/data-model/frontmatter.md` — re-derive the note-mode/field table from `note.yaml` (source of truth; schema → docs direction).
   4. `rg -n "provider" docs/**/quickstart*` — quickstart's `ask` claim: `memoria ask` is keyless BM25; correct the provider-keys sentence.
   5. `rg -n "work update|methodology|--topic" docs/ src/memoria_vault/cli.py src/memoria_vault/runtime/worker.py tests/test_cli_work_project.py` — align Work classification mutation with the approved vocabulary model. Write RED CLI/worker tests, replace Work `--topic` with `--methodology`, persist `csl_json.memoria.methodology`, retain `research_area`, and update current-truth docs. Note `topics` continue to inherit `research_area`; do not create a separate list.
 
-- [ ] **Step 2: Fix the six enforcement-claim corrections** (from the architecture review; locate each with `rg -n` on its phrase in `docs/`): phantom "seven-layer" model description; block-loudness pause described as binding (it binds only the uninstalled adapter path — say so); "single attention writer" claim (three hand-rolled copies exist — describe what code does); telemetry-logging claim (no code writes it — delete the claim); "SQLite-backed attention" claim (correct to files-with-projection); dashboard rail written in present tense (mark planned). For each: the fix is *describe what ships today*, marking unshipped behavior as planned.
+- [x] **Step 2: Fix the six enforcement-claim corrections** — current-truth
+  pages now describe the standalone component boundaries, optional policy-hook
+  pause, operation-specific attention writers, file-backed attention, absent
+  telemetry writers, and planned dashboard rail.
 
-- [ ] **Step 3: Tutorials 01/02/04/05 verbatim run** — in a fresh `test-vault/` vault, execute each tutorial's commands exactly as written; fix the tutorial text where a step fails (01: `list --type work` now works — verify the expected output block matches Task 13's real output; 02/04: teach the check step at point of need; 05: reject wording matches Task 12's honest `FAILED:` output).
+  (From the architecture review; locate each with `rg -n` on its phrase in `docs/`): phantom "seven-layer" model description; block-loudness pause described as binding (it binds only the uninstalled adapter path — say so); "single attention writer" claim (three hand-rolled copies exist — describe what code does); telemetry-logging claim (no code writes it — delete the claim); "SQLite-backed attention" claim (correct to files-with-projection); dashboard rail written in present tense (mark planned). For each: the fix is *describe what ships today*, marking unshipped behavior as planned.
 
-- [ ] **Step 4: Gate + PR**
+- [x] **Step 3: Tutorials 01/02/04/05 verbatim run** — final-head replay in
+  fresh disposable vault `test-vault/f4-tutorial-replay-isolated-20260713`
+  passed every documented command. It confirmed the fresh Work JSON, capture,
+  check, project slice, compose, verification, evidence rejection, and
+  promotion flows. The replay corrected `fulltext` versus its `fulltexts/`
+  folder and added `--json` to `work export` so the promised provenance fields
+  are visible.
+
+  (In a fresh `test-vault/` vault, execute each tutorial's commands exactly as written; fix the tutorial text where a step fails (01: `list --type work` now works — verify the expected output block matches Task 13's real output; 02/04: teach the check step at point of need; 05: reject wording matches Task 12's honest `FAILED:` output).)
+
+- [x] **Step 4: Gate + PR-ready handoff** — independent whole-branch reviews
+  closed CLI success-output, Canvas drift/recovery (including orphan Canvases),
+  legacy Work-topic normalization on every read path, supported linter
+  invocation, schema-reference accuracy, and current-truth architecture prose.
+  The final focused transport review passed (47 passed, 8 optional-MCP
+  skipped). At `bcf4d40`, `python3 scripts/verify` passed (495 passed, 9
+  skipped, 523 deselected; offline smoke green). After the final tutorial-only
+  corrections, `VERIFY_DOCS_ONLY=1 python3 scripts/verify` passed (47 static
+  tests). The current-truth Surfaces correction and clearly marked
+  alpha.21-unreleased design-history note are integrated. The final immutable
+  diff security scan
+  (`772fbf284d5bde9056c10d2b8b1ab484266d4ec2..4ada6775da43caac96ced55d11d47dd0467f90eb`)
+  sealed complete coverage at
+  `/tmp/codex-security-scans/memoria-vault/4ada6775da43caac96ced55d11d47dd0467f90eb_20260713T201001Z/report.md`:
+  its one raw unchecked-title candidate was dynamically validated and
+  suppressed, so no reportable finding survived. A final current-truth audit
+  also documented owned `argument.canvas` regeneration versus orphan-Canvas
+  quarantine, and marked the generic calibration contract as planned rather
+  than shipped.
 
 ```bash
 python3 scripts/verify
 git status --short
 # Stage each exact Task 16 path reported above; never pass a directory.
-git add src/memoria_vault/cli.py src/memoria_vault/runtime/worker.py tests/test_cli_work_project.py <each-exact-doc-or-tutorial-path>
+git add src/memoria_vault/cli.py src/memoria_vault/runtime/worker.py tests/test_cli_work_project.py tests/test_runtime_gate_replay.py <each-exact-doc-or-tutorial-path>
 git commit -m "docs: make enforcement claims match shipped code; tutorials run verbatim"
 gh pr create --title "fix(cli+docs): honest surfaces (F4)" --body "Closes #1364, closes #1351. _emit prints FAILED with detail, list --type work enumerates the catalog, note mode:work creatable, dead knobs deleted, projection drift covers argument.canvas, doc claims corrected to shipped behavior, tutorials run verbatim. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
 ```
+
+- [ ] **Step 5: Publish, pass required checks, and squash-merge PR-F4**
 
 ---
 

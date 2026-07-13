@@ -6,6 +6,8 @@ from pathlib import Path
 
 from scripts.checks.schema_doc_drift import check_schema_docs
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 def _write_fixture(root: Path, *, enum_values: str = "claim, question") -> tuple[Path, Path]:
     schemas = root / "schemas"
@@ -15,7 +17,6 @@ def _write_fixture(root: Path, *, enum_values: str = "claim, question") -> tuple
     (schemas / "types" / "note.yaml").write_text(
         "type: note\n"
         "category: notes\n"
-        "gated: false\n"
         "enums:\n"
         "  mode: [claim, question]\n"
         "required:\n"
@@ -33,7 +34,6 @@ def _write_fixture(root: Path, *, enum_values: str = "claim, question") -> tuple
         "```yaml\n"
         "type: note\n"
         "category: notes\n"
-        "gated: false\n"
         "enums:\n"
         f"  mode: [{enum_values}]\n"
         "required:\n"
@@ -72,3 +72,12 @@ def test_schema_doc_lint_fails_on_seeded_type_roster_mismatch(tmp_path: Path) ->
 
     assert any("document type count" in error for error in errors)
     assert any("document types" in error for error in errors)
+
+
+def test_frontmatter_reference_documents_ulids_and_type_specific_id_kinds() -> None:
+    text = (ROOT / "docs/reference/data-model/frontmatter.md").read_text(encoding="utf-8")
+    id_row = next(line for line in text.splitlines() if line.startswith("| `id` |"))
+
+    assert "| `ulid` | a valid ULID string |" in text
+    assert "`ulid` for `note`, `hub`, and `project`" in id_row
+    assert "`str` for `code-artifact`, `digest`, and `fulltext`" in id_row

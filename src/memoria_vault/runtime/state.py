@@ -2355,6 +2355,16 @@ def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str,
 
 
 def _source_row(row: sqlite3.Row) -> dict[str, Any]:
+    csl_json = json.loads(row["csl_json"] or "{}")
+    memoria = csl_json.get("memoria") if isinstance(csl_json, dict) else None
+    if isinstance(memoria, dict) and "topics" in memoria:
+        csl_json = dict(csl_json)
+        memoria = dict(memoria)
+        memoria.pop("topics")
+        if memoria:
+            csl_json["memoria"] = memoria
+        else:
+            csl_json.pop("memoria", None)
     return {
         "work_id": row["work_id"],
         "concept_path": row["concept_path"],
@@ -2364,7 +2374,7 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "item_type": row["item_type"],
         "identifiers": json.loads(row["identifiers_json"] or "{}"),
         "citekey": row["citekey"],
-        "csl_json": json.loads(row["csl_json"] or "{}"),
+        "csl_json": csl_json,
         "provider_coverage": row["provider_coverage"],
         "text_status": row["text_status"],
         "check_status": row["check_status"],

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.cli import main
+from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import mark_file_status
@@ -366,12 +366,17 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "--workspace",
         str(workspace),
         "doi-10.1000_alpha",
-        "--topic",
-        "framing",
+        "--research-area",
+        "personal-informatics",
+        "--methodology",
+        "rct",
         "--idempotency-key",
         "loop-update",
     )
-    assert updated["result"]["work"]["csl_json"]["memoria"]["topics"] == ["framing"]
+    memoria = updated["result"]["work"]["csl_json"]["memoria"]
+    assert memoria["research_area"] == ["personal-informatics"]
+    assert memoria["methodology"] == ["rct"]
+    assert "topics" not in memoria
     run_json(
         "work",
         "interview",
@@ -526,6 +531,23 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
     } <= operations
 
 
+def test_cli_work_update_rejects_retired_topic_flag() -> None:
+    with pytest.raises(SystemExit) as exc:
+        _build_parser().parse_args(
+            [
+                "work",
+                "update",
+                "--workspace",
+                "/tmp/disposable-vault",
+                "work-alpha",
+                "--topic",
+                "personal-informatics",
+            ]
+        )
+
+    assert exc.value.code == 2
+
+
 def test_cli_project_gaps_runs_gap_analysis_request(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -552,7 +574,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
-        csl_json={"memoria": {"topics": ["catalog-only"]}},
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
     )
     _write_project_argument_fixture(workspace)
 

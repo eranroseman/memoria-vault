@@ -88,7 +88,6 @@ def test_workspace_seed_is_packaged_runtime_minimum():
         ".memoria/config/providers.yaml",
         ".memoria/eval/alpha15-seeded-errors.json",
         ".memoria/patterns/_preamble.md",
-        ".memoria/schemas/calibration.yaml",
         ".memoria/schemas/folders.yaml",
         ".memoria/schemas/types/note.yaml",
         ".obsidian/app.json",

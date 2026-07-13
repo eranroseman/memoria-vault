@@ -7,13 +7,18 @@ grand_parent: Reference
 
 # Calibration
 
-`src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml` is
-the source of truth for shared thresholds and scorer versions. This page states
-the rule; the YAML owns the values.
+Memoria ships no shared threshold file or generic calibration gate. Current
+thresholds are operation-specific constants. The seeded-error review payload
+exposes a fixed `production_enabled: false` marker, but it is report metadata,
+not an activation mechanism.
 
-## Production rule
+## Planned production-calibration contract
 
-A score may affect production behavior only when all of these are true:
+> **Planned beta.1 — I1/E1:** A reusable calibration contract does not ship
+> today. Before a future score can alter routing, promotion, or other canonical
+> work, it will require the evidence below.
+
+A future score may affect production behavior only when all of these are true:
 
 - `production_enabled: true`
 - the relevant threshold fields are non-null
@@ -23,18 +28,17 @@ A score may affect production behavior only when all of these are true:
   were calibrated
 - the sample-count and error-budget fields in that block are satisfied
 
-If any threshold is `null`, the score is report-only. It may log shadow telemetry
-or appear in a review surface, but it must not auto-accept, auto-defer, hide,
+If any future threshold is `null`, the score will remain report-only. It may
+appear in a review surface, but it must not auto-accept, auto-defer, hide,
 merge, block, or reorder canonical work.
 
-Seeded-error probes follow the same rule. They can surface calibration findings
-in the ordinary review stream, and reviewers can record accept/reject
-dispositions on those findings, but those dispositions do not change the
-canonical artifact automatically.
+Seeded-error currently emits a fixed report-only review batch; it does not
+implement this generic contract.
 
-## Drift
+## Planned recalibration
 
-Recalibrate any enabled block when the scoring model, embedding model, upstream
-classification source, prompt, or feature extraction changes. Until recalibration
-passes the same sample and error-budget checks, set `production_enabled: false`
-and return the score to shadow mode.
+When the generic contract ships, an enabled block will need recalibration after
+a scoring model, embedding model, upstream classification source, prompt, or
+feature-extraction change. Until recalibration passes the same sample and
+error-budget checks, it will set `production_enabled: false` and return the
+score to shadow mode.

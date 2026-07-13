@@ -34,6 +34,32 @@ def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
         api.read_concept(workspace, "notes/beta.md", read_scope=["notes/alpha.md"])
 
 
+def test_engine_read_work_omits_retired_topics_from_untouched_legacy_row(
+    workspace: Path,
+) -> None:
+    state.upsert_catalog_record(
+        workspace,
+        work_id="legacy-work",
+        title="Legacy Work",
+        check_status="checked",
+        csl_json={
+            "id": "legacy-work",
+            "memoria": {
+                "topics": ["legacy-only"],
+                "research_area": ["current-area"],
+                "standing": "current",
+            },
+        },
+    )
+
+    work = api.read_work(workspace, "legacy-work")["work"]
+
+    assert work["csl_json"] == {
+        "id": "legacy-work",
+        "memoria": {"research_area": ["current-area"], "standing": "current"},
+    }
+
+
 def test_write_new_concept_replays_generated_path_and_id_for_same_key(
     workspace: Path,
 ) -> None:

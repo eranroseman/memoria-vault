@@ -67,7 +67,7 @@ matrix before payload validation or domain mutation.
 | Record empirical event | worker operation `empirical-event-record` + runtime helper (`record_empirical_event`) | Validates one strict [`empirical_event.v1`](../control-and-policy/empirical-events.md) payload, requires `idempotency_key=empirical-event:<event_id>`, rejects raw text/path-like fields, and appends a queryable `empirical-event` journal row with `journal_event_ref.v1` output metadata. |
 | Record Co-PI interview | worker operation `record-copi-interview` + runtime helper (`record_copi_interview_turn`) | Records a PI interview takeaway for a checked Work as a committed `copi-interview` journal event; digest compile can consume it as traced context. |
 | Compile source digest | worker operation `compile-source-digest` + runtime helper (`compile_source_digest`) | Builds a checked digest from one checked Work using the manifest-pinned runner, records model provenance, embeds citation-survival payloads, and stages hub suggestions. |
-| Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md` and `bibliography.bib` in one worker-owned projection run. |
+| Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md`, `bibliography.bib`, and owned `projects/<project>/argument.canvas` files in one worker-owned projection run. An orphan Canvas has no project owner, so scan quarantines it without regeneration. |
 | Regenerate workspace indexes | runtime projection helper (`write_workspace_indexes`) / worker operation `regenerate-indexes` | Rebuilds the root and bundle `index.md` projections from checked Concept files. |
 | Regenerate capability index | runtime capability helper (`write_capability_index`) / worker operation `regenerate-capability-index` | Rebuilds ignored `.memoria/index/capability-index.json` from packaged capability manifests and records product SHA-256 trust hashes. |
 
@@ -115,7 +115,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all registered structural detectors over the vault; findings surface on the drift dashboards. |
+| Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all registered structural detectors over the vault; severity-ranked findings return in command output. The linter does not write attention; separately invoked integrity operations may do so. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation - the one check that prevents rather than reports. |
 | Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([the quarantine-and-verify with durable, audit-logged crash recovery decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; `hubs/` stays PI-curated. |

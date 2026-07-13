@@ -17,19 +17,19 @@ navigation.
 
 ## Dashboard inventory
 
-| Surface | View | Backing surface | Shows |
-| --- | --- | --- | --- |
-| Queue | Inbox | `inbox/` | Daily attention queue (`projection: attention`), surfaced by the request/attention commands. |
-| Maintenance | Maintenance | request/attention/linter reads | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
-| Corpus | Library | `digests/`, `fulltexts/`, `bibliography.bib` | Source intake, checked digests, generated full text, and bibliography projection. |
-| Corpus | Knowledge | `notes/`, `hubs/` | Synthesis status, open questions, contradictions, hubs, and patterns. |
-| Corpus | Project | `projects/` | Project steering: active projects, refutation-stamp gate, saturation, and project gaps. |
-| Maintenance support | Board state | `memoria request list` / `memoria attention list` | Queue and attention projections for debugging worker state and PI-facing prompts. |
-| Runtime ops | Audit log | `system/logs/audit.jsonl` | Recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
-| Runtime ops | Eval trend | `system/metrics/eval/runs.jsonl` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) — diagnostic, never gating. |
+| Surface | View | Availability | Backing surface | Shows |
+| --- | --- | --- | --- | --- |
+| Queue | Inbox | Shipped CLI/read API | `inbox/` | Daily attention queue (`projection: attention`), surfaced by the request/attention commands. |
+| Maintenance | Maintenance | Planned optional adapter | request/attention/linter reads | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
+| Corpus | Library | Planned optional adapter | `digests/`, `fulltexts/`, `bibliography.bib` | Source intake, checked digests, generated full text, and bibliography projection. |
+| Corpus | Knowledge | Planned optional adapter | `notes/`, `hubs/` | Synthesis status, open questions, contradictions, hubs, and patterns. |
+| Corpus | Project | Planned optional adapter | `projects/` | Project steering: active projects, refutation-stamp gate, saturation, and project gaps. |
+| Maintenance support | Board state | Shipped CLI/read API | `memoria request list` / `memoria attention list` | Queue and attention projections for debugging worker state and PI-facing prompts. |
+| Runtime ops | Audit log | Planned view; log shipped | `system/logs/audit.jsonl` | Recent writes; an adapter may render row-capped views. |
+| Runtime ops | Eval trend | Planned view; metric log shipped | `system/metrics/eval/runs.jsonl` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) — diagnostic, never gating. |
 
 The **Surface** column names the corpus home, queue, maintenance collection, or
-support context where a dashboard is reached.
+support context where a shipped read or planned view belongs.
 The explanation site groups the support dashboards by the *kind of attention* they
 demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational
 health** ([Dashboards](../../explanation/surfaces/dashboards/README.md)).
@@ -47,11 +47,11 @@ governed by the decision that [standalone catalog is the citation authority](htt
 | --- | --- | --- |
 | Optional adapter views | Adapter-owned view files | Digest, fulltext, note, hub, and project documents by home. Verdicts stay in SQLite/read API. |
 
-## Verdict band (Maintenance drift watch)
+## Planned verdict band (Maintenance drift watch)
 
-Maintenance's Drift watch view rolls the Linter operation's detector findings up into
-a `PASS` / `REVIEW` / `FAIL` band; the rollup rule and the severity scale it reads
-are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
+The Linter already computes a `PASS` / `REVIEW` / `FAIL` verdict. A planned
+Maintenance view may render that verdict as a Drift watch band; the rollup rule
+and severity scale are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
 
 ## Eval metrics (eval-trend)
 
@@ -61,6 +61,6 @@ The scoring contract is owned by [Vault eval](vault-eval.md).
 ## Related
 
 - The detectors behind Maintenance drift watch: [Linter: detectors and auto-fix](linter.md)
-- The audit-log schema the audit-log dashboard reads: [Memory substrates](../pipelines-and-io/memory-substrates.md)
+- The audit-log schema a planned audit-log view may read: [Memory substrates](../pipelines-and-io/memory-substrates.md)
 - Current Concept types: [Document types](../data-model/document-types.md)
 - Dashboard design rationale: [Dashboards](../../explanation/surfaces/dashboards/README.md)

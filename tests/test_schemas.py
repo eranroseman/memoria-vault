@@ -80,6 +80,15 @@ def test_concept_types_load():
     assert set(types) == SCHEMA_TYPES
 
 
+def test_type_schemas_do_not_ship_dead_gated_keys():
+    for name, type_schema in schema.load_types().items():
+        assert "gated" not in type_schema, name
+
+
+def test_schema_seed_does_not_ship_unused_calibration_file():
+    assert not (schema.SCHEMAS_DIR / "calibration.yaml").exists()
+
+
 def test_frontmatter_has_no_verdict_or_standing_fields():
     types = schema.load_types()
     for name, sc in types.items():

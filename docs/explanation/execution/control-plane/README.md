@@ -50,4 +50,4 @@ For the current control-plane command lookup, see the
 
 **Dashboards**
 
-- The Inbox board view: [The board-state dashboard](../../surfaces/dashboards/daily-glance.md#board-state-support)
+- The shipped request/attention reads and planned Board view: [Board-state support](../../surfaces/dashboards/daily-glance.md#board-state-support)

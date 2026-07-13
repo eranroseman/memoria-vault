@@ -82,7 +82,7 @@ audited, and correctable; skipping it turns a claim into an isolated citation.
 ## Queue accumulation
 
 **Failure:** the Inbox grows, source rows sit unchecked, and candidate attention
-ages without triage while dashboards still show catalog activity.
+ages without triage while catalog reads still show capture activity.
 
 **Why it happens:** Inbox and reading queues are processing surfaces, not
 storage. A queue that grows without shrinking is capture without synthesis.

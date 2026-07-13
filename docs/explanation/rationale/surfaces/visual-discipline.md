@@ -23,7 +23,7 @@ collapses the signal into visual noise is *arbitrary* or per-note color, not a
 bounded semantic palette. What each callout means is explained in
 [Obsidian](../../surfaces/obsidian/README.md#callouts).
 
-Heading hierarchy stays shallow and consistent because generated dashboard views
+Heading hierarchy stays shallow and consistent because optional generated views
 and human scanning both depend on predictable structure. A broken hierarchy
 produces empty or wrong views before it looks like a cosmetic problem.
 
@@ -33,12 +33,12 @@ Emoji in note *titles* break filename portability across operating systems — a
 
 ## Why chrome is hidden by default
 
-Earlier designs reserved a standalone status line for a one-second ambient answer
-to "is everything roughly fine?" When the optional proof adapter is installed, it
-uses Obsidian's status bar only for recording/offline state; it is not a
-workspace-health indicator. The current health answer lives in Markdown/read-model
-surfaces: Inbox action counts and maintenance drift bands stay visible without
-adding a separate always-on indicator.
+Chrome is hidden by default because workspace health remains inspectable in
+Markdown/read-model surfaces: Inbox attention and linter verdicts are available
+through files, CLI, and read APIs. The optional proof adapter uses Obsidian's
+status bar only for recording/offline state, not workspace health. A planned
+adapter may render maintenance drift bands without adding a separate always-on
+indicator.
 
 One editor window per workspace is a technical constraint as much as a discipline.
 The engine assumes one active workspace view; multiple editors updating the same
@@ -48,15 +48,13 @@ attention item or Concept can produce audit and request-state races.
 
 ## Why places are corpus homes, not saved workspaces
 
-The current design maps work modes to corpus folders, CLI/read-API views, and
-Markdown entry points rather than to saved editor pane layouts
-([the alpha.20 control-surface checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/20-alpha.20.md)). Corpus homes and entry notes are content the vault can
-diff, lint, link, and restore. A workspace is pane state. Treating every mode as
-pane state made navigation heavier than the job required.
+Work modes map to corpus folders, CLI/read-API views, and Markdown entry points,
+not saved editor pane layouts. Corpus homes and entry notes are durable content
+the vault can diff, lint, link, and restore; a workspace is transient pane state.
 
 Memoria ships no saved Obsidian workspace. Navigation happens through Markdown
-entry points plus CLI/read-API views; the retired `spaces/` projection root is
-not part of the current seed. The proof adapter is a control surface over local
+entry points plus CLI/read-API views; `spaces/` is not part of the current seed.
+The proof adapter is a control surface over local
 HTTP, not a saved workspace layout. The historical
 workspace-swap model lives in [UI / navigation design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md#i-ui--navigation--the-alpha7-clean-slate);
 the current boundary is the engine/read-API surface.

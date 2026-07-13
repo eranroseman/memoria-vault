@@ -7,12 +7,15 @@ nav_order: 3
 
 # Run the weekly review
 
-Walk the Friday ritual: refresh your steering, sweep the Inbox, use Maintenance's weekly sections, and check structural health. Allow up to ~60 minutes; closer to 20–30 once the vault is established and the queues run near-empty — **empty is success**.
+Walk the Friday ritual: refresh your steering, sweep the Inbox, inspect new
+material, and run the structural checks. Allow up to ~60 minutes; closer to
+20–30 once the vault is established and the queues run near-empty — **empty is
+success**.
 
 ## Prerequisites
 
 - A local workspace available to the `memoria` CLI
-- CLI attention/request views available — the Friday collection: loose ends, drift watch, board state, and the week's new catalog entries and notes
+- The CLI attention, request, list, and linter commands available
 
 ## Steps
 
@@ -22,28 +25,45 @@ Open `steering.md`. Confirm or update the active questions and reading focus —
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
-Open the Inbox queue's **Needs me** view, or run `memoria attention list`, and
-work the proposed action items as one batch: candidates kept or skipped, gaps
+Run `memoria attention list --workspace . --json` and work the open action items
+as one batch: candidates kept or skipped, gaps
 turned into discovery tasks or archived, and work prompts dismissed once no
 action remains ([Work the action queue](work-the-action-queue.md)). The
 weekly review is the backstop that keeps the queue from aging past a week.
 
-**Step 3 — Notice-level findings (5 min).**
+**Step 3 — Run the structural checks (5 min).**
 
-Maintenance's **Loose ends** view lists `loudness: notice` attention items —
-things that didn't demand attention mid-week. Resolve each or consciously defer.
+Run the vault-local linter and read its JSON report by severity:
+
+```bash
+./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+  --vault . --json
+```
+
+On Windows, replace `./.memoria/.venv/bin/python` with
+`.\.memoria\.venv\Scripts\python.exe`.
+
+Fix CRITICAL and HIGH findings now. Record a deliberate deferral for lower
+severity debt that should survive the session.
 
 **Step 4 — Review the week's movement (5–10 min).**
 
-The **New this week** sections list catalog entries and notes created in the
-last 7 days. Scan for anything that landed and stalled: a Work still unchecked
-after enrichment, a digest request that never ran, or a claim with no
-connections (cross-check Knowledge's **Open questions** view).
+List catalog entries and notes, then scan timestamps or recent Git history for
+anything that landed and stalled:
+
+```bash
+memoria list --workspace . --type work --json
+memoria list --workspace . --type note --json
+memoria request list --workspace . --json
+```
+
+Look for an unchecked Work, a digest request that never ran, or a claim with no
+connections.
 
 **Step 5 — Clear unchecked note backlog (10–15 min).**
 
-Return to the Knowledge view's unchecked notes. Accept, edit, or archive each
-one. Target: zero unchecked PI notes older than a week.
+Use the note-list `check_status` values to find unchecked notes. Accept, edit,
+or archive each one. Target: zero unchecked PI notes older than a week.
 
 **Step 6 — Curate settled clusters (5 min).**
 
@@ -53,17 +73,15 @@ Don't create hubs just to clear a queue.
 
 **Step 7 — Check structural health (5 min).**
 
-Use Maintenance's **Drift watch** and **Loose ends** views — a manual or
-operator-managed scheduled Linter run feeds them. Address HIGH findings this
-session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until
-it isn't. To re-check after fixes, run the detectors directly
-([Run the Linter](../operate/run-the-linter.md)).
+Re-run the detectors after fixes. Address HIGH findings this session; MEDIUM can
+wait for a maintenance pass; LOW remains advisory. The exact command and
+severity meanings are in [Run the Linter](../operate/run-the-linter.md).
 
 ## Verify
 
-- The Inbox's **Needs me** view is empty
+- `memoria attention list --workspace . --json` has no open item that needs PI action
 - No stale unchecked note backlog remains
-- No HIGH or CRITICAL finding is outstanding in Maintenance's Drift watch
+- A fresh linter run has no HIGH or CRITICAL finding
 - `steering.md` reflects what you actually intend to read next week
 
 ## Related

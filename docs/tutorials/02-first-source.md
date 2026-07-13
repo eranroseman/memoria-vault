@@ -38,14 +38,24 @@ next command.
 Use the `work_id` from the JSON output:
 
 ```bash
-memoria work export --workspace . <work-id>
+memoria work export --workspace . <work-id> --json
 ```
 
 Look for `check_status`, `content_path`, `raw_path`, and hash fields. Those are
 the provenance anchors the rest of the system reads.
 The paths should point under `.memoria/blobs/source-content/`.
 
-**4. Compile a digest when the source is ready.**
+**4. Check the Work after reviewing it.**
+
+The local-file capture starts unchecked. After inspecting the exported record
+and source text, record the PI decision that makes it available to checked-read
+operations:
+
+```bash
+memoria work update --workspace . <work-id> --check-status checked
+```
+
+**5. Compile a digest when the source is ready.**
 
 ```bash
 memoria work digest --workspace . <work-id> --mode test
@@ -60,6 +70,7 @@ artifact you can inspect.
 
 - Capture enters through the request/worker path.
 - Source bytes and normalized text are blobs, not frontmatter.
+- A captured Work remains unchecked until the PI checks it.
 - A digest is source-derived material keyed by `work_id`.
 
 Next: [03: Connect notes](03-connect-notes.md).

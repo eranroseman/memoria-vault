@@ -1,13 +1,14 @@
 ---
 title: Regenerate tracked projections
 type: operation
-description: Regenerate all tracked generated workspace projections.
+description: Regenerate tracked workspace and project Canvas projections.
 operation_id: regenerate-tracked-projections
 allowed_tools:
 - projection_writer
 allowed_paths:
 - index.md
 - bibliography.bib
+- projects/
 - .memoria/journal/
 allowed_network: []
 prompt_version: regenerate-tracked-projections.v1
@@ -26,4 +27,5 @@ links: {}
 
 # Operation
 
-Render `index.md` and `bibliography.bib`.
+Render `index.md`, `bibliography.bib`, and existing project `argument.canvas`
+projections.

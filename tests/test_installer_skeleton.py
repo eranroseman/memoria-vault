@@ -34,7 +34,6 @@ def test_package_seed_is_runtime_minimum():
         ".memoria/config/providers.yaml",
         ".memoria/eval/alpha15-seeded-errors.json",
         ".memoria/patterns/_preamble.md",
-        ".memoria/schemas/calibration.yaml",
         ".memoria/schemas/folders.yaml",
         ".memoria/schemas/types/code-artifact.yaml",
         ".memoria/schemas/types/digest.yaml",

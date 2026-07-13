@@ -39,7 +39,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria work enrich <work-id>` | Enrich a work from provider replay/payload inputs. |
 | `memoria work digest <work-id> [--mode test\|live]` | Compile a source digest with the selected manifest-pinned runner branch. |
 | `memoria work interview <work-id>` | Record PI-owned source interview responses. |
-| `memoria work update` | Apply PI-owned source/work metadata changes. |
+| `memoria work update <work-id> [--research-area <term>] [--methodology <term>]` | Apply PI-owned source/work metadata changes. Classification flags are repeatable; Work has no `--topic` flag. |
 | `memoria work export <work-id>` | Export a catalog work record. |
 
 ## Requests And Workspace
@@ -51,7 +51,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria workspace backup <target>` | PI-only coherent backup of SQLite, blobs, and journal head into a manifest-bound directory outside the live vault. |
 | `memoria workspace restore <source> [--force]` | PI-only validated, rollback-capable restore; `--force` is required while a live database exists. |
 | `memoria workspace recover` | PI-only recovery of interrupted backup publication, restore, request, and materialization work. |
-| `memoria workspace scan/run/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots, quarantine and regenerate changed tracked projections, run queued work, and maintain projections/search. |
+| `memoria workspace scan/run/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots; quarantine changed tracked projections; regenerate projections with a current owner; run queued work; and maintain projections/search. An orphan `projects/<project>/argument.canvas` remains quarantined. |
 | `memoria attention list/show/resolve/worklist` | Review PI attention items. |
 
 ## Knowledge And Projects
@@ -152,14 +152,21 @@ This roster mirrors the live argparse tree:
 
 Run `memoria <command> --help` for exact flags.
 
-`memoria new note` accepts `--description` plus `--body` or `--file`; `memoria
-new hub` accepts `--description` plus optional `--body`; `memoria new project`
-accepts `--description` plus optional `--direction`. The generated files include
-the same frontmatter defaults and body heading shape as the CLI concept writers.
+`memoria new note` accepts `--description` plus `--body` or `--file`, optional
+`--mode claim|question|definition|work`, and `--work-id` when `--mode work` is
+selected. `memoria new hub` accepts `--description` plus optional `--body`;
+`memoria new project` accepts `--description` plus optional `--direction`. The
+generated files include the same frontmatter defaults and body heading shape as
+the CLI concept writers.
 
 Most workspace commands accept `--workspace <path>` and `--json`. `--actor`
 records declared provenance; the raw local CLI does not authenticate its caller
 and must remain a PI-owned surface. Do not expose it to an untrusted agent.
+Without `--json`, a successful command prints an allowlisted path, identifier,
+count, or status when one is available. A detail-free success prints `ok`, and
+an opaque result points to `--json`; the generic presenter never prints a
+complete worker request, result payload, or Concept body. Use `--json` for full
+machine-readable operation details.
 Agent-facing adapters use [HTTP](local-http-transport.md) or
 [MCP](mcp-transport.md), which always record request actor `agent`.
 `workspace scan`, `workspace check`, and scans performed by `serve --watch`

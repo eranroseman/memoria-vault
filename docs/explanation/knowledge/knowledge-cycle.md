@@ -35,10 +35,11 @@ These tasks are **individually triggered, not a set**. A human gate — often a
 long gap — sits between each: a source is catalogued; much later, if ever,
 extracted; only after a claim-bearing note exists does linking fire.
 
-A source arrives as a catalog row plus a `candidate` attention item. The PI
-keeps or rejects it. It becomes checked source state only after enrichment and
-review checks pass. The PI then reads it, distills claims, and confirms links
-into the graph. Once enough claims accumulate, a project maps them into
+A source arrives as an unchecked SQLite catalog row with its source text in the
+blob store. Enrichment records provider evidence; passing rows become checked,
+while failed or contested rows raise Inbox attention. The PI then reads checked
+Works, distills claims, and confirms links into the graph. Once enough claims
+accumulate, a project maps them into
 `outline.md`, composes `draft.md`, verifies evidence markers, exports clean
 drafts, and promotes selected passages back into unchecked notes for review.
 
@@ -72,11 +73,12 @@ slip-box depended on the same density (see [Intellectual foundations](../rationa
 
 ## Where the cycle gets stuck
 
-The Inbox and dashboards show where work stopped. Sources awaiting reading
-appear in the Library pipeline. Unconnected claims appear in Knowledge's Open
-questions view. Low-stakes structural debt appears in Maintenance's Loose ends
-view. Open verification findings appear as Inbox `flag`/`alert` attention items.
-The views exist to expose these failures before they harden.
+The shipped CLI and read API show where work stopped. Sources awaiting work are
+visible through `memoria list --type work`, `memoria work export`, request
+state, and file-backed Inbox attention; no separate named pipeline ships.
+Unconnected claims remain visible in the checked note graph, and open
+verification findings appear as Inbox `flag`/`alert` attention items. These
+surfaces expose stalled work before it hardens.
 
 The project transition is now explicit: `memoria project slice` proposes a
 checked outline, `compose` writes a draft, `verify` gates the evidence markers,

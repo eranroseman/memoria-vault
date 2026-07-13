@@ -19,7 +19,6 @@ linked reference pages and schema files.
 | Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<workspace>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
 | Workspace seed | `src/memoria_vault/product/workspace_seed/**` | copied by `memoria init` | Memoria | Edit source; reinstall or repair workspace | package-seed tests |
 | Schema config | `src/memoria_vault/product/workspace_seed/.memoria/schemas/**` | `<workspace>/.memoria/schemas/**` | Memoria | Edit source; reinstall or repair workspace | linter and schema tests |
-| Calibration | `src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml` | `<workspace>/.memoria/schemas/calibration.yaml` | Memoria | Edit source; reinstall or repair workspace | calibration and linter tests |
 | Search index state | checked-only BM25 input tree and manifest | `<workspace>/.memoria/index/search/` | generated | Rebuild; do not hand-edit | `memoria doctor --check search` |
 | Optional editor adapter settings | adapter package, not the standalone seed | adapter-owned files | adapter owner | Not part of standalone baseline | adapter tests |
 
@@ -44,5 +43,5 @@ Use a disposable workspace under `~/memoria-vault/test-vault` for development ve
 - Write-gate contract: [Policy gate](../control-and-policy/policy-mcp.md)
 - External integrations: [External integrations](../evidence-and-integrations/integrations.md)
 - Frontmatter fields: [Frontmatter fields](../data-model/frontmatter.md)
-- Calibration thresholds: [Calibration](../analysis-and-surfaces/calibration.md)
+- Score calibration: [Calibration](../analysis-and-surfaces/calibration.md)
 - Search: [Search](../pipelines-and-io/search.md)

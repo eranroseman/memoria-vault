@@ -47,8 +47,10 @@ git status --short
 Expected: a clean fast-forward or no remote changes. A diverged branch means
 another machine pushed while this one was offline; resolve before starting work.
 
-Then open the Inbox queue for **Needs me**. If the rail health band is non-zero,
-open Maintenance for **Drift watch**, **Loose ends**, and **Board**.
+Then run `memoria attention list --workspace .` and work the open Inbox items.
+If an optional adapter implements the planned rail, its health band may point
+you to Drift watch, Loose ends, and Board; those dashboard groupings are not a
+standalone CLI surface today.
 
 ## What's Fragile
 

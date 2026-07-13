@@ -9,16 +9,18 @@ permalink: /explanation/surfaces/dashboards/
 
 # Surfaces and dashboards
 
-The **Inbox** is the action queue: discrete things that need you now.
-**Dashboards** are browsable health views: where things stand. They are
-consumer-only, and a healthy vault shows them near-empty.
+The shipped **Inbox** is the file-backed action queue: discrete things that need
+you now. The named **dashboards** in this section are planned, consumer-only
+optional-adapter views over shipped CLI/read-API data.
 
 The pages in this section explain four kinds of surface: daily attention,
-synthesis agenda, structural health, and operational health. The exact shipped
-views, sources, and sort orders are in [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md).
+synthesis agenda, structural health, and operational health. The exact
+availability and backing sources are in
+[Dashboards](../../../reference/analysis-and-surfaces/dashboards.md).
 
-The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
-and Maintenance is the weekly structural-debt collection behind the health band.
+The planned dashboard rail starts with **Now**. Today, the file-backed Inbox and
+`memoria attention list` are the daily action queue; Maintenance is the planned
+weekly structural-debt collection behind the health band.
 Board state is the worker-debug view over request and attention state, surfaced
 through `memoria request list` and `memoria attention list`, not a shipped
 dashboard file. The Project gate is its own steering surface, not part of the dashboard
@@ -28,5 +30,5 @@ drift-watch are the **Linter operation's** structural debt — kept separate, no
 
 ## Related
 
-- How to operate the dashboards: [Using Obsidian](../../../how-to-guides/using-obsidian/README.md)
+- How to operate the shipped workspace: [Using Obsidian](../../../how-to-guides/using-obsidian/README.md)
 - The primary weekly entry point: [Run the weekly review](../../../how-to-guides/inbox/run-the-weekly-review.md)

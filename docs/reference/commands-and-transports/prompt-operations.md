@@ -115,4 +115,4 @@ and commits those staged writer changes.
 - Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../../explanation/rationale/evidence/why-pattern-provenance.md)
 - CLI command boundary: [CLI](cli.md)
 - Every action the system performs: [System actions](system-actions.md)
-- The picker view over the library: [Dashboards](../analysis-and-surfaces/dashboards.md)
+- The planned picker view over the library: [Dashboards](../analysis-and-surfaces/dashboards.md)
