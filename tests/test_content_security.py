@@ -46,10 +46,12 @@ def test_raw_html_is_inert() -> None:
 
 
 def test_multiline_raw_html_is_inert() -> None:
-    rendered = neutralize_untrusted_markdown('<img\nsrc="&#x68;ttps://evil.example/x.png">')
+    source = '<img\nsrc="&#x68;ttps://evil.example/beacon.png">\n'
+
+    rendered = neutralize_untrusted_markdown(source)
 
     assert "<img" not in rendered
-    assert "&lt;img" in rendered
+    assert "&lt;img\nsrc=" in rendered
 
 
 def test_links_and_external_urls_are_noninteractive_code_spans() -> None:
@@ -73,12 +75,26 @@ def test_only_vault_wikilinks_remain_live() -> None:
     assert "`notes/claim-2.md`" in rendered
 
 
+def test_entity_obfuscated_shortcut_reference_link_is_inert() -> None:
+    source = "[beacon]\n\n[beacon]: &#x68;ttps://evil.example/click\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert "\\[beacon]: &#x68;ttps://evil.example/click" in rendered
+
+
 def test_existing_code_spans_and_fences_are_untouched() -> None:
     source = (
         "`http://inline.example` and ``![literal](http://code.example)``\n"
         "```markdown\n![literal](http://fenced.example)\n```\n"
         '~~~html\n<img src="http://tilde.example">\n~~~\n'
     )
+
+    assert neutralize_untrusted_markdown(source) == source
+
+
+def test_multiline_code_span_is_untouched() -> None:
+    source = "`![literal](http://code.example/image.png)\nhttps://code.example/inside`"
 
     assert neutralize_untrusted_markdown(source) == source
 

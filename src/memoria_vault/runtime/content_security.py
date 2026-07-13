@@ -5,11 +5,14 @@ from __future__ import annotations
 import re
 
 _FENCE_OPEN_RE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})")
-_HTML_TAG_RE = re.compile(r"<(?=[!/?A-Za-z])[^>\n]*>")
+_HTML_TAG_RE = re.compile(r"<(?=[!/?A-Za-z])[^>]*>")
 _HTML_OPEN_RE = re.compile(r"<(?=[!/?A-Za-z])")
 _IMAGE_EMBED_RE = re.compile(r"!\[\[([^\]\n]*)\]\]")
 _INLINE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]*)\]\(\s*([^\n)]*?)\s*\)")
 _REFERENCE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]+)\]\[([^\]\n]*)\]")
+_REFERENCE_DEFINITION_RE = re.compile(
+    r"(?m)^(?P<indent>[ \t]{0,3})(?P<label>\[(?:\\.|[^\]\\\n])+\]):"
+)
 _IMAGE_OPEN_RE = re.compile(r"!\[")
 _EXTERNAL_URL_RE = re.compile(
     r"(?<![\w/`:])(?:(?:https?|ftp)://|//|mailto:|www\.)"
@@ -43,6 +46,10 @@ def _replace_reference_link(match: re.Match[str]) -> str:
     return f"{prefix} ({_code_span(reference)})"
 
 
+def _replace_reference_definition(match: re.Match[str]) -> str:
+    return f"{match.group('indent')}\\{match.group('label')}:"
+
+
 def _replace_external_url(match: re.Match[str]) -> str:
     value = match.group(0)
     trailing = ""
@@ -55,6 +62,7 @@ def _replace_external_url(match: re.Match[str]) -> str:
 def _neutralize_plain_text(text: str) -> str:
     text = _INLINE_LINK_RE.sub(_replace_inline_link, text)
     text = _REFERENCE_LINK_RE.sub(_replace_reference_link, text)
+    text = _REFERENCE_DEFINITION_RE.sub(_replace_reference_definition, text)
     text = _IMAGE_EMBED_RE.sub(r"\\[[\1]]", text)
     text = _IMAGE_OPEN_RE.sub(r"\\[", text)
     text = _HTML_TAG_RE.sub(
@@ -66,7 +74,7 @@ def _neutralize_plain_text(text: str) -> str:
 
 
 def _neutralize_inline_text(text: str) -> str:
-    """Neutralize one non-fenced line while preserving inline code spans."""
+    """Neutralize non-fenced text while preserving inline code spans."""
     output: list[str] = []
     plain_start = 0
     cursor = 0
@@ -107,6 +115,7 @@ def neutralize_untrusted_markdown(body: str) -> str:
     fenced code remain unchanged. The transformation is idempotent.
     """
     output: list[str] = []
+    plain_lines: list[str] = []
     fence_character: str | None = None
     fence_length = 0
 
@@ -125,12 +134,15 @@ def neutralize_untrusted_markdown(body: str) -> str:
 
         opening = _FENCE_OPEN_RE.match(line)
         if opening:
+            output.append(_neutralize_inline_text("".join(plain_lines)))
+            plain_lines.clear()
             fence = opening.group("fence")
             fence_character = fence[0]
             fence_length = len(fence)
             output.append(line)
             continue
 
-        output.append(_neutralize_inline_text(line))
+        plain_lines.append(line)
 
+    output.append(_neutralize_inline_text("".join(plain_lines)))
     return "".join(output)
