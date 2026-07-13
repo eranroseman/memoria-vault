@@ -28,7 +28,7 @@ from pathlib import Path
 
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
-from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter
+from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter, write_text_durable
 
 # eval role -> the local role label that owns it.
 # Kept local so vault-eval can run without importing adapter or profile code.
@@ -163,7 +163,7 @@ def write_last_run(
         for r in rows
     ]
     out = vault / EVAL_DIR / LAST_RUN
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_text_durable(out, "\n".join(lines) + "\n")
     return out
 
 

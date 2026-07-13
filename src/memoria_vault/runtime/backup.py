@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
@@ -169,8 +170,11 @@ def restore_backup(
         with state.workspace_lock(vault):
             if (vault / state.DB_REL).exists() and not force:
                 return _failure("live database is present; pass --force to replace it")
-            committed_anchor = _committed_journal_anchor(vault)
-            if committed_anchor not in {None, "", "GENESIS"}:
+            try:
+                committed_anchor = _committed_journal_anchor(vault)
+            except (OSError, ValueError) as exc:
+                return _failure(f"committed journal-head lookup failed: {exc}")
+            if committed_anchor not in {None, "GENESIS"}:
                 if committed_anchor not in validated["row_hashes"]:
                     return _failure(
                         "backup predates the committed journal-head; restore the matching "
@@ -220,6 +224,84 @@ def blob_inventory(root: Path) -> dict[str, Any]:
         "sha256": "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
         "entries": entries,
     }
+
+
+def local_backup_status(vault: Path) -> dict[str, Any]:
+    """Validate the local-backup stamp against live and backed-up blobs."""
+    vault = Path(vault)
+    try:
+        current = blob_inventory(vault / BLOBS_REL)
+    except (OSError, ValueError) as exc:
+        return {
+            "valid": False,
+            "stamp_exists": (vault / LAST_BACKUP_REL).is_file(),
+            "stamp_path": LAST_BACKUP_REL,
+            "target": "",
+            "blob_files": 0,
+            "blob_sha256": "",
+            "inventory_ok": False,
+            "error": f"live blob inventory is invalid: {exc}",
+        }
+
+    base = {
+        "valid": False,
+        "stamp_exists": False,
+        "stamp_path": LAST_BACKUP_REL,
+        "target": "",
+        "blob_files": current["files"],
+        "blob_sha256": current["sha256"],
+        "inventory_ok": True,
+        "error": "",
+    }
+    stamp_path = vault / LAST_BACKUP_REL
+    if stamp_path.is_symlink() or not stamp_path.is_file():
+        return {**base, "error": "no valid local backup stamp"}
+    try:
+        stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        return {**base, "stamp_exists": True, "error": f"backup stamp is invalid: {exc}"}
+    if not isinstance(stamp, dict):
+        return {**base, "stamp_exists": True, "error": "backup stamp is not an object"}
+
+    target_value = stamp.get("target")
+    target = Path(target_value) if isinstance(target_value, str) and target_value else None
+    stamped_files = stamp.get("blob_files")
+    stamped_hash = stamp.get("blob_sha256")
+    stamped = {
+        **base,
+        "stamp_exists": True,
+        "target": str(target) if target is not None else "",
+    }
+    if stamp.get("format") != BACKUP_FORMAT or stamp.get("version") != BACKUP_VERSION:
+        return {**stamped, "error": "backup stamp format is invalid"}
+    if stamped_files != current["files"] or stamped_hash != current["sha256"]:
+        return {**stamped, "error": "backup stamp does not match the current blob inventory"}
+    if target is None or not target.is_absolute() or target.is_symlink() or not target.is_dir():
+        return {**stamped, "error": "stamped backup target is missing or invalid"}
+    manifest = _read_manifest(target)
+    if manifest is None:
+        return {**stamped, "error": "stamped backup target is not a recognized backup"}
+    try:
+        database_spec = _manifest_section(manifest, "database")
+        blobs_spec = _manifest_section(manifest, "blobs")
+        expected_database_hash = _manifest_hash(database_spec, "database")
+        expected_blob_hash = _manifest_hash(blobs_spec, "blob inventory")
+        database = target / "memoria.sqlite"
+        if database.is_symlink() or not database.is_file():
+            raise ValueError("stamped backup target database is missing")
+        if _file_sha256(database) != expected_database_hash:
+            raise ValueError("stamped backup target database hash does not match")
+        backed_up = blob_inventory(target / "blobs")
+        if (
+            backed_up["files"] != blobs_spec.get("files")
+            or backed_up["sha256"] != expected_blob_hash
+            or backed_up["files"] != current["files"]
+            or backed_up["sha256"] != current["sha256"]
+        ):
+            raise ValueError("stamped backup target does not match the current blob inventory")
+    except (OSError, ValueError) as exc:
+        return {**stamped, "error": str(exc)}
+    return {**stamped, "valid": True, "error": ""}
 
 
 def _stage_restore_source(
@@ -336,6 +418,8 @@ def _rebuild_journal_exports(vault: Path) -> None:
         event = json.loads(str(payload_json))
         if not isinstance(event, dict) or event.get("machine") != machine:
             raise ValueError("backup event_log machine does not match its payload")
+        if not machine.strip() or safe_filename(machine) != machine:
+            raise ValueError("backup event_log machine is not a canonical filename")
         grouped.setdefault(machine, []).append(json.dumps(event, ensure_ascii=False) + "\n")
     for machine, lines in grouped.items():
         write_text_durable(journal_root / f"{machine}.jsonl", "".join(lines))
@@ -343,16 +427,35 @@ def _rebuild_journal_exports(vault: Path) -> None:
 
 def _committed_journal_anchor(vault: Path) -> str | None:
     try:
-        proc = subprocess.run(
+        listed = subprocess.run(
+            ["git", "ls-tree", "--name-only", "HEAD", "--", state.JOURNAL_HEAD_REL],
+            cwd=vault,
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+    except OSError as exc:
+        raise OSError(f"cannot execute Git: {exc}") from exc
+    if listed.returncode:
+        raise ValueError(listed.stderr.strip() or "Git could not inspect the committed anchor")
+    if not listed.stdout.strip():
+        return None
+    try:
+        shown = subprocess.run(
             ["git", "show", f"HEAD:{state.JOURNAL_HEAD_REL}"],
             cwd=vault,
             check=False,
             text=True,
             capture_output=True,
         )
-    except OSError:
-        return None
-    return None if proc.returncode else proc.stdout.strip()
+    except OSError as exc:
+        raise OSError(f"cannot execute Git: {exc}") from exc
+    if shown.returncode:
+        raise ValueError(shown.stderr.strip() or "Git could not read the committed anchor")
+    anchor = shown.stdout.strip()
+    if not anchor:
+        raise ValueError("the committed journal-head is empty")
+    return anchor
 
 
 def _install_restore_stage(
@@ -374,6 +477,7 @@ def _install_restore_stage(
     )
     installed: list[Path] = []
     moved: list[tuple[Path, Path]] = []
+    rollback_complete = False
     try:
         for live_rel, rollback_rel in components:
             live = vault / live_rel
@@ -440,12 +544,13 @@ def _install_restore_stage(
             if os.path.lexists(live):
                 _remove_path(live)
             os.replace(saved, live)
+        rollback_complete = True
         raise
     else:
-        shutil.rmtree(rollback)
+        rollback_complete = True
         shutil.rmtree(stage, ignore_errors=True)
     finally:
-        if rollback.exists():
+        if rollback_complete and rollback.exists():
             shutil.rmtree(rollback, ignore_errors=True)
     return final_verification
 

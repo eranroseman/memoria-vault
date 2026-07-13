@@ -26,6 +26,7 @@ from pathlib import Path
 
 from memoria_vault.runtime.diagnostics import record_event
 from memoria_vault.runtime.paths import load_json, safe_filename
+from memoria_vault.runtime.vaultio import write_text_durable
 
 # Obsidian adapter tool-name keyword -> policy action. Matched by substring so it
 # survives server prefixing (e.g. mcp__obsidian__patch_content). Read tools
@@ -358,7 +359,10 @@ def evaluate_pre(payload: dict, actor: str, workspace: Path) -> dict:
         if before is not None:
             pend = _pending_file(workspace, _stash_key(payload))
             pend.parent.mkdir(parents=True, exist_ok=True)
-            pend.write_text(json.dumps({"before_hash": before, "path": path}), encoding="utf-8")
+            write_text_durable(
+                pend,
+                json.dumps({"before_hash": before, "path": path}),
+            )
         return {}
     if decision == "dry_run":
         return {

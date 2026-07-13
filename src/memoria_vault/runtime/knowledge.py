@@ -46,6 +46,7 @@ from memoria_vault.runtime.vaultio import (
     read_frontmatter,
     split_frontmatter,
     write_frontmatter_doc,
+    write_text_durable,
 )
 
 GAP_KINDS = {
@@ -1882,7 +1883,7 @@ def write_project_outline(
     outline_rel = str(proposal["outline_path"])
     outline_path = vault / outline_rel
     outline_path.parent.mkdir(parents=True, exist_ok=True)
-    outline_path.write_text(_outline_text(proposal["members"]), encoding="utf-8")
+    write_text_durable(outline_path, _outline_text(proposal["members"]))
     project_slice = read_project_slice(vault, str(proposal["project_path"]))
     event = None
     commit_id = ""
@@ -1995,7 +1996,7 @@ def compose_project_draft(
     draft_rel = _project_draft_rel(project_rel)
     draft_path = vault / draft_rel
     draft_path.parent.mkdir(parents=True, exist_ok=True)
-    draft_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    write_text_durable(draft_path, "\n".join(lines).rstrip() + "\n")
     rebuild = state.rebuild_evidence_sets_from_markers(
         vault,
         run_id=context.run_id,
@@ -2229,9 +2230,9 @@ def promote_draft_passage(
     materialized = materialize_unchecked(vault, note_rel, context=context)
     link = _draft_note_markdown_link(draft_rel, note_rel, note_title)
     if link not in draft_content:
-        draft_path.write_text(
+        write_text_durable(
+            draft_path,
             draft_content.rstrip() + "\n\n## Extracted Notes\n\n" + f"- {link}\n",
-            encoding="utf-8",
         )
     event = append_journal_event(
         vault,
@@ -2620,7 +2621,7 @@ def _frontmatter_string_values(value: Any) -> Iterable[str]:
 def _write_project_export_output(vault: Path, output_path: str, content: str) -> str:
     target = _project_export_output_path(vault, output_path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content, encoding="utf-8")
+    write_text_durable(target, content)
     return _project_export_display_path(vault, target)
 
 

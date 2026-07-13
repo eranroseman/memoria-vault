@@ -650,12 +650,13 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             },
             args,
         )
+    backup = _backup_report(workspace)
     return _emit(
         {
-            "ok": all(checks.values()),
+            "ok": all(checks.values()) and backup["ok"],
             "workspace": str(workspace),
             "checks": checks,
-            "backup": _backup_report(workspace),
+            "backup": backup,
             "repaired": repaired,
         },
         args,
@@ -664,6 +665,8 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
+    doctor = _doctor_checks(workspace)
+    backup = _backup_report(workspace)
     with state.connect(workspace) as conn:
         requests = [
             dict(row)
@@ -677,11 +680,11 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
         ]
     return _emit(
         {
-            "ok": True,
+            "ok": all(doctor.values()) and backup["ok"],
             "workspace": str(workspace),
             "redacted": bool(args.redacted),
-            "doctor": _doctor_checks(workspace),
-            "backup": _backup_report(workspace),
+            "doctor": doctor,
+            "backup": backup,
             "requests": requests,
             "journal_head": state.journal_head(workspace),
         },
@@ -2514,6 +2517,8 @@ def _doctor_checks(workspace: Path) -> dict[str, Any]:
 
 
 def _backup_report(workspace: Path) -> dict[str, Any]:
+    from memoria_vault.runtime import backup as runtime_backup
+
     litestream_configs = [
         ".memoria/config/litestream.yml",
         ".memoria/config/litestream.yaml",
@@ -2527,7 +2532,14 @@ def _backup_report(workspace: Path) -> dict[str, Any]:
         ".memoria/config/blob-sync.json",
     ]
     remotes = _git_remotes(workspace)
+    local_backup = runtime_backup.local_backup_status(workspace)
+    blob_configured = _any_workspace_file(workspace, [*blob_sync_configs, *backup_configs])
+    blob_files = int(local_backup["blob_files"])
+    ok = bool(local_backup["inventory_ok"]) and (
+        blob_files == 0 or blob_configured or bool(local_backup["valid"])
+    )
     return {
+        "ok": ok,
         "git_remote": {
             "configured": bool(remotes),
             "remotes": remotes,
@@ -2538,11 +2550,14 @@ def _backup_report(workspace: Path) -> dict[str, Any]:
             "runtime_dependency": False,
         },
         "blob_sync": {
-            "configured": _any_workspace_file(workspace, [*blob_sync_configs, *backup_configs]),
+            "configured": blob_configured,
             "blob_root": ".memoria/blobs",
             "blob_root_exists": (workspace / ".memoria/blobs").is_dir(),
+            "files": blob_files,
+            "sha256": local_backup["blob_sha256"],
             "config_paths": [*blob_sync_configs, *backup_configs],
         },
+        "local_backup": local_backup,
     }
 
 

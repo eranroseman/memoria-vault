@@ -188,6 +188,8 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria workspace recover",
         "memoria workspace rollback",
         "memoria workspace check",
+        "memoria workspace backup",
+        "memoria workspace restore",
         "memoria workspace rebuild",
         "memoria workspace export",
         "memoria eval run",

@@ -792,7 +792,8 @@ event, preserve the source byte-for-byte, and leave the chain verifiable.
 - [x] **Step 4: Run tests** — all 16 backup/restore tests pass, including the
   injected journal-install failure that restores every prior live component.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `13cb7643 feat(backup): restore validated
+  workspace grounds`.
 
 ```bash
 git add src/memoria_vault/runtime/backup.py src/memoria_vault/cli.py tests/test_backup_restore.py
@@ -816,7 +817,10 @@ git commit -m "feat(backup): workspace restore + round-trip drill"
   inventory. SQLite-only replication does not cover blobs. `create_backup`
   writes the bound stamp after successful publication.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test** — five backup-health tests cover a
+  fresh unbacked blob, a current and then stale inventory stamp, a disappeared
+  backup target, SQLite-only versus blob-sync configuration, file-only counts,
+  and both doctor consumers.
 
 ```python
 def test_backup_report_fails_on_unbacked_blobs(tmp_path, capsys):
@@ -842,30 +846,36 @@ def test_backup_report_requires_blob_coverage_not_sqlite_only(tmp_path, capsys):
     assert _backup_report(vault)["ok"] is True
 ```
 
-- [ ] **Step 2: Run to verify failure** — no `"ok"` key.
+- [x] **Step 2: Run to verify failure** — all 16 backup/restore tests remain
+  green; five health tests fail because `_backup_report` has no `ok`/inventory
+  contract and both doctor surfaces still report success.
 
-- [ ] **Step 3: Implement** — in `create_backup`, after the successful `tmp.replace(target)`, write the stamp with the durable helper:
+- [x] **Step 3: Implement** — `create_backup` writes a versioned JSON stamp
+  only after the manifest-backed target is published. `local_backup_status`
+  recomputes the live file-only blob inventory and validates the stamp, target,
+  database hash, and backed-up blob inventory. `_backup_report`, `doctor`, and
+  `doctor bundle` propagate that result; Litestream-only configuration does not
+  count as blob coverage.
 
-```python
-from memoria_vault.runtime.vaultio import write_text_durable
-from memoria_vault.runtime.time import now_iso
+  The raw-write audit routes twelve durable records through
+  `write_text_durable`: four project outline/draft/write-back/export paths, the
+  policy hook's pending pre-write hash, digest attention, quarantine recovery
+  material, the eval last-run ledger, two inbox-card paths, session summaries,
+  and worklist items. Nine reviewed exceptions remain raw: the generated
+  argument canvas, Pandoc temporary input, projection drift scratch and root
+  index, disposable search documents and manifest, the local capability cache,
+  generated structural-impact cache, and retraction's existing
+  temporary-write-plus-replace path.
 
-        write_text_durable(vault / ".memoria/config/last-backup", now_iso() + "\n", create_parent=True)
-```
+  Independent review also closes four fail-closed edges: a noncanonical
+  `event_log.machine` cannot escape restore staging, Git anchor lookup errors
+  refuse restore, a failed rollback preserves its sibling recovery directory,
+  and the absolute machine-local `last-backup` stamp is ignored by Git.
 
-In `_backup_report`, compute and prepend:
-```python
-    blobs_dir = workspace / ".memoria/blobs"
-    has_blobs = blobs_dir.is_dir() and any(blobs_dir.rglob("*"))
-    blob_covered = _any_workspace_file(workspace, [*backup_configs, *blob_sync_configs])
-    stamped = (workspace / ".memoria/config/last-backup").is_file()
-    ok = (not has_blobs) or blob_covered or stamped
-```
-and include `"ok": ok` in the returned dict. Make the doctor consumer propagate it (it flows through `_emit`, which exits 1 on `ok: False`).
-
-Durable-write sweep: for each hit from the `rg` above that writes product content (skip test fixtures/scratch), replace `path.write_text(content, encoding="utf-8")` with `write_text_durable(path, content)`. Known: `knowledge.py:2215`. List each converted site in the commit message body.
-
-- [ ] **Step 4: Publish the backup and recovery reference**
+- [x] **Step 4: Publish the backup and recovery reference** — current-truth
+  command, layout, validation, rollback, and doctor contracts are published in
+  `backup-and-recovery.md`; the system index, CLI inventory, on-disk layout,
+  and failure-mode table link and agree with it.
 
 Create `docs/reference/system/backup-and-recovery.md` with this current-truth
 contract after Tasks 9–10 ship:
@@ -933,7 +943,11 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
 | [Backup and recovery](backup-and-recovery.md) |
 ```
 
-- [ ] **Step 5: Run tests + gate** — `python3 -m pytest tests/test_backup_restore.py -v` PASS; `python3 scripts/verify` PASS.
+- [x] **Step 5: Run tests + gate** — the backup/restore and CLI-surface slice
+  passes 27 tests; the full affected subsystem slice passes 185. `python3
+  scripts/verify` passes with 445 passed, 9 skipped, and 444 deselected. Offline
+  smoke, syntax, authored JSON, shell, PowerShell, and every static/document
+  gate are green.
 
 - [ ] **Step 6: Commit + PR**
 

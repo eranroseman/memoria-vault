@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 
 from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing
-from memoria_vault.runtime.vaultio import frontmatter_doc
+from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 PROPOSAL_TYPES = {"candidate", "gap"}
 VERIFICATION_TYPES = {"flag", "alert"}
@@ -166,7 +166,7 @@ def write_work_prompt(
         path = inbox / f"work-prompt-{_slug(dedupe_slug)}.md"
         if path.exists():
             return None
-        path.write_text(content, encoding="utf-8")
+        write_text_durable(path, content)
         loudness_routing.push_card(vault, path, {"title": title, "loudness": loudness})
         return path
     return _write(vault, "work-prompt", title, content, loudness=loudness)
@@ -181,7 +181,7 @@ def _write(vault: Path, card_type: str, title: str, content: str, loudness: str 
     while path.exists():
         n += 1
         path = inbox / f"{base}-{n}.md"
-    path.write_text(content, encoding="utf-8")
+    write_text_durable(path, content)
     loudness_routing.push_card(
         vault, path, {"title": title, "loudness": loudness, "type": card_type}
     )

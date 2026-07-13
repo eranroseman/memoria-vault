@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime.subsystems.lib import inbox
-from memoria_vault.runtime.vaultio import frontmatter_doc
+from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 DECISIONS = ("proposed", "include", "exclude", "maybe", "archived")
 
@@ -106,7 +106,7 @@ def emit_worklist(
         body = [f"# {item_title}", "", f"Reference: `{ref}`", ""]
         if reason:
             body += ["# Reason", "", reason, ""]
-        path.write_text(frontmatter_doc(frontmatter, "\n".join(body)), encoding="utf-8")
+        write_text_durable(path, frontmatter_doc(frontmatter, "\n".join(body)))
         item_paths.append(path)
 
     target = f"system/worklists/{slug}/"
