@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import platform
 import re
 import shutil
@@ -128,9 +129,12 @@ def validate_operation_context(vault: Path, context: OperationContext) -> Mappin
         value = getattr(context, field)
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"operation context {field} must be a nonblank string")
-    request = state.request_job(vault, context.request_id)
-    if request is None:
+    persisted = state.request_row(vault, context.request_id)
+    if persisted is None:
         raise ValueError(f"operation context request does not exist: {context.request_id}")
+    if persisted["status"] != "running":
+        raise ValueError("operation context request must be running")
+    request = json.loads(persisted["job_json"])
     if request.get("bound_context") != operation_context_record(context):
         raise ValueError("operation context does not match the bound request context")
     return request

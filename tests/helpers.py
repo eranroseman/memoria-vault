@@ -38,7 +38,7 @@ def operation_context(
         "job_id": request_id,
         "kind": "operation",
         "operation_id": operation_id,
-        "status": "done",
+        "status": "running",
         "bound_context": {
             "actor": actor,
             "run_id": run_id,
@@ -52,8 +52,8 @@ def operation_context(
         envelope,
         job,
     )
-    saved["status"] = "done"
-    state.finish_request(vault, request_id, "done", saved)
+    saved["status"] = "running"
+    state.set_request_running(vault, request_id, saved)
     return OperationContext(actor, run_id, request_id, operation_id, machine)
 
 

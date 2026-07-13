@@ -101,8 +101,8 @@ def _operation_context(vault: Path, operation_id: str):
             },
         },
     )
-    job["status"] = "done"
-    state.finish_request(vault, request_id, "done", job)
+    job["status"] = "running"
+    state.set_request_running(vault, request_id, job)
     return OperationContext("operation", request_id, request_id, operation_id, "e2e")
 
 

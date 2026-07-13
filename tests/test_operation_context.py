@@ -54,7 +54,7 @@ def _saved_operation_context(
         actor=context.actor,
         provenance=provenance or {},
     )
-    state.save_request(
+    saved = state.save_request(
         vault,
         envelope,
         {
@@ -70,6 +70,8 @@ def _saved_operation_context(
             },
         },
     )
+    saved["status"] = "running"
+    state.set_request_running(vault, context.request_id, saved)
     return context
 
 
@@ -296,7 +298,7 @@ def test_context_journal_rejects_non_mapping_request_provenance_before_mutation(
         actor=context.actor,
     )
     envelope["provenance"] = None
-    state.save_request(
+    saved = state.save_request(
         tmp_path,
         envelope,
         {
@@ -312,6 +314,8 @@ def test_context_journal_rejects_non_mapping_request_provenance_before_mutation(
             },
         },
     )
+    saved["status"] = "running"
+    state.set_request_running(tmp_path, context.request_id, saved)
 
     with pytest.raises(ValueError, match=r"provenance.*mapping"):
         trusted_writer.append_journal_event(
@@ -505,6 +509,36 @@ def test_stage_rejects_forged_context_before_file_or_database_mutation(
         assert conn.execute("SELECT COUNT(*) FROM derivations").fetchone()[0] == 0
         assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
     assert not list((workspace / ".memoria/journal").glob("*.jsonl"))
+
+
+@pytest.mark.parametrize("status", ["pending", "done", "failed", "cancelled"])
+def test_inactive_bound_context_cannot_replay_mutation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    status: str,
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    context = _saved_operation_context(workspace)
+    job = state.request_job(workspace, context.request_id)
+    assert job is not None
+    job["status"] = status
+    state.finish_request(workspace, context.request_id, status, job)
+
+    with pytest.raises(ValueError, match="running"):
+        trusted_writer.stage_concept(
+            workspace,
+            "notes/replayed-context.md",
+            _note_content("Replayed context"),
+            context=context,
+        )
+
+    assert not (workspace / ".memoria/staging/notes/replayed-context.md").exists()
+    assert not (workspace / "notes/replayed-context.md").exists()
+    assert not list((workspace / ".memoria/journal").glob("*.jsonl"))
+    with state.connect(workspace) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM outputs").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM derivations").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
 
 
 def test_materialize_rejects_nonexistent_context_before_move(

@@ -131,6 +131,7 @@ def prepare_seeded_error_fixture(
     validate_operation_context(request_root, context)
     if state.request_job(vault, context.request_id) is None:
         state.save_request(vault, request["request_envelope"], request)
+        state.set_request_running(vault, context.request_id, request)
     validate_operation_context(vault, context)
     _copy_once(template_root / ".memoria/schemas", vault / ".memoria/schemas")
     _copy_once(template_root / ".memoria/config", vault / ".memoria/config")
