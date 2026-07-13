@@ -45,8 +45,10 @@ matrix before payload validation or domain mutation.
 
 Code-owned Markdown insertions neutralize model- and provider-derived prose
 before apply. Markdown images and Obsidian embeds become inert, raw HTML is
-escaped, and external URLs become code spans. Vault wikilinks and existing code
-spans or fences remain unchanged. This applies to prompt reports, digest and hub
+escaped, and external URLs become code spans. Vault wikilinks and ordinary
+literal code spans or fences remain unchanged. Pandoc raw-format attributes and
+fence headers are neutralized even when otherwise well formed; malformed or
+unclosed code candidates are treated as prose. This applies to prompt reports, digest and hub
 suggestions, note candidates, generated outlines and drafts, promoted draft
 passages, provider attention cards, worklists, and extracted-edge prompts.
 
@@ -55,6 +57,22 @@ mixed-author seams. They cannot infer which substring a human authored. Their
 code-owned callers neutralize fields whose provenance is known. Structural IDs
 and paths remain unchanged state; display prose derived from them is inert or
 rendered as code.
+
+## Change witness
+
+`observe-pi-edits` seeds and reconciles baselines from file-byte snapshots for
+eligible bundle Concepts under the configured bundle roots. A direct PI edit
+gets a baseline only after its observed snapshot survives staging and commit; a
+later edit remains dirty for the next sweep. A later mismatch without a matching
+journaled current hash returns a `route: ask` `foreign-edit` finding; removing a
+previously recorded restriction key returns `restriction-key-removed`. These
+structured operation findings do not block the file or create an attention
+projection.
+
+A journal-backed current hash reconciles a baseline. A generic writer commit
+does not bless a disk edit with no journal record. `local-only: true` is
+recognized only as a change-detection key in this release. It does not enforce privacy,
+retrieval, export, or egress policy.
 
 ## Capture pipeline (`memoria_vault.runtime.capture`)
 

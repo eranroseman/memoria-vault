@@ -49,7 +49,10 @@ memoria project resolve-evidence --workspace <vault> projects/<project>/project.
   --reason "Reviewed source span"
 ```
 
-Then edit the draft or supporting checked notes and run verification again.
+Then edit the draft or supporting checked notes and run verification again. A
+PI disposition can clear eligible evidence-review work, but it cannot clear
+`evidence-text-drift` or `evidence-text-unbound`; repair the anchored claim or
+its evidence marker instead.
 
 ## Promote reusable prose
 

@@ -15,9 +15,10 @@ The durable source is the inline marker on a draft claim:
 ```
 
 The marker owns the ordered `items=` list. SQLite table `evidence_sets` is
-derived state rebuilt from those markers. The exception is the block-text
-binding: the first resolvable appearance of an evidence ID binds that ID to its
-claim text, and later rebuilds preserve the original binding.
+derived active state rebuilt from those markers. A separate `evidence_bindings`
+ledger records the first observed appearance of each evidence ID: its anchored
+claim hash when resolvable, or `null` when it is not. The ledger survives marker
+removal, so a reappearing ID always retains its original binding.
 
 | Field | Meaning |
 | --- | --- |
@@ -26,14 +27,18 @@ claim text, and later rebuilds preserve the original binding.
 | `type` | Derived as `single-span`, `multi-span`, `multi-hop`, `implicit`, or `computed`. |
 | `state` | `complete` only when every item resolves. |
 | `review_required` | `true` for implicit or multi-hop evidence, independent of `state`. |
-| `block_text_sha256` | Mint-once SHA-256 binding to the anchored claim block; nullable only to represent an unbound, fail-closed row. |
+| `block_text_sha256` | The mint-once SHA-256 binding copied from the immutable `evidence_bindings` ledger; nullable only to represent an unbound, fail-closed row. |
 
 The hash covers the Markdown paragraph or block containing the matching
 `^blk-<8hex>` anchor. Before hashing, Memoria removes that anchor and its
-`%%ev: ... %%` control marker, then trims outer whitespace. Rebuilding the
-table never refreshes an existing ID's hash, even when the stored value is
-null. Changing the claim therefore cannot silently bless the edit with a new
-binding.
+`%%ev: ... %%` control marker, then trims outer whitespace. The first observed
+ID records that hash, or `null` if the block cannot resolve. Later rebuilds,
+including removal and reappearance of the marker, never refresh that value.
+Changing the claim therefore cannot silently bless the edit with a new binding.
+
+The ledger establishes only this identity-to-text binding. Markers remain the
+source for active evidence items; making SQLite authoritative for all evidence
+truth is deferred and unshipped.
 
 Source-span refs use stable `work_id`, never citekeys. Citekeys are rendered
 only during export.

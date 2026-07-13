@@ -16,9 +16,9 @@ renders a project Concept, its paper plan when present, its argument state,
 linked checked hubs, and `bibliography.bib` to Markdown. Add `--draft` to render
 `projects/<project>/draft.md` instead: draft-internal evidence markers become
 Pandoc citekeys and block anchors are stripped from the exported artifact.
-Draft export always runs verification and refuses text that has drifted from
-its evidence ID's stored block hash, lacks that binding, or has an unresolvable
-block anchor.
+Draft export verifies and renders one draft snapshot. It refuses text that has
+drifted from its evidence ID's stored block hash, lacks that binding, or has an
+unresolvable block anchor.
 `.docx`, `.pdf`, and `.odt` remain available when Pandoc is installed. Add
 `--ready-only` when the export must fail closed unless the project has required
 paper framing and checked support. For citation-rich manuscript drafts, live
@@ -103,10 +103,13 @@ your `.csl` files there before export.
 ## Content safety gate
 
 Both project renderers return content with machine/third-party beacons inert.
-The shared writer applies the same idempotent transformation again at the final
-Markdown/Pandoc content boundary. Markdown images and Obsidian embeds are
-escaped, raw HTML is escaped, and external URLs become non-clickable code spans.
-Vault wikilinks and existing code spans or fences remain unchanged.
+`knowledge.write_project_export` applies the same idempotent transformation
+again at the final Markdown/Pandoc content boundary. Markdown images and
+Obsidian embeds are escaped, raw HTML is escaped, and external URLs become
+non-clickable code spans. Vault wikilinks and ordinary literal code spans or
+fences remain unchanged. Pandoc raw-format attributes and fence headers are
+neutralized even when otherwise well formed; malformed or unclosed code
+candidates are treated as prose.
 
 This gate covers both direct draft exports and argument exports, including
 callers that bypass file output and consume a renderer's returned `content`.
