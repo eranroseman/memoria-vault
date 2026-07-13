@@ -5,18 +5,19 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import state, trusted_writer
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
-    compile_source_digest as _compile_source_digest,
-)
-from memoria_vault.runtime.operations import (
+    _source_interviews,
     load_operation_policy,
     load_runner_provider_config,
     require_allowed_network,
     resolve_operation_runner,
     validate_operation_policy,
+)
+from memoria_vault.runtime.operations import (
+    compile_source_digest as _compile_source_digest,
 )
 from memoria_vault.runtime.operations import (
     record_copi_interview_turn as _record_copi_interview_turn,
@@ -365,6 +366,31 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
         git(vault, "show", "--name-only", "--format=", interview["commit"]).splitlines()
     )
     assert committed == {state.JOURNAL_HEAD_REL}
+
+
+def test_source_interviews_follow_authoritative_event_order(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    for turn_id, timestamp in (
+        ("first-inserted", "2026-07-13T02:00:00+00:00"),
+        ("second-inserted", "2026-07-13T01:00:00+00:00"),
+    ):
+        trusted_writer.append_explicit_journal_event(
+            vault,
+            {
+                "event": "copi-interview",
+                "work_id": "source-alpha",
+                "turn_id": turn_id,
+                "turn_sha256": f"sha256:{turn_id}",
+                "timestamp": timestamp,
+            },
+            actor="pi",
+            machine="copi-machine",
+        )
+
+    assert [row["turn_id"] for row in _source_interviews(vault, "source-alpha")] == [
+        "first-inserted",
+        "second-inserted",
+    ]
 
 
 def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkeypatch) -> None:

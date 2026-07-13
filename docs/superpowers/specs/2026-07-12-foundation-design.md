@@ -150,25 +150,30 @@ the git-tracked `.memoria/journal-head` anchor stays as tamper evidence. The
 goal is one authoritative trust-**read** path, not a sole journal. Defects to
 fix inside that design:
 
-- **Chain verifier (missing entirely):** walk `event_log` from GENESIS
-  recomputing `row_hash`/`prev_hash` (`state._journal_hash`), compare the tip
-  to the `journal-head` anchor. Surfaced as `memoria journal verify` and run
-  inside `workspace scan`. Mismatch = failure, not a warning.
+- **Chain verifier:** walk `event_log` from GENESIS, require payload event type
+  and machine to agree with their indexed columns, and recompute
+  `row_hash`/`prev_hash` (`state._journal_hash`). The working-tree
+  `journal-head` must equal the live tip, while the committed Git value must be
+  `GENESIS` or a row hash on that chain. Surfaced as `memoria journal verify`
+  and run inside `workspace scan`. Mismatch = failure, not a warning.
 - **Trust reads move to `event_log`:** `integrity._latest_derived`
   (integrity.py:1292-1301) and the JSONL glob at `operations.py:834` switch
   from `.memoria/journal/*.jsonl` to `event_log` queries. The JSONL becomes
   derived/sync-plane only; a reconciliation check (JSONL events ⊆ event_log)
   rides the verifier.
-- **Crash story (defined):** `event_log` insert is authoritative and happens
-  first; the `trusted_writer.py:75` JSONL append is second and repairable —
-  the reconciliation sweep re-emits missing JSONL lines from `event_log`.
+- **Crash story:** `event_log` insert is authoritative and happens first; the
+  JSONL append is second and repairable. Under the workspace writer lock, the
+  reconciliation sweep removes an incomplete terminal JSONL fragment and
+  re-emits missing lines from `event_log`. Complete malformed or export-only
+  rows fail closed.
 - **Indexes (rides v9):** `event_log(event_type)`, `event_log(timestamp)` —
   justified now that event_log serves reads.
 
-Tests: verifier catches a tampered payload and a broken head anchor;
+Tests: verifier catches a tampered payload, semantic column mismatch, broken
+live anchor, and fully rehashed chain that discards the committed anchor;
 blast-radius traversal returns identical results from the DB path (fixture
-comparison against the JSONL path before its removal); crash between the two
-appends recovers clean via the sweep.
+comparison against the JSONL path before its removal); crashes before or during
+the final JSONL line recover clean via the serialized sweep.
 
 ## F3 · Durability of grounds (#1363)
 

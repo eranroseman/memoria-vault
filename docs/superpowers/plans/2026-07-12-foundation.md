@@ -276,7 +276,10 @@ PR-F1 closes #1361 only when the full context contract is green.
 - Produces: `state.verify_journal_chain(vault: Path) -> dict[str, Any]` returning `{"ok": bool, "events": int, "tip": str, "anchor": str, "error": str}`; CLI `memoria journal verify --workspace <ws>` exiting 0/1 via `_emit`.
 
 The verifier treats a missing anchor as failure when the chain is nonempty. An
-empty chain may omit the anchor or carry `GENESIS`.
+empty chain may omit the live anchor or carry `GENESIS`. The live anchor equals
+the current tip; when Git has a committed anchor, that value must be `GENESIS`
+or a row hash on the verified chain. Payload event type and machine must agree
+with their indexed columns before any trust read may use them.
 
 - [x] **Step 1: Write the failing test**
 
@@ -436,14 +439,20 @@ git commit -m "feat(journal): chain verifier + memoria journal verify"
   (returns count re-emitted). `verify_journal_chain` also proves the opposite
   direction, `JSONL ⊆ event_log`, with multiset counts and matching machine
   ownership; any JSONL-only row is a verification failure. After a passing
-  verify, `workspace scan` repairs DB-only export rows before other work.
+  verify, `workspace scan` repairs DB-only export rows before other work. The
+  existing workspace writer lock covers verification and reconciliation as one
+  serialized region, preventing a scan from duplicating an in-flight append.
+  An incomplete terminal JSONL fragment is ignored during subset verification,
+  removed durably under that lock, and restored from `event_log`; complete
+  malformed rows still fail closed.
 
 This strict-tip implementation makes the anchor describe the latest
 authoritative SQLite row, including explicit lifecycle events that do not make
-a separate Git commit. A JSONL failure is repairable because the DB row and
-anchor already agree. A physical failure between the DB commit and durable
-anchor replacement remains fail-closed and requires operator recovery rather
-than silently accepting an unanchored suffix.
+a separate Git commit. The last committed anchor remains prefix evidence
+against replacement of the established chain. A JSONL failure is repairable
+because the DB row and live anchor already agree. A physical failure between
+the DB commit and durable anchor replacement remains fail-closed and requires
+operator recovery rather than silently accepting an unanchored suffix.
 
 - [x] **Step 1: Write the failing test**
 
@@ -545,9 +554,10 @@ JSONL filename. Do not refresh or rewrite an extra JSONL-only row into the DB.
 The reconciler computes both multiset differences before writing and rejects
 any export-only count before repairing DB-only counts.
 
-- [x] **Step 4: Run tests** — 15 journal-trust tests pass; the journal, CLI,
-  trusted-writer slice passes 51, and the broader state/writer/worker/CLI slice
-  passes 248.
+- [x] **Step 4: Run tests** — 22 journal-trust tests pass after independent
+  review added empty-chain, committed-prefix, semantic-column, partial-tail,
+  and serialized-reconciliation coverage. The broader state, request,
+  operation, writer, integrity, and CLI slice passes 268.
 
 - [x] **Step 5: Commit**
 
@@ -635,12 +645,27 @@ dicts.
 (trusted_writer): replace the `_iter_events(vault)` trust source with an
 `event_log` reader ordered by `event_id`. JSONL iteration remains only in
 `_iter_journal_exports` for the reconciliation sweep's export-side comparison.
+Co-PI interview rows deliberately retain this authoritative insertion order;
+payload timestamps do not reorder a multi-machine event stream.
 
-- [x] **Step 4: Run tests + gate** — the four focused RED tests pass, the
-  retired-identifier contract passes after naming the reader `read_event_log`,
-  and `python3 scripts/verify` passes with 444 passed, 9 skipped, and 393
-  deselected; offline smoke, syntax, authored JSON, and static/document gates
-  are green.
+Independent review closure:
+
+- [x] Serialize verify + reconciliation with the existing workspace writer
+  lock, releasing it before fixtures and worker dispatch.
+- [x] Retain strict live-tip equality and require the committed Git anchor to
+  remain `GENESIS` or a prefix hash on the verified chain.
+- [x] Recover an incomplete terminal JSONL fragment while rejecting complete
+  malformed or export-only rows.
+- [x] Validate payload event type and machine against indexed row columns
+  before trust reads.
+- [x] Keep approved `event_id` ordering for interviews and prove that payload
+  timestamps cannot reorder the authoritative stream.
+
+- [x] **Step 4: Run tests + gate** — the review-remediated focused suite passes
+  23 tests, the broader F2 regression slice passes 268, and
+  `python3 scripts/verify` passes with 445 passed, 9 skipped, and 400
+  deselected. Offline smoke, syntax, authored JSON, and every static/document
+  gate are green.
 
 `python3 -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python3 scripts/verify` → PASS.
 

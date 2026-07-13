@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 
 import pytest
 
+from memoria_vault import cli
 from memoria_vault.cli import main
 from memoria_vault.runtime import state, trusted_writer
 from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
@@ -98,6 +100,99 @@ def test_verify_fails_on_tampered_prev_hash(tmp_path, capsys):
 
     assert report["ok"] is False
     assert "event 2" in report["error"]
+
+
+def test_verify_rejects_rehashed_chain_that_drops_committed_anchor(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault, count=2)
+    trusted_writer.commit_explicit_writer_changes(
+        vault,
+        "anchor journal",
+        [],
+        actor="operation",
+        machine="journal-test",
+    )
+
+    forged_events = []
+    previous = "GENESIS"
+    with state.connect(vault) as conn:
+        conn.execute("DROP TRIGGER event_log_no_update")
+        rows = conn.execute(
+            """
+            SELECT event_id, timestamp, event_type, machine, payload_json
+            FROM event_log
+            ORDER BY event_id
+            """
+        ).fetchall()
+        for row in rows:
+            event = json.loads(str(row["payload_json"]))
+            event["run_id"] = f"forged-{row['event_id']}"
+            payload = json.dumps(
+                event,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            row_hash = state._journal_hash(
+                int(row["event_id"]),
+                str(row["timestamp"]),
+                str(row["event_type"]),
+                str(row["machine"]),
+                payload,
+                previous,
+            )
+            conn.execute(
+                """
+                UPDATE event_log
+                SET payload_json = ?, prev_hash = ?, row_hash = ?
+                WHERE event_id = ?
+                """,
+                (payload, previous, row_hash, row["event_id"]),
+            )
+            forged_events.append(event)
+            previous = row_hash
+
+    (vault / ".memoria/journal/journal-test.jsonl").write_text(
+        "".join(json.dumps(event, ensure_ascii=False) + "\n" for event in forged_events),
+        encoding="utf-8",
+    )
+    (vault / state.JOURNAL_HEAD_REL).write_text(previous + "\n", encoding="utf-8")
+
+    report = state.verify_journal_chain(vault)
+
+    assert report["ok"] is False
+    assert "committed" in report["error"]
+
+
+def test_verify_rejects_event_type_that_conflicts_with_payload(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault, count=1)
+    with state.connect(vault) as conn:
+        conn.execute("DROP TRIGGER event_log_no_update")
+        row = conn.execute(
+            """
+            SELECT event_id, timestamp, machine, payload_json, prev_hash
+            FROM event_log
+            """
+        ).fetchone()
+        row_hash = state._journal_hash(
+            int(row["event_id"]),
+            str(row["timestamp"]),
+            "forged-type",
+            str(row["machine"]),
+            str(row["payload_json"]),
+            str(row["prev_hash"]),
+        )
+        conn.execute(
+            "UPDATE event_log SET event_type = ?, row_hash = ? WHERE event_id = ?",
+            ("forged-type", row_hash, row["event_id"]),
+        )
+    (vault / state.JOURNAL_HEAD_REL).write_text(row_hash + "\n", encoding="utf-8")
+
+    report = state.verify_journal_chain(vault)
+
+    assert report["ok"] is False
+    assert "event type" in report["error"]
 
 
 def test_verify_fails_on_broken_anchor(tmp_path, capsys):
@@ -339,3 +434,50 @@ def test_workspace_scan_repairs_db_only_jsonl_before_other_work(tmp_path, capsys
 
     assert payload["journal_reconciled"] == 1
     assert event in list(iter_jsonl(vault / ".memoria/journal/journal-test.jsonl"))
+
+
+def test_workspace_scan_repairs_partial_final_jsonl_line(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault, count=1)
+    path = vault / ".memoria/journal/journal-test.jsonl"
+    complete = path.read_bytes()
+    path.write_bytes(complete[:-4])
+
+    assert main(["workspace", "scan", "--workspace", str(vault), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["journal_reconciled"] == 1
+    assert len(list(iter_jsonl(path))) == 1
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
+def test_workspace_scan_serializes_journal_verify_and_reconcile(tmp_path, capsys, monkeypatch):
+    vault = init_cli_workspace(tmp_path, capsys)
+    lock_held = False
+    real_lock = cli._workspace_lock
+    real_verify = state.verify_journal_chain
+    real_reconcile = trusted_writer.reconcile_journal_export
+
+    @contextmanager
+    def observed_lock(workspace):
+        nonlocal lock_held
+        with real_lock(workspace):
+            lock_held = True
+            try:
+                yield
+            finally:
+                lock_held = False
+
+    def verify(workspace):
+        assert lock_held
+        return real_verify(workspace)
+
+    def reconcile(workspace):
+        assert lock_held
+        return real_reconcile(workspace)
+
+    monkeypatch.setattr(cli, "_workspace_lock", observed_lock)
+    monkeypatch.setattr(state, "verify_journal_chain", verify)
+    monkeypatch.setattr(trusted_writer, "reconcile_journal_export", reconcile)
+
+    assert main(["workspace", "scan", "--workspace", str(vault), "--json"]) == 0

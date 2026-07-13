@@ -418,9 +418,13 @@ def verify_journal_chain(vault: Path) -> dict[str, Any]:
         ).fetchall()
 
     previous = "GENESIS"
+    row_hashes: set[str] = set()
     for row in rows:
         event_id = int(row["event_id"])
         try:
+            event = json.loads(str(row["payload_json"]))
+            if not isinstance(event, dict):
+                raise ValueError("journal payload must be an object")
             expected = _journal_hash(
                 event_id,
                 str(row["timestamp"]),
@@ -433,11 +437,21 @@ def verify_journal_chain(vault: Path) -> dict[str, Any]:
             return _journal_verification_failure(
                 rows, error=f"journal chain has invalid payload JSON at event {event_id}"
             )
+        payload_type = str(event.get("event") or event.get("type") or "event")
+        if payload_type != str(row["event_type"]):
+            return _journal_verification_failure(
+                rows, error=f"journal event type conflicts with payload at event {event_id}"
+            )
+        if event.get("machine") != str(row["machine"]):
+            return _journal_verification_failure(
+                rows, error=f"journal machine conflicts with payload at event {event_id}"
+            )
         if str(row["prev_hash"]) != previous or str(row["row_hash"]) != expected:
             return _journal_verification_failure(
                 rows, error=f"journal chain broken at event {event_id}"
             )
         previous = str(row["row_hash"])
+        row_hashes.add(previous)
 
     tip = previous
     anchor_path = Path(vault) / JOURNAL_HEAD_REL
@@ -461,6 +475,14 @@ def verify_journal_chain(vault: Path) -> dict[str, Any]:
             tip=tip,
             anchor=anchor,
             error="journal-head anchor does not match chain tip",
+        )
+    committed_anchor = _committed_journal_head_anchor(Path(vault))
+    if committed_anchor is not None and committed_anchor not in {"GENESIS", *row_hashes}:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            anchor=anchor,
+            error="committed journal-head anchor is not a prefix of the live chain",
         )
     export_error = _journal_export_subset_error(Path(vault), rows)
     if export_error:
@@ -529,18 +551,31 @@ def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
     root = vault / ".memoria/journal"
     for path in sorted(root.glob("*.jsonl")):
         try:
-            lines = path.read_text(encoding="utf-8").splitlines()
-        except (OSError, UnicodeError) as exc:
+            raw = path.read_bytes()
+        except OSError as exc:
             return f"journal JSONL export is unreadable: {path.name}: {exc}"
+        lines = raw.splitlines()
+        partial_tail = bool(raw) and not raw.endswith((b"\n", b"\r"))
         machine = path.stem
-        for line_number, line in enumerate(lines, start=1):
+        for line_number, raw_line in enumerate(lines, start=1):
+            is_partial_tail = partial_tail and line_number == len(lines)
+            try:
+                line = raw_line.decode("utf-8")
+            except UnicodeDecodeError:
+                if is_partial_tail:
+                    continue
+                return f"invalid UTF-8 in {path.name} at line {line_number}"
             if not line.strip():
                 continue
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
+                if is_partial_tail:
+                    continue
                 return f"invalid JSONL in {path.name} at line {line_number}"
             if not isinstance(event, dict):
+                if is_partial_tail:
+                    continue
                 return f"invalid JSONL object in {path.name} at line {line_number}"
             if event.get("machine") != machine:
                 return f"JSONL machine mismatch in {path.name} at line {line_number}"
@@ -552,6 +587,20 @@ def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
                 )
             authoritative[key] -= 1
     return ""
+
+
+def _committed_journal_head_anchor(vault: Path) -> str | None:
+    try:
+        proc = subprocess.run(
+            ["git", "show", f"HEAD:{JOURNAL_HEAD_REL}"],
+            cwd=vault,
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+    except OSError:
+        return None
+    return None if proc.returncode else proc.stdout.strip()
 
 
 def _journal_verification_failure(

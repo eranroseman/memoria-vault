@@ -65,21 +65,24 @@ writable runtime directories are created from `folders.yaml`:
 ├── patterns/_preamble.md    shared operation prompt preamble
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── journal/                 derived per-machine JSONL synchronization exports
-├── journal-head             live hash-chain tip for the authoritative event log
+├── journal-head             Git-tracked live hash-chain tip for the event log
 ├── memoria.sqlite           authoritative state, including the event log
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ```
 
 The append-only, hash-chained `event_log` in `memoria.sqlite` is the journal of
 record. Trust-sensitive readers query it in event order. A journal append
-commits there first and advances `journal-head`; the per-machine JSONL files are
-derived exports for synchronization. `memoria workspace scan` verifies the
-chain and export subset before mutation, then re-emits any missing export rows.
+commits there first and advances the working-tree `journal-head`; its committed
+Git value must remain a prefix of the live chain. The per-machine JSONL files
+are derived exports for synchronization. `memoria workspace scan` holds the
+workspace writer lock while it verifies the chain and export subset, removes an
+incomplete final JSONL fragment, and re-emits any missing export rows.
 
-Alpha.20 deliberately does **not** ship dashboards, note templates, hidden
-operation-package homes, installed profile packages, lane override packages,
-cron wrappers, or profile tool registries. It does ship the Memoria Obsidian
-adapter as the one default editor plugin. Operation manifests live under
+> **Unshipped:** dashboards, note templates, hidden operation-package homes,
+> installed profile packages, lane override packages, cron wrappers, and
+> profile tool registries are not part of the current package.
+
+The Memoria Obsidian adapter is the default editor plugin. Operation manifests live under
 `memoria_vault.product.capabilities.operations`; operation code lives in the
 installed `memoria_vault` package.
 

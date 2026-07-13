@@ -32,6 +32,7 @@ from memoria_vault.runtime.vaultio import (
     retired_frontmatter_field_errors,
     split_frontmatter,
     universal_concept_frontmatter_errors,
+    write_bytes_durable,
     write_frontmatter_doc,
 )
 
@@ -924,6 +925,8 @@ def _iter_journal_exports(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
 def reconcile_journal_export(vault: Path) -> int:
     """Re-emit authoritative rows missing from per-machine JSONL exports."""
     vault = Path(vault)
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
+        _truncate_partial_jsonl_tail(path)
     exported = Counter(
         (machine, _canonical_journal_event(event))
         for machine, event in _iter_journal_exports(vault)
@@ -957,6 +960,24 @@ def reconcile_journal_export(vault: Path) -> int:
 
 def _canonical_journal_event(event: dict[str, Any]) -> str:
     return json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _truncate_partial_jsonl_tail(path: Path) -> bool:
+    try:
+        data = path.read_bytes()
+    except FileNotFoundError:
+        return False
+    if not data or data.endswith((b"\n", b"\r")):
+        return False
+    tail_start = data.rfind(b"\n") + 1
+    try:
+        event = json.loads(data[tail_start:].decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        event = None
+    if isinstance(event, dict):
+        return False
+    write_bytes_durable(path, data[:tail_start])
+    return True
 
 
 def _known_current_hashes(vault: Path) -> dict[str, str]:

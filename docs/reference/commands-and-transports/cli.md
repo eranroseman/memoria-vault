@@ -62,7 +62,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
 | `memoria steering show/edit` | Read steering; editing is PI-only. |
 | `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
-| `memoria journal tail/show/verify` | Inspect journal entries or verify the authoritative hash chain, live head anchor, and JSONL export subset. |
+| `memoria journal tail/show/verify` | Inspect journal entries or verify the authoritative hash chain, live-tip anchor, committed anchor prefix, and JSONL export subset. |
 
 ## Operations And Eval
 
