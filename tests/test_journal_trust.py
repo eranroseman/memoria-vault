@@ -32,6 +32,30 @@ def _event_count(vault) -> int:
         return int(conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0])
 
 
+def test_verify_accepts_empty_chain_without_anchor(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    (vault / state.JOURNAL_HEAD_REL).unlink(missing_ok=True)
+
+    report = state.verify_journal_chain(vault)
+
+    assert report["ok"] is True
+    assert report["events"] == 0
+    assert report["tip"] == "GENESIS"
+    assert report["anchor"] == ""
+
+
+def test_verify_accepts_empty_chain_with_genesis_anchor(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    state.write_journal_head_anchor(vault)
+
+    report = state.verify_journal_chain(vault)
+
+    assert report["ok"] is True
+    assert report["events"] == 0
+    assert report["tip"] == "GENESIS"
+    assert report["anchor"] == "GENESIS"
+
+
 def test_verify_passes_on_healthy_chain(tmp_path, capsys):
     vault = init_cli_workspace(tmp_path, capsys)
     _seed_events(vault)
@@ -53,6 +77,22 @@ def test_verify_fails_on_tampered_payload(tmp_path, capsys):
     with state.connect(vault) as conn:
         conn.execute("DROP TRIGGER event_log_no_update")
         conn.execute("UPDATE event_log SET payload_json = '{}' WHERE event_id = 2")
+
+    report = state.verify_journal_chain(vault)
+
+    assert report["ok"] is False
+    assert "event 2" in report["error"]
+
+
+def test_verify_fails_on_tampered_prev_hash(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault)
+    with state.connect(vault) as conn:
+        conn.execute("DROP TRIGGER event_log_no_update")
+        conn.execute(
+            "UPDATE event_log SET prev_hash = ? WHERE event_id = 2",
+            ("sha256:forged-prev-hash",),
+        )
 
     report = state.verify_journal_chain(vault)
 
