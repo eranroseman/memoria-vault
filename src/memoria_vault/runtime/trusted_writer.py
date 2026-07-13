@@ -908,7 +908,7 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
     with state.workspace_lock(vault):
-        if _normalize_journal_export_tails(vault):
+        if _has_unterminated_journal_export_tail(vault):
             reconcile_journal_export(vault)
         state._append_journal_row(vault, event, machine=machine)
         state.write_journal_head_anchor(vault)
@@ -922,12 +922,17 @@ def _journal_path(vault: Path, machine: str) -> Path:
 def _iter_journal_exports(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
     for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
         try:
-            lines = path.read_text(encoding="utf-8").splitlines()
-        except (OSError, UnicodeError) as exc:
+            raw = path.read_bytes()
+        except OSError as exc:
             raise ValueError(f"journal JSONL export is unreadable: {path.name}: {exc}") from exc
+        if raw and not raw.endswith((b"\n", b"\r")):
+            raw = raw[: raw.rfind(b"\n") + 1]
         machine = path.stem
-        for line_number, line in enumerate(lines, start=1):
-            line = line.strip()
+        for line_number, raw_line in enumerate(raw.splitlines(), start=1):
+            try:
+                line = raw_line.decode("utf-8").strip()
+            except UnicodeDecodeError as exc:
+                raise ValueError(f"invalid UTF-8 in {path.name} at line {line_number}") from exc
             if not line:
                 continue
             try:
@@ -945,7 +950,6 @@ def reconcile_journal_export(vault: Path) -> int:
     """Re-emit authoritative rows missing from per-machine JSONL exports."""
     vault = Path(vault)
     with state.workspace_lock(vault):
-        _normalize_journal_export_tails(vault)
         exported = Counter(
             (machine, _canonical_journal_event(event))
             for machine, event in _iter_journal_exports(vault)
@@ -972,6 +976,7 @@ def reconcile_journal_export(vault: Path) -> int:
             raise ValueError(
                 f"journal JSONL export contains {extra_count} row(s) absent from event_log"
             )
+        _normalize_journal_export_tails(vault)
         for machine, event in missing:
             append_jsonl(_journal_path(vault, machine), [event])
         return len(missing)
@@ -986,6 +991,17 @@ def _normalize_journal_export_tails(vault: Path) -> bool:
     for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
         normalized = _truncate_partial_jsonl_tail(path) or normalized
     return normalized
+
+
+def _has_unterminated_journal_export_tail(vault: Path) -> bool:
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
+        try:
+            data = path.read_bytes()
+        except FileNotFoundError:
+            continue
+        if data and not data.endswith((b"\n", b"\r")):
+            return True
+    return False
 
 
 def _truncate_partial_jsonl_tail(path: Path) -> bool:
