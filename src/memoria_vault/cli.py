@@ -444,6 +444,10 @@ def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     _common(recover)
     recover.add_argument("--fixture")
     recover.set_defaults(handler=_cmd_workspace_recover)
+    backup = workspace_sub.add_parser("backup")
+    _common(backup)
+    backup.add_argument("target")
+    backup.set_defaults(handler=_cmd_workspace_backup)
     for name in ("scan", "rollback", "check", "rebuild", "export"):
         cmd = workspace_sub.add_parser(name)
         _common(cmd)
@@ -1710,6 +1714,22 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
     if fixture is not None:
         payload["fixture"] = fixture
     return _emit(payload, args)
+
+
+def _cmd_workspace_backup(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import backup as runtime_backup
+
+    if args.actor != "pi":
+        raise ValueError("workspace backup requires PI actor authority")
+    return _emit(
+        runtime_backup.create_backup(
+            _workspace(args),
+            Path(args.target),
+            actor=args.actor,
+            machine="memoria-cli",
+        ),
+        args,
+    )
 
 
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
