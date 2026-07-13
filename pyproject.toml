@@ -58,6 +58,7 @@ markers = [
   "package: build/install/smoke and installer-facing behavior",
   "runtime: worker loops, recovery, idempotence, migrations, and long local checks",
   "live: real external services/providers; never required for normal PR merge",
+  "floor: promotion-floor sweep — every command x every API on the seeded ephemeral vault",
   "slow: deterministic but slow enough to skip from the default local loop",
 ]
 

@@ -13,7 +13,7 @@ GIT_ENV_VARS = (
     "GIT_PREFIX",
 )
 
-TEST_LEVEL_NAMES = frozenset({"static", "unit", "contract", "package", "runtime", "live"})
+TEST_LEVEL_NAMES = frozenset({"static", "unit", "contract", "package", "runtime", "live", "floor"})
 
 TEST_LEVELS = {
     "test_operation_context.py": "runtime",
