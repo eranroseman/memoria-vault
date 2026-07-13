@@ -406,11 +406,11 @@ git commit -m "feat(integrity): witness restriction-key removal (superseded/loca
 - Modify: confirm both new finding kinds route to the Review surface the way `observed_external_edit` already does (`rg -n "observed_external_edit|write_work_prompt|finding" src/memoria_vault/runtime/`); add any missing wiring.
 - Test: `tests/test_worker_integrity_jobs.py` (extend — the sweep runs as an operation job)
 
-- [ ] **Step 1: Write the failing test** — run the sweep through the worker operation (`observe-pi-edits` / the sweep op) and assert both a foreign-edit and a restriction-key-removal surface as Review items via the worker path (not just the direct function).
+- [x] **Step 1: Write the failing test** — `test_worker_observe_sweep_surfaces_change_witness_findings` runs `observe-pi-edits` twice through the worker and asserts the second result contains both `foreign-edit` and `restriction-key-removed` ask-route Review findings.
 
-- [ ] **Step 2: Implement** any wiring gap so both findings reach Review through the worker.
+- [x] **Step 2: Implement** — the worker now exposes the sweep's `finding_count` and structured `findings`, matching the existing integrity-operation Review result surface.
 
-- [ ] **Step 3: Gate + PR**
+- [x] **Step 3: Gate + local handoff** — focused worker/content-security/writer coverage passed (`108 passed`); full `python3 scripts/verify` passed (`500 passed, 9 skipped, 794 deselected`; smoke gates green). This session has local integration authority only: no branch was pushed and no PR was opened.
 
 ```bash
 python scripts/verify

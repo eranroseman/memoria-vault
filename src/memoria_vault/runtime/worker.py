@@ -897,6 +897,8 @@ def _run_operation_job(
         return {
             "commit": commits[-1] if commits else "",
             "observed_count": len(result["observed"]),
+            "finding_count": len(result["findings"]),
+            "findings": result["findings"],
             "paths": result["paths"],
             "projection_quarantine_count": len(projection_events),
             "projection_paths": projection_paths,
