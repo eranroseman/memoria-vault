@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import indexing, state
-from memoria_vault.runtime.trusted_writer import OperationContext
+from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 
 SELECTED_RETRIEVAL_SUBSTRATE = "bm25"
 
@@ -52,6 +52,7 @@ def dense_substrate_capability() -> Capability:
 def fts_search(
     vault: Path, query: str, *, context: OperationContext, k: int = 10
 ) -> list[dict[str, Any]]:
+    validate_operation_context(vault, context)
     indexing.refresh_stale_passages(vault, context=context)
     match = _fts_query(query)
     if not match:
@@ -75,6 +76,7 @@ def fts_search(
 def vector_search(
     vault: Path, query: str, *, context: OperationContext, k: int = 10
 ) -> list[dict[str, Any]]:
+    validate_operation_context(vault, context)
     indexing.refresh_stale_passages(vault, context=context)
     query_vector = indexing.hash_embedding(query)
     with state.connect(vault) as conn:
@@ -101,6 +103,7 @@ def vector_search(
 def hybrid_search(
     vault: Path, query: str, *, context: OperationContext, k: int = 10
 ) -> list[dict[str, Any]]:
+    validate_operation_context(vault, context)
     fts = fts_search(vault, query, k=k * 4, context=context)
     vectors = vector_search(vault, query, k=k * 4, context=context)
     scores: dict[str, float] = {}
@@ -123,6 +126,7 @@ def evaluate_fixture(
     context: OperationContext,
     k: int = 5,
 ) -> dict[str, Any]:
+    validate_operation_context(vault, context)
     from memoria_vault.runtime.search_index import evaluate_bm25
 
     cases = list(cases)

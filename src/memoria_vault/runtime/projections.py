@@ -15,6 +15,7 @@ from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_explicit_writer_changes,
     commit_writer_changes,
+    validate_operation_context,
 )
 
 BUNDLE_ROOTS = ("notes", "hubs", "projects", "digests", "fulltexts")
@@ -108,6 +109,7 @@ def write_tracked_projections(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Write all tracked generated projections."""
+    validate_operation_context(vault, context)
     return _write_tracked_projections(
         vault,
         commit=commit,
@@ -127,7 +129,7 @@ def write_tracked_projections_explicit(
     """Write tracked projections outside an operation envelope."""
     if actor not in state.ACTORS:
         raise ValueError(f"projection actor must be one of {sorted(state.ACTORS)}")
-    if not machine.strip():
+    if not isinstance(machine, str) or not machine.strip():
         raise ValueError("projection machine must be nonblank")
     return _write_tracked_projections(
         vault,
@@ -203,6 +205,7 @@ def write_workspace_indexes(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Write generated root and bundle index.md projections."""
+    validate_operation_context(vault, context)
     return _write_workspace_indexes(
         vault,
         commit=commit,
@@ -222,7 +225,7 @@ def write_workspace_indexes_explicit(
     """Write workspace indexes outside an operation envelope."""
     if actor not in state.ACTORS:
         raise ValueError(f"projection actor must be one of {sorted(state.ACTORS)}")
-    if not machine.strip():
+    if not isinstance(machine, str) or not machine.strip():
         raise ValueError("projection machine must be nonblank")
     return _write_workspace_indexes(
         vault,

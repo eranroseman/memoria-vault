@@ -29,6 +29,7 @@ from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_journal_event,
     commit_writer_changes,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
@@ -65,6 +66,7 @@ def enrich_source(
     policy: dict[str, Any],
     provider_payloads: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    validate_operation_context(vault, context)
     vault = Path(vault)
     source = state.catalog_source(vault, work_id)
     if source is None:
@@ -86,6 +88,7 @@ def enrich_source(
         run_id=run_id,
         work_id=source["work_id"],
         required_provider_policy={"branch": "doi", "required": required, "optional": optional},
+        request_id=context.request_id,
     )
     append_journal_event(
         vault,

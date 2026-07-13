@@ -164,13 +164,17 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
             ("doi-10.1000_harness.2026",),
         ).fetchone()
         enrich = conn.execute(
-            "SELECT status, operation_id, actor FROM operation_requests WHERE request_id = ?",
+            """
+            SELECT status, operation_id, actor, causal_refs_json
+            FROM operation_requests WHERE request_id = ?
+            """,
             ("enrich-doi-10.1000_harness.2026",),
         ).fetchone()
     assert source["citekey"] == "harness2026"
     assert source["check_status"] == "unchecked"
     assert json.loads(source["identifiers_json"]) == {"doi": "10.1000/harness.2026"}
-    assert tuple(enrich) == ("pending", "enrich-source", "operation")
+    assert tuple(enrich)[:3] == ("pending", "enrich-source", "operation")
+    assert json.loads(enrich["causal_refs_json"]) == [{"id": "capture-bibtex-harness"}]
     assert done["enrichment_job"]["job_id"] == "enrich-doi-10.1000_harness.2026"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL}

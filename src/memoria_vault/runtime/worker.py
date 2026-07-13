@@ -34,6 +34,7 @@ from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
     materialize_unchecked,
     operation_context_from_job,
+    operation_context_record,
     promote_checked,
     stage_concept,
 )
@@ -222,6 +223,8 @@ def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> 
 def _run_claimed_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
     try:
         context = operation_context_from_job(job, machine)
+        job = {**job, "bound_context": operation_context_record(context)}
+        state.set_request_running(vault, context.request_id, job)
         result = _run_job(vault, job, context)
     except Exception as exc:  # noqa: BLE001 -- worker records failed jobs instead of losing them.
         job.update({"status": "failed", "failed_at": now_iso(), "error": str(exc)})
@@ -851,6 +854,8 @@ def _run_operation_job(
         )
         return {"commit": result["commit"], "resolution": result["event"]}
     if operation_id == "observe-pi-edits":
+        if context.actor != "integrity":
+            raise ValueError("observe-pi-edits requires integrity actor authority")
         from memoria_vault.runtime.projections import (
             changed_tracked_projection_paths,
             write_tracked_projections,

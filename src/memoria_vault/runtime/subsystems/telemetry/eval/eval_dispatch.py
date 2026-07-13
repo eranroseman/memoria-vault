@@ -26,7 +26,8 @@ import datetime
 import sys
 from pathlib import Path
 
-from memoria_vault.runtime.trusted_writer import OperationContext
+from memoria_vault.engine import api as engine_api
+from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter
 
 # eval role -> the local role label that owns it.
@@ -141,6 +142,7 @@ def write_last_run(
     vault: Path, quarter: str, rows: list[dict], *, context: OperationContext
 ) -> Path:
     """Record what was dispatched when (plain markdown — untyped system infra)."""
+    validate_operation_context(vault, context)
     now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     lines = [
         "# vault-eval — last dispatch",
@@ -173,6 +175,7 @@ def dispatch(
     context: OperationContext,
 ) -> dict:
     """Fan current local gold tasks out: one idempotent intent per task and quarter."""
+    validate_operation_context(vault, context)
     quarter = quarter_of(today)
     tasks = load_gold_tasks(vault)
     rows: list[dict] = []
@@ -215,7 +218,18 @@ def main() -> None:
     vault = Path(args.vault).expanduser()
     if not vault.is_dir():
         sys.exit(f"not a directory: {vault}")
-    result = dispatch(vault, dry_run=args.dry_run)
+    run = engine_api.run_operation(
+        vault,
+        "eval-run",
+        {"dry_run": args.dry_run},
+        actor="operation",
+        command="eval-dispatch",
+        surface="memoria-eval",
+        machine="memoria-eval",
+    )
+    result = run.get("result") if isinstance(run.get("result"), dict) else {}
+    if not run["ok"]:
+        sys.exit(str(result.get("error") or "eval dispatch failed"))
     n = len(result["dispatched"])
     print(
         f"[eval] {result['quarter']}: {n} gold task(s) "

@@ -1098,6 +1098,13 @@ def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.knowledge import read_project_draft, resolve_evidence_review
 
     workspace = _workspace(args)
+    verification_request = _enqueue_and_run(
+        args,
+        "verify-project-draft",
+        {"project_path": args.project_path},
+    )
+    if not verification_request.get("ok"):
+        return _emit(verification_request, args)
     verification = read_project_draft(workspace, args.project_path)
     evidence_ids = {str(row["id"]) for row in verification["evidence_sets"]}
     if args.evidence_id not in evidence_ids:
@@ -1499,6 +1506,7 @@ def _workspace_scan_payload(
     idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     scan_args = argparse.Namespace(**vars(args))
+    scan_args.actor = "integrity"
     if schedule_id is not None:
         scan_args.schedule_id = schedule_id
     if idempotency_key is not None:

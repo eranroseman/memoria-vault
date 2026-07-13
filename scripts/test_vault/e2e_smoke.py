@@ -92,6 +92,13 @@ def _operation_context(vault: Path, operation_id: str):
             "job_id": request_id,
             "kind": "operation",
             "operation_id": operation_id,
+            "bound_context": {
+                "actor": "operation",
+                "run_id": request_id,
+                "request_id": request_id,
+                "operation_id": operation_id,
+                "machine": "e2e",
+            },
         },
     )
     job["status"] = "done"

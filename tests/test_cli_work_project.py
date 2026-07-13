@@ -69,7 +69,7 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
             ("doi-10.1000_import.2026",),
         ).fetchone()
         enrich = conn.execute(
-            "SELECT operation_id, status FROM operation_requests WHERE request_id = ?",
+            "SELECT operation_id, status, actor FROM operation_requests WHERE request_id = ?",
             ("enrich-doi-10.1000_import.2026",),
         ).fetchone()
     assert tuple(row) == (
@@ -77,7 +77,7 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
         "unchecked",
         output["result"]["content_path"],
     )
-    assert tuple(enrich) == ("enrich-source", "pending")
+    assert tuple(enrich) == ("enrich-source", "pending", "operation")
 
 
 def test_cli_work_add_file_stages_text_without_source_markdown(
@@ -866,6 +866,71 @@ def test_cli_project_compose_writes_draft(
         ("project-verify", "verify-project-draft"),
         ("project-verify-after-disposition", "verify-project-draft"),
     ]
+
+
+def test_cli_project_resolve_evidence_verifies_current_draft_before_disposition(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+    (workspace / "projects/project-alpha/outline.md").write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 -- Support\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "project",
+                "compose",
+                "--workspace",
+                str(workspace),
+                "project-alpha",
+                "--json",
+                "--idempotency-key",
+                "compose-before-stale-resolution",
+            ]
+        )
+        == 0
+    )
+    composed = json.loads(capsys.readouterr().out)
+    old_id = composed["result"]["evidence_markers"][0]["id"]
+    current_id = "ev-deadbeef"
+    draft = workspace / "projects/project-alpha/draft.md"
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(old_id, current_id),
+        encoding="utf-8",
+    )
+
+    rc = main(
+        [
+            "project",
+            "resolve-evidence",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--evidence-id",
+            current_id,
+            "--decision",
+            "accept",
+            "--json",
+            "--idempotency-key",
+            "verify-before-stale-resolution",
+        ]
+    )
+    resolved = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert resolved["ok"] is True
+    assert resolved["evidence_id"] == current_id
+    assert {row["id"] for row in state.evidence_sets(workspace)} == {current_id}
+    with state.connect(workspace) as conn:
+        verification = conn.execute(
+            "SELECT operation_id, status FROM operation_requests WHERE request_id = ?",
+            ("verify-before-stale-resolution",),
+        ).fetchone()
+    assert tuple(verification) == ("verify-project-draft", "done")
 
 
 def test_cli_new_note_check_and_link_flow(

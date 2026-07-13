@@ -14,6 +14,7 @@ from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_journal_event,
     commit_writer_changes,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import parse_frontmatter
 
@@ -46,6 +47,7 @@ def write_capability_index(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Write an ignored local cache of the product capability catalog."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     output = vault / normalize_path(output_path)
     text = render_capability_index(vault)

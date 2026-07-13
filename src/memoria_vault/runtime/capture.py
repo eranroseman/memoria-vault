@@ -19,6 +19,7 @@ from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_explicit_writer_changes,
     commit_writer_changes,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
@@ -90,6 +91,7 @@ def stage_catalog_source(
     check_status: str = "unchecked",
 ) -> dict[str, Any]:
     """Stage a source as a DB catalog row plus immutable blob payloads."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     work_id = _work_id(work_id)
     if not title.strip() or not description.strip():
@@ -200,6 +202,7 @@ def capture_source(
     workflow: str = "capture_source",
 ) -> dict[str, Any]:
     """Capture one source as a checked SQLite catalog row plus blob payloads."""
+    validate_operation_context(vault, context)
     return stage_catalog_source(
         vault,
         work_id,
@@ -300,6 +303,7 @@ def capture_bibtex_source(
     description: str | None = None,
 ) -> dict[str, Any]:
     """Capture one source from a local BibTeX entry."""
+    validate_operation_context(vault, context)
     payload = bibtex_capture_payload(
         bibtex,
         content_text=content_text,
@@ -395,6 +399,7 @@ def stage_capture_payload(
     workflow: str = "capture_source",
     check_status: str = "unchecked",
 ) -> dict[str, Any]:
+    validate_operation_context(vault, context)
     raw_text = payload.get("raw_text")
     return stage_catalog_source(
         vault,
@@ -427,6 +432,7 @@ def capture_url_source(
     timeout: float = 10.0,
 ) -> dict[str, Any]:
     """Capture one URL snapshot with stdlib HTML text extraction."""
+    validate_operation_context(vault, context)
     return _store_url_source(
         vault,
         url,
@@ -448,6 +454,7 @@ def stage_url_source(
     timeout: float = 10.0,
 ) -> dict[str, Any]:
     """Stage one URL snapshot as an unchecked DB row plus text/blob payloads."""
+    validate_operation_context(vault, context)
     return _store_url_source(
         vault,
         url,
@@ -517,6 +524,7 @@ def capture_pdf_source(
     citekey: str = "",
 ) -> dict[str, Any]:
     """Capture a PDF raw blob and extracted page text."""
+    validate_operation_context(vault, context)
     return _store_pdf_source(
         vault,
         work_id,
@@ -552,6 +560,7 @@ def stage_pdf_source(
     citekey: str = "",
 ) -> dict[str, Any]:
     """Stage a PDF raw blob and extracted text as an unchecked DB row."""
+    validate_operation_context(vault, context)
     return _store_pdf_source(
         vault,
         work_id,
@@ -652,6 +661,7 @@ def write_references_bib(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Write the generated bibliography.bib projection."""
+    validate_operation_context(vault, context)
     return _write_references_bib(
         vault,
         output_path=output_path,
@@ -673,7 +683,7 @@ def write_references_bib_explicit(
     """Write bibliography projection outside an operation envelope."""
     if actor not in state.ACTORS:
         raise ValueError(f"projection actor must be one of {sorted(state.ACTORS)}")
-    if not machine.strip():
+    if not isinstance(machine, str) or not machine.strip():
         raise ValueError("projection machine must be nonblank")
     return _write_references_bib(
         vault,

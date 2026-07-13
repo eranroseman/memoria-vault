@@ -18,7 +18,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
-from memoria_vault.runtime.trusted_writer import OperationContext
+from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
@@ -29,6 +29,7 @@ def rebuild_checked_search_index(
     vault: Path, output_root: str = SEARCH_INPUT_ROOT, *, context: OperationContext
 ) -> dict[str, Any]:
     """Rebuild the disposable checked retrieval tree and BM25 manifest."""
+    validate_operation_context(vault, context)
     return _rebuild_checked_search_index(
         vault,
         output_root,
@@ -48,7 +49,7 @@ def rebuild_checked_search_index_explicit(
     """Rebuild checked retrieval outside an operation envelope."""
     if actor not in state.ACTORS:
         raise ValueError(f"search actor must be one of {sorted(state.ACTORS)}")
-    if not machine.strip():
+    if not isinstance(machine, str) or not machine.strip():
         raise ValueError("search machine must be nonblank")
     return _rebuild_checked_search_index(
         vault,
@@ -207,6 +208,7 @@ def answer_query(
     project_id: str = "",
 ) -> dict[str, Any]:
     """Return a deterministic Ask/Query contract over checked retrieval hits."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     indexing.refresh_stale_passages(vault, context=context)
     docs = [
@@ -232,6 +234,7 @@ def search_checked_index(
     include_stale: bool = False,
 ) -> list[dict[str, Any]]:
     """Return BM25 hits over checked retrieval documents."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     indexing.refresh_stale_passages(vault, context=context)
     docs = checked_search_documents(vault, include_stale=include_stale)

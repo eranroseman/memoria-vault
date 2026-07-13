@@ -758,7 +758,7 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
         vault,
         "observe-pi-edits",
         idempotency_key="observe-pi",
-        actor="pi",
+        actor="integrity",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -771,6 +771,7 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
     assert state.concept_check_status(vault, "notes/pi.md") == "unchecked"
     event_log = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert event_log[-1]["event"] == "observed_external_edit"
+    assert event_log[-1]["actor"] == "pi"
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT check_status FROM outputs WHERE output_id = 'notes/pi.md'"
@@ -831,7 +832,12 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
 
     source_path = vault / source_rel
     source_path.write_text(note_text() + "\nEdited source.\n", encoding="utf-8")
-    enqueue_operation(vault, "observe-pi-edits", idempotency_key="observe-source-edit", actor="pi")
+    enqueue_operation(
+        vault,
+        "observe-pi-edits",
+        idempotency_key="observe-source-edit",
+        actor="integrity",
+    )
     done = run_next_job(vault, machine="test-machine")
 
     assert done is not None
@@ -871,7 +877,10 @@ def test_observe_pi_edits_quarantines_changed_tracked_projection(tmp_path: Path)
     )
 
     enqueue_operation(
-        vault, "observe-pi-edits", idempotency_key="observe-projection-edit", actor="pi"
+        vault,
+        "observe-pi-edits",
+        idempotency_key="observe-projection-edit",
+        actor="integrity",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -899,7 +908,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
         vault,
         "observe-pi-edits",
         idempotency_key="observe-pi",
-        actor="pi",
+        actor="integrity",
     )
     run_next_job(vault, machine="test-machine")
 

@@ -30,6 +30,7 @@ from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
     promote_checked,
     stage_concept,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import concept_text
 
@@ -114,9 +115,6 @@ def prepare_seeded_error_fixture(
     """Create the disposable fixture used by the seeded-error verdict gate."""
     vault = Path(vault)
     template_root = Path(template_root)
-    _copy_once(template_root / ".memoria/schemas", vault / ".memoria/schemas")
-    _copy_once(template_root / ".memoria/config", vault / ".memoria/config")
-    _ensure_git(vault)
     request = (
         state.request_job(template_root, context.request_id)
         if state.db_path(template_root).is_file()
@@ -124,8 +122,19 @@ def prepare_seeded_error_fixture(
     ) or state.request_job(vault, context.request_id)
     if request is None or not isinstance(request.get("request_envelope"), dict):
         raise ValueError(f"seeded verdict request does not exist: {context.request_id}")
+    request_root = (
+        template_root
+        if state.db_path(template_root).is_file()
+        and state.request_job(template_root, context.request_id) is not None
+        else vault
+    )
+    validate_operation_context(request_root, context)
     if state.request_job(vault, context.request_id) is None:
         state.save_request(vault, request["request_envelope"], request)
+    validate_operation_context(vault, context)
+    _copy_once(template_root / ".memoria/schemas", vault / ".memoria/schemas")
+    _copy_once(template_root / ".memoria/config", vault / ".memoria/config")
+    _ensure_git(vault)
 
     source = capture_source(
         vault,
@@ -454,6 +463,14 @@ def run_seeded_error_verdict(
 ) -> dict[str, Any]:
     """Run the seeded-error check against a disposable vault."""
     vault = Path(vault)
+    template_root = Path(template_root)
+    context_root = (
+        template_root
+        if state.db_path(template_root).is_file()
+        and state.request_job(template_root, context.request_id) is not None
+        else vault
+    )
+    validate_operation_context(context_root, context)
     operation_id = str(operation_id or DEFAULT_OPERATION_ID).strip() or DEFAULT_OPERATION_ID
     bundle = load_seeded_error_bundle(bundle_path)
     fixture = prepare_seeded_error_fixture(vault, template_root, context=context)

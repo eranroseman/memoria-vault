@@ -26,6 +26,7 @@ from memoria_vault.runtime.trusted_writer import (
     normalize_promotion_checks,
     promote_checked,
     stage_concept,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import (
     concept_text,
@@ -61,6 +62,7 @@ def record_copi_interview_turn(
     project_id: str = "",
 ) -> dict[str, Any]:
     """Record one PI interview turn for later source synthesis."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     work_id = _work_id(work_id)
     source_ref = _source_ref(work_id)
@@ -108,6 +110,7 @@ def record_empirical_event(
     context: OperationContext,
 ) -> dict[str, Any]:
     """Validate and append one empirical-use event."""
+    validate_operation_context(vault, context)
     from memoria_vault.engine.empirical_events import (
         EMPIRICAL_EVENT_RECORD_OPERATION,
         EMPIRICAL_EVENT_SCHEMA,
@@ -304,6 +307,7 @@ def run_prompt_operation(
     mode: str | None = None,
 ) -> dict[str, Any]:
     """Run one checked prompt operation through the standard staged write path."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
     runner = resolve_operation_runner(vault, policy, mode)
@@ -413,6 +417,7 @@ def run_operation_model_text(
     purpose: str,
 ) -> dict[str, Any]:
     """Run a policy-scoped text model call and record the model-call event."""
+    validate_operation_context(vault, context)
     output = _run_prompt_model(policy, runner, prompt, input_text)
     model_call = append_journal_event(
         Path(vault),
@@ -449,6 +454,7 @@ def compile_source_digest(
     mode: str | None = None,
 ) -> dict[str, Any]:
     """Compile one checked source into a checked digest plus hub suggestions."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
     runner = resolve_operation_runner(vault, policy, mode)

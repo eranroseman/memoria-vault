@@ -440,6 +440,41 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
     }
 
 
+def test_http_transport_operation_run_cannot_claim_pi_authority(workspace: Path) -> None:
+    _write_attention(workspace, "agent-cannot-resolve")
+
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "resolve-attention",
+            "payload": {
+                "target_id": "inbox/agent-cannot-resolve.md",
+                "outcome": "apply",
+                "routing_class": "ask",
+                "reason": "caller claimed PI authority",
+            },
+            "idempotency_key": "http-agent-cannot-resolve",
+            "actor": "pi",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert response["ok"] is False
+    assert response["result"]["status"] == "failed"
+    assert response["result"]["error"] == "resolve-attention requires PI actor authority"
+    with state.connect(workspace) as conn:
+        request = conn.execute(
+            "SELECT actor FROM operation_requests WHERE request_id = ?",
+            ("http-agent-cannot-resolve",),
+        ).fetchone()
+    assert request["actor"] == "agent"
+    assert "attention_status: open" in (workspace / "inbox/agent-cannot-resolve.md").read_text(
+        encoding="utf-8"
+    )
+
+
 def test_http_transport_operation_run_records_empirical_event_once(workspace: Path) -> None:
     event_id = str(uuid.uuid4())
     event = {

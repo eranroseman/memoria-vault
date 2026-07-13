@@ -328,7 +328,11 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
         row = conn.execute(
             "SELECT check_status FROM catalog_sources WHERE work_id = 'source-alpha'"
         ).fetchone()
+        enrichment_run = conn.execute(
+            "SELECT request_id FROM enrichment_runs WHERE run_id = 'enrich-alpha'"
+        ).fetchone()
     assert row["check_status"] == "unchecked"
+    assert enrichment_run["request_id"] == "enrich-alpha"
     events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[-1]["event"] == "check-fired"
     assert "missing required provider: unpaywall" in events[-1]["reason"]

@@ -36,6 +36,7 @@ from memoria_vault.runtime.trusted_writer import (
     materialize_unchecked,
     promote_checked,
     stage_concept,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
@@ -112,6 +113,7 @@ def frame_project_paper(
     paper_plan: dict[str, Any],
 ) -> dict[str, Any]:
     """Record PI-supplied paper framing fields on a project and leave it unchecked."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     path = vault / project_rel
@@ -179,6 +181,7 @@ def emit_note_candidates(
     mode: str | None = None,
 ) -> dict[str, Any]:
     """Promote checked note candidates derived from one checked digest."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
     runner = resolve_operation_runner(vault, policy, mode)
@@ -293,6 +296,7 @@ def curate_note_candidate(
     reason: str = "",
 ) -> dict[str, Any]:
     """Record PI acceptance or rejection of a checked candidate note."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     note_rel = _note_rel(note_path)
     status = status.strip().lower()
@@ -335,6 +339,7 @@ def curate_note_link(
     reason: str = "",
 ) -> dict[str, Any]:
     """Record one PI-authored typed link on a checked note."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     source_rel = _note_rel(source_note_path)
     target_rel = _concept_rel(target_path)
@@ -404,6 +409,7 @@ def analyze_gaps(
     project_path: str = "",
 ) -> dict[str, Any]:
     """Classify source/note topic mismatches over checked Concepts and search hits."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_path = project_path.strip()
     project_argument: dict[str, Any] | None = None
@@ -412,7 +418,7 @@ def analyze_gaps(
     if project_path:
         project_argument = analyze_project_argument(vault, project_path)
         argument_gaps = _project_argument_gaps(project_argument)
-        paper_gaps = _project_paper_readiness_gaps(vault, project_path)
+        paper_gaps = _project_paper_readiness_gaps(vault, project_path, context=context)
     counts: dict[str, dict[str, int]] = defaultdict(
         lambda: {"sources": 0, "digests": 0, "notes": 0}
     )
@@ -897,8 +903,10 @@ def _project_argument_gaps(argument: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def _project_paper_readiness_gaps(vault: Path, project_path: str) -> list[dict[str, Any]]:
-    readiness = project_export_readiness(vault, project_path)
+def _project_paper_readiness_gaps(
+    vault: Path, project_path: str, *, context: OperationContext
+) -> list[dict[str, Any]]:
+    readiness = project_export_readiness(vault, project_path, context=context)
     if readiness["ready"]:
         return []
     missing = ", ".join(readiness["missing"])
@@ -1774,6 +1782,7 @@ def write_project_argument_canvas(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Write the checked project argument graph as a generated Canvas projection."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     canvas_rel = _project_canvas_rel(project_rel)
@@ -1820,6 +1829,7 @@ def propose_project_slice(
     limit: int = 20,
 ) -> dict[str, Any]:
     """Propose checked note membership for a project slice using BM25 only."""
+    validate_operation_context(vault, context)
     from memoria_vault.runtime.search_index import search_checked_index
 
     vault = Path(vault)
@@ -1875,6 +1885,7 @@ def write_project_outline(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Write a host-neutral project outline from a BM25 project-slice proposal."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     proposal = propose_project_slice(vault, project_path, query=query, limit=limit, context=context)
     outline_rel = str(proposal["outline_path"])
@@ -1930,6 +1941,7 @@ def compose_project_draft(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Compose a deterministic draft from a project's outline slice."""
+    validate_operation_context(vault, context)
     from memoria_vault.runtime.evidence import (
         EvidenceMarker,
         evidence_ids_in_text,
@@ -1995,7 +2007,7 @@ def compose_project_draft(
     draft_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     rebuild = state.rebuild_evidence_sets_from_markers(
         vault,
-        run_id=f"compose-project-draft:{project_rel}",
+        run_id=context.run_id,
     )
     draft = read_project_draft(vault, project_rel)
     event = None
@@ -2078,6 +2090,7 @@ def verify_project_draft(
     max_findings: int = 20,
 ) -> dict[str, Any]:
     """Run deterministic structural/evidence checks for a composed project draft."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     _checked_frontmatter(vault, project_rel, "project")
@@ -2097,7 +2110,7 @@ def verify_project_draft(
         }
     rebuild = state.rebuild_evidence_sets_from_markers(
         vault,
-        run_id=f"verify-project-draft:{project_rel}",
+        run_id=context.run_id,
     )
     draft = read_project_draft(vault, project_rel)
     findings = []
@@ -2185,6 +2198,7 @@ def promote_draft_passage(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Extract a selected draft passage into a new unchecked note."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     draft_rel = _project_draft_rel(project_rel)
@@ -2397,6 +2411,7 @@ def write_project_export(
     draft: bool = False,
 ) -> dict[str, Any]:
     """Write or return a deterministic project export."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     export_format = export_format.strip().lower() or "markdown"
     if export_format not in {"markdown", "docx", "pdf", "odt"}:
@@ -2405,7 +2420,7 @@ def write_project_export(
         rendered = render_project_draft_export_markdown(vault, project_path, context=context)
         readiness = rendered["readiness"]
     else:
-        readiness = project_export_readiness(vault, project_path)
+        readiness = project_export_readiness(vault, project_path, context=context)
         if ready_only and not readiness["ready"]:
             missing = ", ".join(readiness["missing"])
             raise ValueError(f"project is not export-ready: {missing}")
@@ -2452,6 +2467,7 @@ def render_project_draft_export_markdown(
     vault: Path, project_path: str, *, context: OperationContext
 ) -> dict[str, Any]:
     """Render a verified project draft with internal evidence markers stripped."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     verification = verify_project_draft(vault, project_path, context=context)
     if not verification["ok"]:
@@ -2471,8 +2487,11 @@ def render_project_draft_export_markdown(
     }
 
 
-def project_export_readiness(vault: Path, project_path: str) -> dict[str, Any]:
+def project_export_readiness(
+    vault: Path, project_path: str, *, context: OperationContext
+) -> dict[str, Any]:
     """Return structural export readiness for a checked paper project."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     project = _checked_frontmatter(vault, project_rel, "project")
@@ -2485,7 +2504,7 @@ def project_export_readiness(vault: Path, project_path: str) -> dict[str, Any]:
     if argument["supports_count"] < 1:
         missing.append("checked support")
     if (vault / _project_draft_rel(project_rel)).is_file():
-        draft_verification = verify_project_draft(vault, project_rel)
+        draft_verification = verify_project_draft(vault, project_rel, context=context)
         missing.extend(draft_verification["missing"])
     return {
         "ready": not missing,

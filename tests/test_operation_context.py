@@ -3,7 +3,7 @@
 import inspect
 import json
 from collections.abc import Callable
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from typing import Any
 
@@ -61,6 +61,13 @@ def _saved_operation_context(
             "job_id": context.request_id,
             "kind": "operation",
             "operation_id": context.operation_id,
+            "bound_context": {
+                "actor": context.actor,
+                "run_id": context.run_id,
+                "request_id": context.request_id,
+                "operation_id": context.operation_id,
+                "machine": context.machine,
+            },
         },
     )
     return context
@@ -296,6 +303,13 @@ def test_context_journal_rejects_non_mapping_request_provenance_before_mutation(
             "job_id": context.request_id,
             "kind": "operation",
             "operation_id": context.operation_id,
+            "bound_context": {
+                "actor": context.actor,
+                "run_id": context.run_id,
+                "request_id": context.request_id,
+                "operation_id": context.operation_id,
+                "machine": context.machine,
+            },
         },
     )
 
@@ -400,6 +414,239 @@ def test_context_builder_failure_records_failed_request_without_mutation(
     assert not (workspace / "notes/invalid-context.md").exists()
     assert not list((workspace / ".memoria/journal").glob("*.jsonl"))
     with state.connect(workspace) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+
+
+def test_worker_binds_exact_context_to_running_request_before_dispatch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    queued = worker.enqueue_operation(
+        tmp_path,
+        "test-bound-context",
+        payload={"run_id": "bound-run"},
+        idempotency_key="bound-request",
+        actor="agent",
+    )
+    seen: dict[str, Any] = {}
+
+    def inspect_dispatch(
+        vault: Path, job: dict[str, Any], context: OperationContext
+    ) -> dict[str, Any]:
+        persisted = state.request_job(vault, context.request_id)
+        assert persisted is not None
+        assert persisted["status"] == "running"
+        assert persisted["bound_context"] == trusted_writer.operation_context_record(context)
+        seen["bound_context"] = persisted["bound_context"]
+        return {}
+
+    monkeypatch.setattr(worker, "_run_job", inspect_dispatch)
+
+    result = worker.run_request(tmp_path, queued["job_id"], machine="agent laptop")
+
+    assert result["status"] == "done"
+    assert seen["bound_context"] == {
+        "actor": "agent",
+        "run_id": "bound-run",
+        "request_id": "bound-request",
+        "operation_id": "test-bound-context",
+        "machine": "agent_laptop",
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("actor", "integrity"),
+        ("run_id", "forged-run"),
+        ("request_id", "missing-request"),
+        ("operation_id", "forged-operation"),
+        ("machine", "forged-machine"),
+    ],
+)
+def test_forged_or_nonexistent_context_rejected_without_journal_mutation(
+    tmp_path: Path,
+    field: str,
+    value: str,
+) -> None:
+    context = _saved_operation_context(tmp_path)
+    forged = replace(context, **{field: value})
+
+    with pytest.raises(ValueError, match=r"context|request"):
+        trusted_writer.append_journal_event(
+            tmp_path,
+            {"event": "derived", "output_id": "notes/forged.md"},
+            context=forged,
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
+def test_stage_rejects_forged_context_before_file_or_database_mutation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    context = _saved_operation_context(workspace)
+    forged = replace(context, actor="integrity")
+
+    with pytest.raises(ValueError, match="context"):
+        trusted_writer.stage_concept(
+            workspace,
+            "notes/forged-stage.md",
+            _note_content("Forged stage"),
+            context=forged,
+        )
+
+    assert not (workspace / ".memoria/staging/notes/forged-stage.md").exists()
+    with state.connect(workspace) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM outputs").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM derivations").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+    assert not list((workspace / ".memoria/journal").glob("*.jsonl"))
+
+
+def test_materialize_rejects_nonexistent_context_before_move(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    context = _saved_operation_context(workspace)
+    trusted_writer.stage_concept(
+        workspace,
+        "notes/materialize-boundary.md",
+        _note_content("Materialize boundary"),
+        context=context,
+    )
+    staging = workspace / ".memoria/staging/notes/materialize-boundary.md"
+    missing = replace(context, request_id="missing-request")
+
+    with pytest.raises(ValueError, match="request"):
+        trusted_writer.materialize_unchecked(
+            workspace,
+            "notes/materialize-boundary.md",
+            context=missing,
+        )
+
+    assert staging.is_file()
+    assert not (workspace / "notes/materialize-boundary.md").exists()
+
+
+def test_quarantine_rejects_nonexistent_context_before_move_or_state_change(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    target = workspace / "notes/quarantine-boundary.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(_note_content("Quarantine boundary"), encoding="utf-8")
+    missing = OperationContext(
+        "integrity", "scan-run", "missing-request", "trace-integrity-scan", "scanner"
+    )
+
+    with pytest.raises(ValueError, match="request"):
+        trusted_writer.quarantine_untraced(
+            workspace,
+            ["notes/quarantine-boundary.md"],
+            context=missing,
+        )
+
+    assert target.is_file()
+    assert not (workspace / ".memoria/quarantine/notes/quarantine-boundary.md").exists()
+    with state.connect(workspace) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+
+
+def test_commit_rejects_nonexistent_context_before_git_or_anchor_mutation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    target = workspace / "scratch.txt"
+    target.write_text("uncommitted\n", encoding="utf-8")
+    before_head = worker.subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=workspace,
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout.strip()
+    missing = OperationContext(
+        "operation", "commit-run", "missing-request", "test-commit", "writer"
+    )
+
+    with pytest.raises(ValueError, match="request"):
+        trusted_writer.commit_writer_changes(
+            workspace,
+            "must not commit",
+            ["scratch.txt"],
+            context=missing,
+        )
+
+    after_head = worker.subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=workspace,
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout.strip()
+    assert after_head == before_head
+    assert target.is_file()
+
+
+def test_projection_rejects_nonexistent_context_before_write(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from memoria_vault.runtime.projections import write_workspace_indexes
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    index = workspace / "index.md"
+    index.write_text("sentinel\n", encoding="utf-8")
+    missing = OperationContext(
+        "operation", "projection-run", "missing-request", "projection", "writer"
+    )
+
+    with pytest.raises(ValueError, match="request"):
+        write_workspace_indexes(workspace, context=missing)
+
+    assert index.read_text(encoding="utf-8") == "sentinel\n"
+
+
+def test_explicit_scan_propagation_rejects_blank_machine_at_entry(tmp_path: Path) -> None:
+    from memoria_vault.runtime.integrity import propagate_scan_demotion_explicit
+
+    with pytest.raises(ValueError, match="machine"):
+        propagate_scan_demotion_explicit(
+            tmp_path,
+            "notes/source.md",
+            reason="test",
+            actor="integrity",
+            machine=" ",
+        )
+
+
+def test_explicit_pi_observation_rejects_blank_machine_before_database_mutation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    target = workspace / "notes/blank-machine.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(_note_content("Blank machine"), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="machine"):
+        trusted_writer.observe_pi_edit(
+            workspace,
+            "notes/blank-machine.md",
+            "sha256:prior",
+            machine=" ",
+        )
+
+    with state.connect(workspace) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM outputs").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM concept_verdicts").fetchone()[0] == 0
         assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
 
 
@@ -697,3 +944,96 @@ def test_scheduled_sweep_requests_declare_integrity_actor(tmp_path: Path) -> Non
             ("scheduled-actor",),
         ).fetchall()
     assert [row["actor"] for row in actors] == ["integrity"]
+
+
+def test_read_barrier_scan_request_row_declares_integrity_actor(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    worker.enqueue_trusted_write(
+        workspace,
+        "notes/read-barrier.md",
+        _note_content("Read barrier"),
+        idempotency_key="read-barrier-write",
+        actor="operation",
+    )
+    worker.run_next_job(workspace, machine="writer")
+    path = workspace / "notes/read-barrier.md"
+    path.write_text(path.read_text(encoding="utf-8") + "\nExternal edit.\n", encoding="utf-8")
+
+    assert is_consumable_checked_file(workspace, "notes/read-barrier.md") is False
+
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            """
+            SELECT operation_id, actor, schedule_id
+            FROM operation_requests
+            WHERE schedule_id = 'read-guard'
+            """
+        ).fetchone()
+    assert tuple(row) == ("observe-pi-edits", "integrity", "read-guard")
+
+
+def test_observe_pi_edits_rejects_non_integrity_request_before_mutation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    request = worker.enqueue_operation(
+        workspace,
+        "observe-pi-edits",
+        idempotency_key="pi-scan-authority",
+        actor="pi",
+    )
+
+    result = worker.run_request(workspace, request["job_id"], machine="scanner")
+
+    assert result["status"] == "failed"
+    assert "integrity" in result["error"]
+    assert not list((workspace / ".memoria/journal").glob("*.jsonl"))
+    with state.connect(workspace) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+
+
+def test_integrity_scan_keeps_nested_external_edit_actor_pi(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    worker.enqueue_trusted_write(
+        workspace,
+        "notes/nested-pi.md",
+        _note_content("Nested PI"),
+        idempotency_key="nested-pi-write",
+        actor="operation",
+    )
+    worker.run_next_job(workspace, machine="writer")
+    path = workspace / "notes/nested-pi.md"
+    path.write_text(path.read_text(encoding="utf-8") + "\nPI edit.\n", encoding="utf-8")
+    request = worker.enqueue_operation(
+        workspace,
+        "observe-pi-edits",
+        idempotency_key="nested-pi-scan",
+        actor="integrity",
+    )
+
+    result = worker.run_request(workspace, request["job_id"], machine="scanner")
+
+    assert result["status"] == "done"
+    with state.connect(workspace) as conn:
+        request_actor = conn.execute(
+            "SELECT actor FROM operation_requests WHERE request_id = 'nested-pi-scan'"
+        ).fetchone()["actor"]
+        payloads = [
+            json.loads(row["payload_json"])
+            for row in conn.execute(
+                "SELECT payload_json FROM event_log WHERE event_type = 'observed_external_edit'"
+            )
+        ]
+    assert request_actor == "integrity"
+    assert len(payloads) == 1
+    assert payloads[0]["actor"] == "pi"
+    assert payloads[0]["operation"] == "observe-pi-edits"

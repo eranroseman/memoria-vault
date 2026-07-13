@@ -109,6 +109,33 @@ def _required_context_identifier(source: Mapping[str, Any], key: str, label: str
     return value.strip()
 
 
+def operation_context_record(context: OperationContext) -> dict[str, str]:
+    """Return the exact persisted representation of one built context."""
+    return {
+        "actor": context.actor,
+        "run_id": context.run_id,
+        "request_id": context.request_id,
+        "operation_id": context.operation_id,
+        "machine": context.machine,
+    }
+
+
+def validate_operation_context(vault: Path, context: OperationContext) -> Mapping[str, Any]:
+    """Authenticate a request context against the worker-bound request record."""
+    if context.actor not in state.ACTORS:
+        raise ValueError(f"operation context actor must be one of {sorted(state.ACTORS)}")
+    for field in ("run_id", "request_id", "operation_id", "machine"):
+        value = getattr(context, field)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"operation context {field} must be a nonblank string")
+    request = state.request_job(vault, context.request_id)
+    if request is None:
+        raise ValueError(f"operation context request does not exist: {context.request_id}")
+    if request.get("bound_context") != operation_context_record(context):
+        raise ValueError("operation context does not match the bound request context")
+    return request
+
+
 def normalize_promotion_checks(
     checks: Iterable[str] | None = None,
     *,
@@ -151,10 +178,8 @@ def append_journal_event(
     context: OperationContext,
 ) -> dict[str, Any]:
     """Append one request event with provenance owned by its operation context."""
+    request = validate_operation_context(vault, context)
     row = _decorate_context_event(event, context)
-    request = state.request_job(vault, context.request_id)
-    if request is None:
-        raise ValueError(f"journal request does not exist: {context.request_id}")
     envelope = request.get("request_envelope")
     provenance = envelope.get("provenance") if isinstance(envelope, Mapping) else None
     if not isinstance(provenance, Mapping):
@@ -199,6 +224,7 @@ def commit_writer_changes(
     context: OperationContext,
 ) -> str:
     """Commit request-owned files plus the SQLite journal-head anchor."""
+    validate_operation_context(vault, context)
     return _commit_writer_changes(vault, message, paths)
 
 
@@ -286,6 +312,8 @@ def observe_pi_edit(
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Backfill provenance for a direct PI edit and make it ineligible until checked."""
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("PI edit observation machine must be a nonblank string")
     vault = Path(vault)
     target = _target_path(target_path)
     contract = _load_contract(vault, schemas_dir)
@@ -352,6 +380,7 @@ def observe_pi_edits_from_status(
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Observe PI edits while preserving the enclosing integrity request context."""
+    validate_operation_context(vault, context)
     return _observe_pi_edits_from_status(
         vault,
         context=context,
@@ -381,7 +410,7 @@ def observe_pi_edits_explicit_from_status(
         paths=paths,
         schemas_dir=schemas_dir,
         explicit_actor=actor,
-        explicit_machine=safe_filename(machine),
+        explicit_machine=machine,
     )
 
 
@@ -483,6 +512,7 @@ def mark_checked(
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Mark an existing live Concept checked after the worker's checks pass."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
     promotion_checks = normalize_promotion_checks([check] if checks is None else checks)
@@ -513,6 +543,7 @@ def stage_concept(
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Validate a machine Concept request, stage it unchecked, and journal derivation."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
     contract = _load_contract(vault, schemas_dir)
@@ -556,6 +587,7 @@ def promote_checked(
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Promote a staged Concept into its bundle only after it validates as checked."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
     promotion_checks = normalize_promotion_checks([check] if checks is None else checks)
@@ -585,6 +617,7 @@ def materialize_unchecked(
     vault: Path, target_path: str, *, context: OperationContext
 ) -> dict[str, Any]:
     """Move a staged unchecked Concept into its bundle without promotion."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
     staged_path = _staged_path(vault, target)
@@ -605,6 +638,7 @@ def quarantine_untraced(
     reason: str = "foreign-untraced",
 ) -> list[dict[str, Any]]:
     """Move explicit bundle files whose current hash is not journal-backed."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     known = _known_current_hashes(vault)
     events: list[dict[str, Any]] = []
@@ -662,6 +696,7 @@ def quarantine_untraced_from_status(
     schemas_dir: Path | None = None,
 ) -> list[dict[str, Any]]:
     """Quarantine untraced bundle files reported by git status."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     contract = _load_contract(vault, schemas_dir)
     return quarantine_untraced(

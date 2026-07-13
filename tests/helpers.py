@@ -39,6 +39,13 @@ def operation_context(
         "kind": "operation",
         "operation_id": operation_id,
         "status": "done",
+        "bound_context": {
+            "actor": actor,
+            "run_id": run_id,
+            "request_id": request_id,
+            "operation_id": operation_id,
+            "machine": machine,
+        },
     }
     saved = state.save_request(
         vault,

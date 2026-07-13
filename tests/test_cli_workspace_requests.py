@@ -190,10 +190,10 @@ def test_cli_workspace_scan_reports_schedule_id_for_file_watch(
     assert output["job"]["request_envelope"]["schedule_id"] == "file-watch"
     with state.connect(workspace) as conn:
         row = conn.execute(
-            "SELECT operation_id, schedule_id FROM operation_requests WHERE request_id = ?",
+            "SELECT operation_id, schedule_id, actor FROM operation_requests WHERE request_id = ?",
             ("scheduled-scan",),
         ).fetchone()
-    assert tuple(row) == ("observe-pi-edits", "file-watch")
+    assert tuple(row) == ("observe-pi-edits", "file-watch", "integrity")
 
 
 def test_cli_serve_watch_once_runs_file_watch_scan(
@@ -223,10 +223,10 @@ def test_cli_serve_watch_once_runs_file_watch_scan(
     assert output["job"]["request_envelope"]["schedule_id"] == "file-watch"
     with state.connect(workspace) as conn:
         row = conn.execute(
-            "SELECT operation_id, schedule_id FROM operation_requests WHERE request_id = ?",
+            "SELECT operation_id, schedule_id, actor FROM operation_requests WHERE request_id = ?",
             ("serve-watch-once",),
         ).fetchone()
-    assert tuple(row) == ("observe-pi-edits", "file-watch")
+    assert tuple(row) == ("observe-pi-edits", "file-watch", "integrity")
 
 
 def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(

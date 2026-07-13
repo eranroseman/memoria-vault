@@ -28,6 +28,7 @@ from memoria_vault.runtime.trusted_writer import (
     append_explicit_journal_event,
     append_journal_event,
     commit_writer_changes,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import (
     iter_markdown,
@@ -87,6 +88,7 @@ def record_integrity_check(
     auto_revert: bool = False,
 ) -> dict[str, Any]:
     """Record one check verdict with shadow-first routing metadata."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     target = normalize_path(target_id)
     target_path = vault / target
@@ -126,6 +128,7 @@ def check_evidence_integrity(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked notes/digests whose declared evidence is not checked."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -175,6 +178,7 @@ def check_claim_quote_support(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked notes whose claim has no substantive term overlap with its quote."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -212,6 +216,7 @@ def check_prompt_injection_markers(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked Concepts carrying explicit prompt-injection marker text."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for row in state.catalog_sources(vault):
@@ -264,6 +269,7 @@ def check_quote_anchor_support(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked notes whose quoted span is absent from checked source text."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -303,6 +309,7 @@ def check_source_metadata(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked sources whose bibliographic metadata is too thin."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for row in state.catalog_sources(vault, checked_only=False):
@@ -559,6 +566,7 @@ def check_citation_survival(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag a missing or stale generated bibliography.bib projection."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     if capture.render_references_bib(vault) and not capture.check_references_bib(vault):
@@ -589,6 +597,7 @@ def check_provenance_checkpoint(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked synthesis that depends on uncorroborated checked sources."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -629,6 +638,7 @@ def check_contradiction_links(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked digests whose explicit contradiction targets are not current."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -710,6 +720,7 @@ def surface_tensions(
     mode: str | None = None,
 ) -> dict[str, Any]:
     """Propose unchecked contradiction candidates; never writes contradiction links."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     compare = comparator or _compare_claims
     gate = contradiction_tier1_gate(comparator=compare)
@@ -857,6 +868,7 @@ def check_link_targets(
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked Concepts whose declared link targets are not current."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -900,6 +912,7 @@ def propagate_scan_demotion(
     reason: str,
 ) -> dict[str, Any]:
     """Propagate a scan-side demotion through checked downstream Concepts."""
+    validate_operation_context(vault, context)
     return _propagate_scan_demotion(
         vault,
         target_id,
@@ -919,6 +932,8 @@ def propagate_scan_demotion_explicit(
     """Propagate an explicit integrity scan outside an operation envelope."""
     if actor != "integrity":
         raise ValueError("explicit scan propagation actor must be integrity")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("explicit scan propagation machine must be a nonblank string")
     return _propagate_scan_demotion(
         vault,
         target_id,
@@ -1008,6 +1023,7 @@ def cascade_rollback(
     include_target: bool = False,
 ) -> dict[str, Any]:
     """Quarantine machine-derived descendants and flag PI-derived descendants."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     append_event = lambda event: append_journal_event(vault, event, context=context)
     target = normalize_path(target_id)
@@ -1077,6 +1093,7 @@ def resolve_attention(
     reason: str = "",
 ) -> dict[str, Any]:
     """Record a PI attention disposition through the worker-owned journal."""
+    validate_operation_context(vault, context)
     if resolution not in {"acknowledged", "resolved"}:
         raise ValueError(f"unsupported attention resolution: {resolution!r}")
     outcome = outcome or resolution
