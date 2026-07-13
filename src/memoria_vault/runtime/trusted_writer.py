@@ -908,6 +908,8 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
     with state.workspace_lock(vault):
+        if _normalize_journal_export_tails(vault):
+            reconcile_journal_export(vault)
         state._append_journal_row(vault, event, machine=machine)
         state.write_journal_head_anchor(vault)
         append_jsonl(_journal_path(vault, machine), [event])
@@ -943,8 +945,7 @@ def reconcile_journal_export(vault: Path) -> int:
     """Re-emit authoritative rows missing from per-machine JSONL exports."""
     vault = Path(vault)
     with state.workspace_lock(vault):
-        for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
-            _truncate_partial_jsonl_tail(path)
+        _normalize_journal_export_tails(vault)
         exported = Counter(
             (machine, _canonical_journal_event(event))
             for machine, event in _iter_journal_exports(vault)
@@ -980,6 +981,13 @@ def _canonical_journal_event(event: dict[str, Any]) -> str:
     return json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
+def _normalize_journal_export_tails(vault: Path) -> bool:
+    normalized = False
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
+        normalized = _truncate_partial_jsonl_tail(path) or normalized
+    return normalized
+
+
 def _truncate_partial_jsonl_tail(path: Path) -> bool:
     try:
         data = path.read_bytes()
@@ -988,12 +996,6 @@ def _truncate_partial_jsonl_tail(path: Path) -> bool:
     if not data or data.endswith((b"\n", b"\r")):
         return False
     tail_start = data.rfind(b"\n") + 1
-    try:
-        event = json.loads(data[tail_start:].decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        event = None
-    if isinstance(event, dict):
-        return False
     write_bytes_durable(path, data[:tail_start])
     return True
 

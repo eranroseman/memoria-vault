@@ -2003,7 +2003,10 @@ def _cmd_journal_show(args: argparse.Namespace) -> int:
 
 
 def _cmd_journal_verify(args: argparse.Namespace) -> int:
-    return _emit(state.verify_journal_chain(_workspace(args)), args)
+    workspace = _workspace(args)
+    with _workspace_lock(workspace):
+        report = state.verify_journal_chain(workspace)
+    return _emit(report, args)
 
 
 def _enqueue_and_run(

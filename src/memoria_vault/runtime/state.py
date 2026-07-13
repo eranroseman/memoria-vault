@@ -647,23 +647,19 @@ def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
         machine = path.stem
         for line_number, raw_line in enumerate(lines, start=1):
             is_partial_tail = partial_tail and line_number == len(lines)
+            if is_partial_tail:
+                continue
             try:
                 line = raw_line.decode("utf-8")
             except UnicodeDecodeError:
-                if is_partial_tail:
-                    continue
                 return f"invalid UTF-8 in {path.name} at line {line_number}"
             if not line.strip():
                 continue
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
-                if is_partial_tail:
-                    continue
                 return f"invalid JSONL in {path.name} at line {line_number}"
             if not isinstance(event, dict):
-                if is_partial_tail:
-                    continue
                 return f"invalid JSONL object in {path.name} at line {line_number}"
             if event.get("machine") != machine:
                 return f"JSONL machine mismatch in {path.name} at line {line_number}"

@@ -454,6 +454,84 @@ def test_workspace_scan_repairs_partial_final_jsonl_line(tmp_path, capsys):
     assert state.verify_journal_chain(vault)["ok"] is True
 
 
+def test_append_reemits_unterminated_complete_jsonl_tail_before_next_event(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    first = trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "lost-newline", "status": "started"},
+        actor="operation",
+        machine="journal-test",
+    )
+    path = vault / ".memoria/journal/journal-test.jsonl"
+    path.write_bytes(path.read_bytes().rstrip(b"\n"))
+
+    second = trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "next-append", "status": "started"},
+        actor="operation",
+        machine="journal-test",
+    )
+
+    assert list(iter_jsonl(path)) == [first, second]
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
+def test_workspace_scan_reemits_unterminated_complete_tail_and_db_only_row(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    first = trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "lost-newline", "status": "started"},
+        actor="operation",
+        machine="journal-test",
+    )
+    path = vault / ".memoria/journal/journal-test.jsonl"
+    path.write_bytes(path.read_bytes().rstrip(b"\n"))
+    db_only = {
+        "event": "run",
+        "run_id": "db-only-after-crash",
+        "status": "started",
+        "timestamp": "2026-07-12T00:00:00+00:00",
+        "actor": "operation",
+        "machine": "journal-test",
+    }
+    state._append_journal_row(vault, db_only, machine="journal-test")
+    state.write_journal_head_anchor(vault)
+
+    assert main(["workspace", "scan", "--workspace", str(vault), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["journal_reconciled"] == 2
+    assert list(iter_jsonl(path)) == [first, db_only]
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
+def test_workspace_scan_discards_unterminated_complete_jsonl_only_tail(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    authoritative = {
+        "event": "run",
+        "run_id": "authoritative-after-crash",
+        "status": "started",
+        "timestamp": "2026-07-12T00:00:00+00:00",
+        "actor": "operation",
+        "machine": "journal-test",
+    }
+    state._append_journal_row(vault, authoritative, machine="journal-test")
+    state.write_journal_head_anchor(vault)
+    path = vault / ".memoria/journal/journal-test.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({**authoritative, "run_id": "unterminated-export-only"}),
+        encoding="utf-8",
+    )
+
+    assert main(["workspace", "scan", "--workspace", str(vault), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["journal_reconciled"] == 1
+    assert list(iter_jsonl(path)) == [authoritative]
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
 def test_workspace_scan_serializes_journal_verify_and_reconcile(tmp_path, capsys, monkeypatch):
     vault = init_cli_workspace(tmp_path, capsys)
     lock_held = False
@@ -551,6 +629,70 @@ def test_append_and_reconcile_do_not_overlap_their_journal_snapshots(tmp_path, c
         "concurrent",
     ]
     assert state.verify_journal_chain(vault)["ok"] is True
+
+
+def test_journal_verify_cli_waits_for_inflight_append(tmp_path, capsys, monkeypatch):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault, count=1)
+    row_written = threading.Event()
+    release_append = threading.Event()
+    verify_lock_attempted = threading.Event()
+    emitted: list[dict] = []
+    original_append = state._append_journal_row
+    original_lock = cli._workspace_lock
+
+    def pause_after_authoritative_write(vault, event, *, machine):
+        original_append(vault, event, machine=machine)
+        row_written.set()
+        assert release_append.wait(timeout=2)
+
+    @contextmanager
+    def observe_verify_lock(workspace):
+        verify_lock_attempted.set()
+        with original_lock(workspace):
+            yield
+
+    def capture_emit(payload, _args):
+        emitted.append(payload)
+        return 0 if payload["ok"] else 1
+
+    monkeypatch.setattr(state, "_append_journal_row", pause_after_authoritative_write)
+    monkeypatch.setattr(cli, "_workspace_lock", observe_verify_lock)
+    monkeypatch.setattr(cli, "_emit", capture_emit)
+
+    def append_event() -> None:
+        trusted_writer.append_explicit_journal_event(
+            vault,
+            {"event": "run", "run_id": "concurrent", "status": "started"},
+            actor="operation",
+            machine="journal-test",
+        )
+
+    def verify() -> int:
+        return main(["journal", "verify", "--workspace", str(vault), "--json"])
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        append_future = executor.submit(append_event)
+        assert row_written.wait(timeout=2)
+        verify_future = executor.submit(verify)
+        try:
+            assert verify_lock_attempted.wait(timeout=2)
+            assert not verify_future.done()
+        finally:
+            release_append.set()
+
+        assert append_future.result(timeout=2) is None
+        assert verify_future.result(timeout=2) == 0
+
+    assert emitted == [
+        {
+            "ok": True,
+            "events": 2,
+            "tip": state.journal_head(vault),
+            "anchor": state.journal_head(vault),
+            "error": "",
+        }
+    ]
 
 
 def test_journal_append_and_reconcile_reenter_the_workspace_lock(tmp_path, capsys):
