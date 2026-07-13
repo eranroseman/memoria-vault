@@ -872,7 +872,36 @@ def test_backup_report_requires_blob_coverage_not_sqlite_only(tmp_path, capsys):
   refuse restore, a failed rollback preserves its sibling recovery directory,
   and the absolute machine-local `last-backup` stamp is ignored by Git.
 
-- [x] **Step 4: Publish the backup and recovery reference** — current-truth
+  Security and hard-exit review adds durable, Git-ignored transaction markers
+  for every backup publication and restore swap. PI-only `workspace recover`
+  validates and completes them. Backup binds its staged replacement and any
+  existing target; restore binds its rollback and stage siblings before the
+  first rename. Restore records original component presence, pre-copies live
+  WAL and rollback-journal sidecars, and includes the machine-local backup
+  stamp in rollback. Recovery preserves components not yet moved and retains
+  the only saved originals until the recovered journal verifies when a database
+  exists. A pre-swap workspace without a database remains without one after
+  rollback. A completed publication recovered after a hard exit writes its
+  matching local backup stamp before removing its marker. Terminal phases remove
+  directory identities last, so cleanup resumes after a hard exit.
+  Cross-directory renames persist the destination entry before the source
+  removal.
+
+  Backup, restore, `doctor --repair`, and `doctor bundle` reject symlinked or
+  junction-backed sensitive paths and pending transactions; `workspace recover`
+  validates and completes pending transactions. Both doctor maintenance paths
+  preflight, acquire a no-follow workspace lock, and preflight again. Repair
+  enumerates all seed, skeleton, projection, SQLite, and existing Git-metadata
+  write targets, refuses Git common-directory indirection, and uses Git
+  subprocesses that ignore environment redirects while binding the Git
+  directory and work tree explicitly. Restore applies the same Git binding to
+  committed journal-anchor reads.
+  Replacement requires a fully restorable prior snapshot, blob-coverage
+  configuration must parse to a non-empty target and Boolean `enabled: true`
+  when that field is present, and every project export format refuses a
+  read-only existing target.
+
+- [x] **Step 4: Author the backup and recovery reference** — current-truth
   command, layout, validation, rollback, and doctor contracts are published in
   `backup-and-recovery.md`; the system index, CLI inventory, on-disk layout,
   and failure-mode table link and agree with it.
@@ -943,11 +972,15 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
 | [Backup and recovery](backup-and-recovery.md) |
 ```
 
-- [x] **Step 5: Run tests + gate** — the backup/restore and CLI-surface slice
-  passes 27 tests; the full affected subsystem slice passes 185. `python3
-  scripts/verify` passes with 445 passed, 9 skipped, and 444 deselected. Offline
-  smoke, syntax, authored JSON, shell, PowerShell, and every static/document
-  gate are green.
+- [x] **Step 5: Re-run tests + gate** — fresh post-hardening verification:
+
+  - `python3 -m pytest -q tests/test_backup_restore.py` — `93 passed`;
+  - `python3 -m pytest -q tests/test_cli_doctor_eval.py` — `33 passed`;
+  - `python3 -m pytest -q tests/test_project_knowledge.py tests/test_runtime_state.py`
+    — `27 passed`; and
+  - `python3 scripts/verify` — `467 passed, 9 skipped, 514 deselected`; all
+    lint, product gates, offline smoke, syntax, and installer checks passed with
+    `verify: OK`.
 
 - [ ] **Step 6: Commit + PR**
 

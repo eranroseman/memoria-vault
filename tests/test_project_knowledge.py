@@ -322,7 +322,10 @@ def test_write_project_export_renders_checked_project_markdown(tmp_path: Path) -
     assert "```bibtex\n@article{alpha,title={Alpha}}\n```" in text
 
 
-def test_write_project_export_does_not_replace_read_only_external_target(tmp_path: Path) -> None:
+@pytest.mark.parametrize("export_format", ["markdown", "docx"])
+def test_write_project_export_does_not_replace_read_only_external_target(
+    tmp_path: Path, export_format: str
+) -> None:
     vault = tmp_path / "vault"
     _md(
         vault / "projects/project-alpha/project.md",
@@ -333,7 +336,8 @@ def test_write_project_export_does_not_replace_read_only_external_target(tmp_pat
         vault / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
     )
-    target = tmp_path / "read-only-export.md"
+    suffix = "md" if export_format == "markdown" else export_format
+    target = tmp_path / f"read-only-export.{suffix}"
     target.write_text("keep\n", encoding="utf-8")
     target.chmod(0o444)
 
@@ -342,6 +346,7 @@ def test_write_project_export_does_not_replace_read_only_external_target(tmp_pat
             write_project_export(
                 vault,
                 "project-alpha",
+                export_format=export_format,
                 output_path=str(target),
             )
     finally:
@@ -462,6 +467,7 @@ def test_write_project_export_requires_pandoc_for_non_markdown(
         "type: project\ncheck_status: checked\ntitle: Alpha project\n",
     )
     monkeypatch.setattr("memoria_vault.runtime.knowledge.shutil.which", lambda _name: None)
+    output_root = tmp_path / "exports"
 
     with pytest.raises(RuntimeError, match="Pandoc is required"):
         write_project_export(
@@ -470,3 +476,5 @@ def test_write_project_export_requires_pandoc_for_non_markdown(
             export_format="docx",
             output_path="exports/project-alpha.docx",
         )
+
+    assert not output_root.exists()

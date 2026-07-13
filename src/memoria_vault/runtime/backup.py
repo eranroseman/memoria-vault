@@ -5,10 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
 import shutil
 import sqlite3
 import subprocess
 import tempfile
+from collections.abc import Iterable
 from contextlib import closing
 from pathlib import Path
 from typing import Any
@@ -24,11 +26,16 @@ MANIFEST_NAME = "manifest.json"
 BLOBS_REL = ".memoria/blobs"
 LAST_BACKUP_REL = ".memoria/config/last-backup"
 BACKUP_TRANSACTION_FORMAT = "memoria-backup-publication-transaction"
-BACKUP_TRANSACTION_VERSION = 1
+BACKUP_TRANSACTION_VERSION = 2
 BACKUP_TRANSACTION_REL = ".memoria/backup-transaction.json"
+BACKUP_TRANSACTION_PHASES = frozenset({"publishing", "published-cleanup", "rolled-back-cleanup"})
 RESTORE_TRANSACTION_FORMAT = "memoria-restore-transaction"
-RESTORE_TRANSACTION_VERSION = 1
+RESTORE_TRANSACTION_VERSION = 2
 RESTORE_TRANSACTION_REL = ".memoria/restore-transaction.json"
+RESTORE_TRANSACTION_PHASES = frozenset({"swapping", "commit-cleanup", "rollback-cleanup"})
+TRANSACTION_DIRECTORY_FORMAT = "memoria-transaction-directory"
+TRANSACTION_DIRECTORY_VERSION = 1
+TRANSACTION_DIRECTORY_IDENTITY = ".memoria-transaction-identity.json"
 
 
 def create_backup(
@@ -45,7 +52,7 @@ def create_backup(
     if runtime_error:
         return _failure(runtime_error)
     raw_target = Path(target).expanduser()
-    if raw_target.is_symlink():
+    if _path_redirects(raw_target):
         return _failure("backup target must not be a symlink")
     target = raw_target.resolve(strict=False)
     if _paths_overlap(vault, target):
@@ -123,22 +130,8 @@ def create_backup(
             _fsync_tree(stage)
             _publish_backup_directory(stage, target, vault)
             stage = None
-
-            stamp = {
-                "format": BACKUP_FORMAT,
-                "version": BACKUP_VERSION,
-                "created_at": created_at,
-                "target": str(target),
-                "blob_files": source_inventory["files"],
-                "blob_sha256": source_inventory["sha256"],
-            }
-            write_text_durable(
-                vault / LAST_BACKUP_REL,
-                json.dumps(stamp, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-                create_parent=True,
-            )
         except BaseException:
-            if stage is not None:
+            if stage is not None and not _backup_transaction_binds_stage(vault, stage):
                 shutil.rmtree(stage, ignore_errors=True)
             raise
 
@@ -150,6 +143,29 @@ def create_backup(
         "blob_sha256": source_inventory["sha256"],
         "journal_head": has_anchor,
     }
+
+
+def _write_local_backup_stamp(vault: Path, target: Path, manifest: dict[str, Any]) -> None:
+    created_at = manifest.get("created_at")
+    blobs = _manifest_section(manifest, "blobs")
+    blob_files = blobs.get("files")
+    if not isinstance(created_at, str) or not created_at.strip():
+        raise ValueError("backup stamp creation timestamp is invalid")
+    if not isinstance(blob_files, int) or blob_files < 0:
+        raise ValueError("backup stamp blob file count is invalid")
+    stamp = {
+        "format": BACKUP_FORMAT,
+        "version": BACKUP_VERSION,
+        "created_at": created_at,
+        "target": str(target),
+        "blob_files": blob_files,
+        "blob_sha256": _manifest_hash(blobs, "blob inventory"),
+    }
+    write_text_durable(
+        vault / LAST_BACKUP_REL,
+        json.dumps(stamp, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        create_parent=True,
+    )
 
 
 def restore_backup(
@@ -167,7 +183,7 @@ def restore_backup(
     if runtime_error:
         return _failure(runtime_error)
     raw_source = Path(source).expanduser()
-    if raw_source.is_symlink():
+    if _path_redirects(raw_source):
         return _failure("backup source must not be a symlink")
     source = raw_source.resolve(strict=False)
     if _paths_overlap(vault, source):
@@ -207,7 +223,7 @@ def restore_backup(
             journal = _install_restore_stage(vault, stage, source, manifest, actor, machine)
             stage = None
     finally:
-        if stage is not None:
+        if stage is not None and not _restore_transaction_binds_stage(vault, stage):
             shutil.rmtree(stage, ignore_errors=True)
 
     return {
@@ -223,13 +239,13 @@ def blob_inventory(root: Path) -> dict[str, Any]:
     """Return a deterministic content inventory for one blob tree."""
     root = Path(root)
     entries: list[dict[str, Any]] = []
-    if root.is_symlink():
+    if _path_redirects(root):
         raise ValueError("blob root must not be a symlink")
     if root.exists() and not root.is_dir():
         raise ValueError("blob root must be a directory")
     if root.is_dir():
         for path in sorted(root.rglob("*")):
-            if path.is_symlink():
+            if _path_redirects(path):
                 raise ValueError(f"blob tree contains a symlink: {path.relative_to(root)}")
             if path.is_dir():
                 continue
@@ -253,6 +269,18 @@ def blob_inventory(root: Path) -> dict[str, Any]:
 def local_backup_status(vault: Path) -> dict[str, Any]:
     """Validate the local-backup stamp against live and backed-up blobs."""
     vault = Path(vault)
+    runtime_error = _runtime_root_error(vault)
+    if runtime_error:
+        return {
+            "valid": False,
+            "stamp_exists": False,
+            "stamp_path": LAST_BACKUP_REL,
+            "target": "",
+            "blob_files": 0,
+            "blob_sha256": "",
+            "inventory_ok": False,
+            "error": runtime_error,
+        }
     try:
         current = blob_inventory(vault / BLOBS_REL)
     except (OSError, ValueError) as exc:
@@ -339,40 +367,82 @@ def recover_interrupted_restore(vault: Path) -> dict[str, Any]:
         transaction = _read_restore_transaction(vault)
         if transaction is None:
             return {"recovered": False}
+        phase = str(transaction["phase"])
+        terminal = phase in {"commit-cleanup", "rollback-cleanup"}
         rollback = _restore_transaction_sibling(
-            vault, transaction.get("rollback"), f".{vault.name}.restore-rollback-", "rollback"
+            vault,
+            transaction.get("rollback"),
+            f".{vault.name}.restore-rollback-",
+            "rollback",
+            required=not terminal,
         )
         stage = _restore_transaction_sibling(
-            vault, transaction.get("stage"), f".{vault.name}.restore-stage-", "stage"
+            vault,
+            transaction.get("stage"),
+            f".{vault.name}.restore-stage-",
+            "stage",
+            required=not terminal,
         )
-        for live_rel, rollback_rel, staged_rel in reversed(_restore_components()):
-            live = vault / live_rel
-            saved = rollback / rollback_rel
-            staged = stage / staged_rel if staged_rel is not None else None
-            if saved.is_symlink():
-                raise ValueError(
-                    f"restore rollback component must not be a symlink: {rollback_rel}"
-                )
-            if staged is not None and staged.is_symlink():
-                raise ValueError(f"restore stage component must not be a symlink: {staged_rel}")
-            if os.path.lexists(saved):
-                if os.path.lexists(live):
+        transaction_id = _transaction_id(transaction)
+        originally_present = _restore_transaction_presence(transaction)
+        for directory, role in ((rollback, "rollback"), (stage, "stage")):
+            if os.path.lexists(directory):
+                if terminal:
+                    _validate_terminal_transaction_directory(
+                        vault, directory, role, RESTORE_TRANSACTION_FORMAT, transaction_id
+                    )
+                else:
+                    _validate_transaction_directory_identity(
+                        vault, directory, role, RESTORE_TRANSACTION_FORMAT, transaction_id
+                    )
+        if not terminal:
+            _preflight_restore_recovery_components(rollback, stage)
+            for live_rel, rollback_rel, _staged_rel in reversed(_restore_components()):
+                live = vault / live_rel
+                saved = rollback / rollback_rel
+                if os.path.lexists(saved):
+                    if os.path.lexists(live):
+                        _remove_path_durable(live)
+                    live.parent.mkdir(parents=True, exist_ok=True)
+                    _copy_recovery_component(saved, live)
+                elif live_rel.as_posix() in originally_present:
+                    if (
+                        not os.path.lexists(live)
+                        and live_rel not in _sqlite_disposable_components()
+                    ):
+                        raise ValueError(
+                            f"original restore component has no live or rollback copy: {live_rel}"
+                        )
+                else:
                     _remove_path_durable(live)
-                live.parent.mkdir(parents=True, exist_ok=True)
-                _copy_recovery_component(saved, live)
-            elif staged is None or not os.path.lexists(staged):
-                _remove_path_durable(live)
 
-        journal = state.verify_journal_chain(vault)
-        if not journal["ok"]:
-            raise ValueError(
-                f"recovered pre-restore journal verification failed: {journal['error']}"
-            )
+        verify_journal = (
+            Path(state.DB_REL).as_posix() in originally_present or phase == "commit-cleanup"
+        )
+        if verify_journal:
+            database = vault / state.DB_REL
+            if _path_redirects(database) or not database.is_file():
+                raise ValueError("recovered restore database is missing")
+            journal = state.verify_journal_chain(vault)
+            if not journal["ok"]:
+                raise ValueError(
+                    f"recovered pre-restore journal verification failed: {journal['error']}"
+                )
+        else:
+            journal = {"ok": True, "head": "", "skipped": "database was absent before restore"}
+        if not terminal:
+            phase = "rollback-cleanup"
+            _set_restore_transaction_phase(vault, transaction, phase)
+        _cleanup_transaction_directory(rollback)
+        _cleanup_transaction_directory(stage)
         _remove_restore_transaction(vault)
-        _cleanup_directory(rollback)
-        _cleanup_directory(stage)
 
-    return {"recovered": True, "rollback": rollback.name, "journal": journal}
+    return {
+        "recovered": True,
+        "rollback": rollback.name,
+        "outcome": "committed" if phase == "commit-cleanup" else "rolled_back",
+        "journal": journal,
+    }
 
 
 def recover_interrupted_backup(vault: Path) -> dict[str, Any]:
@@ -386,6 +456,8 @@ def recover_interrupted_backup(vault: Path) -> dict[str, Any]:
         transaction = _read_backup_transaction(vault)
         if transaction is None:
             return {"recovered": False}
+        phase = str(transaction["phase"])
+        previous_target = bool(transaction["previous_target"])
         target = _backup_transaction_target(vault, transaction.get("target"))
         rollback = _backup_transaction_sibling(
             target, transaction.get("rollback"), f".{target.name}.rollback-", "rollback"
@@ -393,17 +465,114 @@ def recover_interrupted_backup(vault: Path) -> dict[str, Any]:
         stage = _backup_transaction_sibling(
             target, transaction.get("stage"), f".{target.name}.stage-", "stage"
         )
-        if os.path.lexists(target):
-            _require_recognized_backup_target(target)
+        transaction_id = _transaction_id(transaction)
+        if phase == "publishing" and not previous_target:
+            target_exists = os.path.lexists(target)
+            rollback_exists = os.path.lexists(rollback)
+            stage_exists = os.path.lexists(stage)
+            if not target_exists and not rollback_exists and stage_exists:
+                _validate_transaction_directory_identity(
+                    vault, stage, "stage", BACKUP_TRANSACTION_FORMAT, transaction_id
+                )
+                _require_recognized_backup_target(stage)
+                outcome = "rolled_back"
+            elif target_exists and not rollback_exists and not stage_exists:
+                _validate_transaction_directory_identity(
+                    vault,
+                    target,
+                    "stage",
+                    BACKUP_TRANSACTION_FORMAT,
+                    transaction_id,
+                    directory_name=stage.name,
+                )
+                _require_recognized_backup_target(target)
+                outcome = "published"
+            else:
+                raise ValueError("backup transaction filesystem state is invalid")
+            phase = f"{outcome.replace('_', '-')}-cleanup"
+            _set_backup_transaction_phase(vault, transaction, phase)
+        elif phase == "publishing":
+            target_exists = os.path.lexists(target)
+            rollback_exists = os.path.lexists(rollback)
+            stage_exists = os.path.lexists(stage)
+            if target_exists and stage_exists and not rollback_exists:
+                _validate_transaction_directory_identity(
+                    vault,
+                    target,
+                    "rollback",
+                    BACKUP_TRANSACTION_FORMAT,
+                    transaction_id,
+                    directory_name=rollback.name,
+                )
+                _validate_transaction_directory_identity(
+                    vault, stage, "stage", BACKUP_TRANSACTION_FORMAT, transaction_id
+                )
+                _require_recognized_backup_target(target)
+                _require_recognized_backup_target(stage)
+                outcome = "rolled_back"
+            elif not target_exists and rollback_exists and stage_exists:
+                _validate_transaction_directory_identity(
+                    vault, rollback, "rollback", BACKUP_TRANSACTION_FORMAT, transaction_id
+                )
+                _validate_transaction_directory_identity(
+                    vault, stage, "stage", BACKUP_TRANSACTION_FORMAT, transaction_id
+                )
+                _require_recognized_backup_target(rollback)
+                _require_recognized_backup_target(stage)
+                _replace_durable(rollback, target)
+                _require_recognized_backup_target(target)
+                outcome = "rolled_back"
+            elif target_exists and rollback_exists and not stage_exists:
+                _validate_transaction_directory_identity(
+                    vault,
+                    target,
+                    "stage",
+                    BACKUP_TRANSACTION_FORMAT,
+                    transaction_id,
+                    directory_name=stage.name,
+                )
+                _validate_transaction_directory_identity(
+                    vault, rollback, "rollback", BACKUP_TRANSACTION_FORMAT, transaction_id
+                )
+                _require_recognized_backup_target(target)
+                _require_recognized_backup_target(rollback)
+                outcome = "published"
+            else:
+                raise ValueError("backup transaction filesystem state is invalid")
+            phase = f"{outcome.replace('_', '-')}-cleanup"
+            _set_backup_transaction_phase(vault, transaction, phase)
         else:
-            if rollback.is_symlink() or not rollback.is_dir():
-                raise ValueError("backup transaction rollback directory is missing or invalid")
-            _replace_durable(rollback, target)
+            outcome = "published" if phase == "published-cleanup" else "rolled_back"
+            if outcome == "published" or previous_target:
+                _require_recognized_backup_target(target)
+                target_identity = target / TRANSACTION_DIRECTORY_IDENTITY
+                if os.path.lexists(target_identity):
+                    _validate_transaction_directory_identity(
+                        vault,
+                        target,
+                        "stage" if outcome == "published" else "rollback",
+                        BACKUP_TRANSACTION_FORMAT,
+                        transaction_id,
+                        directory_name=stage.name if outcome == "published" else rollback.name,
+                    )
+            elif os.path.lexists(target):
+                raise ValueError("backup transaction target must remain absent after rollback")
+            for directory, role in ((rollback, "rollback"), (stage, "stage")):
+                if os.path.lexists(directory):
+                    _validate_terminal_transaction_directory(
+                        vault, directory, role, BACKUP_TRANSACTION_FORMAT, transaction_id
+                    )
+        if outcome == "published":
+            manifest = _read_manifest(target)
+            if manifest is None:
+                raise ValueError("published backup transaction target manifest is invalid")
+            _write_local_backup_stamp(vault, target, manifest)
+        _cleanup_transaction_directory(rollback)
+        _cleanup_transaction_directory(stage)
+        _remove_transaction_directory_identity(target)
         _remove_backup_transaction(vault)
-        _cleanup_directory(rollback)
-        _cleanup_directory(stage)
 
-    return {"recovered": True, "target": str(target)}
+    return {"recovered": True, "target": str(target), "outcome": outcome}
 
 
 def _stage_restore_source(
@@ -528,10 +697,26 @@ def _rebuild_journal_exports(vault: Path) -> None:
 
 
 def _committed_journal_anchor(vault: Path) -> str | None:
+    git_dir = vault / ".git"
+    if _path_redirects(git_dir) or not git_dir.is_dir():
+        raise ValueError("workspace Git metadata must be a directory")
+    if os.path.lexists(git_dir / "commondir"):
+        raise ValueError("workspace Git common-directory indirection is not supported")
+    env = {name: value for name, value in os.environ.items() if not name.startswith("GIT_")}
+    git = [
+        "git",
+        f"--git-dir={git_dir}",
+        f"--work-tree={vault}",
+        "-c",
+        f"core.hooksPath={os.devnull}",
+        "-c",
+        "core.fsmonitor=false",
+    ]
     try:
         listed = subprocess.run(
-            ["git", "ls-tree", "--name-only", "HEAD", "--", state.JOURNAL_HEAD_REL],
+            [*git, "ls-tree", "--name-only", "HEAD", "--", state.JOURNAL_HEAD_REL],
             cwd=vault,
+            env=env,
             check=False,
             text=True,
             capture_output=True,
@@ -544,8 +729,9 @@ def _committed_journal_anchor(vault: Path) -> str | None:
         return None
     try:
         shown = subprocess.run(
-            ["git", "show", f"HEAD:{state.JOURNAL_HEAD_REL}"],
+            [*git, "show", f"HEAD:{state.JOURNAL_HEAD_REL}"],
             cwd=vault,
+            env=env,
             check=False,
             text=True,
             capture_output=True,
@@ -573,11 +759,9 @@ def _install_restore_stage(
     try:
         _write_restore_transaction(vault, rollback, stage)
     except BaseException:
-        _cleanup_directory(rollback)
+        if not _restore_transaction_binds_rollback(vault, rollback):
+            _cleanup_directory(rollback)
         raise
-    installed: list[Path] = []
-    moved: list[tuple[Path, Path]] = []
-    rollback_complete = False
     try:
         for live_rel, rollback_rel, _staged_rel in _restore_components():
             live = vault / live_rel
@@ -586,7 +770,6 @@ def _install_restore_stage(
             saved = rollback / rollback_rel
             saved.parent.mkdir(parents=True, exist_ok=True)
             _replace_durable(live, saved)
-            moved.append((live, saved))
 
         install_components = [
             (stage / state.DB_REL, vault / state.DB_REL),
@@ -599,7 +782,6 @@ def _install_restore_stage(
         for staged, live in install_components:
             live.parent.mkdir(parents=True, exist_ok=True)
             _replace_durable(staged, live)
-            installed.append(live)
 
         verification = state.verify_journal_chain(vault)
         if not verification["ok"]:
@@ -635,26 +817,19 @@ def _install_restore_stage(
             json.dumps(stamp, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             create_parent=True,
         )
-    except BaseException:
-        for path in reversed(installed):
-            _remove_path_durable(path)
-        _remove_sqlite_sidecars(vault / state.DB_REL)
-        for live, saved in reversed(moved):
-            live.parent.mkdir(parents=True, exist_ok=True)
-            if os.path.lexists(live):
-                _remove_path_durable(live)
-            _copy_recovery_component(saved, live)
-        rollback_complete = True
+    except BaseException as restore_error:
+        try:
+            recover_interrupted_restore(vault)
+        except BaseException as rollback_error:
+            raise rollback_error from restore_error
         raise
-    else:
-        rollback_complete = True
-    finally:
-        if rollback_complete:
-            _remove_restore_transaction(vault)
-            if rollback.exists():
-                _cleanup_directory(rollback)
-            if stage.exists():
-                _cleanup_directory(stage)
+    transaction = _read_restore_transaction(vault)
+    if transaction is None:
+        raise ValueError("restore transaction marker is missing after a successful swap")
+    _set_restore_transaction_phase(vault, transaction, "commit-cleanup")
+    _cleanup_transaction_directory(rollback)
+    _cleanup_transaction_directory(stage)
+    _remove_restore_transaction(vault)
     return final_verification
 
 
@@ -694,27 +869,113 @@ def _failure(error: str) -> dict[str, Any]:
 
 
 def _runtime_root_error(vault: Path) -> str:
-    runtime_root = vault / ".memoria"
-    if runtime_root.is_symlink():
-        return "workspace .memoria root must not be a symlink"
+    runtime_paths = (
+        Path(".memoria"),
+        Path(".memoria/locks"),
+        Path(".memoria/locks/worker.lock"),
+        Path(".memoria/config"),
+        *(live_rel for live_rel, _rollback_rel, _staged_rel in _restore_components()),
+    )
+    for rel in runtime_paths:
+        path = vault / rel
+        if _path_redirects(path):
+            return f"workspace runtime path must not be a symlink: {rel}"
     return ""
+
+
+def _path_redirects(path: Path) -> bool:
+    return path.is_symlink() or path.is_junction()
+
+
+def validate_runtime_root(vault: Path) -> None:
+    """Reject runtime paths that redirect maintenance outside the workspace."""
+    error = _runtime_root_error(Path(vault))
+    if error:
+        raise ValueError(error)
+
+
+def validate_maintenance_preconditions(vault: Path) -> None:
+    """Refuse maintenance while runtime paths redirect or recovery is pending."""
+    vault = Path(vault)
+    validate_runtime_root(vault)
+    if _read_restore_transaction(vault) is not None:
+        raise ValueError("interrupted restore requires memoria workspace recover")
+    if _read_backup_transaction(vault) is not None:
+        raise ValueError("interrupted backup requires memoria workspace recover")
+
+
+def validate_workspace_write_targets(vault: Path, relpaths: Iterable[str | Path]) -> None:
+    """Reject a write target whose existing path redirects outside the workspace."""
+    vault = Path(vault)
+    for value in relpaths:
+        rel = Path(value)
+        if rel.is_absolute() or not rel.parts or ".." in rel.parts:
+            raise ValueError(f"workspace write target must be relative: {value}")
+        current = vault
+        for index, part in enumerate(rel.parts):
+            current /= part
+            if _path_redirects(current):
+                raise ValueError(
+                    "workspace write target must not redirect through a symlink or junction: "
+                    f"{rel.as_posix()}"
+                )
+            if index < len(rel.parts) - 1 and os.path.lexists(current) and not current.is_dir():
+                raise ValueError(
+                    f"workspace write target parent must be a directory: {rel.as_posix()}"
+                )
 
 
 def _write_backup_transaction(vault: Path, target: Path, rollback: Path, stage: Path) -> None:
     if rollback.parent != target.parent or stage.parent != target.parent:
         raise ValueError("backup transaction directories must be target siblings")
-    value = {
-        "format": BACKUP_TRANSACTION_FORMAT,
-        "version": BACKUP_TRANSACTION_VERSION,
-        "vault": str(vault),
-        "target": str(target),
-        "rollback": rollback.name,
-        "stage": stage.name,
-    }
-    write_text_durable(
-        vault / BACKUP_TRANSACTION_REL,
-        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-    )
+    previous_target = os.path.lexists(target) or os.path.lexists(rollback)
+    candidates = [
+        (directory, role, directory_name)
+        for directory, role, directory_name in (
+            (target, "rollback", rollback.name),
+            (rollback, "rollback", rollback.name),
+            (stage, "stage", stage.name),
+        )
+        if os.path.lexists(directory)
+    ]
+    for directory, role, _directory_name in candidates:
+        if _path_redirects(directory) or not directory.is_dir():
+            raise ValueError(f"backup transaction {role} directory is invalid")
+    if not os.path.lexists(stage):
+        raise ValueError("backup transaction stage directory is missing")
+    transaction_id = secrets.token_hex(16)
+    marker = vault / BACKUP_TRANSACTION_REL
+    try:
+        for directory, role, directory_name in candidates:
+            _write_transaction_directory_identity(
+                vault,
+                directory,
+                role,
+                BACKUP_TRANSACTION_FORMAT,
+                transaction_id,
+                directory_name=directory_name,
+            )
+        value = {
+            "format": BACKUP_TRANSACTION_FORMAT,
+            "version": BACKUP_TRANSACTION_VERSION,
+            "vault": str(vault),
+            "target": str(target),
+            "rollback": rollback.name,
+            "stage": stage.name,
+            "transaction_id": transaction_id,
+            "phase": "publishing",
+            "previous_target": previous_target,
+        }
+        write_text_durable(
+            marker,
+            json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        )
+        _fsync_directory(marker.parent)
+    except BaseException:
+        if not os.path.lexists(marker):
+            for directory, _role, _directory_name in reversed(candidates):
+                _remove_transaction_directory_identity(directory)
+        raise
 
 
 def _read_backup_transaction(vault: Path) -> dict[str, Any] | None:
@@ -729,13 +990,35 @@ def _read_backup_transaction(vault: Path) -> dict[str, Any] | None:
         raise ValueError(f"backup transaction marker is invalid: {exc}") from exc
     if not isinstance(value, dict):
         raise ValueError("backup transaction marker must be an object")
+    if value.get("format") == BACKUP_TRANSACTION_FORMAT and value.get("version") == 1:
+        raise ValueError("legacy backup transaction marker identity is invalid")
     if (
         value.get("format") != BACKUP_TRANSACTION_FORMAT
         or value.get("version") != BACKUP_TRANSACTION_VERSION
         or value.get("vault") != str(vault)
+        or value.get("phase") not in BACKUP_TRANSACTION_PHASES
+        or not isinstance(value.get("previous_target"), bool)
     ):
         raise ValueError("backup transaction marker identity is invalid")
     return value
+
+
+def _set_backup_transaction_phase(
+    vault: Path, transaction: dict[str, Any], phase: str
+) -> dict[str, Any]:
+    if phase not in BACKUP_TRANSACTION_PHASES:
+        raise ValueError("backup transaction phase is invalid")
+    updated = {**transaction, "phase": phase}
+    _write_transaction_marker(vault / BACKUP_TRANSACTION_REL, updated)
+    return updated
+
+
+def _backup_transaction_binds_stage(vault: Path, stage: Path) -> bool:
+    try:
+        transaction = _read_backup_transaction(vault)
+    except ValueError:
+        return True
+    return transaction is not None and transaction.get("stage") == stage.name
 
 
 def _backup_transaction_target(vault: Path, value: object) -> Path:
@@ -753,7 +1036,7 @@ def _backup_transaction_sibling(target: Path, value: object, prefix: str, label:
     if not isinstance(value, str) or Path(value).name != value or not value.startswith(prefix):
         raise ValueError(f"backup transaction {label} directory is invalid")
     path = target.parent / value
-    if path.is_symlink():
+    if _path_redirects(path):
         raise ValueError(f"backup transaction {label} directory is invalid")
     return path
 
@@ -769,7 +1052,7 @@ def _remove_backup_transaction(vault: Path) -> None:
 
 
 def _require_recognized_backup_target(target: Path) -> None:
-    if target.is_symlink() or not target.is_dir():
+    if _path_redirects(target) or not target.is_dir():
         raise ValueError("backup transaction target is missing or invalid")
     manifest = _read_manifest(target)
     if manifest is None or not _is_restorable_backup(target, manifest):
@@ -781,54 +1064,257 @@ def _restore_components() -> tuple[tuple[Path, Path, Path | None], ...]:
         (Path(state.DB_REL), Path("memoria.sqlite"), Path(state.DB_REL)),
         (Path(f"{state.DB_REL}-wal"), Path("memoria.sqlite-wal"), None),
         (Path(f"{state.DB_REL}-shm"), Path("memoria.sqlite-shm"), None),
+        (Path(f"{state.DB_REL}-journal"), Path("memoria.sqlite-journal"), None),
         (Path(BLOBS_REL), Path("blobs"), Path(BLOBS_REL)),
         (Path(state.JOURNAL_HEAD_REL), Path("journal-head"), Path(state.JOURNAL_HEAD_REL)),
         (Path(".memoria/journal"), Path("journal"), Path(".memoria/journal")),
+        (Path(LAST_BACKUP_REL), Path("last-backup"), None),
     )
 
 
+def _sqlite_disposable_components() -> frozenset[Path]:
+    return frozenset({Path(f"{state.DB_REL}-shm")})
+
+
+def _preflight_restore_recovery_components(rollback: Path, stage: Path) -> None:
+    for _live_rel, rollback_rel, staged_rel in _restore_components():
+        saved = rollback / rollback_rel
+        staged = stage / staged_rel if staged_rel is not None else None
+        if _path_redirects(saved):
+            raise ValueError(f"restore rollback component must not be a symlink: {rollback_rel}")
+        if staged is not None and _path_redirects(staged):
+            raise ValueError(f"restore stage component must not be a symlink: {staged_rel}")
+
+
 def _write_restore_transaction(vault: Path, rollback: Path, stage: Path) -> None:
+    runtime_error = _runtime_root_error(vault)
+    if runtime_error:
+        raise ValueError(runtime_error)
+    for role, directory in (("rollback", rollback), ("stage", stage)):
+        if _path_redirects(directory):
+            raise ValueError(f"restore transaction {role} directory must not be a symlink")
+        if directory.parent != vault.parent:
+            raise ValueError(f"restore transaction {role} directory must be a vault sibling")
+        if not directory.is_dir():
+            raise ValueError(f"restore transaction {role} directory is missing")
+    present = [
+        live_rel.as_posix()
+        for live_rel, _rollback_rel, _staged_rel in _restore_components()
+        if os.path.lexists(vault / live_rel)
+    ]
+    for live_rel, rollback_rel in (
+        (Path(f"{state.DB_REL}-wal"), Path("memoria.sqlite-wal")),
+        (Path(f"{state.DB_REL}-journal"), Path("memoria.sqlite-journal")),
+    ):
+        if live_rel.as_posix() not in present:
+            continue
+        live = vault / live_rel
+        if _path_redirects(live) or not live.is_file():
+            raise ValueError(f"restore component must be a regular file: {live_rel}")
+        _copy_recovery_component(live, rollback / rollback_rel)
+
+    transaction_id = secrets.token_hex(16)
+    _write_transaction_directory_identity(
+        vault, rollback, "rollback", RESTORE_TRANSACTION_FORMAT, transaction_id
+    )
+    _write_transaction_directory_identity(
+        vault, stage, "stage", RESTORE_TRANSACTION_FORMAT, transaction_id
+    )
     value = {
         "format": RESTORE_TRANSACTION_FORMAT,
         "version": RESTORE_TRANSACTION_VERSION,
         "vault": str(vault),
         "rollback": rollback.name,
         "stage": stage.name,
+        "transaction_id": transaction_id,
+        "phase": "swapping",
+        "present": present,
     }
+    marker = vault / RESTORE_TRANSACTION_REL
     write_text_durable(
-        vault / RESTORE_TRANSACTION_REL,
+        marker,
         json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
     )
+    _fsync_directory(marker.parent)
 
 
 def _read_restore_transaction(vault: Path) -> dict[str, Any] | None:
     path = vault / RESTORE_TRANSACTION_REL
-    if path.is_symlink():
-        raise ValueError("restore transaction marker must not be a symlink")
-    if not path.is_file():
+    if not os.path.lexists(path):
         return None
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("restore transaction marker must be a regular file")
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"restore transaction marker is invalid: {exc}") from exc
     if not isinstance(value, dict):
         raise ValueError("restore transaction marker must be an object")
+    if value.get("format") == RESTORE_TRANSACTION_FORMAT and value.get("version") == 1:
+        raise ValueError("legacy restore transaction marker identity is invalid")
     if (
         value.get("format") != RESTORE_TRANSACTION_FORMAT
         or value.get("version") != RESTORE_TRANSACTION_VERSION
         or value.get("vault") != str(vault)
+        or value.get("phase") not in RESTORE_TRANSACTION_PHASES
     ):
         raise ValueError("restore transaction marker identity is invalid")
     return value
 
 
-def _restore_transaction_sibling(vault: Path, value: object, prefix: str, label: str) -> Path:
+def _set_restore_transaction_phase(
+    vault: Path, transaction: dict[str, Any], phase: str
+) -> dict[str, Any]:
+    if phase not in RESTORE_TRANSACTION_PHASES:
+        raise ValueError("restore transaction phase is invalid")
+    updated = {**transaction, "phase": phase}
+    _write_transaction_marker(vault / RESTORE_TRANSACTION_REL, updated)
+    return updated
+
+
+def _restore_transaction_sibling(
+    vault: Path,
+    value: object,
+    prefix: str,
+    label: str,
+    *,
+    required: bool = True,
+) -> Path:
     if not isinstance(value, str) or Path(value).name != value or not value.startswith(prefix):
         raise ValueError(f"restore transaction {label} directory is invalid")
     path = vault.parent / value
-    if path.is_symlink() or not path.is_dir():
+    if _path_redirects(path) or (os.path.lexists(path) and not path.is_dir()):
+        raise ValueError(f"restore transaction {label} directory is missing or invalid")
+    if required and not path.is_dir():
         raise ValueError(f"restore transaction {label} directory is missing or invalid")
     return path
+
+
+def _restore_transaction_presence(transaction: dict[str, Any]) -> set[str]:
+    value = transaction.get("present")
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ValueError("restore transaction original component list is invalid")
+    present = set(value)
+    allowed = {live_rel.as_posix() for live_rel, _rollback, _staged in _restore_components()}
+    if len(present) != len(value) or not present <= allowed:
+        raise ValueError("restore transaction original component list is invalid")
+    return present
+
+
+def _restore_transaction_binds_stage(vault: Path, stage: Path) -> bool:
+    try:
+        transaction = _read_restore_transaction(vault)
+    except ValueError:
+        return True
+    return transaction is not None and transaction.get("stage") == stage.name
+
+
+def _restore_transaction_binds_rollback(vault: Path, rollback: Path) -> bool:
+    try:
+        transaction = _read_restore_transaction(vault)
+    except ValueError:
+        return True
+    return transaction is not None and transaction.get("rollback") == rollback.name
+
+
+def _transaction_id(transaction: dict[str, Any]) -> str:
+    value = transaction.get("transaction_id")
+    if (
+        not isinstance(value, str)
+        or len(value) != 32
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise ValueError("transaction identity is invalid")
+    return value
+
+
+def _write_transaction_marker(path: Path, value: dict[str, Any]) -> None:
+    write_text_durable(
+        path,
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+    _fsync_directory(path.parent)
+
+
+def _write_transaction_directory_identity(
+    vault: Path,
+    directory: Path,
+    role: str,
+    transaction_format: str,
+    transaction_id: str,
+    *,
+    directory_name: str | None = None,
+) -> None:
+    value = {
+        "format": TRANSACTION_DIRECTORY_FORMAT,
+        "version": TRANSACTION_DIRECTORY_VERSION,
+        "transaction_format": transaction_format,
+        "transaction_id": transaction_id,
+        "vault": str(vault),
+        "role": role,
+        "directory": directory_name or directory.name,
+    }
+    write_text_durable(
+        directory / TRANSACTION_DIRECTORY_IDENTITY,
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+    _fsync_directory(directory)
+
+
+def _validate_transaction_directory_identity(
+    vault: Path,
+    directory: Path,
+    role: str,
+    transaction_format: str,
+    transaction_id: str,
+    *,
+    directory_name: str | None = None,
+) -> None:
+    path = directory / TRANSACTION_DIRECTORY_IDENTITY
+    if _path_redirects(path) or not path.is_file():
+        raise ValueError(f"transaction {role} directory identity is missing or invalid")
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"transaction {role} directory identity is invalid: {exc}") from exc
+    expected = {
+        "format": TRANSACTION_DIRECTORY_FORMAT,
+        "version": TRANSACTION_DIRECTORY_VERSION,
+        "transaction_format": transaction_format,
+        "transaction_id": transaction_id,
+        "vault": str(vault),
+        "role": role,
+        "directory": directory_name or directory.name,
+    }
+    if value != expected:
+        raise ValueError(f"transaction {role} directory identity does not match")
+
+
+def _validate_terminal_transaction_directory(
+    vault: Path,
+    directory: Path,
+    role: str,
+    transaction_format: str,
+    transaction_id: str,
+) -> None:
+    identity = directory / TRANSACTION_DIRECTORY_IDENTITY
+    if os.path.lexists(identity):
+        _validate_transaction_directory_identity(
+            vault, directory, role, transaction_format, transaction_id
+        )
+        return
+    if _path_redirects(directory) or not directory.is_dir() or any(directory.iterdir()):
+        raise ValueError(f"transaction {role} cleanup directory is not empty")
+
+
+def _remove_transaction_directory_identity(directory: Path) -> None:
+    path = directory / TRANSACTION_DIRECTORY_IDENTITY
+    if not os.path.lexists(path):
+        return
+    if _path_redirects(path) or not path.is_file():
+        raise ValueError("transaction directory identity is not removable")
+    path.unlink()
+    _fsync_directory(directory)
 
 
 def _remove_restore_transaction(vault: Path) -> None:
@@ -840,9 +1326,9 @@ def _remove_restore_transaction(vault: Path) -> None:
 
 def _replace_durable(source: Path, destination: Path) -> None:
     os.replace(source, destination)
-    _fsync_directory(source.parent)
+    _fsync_directory(destination.parent)
     if destination.parent != source.parent:
-        _fsync_directory(destination.parent)
+        _fsync_directory(source.parent)
 
 
 def _remove_path_durable(path: Path) -> None:
@@ -885,7 +1371,7 @@ def _fsync_tree(root: Path) -> None:
 
 
 def _cleanup_directory(path: Path) -> None:
-    if path.is_symlink():
+    if _path_redirects(path):
         raise ValueError(f"recovery directory must not be a symlink: {path.name}")
     if path.is_dir():
         parent = path.parent
@@ -893,15 +1379,32 @@ def _cleanup_directory(path: Path) -> None:
         _fsync_directory(parent)
 
 
+def _cleanup_transaction_directory(path: Path) -> None:
+    if not os.path.lexists(path):
+        return
+    if _path_redirects(path) or not path.is_dir():
+        raise ValueError(f"recovery directory must be a directory: {path.name}")
+    identity = path / TRANSACTION_DIRECTORY_IDENTITY
+    for child in list(path.iterdir()):
+        if child == identity:
+            continue
+        _remove_path_durable(child)
+    _remove_transaction_directory_identity(path)
+    _cleanup_directory(path)
+
+
 def _fsync_directory(path: Path) -> None:
     try:
         fd = os.open(path, os.O_RDONLY)
     except OSError:
-        return
+        if os.name == "nt":
+            return
+        raise
     try:
         os.fsync(fd)
     except OSError:
-        pass
+        if os.name != "nt":
+            raise
     finally:
         os.close(fd)
 
@@ -987,23 +1490,50 @@ def _publish_backup_directory(stage: Path, target: Path, vault: Path) -> None:
     target_error = _replaceable_target_error(target)
     if target_error:
         raise ValueError(target_error)
-    if not os.path.lexists(target):
-        _replace_durable(stage, target)
-        return
-
     rollback = Path(tempfile.mkdtemp(prefix=f".{target.name}.rollback-", dir=target.parent))
     rollback.rmdir()
     _fsync_directory(target.parent)
+    _write_backup_transaction(vault, target, rollback, stage)
     try:
-        _write_backup_transaction(vault, target, rollback, stage)
-        _replace_durable(target, rollback)
+        if os.path.lexists(target):
+            _replace_durable(target, rollback)
         _replace_durable(stage, target)
-        _remove_backup_transaction(vault)
-    except BaseException:
-        if rollback.is_dir():
-            if os.path.lexists(target):
-                _remove_path_durable(target)
-            _replace_durable(rollback, target)
-            _remove_backup_transaction(vault)
+        _complete_backup_publication(vault, target, rollback, stage)
+    except BaseException as publish_error:
+        try:
+            recovery = recover_interrupted_backup(vault)
+        except BaseException as recovery_error:
+            raise recovery_error from publish_error
+        if recovery["outcome"] == "published":
+            return
         raise
-    _cleanup_directory(rollback)
+
+
+def _complete_backup_publication(vault: Path, target: Path, rollback: Path, stage: Path) -> None:
+    transaction = _read_backup_transaction(vault)
+    if transaction is None or transaction.get("phase") != "publishing":
+        raise ValueError("backup publication transaction is missing or invalid")
+    transaction_id = _transaction_id(transaction)
+    _validate_transaction_directory_identity(
+        vault,
+        target,
+        "stage",
+        BACKUP_TRANSACTION_FORMAT,
+        transaction_id,
+        directory_name=stage.name,
+    )
+    if bool(transaction["previous_target"]):
+        _validate_transaction_directory_identity(
+            vault, rollback, "rollback", BACKUP_TRANSACTION_FORMAT, transaction_id
+        )
+    elif os.path.lexists(rollback):
+        raise ValueError("backup publication rollback directory must remain absent")
+    _set_backup_transaction_phase(vault, transaction, "published-cleanup")
+    manifest = _read_manifest(target)
+    if manifest is None:
+        raise ValueError("published backup transaction target manifest is invalid")
+    _write_local_backup_stamp(vault, target, manifest)
+    _cleanup_transaction_directory(rollback)
+    _cleanup_transaction_directory(stage)
+    _remove_transaction_directory_identity(target)
+    _remove_backup_transaction(vault)

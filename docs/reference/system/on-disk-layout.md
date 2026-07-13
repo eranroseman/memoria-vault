@@ -70,6 +70,8 @@ writable runtime directories are created from `folders.yaml`:
 ├── backup-transaction.json  Git-ignored interrupted-backup recovery marker
 ├── restore-transaction.json Git-ignored interrupted-restore recovery marker
 ├── memoria.sqlite           authoritative state, including the event log
+├── memoria.sqlite-{wal,shm,journal}   transient SQLite sidecars
+├── locks/worker.lock         no-follow workspace writer lock
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ```
 

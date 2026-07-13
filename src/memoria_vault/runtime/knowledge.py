@@ -2434,10 +2434,11 @@ def write_project_export(
 
     if not output:
         raise ValueError("project export --output is required for Pandoc formats")
+    target = _project_export_output_path(vault, output)
     pandoc = shutil.which("pandoc")
     if pandoc is None:
         raise RuntimeError(f"Pandoc is required for project export format: {export_format}")
-    target = _project_export_output_path(vault, output)
+    target.parent.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(prefix="memoria-project-export-") as tmp:
         source = Path(tmp) / "project.md"
         source.write_text(content, encoding="utf-8")
@@ -2622,8 +2623,6 @@ def _frontmatter_string_values(value: Any) -> Iterable[str]:
 def _write_project_export_output(vault: Path, output_path: str, content: str) -> str:
     target = _project_export_output_path(vault, output_path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    if os.path.lexists(target) and not os.access(target, os.W_OK):
-        raise PermissionError(f"project export target is not writable: {target}")
     write_text_durable(target, content)
     return _project_export_display_path(vault, target)
 
@@ -2632,7 +2631,8 @@ def _project_export_output_path(vault: Path, output_path: str) -> Path:
     target = Path(output_path).expanduser()
     if not target.is_absolute():
         target = vault / target
-    target.parent.mkdir(parents=True, exist_ok=True)
+    if os.path.lexists(target) and not os.access(target, os.W_OK):
+        raise PermissionError(f"project export target is not writable: {target}")
     return target
 
 

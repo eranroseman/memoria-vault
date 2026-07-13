@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import contextlib
+import errno
 import hashlib
 import json
 import os
 import re
 import sqlite3
+import stat
 import subprocess
 import threading
 import time
@@ -60,7 +62,55 @@ _WORKSPACE_LOCK_PID = os.getpid()
 
 
 def _workspace_lock_key(vault: Path) -> str:
-    return str((Path(vault) / ".memoria/locks/worker.lock").resolve())
+    return str(Path(vault).resolve() / ".memoria/locks/worker.lock")
+
+
+def _open_workspace_lock_file(vault: Path, lock_path: Path):
+    redirect_error = "workspace lock path must not redirect through a symlink or junction"
+    if os.name == "nt" or not hasattr(os, "O_NOFOLLOW"):
+        runtime = Path(vault).resolve() / ".memoria"
+        locks = runtime / "locks"
+        for path in (runtime, locks, lock_path):
+            if path.is_symlink() or path.is_junction():
+                raise ValueError(redirect_error)
+        locks.mkdir(parents=True, exist_ok=True)
+        for path in (runtime, locks, lock_path):
+            if path.is_symlink() or path.is_junction():
+                raise ValueError(redirect_error)
+        return lock_path.open("a+b")
+
+    directory_fds: list[int] = []
+    lock_fd: int | None = None
+    try:
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        directory_fds.append(os.open(Path(vault).resolve(), flags))
+        for component in (".memoria", "locks"):
+            try:
+                os.mkdir(component, mode=0o700, dir_fd=directory_fds[-1])
+            except FileExistsError:
+                pass
+            directory_fds.append(os.open(component, flags, dir_fd=directory_fds[-1]))
+        lock_flags = os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
+        lock_fd = os.open(
+            "worker.lock",
+            lock_flags,
+            0o600,
+            dir_fd=directory_fds[-1],
+        )
+        if not stat.S_ISREG(os.fstat(lock_fd).st_mode):
+            raise ValueError("workspace lock path must be a regular file")
+        lock_file = os.fdopen(lock_fd, "a+b")
+        lock_fd = None
+        return lock_file
+    except OSError as exc:
+        if exc.errno in {errno.ELOOP, errno.ENOTDIR}:
+            raise ValueError(redirect_error) from exc
+        raise
+    finally:
+        if lock_fd is not None:
+            os.close(lock_fd)
+        for directory_fd in reversed(directory_fds):
+            os.close(directory_fd)
 
 
 def _workspace_thread_lock(key: str) -> threading.RLock:
@@ -93,8 +143,7 @@ def workspace_lock(vault: Path):
             return
 
         lock_path = Path(lock_key)
-        lock_path.parent.mkdir(parents=True, exist_ok=True)
-        with lock_path.open("a+b") as lock_file:
+        with _open_workspace_lock_file(Path(vault), lock_path) as lock_file:
             if fcntl is not None:
                 fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
                 try:
@@ -133,10 +182,18 @@ def db_path(vault: Path) -> Path:
     return Path(vault) / DB_REL
 
 
+class _ClosingConnection(sqlite3.Connection):
+    def __exit__(self, *exc_info: object) -> bool:
+        try:
+            return super().__exit__(*exc_info)
+        finally:
+            self.close()
+
+
 def connect(vault: Path) -> sqlite3.Connection:
     path = db_path(vault)
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, factory=_ClosingConnection)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA journal_mode = WAL")
@@ -410,6 +467,8 @@ def finish_request(vault: Path, request_id: str, status: str, job: dict[str, Any
 
 
 def recover_running_requests(vault: Path) -> list[str]:
+    if not db_path(vault).is_file():
+        return []
     recovered: list[str] = []
     with connect(vault) as conn:
         rows = conn.execute(
@@ -1033,6 +1092,8 @@ def record_projection_output(
 
 def recover_pending_materializations(vault: Path) -> list[str]:
     vault = Path(vault)
+    if not db_path(vault).is_file():
+        return []
     restored: list[str] = []
     with connect(vault) as conn:
         rows = conn.execute(

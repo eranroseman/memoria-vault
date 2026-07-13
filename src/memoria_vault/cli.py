@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import uuid
+from contextlib import contextmanager
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
@@ -613,7 +614,8 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     if args.repair:
         if not workspace.is_dir():
             return _fail("doctor --repair requires an existing workspace", json_output=args.json)
-        repaired = _repair_workspace(workspace)
+        with _doctor_maintenance(workspace, repair=True):
+            repaired = _repair_workspace(workspace)
     checks: dict[str, Any] = {
         "workspace_exists": workspace.is_dir(),
         "state_db": state.db_path(workspace).is_file(),
@@ -667,19 +669,21 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    doctor = _doctor_checks(workspace)
-    backup = _backup_report(workspace)
-    with state.connect(workspace) as conn:
-        requests = [
-            dict(row)
-            for row in conn.execute(
-                """
-                SELECT request_id, operation_id, status, created_at, completed_at, error
-                FROM operation_requests
-                ORDER BY created_at, request_id
-                """
-            )
-        ]
+    with _doctor_maintenance(workspace):
+        doctor = _doctor_checks(workspace)
+        backup = _backup_report(workspace)
+        with state.connect(workspace) as conn:
+            requests = [
+                dict(row)
+                for row in conn.execute(
+                    """
+                    SELECT request_id, operation_id, status, created_at, completed_at, error
+                    FROM operation_requests
+                    ORDER BY created_at, request_id
+                    """
+                )
+            ]
+        journal_head = state.journal_head(workspace)
     return _emit(
         {
             "ok": all(doctor.values()) and backup["ok"],
@@ -688,7 +692,7 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
             "doctor": doctor,
             "backup": backup,
             "requests": requests,
-            "journal_head": state.journal_head(workspace),
+            "journal_head": journal_head,
         },
         args,
     )
@@ -1720,6 +1724,7 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
     if args.actor != "pi":
         raise ValueError("workspace recover requires PI actor authority")
     workspace = _workspace(args)
+    runtime_backup.validate_runtime_root(workspace)
     fixture = _workspace_recover_fixture(workspace, args.fixture) if args.fixture else None
     with _workspace_lock(workspace):
         restore_recovery = runtime_backup.recover_interrupted_restore(workspace)
@@ -1737,6 +1742,15 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
     }
     if fixture is not None:
         payload["fixture"] = fixture
+    if not args.json and not args.quiet:
+        print(
+            "workspace recovery: "
+            f"{len(payload['restore_rollbacks'])} restore rollbacks, "
+            f"{len(payload['backup_targets'])} backup targets, "
+            f"{len(restored)} materializations, "
+            f"{len(failed_requests)} interrupted requests"
+        )
+        return 0
     return _emit(payload, args)
 
 
@@ -2288,6 +2302,77 @@ def _repair_workspace(workspace: Path) -> list[str]:
     return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
 
 
+def _repair_write_targets(workspace: Path) -> list[str]:
+    from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
+
+    targets = set(_workspace_plan(workspace))
+    for source_rel, target_rel in SEED_TREES:
+        targets.update(_seed_tree_write_targets(source_rel, target_rel))
+    targets.update(target for _source, target in SEED_FILES)
+    targets.update(
+        {
+            state.DB_REL,
+            f"{state.DB_REL}-wal",
+            f"{state.DB_REL}-shm",
+            f"{state.DB_REL}-journal",
+            state.JOURNAL_HEAD_REL,
+            ".memoria/overrides.jsonl",
+            "system/manifest.jsonl",
+            *TRACKED_PROJECTION_PATHS,
+        }
+    )
+    targets.update(_existing_tree_targets(workspace, ".git"))
+    return sorted(targets)
+
+
+def _seed_tree_write_targets(source_rel: str, target_rel: str) -> list[str]:
+    targets = [target_rel]
+    source = _seed_resource(source_rel)
+    if not source.is_dir():
+        return targets
+    for child in source.iterdir():
+        child_target = (Path(target_rel) / child.name).as_posix()
+        targets.append(child_target)
+        if child.is_dir():
+            targets.extend(_seed_tree_write_targets(f"{source_rel}/{child.name}", child_target))
+    return targets
+
+
+def _existing_tree_targets(workspace: Path, root_rel: str) -> list[str]:
+    targets = [root_rel]
+    root = workspace / root_rel
+    if root.is_symlink() or root.is_junction() or not root.is_dir():
+        return targets
+    for child in root.iterdir():
+        child_rel = child.relative_to(workspace).as_posix()
+        targets.append(child_rel)
+        if not child.is_symlink() and not child.is_junction() and child.is_dir():
+            targets.extend(_existing_tree_targets(workspace, child_rel))
+    return targets
+
+
+@contextmanager
+def _doctor_maintenance(workspace: Path, *, repair: bool = False):
+    from memoria_vault.runtime import backup as runtime_backup
+
+    def preflight() -> None:
+        runtime_backup.validate_maintenance_preconditions(workspace)
+        if repair:
+            runtime_backup.validate_workspace_write_targets(
+                workspace, _repair_write_targets(workspace)
+            )
+            git_path = workspace / ".git"
+            if os.path.lexists(git_path) and not git_path.is_dir():
+                raise ValueError("workspace Git metadata must be a directory")
+            if os.path.lexists(git_path / "commondir"):
+                raise ValueError("workspace Git common-directory indirection is not supported")
+
+    preflight()
+    with _workspace_lock(workspace):
+        preflight()
+        yield
+
+
 def _initialize_workspace_files(
     workspace: Path, *, overwrite: bool = False, include_obsidian: bool = True
 ) -> None:
@@ -2441,9 +2526,21 @@ def _ensure_git(workspace: Path) -> None:
 
 
 def _git(workspace: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    workspace = Path(workspace).resolve()
+    env = {name: value for name, value in os.environ.items() if not name.startswith("GIT_")}
     proc = subprocess.run(
-        ["git", *args],
+        [
+            "git",
+            f"--git-dir={workspace / '.git'}",
+            f"--work-tree={workspace}",
+            "-c",
+            f"core.hooksPath={os.devnull}",
+            "-c",
+            "core.fsmonitor=false",
+            *args,
+        ],
         cwd=workspace,
+        env=env,
         check=False,
         text=True,
         capture_output=True,
@@ -2549,7 +2646,10 @@ def _backup_report(workspace: Path) -> dict[str, Any]:
     ]
     remotes = _git_remotes(workspace)
     local_backup = runtime_backup.local_backup_status(workspace)
-    blob_configured = _valid_blob_backup_config(workspace, [*blob_sync_configs, *backup_configs])
+    runtime_valid = bool(local_backup["inventory_ok"])
+    blob_configured = runtime_valid and _valid_blob_backup_config(
+        workspace, [*blob_sync_configs, *backup_configs]
+    )
     blob_files = int(local_backup["blob_files"])
     ok = bool(local_backup["inventory_ok"]) and (
         blob_files == 0 or blob_configured or bool(local_backup["valid"])
@@ -2561,14 +2661,15 @@ def _backup_report(workspace: Path) -> dict[str, Any]:
             "remotes": remotes,
         },
         "sqlite_replication": {
-            "configured": _any_workspace_file(workspace, [*litestream_configs, *backup_configs]),
+            "configured": runtime_valid
+            and _any_workspace_file(workspace, [*litestream_configs, *backup_configs]),
             "config_paths": [*litestream_configs, *backup_configs],
             "runtime_dependency": False,
         },
         "blob_sync": {
             "configured": blob_configured,
             "blob_root": ".memoria/blobs",
-            "blob_root_exists": (workspace / ".memoria/blobs").is_dir(),
+            "blob_root_exists": runtime_valid and (workspace / ".memoria/blobs").is_dir(),
             "files": blob_files,
             "sha256": local_backup["blob_sha256"],
             "config_paths": [*blob_sync_configs, *backup_configs],
@@ -2578,22 +2679,25 @@ def _backup_report(workspace: Path) -> dict[str, Any]:
 
 
 def _git_remotes(workspace: Path) -> list[str]:
-    if not (workspace / ".git").exists() or shutil.which("git") is None:
+    git_dir = workspace / ".git"
+    if (
+        git_dir.is_symlink()
+        or git_dir.is_junction()
+        or not git_dir.is_dir()
+        or os.path.lexists(git_dir / "commondir")
+        or shutil.which("git") is None
+    ):
         return []
-    proc = subprocess.run(
-        ["git", "remote"],
-        cwd=workspace,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
+    proc = _git(workspace, "remote", check=False)
     if proc.returncode:
         return []
     return sorted(line.strip() for line in proc.stdout.splitlines() if line.strip())
 
 
 def _any_workspace_file(workspace: Path, relpaths: list[str]) -> bool:
-    return any((workspace / rel).is_file() for rel in relpaths)
+    return any(
+        not (workspace / rel).is_symlink() and (workspace / rel).is_file() for rel in relpaths
+    )
 
 
 def _valid_blob_backup_config(workspace: Path, relpaths: list[str]) -> bool:
@@ -2606,7 +2710,9 @@ def _valid_blob_backup_config(workspace: Path, relpaths: list[str]) -> bool:
             value = json.loads(raw) if path.suffix == ".json" else yaml.safe_load(raw)
         except (OSError, UnicodeError, json.JSONDecodeError, yaml.YAMLError):
             continue
-        if not isinstance(value, dict) or value.get("enabled") is False:
+        if not isinstance(value, dict):
+            continue
+        if "enabled" in value and value["enabled"] is not True:
             continue
         target = value.get("target")
         if isinstance(target, str) and target.strip():

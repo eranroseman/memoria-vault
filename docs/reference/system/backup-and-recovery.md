@@ -35,12 +35,16 @@ or recover fails before any filesystem effect.
 | `journal-head` | The live chain head. It is absent only when the backed-up empty chain has no anchor. |
 
 The target must not overlap the live vault. Memoria writes a temporary sibling,
-then renames it into place. A missing target is created. An existing target is
+records an identity-bound publication transaction, then renames the sibling
+into place. A missing target is created. An existing target is
 replaceable only when its versioned manifest and snapshot contents pass the
 same validation used by restore; arbitrary directories, files, forged
-manifests, and symlinks are refused. If replacement fails, the previous
-recognized backup is restored. The live workspace's `.memoria` root must be a
-real directory, not a symlink.
+manifests, symlinks, and junctions are refused. If replacement fails, the
+previous recognized backup is restored when recovery can validate the
+transaction material; otherwise, that material is preserved for PI inspection.
+The live workspace's fixed database,
+sidecar, blob, journal, configuration, and lock paths must not redirect through
+symlinks or junctions.
 
 ## Restore validation
 
@@ -69,21 +73,37 @@ replace the backup and recompute those hashes.
 **Unshipped/deferred:** cryptographic backup authenticity, including signing or
 keyed verification for storage outside the operator's trust boundary.
 
-The live swap includes `memoria.sqlite`, stale WAL/SHM sidecars, `blobs/`,
-`journal-head`, and `journal/`. A failure restores every prior component. A
-successful swap appends a PI-attributed `workspace-restored` event, verifies
-the resulting chain, preserves the backup source, and removes staging data.
+The live swap includes `memoria.sqlite`, stale WAL/SHM/rollback-journal
+sidecars, `blobs/`, `journal-head`, `journal/`, and the machine-local
+`last-backup` stamp. Before publishing the marker, Memoria durably preserves
+any live WAL or rollback journal in the bound rollback directory. On a failed
+swap, recovery attempts to restore every prior component. A successful swap
+appends a PI-attributed
+`workspace-restored` event, verifies the resulting chain, preserves the backup
+source, and removes staging data.
 If restoring the prior live components also fails, Memoria preserves the
 sibling `.<vault>.restore-rollback-*` directory as recovery material instead
 of deleting the only saved originals. A durable, Git-ignored
-`.memoria/restore-transaction.json` marker binds that rollback directory and
-its stage to the live vault. `memoria workspace recover` restores each saved
-live component named by the marker, verifies the recovered journal, and then
-removes the marker, rollback, and interrupted stage. A separate
-`.memoria/backup-transaction.json` marker covers replacement of an existing
-backup target: recovery restores the prior complete target when the process
-stopped after moving it aside, or retains a complete validated new target when
-its publish rename had already completed.
+`.memoria/restore-transaction.json` marker records which live components
+existed and binds the rollback directory and stage to the live vault with a
+transaction identity. While a swap is unresolved, `memoria workspace recover`
+preserves any original that was not moved before interruption, restores the
+saved live components and prior backup stamp, and, when a recovered database
+exists, verifies its journal before recording a cleanup phase. Cleanup removes
+directory contents before their transaction identities, so an interrupted
+cleanup can resume. Once a marker is in cleanup, recovery verifies the retained
+journal and completes cleanup only. A pre-swap workspace without a database
+remains without one after rollback. When it cannot determine the pre-swap
+state, it leaves the marker and sibling directories intact for the PI to
+inspect rather than guessing. A separate `.memoria/backup-transaction.json`
+marker covers every publication. Before the first rename, it identity-binds the
+staged replacement and, when present, the prior target to one random
+transaction. For an unresolved publication marker, recovery validates those
+identities and recognized backup material before it restores the prior target,
+removes an unpublished first snapshot, or retains a replacement whose publish
+rename completed. Once a backup marker is in cleanup, it validates the retained
+target, writes its matching local backup stamp, and completes cleanup only. The
+marker is removed last, after the stamp is durable.
 
 ## Doctor status
 
@@ -95,14 +115,27 @@ blob files without current coverage. Coverage is one of:
 - `.memoria/config/last-backup`, whose JSON stamp matches both the current blob
   inventory and a present, valid backup target.
 
-Configured YAML/JSON coverage must be a readable mapping, must not set
-`enabled: false`, and must name a non-empty `target`. An empty, malformed,
-disabled, or target-free file does not count as coverage.
+Configured YAML/JSON coverage must be a readable mapping and must name a
+non-empty `target`. If `enabled` is present, its value must be the Boolean
+`true`. An empty, malformed, disabled, or target-free file does not count as
+coverage.
 
 SQLite-only Litestream configuration does not cover blobs. Empty directories
 do not count as blob content. Changing a blob or removing the stamped target
-makes the local-backup status fail until a new backup succeeds.
+makes the local-backup status fail until a successful backup, restore, or
+recovery of a completed publish writes a matching stamp.
 `last-backup` is ignored by Git because its absolute target is machine-local.
+
+Before `doctor --repair` writes or `doctor bundle` opens SQLite, Memoria
+checks the fixed runtime paths and pending transaction markers, acquires the
+workspace lock without following path redirects, then repeats those checks
+under that lock. Pending backup or restore work must be completed by
+`memoria workspace recover` first. Repair also checks every skeleton,
+seed, projection, SQLite, and existing Git-metadata target before its first
+write. Its Git commands are bound to the workspace repository and ignore Git
+environment variables that can redirect the index, object store, work tree,
+configuration, or common directory. Repair refuses repository common-directory
+indirection.
 
 ## Related
 
