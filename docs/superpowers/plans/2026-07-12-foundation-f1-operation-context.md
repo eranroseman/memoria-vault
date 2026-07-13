@@ -769,7 +769,7 @@ git commit -m "docs: close the F1 provenance contract"
 python scripts/verify
 ```
 
-- [ ] **Step 6: Sync the final review base**
+- [x] **Step 6: Sync the final review base**
 
 Fetch and integrate `origin/main` without dropping its concurrent docs edits,
 then run `python scripts/verify`. If integration changes runtime files, repeat

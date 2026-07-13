@@ -16,7 +16,7 @@ directly to Concepts or catalog data). A dispatch record is written to
 ``.memoria/eval/last-run.md``.
 
     python eval_dispatch.py --vault <path>             # dispatch (scheduled + on-demand)
-    python eval_dispatch.py --vault <path> --dry-run   # print payloads, create nothing
+    python eval_dispatch.py --vault <path> --dry-run   # print payloads; no intents/last-run
 """
 
 from __future__ import annotations
