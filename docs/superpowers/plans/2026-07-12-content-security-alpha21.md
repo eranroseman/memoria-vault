@@ -4,7 +4,7 @@
 
 **Goal:** Land the three alpha.21 trust items the archive gap analysis surfaced: CS1 exfiltration neutralization (embeds/HTML/URLs in machine-written text can't beacon), CS3 out-of-band change witness (foreign edits to human files + restriction-key removal are detected), and `mc`-hash-binding (a verification label can't survive an edit to the text it vouches for).
 
-**Architecture:** Three independent PRs. CS1 is pure text transformation (no schema). `mc`-hash-binding and CS3 each add one schema column/table and ride the next `SCHEMA_VERSION` bump. Each builds on existing seams — the machine-write path (`trusted_writer`), the export renderer (`knowledge.render_project_*_export`), the observe-edit sweep (`trusted_writer.observe_pi_edits_from_status`), and the evidence-set store (`evidence_sets` table).
+**Architecture:** Three independent PRs. CS1 is pure text transformation (no schema). `mc`-hash-binding and CS3 each add one schema column/table and ride the next `SCHEMA_VERSION` bump. Each builds on existing seams — explicit machine/third-party field boundaries in operations and knowledge flows, the final export-content choke, the observe-edit sweep (`trusted_writer.observe_pi_edits_from_status`), and the evidence-set store (`evidence_sets` table).
 
 **Tech Stack:** Python 3 stdlib + SQLite (no new deps). Tests: pytest via `python scripts/verify`.
 
@@ -12,13 +12,13 @@ Spec: `docs/superpowers/specs/2026-07-12-beta.1-content-security.md` (CS1, CS3) 
 
 ## Design decisions (made here; confirm at review)
 
-1. **CS1 scope — neutralize at export (always) + at apply for demonstrably machine-compiled third-party text (digest bodies), not blanket over every machine write.** Blanket whole-body neutralization would corrupt legitimate human prose that flows through the machine writer (escaping a human's intended `<`, `![`, or URL). Authorship is file-granular in the code (no inline machine-span marker), so this plan neutralizes (a) the assembled *export* content — recipient-facing, always safe — and (b) *digest* bodies at apply (machine-compiled from source text). Broader apply-side neutralization of third-party metadata fields (source titles) rides O2 ingest (CS4/CS5), where the field boundaries are clean. The `neutralize_untrusted_markdown` helper is reusable by that later work.
-2. **`mc`-hash-binding — bind the evidence label to a block-text hash and invalidate on mismatch, without yet inverting the file-authoritative rebuild to DB-authoritative.** The full "DB is authority, stop rebuilding from markers" inversion (gap #10) is larger and riskier; this plan adds `block_text_sha256` to `evidence_sets`, recomputes it at verify, and **refuses export / demotes** when a resolved block's current text hash ≠ the bound hash. That closes the fail-open (a label surviving edited text) with a small change; the authority inversion is noted as a follow-on.
+1. **CS1 scope — neutralize every demonstrably machine/model/third-party region at apply, then neutralize assembled content again at export.** The apply boundaries currently include prompt-operation model output; source-digest title, description, heading, and body; model-emitted note-candidate title/body and derived prose fields; and promoted machine-draft passages. The final export-content choke covers both argument and direct-draft exports. Generic writers are not blanket-wrapped because they also carry human-authored text; neutralization belongs where provenance is known. The work-title canary deliberately seeds the source title because title and description are live third-party fields, not deferred O2 work.
+2. **`mc`-hash-binding — close only the fail-closed hash-survival slice of archive gap #10.** A fresh evidence ID binds once to the current anchored block text. Rebuilds preserve the prior stored hash for an existing ID, and verification compares current text with that preserved binding before any refresh could occur. A missing stored hash or an unresolvable current block is itself a blocking verification finding. The larger DB-authoritative inversion (stop rebuilding evidence truth from markers) is explicitly deferred and remains unshipped; Tasks 5–7 do not claim to close all of gap #10.
 
 ## Global Constraints
 
 - Correctness gate: `python scripts/verify` must pass before each PR.
-- **Schema version:** current `SCHEMA_VERSION` is **8**; Foundation F1 targets **9**. Tasks that change `schema.sql` must **read the current `SCHEMA_VERSION` first** (`rg -n '^SCHEMA_VERSION' src/memoria_vault/runtime/state.py`) and bump to the next integer, editing `schema.sql`'s `PRAGMA user_version` to match; `state._init` already accepts `{0, SCHEMA_VERSION}`. Pre-beta vaults are disposable and rebuild — no migration code. **This plan's two schema PRs (`mc`, CS3) must land after Foundation F1's v9**; if F1 hasn't merged, coordinate the numbers (they take the next two integers).
+- **Schema version:** current `SCHEMA_VERSION` is **9** (Foundation F1 is merged). Tasks that change `schema.sql` must **read the current `SCHEMA_VERSION` first** (`rg -n '^SCHEMA_VERSION' src/memoria_vault/runtime/state.py`) and bump to the next integer, editing `schema.sql`'s `PRAGMA user_version` to match; `state._init` already accepts `{0, SCHEMA_VERSION}`. Pre-beta vaults are disposable and rebuild — no migration code. PR-MC therefore targets **10** in this branch. If CS3 later lands on a different base, it takes whatever the next integer is then rather than assuming 11.
 - Test only against disposable vaults (`tests/helpers.init_cli_workspace` / `tmp_path`); never a personal vault.
 - Every new test file MUST be registered in `tests/conftest.py` `TEST_LEVELS` (`"unit"` pure fns, `"runtime"` vault-mutating flows, `"contract"` CLI/API); `test_testing_levels.py` enforces this.
 - Stage explicit paths only — never `git add -A`.
@@ -78,7 +78,7 @@ def test_vault_internals_and_code_untouched():
 Run: `python -m pytest tests/test_content_security.py -v`
 Expected: FAIL — module does not exist.
 
-Also add to `tests/conftest.py` `TEST_LEVELS` (alphabetical): `"test_content_security.py": "runtime",` (it grows vault-mutating cases in Task 4).
+Also add to `tests/conftest.py` `TEST_LEVELS` (alphabetical): `"test_content_security.py": "runtime",` (the file gains vault-mutating apply/export cases in Tasks 3–4).
 
 - [ ] **Step 3: Implement**
 
@@ -130,17 +130,17 @@ git add src/memoria_vault/runtime/content_security.py tests/test_content_securit
 git commit -m "feat(security): neutralize_untrusted_markdown helper (CS1 embeds/HTML/URLs)"
 ```
 
-### Task 2: Neutralize at export (draft + argument export)
+### Task 2: Neutralize the final content at export (draft + argument export)
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/knowledge.py` (`_render_draft_export_body` ~:3165; `write_project_export` ~:2380 at the `content = str(rendered["content"])` choke ~:2403)
-- Test: `tests/test_draft_verification.py` (extend — it already covers export)
+- Modify: `src/memoria_vault/runtime/knowledge.py` (`write_project_export` and the renderer return contracts)
+- Test: `tests/test_draft_verification.py` and `tests/test_project_knowledge.py` (extend existing draft and argument export coverage)
 
 **Interfaces:**
 - Consumes: `content_security.neutralize_untrusted_markdown` (Task 1).
-- Produces: exported markdown from both renderers is neutralized before it lands to disk/Pandoc.
+- Produces: exported markdown from both renderers is neutralized at the shared `content = str(rendered["content"])` choke before it lands on disk or reaches Pandoc. Renderer-return tests also prove direct consumers receive neutralized content.
 
-- [ ] **Step 1: Read** `_render_draft_export_body` (knowledge.py:3165) and `write_project_export` (:2380–2410) fully; confirm `content = str(rendered["content"])` (~:2403) is the single string handed to disk/Pandoc.
+- [ ] **Step 1: Read** `_render_draft_export_body`, `render_project_draft_export_markdown`, `render_project_export_markdown`, and `write_project_export` fully; confirm which return values are public and that `content = str(rendered["content"])` is the final disk/Pandoc choke.
 
 - [ ] **Step 2: Write the failing test** (append to `tests/test_draft_verification.py`; reuse its existing draft-export fixture — copy the setup from `test_verified_source_backed_draft_exports_without_internal_markers`):
 
@@ -155,7 +155,7 @@ def test_export_neutralizes_embedded_beacon(tmp_path, capsys):
 ```
 Fill concretely from the existing fixture (no `...` in the final test).
 
-- [ ] **Step 3: Implement** — at the top of `knowledge.py` add `from memoria_vault.runtime.content_security import neutralize_untrusted_markdown`. In `_render_draft_export_body`, wrap the returned body: `return neutralize_untrusted_markdown(<existing body>)`. In `render_project_export_markdown`, neutralize the assembled `"\n".join(lines)` content before returning. (Belt-and-suspenders: both the body transformer and the argument renderer.)
+- [ ] **Step 3: Implement** — import `neutralize_untrusted_markdown`; neutralize each renderer's returned `content` so direct consumers are safe, and neutralize `str(rendered["content"])` again at `write_project_export` as the final default-deny choke. The helper is idempotent, so this defense-in-depth does not alter already-neutralized content.
 
 - [ ] **Step 4: Run** `python -m pytest tests/test_draft_verification.py -v` → PASS; full suite `-x -q` → PASS (confirm no existing export test asserts a raw external URL/HTML survives; if one does, it was asserting the vulnerability — update it).
 
@@ -166,21 +166,21 @@ git add src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
 git commit -m "fix(security): neutralize exported draft/argument content (CS1 export side)"
 ```
 
-### Task 3: Neutralize digest bodies at apply
+### Task 3: Neutralize every current machine/third-party apply region
 
 **Files:**
-- Modify: the digest-compile write path — locate: `rg -n "compile-source-digest|def .*digest" src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py`; the digest body is machine-compiled from source text and written via `stage_concept`/`materialize`.
-- Test: `tests/test_content_security.py` (extend, `runtime`)
+- Modify: `src/memoria_vault/runtime/operations.py` and `src/memoria_vault/runtime/knowledge.py`
+- Test: `tests/test_content_security.py`, `tests/test_operations.py`, and `tests/test_knowledge.py` (extend existing fixtures)
 
 **Interfaces:**
 - Consumes: `neutralize_untrusted_markdown`.
-- Produces: a compiled digest's body is neutralized before it is written to the bundle.
+- Produces: known-untrusted prose is neutralized immediately before it enters a staged note: prompt-operation model output; source-digest source title, description, heading, and model digest body; model-emitted note-candidate title/body plus derived prose fields; and promoted machine-draft passage text. Human-only parameters and generic `stage_concept` calls remain untouched.
 
-- [ ] **Step 1: Read the digest-compile function** found above; identify where the digest `body` string is assembled (from source/model text) before it goes to the writer.
+- [ ] **Step 1: Read** `run_prompt_operation`, `compile_source_digest`, `emit_note_candidates`, and `promote_draft_passage` fully. Mark the exact fields whose provenance is model or third-party and the `stage_concept` call each reaches.
 
-- [ ] **Step 2: Write the failing test** — drive a digest compilation whose source content carries `![beacon](http://evil/x)` and a raw `<img>`; assert the written `digests/<id>.md` body has them neutralized. (Reuse the digest fixture from `tests/test_knowledge.py` / `test_draft_compose.py`.)
+- [ ] **Step 2: Write failing tests** — cover each apply boundary with the smallest existing fixture. For the digest, seed the source **title**, description, and model body with distinct beacons and assert the staged digest contains none live. Cover prompt output, emitted note candidates, and promoted draft passage similarly. Include a human-authored control that proves generic human text is not rewritten.
 
-- [ ] **Step 3: Implement** — wrap the assembled digest body: `body = neutralize_untrusted_markdown(body)` immediately before the `stage_concept`/write call in the digest path. Do **not** touch `note`/human-authored writes (design decision 1).
+- [ ] **Step 3: Implement** — neutralize only the provenance-known fields before formatting/staging. Preserve raw model output hashes in journal provenance; hash what the model returned, not the transformed rendering. Do not wrap `stage_concept` globally.
 
 - [ ] **Step 4: Run** the new test + `tests/test_knowledge.py` → PASS.
 
@@ -188,7 +188,7 @@ git commit -m "fix(security): neutralize exported draft/argument content (CS1 ex
 
 ```bash
 git add src/memoria_vault/runtime/*.py tests/test_content_security.py
-git commit -m "fix(security): neutralize machine-compiled digest bodies at apply (CS1)"
+git commit -m "fix(security): neutralize machine and third-party text at apply (CS1)"
 ```
 
 ### Task 4: Canary drill + PR-CS1
@@ -196,7 +196,7 @@ git commit -m "fix(security): neutralize machine-compiled digest bodies at apply
 **Files:**
 - Test: `tests/test_content_security.py` (add the end-to-end canary)
 
-- [ ] **Step 1: Write the canary test** — a single seeded payload (`![x](http://beacon/p)` + `<script>` + bare `http://beacon/y`) placed in a digest source; assert it survives neither the apply-written digest file nor a project export that cites it. Concrete fixture, no placeholders.
+- [ ] **Step 1: Write the canary test** — seed a source **work title** (plus description/body) with `![x](http://beacon/p)`, `<script>`, and bare `http://beacon/y`; assert no live payload survives either the apply-written digest or a project export that cites it. This title canary is the regression proof that third-party metadata is in CS1 scope. Concrete fixture, no placeholders.
 
 - [ ] **Step 2: Gate + PR**
 
@@ -204,7 +204,9 @@ git commit -m "fix(security): neutralize machine-compiled digest bodies at apply
 python scripts/verify
 git add tests/test_content_security.py
 git commit -m "test(security): CS1 canary — seeded beacon survives neither apply nor export"
-gh pr create --title "feat(security): exfiltration neutralization at export + digest apply (CS1)" --body "Part of alpha.21 content-security (spec 2026-07-12-beta.1-content-security.md CS1). Neutralizes embeds/HTML/external-URLs in machine-written third-party text at export (always) and in machine-compiled digest bodies at apply; helper reusable by O2 ingest for the metadata-field side. Whole-body human writes untouched (design decision 1)."
+# Create this PR only in a session authorized to push/open PRs. This execution
+# stops after local commits and verification.
+gh pr create --title "feat(security): neutralize untrusted apply and export content (CS1)" --body "Part of alpha.21 content-security CS1. Neutralizes every current machine/model/third-party prose region at its apply boundary, including source title/description, and neutralizes final argument/draft export content again. Generic human writes remain untouched."
 ```
 
 ---
@@ -263,9 +265,9 @@ git commit -m "feat(verify): evidence_sets.block_text_sha256 column (schema bump
 
 - [ ] **Step 1: Read** `rebuild_evidence_sets_from_markers` (:1530) + the row-insert (:1740) + how a `block_ref` (`{rel}#^blk-{id}`) maps to the block's text in the file (the anchor scan around knowledge.py:1967 / :3182).
 
-- [ ] **Step 2: Write the failing test** — compose a draft with one `%%ev%%` marker on a block; rebuild; assert the row's `block_text_sha256` equals `"sha256:"+sha256` of that block's current text; then edit the block text on disk, rebuild, assert the hash changed.
+- [ ] **Step 2: Write the failing test** — compose a draft with one fresh `%%ev%%` marker on an anchored paragraph; rebuild and assert the row binds to `"sha256:"+sha256` of the canonical block text (anchor and evidence marker excluded). Edit that paragraph on disk, rebuild, and assert the stored hash **does not change** while `_block_text_sha256(vault, block_ref)` now returns a different current hash.
 
-- [ ] **Step 3: Implement** — add `_block_text_sha256(vault, block_ref)` (resolve anchor → block body substring → `sha256_file`-style hash of the bytes; reuse the anchor-resolution already in the marker scanner). In the row builder, set `block_text_sha256` from it. Store `None` when the anchor doesn't resolve.
+- [ ] **Step 3: Implement** — add `_block_text_sha256(vault, block_ref)` (resolve `path#^anchor` to its enclosing Markdown paragraph/block, remove the block anchor and `%%ev...%%` control marker, trim outer whitespace, and hash the remaining UTF-8 bytes with the `sha256:` prefix). Before `replace_evidence_sets` deletes rows, load existing `{id: block_text_sha256}` bindings. A previously unseen ID binds to its current resolved text once; an existing ID keeps its prior value, including `None`, across every marker rebuild. Never refresh an existing binding from current file text.
 
 - [ ] **Step 4: Run** → PASS; `tests/test_evidence_markers.py` + `test_evidence_sets.py` → PASS.
 
@@ -284,13 +286,13 @@ git commit -m "feat(verify): bind evidence rows to their block-text hash"
 
 **Interfaces:**
 - Consumes: the stored `block_text_sha256` (Task 6).
-- Produces: `verify_project_draft` emits a `evidence-text-drift` finding (kind added to the findings vocabulary) when a resolved block's current text hash ≠ the stored `block_text_sha256`; export refuses while any such finding is open (same gate as `evidence-incomplete`).
+- Produces: `verify_project_draft` emits `evidence-text-drift` when current text differs from the preserved binding and `evidence-text-unbound` when the stored binding is missing or the current block cannot resolve. Either finding makes verification fail and therefore refuses export through the existing verification gate.
 
-- [ ] **Step 1: Write the failing test** — verify a clean draft (passes/exports); then edit the anchored block text on disk *without* re-running compose (simulates file-only rebuild / human-edit-under-marker); re-verify → assert a `evidence-text-drift` finding and that export now **refuses** with that reason.
+- [ ] **Step 1: Write failing tests** — verify a clean draft (passes/exports); edit the anchored paragraph on disk; rebuild; re-verify and assert `evidence-text-drift` plus export refusal. Separately delete/unresolve the anchor and create a row with a missing stored binding; each must emit `evidence-text-unbound` and refuse export. These tests prove rebuild cannot bless an edit and fail-open null/unresolvable states are gone.
 
 - [ ] **Step 2: Run** → FAIL (no drift check today; edited text exports clean — the fail-open).
 
-- [ ] **Step 3: Implement** — in `verify_project_draft`, after loading evidence rows, recompute `_block_text_sha256` for each row's `block_ref` and compare to the stored `block_text_sha256`; on mismatch (and non-null stored), append a finding `{"kind":"evidence-text-drift","block_ref":…,"reason":"block text changed after the evidence label was bound"}`. Add `evidence-text-drift` to the set that `render_project_draft_export_markdown` refuses on (mirror the existing `review-required`/`evidence-incomplete` gate).
+- [ ] **Step 3: Implement** — in `verify_project_draft`, immediately after loading evidence rows, recompute `_block_text_sha256` and compare it with the preserved stored value **before** disposition logic. Missing/unresolvable values append `evidence-text-unbound`; unequal non-null values append `evidence-text-drift`. Continue using the existing `ok = not findings` and verified-export refusal contract rather than adding a parallel allowlist that could miss a new finding kind.
 
 - [ ] **Step 4: Run** the drift test + `tests/test_draft_verification.py` → PASS; `python scripts/verify` → PASS.
 
@@ -299,7 +301,9 @@ git commit -m "feat(verify): bind evidence rows to their block-text hash"
 ```bash
 git add src/memoria_vault/runtime/knowledge.py tests/test_mc_hash_binding.py tests/test_draft_verification.py
 git commit -m "fix(verify): demote + refuse export when block text drifts from its evidence label"
-gh pr create --title "fix(verify): bind evidence labels to block-text hash (mc-hash-binding)" --body "Archive gap #10. evidence_sets gains block_text_sha256; verify recomputes it and refuses export when a block's text changed after its label was bound — closing the fail-open where a verification label survived edited text. Full DB-authoritative inversion (stop rebuilding from markers) noted as follow-on (design decision 2)."
+# Create this PR only in a session authorized to push/open PRs. This execution
+# stops after local commits and verification.
+gh pr create --title "fix(verify): bind evidence labels to block-text hash (mc-hash-binding)" --body "Partial archive gap #10 hardening: fresh evidence IDs bind once to anchored block text; rebuild preserves the prior hash; verify refuses drift, missing bindings, and unresolvable blocks. DB-authoritative evidence truth remains deferred and unshipped."
 ```
 
 ---
@@ -337,14 +341,14 @@ git commit -m "feat(integrity): file_baseline table for the change witness (sche
 - Test: `tests/test_trusted_writer.py` (extend)
 
 **Interfaces:**
-- Consumes: `state.upsert_file_baseline` (Task 9); `_head_sha256` (:695); the restriction-key set `{"superseded","local-only"}` plus `standing` values `{"archived","retracted","superseded"}`.
+- Consumes: `state.upsert_file_baseline` (Task 8); `_head_sha256` (:695); the shipped restriction field `superseded: true`. Recognition of `local-only: true` may be recorded as forward-compatible groundwork only; no local-only privacy enforcement is claimed in alpha.21.
 - Produces: after each observe sweep, every scanned bundle file has a `file_baseline` row with its current human_sha256 and its current restriction-key list (parsed from frontmatter). Helper `trusted_writer._restriction_keys(frontmatter) -> list[str]`.
 
-- [ ] **Step 1: Write the failing test** — run `observe_pi_edits_from_status` over a vault with a note carrying `standing: superseded`; assert its `file_baseline` row records `human_sha256` and `["superseded"]`.
+- [ ] **Step 1: Write the failing test** — run `observe_pi_edits_from_status` over a vault with a note carrying `superseded: true`; assert its `file_baseline` row records `human_sha256` and `["superseded"]`.
 
 - [ ] **Step 2: Run** → FAIL (no baseline recorded).
 
-- [ ] **Step 3: Implement** — add `_restriction_keys(frontmatter)` returning the restriction markers present (`local-only: true` → `"local-only"`; `standing`/`superseded` in the retract set → `"superseded"`). In the sweep, after processing each path, `upsert_file_baseline(vault, output_id, human_sha256=<current sha>, restriction_keys=_restriction_keys(fm))`.
+- [ ] **Step 3: Implement** — add `_restriction_keys(frontmatter)` returning `"superseded"` when the shipped boolean is true; it may also recognize `local-only: true` as data-only groundwork. Do not invent or rely on a `standing` field. In the sweep, after processing each path, `upsert_file_baseline(vault, output_id, human_sha256=<current sha>, restriction_keys=_restriction_keys(fm))`.
 
 - [ ] **Step 4: Run** → PASS.
 
@@ -388,9 +392,9 @@ git commit -m "feat(integrity): witness out-of-band edits to human files (CS3)"
 
 **Interfaces:**
 - Consumes: `file_baseline.restriction_keys_json` (prior run), current frontmatter keys.
-- Produces: a `restriction-key-removed` finding/Review item when a key present in the baseline is absent now (e.g. `superseded` deleted → a retracted work silently re-admitted to Ask/export). Flag-not-block.
+- Produces: a `restriction-key-removed` finding/Review item when a key present in the baseline is absent now (e.g. `superseded: true` deleted → a retracted work silently re-admitted to Ask/export). Flag-not-block. `local-only` recognition, if present, is detection groundwork only and is not described as shipped privacy enforcement.
 
-- [ ] **Step 1: Write the failing test** — baseline a note with `standing: superseded`; remove the key on disk; run the sweep; assert a `restriction-key-removed` finding names the file and the key.
+- [ ] **Step 1: Write the failing test** — baseline a note with `superseded: true`; remove the key on disk; run the sweep; assert a `restriction-key-removed` finding names the file and the key.
 
 - [ ] **Step 2: Run** → FAIL.
 
@@ -428,7 +432,7 @@ gh pr create --title "feat(integrity): out-of-band change witness (CS3)" --body 
 
 ## Self-review notes
 
-- **Spec coverage:** CS1 → Tasks 1–4 (export + digest-apply; metadata-field apply deferred to O2 per decision 1). `mc`-hash-binding (gap #10) → Tasks 5–7. CS3 → Tasks 8–12 (both fail-open holes: foreign human-file edits + restriction-key removal). CS2/CS4–CS8 are explicitly other packages (U3/O2/W2/X1/beta.2), not this plan.
-- **Schema coordination:** three tasks read `SCHEMA_VERSION` before bumping and land after Foundation F1's v9; PR-MC and PR-CS3 take the next two integers — the Global Constraints and each schema task state this.
+- **Spec coverage:** CS1 → Tasks 1–4 (every current provenance-known machine/model/third-party apply field, including work title, plus final export). `mc`-hash-binding → Tasks 5–7 and intentionally closes only the fail-closed hash-survival slice of gap #10; DB authority remains deferred/unshipped. CS3 → Tasks 8–12 (both fail-open holes: foreign human-file edits + removal of shipped `superseded: true`; optional `local-only` recognition is groundwork only). CS2/CS4–CS8 are explicitly other packages (U3/O2/W2/X1/beta.2), not this plan.
+- **Schema coordination:** current schema is v9; PR-MC targets v10. Every later schema task reads the actual merged version and takes the next integer rather than relying on a stale hard-coded number.
 - **Placeholder scan:** the investigate-then-fill steps (Tasks 2, 3, 6, 7 test setups) each name the exact existing fixture to copy and forbid leaving `...`
-- **Type consistency:** `neutralize_untrusted_markdown(str)->str`, `_block_text_sha256(vault, block_ref)->str|None`, `upsert_file_baseline(...)/file_baseline(...)`, `_restriction_keys(frontmatter)->list[str]` are named identically where consumed. Finding kinds `evidence-text-drift` / `restriction-key-removed` are used consistently.
+- **Type consistency:** `neutralize_untrusted_markdown(str)->str`, `_block_text_sha256(vault, block_ref)->str|None`, `upsert_file_baseline(...)/file_baseline(...)`, `_restriction_keys(frontmatter)->list[str]` are named identically where consumed. Finding kinds `evidence-text-drift`, `evidence-text-unbound`, and `restriction-key-removed` are used consistently.
