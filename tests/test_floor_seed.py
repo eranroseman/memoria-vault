@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from tests.floor_lib import seed_vault, vault_digest
 
 
@@ -22,7 +20,6 @@ def test_floor_seed_builds_and_passes_detectors(tmp_path: Path) -> None:
     assert detectors.verdict(findings) == "PASS", findings
 
 
-@pytest.mark.skip(reason="vault_digest lands in Task 3")
 def test_floor_seed_is_deterministic(tmp_path: Path) -> None:
     a, _ = seed_vault(tmp_path / "a")
     b, _ = seed_vault(tmp_path / "b")

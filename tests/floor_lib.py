@@ -6,9 +6,12 @@ Spec: docs/superpowers/specs/2026-07-13-development-pipeline-spec.md §3.4.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
+import re
 import shutil
+import sqlite3
 import tempfile
 from pathlib import Path
 
@@ -185,5 +188,88 @@ def seed_vault(tmp_path: Path) -> tuple[Path, dict]:
     return target, manifest
 
 
-def vault_digest(vault: Path) -> dict:  # implemented in Task 3
-    raise NotImplementedError
+REDACTIONS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"[0-9A-HJKMNP-TV-Z]{26}"), "<ULID>"),
+    (
+        re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?"),
+        "<TS>",
+    ),
+    (re.compile(r"\b[0-9a-f]{40,64}\b"), "<HASH>"),
+)
+
+
+def _redact(text: str) -> str:
+    for pattern, repl in REDACTIONS:
+        text = pattern.sub(repl, text)
+    return text
+
+
+_DIGEST_TABLES = (
+    "concepts",
+    "concept_edges",
+    "catalog_sources",
+    "operation_requests",
+    "event_log",
+    "attention_items",
+    "passages",
+)
+
+
+def vault_digest(vault: Path) -> dict:
+    """Redacted, canonical state digest: files + DB shape + journal kinds."""
+    files: dict[str, str] = {}
+    for path in sorted(vault.rglob("*")):
+        rel = path.relative_to(vault).as_posix()
+        if not path.is_file() or rel.startswith((".git/", ".memoria/.venv")):
+            continue
+        if rel.endswith((".sqlite", ".sqlite-wal", ".sqlite-shm")):
+            continue
+        body = _redact(path.read_bytes().decode("utf-8", errors="replace"))
+        files[rel] = hashlib.sha256(body.encode()).hexdigest()[:12]
+    db: dict[str, object] = {}
+    with contextlib.closing(sqlite3.connect(vault / ".memoria/memoria.sqlite")) as conn:
+        conn.row_factory = sqlite3.Row
+        existing = {
+            r["name"] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        }
+        for table in _DIGEST_TABLES:
+            if table in existing:
+                db[table] = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        kinds = (
+            [r[0] for r in conn.execute("SELECT event_type FROM event_log ORDER BY event_id")]
+            if "event_log" in existing
+            else []
+        )
+    return {"files": files, "db": db, "journal_kinds": kinds}
+
+
+def assert_invariants(vault: Path) -> None:
+    """Spec §3.4: invariants over goldens — the always-on battery."""
+    from memoria_vault.runtime import projections, state
+    from memoria_vault.runtime.subsystems.integrity.linter import detectors
+
+    with contextlib.closing(sqlite3.connect(vault / ".memoria/memoria.sqlite")) as conn:
+        ok = conn.execute("PRAGMA integrity_check").fetchone()[0]
+        assert ok == "ok", f"integrity_check: {ok}"
+        fk = conn.execute("PRAGMA foreign_key_check").fetchall()
+        assert not fk, f"foreign_key_check: {fk[:5]}"
+    chain = state.verify_journal_chain(vault)
+    assert chain.get("ok"), f"journal chain: {chain}"
+    anchor_file = vault / state.JOURNAL_HEAD_REL
+    if anchor_file.exists():
+        assert anchor_file.read_text(encoding="utf-8").strip() == state.journal_head_anchor(
+            vault
+        ), "journal-head anchor drift"
+    tracked = projections.check_tracked_projections(vault)
+    assert tracked.get("ok"), f"tracked projections drift: {tracked}"
+    assert projections.check_workspace_indexes(vault), "workspace indexes stale"
+    findings = detectors.run_all(vault)
+    assert detectors.verdict(findings) == "PASS", f"detectors: {findings[:5]}"
+
+
+@contextlib.contextmanager
+def read_only_guard(vault: Path):
+    before = vault_digest(vault)
+    yield
+    after = vault_digest(vault)
+    assert before == after, "read operation modified vault state"

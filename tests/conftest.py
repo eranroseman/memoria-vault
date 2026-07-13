@@ -45,6 +45,7 @@ TEST_LEVELS = {
     "test_evidence_sets.py": "runtime",
     "test_exploration_channel.py": "runtime",
     "test_exploration_trace.py": "contract",
+    "test_floor_invariants.py": "floor",
     "test_floor_seed.py": "floor",
     "test_frontmatter_contract.py": "contract",
     "test_gap_analysis.py": "runtime",
