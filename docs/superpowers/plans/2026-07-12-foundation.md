@@ -671,8 +671,11 @@ Independent review closure:
 
 `python3 -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python3 scripts/verify` → PASS.
 
-- [ ] **Step 5: Commit + PR** — implementation and review-remediation commits
-  are integrated locally; publication remains pending.
+- [x] **Step 5: Commit + PR** — implementation and review-remediation commits
+  are integrated in [PR #1387](https://github.com/eranroseman/memoria-vault/pull/1387).
+  The exact published head passes `python3 scripts/verify` (445 passed, 9
+  skipped, 418 deselected), and its final diff-scoped security review reports
+  no findings.
 
 ```bash
 git add src/memoria_vault/runtime/integrity.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/trusted_writer.py tests/test_journal_trust.py
