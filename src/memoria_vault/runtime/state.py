@@ -2583,11 +2583,7 @@ def _block_text_sha256(vault: Path, block_ref: str) -> str | None:
 
     anchor_token = f"^{anchor}"
     anchor_pattern = rf"(?<!\S){re.escape(anchor_token)}(?=\s|$)"
-    blocks = [
-        block
-        for block in re.split(r"\n[ \t]*\n+", text)
-        if re.search(anchor_pattern, block)
-    ]
+    blocks = [block for block in re.split(r"\n[ \t]*\n+", text) if re.search(anchor_pattern, block)]
     if len(blocks) != 1:
         return None
 

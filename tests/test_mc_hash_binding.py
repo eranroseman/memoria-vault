@@ -7,17 +7,12 @@ from memoria_vault.runtime import state
 
 _EVIDENCE_ID = "ev-11111111"
 _BLOCK_REF = "projects/project-alpha/draft.md#^blk-11111111"
-_MARKER = (
-    "%%ev: ev-11111111 type=implicit state=evidence-incomplete "
-    "review=true items=%%"
-)
+_MARKER = "%%ev: ev-11111111 type=implicit state=evidence-incomplete review=true items=%%"
 
 
 def test_evidence_sets_schema_has_block_text_hash_binding(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
-        columns = {
-            row["name"] for row in conn.execute("PRAGMA table_info(evidence_sets)")
-        }
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(evidence_sets)")}
 
     assert "block_text_sha256" in columns
 
