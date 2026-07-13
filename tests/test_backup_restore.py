@@ -128,6 +128,26 @@ def test_blob_inventory_rejects_windows_junctions(
         backup.blob_inventory(root)
 
 
+def test_local_backup_status_rejects_junction_backup_target(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "junction-backup-target"
+    assert _create(vault, target)["ok"] is True
+    real_is_junction = Path.is_junction
+
+    def fake_is_junction(path: Path) -> bool:
+        return Path(path) == target or real_is_junction(path)
+
+    monkeypatch.setattr(Path, "is_junction", fake_is_junction)
+
+    report = backup.local_backup_status(vault)
+
+    assert report["valid"] is False
+    assert report["error"] == "stamped backup target is missing or invalid"
+
+
 def test_backup_and_restore_markers_are_ignored_local_machine_state(tmp_path: Path, capsys) -> None:
     vault = init_cli_workspace(tmp_path, capsys)
     _seed(vault)
@@ -1271,8 +1291,7 @@ def test_restore_refuses_while_backup_publication_recovery_is_pending(
     target = tmp_path / "pending-target"
     rollback = tmp_path / ".pending-target.rollback-test"
     stage = tmp_path / ".pending-target.stage-test"
-    rollback.mkdir()
-    stage.mkdir()
+    assert _create(vault, stage)["ok"] is True
     backup._write_backup_transaction(vault, target, rollback, stage)
 
     report = _restore(vault, source)
@@ -1658,8 +1677,8 @@ def test_backup_transaction_writer_propagates_marker_directory_fsync_failure(
     target = tmp_path / "marker-fsync-target"
     rollback = tmp_path / ".marker-fsync-target.rollback-bound"
     stage = tmp_path / ".marker-fsync-target.stage-bound"
-    target.mkdir()
-    stage.mkdir()
+    assert _create(vault, target)["ok"] is True
+    assert _create(vault, stage)["ok"] is True
     marker = vault / backup.BACKUP_TRANSACTION_REL
 
     def fail_marker_fsync(path: Path) -> None:
@@ -1699,6 +1718,35 @@ def test_workspace_recover_rejects_substituted_valid_backup_stage(tmp_path: Path
     assert (target / backup.MANIFEST_NAME).is_file()
 
 
+def test_workspace_recover_rejects_substituted_published_backup_after_identity_cleanup(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    blob = _seed(vault)
+    target = tmp_path / "identity-bound-terminal-target"
+    stage = tmp_path / ".identity-bound-terminal-target.stage-recorded"
+    rollback = tmp_path / ".identity-bound-terminal-target.rollback-recorded"
+    substitute = tmp_path / "identity-bound-terminal-substitute"
+    assert _create(vault, target)["ok"] is True
+    blob.write_text("replacement evidence bytes", encoding="utf-8")
+    assert _create(vault, stage)["ok"] is True
+    assert _create(vault, substitute)["ok"] is True
+    backup._write_backup_transaction(vault, target, rollback, stage)
+    target.rename(rollback)
+    stage.rename(target)
+    transaction = backup._read_backup_transaction(vault)
+    assert transaction is not None
+    backup._set_backup_transaction_phase(vault, transaction, "published-cleanup")
+    (target / backup.TRANSACTION_DIRECTORY_IDENTITY).unlink()
+    target.rename(tmp_path / "held-published-backup")
+    substitute.rename(target)
+
+    with pytest.raises(ValueError, match="identity"):
+        backup.recover_interrupted_backup(vault)
+
+    assert (vault / backup.BACKUP_TRANSACTION_REL).is_file()
+
+
 def test_workspace_recover_rejects_substituted_valid_backup_rollback(
     tmp_path: Path, capsys
 ) -> None:
@@ -1731,11 +1779,12 @@ def test_workspace_recover_rejects_unrecognized_backup_rollback(tmp_path: Path, 
     target = tmp_path / "missing-backup-target"
     rollback = tmp_path / ".missing-backup-target.rollback-forged"
     stage = tmp_path / ".missing-backup-target.stage-forged"
-    rollback.mkdir()
-    stage.mkdir()
+    assert _create(vault, rollback)["ok"] is True
+    assert _create(vault, stage)["ok"] is True
+    backup._write_backup_transaction(vault, target, rollback, stage)
+    (rollback / backup.MANIFEST_NAME).unlink()
     sentinel = rollback / "keep.txt"
     sentinel.write_text("keep", encoding="utf-8")
-    backup._write_backup_transaction(vault, target, rollback, stage)
 
     with pytest.raises(ValueError, match="recognized Memoria backup"):
         backup.recover_interrupted_backup(vault)
@@ -1753,10 +1802,11 @@ def test_workspace_recover_does_not_delete_unrecognized_backup_stage(
     assert _create(vault, target)["ok"] is True
     rollback = tmp_path / ".complete-backup-target.rollback-forged"
     stage = tmp_path / ".complete-backup-target.stage-forged"
-    stage.mkdir()
+    assert _create(vault, stage)["ok"] is True
+    backup._write_backup_transaction(vault, target, rollback, stage)
+    (stage / backup.MANIFEST_NAME).unlink()
     sentinel = stage / "keep.txt"
     sentinel.write_text("keep", encoding="utf-8")
-    backup._write_backup_transaction(vault, target, rollback, stage)
 
     with pytest.raises(ValueError, match="recognized Memoria backup"):
         backup.recover_interrupted_backup(vault)
@@ -1847,6 +1897,94 @@ def test_workspace_lock_rejects_redirected_lock_path(tmp_path: Path, redirect_pa
             pass
 
     assert not outside_lock.exists()
+
+
+def test_workspace_lock_fails_closed_without_no_follow_open(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path / "workspace"
+    lock_path = vault / ".memoria/locks/worker.lock"
+    lock_path.parent.mkdir(parents=True)
+    outside_lock = tmp_path / "outside-worker.lock"
+    real_open = Path.open
+
+    def replace_lock_before_open(path: Path, *args, **kwargs):
+        if Path(path) == lock_path:
+            lock_path.symlink_to(outside_lock)
+        return real_open(path, *args, **kwargs)
+
+    monkeypatch.delattr(state.os, "O_NOFOLLOW")
+    monkeypatch.setattr(Path, "open", replace_lock_before_open)
+
+    with pytest.raises(ValueError, match="no-follow"):
+        with state.workspace_lock(vault):
+            pass
+
+    assert not outside_lock.exists()
+
+
+def test_workspace_lock_uses_native_safe_opener_on_windows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path / "workspace"
+    lock_path = vault / ".memoria/locks/worker.lock"
+    real_os = state.os
+    sentinel = object()
+
+    class WindowsOS:
+        name = "nt"
+
+        def __getattr__(self, name: str):
+            return getattr(real_os, name)
+
+    monkeypatch.setattr(state, "os", WindowsOS())
+    monkeypatch.setattr(
+        state,
+        "_open_workspace_lock_file_windows",
+        lambda _vault, _lock_path: sentinel,
+        raising=False,
+    )
+
+    opened = state._open_workspace_lock_file(vault, lock_path)
+    try:
+        assert opened is sentinel
+    finally:
+        if opened is not sentinel:
+            opened.close()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="requires a native Windows handle backend")
+def test_windows_workspace_lock_smoke_rejects_reparse_component(tmp_path: Path) -> None:
+    vault = tmp_path / "workspace"
+    vault.mkdir()
+    lock_path = vault / ".memoria/locks/worker.lock"
+
+    with state.workspace_lock(vault):
+        assert lock_path.is_file()
+
+    lock_path.unlink()
+    locks = lock_path.parent
+    locks.rmdir()
+    outside_locks = tmp_path / "outside-locks"
+    outside_locks.mkdir()
+    created = subprocess.run(
+        ["cmd.exe", "/d", "/c", "mklink", "/J", str(locks), str(outside_locks)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if created.returncode:
+        pytest.skip(f"Windows junction creation is unavailable: {created.stderr.strip()}")
+    try:
+        with pytest.raises(
+            ValueError, match="workspace lock path must not redirect through a symlink or junction"
+        ):
+            with state.workspace_lock(vault):
+                pass
+
+        assert not (outside_locks / "worker.lock").exists()
+    finally:
+        locks.rmdir()
 
 
 def test_workspace_recover_preserves_rollback_when_verification_fails(
@@ -1950,6 +2088,58 @@ def test_backup_recovery_resumes_identity_bound_terminal_cleanup(
     assert report["outcome"] == "rolled_back"
     assert not marker_path.exists()
     assert not (target / backup.TRANSACTION_DIRECTORY_IDENTITY).exists()
+
+
+def test_backup_recovery_removes_marker_before_target_identity(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "marker-before-identity-target"
+    rollback = tmp_path / ".marker-before-identity-target.rollback-test"
+    stage = tmp_path / ".marker-before-identity-target.stage-test"
+    assert _create(vault, target)["ok"] is True
+    assert _create(vault, stage)["ok"] is True
+    backup._write_backup_transaction(vault, target, rollback, stage)
+    real_remove_marker = backup._remove_backup_transaction
+
+    def remove_marker_after_identity_check(candidate: Path) -> None:
+        assert (target / backup.TRANSACTION_DIRECTORY_IDENTITY).is_file()
+        real_remove_marker(candidate)
+
+    monkeypatch.setattr(backup, "_remove_backup_transaction", remove_marker_after_identity_check)
+
+    report = backup.recover_interrupted_backup(vault)
+
+    assert report["outcome"] == "rolled_back"
+    assert not (vault / backup.BACKUP_TRANSACTION_REL).exists()
+    assert not (target / backup.TRANSACTION_DIRECTORY_IDENTITY).exists()
+
+
+def test_backup_publish_tolerates_post_marker_identity_cleanup_failure(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "post-marker-cleanup-target"
+    real_remove_identity = backup._remove_transaction_directory_identity
+
+    def fail_target_identity_cleanup(directory: Path) -> None:
+        if Path(directory) == target:
+            raise OSError("injected target identity cleanup failure")
+        real_remove_identity(directory)
+
+    monkeypatch.setattr(
+        backup,
+        "_remove_transaction_directory_identity",
+        fail_target_identity_cleanup,
+    )
+
+    report = _create(vault, target)
+
+    assert report["ok"] is True
+    assert not (vault / backup.BACKUP_TRANSACTION_REL).exists()
+    assert (target / backup.TRANSACTION_DIRECTORY_IDENTITY).is_file()
 
 
 def test_restore_recovery_resumes_after_identity_is_removed_from_empty_cleanup_dir(

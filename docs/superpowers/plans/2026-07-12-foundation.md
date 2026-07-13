@@ -882,8 +882,13 @@ def test_backup_report_requires_blob_coverage_not_sqlite_only(tmp_path, capsys):
   the only saved originals until the recovered journal verifies when a database
   exists. A pre-swap workspace without a database remains without one after
   rollback. A completed publication recovered after a hard exit writes its
-  matching local backup stamp before removing its marker. Terminal phases remove
-  directory identities last, so cleanup resumes after a hard exit.
+  matching local backup stamp before removing its marker. The retained target
+  keeps its transaction identity through terminal validation, stamp publication,
+  and sibling cleanup, so substitution cannot hide behind an interrupted
+  identity cleanup. The marker is removed before best-effort target identity
+  cleanup; leftover identity metadata is inert and does not invalidate the
+  backup. Sibling cleanup removes directory identities last, so it resumes after
+  a hard exit.
   Cross-directory renames persist the destination entry before the source
   removal.
 
@@ -894,8 +899,13 @@ def test_backup_report_requires_blob_coverage_not_sqlite_only(tmp_path, capsys):
   enumerates all seed, skeleton, projection, SQLite, and existing Git-metadata
   write targets, refuses Git common-directory indirection, and uses Git
   subprocesses that ignore environment redirects while binding the Git
-  directory and work tree explicitly. Restore applies the same Git binding to
-  committed journal-anchor reads.
+  directory and work tree explicitly. Those subprocesses disable system/global
+  Git configuration, and repair never stages any repository, including one it
+  creates, so repository clean filters cannot run. POSIX maintenance fails
+  closed when atomic no-follow opens are unavailable; the Windows lock opener
+  anchors the resolved workspace root and opens every component below it with
+  parent-relative no-reparse native handles. Restore applies the same Git
+  binding to committed journal-anchor reads.
   Replacement requires a fully restorable prior snapshot, blob-coverage
   configuration must parse to a non-empty target and Boolean `enabled: true`
   when that field is present, and every project export format refuses a
@@ -972,15 +982,10 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
 | [Backup and recovery](backup-and-recovery.md) |
 ```
 
-- [x] **Step 5: Re-run tests + gate** — fresh post-hardening verification:
-
-  - `python3 -m pytest -q tests/test_backup_restore.py` — `93 passed`;
-  - `python3 -m pytest -q tests/test_cli_doctor_eval.py` — `33 passed`;
-  - `python3 -m pytest -q tests/test_project_knowledge.py tests/test_runtime_state.py`
-    — `27 passed`; and
-  - `python3 scripts/verify` — `467 passed, 9 skipped, 514 deselected`; all
-    lint, product gates, offline smoke, syntax, and installer checks passed with
-    `verify: OK`.
+- [ ] **Step 5: Re-run tests + gate** — re-run the complete affected suites and
+  `python3 scripts/verify` after the final Windows locking change. The native
+  Windows no-reparse lock smoke is included but skips on non-Windows hosts; a
+  native Windows run or CI check is required before this step can be checked.
 
 - [ ] **Step 6: Commit + PR**
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 from contextlib import contextmanager
 from pathlib import Path
@@ -240,8 +241,9 @@ def test_cli_doctor_maintenance_rejects_pending_transactions(
         target = tmp_path / "doctor-backup-target"
         rollback = tmp_path / ".doctor-backup-target.rollback-doctor"
         stage = tmp_path / ".doctor-backup-target.stage-doctor"
-        target.mkdir()
-        stage.mkdir()
+        assert (
+            backup.create_backup(workspace, stage, actor="pi", machine="test-doctor")["ok"] is True
+        )
         backup._write_backup_transaction(workspace, target, rollback, stage)
 
     command = ["doctor"]
@@ -416,6 +418,54 @@ def test_cli_doctor_repair_ignores_git_environment_redirects(
     assert rc == 0
     assert outside_config.read_bytes() == original_config
     assert output["backup"]["git_remote"] == {"configured": False, "remotes": []}
+
+
+@pytest.mark.skipif(os.name == "nt", reason="uses a POSIX Git clean-filter command")
+def test_cli_doctor_repair_does_not_run_repository_clean_filters(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    shutil.rmtree(workspace / ".git")
+    git(workspace, "init", "-q")
+    sentinel = tmp_path / "clean-filter-ran"
+    (workspace / ".gitattributes").write_text("* filter=doctorprobe\n", encoding="utf-8")
+    git(
+        workspace,
+        "config",
+        "filter.doctorprobe.clean",
+        f"sh -c 'touch {sentinel}; cat'",
+    )
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+
+    assert rc == 0
+    assert not sentinel.exists()
+
+
+def test_cli_doctor_repair_does_not_commit_existing_files_when_creating_git(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    shutil.rmtree(workspace / ".git")
+    (workspace / "operator-notes.md").write_text("private draft\n", encoding="utf-8")
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    head = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=workspace,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert rc == 0
+    assert (workspace / ".git").is_dir()
+    assert head.returncode != 0
+    assert (workspace / "operator-notes.md").read_text(encoding="utf-8") == "private draft\n"
 
 
 def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(

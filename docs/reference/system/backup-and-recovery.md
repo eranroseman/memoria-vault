@@ -101,9 +101,11 @@ staged replacement and, when present, the prior target to one random
 transaction. For an unresolved publication marker, recovery validates those
 identities and recognized backup material before it restores the prior target,
 removes an unpublished first snapshot, or retains a replacement whose publish
-rename completed. Once a backup marker is in cleanup, it validates the retained
-target, writes its matching local backup stamp, and completes cleanup only. The
-marker is removed last, after the stamp is durable.
+rename completed. Once a backup marker is in cleanup, the retained target must
+keep its matching transaction identity while recovery writes the local backup
+stamp and removes sibling transaction material. Recovery then removes the marker
+and best-effort target identity cleanup follows. An interrupted identity cleanup
+may leave that inert metadata in an otherwise valid backup target.
 
 ## Doctor status
 
@@ -135,7 +137,15 @@ seed, projection, SQLite, and existing Git-metadata target before its first
 write. Its Git commands are bound to the workspace repository and ignore Git
 environment variables that can redirect the index, object store, work tree,
 configuration, or common directory. Repair refuses repository common-directory
-indirection.
+indirection. Git system and global configuration are disabled for these
+commands. `memoria init` and first-time migration stage and commit files only in
+a repository they create. Repair never stages any repository, including one it
+creates, so repository-configured clean filters cannot run. On POSIX, the
+workspace lock requires atomic no-follow opens and refuses maintenance when the
+platform lacks them. On Windows, it anchors the resolved workspace root, then
+opens and inspects every lock-path component below it through parent-relative
+native handles without resolving reparse points. It retains those handles until
+the lock closes.
 
 ## Related
 

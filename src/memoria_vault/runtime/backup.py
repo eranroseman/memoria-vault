@@ -328,7 +328,7 @@ def local_backup_status(vault: Path) -> dict[str, Any]:
         return {**stamped, "error": "backup stamp format is invalid"}
     if stamped_files != current["files"] or stamped_hash != current["sha256"]:
         return {**stamped, "error": "backup stamp does not match the current blob inventory"}
-    if target is None or not target.is_absolute() or target.is_symlink() or not target.is_dir():
+    if target is None or not target.is_absolute() or _path_redirects(target) or not target.is_dir():
         return {**stamped, "error": "stamped backup target is missing or invalid"}
     manifest = _read_manifest(target)
     if manifest is None:
@@ -545,16 +545,14 @@ def recover_interrupted_backup(vault: Path) -> dict[str, Any]:
             outcome = "published" if phase == "published-cleanup" else "rolled_back"
             if outcome == "published" or previous_target:
                 _require_recognized_backup_target(target)
-                target_identity = target / TRANSACTION_DIRECTORY_IDENTITY
-                if os.path.lexists(target_identity):
-                    _validate_transaction_directory_identity(
-                        vault,
-                        target,
-                        "stage" if outcome == "published" else "rollback",
-                        BACKUP_TRANSACTION_FORMAT,
-                        transaction_id,
-                        directory_name=stage.name if outcome == "published" else rollback.name,
-                    )
+                _validate_transaction_directory_identity(
+                    vault,
+                    target,
+                    "stage" if outcome == "published" else "rollback",
+                    BACKUP_TRANSACTION_FORMAT,
+                    transaction_id,
+                    directory_name=stage.name if outcome == "published" else rollback.name,
+                )
             elif os.path.lexists(target):
                 raise ValueError("backup transaction target must remain absent after rollback")
             for directory, role in ((rollback, "rollback"), (stage, "stage")):
@@ -569,8 +567,8 @@ def recover_interrupted_backup(vault: Path) -> dict[str, Any]:
             _write_local_backup_stamp(vault, target, manifest)
         _cleanup_transaction_directory(rollback)
         _cleanup_transaction_directory(stage)
-        _remove_transaction_directory_identity(target)
         _remove_backup_transaction(vault)
+        _remove_target_identity_after_marker(target)
 
     return {"recovered": True, "target": str(target), "outcome": outcome}
 
@@ -1317,6 +1315,14 @@ def _remove_transaction_directory_identity(directory: Path) -> None:
     _fsync_directory(directory)
 
 
+def _remove_target_identity_after_marker(directory: Path) -> None:
+    """Best-effort cleanup after recovery no longer needs the target binding."""
+    try:
+        _remove_transaction_directory_identity(directory)
+    except (OSError, ValueError):
+        pass
+
+
 def _remove_restore_transaction(vault: Path) -> None:
     path = vault / RESTORE_TRANSACTION_REL
     if os.path.lexists(path):
@@ -1535,5 +1541,5 @@ def _complete_backup_publication(vault: Path, target: Path, rollback: Path, stag
     _write_local_backup_stamp(vault, target, manifest)
     _cleanup_transaction_directory(rollback)
     _cleanup_transaction_directory(stage)
-    _remove_transaction_directory_identity(target)
     _remove_backup_transaction(vault)
+    _remove_target_identity_after_marker(target)

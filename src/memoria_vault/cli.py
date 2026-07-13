@@ -2298,7 +2298,7 @@ def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool 
 
 
 def _repair_workspace(workspace: Path) -> list[str]:
-    _initialize_workspace_files(workspace, overwrite=True)
+    _initialize_workspace_files(workspace, overwrite=True, commit_created_repository=False)
     return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
 
 
@@ -2374,7 +2374,11 @@ def _doctor_maintenance(workspace: Path, *, repair: bool = False):
 
 
 def _initialize_workspace_files(
-    workspace: Path, *, overwrite: bool = False, include_obsidian: bool = True
+    workspace: Path,
+    *,
+    overwrite: bool = False,
+    include_obsidian: bool = True,
+    commit_created_repository: bool = True,
 ) -> None:
     workspace.mkdir(parents=True, exist_ok=True)
     for rel in _workspace_plan(workspace):
@@ -2385,7 +2389,7 @@ def _initialize_workspace_files(
     from memoria_vault.runtime.projections import write_tracked_projections_explicit
 
     write_tracked_projections_explicit(workspace, actor="operation", machine="memoria-init")
-    _ensure_git(workspace)
+    _ensure_git(workspace, commit_created_repository=commit_created_repository)
 
 
 def _import_alpha15_workspace(source: Path, workspace: Path) -> dict[str, Any]:
@@ -2512,14 +2516,20 @@ def _ensure_control_files(workspace: Path) -> None:
         write_text_durable(manifest, "", create_parent=True)
 
 
-def _ensure_git(workspace: Path) -> None:
-    if not (workspace / ".git").exists():
+def _ensure_git(workspace: Path, *, commit_created_repository: bool = True) -> None:
+    git_path = workspace / ".git"
+    created_repository = not os.path.lexists(git_path)
+    if created_repository:
         _git(workspace, "init", "-q")
     if _git(workspace, "config", "user.email", check=False).returncode:
         _git(workspace, "config", "user.email", "memoria@example.invalid")
     if _git(workspace, "config", "user.name", check=False).returncode:
         _git(workspace, "config", "user.name", "Memoria")
-    if _git(workspace, "rev-parse", "--verify", "HEAD", check=False).returncode:
+    if (
+        created_repository
+        and commit_created_repository
+        and _git(workspace, "rev-parse", "--verify", "HEAD", check=False).returncode
+    ):
         _git(workspace, "add", ".")
         if _git(workspace, "diff", "--cached", "--quiet", check=False).returncode:
             _git(workspace, "commit", "-m", "initialize memoria workspace")
@@ -2528,6 +2538,8 @@ def _ensure_git(workspace: Path) -> None:
 def _git(workspace: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     workspace = Path(workspace).resolve()
     env = {name: value for name, value in os.environ.items() if not name.startswith("GIT_")}
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
+    env["GIT_CONFIG_GLOBAL"] = os.devnull
     proc = subprocess.run(
         [
             "git",
