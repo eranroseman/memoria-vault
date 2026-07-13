@@ -3,11 +3,39 @@
 from __future__ import annotations
 
 import re
+import shlex
 
-_FENCE_OPEN_RE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})")
-_PANDOC_RAW_FORMAT_RE = re.compile(r"(?<!\\)\{=[A-Za-z0-9_.+-]+\}")
+_FENCE_OPEN_RE = re.compile(r"^ {0,3}(?P<fence>`{3,}|~{3,})")
+_RAW_FORMAT_FENCE_INFO_RE = re.compile(r"^[ \t]*\{[ \t]*=[^ \t}]+[ \t]*\}[ \t]*(?:\r?\n)?$")
+_RAW_FORMAT_INLINE_ATTRIBUTE_RE = re.compile(r"\{[ \t]*=[^ \t}]+[ \t]*\}")
+_TILDE_FENCE_LANGUAGE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9+._-]*$")
+_TILDE_FENCE_ATTRIBUTES_RE = re.compile(
+    r"^(?:(?P<language>[A-Za-z0-9][A-Za-z0-9+._-]*)[ \t]+)?"
+    r"\{(?P<attributes>[^{}]+)\}$"
+)
+_TILDE_FENCE_ATTRIBUTE_NAME_RE = re.compile(r"^[A-Za-z_:][A-Za-z0-9_.:-]*$")
 _HTML_TAG_RE = re.compile(r"<(?=[!/?A-Za-z])[^>]*>")
 _HTML_OPEN_RE = re.compile(r"<(?=[!/?A-Za-z])")
+_HTML_BLOCK_OPEN_RE = re.compile(
+    r"""(?ix)
+    (?:
+        <!--
+        | <\?
+        | <!\[CDATA\[
+        | <![A-Z]
+        | </?(?:
+            address|article|aside|base|basefont|blockquote|body|caption|center|col|
+            colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|
+            footer|form|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|
+            menuitem|nav|noframes|ol|output|p|plaintext|pre|script|search|section|
+            style|summary|table|tbody|td|tfoot|th|thead|textarea|title|tr|track|ul|wbr
+        )(?=[ \t\r\n/>])
+    )
+    """
+)
+_ATX_HEADING_PREFIX_RE = re.compile(r"#{1,6}(?:[ \t]+|$)")
+_LIST_PREFIX_RE = re.compile(r"(?:[-+*]|\d{1,9}[.)])[ \t]+")
+_THEMATIC_OR_SETEXT_RE = re.compile(r"^[ \t]{0,3}(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|[-=]+[ \t]*)$")
 _IMAGE_EMBED_RE = re.compile(r"!\[\[([^\]\n]*)\]\]")
 _INLINE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]*)\]\(\s*([^\n)]*?)\s*\)")
 _REFERENCE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]+)\]\[([^\]\n]*)\]")
@@ -66,7 +94,6 @@ def _replace_external_url(match: re.Match[str]) -> str:
 
 
 def _neutralize_plain_text(text: str) -> str:
-    text = _PANDOC_RAW_FORMAT_RE.sub(lambda match: "\\" + match.group(0), text)
     text = _INLINE_LINK_RE.sub(_replace_inline_link, text)
     text = _REFERENCE_LINK_RE.sub(_replace_reference_link, text)
     text = _REFERENCE_DEFINITION_RE.sub(_replace_reference_definition, text)
@@ -90,14 +117,106 @@ def neutralize_untrusted_markdown_fragment(fragment: str) -> str:
     return _neutralize_plain_text(fragment.replace("`", "&#96;"))
 
 
-def _is_escaped_backtick(text: str, index: int) -> bool:
-    """Return whether the backtick at *index* is escaped in Markdown source."""
+def _is_escaped_markdown_character(text: str, index: int) -> bool:
+    """Return whether the Markdown character at *index* is escaped in source."""
     backslashes = 0
     index -= 1
     while index >= 0 and text[index] == "\\":
         backslashes += 1
         index -= 1
     return bool(backslashes % 2)
+
+
+def _is_fenced_code_opening(line: str, opening: re.Match[str]) -> bool:
+    """Return whether *opening* can be a CommonMark fenced-code opener."""
+    return opening.group("fence")[0] != "`" or "`" not in line[opening.end() :]
+
+
+def _has_regular_tilde_fence_attributes(attributes: str) -> bool:
+    """Return whether *attributes* contains only normal fenced-code attributes."""
+    try:
+        tokens = shlex.split(attributes, comments=False, posix=True)
+    except ValueError:
+        return False
+    if not tokens:
+        return False
+    for token in tokens:
+        if token[:1] in {"#", "."}:
+            if not _TILDE_FENCE_ATTRIBUTE_NAME_RE.fullmatch(token[1:]):
+                return False
+            continue
+        name, separator, value = token.partition("=")
+        if not (separator and value and _TILDE_FENCE_ATTRIBUTE_NAME_RE.fullmatch(name)):
+            return False
+    return True
+
+
+def _has_valid_tilde_fence_info(line: str, opening: re.Match[str]) -> bool:
+    """Return whether a tilde fence has a non-raw or exact raw-format header."""
+    suffix = line[opening.end() :]
+    if _RAW_FORMAT_FENCE_INFO_RE.fullmatch(suffix):
+        return True
+    info = suffix.rstrip("\r\n").strip(" \t")
+    if not info or _TILDE_FENCE_LANGUAGE_RE.fullmatch(info):
+        return True
+    attributes = _TILDE_FENCE_ATTRIBUTES_RE.fullmatch(info)
+    return bool(attributes and _has_regular_tilde_fence_attributes(attributes["attributes"]))
+
+
+def _tilde_fence_can_start_block(plain_lines: list[str]) -> bool:
+    """Return whether a tilde fence is at a Markdown block boundary."""
+    return not plain_lines or not plain_lines[-1].strip()
+
+
+def _markdown_block_line_context(line: str) -> tuple[str, bool]:
+    """Return the content after a Markdown block prefix and whether one was found."""
+    indentation = min(len(line) - len(line.lstrip(" \t")), 3)
+    content = line[indentation:]
+    has_block_prefix = False
+    while content.startswith(">"):
+        has_block_prefix = True
+        content = content[1:].lstrip(" \t")
+    for prefix in (_ATX_HEADING_PREFIX_RE, _LIST_PREFIX_RE):
+        match = prefix.match(content)
+        if match:
+            return content[match.end() :], True
+    return content, has_block_prefix
+
+
+def _line_has_unescaped_html_tag(line: str) -> bool:
+    return any(
+        not _is_escaped_markdown_character(line, match.start())
+        for match in _HTML_TAG_RE.finditer(line)
+    )
+
+
+def _line_starts_interrupting_markdown_block(line: str) -> bool:
+    """Return whether *line* starts a block that ends the current paragraph."""
+    _content, has_block_prefix = _markdown_block_line_context(line)
+    fence_opening = _FENCE_OPEN_RE.match(line)
+    return bool(
+        has_block_prefix
+        or (fence_opening and _is_fenced_code_opening(line, fence_opening))
+        or _THEMATIC_OR_SETEXT_RE.fullmatch(line)
+    )
+
+
+def _contains_interrupting_html_block(content: str) -> bool:
+    """Return whether raw HTML can make a multiline code span parse as blocks."""
+    lines = f"\0{content}\0".splitlines()
+    has_unescaped_html_tag = False
+    has_interrupting_markdown_block = False
+    for line in lines:
+        block_content, has_block_prefix = _markdown_block_line_context(line)
+        if _HTML_OPEN_RE.match(block_content) and (
+            _HTML_BLOCK_OPEN_RE.match(block_content) or has_block_prefix
+        ):
+            return True
+        has_unescaped_html_tag |= _line_has_unescaped_html_tag(line)
+        has_interrupting_markdown_block |= _line_starts_interrupting_markdown_block(line)
+    return has_unescaped_html_tag and (
+        any(not line.strip() for line in lines) or has_interrupting_markdown_block
+    )
 
 
 def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
@@ -117,7 +236,7 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
         opener_end = cursor + 1
         while opener_end < len(text) and text[opener_end] == "`":
             opener_end += 1
-        if _is_escaped_backtick(text, cursor):
+        if _is_escaped_markdown_character(text, cursor):
             cursor = opener_end
             continue
 
@@ -131,7 +250,7 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
             run_end = probe + 1
             while run_end < len(text) and text[run_end] == "`":
                 run_end += 1
-            if not _is_escaped_backtick(text, probe) and text[probe:run_end] == delimiter:
+            if text[probe:run_end] == delimiter:
                 closing = probe
                 break
             probe = run_end
@@ -144,7 +263,7 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
 
         closing_end = closing + len(delimiter)
         content = text[opener_end:closing]
-        if ("\n" in content or "\r" in content) and _HTML_OPEN_RE.search(content):
+        if ("\n" in content or "\r" in content) and _contains_interrupting_html_block(content):
             # Markdown blocks can interrupt a would-be multiline code span before
             # raw HTML. Leave these ambiguous spans for the normal escape pass.
             output.append(text[plain_start:cursor])
@@ -158,6 +277,13 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
         token = f"<{marker}{len(spans)}{marker}>"
         output.append(token)
         spans.append((token, text[cursor:closing_end]))
+        raw_attribute = _RAW_FORMAT_INLINE_ATTRIBUTE_RE.match(text, closing_end)
+        if raw_attribute:
+            output.append("\\")
+            output.append(raw_attribute.group())
+            plain_start = raw_attribute.end()
+            cursor = raw_attribute.end()
+            continue
         plain_start = closing_end
         cursor = closing_end
 
@@ -174,6 +300,15 @@ def _neutralize_inline_text(text: str) -> str:
     return neutralized
 
 
+def _inert_raw_format_fence_opening(line: str, opening: re.Match[str]) -> str:
+    """Turn a Pandoc raw-format fence into an ordinary text fence."""
+    suffix = line[opening.end() :]
+    if not _RAW_FORMAT_FENCE_INFO_RE.fullmatch(suffix):
+        return line
+    line_ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+    return f"{line[: opening.end()]}text{line_ending}"
+
+
 def neutralize_untrusted_markdown(body: str) -> str:
     """Make machine- or third-party-derived Markdown safe to render.
 
@@ -185,31 +320,46 @@ def neutralize_untrusted_markdown(body: str) -> str:
     plain_lines: list[str] = []
     fence_character: str | None = None
     fence_length = 0
+    fence_lines: list[str] = []
 
     for line in body.splitlines(keepends=True):
         if fence_character is not None:
-            output.append(line)
+            fence_lines.append(line)
             closing = re.match(
-                rf"^[ \t]{{0,3}}{re.escape(fence_character)}"
+                rf"^ {{0,3}}{re.escape(fence_character)}"
                 rf"{{{fence_length},}}[ \t]*(?:\r?\n)?$",
                 line,
             )
             if closing:
+                output.extend(fence_lines)
                 fence_character = None
                 fence_length = 0
+                fence_lines.clear()
             continue
 
         opening = _FENCE_OPEN_RE.match(line)
-        if opening:
+        tilde_fence = bool(opening and opening.group("fence")[0] == "~")
+        if (
+            opening
+            and _is_fenced_code_opening(line, opening)
+            and (
+                not tilde_fence
+                or (
+                    _tilde_fence_can_start_block(plain_lines)
+                    and _has_valid_tilde_fence_info(line, opening)
+                )
+            )
+        ):
             output.append(_neutralize_inline_text("".join(plain_lines)))
             plain_lines.clear()
             fence = opening.group("fence")
             fence_character = fence[0]
             fence_length = len(fence)
-            output.append(_PANDOC_RAW_FORMAT_RE.sub(lambda match: "\\" + match.group(0), line))
+            fence_lines.append(_inert_raw_format_fence_opening(line, opening))
             continue
 
         plain_lines.append(line)
 
+    plain_lines.extend(fence_lines)
     output.append(_neutralize_inline_text("".join(plain_lines)))
     return "".join(output)

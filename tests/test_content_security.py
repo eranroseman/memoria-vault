@@ -129,7 +129,283 @@ def test_existing_code_spans_and_fences_are_untouched() -> None:
         "`http://inline.example` and ``![literal](http://code.example)``\n"
         "```markdown\n![literal](http://fenced.example)\n```\n"
         '~~~html\n<img src="http://tilde.example">\n~~~\n'
+        '````markdown\n`<iframe src="http://fenced-inline.example">`{=html}\n````\n'
     )
+
+    assert neutralize_untrusted_markdown(source) == source
+
+
+@pytest.mark.parametrize("delimiter", ["`", "``", "```", "````"])
+@pytest.mark.parametrize("backslashes", [0, 1, 2, 3])
+def test_inline_code_preserves_literal_backslashes_before_matching_closer(
+    delimiter: str,
+    backslashes: int,
+) -> None:
+    source = delimiter + "![literal](http://code.example)" + "\\" * backslashes + delimiter
+
+    assert neutralize_untrusted_markdown(source) == source
+
+
+@pytest.mark.parametrize("delimiter", ["`", "``", "```", "````"])
+@pytest.mark.parametrize("backslashes", [0, 1, 2, 3])
+def test_raw_format_inline_code_with_literal_closer_backslashes_is_inert(
+    delimiter: str,
+    backslashes: int,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    payload = '<iframe src="https://evil.example/raw-inline"></iframe>'
+    closing_backslashes = "\\" * backslashes
+    source = delimiter + payload + closing_backslashes + delimiter + "{=html}"
+    expected = delimiter + payload + closing_backslashes + delimiter + "\\{=html}"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered == expected
+    assert neutralize_untrusted_markdown(rendered) == rendered
+    html = subprocess.run(
+        [pandoc, "-f", "markdown", "-t", "html"],
+        input=rendered,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+    assert "<iframe" not in html
+
+
+def test_fence_with_raw_inline_like_content_is_untouched() -> None:
+    source = '```markdown\n```{=html}\n<iframe src="https://evil.example/literal"></iframe>\n```\n'
+
+    assert neutralize_untrusted_markdown(source) == source
+
+
+@pytest.mark.parametrize(
+    ("fence", "attribute"),
+    [
+        ("```", "{=html}"),
+        ("~~~", " { =HTML }"),
+    ],
+)
+def test_raw_format_fences_are_inert_through_export_boundaries(
+    tmp_path: Path,
+    fence: str,
+    attribute: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    source = (
+        f'{fence}{attribute}\n<iframe src="https://evil.example/raw-fence"></iframe>\n{fence}\n'
+    )
+    direct = neutralize_untrusted_markdown(source)
+    assert direct != source
+    assert neutralize_untrusted_markdown(direct) == direct
+
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=source,
+    )
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (direct, rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "markdown", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<iframe" not in html
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        '```markdown\n<iframe src="https://evil.example/unclosed-backtick"></iframe>\n',
+        '~~~markdown\n<iframe src="https://evil.example/unclosed-tilde"></iframe>\n',
+        '~~~{=html}\n<iframe src="https://evil.example/unclosed-raw"></iframe>\n',
+        '~~~{=html .bad}\n<iframe src="https://evil.example/malformed-raw"></iframe>\n~~~\n',
+        '~~~ {.bad =html}\n<iframe src="https://evil.example/mixed-raw"></iframe>\n~~~\n',
+        '~~~python linenos startFrom=10\n<iframe src="https://evil.example/unsupported-info"></iframe>\n~~~\n',
+        'prefix\n~~~{=html}\n<iframe src="https://evil.example/adjacent-raw"></iframe>\n~~~\n',
+        '\t~~~{=html}\n<iframe src="https://evil.example/tab-indented"></iframe>\n\t~~~\n',
+        ' \t```{=html}\n<iframe src="https://evil.example/mixed-indent"></iframe>\n \t```\n',
+    ],
+)
+def test_noncode_fence_candidates_are_inert_through_export_boundaries(
+    tmp_path: Path,
+    source: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+
+    direct = neutralize_untrusted_markdown(source)
+
+    assert direct != source
+    assert neutralize_untrusted_markdown(direct) == direct
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=source,
+    )
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (direct, rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "markdown", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<iframe" not in html
+
+
+def test_closed_valid_tilde_fence_with_regular_attributes_is_untouched() -> None:
+    source = '~~~ {.python key="literal value"}\n<iframe src="https://example.invalid/literal"></iframe>\n~~~\n'
+
+    assert neutralize_untrusted_markdown(source) == source
+
+
+@pytest.mark.parametrize(
+    ("delimiter", "attribute", "multiline"),
+    [
+        ("`", "{=html}", False),
+        ("``", "{=HTML}", False),
+        ("```", "{=html4}", False),
+        ("````", "{ =HTML5 }", False),
+        ("```", "{=html4}", True),
+        ("````", "{ =HTML5 }", True),
+    ],
+)
+def test_raw_format_inline_code_is_inert_through_export_boundaries(
+    tmp_path: Path,
+    delimiter: str,
+    attribute: str,
+    multiline: bool,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    payload = '<iframe src="https://evil.example/raw-inline"></iframe>'
+    source = (
+        f"{delimiter}\n{payload}\n{delimiter}{attribute}"
+        if multiline
+        else f"{delimiter}{payload}{delimiter}{attribute}"
+    )
+    direct = neutralize_untrusted_markdown(source)
+    assert direct != source
+    assert neutralize_untrusted_markdown(direct) == direct
+
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=source,
+    )
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (direct, rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "markdown", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<iframe" not in html
+
+
+@pytest.mark.parametrize("delimiter", ["```", "````", "`````"])
+@pytest.mark.parametrize("closer_backslashes", [1, 2, 3])
+@pytest.mark.parametrize("attribute", ["{=html}", "{=HTML4}", "{ =html5 }"])
+def test_delayed_raw_inline_closers_with_literal_backslashes_are_inert_through_export_boundaries(
+    tmp_path: Path,
+    delimiter: str,
+    closer_backslashes: int,
+    attribute: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    payload = '<iframe src="https://evil.example/delayed-buffer"></iframe>'
+    closer = "\\" * closer_backslashes + delimiter + attribute
+    source = f"{delimiter}\n{payload}\n{closer}\n"
+
+    direct = neutralize_untrusted_markdown(source)
+
+    assert direct != source
+    assert neutralize_untrusted_markdown(direct) == direct
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=source,
+    )
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (direct, rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "markdown", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<iframe" not in html
+
+
+@pytest.mark.parametrize("delimiter", ["```", "````", "`````"])
+@pytest.mark.parametrize("closer_backslashes", [1, 2, 3])
+def test_closed_fence_with_raw_inline_like_backslash_closer_is_untouched(
+    delimiter: str,
+    closer_backslashes: int,
+) -> None:
+    source = (
+        f"{delimiter}markdown\n"
+        "![literal](https://example.invalid/fenced)\n"
+        + "\\" * closer_backslashes
+        + f"{delimiter}{{=html}}\n{delimiter}\n"
+    )
+
+    assert neutralize_untrusted_markdown(source) == source
+
+
+def test_multiline_code_span_is_untouched() -> None:
+    source = "`![literal](http://code.example/image.png)\nhttps://code.example/inside`"
 
     assert neutralize_untrusted_markdown(source) == source
 
@@ -137,31 +413,30 @@ def test_existing_code_spans_and_fences_are_untouched() -> None:
 @pytest.mark.parametrize(
     "source",
     [
-        '`<img src="https://evil.example/pandoc-inline">`{=html}\n',
-        '```{=html}\n<img src="https://evil.example/pandoc-fence">\n```\n',
+        '`\n<img src="https://example.invalid/literal.png">\n`',
+        "`\n<span>literal</span>\n`",
     ],
 )
-def test_pandoc_raw_format_markup_is_inert(source: str) -> None:
+def test_multiline_inline_code_with_non_block_html_is_untouched(source: str) -> None:
+    assert neutralize_untrusted_markdown(source) == source
+
+
+def test_multiline_pseudo_code_span_with_inline_html_before_heading_is_inert() -> None:
     pandoc = shutil.which("pandoc")
     if pandoc is None:
         pytest.skip("Pandoc is optional")
+    source = '`\n<img src="https://evil.example/heading-break">\n# Heading\n`'
 
     rendered = neutralize_untrusted_markdown(source)
+
     html = subprocess.run(
-        [pandoc, "-t", "html"],
+        [pandoc, "-f", "commonmark", "-t", "html"],
         input=rendered,
         text=True,
         capture_output=True,
         check=True,
     ).stdout
-
     assert "<img" not in html
-
-
-def test_multiline_code_span_is_untouched() -> None:
-    source = "`![literal](http://code.example/image.png)\nhttps://code.example/inside`"
-
-    assert neutralize_untrusted_markdown(source) == source
 
 
 @pytest.mark.parametrize("delimiter", ["`", "``"])
