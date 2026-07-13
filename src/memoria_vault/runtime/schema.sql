@@ -341,6 +341,20 @@ CREATE TABLE IF NOT EXISTS evidence_sets (
 );
 CREATE INDEX IF NOT EXISTS idx_evidence_sets_block_ref
     ON evidence_sets(block_ref);
+CREATE TABLE IF NOT EXISTS evidence_bindings (
+    id TEXT PRIMARY KEY,
+    block_text_sha256 TEXT
+);
+CREATE TRIGGER IF NOT EXISTS evidence_bindings_no_update
+BEFORE UPDATE ON evidence_bindings
+BEGIN
+    SELECT RAISE(ABORT, 'evidence bindings are immutable');
+END;
+CREATE TRIGGER IF NOT EXISTS evidence_bindings_no_delete
+BEFORE DELETE ON evidence_bindings
+BEGIN
+    SELECT RAISE(ABORT, 'evidence bindings are immutable');
+END;
 CREATE TABLE IF NOT EXISTS file_baseline (
     subject_id TEXT PRIMARY KEY,
     human_sha256 TEXT NOT NULL,
@@ -361,4 +375,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 11;
+PRAGMA user_version = 12;

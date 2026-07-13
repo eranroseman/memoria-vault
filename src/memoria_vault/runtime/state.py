@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -2263,9 +2263,18 @@ def code_run(vault: Path, run_id: str) -> dict[str, Any] | None:
 def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
     rows = list(rows)
     with connect(vault) as conn:
+        for row in rows:
+            conn.execute(
+                """
+                INSERT INTO evidence_bindings(id, block_text_sha256)
+                VALUES (?, ?)
+                ON CONFLICT(id) DO NOTHING
+                """,
+                (str(row["id"]), row.get("block_text_sha256")),
+            )
         existing_bindings = {
             row["id"]: row["block_text_sha256"]
-            for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_sets")
+            for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_bindings")
         }
         deleted = conn.execute("DELETE FROM evidence_sets").rowcount
         for row in rows:
@@ -2621,13 +2630,20 @@ def _block_text_sha256(vault: Path, block_ref: str) -> str | None:
     rel, separator, anchor = str(block_ref).partition("#^")
     if not separator or not rel or not anchor:
         return None
-    evidence_id = _evidence_id_for_block_anchor(anchor)
-    if evidence_id is None:
-        return None
     try:
         path = Path(vault) / normalize_path(rel)
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError, ValueError):
+        return None
+    return _block_text_sha256_from_text(text, block_ref)
+
+
+def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
+    _rel, separator, anchor = str(block_ref).partition("#^")
+    if not separator or not anchor:
+        return None
+    evidence_id = _evidence_id_for_block_anchor(anchor)
+    if evidence_id is None:
         return None
 
     anchor_token = f"^{anchor}"

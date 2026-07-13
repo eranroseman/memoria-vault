@@ -44,6 +44,29 @@ def test_rebuild_binds_new_evidence_once_and_preserves_hash_after_edit(
     assert rebuilt["block_text_sha256"] == expected
 
 
+def test_rebuild_preserves_binding_when_id_disappears_then_reappears(
+    tmp_path: Path,
+) -> None:
+    draft = tmp_path / "projects/project-alpha/draft.md"
+    draft.parent.mkdir(parents=True)
+    original = "Original bound claim."
+    draft.write_text(f"{original} ^blk-11111111 {_MARKER}\n", encoding="utf-8")
+
+    state.rebuild_evidence_sets_from_markers(tmp_path, run_id="compose-1")
+    expected = "sha256:" + hashlib.sha256(original.encode()).hexdigest()
+
+    draft.write_text("Evidence marker deliberately removed.\n", encoding="utf-8")
+    state.rebuild_evidence_sets_from_markers(tmp_path, run_id="remove-1")
+    assert state.evidence_sets(tmp_path) == []
+
+    changed = "Changed claim reusing the original evidence ID."
+    draft.write_text(f"{changed} ^blk-11111111 {_MARKER}\n", encoding="utf-8")
+    state.rebuild_evidence_sets_from_markers(tmp_path, run_id="reintroduce-1")
+    [reintroduced] = state.evidence_sets(tmp_path)
+
+    assert reintroduced["block_text_sha256"] == expected
+
+
 def test_rebuild_preserves_an_existing_unbound_hash(tmp_path: Path) -> None:
     draft = tmp_path / "projects/project-alpha/draft.md"
     draft.parent.mkdir(parents=True)

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import knowledge, state
 from memoria_vault.runtime.knowledge import analyze_gaps as _analyze_gaps
 from memoria_vault.runtime.knowledge import (
     compose_project_draft as _compose_project_draft,
@@ -389,6 +389,64 @@ def test_draft_text_drift_overrides_pi_disposition_and_refuses_export(
         write_project_export(vault, "project-alpha", draft=True)
 
 
+def test_reintroduced_evidence_id_refuses_export_when_its_text_changed(tmp_path: Path) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+
+    draft.write_text(original.replace(f"{anchor} {marker}", ""), encoding="utf-8")
+    state.rebuild_evidence_sets_from_markers(tmp_path)
+    assert state.evidence_sets(tmp_path) == []
+
+    draft.write_text(
+        original.replace("Original source-backed claim.", "Changed source-backed claim."),
+        encoding="utf-8",
+    )
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"][0]["kind"] == "evidence-text-drift"
+    with pytest.raises(ValueError, match="evidence-text-drift"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_draft_export_uses_the_verified_draft_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    draft, _evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Verified source-backed claim.",
+    )
+    original = knowledge.read_project_draft
+    reads = 0
+
+    def swap_after_verification(*args, **kwargs):
+        nonlocal reads
+        reads += 1
+        if reads == 2:
+            draft.write_text(
+                draft.read_text(encoding="utf-8").replace(
+                    "Verified source-backed claim.",
+                    "Unverified changed claim.",
+                ),
+                encoding="utf-8",
+            )
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(knowledge, "read_project_draft", swap_after_verification)
+    exported = write_project_export(tmp_path, "project-alpha", draft=True)
+
+    assert reads == 1
+    assert "Verified source-backed claim." in exported["content"]
+    assert "Unverified changed claim." not in exported["content"]
+
+
 def test_relocated_evidence_marker_refuses_export_with_unbound_text(tmp_path: Path) -> None:
     draft, evidence_id = _compose_source_backed_draft(
         tmp_path,
@@ -442,8 +500,6 @@ def test_even_escaped_inline_code_controls_refuse_export(tmp_path: Path) -> None
         f"Source note: `notes/support.md`\n\nUnsupported claim. {'\\' * 2}` {anchor} {marker} `\n",
         encoding="utf-8",
     )
-    with state.connect(tmp_path) as conn:
-        conn.execute("DELETE FROM evidence_sets")
     state.rebuild_evidence_sets_from_markers(tmp_path)
     [bound] = state.evidence_sets(tmp_path)
 
@@ -456,7 +512,7 @@ def test_even_escaped_inline_code_controls_refuse_export(tmp_path: Path) -> None
             "severity": "high",
             "evidence_id": evidence_id,
             "block_ref": bound["block_ref"],
-            "reason": "stored block-text binding is missing",
+            "reason": "anchored block text cannot be resolved",
         }
     ]
     with pytest.raises(ValueError, match="evidence-text-unbound"):
@@ -479,8 +535,6 @@ def test_backslash_before_inline_code_closer_controls_refuse_export(tmp_path: Pa
         f"Unsupported claim. ` {anchor} {marker} {escaped_closer}\n",
         encoding="utf-8",
     )
-    with state.connect(tmp_path) as conn:
-        conn.execute("DELETE FROM evidence_sets")
     state.rebuild_evidence_sets_from_markers(tmp_path)
     [bound] = state.evidence_sets(tmp_path)
 
@@ -493,7 +547,7 @@ def test_backslash_before_inline_code_closer_controls_refuse_export(tmp_path: Pa
             "severity": "high",
             "evidence_id": evidence_id,
             "block_ref": bound["block_ref"],
-            "reason": "stored block-text binding is missing",
+            "reason": "anchored block text cannot be resolved",
         }
     ]
     with pytest.raises(ValueError, match="evidence-text-unbound"):
@@ -511,15 +565,15 @@ def test_heading_and_following_paragraph_cannot_share_evidence_binding(
     marker_start = f"%%ev: {evidence_id} "
     _before, marker_and_rest = original.split(marker_start, 1)
     marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
-    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    fresh_evidence_id = "ev-1234abcd"
+    fresh_marker = marker.replace(evidence_id, fresh_evidence_id)
+    fresh_anchor = f"^blk-{fresh_evidence_id.removeprefix('ev-')}"
     draft.write_text(
-        f"# Supported claim {anchor} {marker}\n"
+        f"# Supported claim {fresh_anchor} {fresh_marker}\n"
         "Changed unsupported claim.\n\n"
         "Source note: `notes/support.md`\n",
         encoding="utf-8",
     )
-    with state.connect(tmp_path) as conn:
-        conn.execute("DELETE FROM evidence_sets")
     state.rebuild_evidence_sets_from_markers(tmp_path)
     [bound] = state.evidence_sets(tmp_path)
 
@@ -529,8 +583,8 @@ def test_heading_and_following_paragraph_cannot_share_evidence_binding(
     )
 
     draft.write_text(
-        f"# Supported claim {anchor} \n"
-        f"Changed unsupported claim. {marker}\n\n"
+        f"# Supported claim {fresh_anchor} \n"
+        f"Changed unsupported claim. {fresh_marker}\n\n"
         "Source note: `notes/support.md`\n",
         encoding="utf-8",
     )
@@ -541,7 +595,7 @@ def test_heading_and_following_paragraph_cannot_share_evidence_binding(
         {
             "kind": "evidence-text-unbound",
             "severity": "high",
-            "evidence_id": evidence_id,
+            "evidence_id": fresh_evidence_id,
             "block_ref": bound["block_ref"],
             "reason": "anchored block text cannot be resolved",
         }
@@ -579,25 +633,37 @@ def test_unresolvable_evidence_anchor_refuses_export(tmp_path: Path) -> None:
 
 
 def test_missing_stored_evidence_binding_refuses_export(tmp_path: Path) -> None:
-    _draft, evidence_id = _compose_source_backed_draft(
+    draft, evidence_id = _compose_source_backed_draft(
         tmp_path,
         body="This claim has a resolvable block but no stored binding.",
     )
-    [bound] = state.evidence_sets(tmp_path)
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    unbound_evidence_id = "ev-1234abcd"
+    unbound_marker = marker.replace(evidence_id, unbound_evidence_id)
+    unbound_anchor = f"^blk-{unbound_evidence_id.removeprefix('ev-')}"
+    draft.write_text(
+        original.replace(f"{anchor} {marker}", f"{unbound_anchor} {unbound_marker}"),
+        encoding="utf-8",
+    )
     with state.connect(tmp_path) as conn:
         conn.execute(
-            "UPDATE evidence_sets SET block_text_sha256 = NULL WHERE id = ?",
-            (evidence_id,),
+            "INSERT INTO evidence_bindings(id, block_text_sha256) VALUES (?, NULL)",
+            (unbound_evidence_id,),
         )
 
     verification = verify_project_draft(tmp_path, "project-alpha")
+    [bound] = state.evidence_sets(tmp_path)
 
     assert verification["ready"] is False
     assert verification["findings"] == [
         {
             "kind": "evidence-text-unbound",
             "severity": "high",
-            "evidence_id": evidence_id,
+            "evidence_id": unbound_evidence_id,
             "block_ref": bound["block_ref"],
             "reason": "stored block-text binding is missing",
         }
