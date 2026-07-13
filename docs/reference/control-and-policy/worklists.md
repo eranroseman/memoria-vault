@@ -41,6 +41,12 @@ Row objects may include `title` or `name`, `item_ref` or `target` or `path` or `
 
 `decision` defaults to `proposed` and must be one of `proposed`, `include`, `exclude`, `maybe`, or `archived`.
 
+Report-derived titles, reasons, and aggregate-prompt prose are untrusted display
+text. Apply neutralizes image/embed syntax, raw HTML, and external URLs in those
+fields. Structural references such as `item_ref` and `source_report` retain
+their original values; the item view renders `item_ref` as code and makes
+URL-bearing display prose non-clickable.
+
 ## Outputs
 
 | Path | Shape |

@@ -97,6 +97,19 @@ your `.csl` files there before export.
 
 ---
 
+## Content safety gate
+
+Both project renderers return content with machine/third-party beacons inert.
+The shared writer applies the same idempotent transformation again at the final
+Markdown/Pandoc content boundary. Markdown images and Obsidian embeds are
+escaped, raw HTML is escaped, and external URLs become non-clickable code spans.
+Vault wikilinks and existing code spans or fences remain unchanged.
+
+This gate covers both direct draft exports and argument exports, including
+callers that bypass file output and consume a renderer's returned `content`.
+
+---
+
 ## Export gate
 
 An exported artifact is terminal — rendered once from its source composition or

@@ -165,12 +165,13 @@ git commit -m "fix(security): neutralize machine and third-party text at apply (
 
 **Files:**
 - Test: `tests/test_content_security.py` (add the end-to-end canary)
+- Current truth: `docs/reference/commands-and-transports/system-actions-operations.md`, `prompt-operations.md`, `docs/reference/pipelines-and-io/export.md`, and `docs/reference/control-and-policy/worklists.md`
 
 - [x] **Step 1: Write the canary test** — seed a source **work title** (plus description/body) with `![x](http://beacon/p)`, `<script>`, and bare `http://beacon/y`; assert no live payload survives either the apply-written digest or a project export that cites it. This title canary is the regression proof that third-party metadata is in CS1 scope. Concrete fixture, no placeholders.
 
 **Evidence:** `test_work_title_canary_is_inert_at_apply_and_export` passes through capture → digest → candidate note → PI acceptance → composed draft → verified draft export with the same seeded title inert at every rendered apply/export surface.
 
-- [ ] **Step 2: Gate + PR**
+- [x] **Step 2: Gate + local handoff** — run the gate and commit current-truth docs. Do not push or open the PR in a session that lacks that authority.
 
 ```bash
 python scripts/verify
@@ -180,6 +181,8 @@ git commit -m "test(security): CS1 canary — seeded beacon survives neither app
 # stops after local commits and verification.
 gh pr create --title "feat(security): neutralize untrusted apply and export content (CS1)" --body "Part of alpha.21 content-security CS1. Neutralizes every current machine/model/third-party prose region at its apply boundary, including source title/description, and neutralizes final argument/draft export content again. Generic human writes remain untouched."
 ```
+
+**Gate evidence:** `python3 scripts/verify` → `verify: OK`; 447 selected tests passed, 9 skipped, offline smoke reported all gates green, and compile/shell/JSON/PowerShell checks passed. No PR was opened or pushed in this execution.
 
 ---
 

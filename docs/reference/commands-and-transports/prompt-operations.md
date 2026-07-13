@@ -88,7 +88,10 @@ with request/event-log rows that point at the checked inputs, model call,
 derived output, and note-candidate status. The canonical `notes/...` target is
 not materialized or checked until the normal promotion path accepts it.
 `model_call` rows include resolved
-mode/provider/model/params and a prompt hash.
+mode/provider/model/params, a prompt hash, and the hash of the raw model output.
+Before staging the report, the runtime neutralizes images/embeds, raw HTML, and
+external URLs in that output. The journal hash remains bound to what the model
+returned, not the neutralized rendering.
 
 ---
 
