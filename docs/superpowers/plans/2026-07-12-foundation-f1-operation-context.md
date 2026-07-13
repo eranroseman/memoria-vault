@@ -785,6 +785,23 @@ the focused provenance tests before review.
    rerun the affected code/security review plus `python3 scripts/verify`.
 4. Confirm `git status --short` is empty before push.
 
+Current remediation checklist:
+
+- [x] Bind an idempotency key to the normalized job kind and complete request
+  envelope, with exact-retry and concurrent-conflict tests.
+- [x] Enforce the approved PI-only and integrity-only operation matrix at the
+  common worker dispatch seam before payload validation.
+- [x] Preserve generated concept identity on an exact retry, namespace child
+  and workspace-scan request keys, and declare manual integrity-scan actors.
+- [x] Make request payloads equal their immutable envelopes at dispatch; PI
+  answer/amend controls create successor requests instead of rebinding a key.
+- [x] Reserve all direct request controls and evidence dispositions for the PI;
+  HTTP and MCP remain agent-only request adapters.
+- [x] Re-run the original HTTP, MCP, and worker proof cases against the fixed
+  paths; each confused-deputy or key-reuse attempt now fails before mutation.
+- [ ] Receive clean follow-up code review, complete the remediation security
+  scan, and pass `python3 scripts/verify`.
+
 - [ ] **Step 8: Publish and merge PR-F1**
 
 Push the reviewed branch, open the F1 PR for issue #1361, wait for `verify` and

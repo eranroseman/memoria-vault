@@ -97,15 +97,47 @@ def request_envelope(
     }
 
 
-def save_request(vault: Path, envelope: dict[str, Any], job: dict[str, Any]) -> dict[str, Any]:
+def save_request(
+    vault: Path,
+    envelope: dict[str, Any],
+    job: dict[str, Any],
+    *,
+    supersede_request_id: str | None = None,
+) -> dict[str, Any]:
     created_at = str(job.get("created_at") or now_iso())
-    job = {**job, "request_envelope": envelope}
+    job = json.loads(_json({**job, "request_envelope": envelope}))
+    envelope = job["request_envelope"]
     payload = _json(job)
     idem = str(envelope.get("idempotency_key") or envelope["request_id"])
+    kind = str(job.get("kind") or "operation")
+    superseded_id = safe_filename(supersede_request_id or "")
+    if superseded_id:
+        if envelope["actor"] != "pi":
+            raise ValueError("request supersession requires PI actor authority")
+        if superseded_id == envelope["request_id"]:
+            raise ValueError("request cannot supersede itself")
+        provenance = envelope.get("provenance")
+        bound_source = (
+            safe_filename(str(provenance.get("supersedes_request_id") or ""))
+            if isinstance(provenance, dict)
+            else ""
+        )
+        if bound_source != superseded_id:
+            raise ValueError("superseded request id must be bound in request provenance")
+        causal_ids = {
+            safe_filename(str(ref.get("id") or ""))
+            for ref in envelope.get("causal_refs", [])
+            if isinstance(ref, dict)
+        }
+        if superseded_id not in causal_ids:
+            raise ValueError("superseded request id must be a causal reference")
     with connect(vault) as conn:
+        # Serialize lookup and insertion so a concurrent retry cannot bypass the
+        # request-identity comparison between a different actor or payload.
+        conn.execute("BEGIN IMMEDIATE")
         existing = conn.execute(
             """
-            SELECT job_json
+            SELECT kind, job_json
             FROM operation_requests
             WHERE request_id = ? OR idempotency_key = ?
             LIMIT 1
@@ -113,7 +145,30 @@ def save_request(vault: Path, envelope: dict[str, Any], job: dict[str, Any]) -> 
             (envelope["request_id"], idem),
         ).fetchone()
         if existing is not None:
-            return json.loads(existing["job_json"])
+            existing_job = json.loads(existing["job_json"])
+            existing_kind = str(existing_job.get("kind") or existing["kind"])
+            if (
+                _json(existing_job.get("request_envelope")) != _json(envelope)
+                or existing["kind"] != kind
+                or existing_kind != kind
+            ):
+                raise ValueError("idempotency key is already bound to a different request")
+            return existing_job
+        superseded = None
+        superseded_job: dict[str, Any] | None = None
+        if superseded_id:
+            superseded = conn.execute(
+                "SELECT status, job_json FROM operation_requests WHERE request_id = ?",
+                (superseded_id,),
+            ).fetchone()
+            if superseded is None:
+                raise FileNotFoundError(f"request not found: {supersede_request_id}")
+            if superseded["status"] == "running":
+                raise ValueError("request amendment requires a non-running request")
+            superseded_job = json.loads(superseded["job_json"])
+            prior_successor = str(superseded_job.get("superseded_by_request_id") or "")
+            if prior_successor and safe_filename(prior_successor) != envelope["request_id"]:
+                raise ValueError(f"request already superseded by request {prior_successor}")
         conn.execute(
             """
             INSERT INTO operation_requests(
@@ -150,10 +205,28 @@ def save_request(vault: Path, envelope: dict[str, Any], job: dict[str, Any]) -> 
                 _json(envelope["provenance"]),
                 envelope["schedule_id"],
                 created_at,
-                str(job.get("kind") or "operation"),
+                kind,
                 payload,
             ),
         )
+        if superseded is not None and superseded_job is not None:
+            superseded_job["superseded_by_request_id"] = envelope["request_id"]
+            if superseded["status"] != "pending":
+                conn.execute(
+                    "UPDATE operation_requests SET job_json = ? WHERE request_id = ?",
+                    (_json(superseded_job), superseded_id),
+                )
+            else:
+                error = f"superseded by request {envelope['request_id']}"
+                superseded_job.update({"status": "cancelled", "error": error})
+                conn.execute(
+                    """
+                    UPDATE operation_requests
+                    SET status = 'cancelled', completed_at = ?, job_json = ?, error = ?
+                    WHERE request_id = ?
+                    """,
+                    (now_iso(), _json(superseded_job), error, superseded_id),
+                )
     return job
 
 
@@ -219,6 +292,24 @@ def next_pending_job(vault: Path) -> dict[str, Any] | None:
             """
         ).fetchone()
     return json.loads(row["job_json"]) if row is not None else None
+
+
+def claim_request(vault: Path, request_id: str, job: dict[str, Any]) -> bool:
+    """Mark one pending request running only if it has not been superseded."""
+    request_id = safe_filename(request_id)
+    now = now_iso()
+    running = {**job, "status": "running"}
+    with connect(vault) as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        cursor = conn.execute(
+            """
+            UPDATE operation_requests
+            SET status = 'running', started_at = ?, job_json = ?, error = ''
+            WHERE request_id = ? AND status = 'pending'
+            """,
+            (now, _json(running), request_id),
+        )
+    return cursor.rowcount == 1
 
 
 def set_request_running(vault: Path, request_id: str, job: dict[str, Any]) -> None:

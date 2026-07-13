@@ -299,6 +299,40 @@ def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
     assert verification["findings"] == []
 
 
+def test_evidence_review_rejects_non_pi_actor_without_clearing_draft_gate(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim still needs PI review.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    result = compose_project_draft(vault, "project-alpha")
+    evidence_id = result["evidence_markers"][0]["id"]
+
+    with pytest.raises(ValueError, match="resolve-evidence-review requires PI actor authority"):
+        resolve_evidence_review(
+            vault,
+            evidence_id,
+            decision="accept",
+            reason="agent attempted disposition",
+            actor="agent",
+        )
+
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert verification["ready"] is False
+    assert {finding["kind"] for finding in verification["findings"]} == {
+        "evidence-incomplete",
+        "review-required",
+    }
+
+
 def test_regular_export_with_existing_draft_uses_export_context_for_readiness(
     tmp_path: Path,
 ) -> None:

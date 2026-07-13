@@ -16,12 +16,21 @@ The shipped control plane is the operation request table in
 ```bash
 memoria request list --workspace <workspace>
 memoria request show --workspace <workspace> <request-id>
+memoria request answer --workspace <workspace> --idempotency-key <new-key> <request-id> key=value
+memoria request amend --workspace <workspace> --idempotency-key <new-key> <request-id> key=value
 memoria request retry --workspace <workspace> <request-id>
 memoria request cancel --workspace <workspace> <request-id>
+memoria request resume --workspace <workspace> <request-id>
 memoria workspace run --workspace <workspace>
 memoria workspace recover --workspace <workspace>
 memoria attention list --workspace <workspace>
 ```
+
+Request controls are PI-only. Answer and amend create a new PI-attributed
+successor request with a new idempotency key. A pending source is cancelled as
+superseded; a terminal source remains terminal and is marked as superseded.
+They never rewrite the source request envelope. Cancel, retry, and resume
+change only request state.
 
 ## WIP Limits
 

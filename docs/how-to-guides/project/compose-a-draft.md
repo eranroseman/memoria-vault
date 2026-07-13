@@ -40,7 +40,7 @@ memoria project verify --workspace <vault> projects/<project>/project.md
 ## Resolve evidence review
 
 If verification reports an evidence item that you accept or reject after review,
-record that disposition:
+record the PI disposition:
 
 ```bash
 memoria project resolve-evidence --workspace <vault> projects/<project>/project.md \

@@ -70,7 +70,7 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
         ).fetchone()
         enrich = conn.execute(
             "SELECT operation_id, status, actor FROM operation_requests WHERE request_id = ?",
-            ("enrich-doi-10.1000_import.2026",),
+            ("enrich-doi-10.1000_import.2026_import-bibtex",),
         ).fetchone()
     assert tuple(row) == (
         "Alpha Import",
@@ -996,9 +996,15 @@ def test_cli_new_note_check_and_link_flow(
                 str(workspace),
                 "--body",
                 "The source reframes the problem before measuring outcomes.",
+                "--description",
+                "A framing note.",
+                "--tag",
+                "framing",
                 "--json",
                 "--idempotency-key",
                 "note-new",
+                "--actor",
+                "agent",
             ]
         )
         == 0
@@ -1006,6 +1012,35 @@ def test_cli_new_note_check_and_link_flow(
     repeated = json.loads(capsys.readouterr().out)
     assert repeated["path"] == note_path
     assert not (workspace / "notes/framing-changes-the-question-2.md").exists()
+
+    assert (
+        main(
+            [
+                "new",
+                "note",
+                "Framing changes the question",
+                "--workspace",
+                str(workspace),
+                "--body",
+                "The source reframes the problem before measuring outcomes.",
+                "--description",
+                "A framing note.",
+                "--tag",
+                "framing",
+                "--json",
+                "--idempotency-key",
+                "note-new",
+                "--actor",
+                "pi",
+            ]
+        )
+        == 2
+    )
+    conflict = json.loads(capsys.readouterr().out)
+    assert conflict == {
+        "ok": False,
+        "error": "idempotency key is already bound to a different request",
+    }
 
     assert (
         main(

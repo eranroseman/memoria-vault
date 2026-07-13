@@ -27,6 +27,7 @@ def _operation_job(
         "job_id": request_id,
         "kind": "operation",
         "operation_id": operation_id,
+        "payload": dict(args),
         "request_envelope": {
             "request_id": request_id,
             "operation_id": operation_id,
@@ -175,6 +176,31 @@ def test_context_rejects_request_id_mismatch() -> None:
 def test_context_rejects_operation_id_mismatch(job: dict[str, Any]) -> None:
     with pytest.raises(ValueError, match=r"operation.*match"):
         operation_context_from_job(job, "machine")
+
+
+def test_context_rejects_operation_payload_that_differs_from_envelope() -> None:
+    job = _operation_job()
+    job["payload"] = {"target_path": "notes/altered.md"}
+
+    with pytest.raises(ValueError, match="payload must match request envelope args"):
+        operation_context_from_job(job, "machine")
+
+
+def test_context_distinguishes_json_boolean_from_number() -> None:
+    job = _operation_job()
+    job["payload"] = {"enabled": True}
+    job["request_envelope"]["args"] = {"enabled": 1}
+
+    with pytest.raises(ValueError, match="payload must match request envelope args"):
+        operation_context_from_job(job, "machine")
+
+
+def test_context_normalizes_tuple_and_json_array_identity() -> None:
+    job = _operation_job()
+    job["payload"] = {"terms": ("alpha", "beta")}
+    job["request_envelope"]["args"] = {"terms": ["alpha", "beta"]}
+
+    assert operation_context_from_job(job, "machine").request_id == "request-1"
 
 
 def test_context_uses_explicit_run_id() -> None:
@@ -943,6 +969,84 @@ def test_attention_resolution_rejects_non_pi_before_mutation(
     assert "PI" in result["error"]
     assert not (workspace / target).exists()
     assert not [row for row in _event_log_payloads(workspace) if row.get("event") == "resolved"]
+
+
+PI_AUTHORITY_OPERATIONS = (
+    "acknowledge-attention",
+    "resolve-attention",
+    "record-copi-interview",
+    "curate-note-candidate",
+    "curate-note-link",
+    "mark-checked",
+    "update-work",
+    "frame-paper",
+    "promote-draft-passage",
+    "cascade-rollback",
+)
+INTEGRITY_AUTHORITY_OPERATIONS = ("trace-integrity-scan", "observe-pi-edits")
+
+
+@pytest.mark.parametrize(
+    ("operation_id", "actor", "required_actor"),
+    [
+        *[
+            (operation_id, actor, "PI")
+            for operation_id in PI_AUTHORITY_OPERATIONS
+            for actor in ("agent", "operation", "integrity")
+        ],
+        *[
+            (operation_id, actor, "integrity")
+            for operation_id in INTEGRITY_AUTHORITY_OPERATIONS
+            for actor in ("pi", "agent", "operation")
+        ],
+    ],
+)
+def test_protected_operation_rejects_wrong_actor_before_payload_validation(
+    tmp_path: Path,
+    operation_id: str,
+    actor: str,
+    required_actor: str,
+) -> None:
+    request = worker.enqueue_operation(
+        tmp_path,
+        operation_id,
+        actor=actor,
+        idempotency_key=f"wrong-{operation_id}-{actor}",
+    )
+
+    result = worker.run_request(tmp_path, request["job_id"], machine="agent machine")
+
+    assert result["status"] == "failed"
+    assert result["error"] == f"{operation_id} requires {required_actor} actor authority"
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize(
+    ("operation_id", "actor"),
+    [
+        ("mark-checked", "pi"),
+        ("trace-integrity-scan", "integrity"),
+    ],
+)
+def test_protected_operation_accepts_its_authorized_actor_before_payload_validation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    operation_id: str,
+    actor: str,
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    request = worker.enqueue_operation(
+        workspace,
+        operation_id,
+        actor=actor,
+        idempotency_key=f"authorized-{operation_id}",
+    )
+
+    result = worker.run_request(workspace, request["job_id"], machine="authorized machine")
+
+    label = "PI" if actor == "pi" else actor
+    assert f"requires {label} actor authority" not in str(result.get("error") or "")
 
 
 @pytest.mark.parametrize("operation_id", ["acknowledge-attention", "resolve-attention"])

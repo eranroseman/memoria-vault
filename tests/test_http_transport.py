@@ -11,7 +11,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import http_routes
-from memoria_vault.runtime import state
+from memoria_vault.runtime import state, worker
 from memoria_vault.runtime.http_transport import PayloadTooLarge, _dispatch, is_authorized
 from memoria_vault.runtime.jsonl import iter_jsonl
 from tests.helpers import init_cli_workspace, write_checked_note
@@ -471,6 +471,63 @@ def test_http_transport_operation_run_cannot_claim_pi_authority(workspace: Path)
         ).fetchone()
     assert request["actor"] == "agent"
     assert "attention_status: open" in (workspace / "inbox/agent-cannot-resolve.md").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_http_transport_rejects_idempotency_key_bound_to_pending_pi_request(
+    workspace: Path,
+) -> None:
+    _write_attention(workspace, "pi-pending")
+    request = worker.enqueue_operation(
+        workspace,
+        "resolve-attention",
+        actor="pi",
+        idempotency_key="pi-pending-request",
+        payload={
+            "target_id": "inbox/pi-pending.md",
+            "outcome": "apply",
+            "routing_class": "ask",
+            "reason": "PI decision",
+        },
+    )
+
+    listed, listed_status = _dispatch(
+        workspace,
+        "GET",
+        "/requests?status=pending",
+        dict,
+        read_scope=["inbox"],
+    )
+    response, status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "create-concept",
+            "payload": {"concept_type": "note"},
+            "idempotency_key": request["job_id"],
+        },
+    )
+
+    assert listed_status == HTTPStatus.OK
+    assert listed["requests"] == [
+        {
+            "request_id": "pi-pending-request",
+            "operation_id": "resolve-attention",
+            "status": "pending",
+            "created_at": listed["requests"][0]["created_at"],
+            "completed_at": None,
+            "error": "",
+        }
+    ]
+    assert status == HTTPStatus.BAD_REQUEST
+    assert response == {
+        "ok": False,
+        "error": "idempotency key is already bound to a different request",
+    }
+    assert state.request_job(workspace, request["job_id"])["status"] == "pending"
+    assert "attention_status: open" in (workspace / "inbox/pi-pending.md").read_text(
         encoding="utf-8"
     )
 

@@ -2158,6 +2158,8 @@ def resolve_evidence_review(
     reason: str = "",
 ) -> dict[str, Any]:
     """Record a PI disposition for one evidence-set review item."""
+    if actor != "pi":
+        raise ValueError("resolve-evidence-review requires PI actor authority")
     evidence_id = evidence_id.strip()
     decision = decision.strip().lower()
     if not re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id):

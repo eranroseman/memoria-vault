@@ -62,6 +62,20 @@ INTEGRITY_FINDING_OPERATIONS = {
     "integrity-contradiction-check": "check_contradiction_links",
     "integrity-link-target-check": "check_link_targets",
 }
+PROTECTED_OPERATION_ACTORS = {
+    "acknowledge-attention": "pi",
+    "resolve-attention": "pi",
+    "record-copi-interview": "pi",
+    "curate-note-candidate": "pi",
+    "curate-note-link": "pi",
+    "mark-checked": "pi",
+    "update-work": "pi",
+    "frame-paper": "pi",
+    "promote-draft-passage": "pi",
+    "cascade-rollback": "pi",
+    "trace-integrity-scan": "integrity",
+    "observe-pi-edits": "integrity",
+}
 OVERRIDE_LOG_REL = ".memoria/overrides.jsonl"
 CREATE_CONCEPT_HOMES = {
     "note": "notes",
@@ -116,8 +130,6 @@ def enqueue_trusted_write(
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
     job_id = safe_filename(idempotency_key or uuid.uuid4().hex)
-    if existing_job := state.request_job(vault, job_id):
-        return existing_job
 
     job = {
         "job_id": job_id,
@@ -163,12 +175,29 @@ def enqueue_operation(
     actor: str,
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
+    supersede_request_id: str | None = None,
 ) -> dict[str, Any]:
     """Queue one operation request for the local worker."""
     vault = Path(vault)
     job_id = safe_filename(idempotency_key or f"{operation_id}-{uuid.uuid4().hex}")
-    if existing_job := state.request_job(vault, job_id):
-        return existing_job
+    superseded_id = safe_filename(supersede_request_id or "")
+    request_provenance = dict(provenance or {"surface": "worker"})
+    request_causal_refs = list(causal_refs or [])
+    if superseded_id:
+        if actor.strip() != "pi":
+            raise ValueError("request supersession requires PI actor authority")
+        if superseded_id == job_id:
+            raise ValueError("request cannot supersede itself")
+        bound_source = str(request_provenance.get("supersedes_request_id") or "")
+        if bound_source and safe_filename(bound_source) != superseded_id:
+            raise ValueError("superseded request id conflicts with request provenance")
+        request_provenance["supersedes_request_id"] = superseded_id
+        causal_ids = {
+            safe_filename(str(ref.get("id") if isinstance(ref, dict) else ref))
+            for ref in request_causal_refs
+        }
+        if superseded_id not in causal_ids:
+            request_causal_refs.append(superseded_id)
 
     args = dict(payload or {})
     job = {
@@ -188,23 +217,28 @@ def enqueue_operation(
         output_intents=output_intents or [],
         primary_target=primary_target,
         precondition_hashes=precondition_hashes,
-        causal_refs=causal_refs or [],
+        causal_refs=request_causal_refs,
         actor=actor,
-        provenance=provenance or {"surface": "worker"},
+        provenance=request_provenance,
         schedule_id=schedule_id,
     )
-    return state.save_request(vault, envelope, job)
+    return state.save_request(
+        vault,
+        envelope,
+        job,
+        supersede_request_id=supersede_request_id,
+    )
 
 
 def run_next_job(vault: Path, *, machine: str | None = None) -> dict[str, Any] | None:
     """Claim and run the oldest pending worker request."""
     vault = Path(vault)
     with _workspace_lock(vault):
-        sqlite_job = state.next_pending_job(vault)
-        if sqlite_job is None:
-            return None
-        running = _claim_sqlite_job(vault, sqlite_job)
-        return _run_claimed_job(vault, running, machine)
+        while sqlite_job := state.next_pending_job(vault):
+            running = _claim_sqlite_job(vault, sqlite_job)
+            if running is not None:
+                return _run_claimed_job(vault, running, machine)
+        return None
 
 
 def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> dict[str, Any]:
@@ -217,6 +251,8 @@ def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> 
         if job.get("status") != "pending":
             raise ValueError(f"request {request_id} is not pending")
         running = _claim_sqlite_job(vault, job)
+        if running is None:
+            raise ValueError(f"request {request_id} is not pending")
         return _run_claimed_job(vault, running, machine)
 
 
@@ -310,6 +346,7 @@ def _run_operation_job(
 ) -> dict[str, Any]:
     operation_id = context.operation_id
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
+    _require_operation_actor(context)
     from memoria_vault.runtime.operations import (
         load_operation_policy,
         required_promotion_checks,
@@ -835,8 +872,6 @@ def _run_operation_job(
     if operation_id in {"acknowledge-attention", "resolve-attention"}:
         from memoria_vault.runtime.integrity import resolve_attention
 
-        if context.actor != "pi":
-            raise ValueError(f"{operation_id} requires PI actor authority")
         target_id = str(payload.get("target_id") or "").strip()
         if not target_id:
             raise ValueError(f"{operation_id} requires target_id")
@@ -854,8 +889,6 @@ def _run_operation_job(
         )
         return {"commit": result["commit"], "resolution": result["event"]}
     if operation_id == "observe-pi-edits":
-        if context.actor != "integrity":
-            raise ValueError("observe-pi-edits requires integrity actor authority")
         from memoria_vault.runtime.projections import (
             changed_tracked_projection_paths,
             write_tracked_projections,
@@ -1099,6 +1132,14 @@ def _run_operation_job(
     raise ValueError(f"unsupported operation: {operation_id!r}")
 
 
+def _require_operation_actor(context: OperationContext) -> None:
+    required_actor = PROTECTED_OPERATION_ACTORS.get(context.operation_id)
+    if required_actor is None or context.actor == required_actor:
+        return
+    label = "PI" if required_actor == "pi" else required_actor
+    raise ValueError(f"{context.operation_id} requires {label} actor authority")
+
+
 def _run_integrity_finding_operation(
     vault: Path, operation_id: str, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
@@ -1232,11 +1273,12 @@ def _run_capture_bibtex_source_operation(
     output = _source_result(result)
     output["enrichment_job"] = None
     if payload_doi(capture_payload):
+        enrichment_key = f"enrich-{result['work_id']}:{context.request_id}"
         output["enrichment_job"] = enqueue_operation(
             vault,
             "enrich-source",
             payload={"work_id": result["work_id"]},
-            idempotency_key=f"enrich-{result['work_id']}",
+            idempotency_key=enrichment_key,
             input_refs=[{"id": result["work_id"], "kind": "catalog_source"}],
             primary_target=f"catalog/sources/{result['work_id']}",
             causal_refs=[context.request_id],
@@ -1332,11 +1374,10 @@ def _create_concept_payload(payload: dict[str, Any]) -> tuple[str, str]:
     return target, content
 
 
-def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any]:
+def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any] | None:
     job_id = str(job["job_id"])
     job = {**job, "status": "running", "started_at": now_iso()}
-    state.set_request_running(vault, job_id, job)
-    return job
+    return job if state.claim_request(vault, job_id, job) else None
 
 
 def _finish_job(vault: Path, status: str, job: dict[str, Any]) -> None:

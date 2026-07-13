@@ -89,6 +89,12 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
     args = envelope.get("args", {})
     if not isinstance(args, Mapping):
         raise ValueError("request envelope args must be a mapping")
+    if job.get("kind") == "operation":
+        payload = job.get("payload", {})
+        if not isinstance(payload, Mapping) or _canonical_json(dict(payload)) != _canonical_json(
+            dict(args)
+        ):
+            raise ValueError("operation job payload must match request envelope args")
     run_value = args.get("run_id")
     if run_value is not None and not isinstance(run_value, str):
         raise ValueError("request envelope run_id must be a string")
@@ -101,6 +107,10 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
         operation_id=operation_id,
         machine=safe_filename(machine or platform.node() or "local"),
     )
+
+
+def _canonical_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _required_context_identifier(source: Mapping[str, Any], key: str, label: str) -> str:

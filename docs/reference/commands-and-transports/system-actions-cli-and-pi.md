@@ -24,6 +24,7 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 | Trace rollback | `memoria workspace rollback` | Runs `cascade-rollback` against a target id; the worker owns quarantine, commit, and journal rows. |
 | Observe PI edits | `memoria workspace scan` / `memoria serve --watch` | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. `serve --watch` is only a stdlib polling trigger; the scan worker remains the correctness boundary. |
 | Resolve attention | `memoria attention resolve (--apply\|--reject\|--defer)` | Runs the attention-disposition request, records routing class plus PI resolution outcome, and closes or defers the attention projection in the committed journal row. |
+| Control a request | `memoria request answer/amend/cancel/retry/resume` | PI-only controls. Answer and amend require a fresh idempotency key and create a PI-attributed successor; cancel, retry, and resume preserve the request envelope and control only state. |
 | Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
 | Serve local HTTP | `memoria serve --http` | Starts the [local HTTP transport](local-http-transport.md) with bearer-token auth; handlers only marshal selected `engine/api` reads and request-envelope writes. Remote/OAuth transport is not implemented. |
 | Serve MCP stdio | `memoria mcp --workspace <path> --read-scope <path>` | Starts the optional [MCP transport](mcp-transport.md). It requires a non-root read scope, exposes only engine read tools plus request-envelope writes, and records MCP provenance. |
@@ -36,4 +37,5 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 | --- | --- |
 | Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set DB/read API `check_status = checked`; operation-owned promotions enforce their `required_checks` (`memoria-runtime`) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
 | Inbox triage | Resolve or act on attention projections; dispositions are logged for trust and attention metrics. |
+| Evidence disposition | `memoria project resolve-evidence` records the PI's accept/reject decision for one draft evidence item; an agent cannot clear the review gate. |
 | Workspace recover | `memoria workspace recover` marks interrupted running requests failed for explicit retry and replays pending materialization payloads; `--fixture crash-before-materialization` is a test-only recovery harness. |

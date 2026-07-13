@@ -22,8 +22,9 @@ memoria mcp --workspace <path> --read-scope notes --actor agent
 ```
 
 `--read-scope` is required and may be repeated. Root scope (`/` or `.`) and path
-traversal are rejected before the server starts. `--actor` defaults to `agent`
-and is fixed for all `operation_run` calls made through that server.
+traversal are rejected before the server starts. `--actor` names the concrete
+agent identity recorded in provenance; it defaults to `agent`. Every
+`operation_run` request from this server carries actor `agent`.
 
 The transport currently runs over MCP `stdio` only.
 
@@ -84,10 +85,16 @@ cannot distinguish hidden content from absent content through Memoria tools.
 {"surface": "memoria-mcp", "command": "mcp:<operation_id>"}
 ```
 
-The MCP tool does not accept an actor argument; actor identity comes from the
-server's `--actor` flag. The worker owns operation validation, staging, checks,
-journal rows, and final materialization. New Concepts created through
-`create-concept` remain unchecked until the normal check path promotes them.
+The MCP tool does not accept an actor argument. The server records its
+`--actor` value as concrete agent identity, and the request actor remains
+`agent`. The worker owns operation validation, staging, checks, journal rows,
+and final materialization. New Concepts created through `create-concept` remain
+unchecked until the normal check path promotes them.
+MCP exposes no PI request-control or evidence-disposition tool.
+
+An idempotency key binds the complete request envelope. Repeating the same
+envelope returns the existing request. A request that reuses the key with a
+different envelope is rejected.
 
 ## Host configuration shape
 

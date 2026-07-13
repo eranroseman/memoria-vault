@@ -20,7 +20,9 @@ from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
+from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.worker import (
+    PROTECTED_OPERATION_ACTORS,
     _workspace_lock,
     enqueue_operation,
     enqueue_trusted_write,
@@ -1097,6 +1099,8 @@ def _cmd_project_verify(args: argparse.Namespace) -> int:
 def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.knowledge import read_project_draft, resolve_evidence_review
 
+    if args.actor != "pi":
+        raise ValueError("resolve-evidence-review requires PI actor authority")
     workspace = _workspace(args)
     verification_request = _enqueue_and_run(
         args,
@@ -1261,114 +1265,324 @@ def _cmd_request_show(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_resume(args: argparse.Namespace) -> int:
+    _require_pi_request_control(args)
     result = run_request(_workspace(args), args.request_id, machine="memoria-cli")
     return _emit({"ok": result.get("status") == "done", "result": result}, args)
+
+
+def _require_pi_request_control(args: argparse.Namespace) -> None:
+    if args.actor != "pi":
+        raise ValueError("request control requires PI actor authority")
+
+
+def _request_control_row(workspace: Path, args: argparse.Namespace) -> Any:
+    row = state.request_row(workspace, args.request_id)
+    if row is None:
+        raise FileNotFoundError(f"request not found: {args.request_id}")
+    return row
+
+
+def _request_successor(
+    workspace: Path,
+    request: dict[str, Any],
+    *,
+    payload: dict[str, Any],
+    idempotency_key: str | None,
+    command: str,
+) -> dict[str, Any]:
+    if not idempotency_key:
+        raise ValueError(f"request {command} requires --idempotency-key")
+    if request["kind"] != "operation":
+        raise ValueError(f"request {command} supports operation requests only")
+    if required_actor := PROTECTED_OPERATION_ACTORS.get(request["operation_id"]):
+        if required_actor != "pi":
+            raise ValueError(
+                f"request {command} cannot create a PI successor requiring "
+                f"{required_actor} actor authority"
+            )
+    if request["status"] not in {"pending", "done", "failed", "cancelled"}:
+        raise ValueError("request amendment requires a non-running request")
+    envelope = request["job"].get("request_envelope")
+    if not isinstance(envelope, dict) or envelope.get("args") != request["args"]:
+        raise ValueError("request envelope arguments do not match the stored request")
+    if request["job"].get("payload") != request["args"]:
+        raise ValueError("request payload does not match the stored request envelope")
+    successor_id = safe_filename(idempotency_key)
+    if successor_id == request["request_id"]:
+        raise ValueError("request amendment requires a new idempotency key")
+    prior_successor = str(request["job"].get("superseded_by_request_id") or "")
+    if prior_successor and safe_filename(prior_successor) != successor_id:
+        raise ValueError(f"request already superseded by request {prior_successor}")
+    return enqueue_operation(
+        workspace,
+        request["operation_id"],
+        payload=payload,
+        idempotency_key=idempotency_key,
+        input_refs=request["input_refs"],
+        output_intents=request["output_intents"],
+        primary_target=request["primary_target"],
+        precondition_hashes=request["precondition_hashes"],
+        causal_refs=[*request["causal_refs"], request["request_id"]],
+        actor="pi",
+        provenance={
+            "surface": "memoria-cli",
+            "command": f"request-{command}",
+            "supersedes_request_id": request["request_id"],
+        },
+        schedule_id=None,
+        supersede_request_id=request["request_id"],
+    )
+
+
+def _request_lifecycle_event_exists(workspace: Path, event: str, successor_request_id: str) -> bool:
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            """
+            SELECT 1
+            FROM event_log
+            WHERE event_type = ?
+              AND json_extract(payload_json, '$.successor_request_id') = ?
+            LIMIT 1
+            """,
+            (event, successor_request_id),
+        ).fetchone()
+    return row is not None
+
+
+def _request_attempt_event_exists(
+    workspace: Path,
+    event: str,
+    request_id: str,
+    attempt_key: str,
+    attempt: int,
+) -> bool:
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            """
+            SELECT 1
+            FROM event_log
+            WHERE event_type = ?
+              AND json_extract(payload_json, '$.request_id') = ?
+              AND json_extract(payload_json, ?) = ?
+            LIMIT 1
+            """,
+            (event, request_id, f"$.{attempt_key}", attempt),
+        ).fetchone()
+    return row is not None
 
 
 def _cmd_request_answer(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
+    _require_pi_request_control(args)
     workspace = _workspace(args)
-    row = state.request_row(workspace, args.request_id)
-    if row is None:
-        return _fail(f"request not found: {args.request_id}", json_output=args.json)
     answers = _key_values(args.answers)
-    job = json.loads(row["job_json"])
-    payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
-    payload["answers"] = {**payload.get("answers", {}), **answers}
-    job["payload"] = payload
-    _write_request_job(workspace, args.request_id, row["status"], job)
-    append_explicit_journal_event(
-        workspace,
+    with _workspace_lock(workspace):
+        row = _request_control_row(workspace, args)
+        request = state.request_detail(row)
+        source_request_id = str(request["request_id"])
+        current_answers = request["args"].get("answers", {})
+        if not isinstance(current_answers, dict):
+            raise ValueError("request answers must be a mapping")
+        successor = _request_successor(
+            workspace,
+            request,
+            payload={**request["args"], "answers": {**current_answers, **answers}},
+            idempotency_key=args.idempotency_key,
+            command="answer",
+        )
+        if not _request_lifecycle_event_exists(
+            workspace, "request_answered", str(successor["job_id"])
+        ):
+            append_explicit_journal_event(
+                workspace,
+                {
+                    "event": "request_answered",
+                    "request_id": source_request_id,
+                    "successor_request_id": successor["job_id"],
+                    "answers": sorted(answers),
+                },
+                actor="pi",
+                machine="memoria-cli",
+            )
+    updated = state.request_row(workspace, str(successor["job_id"]))
+    return _emit(
         {
-            "event": "request_answered",
-            "request_id": args.request_id,
-            "answers": sorted(answers),
+            "ok": True,
+            "request": state.request_detail(updated),
+            "supersedes_request_id": source_request_id,
         },
-        actor=args.actor,
-        machine="memoria-cli",
+        args,
     )
-    updated = state.request_row(workspace, args.request_id)
-    return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
 def _cmd_request_amend(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
+    _require_pi_request_control(args)
     workspace = _workspace(args)
-    row = state.request_row(workspace, args.request_id)
-    if row is None:
-        return _fail(f"request not found: {args.request_id}", json_output=args.json)
     updates = _key_values(args.updates)
-    job = json.loads(row["job_json"])
-    payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
-    payload.update(updates)
-    job["payload"] = payload
-    _write_request_job(
-        workspace, args.request_id, "pending", {**job, "status": "pending", "error": ""}
-    )
-    append_explicit_journal_event(
-        workspace,
+    scoped = _scope_bearing_request_fields(updates)
+    if scoped:
+        raise ValueError(f"request amend cannot change scope-bearing field: {', '.join(scoped)}")
+    with _workspace_lock(workspace):
+        row = _request_control_row(workspace, args)
+        request = state.request_detail(row)
+        source_request_id = str(request["request_id"])
+        successor = _request_successor(
+            workspace,
+            request,
+            payload={**request["args"], **updates},
+            idempotency_key=args.idempotency_key,
+            command="amend",
+        )
+        if not _request_lifecycle_event_exists(
+            workspace, "request_amended", str(successor["job_id"])
+        ):
+            append_explicit_journal_event(
+                workspace,
+                {
+                    "event": "request_amended",
+                    "request_id": source_request_id,
+                    "successor_request_id": successor["job_id"],
+                    "updates": sorted(updates),
+                },
+                actor="pi",
+                machine="memoria-cli",
+            )
+    updated = state.request_row(workspace, str(successor["job_id"]))
+    return _emit(
         {
-            "event": "request_amended",
-            "request_id": args.request_id,
-            "updates": sorted(updates),
+            "ok": True,
+            "request": state.request_detail(updated),
+            "supersedes_request_id": source_request_id,
         },
-        actor=args.actor,
-        machine="memoria-cli",
+        args,
     )
-    updated = state.request_row(workspace, args.request_id)
-    return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
 def _cmd_request_cancel(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
+    _require_pi_request_control(args)
     workspace = _workspace(args)
-    row = state.request_row(workspace, args.request_id)
-    if row is None:
-        return _fail(f"request not found: {args.request_id}", json_output=args.json)
-    job = json.loads(row["job_json"])
-    job["status"] = "cancelled"
-    job["error"] = f"cancelled: {args.reason}"
-    _write_request_job(workspace, args.request_id, "cancelled", job)
-    append_explicit_journal_event(
-        workspace,
-        {
-            "event": "request_cancelled",
-            "request_id": args.request_id,
-            "reason": args.reason,
-        },
-        actor=args.actor,
-        machine="memoria-cli",
-    )
-    updated = state.request_row(workspace, args.request_id)
+    with _workspace_lock(workspace):
+        row = _request_control_row(workspace, args)
+        request_id = str(row["request_id"])
+        job = json.loads(row["job_json"])
+        expected_error = f"cancelled: {args.reason}"
+        if row["status"] == "pending":
+            attempt = int(job.get("cancel_attempt") or 0) + 1
+            job.update(
+                {
+                    "status": "cancelled",
+                    "error": expected_error,
+                    "cancel_attempt": attempt,
+                }
+            )
+            _write_request_job(workspace, request_id, "cancelled", job)
+        elif row["status"] == "cancelled":
+            attempt = int(job.get("cancel_attempt") or 0)
+            if (
+                not attempt
+                or job.get("error") != expected_error
+                or job.get("superseded_by_request_id")
+                or _request_attempt_event_exists(
+                    workspace,
+                    "request_cancelled",
+                    request_id,
+                    "cancel_attempt",
+                    attempt,
+                )
+            ):
+                raise ValueError(f"request cancel requires pending status, got {row['status']}")
+        else:
+            raise ValueError(f"request cancel requires pending status, got {row['status']}")
+        if not _request_attempt_event_exists(
+            workspace,
+            "request_cancelled",
+            request_id,
+            "cancel_attempt",
+            attempt,
+        ):
+            append_explicit_journal_event(
+                workspace,
+                {
+                    "event": "request_cancelled",
+                    "request_id": request_id,
+                    "reason": args.reason,
+                    "cancel_attempt": attempt,
+                },
+                actor="pi",
+                machine="memoria-cli",
+            )
+    updated = state.request_row(workspace, request_id)
     return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
 def _cmd_request_retry(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
+    _require_pi_request_control(args)
     workspace = _workspace(args)
-    row = state.request_row(workspace, args.request_id)
-    if row is None:
-        return _fail(f"request not found: {args.request_id}", json_output=args.json)
-    if row["status"] not in {"failed", "cancelled"}:
-        return _fail(
-            f"request retry requires failed or cancelled status, got {row['status']}",
-            json_output=args.json,
+    with _workspace_lock(workspace):
+        row = _request_control_row(workspace, args)
+        request_id = str(row["request_id"])
+        job = json.loads(row["job_json"])
+        attempt = int(job.get("retry_attempt") or 0)
+        event_exists = attempt > 0 and _request_attempt_event_exists(
+            workspace,
+            "request_retried",
+            request_id,
+            "retry_attempt",
+            attempt,
         )
-    job = json.loads(row["job_json"])
-    job["status"] = "pending"
-    job.pop("error", None)
-    _write_request_job(workspace, args.request_id, "pending", job)
-    append_explicit_journal_event(
-        workspace,
-        {"event": "request_retried", "request_id": args.request_id},
-        actor=args.actor,
-        machine="memoria-cli",
-    )
-    updated = state.request_row(workspace, args.request_id)
+        if attempt and not event_exists:
+            append_explicit_journal_event(
+                workspace,
+                {
+                    "event": "request_retried",
+                    "request_id": request_id,
+                    "retry_attempt": attempt,
+                    "from_status": str(job.get("retry_from_status") or ""),
+                },
+                actor="pi",
+                machine="memoria-cli",
+            )
+            updated = state.request_row(workspace, request_id)
+            return _emit({"ok": True, "request": state.request_detail(updated)}, args)
+        if row["status"] not in {"failed", "cancelled"}:
+            return _fail(
+                f"request retry requires failed or cancelled status, got {row['status']}",
+                json_output=args.json,
+            )
+        if superseded_by := str(job.get("superseded_by_request_id") or ""):
+            raise ValueError(f"request was superseded by request {superseded_by}")
+        attempt += 1
+        job["status"] = "pending"
+        job["retry_attempt"] = attempt
+        job["retry_from_status"] = str(row["status"])
+        job.pop("error", None)
+        _write_request_job(workspace, request_id, "pending", job)
+        if not _request_attempt_event_exists(
+            workspace,
+            "request_retried",
+            request_id,
+            "retry_attempt",
+            attempt,
+        ):
+            append_explicit_journal_event(
+                workspace,
+                {
+                    "event": "request_retried",
+                    "request_id": request_id,
+                    "retry_attempt": attempt,
+                    "from_status": str(job["retry_from_status"]),
+                },
+                actor="pi",
+                machine="memoria-cli",
+            )
+    updated = state.request_row(workspace, request_id)
     return _emit({"ok": True, "request": state.request_detail(updated)}, args)
 
 
@@ -1511,6 +1725,14 @@ def _workspace_scan_payload(
         scan_args.schedule_id = schedule_id
     if idempotency_key is not None:
         scan_args.idempotency_key = idempotency_key
+
+    def auxiliary_args(operation_id: str) -> argparse.Namespace:
+        operation_args = argparse.Namespace(**vars(scan_args))
+        base_key = str(getattr(operation_args, "idempotency_key", "") or "")
+        if base_key:
+            operation_args.idempotency_key = f"{base_key}:{operation_id}"
+        return operation_args
+
     workspace = _workspace(args)
     fixture_name = getattr(args, "fixture", "")
     fixture = _workspace_scan_fixture(workspace, fixture_name) if fixture_name else None
@@ -1519,14 +1741,18 @@ def _workspace_scan_payload(
     regeneration = None
     if projection_paths:
         quarantine = _enqueue_and_run(
-            scan_args,
+            auxiliary_args("trace-integrity-scan"),
             "trace-integrity-scan",
             {
                 "paths": projection_paths,
                 "reason": "workspace-scan-generated-projection",
             },
         )
-        regeneration = _enqueue_and_run(scan_args, "regenerate-tracked-projections", {})
+        regeneration = _enqueue_and_run(
+            auxiliary_args("regenerate-tracked-projections"),
+            "regenerate-tracked-projections",
+            {},
+        )
     observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})
     needs_check_paths = list(observed["result"].get("paths") or [])
     payload = {
@@ -1618,8 +1844,18 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
             },
             args,
         )
+    check_args = argparse.Namespace(**vars(args))
+    check_args.actor = "integrity"
+
+    def operation_args(operation_id: str) -> argparse.Namespace:
+        item_args = argparse.Namespace(**vars(check_args))
+        base_key = str(getattr(item_args, "idempotency_key", "") or "")
+        if base_key:
+            item_args.idempotency_key = f"{base_key}:{operation_id}"
+        return item_args
+
     results = [
-        _enqueue_and_run(args, operation_id, {"shadow": bool(args.shadow)})
+        _enqueue_and_run(operation_args(operation_id), operation_id, {"shadow": bool(args.shadow)})
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
     ]
     return _emit(
@@ -1684,6 +1920,8 @@ def _cmd_steering_edit(args: argparse.Namespace) -> int:
         commit_explicit_writer_changes,
     )
 
+    if args.actor != "pi":
+        raise ValueError("steering edit requires PI actor authority")
     workspace = _workspace(args)
     body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
     path = workspace / "steering.md"
@@ -1775,14 +2013,15 @@ def _queue_import_enrichment(
     if not work_id:
         return None
     workspace = _workspace(args)
+    parent_request_id = str(output["job"]["job_id"])
     return enqueue_operation(
         workspace,
         "enrich-source",
         payload={"work_id": work_id},
-        idempotency_key=f"enrich-{work_id}",
+        idempotency_key=f"enrich-{work_id}:{parent_request_id}",
         input_refs=[{"id": work_id, "kind": "catalog_source"}],
         primary_target=f"catalog/sources/{work_id}",
-        causal_refs=[str(output["job"]["job_id"])],
+        causal_refs=[parent_request_id],
         actor="operation",
         provenance={"surface": "memoria-cli", "command": "work-import"},
         schedule_id=args.schedule_id,
@@ -2288,16 +2527,12 @@ def _write_request_job(workspace: Path, request_id: str, status: str, job: dict[
 
 
 def _request_job_args(job: dict[str, Any]) -> dict[str, Any]:
-    payload = job.get("payload")
     envelope = job.get("request_envelope")
-    if isinstance(payload, dict):
-        args = payload
-    elif isinstance(envelope, dict) and isinstance(envelope.get("args"), dict):
-        args = envelope["args"]
-    else:
-        args = {}
-    if isinstance(envelope, dict):
-        envelope["args"] = args
+    if not isinstance(envelope, dict) or not isinstance(envelope.get("args"), dict):
+        raise ValueError("request job requires immutable envelope arguments")
+    args = envelope["args"]
+    if job.get("kind") == "operation" and job.get("payload") != args:
+        raise ValueError("operation request payload must match immutable envelope arguments")
     return args
 
 
@@ -2312,6 +2547,30 @@ def _key_values(values: list[str]) -> dict[str, Any]:
         except json.JSONDecodeError:
             rows[key.strip()] = item
     return rows
+
+
+def _scope_bearing_request_fields(updates: dict[str, Any]) -> list[str]:
+    exact = {
+        "id",
+        "ids",
+        "input",
+        "inputs",
+        "output",
+        "outputs",
+        "path",
+        "paths",
+        "ref",
+        "refs",
+        "target",
+        "targets",
+    }
+    suffixes = ("_id", "_ids", "_path", "_paths", "_ref", "_refs")
+    return sorted(
+        key
+        for key in updates
+        if (normalized := key.strip().lower().replace("-", "_")) in exact
+        or normalized.endswith(suffixes)
+    )
 
 
 def _present_updates(args: argparse.Namespace) -> dict[str, Any]:
@@ -2402,6 +2661,8 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         commit_explicit_writer_changes,
     )
 
+    if args.actor != "pi":
+        raise ValueError(f"vocabulary {mode} requires PI actor authority")
     workspace = _workspace(args)
     path = workspace / "system/vocabulary.md"
     if not path.is_file():

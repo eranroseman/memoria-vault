@@ -47,7 +47,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | Command | Purpose |
 | --- | --- |
 | `memoria request list/show` | Inspect operation requests. |
-| `memoria request answer/amend/cancel/retry/resume` | Continue or change a request. |
+| `memoria request answer/amend/cancel/retry/resume` | PI-only request controls. Answer and amend create a successor request; cancel, retry, and resume control request state. |
 | `memoria workspace scan/run/recover/rollback/check/rebuild/export` | Observe file edits, run queued work, recover interrupted work, and maintain projections/search. |
 | `memoria attention list/show/resolve/worklist` | Review PI attention items. |
 
@@ -151,8 +151,22 @@ new hub` accepts `--description` plus optional `--body`; `memoria new project`
 accepts `--description` plus optional `--direction`. The generated files include
 the same frontmatter defaults and body heading shape as the CLI concept writers.
 
-Most workspace commands accept `--workspace <path>` and `--json`. Mutating
-workspace commands that expose `--actor` default to `pi`; shell agents should
-pass `--actor agent` so queued writes record the correct request-envelope actor
-while still landing unchecked. `memoria mcp` is the exception: it has no `--json`
-mode, requires `--read-scope`, and defaults `--actor` to `agent`.
+Most workspace commands accept `--workspace <path>` and `--json`. `--actor`
+records declared provenance; the raw local CLI does not authenticate its caller
+and must remain a PI-owned surface. Do not expose it to an untrusted agent.
+Agent-facing adapters use [HTTP](local-http-transport.md) or
+[MCP](mcp-transport.md), which always record request actor `agent`.
+`workspace scan`, `workspace check`, and scans performed by `serve --watch`
+always record actor `integrity`. `memoria mcp` has no `--json` mode, requires
+`--read-scope`, and uses `--actor` only as the concrete agent identity recorded
+in provenance.
+
+`memoria request answer` and `memoria request amend` are PI-only. Each requires
+a fresh `--idempotency-key`, creates a PI-attributed successor request, and
+cancels a pending source as superseded without changing its envelope. A terminal
+source stays terminal and is marked as superseded.
+An amendment cannot change scope-bearing ID, reference, path, or target fields;
+submit a new operation for a different scope.
+Integrity-only requests cannot be cloned by a PI request control.
+`cancel`, `retry`, and `resume` are PI-only state controls. `memoria project
+resolve-evidence` is also PI-only.

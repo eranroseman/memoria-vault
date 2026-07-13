@@ -232,8 +232,10 @@ and consumed by every request-mediated writer.
 - [x] Prove actor, run, request, operation, and machine consistency across the
   request row, journal planes, mutations, and current derivation projection.
 - [x] Reject non-PI attention decisions rather than relabeling them as human.
-- [ ] Run the explicit security diff scan required for this runtime-policy
-  change before PR-F1.
+- [ ] Close the explicit security diff scan required for this runtime-policy
+  change. Remediation now binds idempotency keys to complete request identity
+  and enforces the protected-operation authority matrix at worker dispatch;
+  follow-up review, rescan, and the full gate remain.
 
 ### Task 4: Reject-marker trace
 

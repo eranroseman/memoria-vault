@@ -10,6 +10,23 @@ grand_parent: Reference
 Deterministic operations and runtime helpers behind the system action roster.
 For the guarded operation ID list, see [System actions](system-actions.md).
 
+## Request authority and retries
+
+Every request carries one validated actor. The worker reserves
+`acknowledge-attention`, `resolve-attention`, `record-copi-interview`,
+`curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`,
+`frame-paper`, `promote-draft-passage`, and `cascade-rollback` for the `pi`
+actor. It reserves
+`trace-integrity-scan` and `observe-pi-edits` for the `integrity` actor.
+
+An idempotency key binds the normalized request/job kind and complete request
+envelope. An exact retry with the same kind and envelope returns the existing
+request. Reusing a key with a different kind, operation, arguments, references,
+output intent, target, preconditions, causal references, actor, provenance, or
+schedule is rejected, including when submissions arrive concurrently. PI request
+answers and amendments create a successor with a fresh key; they do not alter
+the source envelope.
+
 ## Capture pipeline (`memoria_vault.runtime.capture`)
 
 | Action | Performer | What it does |

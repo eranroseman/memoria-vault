@@ -11,7 +11,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import actions_by_id
-from memoria_vault.runtime import mcp_transport, state
+from memoria_vault.runtime import mcp_transport, state, worker
 from memoria_vault.runtime.mcp_transport import make_mcp_app
 from tests.helpers import init_cli_workspace, write_checked_note
 
@@ -279,6 +279,53 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
             )
         )
     }
+
+
+def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path) -> None:
+    pytest.importorskip("mcp")
+    tool_error = pytest.importorskip("mcp.server.fastmcp.exceptions").ToolError
+    attention_path = workspace / "inbox/pi-pending.md"
+    attention_path.parent.mkdir(parents=True, exist_ok=True)
+    attention_path.write_text(
+        "---\n"
+        "projection: attention\n"
+        "title: PI pending\n"
+        "attention_kind: work-prompt\n"
+        "attention_status: open\n"
+        "routing_class: ask\n"
+        "---\n"
+        "Review.\n",
+        encoding="utf-8",
+    )
+    request = worker.enqueue_operation(
+        workspace,
+        "resolve-attention",
+        actor="pi",
+        idempotency_key="pi-pending-request",
+        payload={
+            "target_id": "inbox/pi-pending.md",
+            "outcome": "apply",
+            "routing_class": "ask",
+            "reason": "PI decision",
+        },
+    )
+    app = make_mcp_app(workspace, read_scope=["inbox"], agent_identity="review-agent")
+
+    listed = _call(app, "requests", status="pending")
+    detail = _call(app, "request", request_id=request["job_id"])
+    with pytest.raises(tool_error, match="idempotency key is already bound"):
+        _call(
+            app,
+            "operation_run",
+            operation_id="create-concept",
+            payload={"concept_type": "note"},
+            idempotency_key=request["job_id"],
+        )
+
+    assert [row["request_id"] for row in listed["requests"]] == ["pi-pending-request"]
+    assert detail["request"]["actor"] == "pi"
+    assert state.request_job(workspace, request["job_id"])["status"] == "pending"
+    assert "attention_status: open" in attention_path.read_text(encoding="utf-8")
 
 
 def _call(app: Any, name: str, **arguments: Any) -> dict[str, Any]:

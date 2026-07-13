@@ -184,7 +184,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
         "curate-note-candidate",
         payload={"note_path": note_rel, "status": "accepted", "reason": "PI approved"},
         idempotency_key="curate-note-alpha",
-        actor="operation",
+        actor="pi",
     )
     curate_done = run_next_job(vault, machine="test-machine")
 

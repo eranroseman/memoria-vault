@@ -6,7 +6,7 @@ from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.operations import load_operation_policy
-from memoria_vault.runtime.worker import enqueue_operation, run_next_job
+from memoria_vault.runtime.worker import enqueue_operation, run_next_job, run_request
 from tests.helpers import copy_memoria_dirs, git, init_git
 
 
@@ -168,16 +168,60 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
             SELECT status, operation_id, actor, causal_refs_json
             FROM operation_requests WHERE request_id = ?
             """,
-            ("enrich-doi-10.1000_harness.2026",),
+            ("enrich-doi-10.1000_harness.2026_capture-bibtex-harness",),
         ).fetchone()
     assert source["citekey"] == "harness2026"
     assert source["check_status"] == "unchecked"
     assert json.loads(source["identifiers_json"]) == {"doi": "10.1000/harness.2026"}
     assert tuple(enrich)[:3] == ("pending", "enrich-source", "operation")
     assert json.loads(enrich["causal_refs_json"]) == [{"id": "capture-bibtex-harness"}]
-    assert done["enrichment_job"]["job_id"] == "enrich-doi-10.1000_harness.2026"
+    assert (
+        done["enrichment_job"]["job_id"] == "enrich-doi-10.1000_harness.2026_capture-bibtex-harness"
+    )
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL}
+
+
+def test_capture_bibtex_distinct_parents_create_distinct_enrichment_children(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    bibtex = """@article{same2026,
+      title = {Same Work, New Capture},
+      year = {2026},
+      doi = {10.1000/same.2026},
+      abstract = {A repeated capture fixture.}
+    }"""
+    results = []
+
+    for request_id in ("capture-same-one", "capture-same-two"):
+        request = enqueue_operation(
+            vault,
+            "capture-bibtex-source",
+            payload={"bibtex": bibtex},
+            idempotency_key=request_id,
+            actor="pi",
+        )
+        results.append(run_request(vault, request["job_id"], machine="test-machine"))
+
+    assert [result["status"] for result in results] == ["done", "done"]
+    with state.connect(vault) as conn:
+        children = conn.execute(
+            """
+            SELECT request_id, causal_refs_json
+            FROM operation_requests
+            WHERE operation_id = 'enrich-source'
+            ORDER BY request_id
+            """
+        ).fetchall()
+    assert [row["request_id"] for row in children] == [
+        "enrich-doi-10.1000_same.2026_capture-same-one",
+        "enrich-doi-10.1000_same.2026_capture-same-two",
+    ]
+    assert [json.loads(row["causal_refs_json"]) for row in children] == [
+        [{"id": "capture-same-one"}],
+        [{"id": "capture-same-two"}],
+    ]
 
 
 def test_worker_runs_capture_url_source_operation_jobs(tmp_path: Path, monkeypatch) -> None:

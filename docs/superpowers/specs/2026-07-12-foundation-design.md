@@ -45,6 +45,7 @@ validated provenance context from claim through mutation and journaling.
   failure-recording block before dispatch. The builder requires an envelope,
   validates `actor` against `state.ACTORS`, rejects blank identifiers, and
   rejects disagreement between the job and envelope request or operation ids.
+  An operation job's dispatched payload must equal immutable envelope arguments.
   An explicit nonblank envelope `args.run_id` wins; otherwise `run_id` is the
   request id. The builder normalizes `machine` once as
   `safe_filename(machine or platform.node() or "local")` so the JSONL filename
@@ -57,18 +58,32 @@ validated provenance context from claim through mutation and journaling.
   neither interface supplies a provenance default. Domain arguments remain
   domain arguments; the context replaces distributed actor, run, request,
   operation, and machine keyword parameters.
-- **Declare actors at request creation:** CLI, MCP, and HTTP adapters keep their
-  declared `pi` or `agent` defaults and pass them explicitly. Engine and worker
+- **Declare actors at request creation:** CLI commands declare their documented
+  actor, while MCP and HTTP requests are always `agent`. The raw CLI is a
+  PI-owned provenance surface, not an authentication boundary. Engine and worker
   interfaces require an actor. Engine-created child requests declare
   `operation`; integrity sweeps and read-barrier scans declare `integrity`.
   `observe_pi_edit` remains explicitly `pi` because it records an unmediated
   edit from the researcher's editor.
-- **Respect authority:** `resolve-attention` and `acknowledge-attention` are
-  PI-only judgment operations. The worker rejects a non-`pi` context instead
-  of relabeling an agent action as human; the runtime helper records the
-  validated actor it receives. Supporting an agent-submitted PI decision would
-  require separate `submitted_by` and `decided_by` provenance and is out of
-  scope.
+- **Bind idempotency to request identity:** an idempotency key identifies one
+  normalized job kind and one complete request envelope: operation, actor,
+  arguments, provenance, and causal references. An exact retry returns the
+  existing request. Reusing the key with any different identity field fails
+  before dispatch, including when the second request arrives concurrently. A PI
+  answer or amendment creates a fresh, PI-attributed successor. It cancels a
+  pending source or marks a terminal source as superseded; it never changes the
+  source envelope.
+- **Respect authority at dispatch:** the worker validates authority before
+  payload validation or mutation. `acknowledge-attention`,
+  `resolve-attention`, `record-copi-interview`, `curate-note-candidate`,
+  `curate-note-link`, `mark-checked`, `update-work`, `frame-paper`,
+  `promote-draft-passage`, and `cascade-rollback` require `pi`.
+  `trace-integrity-scan` and `observe-pi-edits` require `integrity`. Other
+  operations accept any actor in the four-value vocabulary unless their
+  contract states a narrower authority. A rejected request fails without a
+  domain event or mutation. The explicit `resolve-evidence-review` helper also
+  requires `pi`. Supporting an agent-submitted PI decision would require
+  separate `submitted_by` and `decided_by` provenance and is out of scope.
 - **Current derivation projection:** `derivations` stores the actor of the most
   recent write for each `(input_id, output_id)` pair. Repeated staging upserts
   that actor; append-only `event_log` rows retain the complete history. The
@@ -98,11 +113,17 @@ provenance; applies the run-id fallback; and normalizes one machine identity.
 Engine and queue calls without actor raise. Input-backed agent, operation, and
 integrity requests preserve their actor in `operation_requests`, journal
 events, and `derivations`; the JSONL filename and `event_log.machine` agree.
-PI-only attention operations reject an agent context. Repeating one derivation
-as `pi` and then `agent` leaves one current `agent` row while the journal keeps
-both events. Production and raw-SQL paths reject an out-of-vocabulary actor.
-The reject-marker trace test is N/A: reject never strips the durable marker,
-and export strips only its output copy.
+Every protected operation rejects each non-authorized actor before payload
+validation and leaves the domain event log empty. Exact idempotent retries
+return one request, while changed actor, operation, arguments, provenance,
+causal references, or job kind conflict; concurrent conflicting submissions
+also produce one request and one conflict. PI request controls reject an agent
+before mutation; their successors leave the source envelope unchanged and bind
+the source as a causal reference. Repeating one derivation as `pi` and then
+`agent` leaves one current `agent` row while the journal keeps both events.
+Production and raw-SQL paths reject an out-of-vocabulary actor. The reject-marker
+trace test is N/A: reject never strips the durable marker, and export strips only
+its output copy.
 
 ## F2 · Journal trust — one authoritative trust-read path (#1362)
 

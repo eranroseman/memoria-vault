@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -30,6 +32,159 @@ def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
     assert visible["path"] == "notes/alpha.md"
     with pytest.raises(FileNotFoundError, match="target not found"):
         api.read_concept(workspace, "notes/beta.md", read_scope=["notes/alpha.md"])
+
+
+def test_write_new_concept_replays_generated_path_and_id_for_same_key(
+    workspace: Path,
+) -> None:
+    first = api.write_new_concept(
+        workspace,
+        "note",
+        "Idempotent concept",
+        body="Stable body.",
+        tags=["stable"],
+        extra={"mode": "claim", "claim_text": "Stable body."},
+        idempotency_key="idempotent-concept",
+        actor="pi",
+    )
+    second = api.write_new_concept(
+        workspace,
+        "note",
+        "Idempotent concept",
+        body="Stable body.",
+        tags=["stable"],
+        extra={"mode": "claim", "claim_text": "Stable body."},
+        idempotency_key="idempotent-concept",
+        actor="pi",
+    )
+
+    assert first["ok"] is second["ok"] is True
+    assert second["path"] == first["path"]
+    assert second["concept"]["id"] == first["concept"]["id"]
+    assert not (workspace / "notes/idempotent-concept-2.md").exists()
+    with state.connect(workspace) as conn:
+        assert (
+            conn.execute(
+                "SELECT COUNT(*) FROM operation_requests WHERE idempotency_key = ?",
+                ("idempotent-concept",),
+            ).fetchone()[0]
+            == 1
+        )
+
+
+def test_write_new_concept_rejects_changed_body_for_same_key(workspace: Path) -> None:
+    api.write_new_concept(
+        workspace,
+        "note",
+        "Bound concept",
+        body="Original body.",
+        tags=[],
+        extra={},
+        idempotency_key="bound-concept",
+        actor="pi",
+    )
+
+    with pytest.raises(ValueError, match="idempotency key is already bound"):
+        api.write_new_concept(
+            workspace,
+            "note",
+            "Bound concept",
+            body="Changed body.",
+            tags=[],
+            extra={},
+            idempotency_key="bound-concept",
+            actor="pi",
+        )
+
+
+def test_write_new_concept_concurrent_exact_retries_share_generated_identity(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original_request_job = state.request_job
+    barrier = threading.Barrier(2)
+    counter_lock = threading.Lock()
+    initial_lookups = 0
+
+    def synchronized_request_job(vault: Path, request_id: str):
+        nonlocal initial_lookups
+        with counter_lock:
+            synchronize = initial_lookups < 2
+            initial_lookups += 1
+        result = original_request_job(vault, request_id)
+        if synchronize:
+            barrier.wait()
+        return result
+
+    monkeypatch.setattr(state, "request_job", synchronized_request_job)
+
+    def create() -> dict[str, object]:
+        return api.write_new_concept(
+            workspace,
+            "note",
+            "Concurrent concept",
+            body="Stable body.",
+            tags=["stable"],
+            extra={"mode": "claim", "claim_text": "Stable body."},
+            idempotency_key="concurrent-concept",
+            actor="pi",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(lambda _index: create(), range(2)))
+
+    assert all(result["ok"] is True for result in results)
+    assert {result["path"] for result in results} == {"notes/concurrent_concept.md"}
+    assert len({result["concept"]["id"] for result in results}) == 1
+    with state.connect(workspace) as conn:
+        assert (
+            conn.execute(
+                "SELECT COUNT(*) FROM operation_requests WHERE idempotency_key = ?",
+                ("concurrent-concept",),
+            ).fetchone()[0]
+            == 1
+        )
+
+
+def test_run_operation_concurrent_exact_retries_return_one_result(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original_enqueue = api.enqueue_operation
+    barrier = threading.Barrier(2)
+
+    def synchronized_enqueue(*args, **kwargs):
+        job = original_enqueue(*args, **kwargs)
+        barrier.wait()
+        return job
+
+    monkeypatch.setattr(api, "enqueue_operation", synchronized_enqueue)
+    payload = {
+        "target_path": "notes/concurrent-operation.md",
+        "content": "---\ntype: note\ntitle: Concurrent operation\n---\nBody.\n",
+        "concept_type": "note",
+    }
+
+    def run() -> dict[str, object]:
+        return api.run_operation(
+            workspace,
+            "create-concept",
+            payload,
+            idempotency_key="concurrent-operation",
+            actor="agent",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(lambda _index: run(), range(2)))
+
+    assert all(result["ok"] is True for result in results)
+    assert {result["result"]["status"] for result in results} == {"done"}
+    with state.connect(workspace) as conn:
+        assert (
+            conn.execute(
+                "SELECT COUNT(*) FROM operation_requests WHERE idempotency_key = ?",
+                ("concurrent-operation",),
+            ).fetchone()[0]
+            == 1
+        )
 
 
 def test_engine_read_concept_refuses_tampered_checked_file(workspace: Path) -> None:
