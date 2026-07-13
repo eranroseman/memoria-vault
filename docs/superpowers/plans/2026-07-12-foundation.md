@@ -995,7 +995,8 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
     product gates, offline smoke, syntax, and installer checks passed with
     `verify: OK`.
 
-- [ ] **Step 6: Commit + PR**
+- [x] **Step 6: Commit + PR** — implementation and hardening commits are
+  published in [PR #1390](https://github.com/eranroseman/memoria-vault/pull/1390).
 
 ```bash
 git add src/memoria_vault/cli.py src/memoria_vault/runtime/backup.py src/memoria_vault/runtime/knowledge.py tests/test_backup_restore.py docs/reference/system/backup-and-recovery.md docs/reference/system/README.md
