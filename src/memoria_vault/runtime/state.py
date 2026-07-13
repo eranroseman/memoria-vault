@@ -2217,9 +2217,19 @@ def code_run(vault: Path, run_id: str) -> dict[str, Any] | None:
 def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
     rows = list(rows)
     with connect(vault) as conn:
+        existing_bindings = {
+            row["id"]: row["block_text_sha256"]
+            for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_sets")
+        }
         deleted = conn.execute("DELETE FROM evidence_sets").rowcount
         for row in rows:
+            evidence_id = str(row["id"])
             items = [str(item) for item in row.get("items", [])]
+            block_text_sha256 = (
+                existing_bindings[evidence_id]
+                if evidence_id in existing_bindings
+                else row.get("block_text_sha256")
+            )
             conn.execute(
                 """
                 INSERT INTO evidence_sets(
@@ -2235,14 +2245,14 @@ def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[s
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    str(row["id"]),
+                    evidence_id,
                     normalize_path(str(row["block_ref"])),
                     _json(items),
                     str(row["type"]),
                     str(row["state"]),
                     1 if bool(row.get("review_required")) else 0,
                     str(row.get("run_id") or ""),
-                    row.get("block_text_sha256"),
+                    block_text_sha256,
                 ),
             )
     return {"deleted": int(deleted), "inserted": len(rows)}
@@ -2482,9 +2492,10 @@ def _derived_evidence_row(
 ) -> dict[str, Any]:
     items = list(marker.items)
     evidence_type = _derived_evidence_type(items)
+    block_ref = _evidence_block_ref(rel, marker.evidence_id)
     return {
         "id": marker.evidence_id,
-        "block_ref": _evidence_block_ref(rel, marker.evidence_id),
+        "block_ref": block_ref,
         "items": items,
         "type": evidence_type,
         "state": "complete"
@@ -2492,6 +2503,7 @@ def _derived_evidence_row(
         else "evidence-incomplete",
         "review_required": evidence_type in {"implicit", "multi-hop"},
         "run_id": run_id,
+        "block_text_sha256": _block_text_sha256(vault, block_ref),
     }
 
 
@@ -2557,6 +2569,31 @@ def _source_span_pages(vault: Path) -> dict[str, set[str]]:
 
 def _evidence_block_ref(rel: str, evidence_id: str) -> str:
     return f"{normalize_path(rel)}#^blk-{evidence_id.removeprefix('ev-')}"
+
+
+def _block_text_sha256(vault: Path, block_ref: str) -> str | None:
+    rel, separator, anchor = str(block_ref).partition("#^")
+    if not separator or not rel or not anchor:
+        return None
+    try:
+        path = Path(vault) / normalize_path(rel)
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError, ValueError):
+        return None
+
+    anchor_token = f"^{anchor}"
+    anchor_pattern = rf"(?<!\S){re.escape(anchor_token)}(?=\s|$)"
+    blocks = [
+        block
+        for block in re.split(r"\n[ \t]*\n+", text)
+        if re.search(anchor_pattern, block)
+    ]
+    if len(blocks) != 1:
+        return None
+
+    canonical = re.sub(anchor_pattern, "", blocks[0])
+    canonical = re.sub(r"%%ev:\s*.*?%%", "", canonical, flags=re.DOTALL).strip()
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _upsert_concept_mirror_conn(

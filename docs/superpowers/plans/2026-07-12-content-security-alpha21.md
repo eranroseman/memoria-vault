@@ -242,20 +242,25 @@ evidence rows, schema v10, package/query assertions, and test-level registration
 - Consumes: Task 5's column; the block-anchor resolution (`^blk-<id>`) already used by the marker→row builder.
 - Produces: each rebuilt `evidence_sets` row stores `block_text_sha256 = "sha256:" + sha256(<anchored block body text>)`. Function `state._block_text_sha256(vault, block_ref) -> str | None` (resolves the `path#^blk-id` to its block text, hashes it; None if unresolvable).
 
-- [ ] **Step 1: Read** `rebuild_evidence_sets_from_markers` (:1530) + the row-insert (:1740) + how a `block_ref` (`{rel}#^blk-{id}`) maps to the block's text in the file (the anchor scan around knowledge.py:1967 / :3182).
+- [x] **Step 1: Read** `rebuild_evidence_sets_from_markers` (:1530) + the row-insert (:1740) + how a `block_ref` (`{rel}#^blk-{id}`) maps to the block's text in the file (the anchor scan around knowledge.py:1967 / :3182).
 
-- [ ] **Step 2: Write the failing test** — compose a draft with one fresh `%%ev%%` marker on an anchored paragraph; rebuild and assert the row binds to `"sha256:"+sha256` of the canonical block text (anchor and evidence marker excluded). Edit that paragraph on disk, rebuild, and assert the stored hash **does not change** while `_block_text_sha256(vault, block_ref)` now returns a different current hash.
+- [x] **Step 2: Write the failing test** — compose a draft with one fresh `%%ev%%` marker on an anchored paragraph; rebuild and assert the row binds to `"sha256:"+sha256` of the canonical block text (anchor and evidence marker excluded). Edit that paragraph on disk, rebuild, and assert the stored hash **does not change** while `_block_text_sha256(vault, block_ref)` now returns a different current hash.
 
-- [ ] **Step 3: Implement** — add `_block_text_sha256(vault, block_ref)` (resolve `path#^anchor` to its enclosing Markdown paragraph/block, remove the block anchor and `%%ev...%%` control marker, trim outer whitespace, and hash the remaining UTF-8 bytes with the `sha256:` prefix). Before `replace_evidence_sets` deletes rows, load existing `{id: block_text_sha256}` bindings. A previously unseen ID binds to its current resolved text once; an existing ID keeps its prior value, including `None`, across every marker rebuild. Never refresh an existing binding from current file text.
+- [x] **Step 3: Implement** — add `_block_text_sha256(vault, block_ref)` (resolve `path#^anchor` to its enclosing Markdown paragraph/block, remove the block anchor and `%%ev...%%` control marker, trim outer whitespace, and hash the remaining UTF-8 bytes with the `sha256:` prefix). Before `replace_evidence_sets` deletes rows, load existing `{id: block_text_sha256}` bindings. A previously unseen ID binds to its current resolved text once; an existing ID keeps its prior value, including `None`, across every marker rebuild. Never refresh an existing binding from current file text.
 
-- [ ] **Step 4: Run** → PASS; `tests/test_evidence_markers.py` + `test_evidence_sets.py` → PASS.
+- [x] **Step 4: Run** → PASS; `tests/test_evidence_markers.py` + `test_evidence_sets.py` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/state.py tests/test_mc_hash_binding.py
 git commit -m "feat(verify): bind evidence rows to their block-text hash"
 ```
+
+**TDD evidence:** the fresh-row test failed with a null binding and the resolver
+test failed because `_block_text_sha256` did not exist. After implementation, 13
+binding, marker, evidence-row, and draft-composition tests passed. The regression
+also proves that an existing null binding remains null after its anchor appears.
 
 ### Task 7: Verify demotes + refuses export on block-text drift
 
