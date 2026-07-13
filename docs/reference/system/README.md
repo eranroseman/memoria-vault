@@ -15,3 +15,4 @@ permalink: /reference/system/
 | [System artifacts](system-artifacts.md) |
 | [Installer (bootstrap)](installer.md) |
 | [Failure modes](failure-modes.md) |
+| [Backup and recovery](backup-and-recovery.md) |

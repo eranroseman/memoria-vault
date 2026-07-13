@@ -22,6 +22,10 @@ paper framing and checked support. For citation-rich manuscript drafts, live
 Zotero field workflows, or custom CSL routes, use Pandoc outside the
 checked-project export surface.
 
+An absolute `--output` may target a location outside the vault. When that path
+already exists, it must be writable; export refuses a read-only target instead
+of replacing it through the containing directory.
+
 ---
 
 ## Citation states

@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
+import memoria_vault.cli as cli_module
 from memoria_vault.cli import main
-from memoria_vault.runtime import state
+from memoria_vault.runtime import backup, state
 from tests.helpers import WORKSPACE_SEED, git, patch_pydantic_ai
 
 
@@ -48,7 +53,7 @@ def test_cli_doctor_reports_backup_contract(
 
     git(workspace, "remote", "add", "origin", "https://example.invalid/memoria.git")
     (workspace / ".memoria/config/litestream.yaml").write_text("dbs: []\n", encoding="utf-8")
-    (workspace / ".memoria/config/blob-sync.yaml").write_text("paths: []\n", encoding="utf-8")
+    (workspace / ".memoria/config/blob-sync.yaml").write_text("target: test\n", encoding="utf-8")
 
     assert main(["doctor", "bundle", "--workspace", str(workspace), "--json"]) == 0
     bundle = json.loads(capsys.readouterr().out)
@@ -79,6 +84,388 @@ def test_cli_doctor_repair_restores_runtime_seed_files(
     assert provider_config.read_text(encoding="utf-8") == seed_provider_config.read_text(
         encoding="utf-8"
     )
+
+
+def test_cli_doctor_repair_rejects_symlinked_runtime_before_seed_writes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    outside_runtime = tmp_path / "outside-runtime"
+    (workspace / ".memoria").rename(outside_runtime)
+    provider_config = outside_runtime / "config/providers.yaml"
+    provider_config.write_text("outside sentinel\n", encoding="utf-8")
+    (workspace / ".memoria").symlink_to(outside_runtime, target_is_directory=True)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["error"] == "workspace runtime path must not be a symlink: .memoria"
+    assert provider_config.read_text(encoding="utf-8") == "outside sentinel\n"
+
+
+def test_cli_doctor_bundle_rejects_symlinked_runtime_before_connect(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    outside_runtime = tmp_path / "outside-runtime"
+    outside_runtime.mkdir()
+    (workspace / ".memoria").symlink_to(outside_runtime, target_is_directory=True)
+    outside_database = outside_runtime / "memoria.sqlite"
+
+    rc = main(["doctor", "bundle", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["error"] == "workspace runtime path must not be a symlink: .memoria"
+    assert not outside_database.exists()
+
+
+@pytest.mark.parametrize("bundle", [False, True])
+def test_cli_doctor_maintenance_rejects_redirected_sqlite_rollback_journal(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    bundle: bool,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    rollback_journal = Path(f"{workspace / state.DB_REL}-journal")
+    rollback_journal.unlink(missing_ok=True)
+    outside_journal = tmp_path / "outside-journal"
+    rollback_journal.symlink_to(outside_journal)
+    command = ["doctor"]
+    if bundle:
+        command.append("bundle")
+    command.extend(["--workspace", str(workspace), "--json"])
+    if not bundle:
+        command.append("--repair")
+
+    rc = main(command)
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["error"] == (
+        "workspace runtime path must not be a symlink: .memoria/memoria.sqlite-journal"
+    )
+    assert not outside_journal.exists()
+
+
+def test_cli_doctor_repair_rejects_symlinked_seed_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    provider_config = workspace / ".memoria/config/providers.yaml"
+    outside_config = tmp_path / "outside-providers.yaml"
+    outside_config.write_text("outside sentinel\n", encoding="utf-8")
+    provider_config.unlink()
+    provider_config.symlink_to(outside_config)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert "symlink" in output["error"]
+    assert outside_config.read_text(encoding="utf-8") == "outside sentinel\n"
+
+
+@pytest.mark.parametrize(
+    "redirect_rel",
+    [
+        ".memoria/eval",
+        ".memoria/patterns",
+        ".memoria/schemas",
+        ".githooks/pre-commit",
+        ".obsidian",
+        "system",
+        "index.md",
+        ".git/config",
+    ],
+)
+def test_cli_doctor_repair_preflights_every_write_target(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    redirect_rel: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    redirected = workspace / redirect_rel
+    real_is_junction = Path.is_junction
+    real_repair = cli_module._repair_workspace
+    repair_called = False
+
+    def fake_is_junction(path: Path) -> bool:
+        return Path(path) == redirected or real_is_junction(path)
+
+    def record_repair(candidate: Path) -> list[str]:
+        nonlocal repair_called
+        repair_called = True
+        return real_repair(candidate)
+
+    monkeypatch.setattr(Path, "is_junction", fake_is_junction)
+    monkeypatch.setattr("memoria_vault.cli._repair_workspace", record_repair)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert "redirect" in output["error"]
+    assert repair_called is False
+
+
+@pytest.mark.parametrize("transaction_type", ["backup", "restore"])
+@pytest.mark.parametrize("bundle", [False, True])
+def test_cli_doctor_maintenance_rejects_pending_transactions(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    transaction_type: str,
+    bundle: bool,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    if transaction_type == "restore":
+        rollback = tmp_path / ".workspace.restore-rollback-doctor"
+        stage = tmp_path / ".workspace.restore-stage-doctor"
+        rollback.mkdir()
+        stage.mkdir()
+        backup._write_restore_transaction(workspace, rollback, stage)
+    else:
+        target = tmp_path / "doctor-backup-target"
+        rollback = tmp_path / ".doctor-backup-target.rollback-doctor"
+        stage = tmp_path / ".doctor-backup-target.stage-doctor"
+        assert (
+            backup.create_backup(workspace, stage, actor="pi", machine="test-doctor")["ok"] is True
+        )
+        backup._write_backup_transaction(workspace, target, rollback, stage)
+
+    command = ["doctor"]
+    if bundle:
+        command.append("bundle")
+    command.extend(["--workspace", str(workspace), "--json"])
+    if not bundle:
+        command.append("--repair")
+
+    rc = main(command)
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["error"] == f"interrupted {transaction_type} requires memoria workspace recover"
+
+
+def test_cli_doctor_repair_rechecks_write_targets_after_lock(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    outside_index = tmp_path / "outside-index.md"
+    outside_index.write_text("outside sentinel\n", encoding="utf-8")
+    repair_called = False
+
+    @contextmanager
+    def redirecting_lock(_workspace: Path):
+        index = workspace / "index.md"
+        index.unlink()
+        index.symlink_to(outside_index)
+        yield
+
+    def record_repair(_workspace: Path) -> list[str]:
+        nonlocal repair_called
+        repair_called = True
+        return []
+
+    monkeypatch.setattr(cli_module, "_workspace_lock", redirecting_lock)
+    monkeypatch.setattr(cli_module, "_repair_workspace", record_repair)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert "symlink or junction" in output["error"]
+    assert repair_called is False
+    assert outside_index.read_text(encoding="utf-8") == "outside sentinel\n"
+
+
+def test_cli_doctor_bundle_rechecks_pending_transaction_after_lock(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    rollback = tmp_path / ".workspace.restore-rollback-doctor-race"
+    stage = tmp_path / ".workspace.restore-stage-doctor-race"
+    rollback.mkdir()
+    stage.mkdir()
+    connect_called = False
+    real_connect = state.connect
+
+    @contextmanager
+    def transaction_starting_lock(_workspace: Path):
+        backup._write_restore_transaction(workspace, rollback, stage)
+        yield
+
+    def record_connect(_workspace: Path):
+        nonlocal connect_called
+        connect_called = True
+        return real_connect(_workspace)
+
+    monkeypatch.setattr(cli_module, "_workspace_lock", transaction_starting_lock)
+    monkeypatch.setattr(cli_module.state, "connect", record_connect)
+
+    rc = main(["doctor", "bundle", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["error"] == "interrupted restore requires memoria workspace recover"
+    assert connect_called is False
+
+
+def test_cli_doctor_repair_rejects_gitfile_redirect(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    outside_git = tmp_path / "outside-git"
+    (workspace / ".git").rename(outside_git)
+    (workspace / ".git").write_text(f"gitdir: {outside_git}\n", encoding="utf-8")
+    repair_called = False
+
+    def record_repair(_workspace: Path) -> list[str]:
+        nonlocal repair_called
+        repair_called = True
+        return []
+
+    monkeypatch.setattr(cli_module, "_repair_workspace", record_repair)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["error"] == "workspace Git metadata must be a directory"
+    assert repair_called is False
+
+
+def test_cli_doctor_repair_rejects_git_common_directory_indirection(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    (workspace / ".git/commondir").write_text(str(tmp_path / "outside-git"), encoding="utf-8")
+    repair_called = False
+
+    def record_repair(_workspace: Path) -> list[str]:
+        nonlocal repair_called
+        repair_called = True
+        return []
+
+    monkeypatch.setattr(cli_module, "_repair_workspace", record_repair)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["error"] == "workspace Git common-directory indirection is not supported"
+    assert repair_called is False
+
+
+def test_cli_doctor_repair_ignores_git_environment_redirects(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    outside_git = tmp_path / "outside.git"
+    subprocess.run(
+        ["git", "init", "--bare", "-q", str(outside_git)],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    outside_config = outside_git / "config"
+    subprocess.run(
+        ["git", "--git-dir", str(outside_git), "remote", "add", "outside", "test://outside"],
+        check=True,
+    )
+    original_config = outside_config.read_bytes()
+    monkeypatch.setenv("GIT_DIR", str(outside_git))
+    monkeypatch.setenv("GIT_WORK_TREE", str(workspace))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert outside_config.read_bytes() == original_config
+    assert output["backup"]["git_remote"] == {"configured": False, "remotes": []}
+
+
+@pytest.mark.skipif(os.name == "nt", reason="uses a POSIX Git clean-filter command")
+def test_cli_doctor_repair_does_not_run_repository_clean_filters(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    shutil.rmtree(workspace / ".git")
+    git(workspace, "init", "-q")
+    sentinel = tmp_path / "clean-filter-ran"
+    (workspace / ".gitattributes").write_text("* filter=doctorprobe\n", encoding="utf-8")
+    git(
+        workspace,
+        "config",
+        "filter.doctorprobe.clean",
+        f"sh -c 'touch {sentinel}; cat'",
+    )
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+
+    assert rc == 0
+    assert not sentinel.exists()
+
+
+def test_cli_doctor_repair_does_not_commit_existing_files_when_creating_git(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    shutil.rmtree(workspace / ".git")
+    (workspace / "operator-notes.md").write_text("private draft\n", encoding="utf-8")
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    head = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=workspace,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert rc == 0
+    assert (workspace / ".git").is_dir()
+    assert head.returncode != 0
+    assert (workspace / "operator-notes.md").read_text(encoding="utf-8") == "private draft\n"
 
 
 def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(

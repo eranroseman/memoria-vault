@@ -29,6 +29,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from memoria_vault.runtime.vaultio import write_text_durable
+
 AUDIT_RELPATH = "system/logs/audit.jsonl"
 SESSIONS_RELDIR = "system/logs/sessions"
 QUIET_HOURS = 24.0
@@ -161,8 +163,9 @@ def write_summaries(
             name, n = f"{base}-{n}.jsonl", n + 1
         outdir.mkdir(parents=True, exist_ok=True)
         records = digest(request_id, entries)
-        (outdir / name).write_text(
-            "\n".join(json.dumps(r, sort_keys=True) for r in records) + "\n", encoding="utf-8"
+        write_text_durable(
+            outdir / name,
+            "\n".join(json.dumps(r, sort_keys=True) for r in records) + "\n",
         )
         written.append(outdir / name)
         done.add(request_id)

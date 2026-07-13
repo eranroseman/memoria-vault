@@ -72,6 +72,14 @@ def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
         assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
 
 
+def test_state_connect_context_closes_database_connection(tmp_path: Path) -> None:
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT 1").fetchone()[0] == 1
+
+    with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+        conn.execute("SELECT 1")
+
+
 def test_sqlite_schema_rejects_legacy_user_version(tmp_path: Path) -> None:
     db = tmp_path / state.DB_REL
     db.parent.mkdir(parents=True)

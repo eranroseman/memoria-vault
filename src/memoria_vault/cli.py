@@ -12,9 +12,12 @@ import subprocess
 import sys
 import time
 import uuid
+from contextlib import contextmanager
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
@@ -444,6 +447,15 @@ def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     _common(recover)
     recover.add_argument("--fixture")
     recover.set_defaults(handler=_cmd_workspace_recover)
+    backup = workspace_sub.add_parser("backup")
+    _common(backup)
+    backup.add_argument("target")
+    backup.set_defaults(handler=_cmd_workspace_backup)
+    restore = workspace_sub.add_parser("restore")
+    _common(restore)
+    restore.add_argument("source")
+    restore.add_argument("--force", action="store_true")
+    restore.set_defaults(handler=_cmd_workspace_restore)
     for name in ("scan", "rollback", "check", "rebuild", "export"):
         cmd = workspace_sub.add_parser(name)
         _common(cmd)
@@ -602,7 +614,8 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     if args.repair:
         if not workspace.is_dir():
             return _fail("doctor --repair requires an existing workspace", json_output=args.json)
-        repaired = _repair_workspace(workspace)
+        with _doctor_maintenance(workspace, repair=True):
+            repaired = _repair_workspace(workspace)
     checks: dict[str, Any] = {
         "workspace_exists": workspace.is_dir(),
         "state_db": state.db_path(workspace).is_file(),
@@ -641,12 +654,13 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             },
             args,
         )
+    backup = _backup_report(workspace)
     return _emit(
         {
-            "ok": all(checks.values()),
+            "ok": all(checks.values()) and backup["ok"],
             "workspace": str(workspace),
             "checks": checks,
-            "backup": _backup_report(workspace),
+            "backup": backup,
             "repaired": repaired,
         },
         args,
@@ -655,26 +669,30 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    with state.connect(workspace) as conn:
-        requests = [
-            dict(row)
-            for row in conn.execute(
-                """
-                SELECT request_id, operation_id, status, created_at, completed_at, error
-                FROM operation_requests
-                ORDER BY created_at, request_id
-                """
-            )
-        ]
+    with _doctor_maintenance(workspace):
+        doctor = _doctor_checks(workspace)
+        backup = _backup_report(workspace)
+        with state.connect(workspace) as conn:
+            requests = [
+                dict(row)
+                for row in conn.execute(
+                    """
+                    SELECT request_id, operation_id, status, created_at, completed_at, error
+                    FROM operation_requests
+                    ORDER BY created_at, request_id
+                    """
+                )
+            ]
+        journal_head = state.journal_head(workspace)
     return _emit(
         {
-            "ok": True,
+            "ok": all(doctor.values()) and backup["ok"],
             "workspace": str(workspace),
             "redacted": bool(args.redacted),
-            "doctor": _doctor_checks(workspace),
-            "backup": _backup_report(workspace),
+            "doctor": doctor,
+            "backup": backup,
             "requests": requests,
-            "journal_head": state.journal_head(workspace),
+            "journal_head": journal_head,
         },
         args,
     )
@@ -1701,15 +1719,72 @@ def _cmd_workspace_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_workspace_recover(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import backup as runtime_backup
+
+    if args.actor != "pi":
+        raise ValueError("workspace recover requires PI actor authority")
     workspace = _workspace(args)
+    runtime_backup.validate_runtime_root(workspace)
     fixture = _workspace_recover_fixture(workspace, args.fixture) if args.fixture else None
     with _workspace_lock(workspace):
+        restore_recovery = runtime_backup.recover_interrupted_restore(workspace)
+        backup_recovery = runtime_backup.recover_interrupted_backup(workspace)
         restored = state.recover_pending_materializations(workspace)
         failed_requests = state.recover_running_requests(workspace)
-    payload = {"ok": True, "restored": restored, "failed_requests": failed_requests}
+    payload = {
+        "ok": True,
+        "restored": restored,
+        "restore_rollbacks": (
+            [restore_recovery["rollback"]] if restore_recovery["recovered"] else []
+        ),
+        "backup_targets": [backup_recovery["target"]] if backup_recovery["recovered"] else [],
+        "failed_requests": failed_requests,
+    }
     if fixture is not None:
         payload["fixture"] = fixture
+    if not args.json and not args.quiet:
+        print(
+            "workspace recovery: "
+            f"{len(payload['restore_rollbacks'])} restore rollbacks, "
+            f"{len(payload['backup_targets'])} backup targets, "
+            f"{len(restored)} materializations, "
+            f"{len(failed_requests)} interrupted requests"
+        )
+        return 0
     return _emit(payload, args)
+
+
+def _cmd_workspace_backup(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import backup as runtime_backup
+
+    if args.actor != "pi":
+        raise ValueError("workspace backup requires PI actor authority")
+    return _emit(
+        runtime_backup.create_backup(
+            _workspace(args),
+            Path(args.target),
+            actor=args.actor,
+            machine="memoria-cli",
+        ),
+        args,
+    )
+
+
+def _cmd_workspace_restore(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import backup as runtime_backup
+
+    if args.actor != "pi":
+        raise ValueError("workspace restore requires PI actor authority")
+    return _emit(
+        runtime_backup.restore_backup(
+            _workspace(args),
+            Path(args.source),
+            force=bool(args.force),
+            actor=args.actor,
+            machine="memoria-cli",
+        ),
+        args,
+    )
 
 
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
@@ -2223,12 +2298,87 @@ def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool 
 
 
 def _repair_workspace(workspace: Path) -> list[str]:
-    _initialize_workspace_files(workspace, overwrite=True)
+    _initialize_workspace_files(workspace, overwrite=True, commit_created_repository=False)
     return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
 
 
+def _repair_write_targets(workspace: Path) -> list[str]:
+    from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
+
+    targets = set(_workspace_plan(workspace))
+    for source_rel, target_rel in SEED_TREES:
+        targets.update(_seed_tree_write_targets(source_rel, target_rel))
+    targets.update(target for _source, target in SEED_FILES)
+    targets.update(
+        {
+            state.DB_REL,
+            f"{state.DB_REL}-wal",
+            f"{state.DB_REL}-shm",
+            f"{state.DB_REL}-journal",
+            state.JOURNAL_HEAD_REL,
+            ".memoria/overrides.jsonl",
+            "system/manifest.jsonl",
+            *TRACKED_PROJECTION_PATHS,
+        }
+    )
+    targets.update(_existing_tree_targets(workspace, ".git"))
+    return sorted(targets)
+
+
+def _seed_tree_write_targets(source_rel: str, target_rel: str) -> list[str]:
+    targets = [target_rel]
+    source = _seed_resource(source_rel)
+    if not source.is_dir():
+        return targets
+    for child in source.iterdir():
+        child_target = (Path(target_rel) / child.name).as_posix()
+        targets.append(child_target)
+        if child.is_dir():
+            targets.extend(_seed_tree_write_targets(f"{source_rel}/{child.name}", child_target))
+    return targets
+
+
+def _existing_tree_targets(workspace: Path, root_rel: str) -> list[str]:
+    targets = [root_rel]
+    root = workspace / root_rel
+    if root.is_symlink() or root.is_junction() or not root.is_dir():
+        return targets
+    for child in root.iterdir():
+        child_rel = child.relative_to(workspace).as_posix()
+        targets.append(child_rel)
+        if not child.is_symlink() and not child.is_junction() and child.is_dir():
+            targets.extend(_existing_tree_targets(workspace, child_rel))
+    return targets
+
+
+@contextmanager
+def _doctor_maintenance(workspace: Path, *, repair: bool = False):
+    from memoria_vault.runtime import backup as runtime_backup
+
+    def preflight() -> None:
+        runtime_backup.validate_maintenance_preconditions(workspace)
+        if repair:
+            runtime_backup.validate_workspace_write_targets(
+                workspace, _repair_write_targets(workspace)
+            )
+            git_path = workspace / ".git"
+            if os.path.lexists(git_path) and not git_path.is_dir():
+                raise ValueError("workspace Git metadata must be a directory")
+            if os.path.lexists(git_path / "commondir"):
+                raise ValueError("workspace Git common-directory indirection is not supported")
+
+    preflight()
+    with _workspace_lock(workspace):
+        preflight()
+        yield
+
+
 def _initialize_workspace_files(
-    workspace: Path, *, overwrite: bool = False, include_obsidian: bool = True
+    workspace: Path,
+    *,
+    overwrite: bool = False,
+    include_obsidian: bool = True,
+    commit_created_repository: bool = True,
 ) -> None:
     workspace.mkdir(parents=True, exist_ok=True)
     for rel in _workspace_plan(workspace):
@@ -2239,7 +2389,7 @@ def _initialize_workspace_files(
     from memoria_vault.runtime.projections import write_tracked_projections_explicit
 
     write_tracked_projections_explicit(workspace, actor="operation", machine="memoria-init")
-    _ensure_git(workspace)
+    _ensure_git(workspace, commit_created_repository=commit_created_repository)
 
 
 def _import_alpha15_workspace(source: Path, workspace: Path) -> dict[str, Any]:
@@ -2366,23 +2516,43 @@ def _ensure_control_files(workspace: Path) -> None:
         write_text_durable(manifest, "", create_parent=True)
 
 
-def _ensure_git(workspace: Path) -> None:
-    if not (workspace / ".git").exists():
+def _ensure_git(workspace: Path, *, commit_created_repository: bool = True) -> None:
+    git_path = workspace / ".git"
+    created_repository = not os.path.lexists(git_path)
+    if created_repository:
         _git(workspace, "init", "-q")
     if _git(workspace, "config", "user.email", check=False).returncode:
         _git(workspace, "config", "user.email", "memoria@example.invalid")
     if _git(workspace, "config", "user.name", check=False).returncode:
         _git(workspace, "config", "user.name", "Memoria")
-    if _git(workspace, "rev-parse", "--verify", "HEAD", check=False).returncode:
+    if (
+        created_repository
+        and commit_created_repository
+        and _git(workspace, "rev-parse", "--verify", "HEAD", check=False).returncode
+    ):
         _git(workspace, "add", ".")
         if _git(workspace, "diff", "--cached", "--quiet", check=False).returncode:
             _git(workspace, "commit", "-m", "initialize memoria workspace")
 
 
 def _git(workspace: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    workspace = Path(workspace).resolve()
+    env = {name: value for name, value in os.environ.items() if not name.startswith("GIT_")}
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
+    env["GIT_CONFIG_GLOBAL"] = os.devnull
     proc = subprocess.run(
-        ["git", *args],
+        [
+            "git",
+            f"--git-dir={workspace / '.git'}",
+            f"--work-tree={workspace}",
+            "-c",
+            f"core.hooksPath={os.devnull}",
+            "-c",
+            "core.fsmonitor=false",
+            *args,
+        ],
         cwd=workspace,
+        env=env,
         check=False,
         text=True,
         capture_output=True,
@@ -2472,6 +2642,8 @@ def _doctor_checks(workspace: Path) -> dict[str, Any]:
 
 
 def _backup_report(workspace: Path) -> dict[str, Any]:
+    from memoria_vault.runtime import backup as runtime_backup
+
     litestream_configs = [
         ".memoria/config/litestream.yml",
         ".memoria/config/litestream.yaml",
@@ -2485,42 +2657,79 @@ def _backup_report(workspace: Path) -> dict[str, Any]:
         ".memoria/config/blob-sync.json",
     ]
     remotes = _git_remotes(workspace)
+    local_backup = runtime_backup.local_backup_status(workspace)
+    runtime_valid = bool(local_backup["inventory_ok"])
+    blob_configured = runtime_valid and _valid_blob_backup_config(
+        workspace, [*blob_sync_configs, *backup_configs]
+    )
+    blob_files = int(local_backup["blob_files"])
+    ok = bool(local_backup["inventory_ok"]) and (
+        blob_files == 0 or blob_configured or bool(local_backup["valid"])
+    )
     return {
+        "ok": ok,
         "git_remote": {
             "configured": bool(remotes),
             "remotes": remotes,
         },
         "sqlite_replication": {
-            "configured": _any_workspace_file(workspace, [*litestream_configs, *backup_configs]),
+            "configured": runtime_valid
+            and _any_workspace_file(workspace, [*litestream_configs, *backup_configs]),
             "config_paths": [*litestream_configs, *backup_configs],
             "runtime_dependency": False,
         },
         "blob_sync": {
-            "configured": _any_workspace_file(workspace, [*blob_sync_configs, *backup_configs]),
+            "configured": blob_configured,
             "blob_root": ".memoria/blobs",
-            "blob_root_exists": (workspace / ".memoria/blobs").is_dir(),
+            "blob_root_exists": runtime_valid and (workspace / ".memoria/blobs").is_dir(),
+            "files": blob_files,
+            "sha256": local_backup["blob_sha256"],
             "config_paths": [*blob_sync_configs, *backup_configs],
         },
+        "local_backup": local_backup,
     }
 
 
 def _git_remotes(workspace: Path) -> list[str]:
-    if not (workspace / ".git").exists() or shutil.which("git") is None:
+    git_dir = workspace / ".git"
+    if (
+        git_dir.is_symlink()
+        or git_dir.is_junction()
+        or not git_dir.is_dir()
+        or os.path.lexists(git_dir / "commondir")
+        or shutil.which("git") is None
+    ):
         return []
-    proc = subprocess.run(
-        ["git", "remote"],
-        cwd=workspace,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
+    proc = _git(workspace, "remote", check=False)
     if proc.returncode:
         return []
     return sorted(line.strip() for line in proc.stdout.splitlines() if line.strip())
 
 
 def _any_workspace_file(workspace: Path, relpaths: list[str]) -> bool:
-    return any((workspace / rel).is_file() for rel in relpaths)
+    return any(
+        not (workspace / rel).is_symlink() and (workspace / rel).is_file() for rel in relpaths
+    )
+
+
+def _valid_blob_backup_config(workspace: Path, relpaths: list[str]) -> bool:
+    for rel in relpaths:
+        path = workspace / rel
+        if path.is_symlink() or not path.is_file():
+            continue
+        try:
+            raw = path.read_text(encoding="utf-8")
+            value = json.loads(raw) if path.suffix == ".json" else yaml.safe_load(raw)
+        except (OSError, UnicodeError, json.JSONDecodeError, yaml.YAMLError):
+            continue
+        if not isinstance(value, dict):
+            continue
+        if "enabled" in value and value["enabled"] is not True:
+            continue
+        target = value.get("target")
+        if isinstance(target, str) and target.strip():
+            return True
+    return False
 
 
 def _write_request_job(workspace: Path, request_id: str, status: str, job: dict[str, Any]) -> None:

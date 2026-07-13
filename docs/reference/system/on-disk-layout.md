@@ -61,12 +61,17 @@ writable runtime directories are created from `folders.yaml`:
 │   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores)
 ├── config/                  provider and runtime policy (`providers.yaml`)
+│   └── last-backup           gitignored local backup stamp bound to the current blob inventory
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── journal/                 derived per-machine JSONL synchronization exports
 ├── journal-head             Git-tracked live hash-chain tip for the event log
+├── backup-transaction.json  Git-ignored identity-bound backup recovery marker
+├── restore-transaction.json Git-ignored interrupted-restore recovery marker
 ├── memoria.sqlite           authoritative state, including the event log
+├── memoria.sqlite-{wal,shm,journal}   transient SQLite sidecars
+├── locks/worker.lock         fail-closed no-follow workspace writer lock
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ```
 
@@ -77,6 +82,11 @@ Git value must remain a prefix of the live chain. The per-machine JSONL files
 are derived exports for synchronization. `memoria workspace scan` holds the
 workspace writer lock while it verifies the chain and export subset, removes an
 incomplete final JSONL fragment, and re-emits any missing export rows.
+
+Backups live outside this tree. `memoria workspace backup <target>` publishes a
+manifest-bound SQLite/blob/head snapshot; `last-backup` records the target and
+blob inventory used by the failing doctor health check. See
+[Backup and recovery](backup-and-recovery.md).
 
 > **Unshipped:** dashboards, note templates, hidden operation-package homes,
 > installed profile packages, lane override packages, cron wrappers, and

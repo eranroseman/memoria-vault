@@ -6,6 +6,9 @@
 .memoria/journal/
 .memoria/memoria.sqlite
 .memoria/memoria.sqlite-*
+.memoria/backup-transaction.json
+.memoria/restore-transaction.json
+.memoria/config/last-backup
 
 # Regenerable runtime data.
 .memoria/index/

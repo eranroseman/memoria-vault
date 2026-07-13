@@ -20,8 +20,8 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria surface schema --json` | Print the shared surface-contract action registry used by CLI/HTTP/MCP drift checks. |
 | `memoria doctor --check search` | Check local search index state. |
 | `memoria doctor --check runner [--provider local\|gateway]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. |
-| `memoria doctor` | Report local runtime checks plus the three-store backup contract: Git remote, SQLite replication config, and blob-sync config. Backup tools are reported, not runtime dependencies. |
-| `memoria doctor bundle` | Emit a diagnostic bundle, including the same backup-contract report. |
+| `memoria doctor` | Report local runtime checks and backup health. It exits nonzero when blob files lack configured coverage or a current valid local-backup stamp. |
+| `memoria doctor bundle` | Emit a diagnostic bundle and propagate the same failing backup-health status. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
 | `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |
@@ -48,7 +48,10 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | --- | --- |
 | `memoria request list/show` | Inspect operation requests. |
 | `memoria request answer/amend/cancel/retry/resume` | PI-only request lifecycle controls. Answer and amend create a successor, cancel and retry change eligible states, and resume runs pending work. |
-| `memoria workspace scan/run/recover/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots, quarantine and regenerate changed tracked projections, run queued work, recover interrupted work, and maintain projections/search. |
+| `memoria workspace backup <target>` | PI-only coherent backup of SQLite, blobs, and journal head into a manifest-bound directory outside the live vault. |
+| `memoria workspace restore <source> [--force]` | PI-only validated, rollback-capable restore; `--force` is required while a live database exists. |
+| `memoria workspace recover` | PI-only recovery of interrupted backup publication, restore, request, and materialization work. |
+| `memoria workspace scan/run/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots, quarantine and regenerate changed tracked projections, run queued work, and maintain projections/search. |
 | `memoria attention list/show/resolve/worklist` | Review PI attention items. |
 
 ## Knowledge And Projects
@@ -137,10 +140,12 @@ This roster mirrors the live argparse tree:
 - `memoria work import`
 - `memoria work interview`
 - `memoria work update`
+- `memoria workspace backup`
 - `memoria workspace check`
 - `memoria workspace export`
 - `memoria workspace rebuild`
 - `memoria workspace recover`
+- `memoria workspace restore`
 - `memoria workspace rollback`
 - `memoria workspace run`
 - `memoria workspace scan`

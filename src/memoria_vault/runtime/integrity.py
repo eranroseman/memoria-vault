@@ -35,6 +35,7 @@ from memoria_vault.runtime.vaultio import (
     safe_read,
     split_frontmatter,
     write_frontmatter_doc,
+    write_text_durable,
 )
 
 NLI_SUPPORTED = "SUPPORTED"
@@ -1339,7 +1340,8 @@ def _quarantine_catalog_source(
         )
     quarantine_path = _unique_path(vault / ".memoria/quarantine" / source_ref)
     quarantine_path.parent.mkdir(parents=True, exist_ok=True)
-    quarantine_path.write_text(
+    write_text_durable(
+        quarantine_path,
         json.dumps(
             {
                 "target_id": source_ref,
@@ -1350,7 +1352,6 @@ def _quarantine_catalog_source(
             sort_keys=True,
         )
         + "\n",
-        encoding="utf-8",
     )
     quarantine_id = quarantine_path.relative_to(vault).as_posix()
     append_journal_event(

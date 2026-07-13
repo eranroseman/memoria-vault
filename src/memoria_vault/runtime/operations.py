@@ -32,6 +32,7 @@ from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     safe_read,
     split_frontmatter,
+    write_text_durable,
 )
 
 REQUIRED_POLICY_FIELDS = {
@@ -663,7 +664,8 @@ def _write_digest_text_attention(
         f"`text_status: {text_status}` instead of `full-text`."
     )
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
+    write_text_durable(
+        path,
         frontmatter_doc(
             {
                 "title": title,
@@ -682,7 +684,6 @@ def _write_digest_text_attention(
                 f"`{source_ref}` must acquire full text before digest compilation.\n"
             ),
         ),
-        encoding="utf-8",
     )
     append_journal_event(
         vault,

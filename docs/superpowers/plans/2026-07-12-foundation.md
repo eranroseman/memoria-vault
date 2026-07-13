@@ -687,6 +687,32 @@ gh pr create --title "fix(journal): one authoritative trust-read path (F2)" --bo
 
 ## PR-F3 · Durability of grounds (#1363)
 
+F3 execution contract (reviewed before implementation):
+
+- Backup and restore are explicit PI-owned maintenance operations. Their
+  direct interfaces require explicit `actor` and `machine` values, reject every
+  non-PI actor before filesystem effects, and hold the workspace writer lock
+  across the coherent snapshot or replacement.
+- Backup verifies and reconciles the journal before snapshotting, rejects any
+  source/target overlap, and publishes a versioned manifest with database,
+  blob-inventory, and journal-head bindings. An existing target is replaceable
+  only when it is a recognized Memoria backup; arbitrary directories, files,
+  and symlinks are never removed. Sibling staging and rollback preserve the
+  prior recognized backup when publication fails.
+- Restore validates and copies the source into sibling staging before touching
+  live state: manifest hashes, SQLite `quick_check`, journal chain/head, blob
+  inventory, and the live repository's committed-anchor prefix all fail
+  closed. It rebuilds JSONL exports from the restored `event_log`, swaps the
+  database (including WAL/SHM cleanup), blobs, anchor, and journal as one
+  rollback-capable operation, then appends a PI-attributed restore event.
+- The backup-health stamp is structured JSON bound to the backed-up blob
+  inventory, not a timestamp-only existence flag. Doctor recomputes the current
+  file-only inventory, so a later blob mutation makes the stamp stale.
+- Raw product writes are classified before conversion. Canonical Markdown,
+  operational ledgers, manifests, and recovery material use durable helpers;
+  deliberately rebuildable indexes and already-atomic temporary-write paths
+  remain documented exceptions.
+
 ### Task 9: `memoria workspace backup <dir>`
 
 **Files:**
@@ -696,126 +722,33 @@ gh pr create --title "fix(journal): one authoritative trust-read path (F2)" --bo
 
 **Interfaces:**
 - Consumes: `state.DB_REL`, `state.JOURNAL_HEAD_REL`, blob root `.memoria/blobs`.
-- Produces: `backup.create_backup(vault: Path, target: Path) -> dict[str, Any]` returning `{"ok": True, "target": str, "db": True, "blobs": int, "journal_head": bool}`; CLI `memoria workspace backup <target>`. Task 10 consumes `create_backup` + the on-disk layout: `<target>/memoria.sqlite`, `<target>/blobs/**`, `<target>/journal-head`.
+- Produces: `backup.create_backup(vault: Path, target: Path, *, actor: str,
+  machine: str) -> dict[str, Any]` returning a manifest-backed snapshot report;
+  CLI `memoria workspace backup <target>`. Task 10 consumes the versioned
+  layout: `<target>/manifest.json`, `<target>/memoria.sqlite`,
+  `<target>/blobs/**`, and `<target>/journal-head` when the chain has an anchor.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test** — seven Task 9 contracts cover the
+  bound snapshot, recognized-target replacement, arbitrary-target and overlap
+  refusal, PI authority, journal preflight, and the public CLI.
 
-```python
-"""tests/test_backup_restore.py — grounds durability round-trip."""
+The RED suite lives in `tests/test_backup_restore.py`; it also injects a
+publication failure and proves the previous recognized backup is restored,
+then proves symlink and arbitrary-directory targets remain untouched.
 
-from memoria_vault.runtime import backup, state, trusted_writer
-from tests.helpers import init_cli_workspace
+- [x] **Step 2: Run to verify failure** — focused collection fails because
+  `memoria_vault.runtime.backup` does not exist.
 
+- [x] **Step 3: Implement** — `runtime/backup.py` now performs the locked
+  verifier/reconciler preflight, SQLite backup-API snapshot, deterministic blob
+  inventory, versioned manifest, overlap and symlink checks, and recognized-
+  target swap/rollback. The CLI passes explicit PI and machine provenance.
 
-def _seed(vault):
-    blob = vault / ".memoria/blobs/source-content/w-1/raw/source.txt"
-    blob.parent.mkdir(parents=True)
-    blob.write_text("evidence bytes", encoding="utf-8")
-    trusted_writer.append_explicit_journal_event(
-        vault,
-        {"event": "run", "run_id": "b", "status": "started"},
-        actor="operation",
-        machine="backup-test",
-    )
-    state.write_journal_head_anchor(vault)
+- [x] **Step 4: Run tests** — 9 focused Task 9 tests pass; Ruff check and
+  formatting pass on every touched Python file.
 
-
-def test_backup_snapshot_contains_db_blobs_anchor(tmp_path, capsys):
-    vault = init_cli_workspace(tmp_path, capsys)
-    _seed(vault)
-    target = tmp_path / "backup-1"
-    report = backup.create_backup(vault, target)
-    assert report["ok"] is True
-    assert (target / "memoria.sqlite").is_file()
-    assert (target / "blobs/source-content/w-1/raw/source.txt").read_text() == "evidence bytes"
-    assert (target / "journal-head").is_file()
-
-
-def test_backup_is_atomic_no_partial_dir_on_rerun(tmp_path, capsys):
-    vault = init_cli_workspace(tmp_path, capsys)
-    _seed(vault)
-    target = tmp_path / "backup-1"
-    backup.create_backup(vault, target)
-    report = backup.create_backup(vault, target)  # overwrite path: full replace, no merge
-    assert report["ok"] is True
-    assert not list(tmp_path.glob("backup-1.tmp*"))
-```
-
-- [ ] **Step 2: Run to verify failure** — `ModuleNotFoundError: backup`.
-
-- [ ] **Step 3: Implement** `src/memoria_vault/runtime/backup.py`:
-
-```python
-"""Workspace backup/restore for the non-rebuildable stores (DB, blobs, anchor)."""
-
-from __future__ import annotations
-
-import shutil
-import sqlite3
-import tempfile
-from pathlib import Path
-from typing import Any
-
-from memoria_vault.runtime.state import DB_REL, JOURNAL_HEAD_REL
-
-BLOBS_REL = ".memoria/blobs"
-
-
-def create_backup(vault: Path, target: Path) -> dict[str, Any]:
-    vault, target = Path(vault), Path(target)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = Path(tempfile.mkdtemp(prefix=f".{target.name}.tmp-", dir=target.parent))
-    try:
-        src = sqlite3.connect(vault / DB_REL)
-        try:
-            dst = sqlite3.connect(tmp / "memoria.sqlite")
-            try:
-                src.backup(dst)
-            finally:
-                dst.close()
-        finally:
-            src.close()
-        blob_count = 0
-        blob_root = vault / BLOBS_REL
-        if blob_root.is_dir():
-            shutil.copytree(blob_root, tmp / "blobs")
-            blob_count = sum(1 for p in (tmp / "blobs").rglob("*") if p.is_file())
-        anchor = vault / JOURNAL_HEAD_REL
-        has_anchor = anchor.is_file()
-        if has_anchor:
-            shutil.copy2(anchor, tmp / "journal-head")
-        if target.exists():
-            shutil.rmtree(target)
-        tmp.replace(target)
-    except BaseException:
-        shutil.rmtree(tmp, ignore_errors=True)
-        raise
-    return {
-        "ok": True,
-        "target": str(target),
-        "db": True,
-        "blobs": blob_count,
-        "journal_head": has_anchor,
-    }
-```
-
-CLI wiring, inside the `workspace` subparser block (cli.py:435-438 area):
-```python
-    wbackup = workspace_sub.add_parser("backup")
-    _common(wbackup)
-    wbackup.add_argument("target")
-    wbackup.set_defaults(handler=_cmd_workspace_backup)
-```
-```python
-def _cmd_workspace_backup(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime import backup as runtime_backup
-
-    return _emit(runtime_backup.create_backup(_workspace(args), Path(args.target)), args)
-```
-
-- [ ] **Step 4: Run tests** → PASS.
-
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `23685424 feat(backup): publish coherent
+  workspace snapshots`.
 
 ```bash
 git add src/memoria_vault/runtime/backup.py src/memoria_vault/cli.py tests/test_backup_restore.py tests/conftest.py
@@ -830,67 +763,37 @@ git commit -m "feat(backup): workspace backup — DB snapshot + blobs + journal-
 
 **Interfaces:**
 - Consumes: Task 9's backup layout.
-- Produces: `backup.restore_backup(vault: Path, source: Path, *, force: bool = False) -> dict[str, Any]`; refuses when `<vault>/.memoria/memoria.sqlite` exists and `force` is False; CLI `memoria workspace restore <source> [--force]`.
+- Produces: `backup.restore_backup(vault: Path, source: Path, *, force: bool =
+  False, actor: str, machine: str) -> dict[str, Any]`; refuses a live database
+  without `force`, refuses an invalid or stale source before touching live
+  state, and preserves the backup source; CLI `memoria workspace restore
+  <source> [--force]`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test** — seven restore contracts cover the
+  complete round trip, force and PI authority, source hash validation,
+  committed-anchor refusal, public CLI, and injected mid-swap rollback.
 
-```python
-def test_round_trip_restores_grounds_and_chain(tmp_path, capsys):
-    vault = init_cli_workspace(tmp_path, capsys)
-    _seed(vault)
-    target = tmp_path / "backup-rt"
-    backup.create_backup(vault, target)
-    # wipe the non-rebuildable stores
-    (vault / state.DB_REL).unlink()
-    import shutil as _sh
+The round-trip test mutates every live plane after backup, removes the derived
+JSONL exports, and plants stale WAL/SHM files. Restore must recover the backed-
+up grounds, rebuild exports, remove the stale sidecars, append its provenance
+event, preserve the source byte-for-byte, and leave the chain verifiable.
 
-    _sh.rmtree(vault / backup.BLOBS_REL)
-    (vault / state.JOURNAL_HEAD_REL).unlink()
-    report = backup.restore_backup(vault, target, force=True)
-    assert report["ok"] is True
-    assert (vault / backup.BLOBS_REL / "source-content/w-1/raw/source.txt").read_text() == "evidence bytes"
-    assert state.verify_journal_chain(vault)["ok"] is True  # the drill: chain verifies after restore
+- [x] **Step 2: Run to verify failure** — the nine backup tests remain green;
+  all seven restore tests fail because `restore_backup` and the CLI subcommand
+  do not exist.
 
+- [x] **Step 3: Implement** — restore now validates a copied sibling stage
+  (manifest hashes, SQLite `quick_check`, blob inventory, journal chain and
+  anchor), rejects a backup older than the committed anchor, rebuilds JSONL
+  from `event_log`, and swaps DB/sidecars, blobs, anchor, and journal with a
+  full rollback ledger. It appends `workspace-restored` with explicit PI and
+  machine provenance only after the restored chain verifies.
 
-def test_restore_refuses_live_db_without_force(tmp_path, capsys):
-    vault = init_cli_workspace(tmp_path, capsys)
-    _seed(vault)
-    target = tmp_path / "backup-rt2"
-    backup.create_backup(vault, target)
-    report = backup.restore_backup(vault, target)
-    assert report["ok"] is False
-    assert "force" in report["error"]
-```
+- [x] **Step 4: Run tests** — all 16 backup/restore tests pass, including the
+  injected journal-install failure that restores every prior live component.
 
-- [ ] **Step 2: Run to verify failure** — `restore_backup` missing.
-
-- [ ] **Step 3: Implement** (append to `backup.py`):
-
-```python
-def restore_backup(vault: Path, source: Path, *, force: bool = False) -> dict[str, Any]:
-    vault, source = Path(vault), Path(source)
-    if not (source / "memoria.sqlite").is_file():
-        return {"ok": False, "error": f"not a backup directory: {source}"}
-    live_db = vault / DB_REL
-    if live_db.exists() and not force:
-        return {"ok": False, "error": "live DB present; pass --force to overwrite"}
-    live_db.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source / "memoria.sqlite", live_db)
-    blob_root = vault / BLOBS_REL
-    if blob_root.exists():
-        shutil.rmtree(blob_root)
-    if (source / "blobs").is_dir():
-        shutil.copytree(source / "blobs", blob_root)
-    if (source / "journal-head").is_file():
-        shutil.copy2(source / "journal-head", vault / JOURNAL_HEAD_REL)
-    return {"ok": True, "restored_from": str(source)}
-```
-
-CLI: `restore` subparser mirroring `backup` plus `--force` (`action="store_true"`), handler calling `restore_backup(..., force=args.force)`.
-
-- [ ] **Step 4: Run tests** → PASS.
-
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `13cb7643 feat(backup): restore validated
+  workspace grounds`.
 
 ```bash
 git add src/memoria_vault/runtime/backup.py src/memoria_vault/cli.py tests/test_backup_restore.py
@@ -908,9 +811,16 @@ git commit -m "feat(backup): workspace restore + round-trip drill"
 
 **Interfaces:**
 - Consumes: Task 9's `create_backup` (its existence makes "no backup ever taken" checkable).
-- Produces: `_backup_report` gains top-level `"ok": bool` — False when `.memoria/blobs` exists non-empty AND neither blob-sync/general-backup config nor a `.memoria/config/last-backup` stamp covers it; SQLite-only replication does not cover blobs. `create_backup` writes the stamp (ISO timestamp) on success.
+- Produces: `_backup_report` gains top-level `"ok": bool` — False when
+  `.memoria/blobs` contains files and neither blob-sync/general-backup config
+  nor a valid `.memoria/config/last-backup` JSON stamp matches the current blob
+  inventory. SQLite-only replication does not cover blobs. `create_backup`
+  writes the bound stamp after successful publication.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test** — five backup-health tests cover a
+  fresh unbacked blob, a current and then stale inventory stamp, a disappeared
+  backup target, SQLite-only versus blob-sync configuration, file-only counts,
+  and both doctor consumers.
 
 ```python
 def test_backup_report_fails_on_unbacked_blobs(tmp_path, capsys):
@@ -936,30 +846,75 @@ def test_backup_report_requires_blob_coverage_not_sqlite_only(tmp_path, capsys):
     assert _backup_report(vault)["ok"] is True
 ```
 
-- [ ] **Step 2: Run to verify failure** — no `"ok"` key.
+- [x] **Step 2: Run to verify failure** — all 16 backup/restore tests remain
+  green; five health tests fail because `_backup_report` has no `ok`/inventory
+  contract and both doctor surfaces still report success.
 
-- [ ] **Step 3: Implement** — in `create_backup`, after the successful `tmp.replace(target)`, write the stamp with the durable helper:
+- [x] **Step 3: Implement** — `create_backup` writes a versioned JSON stamp
+  only after the manifest-backed target is published. `local_backup_status`
+  recomputes the live file-only blob inventory and validates the stamp, target,
+  database hash, and backed-up blob inventory. `_backup_report`, `doctor`, and
+  `doctor bundle` propagate that result; Litestream-only configuration does not
+  count as blob coverage.
 
-```python
-from memoria_vault.runtime.vaultio import write_text_durable
-from memoria_vault.runtime.time import now_iso
+  The raw-write audit routes twelve durable records through
+  `write_text_durable`: four project outline/draft/write-back/export paths, the
+  policy hook's pending pre-write hash, digest attention, quarantine recovery
+  material, the eval last-run ledger, two inbox-card paths, session summaries,
+  and worklist items. Nine reviewed exceptions remain raw: the generated
+  argument canvas, Pandoc temporary input, projection drift scratch and root
+  index, disposable search documents and manifest, the local capability cache,
+  generated structural-impact cache, and retraction's existing
+  temporary-write-plus-replace path.
 
-        write_text_durable(vault / ".memoria/config/last-backup", now_iso() + "\n", create_parent=True)
-```
+  Independent review also closes four fail-closed edges: a noncanonical
+  `event_log.machine` cannot escape restore staging, Git anchor lookup errors
+  refuse restore, a failed rollback preserves its sibling recovery directory,
+  and the absolute machine-local `last-backup` stamp is ignored by Git.
 
-In `_backup_report`, compute and prepend:
-```python
-    blobs_dir = workspace / ".memoria/blobs"
-    has_blobs = blobs_dir.is_dir() and any(blobs_dir.rglob("*"))
-    blob_covered = _any_workspace_file(workspace, [*backup_configs, *blob_sync_configs])
-    stamped = (workspace / ".memoria/config/last-backup").is_file()
-    ok = (not has_blobs) or blob_covered or stamped
-```
-and include `"ok": ok` in the returned dict. Make the doctor consumer propagate it (it flows through `_emit`, which exits 1 on `ok: False`).
+  Security and hard-exit review adds durable, Git-ignored transaction markers
+  for every backup publication and restore swap. PI-only `workspace recover`
+  validates and completes them. Backup binds its staged replacement and any
+  existing target; restore binds its rollback and stage siblings before the
+  first rename. Restore records original component presence, pre-copies live
+  WAL and rollback-journal sidecars, and includes the machine-local backup
+  stamp in rollback. Recovery preserves components not yet moved and retains
+  the only saved originals until the recovered journal verifies when a database
+  exists. A pre-swap workspace without a database remains without one after
+  rollback. A completed publication recovered after a hard exit writes its
+  matching local backup stamp before removing its marker. The retained target
+  keeps its transaction identity through terminal validation, stamp publication,
+  and sibling cleanup, so substitution cannot hide behind an interrupted
+  identity cleanup. The marker is removed before best-effort target identity
+  cleanup; leftover identity metadata is inert and does not invalidate the
+  backup. Sibling cleanup removes directory identities last, so it resumes after
+  a hard exit.
+  Cross-directory renames persist the destination entry before the source
+  removal.
 
-Durable-write sweep: for each hit from the `rg` above that writes product content (skip test fixtures/scratch), replace `path.write_text(content, encoding="utf-8")` with `write_text_durable(path, content)`. Known: `knowledge.py:2215`. List each converted site in the commit message body.
+  Backup, restore, `doctor --repair`, and `doctor bundle` reject symlinked or
+  junction-backed sensitive paths and pending transactions; `workspace recover`
+  validates and completes pending transactions. Both doctor maintenance paths
+  preflight, acquire a no-follow workspace lock, and preflight again. Repair
+  enumerates all seed, skeleton, projection, SQLite, and existing Git-metadata
+  write targets, refuses Git common-directory indirection, and uses Git
+  subprocesses that ignore environment redirects while binding the Git
+  directory and work tree explicitly. Those subprocesses disable system/global
+  Git configuration, and repair never stages any repository, including one it
+  creates, so repository clean filters cannot run. POSIX maintenance fails
+  closed when atomic no-follow opens are unavailable; the Windows lock opener
+  anchors the resolved workspace root and opens every component below it with
+  parent-relative no-reparse native handles. Restore applies the same Git
+  binding to committed journal-anchor reads.
+  Replacement requires a fully restorable prior snapshot, blob-coverage
+  configuration must parse to a non-empty target and Boolean `enabled: true`
+  when that field is present, and every project export format refuses a
+  read-only existing target.
 
-- [ ] **Step 4: Publish the backup and recovery reference**
+- [x] **Step 4: Author the backup and recovery reference** — current-truth
+  command, layout, validation, rollback, and doctor contracts are published in
+  `backup-and-recovery.md`; the system index, CLI inventory, on-disk layout,
+  and failure-mode table link and agree with it.
 
 Create `docs/reference/system/backup-and-recovery.md` with this current-truth
 contract after Tasks 9–10 ship:
@@ -1027,9 +982,21 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
 | [Backup and recovery](backup-and-recovery.md) |
 ```
 
-- [ ] **Step 5: Run tests + gate** — `python3 -m pytest tests/test_backup_restore.py -v` PASS; `python3 scripts/verify` PASS.
+- [x] **Step 5: Re-run tests + gate** — fresh post-hardening verification after
+  rebasing onto `origin/main`:
 
-- [ ] **Step 6: Commit + PR**
+  - `python3 -m pytest -q tests/test_backup_restore.py` — `99 passed, 1 skipped`;
+  - `python3 -m pytest -q tests/test_cli_doctor_eval.py` — `35 passed`;
+  - `python3 -m pytest -q tests/test_project_knowledge.py tests/test_runtime_state.py`
+    — `27 passed`;
+  - native Windows Python 3.14.3 lock smoke — acquisition and a real
+    locks-directory junction rejection both passed; and
+  - `python3 scripts/verify` — `469 passed, 9 skipped, 521 deselected`; all lint,
+    product gates, offline smoke, syntax, and installer checks passed with
+    `verify: OK`.
+
+- [x] **Step 6: Commit + PR** — implementation and hardening commits are
+  published in [PR #1390](https://github.com/eranroseman/memoria-vault/pull/1390).
 
 ```bash
 git add src/memoria_vault/cli.py src/memoria_vault/runtime/backup.py src/memoria_vault/runtime/knowledge.py tests/test_backup_restore.py docs/reference/system/backup-and-recovery.md docs/reference/system/README.md
