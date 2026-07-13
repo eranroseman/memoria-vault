@@ -654,22 +654,25 @@ Independent review closure:
   lock, releasing it before fixtures and worker dispatch.
 - [x] Retain strict live-tip equality and require the committed Git anchor to
   remain `GENESIS` or a prefix hash on the verified chain.
-- [x] Recover an incomplete terminal JSONL fragment while rejecting complete
-  malformed or export-only rows.
+- [x] Recover an incomplete terminal JSONL fragment only after preflighting
+  every complete CR/LF-delimited row and the authoritative multiset; reject
+  complete malformed or export-only rows without mutating export bytes.
 - [x] Validate payload event type and machine against indexed row columns
   before trust reads.
 - [x] Keep approved `event_id` ordering for interviews and prove that payload
   timestamps cannot reorder the authoritative stream.
 
-- [x] **Step 4: Run tests + gate** — the review-remediated focused suite passes
-  23 tests, the broader F2 regression slice passes 268, and
-  `python3 scripts/verify` passes with 445 passed, 9 skipped, and 400
-  deselected. Offline smoke, syntax, authored JSON, and every static/document
-  gate are green.
+- [x] **Step 4: Run tests + gate** — final independent review covers CR/LF
+  recovery, failed-repair atomicity, concurrent append/reconcile, and public
+  verification; the journal/worker slice passes 67 tests. `python3
+  scripts/verify` passes with 445 passed, 9 skipped, and 418 deselected.
+  Offline smoke, syntax, authored JSON, and every static/document gate are
+  green. The final diff-scoped security review found no reportable findings.
 
 `python3 -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python3 scripts/verify` → PASS.
 
-- [ ] **Step 5: Commit + PR**
+- [ ] **Step 5: Commit + PR** — implementation and review-remediation commits
+  are integrated locally; publication remains pending.
 
 ```bash
 git add src/memoria_vault/runtime/integrity.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/trusted_writer.py tests/test_journal_trust.py
