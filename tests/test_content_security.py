@@ -4,9 +4,7 @@ from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 
 
 def test_image_embeds_cannot_render() -> None:
-    markdown_image = neutralize_untrusted_markdown(
-        "![beacon](http://evil.example/x.png)"
-    )
+    markdown_image = neutralize_untrusted_markdown("![beacon](http://evil.example/x.png)")
     obsidian_embed = neutralize_untrusted_markdown("![[remote.png]]")
 
     assert "![" not in markdown_image
@@ -52,7 +50,7 @@ def test_existing_code_spans_and_fences_are_untouched() -> None:
     source = (
         "`http://inline.example` and ``![literal](http://code.example)``\n"
         "```markdown\n![literal](http://fenced.example)\n```\n"
-        "~~~html\n<img src=\"http://tilde.example\">\n~~~\n"
+        '~~~html\n<img src="http://tilde.example">\n~~~\n'
     )
 
     assert neutralize_untrusted_markdown(source) == source

@@ -80,10 +80,7 @@ def _neutralize_inline_text(text: str) -> str:
         closing = text.find(delimiter, opener_end)
         while closing != -1 and (
             (closing > 0 and text[closing - 1] == "`")
-            or (
-                closing + len(delimiter) < len(text)
-                and text[closing + len(delimiter)] == "`"
-            )
+            or (closing + len(delimiter) < len(text) and text[closing + len(delimiter)] == "`")
         ):
             closing = text.find(delimiter, closing + len(delimiter))
         if closing == -1:
