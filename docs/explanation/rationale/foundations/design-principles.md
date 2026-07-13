@@ -83,7 +83,7 @@ Memoria never reads a claim and asks whether it is true; it asks how the claim i
 
 **12. Origin-blind consequences.**
 
-The origin of a change — human, machine, or LLM — does not affect its *epistemic* consequences. When a claim is found wrong, the grounding consequences propagate across the graph identically whoever authored it; flags, demotions, gap findings, and blast radius are origin-blind. Write and revert *authority*, by contrast, stays origin-gated: human-authored spans are never auto-destroyed, machine material auto-reverts. Origin is provenance, not authorization.
+The origin of a change — human, machine, or LLM — does not affect its *epistemic* consequences. When a claim is found wrong, the grounding consequences propagate across the graph identically whoever authored it; flags, demotions, and blast radius are origin-blind. Write and revert *authority*, by contrast, stays origin-gated: human-authored spans are never auto-destroyed, machine material auto-reverts. Origin is provenance, not authorization.
 
 > **Planned — G5 (alpha.22/B1):** Origin-blind epistemic consequence and
 > blast-radius propagation are planned for this milestone. Today, write and revert

@@ -808,11 +808,13 @@ git commit -m "feat(backup): workspace restore + round-trip drill"
 **Files:**
 - Modify: `src/memoria_vault/cli.py:2169-2199` (`_backup_report`) and its consumer (locate: `rg -n "_backup_report" src/memoria_vault/cli.py`)
 - Modify: any raw write in a product write path (locate: `rg -n "\.write_text\(|\.write_bytes\(" src/memoria_vault/runtime/ | grep -v vaultio` — known case: `knowledge.py:2215` draft write-back)
+- Create: `docs/reference/system/backup-and-recovery.md`
+- Modify: `docs/reference/system/README.md`
 - Test: `tests/test_backup_restore.py` (extend)
 
 **Interfaces:**
 - Consumes: Task 9's `create_backup` (its existence makes "no backup ever taken" checkable).
-- Produces: `_backup_report` gains top-level `"ok": bool` — False when `.memoria/blobs` exists non-empty AND no replication config AND no `.memoria/config/last-backup` stamp; `create_backup` writes that stamp (ISO timestamp) on success.
+- Produces: `_backup_report` gains top-level `"ok": bool` — False when `.memoria/blobs` exists non-empty AND neither blob-sync/general-backup config nor a `.memoria/config/last-backup` stamp covers it; SQLite-only replication does not cover blobs. `create_backup` writes the stamp (ISO timestamp) on success.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -824,6 +826,19 @@ def test_backup_report_fails_on_unbacked_blobs(tmp_path, capsys):
 
     assert _backup_report(vault)["ok"] is False
     backup.create_backup(vault, tmp_path / "b")
+    assert _backup_report(vault)["ok"] is True
+
+
+def test_backup_report_requires_blob_coverage_not_sqlite_only(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    from memoria_vault.cli import _backup_report
+
+    config = vault / ".memoria/config"
+    config.mkdir(parents=True, exist_ok=True)
+    (config / "litestream.yml").write_text("dbs: []\n", encoding="utf-8")
+    assert _backup_report(vault)["ok"] is False
+    (config / "blob-sync.yaml").write_text("target: test\n", encoding="utf-8")
     assert _backup_report(vault)["ok"] is True
 ```
 
@@ -842,20 +857,88 @@ In `_backup_report`, compute and prepend:
 ```python
     blobs_dir = workspace / ".memoria/blobs"
     has_blobs = blobs_dir.is_dir() and any(blobs_dir.rglob("*"))
-    replicated = _any_workspace_file(workspace, [*litestream_configs, *backup_configs, *blob_sync_configs])
+    blob_covered = _any_workspace_file(workspace, [*backup_configs, *blob_sync_configs])
     stamped = (workspace / ".memoria/config/last-backup").is_file()
-    ok = (not has_blobs) or replicated or stamped
+    ok = (not has_blobs) or blob_covered or stamped
 ```
 and include `"ok": ok` in the returned dict. Make the doctor consumer propagate it (it flows through `_emit`, which exits 1 on `ok: False`).
 
 Durable-write sweep: for each hit from the `rg` above that writes product content (skip test fixtures/scratch), replace `path.write_text(content, encoding="utf-8")` with `write_text_durable(path, content)`. Known: `knowledge.py:2215`. List each converted site in the commit message body.
 
-- [ ] **Step 4: Run tests + gate** — `python -m pytest tests/test_backup_restore.py -v` PASS; `python scripts/verify` PASS.
+- [ ] **Step 4: Publish the backup and recovery reference**
 
-- [ ] **Step 5: Commit + PR**
+Create `docs/reference/system/backup-and-recovery.md` with this current-truth
+contract after Tasks 9–10 ship:
+
+```markdown
+---
+title: Backup and recovery
+parent: System and infrastructure
+nav_order: 6
+grand_parent: Reference
+---
+
+# Backup and recovery
+
+Memoria backs up the non-rebuildable database and blob stores that Git does
+not carry, plus the Git-tracked journal head needed to verify the restored
+event log.
+
+## Commands
+
+| Command | Contract |
+| --- | --- |
+| `memoria workspace backup <target>` | Creates one complete backup directory, replacing an existing target rather than merging it. |
+| `memoria workspace restore <source>` | Restores a backup into a workspace without a live Memoria database. |
+| `memoria workspace restore <source> --force` | Replaces the live database and blob store with the selected backup. |
+
+## Backup directory
+
+| Path | Contents |
+| --- | --- |
+| `memoria.sqlite` | A SQLite backup snapshot containing verdicts, provenance, requests, and the event log. |
+| `blobs/` | The immutable source-content blob tree, when present. |
+| `journal-head` | The hash-chain head used to verify the restored event log. |
+
+The command writes into a temporary sibling and renames it into place only
+after every component succeeds. A failed backup leaves no partial target.
+
+## Restore checks
+
+The source must contain `memoria.sqlite`. Restore refuses to overwrite a live
+`.memoria/memoria.sqlite` unless `--force` is present. A successful restore
+replaces the database and blob tree, restores the journal head when present,
+and preserves the backup source.
+
+After restore, `memoria journal verify` must report an intact chain before the
+workspace resumes normal writes.
+
+## Doctor status
+
+`memoria doctor` reports backup health as failed when the workspace has blobs
+but has neither a successful local backup stamp nor configured blob-sync or
+general-backup coverage. SQLite-only replication does not cover blobs. A
+successful `workspace backup` writes
+`.memoria/config/last-backup`.
+
+## Related
+
+- [Failure modes](failure-modes.md) — recovery symptoms and responses.
+- [On-disk layout](on-disk-layout.md) — live workspace paths.
+```
+
+Add this table row after Failure modes in `docs/reference/system/README.md`:
+
+```markdown
+| [Backup and recovery](backup-and-recovery.md) |
+```
+
+- [ ] **Step 5: Run tests + gate** — `python -m pytest tests/test_backup_restore.py -v` PASS; `python scripts/verify` PASS.
+
+- [ ] **Step 6: Commit + PR**
 
 ```bash
-git add src/memoria_vault/cli.py src/memoria_vault/runtime/backup.py src/memoria_vault/runtime/knowledge.py tests/test_backup_restore.py
+git add src/memoria_vault/cli.py src/memoria_vault/runtime/backup.py src/memoria_vault/runtime/knowledge.py tests/test_backup_restore.py docs/reference/system/backup-and-recovery.md docs/reference/system/README.md
 git commit -m "feat(backup): doctor fails on unbacked blobs; durable-write sweep"
 gh pr create --title "feat(backup): durable grounds — backup/restore + failing doctor (F3)" --body "Closes #1363. workspace backup/restore (SQLite snapshot + blobs + journal-head, atomic, round-trip drilled), doctor fails on unbacked blobs, raw writes routed through write_text_durable. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
 ```

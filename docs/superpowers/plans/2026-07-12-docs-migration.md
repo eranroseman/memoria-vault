@@ -31,7 +31,7 @@ Spec: consolidation §5 (`docs/superpowers/specs/2026-07-12-beta.1-consolidation
 
 *(Reused from the subsumed reconcile plan Task 1 — prose unchanged.)*
 
-- [ ] **Step 1: Reframe the opener as four pillars.** Replace the first paragraph ("Memoria is built on four converging ideas…") with:
+- [x] **Step 1: Reframe the opener as four pillars.** Replace the first paragraph ("Memoria is built on four converging ideas…") with:
 
 ```markdown
 Memoria stands on four pillars — each owning one layer with no overlap — and is
@@ -42,15 +42,15 @@ and the HCI, extraction, evaluation, and retrieval traditions they build on:
 makes it easier to understand why specific choices were made.
 ```
 
-- [ ] **Step 2: Fold Memex into the LLM-Wiki section.** Append to the end of `## Karpathy's LLM-Wiki pattern`:
+- [x] **Step 2: Fold Memex into the LLM-Wiki section.** Append to the end of `## Karpathy's LLM-Wiki pattern`:
 
 ```markdown
 The idea is related in spirit to Vannevar Bush's [Memex](../../../reference/evidence-and-integrations/bibliography.md#bush1945) (1945) — a personal, curated knowledge store with associative trails between documents. Bush's vision was closer to this than to what the web became: private, actively curated, with the connections between documents as valuable as the documents themselves. The part he couldn't solve was who does the maintenance. The LLM handles that.
 ```
 
-- [ ] **Step 3: Remove the standalone `## Bush's Memex` section** (heading + paragraph) — its point now lives in Step 2 and the synthesis.
+- [x] **Step 3: Remove the standalone `## Bush's Memex` section** (heading + paragraph) — its point now lives in Step 2 and the synthesis.
 
-- [ ] **Step 4: Add the Toulmin section** after `## Luhmann's Zettelkasten` (before `## The literature review`):
+- [x] **Step 4: Add the Toulmin section** after `## Luhmann's Zettelkasten` (before `## The literature review`):
 
 ```markdown
 ---
@@ -62,7 +62,7 @@ Stephen Toulmin's model of argument (1958) gives the knowledge graph its logical
 Typing the roles types the consequences: losing grounds, losing a warrant, a qualifier bounding a regression, and a rebuttal that strengthens when its target falls are different graph events with different blast radius. A graph that only stores "claim links to claim" cannot tell them apart; one that stores the Toulmin roles can. This is why Memoria assesses *grounding* rather than truth — the roles are the structure grounding is assessed against.
 ```
 
-- [ ] **Step 5: Add the autoresearch section** immediately after:
+- [x] **Step 5: Add the autoresearch section** immediately after:
 
 ```markdown
 ---
@@ -74,7 +74,7 @@ The fourth pillar is Karpathy's autoresearch framing — a fixed harness, one me
 The boundary is strict and load-bearing: autoresearch tunes the instruments that *assess* knowledge, never the knowledge itself. A self-improving loop pointed at the researcher's claims would optimize the vault toward whatever the metric rewards; pointed at the instruments, it sharpens the tools while the human keeps authorship of what they measure.
 ```
 
-- [ ] **Step 6: Update `## The synthesis`** so the list reads:
+- [x] **Step 6: Update `## The synthesis`** so the list reads:
 
 ```markdown
 - The wiki is the compiled artifact, with its associative trails (Karpathy, after Bush's Memex).
@@ -87,9 +87,9 @@ The boundary is strict and load-bearing: autoresearch tunes the instruments that
 
 Keep the synthesis *sentence* above the list in its current four-pillar form (already on `main`).
 
-- [ ] **Step 7: project-words.txt** — ensure present (sorted, lowercase): `autoresearch`, `toulmin`, `rebuttal`, `qualifier`.
+- [x] **Step 7: project-words.txt** — ensure present (sorted, lowercase): `autoresearch`, `toulmin`, `rebuttal`, `qualifier`.
 
-- [ ] **Step 8: Gate + commit**
+- [x] **Step 8: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -106,7 +106,7 @@ git commit -m "docs: intellectual-foundations — four pillars, Toulmin + autore
 
 *(Reused from reconcile plan Task 2.)*
 
-- [ ] **Step 1: Insert after `## What Memoria is` (before `## What Memoria is not`):**
+- [x] **Step 1: Insert after `## What Memoria is` (before `## What Memoria is not`):**
 
 ```markdown
 ---
@@ -118,7 +118,7 @@ The vault — everything except `.memoria/` — is one self-contained **Knowledg
 Each project is its own nested, detachable bundle: projects reference vault knowledge freely, permanent knowledge never links into a project, and project close harvests durable claims into the vault before the working bundle archives. The vault must live without its projects.
 ```
 
-- [ ] **Step 2: Gate + commit**
+- [x] **Step 2: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -135,7 +135,7 @@ git commit -m "docs: what-memoria-is — add the OKF bundle constitution"
 
 *(Reused from reconcile plan Task 3.)*
 
-- [ ] **Step 1: Replace the opening** ("Ten principles that settle ambiguous decisions…") with:
+- [x] **Step 1: Replace the opening** ("Ten principles that settle ambiguous decisions…") with:
 
 ```markdown
 Twelve principles that settle ambiguous decisions. When a tool choice, workflow step, or architectural question is unclear, these are the tiebreakers.
@@ -143,7 +143,7 @@ Twelve principles that settle ambiguous decisions. When a tool choice, workflow 
 Underneath them runs one master pattern: **the fluent, judging half of any capability stays with the human; the structural, inspectable half goes into the engine.** Truth/grounding, judgment/method, agent-loop/fenced-operation, and knowledge/trust-state are all this one cut — a design fork that resists resolution usually has not been cut along this line yet.
 ```
 
-- [ ] **Step 2: Append principles 11 and 12** after principle 10 (before `## Related`):
+- [x] **Step 2: Append principles 11 and 12** after principle 10 (before `## Related`):
 
 ```markdown
 **11. Grounding, not truth.**
@@ -155,7 +155,7 @@ Memoria never reads a claim and asks whether it is true; it asks how the claim i
 The origin of a change — human, machine, or LLM — does not affect its *epistemic* consequences. When a claim is found wrong, the grounding consequences propagate across the graph identically whoever authored it; flags, demotions, and blast radius are origin-blind. Write and revert *authority*, by contrast, stays origin-gated: human-authored spans are never auto-destroyed, machine material auto-reverts. Origin is provenance, not authorization.
 ```
 
-- [ ] **Step 3: Gate + commit**
+- [x] **Step 3: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -173,7 +173,7 @@ git commit -m "docs: design-principles — grounding-not-truth + origin-blind ax
 
 *(Reused from reconcile plan Task 5.)*
 
-- [ ] **Step 1: Add to the appropriate domain section** (match the existing `**Term** — definition.` format; include the anchor Task 2's link targets):
+- [x] **Step 1: Add to the appropriate domain section** (match the existing `**Term** — definition.` format; include the anchor Task 2's link targets):
 
 ```markdown
 **<a id="open-knowledge-format-okf"></a>Open Knowledge Format (OKF)** — the plain-files bundle format Memoria produces: a self-contained, tool-agnostic Knowledge Bundle readable without Memoria present. The vault (excluding `.memoria/`) is one OKF bundle; each project is a nested one.
@@ -185,9 +185,9 @@ git commit -m "docs: design-principles — grounding-not-truth + origin-blind ax
 **autoresearch** — the self-improvement loop (fixed harness, one metric, keep-or-discard) applied to Memoria's own instruments — detectors, prompts, gates — never to the knowledge they assess.
 ```
 
-- [ ] **Step 2:** ensure `okf` is in `project-words.txt` (lowercase, sorted).
+- [x] **Step 2:** ensure `okf` is in `project-words.txt` (lowercase, sorted).
 
-- [ ] **Step 3: Gate + commit**
+- [x] **Step 3: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -202,7 +202,7 @@ git commit -m "docs: glossary — OKF, Knowledge Bundle, Toulmin roles, autorese
 **Files:**
 - Create: `docs/explanation/knowledge/consequence-propagation.md` (frontmatter: copy an existing `explanation/knowledge/` page's frontmatter shape — title, parent, nav order — and adapt)
 
-- [ ] **Step 1: Write the page:**
+- [x] **Step 1: Write the page:**
 
 ```markdown
 # Consequence propagation
@@ -255,9 +255,9 @@ machine material can auto-revert. See
 - [Promotion and gated zones](promotion-and-gated-zones.md) — states, not places.
 ```
 
-- [ ] **Step 2:** add the page to `docs/explanation/knowledge/README.md`'s index list (match its existing entry format).
+- [x] **Step 2:** add the page to `docs/explanation/knowledge/README.md`'s index list (match its existing entry format).
 
-- [ ] **Step 3: Gate + commit**
+- [x] **Step 3: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -272,7 +272,7 @@ git commit -m "docs: new explanation page — consequence propagation (typed bla
 **Files:**
 - Create: `docs/explanation/architecture/okf-and-portability.md` (frontmatter per existing `architecture/` pages)
 
-- [ ] **Step 1: Write the page:**
+- [x] **Step 1: Write the page:**
 
 ```markdown
 # OKF and portability
@@ -315,9 +315,9 @@ archives.
 - [Consistency model](consistency-model.md) — how files and engine state stay honest.
 ```
 
-- [ ] **Step 2:** add to `docs/explanation/architecture/README.md`'s index.
+- [x] **Step 2:** add to `docs/explanation/architecture/README.md`'s index.
 
-- [ ] **Step 3: Gate + commit**
+- [x] **Step 3: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -332,7 +332,7 @@ git commit -m "docs: new explanation page — OKF and portability"
 **Files:**
 - Create: `docs/explanation/architecture/consistency-model.md`
 
-- [ ] **Step 1: Write the page:**
+- [x] **Step 1: Write the page:**
 
 ```markdown
 # Consistency model
@@ -381,9 +381,9 @@ as checked.
 
 Verify the `failure-modes.md` Related link path exists (`ls docs/reference/system/`); drop that line if absent.
 
-- [ ] **Step 2:** add to `docs/explanation/architecture/README.md`'s index.
+- [x] **Step 2:** add to `docs/explanation/architecture/README.md`'s index.
 
-- [ ] **Step 3: Gate + commit**
+- [x] **Step 3: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -399,9 +399,9 @@ git commit -m "docs: new explanation page — consistency model (ACID trust plan
 - Modify: `docs/explanation/architecture/vault.md`
 - Modify: `docs/explanation/architecture/memory-model.md`
 
-- [ ] **Step 1: Read both pages fully** (they exist and carry structure this task must respect — insert, don't restructure).
+- [x] **Step 1: Read both pages fully** (they exist and carry structure this task must respect — insert, don't restructure).
 
-- [ ] **Step 2: vault.md — add the three-spaces + one-way rule.** After its bundle-roots material, insert a short section (adapt heading level to the page):
+- [x] **Step 2: vault.md — add the three-spaces + one-way rule.** After its bundle-roots material, insert a short section (adapt heading level to the page):
 
 ```markdown
 ## Three spaces, one bundle
@@ -414,7 +414,7 @@ keeps a project removable without breaking the vault. Project close harvests
 durable claims into the vault before the working bundle archives.
 ```
 
-- [ ] **Step 3: memory-model.md — add the placement doctrine.** Insert where the page discusses substrate ownership:
+- [x] **Step 3: memory-model.md — add the placement doctrine.** Insert where the page discusses substrate ownership:
 
 ```markdown
 ## The placement rule
@@ -430,7 +430,7 @@ projection — `bibliography.bib` from the catalog, `concept_edges` from
 frontmatter links — so drift is detectable and one side is always authority.
 ```
 
-- [ ] **Step 4: Gate + commit**
+- [x] **Step 4: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -447,7 +447,7 @@ git commit -m "docs: vault + memory-model — three-spaces rule and the placemen
 - Modify: `docs/explanation/surfaces/README.md`
 - Create: `docs/reference/data-model/okf-compliance.md`
 
-- [ ] **Step 1: knowledge-cycle.md — add the inquiry-first arc.** Read the page; insert near its top-level narrative:
+- [x] **Step 1: knowledge-cycle.md — add the inquiry-first arc.** Read the page; insert near its top-level narrative:
 
 ```markdown
 ## Pull, not push
@@ -461,7 +461,7 @@ durable claims harvest back into the vault — each project leaves the
 permanent knowledge richer than it found it.
 ```
 
-- [ ] **Step 2: surfaces/README.md — add the division-of-labor model.** Read the page; insert:
+- [x] **Step 2: surfaces/README.md — add the division-of-labor model.** Read the page; insert:
 
 ```markdown
 ## The division of labor
@@ -483,7 +483,7 @@ product must remain fully operable with `vim` and a file browser; every
 deep-work artifact is a plain file; the plugin is never the only way in.
 ```
 
-- [ ] **Step 3: Create `docs/reference/data-model/okf-compliance.md`:**
+- [x] **Step 3: Create `docs/reference/data-model/okf-compliance.md`:**
 
 ```markdown
 # OKF compliance contract
@@ -516,7 +516,7 @@ conformance bar; the rationale lives in
 
 Add it to `docs/reference/data-model/README.md`'s index.
 
-- [ ] **Step 4: Gate + commit**
+- [x] **Step 4: Gate + commit**
 
 ```bash
 python scripts/verify
@@ -532,13 +532,13 @@ git commit -m "docs: inquiry-first cycle, surface division of labor, OKF complia
 - Delete: `docs/superpowers/product-statement.md`, `docs/superpowers/specs/okf-note.md`, `docs/superpowers/specs/user-workflow.md`, `docs/superpowers/specs/autoresearch-note.md` (the two `foundations-reconcile*` records were already retired 2026-07-12 — their prose is embedded in this plan)
 - Modify: `docs/superpowers/README.md`, `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md` (§7)
 
-- [ ] **Step 1: Verify nothing published links into the retired files:** `rg -l "product-statement|okf-note|user-workflow|autoresearch-note|foundations-reconcile" docs/ --glob '!docs/superpowers/**'` — fix any hit before deleting.
+- [x] **Step 1: Verify nothing published links into the retired files:** `rg -l "product-statement|okf-note|user-workflow|autoresearch-note|foundations-reconcile" docs/ --glob '!docs/superpowers/**'` — fix any hit before deleting.
 
-- [ ] **Step 2: Delete the four files** (`git rm` each by explicit path).
+- [x] **Step 2: Delete the four files** (`git rm` each by explicit path).
 
-- [ ] **Step 3: Update `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md` §7:** change the "**Retire at #1366 close**" bullet to "**Retired <date>** (doc-worthy prose published via #1366): …same file list…". Update `docs/superpowers/README.md` if it names any retired file.
+- [x] **Step 3: Update `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md` §7:** change the "**Retire at #1366 close**" bullet to "**Retired <date>** (doc-worthy prose published via #1366): …same file list…". Update `docs/superpowers/README.md` if it names any retired file.
 
-- [ ] **Step 4: Full gate, PR, merge**
+- [x] **Step 4: Full gate, PR, merge**
 
 ```bash
 python scripts/verify

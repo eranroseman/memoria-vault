@@ -16,7 +16,7 @@ but they do not own workflow state or write authority.
 Three surfaces, one envelope: the **editor** is where judgment happens — the
 researcher reading, writing, and deciding in plain files; the **plugin** is an
 ambient layer — status, inbox cards, one-click dispositions — that only
-enqueues through the engine, never writes on its own. The **agent** is voice
+enqueues through the engine, never writes on its own; the **agent** is voice
 and hands — it converses and files dispositions through the same operation
 envelope with its true actor. **Planned: F1 alpha.21; U1/U3/U4 beta.1.** A fourth,
 invisible role (the engine's own jobs) validates and indexes behind them all.
