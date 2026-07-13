@@ -88,6 +88,16 @@ def neutralize_untrusted_markdown_fragment(fragment: str) -> str:
     return _neutralize_plain_text(fragment.replace("`", "&#96;"))
 
 
+def _is_escaped_backtick(text: str, index: int) -> bool:
+    """Return whether the backtick at *index* is escaped in Markdown source."""
+    backslashes = 0
+    index -= 1
+    while index >= 0 and text[index] == "\\":
+        backslashes += 1
+        index -= 1
+    return bool(backslashes % 2)
+
+
 def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
     """Replace inline code spans with unique tokens while preserving their source."""
     output: list[str] = []
@@ -98,7 +108,7 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
     plain_start = 0
     cursor = 0
     while cursor < len(text):
-        if text[cursor] != "`":
+        if text[cursor] != "`" or _is_escaped_backtick(text, cursor):
             cursor += 1
             continue
 
@@ -108,7 +118,8 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
         delimiter = text[cursor:opener_end]
         closing = text.find(delimiter, opener_end)
         while closing != -1 and (
-            (closing > 0 and text[closing - 1] == "`")
+            _is_escaped_backtick(text, closing)
+            or (closing > 0 and text[closing - 1] == "`")
             or (closing + len(delimiter) < len(text) and text[closing + len(delimiter)] == "`")
         ):
             closing = text.find(delimiter, closing + len(delimiter))

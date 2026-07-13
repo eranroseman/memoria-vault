@@ -2278,7 +2278,7 @@ def promote_draft_passage(
     link = _draft_note_markdown_link(
         draft_rel,
         note_rel,
-        neutralize_untrusted_markdown(note_title),
+        neutralize_untrusted_markdown_fragment(note_title),
     )
     if link not in draft_content:
         write_text_durable(

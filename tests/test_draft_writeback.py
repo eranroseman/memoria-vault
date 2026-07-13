@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
@@ -67,6 +71,38 @@ def test_promote_draft_passage_neutralizes_machine_draft_text(tmp_path: Path) ->
     assert "<script>" not in rendered
     assert "`http://beacon.example/draft.png`" in rendered
     assert "`http://beacon.example/bare`" in rendered
+
+
+def test_promote_draft_passage_neutralizes_titles_composed_into_links(tmp_path: Path) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    vault = _workspace(tmp_path)
+    _checked_project(vault)
+    passage = "Selected claim text."
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text(f"# Alpha draft\n\n{passage}\n", encoding="utf-8")
+
+    for title in (
+        '```\n<img src="https://evil.example/promote-fenced">\n```',
+        r'\` <img src="https://evil.example/promote-escaped"> \`',
+    ):
+        promote_draft_passage(
+            vault,
+            "project-alpha",
+            title=title,
+            passage=passage,
+            actor="pi",
+        )
+
+    rendered = subprocess.run(
+        [pandoc, "-f", "commonmark", "-t", "html"],
+        input=draft.read_text(encoding="utf-8"),
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+    assert "<img" not in rendered
 
 
 def test_cli_project_promote_runs_writeback_operation(tmp_path: Path, capsys: object) -> None:

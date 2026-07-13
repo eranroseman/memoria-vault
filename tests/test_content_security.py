@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.knowledge import (
@@ -16,6 +17,12 @@ from memoria_vault.runtime.knowledge import (
 )
 from memoria_vault.runtime.knowledge import curate_note_candidate as _curate_note_candidate
 from memoria_vault.runtime.knowledge import emit_note_candidates as _emit_note_candidates
+from memoria_vault.runtime.knowledge import (
+    render_project_draft_export_markdown as _render_project_draft_export_markdown,
+)
+from memoria_vault.runtime.knowledge import (
+    render_project_export_markdown as _render_project_export_markdown,
+)
 from memoria_vault.runtime.knowledge import write_project_export as _write_project_export
 from memoria_vault.runtime.operations import (
     compile_source_digest as _compile_source_digest,
@@ -135,6 +142,92 @@ def test_neutralization_is_idempotent() -> None:
     once = neutralize_untrusted_markdown(source)
 
     assert neutralize_untrusted_markdown(once) == once
+
+
+def test_escaped_backtick_delimiters_are_inert_through_export_boundaries(
+    tmp_path: Path,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    payload = r'\` <img src="https://evil.example/x"> \`'
+    helper = neutralize_untrusted_markdown(payload)
+
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=payload,
+    )
+    argument_rendered = _render_project_export_markdown(tmp_path, "argument")
+    argument_written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    state.upsert_catalog_record(
+        tmp_path,
+        work_id="source-escaped",
+        title="Escaped Source",
+        check_status="checked",
+        content_path=".memoria/blobs/source-content/source-escaped.md",
+    )
+    source = tmp_path / ".memoria/blobs/source-content/source-escaped.md"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("Escaped source span. ^p0001\n", encoding="utf-8")
+    write_checked_concept(
+        tmp_path,
+        "projects/draft/project.md",
+        "type: project\ncheck_status: checked\ntitle: Draft project\n",
+        "project",
+    )
+    write_checked_concept(
+        tmp_path,
+        "notes/escaped.md",
+        "type: note\ncheck_status: checked\ntitle: Escaped note\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA3\n"
+        "work_id: catalog/sources/source-escaped\n",
+        "note",
+        body=payload,
+    )
+    outline = tmp_path / "projects/draft/outline.md"
+    outline.parent.mkdir(parents=True, exist_ok=True)
+    outline.write_text("- 01ARZ3NDEKTSV4RRFFQ69G5FA3 — Escaped note\n", encoding="utf-8")
+    call_with_context(_compose_project_draft, tmp_path, "draft", machine="draft-machine")
+    draft_rendered = call_with_context(
+        _render_project_draft_export_markdown,
+        tmp_path,
+        "draft",
+        machine="draft-render-machine",
+    )
+    draft_written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "draft",
+        draft=True,
+        machine="draft-export-machine",
+    )
+
+    assert neutralize_untrusted_markdown(helper) == helper
+    for markdown in (
+        helper,
+        argument_rendered["content"],
+        argument_written["content"],
+        draft_rendered["content"],
+        draft_written["content"],
+    ):
+        rendered = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in rendered
+        assert 'href="https://evil.example/x"' not in rendered
 
 
 def test_work_title_canary_is_inert_at_apply_and_export(tmp_path: Path) -> None:
