@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+import os
 import re
 import sqlite3
 import subprocess
+import threading
+import time
 from collections import Counter
 from collections.abc import Iterable
 from importlib.resources import files
@@ -26,6 +30,16 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_text_durable
 
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows fallback is exercised only on Windows.
+    fcntl = None
+
+try:
+    import msvcrt
+except ImportError:  # pragma: no cover - POSIX path is exercised in CI.
+    msvcrt = None
+
 if TYPE_CHECKING:
     from memoria_vault.runtime.trusted_writer import OperationContext
 
@@ -39,6 +53,80 @@ WORK_ASPECT_TYPES = frozenset(
     {"context", "key_idea", "method", "outcome", "limitation", "assumption"}
 )
 EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
+_WORKSPACE_LOCKS_GUARD = threading.Lock()
+_WORKSPACE_LOCKS: dict[str, threading.RLock] = {}
+_WORKSPACE_LOCK_DEPTH = threading.local()
+_WORKSPACE_LOCK_PID = os.getpid()
+
+
+def _workspace_lock_key(vault: Path) -> str:
+    return str((Path(vault) / ".memoria/locks/worker.lock").resolve())
+
+
+def _workspace_thread_lock(key: str) -> threading.RLock:
+    global _WORKSPACE_LOCK_DEPTH, _WORKSPACE_LOCK_PID
+    with _WORKSPACE_LOCKS_GUARD:
+        if _WORKSPACE_LOCK_PID != os.getpid():
+            _WORKSPACE_LOCKS.clear()
+            _WORKSPACE_LOCK_DEPTH = threading.local()
+            _WORKSPACE_LOCK_PID = os.getpid()
+        return _WORKSPACE_LOCKS.setdefault(key, threading.RLock())
+
+
+@contextlib.contextmanager
+def workspace_lock(vault: Path):
+    """Serialize one workspace while allowing same-thread nested calls."""
+    lock_key = _workspace_lock_key(vault)
+    thread_lock = _workspace_thread_lock(lock_key)
+    with thread_lock:
+        depths = getattr(_WORKSPACE_LOCK_DEPTH, "depths", None)
+        if depths is None:
+            depths = {}
+            _WORKSPACE_LOCK_DEPTH.depths = depths
+        depth = int(depths.get(lock_key, 0))
+        if depth:
+            depths[lock_key] = depth + 1
+            try:
+                yield
+            finally:
+                depths[lock_key] = depth
+            return
+
+        lock_path = Path(lock_key)
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        with lock_path.open("a+b") as lock_file:
+            if fcntl is not None:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+                try:
+                    depths[lock_key] = 1
+                    yield
+                finally:
+                    depths.pop(lock_key, None)
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                return
+            if msvcrt is not None:
+                lock_file.write(b"\0")
+                lock_file.flush()
+                lock_file.seek(0)
+                while True:
+                    try:
+                        msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+                        break
+                    except OSError:
+                        time.sleep(0.05)
+                try:
+                    depths[lock_key] = 1
+                    yield
+                finally:
+                    depths.pop(lock_key, None)
+                    lock_file.seek(0)
+                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+                return
+            depths[lock_key] = 1
+            try:
+                yield
+            finally:
+                depths.pop(lock_key, None)
 
 
 def db_path(vault: Path) -> Path:

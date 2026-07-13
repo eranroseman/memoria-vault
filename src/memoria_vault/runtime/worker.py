@@ -3,25 +3,13 @@
 from __future__ import annotations
 
 import base64
-import contextlib
 import json
 import subprocess
 import tempfile
-import time
 import uuid
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import Any
-
-try:
-    import fcntl
-except ImportError:  # pragma: no cover - Windows fallback is exercised only on Windows.
-    fcntl = None
-
-try:
-    import msvcrt
-except ImportError:  # pragma: no cover - POSIX path is exercised in CI.
-    msvcrt = None
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
@@ -84,36 +72,7 @@ CREATE_CONCEPT_HOMES = {
 }
 
 
-@contextlib.contextmanager
-def _workspace_lock(vault: Path):
-    # ponytail: one workspace-wide worker lock; split only if throughput requires it.
-    lock_path = Path(vault) / ".memoria/locks/worker.lock"
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-    with lock_path.open("a+b") as lock_file:
-        if fcntl is not None:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-            return
-        if msvcrt is not None:
-            lock_file.write(b"\0")
-            lock_file.flush()
-            lock_file.seek(0)
-            while True:
-                try:
-                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
-                    break
-                except OSError:
-                    time.sleep(0.05)
-            try:
-                yield
-            finally:
-                lock_file.seek(0)
-                msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
-            return
-        yield
+_workspace_lock = state.workspace_lock
 
 
 def enqueue_trusted_write(

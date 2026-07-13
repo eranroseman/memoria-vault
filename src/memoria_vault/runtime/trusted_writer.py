@@ -17,7 +17,7 @@ from typing import Any
 import yaml
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -907,9 +907,10 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
-    state._append_journal_row(vault, event, machine=machine)
-    state.write_journal_head_anchor(vault)
-    append_jsonl(_journal_path(vault, machine), [event])
+    with state.workspace_lock(vault):
+        state._append_journal_row(vault, event, machine=machine)
+        state.write_journal_head_anchor(vault)
+        append_jsonl(_journal_path(vault, machine), [event])
 
 
 def _journal_path(vault: Path, machine: str) -> Path:
@@ -918,44 +919,61 @@ def _journal_path(vault: Path, machine: str) -> Path:
 
 def _iter_journal_exports(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
     for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
-        for event in iter_jsonl(path):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError) as exc:
+            raise ValueError(f"journal JSONL export is unreadable: {path.name}: {exc}") from exc
+        machine = path.stem
+        for line_number, line in enumerate(lines, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"invalid JSONL in {path.name} at line {line_number}") from exc
+            if not isinstance(event, dict):
+                raise ValueError(f"invalid JSONL object in {path.name} at line {line_number}")
+            if event.get("machine") != machine:
+                raise ValueError(f"JSONL machine mismatch in {path.name} at line {line_number}")
             yield path.stem, event
 
 
 def reconcile_journal_export(vault: Path) -> int:
     """Re-emit authoritative rows missing from per-machine JSONL exports."""
     vault = Path(vault)
-    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
-        _truncate_partial_jsonl_tail(path)
-    exported = Counter(
-        (machine, _canonical_journal_event(event))
-        for machine, event in _iter_journal_exports(vault)
-    )
-    missing: list[tuple[str, dict[str, Any]]] = []
-    with state.connect(vault) as conn:
-        rows = conn.execute(
-            "SELECT machine, payload_json FROM event_log ORDER BY event_id"
-        ).fetchall()
-    for row in rows:
-        machine = str(row["machine"])
-        event = json.loads(str(row["payload_json"]))
-        if not isinstance(event, dict):
-            raise ValueError("event_log payload must be a JSON object")
-        if event.get("machine") != machine:
-            raise ValueError("event_log payload machine does not match its row")
-        key = (machine, _canonical_journal_event(event))
-        if exported[key]:
-            exported[key] -= 1
-        else:
-            missing.append((machine, event))
-    extra_count = sum(exported.values())
-    if extra_count:
-        raise ValueError(
-            f"journal JSONL export contains {extra_count} row(s) absent from event_log"
+    with state.workspace_lock(vault):
+        for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
+            _truncate_partial_jsonl_tail(path)
+        exported = Counter(
+            (machine, _canonical_journal_event(event))
+            for machine, event in _iter_journal_exports(vault)
         )
-    for machine, event in missing:
-        append_jsonl(_journal_path(vault, machine), [event])
-    return len(missing)
+        missing: list[tuple[str, dict[str, Any]]] = []
+        with state.connect(vault) as conn:
+            rows = conn.execute(
+                "SELECT machine, payload_json FROM event_log ORDER BY event_id"
+            ).fetchall()
+        for row in rows:
+            machine = str(row["machine"])
+            event = json.loads(str(row["payload_json"]))
+            if not isinstance(event, dict):
+                raise ValueError("event_log payload must be a JSON object")
+            if event.get("machine") != machine:
+                raise ValueError("event_log payload machine does not match its row")
+            key = (machine, _canonical_journal_event(event))
+            if exported[key]:
+                exported[key] -= 1
+            else:
+                missing.append((machine, event))
+        extra_count = sum(exported.values())
+        if extra_count:
+            raise ValueError(
+                f"journal JSONL export contains {extra_count} row(s) absent from event_log"
+            )
+        for machine, event in missing:
+            append_jsonl(_journal_path(vault, machine), [event])
+        return len(missing)
 
 
 def _canonical_journal_event(event: dict[str, Any]) -> str:

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 
 import pytest
@@ -481,3 +484,142 @@ def test_workspace_scan_serializes_journal_verify_and_reconcile(tmp_path, capsys
     monkeypatch.setattr(trusted_writer, "reconcile_journal_export", reconcile)
 
     assert main(["workspace", "scan", "--workspace", str(vault), "--json"]) == 0
+
+
+def test_append_and_reconcile_do_not_overlap_their_journal_snapshots(tmp_path, capsys, monkeypatch):
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed_events(vault, count=1)
+    row_written = threading.Event()
+    release_append = threading.Event()
+    reconcile_lock_attempted = threading.Event()
+    export_scan_started = threading.Event()
+    thread_role = threading.local()
+    original_append = state._append_journal_row
+    original_exports = trusted_writer._iter_journal_exports
+    original_workspace_lock = state.workspace_lock
+
+    def pause_after_authoritative_write(vault, event, *, machine):
+        original_append(vault, event, machine=machine)
+        row_written.set()
+        assert release_append.wait(timeout=2)
+
+    def observe_export_scan(vault):
+        export_scan_started.set()
+        yield from original_exports(vault)
+
+    @contextlib.contextmanager
+    def observe_workspace_lock(vault):
+        if getattr(thread_role, "name", "") == "reconcile":
+            reconcile_lock_attempted.set()
+        with original_workspace_lock(vault):
+            yield
+
+    monkeypatch.setattr(state, "_append_journal_row", pause_after_authoritative_write)
+    monkeypatch.setattr(trusted_writer, "_iter_journal_exports", observe_export_scan)
+    monkeypatch.setattr(state, "workspace_lock", observe_workspace_lock)
+
+    def append_event() -> None:
+        thread_role.name = "append"
+        trusted_writer.append_explicit_journal_event(
+            vault,
+            {"event": "run", "run_id": "concurrent", "status": "started"},
+            actor="operation",
+            machine="journal-test",
+        )
+
+    def reconcile_export() -> int:
+        thread_role.name = "reconcile"
+        return trusted_writer.reconcile_journal_export(vault)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        append_future = executor.submit(append_event)
+        assert row_written.wait(timeout=2)
+        reconcile_future = executor.submit(reconcile_export)
+        assert reconcile_lock_attempted.wait(timeout=2)
+        try:
+            assert not export_scan_started.is_set()
+        finally:
+            release_append.set()
+
+        assert append_future.result(timeout=2) is None
+        assert reconcile_future.result(timeout=2) == 0
+
+    assert [
+        event["run_id"] for event in iter_jsonl(vault / ".memoria/journal/journal-test.jsonl")
+    ] == [
+        "journal-run-0",
+        "concurrent",
+    ]
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
+def test_journal_append_and_reconcile_reenter_the_workspace_lock(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+
+    with state.workspace_lock(vault):
+        trusted_writer.append_explicit_journal_event(
+            vault,
+            {"event": "run", "run_id": "nested-lock", "status": "started"},
+            actor="operation",
+            machine="journal-test",
+        )
+        assert trusted_writer.reconcile_journal_export(vault) == 0
+
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
+@pytest.mark.parametrize(
+    ("invalid_line", "error"),
+    [
+        ("not-json\n", "invalid JSONL"),
+        ('["not", "an object"]\n', "JSONL object"),
+    ],
+    ids=["malformed", "non-object"],
+)
+def test_reconcile_rejects_invalid_jsonl_before_db_only_repair(
+    tmp_path, capsys, invalid_line, error
+):
+    vault = init_cli_workspace(tmp_path, capsys)
+    db_only = {
+        "event": "run",
+        "run_id": "needs-repair",
+        "status": "started",
+        "timestamp": "2026-07-12T00:00:00+00:00",
+        "actor": "operation",
+        "machine": "journal-test",
+    }
+    state._append_journal_row(vault, db_only, machine="journal-test")
+    state.write_journal_head_anchor(vault)
+    path = vault / ".memoria/journal/journal-test.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(invalid_line, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=error):
+        trusted_writer.reconcile_journal_export(vault)
+
+    assert path.read_text(encoding="utf-8") == invalid_line
+
+
+def test_reconcile_rejects_extra_duplicate_before_db_only_repair(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    event = trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "authoritative-once", "status": "started"},
+        actor="operation",
+        machine="journal-test",
+    )
+    db_only = {
+        **event,
+        "run_id": "must-not-be-emitted",
+    }
+    state._append_journal_row(vault, db_only, machine="journal-test")
+    state.write_journal_head_anchor(vault)
+    path = vault / ".memoria/journal/journal-test.jsonl"
+    append_jsonl(path, [event])
+    before = path.read_text(encoding="utf-8")
+
+    with pytest.raises(ValueError, match="contains 1 row"):
+        trusted_writer.reconcile_journal_export(vault)
+
+    assert path.read_text(encoding="utf-8") == before
+    assert list(iter_jsonl(path)) == [event, event]
