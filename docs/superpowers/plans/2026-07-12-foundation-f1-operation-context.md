@@ -85,7 +85,7 @@ nonblank string `args.run_id` and otherwise uses `request_id`; rejects a
 non-string non-null run id; and normalizes machine once with
 `safe_filename(machine or platform.node() or "local")`.
 
-- [ ] **Step 1: Write context contract tests**
+- [x] **Step 1: Write context contract tests**
 
 First run `git mv tests/test_actor_threading.py
 tests/test_operation_context.py`. In the renamed file, replace the
@@ -109,7 +109,7 @@ Parameterize actor-omission tests across `worker.enqueue_operation`,
 `engine_api.run_operation`, `engine_api.write_new_concept`, and
 `engine_api.resolve_attention`. Each call without actor must raise `TypeError`.
 
-- [ ] **Step 2: Run the new tests and confirm RED**
+- [x] **Step 2: Run the new tests and confirm RED**
 
 Run:
 
@@ -120,7 +120,7 @@ python -m pytest tests/test_operation_context.py -v
 Expected: collection or assertion failures because `OperationContext` and its
 builder do not exist and actor defaults remain.
 
-- [ ] **Step 3: Implement context construction at claim time**
+- [x] **Step 3: Implement context construction at claim time**
 
 In `trusted_writer.py`, import `dataclass` and `Mapping`, add the type and
 builder shown above, and keep all five fields as normalized strings. The code
@@ -143,7 +143,7 @@ Delete `_envelope_actor`. Replace worker reads of envelope actor, job request
 id, job operation id, request run id, and raw machine with the context where
 the value is provenance.
 
-- [ ] **Step 4: Remove engine/worker actor defaults and declare internal actors**
+- [x] **Step 4: Remove engine/worker actor defaults and declare internal actors**
 
 Make `actor` a required keyword on:
 
@@ -193,7 +193,7 @@ tests/test_worker_product_jobs.py
 tests/test_worker_queue.py
 ```
 
-- [ ] **Step 5: Verify Task 1 GREEN**
+- [x] **Step 5: Verify Task 1 GREEN**
 
 Run:
 
@@ -205,7 +205,7 @@ python -m pytest tests -q
 
 Expected: all pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/runtime/worker.py src/memoria_vault/runtime/read_barrier.py src/memoria_vault/runtime/mcp_transport.py src/memoria_vault/runtime/http_transport.py src/memoria_vault/engine/api.py src/memoria_vault/cli.py tests/conftest.py tests/test_actor_threading.py tests/test_operation_context.py tests/test_capabilities.py tests/test_cli_workspace_requests.py tests/test_empirical_events.py tests/test_engine_api.py tests/test_http_transport.py tests/test_mcp_transport.py tests/test_projections.py tests/test_runtime_state.py tests/test_source_enrichment.py tests/test_worker_capture_jobs.py tests/test_worker_integrity_jobs.py tests/test_worker_knowledge_cycle.py tests/test_worker_product_jobs.py tests/test_worker_queue.py
@@ -224,7 +224,7 @@ git commit -m "fix(provenance): construct one validated operation context"
 **Produces:** `derivations` is a latest-writer projection while `event_log`
 remains the append-only history.
 
-- [ ] **Step 1: Write failing projection tests**
+- [x] **Step 1: Write failing projection tests**
 
 In `tests/test_schema_v9.py`, add tests that:
 
@@ -234,7 +234,7 @@ In `tests/test_schema_v9.py`, add tests that:
    `sqlite3.IntegrityError`; and
 3. leave the earlier valid actor unchanged after the failed update.
 
-- [ ] **Step 2: Confirm RED**
+- [x] **Step 2: Confirm RED**
 
 ```bash
 python -m pytest tests/test_schema_v9.py -k derivation -v
@@ -243,7 +243,7 @@ python -m pytest tests/test_schema_v9.py -k derivation -v
 Expected: the repeated pair remains `pi`, and the invalid existing-pair write
 does not raise because `INSERT OR IGNORE` suppresses both the update and CHECK.
 
-- [ ] **Step 3: Upsert the current actor**
+- [x] **Step 3: Upsert the current actor**
 
 In `state.record_file_output`, replace `INSERT OR IGNORE` with:
 
@@ -257,7 +257,7 @@ DO UPDATE SET actor = excluded.actor
 Do not use `OR REPLACE`, prevalidate away SQLite's CHECK, delete omitted edges,
 or change edge membership.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 ```bash
 python -m pytest tests/test_schema_v9.py -k derivation -v
@@ -266,7 +266,7 @@ python -m pytest tests -q
 
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/state.py tests/test_schema_v9.py
@@ -290,7 +290,7 @@ git commit -m "fix(provenance): keep derivation actor projection current"
 **Produces:** a tested context decorator and outside-envelope adapter that Task
 4 can make the only journal entry points while migrating every caller.
 
-- [ ] **Step 1: Write failing seam tests**
+- [x] **Step 1: Write failing seam tests**
 
 Add a local test helper that saves a matching request envelope and constructs
 `OperationContext` with explicit values. Test that:
@@ -307,7 +307,7 @@ Add a local test helper that saves a matching request envelope and constructs
 - `_journal_path` and the lower state storage helper do not call
   `safe_filename`; only the context builder or explicit adapter normalizes.
 
-- [ ] **Step 2: Confirm RED**
+- [x] **Step 2: Confirm RED**
 
 ```bash
 python -m pytest tests/test_operation_context.py -k "metadata or conflict or machine" -v
@@ -316,7 +316,7 @@ python -m pytest tests/test_operation_context.py -k "metadata or conflict or mac
 Expected: failures because context decoration and the explicit adapter do not
 exist.
 
-- [ ] **Step 3: Implement the seam without a second public request API**
+- [x] **Step 3: Implement the seam without a second public request API**
 
 In `trusted_writer.py`, implement functions with these signatures and
 contracts; the docstrings summarize the bodies required by the rules below:
@@ -371,7 +371,7 @@ unchanged migration bridge for existing callers. Add no new caller to it. Task
 4 deletes it atomically after migrating every producer; no permissive API is
 present in the final F1 diff.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 ```bash
 python -m pytest tests/test_operation_context.py tests/test_runtime_state.py tests/test_trusted_writer.py -q
@@ -380,7 +380,7 @@ python -m pytest tests -q
 
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/runtime/state.py tests/test_operation_context.py tests/test_runtime_state.py tests/test_trusted_writer.py
@@ -421,7 +421,7 @@ git commit -m "fix(provenance): establish the context-owned journal seam"
 **Produces:** no request-mediated leaf invents or relabels provenance, and the
 migration bridge from Task 3 is gone.
 
-- [ ] **Step 1: Add failing final-interface tests**
+- [x] **Step 1: Add failing final-interface tests**
 
 Extend `tests/test_operation_context.py` and `tests/test_trusted_writer.py` to
 prove the final public request append, staging, promotion, materialization,
@@ -440,7 +440,7 @@ identity such as `codex` produces enum actor `agent`,
 `request_envelope.provenance.agent_identity == "codex"`, and matching journal
 `request_provenance` after the request runs.
 
-- [ ] **Step 2: Add failing end-to-end provenance tests**
+- [x] **Step 2: Add failing end-to-end provenance tests**
 
 In `tests/test_operation_context.py`, add a helper that queues and runs an
 input-backed `create-concept` request with explicit `input_refs`, output
@@ -463,7 +463,7 @@ Add a repeated-write test: write the same edge first as `pi`, then as `agent`
 with distinct requests. Assert one current `agent` derivation row and both
 historical derived events.
 
-- [ ] **Step 3: Add authority and internal-actor tests**
+- [x] **Step 3: Add authority and internal-actor tests**
 
 Add tests proving:
 
@@ -484,7 +484,7 @@ python -m pytest tests/test_operation_context.py -k "end_to_end or repeated or a
 Expected: failures on at least the attention relabel, internal actor defaults,
 and leaf metadata paths.
 
-- [ ] **Step 4: Promote the seam and convert writer/state boundaries**
+- [x] **Step 4: Promote the seam and convert writer/state boundaries**
 
 Rename Task 3's `_append_context_event` to the public context-required
 `append_journal_event`. Delete the legacy machine-only append in both
@@ -540,7 +540,7 @@ requires `actor == "integrity"` and a nonblank machine, then follows the same
 split. `observe_pi_edit` and `observe_pi_edit_from_head` remain literal `pi`
 with required machine.
 
-- [ ] **Step 5: Migrate every worker branch and domain writer**
+- [x] **Step 5: Migrate every worker branch and domain writer**
 
 Thread `context` through every mutating or journaling branch in
 `_run_operation_job`. Use this inventory as the completion checklist:
@@ -594,7 +594,7 @@ Rename the `run_id` keyword parameter on `run_operation_model_text` and
 `call_id` while `_decorate_context_event` supplies the request's reserved
 `run_id`. Remove leaf-written reserved `run_id` everywhere else.
 
-- [ ] **Step 6: Preserve PI authority and explicit outside-envelope provenance**
+- [x] **Step 6: Preserve PI authority and explicit outside-envelope provenance**
 
 In the worker, reject non-`pi` context for `acknowledge-attention` and
 `resolve-attention` before calling the runtime. Change
@@ -659,7 +659,7 @@ tests/test_worker_queue.py
 tests/test_eval.py
 ```
 
-- [ ] **Step 7: Run focused subsystem tests**
+- [x] **Step 7: Run focused subsystem tests**
 
 ```bash
 python -m pytest tests/test_worker_product_jobs.py tests/test_worker_integrity_jobs.py tests/test_worker_capture_jobs.py tests/test_source_enrichment.py tests/test_operations.py tests/test_knowledge.py tests/test_projections.py tests/test_capabilities.py tests/test_project_knowledge.py tests/test_draft_compose.py tests/test_draft_verification.py tests/test_draft_writeback.py tests/test_search_index.py tests/test_gap_analysis.py tests/test_integrity_source_metadata.py tests/test_seeded_errors.py tests/test_eval.py -q
@@ -667,7 +667,7 @@ python -m pytest tests/test_worker_product_jobs.py tests/test_worker_integrity_j
 
 Expected: all pass.
 
-- [ ] **Step 8: Run the full test suite**
+- [x] **Step 8: Run the full test suite**
 
 ```bash
 python -m pytest tests -q
@@ -675,7 +675,7 @@ python -m pytest tests -q
 
 Expected: all pass.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 Stage only the production files and actually modified test files listed in this
 task. Before committing, use `git status --short` to enumerate them and pass
@@ -700,7 +700,7 @@ git commit -m "fix(provenance): preserve context through every mediated mutation
 - Modify: `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md`
 - Modify: `docs/superpowers/plans/2026-07-12-foundation.md`
 
-- [ ] **Step 1: Run the provenance hardcode audit**
+- [x] **Step 1: Run the provenance hardcode audit**
 
 Run:
 
@@ -722,7 +722,7 @@ rg -n 'state\.append_journal_event\(' src/memoria_vault
 
 Expected: no match; trusted writer calls the private storage helper instead.
 
-- [ ] **Step 2: Re-run the end-to-end proof**
+- [x] **Step 2: Re-run the end-to-end proof**
 
 ```bash
 python -m pytest tests/test_operation_context.py tests/test_schema_v9.py -v
@@ -733,7 +733,7 @@ Expected: all pass, including the three non-PI actor paths, repeated
 derivation history, PI-only authority, internal actor declarations, and
 machine consistency.
 
-- [ ] **Step 3: Update current-truth documentation**
+- [x] **Step 3: Update current-truth documentation**
 
 - Keep the memory-model statement that `observe_pi_edit` is intentionally
   `pi`, and state that mediated writes consume one validated context.
@@ -749,7 +749,7 @@ machine consistency.
 - Do not add historical narration to published docs; clearly marked
   planned/deferred doctrine may remain.
 
-- [ ] **Step 4: Run the repository gate**
+- [x] **Step 4: Run the repository gate**
 
 ```bash
 python scripts/verify
@@ -757,7 +757,7 @@ python scripts/verify
 
 Expected: lint, product gates, tests, offline smoke, and syntax all pass.
 
-- [ ] **Step 5: Record plan completion, commit docs, and re-run the gate**
+- [x] **Step 5: Record plan completion, commit docs, and re-run the gate**
 
 After Step 4 passes, mark parent Foundation Task 3 and this closure plan's
 implementation tasks complete. The status becomes repository current truth

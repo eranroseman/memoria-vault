@@ -11,7 +11,7 @@ from memoria_vault.runtime import state
 from tests.helpers import ROOT
 
 
-def test_schema_lands_at_user_version_7(tmp_path: Path) -> None:
+def test_schema_lands_at_user_version_9(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         assert state.SCHEMA_VERSION == 9
         assert conn.execute("PRAGMA user_version").fetchone()[0] == 9

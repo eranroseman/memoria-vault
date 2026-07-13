@@ -59,9 +59,9 @@ one side is always authority.
 that arrives outside the operation envelope is, by definition, the human
 working in their own editor.
 
-**Planned — F1 (alpha.21):** Every mediated write consumes one validated
-`OperationContext`, whose actor is one of `pi`, `agent`, `operation`, or
-`integrity`; engine and worker interfaces never default a missing actor.
+Every mediated write consumes one validated `OperationContext`, whose actor is
+one of `pi`, `agent`, `operation`, or `integrity`. Engine and worker interfaces
+never default a missing actor.
 
 ---
 

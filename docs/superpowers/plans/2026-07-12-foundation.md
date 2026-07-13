@@ -225,13 +225,13 @@ git commit -m "fix(provenance): request_envelope requires a valid actor, never d
 The approved design requires one immutable context constructed at job claim
 and consumed by every request-mediated writer.
 
-- [ ] Execute Tasks 1–4 in
+- [x] Execute Tasks 1–4 in
   `docs/superpowers/plans/2026-07-12-foundation-f1-operation-context.md`.
-- [ ] Require actor declarations at engine and worker boundaries while keeping
+- [x] Require actor declarations at engine and worker boundaries while keeping
   explicit defaults only at CLI, MCP, and HTTP adapters.
-- [ ] Prove actor, run, request, operation, and machine consistency across the
+- [x] Prove actor, run, request, operation, and machine consistency across the
   request row, journal planes, mutations, and current derivation projection.
-- [ ] Reject non-PI attention decisions rather than relabeling them as human.
+- [x] Reject non-PI attention decisions rather than relabeling them as human.
 - [ ] Run the explicit security diff scan required for this runtime-policy
   change before PR-F1.
 
