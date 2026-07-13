@@ -33,13 +33,13 @@ Spec: `docs/superpowers/specs/2026-07-12-beta.1-content-security.md` (CS1, CS3) 
 
 **Files:**
 - Create: `src/memoria_vault/runtime/content_security.py`
-- Test: `tests/test_content_security.py` (new — register `"unit"`)
+- Test: `tests/test_content_security.py` (new — register `"runtime"` because Tasks 3–4 extend it with vault-mutating cases)
 
 **Interfaces:**
 - Consumes: nothing.
 - Produces: `content_security.neutralize_untrusted_markdown(body: str) -> str` — escapes Markdown image/embed syntax, inerts raw HTML tags, wraps external URLs as non-clickable code spans; leaves vault-internal `[[wikilinks]]` and existing code spans/fences untouched. Tasks 3–4 consume it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """tests/test_content_security.py — CS1 neutralization."""
@@ -73,62 +73,28 @@ def test_vault_internals_and_code_untouched():
     assert neutralize_untrusted_markdown(src) == src  # wikilinks + code spans/fences preserved
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python -m pytest tests/test_content_security.py -v`
 Expected: FAIL — module does not exist.
 
 Also add to `tests/conftest.py` `TEST_LEVELS` (alphabetical): `"test_content_security.py": "runtime",` (the file gains vault-mutating apply/export cases in Tasks 3–4).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement** — use a line scanner that preserves backtick and tilde fenced blocks plus variable-length inline code spans. Neutralize Markdown image/embed and link forms, raw HTML, and bare external URLs in every remaining segment. Choose a safe code-span delimiter and keep the transform idempotent so renderer plus final-write application is stable.
 
-```python
-"""src/memoria_vault/runtime/content_security.py — CS1 exfiltration neutralization."""
-
-from __future__ import annotations
-
-import re
-
-# Split on fenced code blocks and inline code spans so we never rewrite code.
-_CODE_SEGMENT_RE = re.compile(r"(```.*?```|`[^`\n]+`)", re.DOTALL)
-_IMG_RE = re.compile(r"!(?=\[)")                       # leading ! of ![...] or ![[...]]
-_HTML_TAG_RE = re.compile(r"<(/?[a-zA-Z!][^>]*)>")
-_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\((https?://[^)]+)\)")
-_BARE_URL_RE = re.compile(r"(?<![`(\w])https?://[^\s`)\]<]+")
-
-
-def _neutralize_segment(text: str) -> str:
-    text = _IMG_RE.sub(r"\\", text)                    # ![ -> \[  (image cannot render)
-    text = _HTML_TAG_RE.sub(r"&lt;\1&gt;", text)       # raw HTML tags inert
-    text = _MD_LINK_RE.sub(r"\1 (`\2`)", text)         # [t](url) -> t (`url`)
-    text = _BARE_URL_RE.sub(lambda m: f"`{m.group(0)}`", text)  # bare url -> code span
-    return text
-
-
-def neutralize_untrusted_markdown(body: str) -> str:
-    """Neutralize embeds/HTML/external-URLs in machine-written third-party text.
-
-    Vault-internal ``[[wikilinks]]`` and existing code spans/fences are left
-    untouched (they are authored/trusted structure, not exfiltration vectors).
-    """
-    parts = _CODE_SEGMENT_RE.split(body)
-    # split() keeps the delimiters (code segments) at odd indices — leave those verbatim
-    return "".join(
-        part if i % 2 else _neutralize_segment(part) for i, part in enumerate(parts)
-    )
-```
-
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python -m pytest tests/test_content_security.py -v`
 Expected: PASS. (If `test_image_embed_cannot_render` still finds `![`, confirm `_IMG_RE` fired; the replacement `\\` + surviving `[` yields `\[`, no `![`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/content_security.py tests/test_content_security.py tests/conftest.py
 git commit -m "feat(security): neutralize_untrusted_markdown helper (CS1 embeds/HTML/URLs)"
 ```
+
+**Evidence:** RED `python3 -m pytest tests/test_content_security.py -v` failed at collection with `ModuleNotFoundError`. GREEN `python3 -m pytest tests/test_content_security.py tests/test_testing_levels.py -v` passed 8 tests (6 helper behaviors plus 2 level-policy checks).
 
 ### Task 2: Neutralize the final content at export (draft + argument export)
 
