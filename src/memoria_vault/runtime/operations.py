@@ -15,6 +15,8 @@ import yaml
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import read_capability_manifest
+from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
@@ -370,7 +372,11 @@ def run_prompt_operation(
     stage = stage_concept(
         vault,
         output_path,
-        concept_text(frontmatter, f"{policy['title']} report", output),
+        concept_text(
+            frontmatter,
+            f"{policy['title']} report",
+            neutralize_untrusted_markdown(output),
+        ),
         context=context,
         inputs=inputs,
     )
@@ -513,12 +519,16 @@ def compile_source_digest(
         context=context,
     )
 
+    safe_source_title = neutralize_untrusted_markdown(str(source_fm["title"]))
+    safe_source_description = neutralize_untrusted_markdown(str(source_fm["description"]))
+    safe_digest_text = neutralize_untrusted_markdown(digest_text)
+    safe_topics = [neutralize_untrusted_markdown(topic) for topic in topics]
     digest_frontmatter = {
         "type": "digest",
-        "title": f"Digest: {source_fm['title']}",
-        "description": source_fm["description"],
+        "title": f"Digest: {safe_source_title}",
+        "description": safe_source_description,
         "work_id": work_id,
-        "tags": topics,
+        "tags": safe_topics,
         "links": {},
     }
     digest_stage = stage_concept(
@@ -526,8 +536,8 @@ def compile_source_digest(
         digest_rel,
         concept_text(
             digest_frontmatter,
-            f"Digest: {source_fm['title']}",
-            digest_text,
+            f"Digest: {safe_source_title}",
+            safe_digest_text,
         ),
         context=context,
         inputs=[
@@ -549,13 +559,13 @@ def compile_source_digest(
     hub_stage_events = []
     hub_checks = []
     hub_paths = []
-    for topic in topics:
+    for topic, safe_topic in zip(topics, safe_topics, strict=True):
         hub_rel = f"hubs/{_topic_slug(topic)}.md"
         hub_exists = (vault / hub_rel).exists()
         hub_frontmatter = {
             "type": "hub",
-            "title": topic,
-            "description": f"Machine suggestion from {source_fm['title']}.",
+            "title": safe_topic,
+            "description": f"Machine suggestion from {safe_source_title}.",
             "tag": _topic_slug(topic),
             "tags": ["suggestion"],
             "links": {},
@@ -565,7 +575,7 @@ def compile_source_digest(
             hub_rel,
             concept_text(
                 hub_frontmatter,
-                topic,
+                safe_topic,
                 f"Suggested update from `{digest_rel}`. Curated hubs are not overwritten.\n",
             ),
             context=context,

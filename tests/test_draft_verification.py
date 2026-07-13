@@ -161,10 +161,11 @@ def test_draft_renderer_and_writer_neutralize_exported_beacons(tmp_path: Path) -
     _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — Support\n")
     compose_project_draft(vault, "project-alpha")
 
+    applied = (vault / "projects/project-alpha/draft.md").read_text(encoding="utf-8")
     rendered = render_project_draft_export_markdown(vault, "project-alpha")
     written = write_project_export(vault, "project-alpha", draft=True)
 
-    for content in (rendered["content"], written["content"]):
+    for content in (applied, rendered["content"], written["content"]):
         assert "![draft]" not in content
         assert "<script>" not in content
         assert "](http://beacon.example" not in content

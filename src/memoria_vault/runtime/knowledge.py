@@ -233,30 +233,39 @@ def emit_note_candidates(
     for row in rows:
         title = _required_text(row, "title")
         body = _required_text(row, "body")
+        safe_title = neutralize_untrusted_markdown(title)
+        safe_body = neutralize_untrusted_markdown(body)
         note_rel = _unique_note_rel(vault, title)
         require_policy_path(policy, note_rel)
         row_work_id = _draft_work_id(str(row.get("work_id") or ""))
         work_ref = f"catalog/sources/{row_work_id}" if row_work_id else digest_source_ref
         frontmatter = {
             "type": "note",
-            "title": title,
+            "title": safe_title,
             "work_id": work_ref,
-            "extraction_confidence": str(row.get("extraction_confidence") or "medium"),
-            "tags": _string_list(row.get("tags")),
+            "extraction_confidence": neutralize_untrusted_markdown(
+                str(row.get("extraction_confidence") or "medium")
+            ),
+            "tags": [neutralize_untrusted_markdown(tag) for tag in _string_list(row.get("tags"))],
         }
         if row.get("description"):
-            frontmatter["description"] = str(row["description"])
+            frontmatter["description"] = neutralize_untrusted_markdown(str(row["description"]))
         if row.get("claim_text"):
-            frontmatter["claim_text"] = str(row["claim_text"])
+            frontmatter["claim_text"] = neutralize_untrusted_markdown(str(row["claim_text"]))
         if row.get("quote"):
-            frontmatter["quote"] = str(row["quote"])
+            frontmatter["quote"] = neutralize_untrusted_markdown(str(row["quote"]))
         if isinstance(row.get("annotation_ref"), dict):
-            frontmatter["annotation_ref"] = dict(row["annotation_ref"])
+            annotation_ref = dict(row["annotation_ref"])
+            if annotation_ref.get("text_quote"):
+                annotation_ref["text_quote"] = neutralize_untrusted_markdown(
+                    str(annotation_ref["text_quote"])
+                )
+            frontmatter["annotation_ref"] = annotation_ref
 
         stage = stage_concept(
             vault,
             note_rel,
-            concept_text(frontmatter, title, body),
+            concept_text(frontmatter, safe_title, safe_body),
             context=context,
             inputs=[{"id": digest_rel, "sha256": sha256_file(vault / digest_rel)}],
         )
@@ -1961,7 +1970,7 @@ def compose_project_draft(
         "generated_by: compose-project-draft",
         "---",
         "",
-        f"# {project.get('title') or Path(project_rel).stem}",
+        f"# {neutralize_untrusted_markdown(str(project.get('title') or Path(project_rel).stem))}",
         "",
         f"Slice includes {len(members)} checked notes.",
         "",
@@ -1984,10 +1993,11 @@ def compose_project_draft(
         )
         evidence_markers.append(marker)
         block_anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
-        excerpt = _draft_note_excerpt(body, per_node_budget)
+        excerpt = neutralize_untrusted_markdown(_draft_note_excerpt(body, per_node_budget))
+        member_title = neutralize_untrusted_markdown(str(member["title"]))
         lines.extend(
             [
-                f"## {member['title']}",
+                f"## {member_title}",
                 "",
                 f"Source note: `{note_rel}`",
                 "",
@@ -2221,7 +2231,7 @@ def promote_draft_passage(
     if note_source:
         frontmatter["work_id"] = f"catalog/sources/{note_source}"
     apply_universal_concept_frontmatter(frontmatter, note_rel)
-    content = frontmatter_doc(frontmatter, selected + "\n")
+    content = frontmatter_doc(frontmatter, neutralize_untrusted_markdown(selected) + "\n")
     stage = stage_concept(
         vault,
         note_rel,
@@ -2230,7 +2240,11 @@ def promote_draft_passage(
         inputs=[{"id": draft_rel, "sha256": sha256_file(draft_path)}],
     )
     materialized = materialize_unchecked(vault, note_rel, context=context)
-    link = _draft_note_markdown_link(draft_rel, note_rel, note_title)
+    link = _draft_note_markdown_link(
+        draft_rel,
+        note_rel,
+        neutralize_untrusted_markdown(note_title),
+    )
     if link not in draft_content:
         write_text_durable(
             draft_path,
@@ -3030,7 +3044,7 @@ def _outline_text(members: Iterable[dict[str, Any]]) -> str:
     lines = []
     for member in members:
         note_id = str(member["id"]).strip()
-        reasoning = str(member.get("reasoning") or "").strip()
+        reasoning = neutralize_untrusted_markdown(str(member.get("reasoning") or "").strip())
         lines.append(f"- {note_id} — {reasoning}")
     return "\n".join(lines) + ("\n" if lines else "")
 

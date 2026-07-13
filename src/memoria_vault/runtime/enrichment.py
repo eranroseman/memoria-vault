@@ -22,6 +22,7 @@ from memoria_vault.runtime.capture import (
     derive_work_aspect_rows,
     render_references_bib,
 )
+from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.integrity import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -426,20 +427,22 @@ def _write_attention_flag(
     path = vault / rel
     if path.exists():
         return rel
+    safe_finding = neutralize_untrusted_markdown(finding)
+    safe_evidence = neutralize_untrusted_markdown(evidence)
     text = frontmatter_doc(
         {
             "title": title,
             "projection": "attention",
             "attention_kind": "flag",
             "attention_status": "open",
-            "finding": finding,
+            "finding": safe_finding,
             "agent_recommendation": "issues-found",
             "target": target,
             "raised_by": "enrich-source",
             "loudness": "alert",
             "created": date.today().isoformat(),
         },
-        f"# Finding\n\n{finding}\n\n# Evidence\n\n{evidence}\n",
+        f"# Finding\n\n{safe_finding}\n\n# Evidence\n\n{safe_evidence}\n",
     )
     write_text_durable(path, text, create_parent=True)
     return rel
@@ -463,9 +466,10 @@ def _write_discovery_candidate(
     path = vault / rel
     if path.exists():
         return rel
+    safe_target_title = neutralize_untrusted_markdown(target_title)
     text = frontmatter_doc(
         {
-            "title": f"Review discovered Work: {target_title}",
+            "title": f"Review discovered Work: {safe_target_title}",
             "projection": "attention",
             "attention_kind": "candidate",
             "attention_status": "open",
@@ -477,7 +481,7 @@ def _write_discovery_candidate(
             "created": date.today().isoformat(),
         },
         (
-            f"# Candidate Work\n\n{target_title}\n\n# Evidence\n\n"
+            f"# Candidate Work\n\n{safe_target_title}\n\n# Evidence\n\n"
             f"{source['work_id']} {edge['relation_type']} this Work in provider metadata.\n"
         ),
     )

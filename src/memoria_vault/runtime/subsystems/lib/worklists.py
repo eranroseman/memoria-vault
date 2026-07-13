@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
@@ -73,6 +74,7 @@ def emit_worklist(
         raise ValueError("a worklist needs at least one row")
     vault = Path(vault)
     slug = _slug(worklist_id or title)
+    safe_title = neutralize_untrusted_markdown(title)
     worklist_dir = vault / "system" / "worklists" / slug
     worklist_dir.mkdir(parents=True, exist_ok=True)
     today = datetime.date.today().isoformat()
@@ -81,17 +83,19 @@ def emit_worklist(
     for index, row in enumerate(rows, start=1):
         ref = _item_ref(row, index)
         item_title = _item_title(row, ref)
+        safe_item_title = neutralize_untrusted_markdown(item_title)
         decision = str(row.get("decision") or "proposed").strip()
         if decision not in DECISIONS:
             raise ValueError(f"decision must be one of {DECISIONS}")
         rank = int(row.get("rank") or index)
         group = str(row.get("group") or row.get("category") or workflow).strip()
         reason = str(row.get("reason") or row.get("evidence") or "").strip()
+        safe_reason = neutralize_untrusted_markdown(reason)
         item_source = str(row.get("source_report") or source_report).strip()
         item_slug = _slug(f"{rank:03d}-{item_title}")
         path = worklist_dir / f"{item_slug}.md"
         frontmatter = {
-            "title": item_title,
+            "title": safe_item_title,
             "projection": "worklist-item",
             "attention_status": "open",
             "decision": decision,
@@ -103,21 +107,21 @@ def emit_worklist(
         if group:
             frontmatter["group"] = group
         frontmatter.update({"rank": rank, "created": today})
-        body = [f"# {item_title}", "", f"Reference: `{ref}`", ""]
-        if reason:
-            body += ["# Reason", "", reason, ""]
+        body = [f"# {safe_item_title}", "", f"Reference: `{ref}`", ""]
+        if safe_reason:
+            body += ["# Reason", "", safe_reason, ""]
         write_text_durable(path, frontmatter_doc(frontmatter, "\n".join(body)))
         item_paths.append(path)
 
     target = f"system/worklists/{slug}/"
     prompt = inbox.write_work_prompt(
         vault,
-        title=f"Review worklist: {title}",
+        title=f"Review worklist: {safe_title}",
         action=(
             "Open the worklist folder, review the grouped rows, and set each "
             "item's decision to include, exclude, maybe, or archived."
         ),
-        what_happened=(
+        what_happened=neutralize_untrusted_markdown(
             f"{len(item_paths)} items were emitted into the {slug} "
             f"batch from {source_report or 'a report'}."
         ),

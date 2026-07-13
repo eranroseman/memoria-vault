@@ -145,6 +145,63 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     assert committed == {state.JOURNAL_HEAD_REL, note_rel}
 
 
+def test_emit_note_candidates_neutralizes_every_model_derived_text_field(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    compile_source_digest(
+        vault,
+        "source-alpha",
+        ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+        machine="digest-machine",
+    )
+    candidates = [
+        {
+            "title": "![Candidate](http://beacon.example/title.png)",
+            "description": '<img src="http://beacon.example/description.png">',
+            "body": "Body http://beacon.example/body",
+            "claim_text": "[claim](http://beacon.example/claim)",
+            "quote": "![quote](http://beacon.example/quote.png)",
+            "tags": ["[tag](http://beacon.example/tag)"],
+            "annotation_ref": {
+                "work_id": "catalog/sources/source-alpha",
+                "text_quote": "http://beacon.example/annotation",
+            },
+        }
+    ]
+
+    result = emit_note_candidates(
+        vault,
+        "source-alpha",
+        candidates,
+        machine="note-machine",
+    )
+
+    [note_rel] = result["note_paths"]
+    rendered = (vault / note_rel).read_text(encoding="utf-8")
+    assert "![" not in rendered
+    assert "<img" not in rendered
+    assert "](http://beacon.example" not in rendered
+    for url in (
+        "http://beacon.example/title.png",
+        "http://beacon.example/description.png",
+        "http://beacon.example/body",
+        "http://beacon.example/claim",
+        "http://beacon.example/quote.png",
+        "http://beacon.example/tag",
+        "http://beacon.example/annotation",
+    ):
+        assert f"`{url}`" in rendered
+
+
 def test_emit_note_candidates_preserves_pdf_annotation_selector(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_source(

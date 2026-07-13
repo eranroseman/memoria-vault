@@ -44,6 +44,31 @@ def test_promote_draft_passage_creates_unchecked_note_and_links_draft(tmp_path: 
     assert "![[notes/selected-claim.md]]" not in draft_text
 
 
+def test_promote_draft_passage_neutralizes_machine_draft_text(tmp_path: Path) -> None:
+    vault = _workspace(tmp_path)
+    _checked_project(vault)
+    passage = (
+        "![draft](http://beacon.example/draft.png) "
+        "<script>signal()</script> http://beacon.example/bare"
+    )
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text(f"# Alpha draft\n\n{passage}\n", encoding="utf-8")
+
+    result = promote_draft_passage(
+        vault,
+        "project-alpha",
+        title="Selected Claim",
+        passage=passage,
+        actor="pi",
+    )
+
+    rendered = (vault / result["note_path"]).read_text(encoding="utf-8")
+    assert "![draft]" not in rendered
+    assert "<script>" not in rendered
+    assert "`http://beacon.example/draft.png`" in rendered
+    assert "`http://beacon.example/bare`" in rendered
+
+
 def test_cli_project_promote_runs_writeback_operation(tmp_path: Path, capsys: object) -> None:
     workspace = tmp_path / "workspace"
     assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0

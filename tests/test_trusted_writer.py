@@ -130,6 +130,17 @@ def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) 
     assert events(vault) == [event]
 
 
+def test_stage_concept_preserves_mixed_author_caller_content(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    payload = "Human-selected ![figure](https://example.test/figure.png)."
+    content = note_text().replace("Alpha body.", payload)
+
+    stage_concept(vault, "notes/alpha.md", content, machine="test-machine")
+
+    staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
+    assert payload in staged
+
+
 def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
@@ -276,6 +287,29 @@ def test_commit_writer_extracts_typed_edge_candidates_without_mutating_links(
     assert read_frontmatter(vault / "notes/alpha.md")["links"] == {}
     committed = set(git(vault, "show", "--name-only", "--format=", commit_hash).splitlines())
     assert prompts[0].relative_to(vault).as_posix() in committed
+
+
+def test_edge_candidate_prompt_neutralizes_code_owned_note_title(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    content = note_text(title="bad` ![title](http://beacon.example/title.png)").replace(
+        "Alpha body.",
+        "Typed [[supports::notes/beta.md]].",
+    )
+
+    stage_concept(vault, "notes/alpha.md", content, machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    commit_writer_changes(
+        vault,
+        "trusted write alpha",
+        ["notes/alpha.md"],
+        machine="test-machine",
+    )
+
+    [prompt] = sorted((vault / "inbox").glob("work-prompt-edge-candidate-*.md"))
+    prompt_text = prompt.read_text(encoding="utf-8")
+    assert "![title]" not in prompt_text
+    assert "`http://beacon.example/title.png`" in prompt_text
 
 
 def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> None:

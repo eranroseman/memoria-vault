@@ -235,7 +235,7 @@ def test_write_project_outline_proposes_bm25_slice_and_computes_edges(
     result = write_project_outline(
         vault,
         "project-alpha",
-        query="sleep plasticity",
+        query="sleep plasticity ![query](http://beacon.example/query.png)",
         limit=2,
     )
 
@@ -248,6 +248,8 @@ def test_write_project_outline_proposes_bm25_slice_and_computes_edges(
     outline = (vault / "projects/project-alpha/outline.md").read_text(encoding="utf-8")
     assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — BM25 score " in outline
     assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — BM25 score " in outline
+    assert "![query]" not in outline
+    assert "`http://beacon.example/query.png`" in outline
     assert result["edges"] == [
         {"source": "notes/support.md", "target": "notes/thesis.md", "type": "supports"}
     ]

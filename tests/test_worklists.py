@@ -49,6 +49,32 @@ def test_emit_worklist_writes_projection_rows_and_one_prompt(tmp_path):
     assert "task_id" not in prompt_fm
 
 
+def test_emit_worklist_neutralizes_report_derived_text(tmp_path):
+    result = worklists.emit_worklist(
+        tmp_path,
+        "![Batch](http://beacon.example/batch.png)",
+        [
+            {
+                "title": "![Work](http://beacon.example/work.png)",
+                "item_ref": "https://beacon.example/ref",
+                "reason": '<img src="http://beacon.example/reason.png">',
+            }
+        ],
+    )
+
+    [item] = result["items"]
+    rendered = item.read_text(encoding="utf-8")
+    prompt = result["prompt"].read_text(encoding="utf-8")
+    assert "![" not in rendered + prompt
+    assert "<img" not in rendered
+    for url in (
+        "http://beacon.example/batch.png",
+        "http://beacon.example/work.png",
+        "http://beacon.example/reason.png",
+    ):
+        assert f"`{url}`" in rendered + prompt
+
+
 def test_emit_worklist_rejects_unknown_decision(tmp_path):
     try:
         worklists.emit_worklist(tmp_path, "Bad batch", [{"title": "x", "decision": "accept"}])

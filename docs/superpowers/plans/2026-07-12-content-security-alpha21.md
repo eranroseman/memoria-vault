@@ -12,7 +12,7 @@ Spec: `docs/superpowers/specs/2026-07-12-beta.1-content-security.md` (CS1, CS3) 
 
 ## Design decisions (made here; confirm at review)
 
-1. **CS1 scope — neutralize every demonstrably machine/model/third-party region at apply, then neutralize assembled content again at export.** The apply boundaries currently include prompt-operation model output; source-digest title, description, heading, and body; model-emitted note-candidate title/body and derived prose fields; and promoted machine-draft passages. The final export-content choke covers both argument and direct-draft exports. Generic writers are not blanket-wrapped because they also carry human-authored text; neutralization belongs where provenance is known. The work-title canary deliberately seeds the source title because title and description are live third-party fields, not deferred O2 work.
+1. **CS1 scope — neutralize every demonstrably machine/model/third-party prose region at apply, then neutralize assembled content again at export.** The audited apply boundaries are prompt-operation model output; source-digest and hub-suggestion title/description/topic/body fields; model-emitted note-candidate prose; generated outline reasoning; composed-draft copied headings/excerpts; promoted machine-draft passages; provider-derived enrichment attention/candidate prose; report-derived worklist prose; and code-owned edge-candidate prompt prose. Structural identifiers and paths remain unchanged state; rendered occurrences are trusted structure or code spans. The final export-content choke covers both argument and direct-draft exports. Generic mixed-author seams (`stage_concept`, `write_work_prompt`, and caller-owned record writers) remain byte-preserving because they cannot infer inline authorship; their code-owned callers neutralize provenance-known fields before invoking them. The work-title canary deliberately seeds the source title because title and description are live third-party fields, not deferred O2 work.
 2. **`mc`-hash-binding — close only the fail-closed hash-survival slice of archive gap #10.** A fresh evidence ID binds once to the current anchored block text. Rebuilds preserve the prior stored hash for an existing ID, and verification compares current text with that preserved binding before any refresh could occur. A missing stored hash or an unresolvable current block is itself a blocking verification finding. The larger DB-authoritative inversion (stop rebuilding evidence truth from markers) is explicitly deferred and remains unshipped; Tasks 5–7 do not claim to close all of gap #10.
 
 ## Global Constraints
@@ -137,34 +137,38 @@ git commit -m "fix(security): neutralize exported draft/argument content (CS1 ex
 ### Task 3: Neutralize every current machine/third-party apply region
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/operations.py` and `src/memoria_vault/runtime/knowledge.py`
-- Test: `tests/test_content_security.py`, `tests/test_operations.py`, and `tests/test_knowledge.py` (extend existing fixtures)
+- Modify: `src/memoria_vault/runtime/operations.py`, `knowledge.py`, `enrichment.py`, `trusted_writer.py`, and `subsystems/lib/worklists.py`
+- Test: `tests/test_operations.py`, `test_knowledge.py`, `test_draft_verification.py`, `test_draft_writeback.py`, `test_project_knowledge.py`, `test_source_enrichment.py`, `test_worklists.py`, and `test_trusted_writer.py`
 
 **Interfaces:**
 - Consumes: `neutralize_untrusted_markdown`.
-- Produces: known-untrusted prose is neutralized immediately before it enters a staged note: prompt-operation model output; source-digest source title, description, heading, and model digest body; model-emitted note-candidate title/body plus derived prose fields; and promoted machine-draft passage text. Human-only parameters and generic `stage_concept` calls remain untouched.
+- Produces: known-untrusted prose is neutralized immediately before a code-owned Markdown insertion: prompt reports; digest/hub suggestions; candidate notes; outline reasoning; composed drafts; promoted passages; provider attention/candidates; worklists; and extracted-edge prompts. Human-only parameters, structural IDs, and generic mixed-author calls remain untouched.
 
-- [ ] **Step 1: Read** `run_prompt_operation`, `compile_source_digest`, `emit_note_candidates`, and `promote_draft_passage` fully. Mark the exact fields whose provenance is model or third-party and the `stage_concept` call each reaches.
+- [x] **Step 1: Read** every Markdown write/stage path and classify its dynamic insertions as provenance-known prose, trusted structure, safe-by-construction values, or caller-owned mixed-author content.
 
-- [ ] **Step 2: Write failing tests** — cover each apply boundary with the smallest existing fixture. For the digest, seed the source **title**, description, and model body with distinct beacons and assert the staged digest contains none live. Cover prompt output, emitted note candidates, and promoted draft passage similarly. Include a human-authored control that proves generic human text is not rewritten.
+- [x] **Step 2: Write failing tests** — cover every provenance-known apply class with the smallest existing fixture. For the digest, seed the source **title**, description, model body, and hub topic with distinct beacons. Include a mixed-author `stage_concept` characterization proving generic caller content is not rewritten.
 
-- [ ] **Step 3: Implement** — neutralize only the provenance-known fields before formatting/staging. Preserve raw model output hashes in journal provenance; hash what the model returned, not the transformed rendering. Do not wrap `stage_concept` globally.
+- [x] **Step 3: Implement** — neutralize only provenance-known prose before formatting/staging. Preserve raw model output hashes in journal provenance; hash what the model returned, not the transformed rendering. Do not wrap generic mixed-author writers globally.
 
-- [ ] **Step 4: Run** the new test + `tests/test_knowledge.py` → PASS.
+- [x] **Step 4: Run** focused RED/GREEN selections and all affected test files → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
-git add src/memoria_vault/runtime/*.py tests/test_content_security.py
+git add <explicit Task 3 runtime and test paths>
 git commit -m "fix(security): neutralize machine and third-party text at apply (CS1)"
 ```
+
+**Evidence:** Initial apply selection failed 8/8 across prompt, digest/hub, candidate-note, composed-draft, promoted-passage, outline, provider-inbox, and worklist paths. The extracted-edge prompt probe then failed 1/1. GREEN both selections passed; the nine affected test files passed 103/103. The journal assertions prove raw model hashes remain bound to pre-transform output. The mixed-author writer characterization passes unchanged.
 
 ### Task 4: Canary drill + PR-CS1
 
 **Files:**
 - Test: `tests/test_content_security.py` (add the end-to-end canary)
 
-- [ ] **Step 1: Write the canary test** — seed a source **work title** (plus description/body) with `![x](http://beacon/p)`, `<script>`, and bare `http://beacon/y`; assert no live payload survives either the apply-written digest or a project export that cites it. This title canary is the regression proof that third-party metadata is in CS1 scope. Concrete fixture, no placeholders.
+- [x] **Step 1: Write the canary test** — seed a source **work title** (plus description/body) with `![x](http://beacon/p)`, `<script>`, and bare `http://beacon/y`; assert no live payload survives either the apply-written digest or a project export that cites it. This title canary is the regression proof that third-party metadata is in CS1 scope. Concrete fixture, no placeholders.
+
+**Evidence:** `test_work_title_canary_is_inert_at_apply_and_export` passes through capture → digest → candidate note → PI acceptance → composed draft → verified draft export with the same seeded title inert at every rendered apply/export surface.
 
 - [ ] **Step 2: Gate + PR**
 
