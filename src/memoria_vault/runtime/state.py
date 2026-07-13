@@ -622,6 +622,13 @@ def read_event_log(
     return events
 
 
+def journal_export_complete_prefix(raw: bytes) -> bytes:
+    """Return the complete CR/LF-delimited journal export records in ``raw``."""
+    if not raw or raw.endswith((b"\n", b"\r")):
+        return raw
+    return raw[: max(raw.rfind(b"\n"), raw.rfind(b"\r")) + 1]
+
+
 def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
     authoritative: Counter[tuple[str, str]] = Counter()
     for row in rows:
@@ -642,13 +649,9 @@ def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
             raw = path.read_bytes()
         except OSError as exc:
             return f"journal JSONL export is unreadable: {path.name}: {exc}"
-        lines = raw.splitlines()
-        partial_tail = bool(raw) and not raw.endswith((b"\n", b"\r"))
+        lines = journal_export_complete_prefix(raw).splitlines()
         machine = path.stem
         for line_number, raw_line in enumerate(lines, start=1):
-            is_partial_tail = partial_tail and line_number == len(lines)
-            if is_partial_tail:
-                continue
             try:
                 line = raw_line.decode("utf-8")
             except UnicodeDecodeError:

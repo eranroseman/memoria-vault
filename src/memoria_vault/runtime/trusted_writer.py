@@ -925,8 +925,7 @@ def _iter_journal_exports(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
             raw = path.read_bytes()
         except OSError as exc:
             raise ValueError(f"journal JSONL export is unreadable: {path.name}: {exc}") from exc
-        if raw and not raw.endswith((b"\n", b"\r")):
-            raw = raw[: raw.rfind(b"\n") + 1]
+        raw = state.journal_export_complete_prefix(raw)
         machine = path.stem
         for line_number, raw_line in enumerate(raw.splitlines(), start=1):
             try:
@@ -1011,8 +1010,7 @@ def _truncate_partial_jsonl_tail(path: Path) -> bool:
         return False
     if not data or data.endswith((b"\n", b"\r")):
         return False
-    tail_start = data.rfind(b"\n") + 1
-    write_bytes_durable(path, data[:tail_start])
+    write_bytes_durable(path, state.journal_export_complete_prefix(data))
     return True
 
 

@@ -532,7 +532,9 @@ def test_workspace_scan_discards_unterminated_complete_jsonl_only_tail(tmp_path,
     assert state.verify_journal_chain(vault)["ok"] is True
 
 
-def _write_bad_prefix_with_valid_unterminated_tail(vault, *, bad_prefix: str):
+def _write_bad_prefix_with_valid_unterminated_tail(
+    vault, *, bad_prefix: str, delimiter: bytes = b"\n"
+):
     first = trusted_writer.append_explicit_journal_event(
         vault,
         {"event": "run", "run_id": "before-tail", "status": "started"},
@@ -551,7 +553,7 @@ def _write_bad_prefix_with_valid_unterminated_tail(vault, *, bad_prefix: str):
     else:
         invalid = json.dumps({**first, "run_id": "export-only-prefix"}).encode("utf-8")
     path.write_bytes(
-        b"\n".join(
+        delimiter.join(
             (
                 json.dumps(first).encode("utf-8"),
                 invalid,
@@ -605,6 +607,81 @@ def test_append_preserves_valid_unterminated_tail_when_prefix_is_rejected(
 
     assert path.read_bytes() == before
     assert _event_count(vault) == before_events
+
+
+@pytest.mark.parametrize(
+    ("bad_prefix", "error"),
+    [("malformed", "invalid JSONL"), ("export-only", "contains 1 row")],
+)
+def test_reconcile_preserves_cr_delimited_bad_prefix_before_unterminated_tail(
+    tmp_path, capsys, bad_prefix, error
+):
+    vault = init_cli_workspace(tmp_path, capsys)
+    path, tail = _write_bad_prefix_with_valid_unterminated_tail(
+        vault, bad_prefix=bad_prefix, delimiter=b"\r"
+    )
+    before = path.read_bytes()
+    before_events = _event_count(vault)
+
+    assert not before.endswith((b"\n", b"\r"))
+    assert json.loads(before.rsplit(b"\r", 1)[-1]) == tail
+    with pytest.raises(ValueError, match=error):
+        trusted_writer.reconcile_journal_export(vault)
+
+    assert path.read_bytes() == before
+    assert _event_count(vault) == before_events
+
+
+@pytest.mark.parametrize(
+    ("bad_prefix", "error"),
+    [("malformed", "invalid JSONL"), ("export-only", "contains 1 row")],
+)
+def test_append_preserves_cr_delimited_bad_prefix_before_unterminated_tail(
+    tmp_path, capsys, bad_prefix, error
+):
+    vault = init_cli_workspace(tmp_path, capsys)
+    path, tail = _write_bad_prefix_with_valid_unterminated_tail(
+        vault, bad_prefix=bad_prefix, delimiter=b"\r"
+    )
+    before = path.read_bytes()
+    before_events = _event_count(vault)
+
+    assert not before.endswith((b"\n", b"\r"))
+    assert json.loads(before.rsplit(b"\r", 1)[-1]) == tail
+    with pytest.raises(ValueError, match=error):
+        trusted_writer.append_explicit_journal_event(
+            vault,
+            {"event": "run", "run_id": "must-not-append", "status": "started"},
+            actor="operation",
+            machine="journal-test",
+        )
+
+    assert path.read_bytes() == before
+    assert _event_count(vault) == before_events
+
+
+def test_reconcile_recovers_unterminated_cr_delimited_tail(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    first = trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "cr-before-tail", "status": "started"},
+        actor="operation",
+        machine="journal-test",
+    )
+    tail = trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "cr-valid-tail", "status": "started"},
+        actor="operation",
+        machine="journal-test",
+    )
+    path = vault / ".memoria/journal/journal-test.jsonl"
+    path.write_bytes(
+        json.dumps(first).encode("utf-8") + b"\r" + json.dumps(tail).encode("utf-8")[:-1]
+    )
+
+    assert trusted_writer.reconcile_journal_export(vault) == 1
+    assert list(iter_jsonl(path)) == [first, tail]
+    assert state.verify_journal_chain(vault)["ok"] is True
 
 
 def test_workspace_scan_serializes_journal_verify_and_reconcile(tmp_path, capsys, monkeypatch):
