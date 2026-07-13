@@ -453,11 +453,31 @@ def _observe_pi_edits_from_status(
     vault = Path(vault)
     contract = _load_contract(vault, schemas_dir)
     targets = _pi_edit_targets(vault, contract, paths)
+    known_hashes = _known_current_hashes(vault)
     for target in targets:
         _validate_pi_edit_target(vault, contract, target)
 
     observed = []
+    findings = []
     for target in targets:
+        path = vault / target
+        current_hash = sha256_file(path)
+        baseline = state.file_baseline(vault, target)
+        if (
+            baseline is not None
+            and baseline["human_sha256"] != current_hash
+            and known_hashes.get(target) != current_hash
+        ):
+            findings.append(
+                {
+                    "kind": "foreign-edit",
+                    "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+                    "route": "ask",
+                    "subject_id": target,
+                    "prior_human_sha256": baseline["human_sha256"],
+                    "current_human_sha256": current_hash,
+                }
+            )
         observed.append(
             observe_pi_edit_from_head(
                 vault,
@@ -472,7 +492,7 @@ def _observe_pi_edits_from_status(
         state.upsert_file_baseline(
             vault,
             target,
-            human_sha256=sha256_file(vault / target),
+            human_sha256=current_hash,
             restriction_keys=_restriction_keys(frontmatter),
         )
     if observed:
@@ -510,7 +530,7 @@ def _observe_pi_edits_from_status(
             )
         else:
             commit = commit_writer_changes(vault, "observe PI edits", targets, context=context)
-    return {"paths": targets, "observed": observed, "commit": commit}
+    return {"paths": targets, "observed": observed, "findings": findings, "commit": commit}
 
 
 def rebuild_concept_mirror_from_files(

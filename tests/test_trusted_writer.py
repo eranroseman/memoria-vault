@@ -489,6 +489,27 @@ def test_observe_pi_edits_from_status_records_file_baseline_restrictions(tmp_pat
     }
 
 
+def test_observe_pi_edits_from_status_flags_out_of_band_edit_after_baseline(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/foreign.md"
+    target.parent.mkdir(parents=True)
+    target.write_text(note_text(title="Foreign edit"), encoding="utf-8")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    target.write_text(
+        note_text(title="Foreign edit") + "\nChanged out of band.\n", encoding="utf-8"
+    )
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    [finding] = result["findings"]
+    assert finding["kind"] == "foreign-edit"
+    assert finding["event"] == "observed_external_edit"
+    assert finding["subject_id"] == "notes/foreign.md"
+    assert finding["route"] == "ask"
+    assert state.file_baseline(vault, "notes/foreign.md")["human_sha256"] == sha256_file(target)
+
+
 def test_promote_checked_rejects_invalid_staged_concept(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     staged = vault / ".memoria/staging/notes/bad.md"

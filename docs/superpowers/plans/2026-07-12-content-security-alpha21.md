@@ -360,15 +360,15 @@ git commit -m "feat(integrity): record per-file baseline hash + restriction keys
 - Consumes: `file_baseline` (prior-run hash), `_head_sha256` / current disk hash.
 - Produces: a foreign-edit finding when a file's current hash ≠ its `file_baseline.human_sha256` AND the change was not made through the writer (no matching journal `output_sha256` for the new content) — surfaced as an `observed_external_edit` Review item, flag-not-block. Closes the `vault_hash_drift` fail-open (files never audited get a baseline the first sweep, then are watched).
 
-- [ ] **Step 1: Write the failing test** — establish a baseline for a human note (one sweep); then overwrite the file on disk out-of-band (simulate a foreign agent/sync — write bytes directly, no journal event); run the sweep; assert a finding/Review item names the file as an out-of-band edit.
+- [x] **Step 1: Write the failing test** — `test_observe_pi_edits_from_status_flags_out_of_band_edit_after_baseline` establishes a baseline, rewrites the note directly with no journal event, then asserts the flag-and-route finding names the file.
 
-- [ ] **Step 2: Run** → FAIL.
+- [x] **Step 2: Run** → FAIL (`findings` was absent from the sweep result).
 
-- [ ] **Step 3: Implement** — in the sweep, for each scanned path with a `file_baseline` row, if current hash ≠ baseline hash and the current hash matches no journaled `output_sha256` (reuse `_known_current_hashes`), emit the observed-external-edit event/finding and refresh the baseline. (Route via the existing `EVENT_OBSERVED_EXTERNAL_EDIT` + Review surfacing already used by `observe_pi_edit`.)
+- [x] **Step 3: Implement** — the sweep compares the prior baseline with the current hash and `_known_current_hashes`; a mismatch with no journaled current hash emits a `foreign-edit` finding (`route: ask`) paired with the existing `observed_external_edit` event, then refreshes the baseline.
 
-- [ ] **Step 4: Run** → PASS; `tests/test_integrity.py` → PASS.
+- [x] **Step 4: Run** → PASS — focused three-test sweep selection and `tests/test_trusted_writer.py tests/test_integrity.py` passed (`34 passed`); Ruff and Ruff format passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `feat(integrity): witness out-of-band edits to human files`.
 
 ```bash
 git add src/memoria_vault/runtime/*.py tests/*.py
