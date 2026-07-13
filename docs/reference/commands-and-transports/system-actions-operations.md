@@ -10,6 +10,37 @@ grand_parent: Reference
 Deterministic operations and runtime helpers behind the system action roster.
 For the guarded operation ID list, see [System actions](system-actions.md).
 
+## Request authority and retries
+
+Every request carries one validated actor. The worker reserves
+`acknowledge-attention`, `resolve-attention`, `record-copi-interview`,
+`curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`,
+`frame-paper`, `promote-draft-passage`, and `cascade-rollback` for the `pi`
+actor. It reserves
+`trace-integrity-scan` and `observe-pi-edits` for the `integrity` actor.
+
+An idempotency key binds the normalized request/job kind and complete request
+envelope. An exact retry with the same kind and envelope returns the existing
+request. Reusing a key with a different kind, operation, arguments, references,
+output intent, target, preconditions, causal references, actor, provenance, or
+schedule is rejected, including when submissions arrive concurrently. Identity
+is compared as canonical JSON: object key order does not matter, Python tuple
+and list inputs normalize to the same JSON array, and JSON booleans remain
+distinct from numbers.
+
+PI request answers and amendments create one unscheduled successor with a fresh
+key. They bind the source in provenance and causal references and do not alter
+the source envelope. An exact successor replay coalesces; a fork conflicts.
+Cancel accepts only pending work. Retry accepts failed or explicitly cancelled,
+non-superseded work. Resume accepts only pending work. Claim and supersession
+are competing atomic state transitions, so at most one can win. An exact repeat
+after an interrupted lifecycle-event append repairs the one missing event; it
+does not duplicate a successor or reopen work.
+
+Request controls, evidence-review dispositions, steering edits, and vocabulary
+mutations require PI authority. The worker enforces the operation authority
+matrix before payload validation or domain mutation.
+
 ## Capture pipeline (`memoria_vault.runtime.capture`)
 
 | Action | Performer | What it does |

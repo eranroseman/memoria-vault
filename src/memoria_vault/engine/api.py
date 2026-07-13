@@ -255,9 +255,9 @@ def compose_draft(
     project_path: str,
     *,
     token_budget: int = 4000,
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     return run_operation(
         workspace,
@@ -274,9 +274,9 @@ def verify_draft(
     workspace: Path,
     project_path: str,
     *,
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     return run_operation(
         workspace,
@@ -295,10 +295,10 @@ def promote_draft_passage(
     *,
     title: str,
     passage: str,
+    actor: str,
     work_id: str = "",
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     return run_operation(
         workspace,
@@ -403,32 +403,47 @@ def run_operation(
     operation_id: str,
     payload: dict[str, Any],
     *,
+    actor: str,
+    agent_identity: str = "",
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
     command: str = "",
     surface: str = "memoria-cli",
     machine: str = "memoria-cli",
 ) -> dict[str, Any]:
+    provenance = {"surface": surface, "command": command or operation_id}
+    if agent_identity:
+        provenance["agent_identity"] = agent_identity
     job = enqueue_operation(
         workspace,
         operation_id,
         payload=payload,
         idempotency_key=idempotency_key,
-        provenance={"surface": surface, "command": command or operation_id},
+        provenance=provenance,
         schedule_id=schedule_id,
         actor=actor,
     )
-    result = (
-        job
-        if job.get("status") != "pending"
-        else run_request(workspace, str(job["job_id"]), machine=machine)
-    )
+    result = _run_saved_request(workspace, job, machine=machine)
     return {
         "ok": result is not None and result.get("status") == "done",
         "job": job,
         "result": result,
     }
+
+
+def _run_saved_request(workspace: Path, job: dict[str, Any], *, machine: str) -> dict[str, Any]:
+    if job.get("status") not in {"pending", "running"}:
+        return job
+    request_id = str(job["job_id"])
+    try:
+        return run_request(workspace, request_id, machine=machine)
+    except ValueError as exc:
+        if str(exc) != f"request {request_id} is not pending":
+            raise
+        saved = state.request_job(workspace, request_id)
+        if saved is None:
+            raise
+        return saved
 
 
 def write_new_concept(
@@ -439,44 +454,79 @@ def write_new_concept(
     body: str,
     tags: list[str],
     extra: dict[str, Any],
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     workspace = Path(workspace)
     if concept_type not in CONCEPT_HOMES:
         raise ValueError(f"unsupported concept type: {concept_type}")
     slug = safe_filename(title.lower()).strip("._-") or concept_type
-    if concept_type == "project":
-        rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}/project.md")
-    else:
-        rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}.md")
-    frontmatter = {"type": concept_type, "title": title, "tags": tags, "links": {}}
-    frontmatter.update(
-        {
-            key: value
-            for key, value in extra.items()
-            if value is not None and (value != "" or key == "description")
-        }
-    )
-    apply_universal_concept_frontmatter(frontmatter, rel)
-    content = frontmatter_doc(frontmatter, body)
-    job = enqueue_operation(
-        workspace,
-        "create-concept",
-        payload={
-            "target_path": rel,
-            "content": content,
-            "concept_type": concept_type,
-            "title": title,
-        },
-        idempotency_key=idempotency_key,
-        output_intents=[{"id": rel, "kind": concept_type}],
-        primary_target=rel,
-        actor=actor,
-        provenance={"surface": "memoria-cli", "command": f"new-{concept_type}"},
-        schedule_id=schedule_id,
-    )
+
+    def candidate(prior_job: dict[str, Any] | None) -> tuple[str, dict[str, Any], str]:
+        prior_args: dict[str, Any] = {}
+        prior_frontmatter: dict[str, Any] = {}
+        prior_envelope = prior_job.get("request_envelope") if isinstance(prior_job, dict) else None
+        if (
+            isinstance(prior_envelope, dict)
+            and prior_envelope.get("operation_id") == "create-concept"
+            and isinstance(prior_envelope.get("args"), dict)
+        ):
+            prior_args = prior_envelope["args"]
+            prior_content = prior_args.get("content")
+            if isinstance(prior_content, str):
+                prior_frontmatter, _prior_body = split_frontmatter(prior_content)
+        prior_rel = prior_args.get("target_path")
+        if isinstance(prior_rel, str) and prior_rel:
+            rel = prior_rel
+        elif concept_type == "project":
+            rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}/project.md")
+        else:
+            rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}.md")
+        frontmatter = {"type": concept_type, "title": title, "tags": tags, "links": {}}
+        frontmatter.update(
+            {
+                key: value
+                for key, value in extra.items()
+                if value is not None and (value != "" or key == "description")
+            }
+        )
+        if prior_id := prior_frontmatter.get("id"):
+            frontmatter.setdefault("id", prior_id)
+        apply_universal_concept_frontmatter(frontmatter, rel)
+        return rel, frontmatter, frontmatter_doc(frontmatter, body)
+
+    def enqueue_candidate(rel: str, content: str) -> dict[str, Any]:
+        return enqueue_operation(
+            workspace,
+            "create-concept",
+            payload={
+                "target_path": rel,
+                "content": content,
+                "concept_type": concept_type,
+                "title": title,
+            },
+            idempotency_key=idempotency_key,
+            output_intents=[{"id": rel, "kind": concept_type}],
+            primary_target=rel,
+            actor=actor,
+            provenance={"surface": "memoria-cli", "command": f"new-{concept_type}"},
+            schedule_id=schedule_id,
+        )
+
+    request_id = safe_filename(idempotency_key) if idempotency_key else ""
+    prior_job = state.request_job(workspace, request_id) if request_id else None
+    rel, frontmatter, content = candidate(prior_job)
+    try:
+        job = enqueue_candidate(rel, content)
+    except ValueError as exc:
+        if not request_id or str(exc) != "idempotency key is already bound to a different request":
+            raise
+        winner = state.request_job(workspace, request_id)
+        if winner is None or winner == prior_job:
+            raise
+        rel, frontmatter, content = candidate(winner)
+        job = enqueue_candidate(rel, content)
     envelope = job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
     args = envelope.get("args") if isinstance(envelope.get("args"), dict) else {}
     if isinstance(args.get("target_path"), str) and args["target_path"]:
@@ -485,11 +535,7 @@ def write_new_concept(
         saved_frontmatter, _body = split_frontmatter(args["content"])
         if saved_frontmatter:
             frontmatter = saved_frontmatter
-    result = (
-        job
-        if job.get("status") != "pending"
-        else run_request(workspace, str(job["job_id"]), machine="memoria-cli")
-    )
+    result = _run_saved_request(workspace, job, machine="memoria-cli")
     return {
         "ok": result is not None and result.get("status") == "done",
         "path": rel,
@@ -506,9 +552,9 @@ def resolve_attention(
     *,
     outcome: str,
     reason: str,
+    actor: str,
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
-    actor: str = "pi",
 ) -> dict[str, Any]:
     card_payload = read_attention_card(workspace, attention_path)
     card = card_payload["attention"]

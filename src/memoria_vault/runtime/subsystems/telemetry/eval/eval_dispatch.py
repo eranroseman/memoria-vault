@@ -16,7 +16,7 @@ directly to Concepts or catalog data). A dispatch record is written to
 ``.memoria/eval/last-run.md``.
 
     python eval_dispatch.py --vault <path>             # dispatch (scheduled + on-demand)
-    python eval_dispatch.py --vault <path> --dry-run   # print payloads, create nothing
+    python eval_dispatch.py --vault <path> --dry-run   # print payloads; no intents/last-run
 """
 
 from __future__ import annotations
@@ -26,6 +26,8 @@ import datetime
 import sys
 from pathlib import Path
 
+from memoria_vault.engine import api as engine_api
+from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter
 
 # eval role -> the local role label that owns it.
@@ -136,8 +138,11 @@ def create_task_intent(payload: dict) -> str:
     return f"planned:{payload['idempotency_key']}"
 
 
-def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
+def write_last_run(
+    vault: Path, quarter: str, rows: list[dict], *, context: OperationContext
+) -> Path:
     """Record what was dispatched when (plain markdown — untyped system infra)."""
+    validate_operation_context(vault, context)
     now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     lines = [
         "# vault-eval — last dispatch",
@@ -162,8 +167,15 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
     return out
 
 
-def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = None) -> dict:
+def dispatch(
+    vault: Path,
+    dry_run: bool = False,
+    today: datetime.date | None = None,
+    *,
+    context: OperationContext,
+) -> dict:
     """Fan current local gold tasks out: one idempotent intent per task and quarter."""
+    validate_operation_context(vault, context)
     quarter = quarter_of(today)
     tasks = load_gold_tasks(vault)
     rows: list[dict] = []
@@ -188,7 +200,7 @@ def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = N
             }
         )
     if not dry_run:
-        write_last_run(vault, quarter, rows)
+        write_last_run(vault, quarter, rows, context=context)
     return {"quarter": quarter, "dispatched": rows, "dry_run": dry_run}
 
 
@@ -206,7 +218,18 @@ def main() -> None:
     vault = Path(args.vault).expanduser()
     if not vault.is_dir():
         sys.exit(f"not a directory: {vault}")
-    result = dispatch(vault, dry_run=args.dry_run)
+    run = engine_api.run_operation(
+        vault,
+        "eval-run",
+        {"dry_run": args.dry_run},
+        actor="operation",
+        command="eval-dispatch",
+        surface="memoria-eval",
+        machine="memoria-eval",
+    )
+    result = run.get("result") if isinstance(run.get("result"), dict) else {}
+    if not run["ok"]:
+        sys.exit(str(result.get("error") or "eval dispatch failed"))
     n = len(result["dispatched"])
     print(
         f"[eval] {result['quarter']}: {n} gold task(s) "

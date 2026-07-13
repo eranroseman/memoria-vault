@@ -3,8 +3,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from memoria_vault.runtime.knowledge import read_project_slice, write_project_argument_canvas
-from tests.helpers import write_checked_concept
+from memoria_vault.runtime.knowledge import read_project_slice
+from memoria_vault.runtime.knowledge import (
+    write_project_argument_canvas as _write_project_argument_canvas,
+)
+from tests.helpers import call_with_context, write_checked_concept
+
+
+def write_project_argument_canvas(vault: Path, *args, **kwargs):
+    return call_with_context(_write_project_argument_canvas, vault, *args, **kwargs)
 
 
 def test_outline_membership_drives_edges_and_large_slice_canvas(tmp_path: Path) -> None:

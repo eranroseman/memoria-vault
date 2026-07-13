@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 from collections import deque
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -23,8 +24,11 @@ from memoria_vault.runtime.trusted_writer import (
     EVENT_DERIVED,
     EVENT_OBSERVED_EXTERNAL_EDIT,
     EVENT_RESOLVED,
+    OperationContext,
+    append_explicit_journal_event,
     append_journal_event,
     commit_writer_changes,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import (
     iter_markdown,
@@ -75,15 +79,16 @@ def record_integrity_check(
     vault: Path,
     target_id: str,
     *,
+    context: OperationContext,
     check: str,
     status: str,
     reason: str = "",
     shadow: bool = True,
     route: str | None = None,
     auto_revert: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Record one check verdict with shadow-first routing metadata."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     target = normalize_path(target_id)
     target_path = vault / target
@@ -100,7 +105,7 @@ def record_integrity_check(
     }
     if reason:
         event["reason"] = reason
-    return append_journal_event(vault, event, machine=machine)
+    return append_journal_event(vault, event, context=context)
 
 
 def route_check(status: str, *, shadow: bool = True, auto_revert: bool = False) -> str:
@@ -118,11 +123,12 @@ def _is_checked_concept(vault: Path, relpath: str) -> bool:
 def check_evidence_integrity(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked notes/digests whose declared evidence is not checked."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -143,7 +149,7 @@ def check_evidence_integrity(
                         status="failed",
                         reason=f"unresolved checked evidence: {evidence_rel}",
                         shadow=shadow,
-                        machine=machine,
+                        context=context,
                     )
                 )
             elif status["status"] == "stale":
@@ -155,23 +161,24 @@ def check_evidence_integrity(
                         status="failed",
                         reason=f"stale checked evidence: {evidence_rel} ({status['lifecycle']})",
                         shadow=shadow,
-                        machine=machine,
+                        context=context,
                     )
                 )
     commit_hash = ""
     if findings and commit:
-        commit_hash = commit_writer_changes(vault, "integrity evidence check", [], machine=machine)
+        commit_hash = commit_writer_changes(vault, "integrity evidence check", [], context=context)
     return {"findings": findings, "commit": commit_hash}
 
 
 def check_claim_quote_support(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked notes whose claim has no substantive term overlap with its quote."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -190,13 +197,13 @@ def check_claim_quote_support(
                     status="failed",
                     reason="claim and cited quote share no substantive terms",
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "integrity claim quote check", [], machine=machine
+            vault, "integrity claim quote check", [], context=context
         )
     return {"findings": findings, "commit": commit_hash}
 
@@ -204,11 +211,12 @@ def check_claim_quote_support(
 def check_prompt_injection_markers(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked Concepts carrying explicit prompt-injection marker text."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for row in state.catalog_sources(vault):
@@ -222,7 +230,7 @@ def check_prompt_injection_markers(
                     status="failed",
                     reason=f"prompt-injection marker: {marker}",
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     for path in iter_markdown(vault):
@@ -242,13 +250,13 @@ def check_prompt_injection_markers(
                     status="failed",
                     reason=f"prompt-injection marker: {marker}",
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "integrity prompt injection check", [], machine=machine
+            vault, "integrity prompt injection check", [], context=context
         )
     return {"findings": findings, "commit": commit_hash}
 
@@ -256,11 +264,12 @@ def check_prompt_injection_markers(
 def check_quote_anchor_support(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked notes whose quoted span is absent from checked source text."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -281,13 +290,13 @@ def check_quote_anchor_support(
                     status="failed",
                     reason="quoted span is absent from checked source text",
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "integrity quote anchor check", [], machine=machine
+            vault, "integrity quote anchor check", [], context=context
         )
     return {"findings": findings, "commit": commit_hash}
 
@@ -295,11 +304,12 @@ def check_quote_anchor_support(
 def check_source_metadata(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked sources whose bibliographic metadata is too thin."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for row in state.catalog_sources(vault, checked_only=False):
@@ -316,19 +326,19 @@ def check_source_metadata(
                     status="failed",
                     reason=reason,
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     source_record_linkage_findings = [
         *_duplicate_source_external_id_findings(
             vault,
             shadow=shadow,
-            machine=machine,
+            context=context,
         ),
         *_duplicate_source_string_block_findings(
             vault,
             shadow=shadow,
-            machine=machine,
+            context=context,
         ),
     ]
     findings.extend(source_record_linkage_findings)
@@ -347,7 +357,7 @@ def check_source_metadata(
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "source metadata check", commit_paths, machine=machine
+            vault, "source metadata check", commit_paths, context=context
         )
     return {
         "findings": findings,
@@ -360,8 +370,8 @@ def check_source_metadata(
 def _duplicate_source_external_id_findings(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool,
-    machine: str | None,
 ) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     for namespace, value, work_ids in _duplicate_source_external_id_groups(vault):
@@ -383,7 +393,7 @@ def _duplicate_source_external_id_findings(
                         f"{', '.join(others)}"
                     ),
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     return findings
@@ -420,8 +430,8 @@ def _duplicate_source_external_id_groups(vault: Path) -> list[tuple[str, str, li
 def _duplicate_source_string_block_findings(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool,
-    machine: str | None,
 ) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     for work_ids in _duplicate_source_string_block_groups(vault):
@@ -443,7 +453,7 @@ def _duplicate_source_string_block_findings(
                         f"{', '.join(others)} (title/year/first-author)"
                     ),
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     return findings
@@ -551,11 +561,12 @@ def _write_source_record_linkage_attention(
 def check_citation_survival(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag a missing or stale generated bibliography.bib projection."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     if capture.render_references_bib(vault) and not capture.check_references_bib(vault):
@@ -567,13 +578,13 @@ def check_citation_survival(
                 status="failed",
                 reason="bibliography.bib is missing or stale for checked catalog sources",
                 shadow=shadow,
-                machine=machine,
+                context=context,
             )
         )
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "integrity citation survival check", [], machine=machine
+            vault, "integrity citation survival check", [], context=context
         )
     return {"findings": findings, "commit": commit_hash}
 
@@ -581,11 +592,12 @@ def check_citation_survival(
 def check_provenance_checkpoint(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked synthesis that depends on uncorroborated checked sources."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -606,14 +618,14 @@ def check_provenance_checkpoint(
                         status="failed",
                         reason=f"uncorroborated checked source: {source_ref} ({status})",
                         shadow=shadow,
-                        machine=machine,
+                        context=context,
                     )
                 )
                 break
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "integrity provenance checkpoint", [], machine=machine
+            vault, "integrity provenance checkpoint", [], context=context
         )
     return {"findings": findings, "commit": commit_hash}
 
@@ -621,11 +633,12 @@ def check_provenance_checkpoint(
 def check_contradiction_links(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked digests whose explicit contradiction targets are not current."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -651,13 +664,13 @@ def check_contradiction_links(
                     status="failed",
                     reason=f"unresolved contradiction target: {target}",
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "integrity contradiction check", [], machine=machine
+            vault, "integrity contradiction check", [], context=context
         )
     return {"findings": findings, "commit": commit_hash}
 
@@ -694,12 +707,44 @@ def contradiction_tier1_gate(
     }
 
 
+def tier1_tension_candidates(
+    vault: Path,
+    *,
+    min_overlap: float = 0.55,
+    comparator: Any | None = None,
+) -> dict[str, Any]:
+    """Return the HANS gate and lazy Tier-1 evaluations for checked claim pairs."""
+    compare = comparator or _compare_claims
+    gate = contradiction_tier1_gate(comparator=compare)
+    rows = _checked_tension_rows(Path(vault))
+
+    def evaluations() -> Iterator[dict[str, Any]]:
+        seen: set[tuple[str, str]] = set()
+        for left_index, left in enumerate(rows):
+            for right in rows[left_index + 1 :]:
+                pair_key = tuple(sorted((left["canonical_id"], right["canonical_id"])))
+                if pair_key in seen or pair_key[0] == pair_key[1]:
+                    continue
+                seen.add(pair_key)
+                overlap = _lexical_overlap(left["text"], right["text"])
+                if overlap < min_overlap:
+                    continue
+                yield {
+                    "left": left,
+                    "right": right,
+                    "lexical_overlap": overlap,
+                    "verdict": compare(left["text"], right["text"]) if gate["passed"] else None,
+                }
+
+    return {"gate": gate, "candidates": evaluations()}
+
+
 def surface_tensions(
     vault: Path,
     *,
+    context: OperationContext,
     max_pairs: int = 20,
     min_overlap: float = 0.55,
-    machine: str | None = None,
     commit: bool = False,
     comparator: Any | None = None,
     tier2: bool = True,
@@ -707,93 +752,85 @@ def surface_tensions(
     mode: str | None = None,
 ) -> dict[str, Any]:
     """Propose unchecked contradiction candidates; never writes contradiction links."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
-    compare = comparator or _compare_claims
-    gate = contradiction_tier1_gate(comparator=compare)
-    rows = _checked_tension_rows(vault)
+    tier1 = tier1_tension_candidates(vault, min_overlap=min_overlap, comparator=comparator)
+    gate = tier1["gate"]
     candidates: list[dict[str, Any]] = []
     abstain_count = 0
     tier2_evaluated_count = 0
     tier2_candidate_count = 0
     tier2_abstain_count = 0
-    seen: set[tuple[str, str]] = set()
-    for left_index, left in enumerate(rows):
-        for right in rows[left_index + 1 :]:
-            pair_key = tuple(sorted((left["canonical_id"], right["canonical_id"])))
-            if pair_key in seen or pair_key[0] == pair_key[1]:
-                continue
-            seen.add(pair_key)
-            overlap = _lexical_overlap(left["text"], right["text"])
-            if overlap < min_overlap:
-                continue
-            tier2_reason = ""
-            if not gate["passed"]:
-                tier2_reason = "tier1-degraded"
-            else:
-                verdict = compare(left["text"], right["text"])
-                if verdict["verdict"] == NLI_REFUTED:
-                    candidates.append(
-                        _tension_candidate(
-                            left,
-                            right,
-                            overlap,
-                            verdict=NLI_REFUTED,
-                            tier="tier1",
-                            warrant=str(verdict.get("warrant") or ""),
-                        )
-                    )
-                elif verdict["verdict"] == NLI_NOTENOUGHINFO:
-                    abstain_count += 1
-                    tier2_reason = "tier1-abstain"
-            if tier2_reason:
-                tier2_result = (
-                    _run_tier2_tension_judge(
-                        vault,
+    for evaluation in tier1["candidates"]:
+        left = evaluation["left"]
+        right = evaluation["right"]
+        overlap = evaluation["lexical_overlap"]
+        verdict = evaluation["verdict"]
+        tier2_reason = ""
+        if not gate["passed"]:
+            tier2_reason = "tier1-degraded"
+        else:
+            if verdict["verdict"] == NLI_REFUTED:
+                candidates.append(
+                    _tension_candidate(
                         left,
                         right,
                         overlap,
-                        reason=tier2_reason,
-                        judge=tier2_judge,
-                        mode=mode,
-                        machine=machine,
+                        verdict=NLI_REFUTED,
+                        tier="tier1",
+                        warrant=str(verdict.get("warrant") or ""),
                     )
-                    if tier2
-                    else _tier2_abstain("Tier-2 disabled by operation payload")
                 )
-                tier2_evaluated_count += int(tier2)
-                if tier2_result["verdict"] == NLI_REFUTED:
-                    candidates.append(
-                        _tension_candidate(
-                            left,
-                            right,
-                            overlap,
-                            verdict=NLI_REFUTED,
-                            tier="tier2",
-                            warrant=str(tier2_result.get("warrant") or ""),
-                            evidence=tier2_result.get("evidence"),
-                            judge=tier2_result.get("judge"),
-                            escalation=tier2_reason,
-                        )
+            elif verdict["verdict"] == NLI_NOTENOUGHINFO:
+                abstain_count += 1
+                tier2_reason = "tier1-abstain"
+        if tier2_reason:
+            tier2_result = (
+                _run_tier2_tension_judge(
+                    vault,
+                    left,
+                    right,
+                    overlap,
+                    reason=tier2_reason,
+                    judge=tier2_judge,
+                    mode=mode,
+                    context=context,
+                )
+                if tier2
+                else _tier2_abstain("Tier-2 disabled by operation payload")
+            )
+            tier2_evaluated_count += int(tier2)
+            if tier2_result["verdict"] == NLI_REFUTED:
+                candidates.append(
+                    _tension_candidate(
+                        left,
+                        right,
+                        overlap,
+                        verdict=NLI_REFUTED,
+                        tier="tier2",
+                        warrant=str(tier2_result.get("warrant") or ""),
+                        evidence=tier2_result.get("evidence"),
+                        judge=tier2_result.get("judge"),
+                        escalation=tier2_reason,
                     )
-                    tier2_candidate_count += 1
-                elif not gate["passed"]:
-                    candidates.append(
-                        _tension_candidate(
-                            left,
-                            right,
-                            overlap,
-                            verdict="DEGRADED",
-                            tier="degraded",
-                            warrant=str(tier2_result.get("warrant") or ""),
-                            judge=tier2_result.get("judge"),
-                            escalation=tier2_reason,
-                        )
+                )
+                tier2_candidate_count += 1
+            elif not gate["passed"]:
+                candidates.append(
+                    _tension_candidate(
+                        left,
+                        right,
+                        overlap,
+                        verdict="DEGRADED",
+                        tier="degraded",
+                        warrant=str(tier2_result.get("warrant") or ""),
+                        judge=tier2_result.get("judge"),
+                        escalation=tier2_reason,
                     )
-                    tier2_abstain_count += int(tier2)
-                else:
-                    tier2_abstain_count += int(tier2)
-            if len(candidates) >= max_pairs:
-                break
+                )
+                tier2_abstain_count += int(tier2)
+            else:
+                tier2_abstain_count += int(tier2)
         if len(candidates) >= max_pairs:
             break
     attention_path = ""
@@ -808,7 +845,7 @@ def surface_tensions(
             reason="contradiction detection degraded: NLI below HANS bar",
             shadow=False,
             route="ask",
-            machine=machine,
+            context=context,
         )
         if commit:
             path = write_work_prompt(
@@ -828,7 +865,7 @@ def surface_tensions(
             attention_path = path.relative_to(vault).as_posix() if path else ""
             commit_paths = [attention_path] if attention_path else []
             commit_hash = commit_writer_changes(
-                vault, "surface degraded contradiction detection", commit_paths, machine=machine
+                vault, "surface degraded contradiction detection", commit_paths, context=context
             )
     return {
         "gate": gate,
@@ -849,11 +886,12 @@ def surface_tensions(
 def check_link_targets(
     vault: Path,
     *,
+    context: OperationContext,
     shadow: bool = True,
-    machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
     """Flag checked Concepts whose declared link targets are not current."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for path in iter_markdown(vault):
@@ -873,13 +911,13 @@ def check_link_targets(
                     status="failed",
                     reason=f"unresolved link target: {target}",
                     shadow=shadow,
-                    machine=machine,
+                    context=context,
                 )
             )
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
-            vault, "integrity link target check", [], machine=machine
+            vault, "integrity link target check", [], context=context
         )
     return {"findings": findings, "commit": commit_hash}
 
@@ -893,10 +931,49 @@ def propagate_scan_demotion(
     vault: Path,
     target_id: str,
     *,
+    context: OperationContext,
     reason: str,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Propagate a scan-side demotion through checked downstream Concepts."""
+    validate_operation_context(vault, context)
+    return _propagate_scan_demotion(
+        vault,
+        target_id,
+        reason=reason,
+        append_event=lambda event: append_journal_event(vault, event, context=context),
+    )
+
+
+def propagate_scan_demotion_explicit(
+    vault: Path,
+    target_id: str,
+    *,
+    reason: str,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
+    """Propagate an explicit integrity scan outside an operation envelope."""
+    if actor != "integrity":
+        raise ValueError("explicit scan propagation actor must be integrity")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("explicit scan propagation machine must be a nonblank string")
+    return _propagate_scan_demotion(
+        vault,
+        target_id,
+        reason=reason,
+        append_event=lambda event: append_explicit_journal_event(
+            vault, event, actor=actor, machine=machine
+        ),
+    )
+
+
+def _propagate_scan_demotion(
+    vault: Path,
+    target_id: str,
+    *,
+    reason: str,
+    append_event: Callable[[dict[str, Any]], dict[str, Any]],
+) -> dict[str, Any]:
     vault = Path(vault)
     target = normalize_path(target_id)
     demoted: list[str] = []
@@ -914,13 +991,13 @@ def propagate_scan_demotion(
             continue
         actor = str(event.get("actor") or "")
         if actor == "pi":
-            _flag_human_descendant(vault, output_id, target, reason, machine)
+            _flag_human_descendant(vault, output_id, target, reason, append_event)
             needs_human.append(output_id)
         elif depth == 1:
-            _demote_machine_descendant(vault, output_id, target, reason, machine)
+            _demote_machine_descendant(vault, output_id, target, reason, append_event)
             demoted.append(output_id)
         else:
-            _flag_stale_machine_descendant(vault, output_id, target, reason, machine)
+            _flag_stale_machine_descendant(vault, output_id, target, reason, append_event)
             stale.append(output_id)
     return {
         "target_id": target,
@@ -964,12 +1041,14 @@ def cascade_rollback(
     vault: Path,
     target_id: str,
     *,
+    context: OperationContext,
     reason: str,
     include_target: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Quarantine machine-derived descendants and flag PI-derived descendants."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
+    append_event = lambda event: append_journal_event(vault, event, context=context)
     target = normalize_path(target_id)
     derived = _latest_derived(vault)
     events = trace_downstream(vault, target)
@@ -977,7 +1056,7 @@ def cascade_rollback(
     catalog_quarantine_id = ""
     if include_target:
         catalog_target, catalog_quarantine_id = _quarantine_catalog_source(
-            vault, target, reason, machine
+            vault, target, reason, context
         )
     if include_target and target in derived:
         events = [derived[target], *events]
@@ -997,7 +1076,7 @@ def cascade_rollback(
         seen.add(output_id)
 
         if event.get("actor") == "pi":
-            _flag_human_descendant(vault, output_id, target, reason, machine)
+            _flag_human_descendant(vault, output_id, target, reason, append_event)
             needs_human.append(output_id)
             continue
 
@@ -1005,7 +1084,7 @@ def cascade_rollback(
         if not path.is_file():
             skipped.append(output_id)
             continue
-        _quarantine_machine_descendant(vault, output_id, target, reason, machine)
+        _quarantine_machine_descendant(vault, output_id, target, reason, context)
         reverted.append(output_id)
         touched.append(output_id)
 
@@ -1015,7 +1094,7 @@ def cascade_rollback(
             vault,
             f"cascade rollback {Path(target).stem}",
             touched,
-            machine=machine,
+            context=context,
         )
     return {
         "target_id": target,
@@ -1030,13 +1109,14 @@ def resolve_attention(
     vault: Path,
     target_id: str,
     *,
+    context: OperationContext,
     resolution: str,
     outcome: str | None = None,
     routing_class: str = "ask",
     reason: str = "",
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Record a PI attention disposition through the worker-owned journal."""
+    validate_operation_context(vault, context)
     if resolution not in {"acknowledged", "resolved"}:
         raise ValueError(f"unsupported attention resolution: {resolution!r}")
     outcome = outcome or resolution
@@ -1059,10 +1139,9 @@ def resolve_attention(
         "decided_at": decided_at,
         "target_id": target,
         "reason": reason,
-        "actor": "pi",
         "source": "attention",
     }
-    row = append_journal_event(vault, event, machine=machine)
+    row = append_journal_event(vault, event, context=context)
     touched: list[str] = []
     target_path = vault / target
     if resolution == "resolved" and target_path.is_file():
@@ -1078,18 +1157,21 @@ def resolve_attention(
         vault,
         f"{outcome} attention {Path(target).stem}",
         touched,
-        machine=machine,
+        context=context,
     )
     return {"event": row, "commit": commit}
 
 
 def _flag_human_descendant(
-    vault: Path, output_id: str, target: str, reason: str, machine: str | None
+    vault: Path,
+    output_id: str,
+    target: str,
+    reason: str,
+    append_event: Callable[[dict[str, Any]], dict[str, Any]],
 ) -> None:
     path = vault / output_id
     target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
-    append_journal_event(
-        vault,
+    append_event(
         {
             "event": EVENT_CHECK_FIRED,
             "check": "cascade-rollback",
@@ -1102,18 +1184,20 @@ def _flag_human_descendant(
             "shadow": False,
             "route": "ask",
         },
-        machine=machine,
     )
 
 
 def _demote_machine_descendant(
-    vault: Path, output_id: str, target: str, reason: str, machine: str | None
+    vault: Path,
+    output_id: str,
+    target: str,
+    reason: str,
+    append_event: Callable[[dict[str, Any]], dict[str, Any]],
 ) -> None:
     path = vault / output_id
     target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
     state.set_concept_verdict(vault, output_id, "unchecked")
-    append_journal_event(
-        vault,
+    append_event(
         {
             "event": EVENT_CHECK_FIRED,
             "check": "scan-demotion-propagation",
@@ -1126,18 +1210,20 @@ def _demote_machine_descendant(
             "shadow": False,
             "route": "act",
         },
-        machine=machine,
     )
 
 
 def _flag_stale_machine_descendant(
-    vault: Path, output_id: str, target: str, reason: str, machine: str | None
+    vault: Path,
+    output_id: str,
+    target: str,
+    reason: str,
+    append_event: Callable[[dict[str, Any]], dict[str, Any]],
 ) -> None:
     path = vault / output_id
     target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
     state.set_concept_flag(vault, output_id, "stale", reason=reason, trigger_id=target)
-    append_journal_event(
-        vault,
+    append_event(
         {
             "event": EVENT_CHECK_FIRED,
             "check": "scan-demotion-stale",
@@ -1150,12 +1236,11 @@ def _flag_stale_machine_descendant(
             "shadow": False,
             "route": "log",
         },
-        machine=machine,
     )
 
 
 def _quarantine_machine_descendant(
-    vault: Path, output_id: str, target: str, reason: str, machine: str | None
+    vault: Path, output_id: str, target: str, reason: str, context: OperationContext
 ) -> None:
     source = vault / output_id
     original_sha = sha256_file(source)
@@ -1178,7 +1263,7 @@ def _quarantine_machine_descendant(
             "trigger_id": target,
             "reason": reason,
         },
-        machine=machine,
+        context=context,
     )
     append_journal_event(
         vault,
@@ -1190,12 +1275,10 @@ def _quarantine_machine_descendant(
                 {"id": output_id, "sha256": original_sha, "role": "rolled-back-head"},
                 {"id": target, "role": "rollback-trigger"},
             ],
-            "operation": "cascade-rollback",
-            "actor": "integrity",
             "quarantined_id": quarantine_id,
             "restore_source": restore_source,
         },
-        machine=machine,
+        context=context,
     )
 
 
@@ -1233,7 +1316,7 @@ def _git_stdout(vault: Path, *args: str) -> str:
 
 
 def _quarantine_catalog_source(
-    vault: Path, target: str, reason: str, machine: str | None
+    vault: Path, target: str, reason: str, context: OperationContext
 ) -> tuple[str, str]:
     source_ref = _source_ref(target)
     if not source_ref:
@@ -1277,14 +1360,12 @@ def _quarantine_catalog_source(
             "event": EVENT_DERIVED,
             "output_id": source_ref,
             "inputs": [{"id": target, "role": "rollback-trigger"}],
-            "operation": "cascade-rollback",
-            "actor": "integrity",
             "store": "db",
             "status": "quarantined",
             "quarantined_id": quarantine_id,
             "reason": reason,
         },
-        machine=machine,
+        context=context,
     )
     return source_ref, quarantine_id
 
@@ -1384,17 +1465,17 @@ def _run_tier2_tension_judge(
     reason: str,
     judge: Any | None,
     mode: str | None,
-    machine: str | None,
+    context: OperationContext,
 ) -> dict[str, Any]:
     if judge is not None:
         return _normalize_tier2_judge_result(judge(left, right), left, right, judge="callable")
     policy, runner = _tier2_runner(vault, mode)
     prompt = _tier2_prompt(left, right, overlap, reason)
-    run_id = f"surface-tensions:tier2:{_sha256_text(left['id'] + right['id'])[:12]}"
+    call_id = f"surface-tensions:tier2:{_sha256_text(left['id'] + right['id'])[:12]}"
     if runner["model"] == "deterministic-fixture":
         raw = _deterministic_tier2_judge(left, right)
         output = json.dumps(raw, sort_keys=True)
-        _record_tier2_model_call(vault, policy, runner, prompt, output, run_id, machine)
+        _record_tier2_model_call(vault, policy, runner, prompt, output, call_id, context)
         return _normalize_tier2_judge_result(raw, left, right, judge="deterministic-fixture")
     try:
         from memoria_vault.runtime.operations import run_operation_model_text
@@ -1405,10 +1486,10 @@ def _run_tier2_tension_judge(
             runner,
             prompt,
             input_text=f"{left['text']}\n\n{right['text']}",
-            run_id=run_id,
+            call_id=call_id,
+            context=context,
             route="surface-tensions-tier2",
             purpose="surface-tensions",
-            machine=machine,
         )
         raw = json.loads(str(call["output"]))
     except Exception as exc:  # noqa: BLE001 -- judge failure degrades to human review.
@@ -1506,14 +1587,14 @@ def _record_tier2_model_call(
     runner: dict[str, Any],
     prompt: str,
     output: str,
-    run_id: str,
-    machine: str | None,
+    call_id: str,
+    context: OperationContext,
 ) -> None:
     append_journal_event(
         vault,
         {
             "event": "model_call",
-            "run_id": run_id,
+            "call_id": call_id,
             "mode": runner["mode"],
             "runner": runner["runner"],
             "provider": runner["provider"],
@@ -1529,7 +1610,7 @@ def _record_tier2_model_call(
             "input_hash": _sha256_text(prompt),
             "output_hash": _sha256_text(output),
         },
-        machine=machine,
+        context=context,
     )
 
 

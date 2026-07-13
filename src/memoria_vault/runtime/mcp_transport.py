@@ -17,11 +17,13 @@ INSTRUCTIONS = (
 ACTION = actions_by_id()
 
 
-def run_mcp_server(workspace: Path, *, read_scope: list[str], actor: str = "agent") -> None:
-    make_mcp_app(workspace, read_scope=read_scope, actor=actor).run("stdio")
+def run_mcp_server(
+    workspace: Path, *, read_scope: list[str], agent_identity: str = "agent"
+) -> None:
+    make_mcp_app(workspace, read_scope=read_scope, agent_identity=agent_identity).run("stdio")
 
 
-def make_mcp_app(workspace: Path, *, read_scope: list[str], actor: str = "agent") -> Any:
+def make_mcp_app(workspace: Path, *, read_scope: list[str], agent_identity: str = "agent") -> Any:
     workspace = Path(workspace).resolve()
     scope = _normalized_scope(read_scope)
 
@@ -113,7 +115,8 @@ def make_mcp_app(workspace: Path, *, read_scope: list[str], actor: str = "agent"
             payload or {},
             idempotency_key=idempotency_key or None,
             schedule_id=schedule_id or None,
-            actor=actor,
+            actor="agent",
+            agent_identity=agent_identity,
             command=f"mcp:{operation_id}",
             surface="memoria-mcp",
             machine="memoria-mcp",

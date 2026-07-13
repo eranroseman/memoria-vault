@@ -29,8 +29,12 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    append_journal_event,
     commit_writer_changes,
     materialize_unchecked,
+    operation_context_from_job,
+    operation_context_record,
     promote_checked,
     stage_concept,
 )
@@ -57,6 +61,20 @@ INTEGRITY_FINDING_OPERATIONS = {
     "integrity-citation-survival-check": "check_citation_survival",
     "integrity-contradiction-check": "check_contradiction_links",
     "integrity-link-target-check": "check_link_targets",
+}
+PROTECTED_OPERATION_ACTORS = {
+    "acknowledge-attention": "pi",
+    "resolve-attention": "pi",
+    "record-copi-interview": "pi",
+    "curate-note-candidate": "pi",
+    "curate-note-link": "pi",
+    "mark-checked": "pi",
+    "update-work": "pi",
+    "frame-paper": "pi",
+    "promote-draft-passage": "pi",
+    "cascade-rollback": "pi",
+    "trace-integrity-scan": "integrity",
+    "observe-pi-edits": "integrity",
 }
 OVERRIDE_LOG_REL = ".memoria/overrides.jsonl"
 CREATE_CONCEPT_HOMES = {
@@ -107,12 +125,11 @@ def enqueue_trusted_write(
     operation: str = "trusted-write",
     run_id: str | None = None,
     idempotency_key: str | None = None,
+    actor: str,
 ) -> dict[str, Any]:
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
     job_id = safe_filename(idempotency_key or uuid.uuid4().hex)
-    if existing_job := state.request_job(vault, job_id):
-        return existing_job
 
     job = {
         "job_id": job_id,
@@ -138,7 +155,7 @@ def enqueue_trusted_write(
         input_refs=inputs or [],
         output_intents=[{"id": target_path, "kind": "trusted_write"}],
         primary_target=target_path,
-        actor="operation",
+        actor=actor,
         provenance={"surface": "worker"},
     )
     return state.save_request(vault, envelope, job)
@@ -155,15 +172,32 @@ def enqueue_operation(
     primary_target: str = "",
     precondition_hashes: dict[str, Any] | None = None,
     causal_refs: list[str | dict[str, Any]] | None = None,
-    actor: str = "pi",
+    actor: str,
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
+    supersede_request_id: str | None = None,
 ) -> dict[str, Any]:
     """Queue one operation request for the local worker."""
     vault = Path(vault)
     job_id = safe_filename(idempotency_key or f"{operation_id}-{uuid.uuid4().hex}")
-    if existing_job := state.request_job(vault, job_id):
-        return existing_job
+    superseded_id = safe_filename(supersede_request_id or "")
+    request_provenance = dict(provenance or {"surface": "worker"})
+    request_causal_refs = list(causal_refs or [])
+    if superseded_id:
+        if actor.strip() != "pi":
+            raise ValueError("request supersession requires PI actor authority")
+        if superseded_id == job_id:
+            raise ValueError("request cannot supersede itself")
+        bound_source = str(request_provenance.get("supersedes_request_id") or "")
+        if bound_source and safe_filename(bound_source) != superseded_id:
+            raise ValueError("superseded request id conflicts with request provenance")
+        request_provenance["supersedes_request_id"] = superseded_id
+        causal_ids = {
+            safe_filename(str(ref.get("id") if isinstance(ref, dict) else ref))
+            for ref in request_causal_refs
+        }
+        if superseded_id not in causal_ids:
+            request_causal_refs.append(superseded_id)
 
     args = dict(payload or {})
     job = {
@@ -183,23 +217,28 @@ def enqueue_operation(
         output_intents=output_intents or [],
         primary_target=primary_target,
         precondition_hashes=precondition_hashes,
-        causal_refs=causal_refs or [],
+        causal_refs=request_causal_refs,
         actor=actor,
-        provenance=provenance or {"surface": "worker"},
+        provenance=request_provenance,
         schedule_id=schedule_id,
     )
-    return state.save_request(vault, envelope, job)
+    return state.save_request(
+        vault,
+        envelope,
+        job,
+        supersede_request_id=supersede_request_id,
+    )
 
 
 def run_next_job(vault: Path, *, machine: str | None = None) -> dict[str, Any] | None:
     """Claim and run the oldest pending worker request."""
     vault = Path(vault)
     with _workspace_lock(vault):
-        sqlite_job = state.next_pending_job(vault)
-        if sqlite_job is None:
-            return None
-        running = _claim_sqlite_job(vault, sqlite_job)
-        return _run_claimed_job(vault, running, machine)
+        while sqlite_job := state.next_pending_job(vault):
+            running = _claim_sqlite_job(vault, sqlite_job)
+            if running is not None:
+                return _run_claimed_job(vault, running, machine)
+        return None
 
 
 def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> dict[str, Any]:
@@ -212,12 +251,17 @@ def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> 
         if job.get("status") != "pending":
             raise ValueError(f"request {request_id} is not pending")
         running = _claim_sqlite_job(vault, job)
+        if running is None:
+            raise ValueError(f"request {request_id} is not pending")
         return _run_claimed_job(vault, running, machine)
 
 
 def _run_claimed_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
     try:
-        result = _run_job(vault, job, machine)
+        context = operation_context_from_job(job, machine)
+        job = {**job, "bound_context": operation_context_record(context)}
+        state.set_request_running(vault, context.request_id, job)
+        result = _run_job(vault, job, context)
     except Exception as exc:  # noqa: BLE001 -- worker records failed jobs instead of losing them.
         job.update({"status": "failed", "failed_at": now_iso(), "error": str(exc)})
         _finish_job(vault, "failed", job)
@@ -258,6 +302,7 @@ def enqueue_integrity_sweep(
             payload={"shadow": shadow},
             idempotency_key=f"{operation_id}-{key}",
             schedule_id=key,
+            actor="integrity",
             provenance={"surface": "worker-schedule"},
         )
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
@@ -278,9 +323,9 @@ def run_integrity_sweep(
     return {"jobs": jobs, "results": results}
 
 
-def _run_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
+def _run_job(vault: Path, job: dict[str, Any], context: OperationContext) -> dict[str, Any]:
     if job.get("kind") == "operation":
-        return _run_operation_job(vault, job, machine)
+        return _run_operation_job(vault, job, context)
     if job.get("kind") != "trusted_write":
         raise ValueError(f"unsupported worker job kind: {job.get('kind')!r}")
     target = str(job["target_path"])
@@ -288,19 +333,20 @@ def _run_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str,
         vault,
         target,
         str(job["content"]),
+        context=context,
         inputs=job.get("inputs") or [],
-        operation=str(job.get("operation") or "trusted-write"),
-        run_id=str(job.get("run_id") or job["job_id"]),
-        machine=machine,
     )
-    promote_checked(vault, target, machine=machine)
-    commit = commit_writer_changes(vault, f"trusted write {target}", [target], machine=machine)
+    promote_checked(vault, target, context=context)
+    commit = commit_writer_changes(vault, f"trusted write {target}", [target], context=context)
     return {"commit": commit, "outputs": [target]}
 
 
-def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
-    operation_id = str(job.get("operation_id") or "")
+def _run_operation_job(
+    vault: Path, job: dict[str, Any], context: OperationContext
+) -> dict[str, Any]:
+    operation_id = context.operation_id
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
+    _require_operation_actor(context)
     from memoria_vault.runtime.operations import (
         load_operation_policy,
         required_promotion_checks,
@@ -310,22 +356,20 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     policy = load_operation_policy(vault, operation_id)
     if operation_id == "create-concept":
         target, content = _create_concept_payload(payload)
-        envelope = (
-            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-        )
-        actor = str(envelope.get("actor") or "pi")
+        envelope = job.get("request_envelope")
+        input_refs = envelope.get("input_refs") if isinstance(envelope, dict) else None
+        if not isinstance(input_refs, list):
+            raise ValueError("create-concept request envelope input_refs must be a list")
         stage_concept(
             vault,
             target,
             content,
-            operation=operation_id,
-            run_id=str(job.get("job_id") or ""),
-            actor=actor,
-            machine=machine,
+            context=context,
+            inputs=input_refs,
         )
-        materialized = materialize_unchecked(vault, target)
+        materialized = materialize_unchecked(vault, target, context=context)
         commit = commit_writer_changes(
-            vault, f"create {Path(target).stem}", [target], machine=machine
+            vault, f"create {Path(target).stem}", [target], context=context
         )
         return {
             "commit": commit,
@@ -348,9 +392,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         return record_empirical_event(
             vault,
             event,
-            request_id=str(envelope.get("request_id") or job.get("job_id") or ""),
-            actor=str(envelope.get("actor") or "pi"),
-            machine=machine,
+            context=context,
         )
     if operation_id in {
         "integrity-evidence-check",
@@ -362,7 +404,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         "integrity-contradiction-check",
         "integrity-link-target-check",
     }:
-        return _run_integrity_finding_operation(vault, operation_id, payload, machine)
+        return _run_integrity_finding_operation(vault, operation_id, payload, context)
     if operation_id == "trace-integrity-scan":
         from memoria_vault.runtime.trusted_writer import (
             quarantine_untraced,
@@ -372,7 +414,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         paths = payload.get("paths")
         reason = str(payload.get("reason") or "worker-trace-integrity")
         if paths is None:
-            events = quarantine_untraced_from_status(vault, reason=reason, machine=machine)
+            events = quarantine_untraced_from_status(vault, reason=reason, context=context)
         else:
             if not isinstance(paths, list) or not all(
                 isinstance(path, str) and path.strip() for path in paths
@@ -382,7 +424,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 vault,
                 [path.strip() for path in paths],
                 reason=reason,
-                machine=machine,
+                context=context,
             )
         commit = ""
         if events:
@@ -392,7 +434,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 if _git_path_tracked(vault, str(event["target_id"]))
             ]
             commit = commit_writer_changes(
-                vault, "trace integrity scan", tracked_targets, machine=machine
+                vault, "trace integrity scan", tracked_targets, context=context
             )
         return {"commit": commit, "finding_count": len(events), "findings": events}
     if operation_id == "compile-source-digest":
@@ -410,9 +452,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             work_id,
             [topic.strip() for topic in hub_topics],
+            context=context,
             mode=str(payload.get("mode") or "test"),
-            machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
         )
         return {
             "commit": result["commit"],
@@ -434,10 +475,9 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             work_id,
             response,
+            context=context,
             prompt=str(payload.get("prompt") or "What matters about this source?"),
             project_id=str(payload.get("project_id") or ""),
-            machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
         )
         return {
             "commit": result["commit"],
@@ -459,9 +499,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             digest_path,
             candidates,
+            context=context,
             mode=str(payload.get("mode") or "test"),
-            machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
         )
         return {
             "commit": result["commit"],
@@ -480,8 +519,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             note_path,
             status,
+            context=context,
             reason=str(payload.get("reason") or ""),
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -505,8 +544,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             source_note_path,
             link_type,
             target_path,
+            context=context,
             reason=str(payload.get("reason") or ""),
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -529,10 +568,10 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         project_path = str(payload.get("project_path") or "").strip()
         result = analyze_gaps(
             vault,
+            context=context,
             seed_terms=seed_terms,
             dense_threshold=dense_threshold,
             project_path=project_path,
-            machine=machine,
         )
         out = {
             "checked_topics": result["checked_topics"],
@@ -572,16 +611,11 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         project_path = str(payload.get("project_path") or "").strip()
         if not project_path:
             raise ValueError("frame-paper requires project_path")
-        envelope = (
-            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-        )
         result = frame_project_paper(
             vault,
             project_path,
+            context=context,
             paper_plan=payload,
-            run_id=str(job.get("job_id") or ""),
-            actor=str(envelope.get("actor") or "pi"),
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -625,8 +659,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         result = write_project_argument_canvas(
             vault,
             project_path,
+            context=context,
             commit=True,
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -644,10 +678,10 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         result = write_project_outline(
             vault,
             project_path,
+            context=context,
             query=str(payload.get("query") or ""),
             limit=int(payload.get("limit") or 20),
             commit=True,
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -671,9 +705,9 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         result = compose_project_draft(
             vault,
             project_path,
+            context=context,
             token_budget=int(payload.get("token_budget") or 4000),
             commit=True,
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -690,7 +724,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         project_path = str(payload.get("project_path") or "").strip()
         if not project_path:
             raise ValueError("verify-project-draft requires project_path")
-        result = verify_project_draft(vault, project_path)
+        result = verify_project_draft(vault, project_path, context=context)
         return {
             "project_path": result["project_path"],
             "draft_path": result["draft_path"],
@@ -713,11 +747,11 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         result = promote_draft_passage(
             vault,
             project_path,
+            context=context,
             title=str(payload.get("title") or ""),
             passage=str(payload.get("passage") or ""),
             work_id=str(payload.get("work_id") or ""),
             commit=True,
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -736,6 +770,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         result = write_project_export(
             vault,
             project_path,
+            context=context,
             export_format=str(payload.get("format") or "markdown"),
             output_path=str(payload.get("output_path") or ""),
             ready_only=bool(payload.get("ready_only")),
@@ -754,7 +789,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "rebuild-checked-search-index":
         from memoria_vault.runtime.search_index import rebuild_checked_search_index
 
-        manifest = rebuild_checked_search_index(vault)
+        manifest = rebuild_checked_search_index(vault, context=context)
         return {
             "engine": manifest["backend"],
             "input_root": manifest["input_root"],
@@ -773,6 +808,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         return answer_query(
             vault,
             query,
+            context=context,
             k=k,
             include_stale=bool(payload.get("include_stale", False)),
             project_id=str(payload.get("project_id") or ""),
@@ -787,17 +823,17 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         with tempfile.TemporaryDirectory(prefix="memoria-seeded-gate-") as tmpdir:
             return run_seeded_error_verdict(
                 Path(tmpdir),
+                context=context,
                 template_root=vault,
                 bundle_path=bundle_path,
                 runner=runner,
                 operation_id=target_operation_id,
-                machine=machine or "seeded-gate",
             )
     if operation_id == "eval-run":
         from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
 
         dry_run = bool(payload.get("dry_run", False))
-        result = eval_dispatch.dispatch(vault, dry_run=dry_run)
+        result = eval_dispatch.dispatch(vault, dry_run=dry_run, context=context)
         outputs = [] if dry_run else [".memoria/eval/last-run.md"]
         return {"outputs": outputs, **result}
     if operation_id == "check-source-metadata":
@@ -805,8 +841,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
 
         result = check_source_metadata(
             vault,
+            context=context,
             shadow=bool(payload.get("shadow", True)),
-            machine=machine,
             commit=True,
         )
         return {
@@ -823,9 +859,9 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         result = cascade_rollback(
             vault,
             target_id,
+            context=context,
             reason=str(payload.get("reason") or "worker-cascade-rollback"),
             include_target=bool(payload.get("include_target", False)),
-            machine=machine,
         )
         return {
             "commit": result["commit"],
@@ -842,6 +878,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         result = resolve_attention(
             vault,
             target_id,
+            context=context,
             resolution="acknowledged" if operation_id == "acknowledge-attention" else "resolved",
             outcome=str(
                 payload.get("outcome")
@@ -849,7 +886,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             ),
             routing_class=str(payload.get("routing_class") or "ask"),
             reason=str(payload.get("reason") or operation_id),
-            machine=machine,
         )
         return {"commit": result["commit"], "resolution": result["event"]}
     if operation_id == "observe-pi-edits":
@@ -866,8 +902,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         projection_events = quarantine_untraced(
             vault,
             projection_paths,
+            context=context,
             reason="workspace-scan-generated-projection",
-            machine=machine,
         )
         projection_commit = ""
         regeneration: dict[str, Any] = {}
@@ -878,10 +914,10 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 if _git_path_tracked(vault, str(event["target_id"]))
             ]
             projection_commit = commit_writer_changes(
-                vault, "trace integrity scan", tracked_targets, machine=machine
+                vault, "trace integrity scan", tracked_targets, context=context
             )
-            regeneration = write_tracked_projections(vault, commit=True, machine=machine)
-        result = observe_pi_edits_from_status(vault, machine=machine)
+            regeneration = write_tracked_projections(vault, commit=True, context=context)
+        result = observe_pi_edits_from_status(vault, context=context)
         commits = [
             commit
             for commit in (
@@ -909,12 +945,12 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         checks = required_promotion_checks(policy)
         if payload_check and payload_check not in checks:
             raise ValueError(f"mark-checked check must be declared by policy: {payload_check}")
-        event = mark_checked(vault, target_path, checks=checks, machine=machine)
+        event = mark_checked(vault, target_path, checks=checks, context=context)
         commit = commit_writer_changes(
             vault,
             f"mark checked {Path(target_path).stem}",
             [target_path],
-            machine=machine,
+            context=context,
         )
         return {"commit": commit, "check": event}
     if operation_id == "surface-tensions":
@@ -922,8 +958,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
 
         return surface_tensions(
             vault,
+            context=context,
             max_pairs=int(payload.get("max_pairs") or 20),
-            machine=machine,
             commit=True,
             tier2=_payload_bool(payload, "tier2", True),
             mode=str(payload.get("mode") or "test"),
@@ -942,9 +978,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             operation_id,
             payload,
+            context=context,
             mode=str(payload.get("mode") or "test"),
-            machine=machine,
-            run_id=str(job["job_id"]),
         )
     if operation_id == "update-work":
         work_id = str(payload.get("work_id") or "").strip()
@@ -1026,22 +1061,21 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 }
             ],
         )
-        state.append_journal_event(
+        append_journal_event(
             vault,
             {
                 "event": "work_updated",
-                "operation": "update-work",
                 "work_id": source["work_id"],
                 "updates": updates,
                 "override_log": OVERRIDE_LOG_REL,
             },
-            machine=machine,
+            context=context,
         )
         commit = commit_writer_changes(
             vault,
             f"update work {source['work_id']}",
             [OVERRIDE_LOG_REL],
-            machine=machine,
+            context=context,
         )
         return {
             "work_id": source["work_id"],
@@ -1050,19 +1084,19 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "commit": commit,
         }
     if operation_id == "capture-source":
-        return _run_capture_source_operation(vault, payload, machine)
+        return _run_capture_source_operation(vault, payload, context)
     if operation_id == "enrich-source":
-        return _run_enrich_source_operation(vault, payload, policy, machine)
+        return _run_enrich_source_operation(vault, payload, policy, context)
     if operation_id == "capture-bibtex-source":
-        return _run_capture_bibtex_source_operation(vault, payload, job, machine)
+        return _run_capture_bibtex_source_operation(vault, payload, context)
     if operation_id == "capture-url-source":
-        return _run_capture_url_source_operation(vault, payload, policy, machine)
+        return _run_capture_url_source_operation(vault, payload, policy, context)
     if operation_id == "capture-pdf-source":
-        return _run_capture_pdf_source_operation(vault, payload, machine)
+        return _run_capture_pdf_source_operation(vault, payload, context)
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
 
-        result = write_references_bib(vault, commit=True, machine=machine)
+        result = write_references_bib(vault, commit=True, context=context)
         return {
             "commit": result["commit"],
             "changed": result["changed"],
@@ -1071,7 +1105,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "regenerate-capability-index":
         from memoria_vault.runtime.capabilities import write_capability_index
 
-        result = write_capability_index(vault, commit=True, machine=machine)
+        result = write_capability_index(vault, commit=True, context=context)
         return {
             "commit": result["commit"],
             "changed": result["changed"],
@@ -1080,7 +1114,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "regenerate-indexes":
         from memoria_vault.runtime.projections import write_workspace_indexes
 
-        result = write_workspace_indexes(vault, commit=True, machine=machine)
+        result = write_workspace_indexes(vault, commit=True, context=context)
         return {
             "commit": result["commit"],
             "changed": result["changed"],
@@ -1089,7 +1123,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "regenerate-tracked-projections":
         from memoria_vault.runtime.projections import write_tracked_projections
 
-        result = write_tracked_projections(vault, commit=True, machine=machine)
+        result = write_tracked_projections(vault, commit=True, context=context)
         return {
             "commit": result["commit"],
             "changed": result["changed"],
@@ -1098,16 +1132,24 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     raise ValueError(f"unsupported operation: {operation_id!r}")
 
 
+def _require_operation_actor(context: OperationContext) -> None:
+    required_actor = PROTECTED_OPERATION_ACTORS.get(context.operation_id)
+    if required_actor is None or context.actor == required_actor:
+        return
+    label = "PI" if required_actor == "pi" else required_actor
+    raise ValueError(f"{context.operation_id} requires {label} actor authority")
+
+
 def _run_integrity_finding_operation(
-    vault: Path, operation_id: str, payload: dict[str, Any], machine: str | None
+    vault: Path, operation_id: str, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     from memoria_vault.runtime import integrity
 
     check = getattr(integrity, INTEGRITY_FINDING_OPERATIONS[operation_id])
     result = check(
         vault,
+        context=context,
         shadow=bool(payload.get("shadow", True)),
-        machine=machine,
         commit=True,
     )
     return {
@@ -1129,7 +1171,7 @@ def _source_result(result: dict[str, Any]) -> dict[str, Any]:
 
 
 def _run_capture_source_operation(
-    vault: Path, payload: dict[str, Any], machine: str | None
+    vault: Path, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_capture_payload
 
@@ -1164,14 +1206,16 @@ def _run_capture_source_operation(
             "identifiers": identifiers,
             "csl_json": csl_json,
         },
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
+        context=context,
     )
     return _source_result(result)
 
 
 def _run_enrich_source_operation(
-    vault: Path, payload: dict[str, Any], policy: dict[str, Any], machine: str | None
+    vault: Path,
+    payload: dict[str, Any],
+    policy: dict[str, Any],
+    context: OperationContext,
 ) -> dict[str, Any]:
     from memoria_vault.runtime.enrichment import enrich_source
 
@@ -1184,15 +1228,14 @@ def _run_enrich_source_operation(
     return enrich_source(
         vault,
         work_id,
+        context=context,
         policy=policy,
         provider_payloads=provider_payloads,
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
     )
 
 
 def _run_capture_bibtex_source_operation(
-    vault: Path, payload: dict[str, Any], job: dict[str, Any], machine: str | None
+    vault: Path, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import (
         bibtex_capture_payload,
@@ -1211,38 +1254,34 @@ def _run_capture_bibtex_source_operation(
         raise ValueError("capture-bibtex-source content_text must be a string")
     work_id = payload.get("work_id")
     description = payload.get("description")
-    run_id = payload.get("run_id")
     if work_id is not None and not isinstance(work_id, str):
         raise ValueError("capture-bibtex-source work_id must be a string")
     if description is not None and not isinstance(description, str):
         raise ValueError("capture-bibtex-source description must be a string")
-    if run_id is not None and not isinstance(run_id, str):
-        raise ValueError("capture-bibtex-source run_id must be a string")
     capture_payload = bibtex_capture_payload(
         bibtex,
         content_text=content_text,
         work_id=work_id or None,
         description=description or None,
     )
-    if run_id:
-        capture_payload["run_id"] = run_id
     result = stage_capture_payload(
         vault,
         capture_payload,
-        machine=machine,
+        context=context,
         workflow="capture_bibtex_source",
     )
     output = _source_result(result)
     output["enrichment_job"] = None
     if payload_doi(capture_payload):
+        enrichment_key = f"enrich-{result['work_id']}:{context.request_id}"
         output["enrichment_job"] = enqueue_operation(
             vault,
             "enrich-source",
             payload={"work_id": result["work_id"]},
-            idempotency_key=f"enrich-{result['work_id']}",
+            idempotency_key=enrichment_key,
             input_refs=[{"id": result["work_id"], "kind": "catalog_source"}],
             primary_target=f"catalog/sources/{result['work_id']}",
-            causal_refs=[str(job["job_id"])],
+            causal_refs=[context.request_id],
             actor="operation",
             provenance={"surface": "worker", "command": "capture-bibtex-source"},
         )
@@ -1250,7 +1289,10 @@ def _run_capture_bibtex_source_operation(
 
 
 def _run_capture_url_source_operation(
-    vault: Path, payload: dict[str, Any], policy: dict[str, Any], machine: str | None
+    vault: Path,
+    payload: dict[str, Any],
+    policy: dict[str, Any],
+    context: OperationContext,
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_url_source
     from memoria_vault.runtime.operations import require_allowed_network
@@ -1265,17 +1307,16 @@ def _run_capture_url_source_operation(
     result = stage_url_source(
         vault,
         url,
+        context=context,
         title=str(payload.get("title") or "") or None,
         description=str(payload.get("description") or "") or None,
         timeout=float(timeout),
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
     )
     return _source_result(result)
 
 
 def _run_capture_pdf_source_operation(
-    vault: Path, payload: dict[str, Any], machine: str | None
+    vault: Path, payload: dict[str, Any], context: OperationContext
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_pdf_source
 
@@ -1303,6 +1344,7 @@ def _run_capture_pdf_source_operation(
         title,
         description,
         base64.b64decode(raw_pdf_base64),
+        context=context,
         raw_filename=str(payload.get("raw_filename") or "source.pdf"),
         resource=str(payload.get("resource") or ""),
         item_type=str(payload.get("item_type") or "article"),
@@ -1310,8 +1352,6 @@ def _run_capture_pdf_source_operation(
         csl_json=csl_json,
         provider_coverage=str(payload.get("provider_coverage") or "partial"),
         citekey=str(payload.get("citekey") or ""),
-        machine=machine,
-        run_id=str(payload.get("run_id") or "") or None,
     )
     return _source_result(result)
 
@@ -1334,11 +1374,10 @@ def _create_concept_payload(payload: dict[str, Any]) -> tuple[str, str]:
     return target, content
 
 
-def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any]:
+def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any] | None:
     job_id = str(job["job_id"])
     job = {**job, "status": "running", "started_at": now_iso()}
-    state.set_request_running(vault, job_id, job)
-    return job
+    return job if state.claim_request(vault, job_id, job) else None
 
 
 def _finish_job(vault: Path, status: str, job: dict[str, Any]) -> None:
@@ -1394,12 +1433,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--payload", default="{}")
     parser.add_argument("--idempotency-key", default=None)
     parser.add_argument("--schedule-id", default=None)
+    parser.add_argument("--actor", choices=sorted(state.ACTORS), default=None)
     args = parser.parse_args(argv)
 
     vault = Path(args.vault)
     if args.command == "enqueue-operation":
         if not args.operation_id:
             parser.error("enqueue-operation requires --operation-id")
+        if not args.actor:
+            parser.error("enqueue-operation requires --actor")
         payload = json.loads(args.payload)
         if not isinstance(payload, dict):
             parser.error("--payload must be a JSON object")
@@ -1410,6 +1452,7 @@ def main(argv: list[str] | None = None) -> int:
                     args.operation_id,
                     payload=payload,
                     idempotency_key=args.idempotency_key,
+                    actor=args.actor,
                 ),
                 ensure_ascii=False,
                 sort_keys=True,
@@ -1421,6 +1464,7 @@ def main(argv: list[str] | None = None) -> int:
             vault,
             "observe-pi-edits",
             idempotency_key=args.idempotency_key or f"scan-{now_iso()}",
+            actor="integrity",
             provenance={"surface": "worker-scan"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)
@@ -1437,6 +1481,7 @@ def main(argv: list[str] | None = None) -> int:
             payload=payload,
             idempotency_key=args.idempotency_key or f"{args.operation_id}-{args.schedule_id}",
             schedule_id=args.schedule_id,
+            actor="operation",
             provenance={"surface": "worker-schedule"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)
@@ -1450,9 +1495,13 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
     if args.command == "observe-pi-edits":
-        from memoria_vault.runtime.trusted_writer import observe_pi_edits_from_status
+        from memoria_vault.runtime.trusted_writer import observe_pi_edits_explicit_from_status
 
-        observe_pi_edits_from_status(vault, machine=args.machine)
+        observe_pi_edits_explicit_from_status(
+            vault,
+            actor="integrity",
+            machine=args.machine,
+        )
         return 0
     if args.command == "recover":
         print(json.dumps(state.recover_pending_materializations(vault), ensure_ascii=False))

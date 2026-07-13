@@ -14,8 +14,12 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    append_explicit_journal_event,
     append_journal_event,
+    commit_explicit_writer_changes,
     commit_writer_changes,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
@@ -73,6 +77,7 @@ def stage_catalog_source(
     description: str,
     content_text: str,
     *,
+    context: OperationContext,
     raw_bytes: bytes | None = None,
     raw_filename: str = "source.txt",
     resource: str = "",
@@ -82,12 +87,11 @@ def stage_catalog_source(
     provider_coverage: str = "partial",
     text_status: str = "full-text",
     citekey: str = "",
-    machine: str | None = None,
-    run_id: str | None = None,
     workflow: str = "capture_source",
     check_status: str = "unchecked",
 ) -> dict[str, Any]:
     """Stage a source as a DB catalog row plus immutable blob payloads."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     work_id = _work_id(work_id)
     if not title.strip() or not description.strip():
@@ -108,12 +112,10 @@ def stage_catalog_source(
         if item_type == "article":
             item_type = str(existing.get("item_type") or item_type)
         citekey = citekey or str(existing.get("citekey") or "")
-    run_id = run_id or f"capture:{work_id}"
-
     started = append_journal_event(
         vault,
-        {"event": "run", "run_id": run_id, "workflow": workflow, "status": "started"},
-        machine=machine,
+        {"event": "run", "workflow": workflow, "status": "started"},
+        context=context,
     )
     root = vault / ".memoria/blobs/source-content" / work_id
     raw_path = root / "raw" / safe_filename(raw_filename or "source.txt")
@@ -155,18 +157,17 @@ def stage_catalog_source(
         vault,
         {
             "event": "run",
-            "run_id": run_id,
             "workflow": workflow,
             "status": "done",
             "work_id": work_id,
             "outputs": [content_rel, raw_rel],
             "raw": raw_rel,
         },
-        machine=machine,
+        context=context,
     )
-    commit = commit_writer_changes(vault, f"stage source {work_id}", [], machine=machine)
+    commit = commit_writer_changes(vault, f"stage source {work_id}", [], context=context)
     return {
-        "run_id": run_id,
+        "run_id": context.run_id,
         "work_id": work_id,
         "source_path": f"catalog/sources/{work_id}",
         "content_path": content_rel,
@@ -188,6 +189,7 @@ def capture_source(
     description: str,
     content_text: str,
     *,
+    context: OperationContext,
     raw_bytes: bytes | None = None,
     raw_filename: str = "source.txt",
     resource: str = "",
@@ -197,17 +199,17 @@ def capture_source(
     provider_coverage: str = "partial",
     text_status: str = "full-text",
     citekey: str = "",
-    machine: str | None = None,
-    run_id: str | None = None,
     workflow: str = "capture_source",
 ) -> dict[str, Any]:
     """Capture one source as a checked SQLite catalog row plus blob payloads."""
+    validate_operation_context(vault, context)
     return stage_catalog_source(
         vault,
         work_id,
         title,
         description,
         content_text,
+        context=context,
         raw_bytes=raw_bytes,
         raw_filename=raw_filename,
         resource=resource,
@@ -217,8 +219,6 @@ def capture_source(
         provider_coverage=provider_coverage,
         text_status=text_status,
         citekey=citekey,
-        machine=machine,
-        run_id=run_id,
         workflow=workflow,
         check_status="checked",
     )
@@ -297,25 +297,23 @@ def capture_bibtex_source(
     vault: Path,
     bibtex: str,
     *,
+    context: OperationContext,
     content_text: str | None = None,
     work_id: str | None = None,
     description: str | None = None,
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Capture one source from a local BibTeX entry."""
+    validate_operation_context(vault, context)
     payload = bibtex_capture_payload(
         bibtex,
         content_text=content_text,
         work_id=work_id,
         description=description,
     )
-    citekey = str(payload.get("citekey") or "")
     return stage_capture_payload(
         vault,
         payload,
-        machine=machine,
-        run_id=run_id or f"capture-bibtex:{citekey}",
+        context=context,
         workflow="capture_bibtex_source",
         check_status="checked",
     )
@@ -397,11 +395,11 @@ def stage_capture_payload(
     vault: Path,
     payload: dict[str, Any],
     *,
-    machine: str | None = None,
-    run_id: str | None = None,
+    context: OperationContext,
     workflow: str = "capture_source",
     check_status: str = "unchecked",
 ) -> dict[str, Any]:
+    validate_operation_context(vault, context)
     raw_text = payload.get("raw_text")
     return stage_catalog_source(
         vault,
@@ -409,6 +407,7 @@ def stage_capture_payload(
         str(payload["title"]),
         str(payload["description"]),
         str(payload["content_text"]),
+        context=context,
         raw_bytes=str(raw_text).encode() if raw_text is not None else None,
         raw_filename=str(payload.get("raw_filename") or "source.txt"),
         resource=str(payload.get("resource") or ""),
@@ -418,8 +417,6 @@ def stage_capture_payload(
         provider_coverage=str(payload.get("provider_coverage") or "partial"),
         text_status=str(payload.get("text_status") or "full-text"),
         citekey=str(payload.get("citekey") or ""),
-        machine=machine,
-        run_id=run_id or str(payload.get("run_id") or "") or None,
         workflow=workflow,
         check_status=check_status,
     )
@@ -429,21 +426,20 @@ def capture_url_source(
     vault: Path,
     url: str,
     *,
+    context: OperationContext,
     title: str | None = None,
     description: str | None = None,
     timeout: float = 10.0,
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Capture one URL snapshot with stdlib HTML text extraction."""
+    validate_operation_context(vault, context)
     return _store_url_source(
         vault,
         url,
+        context=context,
         title=title,
         description=description,
         timeout=timeout,
-        machine=machine,
-        run_id=run_id,
         check_status="checked",
     )
 
@@ -452,21 +448,20 @@ def stage_url_source(
     vault: Path,
     url: str,
     *,
+    context: OperationContext,
     title: str | None = None,
     description: str | None = None,
     timeout: float = 10.0,
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Stage one URL snapshot as an unchecked DB row plus text/blob payloads."""
+    validate_operation_context(vault, context)
     return _store_url_source(
         vault,
         url,
+        context=context,
         title=title,
         description=description,
         timeout=timeout,
-        machine=machine,
-        run_id=run_id,
         check_status="unchecked",
     )
 
@@ -475,11 +470,10 @@ def _store_url_source(
     vault: Path,
     url: str,
     *,
+    context: OperationContext,
     title: str | None,
     description: str | None,
     timeout: float,
-    machine: str | None,
-    run_id: str | None,
     check_status: str,
 ) -> dict[str, Any]:
     resource = url.strip()
@@ -495,6 +489,7 @@ def _store_url_source(
         final_title,
         description or f"URL snapshot captured from {resource}.",
         content_text,
+        context=context,
         raw_bytes=raw_bytes,
         raw_filename=f"{safe_filename(work_id)}.html",
         resource=resource,
@@ -507,8 +502,6 @@ def _store_url_source(
         },
         provider_coverage="partial",
         text_status="full-text",
-        machine=machine,
-        run_id=run_id or f"capture-url:{resource}",
         workflow="capture_url_source",
         check_status=check_status,
     )
@@ -521,6 +514,7 @@ def capture_pdf_source(
     description: str,
     raw_bytes: bytes,
     *,
+    context: OperationContext,
     raw_filename: str = "source.pdf",
     resource: str = "",
     item_type: str = "article",
@@ -528,16 +522,16 @@ def capture_pdf_source(
     csl_json: dict[str, Any] | None = None,
     provider_coverage: str = "partial",
     citekey: str = "",
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Capture a PDF raw blob and extracted page text."""
+    validate_operation_context(vault, context)
     return _store_pdf_source(
         vault,
         work_id,
         title,
         description,
         raw_bytes,
+        context=context,
         raw_filename=raw_filename,
         resource=resource,
         item_type=item_type,
@@ -545,8 +539,6 @@ def capture_pdf_source(
         csl_json=csl_json,
         provider_coverage=provider_coverage,
         citekey=citekey,
-        machine=machine,
-        run_id=run_id,
         check_status="checked",
     )
 
@@ -558,6 +550,7 @@ def stage_pdf_source(
     description: str,
     raw_bytes: bytes,
     *,
+    context: OperationContext,
     raw_filename: str = "source.pdf",
     resource: str = "",
     item_type: str = "article",
@@ -565,16 +558,16 @@ def stage_pdf_source(
     csl_json: dict[str, Any] | None = None,
     provider_coverage: str = "partial",
     citekey: str = "",
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Stage a PDF raw blob and extracted text as an unchecked DB row."""
+    validate_operation_context(vault, context)
     return _store_pdf_source(
         vault,
         work_id,
         title,
         description,
         raw_bytes,
+        context=context,
         raw_filename=raw_filename,
         resource=resource,
         item_type=item_type,
@@ -582,8 +575,6 @@ def stage_pdf_source(
         csl_json=csl_json,
         provider_coverage=provider_coverage,
         citekey=citekey,
-        machine=machine,
-        run_id=run_id,
         check_status="unchecked",
     )
 
@@ -595,6 +586,7 @@ def _store_pdf_source(
     description: str,
     raw_bytes: bytes,
     *,
+    context: OperationContext,
     raw_filename: str,
     resource: str,
     item_type: str,
@@ -602,8 +594,6 @@ def _store_pdf_source(
     csl_json: dict[str, Any] | None,
     provider_coverage: str,
     citekey: str,
-    machine: str | None,
-    run_id: str | None,
     check_status: str,
 ) -> dict[str, Any]:
     stable_work_id = _work_id(work_id)
@@ -617,6 +607,7 @@ def _store_pdf_source(
         title,
         description,
         content_text,
+        context=context,
         raw_bytes=raw_bytes,
         raw_filename=pdf_raw_filename,
         resource=resource,
@@ -626,8 +617,6 @@ def _store_pdf_source(
         provider_coverage=provider_coverage,
         text_status="full-text",
         citekey=citekey,
-        machine=machine,
-        run_id=run_id or f"capture-pdf:{stable_work_id}",
         workflow="capture_pdf_source",
         check_status=check_status,
     )
@@ -667,11 +656,54 @@ def render_references_bib(vault: Path) -> str:
 def write_references_bib(
     vault: Path,
     *,
+    context: OperationContext,
     output_path: str = "bibliography.bib",
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Write the generated bibliography.bib projection."""
+    validate_operation_context(vault, context)
+    return _write_references_bib(
+        vault,
+        output_path=output_path,
+        commit=commit,
+        context=context,
+        actor=context.actor,
+        machine=context.machine,
+    )
+
+
+def write_references_bib_explicit(
+    vault: Path,
+    *,
+    actor: str,
+    machine: str,
+    output_path: str = "bibliography.bib",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Write bibliography projection outside an operation envelope."""
+    if actor not in state.ACTORS:
+        raise ValueError(f"projection actor must be one of {sorted(state.ACTORS)}")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("projection machine must be nonblank")
+    return _write_references_bib(
+        vault,
+        output_path=output_path,
+        commit=commit,
+        context=None,
+        actor=actor,
+        machine=machine,
+    )
+
+
+def _write_references_bib(
+    vault: Path,
+    *,
+    output_path: str,
+    commit: bool,
+    context: OperationContext | None,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
     vault = Path(vault)
     output = vault / output_path
     text = render_references_bib(vault)
@@ -682,23 +714,26 @@ def write_references_bib(
     event = None
     commit_id = ""
     if commit:
-        event = append_journal_event(
-            vault,
-            {
-                "event": "run",
-                "run_id": "projection:bibliography.bib",
-                "workflow": "generate_bibliography_bib",
-                "status": "done",
-                "outputs": [output_path],
-            },
-            machine=machine,
-        )
-        commit_id = commit_writer_changes(
-            vault,
-            "regenerate bibliography.bib",
-            [output_path],
-            machine=machine,
-        )
+        payload = {
+            "event": "run",
+            "workflow": "generate_bibliography_bib",
+            "status": "done",
+            "outputs": [output_path],
+        }
+        if context:
+            event = append_journal_event(vault, payload, context=context)
+            commit_id = commit_writer_changes(
+                vault, "regenerate bibliography.bib", [output_path], context=context
+            )
+        else:
+            event = append_explicit_journal_event(vault, payload, actor=actor, machine=machine)
+            commit_id = commit_explicit_writer_changes(
+                vault,
+                "regenerate bibliography.bib",
+                [output_path],
+                actor=actor,
+                machine=machine,
+            )
     return {"path": output_path, "changed": changed, "event": event, "commit": commit_id}
 
 

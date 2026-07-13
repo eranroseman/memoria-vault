@@ -11,7 +11,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import actions_by_id
-from memoria_vault.runtime import mcp_transport, state
+from memoria_vault.runtime import mcp_transport, state, worker
 from memoria_vault.runtime.mcp_transport import make_mcp_app
 from tests.helpers import init_cli_workspace, write_checked_note
 
@@ -50,11 +50,19 @@ def test_cli_mcp_rejects_root_and_traversal_scope(
     assert message in captured.err
 
 
-def test_cli_mcp_passes_scope_and_actor(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_mcp_passes_scope_and_agent_identity(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     captured: dict[str, Any] = {}
 
-    def fake_server(workspace_arg: Path, *, read_scope: list[str], actor: str) -> None:
-        captured.update({"workspace": workspace_arg, "read_scope": read_scope, "actor": actor})
+    def fake_server(workspace_arg: Path, *, read_scope: list[str], agent_identity: str) -> None:
+        captured.update(
+            {
+                "workspace": workspace_arg,
+                "read_scope": read_scope,
+                "agent_identity": agent_identity,
+            }
+        )
 
     monkeypatch.setattr("memoria_vault.runtime.mcp_transport.run_mcp_server", fake_server)
 
@@ -74,7 +82,7 @@ def test_cli_mcp_passes_scope_and_actor(workspace: Path, monkeypatch: pytest.Mon
     assert captured == {
         "workspace": workspace,
         "read_scope": ["notes"],
-        "actor": "review-agent",
+        "agent_identity": "review-agent",
     }
 
 
@@ -92,7 +100,7 @@ def test_mcp_app_requires_non_root_read_scope(workspace: Path) -> None:
 def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
     assert sorted(tool.name for tool in app._tool_manager.list_tools()) == [
         "attention",
@@ -116,7 +124,7 @@ def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
 def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     actions = actions_by_id()
     tools = {tool.name: tool for tool in app._tool_manager.list_tools()}
 
@@ -128,7 +136,7 @@ def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
 
 def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> None:
     pytest.importorskip("mcp")
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
     content, structured = asyncio.run(app.call_tool("status", {}))
 
@@ -167,7 +175,7 @@ def test_mcp_read_tools_pass_session_scope(
     ):
         monkeypatch.setattr(mcp_transport.engine_api, name, record(name))
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     for tool_name, arguments in {
         "requests": {},
         "request": {"request_id": "r1"},
@@ -206,7 +214,7 @@ def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
 
     write_checked_note(workspace, "notes/alpha.md", "Alpha")
     write_checked_note(workspace, "notes/beta.md", "Beta")
-    app = make_mcp_app(workspace, read_scope=["notes/alpha.md"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes/alpha.md"], agent_identity="agent")
 
     listed = _call(app, "concepts")
 
@@ -218,7 +226,7 @@ def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
 def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="review-agent")
 
     response = _call(
         app,
@@ -247,8 +255,77 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
     assert json.loads(row["provenance_json"]) == {
         "surface": "memoria-mcp",
         "command": "mcp:create-concept",
+        "agent_identity": "review-agent",
     }
     assert json.loads(row["args_json"])["target_path"] == "notes/mcp.md"
+    with state.connect(workspace) as conn:
+        journal = conn.execute(
+            "SELECT payload_json FROM event_log"
+            " WHERE json_extract(payload_json, '$.request_id') = ?",
+            ("mcp-create",),
+        ).fetchall()
+    assert journal
+    assert {
+        tuple(sorted(json.loads(event["payload_json"])["request_provenance"].items()))
+        for event in journal
+    } == {
+        tuple(
+            sorted(
+                {
+                    "surface": "memoria-mcp",
+                    "command": "mcp:create-concept",
+                    "agent_identity": "review-agent",
+                }.items()
+            )
+        )
+    }
+
+
+def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path) -> None:
+    pytest.importorskip("mcp")
+    tool_error = pytest.importorskip("mcp.server.fastmcp.exceptions").ToolError
+    attention_path = workspace / "inbox/pi-pending.md"
+    attention_path.parent.mkdir(parents=True, exist_ok=True)
+    attention_path.write_text(
+        "---\n"
+        "projection: attention\n"
+        "title: PI pending\n"
+        "attention_kind: work-prompt\n"
+        "attention_status: open\n"
+        "routing_class: ask\n"
+        "---\n"
+        "Review.\n",
+        encoding="utf-8",
+    )
+    request = worker.enqueue_operation(
+        workspace,
+        "resolve-attention",
+        actor="pi",
+        idempotency_key="pi-pending-request",
+        payload={
+            "target_id": "inbox/pi-pending.md",
+            "outcome": "apply",
+            "routing_class": "ask",
+            "reason": "PI decision",
+        },
+    )
+    app = make_mcp_app(workspace, read_scope=["inbox"], agent_identity="review-agent")
+
+    listed = _call(app, "requests", status="pending")
+    detail = _call(app, "request", request_id=request["job_id"])
+    with pytest.raises(tool_error, match="idempotency key is already bound"):
+        _call(
+            app,
+            "operation_run",
+            operation_id="create-concept",
+            payload={"concept_type": "note"},
+            idempotency_key=request["job_id"],
+        )
+
+    assert [row["request_id"] for row in listed["requests"]] == ["pi-pending-request"]
+    assert detail["request"]["actor"] == "pi"
+    assert state.request_job(workspace, request["job_id"])["status"] == "pending"
+    assert "attention_status: open" in attention_path.read_text(encoding="utf-8")
 
 
 def _call(app: Any, name: str, **arguments: Any) -> dict[str, Any]:

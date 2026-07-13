@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.cli import main
 from memoria_vault.engine import api
-from memoria_vault.runtime import state
+from memoria_vault.runtime import integrity, state
 from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.policy.audit import sha256_file
 
@@ -118,6 +120,104 @@ def test_exploration_channel_surfaces_nli_refuted_contrary_candidate(
             ),
         }
     ]
+
+
+def test_exploration_channel_omits_nli_candidate_when_tier1_gate_is_degraded(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _checked_note(
+        tmp_path,
+        "notes/left.md",
+        "type: note\ntitle: Left\n",
+        body="Reminder systems improve memory recall when cues are present.",
+    )
+    _checked_note(
+        tmp_path,
+        "notes/right.md",
+        "type: note\ntitle: Right\n",
+        body="Reminder systems do not improve memory recall when cues are present.",
+    )
+
+    candidate_comparisons = 0
+
+    def degraded_comparator(premise: str, hypothesis: str) -> dict:
+        nonlocal candidate_comparisons
+        if "Reminder systems" in premise and "Reminder systems" in hypothesis:
+            candidate_comparisons += 1
+            raise AssertionError("degraded Tier-1 must not compare candidate pairs")
+        return {
+            "verdict": integrity.NLI_NOTENOUGHINFO,
+            "confidence": 0.0,
+            "warrant": "fixture HANS failure",
+        }
+
+    monkeypatch.setattr(integrity, "_compare_claims", degraded_comparator)
+
+    result = exploration_channel(tmp_path)
+
+    assert candidate_comparisons == 0
+    assert result["contrary_items"] == []
+
+
+def test_exploration_channel_stops_nli_comparisons_at_limit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for rel, title, body in (
+        (
+            "notes/01-left.md",
+            "Left",
+            "Reminder systems improve memory recall when cues are present.",
+        ),
+        (
+            "notes/02-right.md",
+            "Right",
+            "Reminder systems do not improve memory recall when cues are present.",
+        ),
+        (
+            "notes/03-extra.md",
+            "Extra",
+            "Reminder systems never improve memory recall when cues are present.",
+        ),
+    ):
+        _checked_note(tmp_path, rel, f"type: note\ntitle: {title}\n", body=body)
+
+    candidate_comparisons = 0
+
+    def comparator(premise: str, hypothesis: str) -> dict:
+        nonlocal candidate_comparisons
+        if "Reminder systems" not in premise or "Reminder systems" not in hypothesis:
+            return {
+                "verdict": integrity.NLI_REFUTED,
+                "confidence": 0.9,
+                "warrant": "fixture HANS pass",
+            }
+        candidate_comparisons += 1
+        if candidate_comparisons > 1:
+            raise AssertionError("comparison continued after exploration reached its limit")
+        return {
+            "verdict": integrity.NLI_REFUTED,
+            "confidence": 0.9,
+            "warrant": "fixture first candidate",
+        }
+
+    monkeypatch.setattr(integrity, "_compare_claims", comparator)
+
+    result = exploration_channel(tmp_path, limit=1)
+
+    assert result["contrary_items"] == [
+        {
+            "path": "notes/01-left.md",
+            "title": "Left",
+            "target": "notes/02-right.md",
+            "why": (
+                "Contrary channel: NLI REFUTED candidate between `notes/01-left.md` "
+                "and `notes/02-right.md` (fixture first candidate)."
+            ),
+        }
+    ]
+    assert candidate_comparisons == 1
 
 
 def test_cli_project_explore_returns_channel(tmp_path: Path, capsys: object) -> None:

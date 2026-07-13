@@ -7,8 +7,16 @@ import pytest
 
 from memoria_vault.runtime import indexing, retrieval, state
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.search_index import answer_query
-from tests.helpers import copy_memoria_dirs, write_checked_concept
+from memoria_vault.runtime.search_index import answer_query as _answer_query
+from tests.helpers import call_with_context, copy_memoria_dirs, write_checked_concept
+
+
+def answer_query(vault: Path, *args, **kwargs):
+    return call_with_context(_answer_query, vault, *args, **kwargs)
+
+
+def rebuild_passage_index(vault: Path, *args, **kwargs):
+    return call_with_context(indexing.rebuild_passage_index, vault, *args, **kwargs)
 
 
 def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
@@ -20,7 +28,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 8
+    assert state.SCHEMA_VERSION == 9
     assert {
         "passages",
         "passage_fts",
@@ -50,7 +58,7 @@ def test_passage_index_refreshes_stale_file_and_cascades_status(tmp_path: Path) 
         body="rarealpha first version",
     )
 
-    indexing.rebuild_passage_index(vault)
+    rebuild_passage_index(vault)
     assert state.indexed_passages(vault, checked_only=True)[0]["text"].endswith(
         "rarealpha first version\n"
     )
@@ -82,9 +90,10 @@ def test_retrieval_fixture_keeps_bm25_selected_and_vector_optional(tmp_path: Pat
         "type: note\ntitle: Alpha\ntags: []\nlinks: {}\n",
         body="retrieval fixture rarealpha token",
     )
-    indexing.rebuild_passage_index(vault)
+    rebuild_passage_index(vault)
 
-    report = retrieval.evaluate_fixture(
+    report = call_with_context(
+        retrieval.evaluate_fixture,
         vault,
         [{"query": "rarealpha", "relevant": ["notes/alpha.md"]}],
     )

@@ -86,7 +86,7 @@ replace the CLI.
 |---|---|
 | Settings | Enable collection, server URL, bearer token in Obsidian SecretStorage, default project ID, retention days. |
 | Reads | `GET /status`, `GET /attention`, and `GET /concept?target=<path>` through the local HTTP transport. |
-| Writes | `POST /operation/run` only, with actor `agent`; empirical events use operation `empirical-event-record` and idempotency key `empirical-event:<event_id>`. |
+| Writes | `POST /operation/run` only; the HTTP transport records actor `agent`. Empirical events use operation `empirical-event-record` and idempotency key `empirical-event:<event_id>`. |
 | Commands | Connect to local server, show attention count, show active Concept, queue operation, start/stop data collection session, record disposition, record fallback, flush queued events, delete queued events. |
 | Offline behavior | Validated empirical-event payloads queue locally and are pruned by the configured retention window. |
 

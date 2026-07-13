@@ -15,11 +15,17 @@ from memoria_vault.runtime.capabilities import (
     check_capability_index,
     iter_capability_manifests,
     render_capability_index,
-    write_capability_index,
+)
+from memoria_vault.runtime.capabilities import (
+    write_capability_index as _write_capability_index,
 )
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-from tests.helpers import ROOT, git, init_git
+from tests.helpers import ROOT, call_with_context, git, init_git
+
+
+def write_capability_index(vault: Path, *args, **kwargs):
+    return call_with_context(_write_capability_index, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -88,6 +94,7 @@ def test_worker_runs_capability_index_projection_operation_jobs(tmp_path: Path) 
         vault,
         "regenerate-capability-index",
         idempotency_key="capability-index",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 

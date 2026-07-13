@@ -158,7 +158,28 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
         result = structural_impact.run(vault, args["project"])
         artifacts.append(result["path"])
     elif tool == "project.argument_canvas":
-        result = write_project_argument_canvas(vault, args["project"])
+        from memoria_vault.runtime import state
+        from memoria_vault.runtime.trusted_writer import (
+            operation_context_from_job,
+            operation_context_record,
+        )
+        from memoria_vault.runtime.worker import enqueue_operation
+
+        request = enqueue_operation(
+            vault,
+            "render-project-argument-canvas",
+            payload={"project_path": args["project"]},
+            idempotency_key=f"harness-canvas-{args['project']}",
+            actor="operation",
+            provenance={"surface": "test-env-harness"},
+        )
+        context = operation_context_from_job(request, "test-env-harness")
+        request["status"] = "running"
+        request["bound_context"] = operation_context_record(context)
+        state.set_request_running(vault, request["job_id"], request)
+        result = write_project_argument_canvas(vault, args["project"], context=context)
+        request["status"] = "done"
+        state.finish_request(vault, request["job_id"], "done", request)
         artifacts.append(result["canvas_path"])
     else:
         raise HarnessError(f"unknown cassette tool: {tool}")

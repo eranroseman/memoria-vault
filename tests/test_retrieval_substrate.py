@@ -5,8 +5,14 @@ from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.knowledge import exploration_channel
-from memoria_vault.runtime.search_index import rebuild_checked_search_index
-from tests.helpers import ROOT, copy_memoria_dirs
+from memoria_vault.runtime.search_index import (
+    rebuild_checked_search_index as _rebuild_checked_search_index,
+)
+from tests.helpers import ROOT, call_with_context, copy_memoria_dirs
+
+
+def rebuild_checked_search_index(vault: Path, *args, **kwargs):
+    return call_with_context(_rebuild_checked_search_index, vault, *args, **kwargs)
 
 
 def test_packaged_search_has_no_vector_dependency() -> None:

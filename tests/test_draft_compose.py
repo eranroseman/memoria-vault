@@ -6,8 +6,13 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.knowledge import compose_project_draft, read_project_draft
-from tests.helpers import write_checked_concept
+from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
+from memoria_vault.runtime.knowledge import read_project_draft
+from tests.helpers import call_with_context, write_checked_concept
+
+
+def compose_project_draft(vault: Path, *args, **kwargs):
+    return call_with_context(_compose_project_draft, vault, *args, **kwargs)
 
 
 def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
@@ -52,7 +57,12 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
         encoding="utf-8",
     )
 
-    result = compose_project_draft(vault, "project-alpha", token_budget=400)
+    result = compose_project_draft(
+        vault,
+        "project-alpha",
+        token_budget=400,
+        run_id="compose-project-request-run",
+    )
 
     assert result["draft_path"] == "projects/project-alpha/draft.md"
     assert result["member_count"] == 2
@@ -73,6 +83,7 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
     assert implicit[0]["type"] == "implicit"
     assert implicit[0]["state"] == "evidence-incomplete"
     assert implicit[0]["review_required"] is True
+    assert {row["run_id"] for row in rows.values()} == {"compose-project-request-run"}
 
     readback = read_project_draft(vault, "project-alpha")
     assert len(readback["evidence_markers"]) == 2

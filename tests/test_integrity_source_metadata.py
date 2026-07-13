@@ -3,11 +3,19 @@ from __future__ import annotations
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source
-from memoria_vault.runtime.integrity import check_source_metadata
+from memoria_vault.runtime.capture import capture_source as _capture_source
+from memoria_vault.runtime.integrity import check_source_metadata as _check_source_metadata
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_source, vault, *args, **kwargs)
+
+
+def check_source_metadata(vault: Path, *args, **kwargs):
+    return call_with_context(_check_source_metadata, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:

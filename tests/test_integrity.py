@@ -3,26 +3,61 @@ from __future__ import annotations
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source
+from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.integrity import (
-    check_claim_quote_support,
-    check_contradiction_links,
-    check_evidence_integrity,
-    check_link_targets,
-    check_prompt_injection_markers,
-    check_provenance_checkpoint,
-    check_quote_anchor_support,
+    check_claim_quote_support as _check_claim_quote_support,
+)
+from memoria_vault.runtime.integrity import (
+    check_contradiction_links as _check_contradiction_links,
+)
+from memoria_vault.runtime.integrity import (
+    check_evidence_integrity as _check_evidence_integrity,
+)
+from memoria_vault.runtime.integrity import (
+    check_link_targets as _check_link_targets,
+)
+from memoria_vault.runtime.integrity import (
+    check_prompt_injection_markers as _check_prompt_injection_markers,
+)
+from memoria_vault.runtime.integrity import (
+    check_provenance_checkpoint as _check_provenance_checkpoint,
+)
+from memoria_vault.runtime.integrity import (
+    check_quote_anchor_support as _check_quote_anchor_support,
+)
+from memoria_vault.runtime.integrity import (
     contradiction_tier1_gate,
-    record_integrity_check,
     route_check,
+)
+from memoria_vault.runtime.integrity import (
+    record_integrity_check as _record_integrity_check,
 )
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
-    promote_checked,
-    stage_concept,
+    promote_checked as _promote_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
+    stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import copy_memoria_dirs, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, init_git
+
+
+def _context_wrapper(function):
+    return lambda vault, *args, **kwargs: call_with_context(function, vault, *args, **kwargs)
+
+
+capture_source = _context_wrapper(_capture_source)
+check_claim_quote_support = _context_wrapper(_check_claim_quote_support)
+check_contradiction_links = _context_wrapper(_check_contradiction_links)
+check_evidence_integrity = _context_wrapper(_check_evidence_integrity)
+check_link_targets = _context_wrapper(_check_link_targets)
+check_prompt_injection_markers = _context_wrapper(_check_prompt_injection_markers)
+check_provenance_checkpoint = _context_wrapper(_check_provenance_checkpoint)
+check_quote_anchor_support = _context_wrapper(_check_quote_anchor_support)
+record_integrity_check = _context_wrapper(_record_integrity_check)
+promote_checked = _context_wrapper(_promote_checked)
+stage_concept = _context_wrapper(_stage_concept)
 
 
 def workspace(tmp_path: Path) -> Path:

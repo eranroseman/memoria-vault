@@ -11,12 +11,37 @@ from memoria_vault.runtime.seeded_errors import (
     _metrics_by_error_class,
     _verdict_key,
     load_seeded_error_bundle,
-    prepare_seeded_error_fixture,
-    run_seeded_error_verdict,
     seeded_probe_review_batch,
 )
+from memoria_vault.runtime.seeded_errors import (
+    prepare_seeded_error_fixture as _prepare_seeded_error_fixture,
+)
+from memoria_vault.runtime.seeded_errors import (
+    run_seeded_error_verdict as _run_seeded_error_verdict,
+)
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import WORKSPACE_SEED
+from tests.helpers import WORKSPACE_SEED, operation_context
+
+
+def prepare_seeded_error_fixture(vault: Path, template_root: Path):
+    return _prepare_seeded_error_fixture(
+        vault,
+        template_root,
+        context=operation_context(vault, actor="operation", operation_id="seeded-fixture"),
+    )
+
+
+def run_seeded_error_verdict(vault: Path, **kwargs):
+    return _run_seeded_error_verdict(
+        vault,
+        context=operation_context(
+            vault,
+            actor="operation",
+            operation_id="run-seeded-error-verdict",
+        ),
+        **kwargs,
+    )
+
 
 BUNDLE = WORKSPACE_SEED / ".memoria/eval/alpha15-seeded-errors.json"
 

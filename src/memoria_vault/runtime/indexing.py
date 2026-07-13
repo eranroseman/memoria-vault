@@ -9,22 +9,38 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
 EMBEDDING_MODEL_ID = "memoria-hash-test-v1"
 VECTOR_DIM = 16
 
 
-def rebuild_passage_index(vault: Path) -> dict[str, Any]:
+def rebuild_passage_index(vault: Path, *, context: OperationContext) -> dict[str, Any]:
     """Rebuild all derived passage and concept-edge state from checked documents."""
+    validate_operation_context(vault, context)
+    return _rebuild_passage_index(vault)
+
+
+def rebuild_passage_index_explicit(vault: Path, *, actor: str, machine: str) -> dict[str, Any]:
+    """Rebuild derived search state outside an operation envelope."""
+    if actor not in state.ACTORS:
+        raise ValueError(f"index actor must be one of {sorted(state.ACTORS)}")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("index machine must be nonblank")
+    return _rebuild_passage_index(vault)
+
+
+def _rebuild_passage_index(vault: Path) -> dict[str, Any]:
     rows = _passage_rows(vault)
     passage_result = state.replace_indexed_passages(vault, rows)
     edge_result = state.replace_concept_edges(vault, _concept_edges(rows))
     return {"passages": passage_result, "concept_edges": edge_result}
 
 
-def refresh_stale_passages(vault: Path) -> dict[str, Any]:
+def refresh_stale_passages(vault: Path, *, context: OperationContext) -> dict[str, Any]:
     """Refresh changed checked documents before a query, without a daemon."""
+    validate_operation_context(vault, context)
     rows = _passage_rows(vault)
     states = state.file_index_states(vault)
     stale_paths = {

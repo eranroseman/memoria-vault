@@ -590,7 +590,7 @@ CHECK). v5→v6 is implicit via the `IF NOT EXISTS` statements (adds the
 | `work_graph_edges` | Citation/relationship graph edges per work (references/related/topic/…) | Authoritative catalog state |
 | `work_aspects` | Extracted aspects (context/key_idea/method/outcome/limitation/assumption) + verdict | Authoritative catalog state |
 | `evidence_sets` | One row per `%%ev%%` marker found in markdown, classified by type/completeness | **Fully DERIVED** (rebuilt by scanning `*.md`) |
-| `derivations` | Input→output lineage edges (actor pi/operation/integrity) | Authoritative provenance |
+| `derivations` | Input→output lineage edges (actor `pi`, `agent`, `operation`, or `integrity`) | Authoritative provenance |
 | *view* `concept_status` | `concepts ⋈ concept_verdicts`, COALESCE check_status→'unchecked' | Read projection |
 | *view* `consumable_outputs` | Outputs safe to consume (checked + db-store or materialized) | Read projection |
 

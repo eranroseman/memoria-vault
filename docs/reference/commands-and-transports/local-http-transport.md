@@ -92,13 +92,15 @@ unscoped; that is appropriate only for a trusted local adapter.
   "payload": {},
   "idempotency_key": "optional-stable-request-id",
   "schedule_id": "optional-schedule-id",
-  "actor": "agent"
+  "agent_identity": "optional-concrete-agent-name"
 }
 ```
 
 `operation_id` is required. `payload` must be an object; non-object payloads are
-treated as `{}`. `actor` defaults to `agent` when omitted. The transport records
-write provenance as:
+treated as `{}`. The transport records every operation request with actor
+`agent`; callers cannot select another actor. `agent_identity`, when supplied,
+is provenance metadata. This adapter has no PI request-control or
+evidence-disposition endpoint. The transport records write provenance as:
 
 ```json
 {"surface": "memoria-http", "command": "http:<operation_id>"}
@@ -107,6 +109,10 @@ write provenance as:
 The worker owns operation validation and materialization. For example,
 `create-concept` still rejects target paths outside the declared Concept home
 and leaves the new Concept unchecked.
+
+An idempotency key binds the complete request envelope. Repeating the same
+envelope returns the existing request. A request that reuses the key with a
+different envelope is rejected with `400`.
 
 ## Responses
 

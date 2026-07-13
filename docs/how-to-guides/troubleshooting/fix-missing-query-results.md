@@ -55,7 +55,7 @@ FLATTEN topics AS value
 GROUP BY value
 ```
 
-For Work `research_area` or `methodology`, inspect the Work through
+For Work `research_area` or the stored classification metadata, inspect the Work through
 `memoria work export --workspace . <work-id>` or the corresponding read API
 payload instead of looking for source frontmatter.
 
@@ -66,8 +66,13 @@ payload instead of looking for source frontmatter.
 **1. Correct the record to the exact term.** Open each offending note and set
 `topics` to the controlled value exactly — kebab-case, exact spelling, scalar vs
 list as the schema requires ([Frontmatter fields](../../reference/data-model/frontmatter.md)).
-For Work metadata, use `memoria work update`. The record re-appears once the
-query source is refreshed.
+For Work `research_area`, use `memoria work update --research-area`. The record
+re-appears once the query source is refreshed.
+
+> **Deferred — Foundation F4:** the current `work update` command has no
+> `--methodology` option and still exposes `--topic` for Work rows. F4 aligns
+> that surface with the vocabulary model; do not treat note `topics` as an
+> independently controlled Work field.
 
 **2. Or add the term to the vocabulary** — if the value is a legitimate concept the vocabulary simply lacks. Don't scatter one-off variants; promote it once, properly: [Manage vocabulary](../knowledge/manage-vocabulary.md). Then bring any existing variants into line with the new canonical term.
 

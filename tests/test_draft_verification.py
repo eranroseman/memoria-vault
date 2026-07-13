@@ -1,17 +1,92 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.knowledge import analyze_gaps as _analyze_gaps
 from memoria_vault.runtime.knowledge import (
-    compose_project_draft,
-    resolve_evidence_review,
-    verify_project_draft,
-    write_project_export,
+    compose_project_draft as _compose_project_draft,
 )
-from tests.helpers import write_checked_concept
+from memoria_vault.runtime.knowledge import (
+    resolve_evidence_review as _resolve_evidence_review,
+)
+from memoria_vault.runtime.knowledge import (
+    verify_project_draft as _verify_project_draft,
+)
+from memoria_vault.runtime.knowledge import (
+    write_project_export as _write_project_export,
+)
+from tests.helpers import call_with_context, operation_context, write_checked_concept
+
+
+def compose_project_draft(vault: Path, *args, **kwargs):
+    return call_with_context(_compose_project_draft, vault, *args, **kwargs)
+
+
+def analyze_gaps(vault: Path, *args, **kwargs):
+    return call_with_context(_analyze_gaps, vault, *args, **kwargs)
+
+
+def resolve_evidence_review(vault: Path, *args, **kwargs):
+    kwargs.setdefault("actor", "pi")
+    kwargs.setdefault("machine", "test-machine")
+    return _resolve_evidence_review(vault, *args, **kwargs)
+
+
+def verify_project_draft(vault: Path, *args, **kwargs):
+    return call_with_context(_verify_project_draft, vault, *args, **kwargs)
+
+
+def write_project_export(vault: Path, *args, **kwargs):
+    return call_with_context(_write_project_export, vault, *args, **kwargs)
+
+
+def test_compose_rejects_forged_context_before_draft_or_evidence_mutation(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="A claim that must not be composed under forged provenance.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    context = operation_context(vault, operation_id="compose-project-draft")
+    forged = replace(context, actor="integrity")
+
+    with pytest.raises(ValueError, match="context"):
+        _compose_project_draft(vault, "project-alpha", context=forged)
+
+    assert not (vault / "projects/project-alpha/draft.md").exists()
+    assert state.evidence_sets(vault) == []
+
+
+def test_verify_rejects_forged_context_before_evidence_rebuild(tmp_path: Path) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="A claim with an evidence marker.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    compose_project_draft(vault, "project-alpha", run_id="compose-run")
+    before = state.evidence_sets(vault)
+    context = operation_context(vault, operation_id="verify-project-draft")
+    forged = replace(context, run_id="forged-run")
+
+    with pytest.raises(ValueError, match="context"):
+        _verify_project_draft(vault, "project-alpha", context=forged)
+
+    assert state.evidence_sets(vault) == before
 
 
 def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path: Path) -> None:
@@ -36,11 +111,18 @@ def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path:
     _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — Support\n")
     compose_project_draft(vault, "project-alpha")
 
-    verification = verify_project_draft(vault, "project-alpha")
+    verification = verify_project_draft(
+        vault,
+        "project-alpha",
+        run_id="verify-project-request-run",
+    )
     exported = write_project_export(vault, "project-alpha", draft=True)
 
     assert verification["ready"] is True
     assert verification["findings"] == []
+    assert {row["run_id"] for row in verification["evidence_sets"]} == {
+        "verify-project-request-run"
+    }
     assert "This source-backed claim can be exported." in exported["content"]
     assert "[@source-alpha]" in exported["content"]
     assert "%%ev:" not in exported["content"]
@@ -215,6 +297,90 @@ def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
 
     assert verification["ready"] is True
     assert verification["findings"] == []
+
+
+def test_evidence_review_rejects_non_pi_actor_without_clearing_draft_gate(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim still needs PI review.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    result = compose_project_draft(vault, "project-alpha")
+    evidence_id = result["evidence_markers"][0]["id"]
+
+    with pytest.raises(ValueError, match="resolve-evidence-review requires PI actor authority"):
+        resolve_evidence_review(
+            vault,
+            evidence_id,
+            decision="accept",
+            reason="agent attempted disposition",
+            actor="agent",
+        )
+
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert verification["ready"] is False
+    assert {finding["kind"] for finding in verification["findings"]} == {
+        "evidence-incomplete",
+        "review-required",
+    }
+
+
+def test_regular_export_with_existing_draft_uses_export_context_for_readiness(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim remains visible in the regular export.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    compose_project_draft(vault, "project-alpha")
+
+    exported = write_project_export(
+        vault,
+        "project-alpha",
+        run_id="export-project-request-run",
+    )
+
+    assert exported["readiness"]["ready"] is False
+    assert {row["run_id"] for row in state.evidence_sets(vault)} == {"export-project-request-run"}
+
+
+def test_gap_analysis_with_existing_draft_uses_analysis_context_for_readiness(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim contributes a paper-readiness gap.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    compose_project_draft(vault, "project-alpha")
+
+    result = analyze_gaps(
+        vault,
+        project_path="project-alpha",
+        run_id="analyze-gaps-request-run",
+    )
+
+    assert result["paper_readiness_gap_count"] == 1
+    assert {row["run_id"] for row in state.evidence_sets(vault)} == {"analyze-gaps-request-run"}
 
 
 def _project(vault: Path) -> None:

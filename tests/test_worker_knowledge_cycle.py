@@ -28,7 +28,9 @@ def run_operation(
     *,
     key: str,
 ) -> dict:
-    job = enqueue_operation(vault, operation_id, payload=payload or {}, idempotency_key=key)
+    job = enqueue_operation(
+        vault, operation_id, payload=payload or {}, idempotency_key=key, actor="pi"
+    )
     done = run_request(vault, str(job["job_id"]), machine="cycle-machine")
     assert done is not None
     assert done["status"] == "done"
@@ -36,7 +38,7 @@ def run_operation(
 
 
 def run_trusted_write(vault: Path, target: str, content: str, *, key: str) -> dict:
-    enqueue_trusted_write(vault, target, content, idempotency_key=key)
+    enqueue_trusted_write(vault, target, content, idempotency_key=key, actor="operation")
     done = run_next_job(vault, machine="cycle-machine")
     assert done is not None
     assert done["status"] == "done"
@@ -285,12 +287,12 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         key="rollback-cycle",
     )
     reverted = set(rollback["rollback"]["reverted"])
-    assert digest["digest_path"] in reverted
+    needs_human = set(rollback["rollback"]["needs_human"])
+    assert reverted == set()
+    assert digest["digest_path"] in needs_human
+    assert note_path in needs_human
     assert not (vault / source_ref).exists()
-    assert not (vault / digest["digest_path"]).exists()
+    assert (vault / digest["digest_path"]).exists()
     assert (vault / note_path).exists()
-    assert "check_status" not in read_frontmatter(
-        vault / ".memoria/quarantine" / digest["digest_path"]
-    )
-    assert state.concept_check_status(vault, digest["digest_path"]) == "quarantined"
-    assert state.concept_check_status(vault, note_path) == "quarantined"
+    assert state.concept_check_status(vault, digest["digest_path"]) == "checked"
+    assert state.concept_check_status(vault, note_path) == "checked"

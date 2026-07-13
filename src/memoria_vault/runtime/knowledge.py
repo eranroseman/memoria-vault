@@ -28,11 +28,15 @@ from memoria_vault.runtime.policy.paths import normalize_path, require_policy_pa
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    append_explicit_journal_event,
     append_journal_event,
     commit_writer_changes,
+    mark_checked,
     materialize_unchecked,
     promote_checked,
     stage_concept,
+    validate_operation_context,
 )
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
@@ -105,12 +109,11 @@ def frame_project_paper(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     paper_plan: dict[str, Any],
-    machine: str | None = None,
-    run_id: str = "",
-    actor: str = "pi",
 ) -> dict[str, Any]:
     """Record PI-supplied paper framing fields on a project and leave it unchecked."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     path = vault / project_rel
@@ -132,14 +135,11 @@ def frame_project_paper(
         vault,
         project_rel,
         frontmatter_doc(frontmatter, body),
-        operation="frame-paper",
-        run_id=run_id,
-        actor=actor,
-        machine=machine,
+        context=context,
     )
-    materialized = materialize_unchecked(vault, project_rel)
+    materialized = materialize_unchecked(vault, project_rel, context=context)
     commit = commit_writer_changes(
-        vault, f"frame paper {Path(project_rel).stem}", [project_rel], machine=machine
+        vault, f"frame paper {Path(project_rel).stem}", [project_rel], context=context
     )
     return {
         "project_path": project_rel,
@@ -176,12 +176,12 @@ def emit_note_candidates(
     digest_path: str,
     candidates: Iterable[dict[str, Any]],
     *,
+    context: OperationContext,
     operation_id: str = "propose-note-candidates",
     mode: str | None = None,
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Promote checked note candidates derived from one checked digest."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
     runner = resolve_operation_runner(vault, policy, mode)
@@ -195,17 +195,15 @@ def emit_note_candidates(
     if not rows:
         raise ValueError("at least one note candidate is required")
 
-    run_id = run_id or f"{operation_id}:{Path(digest_rel).stem}"
     started = append_journal_event(
         vault,
-        {"event": "run", "run_id": run_id, "workflow": operation_id, "status": "started"},
-        machine=machine,
+        {"event": "run", "workflow": operation_id, "status": "started"},
+        context=context,
     )
     model_call = append_journal_event(
         vault,
         {
             "event": "model_call",
-            "run_id": run_id,
             "mode": runner["mode"],
             "runner": runner["runner"],
             "provider": runner["provider"],
@@ -221,7 +219,7 @@ def emit_note_candidates(
             "input_hash": sha256_file(vault / digest_rel),
             "output_hash": _sha256_text(repr(rows)),
         },
-        machine=machine,
+        context=context,
     )
 
     staged = []
@@ -256,12 +254,10 @@ def emit_note_candidates(
             vault,
             note_rel,
             concept_text(frontmatter, title, body),
+            context=context,
             inputs=[{"id": digest_rel, "sha256": sha256_file(vault / digest_rel)}],
-            operation=operation_id,
-            run_id=run_id,
-            machine=machine,
         )
-        check = promote_checked(vault, note_rel, checks=promotion_checks, machine=machine)
+        check = promote_checked(vault, note_rel, checks=promotion_checks, context=context)
         staged.append(stage)
         checked.append(check)
         note_paths.append(note_rel)
@@ -270,18 +266,17 @@ def emit_note_candidates(
         vault,
         {
             "event": "run",
-            "run_id": run_id,
             "workflow": operation_id,
             "status": "done",
             "outputs": note_paths,
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
-        vault, f"propose notes {Path(digest_rel).stem}", note_paths, machine=machine
+        vault, f"propose notes {Path(digest_rel).stem}", note_paths, context=context
     )
     return {
-        "run_id": run_id,
+        "run_id": context.run_id,
         "note_paths": note_paths,
         "started": started,
         "model_call": model_call,
@@ -297,10 +292,11 @@ def curate_note_candidate(
     note_path: str,
     status: str,
     *,
+    context: OperationContext,
     reason: str = "",
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Record PI acceptance or rejection of a checked candidate note."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     note_rel = _note_rel(note_path)
     status = status.strip().lower()
@@ -320,17 +316,15 @@ def curate_note_candidate(
         vault,
         {
             "event": "resolved",
-            "actor": "pi",
-            "operation": "curate-note-candidate",
             "target_id": note_rel,
             "target_sha256": sha256_file(note),
             "resolution": status,
             "reason": reason.strip(),
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
-        vault, f"{status} note candidate {Path(note_rel).stem}", [note_rel], machine=machine
+        vault, f"{status} note candidate {Path(note_rel).stem}", [note_rel], context=context
     )
     return {"note_path": note_rel, "status": status, "event": event, "commit": commit}
 
@@ -341,10 +335,11 @@ def curate_note_link(
     link_type: str,
     target_path: str,
     *,
+    context: OperationContext,
     reason: str = "",
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Record one PI-authored typed link on a checked note."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     source_rel = _note_rel(source_note_path)
     target_rel = _concept_rel(target_path)
@@ -373,19 +368,16 @@ def curate_note_link(
         bucket.append(target_rel)
         frontmatter["links"] = links
         write_frontmatter_doc(source_note, frontmatter, body)
-        state.mark_checked(
+        mark_checked(
             vault,
             source_rel,
-            sha256_file(source_note),
-            source_note.read_text(encoding="utf-8"),
+            context=context,
         )
 
     event = append_journal_event(
         vault,
         {
             "event": "resolved",
-            "actor": "pi",
-            "operation": "curate-note-link",
             "target_id": source_rel,
             "linked_id": target_rel,
             "link_type": link_type,
@@ -393,10 +385,10 @@ def curate_note_link(
             "changed": changed,
             "reason": reason.strip(),
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
-        vault, f"link note {Path(source_rel).stem}", [source_rel], machine=machine
+        vault, f"link note {Path(source_rel).stem}", [source_rel], context=context
     )
     return {
         "source_note_path": source_rel,
@@ -411,12 +403,13 @@ def curate_note_link(
 def analyze_gaps(
     vault: Path,
     *,
+    context: OperationContext,
     seed_terms: Iterable[str] = (),
     dense_threshold: int = 2,
     project_path: str = "",
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Classify source/note topic mismatches over checked Concepts and search hits."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_path = project_path.strip()
     project_argument: dict[str, Any] | None = None
@@ -425,7 +418,7 @@ def analyze_gaps(
     if project_path:
         project_argument = analyze_project_argument(vault, project_path)
         argument_gaps = _project_argument_gaps(project_argument)
-        paper_gaps = _project_paper_readiness_gaps(vault, project_path)
+        paper_gaps = _project_paper_readiness_gaps(vault, project_path, context=context)
     counts: dict[str, dict[str, int]] = defaultdict(
         lambda: {"sources": 0, "digests": 0, "notes": 0}
     )
@@ -456,7 +449,7 @@ def analyze_gaps(
             labels.setdefault(label.lower(), label)
             counts[label.lower()]
 
-    _add_search_gap_hits(vault, counts, seen, labels, retrieval)
+    _add_search_gap_hits(vault, counts, seen, labels, retrieval, context=context)
 
     gaps = []
     for key in sorted(counts):
@@ -514,14 +507,14 @@ def analyze_gaps(
     gaps.extend(argument_gaps)
     gaps.extend(paper_gaps)
     full_text_attention_paths, full_text_attention_commit = _write_full_text_gap_attention(
-        vault, full_text_gaps, machine=machine
+        vault, full_text_gaps, context=context
     )
-    candidate_paths, commit = _write_gap_discovery_candidates(vault, gaps, machine=machine)
+    candidate_paths, commit = _write_gap_discovery_candidates(vault, gaps, context=context)
     tag_candidates = _tag_candidates(vault)
     tag_candidate_paths, tag_candidate_commit = _write_tag_candidate_attention(
         vault,
         tag_candidates,
-        machine=machine,
+        context=context,
     )
     result = {
         "checked_topics": len(counts),
@@ -910,8 +903,10 @@ def _project_argument_gaps(argument: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def _project_paper_readiness_gaps(vault: Path, project_path: str) -> list[dict[str, Any]]:
-    readiness = project_export_readiness(vault, project_path)
+def _project_paper_readiness_gaps(
+    vault: Path, project_path: str, *, context: OperationContext
+) -> list[dict[str, Any]]:
+    readiness = project_export_readiness(vault, project_path, context=context)
     if readiness["ready"]:
         return []
     missing = ", ".join(readiness["missing"])
@@ -986,6 +981,8 @@ def _add_search_gap_hits(
     seen: dict[str, dict[str, set[str]]],
     labels: dict[str, str],
     retrieval: dict[str, dict[str, Any]],
+    *,
+    context: OperationContext,
 ) -> None:
     from memoria_vault.runtime.search_index import SEARCH_MANIFEST, answer_query
 
@@ -993,7 +990,7 @@ def _add_search_gap_hits(
         return
 
     for key, label in sorted(labels.items()):
-        answer = answer_query(vault, label, k=5)
+        answer = answer_query(vault, label, k=5, context=context)
         retrieval[key] = {
             "engine": answer["engine"],
             "sources": answer["sources"],
@@ -1046,10 +1043,8 @@ def _write_full_text_gap_attention(
     vault: Path,
     gaps: list[dict[str, Any]],
     *,
-    machine: str | None,
+    context: OperationContext,
 ) -> tuple[list[str], str]:
-    if machine is None:
-        return [], ""
     paths = []
     for gap in gaps:
         work_id = str(gap.get("work_id") or "").strip()
@@ -1101,13 +1096,13 @@ def _write_full_text_gap_attention(
             "operation": "analyze-gaps",
             "outputs": sorted(paths),
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
         vault,
         "flag gap full text",
         sorted(paths),
-        machine=machine,
+        context=context,
     )
     return sorted(paths), commit
 
@@ -1116,10 +1111,8 @@ def _write_gap_discovery_candidates(
     vault: Path,
     gaps: list[dict[str, Any]],
     *,
-    machine: str | None,
+    context: OperationContext,
 ) -> tuple[list[str], str]:
-    if machine is None:
-        return [], ""
     work_ids = {
         work_id
         for gap in gaps
@@ -1165,13 +1158,13 @@ def _write_gap_discovery_candidates(
             "operation": "analyze-gaps",
             "outputs": new_paths,
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
         vault,
         "propose gap discovery candidates",
         new_paths,
-        machine=machine,
+        context=context,
     )
     for gap in gaps:
         related = _sort_discovery_candidate_paths(
@@ -1311,9 +1304,9 @@ def _write_tag_candidate_attention(
     vault: Path,
     candidates: list[dict[str, Any]],
     *,
-    machine: str | None,
+    context: OperationContext,
 ) -> tuple[list[str], str]:
-    if machine is None or not candidates:
+    if not candidates:
         return [], ""
     new_paths = []
     for candidate in candidates:
@@ -1353,13 +1346,13 @@ def _write_tag_candidate_attention(
             "operation": "analyze-gaps",
             "outputs": sorted(new_paths),
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
         vault,
         "propose tag candidates",
         sorted(new_paths),
-        machine=machine,
+        context=context,
     )
     return sorted(new_paths), commit
 
@@ -1467,15 +1460,33 @@ def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
 def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
     from memoria_vault.runtime.integrity import (
         NLI_REFUTED,
-        surface_tensions,
+        tier1_tension_candidates,
     )
 
     try:
-        result = surface_tensions(vault, max_pairs=limit, tier2=False)
+        candidates = []
+        tier1 = tier1_tension_candidates(vault)
+        for evaluation in tier1["candidates"]:
+            verdict = evaluation["verdict"]
+            if verdict is None or verdict["verdict"] != NLI_REFUTED:
+                continue
+            left = evaluation["left"]
+            right = evaluation["right"]
+            candidates.append(
+                {
+                    "left": left["id"],
+                    "left_title": left["title"],
+                    "right": right["id"],
+                    "verdict": NLI_REFUTED,
+                    "warrant": verdict.get("warrant") or "",
+                }
+            )
+            if len(candidates) >= limit:
+                break
     except Exception:  # noqa: BLE001 -- exploration must degrade to honest empty.
         return []
     rows = []
-    for candidate in result.get("candidates") or []:
+    for candidate in candidates:
         if candidate.get("verdict") != NLI_REFUTED:
             continue
         left = str(candidate.get("left") or "").strip()
@@ -1758,10 +1769,11 @@ def write_project_argument_canvas(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Write the checked project argument graph as a generated Canvas projection."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     canvas_rel = _project_canvas_rel(project_rel)
@@ -1776,19 +1788,18 @@ def write_project_argument_canvas(
             vault,
             {
                 "event": "run",
-                "run_id": f"projection:{canvas_rel}",
                 "workflow": "render-project-argument-canvas",
                 "status": "done",
                 "inputs": [project_rel],
                 "outputs": [canvas_rel],
             },
-            machine=machine,
+            context=context,
         )
         commit_id = commit_writer_changes(
             vault,
             "render project argument canvas",
             [canvas_rel],
-            machine=machine,
+            context=context,
         )
     return {
         "project_path": project_rel,
@@ -1804,10 +1815,12 @@ def propose_project_slice(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     query: str = "",
     limit: int = 20,
 ) -> dict[str, Any]:
     """Propose checked note membership for a project slice using BM25 only."""
+    validate_operation_context(vault, context)
     from memoria_vault.runtime.search_index import search_checked_index
 
     vault = Path(vault)
@@ -1819,7 +1832,9 @@ def propose_project_slice(
     notes = _checked_notes_by_path(vault)
     members = []
     skipped = []
-    for hit in search_checked_index(vault, retrieval_query, k=max(limit * 4, limit)):
+    for hit in search_checked_index(
+        vault, retrieval_query, k=max(limit * 4, limit), context=context
+    ):
         rel = str(hit["path"])
         frontmatter = notes.get(rel)
         if frontmatter is None:
@@ -1855,14 +1870,15 @@ def write_project_outline(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     query: str = "",
     limit: int = 20,
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Write a host-neutral project outline from a BM25 project-slice proposal."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
-    proposal = propose_project_slice(vault, project_path, query=query, limit=limit)
+    proposal = propose_project_slice(vault, project_path, query=query, limit=limit, context=context)
     outline_rel = str(proposal["outline_path"])
     outline_path = vault / outline_rel
     outline_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1875,7 +1891,6 @@ def write_project_outline(
             vault,
             {
                 "event": "run",
-                "run_id": f"project-slice:{outline_rel}",
                 "workflow": "write-project-slice",
                 "status": "done",
                 "inputs": [proposal["project_path"]],
@@ -1884,13 +1899,13 @@ def write_project_outline(
                 "query": proposal["query"],
                 "member_count": len(project_slice["members"]),
             },
-            machine=machine,
+            context=context,
         )
         commit_id = commit_writer_changes(
             vault,
             "write project slice outline",
             [outline_rel],
-            machine=machine,
+            context=context,
         )
     return {
         "project_path": proposal["project_path"],
@@ -1912,11 +1927,12 @@ def compose_project_draft(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     token_budget: int = 4000,
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Compose a deterministic draft from a project's outline slice."""
+    validate_operation_context(vault, context)
     from memoria_vault.runtime.evidence import (
         EvidenceMarker,
         evidence_ids_in_text,
@@ -1982,7 +1998,7 @@ def compose_project_draft(
     draft_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     rebuild = state.rebuild_evidence_sets_from_markers(
         vault,
-        run_id=f"compose-project-draft:{project_rel}",
+        run_id=context.run_id,
     )
     draft = read_project_draft(vault, project_rel)
     event = None
@@ -1992,7 +2008,6 @@ def compose_project_draft(
             vault,
             {
                 "event": "run",
-                "run_id": f"compose-project-draft:{draft_rel}",
                 "workflow": "compose-project-draft",
                 "status": "done",
                 "inputs": [project_rel, project_slice["outline_path"]],
@@ -2000,13 +2015,13 @@ def compose_project_draft(
                 "member_count": len(members),
                 "evidence_set_count": len(evidence_markers),
             },
-            machine=machine,
+            context=context,
         )
         commit_id = commit_writer_changes(
             vault,
             "compose project draft",
             [draft_rel],
-            machine=machine,
+            context=context,
         )
     return {
         **draft,
@@ -2062,9 +2077,11 @@ def verify_project_draft(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     max_findings: int = 20,
 ) -> dict[str, Any]:
     """Run deterministic structural/evidence checks for a composed project draft."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     _checked_frontmatter(vault, project_rel, "project")
@@ -2084,7 +2101,7 @@ def verify_project_draft(
         }
     rebuild = state.rebuild_evidence_sets_from_markers(
         vault,
-        run_id=f"verify-project-draft:{project_rel}",
+        run_id=context.run_id,
     )
     draft = read_project_draft(vault, project_rel)
     findings = []
@@ -2135,18 +2152,21 @@ def resolve_evidence_review(
     vault: Path,
     evidence_id: str,
     *,
+    actor: str,
+    machine: str,
     decision: str,
     reason: str = "",
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Record a PI disposition for one evidence-set review item."""
+    if actor != "pi":
+        raise ValueError("resolve-evidence-review requires PI actor authority")
     evidence_id = evidence_id.strip()
     decision = decision.strip().lower()
     if not re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id):
         raise ValueError(f"invalid evidence id: {evidence_id}")
     if decision not in {"accept", "reject"}:
         raise ValueError("evidence review decision must be accept or reject")
-    return append_journal_event(
+    return append_explicit_journal_event(
         Path(vault),
         {
             "event": "resolved",
@@ -2155,6 +2175,7 @@ def resolve_evidence_review(
             "decision": decision,
             "reason": reason.strip(),
         },
+        actor=actor,
         machine=machine,
     )
 
@@ -2163,13 +2184,14 @@ def promote_draft_passage(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     title: str,
     passage: str,
     work_id: str = "",
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Extract a selected draft passage into a new unchecked note."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     draft_rel = _project_draft_rel(project_rel)
@@ -2197,18 +2219,14 @@ def promote_draft_passage(
         frontmatter["work_id"] = f"catalog/sources/{note_source}"
     apply_universal_concept_frontmatter(frontmatter, note_rel)
     content = frontmatter_doc(frontmatter, selected + "\n")
-    run_id = f"draft-writeback:{draft_rel}:{Path(note_rel).stem}"
     stage = stage_concept(
         vault,
         note_rel,
         content,
+        context=context,
         inputs=[{"id": draft_rel, "sha256": sha256_file(draft_path)}],
-        operation="promote-draft-passage",
-        run_id=run_id,
-        actor="pi",
-        machine=machine,
     )
-    materialized = materialize_unchecked(vault, note_rel)
+    materialized = materialize_unchecked(vault, note_rel, context=context)
     link = _draft_note_markdown_link(draft_rel, note_rel, note_title)
     if link not in draft_content:
         draft_path.write_text(
@@ -2219,13 +2237,11 @@ def promote_draft_passage(
         vault,
         {
             "event": "resolved",
-            "operation": "promote-draft-passage",
-            "run_id": run_id,
             "draft_path": draft_rel,
             "output_id": note_rel,
             "work_id": frontmatter.get("work_id", ""),
         },
-        machine=machine,
+        context=context,
     )
     commit_id = ""
     if commit:
@@ -2233,7 +2249,7 @@ def promote_draft_passage(
             vault,
             "promote draft passage",
             [note_rel, draft_rel],
-            machine=machine,
+            context=context,
         )
     return {
         "project_path": project_rel,
@@ -2381,21 +2397,23 @@ def write_project_export(
     vault: Path,
     project_path: str,
     *,
+    context: OperationContext,
     export_format: str = "markdown",
     output_path: str = "",
     ready_only: bool = False,
     draft: bool = False,
 ) -> dict[str, Any]:
     """Write or return a deterministic project export."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     export_format = export_format.strip().lower() or "markdown"
     if export_format not in {"markdown", "docx", "pdf", "odt"}:
         raise ValueError(f"unsupported project export format: {export_format}")
     if draft:
-        rendered = render_project_draft_export_markdown(vault, project_path)
+        rendered = render_project_draft_export_markdown(vault, project_path, context=context)
         readiness = rendered["readiness"]
     else:
-        readiness = project_export_readiness(vault, project_path)
+        readiness = project_export_readiness(vault, project_path, context=context)
         if ready_only and not readiness["ready"]:
             missing = ", ".join(readiness["missing"])
             raise ValueError(f"project is not export-ready: {missing}")
@@ -2438,10 +2456,13 @@ def write_project_export(
     }
 
 
-def render_project_draft_export_markdown(vault: Path, project_path: str) -> dict[str, Any]:
+def render_project_draft_export_markdown(
+    vault: Path, project_path: str, *, context: OperationContext
+) -> dict[str, Any]:
     """Render a verified project draft with internal evidence markers stripped."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
-    verification = verify_project_draft(vault, project_path)
+    verification = verify_project_draft(vault, project_path, context=context)
     if not verification["ok"]:
         reasons = ", ".join(_verification_finding_labels(verification["findings"]))
         raise ValueError(f"project draft is not export-ready: {reasons}")
@@ -2459,8 +2480,11 @@ def render_project_draft_export_markdown(vault: Path, project_path: str) -> dict
     }
 
 
-def project_export_readiness(vault: Path, project_path: str) -> dict[str, Any]:
+def project_export_readiness(
+    vault: Path, project_path: str, *, context: OperationContext
+) -> dict[str, Any]:
     """Return structural export readiness for a checked paper project."""
+    validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     project = _checked_frontmatter(vault, project_rel, "project")
@@ -2473,7 +2497,7 @@ def project_export_readiness(vault: Path, project_path: str) -> dict[str, Any]:
     if argument["supports_count"] < 1:
         missing.append("checked support")
     if (vault / _project_draft_rel(project_rel)).is_file():
-        draft_verification = verify_project_draft(vault, project_rel)
+        draft_verification = verify_project_draft(vault, project_rel, context=context)
         missing.extend(draft_verification["missing"])
     return {
         "ready": not missing,

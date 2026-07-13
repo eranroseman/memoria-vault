@@ -1,23 +1,56 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source, check_references_bib, write_references_bib
-from memoria_vault.runtime.integrity import check_citation_survival
+from memoria_vault.runtime.capture import capture_source as _capture_source
+from memoria_vault.runtime.capture import check_references_bib
+from memoria_vault.runtime.capture import write_references_bib as _write_references_bib
+from memoria_vault.runtime.integrity import check_citation_survival as _check_citation_survival
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
-    commit_writer_changes,
-    promote_checked,
+    commit_writer_changes as _commit_writer_changes,
+)
+from memoria_vault.runtime.trusted_writer import (
+    promote_checked as _promote_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
     rebuild_concept_mirror_from_files,
-    stage_concept,
+)
+from memoria_vault.runtime.trusted_writer import (
+    stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write, run_next_job
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_source, vault, *args, **kwargs)
+
+
+def write_references_bib(vault: Path, *args, **kwargs):
+    return call_with_context(_write_references_bib, vault, *args, **kwargs)
+
+
+def check_citation_survival(vault: Path, *args, **kwargs):
+    return call_with_context(_check_citation_survival, vault, *args, **kwargs)
+
+
+def commit_writer_changes(vault: Path, *args, **kwargs):
+    return call_with_context(_commit_writer_changes, vault, *args, **kwargs)
+
+
+def promote_checked(vault: Path, *args, **kwargs):
+    return call_with_context(_promote_checked, vault, *args, **kwargs)
+
+
+def stage_concept(vault: Path, *args, **kwargs):
+    return call_with_context(_stage_concept, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -106,6 +139,7 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         causal_refs=[{"id": "journal:1"}],
         provenance={"surface": "workspace-scan", "source": "pytest"},
         schedule_id="manual-scan",
+        actor="pi",
     )
 
     envelope = job["request_envelope"]
@@ -159,6 +193,7 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
         "notes/sqlite-worker.md",
         note_text("SQLite worker"),
         idempotency_key="sqlite-worker",
+        actor="operation",
     )
 
     done = run_next_job(vault, machine="state-machine")
@@ -444,3 +479,37 @@ def test_sqlite_journal_is_append_only_and_hash_chained(tmp_path: Path) -> None:
     assert first["prev_hash"] == "GENESIS"
     assert first["row_hash"]
     assert "journal is append-only" in blocked
+
+
+def test_private_journal_storage_requires_matching_payload_machine(tmp_path: Path) -> None:
+    with pytest.raises(AssertionError, match="machine"):
+        state._append_journal_row(
+            tmp_path,
+            {"event": "manual", "timestamp": "2026-07-12T00:00:00Z", "machine": "a"},
+            machine="b",
+        )
+
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+
+
+def test_private_journal_storage_does_not_normalize_machine(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_normalization(_value: str) -> str:
+        raise AssertionError("storage must not normalize machine")
+
+    monkeypatch.setattr(state, "safe_filename", fail_normalization)
+    event = {
+        "event": "manual",
+        "timestamp": "2026-07-12T00:00:00Z",
+        "machine": "already_normalized",
+    }
+
+    state._append_journal_row(tmp_path, event, machine="already_normalized")
+
+    with state.connect(tmp_path) as conn:
+        row = conn.execute("SELECT machine, payload_json FROM event_log").fetchone()
+    assert row["machine"] == "already_normalized"
+    assert json.loads(row["payload_json"]) == event

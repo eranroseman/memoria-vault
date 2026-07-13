@@ -6,20 +6,36 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source
+from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
-    compile_source_digest,
+    compile_source_digest as _compile_source_digest,
+)
+from memoria_vault.runtime.operations import (
     load_operation_policy,
     load_runner_provider_config,
-    record_copi_interview_turn,
     require_allowed_network,
     resolve_operation_runner,
     validate_operation_policy,
 )
+from memoria_vault.runtime.operations import (
+    record_copi_interview_turn as _record_copi_interview_turn,
+)
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
-from tests.helpers import copy_memoria_dirs, git, init_git, patch_pydantic_ai
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, patch_pydantic_ai
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_source, vault, *args, **kwargs)
+
+
+def compile_source_digest(vault: Path, *args, **kwargs):
+    return call_with_context(_compile_source_digest, vault, *args, **kwargs)
+
+
+def record_copi_interview_turn(vault: Path, *args, **kwargs):
+    return call_with_context(_record_copi_interview_turn, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -325,6 +341,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
         vault,
         "source-alpha",
         "The PI cares about the methods caveat.",
+        actor="pi",
         project_id="projects/project-alpha/project.md",
         machine="copi-machine",
     )

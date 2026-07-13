@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,6 +74,38 @@ def add_repo_paths(root: Path) -> None:
             sys.path.insert(0, str(path))
 
 
+def _operation_context(vault: Path, operation_id: str):
+    from memoria_vault.runtime import state
+    from memoria_vault.runtime.trusted_writer import OperationContext
+
+    request_id = f"e2e-{uuid.uuid4().hex}"
+    envelope = state.request_envelope(
+        request_id=request_id,
+        operation_id=operation_id,
+        actor="operation",
+        provenance={"surface": "e2e-smoke"},
+    )
+    job = state.save_request(
+        vault,
+        envelope,
+        {
+            "job_id": request_id,
+            "kind": "operation",
+            "operation_id": operation_id,
+            "bound_context": {
+                "actor": "operation",
+                "run_id": request_id,
+                "request_id": request_id,
+                "operation_id": operation_id,
+                "machine": "e2e",
+            },
+        },
+    )
+    job["status"] = "running"
+    state.set_request_running(vault, request_id, job)
+    return OperationContext("operation", request_id, request_id, operation_id, "e2e")
+
+
 def assert_offline_ingest(root: Path, vault: Path) -> None:
     add_repo_paths(root)
 
@@ -90,9 +123,9 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
     result = capture_bibtex_source(
         vault,
         bib,
+        context=_operation_context(vault, "capture-bibtex-source"),
         work_id="demo-work",
         content_text="Demo Work package-gate source.",
-        machine="e2e",
     )
     source = state.catalog_source(vault, result["work_id"])
     assert result["source_path"] == "catalog/sources/demo-work"
@@ -102,7 +135,7 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
     assert not (vault / "catalog/sources/demo-work/source.md").exists()
     assert (vault / result["content_path"]).is_file()
     assert (vault / result["raw_path"]).is_file()
-    write_references_bib(vault)
+    write_references_bib(vault, context=_operation_context(vault, "regenerate-references-bib"))
     assert "@article{x2024demo" in (vault / "bibliography.bib").read_text(encoding="utf-8")
     print("   checked source + bibliography projection asserted")
 
@@ -143,7 +176,11 @@ def assert_typed_graph(root: Path, vault: Path) -> None:
             output_sha256=sha256_file(path),
         )
         state.set_concept_verdict(vault, rel, "checked")
-    result = write_project_argument_canvas(vault, "package-gate")
+    result = write_project_argument_canvas(
+        vault,
+        "package-gate",
+        context=_operation_context(vault, "render-project-argument-canvas"),
+    )
     assert result["node_count"] == 2
     assert result["edge_count"] == 1
     assert (vault / result["canvas_path"]).is_file()

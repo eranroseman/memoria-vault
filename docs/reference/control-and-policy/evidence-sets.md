@@ -34,7 +34,7 @@ hash still matches the marker. Running code warrants the output provenance; it
 does not make the research claim true.
 
 Draft verification reports `evidence-incomplete` and `review_required` markers.
-The PI records a disposition with:
+Only the PI can record a disposition:
 
 ```bash
 memoria project resolve-evidence <project> --evidence-id ev-1234abcd --decision accept

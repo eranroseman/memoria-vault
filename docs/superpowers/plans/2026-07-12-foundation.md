@@ -6,19 +6,22 @@
 
 **Architecture:** Four repair packages, each its own squash-merged PR. F1 carries the single v8→v9 schema change (all v9 deltas land together); F2 builds on it; F3/F4 are independent. No propagation-semantics changes (G5), no edge-parsing changes (G2), no new features.
 
-**Tech Stack:** Python 3 stdlib + SQLite (no new dependencies). Tests: pytest via `python scripts/verify`.
+**Tech Stack:** Python 3 stdlib + SQLite (no new dependencies). Tests: pytest via `python3 scripts/verify`.
 
 Spec: `docs/superpowers/specs/2026-07-12-foundation-design.md`. Milestone `0.1.0-alpha.21`; issues #1361–#1364.
 
 ## Global Constraints
 
-- Correctness gate: `python scripts/verify` must pass before each PR.
+- Correctness gate: `python3 scripts/verify` must pass before each PR.
 - Test only against disposable vaults (pytest `tmp_path` via `tests/helpers.init_cli_workspace`, or `test-vault/` — renamed from `sandbox/` by #1368); never a personal vault.
 - Stage explicit paths only — never `git add -A` (shared index rule).
 - Every **new** test file must be registered in `tests/conftest.py` `TEST_LEVELS` (map filename → level; use `"contract"` for CLI/API behavior, `"runtime"` for vault-mutating flows, `"unit"` for pure functions).
 - Actor vocabulary (decided): exactly `'pi' | 'agent' | 'operation' | 'integrity'`. Concrete agent identity stays in envelope/journal metadata, never the enum.
 - Schema mechanics (decided): edit `schema.sql` in place; `SCHEMA_VERSION` 8→9; `state._init` accepts `{0, 9}` (it already computes `{0, SCHEMA_VERSION}`); no migration code. Pre-beta vaults are disposable and rebuild.
-- Surface defaults stay: CLI `--actor` `choices=("pi","agent"), default="pi"` (cli.py:549) and MCP `--actor default="agent"` (cli.py:123) are the *surface* declaring the actor. The **engine** never defaults.
+- Surface declarations stay explicit: CLI operation `--actor` declares the
+  `pi|agent` enum and defaults to `pi`; MCP `--actor` names
+  `provenance.agent_identity`, while every MCP request declares enum actor
+  `agent`. The **engine** never defaults the enum actor.
 - PR boundaries: PR-F1 after Task 5, PR-F2 after Task 8, PR-F3 after Task 11, PR-F4 after Task 16. PR titles: `fix(provenance): …` / `fix(journal): …` / `feat(backup): …` / `fix(cli): …`.
 
 ---
@@ -36,7 +39,7 @@ Spec: `docs/superpowers/specs/2026-07-12-foundation-design.md`. Milestone `0.1.0
 - Consumes: nothing (first task).
 - Produces: DB schema v9 — both `operation_requests.actor` and `derivations.actor` carry `CHECK (actor IN ('pi', 'agent', 'operation', 'integrity'))`, `operation_requests.actor` has **no DEFAULT**; indexes `idx_event_log_event_type`, `idx_event_log_timestamp`. All later tasks assume v9.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """tests/test_schema_v9.py — v9 schema contract."""
@@ -103,12 +106,12 @@ def test_event_log_indexes_exist(tmp_path):
 
 Also add to `tests/conftest.py` `TEST_LEVELS` (alphabetical position): `"test_schema_v9.py": "unit",`
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
-Run: `python -m pytest tests/test_schema_v9.py -v`
+Run: `python3 -m pytest tests/test_schema_v9.py -v`
 Expected: FAIL — `test_user_version_is_9` gets 8; agent inserts raise IntegrityError.
 
-- [ ] **Step 3: Implement — schema.sql + SCHEMA_VERSION**
+- [x] **Step 3: Implement — schema.sql + SCHEMA_VERSION**
 
 In `src/memoria_vault/runtime/schema.sql`:
 
@@ -142,12 +145,12 @@ Last line, replace `PRAGMA user_version = 8;` with `PRAGMA user_version = 9;`
 
 In `src/memoria_vault/runtime/state.py:30`: `SCHEMA_VERSION = 9` (`_init` already accepts `{0, SCHEMA_VERSION}` — no change).
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
-Run: `python -m pytest tests/test_schema_v9.py -v` → PASS.
-Then run the full suite to catch envelope call sites that relied on the dropped DEFAULT: `python -m pytest tests/ -x -q`. Failures where code inserts without actor are expected — note them; Task 2/3 fix them. If any test fails for that reason, fix the *test's* setup only when the test itself built a raw INSERT; production-code fixes belong to Tasks 2–3.
+Run: `python3 -m pytest tests/test_schema_v9.py -v` → PASS.
+Then run the full suite to catch envelope call sites that relied on the dropped DEFAULT: `python3 -m pytest tests/ -x -q`. Failures where code inserts without actor are expected — note them; Task 2/3 fix them. If any test fails for that reason, fix the *test's* setup only when the test itself built a raw INSERT; production-code fixes belong to Tasks 2–3.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py tests/test_schema_v9.py tests/conftest.py
@@ -164,7 +167,7 @@ git commit -m "fix(provenance): schema v9 — one actor vocabulary on both table
 - Consumes: v9 schema (Task 1).
 - Produces: `state.ACTORS = frozenset({"pi", "agent", "operation", "integrity"})`; `state.request_envelope(*, ..., actor: str, ...)` — **required** keyword, raises `ValueError` on missing/out-of-vocabulary. Task 3 relies on both.
 
-- [ ] **Step 1: Write the failing test** (append to `tests/test_schema_v9.py`)
+- [x] **Step 1: Write the failing test** (append to `tests/test_schema_v9.py`)
 
 ```python
 def test_request_envelope_requires_actor():
@@ -184,12 +187,12 @@ def test_request_envelope_accepts_vocabulary():
         assert env["actor"] == good
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
-Run: `python -m pytest tests/test_schema_v9.py -k envelope -v`
+Run: `python3 -m pytest tests/test_schema_v9.py -k envelope -v`
 Expected: FAIL — no TypeError (default exists), `"claude"` currently accepted.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `state.py`, next to `SCHEMA_VERSION`:
 ```python
@@ -206,171 +209,54 @@ and in the returned dict: `"actor": actor,`
 
 Fix every caller that omitted `actor`: run `rg -n "request_envelope\(" src/ tests/` and pass the envelope's true actor at each site (worker `enqueue_operation` already receives one from `engine_api.run_operation`; internal engine-initiated sites pass `"operation"` or `"integrity"` — match each site's existing journal-event actor).
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
-Run: `python -m pytest tests/test_schema_v9.py -v` → PASS. `python -m pytest tests/ -x -q` → PASS (call sites fixed).
+Run: `python3 -m pytest tests/test_schema_v9.py -v` → PASS. `python3 -m pytest tests/ -x -q` → PASS (call sites fixed).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/state.py tests/test_schema_v9.py
 git commit -m "fix(provenance): request_envelope requires a valid actor, never defaults"
 ```
 
-### Task 3: Thread envelope actor through worker + retire the hardcodes
+### Task 3: Close request provenance with `OperationContext`
 
-**Files:**
-- Modify: `src/memoria_vault/runtime/worker.py` (add `_envelope_actor`; replace the three `envelope.get("actor") or "pi"` sites at ~316/352/583 and every other `or "pi"` fallback found)
-- Modify: `src/memoria_vault/runtime/operations.py:85` (copi-interview `"actor": "pi"`)
-- Modify: `src/memoria_vault/runtime/knowledge.py:323, 387, 2208` (curate-note-candidate, curate-note-link, promote-draft-passage)
-- Test: `tests/test_actor_threading.py` (new — register as `"runtime"`)
+The approved design requires one immutable context constructed at job claim
+and consumed by every request-mediated writer.
 
-**Interfaces:**
-- Consumes: `state.ACTORS` (Task 2).
-- Produces: `worker._envelope_actor(job: dict) -> str` (raises `ValueError` on missing actor); `operations.record_copi_interview(..., *, actor: str, ...)`, `knowledge.curate_note_candidate(..., *, actor: str, ...)`, `knowledge.curate_note_link(..., *, actor: str, ...)`, `knowledge.promote_draft_passage(..., *, actor: str, ...)` — exact current function names to be confirmed at each line before editing; keep the existing name, add the keyword param.
-
-- [ ] **Step 1: Write the failing test**
-
-```python
-"""tests/test_actor_threading.py — envelope actor flows end-to-end."""
-
-import json
-
-import pytest
-
-from memoria_vault.runtime import state, worker
-from tests.helpers import init_cli_workspace
-
-
-def test_envelope_actor_helper_raises_on_missing():
-    with pytest.raises(ValueError):
-        worker._envelope_actor({"request_envelope": {}})
-    assert worker._envelope_actor({"request_envelope": {"actor": "agent"}}) == "agent"
-
-
-def test_agent_enveloped_create_concept_lands_agent_actor(tmp_path, capsys):
-    workspace = init_cli_workspace(tmp_path, capsys)
-    from memoria_vault.engine import api as engine_api
-
-    engine_api.run_operation(
-        workspace,
-        "create-concept",
-        {
-            "target": "notes/actor-test.md",
-            "content": "---\ntype: note\ntitle: Actor test\nmode: claim\nclaim_text: x\n---\n\nBody.\n",
-        },
-        actor="agent",
-    )
-    with state.connect(workspace) as conn:
-        req = conn.execute(
-            "SELECT actor FROM operation_requests WHERE operation_id='create-concept'"
-        ).fetchone()
-        assert req["actor"] == "agent"
-        rows = conn.execute(
-            "SELECT payload_json FROM event_log"
-            " WHERE json_extract(payload_json,'$.operation')='create-concept'"
-            "   AND json_extract(payload_json,'$.actor') IS NOT NULL"
-        ).fetchall()
-    actors = {json.loads(r["payload_json"]).get("actor") for r in rows}
-    assert actors, "create-concept journaled no actor-bearing events"
-    assert actors == {"agent"}  # nothing about this run may claim the human did it
-```
-
-Adjust the create-concept payload keys to `worker._create_concept_payload`'s contract (read that function first; use its exact expected keys).
-
-- [ ] **Step 2: Run to verify failure**
-
-Run: `python -m pytest tests/test_actor_threading.py -v`
-Expected: FAIL — `_envelope_actor` doesn't exist.
-
-- [ ] **Step 3: Implement**
-
-In `worker.py`, near the top-level helpers:
-```python
-def _envelope_actor(job: dict[str, Any]) -> str:
-    envelope = (
-        job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
-    )
-    actor = str(envelope.get("actor") or "").strip()
-    if not actor:
-        raise ValueError("request envelope is missing actor")
-    return actor
-```
-
-Replace every `str(envelope.get("actor") or "pi")` (worker.py ~316, ~352, ~583 — re-locate with `rg -n 'envelope.get\("actor"\) or "pi"' src/memoria_vault/runtime/worker.py`) with `_envelope_actor(job)` and delete the now-unused local `envelope =` lines where nothing else reads them. Leave `actor="operation"` at worker.py:141/1246 — genuinely engine-initiated.
-
-In `operations.py` (function enclosing line 85) and `knowledge.py` (functions enclosing 323, 387, 2208): add keyword param `actor: str` (no default), replace the hardcoded `"actor": "pi"` / `actor="pi"` with the param. Update each worker call site (find with `rg -n "<function-name>" src/memoria_vault/runtime/worker.py`) to pass `actor=_envelope_actor(job)`. Update any direct CLI call sites to pass `actor=args.actor`.
-
-- [ ] **Step 4: Run tests**
-
-Run: `python -m pytest tests/test_actor_threading.py tests/test_schema_v9.py -v` → PASS.
-Run: `python -m pytest tests/ -x -q` → PASS.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/memoria_vault/runtime/worker.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py tests/test_actor_threading.py tests/conftest.py
-git commit -m "fix(provenance): thread envelope actor through worker; retire actor:'pi' hardcodes"
-```
+- [x] Execute Tasks 1–4 in
+  `docs/superpowers/plans/2026-07-12-foundation-f1-operation-context.md`.
+- [x] Require actor declarations at engine and worker boundaries while keeping
+  explicit defaults only at CLI, MCP, and HTTP adapters.
+- [x] Prove actor, run, request, operation, and machine consistency across the
+  request row, journal planes, mutations, and current derivation projection.
+- [x] Reject non-PI attention decisions rather than relabeling them as human.
+- [x] Close the explicit security diff scan required for this runtime-policy
+  change. Remediation binds canonical JSON request identity, enforces the
+  protected-operation authority matrix, makes request succession immutable,
+  closes claim/supersede races, and reserves direct PI decisions. The follow-up
+  code review, 23-file post-fix rescan, and final gate are clean.
 
 ### Task 4: Reject-marker trace
 
-**Files:**
-- Modify: `src/memoria_vault/runtime/knowledge.py` (the `resolve-evidence-review` writer — the journal event at knowledge.py:2153; read the enclosing function fully first)
-- Test: `tests/test_actor_threading.py` (extend) or the existing evidence-review test file if one covers this flow (`rg -ln "resolve-evidence-review" tests/`)
+**Disposition — N/A:** `resolve_evidence_review` is append-only. A disposition
+records journal provenance but does not edit the durable inline `%%ev%%`
+marker, as documented in
+`docs/reference/control-and-policy/evidence-sets.md`. Export rendering strips
+markers only from its derived output copy, so a `stripped_*` reject event would
+be false. Any future durable-marker removal changes disposition semantics and
+requires a separately designed cross-store saga to avoid false or untraced
+mutation.
 
-**Interfaces:**
-- Consumes: the existing `resolve-evidence-review` journal event shape.
-- Produces: on `decision == "reject"` where the draft's `%%ev%%` marker is removed, the journal event gains two fields: `"stripped_marker": "<full marker text>"` and `"stripped_block_ref": "<block anchor>"`.
+### Task 5: Deliver PR-F1
 
-- [ ] **Step 1: Read the enclosing function** at knowledge.py:2153 end-to-end; identify where the marker text leaves the draft on reject (if the marker is *not* stripped there, find the strip site via `rg -n "_EV_MARKER_RE|serialize_evidence_marker" src/memoria_vault/runtime/knowledge.py` and confirm against a reject flow test).
+- [ ] Complete Task 5 of
+  `docs/superpowers/plans/2026-07-12-foundation-f1-operation-context.md`,
+  including the current-truth doc updates, full gate, code review, security
+  diff scan, sync, PR checks, and squash merge.
 
-- [ ] **Step 2: Write the failing test** — drive a reject through the operation (reuse the fixture pattern of the existing evidence-review tests found in Step 1's `rg`) and assert:
-
-```python
-def test_reject_records_stripped_marker(tmp_path, capsys):
-    # ... existing reject-flow fixture ...
-    with state.connect(workspace) as conn:
-        row = conn.execute(
-            "SELECT payload_json FROM event_log"
-            " WHERE json_extract(payload_json,'$.operation')='resolve-evidence-review'"
-            " AND json_extract(payload_json,'$.decision')='reject'"
-            " ORDER BY event_id DESC LIMIT 1"
-        ).fetchone()
-    event = json.loads(row["payload_json"])
-    assert event["stripped_marker"].startswith("%%ev:")
-    assert event["stripped_block_ref"]
-```
-
-- [ ] **Step 3: Run to verify failure** → KeyError `stripped_marker`.
-
-- [ ] **Step 4: Implement** — capture the marker text and block ref *before* removal in the reject branch; add both fields to the journal event dict. Minimal change; do not alter the disposition logic.
-
-- [ ] **Step 5: Run tests + commit**
-
-```bash
-python -m pytest tests/ -x -q
-git add src/memoria_vault/runtime/knowledge.py tests/
-git commit -m "fix(provenance): record stripped %%ev%% marker on reject disposition"
-```
-
-### Task 5: Memory-model doc note + PR-F1
-
-**Files:**
-- Modify: the memory-model explanation page (`docs/explanation/architecture/memory-model.md`)
-
-- [ ] **Step 1:** Add one short paragraph to the provenance/actors section (create the subsection if absent):
-
-> `observe_pi_edit` attributes unmediated file edits to `pi` by design: an edit that arrives outside the operation envelope is, by definition, the human working in their own editor. Every mediated write carries the envelope's true actor (`pi`, `agent`, `operation`, `integrity`); the engine never defaults a missing actor.
-
-- [ ] **Step 2: Gate + PR**
-
-```bash
-python scripts/verify
-git add docs/explanation/architecture/memory-model.md
-git commit -m "docs: state observe_pi_edit's intentional pi attribution"
-gh pr create --title "fix(provenance): faithful actor vocabulary, threading, and reject trace (F1)" --body "Closes #1361. Schema v9 (one actor CHECK on both tables, no default), envelope actor required and threaded through the worker, actor:'pi' hardcodes retired, reject dispositions record the stripped %%ev%% marker. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
-```
+PR-F1 closes #1361 only when the full context contract is green.
 
 ---
 
@@ -393,14 +279,20 @@ gh pr create --title "fix(provenance): faithful actor vocabulary, threading, and
 """tests/test_journal_trust.py — chain verifier + trust reads."""
 
 import json
+from collections import Counter
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import state, trusted_writer
 from tests.helpers import init_cli_workspace
 
 
 def _seed_events(vault, n=3):
     for i in range(n):
-        state.append_journal_event(vault, {"event": "run", "run_id": f"r{i}", "status": "started"})
+        trusted_writer.append_explicit_journal_event(
+            vault,
+            {"event": "run", "run_id": f"r{i}", "status": "started"},
+            actor="operation",
+            machine="journal-test",
+        )
     state.write_journal_head_anchor(vault)
 
 
@@ -501,7 +393,7 @@ def _cmd_journal_verify(args: argparse.Namespace) -> int:
 
 Wire into the existing full-vault pass: locate the `workspace rebuild` handler (`rg -n "_cmd_workspace_rebuild|workspace rebuild" src/memoria_vault/cli.py`) and call `verify_journal_chain` first, failing the command when `ok` is False.
 
-- [ ] **Step 4: Run tests** → `python -m pytest tests/test_journal_trust.py -v` PASS; full suite PASS.
+- [ ] **Step 4: Run tests** → `python3 -m pytest tests/test_journal_trust.py -v` PASS; full suite PASS.
 
 - [ ] **Step 5: Commit**
 
@@ -517,8 +409,13 @@ git commit -m "feat(journal): chain verifier + memoria journal verify"
 - Test: `tests/test_journal_trust.py` (extend)
 
 **Interfaces:**
-- Consumes: `state.append_journal_event`, `append_jsonl`, `_journal_path`.
-- Produces: `_append_event` writes `event_log` **first**, JSONL second; `trusted_writer.reconcile_journal_export(vault: Path, *, machine: str | None = None) -> int` re-appends missing JSONL lines from `event_log` (returns count re-emitted). `verify_journal_chain` callers may run it after a passing verify.
+- Consumes: `state._append_journal_row`, `append_jsonl`, `_journal_path`, and
+  F1's context/explicit trusted-writer append paths.
+- Produces: `_append_event` writes `event_log` **first**, JSONL second;
+  `trusted_writer.reconcile_journal_export(vault: Path) -> int` re-appends
+  missing JSONL lines from `event_log` to each event's recorded machine file
+  (returns count re-emitted). `verify_journal_chain` callers may run it after a
+  passing verify.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -532,7 +429,12 @@ def test_append_event_writes_event_log_first(tmp_path, capsys, monkeypatch):
 
     monkeypatch.setattr(trusted_writer, "append_jsonl", boom)
     try:
-        trusted_writer.append_journal_event(vault, {"event": "run", "run_id": "x", "status": "started"})
+        trusted_writer.append_explicit_journal_event(
+            vault,
+            {"event": "run", "run_id": "x", "status": "started"},
+            actor="operation",
+            machine="journal-test",
+        )
     except RuntimeError:
         pass
     with state.connect(vault) as conn:
@@ -544,10 +446,34 @@ def test_reconcile_reemits_missing_jsonl(tmp_path, capsys):
     vault = init_cli_workspace(tmp_path, capsys)
     from memoria_vault.runtime import trusted_writer
 
-    state.append_journal_event(vault, {"event": "run", "run_id": "only-db", "status": "started"})
+    state._append_journal_row(
+        vault,
+        {
+            "event": "run",
+            "run_id": "only-db",
+            "status": "started",
+            "timestamp": "2026-07-12T00:00:00+00:00",
+            "actor": "operation",
+            "machine": "journal-test",
+        },
+        machine="journal-test",
+    )
     emitted = trusted_writer.reconcile_journal_export(vault)
     assert emitted == 1
     assert trusted_writer.reconcile_journal_export(vault) == 0  # idempotent
+
+
+def test_reconcile_counts_duplicate_payloads(tmp_path, capsys):
+    vault = init_cli_workspace(tmp_path, capsys)
+    event = trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "duplicate", "status": "started"},
+        actor="operation",
+        machine="journal-test",
+    )
+    state._append_journal_row(vault, event, machine="journal-test")
+    assert trusted_writer.reconcile_journal_export(vault) == 1
+    assert trusted_writer.reconcile_journal_export(vault) == 0
 ```
 
 - [ ] **Step 2: Run to verify failure** — first test finds 0 rows (JSONL is written first today); `reconcile_journal_export` doesn't exist.
@@ -555,29 +481,34 @@ def test_reconcile_reemits_missing_jsonl(tmp_path, capsys):
 - [ ] **Step 3: Implement**
 
 ```python
-def _append_event(vault: Path, machine: str | None, event: dict[str, Any]) -> None:
-    state.append_journal_event(vault, event, machine=machine)  # authoritative first
+def _append_event(vault: Path, machine: str, event: dict[str, Any]) -> None:
+    state._append_journal_row(vault, event, machine=machine)  # authoritative first
     append_jsonl(_journal_path(vault, machine), [event])  # derived export second
 
 
-def reconcile_journal_export(vault: Path, *, machine: str | None = None) -> int:
+def reconcile_journal_export(vault: Path) -> int:
     """Re-emit event_log rows missing from the per-machine JSONL export."""
     vault = Path(vault)
-    exported = {
+    exported = Counter(
         json.dumps(event, ensure_ascii=False, sort_keys=True) for event in _iter_events(vault)
-    }
+    )
     missing: list[dict[str, Any]] = []
     with state.connect(vault) as conn:
         rows = conn.execute("SELECT payload_json FROM event_log ORDER BY event_id").fetchall()
     for row in rows:
         event = json.loads(str(row["payload_json"]))
-        if json.dumps(event, ensure_ascii=False, sort_keys=True) not in exported:
+        key = json.dumps(event, ensure_ascii=False, sort_keys=True)
+        if exported[key]:
+            exported[key] -= 1
+        else:
             missing.append(event)
     for event in missing:
-        append_jsonl(_journal_path(vault, machine), [event])
+        append_jsonl(_journal_path(vault, str(event["machine"])), [event])
     return len(missing)
 ```
-Check how `state.append_journal_event` serializes (`payload = _json(row)` — confirm `_json` sorts keys; mirror its exact serialization for the set-membership comparison, importing/reusing it if accessible).
+Check how `state._append_journal_row` serializes (`payload = _json(row)` —
+confirm `_json` sorts keys; mirror its exact serialization for the
+set-membership comparison, importing/reusing it if accessible).
 
 - [ ] **Step 4: Run tests** → PASS; full suite PASS.
 
@@ -600,7 +531,9 @@ git commit -m "fix(journal): event_log first on append; JSONL reconciliation swe
 - Consumes: `event_log.payload_json` with `json_extract`.
 - Produces: identical return shapes as today (dicts keyed the same); no JSONL globs remain on trust paths. `_iter_events` stays only for the reconciliation sweep's export-side read.
 
-- [ ] **Step 1: Write the failing test** — equivalence: seed a `derived` event through `trusted_writer.append_journal_event`, then delete the JSONL files and assert the read still sees it:
+- [ ] **Step 1: Write the failing test** — equivalence: seed a `derived` event
+  through `trusted_writer.append_explicit_journal_event`, then delete the JSONL
+  files and assert the read still sees it:
 
 ```python
 def test_trust_reads_survive_jsonl_deletion(tmp_path, capsys):
@@ -608,9 +541,11 @@ def test_trust_reads_survive_jsonl_deletion(tmp_path, capsys):
     from memoria_vault.runtime import trusted_writer
     from memoria_vault.runtime.integrity import _latest_derived
 
-    trusted_writer.append_journal_event(
+    trusted_writer.append_explicit_journal_event(
         vault,
         {"event": "derived", "output_id": "notes/x.md", "inputs": [{"id": "notes/y.md"}]},
+        actor="operation",
+        machine="journal-test",
     )
     for path in (vault / ".memoria/journal").glob("*.jsonl"):
         path.unlink()
@@ -647,7 +582,7 @@ def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
 
 - [ ] **Step 4: Run tests + gate**
 
-`python -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python scripts/verify` → PASS.
+`python3 -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python3 scripts/verify` → PASS.
 
 - [ ] **Step 5: Commit + PR**
 
@@ -677,7 +612,7 @@ gh pr create --title "fix(journal): one authoritative trust-read path (F2)" --bo
 ```python
 """tests/test_backup_restore.py — grounds durability round-trip."""
 
-from memoria_vault.runtime import backup, state
+from memoria_vault.runtime import backup, state, trusted_writer
 from tests.helpers import init_cli_workspace
 
 
@@ -685,7 +620,12 @@ def _seed(vault):
     blob = vault / ".memoria/blobs/source-content/w-1/raw/source.txt"
     blob.parent.mkdir(parents=True)
     blob.write_text("evidence bytes", encoding="utf-8")
-    state.append_journal_event(vault, {"event": "run", "run_id": "b", "status": "started"})
+    trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "b", "status": "started"},
+        actor="operation",
+        machine="backup-test",
+    )
     state.write_journal_head_anchor(vault)
 
 
@@ -996,7 +936,7 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
 | [Backup and recovery](backup-and-recovery.md) |
 ```
 
-- [ ] **Step 5: Run tests + gate** — `python -m pytest tests/test_backup_restore.py -v` PASS; `python scripts/verify` PASS.
+- [ ] **Step 5: Run tests + gate** — `python3 -m pytest tests/test_backup_restore.py -v` PASS; `python3 scripts/verify` PASS.
 
 - [ ] **Step 6: Commit + PR**
 
@@ -1079,7 +1019,7 @@ def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:
     return 0 if ok else 1
 ```
 
-- [ ] **Step 4: Run tests** → PASS; full suite (`python -m pytest tests/ -x -q`) — fix any test asserting the old dishonest output.
+- [ ] **Step 4: Run tests** → PASS; full suite (`python3 -m pytest tests/ -x -q`) — fix any test asserting the old dishonest output.
 
 - [ ] **Step 5: Commit**
 
@@ -1222,7 +1162,7 @@ and extend the drift-check consumer to iterate `TRACKED_PROJECTION_PATHS` plus `
 - [ ] **Step 5: Run tests + commit**
 
 ```bash
-python -m pytest tests/ -x -q
+python3 -m pytest tests/ -x -q
 git status --short  # list every deleted/modified path, then stage each explicitly:
 git add src/memoria_vault/runtime/projections.py tests/test_projections_drift.py tests/conftest.py <each deleted seed/schema path>
 git commit -m "fix(product): projection drift covers argument.canvas (#1351); delete dead knobs"
@@ -1233,15 +1173,21 @@ git commit -m "fix(product): projection drift covers argument.canvas (#1351); de
 
 **Files:**
 - Modify: `docs/` pages + tutorials (located per item below)
-- Test: manual verbatim run of tutorials 01/02/04/05 in a disposable sandbox vault
+- Modify: `src/memoria_vault/cli.py`
+- Modify: `src/memoria_vault/runtime/worker.py`
+- Modify: `tests/test_cli_work_project.py`
+- Test: manual verbatim run of tutorials 01/02/04/05 in a disposable vault
+  under `test-vault/`
 
-**Interfaces:** none (prose truth).
+**Interfaces:** aligns `work update` classification flags and persistence with
+the approved vocabulary model; the remaining work is prose truth.
 
-- [ ] **Step 1: Fix the four doc–code contradictions** (locate each with the given `rg`; correct the claim to match the code as repaired by Tasks 12–14):
+- [ ] **Step 1: Fix the five doc–code contradictions** (locate each with the given `rg`; correct the claim to match the code as repaired by Tasks 12–14 and the implementation below):
   1. `rg -n "capture-candidate|Library pipeline" docs/` — knowledge-cycle page: remove/correct the capture-candidate stage and "Library pipeline" view that no code implements.
   2. `rg -n "blocks delegation" docs/` — linter page: the linter reports; it does not block delegation. Correct the verb.
   3. `rg -n "mode" docs/reference/data-model/frontmatter.md` — re-derive the note-mode/field table from `note.yaml` (source of truth; schema → docs direction).
   4. `rg -n "provider" docs/**/quickstart*` — quickstart's `ask` claim: `memoria ask` is keyless BM25; correct the provider-keys sentence.
+  5. `rg -n "work update|methodology|--topic" docs/ src/memoria_vault/cli.py src/memoria_vault/runtime/worker.py tests/test_cli_work_project.py` — align Work classification mutation with the approved vocabulary model. Write RED CLI/worker tests, replace Work `--topic` with `--methodology`, persist `csl_json.memoria.methodology`, retain `research_area`, and update current-truth docs. Note `topics` continue to inherit `research_area`; do not create a separate list.
 
 - [ ] **Step 2: Fix the six enforcement-claim corrections** (from the architecture review; locate each with `rg -n` on its phrase in `docs/`): phantom "seven-layer" model description; block-loudness pause described as binding (it binds only the uninstalled adapter path — say so); "single attention writer" claim (three hand-rolled copies exist — describe what code does); telemetry-logging claim (no code writes it — delete the claim); "SQLite-backed attention" claim (correct to files-with-projection); dashboard rail written in present tense (mark planned). For each: the fix is *describe what ships today*, marking unshipped behavior as planned.
 
@@ -1250,8 +1196,10 @@ git commit -m "fix(product): projection drift covers argument.canvas (#1351); de
 - [ ] **Step 4: Gate + PR**
 
 ```bash
-python scripts/verify
-git add docs/ tests/
+python3 scripts/verify
+git status --short
+# Stage each exact Task 16 path reported above; never pass a directory.
+git add src/memoria_vault/cli.py src/memoria_vault/runtime/worker.py tests/test_cli_work_project.py <each-exact-doc-or-tutorial-path>
 git commit -m "docs: make enforcement claims match shipped code; tutorials run verbatim"
 gh pr create --title "fix(cli+docs): honest surfaces (F4)" --body "Closes #1364, closes #1351. _emit prints FAILED with detail, list --type work enumerates the catalog, note mode:work creatable, dead knobs deleted, projection drift covers argument.canvas, doc claims corrected to shipped behavior, tutorials run verbatim. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
 ```
@@ -1260,6 +1208,6 @@ gh pr create --title "fix(cli+docs): honest surfaces (F4)" --body "Closes #1364,
 
 ## Self-review notes
 
-- Spec coverage: F1 → Tasks 1–5; F2 → Tasks 6–8; F3 → Tasks 9–11; F4 → Tasks 12–16; #1351 → Task 15. The spec's "out of scope" items (integrity branch semantics, edge module) appear in no task — correct.
+- Spec coverage: F1 → Tasks 1–3 and 5; Task 4 is N/A because reject never strips durable markers. F2 → Tasks 6–8; F3 → Tasks 9–11; F4 → Tasks 12–16; #1351 → Task 15. The spec's "out of scope" items (integrity branch semantics, edge module) appear in no task — correct.
 - Two tests (Tasks 14/16 Step 2, Task 15 Step 2) carry investigate-then-fill steps because they must reuse existing fixture patterns; each names the exact file to copy the pattern from and forbids leaving `...` in the final test.
 - Function-name confirmations are embedded where the plan touches code not fully read (`catalog_sources` row keys, capture helper name, `_journal_hash` arg order) — each with the exact `rg`/read to run first.

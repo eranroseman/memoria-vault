@@ -38,8 +38,8 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria work import` | Import portable BibTeX or CSL JSON files. |
 | `memoria work enrich <work-id>` | Enrich a work from provider replay/payload inputs. |
 | `memoria work digest <work-id> [--mode test\|live]` | Compile a source digest with the selected manifest-pinned runner branch. |
-| `memoria work interview <work-id>` | Record source interview responses. |
-| `memoria work update` | Update source/work metadata. |
+| `memoria work interview <work-id>` | Record PI-owned source interview responses. |
+| `memoria work update` | Apply PI-owned source/work metadata changes. |
 | `memoria work export <work-id>` | Export a catalog work record. |
 
 ## Requests And Workspace
@@ -47,8 +47,8 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | Command | Purpose |
 | --- | --- |
 | `memoria request list/show` | Inspect operation requests. |
-| `memoria request answer/amend/cancel/retry/resume` | Continue or change a request. |
-| `memoria workspace scan/run/recover/rollback/check/rebuild/export` | Observe file edits, run queued work, recover interrupted work, and maintain projections/search. |
+| `memoria request answer/amend/cancel/retry/resume` | PI-only request lifecycle controls. Answer and amend create a successor, cancel and retry change eligible states, and resume runs pending work. |
+| `memoria workspace scan/run/recover/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots, quarantine and regenerate changed tracked projections, run queued work, recover interrupted work, and maintain projections/search. |
 | `memoria attention list/show/resolve/worklist` | Review PI attention items. |
 
 ## Knowledge And Projects
@@ -56,12 +56,12 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | Command | Purpose |
 | --- | --- |
 | `memoria new note/hub/project` | Author new Concepts through the CLI's code-owned frontmatter/body contract. |
-| `memoria link` | Curate a typed relation between checked Concepts. |
-| `memoria check` | Mark a Concept checked, or run workspace checks when no target is given. |
+| `memoria link` | Curate a PI-owned typed relation between checked Concepts. |
+| `memoria check` | Mark a Concept checked as the PI, or run integrity-owned workspace checks when no target is given. |
 | `memoria show/list/export` | Inspect and export Concepts. |
-| `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. |
-| `memoria steering show/edit` | Read or update steering. |
-| `memoria vocab list/add/rename/merge` | Maintain controlled vocabulary. |
+| `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
+| `memoria steering show/edit` | Read steering; editing is PI-only. |
+| `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
 | `memoria journal tail/show` | Inspect journal entries. |
 
 ## Operations And Eval
@@ -151,8 +151,31 @@ new hub` accepts `--description` plus optional `--body`; `memoria new project`
 accepts `--description` plus optional `--direction`. The generated files include
 the same frontmatter defaults and body heading shape as the CLI concept writers.
 
-Most workspace commands accept `--workspace <path>` and `--json`. Mutating
-workspace commands that expose `--actor` default to `pi`; shell agents should
-pass `--actor agent` so queued writes record the correct request-envelope actor
-while still landing unchecked. `memoria mcp` is the exception: it has no `--json`
-mode, requires `--read-scope`, and defaults `--actor` to `agent`.
+Most workspace commands accept `--workspace <path>` and `--json`. `--actor`
+records declared provenance; the raw local CLI does not authenticate its caller
+and must remain a PI-owned surface. Do not expose it to an untrusted agent.
+Agent-facing adapters use [HTTP](local-http-transport.md) or
+[MCP](mcp-transport.md), which always record request actor `agent`.
+`workspace scan`, `workspace check`, and scans performed by `serve --watch`
+always record actor `integrity`. `memoria mcp` has no `--json` mode, requires
+`--read-scope`, and uses `--actor` only as the concrete agent identity recorded
+in provenance.
+
+`memoria request answer` and `memoria request amend` are PI-only. Each requires
+a fresh `--idempotency-key`, creates a PI-attributed successor request, and
+cancels a pending source as superseded without changing its envelope. A
+terminal source stays terminal and is marked as superseded. The successor
+records the source in provenance and causal references, and it does not inherit
+the source schedule. One source can have one successor: an exact repeat with
+the same key and content reuses it; changed content or a second successor is
+rejected.
+An amendment cannot change scope-bearing ID, reference, path, or target fields;
+submit a new operation for a different scope.
+Integrity-only requests cannot be cloned by a PI request control.
+`cancel`, `retry`, and `resume` are PI-only lifecycle controls. Cancel accepts only
+`pending`; retry accepts `failed` or explicitly cancelled work that has not
+been superseded; resume claims and runs only `pending`. If a transition commits
+but its lifecycle event does not, an exact repeat repairs that one missing event
+without creating another successor or reopening finished work. `memoria project
+resolve-evidence`, `memoria steering edit`, and vocabulary mutations are also
+PI-only.

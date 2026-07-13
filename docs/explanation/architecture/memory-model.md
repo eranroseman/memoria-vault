@@ -53,6 +53,16 @@ projection — `bibliography.bib` from the catalog, `concept_edges` from
 frontmatter links **(planned: G2, alpha.22/B1)** — so drift is detectable and
 one side is always authority.
 
+### Provenance actors
+
+`observe_pi_edit` attributes unmediated file edits to `pi` by design: an edit
+that arrives outside the operation envelope is, by definition, the human
+working in their own editor.
+
+Every mediated write consumes one validated `OperationContext`, whose actor is
+one of `pi`, `agent`, `operation`, or `integrity`. Engine and worker interfaces
+never default a missing actor.
+
 ---
 
 ## Why each substrate has its scope

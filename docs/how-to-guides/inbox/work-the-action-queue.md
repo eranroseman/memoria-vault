@@ -45,9 +45,18 @@ converges to empty; empty is success.
 **4. Reject cleanly when the proposal is wrong.**
 
 Rejecting costs one decision and leaves nothing behind — the proposed write
-never landed. If the request behind an item was mis-specified and should be
-redone, amend or retry a corrected request through the CLI rather than rewriting
-history.
+never landed. If a request has the right scope but wrong non-scope arguments,
+as PI create a corrected successor instead of rewriting it:
+
+```bash
+memoria request amend --workspace <vault> --idempotency-key <new-request-key> \
+  <request-id> field=value
+```
+
+A pending source request is cancelled as superseded; a terminal source remains
+terminal and is marked as superseded. Retry only when its original arguments
+remain correct. If an ID, reference, path, target, or other scope-bearing field
+must change, submit a new original operation instead of amending the request.
 
 **5. Clear back-pressure before adding more work.**
 

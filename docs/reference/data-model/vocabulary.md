@@ -11,9 +11,20 @@ grand_parent: Reference
 values used by catalog Work `research_area`/`methodology` metadata and
 claim-bearing note `topics`.
 
-The shipped file lives at `src/memoria_vault/product/workspace_seed/system/vocabulary.md`.
-In a runtime vault, edit `system/vocabulary.md` directly and keep note
-frontmatter values in lockstep with it.
+The shipped file lives at
+`src/memoria_vault/product/workspace_seed/system/vocabulary.md`. PI-owned
+`memoria vocab add/rename/merge` commands journal and commit changes to the
+`research_area` and `methodology` lists; `topics` inherit `research_area` and
+cannot be mutated independently. Use those commands for recorded mutations:
+`workspace scan` does not observe direct edits to `system/vocabulary.md`, so a
+raw file edit has no equivalent journal provenance. Note frontmatter values
+and catalog Work metadata must move in lockstep. The raw CLI records declared
+provenance rather than authenticating its caller, so keep it PI-owned.
+
+> **Deferred — Foundation F4:** the current `work update` mutation surface
+> accepts `--research-area` and `--topic`; it does not accept `--methodology`.
+> F4 aligns Work mutation with this model, where Work uses `research_area` and
+> `methodology` and claim-bearing notes use inherited `topics`.
 
 ## Fields
 
@@ -27,7 +38,11 @@ frontmatter values in lockstep with it.
 
 The tables below mirror the shipped package-seed `system/vocabulary.md`. That
 note is the single source of truth — if these tables and the shipped note ever
-disagree, the shipped note wins. Each field takes **many values per note**.
+disagree, the shipped note wins. Each field takes **many values per owning
+record**.
+
+The current linter enforces membership for claim-bearing note `topics`. It does
+not validate catalog Work classifications or the vocabulary file itself.
 
 ### `research_area`
 

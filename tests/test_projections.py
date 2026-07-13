@@ -10,11 +10,23 @@ from memoria_vault.runtime.projections import (
     check_tracked_projections,
     check_workspace_indexes,
     render_workspace_index,
-    write_tracked_projections,
-    write_workspace_indexes,
+)
+from memoria_vault.runtime.projections import (
+    write_tracked_projections as _write_tracked_projections,
+)
+from memoria_vault.runtime.projections import (
+    write_workspace_indexes as _write_workspace_indexes,
 )
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-from tests.helpers import git, init_git
+from tests.helpers import call_with_context, git, init_git
+
+
+def write_tracked_projections(vault: Path, *args, **kwargs):
+    return call_with_context(_write_tracked_projections, vault, *args, **kwargs)
+
+
+def write_workspace_indexes(vault: Path, *args, **kwargs):
+    return call_with_context(_write_workspace_indexes, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -172,6 +184,7 @@ def test_worker_runs_workspace_index_projection_operation_jobs(tmp_path: Path) -
         vault,
         "regenerate-indexes",
         idempotency_key="workspace-indexes",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -190,6 +203,7 @@ def test_worker_runs_tracked_projection_operation_jobs(tmp_path: Path) -> None:
         vault,
         "regenerate-tracked-projections",
         idempotency_key="tracked-projections",
+        actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
 

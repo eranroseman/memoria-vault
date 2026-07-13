@@ -25,7 +25,12 @@ from memoria_vault.runtime.capture import (
 from memoria_vault.runtime.integrity import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
+from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    append_journal_event,
+    commit_writer_changes,
+    validate_operation_context,
+)
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 PROVIDER_CONFIG = ".memoria/config/providers.yaml"
@@ -57,11 +62,11 @@ def enrich_source(
     vault: Path,
     work_id: str,
     *,
+    context: OperationContext,
     policy: dict[str, Any],
     provider_payloads: dict[str, Any] | None = None,
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
+    validate_operation_context(vault, context)
     vault = Path(vault)
     source = state.catalog_source(vault, work_id)
     if source is None:
@@ -74,7 +79,7 @@ def enrich_source(
     issues = provider_allowlist_issues(config, policy)
     if issues:
         raise PermissionError("; ".join(issues))
-    run_id = run_id or f"enrich-source:{source['work_id']}:{_hash_text(doi)}"
+    run_id = context.run_id
     fixture_payloads = provider_payloads if isinstance(provider_payloads, dict) else {}
     required = _required_providers(config, "doi")
     optional = _optional_providers(config, "doi", fixture_payloads)
@@ -83,11 +88,12 @@ def enrich_source(
         run_id=run_id,
         work_id=source["work_id"],
         required_provider_policy={"branch": "doi", "required": required, "optional": optional},
+        request_id=context.request_id,
     )
     append_journal_event(
         vault,
-        {"event": "run", "run_id": run_id, "workflow": "enrich-source", "status": "started"},
-        machine=machine,
+        {"event": "run", "workflow": "enrich-source", "status": "started"},
+        context=context,
     )
 
     payloads: dict[str, dict[str, Any]] = {}
@@ -124,7 +130,6 @@ def enrich_source(
             vault,
             {
                 "event": "api_call",
-                "run_id": run_id,
                 "provider": provider,
                 "endpoint": _provider_endpoint(config, provider, doi),
                 "request": {"doi": doi},
@@ -132,7 +137,7 @@ def enrich_source(
                 "status": "ok",
                 "latency_ms": latency_ms,
             },
-            machine=machine,
+            context=context,
         )
 
     if missing:
@@ -145,7 +150,7 @@ def enrich_source(
             status="failed",
             reason=reason,
             shadow=False,
-            machine=machine,
+            context=context,
         )
         attention_path = _write_attention_flag(
             vault,
@@ -159,7 +164,7 @@ def enrich_source(
             vault,
             f"flag source enrichment {source['work_id']}",
             [attention_path],
-            machine=machine,
+            context=context,
         )
         return {
             "run_id": run_id,
@@ -231,7 +236,7 @@ def enrich_source(
             status="failed",
             reason=canonical["block_reason"],
             shadow=False,
-            machine=machine,
+            context=context,
         )
         attention_path = _write_attention_flag(
             vault,
@@ -245,7 +250,7 @@ def enrich_source(
             vault,
             f"flag source enrichment {source['work_id']}",
             [attention_path],
-            machine=machine,
+            context=context,
         )
         return {
             "run_id": run_id,
@@ -264,7 +269,7 @@ def enrich_source(
             status="failed",
             reason=full_text_block,
             shadow=False,
-            machine=machine,
+            context=context,
         )
         attention_path = _write_attention_flag(
             vault,
@@ -277,10 +282,9 @@ def enrich_source(
             vault,
             f"flag source full text {source['work_id']}",
             [attention_path],
-            machine=machine,
+            context=context,
         )
         return {
-            "run_id": run_id,
             "enrichment_status": "needs_human",
             "finding": finding,
             "attention_path": attention_path,
@@ -305,18 +309,17 @@ def enrich_source(
         vault,
         {
             "event": "run",
-            "run_id": run_id,
             "workflow": "enrich-source",
             "status": "done",
             "outputs": [references_path, *candidate_paths],
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
         vault,
         f"enrich source {source['work_id']}",
         [references_path, *candidate_paths],
-        machine=machine,
+        context=context,
     )
     state.finish_enrichment_run(vault, run_id, "enriched")
     return {

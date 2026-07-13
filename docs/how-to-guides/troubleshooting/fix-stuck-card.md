@@ -7,8 +7,7 @@ nav_order: 2
 
 # Fix a stuck request
 
-Memoria tracks CLI/engine work as operation requests. If old docs or adapters
-call this a "card", diagnose the corresponding request.
+Memoria tracks CLI and engine work as operation requests.
 
 ## Detect
 
@@ -27,6 +26,7 @@ intents.
 | `pending` | Run `memoria workspace run --workspace <workspace>` or resume the specific request. |
 | `running` | Run `memoria workspace recover --workspace <workspace>` to replay/reconcile interrupted work. |
 | `failed` | Fix the input/provider/file problem, then run `memoria request retry --workspace <workspace> <request-id>`. |
+| `cancelled` | Retry only work explicitly cancelled by the PI and not marked as superseded. |
 | Human decision needed | Use `memoria attention list` and resolve the attention item after review. |
 
 Cancel obsolete work instead of retrying forever:
@@ -34,6 +34,17 @@ Cancel obsolete work instead of retrying forever:
 ```bash
 memoria request cancel --workspace <workspace> <request-id>
 ```
+
+Cancel accepts only a pending request. If its scope is correct but a non-scope
+argument is wrong, create a successor instead:
+
+```bash
+memoria request amend --workspace <workspace> --idempotency-key <new-key> \
+  <request-id> field=value
+```
+
+If an ID, reference, path, target, or other scope-bearing field is wrong,
+submit a new original operation. `request amend` rejects scope changes.
 
 ## Verify
 
