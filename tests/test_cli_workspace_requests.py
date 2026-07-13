@@ -1018,6 +1018,60 @@ def test_cli_rejects_agent_edits_to_pi_owned_steering_and_vocabulary(
         assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
 
 
+@pytest.mark.parametrize(
+    ("action", "values"),
+    [
+        ("add", ["topics", "new-topic"]),
+        ("rename", ["topics", "old-topic", "new-topic"]),
+        ("merge", ["topics", "old-topic", "new-topic"]),
+    ],
+)
+def test_cli_vocabulary_rejects_inert_topics_mutations(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    action: str,
+    values: list[str],
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    vocabulary = workspace / "system/vocabulary.md"
+    before = vocabulary.read_text(encoding="utf-8")
+
+    assert (
+        main(
+            [
+                "vocab",
+                action,
+                "--workspace",
+                str(workspace),
+                *values,
+                "--json",
+            ]
+        )
+        == 2
+    )
+    error = json.loads(capsys.readouterr().out)
+
+    assert "topics inherit research_area" in error["error"]
+    assert vocabulary.read_text(encoding="utf-8") == before
+    with state.connect(workspace) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM event_log").fetchone()[0] == 0
+
+
+def test_cli_vocabulary_list_reports_topics_inherited_from_research_area(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    assert main(["vocab", "list", "--workspace", str(workspace), "--json"]) == 0
+    vocabulary = json.loads(capsys.readouterr().out)["vocabulary"]
+
+    assert vocabulary["topics"] == vocabulary["research_area"]
+
+
 def test_cli_attention_list_show_worklist_and_resolve_projection(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

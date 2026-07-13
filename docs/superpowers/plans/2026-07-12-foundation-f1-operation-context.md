@@ -25,8 +25,8 @@ projection while `event_log` retains history.
 
 ## Constraints
 
-- Use the repository's canonical `python` command for focused tests and
-  `python scripts/verify` for the full gate.
+- Use `python3` for focused tests and `python3 scripts/verify` for the full
+  gate.
 - Test only in pytest `tmp_path` disposable vaults.
 - Stage only the explicit paths named by each task; never use `git add -A`.
 - Do not reorder the JSONL/SQLite journal writes. Authoritative-first ordering
@@ -114,7 +114,7 @@ Parameterize actor-omission tests across `worker.enqueue_operation`,
 Run:
 
 ```bash
-python -m pytest tests/test_operation_context.py -v
+python3 -m pytest tests/test_operation_context.py -v
 ```
 
 Expected: collection or assertion failures because `OperationContext` and its
@@ -198,9 +198,9 @@ tests/test_worker_queue.py
 Run:
 
 ```bash
-python -m pytest tests/test_operation_context.py tests/test_schema_v9.py tests/test_worker_queue.py -v
-python -m pytest tests/test_cli_workspace_requests.py tests/test_empirical_events.py tests/test_engine_api.py tests/test_mcp_transport.py tests/test_http_transport.py tests/test_worker_integrity_jobs.py tests/test_worker_capture_jobs.py -q
-python -m pytest tests -q
+python3 -m pytest tests/test_operation_context.py tests/test_schema_v9.py tests/test_worker_queue.py -v
+python3 -m pytest tests/test_cli_workspace_requests.py tests/test_empirical_events.py tests/test_engine_api.py tests/test_mcp_transport.py tests/test_http_transport.py tests/test_worker_integrity_jobs.py tests/test_worker_capture_jobs.py -q
+python3 -m pytest tests -q
 ```
 
 Expected: all pass.
@@ -237,7 +237,7 @@ In `tests/test_schema_v9.py`, add tests that:
 - [x] **Step 2: Confirm RED**
 
 ```bash
-python -m pytest tests/test_schema_v9.py -k derivation -v
+python3 -m pytest tests/test_schema_v9.py -k derivation -v
 ```
 
 Expected: the repeated pair remains `pi`, and the invalid existing-pair write
@@ -260,8 +260,8 @@ or change edge membership.
 - [x] **Step 4: Verify GREEN**
 
 ```bash
-python -m pytest tests/test_schema_v9.py -k derivation -v
-python -m pytest tests -q
+python3 -m pytest tests/test_schema_v9.py -k derivation -v
+python3 -m pytest tests -q
 ```
 
 Expected: all pass.
@@ -310,7 +310,7 @@ Add a local test helper that saves a matching request envelope and constructs
 - [x] **Step 2: Confirm RED**
 
 ```bash
-python -m pytest tests/test_operation_context.py -k "metadata or conflict or machine" -v
+python3 -m pytest tests/test_operation_context.py -k "metadata or conflict or machine" -v
 ```
 
 Expected: failures because context decoration and the explicit adapter do not
@@ -374,8 +374,8 @@ present in the final F1 diff.
 - [x] **Step 4: Verify GREEN**
 
 ```bash
-python -m pytest tests/test_operation_context.py tests/test_runtime_state.py tests/test_trusted_writer.py -q
-python -m pytest tests -q
+python3 -m pytest tests/test_operation_context.py tests/test_runtime_state.py tests/test_trusted_writer.py -q
+python3 -m pytest tests -q
 ```
 
 Expected: all pass.
@@ -478,7 +478,7 @@ Add tests proving:
 Run:
 
 ```bash
-python -m pytest tests/test_operation_context.py -k "end_to_end or repeated or attention or sweep or child or observed" -v
+python3 -m pytest tests/test_operation_context.py -k "end_to_end or repeated or attention or sweep or child or observed" -v
 ```
 
 Expected: failures on at least the attention relabel, internal actor defaults,
@@ -605,10 +605,11 @@ For code outside an envelope, use only the explicit append, commit, or
 observation interfaces and pass both actor and machine. The allowed cases are:
 
 - `observe_pi_edit*`: actor `pi`;
-- CLI answer/amend/cancel/retry and disposition commands: `args.actor`,
-  machine `memoria-cli`;
-- CLI `_cmd_steering_edit` and `_update_vocabulary`: `args.actor`, machine
-  `memoria-cli`, through `append_explicit_journal_event` and
+- CLI answer/amend/cancel/retry and PI disposition commands: require
+  `args.actor == "pi"`, then use that actor with machine `memoria-cli`;
+- CLI `_cmd_steering_edit` and `_update_vocabulary`: require
+  `args.actor == "pi"`, then use that actor with machine `memoria-cli` through
+  `append_explicit_journal_event` and
   `commit_explicit_writer_changes`;
 - workspace initialization and rebuild: explicit `operation` or invoking CLI
   actor, plus a named machine;
@@ -662,7 +663,7 @@ tests/test_eval.py
 - [x] **Step 7: Run focused subsystem tests**
 
 ```bash
-python -m pytest tests/test_worker_product_jobs.py tests/test_worker_integrity_jobs.py tests/test_worker_capture_jobs.py tests/test_source_enrichment.py tests/test_operations.py tests/test_knowledge.py tests/test_projections.py tests/test_capabilities.py tests/test_project_knowledge.py tests/test_draft_compose.py tests/test_draft_verification.py tests/test_draft_writeback.py tests/test_search_index.py tests/test_gap_analysis.py tests/test_integrity_source_metadata.py tests/test_seeded_errors.py tests/test_eval.py -q
+python3 -m pytest tests/test_worker_product_jobs.py tests/test_worker_integrity_jobs.py tests/test_worker_capture_jobs.py tests/test_source_enrichment.py tests/test_operations.py tests/test_knowledge.py tests/test_projections.py tests/test_capabilities.py tests/test_project_knowledge.py tests/test_draft_compose.py tests/test_draft_verification.py tests/test_draft_writeback.py tests/test_search_index.py tests/test_gap_analysis.py tests/test_integrity_source_metadata.py tests/test_seeded_errors.py tests/test_eval.py -q
 ```
 
 Expected: all pass.
@@ -670,7 +671,7 @@ Expected: all pass.
 - [x] **Step 8: Run the full test suite**
 
 ```bash
-python -m pytest tests -q
+python3 -m pytest tests -q
 ```
 
 Expected: all pass.
@@ -699,6 +700,21 @@ git commit -m "fix(provenance): preserve context through every mediated mutation
 - Modify: `docs/superpowers/specs/data-structure-analysis.md`
 - Modify: `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md`
 - Modify: `docs/superpowers/plans/2026-07-12-foundation.md`
+- Modify: `docs/superpowers/specs/2026-07-12-foundation-design.md`
+- Modify: `docs/superpowers/plans/2026-07-12-foundation-f1-operation-context.md`
+- Modify: `docs/reference/commands-and-transports/cli.md`
+- Modify: `docs/reference/commands-and-transports/local-http-transport.md`
+- Modify: `docs/reference/commands-and-transports/mcp-transport.md`
+- Modify: `docs/reference/commands-and-transports/system-actions-cli-and-pi.md`
+- Modify: `docs/reference/commands-and-transports/system-actions-operations.md`
+- Modify: `docs/reference/control-and-policy/control-plane.md`
+- Modify: `docs/reference/data-model/vocabulary.md`
+- Modify: `docs/reference/system/failure-modes.md`
+- Modify: `docs/how-to-guides/inbox/work-the-action-queue.md`
+- Modify: `docs/how-to-guides/knowledge/manage-vocabulary.md`
+- Modify: `docs/how-to-guides/troubleshooting/diagnose-a-denied-write.md`
+- Modify: `docs/how-to-guides/troubleshooting/fix-missing-query-results.md`
+- Modify: `docs/how-to-guides/troubleshooting/fix-stuck-card.md`
 
 - [x] **Step 1: Run the provenance hardcode audit**
 
@@ -725,8 +741,8 @@ Expected: no match; trusted writer calls the private storage helper instead.
 - [x] **Step 2: Re-run the end-to-end proof**
 
 ```bash
-python -m pytest tests/test_operation_context.py tests/test_schema_v9.py -v
-python -m pytest tests -q
+python3 -m pytest tests/test_operation_context.py tests/test_schema_v9.py -v
+python3 -m pytest tests -q
 ```
 
 Expected: all pass, including the three non-PI actor paths, repeated
@@ -752,7 +768,7 @@ machine consistency.
 - [x] **Step 4: Run the repository gate**
 
 ```bash
-python scripts/verify
+python3 scripts/verify
 ```
 
 Expected: lint, product gates, tests, offline smoke, and syntax all pass.
@@ -766,41 +782,53 @@ when PR-F1 merges.
 ```bash
 git add tests/test_schema_version.py docs/explanation/architecture/memory-model.md docs/reference/analysis-and-surfaces/retrieval-and-analysis-methods.md docs/superpowers/specs/data-structure-analysis.md docs/superpowers/specs/2026-07-12-beta.1-consolidation.md docs/superpowers/plans/2026-07-12-foundation.md docs/superpowers/plans/2026-07-12-foundation-f1-operation-context.md
 git commit -m "docs: close the F1 provenance contract"
-python scripts/verify
+python3 scripts/verify
 ```
 
 - [x] **Step 6: Sync the final review base**
 
 Fetch and integrate `origin/main` without dropping its concurrent docs edits,
-then run `python scripts/verify`. If integration changes runtime files, repeat
+then run `python3 scripts/verify`. If integration changes runtime files, repeat
 the focused provenance tests before review.
 
 - [ ] **Step 7: Run required reviews**
 
-1. Use `superpowers:requesting-code-review` against the complete F1 diff.
-2. Because this changes runtime provenance policy, run the explicit
+1. [x] Use `superpowers:requesting-code-review` against the complete F1 diff;
+   receive a clean follow-up review after remediation.
+2. [ ] Because this changes runtime provenance policy, complete the explicit
    `codex-security:security-diff-scan` workflow and resolve every validated
-   blocking finding.
-3. Apply validated fixes, stage only their explicit paths, commit them, and
-   rerun the affected code/security review plus `python3 scripts/verify`.
-4. Confirm `git status --short` is empty before push.
+   blocking finding, including the post-fix rescan.
+3. [x] Apply validated fixes and rerun the affected code review.
+4. [ ] Stage only explicit paths, commit the fixes, and run
+   `python3 scripts/verify`.
+5. [ ] Confirm `git status --short` is empty before push.
 
 Current remediation checklist:
 
 - [x] Bind an idempotency key to the normalized job kind and complete request
   envelope, with exact-retry and concurrent-conflict tests.
+- [x] Normalize request identity through JSON and compare canonical JSON, with
+  boolean/number distinction and tuple/list normalization tests.
 - [x] Enforce the approved PI-only and integrity-only operation matrix at the
   common worker dispatch seam before payload validation.
 - [x] Preserve generated concept identity on an exact retry, namespace child
   and workspace-scan request keys, and declare manual integrity-scan actors.
 - [x] Make request payloads equal their immutable envelopes at dispatch; PI
   answer/amend controls create successor requests instead of rebinding a key.
+- [x] Enforce one immutable successor with causal/provenance binding, no
+  inherited schedule, scope-bearing amendment rejection, and exact replay
+  coalescing.
+- [x] Restrict cancel, retry, and resume to their documented states; repair
+  missing lifecycle events without reopening superseded work.
+- [x] Make worker claim and supersession competing atomic state transitions.
 - [x] Reserve all direct request controls and evidence dispositions for the PI;
-  HTTP and MCP remain agent-only request adapters.
+  reserve direct steering and vocabulary mutations too. HTTP and MCP remain
+  agent-only request adapters.
 - [x] Re-run the original HTTP, MCP, and worker proof cases against the fixed
   paths; each confused-deputy or key-reuse attempt now fails before mutation.
-- [ ] Receive clean follow-up code review, complete the remediation security
-  scan, and pass `python3 scripts/verify`.
+- [x] Receive clean follow-up code review.
+- [ ] Complete the remediation security rescan and pass
+  `python3 scripts/verify`.
 
 - [ ] **Step 8: Publish and merge PR-F1**
 

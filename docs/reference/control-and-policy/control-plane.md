@@ -26,11 +26,27 @@ memoria workspace recover --workspace <workspace>
 memoria attention list --workspace <workspace>
 ```
 
-Request controls are PI-only. Answer and amend create a new PI-attributed
-successor request with a new idempotency key. A pending source is cancelled as
-superseded; a terminal source remains terminal and is marked as superseded.
-They never rewrite the source request envelope. Cancel, retry, and resume
-change only request state.
+Request controls are PI-only.
+
+| Control | Current contract |
+| --- | --- |
+| `answer` / `amend` | Require a new idempotency key and a non-running operation request. They create one pending, PI-attributed successor, bind the source in provenance and causal references, and omit the source schedule. A pending source becomes `cancelled` as superseded; a terminal source keeps its status and gains the successor marker. The source envelope never changes. |
+| `cancel` | Changes only `pending` to `cancelled`. Running and terminal requests are rejected. |
+| `retry` | Changes `failed` or explicitly PI-cancelled work back to `pending`. A superseded request cannot be retried. |
+| `resume` | Claims and runs only `pending` work. |
+
+A source has at most one successor. Repeating the same answer or amendment with
+the same key and content returns that successor; changed content or a second
+successor conflicts. An amendment cannot change an ID, reference, path, target,
+or other scope-bearing field. Submit a new original operation when scope must
+change. Integrity-only operations cannot be copied into a PI successor. If a
+state transition commits but its lifecycle-event append is interrupted, an
+exact repeat appends that one missing event without creating another successor
+or reopening work that has since finished.
+
+The local CLI's `--actor` value records declared provenance; it does not
+authenticate a caller. Keep the raw CLI PI-owned. Agent integrations use HTTP
+or MCP, which bind their request actor to `agent`.
 
 ## WIP Limits
 

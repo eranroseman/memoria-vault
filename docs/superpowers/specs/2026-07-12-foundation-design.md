@@ -66,13 +66,25 @@ validated provenance context from claim through mutation and journaling.
   `observe_pi_edit` remains explicitly `pi` because it records an unmediated
   edit from the researcher's editor.
 - **Bind idempotency to request identity:** an idempotency key identifies one
-  normalized job kind and one complete request envelope: operation, actor,
-  arguments, provenance, and causal references. An exact retry returns the
-  existing request. Reusing the key with any different identity field fails
-  before dispatch, including when the second request arrives concurrently. A PI
-  answer or amendment creates a fresh, PI-attributed successor. It cancels a
-  pending source or marks a terminal source as superseded; it never changes the
-  source envelope.
+  normalized job kind and every field in one complete request envelope:
+  operation, actor, arguments, input references, output intents, primary
+  target, precondition hashes, causal references, provenance, and schedule.
+  An exact retry returns the existing request. Reusing the key with any
+  different identity field fails before dispatch, including when the second
+  request arrives concurrently.
+  Request identity is normalized through JSON before persistence and compared
+  as canonical JSON, so mapping order is irrelevant, tuple/list sequences share
+  one JSON representation, and booleans remain distinct from numbers.
+- **Keep request lifecycle immutable:** all request controls require `pi`. An
+  answer or amendment creates one
+  fresh, PI-attributed, unscheduled successor. The successor binds the source in
+  provenance and causal references. It cancels a pending source or marks a
+  terminal source as superseded; it never changes the source envelope. Exact
+  successor replay coalesces, changed replay or a fork conflicts, and
+  scope-bearing amendments are rejected. Cancel accepts only pending work;
+  retry accepts failed or explicitly cancelled, non-superseded work; resume
+  accepts only pending work. Claim and supersession are competing atomic state
+  transitions.
 - **Respect authority at dispatch:** the worker validates authority before
   payload validation or mutation. `acknowledge-attention`,
   `resolve-attention`, `record-copi-interview`, `curate-note-candidate`,
@@ -82,8 +94,9 @@ validated provenance context from claim through mutation and journaling.
   operations accept any actor in the four-value vocabulary unless their
   contract states a narrower authority. A rejected request fails without a
   domain event or mutation. The explicit `resolve-evidence-review` helper also
-  requires `pi`. Supporting an agent-submitted PI decision would require
-  separate `submitted_by` and `decided_by` provenance and is out of scope.
+  requires `pi`, as do direct steering edits and vocabulary mutations.
+  Supporting an agent-submitted PI decision would require separate
+  `submitted_by` and `decided_by` provenance and is out of scope.
 - **Current derivation projection:** `derivations` stores the actor of the most
   recent write for each `(input_id, output_id)` pair. Repeated staging upserts
   that actor; append-only `event_log` rows retain the complete history. The
@@ -116,14 +129,18 @@ events, and `derivations`; the JSONL filename and `event_log.machine` agree.
 Every protected operation rejects each non-authorized actor before payload
 validation and leaves the domain event log empty. Exact idempotent retries
 return one request, while changed actor, operation, arguments, provenance,
-causal references, or job kind conflict; concurrent conflicting submissions
+input references, output intents, primary target, precondition hashes, causal
+references, schedule, or job kind conflict; concurrent conflicting submissions
 also produce one request and one conflict. PI request controls reject an agent
-before mutation; their successors leave the source envelope unchanged and bind
-the source as a causal reference. Repeating one derivation as `pi` and then
-`agent` leaves one current `agent` row while the journal keeps both events.
-Production and raw-SQL paths reject an out-of-vocabulary actor. The reject-marker
-trace test is N/A: reject never strips the durable marker, and export strips only
-its output copy.
+before mutation; evidence dispositions, steering edits, and vocabulary
+mutations do the same. Successors leave the source envelope unchanged, bind the
+source causally, omit its schedule, and cannot fork. Tests cover exact successor
+replay, lifecycle-event repair, scope rejection, retry restrictions, and the
+claim/supersede race. Repeating one derivation as `pi` and then `agent` leaves
+one current `agent` row while the journal keeps both events. Production and
+raw-SQL paths reject an out-of-vocabulary actor. The reject-marker trace test is
+N/A: reject never strips the durable marker, and export strips only its output
+copy.
 
 ## F2 · Journal trust — one authoritative trust-read path (#1362)
 
@@ -185,6 +202,11 @@ Tests: backup→wipe→restore round-trip preserves DB, blobs, and journal-head
   branch while the CLI accepts `--type work`). No new action name.
 - **`new-note --mode work`:** add `work` to the argparse choices
   (cli.py:153); the seed schema already requires `work_id` when `mode=work`.
+- **Work classification honesty:** `work update` accepts `--research-area` and
+  `--methodology`, persists those lists as `csl_json.memoria.research_area` and
+  `.methodology`, and does not expose Work `--topic`. Claim-bearing note
+  `topics` continue to draw from the `research_area` vocabulary; they are not a
+  Work field or an independent controlled list.
 - **Dead knobs deleted:** `.memoria/schemas/calibration.yaml` (read by
   nothing), the `gated:` key in type YAML (read by nothing and wrong).
 - **Doc-code contradiction fixes:** the six enforcement-claim corrections
@@ -198,8 +220,9 @@ Tests: backup→wipe→restore round-trip preserves DB, blobs, and journal-head
   [projection-drift]`.
 
 Tests: failed op → non-"ok" output + exit 1; `list --type work` returns seeded
-works; `mode: work` note round-trips; projection-drift covers argument.canvas;
-tutorial commands smoke-run.
+works; `mode: work` note round-trips; Work classification update round-trips
+`research_area` plus `methodology` and rejects `--topic`; projection-drift
+covers argument.canvas; tutorial commands smoke-run.
 
 ## Sequencing & delivery
 

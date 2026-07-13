@@ -6,13 +6,13 @@
 
 **Architecture:** Four repair packages, each its own squash-merged PR. F1 carries the single v8→v9 schema change (all v9 deltas land together); F2 builds on it; F3/F4 are independent. No propagation-semantics changes (G5), no edge-parsing changes (G2), no new features.
 
-**Tech Stack:** Python 3 stdlib + SQLite (no new dependencies). Tests: pytest via `python scripts/verify`.
+**Tech Stack:** Python 3 stdlib + SQLite (no new dependencies). Tests: pytest via `python3 scripts/verify`.
 
 Spec: `docs/superpowers/specs/2026-07-12-foundation-design.md`. Milestone `0.1.0-alpha.21`; issues #1361–#1364.
 
 ## Global Constraints
 
-- Correctness gate: `python scripts/verify` must pass before each PR.
+- Correctness gate: `python3 scripts/verify` must pass before each PR.
 - Test only against disposable vaults (pytest `tmp_path` via `tests/helpers.init_cli_workspace`, or `test-vault/` — renamed from `sandbox/` by #1368); never a personal vault.
 - Stage explicit paths only — never `git add -A` (shared index rule).
 - Every **new** test file must be registered in `tests/conftest.py` `TEST_LEVELS` (map filename → level; use `"contract"` for CLI/API behavior, `"runtime"` for vault-mutating flows, `"unit"` for pure functions).
@@ -108,7 +108,7 @@ Also add to `tests/conftest.py` `TEST_LEVELS` (alphabetical position): `"test_sc
 
 - [x] **Step 2: Run test to verify it fails**
 
-Run: `python -m pytest tests/test_schema_v9.py -v`
+Run: `python3 -m pytest tests/test_schema_v9.py -v`
 Expected: FAIL — `test_user_version_is_9` gets 8; agent inserts raise IntegrityError.
 
 - [x] **Step 3: Implement — schema.sql + SCHEMA_VERSION**
@@ -147,8 +147,8 @@ In `src/memoria_vault/runtime/state.py:30`: `SCHEMA_VERSION = 9` (`_init` alread
 
 - [x] **Step 4: Run tests**
 
-Run: `python -m pytest tests/test_schema_v9.py -v` → PASS.
-Then run the full suite to catch envelope call sites that relied on the dropped DEFAULT: `python -m pytest tests/ -x -q`. Failures where code inserts without actor are expected — note them; Task 2/3 fix them. If any test fails for that reason, fix the *test's* setup only when the test itself built a raw INSERT; production-code fixes belong to Tasks 2–3.
+Run: `python3 -m pytest tests/test_schema_v9.py -v` → PASS.
+Then run the full suite to catch envelope call sites that relied on the dropped DEFAULT: `python3 -m pytest tests/ -x -q`. Failures where code inserts without actor are expected — note them; Task 2/3 fix them. If any test fails for that reason, fix the *test's* setup only when the test itself built a raw INSERT; production-code fixes belong to Tasks 2–3.
 
 - [x] **Step 5: Commit**
 
@@ -189,7 +189,7 @@ def test_request_envelope_accepts_vocabulary():
 
 - [x] **Step 2: Run to verify failure**
 
-Run: `python -m pytest tests/test_schema_v9.py -k envelope -v`
+Run: `python3 -m pytest tests/test_schema_v9.py -k envelope -v`
 Expected: FAIL — no TypeError (default exists), `"claude"` currently accepted.
 
 - [x] **Step 3: Implement**
@@ -211,7 +211,7 @@ Fix every caller that omitted `actor`: run `rg -n "request_envelope\(" src/ test
 
 - [x] **Step 4: Run tests**
 
-Run: `python -m pytest tests/test_schema_v9.py -v` → PASS. `python -m pytest tests/ -x -q` → PASS (call sites fixed).
+Run: `python3 -m pytest tests/test_schema_v9.py -v` → PASS. `python3 -m pytest tests/ -x -q` → PASS (call sites fixed).
 
 - [x] **Step 5: Commit**
 
@@ -233,9 +233,10 @@ and consumed by every request-mediated writer.
   request row, journal planes, mutations, and current derivation projection.
 - [x] Reject non-PI attention decisions rather than relabeling them as human.
 - [ ] Close the explicit security diff scan required for this runtime-policy
-  change. Remediation now binds idempotency keys to complete request identity
-  and enforces the protected-operation authority matrix at worker dispatch;
-  follow-up review, rescan, and the full gate remain.
+  change. Remediation binds canonical JSON request identity, enforces the
+  protected-operation authority matrix, makes request succession immutable,
+  closes claim/supersede races, and reserves direct PI decisions. Follow-up
+  code review is clean; the post-fix rescan and full gate remain.
 
 ### Task 4: Reject-marker trace
 
@@ -392,7 +393,7 @@ def _cmd_journal_verify(args: argparse.Namespace) -> int:
 
 Wire into the existing full-vault pass: locate the `workspace rebuild` handler (`rg -n "_cmd_workspace_rebuild|workspace rebuild" src/memoria_vault/cli.py`) and call `verify_journal_chain` first, failing the command when `ok` is False.
 
-- [ ] **Step 4: Run tests** → `python -m pytest tests/test_journal_trust.py -v` PASS; full suite PASS.
+- [ ] **Step 4: Run tests** → `python3 -m pytest tests/test_journal_trust.py -v` PASS; full suite PASS.
 
 - [ ] **Step 5: Commit**
 
@@ -581,7 +582,7 @@ def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
 
 - [ ] **Step 4: Run tests + gate**
 
-`python -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python scripts/verify` → PASS.
+`python3 -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python3 scripts/verify` → PASS.
 
 - [ ] **Step 5: Commit + PR**
 
@@ -935,7 +936,7 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
 | [Backup and recovery](backup-and-recovery.md) |
 ```
 
-- [ ] **Step 5: Run tests + gate** — `python -m pytest tests/test_backup_restore.py -v` PASS; `python scripts/verify` PASS.
+- [ ] **Step 5: Run tests + gate** — `python3 -m pytest tests/test_backup_restore.py -v` PASS; `python3 scripts/verify` PASS.
 
 - [ ] **Step 6: Commit + PR**
 
@@ -1018,7 +1019,7 @@ def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:
     return 0 if ok else 1
 ```
 
-- [ ] **Step 4: Run tests** → PASS; full suite (`python -m pytest tests/ -x -q`) — fix any test asserting the old dishonest output.
+- [ ] **Step 4: Run tests** → PASS; full suite (`python3 -m pytest tests/ -x -q`) — fix any test asserting the old dishonest output.
 
 - [ ] **Step 5: Commit**
 
@@ -1161,7 +1162,7 @@ and extend the drift-check consumer to iterate `TRACKED_PROJECTION_PATHS` plus `
 - [ ] **Step 5: Run tests + commit**
 
 ```bash
-python -m pytest tests/ -x -q
+python3 -m pytest tests/ -x -q
 git status --short  # list every deleted/modified path, then stage each explicitly:
 git add src/memoria_vault/runtime/projections.py tests/test_projections_drift.py tests/conftest.py <each deleted seed/schema path>
 git commit -m "fix(product): projection drift covers argument.canvas (#1351); delete dead knobs"
@@ -1172,15 +1173,21 @@ git commit -m "fix(product): projection drift covers argument.canvas (#1351); de
 
 **Files:**
 - Modify: `docs/` pages + tutorials (located per item below)
-- Test: manual verbatim run of tutorials 01/02/04/05 in a disposable sandbox vault
+- Modify: `src/memoria_vault/cli.py`
+- Modify: `src/memoria_vault/runtime/worker.py`
+- Modify: `tests/test_cli_work_project.py`
+- Test: manual verbatim run of tutorials 01/02/04/05 in a disposable vault
+  under `test-vault/`
 
-**Interfaces:** none (prose truth).
+**Interfaces:** aligns `work update` classification flags and persistence with
+the approved vocabulary model; the remaining work is prose truth.
 
-- [ ] **Step 1: Fix the four doc–code contradictions** (locate each with the given `rg`; correct the claim to match the code as repaired by Tasks 12–14):
+- [ ] **Step 1: Fix the five doc–code contradictions** (locate each with the given `rg`; correct the claim to match the code as repaired by Tasks 12–14 and the implementation below):
   1. `rg -n "capture-candidate|Library pipeline" docs/` — knowledge-cycle page: remove/correct the capture-candidate stage and "Library pipeline" view that no code implements.
   2. `rg -n "blocks delegation" docs/` — linter page: the linter reports; it does not block delegation. Correct the verb.
   3. `rg -n "mode" docs/reference/data-model/frontmatter.md` — re-derive the note-mode/field table from `note.yaml` (source of truth; schema → docs direction).
   4. `rg -n "provider" docs/**/quickstart*` — quickstart's `ask` claim: `memoria ask` is keyless BM25; correct the provider-keys sentence.
+  5. `rg -n "work update|methodology|--topic" docs/ src/memoria_vault/cli.py src/memoria_vault/runtime/worker.py tests/test_cli_work_project.py` — align Work classification mutation with the approved vocabulary model. Write RED CLI/worker tests, replace Work `--topic` with `--methodology`, persist `csl_json.memoria.methodology`, retain `research_area`, and update current-truth docs. Note `topics` continue to inherit `research_area`; do not create a separate list.
 
 - [ ] **Step 2: Fix the six enforcement-claim corrections** (from the architecture review; locate each with `rg -n` on its phrase in `docs/`): phantom "seven-layer" model description; block-loudness pause described as binding (it binds only the uninstalled adapter path — say so); "single attention writer" claim (three hand-rolled copies exist — describe what code does); telemetry-logging claim (no code writes it — delete the claim); "SQLite-backed attention" claim (correct to files-with-projection); dashboard rail written in present tense (mark planned). For each: the fix is *describe what ships today*, marking unshipped behavior as planned.
 
@@ -1189,8 +1196,10 @@ git commit -m "fix(product): projection drift covers argument.canvas (#1351); de
 - [ ] **Step 4: Gate + PR**
 
 ```bash
-python scripts/verify
-git add docs/ tests/
+python3 scripts/verify
+git status --short
+# Stage each exact Task 16 path reported above; never pass a directory.
+git add src/memoria_vault/cli.py src/memoria_vault/runtime/worker.py tests/test_cli_work_project.py <each-exact-doc-or-tutorial-path>
 git commit -m "docs: make enforcement claims match shipped code; tutorials run verbatim"
 gh pr create --title "fix(cli+docs): honest surfaces (F4)" --body "Closes #1364, closes #1351. _emit prints FAILED with detail, list --type work enumerates the catalog, note mode:work creatable, dead knobs deleted, projection drift covers argument.canvas, doc claims corrected to shipped behavior, tutorials run verbatim. Spec: docs/superpowers/specs/2026-07-12-foundation-design.md"
 ```

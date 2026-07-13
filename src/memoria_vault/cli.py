@@ -2652,6 +2652,7 @@ def _read_vocabulary(path: Path) -> dict[str, list[str]]:
             term = line.removeprefix("- ").split(" — ", 1)[0].strip()
             if term:
                 rows[field].append(term)
+    rows["topics"] = list(rows.get("research_area", []))
     return rows
 
 
@@ -2663,6 +2664,11 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
 
     if args.actor != "pi":
         raise ValueError(f"vocabulary {mode} requires PI actor authority")
+    if args.field not in {"research_area", "methodology"}:
+        raise ValueError(
+            "vocabulary mutations support research_area and methodology; "
+            "topics inherit research_area"
+        )
     workspace = _workspace(args)
     path = workspace / "system/vocabulary.md"
     if not path.is_file():
