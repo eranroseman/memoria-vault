@@ -385,15 +385,15 @@ git commit -m "feat(integrity): witness out-of-band edits to human files (CS3)"
 - Consumes: `file_baseline.restriction_keys_json` (prior run), current frontmatter keys.
 - Produces: a `restriction-key-removed` finding/Review item when a key present in the baseline is absent now (e.g. `superseded: true` deleted → a retracted work silently re-admitted to Ask/export). Flag-not-block. `local-only` recognition, if present, is detection groundwork only and is not described as shipped privacy enforcement.
 
-- [ ] **Step 1: Write the failing test** — baseline a note with `superseded: true`; remove the key on disk; run the sweep; assert a `restriction-key-removed` finding names the file and the key.
+- [x] **Step 1: Write the failing test** — `test_observe_sweep_flags_removed_superseded_restriction` baselines a `superseded: true` note, removes the key directly, and asserts the finding names both the file and `superseded`.
 
-- [ ] **Step 2: Run** → FAIL.
+- [x] **Step 2: Run** → FAIL (the expected `restriction-key-removed` finding was absent).
 
-- [ ] **Step 3: Implement** — in the sweep, diff `set(baseline.restriction_keys)` − `set(_restriction_keys(current_fm))`; for each removed key, emit a `restriction-key-removed` Review finding (include `subject_id`, `key`), then refresh the baseline.
+- [x] **Step 3: Implement** — the sweep diffs stored and current restriction keys, emits one ask-route `restriction-key-removed` finding per removal with `subject_id` and `key`, and then refreshes the baseline. Recognized `local-only` remains data-only groundwork, not alpha.21 privacy enforcement.
 
-- [ ] **Step 4: Run** → PASS.
+- [x] **Step 4: Run** → PASS — focused three-test detection selection passed; combined `tests/test_content_security.py tests/test_trusted_writer.py` passed (`76 passed`); Ruff and Ruff format passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `feat(integrity): witness restriction-key removal`.
 
 ```bash
 git add src/memoria_vault/runtime/trusted_writer.py tests/test_content_security.py

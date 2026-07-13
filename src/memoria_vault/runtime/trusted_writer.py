@@ -489,11 +489,23 @@ def _observe_pi_edits_from_status(
             )
         )
         frontmatter, _body = split_frontmatter((vault / target).read_text(encoding="utf-8"))
+        restriction_keys = _restriction_keys(frontmatter)
+        if baseline is not None:
+            for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
+                findings.append(
+                    {
+                        "kind": "restriction-key-removed",
+                        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+                        "route": "ask",
+                        "subject_id": target,
+                        "key": key,
+                    }
+                )
         state.upsert_file_baseline(
             vault,
             target,
             human_sha256=current_hash,
-            restriction_keys=_restriction_keys(frontmatter),
+            restriction_keys=restriction_keys,
         )
     if observed:
         from memoria_vault.runtime.integrity import (

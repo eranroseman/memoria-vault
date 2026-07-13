@@ -27,6 +27,9 @@ from memoria_vault.runtime.knowledge import write_project_export as _write_proje
 from memoria_vault.runtime.operations import (
     compile_source_digest as _compile_source_digest,
 )
+from memoria_vault.runtime.trusted_writer import (
+    observe_pi_edits_from_status as _observe_pi_edits_from_status,
+)
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import (
     call_with_context,
@@ -534,6 +537,37 @@ def test_work_title_canary_is_inert_at_apply_and_export(tmp_path: Path) -> None:
         assert "](http://beacon.example" not in content
         assert "`http://beacon.example/work.png`" in content
         assert "`http://beacon.example/bare`" in content
+
+
+def test_observe_sweep_flags_removed_superseded_restriction(tmp_path: Path) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    init_git(vault, "content-security@example.invalid", "Content Security")
+    target = vault / "notes/superseded.md"
+    target.parent.mkdir(parents=True)
+    target.write_text(
+        "---\n"
+        "type: note\n"
+        "title: Superseded note\n"
+        "superseded: true\n"
+        "tags: []\n"
+        "links: {}\n"
+        "---\n"
+        "Superseded body.\n",
+        encoding="utf-8",
+    )
+    call_with_context(_observe_pi_edits_from_status, vault, machine="test-machine")
+
+    target.write_text(
+        target.read_text(encoding="utf-8").replace("superseded: true\n", ""),
+        encoding="utf-8",
+    )
+    result = call_with_context(_observe_pi_edits_from_status, vault, machine="test-machine")
+
+    [finding] = [item for item in result["findings"] if item["kind"] == "restriction-key-removed"]
+    assert finding["subject_id"] == "notes/superseded.md"
+    assert finding["key"] == "superseded"
+    assert finding["route"] == "ask"
 
 
 def test_composed_draft_headings_and_outline_reasoning_render_fenced_fragments_inert(
