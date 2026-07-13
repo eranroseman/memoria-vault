@@ -140,8 +140,19 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
             cursor = opener_end
             continue
 
-        output.append(text[plain_start:cursor])
         closing_end = closing + len(delimiter)
+        content = text[opener_end:closing]
+        if ("\n" in content or "\r" in content) and _HTML_OPEN_RE.search(content):
+            # Markdown blocks can interrupt a would-be multiline code span before
+            # raw HTML. Leave these ambiguous spans for the normal escape pass.
+            output.append(text[plain_start:cursor])
+            output.append("&#96;" * len(delimiter))
+            output.append(content.replace("`", "&#96;"))
+            output.append("&#96;" * len(delimiter))
+            plain_start = closing_end
+            cursor = closing_end
+            continue
+        output.append(text[plain_start:cursor])
         token = f"<{marker}{len(spans)}{marker}>"
         output.append(token)
         spans.append((token, text[cursor:closing_end]))

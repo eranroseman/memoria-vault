@@ -137,6 +137,81 @@ def test_multiline_code_span_is_untouched() -> None:
     assert neutralize_untrusted_markdown(source) == source
 
 
+@pytest.mark.parametrize("delimiter", ["`", "``"])
+@pytest.mark.parametrize(
+    ("raw_html", "open_tag"),
+    [
+        ('<iframe src="https://evil.example/frame"></iframe>', "<iframe"),
+        ('<script src="https://evil.example/script.js"></script>', "<script"),
+        ('<img src="https://evil.example/image.png">', "<img"),
+        ('> <iframe src="https://evil.example/quote"></iframe>', "<iframe"),
+        ('# <iframe src="https://evil.example/heading"></iframe>', "<iframe"),
+        ('- <iframe src="https://evil.example/list"></iframe>', "<iframe"),
+        ('1. <iframe src="https://evil.example/ordered"></iframe>', "<iframe"),
+        (
+            '<style>body { background: url("https://evil.example/style.css") }</style>',
+            "<style",
+        ),
+    ],
+)
+def test_multiline_pseudo_code_spans_with_html_block_openers_are_inert_through_exports(
+    tmp_path: Path,
+    delimiter: str,
+    raw_html: str,
+    open_tag: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    payload = f"{delimiter}\n{raw_html}\n\n{delimiter}"
+
+    direct = neutralize_untrusted_markdown(payload)
+    assert open_tag not in direct
+
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=payload,
+    )
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (direct, rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert open_tag not in html
+
+
+def test_multiline_pseudo_code_span_neutralization_does_not_duplicate_plain_text() -> None:
+    source = 'Before\n`\n<iframe src="https://evil.example/frame"></iframe>\n`\nAfter `literal`\n'
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered.count("Before") == 1
+    assert "<iframe" not in rendered
+    assert "`literal`" in rendered
+
+
+def test_multiline_pseudo_code_span_html_fallback_is_idempotent() -> None:
+    source = '`\n<iframe src="https://evil.example/frame"></iframe>\n\n`\n'
+
+    once = neutralize_untrusted_markdown(source)
+
+    assert neutralize_untrusted_markdown(once) == once
+
+
 def test_neutralization_is_idempotent() -> None:
     source = "![x](http://evil.example/x) <script>bad()</script>"
     once = neutralize_untrusted_markdown(source)
