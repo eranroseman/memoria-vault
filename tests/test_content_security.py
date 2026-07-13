@@ -45,6 +45,13 @@ def test_raw_html_is_inert() -> None:
     assert "hi" in rendered
 
 
+def test_multiline_raw_html_is_inert() -> None:
+    rendered = neutralize_untrusted_markdown('<img\nsrc="&#x68;ttps://evil.example/x.png">')
+
+    assert "<img" not in rendered
+    assert "&lt;img" in rendered
+
+
 def test_links_and_external_urls_are_noninteractive_code_spans() -> None:
     rendered = neutralize_untrusted_markdown(
         "see [here](https://evil.example/x) or //evil.example/y"

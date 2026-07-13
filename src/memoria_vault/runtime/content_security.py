@@ -6,6 +6,7 @@ import re
 
 _FENCE_OPEN_RE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})")
 _HTML_TAG_RE = re.compile(r"<(?=[!/?A-Za-z])[^>\n]*>")
+_HTML_OPEN_RE = re.compile(r"<(?=[!/?A-Za-z])")
 _IMAGE_EMBED_RE = re.compile(r"!\[\[([^\]\n]*)\]\]")
 _INLINE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]*)\]\(\s*([^\n)]*?)\s*\)")
 _REFERENCE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]+)\]\[([^\]\n]*)\]")
@@ -60,6 +61,7 @@ def _neutralize_plain_text(text: str) -> str:
         lambda match: match.group(0).replace("<", "&lt;").replace(">", "&gt;"),
         text,
     )
+    text = _HTML_OPEN_RE.sub("&lt;", text)
     return _EXTERNAL_URL_RE.sub(_replace_external_url, text)
 
 
