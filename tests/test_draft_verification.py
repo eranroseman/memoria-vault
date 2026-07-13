@@ -389,6 +389,167 @@ def test_draft_text_drift_overrides_pi_disposition_and_refuses_export(
         write_project_export(vault, "project-alpha", draft=True)
 
 
+def test_relocated_evidence_marker_refuses_export_with_unbound_text(tmp_path: Path) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    [bound] = state.evidence_sets(tmp_path)
+
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+    assert (
+        "[@source-alpha]" in write_project_export(tmp_path, "project-alpha", draft=True)["content"]
+    )
+
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f" ^blk-{evidence_id.removeprefix('ev-')}"
+    draft.write_text(
+        original.replace(f"{anchor} {marker}", anchor).rstrip()
+        + f"\n\nChanged unsupported claim. {marker}\n",
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-text-unbound",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "reason": "anchored block text cannot be resolved",
+        }
+    ]
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_even_escaped_inline_code_controls_refuse_export(tmp_path: Path) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    draft.write_text(
+        f"Source note: `notes/support.md`\n\nUnsupported claim. {'\\' * 2}` {anchor} {marker} `\n",
+        encoding="utf-8",
+    )
+    with state.connect(tmp_path) as conn:
+        conn.execute("DELETE FROM evidence_sets")
+    state.rebuild_evidence_sets_from_markers(tmp_path)
+    [bound] = state.evidence_sets(tmp_path)
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-text-unbound",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "reason": "stored block-text binding is missing",
+        }
+    ]
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_backslash_before_inline_code_closer_controls_refuse_export(tmp_path: Path) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    escaped_closer = "\\" + "`"
+    draft.write_text(
+        "Source note: `notes/support.md`\n\n"
+        f"Unsupported claim. ` {anchor} {marker} {escaped_closer}\n",
+        encoding="utf-8",
+    )
+    with state.connect(tmp_path) as conn:
+        conn.execute("DELETE FROM evidence_sets")
+    state.rebuild_evidence_sets_from_markers(tmp_path)
+    [bound] = state.evidence_sets(tmp_path)
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-text-unbound",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "reason": "stored block-text binding is missing",
+        }
+    ]
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_heading_and_following_paragraph_cannot_share_evidence_binding(
+    tmp_path: Path,
+) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    draft.write_text(
+        f"# Supported claim {anchor} {marker}\n"
+        "Changed unsupported claim.\n\n"
+        "Source note: `notes/support.md`\n",
+        encoding="utf-8",
+    )
+    with state.connect(tmp_path) as conn:
+        conn.execute("DELETE FROM evidence_sets")
+    state.rebuild_evidence_sets_from_markers(tmp_path)
+    [bound] = state.evidence_sets(tmp_path)
+
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+    assert (
+        "[@source-alpha]" in write_project_export(tmp_path, "project-alpha", draft=True)["content"]
+    )
+
+    draft.write_text(
+        f"# Supported claim {anchor} \n"
+        f"Changed unsupported claim. {marker}\n\n"
+        "Source note: `notes/support.md`\n",
+        encoding="utf-8",
+    )
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-text-unbound",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "reason": "anchored block text cannot be resolved",
+        }
+    ]
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
 def test_unresolvable_evidence_anchor_refuses_export(tmp_path: Path) -> None:
     draft, evidence_id = _compose_source_backed_draft(
         tmp_path,
