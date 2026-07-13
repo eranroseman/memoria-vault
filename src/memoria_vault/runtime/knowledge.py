@@ -2120,6 +2120,38 @@ def verify_project_draft(
     findings = []
     disposed = _disposed_evidence_ids(vault)
     for row in draft["evidence_sets"]:
+        stored_block_hash = row.get("block_text_sha256")
+        current_block_hash = state._block_text_sha256(vault, row["block_ref"])
+        if not stored_block_hash:
+            findings.append(
+                {
+                    "kind": "evidence-text-unbound",
+                    "severity": "high",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "reason": "stored block-text binding is missing",
+                }
+            )
+        elif current_block_hash is None:
+            findings.append(
+                {
+                    "kind": "evidence-text-unbound",
+                    "severity": "high",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "reason": "anchored block text cannot be resolved",
+                }
+            )
+        elif current_block_hash != stored_block_hash:
+            findings.append(
+                {
+                    "kind": "evidence-text-drift",
+                    "severity": "high",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "reason": "anchored block text differs from its stored binding",
+                }
+            )
         if row["id"] in disposed:
             continue
         if row["state"] == "evidence-incomplete":

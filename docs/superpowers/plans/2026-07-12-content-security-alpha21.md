@@ -272,15 +272,15 @@ also proves that an existing null binding remains null after its anchor appears.
 - Consumes: the stored `block_text_sha256` (Task 6).
 - Produces: `verify_project_draft` emits `evidence-text-drift` when current text differs from the preserved binding and `evidence-text-unbound` when the stored binding is missing or the current block cannot resolve. Either finding makes verification fail and therefore refuses export through the existing verification gate.
 
-- [ ] **Step 1: Write failing tests** — verify a clean draft (passes/exports); edit the anchored paragraph on disk; rebuild; re-verify and assert `evidence-text-drift` plus export refusal. Separately delete/unresolve the anchor and create a row with a missing stored binding; each must emit `evidence-text-unbound` and refuse export. These tests prove rebuild cannot bless an edit and fail-open null/unresolvable states are gone.
+- [x] **Step 1: Write failing tests** — verify a clean draft (passes/exports); edit the anchored paragraph on disk; rebuild; re-verify and assert `evidence-text-drift` plus export refusal. Separately delete/unresolve the anchor and create a row with a missing stored binding; each must emit `evidence-text-unbound` and refuse export. These tests prove rebuild cannot bless an edit and fail-open null/unresolvable states are gone.
 
-- [ ] **Step 2: Run** → FAIL (no drift check today; edited text exports clean — the fail-open).
+- [x] **Step 2: Run** → FAIL (no drift check today; edited text exports clean — the fail-open).
 
-- [ ] **Step 3: Implement** — in `verify_project_draft`, immediately after loading evidence rows, recompute `_block_text_sha256` and compare it with the preserved stored value **before** disposition logic. Missing/unresolvable values append `evidence-text-unbound`; unequal non-null values append `evidence-text-drift`. Continue using the existing `ok = not findings` and verified-export refusal contract rather than adding a parallel allowlist that could miss a new finding kind.
+- [x] **Step 3: Implement** — in `verify_project_draft`, immediately after loading evidence rows, recompute `_block_text_sha256` and compare it with the preserved stored value **before** disposition logic. Missing/unresolvable values append `evidence-text-unbound`; unequal non-null values append `evidence-text-drift`. Continue using the existing `ok = not findings` and verified-export refusal contract rather than adding a parallel allowlist that could miss a new finding kind.
 
-- [ ] **Step 4: Run** the drift test + `tests/test_draft_verification.py` → PASS; `python scripts/verify` → PASS.
+- [x] **Step 4: Run** the drift test + `tests/test_draft_verification.py` → PASS; `python scripts/verify` → PASS.
 
-- [ ] **Step 5: Commit + PR**
+- [x] **Step 5: Commit + local handoff**
 
 ```bash
 git add src/memoria_vault/runtime/knowledge.py tests/test_mc_hash_binding.py tests/test_draft_verification.py
@@ -289,6 +289,13 @@ git commit -m "fix(verify): demote + refuse export when block text drifts from i
 # stops after local commits and verification.
 gh pr create --title "fix(verify): bind evidence labels to block-text hash (mc-hash-binding)" --body "Partial archive gap #10 hardening: fresh evidence IDs bind once to anchored block text; rebuild preserves the prior hash; verify refuses drift, missing bindings, and unresolvable blocks. DB-authoritative evidence truth remains deferred and unshipped."
 ```
+
+**TDD and gate evidence:** all three regressions initially reported the edited,
+anchorless, or null-bound draft as ready. After the verifier change, those tests
+passed, as did 46 affected project/evidence tests. `python3 scripts/verify`
+finished with `verify: OK`: 447 selected tests passed, 9 skipped, the offline
+smoke reported all gates green, and compile/shell/JSON/PowerShell checks passed.
+No branch was pushed and no PR was opened in this execution.
 
 ---
 

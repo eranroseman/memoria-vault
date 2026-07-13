@@ -343,6 +343,108 @@ def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
     assert verification["findings"] == []
 
 
+def test_draft_text_drift_overrides_pi_disposition_and_refuses_export(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="The PI accepts this exact claim text.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    composed = compose_project_draft(vault, "project-alpha")
+    evidence_id = composed["evidence_markers"][0]["id"]
+    [bound] = state.evidence_sets(vault)
+    resolve_evidence_review(vault, evidence_id, decision="accept", reason="PI accepted")
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    write_project_export(vault, "project-alpha", draft=True)
+
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(
+            "The PI accepts this exact claim text.",
+            "The claim text changed after PI acceptance.",
+        ),
+        encoding="utf-8",
+    )
+    state.rebuild_evidence_sets_from_markers(vault)
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-text-drift",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "reason": "anchored block text differs from its stored binding",
+        }
+    ]
+    with pytest.raises(ValueError, match="evidence-text-drift"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_unresolvable_evidence_anchor_refuses_export(tmp_path: Path) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="This claim loses its block anchor.",
+    )
+    [bound] = state.evidence_sets(tmp_path)
+    anchor = f" ^blk-{evidence_id.removeprefix('ev-')}"
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(anchor, ""),
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-text-unbound",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "reason": "anchored block text cannot be resolved",
+        }
+    ]
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_missing_stored_evidence_binding_refuses_export(tmp_path: Path) -> None:
+    _draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="This claim has a resolvable block but no stored binding.",
+    )
+    [bound] = state.evidence_sets(tmp_path)
+    with state.connect(tmp_path) as conn:
+        conn.execute(
+            "UPDATE evidence_sets SET block_text_sha256 = NULL WHERE id = ?",
+            (evidence_id,),
+        )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-text-unbound",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "reason": "stored block-text binding is missing",
+        }
+    ]
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
 def test_evidence_review_rejects_non_pi_actor_without_clearing_draft_gate(
     tmp_path: Path,
 ) -> None:
@@ -446,3 +548,30 @@ def _source_span(vault: Path, work_id: str) -> None:
     path = vault / f".memoria/blobs/source-content/{work_id}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"{work_id} source span. ^p0001\n", encoding="utf-8")
+
+
+def _compose_source_backed_draft(vault: Path, *, body: str) -> tuple[Path, str]:
+    state.upsert_catalog_record(
+        vault,
+        work_id="source-alpha",
+        title="Alpha Source",
+        check_status="checked",
+        content_path=".memoria/blobs/source-content/source-alpha.md",
+    )
+    _source_span(vault, "source-alpha")
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\n"
+        "work_id: catalog/sources/source-alpha\n",
+        "note",
+        body=body,
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — Support\n")
+    composed = compose_project_draft(vault, "project-alpha")
+    return (
+        vault / "projects/project-alpha/draft.md",
+        composed["evidence_markers"][0]["id"],
+    )

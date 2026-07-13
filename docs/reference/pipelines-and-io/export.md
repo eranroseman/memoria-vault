@@ -16,6 +16,9 @@ renders a project Concept, its paper plan when present, its argument state,
 linked checked hubs, and `bibliography.bib` to Markdown. Add `--draft` to render
 `projects/<project>/draft.md` instead: draft-internal evidence markers become
 Pandoc citekeys and block anchors are stripped from the exported artifact.
+Draft export always runs verification and refuses text that has drifted from
+its evidence ID's stored block hash, lacks that binding, or has an unresolvable
+block anchor.
 `.docx`, `.pdf`, and `.odt` remain available when Pandoc is installed. Add
 `--ready-only` when the export must fail closed unless the project has required
 paper framing and checked support. For citation-rich manuscript drafts, live
