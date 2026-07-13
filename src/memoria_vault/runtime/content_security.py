@@ -11,7 +11,7 @@ _IMAGE_EMBED_RE = re.compile(r"!\[\[([^\]\n]*)\]\]")
 _INLINE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]*)\]\(\s*([^\n)]*?)\s*\)")
 _REFERENCE_LINK_RE = re.compile(r"(?P<image>!)?\[([^\]\n]+)\]\[([^\]\n]*)\]")
 _REFERENCE_DEFINITION_RE = re.compile(
-    r"(?m)^(?P<indent>[ \t]{0,3})(?P<label>\[(?:\\.|[^\]\\\n])+\]):"
+    r"(?<!\\)(?P<label>\[(?:\\[^\r\n]|[^\]\\\r\n]|(?:\r\n?|\n)(?!(?:\r\n?|\n)))+\]):"
 )
 _IMAGE_OPEN_RE = re.compile(r"!\[")
 _EXTERNAL_URL_RE = re.compile(
@@ -47,7 +47,7 @@ def _replace_reference_link(match: re.Match[str]) -> str:
 
 
 def _replace_reference_definition(match: re.Match[str]) -> str:
-    return f"{match.group('indent')}\\{match.group('label')}:"
+    return f"\\{match.group('label')}:"
 
 
 def _replace_external_url(match: re.Match[str]) -> str:
@@ -73,9 +73,13 @@ def _neutralize_plain_text(text: str) -> str:
     return _EXTERNAL_URL_RE.sub(_replace_external_url, text)
 
 
-def _neutralize_inline_text(text: str) -> str:
-    """Neutralize non-fenced text while preserving inline code spans."""
+def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
+    """Replace inline code spans with unique tokens while preserving their source."""
     output: list[str] = []
+    spans: list[tuple[str, str]] = []
+    marker = "\0"
+    while marker in text:
+        marker += "\0"
     plain_start = 0
     cursor = 0
     while cursor < len(text):
@@ -97,14 +101,25 @@ def _neutralize_inline_text(text: str) -> str:
             cursor = opener_end
             continue
 
-        output.append(_neutralize_plain_text(text[plain_start:cursor]))
+        output.append(text[plain_start:cursor])
         closing_end = closing + len(delimiter)
-        output.append(text[cursor:closing_end])
+        token = f"<{marker}{len(spans)}{marker}>"
+        output.append(token)
+        spans.append((token, text[cursor:closing_end]))
         plain_start = closing_end
         cursor = closing_end
 
-    output.append(_neutralize_plain_text(text[plain_start:]))
-    return "".join(output)
+    output.append(text[plain_start:])
+    return "".join(output), spans
+
+
+def _neutralize_inline_text(text: str) -> str:
+    """Neutralize non-fenced text while preserving inline code spans."""
+    masked, spans = _mask_inline_code_spans(text)
+    neutralized = _neutralize_plain_text(masked)
+    for token, source in spans:
+        neutralized = neutralized.replace(token, source)
+    return neutralized
 
 
 def neutralize_untrusted_markdown(body: str) -> str:

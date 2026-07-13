@@ -83,6 +83,30 @@ def test_entity_obfuscated_shortcut_reference_link_is_inert() -> None:
     assert "\\[beacon]: &#x68;ttps://evil.example/click" in rendered
 
 
+def test_entity_obfuscated_blockquote_reference_definition_is_inert() -> None:
+    source = "> [beacon]\n>\n> [beacon]: &#x68;ttps://evil.example/click\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert "> \\[beacon]: &#x68;ttps://evil.example/click" in rendered
+
+
+def test_entity_obfuscated_multiline_reference_definition_is_inert() -> None:
+    source = "[foo bar]\n\n[foo\nbar]: &#x68;ttps://evil.example/click\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert "\\[foo\nbar]: &#x68;ttps://evil.example/click" in rendered
+
+
+def test_reference_definition_with_inline_code_label_is_inert() -> None:
+    source = "[foo `bar`]\n\n[foo `bar`]: &#x68;ttps://evil.example/click\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert "\\[foo `bar`]: &#x68;ttps://evil.example/click" in rendered
+
+
 def test_existing_code_spans_and_fences_are_untouched() -> None:
     source = (
         "`http://inline.example` and ``![literal](http://code.example)``\n"
