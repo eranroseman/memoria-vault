@@ -11,6 +11,9 @@ from memoria_vault.runtime.knowledge import (
     compose_project_draft as _compose_project_draft,
 )
 from memoria_vault.runtime.knowledge import (
+    render_project_draft_export_markdown as _render_project_draft_export_markdown,
+)
+from memoria_vault.runtime.knowledge import (
     resolve_evidence_review as _resolve_evidence_review,
 )
 from memoria_vault.runtime.knowledge import (
@@ -34,6 +37,10 @@ def resolve_evidence_review(vault: Path, *args, **kwargs):
     kwargs.setdefault("actor", "pi")
     kwargs.setdefault("machine", "test-machine")
     return _resolve_evidence_review(vault, *args, **kwargs)
+
+
+def render_project_draft_export_markdown(vault: Path, *args, **kwargs):
+    return call_with_context(_render_project_draft_export_markdown, vault, *args, **kwargs)
 
 
 def verify_project_draft(vault: Path, *args, **kwargs):
@@ -127,6 +134,42 @@ def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path:
     assert "[@source-alpha]" in exported["content"]
     assert "%%ev:" not in exported["content"]
     assert "^blk-" not in exported["content"]
+
+
+def test_draft_renderer_and_writer_neutralize_exported_beacons(tmp_path: Path) -> None:
+    vault = tmp_path
+    state.upsert_catalog_record(
+        vault,
+        work_id="source-alpha",
+        title="Alpha Source",
+        check_status="checked",
+        content_path=".memoria/blobs/source-content/source-alpha.md",
+    )
+    _source_span(vault, "source-alpha")
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nwork_id: catalog/sources/source-alpha\n",
+        "note",
+        body=(
+            "![draft](http://beacon.example/draft.png) "
+            "<script>signal()</script> http://beacon.example/bare"
+        ),
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — Support\n")
+    compose_project_draft(vault, "project-alpha")
+
+    rendered = render_project_draft_export_markdown(vault, "project-alpha")
+    written = write_project_export(vault, "project-alpha", draft=True)
+
+    for content in (rendered["content"], written["content"]):
+        assert "![draft]" not in content
+        assert "<script>" not in content
+        assert "](http://beacon.example" not in content
+        assert "`http://beacon.example/draft.png`" in content
+        assert "`http://beacon.example/bare`" in content
 
 
 def test_unclean_draft_refuses_export_with_evidence_reason(tmp_path: Path) -> None:

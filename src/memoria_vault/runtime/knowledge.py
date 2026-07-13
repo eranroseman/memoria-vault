@@ -18,6 +18,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.operations import (
     load_operation_policy,
     required_promotion_checks,
@@ -2359,10 +2360,11 @@ def render_project_export_markdown(vault: Path, project_path: str) -> dict[str, 
     _append_project_export_findings(lines, "Gap Findings", argument["gap_findings"])
     _append_project_export_findings(lines, "Advisories", argument["advisories"])
     _append_project_export_references(lines, vault)
+    content = neutralize_untrusted_markdown("\n".join(lines).rstrip() + "\n")
     return {
         "project_path": project_rel,
         "format": "markdown",
-        "content": "\n".join(lines).rstrip() + "\n",
+        "content": content,
         "node_count": argument["node_count"],
         "edge_count": len(argument["edges"]),
         "relation_count": argument["relation_count"],
@@ -2420,7 +2422,7 @@ def write_project_export(
             missing = ", ".join(readiness["missing"])
             raise ValueError(f"project is not export-ready: {missing}")
         rendered = render_project_export_markdown(vault, project_path)
-    content = str(rendered["content"])
+    content = neutralize_untrusted_markdown(str(rendered["content"]))
     output = output_path.strip()
     if export_format == "markdown":
         display_path = _write_project_export_output(vault, output, content) if output else ""
@@ -2471,12 +2473,13 @@ def render_project_draft_export_markdown(
         raise ValueError(f"project draft is not export-ready: {reasons}")
     draft = read_project_draft(vault, project_path)
     _frontmatter, body = split_frontmatter(draft["content"])
+    content = neutralize_untrusted_markdown(_render_draft_export_body(vault, body).strip() + "\n")
     return {
         "project_path": draft["project_path"],
         "draft_path": draft["draft_path"],
         "readiness": verification,
         "format": "markdown",
-        "content": _render_draft_export_body(vault, body).strip() + "\n",
+        "content": content,
         "node_count": 0,
         "edge_count": 0,
         "relation_count": 0,

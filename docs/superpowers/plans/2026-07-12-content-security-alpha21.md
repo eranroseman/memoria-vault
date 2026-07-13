@@ -106,9 +106,9 @@ git commit -m "feat(security): neutralize_untrusted_markdown helper (CS1 embeds/
 - Consumes: `content_security.neutralize_untrusted_markdown` (Task 1).
 - Produces: exported markdown from both renderers is neutralized at the shared `content = str(rendered["content"])` choke before it lands on disk or reaches Pandoc. Renderer-return tests also prove direct consumers receive neutralized content.
 
-- [ ] **Step 1: Read** `_render_draft_export_body`, `render_project_draft_export_markdown`, `render_project_export_markdown`, and `write_project_export` fully; confirm which return values are public and that `content = str(rendered["content"])` is the final disk/Pandoc choke.
+- [x] **Step 1: Read** `_render_draft_export_body`, `render_project_draft_export_markdown`, `render_project_export_markdown`, and `write_project_export` fully; confirm which return values are public and that `content = str(rendered["content"])` is the final disk/Pandoc choke.
 
-- [ ] **Step 2: Write the failing test** (append to `tests/test_draft_verification.py`; reuse its existing draft-export fixture — copy the setup from `test_verified_source_backed_draft_exports_without_internal_markers`):
+- [x] **Step 2: Write the failing test** (append to `tests/test_draft_verification.py`; reuse its existing draft-export fixture — copy the setup from `test_verified_source_backed_draft_exports_without_internal_markers`):
 
 ```python
 def test_export_neutralizes_embedded_beacon(tmp_path, capsys):
@@ -121,16 +121,18 @@ def test_export_neutralizes_embedded_beacon(tmp_path, capsys):
 ```
 Fill concretely from the existing fixture (no `...` in the final test).
 
-- [ ] **Step 3: Implement** — import `neutralize_untrusted_markdown`; neutralize each renderer's returned `content` so direct consumers are safe, and neutralize `str(rendered["content"])` again at `write_project_export` as the final default-deny choke. The helper is idempotent, so this defense-in-depth does not alter already-neutralized content.
+- [x] **Step 3: Implement** — import `neutralize_untrusted_markdown`; neutralize each renderer's returned `content` so direct consumers are safe, and neutralize `str(rendered["content"])` again at `write_project_export` as the final default-deny choke. The helper is idempotent, so this defense-in-depth does not alter already-neutralized content.
 
-- [ ] **Step 4: Run** `python -m pytest tests/test_draft_verification.py -v` → PASS; full suite `-x -q` → PASS (confirm no existing export test asserts a raw external URL/HTML survives; if one does, it was asserting the vulnerability — update it).
+- [x] **Step 4: Run** `python -m pytest tests/test_draft_verification.py -v` → PASS; full suite `-x -q` → PASS (confirm no existing export test asserts a raw external URL/HTML survives; if one does, it was asserting the vulnerability — update it).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
 git commit -m "fix(security): neutralize exported draft/argument content (CS1 export side)"
 ```
+
+**Evidence:** RED three-seam selection failed 3/3 with live draft, argument, and monkeypatched final-choke beacons. GREEN the same selection passed 3/3; both affected files passed 22/22; `python3 -m pytest -x -q` passed 830 with 10 expected skips.
 
 ### Task 3: Neutralize every current machine/third-party apply region
 
