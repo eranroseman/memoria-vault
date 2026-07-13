@@ -1,5 +1,6 @@
 """Operation provenance context and actor flows."""
 
+import inspect
 import json
 from collections.abc import Callable
 from dataclasses import FrozenInstanceError
@@ -69,6 +70,20 @@ def _event_log_payloads(vault: Path) -> list[dict[str, Any]]:
     with state.connect(vault) as conn:
         rows = conn.execute("SELECT payload_json FROM event_log ORDER BY event_id").fetchall()
     return [json.loads(row["payload_json"]) for row in rows]
+
+
+def _note_content(title: str) -> str:
+    return (
+        "---\n"
+        "type: note\n"
+        f"title: {title}\n"
+        "mode: claim\n"
+        f"claim_text: {title}\n"
+        "tags: []\n"
+        "links: {}\n"
+        "---\n\n"
+        f"{title}.\n"
+    )
 
 
 def test_operation_context_is_frozen_and_slotted() -> None:
@@ -190,7 +205,7 @@ def test_context_journal_metadata_comes_from_context_and_saved_request(tmp_path:
         provenance={"agent_identity": "codex", "surface": "mcp"},
     )
 
-    row = trusted_writer._append_context_event(
+    row = trusted_writer.append_journal_event(
         tmp_path,
         {"event": "derived", "output_id": "notes/context.md"},
         context=context,
@@ -232,7 +247,7 @@ def test_context_journal_reserved_metadata_conflict_changes_neither_store(
     context = _saved_operation_context(tmp_path)
 
     with pytest.raises(ValueError, match=key):
-        trusted_writer._append_context_event(
+        trusted_writer.append_journal_event(
             tmp_path,
             {"event": "derived", key: value},
             context=context,
@@ -248,7 +263,7 @@ def test_context_journal_request_provenance_conflict_changes_neither_store(
     context = _saved_operation_context(tmp_path, provenance={"agent_identity": "codex"})
 
     with pytest.raises(ValueError, match="request_provenance"):
-        trusted_writer._append_context_event(
+        trusted_writer.append_journal_event(
             tmp_path,
             {"event": "derived", "request_provenance": None},
             context=context,
@@ -285,7 +300,7 @@ def test_context_journal_rejects_non_mapping_request_provenance_before_mutation(
     )
 
     with pytest.raises(ValueError, match=r"provenance.*mapping"):
-        trusted_writer._append_context_event(
+        trusted_writer.append_journal_event(
             tmp_path,
             {"event": "derived"},
             context=context,
@@ -467,3 +482,218 @@ def test_agent_enveloped_create_concept_lands_agent_actor(tmp_path, capsys) -> N
     actors = {json.loads(row["payload_json"]).get("actor") for row in rows}
     assert actors, "create-concept journaled no actor-bearing events"
     assert actors == {"agent"}
+
+
+@pytest.mark.parametrize(
+    ("function", "required", "forbidden"),
+    [
+        (trusted_writer.append_journal_event, {"context"}, {"actor", "machine"}),
+        (trusted_writer.stage_concept, {"context"}, {"actor", "machine", "run_id", "operation"}),
+        (trusted_writer.mark_checked, {"context"}, {"actor", "machine"}),
+        (trusted_writer.promote_checked, {"context"}, {"actor", "machine"}),
+        (trusted_writer.materialize_unchecked, {"context"}, {"actor", "machine"}),
+        (trusted_writer.quarantine_untraced, {"context"}, {"actor", "machine"}),
+        (trusted_writer.quarantine_untraced_from_status, {"context"}, {"actor", "machine"}),
+        (trusted_writer.commit_writer_changes, {"context"}, {"actor", "machine"}),
+    ],
+)
+def test_request_writer_interfaces_require_only_context_provenance(
+    function: Callable[..., Any], required: set[str], forbidden: set[str]
+) -> None:
+    signature = inspect.signature(function)
+
+    for name in required:
+        parameter = signature.parameters[name]
+        assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+        assert parameter.default is inspect.Parameter.empty
+    assert forbidden.isdisjoint(signature.parameters)
+
+
+@pytest.mark.parametrize(
+    ("function", "required"),
+    [
+        (trusted_writer.append_explicit_journal_event, {"actor", "machine"}),
+        (trusted_writer.commit_explicit_writer_changes, {"actor", "machine"}),
+        (trusted_writer.observe_pi_edit, {"machine"}),
+        (trusted_writer.observe_pi_edit_from_head, {"machine"}),
+        (trusted_writer.observe_pi_edits_explicit_from_status, {"actor", "machine"}),
+    ],
+)
+def test_outside_envelope_writer_interfaces_require_explicit_provenance(
+    function: Callable[..., Any], required: set[str]
+) -> None:
+    signature = inspect.signature(function)
+
+    for name in required:
+        parameter = signature.parameters[name]
+        assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+        assert parameter.default is inspect.Parameter.empty
+    assert "context" not in signature.parameters
+
+
+def _run_input_backed_create(
+    workspace: Path,
+    *,
+    actor: str,
+    request_id: str,
+    title: str,
+) -> dict[str, Any]:
+    target = "notes/context-owned.md"
+    queued = worker.enqueue_operation(
+        workspace,
+        "create-concept",
+        actor=actor,
+        idempotency_key=request_id,
+        input_refs=[{"id": "catalog/sources/source-a/source.md", "role": "source"}],
+        output_intents=[{"id": target, "kind": "concept"}],
+        primary_target=target,
+        payload={
+            "target_path": target,
+            "content": _note_content(title),
+            "concept_type": "note",
+            "run_id": f"run-{request_id}",
+        },
+    )
+    return worker.run_request(workspace, queued["job_id"], machine="agent machine")
+
+
+@pytest.mark.parametrize("actor", ["agent", "operation", "integrity"])
+def test_create_concept_preserves_context_end_to_end(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    actor: str,
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    request_id = f"create-{actor}"
+
+    result = _run_input_backed_create(
+        workspace,
+        actor=actor,
+        request_id=request_id,
+        title=f"Context {actor}",
+    )
+
+    assert result["status"] == "done"
+    with state.connect(workspace) as conn:
+        request = conn.execute(
+            "SELECT actor FROM operation_requests WHERE request_id = ?", (request_id,)
+        ).fetchone()
+        derivations = conn.execute(
+            "SELECT input_id, output_id, actor FROM derivations"
+            " WHERE output_id = 'notes/context-owned.md'"
+        ).fetchall()
+        event_rows = conn.execute(
+            "SELECT machine, payload_json FROM event_log"
+            " WHERE json_extract(payload_json, '$.request_id') = ?",
+            (request_id,),
+        ).fetchall()
+    assert request["actor"] == actor
+    assert [tuple(row) for row in derivations] == [
+        ("catalog/sources/source-a/source.md", "notes/context-owned.md", actor)
+    ]
+    assert event_rows
+    for event_row in event_rows:
+        event = json.loads(event_row["payload_json"])
+        assert event["actor"] == actor
+        assert event["run_id"] == f"run-{request_id}"
+        assert event["request_id"] == request_id
+        assert event["operation"] == "create-concept"
+        assert event["machine"] == "agent_machine"
+        assert event_row["machine"] == "agent_machine"
+    journal = list(iter_jsonl(workspace / ".memoria/journal/agent_machine.jsonl"))
+    assert [row for row in journal if row.get("request_id") == request_id] == [
+        json.loads(row["payload_json"]) for row in event_rows
+    ]
+
+
+def test_repeated_edge_keeps_latest_actor_and_both_historical_events(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    first = _run_input_backed_create(
+        workspace, actor="pi", request_id="repeat-pi", title="PI version"
+    )
+    second = _run_input_backed_create(
+        workspace, actor="agent", request_id="repeat-agent", title="Agent version"
+    )
+
+    assert first["status"] == second["status"] == "done"
+    with state.connect(workspace) as conn:
+        derivations = conn.execute(
+            "SELECT actor FROM derivations"
+            " WHERE input_id = 'catalog/sources/source-a/source.md'"
+            " AND output_id = 'notes/context-owned.md'"
+        ).fetchall()
+        events = conn.execute(
+            "SELECT payload_json FROM event_log"
+            " WHERE json_extract(payload_json, '$.event') = 'derived'"
+            " AND json_extract(payload_json, '$.output_id') = 'notes/context-owned.md'"
+            " ORDER BY event_id"
+        ).fetchall()
+    assert [row["actor"] for row in derivations] == ["agent"]
+    history = [json.loads(row["payload_json"]) for row in events]
+    assert [(row["request_id"], row["actor"]) for row in history] == [
+        ("repeat-pi", "pi"),
+        ("repeat-agent", "agent"),
+    ]
+
+
+@pytest.mark.parametrize("operation_id", ["acknowledge-attention", "resolve-attention"])
+def test_attention_resolution_rejects_non_pi_before_mutation(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    operation_id: str,
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    target = "inbox/attention/non-pi.md"
+    request = worker.enqueue_operation(
+        workspace,
+        operation_id,
+        actor="agent",
+        idempotency_key=f"agent-{operation_id}",
+        payload={"target_id": target, "reason": "agent may not decide"},
+    )
+
+    result = worker.run_request(workspace, request["job_id"], machine="agent machine")
+
+    assert result["status"] == "failed"
+    assert "PI" in result["error"]
+    assert not (workspace / target).exists()
+    assert not [row for row in _event_log_payloads(workspace) if row.get("event") == "resolved"]
+
+
+@pytest.mark.parametrize("operation_id", ["acknowledge-attention", "resolve-attention"])
+def test_attention_resolution_accepts_pi_and_records_pi(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    operation_id: str,
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    request = worker.enqueue_operation(
+        workspace,
+        operation_id,
+        actor="pi",
+        idempotency_key=f"pi-{operation_id}",
+        payload={"target_id": "inbox/attention/pi.md", "reason": "PI decision"},
+    )
+
+    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+
+    assert result["status"] == "done"
+    assert result["resolution"]["actor"] == "pi"
+    assert result["resolution"]["request_id"] == request["job_id"]
+
+
+def test_scheduled_sweep_requests_declare_integrity_actor(tmp_path: Path) -> None:
+    jobs = worker.enqueue_integrity_sweep(tmp_path, sweep_id="scheduled-actor")
+
+    assert jobs
+    assert {job["request_envelope"]["actor"] for job in jobs} == {"integrity"}
+    with state.connect(tmp_path) as conn:
+        actors = conn.execute(
+            "SELECT DISTINCT actor FROM operation_requests WHERE schedule_id = ?",
+            ("scheduled-actor",),
+        ).fetchall()
+    assert [row["actor"] for row in actors] == ["integrity"]

@@ -133,19 +133,6 @@ def normalize_promotion_checks(
     return normalized
 
 
-def append_journal_event(
-    vault: Path,
-    event: dict[str, Any],
-    *,
-    machine: str | None = None,
-) -> dict[str, Any]:
-    """Append one journal event to ``.memoria/journal/<machine>.jsonl``."""
-    row = dict(event)
-    row.setdefault("timestamp", now_iso())
-    _append_event(Path(vault), machine, row)
-    return row
-
-
 def _decorate_context_event(event: Mapping[str, Any], context: OperationContext) -> dict[str, Any]:
     """Copy an event, reject conflicting reserved keys, and add context."""
     row = dict(event)
@@ -157,7 +144,7 @@ def _decorate_context_event(event: Mapping[str, Any], context: OperationContext)
     return row
 
 
-def _append_context_event(
+def append_journal_event(
     vault: Path,
     event: Mapping[str, Any],
     *,
@@ -209,9 +196,34 @@ def commit_writer_changes(
     message: str,
     paths: Iterable[str | Path],
     *,
-    machine: str | None = None,
+    context: OperationContext,
 ) -> str:
-    """Commit only writer-touched files plus the SQLite journal-head anchor."""
+    """Commit request-owned files plus the SQLite journal-head anchor."""
+    return _commit_writer_changes(vault, message, paths)
+
+
+def commit_explicit_writer_changes(
+    vault: Path,
+    message: str,
+    paths: Iterable[str | Path],
+    *,
+    actor: str,
+    machine: str,
+) -> str:
+    """Commit files written outside an operation envelope with explicit provenance."""
+    if actor not in state.ACTORS:
+        raise ValueError(f"writer actor must be one of {sorted(state.ACTORS)}")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("writer machine must be a nonblank string")
+    safe_filename(machine)
+    return _commit_writer_changes(vault, message, paths)
+
+
+def _commit_writer_changes(
+    vault: Path,
+    message: str,
+    paths: Iterable[str | Path],
+) -> str:
     vault = Path(vault)
     output_rels = {_commit_relpath(vault, path) for path in paths}
     edge_rels = _write_edge_candidate_prompts(vault, output_rels)
@@ -270,7 +282,7 @@ def observe_pi_edit(
     inputs: Iterable[str | dict[str, Any]] = (),
     operation: str = "pi-edit",
     run_id: str | None = None,
-    machine: str | None = None,
+    machine: str,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Backfill provenance for a direct PI edit and make it ineligible until checked."""
@@ -305,8 +317,7 @@ def observe_pi_edit(
     }
     if run_id:
         event["run_id"] = run_id
-    _append_event(vault, machine, event)
-    return event
+    return append_explicit_journal_event(vault, event, actor="pi", machine=machine)
 
 
 def observe_pi_edit_from_head(
@@ -315,7 +326,7 @@ def observe_pi_edit_from_head(
     *,
     operation: str = "pi-edit",
     run_id: str | None = None,
-    machine: str | None = None,
+    machine: str,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Backfill a PI edit using the prior git HEAD hash and prior derivation inputs."""
@@ -336,12 +347,53 @@ def observe_pi_edit_from_head(
 def observe_pi_edits_from_status(
     vault: Path,
     *,
+    context: OperationContext,
     paths: Iterable[str] | None = None,
-    operation: str = "pi-edit",
-    machine: str | None = None,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
-    """Observe direct PI Concept edits from git status and commit the backfill."""
+    """Observe PI edits while preserving the enclosing integrity request context."""
+    return _observe_pi_edits_from_status(
+        vault,
+        context=context,
+        paths=paths,
+        schemas_dir=schemas_dir,
+        explicit_actor="",
+        explicit_machine="",
+    )
+
+
+def observe_pi_edits_explicit_from_status(
+    vault: Path,
+    *,
+    actor: str,
+    machine: str,
+    paths: Iterable[str] | None = None,
+    schemas_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Observe PI edits from an explicit integrity scan outside an envelope."""
+    if actor != "integrity":
+        raise ValueError("explicit PI edit scan actor must be integrity")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("explicit PI edit scan machine must be a nonblank string")
+    return _observe_pi_edits_from_status(
+        vault,
+        context=None,
+        paths=paths,
+        schemas_dir=schemas_dir,
+        explicit_actor=actor,
+        explicit_machine=safe_filename(machine),
+    )
+
+
+def _observe_pi_edits_from_status(
+    vault: Path,
+    *,
+    context: OperationContext | None,
+    paths: Iterable[str] | None,
+    schemas_dir: Path | None,
+    explicit_actor: str,
+    explicit_machine: str,
+) -> dict[str, Any]:
     vault = Path(vault)
     contract = _load_contract(vault, schemas_dir)
     targets = _pi_edit_targets(vault, contract, paths)
@@ -352,26 +404,48 @@ def observe_pi_edits_from_status(
         observe_pi_edit_from_head(
             vault,
             target,
-            operation=operation,
-            machine=machine,
+            operation=context.operation_id if context else "observe-pi-edits",
+            run_id=context.run_id if context else None,
+            machine=context.machine if context else explicit_machine,
             schemas_dir=schemas_dir,
         )
         for target in targets
     ]
     if observed:
-        from memoria_vault.runtime.integrity import propagate_scan_demotion
+        from memoria_vault.runtime.integrity import (
+            propagate_scan_demotion,
+            propagate_scan_demotion_explicit,
+        )
 
         for event in observed:
             output_id = str(event["output_id"])
-            propagate_scan_demotion(
-                vault,
-                output_id,
-                reason=f"scan observed unchecked edit: {output_id}",
-                machine=machine,
-            )
+            if context:
+                propagate_scan_demotion(
+                    vault,
+                    output_id,
+                    reason=f"scan observed unchecked edit: {output_id}",
+                    context=context,
+                )
+            else:
+                propagate_scan_demotion_explicit(
+                    vault,
+                    output_id,
+                    reason=f"scan observed unchecked edit: {output_id}",
+                    actor=explicit_actor,
+                    machine=explicit_machine,
+                )
     commit = ""
     if observed:
-        commit = commit_writer_changes(vault, "observe PI edits", targets, machine=machine)
+        if context is None:
+            commit = commit_explicit_writer_changes(
+                vault,
+                "observe PI edits",
+                targets,
+                actor=explicit_actor,
+                machine=explicit_machine,
+            )
+        else:
+            commit = commit_writer_changes(vault, "observe PI edits", targets, context=context)
     return {"paths": targets, "observed": observed, "commit": commit}
 
 
@@ -403,9 +477,9 @@ def mark_checked(
     vault: Path,
     target_path: str,
     *,
+    context: OperationContext,
     check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
-    machine: str | None = None,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Mark an existing live Concept checked after the worker's checks pass."""
@@ -423,7 +497,7 @@ def mark_checked(
         frontmatter,
         body,
         promotion_checks,
-        machine,
+        context,
         contract,
         allow_retired_input=True,
     )
@@ -434,11 +508,8 @@ def stage_concept(
     target_path: str,
     content: str,
     *,
+    context: OperationContext,
     inputs: Iterable[str | dict[str, Any]] = (),
-    operation: str = "trusted-writer",
-    run_id: str | None = None,
-    actor: str = "operation",
-    machine: str | None = None,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Validate a machine Concept request, stage it unchecked, and journal derivation."""
@@ -459,12 +530,8 @@ def stage_concept(
         "staging_id": _rel(vault, staged_path),
         "output_sha256": sha256_file(staged_path),
         "inputs": _input_rows(inputs),
-        "operation": operation,
-        "actor": actor,
     }
-    if run_id:
-        event["run_id"] = run_id
-    _append_event(vault, machine, event)
+    event = append_journal_event(vault, event, context=context)
     state.record_file_output(
         vault,
         output_id=target,
@@ -473,7 +540,7 @@ def stage_concept(
         output_sha256=event["output_sha256"],
         staging_id=event["staging_id"],
         payload_text=staged_path.read_text(encoding="utf-8"),
-        actor=actor,
+        context=context,
         inputs=event["inputs"],
     )
     return event
@@ -483,9 +550,9 @@ def promote_checked(
     vault: Path,
     target_path: str,
     *,
+    context: OperationContext,
     check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
-    machine: str | None = None,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Promote a staged Concept into its bundle only after it validates as checked."""
@@ -507,14 +574,16 @@ def promote_checked(
         frontmatter,
         body,
         promotion_checks,
-        machine,
+        context,
         contract,
     )
     staged_path.unlink()
     return event
 
 
-def materialize_unchecked(vault: Path, target_path: str) -> dict[str, Any]:
+def materialize_unchecked(
+    vault: Path, target_path: str, *, context: OperationContext
+) -> dict[str, Any]:
     """Move a staged unchecked Concept into its bundle without promotion."""
     vault = Path(vault)
     target = _target_path(target_path)
@@ -532,7 +601,7 @@ def quarantine_untraced(
     vault: Path,
     paths: Iterable[str],
     *,
-    machine: str | None = None,
+    context: OperationContext,
     reason: str = "foreign-untraced",
 ) -> list[dict[str, Any]]:
     """Move explicit bundle files whose current hash is not journal-backed."""
@@ -573,8 +642,7 @@ def quarantine_untraced(
             "quarantined_id": _rel(vault, quarantine_path),
             "output_sha256": quarantined_sha,
         }
-        _append_event(vault, machine, event)
-        events.append(event)
+        events.append(append_journal_event(vault, event, context=context))
     return events
 
 
@@ -589,7 +657,7 @@ def _concept_type_for_quarantine(vault: Path, contract: dict[str, Any], target: 
 def quarantine_untraced_from_status(
     vault: Path,
     *,
-    machine: str | None = None,
+    context: OperationContext,
     reason: str = "foreign-untraced",
     schemas_dir: Path | None = None,
 ) -> list[dict[str, Any]]:
@@ -599,7 +667,7 @@ def quarantine_untraced_from_status(
     return quarantine_untraced(
         vault,
         _git_status_paths(vault, contract),
-        machine=machine,
+        context=context,
         reason=reason,
     )
 
@@ -746,7 +814,7 @@ def _write_checked(
     frontmatter: dict[str, Any],
     body: str,
     checks: Iterable[str],
-    machine: str | None,
+    context: OperationContext,
     contract: dict[str, Any],
     *,
     allow_retired_input: bool = False,
@@ -768,8 +836,7 @@ def _write_checked(
             "target_id": target,
             "output_sha256": output_sha256,
         }
-        _append_event(vault, machine, event)
-        events.append(event)
+        events.append(append_journal_event(vault, event, context=context))
     state.mark_checked(vault, target, output_sha256, payload_text)
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     return events[0]
@@ -783,13 +850,6 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
         else:
             rows.append({"id": normalize_path(str(item))})
     return rows
-
-
-def _append_event(vault: Path, machine: str | None, event: dict[str, Any]) -> None:
-    # Migration bridge: legacy callers still provide an unnormalized optional machine.
-    journal_machine = safe_filename(machine or platform.node() or "local")
-    append_jsonl(_journal_path(vault, journal_machine), [event])
-    state.append_journal_event(vault, event, machine=machine)
 
 
 def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:

@@ -7,8 +7,15 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
+from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    append_explicit_journal_event,
+    append_journal_event,
+    commit_explicit_writer_changes,
+    commit_writer_changes,
+)
 
 BUNDLE_ROOTS = ("notes", "hubs", "projects", "digests", "fulltexts")
 INDEX_PATHS = ("index.md",)
@@ -97,15 +104,60 @@ def changed_tracked_projection_paths(vault: Path) -> list[str]:
 def write_tracked_projections(
     vault: Path,
     *,
+    context: OperationContext,
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Write all tracked generated projections."""
-    from memoria_vault.runtime.capture import write_references_bib
+    return _write_tracked_projections(
+        vault,
+        commit=commit,
+        context=context,
+        actor=context.actor,
+        machine=context.machine,
+    )
+
+
+def write_tracked_projections_explicit(
+    vault: Path,
+    *,
+    actor: str,
+    machine: str,
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Write tracked projections outside an operation envelope."""
+    if actor not in state.ACTORS:
+        raise ValueError(f"projection actor must be one of {sorted(state.ACTORS)}")
+    if not machine.strip():
+        raise ValueError("projection machine must be nonblank")
+    return _write_tracked_projections(
+        vault,
+        commit=commit,
+        context=None,
+        actor=actor,
+        machine=machine,
+    )
+
+
+def _write_tracked_projections(
+    vault: Path,
+    *,
+    commit: bool,
+    context: OperationContext | None,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
+    from memoria_vault.runtime.capture import (
+        write_references_bib,
+        write_references_bib_explicit,
+    )
 
     vault = Path(vault)
-    index_result = write_workspace_indexes(vault)
-    references_result = write_references_bib(vault)
+    if context:
+        index_result = write_workspace_indexes(vault, context=context)
+        references_result = write_references_bib(vault, context=context)
+    else:
+        index_result = write_workspace_indexes_explicit(vault, actor=actor, machine=machine)
+        references_result = write_references_bib_explicit(vault, actor=actor, machine=machine)
     changed = [
         *index_result["changed"],
         *([references_result["path"]] if references_result["changed"] else []),
@@ -113,23 +165,29 @@ def write_tracked_projections(
     event = None
     commit_id = ""
     if commit:
-        event = append_journal_event(
-            vault,
-            {
-                "event": "run",
-                "run_id": "projection:tracked",
-                "workflow": "generate_tracked_projections",
-                "status": "done",
-                "outputs": list(TRACKED_PROJECTION_PATHS),
-            },
-            machine=machine,
-        )
-        commit_id = commit_writer_changes(
-            vault,
-            "regenerate tracked projections",
-            TRACKED_PROJECTION_PATHS,
-            machine=machine,
-        )
+        payload = {
+            "event": "run",
+            "workflow": "generate_tracked_projections",
+            "status": "done",
+            "outputs": list(TRACKED_PROJECTION_PATHS),
+        }
+        if context:
+            event = append_journal_event(vault, payload, context=context)
+            commit_id = commit_writer_changes(
+                vault,
+                "regenerate tracked projections",
+                TRACKED_PROJECTION_PATHS,
+                context=context,
+            )
+        else:
+            event = append_explicit_journal_event(vault, payload, actor=actor, machine=machine)
+            commit_id = commit_explicit_writer_changes(
+                vault,
+                "regenerate tracked projections",
+                TRACKED_PROJECTION_PATHS,
+                actor=actor,
+                machine=machine,
+            )
     return {
         "paths": list(TRACKED_PROJECTION_PATHS),
         "changed": changed,
@@ -141,10 +199,48 @@ def write_tracked_projections(
 def write_workspace_indexes(
     vault: Path,
     *,
+    context: OperationContext,
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Write generated root and bundle index.md projections."""
+    return _write_workspace_indexes(
+        vault,
+        commit=commit,
+        context=context,
+        actor=context.actor,
+        machine=context.machine,
+    )
+
+
+def write_workspace_indexes_explicit(
+    vault: Path,
+    *,
+    actor: str,
+    machine: str,
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Write workspace indexes outside an operation envelope."""
+    if actor not in state.ACTORS:
+        raise ValueError(f"projection actor must be one of {sorted(state.ACTORS)}")
+    if not machine.strip():
+        raise ValueError("projection machine must be nonblank")
+    return _write_workspace_indexes(
+        vault,
+        commit=commit,
+        context=None,
+        actor=actor,
+        machine=machine,
+    )
+
+
+def _write_workspace_indexes(
+    vault: Path,
+    *,
+    commit: bool,
+    context: OperationContext | None,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
     vault = Path(vault)
     changed: list[str] = []
     for rel in INDEX_PATHS:
@@ -159,23 +255,26 @@ def write_workspace_indexes(
     event = None
     commit_id = ""
     if commit:
-        event = append_journal_event(
-            vault,
-            {
-                "event": "run",
-                "run_id": "projection:index.md",
-                "workflow": "generate_workspace_indexes",
-                "status": "done",
-                "outputs": list(INDEX_PATHS),
-            },
-            machine=machine,
-        )
-        commit_id = commit_writer_changes(
-            vault,
-            "regenerate workspace indexes",
-            INDEX_PATHS,
-            machine=machine,
-        )
+        payload = {
+            "event": "run",
+            "workflow": "generate_workspace_indexes",
+            "status": "done",
+            "outputs": list(INDEX_PATHS),
+        }
+        if context:
+            event = append_journal_event(vault, payload, context=context)
+            commit_id = commit_writer_changes(
+                vault, "regenerate workspace indexes", INDEX_PATHS, context=context
+            )
+        else:
+            event = append_explicit_journal_event(vault, payload, actor=actor, machine=machine)
+            commit_id = commit_explicit_writer_changes(
+                vault,
+                "regenerate workspace indexes",
+                INDEX_PATHS,
+                actor=actor,
+                machine=machine,
+            )
     return {"paths": list(INDEX_PATHS), "changed": changed, "event": event, "commit": commit_id}
 
 

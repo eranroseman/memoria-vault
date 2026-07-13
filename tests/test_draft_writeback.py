@@ -5,10 +5,14 @@ from pathlib import Path
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
-from memoria_vault.runtime.knowledge import promote_draft_passage
+from memoria_vault.runtime.knowledge import promote_draft_passage as _promote_draft_passage
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import copy_memoria_dirs, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, init_git
+
+
+def promote_draft_passage(vault: Path, *args, **kwargs):
+    return call_with_context(_promote_draft_passage, vault, *args, **kwargs)
 
 
 def test_promote_draft_passage_creates_unchecked_note_and_links_draft(tmp_path: Path) -> None:

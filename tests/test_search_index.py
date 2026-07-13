@@ -8,13 +8,26 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import (
     _bm25,
     _tokens,
-    answer_query,
     checked_concepts,
     evaluate_bm25,
     filter_checked_results,
-    rebuild_checked_search_index,
 )
-from tests.helpers import copy_memoria_dirs
+from memoria_vault.runtime.search_index import (
+    answer_query as _answer_query,
+)
+from memoria_vault.runtime.search_index import (
+    rebuild_checked_search_index as _rebuild_checked_search_index,
+)
+from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+from tests.helpers import call_with_context, copy_memoria_dirs
+
+
+def answer_query(vault: Path, *args, **kwargs):
+    return call_with_context(_answer_query, vault, *args, **kwargs)
+
+
+def rebuild_checked_search_index(vault: Path, *args, **kwargs):
+    return call_with_context(_rebuild_checked_search_index, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -57,13 +70,15 @@ def set_db_status(vault: Path, path: Path, concept_type: str, status: str) -> No
 
 
 def mark_note_candidate(vault: Path, path: Path) -> None:
-    state.append_journal_event(
+    append_explicit_journal_event(
         vault,
         {
             "event": "derived",
             "operation": "propose-note-candidates",
             "output_id": path.relative_to(vault).as_posix(),
         },
+        actor="operation",
+        machine="test-fixture",
     )
 
 

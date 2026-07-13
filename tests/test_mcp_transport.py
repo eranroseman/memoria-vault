@@ -258,6 +258,27 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
         "agent_identity": "review-agent",
     }
     assert json.loads(row["args_json"])["target_path"] == "notes/mcp.md"
+    with state.connect(workspace) as conn:
+        journal = conn.execute(
+            "SELECT payload_json FROM event_log"
+            " WHERE json_extract(payload_json, '$.request_id') = ?",
+            ("mcp-create",),
+        ).fetchall()
+    assert journal
+    assert {
+        tuple(sorted(json.loads(event["payload_json"])["request_provenance"].items()))
+        for event in journal
+    } == {
+        tuple(
+            sorted(
+                {
+                    "surface": "memoria-mcp",
+                    "command": "mcp:create-concept",
+                    "agent_identity": "review-agent",
+                }.items()
+            )
+        )
+    }
 
 
 def _call(app: Any, name: str, **arguments: Any) -> dict[str, Any]:

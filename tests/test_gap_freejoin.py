@@ -7,7 +7,12 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.knowledge import analyze_gaps
+from memoria_vault.runtime.knowledge import analyze_gaps as _analyze_gaps
+from tests.helpers import call_with_context
+
+
+def analyze_gaps(vault: Path, *args, **kwargs):
+    return call_with_context(_analyze_gaps, vault, *args, **kwargs)
 
 
 @pytest.mark.parametrize(

@@ -6,6 +6,7 @@ import sqlite3
 import pytest
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.trusted_writer import OperationContext
 
 
 def _conn(tmp_path):
@@ -24,7 +25,13 @@ def _record_derivation(vault, *, input_id, output_id="concepts/output.md", actor
         output_sha256="sha256:" + hashlib.sha256(payload_text.encode()).hexdigest(),
         staging_id=f".memoria/staging/{output_id}",
         payload_text=payload_text,
-        actor=actor,
+        context=OperationContext(
+            actor=actor,
+            run_id="schema-test",
+            request_id="schema-test",
+            operation_id="schema-test",
+            machine="schema-test",
+        ),
         inputs=[{"id": input_id}],
     )
 

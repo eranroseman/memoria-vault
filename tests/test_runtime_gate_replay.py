@@ -10,11 +10,33 @@ import pytest
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.trusted_writer import (
-    commit_writer_changes,
-    promote_checked,
-    stage_concept,
+    commit_writer_changes as _commit_writer_changes,
 )
-from tests.helpers import patch_pydantic_ai
+from memoria_vault.runtime.trusted_writer import (
+    promote_checked as _promote_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
+    stage_concept as _stage_concept,
+)
+from tests.helpers import call_with_context, operation_context, patch_pydantic_ai
+
+
+def stage_concept(vault: Path, *args, **kwargs):
+    context = operation_context(
+        vault,
+        operation_id=str(kwargs.pop("operation", "runtime-gate-fixture")),
+        machine=str(kwargs.pop("machine", "memoria-cli")),
+        run_id=str(kwargs.pop("run_id", "runtime-gate-fixture")),
+    )
+    return _stage_concept(vault, *args, context=context, **kwargs)
+
+
+def promote_checked(vault: Path, *args, **kwargs):
+    return call_with_context(_promote_checked, vault, *args, **kwargs)
+
+
+def commit_writer_changes(vault: Path, *args, **kwargs):
+    return call_with_context(_commit_writer_changes, vault, *args, **kwargs)
 
 
 def test_runtime_gate_replays_user_facing_commands(
@@ -327,14 +349,14 @@ def _fake_seeded_verdict(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> No
         bundle_path: Path,
         runner: dict,
         operation_id: str,
-        machine: str,
+        context,
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
         assert bundle_path == workspace / ".memoria/eval/alpha15-seeded-errors.json"
         assert operation_id == "run-seeded-error-verdict"
         assert runner["mode"] == "test"
-        assert machine == "memoria-cli"
+        assert context.machine == "memoria-cli"
         return {"passed": True, "metrics": {"expected_errors": 1, "detected_errors": 1}}
 
     monkeypatch.setattr(

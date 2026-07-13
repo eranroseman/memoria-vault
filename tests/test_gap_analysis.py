@@ -5,12 +5,27 @@ import shutil
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source
-from memoria_vault.runtime.knowledge import analyze_gaps
+from memoria_vault.runtime.capture import capture_source as _capture_source
+from memoria_vault.runtime.knowledge import analyze_gaps as _analyze_gaps
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.search_index import rebuild_checked_search_index
+from memoria_vault.runtime.search_index import (
+    rebuild_checked_search_index as _rebuild_checked_search_index,
+)
+from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git
+from tests.helpers import WORKSPACE_SEED, call_with_context, copy_memoria_dirs, git, init_git
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_source, vault, *args, **kwargs)
+
+
+def analyze_gaps(vault: Path, *args, **kwargs):
+    return call_with_context(_analyze_gaps, vault, *args, **kwargs)
+
+
+def rebuild_checked_search_index(vault: Path, *args, **kwargs):
+    return call_with_context(_rebuild_checked_search_index, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -134,13 +149,15 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
             path,
             f"type: note\ncheck_status: checked\ntitle: Candidate {idx}\ntags: [candidate-only]\n",
         )
-        state.append_journal_event(
+        append_explicit_journal_event(
             tmp_path,
             {
                 "event": "derived",
                 "operation": "propose-note-candidates",
                 "output_id": path.relative_to(tmp_path).as_posix(),
             },
+            actor="operation",
+            machine="test-fixture",
         )
 
     result = analyze_gaps(tmp_path, seed_terms=["new area"], dense_threshold=2)

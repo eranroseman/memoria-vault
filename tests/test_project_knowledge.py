@@ -8,15 +8,40 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.knowledge import (
     analyze_project_argument,
-    frame_project_paper,
     read_project_slice,
-    write_project_argument_canvas,
-    write_project_export,
-    write_project_outline,
+)
+from memoria_vault.runtime.knowledge import (
+    frame_project_paper as _frame_project_paper,
+)
+from memoria_vault.runtime.knowledge import (
+    write_project_argument_canvas as _write_project_argument_canvas,
+)
+from memoria_vault.runtime.knowledge import (
+    write_project_export as _write_project_export,
+)
+from memoria_vault.runtime.knowledge import (
+    write_project_outline as _write_project_outline,
 )
 from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+
+def frame_project_paper(vault: Path, *args, **kwargs):
+    return call_with_context(_frame_project_paper, vault, *args, **kwargs)
+
+
+def write_project_argument_canvas(vault: Path, *args, **kwargs):
+    return call_with_context(_write_project_argument_canvas, vault, *args, **kwargs)
+
+
+def write_project_export(vault: Path, *args, **kwargs):
+    return call_with_context(_write_project_export, vault, *args, **kwargs)
+
+
+def write_project_outline(vault: Path, *args, **kwargs):
+    return call_with_context(_write_project_outline, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -92,13 +117,15 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
         "type: note\ncheck_status: checked\ntitle: Candidate\n"
         "links:\n  supports:\n    - notes/thesis.md\n",
     )
-    state.append_journal_event(
+    append_explicit_journal_event(
         tmp_path,
         {
             "event": "derived",
             "operation": "propose-note-candidates",
             "output_id": candidate.relative_to(tmp_path).as_posix(),
         },
+        actor="operation",
+        machine="test-fixture",
     )
 
     result = analyze_project_argument(tmp_path, "project-alpha")

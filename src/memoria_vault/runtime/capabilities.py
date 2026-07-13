@@ -10,7 +10,11 @@ from typing import Any
 
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
+from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    append_journal_event,
+    commit_writer_changes,
+)
 from memoria_vault.runtime.vaultio import parse_frontmatter
 
 CAPABILITY_TYPE = "operation"
@@ -37,9 +41,9 @@ def render_capability_index(vault: Path | None = None) -> str:
 def write_capability_index(
     vault: Path,
     *,
+    context: OperationContext,
     output_path: str = CAPABILITY_INDEX_PATH,
     commit: bool = False,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Write an ignored local cache of the product capability catalog."""
     vault = Path(vault)
@@ -57,18 +61,17 @@ def write_capability_index(
             vault,
             {
                 "event": "run",
-                "run_id": "projection:capability-index.json",
                 "workflow": "generate_capability_index",
                 "status": "done",
                 "outputs": [normalize_path(output_path)],
             },
-            machine=machine,
+            context=context,
         )
         commit_id = commit_writer_changes(
             vault,
             "regenerate capability-index.json",
             [],
-            machine=machine,
+            context=context,
         )
     return {
         "path": normalize_path(output_path),

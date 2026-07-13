@@ -3,18 +3,57 @@ from __future__ import annotations
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source
+from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.knowledge import (
-    curate_note_candidate,
-    curate_note_link,
-    emit_note_candidates,
+    curate_note_candidate as _curate_note_candidate,
 )
-from memoria_vault.runtime.operations import compile_source_digest
+from memoria_vault.runtime.knowledge import (
+    curate_note_link as _curate_note_link,
+)
+from memoria_vault.runtime.knowledge import (
+    emit_note_candidates as _emit_note_candidates,
+)
+from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit_from_head
+from memoria_vault.runtime.trusted_writer import mark_checked as _mark_checked
+from memoria_vault.runtime.trusted_writer import observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, operation_context
+
+
+def _call(function, vault: Path, *args, **kwargs):
+    return call_with_context(function, vault, *args, **kwargs)
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return _call(_capture_source, vault, *args, **kwargs)
+
+
+def curate_note_candidate(vault: Path, *args, **kwargs):
+    return _call(_curate_note_candidate, vault, *args, **kwargs)
+
+
+def curate_note_link(vault: Path, *args, **kwargs):
+    return _call(_curate_note_link, vault, *args, **kwargs)
+
+
+def emit_note_candidates(vault: Path, *args, **kwargs):
+    context = operation_context(
+        vault,
+        operation_id="propose-note-candidates",
+        machine=str(kwargs.pop("machine", "test-machine") or "test-machine"),
+        run_id=str(kwargs.pop("run_id", "test-run") or "test-run"),
+    )
+    return _emit_note_candidates(vault, *args, context=context, **kwargs)
+
+
+def compile_source_digest(vault: Path, *args, **kwargs):
+    return _call(_compile_source_digest, vault, *args, **kwargs)
+
+
+def mark_checked(vault: Path, *args, **kwargs):
+    return _call(_mark_checked, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:

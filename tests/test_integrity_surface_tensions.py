@@ -4,11 +4,29 @@ import json
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.integrity import NLI_NOTENOUGHINFO, NLI_REFUTED, surface_tensions
+from memoria_vault.runtime.integrity import NLI_NOTENOUGHINFO, NLI_REFUTED
+from memoria_vault.runtime.integrity import surface_tensions as _surface_tensions
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.trusted_writer import promote_checked, stage_concept
+from memoria_vault.runtime.trusted_writer import (
+    promote_checked as _promote_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
+    stage_concept as _stage_concept,
+)
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import copy_memoria_dirs, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, init_git
+
+
+def stage_concept(vault: Path, *args, **kwargs):
+    return call_with_context(_stage_concept, vault, *args, **kwargs)
+
+
+def promote_checked(vault: Path, *args, **kwargs):
+    return call_with_context(_promote_checked, vault, *args, **kwargs)
+
+
+def surface_tensions(vault: Path, *args, **kwargs):
+    return call_with_context(_surface_tensions, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:

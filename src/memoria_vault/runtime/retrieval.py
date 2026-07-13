@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import indexing, state
+from memoria_vault.runtime.trusted_writer import OperationContext
 
 SELECTED_RETRIEVAL_SUBSTRATE = "bm25"
 
@@ -48,8 +49,10 @@ def dense_substrate_capability() -> Capability:
     return Capability(True)
 
 
-def fts_search(vault: Path, query: str, *, k: int = 10) -> list[dict[str, Any]]:
-    indexing.refresh_stale_passages(vault)
+def fts_search(
+    vault: Path, query: str, *, context: OperationContext, k: int = 10
+) -> list[dict[str, Any]]:
+    indexing.refresh_stale_passages(vault, context=context)
     match = _fts_query(query)
     if not match:
         return []
@@ -69,8 +72,10 @@ def fts_search(vault: Path, query: str, *, k: int = 10) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-def vector_search(vault: Path, query: str, *, k: int = 10) -> list[dict[str, Any]]:
-    indexing.refresh_stale_passages(vault)
+def vector_search(
+    vault: Path, query: str, *, context: OperationContext, k: int = 10
+) -> list[dict[str, Any]]:
+    indexing.refresh_stale_passages(vault, context=context)
     query_vector = indexing.hash_embedding(query)
     with state.connect(vault) as conn:
         rows = conn.execute(
@@ -93,9 +98,11 @@ def vector_search(vault: Path, query: str, *, k: int = 10) -> list[dict[str, Any
     return sorted(scored, key=lambda row: (-float(row["score"]), str(row["path"])))[:k]
 
 
-def hybrid_search(vault: Path, query: str, *, k: int = 10) -> list[dict[str, Any]]:
-    fts = fts_search(vault, query, k=k * 4)
-    vectors = vector_search(vault, query, k=k * 4)
+def hybrid_search(
+    vault: Path, query: str, *, context: OperationContext, k: int = 10
+) -> list[dict[str, Any]]:
+    fts = fts_search(vault, query, k=k * 4, context=context)
+    vectors = vector_search(vault, query, k=k * 4, context=context)
     scores: dict[str, float] = {}
     rows: dict[str, dict[str, Any]] = {}
     for ranking in (fts, vectors):
@@ -113,16 +120,20 @@ def evaluate_fixture(
     vault: Path,
     cases: Iterable[dict[str, Any]],
     *,
+    context: OperationContext,
     k: int = 5,
 ) -> dict[str, Any]:
     from memoria_vault.runtime.search_index import evaluate_bm25
 
     cases = list(cases)
     bm25 = evaluate_bm25(vault, cases, k=k)
-    variants = {"bm25": bm25, "fts5": _evaluate(fts_search, vault, cases, k=k)}
+    variants = {
+        "bm25": bm25,
+        "fts5": _evaluate(fts_search, vault, cases, context=context, k=k),
+    }
     if state.indexed_passages(vault):
-        variants["vector"] = _evaluate(vector_search, vault, cases, k=k)
-        variants["hybrid"] = _evaluate(hybrid_search, vault, cases, k=k)
+        variants["vector"] = _evaluate(vector_search, vault, cases, context=context, k=k)
+        variants["hybrid"] = _evaluate(hybrid_search, vault, cases, context=context, k=k)
     return {
         "selected": SELECTED_RETRIEVAL_SUBSTRATE,
         "dense_capability": dense_substrate_capability().__dict__,
@@ -130,11 +141,18 @@ def evaluate_fixture(
     }
 
 
-def _evaluate(fn: Any, vault: Path, cases: list[dict[str, Any]], *, k: int) -> dict[str, Any]:
+def _evaluate(
+    fn: Any,
+    vault: Path,
+    cases: list[dict[str, Any]],
+    *,
+    context: OperationContext,
+    k: int,
+) -> dict[str, Any]:
     results = []
     for case in cases:
         expected = {str(path) for path in case.get("relevant", [])}
-        hits = [str(row["path"]) for row in fn(vault, str(case["query"]), k=k)]
+        hits = [str(row["path"]) for row in fn(vault, str(case["query"]), k=k, context=context)]
         results.append(
             {
                 "query": str(case["query"]),

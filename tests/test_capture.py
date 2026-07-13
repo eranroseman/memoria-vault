@@ -8,17 +8,47 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import (
-    capture_bibtex_source,
-    capture_pdf_source,
-    capture_source,
-    capture_url_source,
+    capture_bibtex_source as _capture_bibtex_source,
+)
+from memoria_vault.runtime.capture import (
+    capture_pdf_source as _capture_pdf_source,
+)
+from memoria_vault.runtime.capture import (
+    capture_source as _capture_source,
+)
+from memoria_vault.runtime.capture import (
+    capture_url_source as _capture_url_source,
+)
+from memoria_vault.runtime.capture import (
     check_references_bib,
     render_references_bib,
-    write_references_bib,
+)
+from memoria_vault.runtime.capture import (
+    write_references_bib as _write_references_bib,
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_source, vault, *args, **kwargs)
+
+
+def capture_bibtex_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_bibtex_source, vault, *args, **kwargs)
+
+
+def capture_pdf_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_pdf_source, vault, *args, **kwargs)
+
+
+def capture_url_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_url_source, vault, *args, **kwargs)
+
+
+def write_references_bib(vault: Path, *args, **kwargs):
+    return call_with_context(_write_references_bib, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:

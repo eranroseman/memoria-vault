@@ -7,10 +7,14 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
-from memoria_vault.runtime.trusted_writer import append_journal_event
+from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write
 from tests.helpers import mark_file_status
+
+
+def append_journal_event(vault: Path, event: dict, *, machine: str):
+    return append_explicit_journal_event(vault, event, actor="operation", machine=machine)
 
 
 def write_runner_provider_config(

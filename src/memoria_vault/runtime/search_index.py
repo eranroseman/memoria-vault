@@ -18,6 +18,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.trusted_writer import OperationContext
 from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
@@ -25,9 +26,47 @@ SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
 
 
 def rebuild_checked_search_index(
-    vault: Path, output_root: str = SEARCH_INPUT_ROOT
+    vault: Path, output_root: str = SEARCH_INPUT_ROOT, *, context: OperationContext
 ) -> dict[str, Any]:
     """Rebuild the disposable checked retrieval tree and BM25 manifest."""
+    return _rebuild_checked_search_index(
+        vault,
+        output_root,
+        context=context,
+        actor=context.actor,
+        machine=context.machine,
+    )
+
+
+def rebuild_checked_search_index_explicit(
+    vault: Path,
+    output_root: str = SEARCH_INPUT_ROOT,
+    *,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
+    """Rebuild checked retrieval outside an operation envelope."""
+    if actor not in state.ACTORS:
+        raise ValueError(f"search actor must be one of {sorted(state.ACTORS)}")
+    if not machine.strip():
+        raise ValueError("search machine must be nonblank")
+    return _rebuild_checked_search_index(
+        vault,
+        output_root,
+        context=None,
+        actor=actor,
+        machine=machine,
+    )
+
+
+def _rebuild_checked_search_index(
+    vault: Path,
+    output_root: str,
+    *,
+    context: OperationContext | None,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
     vault = Path(vault)
     out = vault / normalize_path(output_root)
     if out.exists():
@@ -60,7 +99,10 @@ def rebuild_checked_search_index(
     manifest_path = vault / SEARCH_MANIFEST
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
-    indexing.rebuild_passage_index(vault)
+    if context:
+        indexing.rebuild_passage_index(vault, context=context)
+    else:
+        indexing.rebuild_passage_index_explicit(vault, actor=actor, machine=machine)
     return manifest
 
 
@@ -159,13 +201,14 @@ def answer_query(
     vault: Path,
     query: str,
     *,
+    context: OperationContext,
     k: int = 5,
     include_stale: bool = False,
     project_id: str = "",
 ) -> dict[str, Any]:
     """Return a deterministic Ask/Query contract over checked retrieval hits."""
     vault = Path(vault)
-    indexing.refresh_stale_passages(vault)
+    indexing.refresh_stale_passages(vault, context=context)
     docs = [
         (document["path"], document["text"], document["frontmatter"])
         for document in checked_search_documents(vault, include_stale=include_stale)
@@ -184,12 +227,13 @@ def search_checked_index(
     vault: Path,
     query: str,
     *,
+    context: OperationContext,
     k: int = 10,
     include_stale: bool = False,
 ) -> list[dict[str, Any]]:
     """Return BM25 hits over checked retrieval documents."""
     vault = Path(vault)
-    indexing.refresh_stale_passages(vault)
+    indexing.refresh_stale_passages(vault, context=context)
     docs = checked_search_documents(vault, include_stale=include_stale)
     by_path = {str(document["path"]): document for document in docs}
     tokenized = [(str(document["path"]), _tokens(str(document["text"]))) for document in docs]

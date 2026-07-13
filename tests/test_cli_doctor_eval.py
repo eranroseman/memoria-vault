@@ -96,7 +96,7 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
         bundle_path: Path,
         runner: dict,
         operation_id: str,
-        machine: str,
+        context,
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
@@ -104,7 +104,8 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
         assert operation_id == "run-seeded-error-verdict"
         assert runner["mode"] == "live"
         assert runner["provider"] == "gateway"
-        assert machine == "memoria-cli"
+        assert context.machine == "memoria-cli"
+        assert context.actor == "operation"
         return {"passed": True, "metrics": {"expected_errors": 1}}
 
     monkeypatch.setattr(
@@ -201,7 +202,7 @@ def test_cli_eval_select_models_selects_manifest_runner(
         bundle_path: Path,
         runner: dict,
         operation_id: str,
-        machine: str,
+        context,
     ) -> dict[str, object]:
         calls.append(
             {
@@ -210,7 +211,7 @@ def test_cli_eval_select_models_selects_manifest_runner(
                 "bundle_path": bundle_path,
                 "runner": runner,
                 "operation_id": operation_id,
-                "machine": machine,
+                "machine": context.machine,
             }
         )
         return {

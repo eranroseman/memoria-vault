@@ -4,7 +4,11 @@ import datetime
 from pathlib import Path
 
 from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
-from tests.helpers import WORKSPACE_SEED
+from tests.helpers import WORKSPACE_SEED, call_with_context
+
+
+def dispatch(vault: Path, *args, **kwargs):
+    return call_with_context(eval_dispatch.dispatch, vault, *args, **kwargs)
 
 
 def test_eval_role_assignees_cover_supported_roles():
@@ -54,7 +58,7 @@ def _fixture_vault(tmp_path: Path) -> Path:
 
 def test_dry_run_produces_the_right_payload_set(tmp_path, capsys):
     v = _fixture_vault(tmp_path)
-    out = eval_dispatch.dispatch(v, dry_run=True, today=datetime.date(2026, 6, 10))
+    out = dispatch(v, dry_run=True, today=datetime.date(2026, 6, 10))
     assert out["quarter"] == "2026-Q2" and out["dry_run"] is True
     rows = {r["task"]: r for r in out["dispatched"]}
     # current tasks only — README, the archived task, and untyped files skipped
@@ -77,21 +81,21 @@ def test_dispatch_is_idempotent_per_task_and_quarter(tmp_path, monkeypatch):
         lambda payload: created.append(payload) or "intent-1",
     )
     day = datetime.date(2026, 5, 1)
-    eval_dispatch.dispatch(v, today=day)
-    eval_dispatch.dispatch(v, today=day)  # an on-demand re-run inside the quarter
+    dispatch(v, today=day)
+    dispatch(v, today=day)  # an on-demand re-run inside the quarter
     keys = [c["idempotency_key"] for c in created]
     # same quarter -> identical keys; the intent runner deduplicates per task
     assert keys[:2] == ["eval:find-x:2026-Q2", "eval:verify-y:2026-Q2"]
     assert keys[2:] == keys[:2]
     # a new quarter re-opens the window
-    eval_dispatch.dispatch(v, today=datetime.date(2026, 7, 1))
+    dispatch(v, today=datetime.date(2026, 7, 1))
     assert created[-1]["idempotency_key"] == "eval:verify-y:2026-Q3"
 
 
 def test_dispatch_records_last_run(tmp_path, monkeypatch):
     v = _fixture_vault(tmp_path)
     monkeypatch.setattr(eval_dispatch, "create_task_intent", lambda payload: "k-42")
-    eval_dispatch.dispatch(v, today=datetime.date(2026, 6, 10))
+    dispatch(v, today=datetime.date(2026, 6, 10))
     text = (v / ".memoria/eval/last-run.md").read_text(encoding="utf-8")
     assert "2026-Q2" in text and "find-x" in text and "k-42" in text
     # plain markdown, no YAML frontmatter — last-run is untyped system infra

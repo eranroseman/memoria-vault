@@ -3,21 +3,66 @@ from __future__ import annotations
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source
-from memoria_vault.runtime.integrity import cascade_rollback, trace_downstream
+from memoria_vault.runtime.capture import capture_source as _capture_source
+from memoria_vault.runtime.integrity import cascade_rollback as _cascade_rollback
+from memoria_vault.runtime.integrity import trace_downstream
 from memoria_vault.runtime.jsonl import iter_jsonl
-from memoria_vault.runtime.knowledge import emit_note_candidates
-from memoria_vault.runtime.operations import compile_source_digest
+from memoria_vault.runtime.knowledge import emit_note_candidates as _emit_note_candidates
+from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
-    commit_writer_changes,
-    mark_checked,
+    commit_writer_changes as _commit_writer_changes,
+)
+from memoria_vault.runtime.trusted_writer import (
+    mark_checked as _mark_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
     observe_pi_edit,
-    promote_checked,
-    stage_concept,
+)
+from memoria_vault.runtime.trusted_writer import (
+    promote_checked as _promote_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
+    stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+
+def _call(function, vault: Path, *args, **kwargs):
+    return call_with_context(function, vault, *args, **kwargs)
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return _call(_capture_source, vault, *args, **kwargs)
+
+
+def cascade_rollback(vault: Path, *args, **kwargs):
+    return _call(_cascade_rollback, vault, *args, **kwargs)
+
+
+def emit_note_candidates(vault: Path, *args, **kwargs):
+    return _call(_emit_note_candidates, vault, *args, **kwargs)
+
+
+def compile_source_digest(vault: Path, *args, **kwargs):
+    return _call(_compile_source_digest, vault, *args, **kwargs)
+
+
+def commit_writer_changes(vault: Path, *args, **kwargs):
+    return _call(_commit_writer_changes, vault, *args, **kwargs)
+
+
+def mark_checked(vault: Path, *args, **kwargs):
+    return _call(_mark_checked, vault, *args, **kwargs)
+
+
+def promote_checked(vault: Path, *args, **kwargs):
+    return _call(_promote_checked, vault, *args, **kwargs)
+
+
+def stage_concept(vault: Path, *args, **kwargs):
+    return _call(_stage_concept, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:

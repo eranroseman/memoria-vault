@@ -287,12 +287,12 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         key="rollback-cycle",
     )
     reverted = set(rollback["rollback"]["reverted"])
-    assert digest["digest_path"] in reverted
+    needs_human = set(rollback["rollback"]["needs_human"])
+    assert reverted == set()
+    assert digest["digest_path"] in needs_human
+    assert note_path in needs_human
     assert not (vault / source_ref).exists()
-    assert not (vault / digest["digest_path"]).exists()
+    assert (vault / digest["digest_path"]).exists()
     assert (vault / note_path).exists()
-    assert "check_status" not in read_frontmatter(
-        vault / ".memoria/quarantine" / digest["digest_path"]
-    )
-    assert state.concept_check_status(vault, digest["digest_path"]) == "quarantined"
-    assert state.concept_check_status(vault, note_path) == "quarantined"
+    assert state.concept_check_status(vault, digest["digest_path"]) == "checked"
+    assert state.concept_check_status(vault, note_path) == "checked"

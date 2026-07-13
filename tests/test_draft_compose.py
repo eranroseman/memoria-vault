@@ -6,8 +6,13 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.knowledge import compose_project_draft, read_project_draft
-from tests.helpers import write_checked_concept
+from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
+from memoria_vault.runtime.knowledge import read_project_draft
+from tests.helpers import call_with_context, write_checked_concept
+
+
+def compose_project_draft(vault: Path, *args, **kwargs):
+    return call_with_context(_compose_project_draft, vault, *args, **kwargs)
 
 
 def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(

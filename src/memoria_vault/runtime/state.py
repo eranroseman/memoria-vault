@@ -10,7 +10,7 @@ import subprocess
 from collections.abc import Iterable
 from importlib.resources import files
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
@@ -24,6 +24,9 @@ from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_text_durable
+
+if TYPE_CHECKING:
+    from memoria_vault.runtime.trusted_writer import OperationContext
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
@@ -262,12 +265,6 @@ def recover_running_requests(vault: Path) -> list[str]:
     return recovered
 
 
-def append_journal_event(vault: Path, event: dict[str, Any], *, machine: str | None = None) -> None:
-    row = dict(event)
-    machine_name = safe_filename(machine or "local")
-    _insert_journal_row(vault, row, machine=machine_name)
-
-
 def _append_journal_row(vault: Path, event: dict[str, Any], *, machine: str) -> None:
     """Store an already decorated journal event without provenance fallback."""
     row = dict(event)
@@ -384,7 +381,7 @@ def record_file_output(
     output_sha256: str,
     staging_id: str,
     payload_text: str,
-    actor: str,
+    context: OperationContext,
     inputs: Iterable[dict[str, Any]],
 ) -> None:
     target = normalize_path(output_id)
@@ -440,7 +437,7 @@ def record_file_output(
                     ON CONFLICT(input_id, output_id)
                     DO UPDATE SET actor = excluded.actor
                     """,
-                    (normalize_path(input_id), target, actor),
+                    (normalize_path(input_id), target, context.actor),
                 )
 
 

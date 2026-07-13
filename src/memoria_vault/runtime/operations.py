@@ -20,6 +20,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
     append_journal_event,
     commit_writer_changes,
     normalize_promotion_checks,
@@ -55,11 +56,9 @@ def record_copi_interview_turn(
     work_id: str,
     response: str,
     *,
-    actor: str,
+    context: OperationContext,
     prompt: str = "What matters about this source?",
     project_id: str = "",
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Record one PI interview turn for later source synthesis."""
     vault = Path(vault)
@@ -76,22 +75,20 @@ def record_copi_interview_turn(
         vault,
         {
             "event": "copi-interview",
-            "run_id": run_id or f"copi-interview:{work_id}",
             "work_id": work_id,
             "project_id": project_id.strip(),
             "prompt": question,
             "response": answer,
             "turn_id": f"journal:copi-interview:{turn_sha.removeprefix('sha256:')}",
             "turn_sha256": turn_sha,
-            "actor": actor,
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
         vault,
         f"record copi interview {work_id}",
         [],
-        machine=machine,
+        context=context,
     )
     return {"event": event, "commit": commit}
 
@@ -108,9 +105,7 @@ def record_empirical_event(
     vault: Path,
     payload: dict[str, Any],
     *,
-    request_id: str = "",
-    actor: str = "pi",
-    machine: str | None = None,
+    context: OperationContext,
 ) -> dict[str, Any]:
     """Validate and append one empirical-use event."""
     from memoria_vault.engine.empirical_events import (
@@ -125,13 +120,11 @@ def record_empirical_event(
         "event": "empirical-event",
         "operation": EMPIRICAL_EVENT_RECORD_OPERATION,
         "schema": EMPIRICAL_EVENT_SCHEMA,
-        "request_id": request_id,
-        "actor": actor.strip() or "pi",
         **event,
     }
-    stored = append_journal_event(vault, journal_event, machine=machine)
+    stored = append_journal_event(vault, journal_event, context=context)
     journal_event_id = _empirical_journal_event_id(vault, event["event_id"])
-    commit = commit_writer_changes(vault, "record empirical event", [], machine=machine)
+    commit = commit_writer_changes(vault, "record empirical event", [], context=context)
     return {
         "event_id": event["event_id"],
         "journal_event_id": journal_event_id,
@@ -307,9 +300,8 @@ def run_prompt_operation(
     operation_id: str,
     payload: dict[str, Any],
     *,
+    context: OperationContext,
     mode: str | None = None,
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Run one checked prompt operation through the standard staged write path."""
     vault = Path(vault)
@@ -336,19 +328,17 @@ def run_prompt_operation(
     if not input_text:
         raise ValueError(f"{operation_id} requires input_text or input_ref")
 
-    run_id = run_id or f"{operation_id}:{_sha256_text(input_text).removeprefix('sha256:')[:12]}"
     prompt = _prompt_text(vault, policy, pattern, input_text)
     started = append_journal_event(
         vault,
-        {"event": "run", "run_id": run_id, "workflow": operation_id, "status": "started"},
-        machine=machine,
+        {"event": "run", "workflow": operation_id, "status": "started"},
+        context=context,
     )
     output = _run_prompt_model(policy, runner, prompt, input_text)
     model_call = append_journal_event(
         vault,
         {
             "event": "model_call",
-            "run_id": run_id,
             "mode": runner["mode"],
             "runner": runner["runner"],
             "provider": runner["provider"],
@@ -364,9 +354,9 @@ def run_prompt_operation(
             "input_hash": _sha256_text(input_text),
             "output_hash": _sha256_text(output),
         },
-        machine=machine,
+        context=context,
     )
-    output_path = f"notes/{safe_filename(operation_id)}-{safe_filename(run_id)}.md"
+    output_path = f"notes/{safe_filename(operation_id)}-{safe_filename(context.run_id)}.md"
     frontmatter = {
         "type": "note",
         "title": f"{policy['title']} report",
@@ -377,30 +367,27 @@ def run_prompt_operation(
         vault,
         output_path,
         concept_text(frontmatter, f"{policy['title']} report", output),
+        context=context,
         inputs=inputs,
-        operation=operation_id,
-        run_id=run_id,
-        machine=machine,
     )
     finished = append_journal_event(
         vault,
         {
             "event": "run",
-            "run_id": run_id,
             "workflow": operation_id,
             "status": "done",
             "outputs": [output_path],
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
         vault,
         f"run prompt operation {operation_id}",
         [stage["staging_id"]],
-        machine=machine,
+        context=context,
     )
     return {
-        "run_id": run_id,
+        "run_id": context.run_id,
         "operation_id": operation_id,
         "output_path": output_path,
         "staging_id": stage["staging_id"],
@@ -419,11 +406,11 @@ def run_operation_model_text(
     runner: dict[str, Any],
     prompt: str,
     *,
+    context: OperationContext,
     input_text: str,
-    run_id: str,
+    call_id: str,
     route: str,
     purpose: str,
-    machine: str | None = None,
 ) -> dict[str, Any]:
     """Run a policy-scoped text model call and record the model-call event."""
     output = _run_prompt_model(policy, runner, prompt, input_text)
@@ -431,7 +418,7 @@ def run_operation_model_text(
         Path(vault),
         {
             "event": "model_call",
-            "run_id": run_id,
+            "call_id": call_id,
             "mode": runner["mode"],
             "runner": runner["runner"],
             "provider": runner["provider"],
@@ -447,7 +434,7 @@ def run_operation_model_text(
             "input_hash": _sha256_text(input_text),
             "output_hash": _sha256_text(output),
         },
-        machine=machine,
+        context=context,
     )
     return {"output": output, "model_call": model_call}
 
@@ -457,10 +444,9 @@ def compile_source_digest(
     work_id: str,
     hub_topics: Iterable[str],
     *,
+    context: OperationContext,
     operation_id: str = "compile-source-digest",
     mode: str | None = None,
-    machine: str | None = None,
-    run_id: str | None = None,
 ) -> dict[str, Any]:
     """Compile one checked source into a checked digest plus hub suggestions."""
     vault = Path(vault)
@@ -476,7 +462,7 @@ def compile_source_digest(
 
     source_ref = _source_ref(work_id)
     source_fm = _checked_source(vault, source_ref)
-    _require_digestable_text(vault, source_fm, machine=machine)
+    _require_digestable_text(vault, source_fm, context=context)
     content_rel = normalize_path(str(source_fm.get("content_path") or ""))
     content_path = vault / content_rel
     if not content_path.is_file():
@@ -489,11 +475,10 @@ def compile_source_digest(
     for topic in topics:
         require_policy_path(policy, f"hubs/{_topic_slug(topic)}.md")
 
-    run_id = run_id or f"{operation_id}:{work_id}"
     started = append_journal_event(
         vault,
-        {"event": "run", "run_id": run_id, "workflow": operation_id, "status": "started"},
-        machine=machine,
+        {"event": "run", "workflow": operation_id, "status": "started"},
+        context=context,
     )
 
     content = safe_read(content_path)
@@ -504,7 +489,6 @@ def compile_source_digest(
         vault,
         {
             "event": "model_call",
-            "run_id": run_id,
             "mode": runner["mode"],
             "runner": runner["runner"],
             "provider": runner["provider"],
@@ -520,7 +504,7 @@ def compile_source_digest(
             "input_hash": _compile_input_hash(content_path, interviews),
             "output_hash": _sha256_text(digest_text),
         },
-        machine=machine,
+        context=context,
     )
 
     digest_frontmatter = {
@@ -539,6 +523,7 @@ def compile_source_digest(
             f"Digest: {source_fm['title']}",
             digest_text,
         ),
+        context=context,
         inputs=[
             {"id": source_ref, "sha256": _source_input_sha(vault, source_ref, source_fm)},
             {"id": content_rel, "sha256": sha256_file(content_path)},
@@ -551,11 +536,8 @@ def compile_source_digest(
                 for row in interviews
             ],
         ],
-        operation=operation_id,
-        run_id=run_id,
-        machine=machine,
     )
-    digest_check = promote_checked(vault, digest_rel, checks=promotion_checks, machine=machine)
+    digest_check = promote_checked(vault, digest_rel, checks=promotion_checks, context=context)
 
     hub_suggestions = []
     hub_stage_events = []
@@ -580,38 +562,35 @@ def compile_source_digest(
                 topic,
                 f"Suggested update from `{digest_rel}`. Curated hubs are not overwritten.\n",
             ),
+            context=context,
             inputs=[
                 {"id": digest_rel, "sha256": digest_check["output_sha256"]},
                 {"id": source_ref, "sha256": _source_input_sha(vault, source_ref, source_fm)},
             ],
-            operation=operation_id,
-            run_id=run_id,
-            machine=machine,
         )
         hub_stage_events.append(stage)
         if hub_exists:
             hub_suggestions.append(stage["staging_id"])
             continue
-        hub_checks.append(promote_checked(vault, hub_rel, checks=promotion_checks, machine=machine))
+        hub_checks.append(promote_checked(vault, hub_rel, checks=promotion_checks, context=context))
         hub_paths.append(hub_rel)
 
     finished = append_journal_event(
         vault,
         {
             "event": "run",
-            "run_id": run_id,
             "workflow": operation_id,
             "status": "done",
             "outputs": [digest_rel, *hub_paths],
             "suggestions": hub_suggestions,
         },
-        machine=machine,
+        context=context,
     )
     commit = commit_writer_changes(
-        vault, f"compile digest {work_id}", [digest_rel, *hub_paths], machine=machine
+        vault, f"compile digest {work_id}", [digest_rel, *hub_paths], context=context
     )
     return {
-        "run_id": run_id,
+        "run_id": context.run_id,
         "digest_path": digest_rel,
         "hub_paths": hub_paths,
         "hub_suggestions": hub_suggestions,
@@ -652,12 +631,12 @@ def _checked_source(vault: Path, source_ref: str) -> dict[str, Any]:
 
 
 def _require_digestable_text(
-    vault: Path, source_fm: dict[str, Any], *, machine: str | None = None
+    vault: Path, source_fm: dict[str, Any], *, context: OperationContext
 ) -> None:
     text_status = str(source_fm.get("text_status") or "metadata-only")
     if text_status == "full-text":
         return
-    attention_path = _write_digest_text_attention(vault, source_fm, text_status, machine=machine)
+    attention_path = _write_digest_text_attention(vault, source_fm, text_status, context=context)
     raise ValueError(
         "checked digest requires full-text source content; "
         f"text_status is {text_status}; attention_path is {attention_path}"
@@ -665,7 +644,7 @@ def _require_digestable_text(
 
 
 def _write_digest_text_attention(
-    vault: Path, source_fm: dict[str, Any], text_status: str, *, machine: str | None
+    vault: Path, source_fm: dict[str, Any], text_status: str, *, context: OperationContext
 ) -> str:
     source_ref = _source_ref(str(source_fm["work_id"]))
     work_id = _work_id(source_ref)
@@ -712,9 +691,9 @@ def _write_digest_text_attention(
             "shadow": False,
             "route": "ask",
         },
-        machine=machine,
+        context=context,
     )
-    commit_writer_changes(vault, f"flag digest full text {work_id}", [rel], machine=machine)
+    commit_writer_changes(vault, f"flag digest full text {work_id}", [rel], context=context)
     return rel
 
 

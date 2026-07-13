@@ -10,19 +10,62 @@ from memoria_vault.runtime import state, trusted_writer
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
-    commit_writer_changes,
-    mark_checked,
+    commit_writer_changes as _commit_writer_changes,
+)
+from memoria_vault.runtime.trusted_writer import (
+    mark_checked as _mark_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
     observe_pi_edit,
     observe_pi_edit_from_head,
-    observe_pi_edits_from_status,
-    promote_checked,
-    quarantine_untraced,
-    quarantine_untraced_from_status,
     rebuild_trace_state,
-    stage_concept,
+)
+from memoria_vault.runtime.trusted_writer import (
+    observe_pi_edits_from_status as _observe_pi_edits_from_status,
+)
+from memoria_vault.runtime.trusted_writer import (
+    promote_checked as _promote_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
+    quarantine_untraced as _quarantine_untraced,
+)
+from memoria_vault.runtime.trusted_writer import (
+    quarantine_untraced_from_status as _quarantine_untraced_from_status,
+)
+from memoria_vault.runtime.trusted_writer import (
+    stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import is_ulid, read_frontmatter
-from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git
+from tests.helpers import WORKSPACE_SEED, call_with_context, copy_memoria_dirs, git, init_git
+
+
+def stage_concept(vault: Path, *args, **kwargs):
+    return call_with_context(_stage_concept, vault, *args, **kwargs)
+
+
+def promote_checked(vault: Path, *args, **kwargs):
+    return call_with_context(_promote_checked, vault, *args, **kwargs)
+
+
+def mark_checked(vault: Path, *args, **kwargs):
+    return call_with_context(_mark_checked, vault, *args, **kwargs)
+
+
+def quarantine_untraced(vault: Path, *args, **kwargs):
+    return call_with_context(_quarantine_untraced, vault, *args, **kwargs)
+
+
+def quarantine_untraced_from_status(vault: Path, *args, **kwargs):
+    return call_with_context(_quarantine_untraced_from_status, vault, *args, **kwargs)
+
+
+def commit_writer_changes(vault: Path, *args, **kwargs):
+    return call_with_context(_commit_writer_changes, vault, *args, **kwargs)
+
+
+def observe_pi_edits_from_status(vault: Path, *args, **kwargs):
+    kwargs.setdefault("actor", "integrity")
+    return call_with_context(_observe_pi_edits_from_status, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:

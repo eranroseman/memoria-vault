@@ -4,15 +4,65 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import uuid
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.trusted_writer import OperationContext
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_SEED = ROOT / "src/memoria_vault/product/workspace_seed"
+
+
+def operation_context(
+    vault: Path,
+    *,
+    actor: str = "operation",
+    operation_id: str = "test-operation",
+    machine: str = "test-machine",
+    run_id: str = "test-run",
+) -> OperationContext:
+    """Persist a real request envelope and return its matching test context."""
+    request_id = f"test-{uuid.uuid4().hex}"
+    envelope = state.request_envelope(
+        request_id=request_id,
+        operation_id=operation_id,
+        actor=actor,
+        args={"run_id": run_id},
+        provenance={"surface": "pytest"},
+    )
+    job = {
+        "job_id": request_id,
+        "kind": "operation",
+        "operation_id": operation_id,
+        "status": "done",
+    }
+    saved = state.save_request(
+        vault,
+        envelope,
+        job,
+    )
+    saved["status"] = "done"
+    state.finish_request(vault, request_id, "done", saved)
+    return OperationContext(actor, run_id, request_id, operation_id, machine)
+
+
+def call_with_context(function: Any, vault: Path, *args: Any, **kwargs: Any) -> Any:
+    """Call a context-required request seam from a direct-call unit test."""
+    actor = str(kwargs.pop("actor", "operation"))
+    machine = str(kwargs.pop("machine", "test-machine") or "test-machine")
+    run_id = str(kwargs.pop("run_id", "test-run") or "test-run")
+    context = operation_context(
+        vault,
+        actor=actor,
+        operation_id=function.__name__.replace("_", "-"),
+        machine=machine,
+        run_id=run_id,
+    )
+    return function(vault, *args, context=context, **kwargs)
 
 
 def init_cli_workspace(tmp_path: Path, capsys: Any) -> Path:

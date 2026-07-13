@@ -10,7 +10,6 @@ import secrets
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import uuid
 from importlib.resources import files
@@ -24,6 +23,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.worker import (
     _workspace_lock,
     enqueue_operation,
+    enqueue_trusted_write,
     run_pending_jobs,
     run_request,
 )
@@ -1095,10 +1095,10 @@ def _cmd_project_verify(args: argparse.Namespace) -> int:
 
 
 def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.knowledge import resolve_evidence_review, verify_project_draft
+    from memoria_vault.runtime.knowledge import read_project_draft, resolve_evidence_review
 
     workspace = _workspace(args)
-    verification = verify_project_draft(workspace, args.project_path)
+    verification = read_project_draft(workspace, args.project_path)
     evidence_ids = {str(row["id"]) for row in verification["evidence_sets"]}
     if args.evidence_id not in evidence_ids:
         return _fail(
@@ -1110,7 +1110,8 @@ def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
         args.evidence_id,
         decision=args.decision,
         reason=args.reason,
-        machine=args.actor,
+        actor=args.actor,
+        machine="memoria-cli",
     )
     return _emit(
         {
@@ -1258,6 +1259,8 @@ def _cmd_request_resume(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_answer(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+
     workspace = _workspace(args)
     row = state.request_row(workspace, args.request_id)
     if row is None:
@@ -1268,13 +1271,14 @@ def _cmd_request_answer(args: argparse.Namespace) -> int:
     payload["answers"] = {**payload.get("answers", {}), **answers}
     job["payload"] = payload
     _write_request_job(workspace, args.request_id, row["status"], job)
-    state.append_journal_event(
+    append_explicit_journal_event(
         workspace,
         {
             "event": "request_answered",
             "request_id": args.request_id,
             "answers": sorted(answers),
         },
+        actor=args.actor,
         machine="memoria-cli",
     )
     updated = state.request_row(workspace, args.request_id)
@@ -1282,6 +1286,8 @@ def _cmd_request_answer(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_amend(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+
     workspace = _workspace(args)
     row = state.request_row(workspace, args.request_id)
     if row is None:
@@ -1294,13 +1300,14 @@ def _cmd_request_amend(args: argparse.Namespace) -> int:
     _write_request_job(
         workspace, args.request_id, "pending", {**job, "status": "pending", "error": ""}
     )
-    state.append_journal_event(
+    append_explicit_journal_event(
         workspace,
         {
             "event": "request_amended",
             "request_id": args.request_id,
             "updates": sorted(updates),
         },
+        actor=args.actor,
         machine="memoria-cli",
     )
     updated = state.request_row(workspace, args.request_id)
@@ -1308,6 +1315,8 @@ def _cmd_request_amend(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_cancel(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+
     workspace = _workspace(args)
     row = state.request_row(workspace, args.request_id)
     if row is None:
@@ -1316,13 +1325,14 @@ def _cmd_request_cancel(args: argparse.Namespace) -> int:
     job["status"] = "cancelled"
     job["error"] = f"cancelled: {args.reason}"
     _write_request_job(workspace, args.request_id, "cancelled", job)
-    state.append_journal_event(
+    append_explicit_journal_event(
         workspace,
         {
             "event": "request_cancelled",
             "request_id": args.request_id,
             "reason": args.reason,
         },
+        actor=args.actor,
         machine="memoria-cli",
     )
     updated = state.request_row(workspace, args.request_id)
@@ -1330,6 +1340,8 @@ def _cmd_request_cancel(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_retry(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+
     workspace = _workspace(args)
     row = state.request_row(workspace, args.request_id)
     if row is None:
@@ -1343,9 +1355,10 @@ def _cmd_request_retry(args: argparse.Namespace) -> int:
     job["status"] = "pending"
     job.pop("error", None)
     _write_request_job(workspace, args.request_id, "pending", job)
-    state.append_journal_event(
+    append_explicit_journal_event(
         workspace,
         {"event": "request_retried", "request_id": args.request_id},
+        actor=args.actor,
         machine="memoria-cli",
     )
     updated = state.request_row(workspace, args.request_id)
@@ -1391,16 +1404,19 @@ def _cmd_attention_worklist(args: argparse.Namespace) -> int:
 
 
 def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:
-    return _emit(_enqueue_and_run(args, "run-seeded-error-verdict", {"mode": args.mode}), args)
+    operation_args = argparse.Namespace(**{**vars(args), "actor": "operation"})
+    return _emit(
+        _enqueue_and_run(operation_args, "run-seeded-error-verdict", {"mode": args.mode}),
+        args,
+    )
 
 
 def _cmd_eval_select_models(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime import seeded_errors
     from memoria_vault.runtime.capabilities import iter_capability_manifests
     from memoria_vault.runtime.operations import load_operation_policy, resolve_operation_runner
 
     workspace = _workspace(args)
-    bundle_path = _seeded_error_bundle_path(workspace)
+    _seeded_error_bundle_path(workspace)
     operation_ids = (
         [args.operation]
         if args.operation
@@ -1413,15 +1429,18 @@ def _cmd_eval_select_models(args: argparse.Namespace) -> int:
     for operation_id in operation_ids:
         policy = load_operation_policy(workspace, operation_id)
         runner = resolve_operation_runner(workspace, policy, args.mode)
-        with tempfile.TemporaryDirectory(prefix="memoria-select-models-") as tmpdir:
-            verdict = seeded_errors.run_seeded_error_verdict(
-                Path(tmpdir),
-                template_root=workspace,
-                bundle_path=bundle_path,
-                runner=runner,
-                operation_id=operation_id,
-                machine="memoria-cli",
-            )
+        request = enqueue_operation(
+            workspace,
+            "run-seeded-error-verdict",
+            payload={
+                "mode": args.mode,
+                "target_operation_id": operation_id,
+            },
+            idempotency_key=f"select-model-{operation_id}-{args.mode}",
+            actor="operation",
+            provenance={"surface": "memoria-cli", "command": "eval-select-models"},
+        )
+        verdict = run_request(workspace, request["job_id"], machine="memoria-cli")
         passed = bool(verdict.get("passed"))
         selections.append(
             {
@@ -1608,16 +1627,18 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
 
 def _cmd_workspace_rebuild(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    from memoria_vault.runtime.capture import write_references_bib
+    from memoria_vault.runtime.capture import write_references_bib_explicit
     from memoria_vault.runtime.trusted_writer import rebuild_concept_mirror_from_files
 
     mirror = rebuild_concept_mirror_from_files(workspace)
-    references = write_references_bib(workspace)
+    references = write_references_bib_explicit(workspace, actor=args.actor, machine="memoria-cli")
     payload: dict[str, Any] = {"ok": True, "concept_mirror": mirror, "references": references}
     if args.search:
-        from memoria_vault.runtime.search_index import rebuild_checked_search_index
+        from memoria_vault.runtime.search_index import rebuild_checked_search_index_explicit
 
-        manifest = rebuild_checked_search_index(workspace)
+        manifest = rebuild_checked_search_index_explicit(
+            workspace, actor=args.actor, machine="memoria-cli"
+        )
         payload["search"] = {"engine": "bm25", "manifest": manifest}
     return _emit(payload, args)
 
@@ -1650,19 +1671,27 @@ def _cmd_steering_show(args: argparse.Namespace) -> int:
 
 
 def _cmd_steering_edit(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
+    from memoria_vault.runtime.trusted_writer import (
+        append_explicit_journal_event,
+        commit_explicit_writer_changes,
+    )
 
     workspace = _workspace(args)
     body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
     path = workspace / "steering.md"
     path.write_text(body if body.endswith("\n") else f"{body}\n", encoding="utf-8")
-    event = append_journal_event(
+    event = append_explicit_journal_event(
         workspace,
         {"event": "steering_updated", "operation": "steering-edit", "output_id": "steering.md"},
+        actor=args.actor,
         machine="memoria-cli",
     )
-    commit = commit_writer_changes(
-        workspace, "update steering", ["steering.md"], machine="memoria-cli"
+    commit = commit_explicit_writer_changes(
+        workspace,
+        "update steering",
+        ["steering.md"],
+        actor=args.actor,
+        machine="memoria-cli",
     )
     return _emit({"ok": True, "path": "steering.md", "event": event, "commit": commit}, args)
 
@@ -1780,8 +1809,6 @@ def _workspace_scan_fixture(workspace: Path, fixture: str) -> dict[str, str]:
 def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
     if fixture != "crash-before-materialization":
         raise ValueError(f"unknown workspace recover fixture: {fixture}")
-    from memoria_vault.runtime.trusted_writer import promote_checked, stage_concept
-
     rel = "notes/crash-before-materialization.md"
     content = (
         "---\n"
@@ -1792,18 +1819,24 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
         "---\n\n"
         "This note exists to prove pending file materializations recover from Git and SQLite.\n"
     )
-    stage_concept(
+    request = enqueue_trusted_write(
         workspace,
         rel,
         content,
+        actor="operation",
         operation="recover-fixture",
         run_id="fixture:crash-before-materialization",
-        machine="memoria-cli",
+        idempotency_key="fixture-crash-before-materialization",
     )
-    promote_checked(workspace, rel, machine="memoria-cli")
-    state.write_journal_head_anchor(workspace)
-    _git(workspace, "add", "--", rel, state.JOURNAL_HEAD_REL)
-    _git(workspace, "commit", "-m", "simulate recoverable materialization")
+    result = run_request(workspace, request["job_id"], machine="memoria-cli")
+    if result.get("status") != "done":
+        raise RuntimeError(str(result.get("error") or "recover fixture request failed"))
+    with state.connect(workspace) as conn:
+        conn.execute(
+            "UPDATE outputs SET materialization_status = 'pending', materialized_commit = ''"
+            " WHERE output_id = ?",
+            (rel,),
+        )
     path = workspace / rel
     if path.is_file():
         path.unlink()
@@ -1932,9 +1965,9 @@ def _initialize_workspace_files(
     _seed_workspace(workspace, overwrite=overwrite, include_obsidian=include_obsidian)
     state.connect(workspace).close()
     _ensure_control_files(workspace)
-    from memoria_vault.runtime.projections import write_tracked_projections
+    from memoria_vault.runtime.projections import write_tracked_projections_explicit
 
-    write_tracked_projections(workspace)
+    write_tracked_projections_explicit(workspace, actor="operation", machine="memoria-init")
     _ensure_git(workspace)
 
 
@@ -2356,7 +2389,10 @@ def _read_vocabulary(path: Path) -> dict[str, list[str]]:
 
 
 def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
-    from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
+    from memoria_vault.runtime.trusted_writer import (
+        append_explicit_journal_event,
+        commit_explicit_writer_changes,
+    )
 
     workspace = _workspace(args)
     path = workspace / "system/vocabulary.md"
@@ -2376,15 +2412,17 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         event_name = "vocabulary_merged"
         payload = {"field": args.field, "old": args.old, "new": args.new}
     path.write_text(text, encoding="utf-8")
-    event = append_journal_event(
+    event = append_explicit_journal_event(
         workspace,
         {"event": event_name, "operation": f"vocabulary-{mode}", **payload},
+        actor=args.actor,
         machine="memoria-cli",
     )
-    commit = commit_writer_changes(
+    commit = commit_explicit_writer_changes(
         workspace,
         f"{mode} vocabulary {args.field}",
         ["system/vocabulary.md"],
+        actor=args.actor,
         machine="memoria-cli",
     )
     return _emit(

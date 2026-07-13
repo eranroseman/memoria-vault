@@ -26,6 +26,7 @@ import datetime
 import sys
 from pathlib import Path
 
+from memoria_vault.runtime.trusted_writer import OperationContext
 from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter
 
 # eval role -> the local role label that owns it.
@@ -136,7 +137,9 @@ def create_task_intent(payload: dict) -> str:
     return f"planned:{payload['idempotency_key']}"
 
 
-def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
+def write_last_run(
+    vault: Path, quarter: str, rows: list[dict], *, context: OperationContext
+) -> Path:
     """Record what was dispatched when (plain markdown — untyped system infra)."""
     now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     lines = [
@@ -162,7 +165,13 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
     return out
 
 
-def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = None) -> dict:
+def dispatch(
+    vault: Path,
+    dry_run: bool = False,
+    today: datetime.date | None = None,
+    *,
+    context: OperationContext,
+) -> dict:
     """Fan current local gold tasks out: one idempotent intent per task and quarter."""
     quarter = quarter_of(today)
     tasks = load_gold_tasks(vault)
@@ -188,7 +197,7 @@ def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = N
             }
         )
     if not dry_run:
-        write_last_run(vault, quarter, rows)
+        write_last_run(vault, quarter, rows, context=context)
     return {"quarter": quarter, "dispatched": rows, "dry_run": dry_run}
 
 

@@ -7,18 +7,50 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source, check_references_bib, write_references_bib
-from memoria_vault.runtime.integrity import check_citation_survival
+from memoria_vault.runtime.capture import capture_source as _capture_source
+from memoria_vault.runtime.capture import check_references_bib
+from memoria_vault.runtime.capture import write_references_bib as _write_references_bib
+from memoria_vault.runtime.integrity import check_citation_survival as _check_citation_survival
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
-    commit_writer_changes,
-    promote_checked,
+    commit_writer_changes as _commit_writer_changes,
+)
+from memoria_vault.runtime.trusted_writer import (
+    promote_checked as _promote_checked,
+)
+from memoria_vault.runtime.trusted_writer import (
     rebuild_concept_mirror_from_files,
-    stage_concept,
+)
+from memoria_vault.runtime.trusted_writer import (
+    stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write, run_next_job
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+
+def capture_source(vault: Path, *args, **kwargs):
+    return call_with_context(_capture_source, vault, *args, **kwargs)
+
+
+def write_references_bib(vault: Path, *args, **kwargs):
+    return call_with_context(_write_references_bib, vault, *args, **kwargs)
+
+
+def check_citation_survival(vault: Path, *args, **kwargs):
+    return call_with_context(_check_citation_survival, vault, *args, **kwargs)
+
+
+def commit_writer_changes(vault: Path, *args, **kwargs):
+    return call_with_context(_commit_writer_changes, vault, *args, **kwargs)
+
+
+def promote_checked(vault: Path, *args, **kwargs):
+    return call_with_context(_promote_checked, vault, *args, **kwargs)
+
+
+def stage_concept(vault: Path, *args, **kwargs):
+    return call_with_context(_stage_concept, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:

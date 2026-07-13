@@ -6,12 +6,36 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.knowledge import (
-    compose_project_draft,
-    resolve_evidence_review,
-    verify_project_draft,
-    write_project_export,
+    compose_project_draft as _compose_project_draft,
 )
-from tests.helpers import write_checked_concept
+from memoria_vault.runtime.knowledge import (
+    resolve_evidence_review as _resolve_evidence_review,
+)
+from memoria_vault.runtime.knowledge import (
+    verify_project_draft as _verify_project_draft,
+)
+from memoria_vault.runtime.knowledge import (
+    write_project_export as _write_project_export,
+)
+from tests.helpers import call_with_context, write_checked_concept
+
+
+def compose_project_draft(vault: Path, *args, **kwargs):
+    return call_with_context(_compose_project_draft, vault, *args, **kwargs)
+
+
+def resolve_evidence_review(vault: Path, *args, **kwargs):
+    kwargs.setdefault("actor", "pi")
+    kwargs.setdefault("machine", "test-machine")
+    return _resolve_evidence_review(vault, *args, **kwargs)
+
+
+def verify_project_draft(vault: Path, *args, **kwargs):
+    return call_with_context(_verify_project_draft, vault, *args, **kwargs)
+
+
+def write_project_export(vault: Path, *args, **kwargs):
+    return call_with_context(_write_project_export, vault, *args, **kwargs)
 
 
 def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path: Path) -> None:
