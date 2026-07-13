@@ -16,6 +16,8 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import actions_by_id
@@ -1713,12 +1715,26 @@ def _cmd_workspace_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_workspace_recover(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import backup as runtime_backup
+
+    if args.actor != "pi":
+        raise ValueError("workspace recover requires PI actor authority")
     workspace = _workspace(args)
     fixture = _workspace_recover_fixture(workspace, args.fixture) if args.fixture else None
     with _workspace_lock(workspace):
+        restore_recovery = runtime_backup.recover_interrupted_restore(workspace)
+        backup_recovery = runtime_backup.recover_interrupted_backup(workspace)
         restored = state.recover_pending_materializations(workspace)
         failed_requests = state.recover_running_requests(workspace)
-    payload = {"ok": True, "restored": restored, "failed_requests": failed_requests}
+    payload = {
+        "ok": True,
+        "restored": restored,
+        "restore_rollbacks": (
+            [restore_recovery["rollback"]] if restore_recovery["recovered"] else []
+        ),
+        "backup_targets": [backup_recovery["target"]] if backup_recovery["recovered"] else [],
+        "failed_requests": failed_requests,
+    }
     if fixture is not None:
         payload["fixture"] = fixture
     return _emit(payload, args)
@@ -2533,7 +2549,7 @@ def _backup_report(workspace: Path) -> dict[str, Any]:
     ]
     remotes = _git_remotes(workspace)
     local_backup = runtime_backup.local_backup_status(workspace)
-    blob_configured = _any_workspace_file(workspace, [*blob_sync_configs, *backup_configs])
+    blob_configured = _valid_blob_backup_config(workspace, [*blob_sync_configs, *backup_configs])
     blob_files = int(local_backup["blob_files"])
     ok = bool(local_backup["inventory_ok"]) and (
         blob_files == 0 or blob_configured or bool(local_backup["valid"])
@@ -2578,6 +2594,24 @@ def _git_remotes(workspace: Path) -> list[str]:
 
 def _any_workspace_file(workspace: Path, relpaths: list[str]) -> bool:
     return any((workspace / rel).is_file() for rel in relpaths)
+
+
+def _valid_blob_backup_config(workspace: Path, relpaths: list[str]) -> bool:
+    for rel in relpaths:
+        path = workspace / rel
+        if path.is_symlink() or not path.is_file():
+            continue
+        try:
+            raw = path.read_text(encoding="utf-8")
+            value = json.loads(raw) if path.suffix == ".json" else yaml.safe_load(raw)
+        except (OSError, UnicodeError, json.JSONDecodeError, yaml.YAMLError):
+            continue
+        if not isinstance(value, dict) or value.get("enabled") is False:
+            continue
+        target = value.get("target")
+        if isinstance(target, str) and target.strip():
+            return True
+    return False
 
 
 def _write_request_job(workspace: Path, request_id: str, status: str, job: dict[str, Any]) -> None:

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -105,26 +107,19 @@ def test_backup_snapshot_binds_db_blobs_and_anchor(tmp_path: Path, capsys) -> No
     assert manifest["blobs"]["sha256"].startswith("sha256:")
 
 
-def test_backup_stamp_is_ignored_local_machine_state(tmp_path: Path, capsys) -> None:
+def test_backup_and_restore_markers_are_ignored_local_machine_state(tmp_path: Path, capsys) -> None:
     vault = init_cli_workspace(tmp_path, capsys)
     _seed(vault)
 
     assert _create(vault, tmp_path / "ignored-stamp-backup")["ok"] is True
 
-    ignored = subprocess.run(
-        ["git", "check-ignore", "-q", ".memoria/config/last-backup"],
-        cwd=vault,
-        check=False,
-    )
-    status = subprocess.run(
-        ["git", "status", "--short", "--", ".memoria/config/last-backup"],
-        cwd=vault,
-        check=True,
-        text=True,
-        capture_output=True,
-    )
-    assert ignored.returncode == 0
-    assert status.stdout == ""
+    for rel in (
+        backup.LAST_BACKUP_REL,
+        backup.BACKUP_TRANSACTION_REL,
+        backup.RESTORE_TRANSACTION_REL,
+    ):
+        ignored = subprocess.run(["git", "check-ignore", "-q", rel], cwd=vault, check=False)
+        assert ignored.returncode == 0
 
 
 def test_backup_replaces_only_a_recognized_snapshot_without_merging(tmp_path: Path, capsys) -> None:
@@ -169,6 +164,7 @@ def test_backup_publish_failure_restores_previous_recognized_snapshot(
     assert (target / "blobs/source-content/w-1/raw/source.txt").read_text(
         encoding="utf-8"
     ) == "evidence bytes"
+    assert not (vault / backup.BACKUP_TRANSACTION_REL).exists()
     assert not list(tmp_path.glob(".backup-rollback.stage-*"))
     assert not list(tmp_path.glob(".backup-rollback.rollback-*"))
 
@@ -179,6 +175,46 @@ def test_backup_refuses_arbitrary_existing_target(tmp_path: Path, capsys) -> Non
     target = tmp_path / "not-a-backup"
     target.mkdir()
     sentinel = target / "keep.txt"
+    sentinel.write_text("keep", encoding="utf-8")
+
+    report = _create(vault, target)
+
+    assert report["ok"] is False
+    assert "recognized Memoria backup" in str(report["error"])
+    assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+def test_backup_publication_uses_durable_rename(tmp_path: Path, monkeypatch) -> None:
+    stage = tmp_path / "stage"
+    stage.mkdir()
+    target = tmp_path / "published"
+    calls: list[tuple[Path, Path]] = []
+    replace_durable = backup._replace_durable
+
+    def record_replace(source: Path, destination: Path) -> None:
+        calls.append((Path(source), Path(destination)))
+        replace_durable(source, destination)
+
+    monkeypatch.setattr(backup, "_replace_durable", record_replace)
+
+    backup._publish_backup_directory(stage, target, tmp_path / "vault")
+
+    assert calls == [(stage, target)]
+
+
+def test_backup_refuses_forged_manifest_target_without_deleting_contents(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    target = tmp_path / "forged-backup"
+    target.mkdir()
+    (target / backup.MANIFEST_NAME).write_text(
+        json.dumps({"format": backup.BACKUP_FORMAT, "version": backup.BACKUP_VERSION}),
+        encoding="utf-8",
+    )
+    sentinel = target / "unrelated" / "keep.txt"
+    sentinel.parent.mkdir()
     sentinel.write_text("keep", encoding="utf-8")
 
     report = _create(vault, target)
@@ -203,6 +239,23 @@ def test_backup_refuses_symlink_target_without_touching_destination(tmp_path: Pa
     assert report["ok"] is False
     assert "symlink" in str(report["error"])
     assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+def test_backup_refuses_symlinked_memoria_root_without_reading_outside_vault(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    outside_runtime = tmp_path / "outside-runtime"
+    (vault / ".memoria").rename(outside_runtime)
+    (vault / ".memoria").symlink_to(outside_runtime, target_is_directory=True)
+    target = tmp_path / "escaped-backup"
+
+    report = _create(vault, target)
+
+    assert report["ok"] is False
+    assert "symlink" in str(report["error"])
+    assert not target.exists()
 
 
 def test_backup_refuses_target_inside_live_vault(tmp_path: Path, capsys) -> None:
@@ -320,6 +373,26 @@ def test_restore_round_trip_rebuilds_exports_and_preserves_source(tmp_path: Path
     assert list((vault / ".memoria/journal").glob("*.jsonl"))
     assert (source / backup.MANIFEST_NAME).read_bytes() == source_manifest
     assert (source / "memoria.sqlite").read_bytes() == source_database
+
+
+def test_restore_refuses_symlinked_memoria_root_without_touching_outside_state(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    source = tmp_path / "safe-backup"
+    assert _create(vault, source)["ok"] is True
+    outside_runtime = tmp_path / "outside-runtime"
+    (vault / ".memoria").rename(outside_runtime)
+    sentinel = outside_runtime / "blobs" / "keep.txt"
+    sentinel.write_text("keep", encoding="utf-8")
+    (vault / ".memoria").symlink_to(outside_runtime, target_is_directory=True)
+
+    report = _restore(vault, source)
+
+    assert report["ok"] is False
+    assert "symlink" in str(report["error"])
+    assert sentinel.read_text(encoding="utf-8") == "keep"
 
 
 def test_restore_refuses_live_database_without_force(tmp_path: Path, capsys) -> None:
@@ -481,6 +554,249 @@ def test_restore_mid_swap_failure_rolls_back_every_live_component(
     assert not list(vault.parent.glob(f".{vault.name}.restore-rollback-*"))
 
 
+def test_workspace_recover_restores_live_components_after_interrupted_restore(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    blob = _seed(vault)
+    source = tmp_path / "interrupted-restore-source"
+    assert _create(vault, source)["ok"] is True
+    blob.write_text("newer live evidence", encoding="utf-8")
+    trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "live-tip", "status": "started"},
+        actor="operation",
+        machine="live-machine",
+    )
+    state.write_journal_head_anchor(vault)
+    live_head = state.journal_head(vault)
+    crash_script = tmp_path / "interrupt_restore.py"
+    crash_script.write_text(
+        "\n".join(
+            (
+                "import os",
+                "from pathlib import Path",
+                "from memoria_vault.cli import main",
+                "from memoria_vault.runtime import backup, state",
+                f"vault = Path({str(vault)!r})",
+                f"source = Path({str(source)!r})",
+                "database = vault / state.DB_REL",
+                "real_replace = backup.os.replace",
+                "def interrupt(source_path, destination_path):",
+                "    real_replace(source_path, destination_path)",
+                "    if '.restore-stage-' in str(source_path) and Path(destination_path) == database:",
+                "        os._exit(87)",
+                "backup.os.replace = interrupt",
+                "main(['workspace', 'restore', str(source), '--workspace', str(vault), '--force', '--json'])",
+                "raise SystemExit(1)",
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    interrupted = subprocess.run(
+        [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
+    )
+
+    assert interrupted.returncode == 87
+    assert main(["workspace", "recover", "--workspace", str(vault), "--json"]) == 0
+    recovery = json.loads(capsys.readouterr().out)
+    assert len(recovery["restore_rollbacks"]) == 1
+    assert blob.read_text(encoding="utf-8") == "newer live evidence"
+    assert state.journal_head(vault) == live_head
+    assert state.verify_journal_chain(vault)["ok"] is True
+    assert not (vault / backup.RESTORE_TRANSACTION_REL).exists()
+    assert not list(vault.parent.glob(f".{vault.name}.restore-stage-*"))
+    assert not list(vault.parent.glob(f".{vault.name}.restore-rollback-*"))
+
+
+def test_workspace_recover_restores_previous_target_after_interrupted_backup_replacement(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    blob = _seed(vault)
+    target = tmp_path / "interrupted-backup-target"
+    assert _create(vault, target)["ok"] is True
+    previous_manifest = (target / backup.MANIFEST_NAME).read_text(encoding="utf-8")
+    blob.write_text("newer live evidence", encoding="utf-8")
+    crash_script = tmp_path / "interrupt_backup.py"
+    crash_script.write_text(
+        "\n".join(
+            (
+                "import os",
+                "from pathlib import Path",
+                "from memoria_vault.cli import main",
+                "from memoria_vault.runtime import backup",
+                f"vault = Path({str(vault)!r})",
+                f"target = Path({str(target)!r})",
+                "real_replace = backup.os.replace",
+                "def interrupt(source_path, destination_path):",
+                "    real_replace(source_path, destination_path)",
+                "    if Path(source_path) == target and '.rollback-' in Path(destination_path).name:",
+                "        os._exit(87)",
+                "backup.os.replace = interrupt",
+                "main(['workspace', 'backup', str(target), '--workspace', str(vault), '--json'])",
+                "raise SystemExit(1)",
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    interrupted = subprocess.run(
+        [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
+    )
+
+    assert interrupted.returncode == 87
+    assert not target.exists()
+    assert main(["workspace", "recover", "--workspace", str(vault), "--json"]) == 0
+    assert (target / backup.MANIFEST_NAME).read_text(encoding="utf-8") == previous_manifest
+
+
+def test_restore_refuses_while_backup_publication_recovery_is_pending(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    source = tmp_path / "restore-source"
+    assert _create(vault, source)["ok"] is True
+    target = tmp_path / "pending-target"
+    rollback = tmp_path / ".pending-target.rollback-test"
+    stage = tmp_path / ".pending-target.stage-test"
+    rollback.mkdir()
+    stage.mkdir()
+    backup._write_backup_transaction(vault, target, rollback, stage)
+
+    report = _restore(vault, source)
+
+    assert report["ok"] is False
+    assert "interrupted backup" in str(report["error"])
+    assert (vault / backup.BACKUP_TRANSACTION_REL).is_file()
+
+
+def test_workspace_recover_preserves_originals_after_interrupted_in_process_rollback(
+    tmp_path: Path, capsys
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    blob = _seed(vault)
+    source = tmp_path / "rollback-crash-source"
+    assert _create(vault, source)["ok"] is True
+    blob.write_text("newer live evidence", encoding="utf-8")
+    trusted_writer.append_explicit_journal_event(
+        vault,
+        {"event": "run", "run_id": "live-tip", "status": "started"},
+        actor="operation",
+        machine="live-machine",
+    )
+    state.write_journal_head_anchor(vault)
+    live_head = state.journal_head(vault)
+    crash_script = tmp_path / "interrupt_rollback.py"
+    crash_script.write_text(
+        "\n".join(
+            (
+                "import os",
+                "from pathlib import Path",
+                "from memoria_vault.cli import main",
+                "from memoria_vault.runtime import backup",
+                f"vault = Path({str(vault)!r})",
+                f"source = Path({str(source)!r})",
+                "real_replace = backup.os.replace",
+                "real_copy = backup._copy_recovery_component",
+                "def fail_journal_install(source_path, destination_path):",
+                "    if '.restore-stage-' in str(source_path) and Path(destination_path).name == 'journal':",
+                "        raise OSError('injected restore install failure')",
+                "    return real_replace(source_path, destination_path)",
+                "def interrupt_after_old_database_copy(source_path, destination_path):",
+                "    real_copy(source_path, destination_path)",
+                "    if '.restore-rollback-' in str(source_path) and Path(source_path).name == 'memoria.sqlite':",
+                "        os._exit(87)",
+                "backup.os.replace = fail_journal_install",
+                "backup._copy_recovery_component = interrupt_after_old_database_copy",
+                "main(['workspace', 'restore', str(source), '--workspace', str(vault), '--force', '--json'])",
+                "raise SystemExit(1)",
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    interrupted = subprocess.run(
+        [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
+    )
+
+    assert interrupted.returncode == 87
+    assert main(["workspace", "recover", "--workspace", str(vault), "--json"]) == 0
+    assert blob.read_text(encoding="utf-8") == "newer live evidence"
+    assert state.journal_head(vault) == live_head
+    assert state.verify_journal_chain(vault)["ok"] is True
+
+
+def test_workspace_recover_rejects_transaction_sibling_escape(tmp_path: Path, capsys) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    marker = vault / backup.RESTORE_TRANSACTION_REL
+    marker.write_text(
+        json.dumps(
+            {
+                "format": backup.RESTORE_TRANSACTION_FORMAT,
+                "version": backup.RESTORE_TRANSACTION_VERSION,
+                "vault": str(vault.resolve()),
+                "rollback": f"../.{vault.name}.restore-rollback-forged",
+                "stage": f".{vault.name}.restore-stage-forged",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="rollback directory"):
+        backup.recover_interrupted_restore(vault)
+
+
+def test_workspace_recover_requires_pi_actor(tmp_path: Path, capsys) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+
+    assert (
+        main(
+            [
+                "workspace",
+                "recover",
+                "--workspace",
+                str(vault),
+                "--actor",
+                "agent",
+                "--json",
+            ]
+        )
+        == 2
+    )
+
+
+def test_workspace_recover_preserves_rollback_when_verification_fails(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    rollback = tmp_path / f".{vault.name}.restore-rollback-test"
+    stage = tmp_path / f".{vault.name}.restore-stage-test"
+    rollback.mkdir()
+    stage.mkdir()
+    saved_database = rollback / "memoria.sqlite"
+    saved_database.write_bytes((vault / state.DB_REL).read_bytes())
+    backup._write_restore_transaction(vault, rollback, stage)
+    monkeypatch.setattr(
+        backup.state,
+        "verify_journal_chain",
+        lambda _vault: {"ok": False, "error": "injected verification failure"},
+    )
+
+    with pytest.raises(ValueError, match="injected verification failure"):
+        backup.recover_interrupted_restore(vault)
+
+    assert saved_database.is_file()
+    assert (vault / backup.RESTORE_TRANSACTION_REL).is_file()
+
+
 def test_restore_preserves_recovery_material_when_rollback_itself_fails(
     tmp_path: Path, capsys, monkeypatch
 ) -> None:
@@ -490,20 +806,25 @@ def test_restore_preserves_recovery_material_when_rollback_itself_fails(
     assert _create(vault, source)["ok"] is True
     blob.write_text("newer live evidence", encoding="utf-8")
     real_replace = backup.os.replace
+    real_copy = backup._copy_recovery_component
     install_failed = False
 
-    def fail_install_then_rollback(source_path, destination_path):
+    def fail_install(source_path, destination_path):
         nonlocal install_failed
         source_value = Path(source_path)
         destination_value = Path(destination_path)
         if ".restore-stage-" in str(source_value) and destination_value.name == "journal":
             install_failed = True
             raise OSError("injected restore install failure")
-        if install_failed and ".restore-rollback-" in str(source_value):
-            raise OSError("injected rollback failure")
         return real_replace(source_path, destination_path)
 
-    monkeypatch.setattr(backup.os, "replace", fail_install_then_rollback)
+    def fail_rollback(source_path, destination_path):
+        if install_failed and ".restore-rollback-" in str(source_path):
+            raise OSError("injected rollback failure")
+        return real_copy(source_path, destination_path)
+
+    monkeypatch.setattr(backup.os, "replace", fail_install)
+    monkeypatch.setattr(backup, "_copy_recovery_component", fail_rollback)
 
     with pytest.raises(OSError, match="injected rollback failure"):
         _restore(vault, source)
@@ -631,6 +952,32 @@ def test_backup_report_requires_blob_coverage_not_sqlite_only(tmp_path: Path, ca
     blob_covered = _backup_report(vault)
     assert blob_covered["ok"] is True
     assert blob_covered["blob_sync"]["configured"] is True
+
+
+@pytest.mark.parametrize(
+    ("name", "content"),
+    [
+        ("blob-sync.yaml", ""),
+        ("blob-sync.yaml", "target: [\n"),
+        ("blob-sync.yaml", "target: '   '\n"),
+        ("blob-sync.yaml", "enabled: false\ntarget: test\n"),
+        ("blob-sync.json", '{"enabled": false, "target": "test"}\n'),
+    ],
+)
+def test_backup_report_rejects_nonfunctional_blob_coverage_config(
+    tmp_path: Path, capsys, name: str, content: str
+) -> None:
+    from memoria_vault.cli import _backup_report
+
+    vault = init_cli_workspace(tmp_path, capsys)
+    _seed(vault)
+    config = vault / ".memoria/config" / name
+    config.write_text(content, encoding="utf-8")
+
+    report = _backup_report(vault)
+
+    assert report["ok"] is False
+    assert report["blob_sync"]["configured"] is False
 
 
 def test_backup_report_counts_files_not_directories(tmp_path: Path, capsys) -> None:

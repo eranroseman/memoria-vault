@@ -50,7 +50,8 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria request answer/amend/cancel/retry/resume` | PI-only request lifecycle controls. Answer and amend create a successor, cancel and retry change eligible states, and resume runs pending work. |
 | `memoria workspace backup <target>` | PI-only coherent backup of SQLite, blobs, and journal head into a manifest-bound directory outside the live vault. |
 | `memoria workspace restore <source> [--force]` | PI-only validated, rollback-capable restore; `--force` is required while a live database exists. |
-| `memoria workspace scan/run/recover/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots, quarantine and regenerate changed tracked projections, run queued work, recover interrupted work, and maintain projections/search. |
+| `memoria workspace recover` | PI-only recovery of interrupted backup publication, restore, request, and materialization work. |
+| `memoria workspace scan/run/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots, quarantine and regenerate changed tracked projections, run queued work, and maintain projections/search. |
 | `memoria attention list/show/resolve/worklist` | Review PI attention items. |
 
 ## Knowledge And Projects
@@ -139,10 +140,12 @@ This roster mirrors the live argparse tree:
 - `memoria work import`
 - `memoria work interview`
 - `memoria work update`
+- `memoria workspace backup`
 - `memoria workspace check`
 - `memoria workspace export`
 - `memoria workspace rebuild`
 - `memoria workspace recover`
+- `memoria workspace restore`
 - `memoria workspace rollback`
 - `memoria workspace run`
 - `memoria workspace scan`

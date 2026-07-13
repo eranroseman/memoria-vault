@@ -23,6 +23,12 @@ BACKUP_VERSION = 1
 MANIFEST_NAME = "manifest.json"
 BLOBS_REL = ".memoria/blobs"
 LAST_BACKUP_REL = ".memoria/config/last-backup"
+BACKUP_TRANSACTION_FORMAT = "memoria-backup-publication-transaction"
+BACKUP_TRANSACTION_VERSION = 1
+BACKUP_TRANSACTION_REL = ".memoria/backup-transaction.json"
+RESTORE_TRANSACTION_FORMAT = "memoria-restore-transaction"
+RESTORE_TRANSACTION_VERSION = 1
+RESTORE_TRANSACTION_REL = ".memoria/restore-transaction.json"
 
 
 def create_backup(
@@ -35,6 +41,9 @@ def create_backup(
     """Publish one coherent, manifest-bound backup snapshot."""
     _require_pi_maintenance(actor, machine)
     vault = Path(vault).resolve()
+    runtime_error = _runtime_root_error(vault)
+    if runtime_error:
+        return _failure(runtime_error)
     raw_target = Path(target).expanduser()
     if raw_target.is_symlink():
         return _failure("backup target must not be a symlink")
@@ -48,6 +57,10 @@ def create_backup(
     from memoria_vault.runtime.trusted_writer import reconcile_journal_export
 
     with state.workspace_lock(vault):
+        if _read_restore_transaction(vault) is not None:
+            return _failure("interrupted restore requires memoria workspace recover")
+        if _read_backup_transaction(vault) is not None:
+            return _failure("interrupted backup requires memoria workspace recover")
         journal = state.verify_journal_chain(vault)
         if not journal["ok"]:
             return _failure(f"journal verification failed: {journal['error']}")
@@ -61,6 +74,7 @@ def create_backup(
 
         target.parent.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix=f".{target.name}.stage-", dir=target.parent))
+        _fsync_directory(target.parent)
         try:
             database = stage / "memoria.sqlite"
             _snapshot_database(vault / state.DB_REL, database)
@@ -106,7 +120,8 @@ def create_backup(
                 stage / MANIFEST_NAME,
                 json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             )
-            _publish_backup_directory(stage, target)
+            _fsync_tree(stage)
+            _publish_backup_directory(stage, target, vault)
             stage = None
 
             stamp = {
@@ -148,6 +163,9 @@ def restore_backup(
     """Validate and atomically restore one manifest-bound backup."""
     _require_pi_maintenance(actor, machine)
     vault = Path(vault).resolve()
+    runtime_error = _runtime_root_error(vault)
+    if runtime_error:
+        return _failure(runtime_error)
     raw_source = Path(source).expanduser()
     if raw_source.is_symlink():
         return _failure("backup source must not be a symlink")
@@ -161,13 +179,19 @@ def restore_backup(
         return _failure("live database is present; pass --force to replace it")
 
     stage = Path(tempfile.mkdtemp(prefix=f".{vault.name}.restore-stage-", dir=vault.parent))
+    _fsync_directory(vault.parent)
     try:
         try:
             validated = _stage_restore_source(source, manifest, stage)
+            _fsync_tree(stage)
         except (OSError, UnicodeError, ValueError, sqlite3.DatabaseError) as exc:
             return _failure(f"backup validation failed: {exc}")
 
         with state.workspace_lock(vault):
+            if _read_restore_transaction(vault) is not None:
+                return _failure("interrupted restore requires memoria workspace recover")
+            if _read_backup_transaction(vault) is not None:
+                return _failure("interrupted backup requires memoria workspace recover")
             if (vault / state.DB_REL).exists() and not force:
                 return _failure("live database is present; pass --force to replace it")
             try:
@@ -302,6 +326,84 @@ def local_backup_status(vault: Path) -> dict[str, Any]:
     except (OSError, ValueError) as exc:
         return {**stamped, "error": str(exc)}
     return {**stamped, "valid": True, "error": ""}
+
+
+def recover_interrupted_restore(vault: Path) -> dict[str, Any]:
+    """Restore the complete pre-restore component set recorded by an interrupted swap."""
+    vault = Path(vault).resolve()
+    runtime_error = _runtime_root_error(vault)
+    if runtime_error:
+        raise ValueError(runtime_error)
+
+    with state.workspace_lock(vault):
+        transaction = _read_restore_transaction(vault)
+        if transaction is None:
+            return {"recovered": False}
+        rollback = _restore_transaction_sibling(
+            vault, transaction.get("rollback"), f".{vault.name}.restore-rollback-", "rollback"
+        )
+        stage = _restore_transaction_sibling(
+            vault, transaction.get("stage"), f".{vault.name}.restore-stage-", "stage"
+        )
+        for live_rel, rollback_rel, staged_rel in reversed(_restore_components()):
+            live = vault / live_rel
+            saved = rollback / rollback_rel
+            staged = stage / staged_rel if staged_rel is not None else None
+            if saved.is_symlink():
+                raise ValueError(
+                    f"restore rollback component must not be a symlink: {rollback_rel}"
+                )
+            if staged is not None and staged.is_symlink():
+                raise ValueError(f"restore stage component must not be a symlink: {staged_rel}")
+            if os.path.lexists(saved):
+                if os.path.lexists(live):
+                    _remove_path_durable(live)
+                live.parent.mkdir(parents=True, exist_ok=True)
+                _copy_recovery_component(saved, live)
+            elif staged is None or not os.path.lexists(staged):
+                _remove_path_durable(live)
+
+        journal = state.verify_journal_chain(vault)
+        if not journal["ok"]:
+            raise ValueError(
+                f"recovered pre-restore journal verification failed: {journal['error']}"
+            )
+        _remove_restore_transaction(vault)
+        _cleanup_directory(rollback)
+        _cleanup_directory(stage)
+
+    return {"recovered": True, "rollback": rollback.name, "journal": journal}
+
+
+def recover_interrupted_backup(vault: Path) -> dict[str, Any]:
+    """Restore a complete backup target after an interrupted replacement."""
+    vault = Path(vault).resolve()
+    runtime_error = _runtime_root_error(vault)
+    if runtime_error:
+        raise ValueError(runtime_error)
+
+    with state.workspace_lock(vault):
+        transaction = _read_backup_transaction(vault)
+        if transaction is None:
+            return {"recovered": False}
+        target = _backup_transaction_target(vault, transaction.get("target"))
+        rollback = _backup_transaction_sibling(
+            target, transaction.get("rollback"), f".{target.name}.rollback-", "rollback"
+        )
+        stage = _backup_transaction_sibling(
+            target, transaction.get("stage"), f".{target.name}.stage-", "stage"
+        )
+        if os.path.lexists(target):
+            _require_recognized_backup_target(target)
+        else:
+            if rollback.is_symlink() or not rollback.is_dir():
+                raise ValueError("backup transaction rollback directory is missing or invalid")
+            _replace_durable(rollback, target)
+        _remove_backup_transaction(vault)
+        _cleanup_directory(rollback)
+        _cleanup_directory(stage)
+
+    return {"recovered": True, "target": str(target)}
 
 
 def _stage_restore_source(
@@ -467,25 +569,23 @@ def _install_restore_stage(
     machine: str,
 ) -> dict[str, Any]:
     rollback = Path(tempfile.mkdtemp(prefix=f".{vault.name}.restore-rollback-", dir=vault.parent))
-    components = (
-        (Path(state.DB_REL), Path("memoria.sqlite")),
-        (Path(f"{state.DB_REL}-wal"), Path("memoria.sqlite-wal")),
-        (Path(f"{state.DB_REL}-shm"), Path("memoria.sqlite-shm")),
-        (Path(BLOBS_REL), Path("blobs")),
-        (Path(state.JOURNAL_HEAD_REL), Path("journal-head")),
-        (Path(".memoria/journal"), Path("journal")),
-    )
+    _fsync_directory(vault.parent)
+    try:
+        _write_restore_transaction(vault, rollback, stage)
+    except BaseException:
+        _cleanup_directory(rollback)
+        raise
     installed: list[Path] = []
     moved: list[tuple[Path, Path]] = []
     rollback_complete = False
     try:
-        for live_rel, rollback_rel in components:
+        for live_rel, rollback_rel, _staged_rel in _restore_components():
             live = vault / live_rel
             if not os.path.lexists(live):
                 continue
             saved = rollback / rollback_rel
             saved.parent.mkdir(parents=True, exist_ok=True)
-            os.replace(live, saved)
+            _replace_durable(live, saved)
             moved.append((live, saved))
 
         install_components = [
@@ -498,7 +598,7 @@ def _install_restore_stage(
         install_components.append((stage / ".memoria/journal", vault / ".memoria/journal"))
         for staged, live in install_components:
             live.parent.mkdir(parents=True, exist_ok=True)
-            os.replace(staged, live)
+            _replace_durable(staged, live)
             installed.append(live)
 
         verification = state.verify_journal_chain(vault)
@@ -537,21 +637,24 @@ def _install_restore_stage(
         )
     except BaseException:
         for path in reversed(installed):
-            _remove_path(path)
+            _remove_path_durable(path)
         _remove_sqlite_sidecars(vault / state.DB_REL)
         for live, saved in reversed(moved):
             live.parent.mkdir(parents=True, exist_ok=True)
             if os.path.lexists(live):
-                _remove_path(live)
-            os.replace(saved, live)
+                _remove_path_durable(live)
+            _copy_recovery_component(saved, live)
         rollback_complete = True
         raise
     else:
         rollback_complete = True
-        shutil.rmtree(stage, ignore_errors=True)
     finally:
-        if rollback_complete and rollback.exists():
-            shutil.rmtree(rollback, ignore_errors=True)
+        if rollback_complete:
+            _remove_restore_transaction(vault)
+            if rollback.exists():
+                _cleanup_directory(rollback)
+            if stage.exists():
+                _cleanup_directory(stage)
     return final_verification
 
 
@@ -564,7 +667,7 @@ def _remove_path(path: Path) -> None:
 
 def _remove_sqlite_sidecars(database: Path) -> None:
     for suffix in ("-wal", "-shm"):
-        Path(f"{database}{suffix}").unlink(missing_ok=True)
+        _remove_path_durable(Path(f"{database}{suffix}"))
 
 
 def _consolidate_database(database: Path) -> None:
@@ -590,14 +693,239 @@ def _failure(error: str) -> dict[str, Any]:
     return {"ok": False, "error": error}
 
 
+def _runtime_root_error(vault: Path) -> str:
+    runtime_root = vault / ".memoria"
+    if runtime_root.is_symlink():
+        return "workspace .memoria root must not be a symlink"
+    return ""
+
+
+def _write_backup_transaction(vault: Path, target: Path, rollback: Path, stage: Path) -> None:
+    if rollback.parent != target.parent or stage.parent != target.parent:
+        raise ValueError("backup transaction directories must be target siblings")
+    value = {
+        "format": BACKUP_TRANSACTION_FORMAT,
+        "version": BACKUP_TRANSACTION_VERSION,
+        "vault": str(vault),
+        "target": str(target),
+        "rollback": rollback.name,
+        "stage": stage.name,
+    }
+    write_text_durable(
+        vault / BACKUP_TRANSACTION_REL,
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+
+
+def _read_backup_transaction(vault: Path) -> dict[str, Any] | None:
+    path = vault / BACKUP_TRANSACTION_REL
+    if not os.path.lexists(path):
+        return None
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("backup transaction marker must be a regular file")
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"backup transaction marker is invalid: {exc}") from exc
+    if not isinstance(value, dict):
+        raise ValueError("backup transaction marker must be an object")
+    if (
+        value.get("format") != BACKUP_TRANSACTION_FORMAT
+        or value.get("version") != BACKUP_TRANSACTION_VERSION
+        or value.get("vault") != str(vault)
+    ):
+        raise ValueError("backup transaction marker identity is invalid")
+    return value
+
+
+def _backup_transaction_target(vault: Path, value: object) -> Path:
+    if not isinstance(value, str):
+        raise ValueError("backup transaction target is invalid")
+    target = Path(value)
+    if not target.is_absolute() or not target.name or _paths_overlap(vault, target):
+        raise ValueError("backup transaction target is invalid")
+    if target.parent.resolve(strict=False) != target.parent:
+        raise ValueError("backup transaction target parent is invalid")
+    return target
+
+
+def _backup_transaction_sibling(target: Path, value: object, prefix: str, label: str) -> Path:
+    if not isinstance(value, str) or Path(value).name != value or not value.startswith(prefix):
+        raise ValueError(f"backup transaction {label} directory is invalid")
+    path = target.parent / value
+    if path.is_symlink():
+        raise ValueError(f"backup transaction {label} directory is invalid")
+    return path
+
+
+def _remove_backup_transaction(vault: Path) -> None:
+    path = vault / BACKUP_TRANSACTION_REL
+    if not os.path.lexists(path):
+        return
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("backup transaction marker is not removable")
+    path.unlink()
+    _fsync_directory(path.parent)
+
+
+def _require_recognized_backup_target(target: Path) -> None:
+    if target.is_symlink() or not target.is_dir():
+        raise ValueError("backup transaction target is missing or invalid")
+    manifest = _read_manifest(target)
+    if manifest is None or not _is_restorable_backup(target, manifest):
+        raise ValueError("backup transaction target is not a recognized Memoria backup")
+
+
+def _restore_components() -> tuple[tuple[Path, Path, Path | None], ...]:
+    return (
+        (Path(state.DB_REL), Path("memoria.sqlite"), Path(state.DB_REL)),
+        (Path(f"{state.DB_REL}-wal"), Path("memoria.sqlite-wal"), None),
+        (Path(f"{state.DB_REL}-shm"), Path("memoria.sqlite-shm"), None),
+        (Path(BLOBS_REL), Path("blobs"), Path(BLOBS_REL)),
+        (Path(state.JOURNAL_HEAD_REL), Path("journal-head"), Path(state.JOURNAL_HEAD_REL)),
+        (Path(".memoria/journal"), Path("journal"), Path(".memoria/journal")),
+    )
+
+
+def _write_restore_transaction(vault: Path, rollback: Path, stage: Path) -> None:
+    value = {
+        "format": RESTORE_TRANSACTION_FORMAT,
+        "version": RESTORE_TRANSACTION_VERSION,
+        "vault": str(vault),
+        "rollback": rollback.name,
+        "stage": stage.name,
+    }
+    write_text_durable(
+        vault / RESTORE_TRANSACTION_REL,
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+
+
+def _read_restore_transaction(vault: Path) -> dict[str, Any] | None:
+    path = vault / RESTORE_TRANSACTION_REL
+    if path.is_symlink():
+        raise ValueError("restore transaction marker must not be a symlink")
+    if not path.is_file():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"restore transaction marker is invalid: {exc}") from exc
+    if not isinstance(value, dict):
+        raise ValueError("restore transaction marker must be an object")
+    if (
+        value.get("format") != RESTORE_TRANSACTION_FORMAT
+        or value.get("version") != RESTORE_TRANSACTION_VERSION
+        or value.get("vault") != str(vault)
+    ):
+        raise ValueError("restore transaction marker identity is invalid")
+    return value
+
+
+def _restore_transaction_sibling(vault: Path, value: object, prefix: str, label: str) -> Path:
+    if not isinstance(value, str) or Path(value).name != value or not value.startswith(prefix):
+        raise ValueError(f"restore transaction {label} directory is invalid")
+    path = vault.parent / value
+    if path.is_symlink() or not path.is_dir():
+        raise ValueError(f"restore transaction {label} directory is missing or invalid")
+    return path
+
+
+def _remove_restore_transaction(vault: Path) -> None:
+    path = vault / RESTORE_TRANSACTION_REL
+    if os.path.lexists(path):
+        path.unlink()
+        _fsync_directory(path.parent)
+
+
+def _replace_durable(source: Path, destination: Path) -> None:
+    os.replace(source, destination)
+    _fsync_directory(source.parent)
+    if destination.parent != source.parent:
+        _fsync_directory(destination.parent)
+
+
+def _remove_path_durable(path: Path) -> None:
+    if not os.path.lexists(path):
+        return
+    _remove_path(path)
+    _fsync_directory(path.parent)
+
+
+def _copy_recovery_component(source: Path, destination: Path) -> None:
+    if source.is_file():
+        shutil.copy2(source, destination, follow_symlinks=False)
+        _fsync_file(destination)
+    elif source.is_dir():
+        shutil.copytree(source, destination, symlinks=True)
+        for path in sorted(destination.rglob("*"), reverse=True):
+            if path.is_symlink():
+                continue
+            if path.is_file():
+                _fsync_file(path)
+            elif path.is_dir():
+                _fsync_directory(path)
+        _fsync_directory(destination)
+    else:
+        raise ValueError(f"restore rollback component is not a regular file or directory: {source}")
+    _fsync_directory(destination.parent)
+
+
+def _fsync_tree(root: Path) -> None:
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError(f"durable tree root is missing or invalid: {root}")
+    for path in sorted(root.rglob("*"), reverse=True):
+        if path.is_symlink():
+            raise ValueError(f"durable tree contains a symlink: {path}")
+        if path.is_file():
+            _fsync_file(path)
+        elif path.is_dir():
+            _fsync_directory(path)
+    _fsync_directory(root)
+
+
+def _cleanup_directory(path: Path) -> None:
+    if path.is_symlink():
+        raise ValueError(f"recovery directory must not be a symlink: {path.name}")
+    if path.is_dir():
+        parent = path.parent
+        shutil.rmtree(path)
+        _fsync_directory(parent)
+
+
+def _fsync_directory(path: Path) -> None:
+    try:
+        fd = os.open(path, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
 def _replaceable_target_error(target: Path) -> str:
     if not os.path.lexists(target):
         return ""
     if target.is_symlink() or not target.is_dir():
         return "existing backup target is not a recognized Memoria backup directory"
-    if _read_manifest(target) is None:
+    manifest = _read_manifest(target)
+    if manifest is None or not _is_restorable_backup(target, manifest):
         return "existing target is not a recognized Memoria backup"
     return ""
+
+
+def _is_restorable_backup(target: Path, manifest: dict[str, Any]) -> bool:
+    stage = Path(tempfile.mkdtemp(prefix=f".{target.name}.validate-", dir=target.parent))
+    try:
+        _stage_restore_source(target, manifest, stage)
+    except (OSError, UnicodeError, ValueError, sqlite3.DatabaseError):
+        return False
+    finally:
+        shutil.rmtree(stage, ignore_errors=True)
+    return True
 
 
 def _read_manifest(root: Path) -> dict[str, Any] | None:
@@ -655,20 +983,27 @@ def _fsync_file(path: Path) -> None:
         os.fsync(handle.fileno())
 
 
-def _publish_backup_directory(stage: Path, target: Path) -> None:
+def _publish_backup_directory(stage: Path, target: Path, vault: Path) -> None:
     target_error = _replaceable_target_error(target)
     if target_error:
         raise ValueError(target_error)
     if not os.path.lexists(target):
-        os.replace(stage, target)
+        _replace_durable(stage, target)
         return
 
     rollback = Path(tempfile.mkdtemp(prefix=f".{target.name}.rollback-", dir=target.parent))
     rollback.rmdir()
-    os.replace(target, rollback)
+    _fsync_directory(target.parent)
     try:
-        os.replace(stage, target)
+        _write_backup_transaction(vault, target, rollback, stage)
+        _replace_durable(target, rollback)
+        _replace_durable(stage, target)
+        _remove_backup_transaction(vault)
     except BaseException:
-        os.replace(rollback, target)
+        if rollback.is_dir():
+            if os.path.lexists(target):
+                _remove_path_durable(target)
+            _replace_durable(rollback, target)
+            _remove_backup_transaction(vault)
         raise
-    shutil.rmtree(rollback)
+    _cleanup_directory(rollback)

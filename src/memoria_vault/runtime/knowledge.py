@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import posixpath
 import re
 import shutil
@@ -2621,6 +2622,8 @@ def _frontmatter_string_values(value: Any) -> Iterable[str]:
 def _write_project_export_output(vault: Path, output_path: str, content: str) -> str:
     target = _project_export_output_path(vault, output_path)
     target.parent.mkdir(parents=True, exist_ok=True)
+    if os.path.lexists(target) and not os.access(target, os.W_OK):
+        raise PermissionError(f"project export target is not writable: {target}")
     write_text_durable(target, content)
     return _project_export_display_path(vault, target)
 

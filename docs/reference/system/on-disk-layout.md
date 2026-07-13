@@ -67,6 +67,8 @@ writable runtime directories are created from `folders.yaml`:
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── journal/                 derived per-machine JSONL synchronization exports
 ├── journal-head             Git-tracked live hash-chain tip for the event log
+├── backup-transaction.json  Git-ignored interrupted-backup recovery marker
+├── restore-transaction.json Git-ignored interrupted-restore recovery marker
 ├── memoria.sqlite           authoritative state, including the event log
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ```

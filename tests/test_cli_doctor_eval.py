@@ -48,7 +48,7 @@ def test_cli_doctor_reports_backup_contract(
 
     git(workspace, "remote", "add", "origin", "https://example.invalid/memoria.git")
     (workspace / ".memoria/config/litestream.yaml").write_text("dbs: []\n", encoding="utf-8")
-    (workspace / ".memoria/config/blob-sync.yaml").write_text("paths: []\n", encoding="utf-8")
+    (workspace / ".memoria/config/blob-sync.yaml").write_text("target: test\n", encoding="utf-8")
 
     assert main(["doctor", "bundle", "--workspace", str(workspace), "--json"]) == 0
     bundle = json.loads(capsys.readouterr().out)
