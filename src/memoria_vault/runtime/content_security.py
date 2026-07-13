@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 _FENCE_OPEN_RE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})")
+_PANDOC_RAW_FORMAT_RE = re.compile(r"(?<!\\)\{=[A-Za-z0-9_.+-]+\}")
 _HTML_TAG_RE = re.compile(r"<(?=[!/?A-Za-z])[^>]*>")
 _HTML_OPEN_RE = re.compile(r"<(?=[!/?A-Za-z])")
 _IMAGE_EMBED_RE = re.compile(r"!\[\[([^\]\n]*)\]\]")
@@ -65,6 +66,7 @@ def _replace_external_url(match: re.Match[str]) -> str:
 
 
 def _neutralize_plain_text(text: str) -> str:
+    text = _PANDOC_RAW_FORMAT_RE.sub(lambda match: "\\" + match.group(0), text)
     text = _INLINE_LINK_RE.sub(_replace_inline_link, text)
     text = _REFERENCE_LINK_RE.sub(_replace_reference_link, text)
     text = _REFERENCE_DEFINITION_RE.sub(_replace_reference_definition, text)
@@ -204,7 +206,7 @@ def neutralize_untrusted_markdown(body: str) -> str:
             fence = opening.group("fence")
             fence_character = fence[0]
             fence_length = len(fence)
-            output.append(line)
+            output.append(_PANDOC_RAW_FORMAT_RE.sub(lambda match: "\\" + match.group(0), line))
             continue
 
         plain_lines.append(line)

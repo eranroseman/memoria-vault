@@ -421,9 +421,20 @@ gh pr create --title "feat(integrity): out-of-band change witness (CS3)" --body 
 
 ---
 
+## Security invariants confirmed
+
+- [x] A clean, tracked bundle Concept receives its first `file_baseline` during an observe sweep; its first later direct edit produces an ask-route `foreign-edit` finding.
+- [x] Every trusted writer commit refreshes affected bundle baselines from the committed Git bytes, so a direct restore to an older revision remains witnessable.
+- [x] The observe sweep binds the baseline to the journaled snapshot, verifies the file before staging, and verifies the staged bytes before commit; a concurrent later edit remains dirty for a later sweep rather than becoming the baseline.
+- [x] Untrusted Markdown escapes Pandoc raw-format directives (`{=html}`, `{=latex}`, and other format names) on inline code and fence openers while retaining ordinary literal code spans and fences.
+
+Focused regressions cover each invariant, including Pandoc rendering for raw HTML attributes. The full repository gate is the final authority for this plan.
+
+---
+
 ## Self-review notes
 
 - **Spec coverage:** CS1 → Tasks 1–4 (every current provenance-known machine/model/third-party apply field, including work title, plus final export). `mc`-hash-binding → Tasks 5–7 and intentionally closes only the fail-closed hash-survival slice of gap #10; DB authority remains deferred/unshipped. CS3 → Tasks 8–12 (both fail-open holes: foreign human-file edits + removal of shipped `superseded: true`; optional `local-only` recognition is groundwork only). CS2/CS4–CS8 are explicitly other packages (U3/O2/W2/X1/beta.2), not this plan.
-- **Schema coordination:** current schema is v9; PR-MC targets v10. Every later schema task reads the actual merged version and takes the next integer rather than relying on a stale hard-coded number.
+- **Schema coordination:** the resulting schema is v11. Each schema task uses the next actual merged version rather than relying on a stale hard-coded number.
 - **Placeholder scan:** the investigate-then-fill steps (Tasks 2, 3, 6, 7 test setups) each name the exact existing fixture to copy and forbid leaving `...`
 - **Type consistency:** `neutralize_untrusted_markdown(str)->str`, `_block_text_sha256(vault, block_ref)->str|None`, `upsert_file_baseline(...)/file_baseline(...)`, `_restriction_keys(frontmatter)->list[str]` are named identically where consumed. Finding kinds `evidence-text-drift`, `evidence-text-unbound`, and `restriction-key-removed` are used consistently.

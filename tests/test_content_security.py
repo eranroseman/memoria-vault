@@ -134,6 +134,30 @@ def test_existing_code_spans_and_fences_are_untouched() -> None:
     assert neutralize_untrusted_markdown(source) == source
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        '`<img src="https://evil.example/pandoc-inline">`{=html}\n',
+        '```{=html}\n<img src="https://evil.example/pandoc-fence">\n```\n',
+    ],
+)
+def test_pandoc_raw_format_markup_is_inert(source: str) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+
+    rendered = neutralize_untrusted_markdown(source)
+    html = subprocess.run(
+        [pandoc, "-t", "html"],
+        input=rendered,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert "<img" not in html
+
+
 def test_multiline_code_span_is_untouched() -> None:
     source = "`![literal](http://code.example/image.png)\nhttps://code.example/inside`"
 

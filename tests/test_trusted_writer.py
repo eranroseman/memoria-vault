@@ -510,6 +510,106 @@ def test_observe_pi_edits_from_status_flags_out_of_band_edit_after_baseline(tmp_
     assert state.file_baseline(vault, "notes/foreign.md")["human_sha256"] == sha256_file(target)
 
 
+def test_observe_sweep_seeds_clean_bundle_file_baseline(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/clean.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Clean note")
+    target.write_text(original, encoding="utf-8")
+    git(vault, "add", "--", "notes/clean.md")
+    git(vault, "commit", "-m", "seed clean note")
+
+    first = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert first["paths"] == []
+    assert state.file_baseline(vault, "notes/clean.md")["human_sha256"] == sha256_file(target)
+
+    target.write_text(original + "\nChanged out of band.\n", encoding="utf-8")
+    git(vault, "add", "--", "notes/clean.md")
+    git(vault, "commit", "-m", "foreign clean edit")
+    second = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert [finding["kind"] for finding in second["findings"]] == ["foreign-edit"]
+
+
+def test_generic_writer_commit_does_not_bless_an_unjournaled_change(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/lifecycle.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Lifecycle note")
+    target.write_text(original, encoding="utf-8")
+    git(vault, "add", "--", "notes/lifecycle.md")
+    git(vault, "commit", "-m", "seed lifecycle note")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    changed = original + "\nUnjournaled writer update.\n"
+    target.write_text(changed, encoding="utf-8")
+    commit_writer_changes(vault, "commit unjournaled update", ["notes/lifecycle.md"])
+
+    assert state.file_baseline(vault, "notes/lifecycle.md")["human_sha256"] != sha256_file(target)
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert [finding["kind"] for finding in result["findings"]] == ["foreign-edit"]
+
+
+def test_observe_sweep_refreshes_baseline_for_a_journaled_writer_change(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/lifecycle.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Lifecycle note")
+    target.write_text(original, encoding="utf-8")
+    git(vault, "add", "--", "notes/lifecycle.md")
+    git(vault, "commit", "-m", "seed lifecycle note")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    trusted = note_text(title="Journaled lifecycle note")
+    stage_concept(vault, "notes/lifecycle.md", trusted, machine="test-machine")
+    promote_checked(vault, "notes/lifecycle.md", machine="test-machine")
+    commit_writer_changes(vault, "update lifecycle note", ["notes/lifecycle.md"])
+
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert result["findings"] == []
+    assert state.file_baseline(vault, "notes/lifecycle.md")["human_sha256"] == sha256_file(target)
+
+
+def test_observe_sweep_uses_observed_snapshot_for_file_baseline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/race.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Race note")
+    first_change = original + "\nFirst external change.\n"
+    second_change = original + "\nSecond external change.\n"
+    target.write_text(original, encoding="utf-8")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    target.write_text(first_change, encoding="utf-8")
+
+    observed = trusted_writer.observe_pi_edit_from_head
+
+    def observe_after_second_external_change(*args, **kwargs):
+        target.write_text(second_change, encoding="utf-8")
+        return observed(*args, **kwargs)
+
+    monkeypatch.setattr(
+        trusted_writer, "observe_pi_edit_from_head", observe_after_second_external_change
+    )
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert state.file_baseline(vault, "notes/race.md")["human_sha256"] == sha256_file(target)
+
+    monkeypatch.setattr(trusted_writer, "observe_pi_edit_from_head", observed)
+    target.write_text(first_change, encoding="utf-8")
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert [finding["kind"] for finding in result["findings"]] == ["foreign-edit"]
+
+
 def test_promote_checked_rejects_invalid_staged_concept(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     staged = vault / ".memoria/staging/notes/bad.md"
