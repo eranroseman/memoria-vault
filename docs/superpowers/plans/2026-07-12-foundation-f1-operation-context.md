@@ -791,17 +791,17 @@ Fetch and integrate `origin/main` without dropping its concurrent docs edits,
 then run `python3 scripts/verify`. If integration changes runtime files, repeat
 the focused provenance tests before review.
 
-- [ ] **Step 7: Run required reviews**
+- [x] **Step 7: Run required reviews**
 
 1. [x] Use `superpowers:requesting-code-review` against the complete F1 diff;
    receive a clean follow-up review after remediation.
-2. [ ] Because this changes runtime provenance policy, complete the explicit
+2. [x] Because this changes runtime provenance policy, complete the explicit
    `codex-security:security-diff-scan` workflow and resolve every validated
    blocking finding, including the post-fix rescan.
 3. [x] Apply validated fixes and rerun the affected code review.
-4. [ ] Stage only explicit paths, commit the fixes, and run
+4. [x] Stage only explicit paths, commit the fixes, and run
    `python3 scripts/verify`.
-5. [ ] Confirm `git status --short` is empty before push.
+5. [x] Confirm `git status --short` is empty before push.
 
 Current remediation checklist:
 
@@ -827,8 +827,11 @@ Current remediation checklist:
 - [x] Re-run the original HTTP, MCP, and worker proof cases against the fixed
   paths; each confused-deputy or key-reuse attempt now fails before mutation.
 - [x] Receive clean follow-up code review.
-- [ ] Complete the remediation security rescan and pass
-  `python3 scripts/verify`.
+- [x] Complete the final repository gate. The remediation security rescan
+  covered all 23 source-like diff rows, produced zero reportable findings, and
+  sealed its canonical report at
+  `/tmp/codex-security-scans/memoria-vault/cf2863dc49cf5a336f5a8d792f2604975f40d8a0_20260713T063958Z/report.md`.
+  `python3 scripts/verify` passed on the exact final tree.
 
 - [ ] **Step 8: Publish and merge PR-F1**
 

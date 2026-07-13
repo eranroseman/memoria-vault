@@ -232,11 +232,11 @@ and consumed by every request-mediated writer.
 - [x] Prove actor, run, request, operation, and machine consistency across the
   request row, journal planes, mutations, and current derivation projection.
 - [x] Reject non-PI attention decisions rather than relabeling them as human.
-- [ ] Close the explicit security diff scan required for this runtime-policy
+- [x] Close the explicit security diff scan required for this runtime-policy
   change. Remediation binds canonical JSON request identity, enforces the
   protected-operation authority matrix, makes request succession immutable,
-  closes claim/supersede races, and reserves direct PI decisions. Follow-up
-  code review is clean; the post-fix rescan and full gate remain.
+  closes claim/supersede races, and reserves direct PI decisions. The follow-up
+  code review, 23-file post-fix rescan, and final gate are clean.
 
 ### Task 4: Reject-marker trace
 
