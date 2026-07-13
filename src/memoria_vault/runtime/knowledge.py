@@ -1460,36 +1460,27 @@ def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
 def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
     from memoria_vault.runtime.integrity import (
         NLI_REFUTED,
-        _checked_tension_rows,
-        _compare_claims,
-        _lexical_overlap,
+        tier1_tension_candidates,
     )
 
     try:
         candidates = []
-        rows = _checked_tension_rows(vault)
-        seen: set[tuple[str, str]] = set()
-        for left_index, left in enumerate(rows):
-            for right in rows[left_index + 1 :]:
-                pair = tuple(sorted((left["canonical_id"], right["canonical_id"])))
-                if pair in seen or pair[0] == pair[1]:
-                    continue
-                seen.add(pair)
-                if _lexical_overlap(left["text"], right["text"]) < 0.55:
-                    continue
-                verdict = _compare_claims(left["text"], right["text"])
-                if verdict["verdict"] == NLI_REFUTED:
-                    candidates.append(
-                        {
-                            "left": left["id"],
-                            "left_title": left["title"],
-                            "right": right["id"],
-                            "verdict": NLI_REFUTED,
-                            "warrant": verdict.get("warrant") or "",
-                        }
-                    )
-                if len(candidates) >= limit:
-                    break
+        tier1 = tier1_tension_candidates(vault)
+        for evaluation in tier1["candidates"]:
+            verdict = evaluation["verdict"]
+            if verdict is None or verdict["verdict"] != NLI_REFUTED:
+                continue
+            left = evaluation["left"]
+            right = evaluation["right"]
+            candidates.append(
+                {
+                    "left": left["id"],
+                    "left_title": left["title"],
+                    "right": right["id"],
+                    "verdict": NLI_REFUTED,
+                    "warrant": verdict.get("warrant") or "",
+                }
+            )
             if len(candidates) >= limit:
                 break
     except Exception:  # noqa: BLE001 -- exploration must degrade to honest empty.

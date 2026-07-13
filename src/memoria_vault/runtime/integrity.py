@@ -8,7 +8,7 @@ import re
 import shutil
 import subprocess
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -707,6 +707,38 @@ def contradiction_tier1_gate(
     }
 
 
+def tier1_tension_candidates(
+    vault: Path,
+    *,
+    min_overlap: float = 0.55,
+    comparator: Any | None = None,
+) -> dict[str, Any]:
+    """Return the HANS gate and lazy Tier-1 evaluations for checked claim pairs."""
+    compare = comparator or _compare_claims
+    gate = contradiction_tier1_gate(comparator=compare)
+    rows = _checked_tension_rows(Path(vault))
+
+    def evaluations() -> Iterator[dict[str, Any]]:
+        seen: set[tuple[str, str]] = set()
+        for left_index, left in enumerate(rows):
+            for right in rows[left_index + 1 :]:
+                pair_key = tuple(sorted((left["canonical_id"], right["canonical_id"])))
+                if pair_key in seen or pair_key[0] == pair_key[1]:
+                    continue
+                seen.add(pair_key)
+                overlap = _lexical_overlap(left["text"], right["text"])
+                if overlap < min_overlap:
+                    continue
+                yield {
+                    "left": left,
+                    "right": right,
+                    "lexical_overlap": overlap,
+                    "verdict": compare(left["text"], right["text"]) if gate["passed"] else None,
+                }
+
+    return {"gate": gate, "candidates": evaluations()}
+
+
 def surface_tensions(
     vault: Path,
     *,
@@ -722,92 +754,83 @@ def surface_tensions(
     """Propose unchecked contradiction candidates; never writes contradiction links."""
     validate_operation_context(vault, context)
     vault = Path(vault)
-    compare = comparator or _compare_claims
-    gate = contradiction_tier1_gate(comparator=compare)
-    rows = _checked_tension_rows(vault)
+    tier1 = tier1_tension_candidates(vault, min_overlap=min_overlap, comparator=comparator)
+    gate = tier1["gate"]
     candidates: list[dict[str, Any]] = []
     abstain_count = 0
     tier2_evaluated_count = 0
     tier2_candidate_count = 0
     tier2_abstain_count = 0
-    seen: set[tuple[str, str]] = set()
-    for left_index, left in enumerate(rows):
-        for right in rows[left_index + 1 :]:
-            pair_key = tuple(sorted((left["canonical_id"], right["canonical_id"])))
-            if pair_key in seen or pair_key[0] == pair_key[1]:
-                continue
-            seen.add(pair_key)
-            overlap = _lexical_overlap(left["text"], right["text"])
-            if overlap < min_overlap:
-                continue
-            tier2_reason = ""
-            if not gate["passed"]:
-                tier2_reason = "tier1-degraded"
-            else:
-                verdict = compare(left["text"], right["text"])
-                if verdict["verdict"] == NLI_REFUTED:
-                    candidates.append(
-                        _tension_candidate(
-                            left,
-                            right,
-                            overlap,
-                            verdict=NLI_REFUTED,
-                            tier="tier1",
-                            warrant=str(verdict.get("warrant") or ""),
-                        )
-                    )
-                elif verdict["verdict"] == NLI_NOTENOUGHINFO:
-                    abstain_count += 1
-                    tier2_reason = "tier1-abstain"
-            if tier2_reason:
-                tier2_result = (
-                    _run_tier2_tension_judge(
-                        vault,
+    for evaluation in tier1["candidates"]:
+        left = evaluation["left"]
+        right = evaluation["right"]
+        overlap = evaluation["lexical_overlap"]
+        verdict = evaluation["verdict"]
+        tier2_reason = ""
+        if not gate["passed"]:
+            tier2_reason = "tier1-degraded"
+        else:
+            if verdict["verdict"] == NLI_REFUTED:
+                candidates.append(
+                    _tension_candidate(
                         left,
                         right,
                         overlap,
-                        reason=tier2_reason,
-                        judge=tier2_judge,
-                        mode=mode,
-                        context=context,
+                        verdict=NLI_REFUTED,
+                        tier="tier1",
+                        warrant=str(verdict.get("warrant") or ""),
                     )
-                    if tier2
-                    else _tier2_abstain("Tier-2 disabled by operation payload")
                 )
-                tier2_evaluated_count += int(tier2)
-                if tier2_result["verdict"] == NLI_REFUTED:
-                    candidates.append(
-                        _tension_candidate(
-                            left,
-                            right,
-                            overlap,
-                            verdict=NLI_REFUTED,
-                            tier="tier2",
-                            warrant=str(tier2_result.get("warrant") or ""),
-                            evidence=tier2_result.get("evidence"),
-                            judge=tier2_result.get("judge"),
-                            escalation=tier2_reason,
-                        )
+            elif verdict["verdict"] == NLI_NOTENOUGHINFO:
+                abstain_count += 1
+                tier2_reason = "tier1-abstain"
+        if tier2_reason:
+            tier2_result = (
+                _run_tier2_tension_judge(
+                    vault,
+                    left,
+                    right,
+                    overlap,
+                    reason=tier2_reason,
+                    judge=tier2_judge,
+                    mode=mode,
+                    context=context,
+                )
+                if tier2
+                else _tier2_abstain("Tier-2 disabled by operation payload")
+            )
+            tier2_evaluated_count += int(tier2)
+            if tier2_result["verdict"] == NLI_REFUTED:
+                candidates.append(
+                    _tension_candidate(
+                        left,
+                        right,
+                        overlap,
+                        verdict=NLI_REFUTED,
+                        tier="tier2",
+                        warrant=str(tier2_result.get("warrant") or ""),
+                        evidence=tier2_result.get("evidence"),
+                        judge=tier2_result.get("judge"),
+                        escalation=tier2_reason,
                     )
-                    tier2_candidate_count += 1
-                elif not gate["passed"]:
-                    candidates.append(
-                        _tension_candidate(
-                            left,
-                            right,
-                            overlap,
-                            verdict="DEGRADED",
-                            tier="degraded",
-                            warrant=str(tier2_result.get("warrant") or ""),
-                            judge=tier2_result.get("judge"),
-                            escalation=tier2_reason,
-                        )
+                )
+                tier2_candidate_count += 1
+            elif not gate["passed"]:
+                candidates.append(
+                    _tension_candidate(
+                        left,
+                        right,
+                        overlap,
+                        verdict="DEGRADED",
+                        tier="degraded",
+                        warrant=str(tier2_result.get("warrant") or ""),
+                        judge=tier2_result.get("judge"),
+                        escalation=tier2_reason,
                     )
-                    tier2_abstain_count += int(tier2)
-                else:
-                    tier2_abstain_count += int(tier2)
-            if len(candidates) >= max_pairs:
-                break
+                )
+                tier2_abstain_count += int(tier2)
+            else:
+                tier2_abstain_count += int(tier2)
         if len(candidates) >= max_pairs:
             break
     attention_path = ""
