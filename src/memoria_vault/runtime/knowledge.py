@@ -2275,11 +2275,7 @@ def promote_draft_passage(
         inputs=[{"id": draft_rel, "sha256": sha256_file(draft_path)}],
     )
     materialized = materialize_unchecked(vault, note_rel, context=context)
-    link = _draft_note_markdown_link(
-        draft_rel,
-        note_rel,
-        neutralize_untrusted_markdown_fragment(note_title),
-    )
+    link = _draft_note_markdown_link(draft_rel, note_rel, note_title)
     if link not in draft_content:
         write_text_durable(
             draft_path,
@@ -2374,14 +2370,18 @@ def render_project_export_markdown(vault: Path, project_path: str) -> dict[str, 
     project_frontmatter, project_body = split_frontmatter(
         (vault / project_rel).read_text(encoding="utf-8")
     )
-    project_title = str(project_frontmatter.get("title") or Path(project_rel).stem)
+    project_title = neutralize_untrusted_markdown_fragment(
+        str(project_frontmatter.get("title") or Path(project_rel).stem)
+    )
     node_titles = {node["path"]: node["title"] for node in argument["nodes"]}
 
     lines = [f"# {project_title}", ""]
-    description = str(project_frontmatter.get("description") or "").strip()
+    description = neutralize_untrusted_markdown(
+        str(project_frontmatter.get("description") or "").strip()
+    )
     if description:
         lines.extend([description, ""])
-    body = project_body.strip()
+    body = neutralize_untrusted_markdown(project_body.strip())
     if body:
         lines.extend(["## Project", "", body, ""])
     _append_project_export_paper_plan(lines, project_frontmatter.get("paper_plan"))
@@ -2433,14 +2433,16 @@ def _append_project_export_paper_plan(lines: list[str], paper_plan: object) -> N
     }
     lines.extend(["## Paper Plan", ""])
     for key, label in labels.items():
-        value = str(paper_plan.get(key) or "").strip()
+        value = neutralize_untrusted_markdown_fragment(str(paper_plan.get(key) or "").strip())
         if value:
             lines.append(f"- {label}: {value}")
     for key, label in (("claim_evidence_map", "Claim evidence"), ("figure_plan", "Figure plan")):
         value = paper_plan.get(key)
         if isinstance(value, dict) and value:
             rendered = "; ".join(
-                f"{claim}: {evidence}" for claim, evidence in sorted(value.items())
+                f"{neutralize_untrusted_markdown_fragment(str(claim))}: "
+                f"{neutralize_untrusted_markdown_fragment(str(evidence))}"
+                for claim, evidence in sorted(value.items())
             )
             lines.append(f"- {label}: {rendered}")
     lines.append("")
@@ -2567,7 +2569,8 @@ def _append_project_export_nodes(lines: list[str], nodes: list[dict[str, Any]]) 
         return
     lines.extend(["## Argument Nodes", ""])
     for node in nodes:
-        lines.append(f"- {node['title']} ({node['role']}): `{node['path']}`")
+        title = neutralize_untrusted_markdown_fragment(str(node["title"]))
+        lines.append(f"- {title} ({node['role']}): `{node['path']}`")
     lines.append("")
 
 
@@ -2578,8 +2581,12 @@ def _append_project_export_edges(
         return
     lines.extend(["## Argument Links", ""])
     for edge in edges:
-        source = node_titles.get(edge["source"], edge["source"])
-        target = node_titles.get(edge["target"], edge["target"])
+        source = neutralize_untrusted_markdown_fragment(
+            str(node_titles.get(edge["source"], edge["source"]))
+        )
+        target = neutralize_untrusted_markdown_fragment(
+            str(node_titles.get(edge["target"], edge["target"]))
+        )
         lines.append(f"- {source} --{edge['type']}--> {target}")
     lines.append("")
 
@@ -2589,8 +2596,13 @@ def _append_project_export_hubs(lines: list[str], hubs: list[dict[str, str]]) ->
         return
     lines.extend(["## Project Hubs", ""])
     for hub in hubs:
-        description = f" -- {hub['description']}" if hub["description"] else ""
-        lines.append(f"- {hub['title']}: `{hub['path']}`{description}")
+        title = neutralize_untrusted_markdown_fragment(hub["title"])
+        description = (
+            f" -- {neutralize_untrusted_markdown_fragment(hub['description'])}"
+            if hub["description"]
+            else ""
+        )
+        lines.append(f"- {title}: `{hub['path']}`{description}")
     lines.append("")
 
 
@@ -2601,9 +2613,9 @@ def _append_project_export_findings(
         return
     lines.extend([f"## {heading}", ""])
     for row in rows:
-        severity = row.get("severity", "info")
-        kind = row.get("kind", "finding")
-        advice = str(row.get("advice") or "").strip()
+        severity = neutralize_untrusted_markdown_fragment(str(row.get("severity", "info")))
+        kind = neutralize_untrusted_markdown_fragment(str(row.get("kind", "finding")))
+        advice = neutralize_untrusted_markdown_fragment(str(row.get("advice") or "").strip())
         suffix = f": {advice}" if advice else ""
         lines.append(f"- {severity}: {kind}{suffix}")
     lines.append("")
@@ -3267,7 +3279,14 @@ def _render_draft_export_body(vault: Path, content: str) -> str:
 def _draft_note_markdown_link(draft_rel: str, note_rel: str, title: str) -> str:
     start = Path(draft_rel).parent.as_posix()
     href = posixpath.relpath(note_rel, start=start)
-    return f"[{title}]({href}) %%embed: {note_rel}%%"
+    label = _draft_note_link_label(title)
+    return f"[{label}]({href}) %%embed: {note_rel}%%"
+
+
+def _draft_note_link_label(title: str) -> str:
+    """Make an untrusted title safe inside a writer-owned Markdown link label."""
+    label = neutralize_untrusted_markdown_fragment(title)
+    return label.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
 
 
 def _parse_outline_members(text: str) -> list[dict[str, Any]]:

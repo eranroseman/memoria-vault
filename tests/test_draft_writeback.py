@@ -83,17 +83,24 @@ def test_promote_draft_passage_neutralizes_titles_composed_into_links(tmp_path: 
     draft = vault / "projects/project-alpha/draft.md"
     draft.write_text(f"# Alpha draft\n\n{passage}\n", encoding="utf-8")
 
-    for title in (
+    titles = (
+        "x](javascript:alert(1))",
+        "x](data:text/plain,unsafe)",
+        "x](//evil.example/promote-protocol-relative)",
+        "x](https://evil.example/promote-external)",
+        r"brackets [stay] and \\slashes",
         '```\n<img src="https://evil.example/promote-fenced">\n```',
         r'\` <img src="https://evil.example/promote-escaped"> \`',
-    ):
-        promote_draft_passage(
+    )
+    for title in titles:
+        result = promote_draft_passage(
             vault,
             "project-alpha",
             title=title,
             passage=passage,
             actor="pi",
         )
+        assert read_frontmatter(vault / result["note_path"])["title"] == title
 
     rendered = subprocess.run(
         [pandoc, "-f", "commonmark", "-t", "html"],
@@ -103,6 +110,11 @@ def test_promote_draft_passage_neutralizes_titles_composed_into_links(tmp_path: 
         check=True,
     ).stdout
     assert "<img" not in rendered
+    assert 'href="javascript:alert(1)"' not in rendered
+    assert 'href="data:text/plain,unsafe"' not in rendered
+    assert 'href="//evil.example/promote-protocol-relative"' not in rendered
+    assert 'href="https://evil.example/promote-external"' not in rendered
+    assert rendered.count('href="../../notes/') == len(titles)
 
 
 def test_cli_project_promote_runs_writeback_operation(tmp_path: Path, capsys: object) -> None:

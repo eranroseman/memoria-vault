@@ -144,6 +144,161 @@ def test_neutralization_is_idempotent() -> None:
     assert neutralize_untrusted_markdown(once) == once
 
 
+def _partial_backtick_payload(
+    content: str,
+    *,
+    backslashes: int,
+    opening_ticks: int,
+    closing_ticks: int,
+    multiline: bool = False,
+) -> str:
+    separator = "\n" if multiline else " "
+    return (
+        "A"
+        + "\\" * backslashes
+        + "`" * opening_ticks
+        + separator
+        + content
+        + separator
+        + "`" * closing_ticks
+        + " Z"
+    )
+
+
+@pytest.mark.parametrize("backslashes", [1, 2, 3, 4])
+@pytest.mark.parametrize("ticks", [1, 2, 3, 4])
+def test_partial_backtick_runs_are_idempotent(backslashes: int, ticks: int) -> None:
+    source = _partial_backtick_payload(
+        '<img src="https://evil.example/idempotence">',
+        backslashes=backslashes,
+        opening_ticks=ticks,
+        closing_ticks=ticks + 1,
+    )
+    once = neutralize_untrusted_markdown(source)
+
+    assert neutralize_untrusted_markdown(once) == once
+
+
+@pytest.mark.parametrize(
+    ("backslashes", "opening_ticks", "content", "multiline"),
+    [
+        (1, 2, '<img src="https://evil.example/odd-two">', False),
+        (2, 1, "![beacon](https://evil.example/even-one-image.png)", False),
+        (3, 2, "[beacon](https://evil.example/odd-three-link)", False),
+        (1, 2, '<img src="https://evil.example/multiline">', True),
+    ],
+)
+def test_partial_backtick_runs_cannot_borrow_argument_snapshot_code_spans(
+    tmp_path: Path,
+    backslashes: int,
+    opening_ticks: int,
+    content: str,
+    multiline: bool,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    payload = _partial_backtick_payload(
+        content,
+        backslashes=backslashes,
+        opening_ticks=opening_ticks,
+        closing_ticks=opening_ticks + 1,
+        multiline=multiline,
+    )
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=payload,
+    )
+
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in html
+        assert 'href="https://evil.example/' not in html
+
+
+def test_argument_export_neutralizes_interpolated_fragments_before_code_spans(
+    tmp_path: Path,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    paper_plan_payload = _partial_backtick_payload(
+        '<img src="https://evil.example/paper-plan">',
+        backslashes=2,
+        opening_ticks=1,
+        closing_ticks=2,
+    )
+    node_title_payload = _partial_backtick_payload(
+        '<img src="https://evil.example/node-title">',
+        backslashes=2,
+        opening_ticks=1,
+        closing_ticks=2,
+    )
+    hub_title_payload = _partial_backtick_payload(
+        '<img src="https://evil.example/hub-title">',
+        backslashes=2,
+        opening_ticks=1,
+        closing_ticks=2,
+    )
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n"
+        "thesis: notes/thesis.md\npaper_plan:\n"
+        f"  target: {paper_plan_payload}\n",
+        "project",
+    )
+    write_checked_concept(
+        tmp_path,
+        "notes/thesis.md",
+        f"type: note\ncheck_status: checked\ntitle: {node_title_payload}\n",
+        "note",
+    )
+    write_checked_concept(
+        tmp_path,
+        "hubs/argument.md",
+        "type: hub\ncheck_status: checked\n"
+        f"title: {hub_title_payload}\n"
+        "project: projects/argument/project.md\n",
+        "hub",
+    )
+
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in html
+
+
 def test_escaped_backtick_delimiters_are_inert_through_export_boundaries(
     tmp_path: Path,
 ) -> None:

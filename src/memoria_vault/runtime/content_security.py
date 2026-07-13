@@ -108,22 +108,35 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
     plain_start = 0
     cursor = 0
     while cursor < len(text):
-        if text[cursor] != "`" or _is_escaped_backtick(text, cursor):
+        if text[cursor] != "`":
             cursor += 1
             continue
 
         opener_end = cursor + 1
         while opener_end < len(text) and text[opener_end] == "`":
             opener_end += 1
+        if _is_escaped_backtick(text, cursor):
+            cursor = opener_end
+            continue
+
         delimiter = text[cursor:opener_end]
-        closing = text.find(delimiter, opener_end)
-        while closing != -1 and (
-            _is_escaped_backtick(text, closing)
-            or (closing > 0 and text[closing - 1] == "`")
-            or (closing + len(delimiter) < len(text) and text[closing + len(delimiter)] == "`")
-        ):
-            closing = text.find(delimiter, closing + len(delimiter))
+        closing = -1
+        probe = opener_end
+        while probe < len(text):
+            if text[probe] != "`":
+                probe += 1
+                continue
+            run_end = probe + 1
+            while run_end < len(text) and text[run_end] == "`":
+                run_end += 1
+            if not _is_escaped_backtick(text, probe) and text[probe:run_end] == delimiter:
+                closing = probe
+                break
+            probe = run_end
         if closing == -1:
+            output.append(text[plain_start:cursor])
+            output.append("&#96;" * len(delimiter))
+            plain_start = opener_end
             cursor = opener_end
             continue
 
