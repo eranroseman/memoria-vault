@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -1214,6 +1214,51 @@ def record_observed_file_edit(
             """,
             (target, concept_type, target, output_sha256),
         )
+
+
+def upsert_file_baseline(
+    vault: Path,
+    subject_id: str,
+    *,
+    human_sha256: str,
+    restriction_keys: list[str],
+) -> None:
+    target = normalize_path(subject_id)
+    keys = [str(key) for key in restriction_keys]
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO file_baseline(subject_id, human_sha256, restriction_keys_json, observed_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(subject_id) DO UPDATE SET
+                human_sha256 = excluded.human_sha256,
+                restriction_keys_json = excluded.restriction_keys_json,
+                observed_at = excluded.observed_at
+            """,
+            (target, human_sha256, _json(keys), now_iso()),
+        )
+
+
+def file_baseline(vault: Path, subject_id: str) -> dict[str, Any] | None:
+    if not db_path(vault).is_file():
+        return None
+    target = normalize_path(subject_id)
+    with connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT subject_id, human_sha256, restriction_keys_json
+            FROM file_baseline
+            WHERE subject_id = ?
+            """,
+            (target,),
+        ).fetchone()
+    if row is None:
+        return None
+    return {
+        "subject_id": row["subject_id"],
+        "human_sha256": row["human_sha256"],
+        "restriction_keys": json.loads(row["restriction_keys_json"] or "[]"),
+    }
 
 
 def mark_materialized(vault: Path, output_id: str, *, commit: str = "") -> None:

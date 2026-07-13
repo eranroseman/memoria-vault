@@ -341,6 +341,12 @@ CREATE TABLE IF NOT EXISTS evidence_sets (
 );
 CREATE INDEX IF NOT EXISTS idx_evidence_sets_block_ref
     ON evidence_sets(block_ref);
+CREATE TABLE IF NOT EXISTS file_baseline (
+    subject_id TEXT PRIMARY KEY,
+    human_sha256 TEXT NOT NULL,
+    restriction_keys_json TEXT NOT NULL DEFAULT '[]',
+    observed_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS derivations (
     input_id TEXT NOT NULL,
     output_id TEXT NOT NULL,
@@ -355,4 +361,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 10;
+PRAGMA user_version = 11;

@@ -21,7 +21,7 @@ from memoria_vault.runtime.content_security import (
     markdown_code_span,
     neutralize_untrusted_markdown_fragment,
 )
-from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path

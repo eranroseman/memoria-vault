@@ -310,15 +310,15 @@ No branch was pushed and no PR was opened in this execution.
 **Interfaces:**
 - Produces: table `file_baseline(subject_id TEXT PRIMARY KEY, human_sha256 TEXT, restriction_keys_json TEXT NOT NULL DEFAULT '[]', observed_at TEXT NOT NULL)`; `state.upsert_file_baseline(vault, subject_id, *, human_sha256, restriction_keys)` and `state.file_baseline(vault, subject_id) -> dict | None`. Tasks 9–11 use them.
 
-- [ ] **Step 1: Write the failing test** — assert the table exists and `upsert_file_baseline` + `file_baseline` round-trip a hash + a `["superseded"]` key list.
+- [x] **Step 1: Write the failing test** — `test_file_baseline_round_trips_hash_and_restriction_keys` asserts the table exists and the helpers round-trip a hash plus `["superseded"]`.
 
-- [ ] **Step 2: Run** → FAIL.
+- [x] **Step 2: Run** → FAIL (`file_baseline` did not exist before the schema change).
 
-- [ ] **Step 3: Implement** — add the table to `schema.sql`; bump `SCHEMA_VERSION`/`user_version` to next integer (read current first — this is the second schema PR; it takes the integer after PR-MC). Add the two `state` helpers next to `record_observed_file_edit` (:451).
+- [x] **Step 3: Implement** — added `file_baseline` plus the `state` helpers; the actual merged predecessor was v10, so this bumps `SCHEMA_VERSION` and `user_version` to v11.
 
-- [ ] **Step 4: Run** → PASS; `python scripts/verify` → PASS.
+- [x] **Step 4: Run** → PASS — focused schema tests passed; full `python3 scripts/verify` passed (`500 passed, 9 skipped, 790 deselected`; smoke gates green).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `feat(integrity): add file baselines for change witness (schema v11)`.
 
 ```bash
 git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py tests/*.py tests/conftest.py
