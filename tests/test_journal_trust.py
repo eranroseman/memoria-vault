@@ -112,9 +112,7 @@ def test_workspace_scan_fails_before_mutation_on_broken_journal(tmp_path, capsys
     assert _event_count(vault) == before
 
 
-def test_append_is_authoritative_before_jsonl_and_advances_anchor(
-    tmp_path, capsys, monkeypatch
-):
+def test_append_is_authoritative_before_jsonl_and_advances_anchor(tmp_path, capsys, monkeypatch):
     vault = init_cli_workspace(tmp_path, capsys)
     before = _event_count(vault)
 
@@ -133,9 +131,9 @@ def test_append_is_authoritative_before_jsonl_and_advances_anchor(
 
     assert _event_count(vault) == before + 1
     assert state.journal_head(vault) == state.journal_head_anchor(vault)
-    assert (vault / state.JOURNAL_HEAD_REL).read_text(encoding="utf-8").strip() == state.journal_head(
-        vault
-    )
+    assert (vault / state.JOURNAL_HEAD_REL).read_text(
+        encoding="utf-8"
+    ).strip() == state.journal_head(vault)
 
 
 def test_mediated_append_keeps_context_when_jsonl_crashes(tmp_path, capsys, monkeypatch):
@@ -250,7 +248,7 @@ def test_verify_rejects_malformed_jsonl(tmp_path, capsys):
 def test_verify_rejects_jsonl_event_in_wrong_machine_file(tmp_path, capsys):
     vault = init_cli_workspace(tmp_path, capsys)
     _seed_events(vault, count=1)
-    event = list(iter_jsonl(vault / ".memoria/journal/journal-test.jsonl"))[0]
+    event = next(iter_jsonl(vault / ".memoria/journal/journal-test.jsonl"))
     append_jsonl(vault / ".memoria/journal/other-machine.jsonl", [event])
 
     report = state.verify_journal_chain(vault)

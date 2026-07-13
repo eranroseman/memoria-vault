@@ -64,10 +64,17 @@ writable runtime directories are created from `folders.yaml`:
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
 ├── blobs/                   gitignored provider payloads and staged source content
-├── journal/                 per-machine JSONL file journal
-├── memoria.sqlite           SQLite working-state DB
+├── journal/                 derived per-machine JSONL synchronization exports
+├── journal-head             live hash-chain tip for the authoritative event log
+├── memoria.sqlite           authoritative state, including the event log
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ```
+
+The append-only, hash-chained `event_log` in `memoria.sqlite` is the journal of
+record. Trust-sensitive readers query it in event order. A journal append
+commits there first and advances `journal-head`; the per-machine JSONL files are
+derived exports for synchronization. `memoria workspace scan` verifies the
+chain and export subset before mutation, then re-emits any missing export rows.
 
 Alpha.20 deliberately does **not** ship dashboards, note templates, hidden
 operation-package homes, installed profile packages, lane override packages,

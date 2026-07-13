@@ -479,6 +479,39 @@ def verify_journal_chain(vault: Path) -> dict[str, Any]:
     }
 
 
+def read_event_log(
+    vault: Path,
+    *,
+    event_types: Iterable[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Read authoritative journal payloads in event order."""
+    selected = sorted({str(value) for value in event_types or ()})
+    query = "SELECT event_type, machine, payload_json FROM event_log"
+    params: tuple[str, ...] = ()
+    if selected:
+        query += f" WHERE event_type IN ({','.join('?' for _ in selected)})"
+        params = tuple(selected)
+    query += " ORDER BY event_id"
+    with connect(vault) as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    events: list[dict[str, Any]] = []
+    for row in rows:
+        try:
+            event = json.loads(str(row["payload_json"]))
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ValueError("event_log payload must be valid JSON") from exc
+        if not isinstance(event, dict):
+            raise ValueError("event_log payload must be a JSON object")
+        if event.get("machine") != str(row["machine"]):
+            raise ValueError("event_log payload machine does not match its row")
+        payload_type = str(event.get("event") or event.get("type") or "event")
+        if payload_type != str(row["event_type"]):
+            raise ValueError("event_log payload type does not match its row")
+        events.append(event)
+    return events
+
+
 def _journal_export_subset_error(vault: Path, rows: list[Any]) -> str:
     authoritative: Counter[tuple[str, str]] = Counter()
     for row in rows:

@@ -345,6 +345,8 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
         project_id="projects/project-alpha/project.md",
         machine="copi-machine",
     )
+    for path in (vault / ".memoria/journal").glob("*.jsonl"):
+        path.unlink()
     result = compile_source_digest(
         vault,
         "source-alpha",

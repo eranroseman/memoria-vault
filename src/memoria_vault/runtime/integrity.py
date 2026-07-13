@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import capture, state
-from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
@@ -1372,13 +1371,13 @@ def _quarantine_catalog_source(
 
 def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
     derived: dict[str, dict[str, Any]] = {}
-    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
-        for event in iter_jsonl(path):
-            if event.get("event") not in {EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT}:
-                continue
-            output_id = event.get("output_id")
-            if isinstance(output_id, str):
-                derived[normalize_path(output_id)] = event
+    for event in state.read_event_log(
+        vault,
+        event_types=(EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT),
+    ):
+        output_id = event.get("output_id")
+        if isinstance(output_id, str):
+            derived[normalize_path(output_id)] = event
     return derived
 
 

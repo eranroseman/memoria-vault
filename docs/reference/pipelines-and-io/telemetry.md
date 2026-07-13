@@ -47,8 +47,9 @@ The write-gate's decision trail. Its full schema is owned by
 [Policy audit log](../control-and-policy/policy-audit-log.md).
 
 Every denied, dry-run, policy-load failure, and paired optional-adapter write
-appends a row. Worker-owned CLI mutations also write `.memoria/journal/` request
-evidence in `.memoria/memoria.sqlite`; the audit log is the adapter/write-boundary
+appends a row. Worker-owned CLI mutations write authoritative request evidence
+to `event_log` in `.memoria/memoria.sqlite`, with derived per-machine JSONL
+exports under `.memoria/journal/`; the audit log is the adapter/write-boundary
 evidence stream.
 
 ### lint-findings.jsonl

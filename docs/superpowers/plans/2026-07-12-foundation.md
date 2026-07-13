@@ -559,17 +559,25 @@ git commit -m "fix(journal): event_log first on append; JSONL reconciliation swe
 ### Task 8: Trust reads consume event_log + PR-F2
 
 **Files:**
+- Modify: `src/memoria_vault/runtime/state.py` (`read_event_log`)
 - Modify: `src/memoria_vault/runtime/integrity.py:1292-1301` (`_latest_derived`)
 - Modify: `src/memoria_vault/runtime/operations.py:834` (`_source_interviews`)
 - Modify: `src/memoria_vault/runtime/trusted_writer.py:673` (`_iter_events` consumers: `rebuild_trace_state` / `_known_current_hashes` — trust reads too)
-- Test: `tests/test_journal_trust.py` (extend)
+- Test: `tests/test_operations.py`, `tests/test_trusted_writer.py`,
+  `tests/test_integrity_cascade_rollback.py`
 
 **Interfaces:**
 - Consumes: indexed `event_log.event_type` for event selection and
   `event_log.payload_json` for the complete returned event.
-- Produces: identical return shapes as today (dicts keyed the same); no JSONL globs remain on trust paths. `_iter_events` stays only for the reconciliation sweep's export-side read.
+- Produces: identical return shapes as today (dicts keyed the same); no JSONL
+  globs remain on trust paths. `_iter_journal_exports` is isolated to the
+  reconciliation sweep's export-side read.
 
-- [ ] **Step 1: Write the failing test** — equivalence: seed a `derived` event
+- [x] **Step 1: Write the failing test** — equivalence across four trust paths:
+  delete every JSONL export before interview synthesis, trace-state rebuild,
+  PI-edit input recovery, and cascade traversal.
+
+  Seed a `derived` event
   through `trusted_writer.append_explicit_journal_event`, then delete the JSONL
   files and assert the read still sees it:
 
@@ -592,9 +600,14 @@ def test_trust_reads_survive_jsonl_deletion(tmp_path, capsys):
 ```
 Confirm the exact event-type constant first: `rg -n "EVENT_DERIVED\s*=" src/memoria_vault/runtime/` and use its literal value in the seeded event.
 
-- [ ] **Step 2: Run to verify failure** — `_latest_derived` returns `{}` after JSONL deletion.
+- [x] **Step 2: Run to verify failure** — the four focused tests failed with
+  zero interviews, missing rebuilt trace state, dropped upstream inputs, and an
+  empty downstream traversal after JSONL deletion.
 
-- [ ] **Step 3: Implement** — `_latest_derived` becomes:
+- [x] **Step 3: Implement** — add `state.read_event_log`, which performs
+  parameterized indexed event-type selection ordered by `event_id`, validates
+  row/payload machine and event-type agreement, and returns parsed payloads.
+  All four trust readers consume it. `_latest_derived` becomes:
 
 ```python
 def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
@@ -620,10 +633,14 @@ dicts.
 
 `rebuild_trace_state`, `_known_current_hashes`, and `_latest_derived_inputs`
 (trusted_writer): replace the `_iter_events(vault)` trust source with an
-`event_log` reader ordered by `event_id`. Keep `_iter_events` only for the
-reconciliation sweep's export-side comparison.
+`event_log` reader ordered by `event_id`. JSONL iteration remains only in
+`_iter_journal_exports` for the reconciliation sweep's export-side comparison.
 
-- [ ] **Step 4: Run tests + gate**
+- [x] **Step 4: Run tests + gate** — the four focused RED tests pass, the
+  retired-identifier contract passes after naming the reader `read_event_log`,
+  and `python3 scripts/verify` passes with 444 passed, 9 skipped, and 393
+  deselected; offline smoke, syntax, authored JSON, and static/document gates
+  are green.
 
 `python3 -m pytest tests/test_journal_trust.py tests/test_integrity.py tests/test_integrity_cascade_rollback.py -v` → PASS. `python3 scripts/verify` → PASS.
 

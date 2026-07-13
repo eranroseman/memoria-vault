@@ -723,9 +723,12 @@ def quarantine_untraced_from_status(
 
 
 def rebuild_trace_state(vault: Path) -> dict[str, dict[str, Any]]:
-    """Rebuild the latest known output/check state from all per-machine journals."""
+    """Rebuild the latest known output/check state from the authoritative event log."""
     outputs: dict[str, dict[str, Any]] = {}
-    for event in _iter_events(Path(vault)):
+    for event in state.read_event_log(
+        Path(vault),
+        event_types=(*TRACE_OUTPUT_EVENTS, EVENT_CHECK_FIRED),
+    ):
         if event.get("event") in TRACE_OUTPUT_EVENTS:
             output_id = event.get("output_id")
         elif event.get("event") == EVENT_CHECK_FIRED:
@@ -912,11 +915,6 @@ def _journal_path(vault: Path, machine: str) -> Path:
     return vault / ".memoria/journal" / f"{machine}.jsonl"
 
 
-def _iter_events(vault: Path) -> Iterable[dict[str, Any]]:
-    for _machine, event in _iter_journal_exports(vault):
-        yield event
-
-
 def _iter_journal_exports(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
     for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
         for event in iter_jsonl(path):
@@ -972,8 +970,8 @@ def _known_current_hashes(vault: Path) -> dict[str, str]:
 
 def _latest_derived_inputs(vault: Path, target: str) -> list[dict[str, Any]]:
     inputs: list[dict[str, Any]] = []
-    for event in _iter_events(vault):
-        if event.get("event") in TRACE_OUTPUT_EVENTS and event.get("output_id") == target:
+    for event in state.read_event_log(vault, event_types=TRACE_OUTPUT_EVENTS):
+        if event.get("output_id") == target:
             inputs = _input_rows(event.get("inputs") or [])
     return inputs
 
