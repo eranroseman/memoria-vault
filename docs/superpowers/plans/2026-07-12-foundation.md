@@ -4,7 +4,7 @@
 
 **Goal:** Make alpha.20's delivered machinery true and visible: faithful actor provenance (F1), a verifiable journal with one trust-read path (F2), durable evidential grounds (F3), honest surfaces (F4).
 
-**Architecture:** Four repair packages, each its own squash-merged PR. F1 carries the single v8→v9 schema change (all v9 deltas land together); F2 builds on it; F3/F4 are independent. No propagation-semantics changes (G5), no edge-parsing changes (G2), no new features.
+**Architecture:** Four repair packages, each its own squash-merged PR. F1 carries the single v8→v9 schema change (all v9 deltas land together); F2 builds on it; F4 is independent; F3 follows F2 because restore verifies and reconciles the authoritative journal. No propagation-semantics changes (G5), no edge-parsing changes (G2), no new features.
 
 **Tech Stack:** Python 3 stdlib + SQLite (no new dependencies). Tests: pytest via `python3 scripts/verify`.
 
@@ -251,10 +251,12 @@ mutation.
 
 ### Task 5: Deliver PR-F1
 
-- [ ] Complete Task 5 of
+- [x] Complete Task 5 of
   `docs/superpowers/plans/2026-07-12-foundation-f1-operation-context.md`,
   including the current-truth doc updates, full gate, code review, security
   diff scan, sync, PR checks, and squash merge.
+
+PR #1386 passed both required checks and squash-merged as `9b4bfd93`.
 
 PR-F1 closes #1361 only when the full context contract is green.
 
@@ -273,7 +275,10 @@ PR-F1 closes #1361 only when the full context contract is green.
 - Consumes: `event_log` chain columns, `state._journal_hash(event_id, timestamp, event_type, machine, payload, prev_hash)`, `JOURNAL_HEAD_REL`.
 - Produces: `state.verify_journal_chain(vault: Path) -> dict[str, Any]` returning `{"ok": bool, "events": int, "tip": str, "anchor": str, "error": str}`; CLI `memoria journal verify --workspace <ws>` exiting 0/1 via `_emit`.
 
-- [ ] **Step 1: Write the failing test**
+The verifier treats a missing anchor as failure when the chain is nonempty. An
+empty chain may omit the anchor or carry `GENESIS`.
+
+- [x] **Step 1: Write the failing test**
 
 ```python
 """tests/test_journal_trust.py — chain verifier + trust reads."""
@@ -325,9 +330,10 @@ def test_verify_fails_on_broken_anchor(tmp_path, capsys):
     assert "anchor" in report["error"]
 ```
 
-- [ ] **Step 2: Run to verify failure** — `AttributeError: verify_journal_chain`.
+- [x] **Step 2: Run to verify failure** — all six focused tests failed on the
+  missing verifier, missing CLI action, or absent scan gate.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `state.py`:
 ```python
@@ -360,6 +366,14 @@ def verify_journal_chain(vault: Path) -> dict[str, Any]:
     tip = prev if rows else "GENESIS"
     anchor_path = Path(vault) / JOURNAL_HEAD_REL
     anchor = anchor_path.read_text(encoding="utf-8").strip() if anchor_path.is_file() else ""
+    if rows and not anchor:
+        return {
+            "ok": False,
+            "events": len(rows),
+            "tip": tip,
+            "anchor": "",
+            "error": "journal-head anchor is missing for a nonempty chain",
+        }
     if anchor and anchor != tip:
         return {
             "ok": False,
@@ -391,11 +405,15 @@ def _cmd_journal_verify(args: argparse.Namespace) -> int:
 ```
 (`_emit` returns 1 when `ok` is False — Task 12 makes its printout honest; do not duplicate that fix here. Drop the `"workspace": None` key if `_emit` handles a missing key cleanly — verify against `_emit`'s current body.)
 
-Wire into the existing full-vault pass: locate the `workspace rebuild` handler (`rg -n "_cmd_workspace_rebuild|workspace rebuild" src/memoria_vault/cli.py`) and call `verify_journal_chain` first, failing the command when `ok` is False.
+Wire into the existing full-vault pass: locate `_workspace_scan_payload` and
+call `verify_journal_chain` before it queues or runs any mutation. A mismatch
+returns the failed journal report and performs no scan operations. `workspace
+rebuild` is maintenance, not the approved verification boundary.
 
-- [ ] **Step 4: Run tests** → `python3 -m pytest tests/test_journal_trust.py -v` PASS; full suite PASS.
+- [x] **Step 4: Run tests** — `tests/test_journal_trust.py` passes 6 tests;
+  the surrounding journal, CLI-workspace, and runtime-state slice passes 63.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/state.py src/memoria_vault/cli.py tests/test_journal_trust.py tests/conftest.py
@@ -411,11 +429,13 @@ git commit -m "feat(journal): chain verifier + memoria journal verify"
 **Interfaces:**
 - Consumes: `state._append_journal_row`, `append_jsonl`, `_journal_path`, and
   F1's context/explicit trusted-writer append paths.
-- Produces: `_append_event` writes `event_log` **first**, JSONL second;
+- Produces: `_append_decorated_event` writes `event_log` **first**, JSONL second;
   `trusted_writer.reconcile_journal_export(vault: Path) -> int` re-appends
   missing JSONL lines from `event_log` to each event's recorded machine file
-  (returns count re-emitted). `verify_journal_chain` callers may run it after a
-  passing verify.
+  (returns count re-emitted). `verify_journal_chain` also proves the opposite
+  direction, `JSONL ⊆ event_log`, with multiset counts and matching machine
+  ownership; any JSONL-only row is a verification failure. After a passing
+  verify, `workspace scan` repairs DB-only export rows before other work.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -476,12 +496,16 @@ def test_reconcile_counts_duplicate_payloads(tmp_path, capsys):
     assert trusted_writer.reconcile_journal_export(vault) == 0
 ```
 
+Also test that an extra JSONL-only event makes `verify_journal_chain` fail,
+that duplicate counts are compared as a multiset, and that a DB-only row is
+re-emitted to the machine recorded in `event_log`.
+
 - [ ] **Step 2: Run to verify failure** — first test finds 0 rows (JSONL is written first today); `reconcile_journal_export` doesn't exist.
 
 - [ ] **Step 3: Implement**
 
 ```python
-def _append_event(vault: Path, machine: str, event: dict[str, Any]) -> None:
+def _append_decorated_event(vault: Path, event: dict[str, Any], *, machine: str) -> None:
     state._append_journal_row(vault, event, machine=machine)  # authoritative first
     append_jsonl(_journal_path(vault, machine), [event])  # derived export second
 
@@ -489,15 +513,13 @@ def _append_event(vault: Path, machine: str, event: dict[str, Any]) -> None:
 def reconcile_journal_export(vault: Path) -> int:
     """Re-emit event_log rows missing from the per-machine JSONL export."""
     vault = Path(vault)
-    exported = Counter(
-        json.dumps(event, ensure_ascii=False, sort_keys=True) for event in _iter_events(vault)
-    )
+    exported = Counter(_canonical_journal_event(event) for event in _iter_events(vault))
     missing: list[dict[str, Any]] = []
     with state.connect(vault) as conn:
         rows = conn.execute("SELECT payload_json FROM event_log ORDER BY event_id").fetchall()
     for row in rows:
         event = json.loads(str(row["payload_json"]))
-        key = json.dumps(event, ensure_ascii=False, sort_keys=True)
+        key = _canonical_journal_event(event)
         if exported[key]:
             exported[key] -= 1
         else:
@@ -506,9 +528,9 @@ def reconcile_journal_export(vault: Path) -> int:
         append_jsonl(_journal_path(vault, str(event["machine"])), [event])
     return len(missing)
 ```
-Check how `state._append_journal_row` serializes (`payload = _json(row)` —
-confirm `_json` sorts keys; mirror its exact serialization for the
-set-membership comparison, importing/reusing it if accessible).
+Use one canonical JSON helper for both multiset directions. Read authoritative
+rows with their `machine` column and require it to match the payload and target
+JSONL filename. Do not refresh or rewrite an extra JSONL-only row into the DB.
 
 - [ ] **Step 4: Run tests** → PASS; full suite PASS.
 
@@ -528,7 +550,8 @@ git commit -m "fix(journal): event_log first on append; JSONL reconciliation swe
 - Test: `tests/test_journal_trust.py` (extend)
 
 **Interfaces:**
-- Consumes: `event_log.payload_json` with `json_extract`.
+- Consumes: indexed `event_log.event_type` for event selection and
+  `event_log.payload_json` for the complete returned event.
 - Produces: identical return shapes as today (dicts keyed the same); no JSONL globs remain on trust paths. `_iter_events` stays only for the reconciliation sweep's export-side read.
 
 - [ ] **Step 1: Write the failing test** — equivalence: seed a `derived` event
@@ -564,7 +587,7 @@ def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
     with state.connect(Path(vault)) as conn:
         rows = conn.execute(
             "SELECT payload_json FROM event_log"
-            " WHERE json_extract(payload_json, '$.event') IN (?, ?)"
+            " WHERE event_type IN (?, ?)"
             " ORDER BY event_id",
             (EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT),
         ).fetchall()
@@ -576,9 +599,14 @@ def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
     return derived
 ```
 
-`_source_interviews` (operations.py:834): same transformation — `WHERE json_extract(payload_json, '$.event') = 'copi-interview'`, keep the existing per-event filtering logic on the parsed dicts.
+`_source_interviews`: same transformation using `WHERE event_type =
+'copi-interview'`; keep the existing per-event filtering logic on the parsed
+dicts.
 
-`rebuild_trace_state` / `_known_current_hashes` (trusted_writer): replace the `_iter_events(vault)` source with the same `event_log` query pattern (`SELECT payload_json FROM event_log ORDER BY event_id`), parsing each row. Keep `_iter_events` itself — the reconciliation sweep (Task 7) still reads the JSONL side with it.
+`rebuild_trace_state`, `_known_current_hashes`, and `_latest_derived_inputs`
+(trusted_writer): replace the `_iter_events(vault)` trust source with an
+`event_log` reader ordered by `event_id`. Keep `_iter_events` only for the
+reconciliation sweep's export-side comparison.
 
 - [ ] **Step 4: Run tests + gate**
 

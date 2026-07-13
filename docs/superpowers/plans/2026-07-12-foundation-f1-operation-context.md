@@ -833,8 +833,10 @@ Current remediation checklist:
   `/tmp/codex-security-scans/memoria-vault/cf2863dc49cf5a336f5a8d792f2604975f40d8a0_20260713T063958Z/report.md`.
   `python3 scripts/verify` passed on the exact final tree.
 
-- [ ] **Step 8: Publish and merge PR-F1**
+- [x] **Step 8: Publish and merge PR-F1**
 
 Push the reviewed branch, open the F1 PR for issue #1361, wait for `verify` and
 `gitleaks`, and squash-merge only when both pass. Use the approved auto-merge
 authorization if checks are still running.
+
+PR #1386 passed `verify` and `gitleaks` and squash-merged as `9b4bfd93`.

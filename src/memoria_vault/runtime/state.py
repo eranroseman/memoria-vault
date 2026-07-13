@@ -404,6 +404,88 @@ def write_journal_head_anchor(vault: Path) -> str:
     return JOURNAL_HEAD_REL
 
 
+def verify_journal_chain(vault: Path) -> dict[str, Any]:
+    """Verify the authoritative event chain and its tracked head anchor."""
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT event_id, timestamp, event_type, machine,
+                   payload_json, prev_hash, row_hash
+            FROM event_log
+            ORDER BY event_id
+            """
+        ).fetchall()
+
+    previous = "GENESIS"
+    for row in rows:
+        event_id = int(row["event_id"])
+        try:
+            expected = _journal_hash(
+                event_id,
+                str(row["timestamp"]),
+                str(row["event_type"]),
+                str(row["machine"]),
+                str(row["payload_json"]),
+                previous,
+            )
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return _journal_verification_failure(
+                rows, error=f"journal chain has invalid payload JSON at event {event_id}"
+            )
+        if str(row["prev_hash"]) != previous or str(row["row_hash"]) != expected:
+            return _journal_verification_failure(
+                rows, error=f"journal chain broken at event {event_id}"
+            )
+        previous = str(row["row_hash"])
+
+    tip = previous
+    anchor_path = Path(vault) / JOURNAL_HEAD_REL
+    try:
+        anchor = anchor_path.read_text(encoding="utf-8").strip() if anchor_path.is_file() else ""
+    except (OSError, UnicodeError) as exc:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            error=f"journal-head anchor is unreadable: {exc}",
+        )
+    if rows and not anchor:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            error="journal-head anchor is missing for a nonempty chain",
+        )
+    if anchor and anchor != tip:
+        return _journal_verification_failure(
+            rows,
+            tip=tip,
+            anchor=anchor,
+            error="journal-head anchor does not match chain tip",
+        )
+    return {
+        "ok": True,
+        "events": len(rows),
+        "tip": tip,
+        "anchor": anchor,
+        "error": "",
+    }
+
+
+def _journal_verification_failure(
+    rows: list[Any],
+    *,
+    error: str,
+    tip: str = "",
+    anchor: str = "",
+) -> dict[str, Any]:
+    return {
+        "ok": False,
+        "events": len(rows),
+        "tip": tip,
+        "anchor": anchor,
+        "error": error,
+    }
+
+
 def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None:
     target = normalize_path(concept_id)
     status = _check_status(check_status)

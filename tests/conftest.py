@@ -58,6 +58,7 @@ TEST_LEVELS = {
     "test_integrity_cascade_rollback.py": "runtime",
     "test_integrity_source_metadata.py": "runtime",
     "test_integrity_surface_tensions.py": "runtime",
+    "test_journal_trust.py": "runtime",
     "test_knowledge.py": "runtime",
     "test_live_runner.py": "live",
     "test_loudness.py": "unit",
