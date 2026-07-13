@@ -5,10 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import knowledge, state
 from memoria_vault.runtime.knowledge import (
     analyze_project_argument,
     read_project_slice,
+    render_project_export_markdown,
 )
 from memoria_vault.runtime.knowledge import (
     frame_project_paper as _frame_project_paper,
@@ -234,7 +235,7 @@ def test_write_project_outline_proposes_bm25_slice_and_computes_edges(
     result = write_project_outline(
         vault,
         "project-alpha",
-        query="sleep plasticity",
+        query="sleep plasticity ![query](http://beacon.example/query.png)",
         limit=2,
     )
 
@@ -247,6 +248,8 @@ def test_write_project_outline_proposes_bm25_slice_and_computes_edges(
     outline = (vault / "projects/project-alpha/outline.md").read_text(encoding="utf-8")
     assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — BM25 score " in outline
     assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — BM25 score " in outline
+    assert "![query]" not in outline
+    assert "`http://beacon.example/query.png`" in outline
     assert result["edges"] == [
         {"source": "notes/support.md", "target": "notes/thesis.md", "type": "supports"}
     ]
@@ -353,6 +356,53 @@ def test_write_project_export_does_not_replace_read_only_external_target(
         target.chmod(0o600)
 
     assert target.read_text(encoding="utf-8") == "keep\n"
+
+
+def test_argument_renderer_neutralizes_exported_beacons(tmp_path: Path) -> None:
+    project = tmp_path / "projects/project-alpha/project.md"
+    project.parent.mkdir(parents=True, exist_ok=True)
+    project.write_text(
+        "---\ntype: project\ncheck_status: checked\ntitle: Alpha project\n---\n"
+        "![argument](http://beacon.example/argument.png) "
+        "<script>signal()</script> http://beacon.example/bare\n",
+        encoding="utf-8",
+    )
+    _checked(tmp_path, "projects/project-alpha/project.md", "project")
+
+    rendered = render_project_export_markdown(tmp_path, "project-alpha")
+
+    content = rendered["content"]
+    assert "![argument]" not in content
+    assert "<script>" not in content
+    assert "](http://beacon.example" not in content
+    assert "`http://beacon.example/argument.png`" in content
+    assert "`http://beacon.example/bare`" in content
+
+
+def test_export_writer_neutralizes_unsafe_renderer_content_at_final_choke(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n",
+    )
+    monkeypatch.setattr(
+        knowledge,
+        "render_project_export_markdown",
+        lambda _vault, _project: {
+            "project_path": "projects/project-alpha/project.md",
+            "format": "markdown",
+            "content": "![final](http://beacon.example/final.png)\n",
+            "node_count": 0,
+            "edge_count": 0,
+            "relation_count": 0,
+        },
+    )
+
+    rendered = write_project_export(tmp_path, "project-alpha")
+
+    assert "![final]" not in rendered["content"]
+    assert "`http://beacon.example/final.png`" in rendered["content"]
 
 
 def _valid_paper_plan() -> dict[str, object]:

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import shutil
+import subprocess
 from copy import deepcopy
 from pathlib import Path
 
@@ -22,6 +25,7 @@ from memoria_vault.runtime.operations import (
 from memoria_vault.runtime.operations import (
     record_copi_interview_turn as _record_copi_interview_turn,
 )
+from memoria_vault.runtime.operations import run_prompt_operation as _run_prompt_operation
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, patch_pydantic_ai
@@ -37,6 +41,10 @@ def compile_source_digest(vault: Path, *args, **kwargs):
 
 def record_copi_interview_turn(vault: Path, *args, **kwargs):
     return call_with_context(_record_copi_interview_turn, vault, *args, **kwargs)
+
+
+def run_prompt_operation(vault: Path, *args, **kwargs):
+    return call_with_context(_run_prompt_operation, vault, *args, **kwargs)
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -224,6 +232,137 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         "hubs/methods.md",
         "hubs/outcomes.md",
     }
+
+
+def test_prompt_operation_neutralizes_model_output_before_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path)
+    raw_output = (
+        "![model](http://beacon.example/model.png) "
+        "<script>signal()</script> http://beacon.example/bare"
+    )
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._run_prompt_model",
+        lambda _policy, _runner, _prompt, _input: raw_output,
+    )
+
+    result = run_prompt_operation(
+        vault,
+        "analyze-claims",
+        {"input_text": "A checked claim."},
+        machine="prompt-machine",
+        run_id="prompt-alpha",
+    )
+
+    staged = (vault / result["staging_id"]).read_text(encoding="utf-8")
+    assert "![model]" not in staged
+    assert "<script>" not in staged
+    assert "](http://beacon.example" not in staged
+    assert "`http://beacon.example/model.png`" in staged
+    assert "`http://beacon.example/bare`" in staged
+    events = list(iter_jsonl(vault / ".memoria/journal/prompt-machine.jsonl"))
+    assert events[1]["output_hash"] == (
+        "sha256:" + hashlib.sha256(raw_output.encode("utf-8")).hexdigest()
+    )
+
+
+def test_digest_and_hub_apply_neutralize_source_model_and_topic_text(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-beacon",
+        "Work ![title](http://beacon.example/title.png)",
+        'Description <img src="http://beacon.example/description.png">',
+        "Source content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    raw_digest = (
+        "## Synthesis\n\n"
+        "Model ![body](http://beacon.example/body.png) <script>signal()</script>\n\n"
+        "## Hub suggestions\n\n- Framing\n"
+    )
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._run_digest_model",
+        lambda _policy, _runner, _source, _content, _topics, _interviews: raw_digest,
+    )
+
+    result = compile_source_digest(
+        vault,
+        "source-beacon",
+        [
+            "![Topic](http://beacon.example/topic.png)",
+            "Methods",
+            "Outcomes",
+            "Gaps",
+            "Impact",
+        ],
+        machine="digest-machine",
+    )
+
+    rendered = [
+        (vault / result["digest_path"]).read_text(encoding="utf-8"),
+        *[(vault / path).read_text(encoding="utf-8") for path in result["hub_paths"]],
+    ]
+    combined = "\n".join(rendered)
+    assert "![" not in combined
+    assert "<script>" not in combined
+    assert "<img" not in combined
+    for url in (
+        "http://beacon.example/title.png",
+        "http://beacon.example/description.png",
+        "http://beacon.example/body.png",
+        "http://beacon.example/topic.png",
+    ):
+        assert f"`{url}`" in combined
+    events = list(iter_jsonl(vault / ".memoria/journal/digest-machine.jsonl"))
+    assert events[1]["output_hash"] == (
+        "sha256:" + hashlib.sha256(raw_digest.encode("utf-8")).hexdigest()
+    )
+
+
+def test_digest_and_hub_render_composed_fenced_fragments_inert(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    vault = workspace(tmp_path)
+    source_title = '```\n<img src="https://evil.example/source-title">\n```'
+    model_topic = '```\n<img src="https://evil.example/model-topic">\n```'
+    capture_source(
+        vault,
+        "source-fenced-fragment",
+        source_title,
+        "Third-party description.",
+        "Source content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._run_digest_model",
+        lambda _policy, _runner, _source, _content, _topics, _interviews: (
+            "## Synthesis\n\nModel digest.\n\n## Hub suggestions\n\n- Framing\n"
+        ),
+    )
+
+    result = compile_source_digest(
+        vault,
+        "source-fenced-fragment",
+        [model_topic, "Methods", "Outcomes", "Gaps", "Impact"],
+        machine="digest-machine",
+    )
+
+    for path in [result["digest_path"], *result["hub_paths"]]:
+        rendered = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=(vault / path).read_text(encoding="utf-8"),
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in rendered
 
 
 def test_compile_source_digest_rejects_removed_source_markdown_without_catalog_row(

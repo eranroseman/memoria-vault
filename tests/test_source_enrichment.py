@@ -11,12 +11,15 @@ from memoria_vault.runtime.capture import render_references_bib
 from memoria_vault.runtime.enrichment import (
     _optional_providers,
     _provider_endpoint,
+    _write_attention_flag,
+    _write_discovery_candidate,
     load_provider_config,
     provider_allowlist_issues,
     replay_enrichment_run,
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
+from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git
 
@@ -63,6 +66,44 @@ def allow_example_full_text(monkeypatch) -> None:
         return original(vault, operation_id)
 
     monkeypatch.setattr("memoria_vault.runtime.operations.load_operation_policy", load_policy)
+
+
+def test_provider_written_inbox_fields_are_neutralized_on_apply(tmp_path: Path) -> None:
+    source = {"work_id": "source-alpha"}
+    finding = "![finding](http://beacon.example/finding.png)"
+    evidence = '<img src="http://beacon.example/evidence.png">'
+
+    flag_rel = _write_attention_flag(
+        tmp_path,
+        source,
+        check="provider-content",
+        finding=finding,
+        evidence=evidence,
+    )
+    candidate_rel = _write_discovery_candidate(
+        tmp_path,
+        source,
+        {
+            "target_id": "https://openalex.org/W999",
+            "target_title": "![work](http://beacon.example/work.png)",
+            "relation_type": "references",
+        },
+    )
+
+    rendered = "\n".join(
+        (tmp_path / rel).read_text(encoding="utf-8") for rel in (flag_rel, candidate_rel)
+    )
+    assert "![" not in rendered
+    assert "<img" not in rendered
+    for url in (
+        "http://beacon.example/finding.png",
+        "http://beacon.example/evidence.png",
+        "http://beacon.example/work.png",
+    ):
+        assert f"`{url}`" in rendered
+    assert read_frontmatter(tmp_path / candidate_rel)["discovered_work_id"] == (
+        "https://openalex.org/W999"
+    )
 
 
 def doi_payload() -> dict:

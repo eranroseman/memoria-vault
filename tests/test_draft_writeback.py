@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
@@ -42,6 +46,75 @@ def test_promote_draft_passage_creates_unchecked_note_and_links_draft(tmp_path: 
     draft_text = draft.read_text(encoding="utf-8")
     assert "[Selected Claim](../../notes/selected-claim.md)" in draft_text
     assert "![[notes/selected-claim.md]]" not in draft_text
+
+
+def test_promote_draft_passage_neutralizes_machine_draft_text(tmp_path: Path) -> None:
+    vault = _workspace(tmp_path)
+    _checked_project(vault)
+    passage = (
+        "![draft](http://beacon.example/draft.png) "
+        "<script>signal()</script> http://beacon.example/bare"
+    )
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text(f"# Alpha draft\n\n{passage}\n", encoding="utf-8")
+
+    result = promote_draft_passage(
+        vault,
+        "project-alpha",
+        title="Selected Claim",
+        passage=passage,
+        actor="pi",
+    )
+
+    rendered = (vault / result["note_path"]).read_text(encoding="utf-8")
+    assert "![draft]" not in rendered
+    assert "<script>" not in rendered
+    assert "`http://beacon.example/draft.png`" in rendered
+    assert "`http://beacon.example/bare`" in rendered
+
+
+def test_promote_draft_passage_neutralizes_titles_composed_into_links(tmp_path: Path) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    vault = _workspace(tmp_path)
+    _checked_project(vault)
+    passage = "Selected claim text."
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text(f"# Alpha draft\n\n{passage}\n", encoding="utf-8")
+
+    titles = (
+        "x](javascript:alert(1))",
+        "x](data:text/plain,unsafe)",
+        "x](//evil.example/promote-protocol-relative)",
+        "x](https://evil.example/promote-external)",
+        r"brackets [stay] and \\slashes",
+        '```\n<img src="https://evil.example/promote-fenced">\n```',
+        r'\` <img src="https://evil.example/promote-escaped"> \`',
+    )
+    for title in titles:
+        result = promote_draft_passage(
+            vault,
+            "project-alpha",
+            title=title,
+            passage=passage,
+            actor="pi",
+        )
+        assert read_frontmatter(vault / result["note_path"])["title"] == title
+
+    rendered = subprocess.run(
+        [pandoc, "-f", "commonmark", "-t", "html"],
+        input=draft.read_text(encoding="utf-8"),
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+    assert "<img" not in rendered
+    assert 'href="javascript:alert(1)"' not in rendered
+    assert 'href="data:text/plain,unsafe"' not in rendered
+    assert 'href="//evil.example/promote-protocol-relative"' not in rendered
+    assert 'href="https://evil.example/promote-external"' not in rendered
+    assert rendered.count('href="../../notes/') == len(titles)
 
 
 def test_cli_project_promote_runs_writeback_operation(tmp_path: Path, capsys: object) -> None:

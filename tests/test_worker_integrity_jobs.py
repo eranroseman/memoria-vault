@@ -414,3 +414,47 @@ def test_worker_runs_trace_integrity_scan_operation_jobs(tmp_path: Path) -> None
     assert state.concept_check_status(vault, "notes/foreign.md") == "quarantined"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/foreign.md"}
+
+
+def test_worker_observe_sweep_surfaces_change_witness_findings(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    target = vault / "notes/superseded.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "---\n"
+        "type: note\n"
+        "title: Superseded note\n"
+        "superseded: true\n"
+        "tags: []\n"
+        "links: {}\n"
+        "---\n"
+        "Superseded body.\n",
+        encoding="utf-8",
+    )
+    enqueue_operation(
+        vault,
+        "observe-pi-edits",
+        idempotency_key="baseline-superseded",
+        actor="integrity",
+    )
+    run_next_job(vault, machine="test-machine")
+
+    target.write_text(
+        target.read_text(encoding="utf-8").replace("superseded: true\n", ""),
+        encoding="utf-8",
+    )
+    enqueue_operation(
+        vault,
+        "observe-pi-edits",
+        idempotency_key="witness-superseded-removal",
+        actor="integrity",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert {finding["kind"] for finding in done["findings"]} == {
+        "foreign-edit",
+        "restriction-key-removed",
+    }
+    assert all(finding["route"] == "ask" for finding in done["findings"])
