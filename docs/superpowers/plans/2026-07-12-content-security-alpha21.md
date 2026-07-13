@@ -335,15 +335,15 @@ git commit -m "feat(integrity): file_baseline table for the change witness (sche
 - Consumes: `state.upsert_file_baseline` (Task 8); `_head_sha256` (:695); the shipped restriction field `superseded: true`. Recognition of `local-only: true` may be recorded as forward-compatible groundwork only; no local-only privacy enforcement is claimed in alpha.21.
 - Produces: after each observe sweep, every scanned bundle file has a `file_baseline` row with its current human_sha256 and its current restriction-key list (parsed from frontmatter). Helper `trusted_writer._restriction_keys(frontmatter) -> list[str]`.
 
-- [ ] **Step 1: Write the failing test** — run `observe_pi_edits_from_status` over a vault with a note carrying `superseded: true`; assert its `file_baseline` row records `human_sha256` and `["superseded"]`.
+- [x] **Step 1: Write the failing test** — `test_observe_pi_edits_from_status_records_file_baseline_restrictions` sweeps a `superseded: true` note and asserts its baseline hash and `["superseded"]` keys.
 
-- [ ] **Step 2: Run** → FAIL (no baseline recorded).
+- [x] **Step 2: Run** → FAIL (`file_baseline(...)` returned `None`).
 
-- [ ] **Step 3: Implement** — add `_restriction_keys(frontmatter)` returning `"superseded"` when the shipped boolean is true; it may also recognize `local-only: true` as data-only groundwork. Do not invent or rely on a `standing` field. In the sweep, after processing each path, `upsert_file_baseline(vault, output_id, human_sha256=<current sha>, restriction_keys=_restriction_keys(fm))`.
+- [x] **Step 3: Implement** — `_restriction_keys` records true `superseded` and the data-only `local-only` groundwork; every observed sweep target is baselined from its current file hash without introducing a `standing` field.
 
-- [ ] **Step 4: Run** → PASS.
+- [x] **Step 4: Run** → PASS — focused new and existing observe/commit tests passed; `tests/test_trusted_writer.py` passed (`20 passed`); Ruff and Ruff format passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `feat(integrity): record file baselines during observe sweep`.
 
 ```bash
 git add src/memoria_vault/runtime/trusted_writer.py tests/test_trusted_writer.py

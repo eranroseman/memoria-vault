@@ -456,17 +456,25 @@ def _observe_pi_edits_from_status(
     for target in targets:
         _validate_pi_edit_target(vault, contract, target)
 
-    observed = [
-        observe_pi_edit_from_head(
+    observed = []
+    for target in targets:
+        observed.append(
+            observe_pi_edit_from_head(
+                vault,
+                target,
+                operation=context.operation_id if context else "observe-pi-edits",
+                run_id=context.run_id if context else None,
+                machine=context.machine if context else explicit_machine,
+                schemas_dir=schemas_dir,
+            )
+        )
+        frontmatter, _body = split_frontmatter((vault / target).read_text(encoding="utf-8"))
+        state.upsert_file_baseline(
             vault,
             target,
-            operation=context.operation_id if context else "observe-pi-edits",
-            run_id=context.run_id if context else None,
-            machine=context.machine if context else explicit_machine,
-            schemas_dir=schemas_dir,
+            human_sha256=sha256_file(vault / target),
+            restriction_keys=_restriction_keys(frontmatter),
         )
-        for target in targets
-    ]
     if observed:
         from memoria_vault.runtime.integrity import (
             propagate_scan_demotion,
@@ -838,6 +846,10 @@ def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
 def _validate_pi_edit_target(vault: Path, contract: dict[str, Any], target: str) -> None:
     frontmatter, _body = split_frontmatter((vault / target).read_text(encoding="utf-8"))
     _validate_concept(contract, target, frontmatter, strict_writer=False)
+
+
+def _restriction_keys(frontmatter: dict[str, Any]) -> list[str]:
+    return [key for key in ("superseded", "local-only") if frontmatter.get(key) is True]
 
 
 def _staged_path(vault: Path, target: str) -> Path:

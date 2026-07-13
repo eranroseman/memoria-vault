@@ -470,6 +470,25 @@ def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Pat
     assert git(vault, "status", "--short", "--", "journal", "knowledge") == ""
 
 
+def test_observe_pi_edits_from_status_records_file_baseline_restrictions(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/superseded.md"
+    target.parent.mkdir(parents=True)
+    target.write_text(
+        note_text(title="Superseded note").replace("tags: []\n", "superseded: true\ntags: []\n"),
+        encoding="utf-8",
+    )
+
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert state.file_baseline(vault, "notes/superseded.md") == {
+        "subject_id": "notes/superseded.md",
+        "human_sha256": sha256_file(target),
+        "restriction_keys": ["superseded"],
+    }
+
+
 def test_promote_checked_rejects_invalid_staged_concept(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     staged = vault / ".memoria/staging/notes/bad.md"
