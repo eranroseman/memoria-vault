@@ -747,7 +747,8 @@ then proves symlink and arbitrary-directory targets remain untouched.
 - [x] **Step 4: Run tests** — 9 focused Task 9 tests pass; Ruff check and
   formatting pass on every touched Python file.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `23685424 feat(backup): publish coherent
+  workspace snapshots`.
 
 ```bash
 git add src/memoria_vault/runtime/backup.py src/memoria_vault/cli.py tests/test_backup_restore.py tests/conftest.py
@@ -768,63 +769,28 @@ git commit -m "feat(backup): workspace backup — DB snapshot + blobs + journal-
   state, and preserves the backup source; CLI `memoria workspace restore
   <source> [--force]`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test** — seven restore contracts cover the
+  complete round trip, force and PI authority, source hash validation,
+  committed-anchor refusal, public CLI, and injected mid-swap rollback.
 
-```python
-def test_round_trip_restores_grounds_and_chain(tmp_path, capsys):
-    vault = init_cli_workspace(tmp_path, capsys)
-    _seed(vault)
-    target = tmp_path / "backup-rt"
-    backup.create_backup(vault, target)
-    # wipe the non-rebuildable stores
-    (vault / state.DB_REL).unlink()
-    import shutil as _sh
+The round-trip test mutates every live plane after backup, removes the derived
+JSONL exports, and plants stale WAL/SHM files. Restore must recover the backed-
+up grounds, rebuild exports, remove the stale sidecars, append its provenance
+event, preserve the source byte-for-byte, and leave the chain verifiable.
 
-    _sh.rmtree(vault / backup.BLOBS_REL)
-    (vault / state.JOURNAL_HEAD_REL).unlink()
-    report = backup.restore_backup(vault, target, force=True)
-    assert report["ok"] is True
-    assert (vault / backup.BLOBS_REL / "source-content/w-1/raw/source.txt").read_text() == "evidence bytes"
-    assert state.verify_journal_chain(vault)["ok"] is True  # the drill: chain verifies after restore
+- [x] **Step 2: Run to verify failure** — the nine backup tests remain green;
+  all seven restore tests fail because `restore_backup` and the CLI subcommand
+  do not exist.
 
+- [x] **Step 3: Implement** — restore now validates a copied sibling stage
+  (manifest hashes, SQLite `quick_check`, blob inventory, journal chain and
+  anchor), rejects a backup older than the committed anchor, rebuilds JSONL
+  from `event_log`, and swaps DB/sidecars, blobs, anchor, and journal with a
+  full rollback ledger. It appends `workspace-restored` with explicit PI and
+  machine provenance only after the restored chain verifies.
 
-def test_restore_refuses_live_db_without_force(tmp_path, capsys):
-    vault = init_cli_workspace(tmp_path, capsys)
-    _seed(vault)
-    target = tmp_path / "backup-rt2"
-    backup.create_backup(vault, target)
-    report = backup.restore_backup(vault, target)
-    assert report["ok"] is False
-    assert "force" in report["error"]
-```
-
-- [ ] **Step 2: Run to verify failure** — `restore_backup` missing.
-
-- [ ] **Step 3: Implement** (append to `backup.py`):
-
-```python
-def restore_backup(vault: Path, source: Path, *, force: bool = False) -> dict[str, Any]:
-    vault, source = Path(vault), Path(source)
-    if not (source / "memoria.sqlite").is_file():
-        return {"ok": False, "error": f"not a backup directory: {source}"}
-    live_db = vault / DB_REL
-    if live_db.exists() and not force:
-        return {"ok": False, "error": "live DB present; pass --force to overwrite"}
-    live_db.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source / "memoria.sqlite", live_db)
-    blob_root = vault / BLOBS_REL
-    if blob_root.exists():
-        shutil.rmtree(blob_root)
-    if (source / "blobs").is_dir():
-        shutil.copytree(source / "blobs", blob_root)
-    if (source / "journal-head").is_file():
-        shutil.copy2(source / "journal-head", vault / JOURNAL_HEAD_REL)
-    return {"ok": True, "restored_from": str(source)}
-```
-
-CLI: `restore` subparser mirroring `backup` plus `--force` (`action="store_true"`), handler calling `restore_backup(..., force=args.force)`.
-
-- [ ] **Step 4: Run tests** → PASS.
+- [x] **Step 4: Run tests** — all 16 backup/restore tests pass, including the
+  injected journal-install failure that restores every prior live component.
 
 - [ ] **Step 5: Commit**
 
