@@ -19,7 +19,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.content_security import (
+    markdown_code_span,
+    neutralize_untrusted_markdown,
+    neutralize_untrusted_markdown_fragment,
+)
 from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
@@ -74,7 +78,7 @@ def emit_worklist(
         raise ValueError("a worklist needs at least one row")
     vault = Path(vault)
     slug = _slug(worklist_id or title)
-    safe_title = neutralize_untrusted_markdown(title)
+    safe_title = neutralize_untrusted_markdown_fragment(title)
     worklist_dir = vault / "system" / "worklists" / slug
     worklist_dir.mkdir(parents=True, exist_ok=True)
     today = datetime.date.today().isoformat()
@@ -83,7 +87,8 @@ def emit_worklist(
     for index, row in enumerate(rows, start=1):
         ref = _item_ref(row, index)
         item_title = _item_title(row, ref)
-        safe_item_title = neutralize_untrusted_markdown(item_title)
+        safe_item_title = neutralize_untrusted_markdown_fragment(item_title)
+        safe_ref = neutralize_untrusted_markdown_fragment(ref)
         decision = str(row.get("decision") or "proposed").strip()
         if decision not in DECISIONS:
             raise ValueError(f"decision must be one of {DECISIONS}")
@@ -107,7 +112,7 @@ def emit_worklist(
         if group:
             frontmatter["group"] = group
         frontmatter.update({"rank": rank, "created": today})
-        body = [f"# {safe_item_title}", "", f"Reference: `{ref}`", ""]
+        body = [f"# {safe_item_title}", "", f"Reference: {markdown_code_span(safe_ref)}", ""]
         if safe_reason:
             body += ["# Reason", "", safe_reason, ""]
         write_text_durable(path, frontmatter_doc(frontmatter, "\n".join(body)))

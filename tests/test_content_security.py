@@ -1,9 +1,16 @@
 """Content-security regression tests."""
 
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.knowledge import (
+    _outline_text,
+)
 from memoria_vault.runtime.knowledge import (
     compose_project_draft as _compose_project_draft,
 )
@@ -204,3 +211,54 @@ def test_work_title_canary_is_inert_at_apply_and_export(tmp_path: Path) -> None:
         assert "](http://beacon.example" not in content
         assert "`http://beacon.example/work.png`" in content
         assert "`http://beacon.example/bare`" in content
+
+
+def test_composed_draft_headings_and_outline_reasoning_render_fenced_fragments_inert(
+    tmp_path: Path,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas", "config")
+    init_git(vault, "content-security@example.invalid", "Content Security")
+    outline_reasoning = '```\n<img src="https://evil.example/outline-reasoning">\n```'
+    write_checked_concept(
+        vault,
+        "projects/fenced/project.md",
+        "type: project\ncheck_status: checked\ntitle: |\n"
+        "  ```\n"
+        '  <img src="https://evil.example/project-title">\n'
+        "  ```\n",
+        "project",
+    )
+    write_checked_concept(
+        vault,
+        "notes/fenced.md",
+        "type: note\ncheck_status: checked\n"
+        "title: |\n"
+        "  ```\n"
+        '  <img src="https://evil.example/member-title">\n'
+        "  ```\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="A checked note body.",
+    )
+    outline = vault / "projects/fenced/outline.md"
+    outline.parent.mkdir(parents=True, exist_ok=True)
+    outline.write_text("- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — selected\n", encoding="utf-8")
+    call_with_context(_compose_project_draft, vault, "fenced", machine="draft-machine")
+
+    draft = (vault / "projects/fenced/draft.md").read_text(encoding="utf-8")
+    outline_text = _outline_text(
+        [{"id": "01ARZ3NDEKTSV4RRFFQ69G5FA1", "reasoning": outline_reasoning}]
+    )
+    for markdown in (draft, outline_text):
+        rendered = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in rendered

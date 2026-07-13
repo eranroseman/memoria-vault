@@ -30,6 +30,11 @@ def _code_span(value: str) -> str:
     return f"{delimiter}{padding}{value}{padding}{delimiter}"
 
 
+def markdown_code_span(value: str) -> str:
+    """Return a code span that cannot be closed by *value*."""
+    return _code_span(value)
+
+
 def _replace_inline_link(match: re.Match[str]) -> str:
     label = match.group(2)
     destination = match.group(3).strip()
@@ -71,6 +76,16 @@ def _neutralize_plain_text(text: str) -> str:
     )
     text = _HTML_OPEN_RE.sub("&lt;", text)
     return _EXTERNAL_URL_RE.sub(_replace_external_url, text)
+
+
+def neutralize_untrusted_markdown_fragment(fragment: str) -> str:
+    """Make untrusted Markdown safe for interpolation into Markdown scaffolding.
+
+    Unlike :func:`neutralize_untrusted_markdown`, this transform treats
+    user-supplied backticks as text. Call it for a fragment that a writer will
+    place inside headings, templates, or its own code delimiters.
+    """
+    return _neutralize_plain_text(fragment.replace("`", "&#96;"))
 
 
 def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:

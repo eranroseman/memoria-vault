@@ -18,7 +18,10 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.content_security import (
+    neutralize_untrusted_markdown,
+    neutralize_untrusted_markdown_fragment,
+)
 from memoria_vault.runtime.operations import (
     load_operation_policy,
     required_promotion_checks,
@@ -233,7 +236,7 @@ def emit_note_candidates(
     for row in rows:
         title = _required_text(row, "title")
         body = _required_text(row, "body")
-        safe_title = neutralize_untrusted_markdown(title)
+        safe_title = neutralize_untrusted_markdown_fragment(title)
         safe_body = neutralize_untrusted_markdown(body)
         note_rel = _unique_note_rel(vault, title)
         require_policy_path(policy, note_rel)
@@ -1970,7 +1973,7 @@ def compose_project_draft(
         "generated_by: compose-project-draft",
         "---",
         "",
-        f"# {neutralize_untrusted_markdown(str(project.get('title') or Path(project_rel).stem))}",
+        f"# {neutralize_untrusted_markdown_fragment(str(project.get('title') or Path(project_rel).stem))}",
         "",
         f"Slice includes {len(members)} checked notes.",
         "",
@@ -1994,7 +1997,7 @@ def compose_project_draft(
         evidence_markers.append(marker)
         block_anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
         excerpt = neutralize_untrusted_markdown(_draft_note_excerpt(body, per_node_budget))
-        member_title = neutralize_untrusted_markdown(str(member["title"]))
+        member_title = neutralize_untrusted_markdown_fragment(str(member["title"]))
         lines.extend(
             [
                 f"## {member_title}",
@@ -3076,7 +3079,9 @@ def _outline_text(members: Iterable[dict[str, Any]]) -> str:
     lines = []
     for member in members:
         note_id = str(member["id"]).strip()
-        reasoning = neutralize_untrusted_markdown(str(member.get("reasoning") or "").strip())
+        reasoning = neutralize_untrusted_markdown_fragment(
+            str(member.get("reasoning") or "").strip()
+        )
         lines.append(f"- {note_id} — {reasoning}")
     return "\n".join(lines) + ("\n" if lines else "")
 

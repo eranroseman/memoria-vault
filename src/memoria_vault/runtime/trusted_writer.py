@@ -17,7 +17,10 @@ from typing import Any
 import yaml
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.content_security import (
+    markdown_code_span,
+    neutralize_untrusted_markdown_fragment,
+)
 from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
@@ -297,16 +300,20 @@ def _write_edge_candidate_prompts(vault: Path, output_rels: set[str]) -> list[st
             target = match.group(2).strip()
             if edge_type not in ARGUMENT_EDGE_TYPES or not target:
                 continue
-            safe_title = neutralize_untrusted_markdown(title)
-            safe_target = neutralize_untrusted_markdown(target)
+            safe_title = neutralize_untrusted_markdown_fragment(title)
+            safe_target = neutralize_untrusted_markdown_fragment(target)
             # ponytail: unchecked prompt per explicit edge; add DB edge rows only with act tuning.
             prompt = write_work_prompt(
                 vault,
                 f"Review extracted {edge_type} link",
-                f"Review `{edge_type}` from `{source_rel}` to `{safe_target}`.",
                 (
-                    f"`{safe_title}` contains explicit typed link "
-                    f"`[[{edge_type}::{safe_target}]]`. "
+                    f"Review {markdown_code_span(edge_type)} from "
+                    f"{markdown_code_span(source_rel)} to "
+                    f"{markdown_code_span(safe_target)}."
+                ),
+                (
+                    f"{markdown_code_span(safe_title)} contains explicit typed link "
+                    f"{markdown_code_span(f'[[{edge_type}::{safe_target}]]')}. "
                     "It is an unchecked candidate; curate it with `memoria link` if correct."
                 ),
                 "edge-extraction",

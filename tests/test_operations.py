@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
+import subprocess
 from copy import deepcopy
 from pathlib import Path
 
@@ -319,6 +321,48 @@ def test_digest_and_hub_apply_neutralize_source_model_and_topic_text(
     assert events[1]["output_hash"] == (
         "sha256:" + hashlib.sha256(raw_digest.encode("utf-8")).hexdigest()
     )
+
+
+def test_digest_and_hub_render_composed_fenced_fragments_inert(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    vault = workspace(tmp_path)
+    source_title = '```\n<img src="https://evil.example/source-title">\n```'
+    model_topic = '```\n<img src="https://evil.example/model-topic">\n```'
+    capture_source(
+        vault,
+        "source-fenced-fragment",
+        source_title,
+        "Third-party description.",
+        "Source content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._run_digest_model",
+        lambda _policy, _runner, _source, _content, _topics, _interviews: (
+            "## Synthesis\n\nModel digest.\n\n## Hub suggestions\n\n- Framing\n"
+        ),
+    )
+
+    result = compile_source_digest(
+        vault,
+        "source-fenced-fragment",
+        [model_topic, "Methods", "Outcomes", "Gaps", "Impact"],
+        machine="digest-machine",
+    )
+
+    for path in [result["digest_path"], *result["hub_paths"]]:
+        rendered = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=(vault / path).read_text(encoding="utf-8"),
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in rendered
 
 
 def test_compile_source_digest_rejects_removed_source_markdown_without_catalog_row(

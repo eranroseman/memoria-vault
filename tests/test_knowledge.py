@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
@@ -200,6 +204,50 @@ def test_emit_note_candidates_neutralizes_every_model_derived_text_field(
         "http://beacon.example/annotation",
     ):
         assert f"`{url}`" in rendered
+
+
+def test_emit_note_candidate_renders_composed_fenced_title_inert(tmp_path: Path) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-fenced-title",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    compile_source_digest(
+        vault,
+        "source-fenced-title",
+        ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+        machine="digest-machine",
+    )
+
+    result = emit_note_candidates(
+        vault,
+        "source-fenced-title",
+        [
+            {
+                "title": '```\n<img src="https://evil.example/candidate-title">\n```',
+                "body": "Candidate body.",
+            }
+        ],
+        machine="note-machine",
+    )
+
+    [note_rel] = result["note_paths"]
+    rendered = subprocess.run(
+        [pandoc, "-f", "commonmark", "-t", "html"],
+        input=(vault / note_rel).read_text(encoding="utf-8"),
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert "<img" not in rendered
 
 
 def test_emit_note_candidates_preserves_pdf_annotation_selector(tmp_path: Path) -> None:

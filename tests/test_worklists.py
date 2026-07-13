@@ -1,5 +1,8 @@
+import shutil
+import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 from memoria_vault.runtime.subsystems.lib import worklists
@@ -73,6 +76,33 @@ def test_emit_worklist_neutralizes_report_derived_text(tmp_path):
         "http://beacon.example/reason.png",
     ):
         assert f"`{url}`" in rendered + prompt
+
+
+def test_emit_worklist_renders_composed_title_and_reference_inert(tmp_path):
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    result = worklists.emit_worklist(
+        tmp_path,
+        "Security review",
+        [
+            {
+                "title": '```\n<img src="https://evil.example/item-title">\n```',
+                "item_ref": 'ref ` <img src="https://evil.example/item-ref"> `',
+            }
+        ],
+    )
+
+    [item] = result["items"]
+    rendered = subprocess.run(
+        [pandoc, "-f", "commonmark", "-t", "html"],
+        input=item.read_text(encoding="utf-8"),
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert "<img" not in rendered
 
 
 def test_emit_worklist_rejects_unknown_decision(tmp_path):

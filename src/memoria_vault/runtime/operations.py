@@ -15,7 +15,10 @@ import yaml
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import read_capability_manifest
-from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.content_security import (
+    neutralize_untrusted_markdown,
+    neutralize_untrusted_markdown_fragment,
+)
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -519,10 +522,10 @@ def compile_source_digest(
         context=context,
     )
 
-    safe_source_title = neutralize_untrusted_markdown(str(source_fm["title"]))
+    safe_source_title = neutralize_untrusted_markdown_fragment(str(source_fm["title"]))
     safe_source_description = neutralize_untrusted_markdown(str(source_fm["description"]))
     safe_digest_text = neutralize_untrusted_markdown(digest_text)
-    safe_topics = [neutralize_untrusted_markdown(topic) for topic in topics]
+    safe_topics = [neutralize_untrusted_markdown_fragment(topic) for topic in topics]
     digest_frontmatter = {
         "type": "digest",
         "title": f"Digest: {safe_source_title}",

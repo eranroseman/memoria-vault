@@ -289,6 +289,38 @@ def test_commit_writer_extracts_typed_edge_candidates_without_mutating_links(
     assert prompts[0].relative_to(vault).as_posix() in committed
 
 
+def test_edge_candidate_prompt_renders_composed_code_span_target_inert(tmp_path: Path) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    content = note_text().replace(
+        "Alpha body.",
+        'Typed [[supports::target ` <img src="https://evil.example/x"> `]].',
+    )
+
+    stage_concept(vault, "notes/alpha.md", content, machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    commit_writer_changes(
+        vault,
+        "trusted write alpha",
+        ["notes/alpha.md"],
+        machine="test-machine",
+    )
+
+    [prompt] = sorted((vault / "inbox").glob("work-prompt-edge-candidate-*.md"))
+    rendered = subprocess.run(
+        [pandoc, "-f", "commonmark", "-t", "html"],
+        input=prompt.read_text(encoding="utf-8"),
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert "<img" not in rendered
+
+
 def test_edge_candidate_prompt_neutralizes_code_owned_note_title(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     init_git(vault, "writer@example.invalid", "Trusted Writer")
