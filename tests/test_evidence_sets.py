@@ -77,6 +77,7 @@ def test_rebuild_evidence_sets_derives_rows_from_markers(tmp_path: Path) -> None
         "state": "complete",
         "review_required": False,
         "run_id": "compose-1",
+        "block_text_sha256": None,
     }
     assert rows["ev-22222222"]["state"] == "evidence-incomplete"
     assert rows["ev-33333333"]["type"] == "multi-hop"

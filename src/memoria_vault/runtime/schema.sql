@@ -336,7 +336,8 @@ CREATE TABLE IF NOT EXISTS evidence_sets (
     ),
     state TEXT NOT NULL CHECK (state IN ('complete', 'evidence-incomplete')),
     review_required INTEGER NOT NULL CHECK (review_required IN (0, 1)),
-    run_id TEXT NOT NULL DEFAULT ''
+    run_id TEXT NOT NULL DEFAULT '',
+    block_text_sha256 TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_evidence_sets_block_ref
     ON evidence_sets(block_ref);
@@ -354,4 +355,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 9;
+PRAGMA user_version = 10;

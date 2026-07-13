@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -2229,9 +2229,10 @@ def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[s
                     type,
                     state,
                     review_required,
-                    run_id
+                    run_id,
+                    block_text_sha256
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     str(row["id"]),
@@ -2241,6 +2242,7 @@ def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[s
                     str(row["state"]),
                     1 if bool(row.get("review_required")) else 0,
                     str(row.get("run_id") or ""),
+                    row.get("block_text_sha256"),
                 ),
             )
     return {"deleted": int(deleted), "inserted": len(rows)}
@@ -2252,7 +2254,8 @@ def evidence_sets(vault: Path) -> list[dict[str, Any]]:
     with connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT id, block_ref, items_json, type, state, review_required, run_id
+            SELECT id, block_ref, items_json, type, state, review_required, run_id,
+                   block_text_sha256
             FROM evidence_sets
             ORDER BY block_ref, id
             """
@@ -2394,6 +2397,7 @@ def _evidence_set_row(row: sqlite3.Row) -> dict[str, Any]:
         "state": row["state"],
         "review_required": bool(row["review_required"]),
         "run_id": row["run_id"],
+        "block_text_sha256": row["block_text_sha256"],
     }
 
 

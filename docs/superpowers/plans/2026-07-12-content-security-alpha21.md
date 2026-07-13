@@ -198,7 +198,7 @@ gh pr create --title "feat(security): neutralize untrusted apply and export cont
 - Consumes: current `SCHEMA_VERSION` (read it first).
 - Produces: `evidence_sets` has a nullable `block_text_sha256 TEXT` column; schema at the next version. Task 6 populates it, Task 7 reads it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """tests/test_mc_hash_binding.py — evidence label bound to block text."""
@@ -215,18 +215,22 @@ def test_evidence_sets_has_block_text_sha256(tmp_path, capsys):
 ```
 Register `"test_mc_hash_binding.py": "runtime"` in `tests/conftest.py`.
 
-- [ ] **Step 2: Run** → FAIL (column absent).
+- [x] **Step 2: Run** → FAIL (column absent).
 
-- [ ] **Step 3: Implement** — in `schema.sql`, add to the `evidence_sets` table (after `run_id`): `block_text_sha256 TEXT`. Read the current `SCHEMA_VERSION` (`rg -n '^SCHEMA_VERSION' state.py`), set both `state.SCHEMA_VERSION` and `schema.sql`'s final `PRAGMA user_version` to `current + 1`.
+- [x] **Step 3: Implement** — in `schema.sql`, add to the `evidence_sets` table (after `run_id`): `block_text_sha256 TEXT`. Read the current `SCHEMA_VERSION` (`rg -n '^SCHEMA_VERSION' state.py`), set both `state.SCHEMA_VERSION` and `schema.sql`'s final `PRAGMA user_version` to `current + 1`.
 
-- [ ] **Step 4: Run** the new test + `tests/test_evidence_sets.py` → PASS (disposable vaults rebuild at the new version).
+- [x] **Step 4: Run** the new test + `tests/test_evidence_sets.py` → PASS (disposable vaults rebuild at the new version).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py tests/test_mc_hash_binding.py tests/conftest.py
 git commit -m "feat(verify): evidence_sets.block_text_sha256 column (schema bump)"
 ```
+
+**TDD evidence:** the new schema test failed with `block_text_sha256` absent, then
+the schema/state/version suite passed: 29 tests across the new binding contract,
+evidence rows, schema v10, package/query assertions, and test-level registration.
 
 ### Task 6: Bind the block-text hash when rebuilding evidence rows
 
