@@ -982,10 +982,18 @@ Add this table row after Failure modes in `docs/reference/system/README.md`:
 | [Backup and recovery](backup-and-recovery.md) |
 ```
 
-- [ ] **Step 5: Re-run tests + gate** — re-run the complete affected suites and
-  `python3 scripts/verify` after the final Windows locking change. The native
-  Windows no-reparse lock smoke is included but skips on non-Windows hosts; a
-  native Windows run or CI check is required before this step can be checked.
+- [x] **Step 5: Re-run tests + gate** — fresh post-hardening verification after
+  rebasing onto `origin/main`:
+
+  - `python3 -m pytest -q tests/test_backup_restore.py` — `99 passed, 1 skipped`;
+  - `python3 -m pytest -q tests/test_cli_doctor_eval.py` — `35 passed`;
+  - `python3 -m pytest -q tests/test_project_knowledge.py tests/test_runtime_state.py`
+    — `27 passed`;
+  - native Windows Python 3.14.3 lock smoke — acquisition and a real
+    locks-directory junction rejection both passed; and
+  - `python3 scripts/verify` — `469 passed, 9 skipped, 521 deselected`; all lint,
+    product gates, offline smoke, syntax, and installer checks passed with
+    `verify: OK`.
 
 - [ ] **Step 6: Commit + PR**
 
