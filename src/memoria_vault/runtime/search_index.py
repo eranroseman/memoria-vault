@@ -19,7 +19,12 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
-from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
+from memoria_vault.runtime.vaultio import (
+    frontmatter_doc,
+    iter_markdown,
+    parse_frontmatter,
+    safe_read,
+)
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
@@ -561,22 +566,9 @@ def _raw_display_name(value: object) -> str:
 
 
 def _generated_doc(path: str, frontmatter: dict[str, Any], body: list[str]) -> dict[str, Any]:
-    text = "\n".join(
-        [
-            "---",
-            *[
-                f"{key}: {json.dumps(value, ensure_ascii=False)}"
-                for key, value in frontmatter.items()
-            ],
-            "---",
-            "",
-            *body,
-            "",
-        ]
-    )
     return {
         "path": normalize_path(path),
-        "text": text,
+        "text": frontmatter_doc(frontmatter, "\n".join([*body, ""])),
         "frontmatter": dict(frontmatter),
     }
 
