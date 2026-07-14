@@ -12,7 +12,7 @@ from memoria_vault.cli import _build_parser, main
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
-from tests.helpers import ROOT, git, mark_file_status
+from tests.helpers import ROOT, git
 
 
 def _assert_request_columns(columns: set[str]) -> None:
@@ -612,79 +612,3 @@ def test_cli_migrate_from_alpha15_imports_current_root_contract(
     assert digest["work_id"] == "source-alpha"
     assert not (workspace / "works/source-alpha/record.md").exists()
     assert "Digest body." in (workspace / "digests/source-alpha.md").read_text(encoding="utf-8")
-
-
-def _write_project_argument_fixture(workspace: Path) -> None:
-    project = workspace / "projects/project-alpha/project.md"
-    project.parent.mkdir(parents=True, exist_ok=True)
-    project.write_text(
-        "---\n"
-        "type: project\n"
-        "check_status: checked\n"
-        "title: Alpha project\n"
-        "thesis: notes/thesis.md\n"
-        "---\n"
-        "Body.\n",
-        encoding="utf-8",
-    )
-    mark_file_status(workspace, "projects/project-alpha/project.md", "project")
-    notes = {
-        "thesis": (
-            "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n"
-            "id: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n"
-        ),
-        "support": (
-            "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
-            "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\n"
-            "links:\n  supports:\n    - notes/thesis.md\n"
-        ),
-        "refute": (
-            "type: note\ncheck_status: checked\ntitle: Refute\nstatus: accepted\n"
-            "id: 01ARZ3NDEKTSV4RRFFQ69G5FA3\n"
-            "links:\n  contradicts:\n    - notes/thesis.md\n"
-        ),
-    }
-    for name, frontmatter in notes.items():
-        note = workspace / f"notes/{name}.md"
-        note.parent.mkdir(parents=True, exist_ok=True)
-        note.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
-        mark_file_status(workspace, f"notes/{name}.md", "note")
-
-
-def _doi_provider_payloads() -> dict[str, object]:
-    return {
-        "crossref": {
-            "message": {
-                "DOI": "10.1000/alpha",
-                "URL": "https://doi.org/10.1000/alpha",
-                "type": "journal-article",
-                "title": ["Alpha Source"],
-                "container-title": ["Journal of Testable Systems"],
-                "author": [{"given": "Ada", "family": "River"}],
-                "issued": {"date-parts": [[2026]]},
-                "relation": {},
-            }
-        },
-        "openalex": {
-            "id": "https://openalex.org/W123",
-            "doi": "https://doi.org/10.1000/alpha",
-            "title": "Alpha Source",
-            "authorships": [
-                {
-                    "author": {
-                        "id": "https://openalex.org/A123",
-                        "display_name": "Ada River",
-                    },
-                    "institutions": [],
-                }
-            ],
-            "primary_location": {"source": {"display_name": "Journal of Testable Systems"}},
-            "topics": [{"display_name": "Research workflows"}],
-        },
-        "unpaywall": {
-            "doi": "10.1000/alpha",
-            "is_oa": True,
-            "oa_status": "gold",
-            "best_oa_location": {"url_for_pdf": "https://example.test/alpha.pdf"},
-        },
-    }
