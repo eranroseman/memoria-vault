@@ -40,7 +40,12 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "scope": "workspace",
         "params": {},
         "http": {"method": "GET", "path": "/openapi.json"},
-        "response_version": ENGINE_READ_API_VERSION,
+        # No response_version: the http handler (http_transport.openapi_schema)
+        # returns a raw OpenAPI 3.1 document for external tooling, not a
+        # Memoria read-API envelope, so it intentionally carries no
+        # api_version key. response_version is optional in this contract
+        # precisely for actions like this one — see actions_by_id() callers
+        # and tests/test_floor_sweep_reads.py for how the absence is handled.
     },
     {
         "id": "surface.schema",
