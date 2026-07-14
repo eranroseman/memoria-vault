@@ -991,11 +991,7 @@ def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
     if proc.returncode:
         detail = proc.stderr.strip() or proc.stdout.strip()
         raise RuntimeError(f"git status failed: {detail}")
-    return [
-        path
-        for status, path in _parse_git_status_porcelain(proc.stdout)
-        if "D" not in status
-    ]
+    return [path for status, path in _parse_git_status_porcelain(proc.stdout) if "D" not in status]
 
 
 def _validate_pi_edit_target(vault: Path, contract: dict[str, Any], target: str) -> None:
