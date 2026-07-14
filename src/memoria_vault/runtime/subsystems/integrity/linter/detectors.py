@@ -21,14 +21,15 @@ import json
 import re
 import sys
 import time
-from dataclasses import dataclass
 from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
+    Finding,
     audit_log_size,
     audit_unpaired_writes,
+    read,
     vault_hash_drift,
 )
 from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter_field_errors
@@ -102,15 +103,6 @@ except Exception:  # noqa: BLE001 -- dependency-free fallback when schemas canno
 SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
 
-@dataclass
-class Finding:
-    detector: str
-    severity: str
-    path: str
-    message: str
-    timestamp: str = ""  # ISO-8601 UTC; stamped per lint pass in run_all()
-
-
 def iter_files(vault: Path):
     """Yield every file under vault, skipping SKIP_DIRS.
 
@@ -134,30 +126,6 @@ def iter_notes(vault: Path):
 
 def relpath(vault: Path, p: Path) -> str:
     return p.relative_to(vault).as_posix()
-
-
-def read(p: Path) -> str:
-    try:
-        return p.read_text(encoding="utf-8")
-    except (UnicodeDecodeError, OSError):
-        return ""
-
-
-_FM_KEY = re.compile(r"^\s*([A-Za-z_][\w-]*)\s*:", re.M)
-
-
-def all_frontmatter_keys(text: str) -> set[str]:
-    """Every field name declared in the frontmatter at *any* nesting depth.
-
-    Unlike parse_frontmatter (top-level only), this captures keys nested under
-    blocks like `_proposed_classification:` -- which is where source and note
-    Concepts keep `topics`, `research_area`, `methodology`, etc."""
-    if not text.startswith("---"):
-        return set()
-    end = text.find("\n---", 3)
-    if end == -1:
-        return set()
-    return set(_FM_KEY.findall(text[3:end]))
 
 
 def orphan_working_files(vault: Path) -> list[Finding]:

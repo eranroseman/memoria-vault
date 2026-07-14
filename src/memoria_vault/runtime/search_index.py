@@ -19,7 +19,12 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
-from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
+from memoria_vault.runtime.vaultio import (
+    frontmatter_doc,
+    iter_markdown,
+    parse_frontmatter,
+    safe_read,
+)
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
@@ -143,59 +148,6 @@ def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
             if _is_searchable_frontmatter(frontmatter, include_stale=include_stale):
                 docs.append(path)
     return sorted(docs)
-
-
-def filter_checked_results(vault: Path, rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Filter search result rows to checked retrieval documents."""
-    vault = Path(vault)
-    out = []
-    for row in rows:
-        rel = search_result_path(row.get("file") or row.get("path") or "", vault)
-        if rel and is_checked_concept(vault, rel):
-            out.append(row)
-    return out
-
-
-def search_result_path(ref: object, vault: Path) -> str:
-    """Resolve a result URI/path to a vault-relative path."""
-    text = str(ref or "")
-    if text.startswith("search://"):
-        parts = text.split("/", 3)
-        return normalize_path(parts[3]) if len(parts) > 3 else ""
-    text = text.split(":", 1)[0].removeprefix("./")
-    path = Path(text)
-    if path.is_absolute():
-        try:
-            return path.resolve().relative_to(Path(vault).resolve()).as_posix()
-        except (OSError, ValueError):
-            return ""
-    return normalize_path(text)
-
-
-def is_checked_concept(vault: Path, relpath: str) -> bool:
-    rel = normalize_path(relpath)
-    if rel.startswith(f"{SEARCH_INPUT_ROOT}/"):
-        rel = rel.removeprefix(f"{SEARCH_INPUT_ROOT}/")
-    if _is_checked_generated_work_document(vault, rel):
-        return True
-    path = Path(vault) / rel
-    if (
-        path.is_file()
-        and is_consumable_checked_file(vault, rel)
-        and _is_searchable_frontmatter(_frontmatter_with_flags(vault, rel, safe_read(path)))
-    ):
-        return True
-    return False
-
-
-def _is_checked_generated_work_document(vault: Path, rel: str) -> bool:
-    if not rel.startswith(("fulltexts/", "graph-neighborhoods/")):
-        return False
-    work_id = _work_id_from_generated_path(rel)
-    if not work_id:
-        return False
-    source = state.catalog_source(vault, work_id)
-    return bool(source and source.get("check_status") == "checked")
 
 
 def answer_query(
@@ -528,17 +480,6 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
     return docs
 
 
-def _work_id_from_generated_path(rel: str) -> str:
-    rel = normalize_path(rel)
-    if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
-        return Path(rel).stem
-    if rel.startswith("fulltexts/"):
-        parts = rel.split("/")
-        if len(parts) == 2 and parts[1].endswith(".md"):
-            return Path(parts[1]).stem
-    return ""
-
-
 def _work_aspect_body(vault: Path, work_id: str) -> list[str]:
     aspects = state.work_aspects(vault, work_id)
     if not aspects:
@@ -625,22 +566,9 @@ def _raw_display_name(value: object) -> str:
 
 
 def _generated_doc(path: str, frontmatter: dict[str, Any], body: list[str]) -> dict[str, Any]:
-    text = "\n".join(
-        [
-            "---",
-            *[
-                f"{key}: {json.dumps(value, ensure_ascii=False)}"
-                for key, value in frontmatter.items()
-            ],
-            "---",
-            "",
-            *body,
-            "",
-        ]
-    )
     return {
         "path": normalize_path(path),
-        "text": text,
+        "text": frontmatter_doc(frontmatter, "\n".join([*body, ""])),
         "frontmatter": dict(frontmatter),
     }
 

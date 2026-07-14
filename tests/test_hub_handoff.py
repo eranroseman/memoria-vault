@@ -5,10 +5,6 @@ from pathlib import Path
 from memoria_vault.runtime.subsystems.integrity.linter import hub_handoff
 
 
-def _vault(tmp_path: Path) -> Path:
-    return tmp_path
-
-
 def _claim(vault: Path, name: str, topics: str = "[sleep]") -> None:
     (vault / "notes").mkdir(parents=True, exist_ok=True)
     (vault / f"notes/{name}.md").write_text(
@@ -18,7 +14,7 @@ def _claim(vault: Path, name: str, topics: str = "[sleep]") -> None:
 
 
 def test_hub_threshold_handoff_creates_map_card_with_staging_paths(tmp_path):
-    v = _vault(tmp_path)
+    v = tmp_path
     for i in range(3):
         _claim(v, f"sleep-{i}")
     rows = hub_handoff.handoff_hub_thresholds(v, threshold=3)
@@ -36,7 +32,7 @@ def test_hub_threshold_handoff_creates_map_card_with_staging_paths(tmp_path):
 
 
 def test_existing_hub_suppresses_handoff(tmp_path):
-    v = _vault(tmp_path)
+    v = tmp_path
     for i in range(3):
         _claim(v, f"sleep-{i}")
     (v / "hubs").mkdir(parents=True)
@@ -49,7 +45,7 @@ def test_existing_hub_suppresses_handoff(tmp_path):
 
 
 def test_handoff_never_allows_canonical_hub_home(tmp_path):
-    v = _vault(tmp_path)
+    v = tmp_path
     for i in range(3):
         _claim(v, f"sleep-{i}")
     rows = hub_handoff.handoff_hub_thresholds(v, threshold=3)

@@ -6,7 +6,7 @@ A high-cardinality report becomes many worklist projection notes under
 The PI works the batch by editing each row's `decision` field.
 
 Usage:
-  python3 worklists.py emit --vault VAULT --report report.json --title "Batch title"
+  python3 worklists.py --vault VAULT --report report.json --title "Batch title"
 """
 
 from __future__ import annotations
@@ -158,28 +158,23 @@ def emit_report(
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Emit batch worklists")
-    sub = parser.add_subparsers(dest="cmd")
-    emit = sub.add_parser("emit")
-    emit.add_argument("--vault", required=True)
-    emit.add_argument("--report", required=True)
-    emit.add_argument("--title", default="")
-    emit.add_argument("--workflow", default="screen")
+    parser.add_argument("--vault", required=True)
+    parser.add_argument("--report", required=True)
+    parser.add_argument("--title", default="")
+    parser.add_argument("--workflow", default="screen")
     args = parser.parse_args(argv)
-    if args.cmd == "emit":
-        result = emit_report(Path(args.vault), Path(args.report), args.title, args.workflow)
-        print(
-            json.dumps(
-                {
-                    "worklist": result["worklist"],
-                    "items": [str(p) for p in result["items"]],
-                    "prompt": str(result["prompt"]) if result["prompt"] else None,
-                },
-                indent=2,
-            )
+    result = emit_report(Path(args.vault), Path(args.report), args.title, args.workflow)
+    print(
+        json.dumps(
+            {
+                "worklist": result["worklist"],
+                "items": [str(p) for p in result["items"]],
+                "prompt": str(result["prompt"]) if result["prompt"] else None,
+            },
+            indent=2,
         )
-        return 0
-    parser.print_help()
-    return 2
+    )
+    return 0
 
 
 if __name__ == "__main__":

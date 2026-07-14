@@ -102,29 +102,8 @@ def build_resolver(notes: dict[str, Note]) -> dict[str, str]:
     return resolver
 
 
-def relation_values(fm: dict[str, Any], relation: str) -> list[Any]:
-    links = fm.get("links")
-    if isinstance(links, dict):
-        value = links.get(relation, [])
-        return value if isinstance(value, list) else [value]
-    return []
-
-
 def build_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
-    edges: list[Edge] = []
-    for source, note in notes.items():
-        for relation in RELATIONS:
-            for raw in relation_values(note.frontmatter, relation):
-                normalized = normalize_target(raw)
-                if normalized is None:
-                    continue
-                target_raw, addressed = normalized
-                target = resolver.get(target_raw)
-                if target and target != source:
-                    edges.append(
-                        Edge(source=source, target=target, relation=relation, addressed=addressed)
-                    )
-    return edges
+    return [edge for edge in build_descriptive_edges(notes, resolver) if edge.relation in RELATIONS]
 
 
 def build_descriptive_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:

@@ -348,9 +348,6 @@ def main() -> None:
         help="scan catalog DOIs; write Inbox alerts for retracted works",
     )
     ap.add_argument("--vault", type=Path, help="vault root (for --sweep)")
-    ap.add_argument(
-        "--offline", action="store_true", default=True, help="local RW CSV only — the cron default"
-    )
     args = ap.parse_args()
     if args.refresh:
         sys.exit(0 if refresh_rw() >= 0 else 1)
@@ -360,7 +357,7 @@ def main() -> None:
     if args.sweep:
         if not args.vault:
             ap.error("--sweep needs --vault")
-        print(json.dumps(sweep(args.vault, offline=args.offline)))
+        print(json.dumps(sweep(args.vault, offline=True)))
         return
     ap.error("pass --refresh, --doi <doi>, or --sweep --vault <path>")
 

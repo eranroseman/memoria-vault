@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import UTC
 from pathlib import Path
 
+from memoria_vault.runtime.time import parse_iso
+
 
 @dataclass
 class Finding:
@@ -58,9 +60,8 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
     now = datetime.now(UTC)
     out = []
     for (path, request_id), e in sorted(pending.items()):
-        try:
-            ts = datetime.fromisoformat(str(e.get("timestamp", "")).replace("Z", "+00:00"))
-        except ValueError:
+        ts = parse_iso(e.get("timestamp", ""))
+        if ts is None:
             continue
         age_h = (now - ts).total_seconds() / 3600
         if age_h > max_age_h:

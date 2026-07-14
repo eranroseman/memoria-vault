@@ -802,19 +802,7 @@ def _install_restore_stage(
             raise ValueError(
                 f"restored journal failed after provenance append: {final_verification['error']}"
             )
-        stamp = {
-            "format": BACKUP_FORMAT,
-            "version": BACKUP_VERSION,
-            "created_at": manifest["created_at"],
-            "target": str(source),
-            "blob_files": manifest["blobs"]["files"],
-            "blob_sha256": manifest["blobs"]["sha256"],
-        }
-        write_text_durable(
-            vault / LAST_BACKUP_REL,
-            json.dumps(stamp, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-            create_parent=True,
-        )
+        _write_local_backup_stamp(vault, source, manifest)
     except BaseException as restore_error:
         try:
             recover_interrupted_restore(vault)

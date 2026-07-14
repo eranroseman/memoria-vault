@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
@@ -31,7 +32,6 @@ CONCEPT_HOMES = {
     "project": "projects",
 }
 VIEW_SPEC_VERSION = "view-spec.v1"
-READ_API_VERSION = "engine-read-api.v1"
 
 
 def read_status(workspace: Path) -> dict[str, Any]:
@@ -712,6 +712,10 @@ def _attention_in_scope(card: dict[str, Any], read_scope: list[str] | None) -> b
     )
 
 
+def _view(kind: str, blocks: list[dict[str, Any]]) -> dict[str, Any]:
+    return {"version": VIEW_SPEC_VERSION, "kind": kind, "blocks": blocks}
+
+
 def _attention_table_view(cards: list[dict[str, Any]], *, worklist: bool) -> dict[str, Any]:
     rows = [
         {
@@ -726,10 +730,9 @@ def _attention_table_view(cards: list[dict[str, Any]], *, worklist: bool) -> dic
         }
         for card in cards
     ]
-    return {
-        "version": VIEW_SPEC_VERSION,
-        "kind": "attention",
-        "blocks": [
+    return _view(
+        "attention",
+        [
             {
                 "id": "attention-table",
                 "kind": "table",
@@ -740,14 +743,13 @@ def _attention_table_view(cards: list[dict[str, Any]], *, worklist: bool) -> dic
                 "rows": rows,
             }
         ],
-    }
+    )
 
 
 def _attention_card_view(card: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "version": VIEW_SPEC_VERSION,
-        "kind": "attention-card",
-        "blocks": [
+    return _view(
+        "attention-card",
+        [
             {
                 "id": safe_filename(card["path"]),
                 "kind": "card",
@@ -764,7 +766,7 @@ def _attention_card_view(card: dict[str, Any]) -> dict[str, Any]:
                 "body_data": card["body_data"],
             }
         ],
-    }
+    )
 
 
 def _slice_table_view(project_slice: dict[str, Any]) -> dict[str, Any]:
@@ -780,10 +782,9 @@ def _slice_table_view(project_slice: dict[str, Any]) -> dict[str, Any]:
         }
         for member in project_slice["members"]
     ]
-    return {
-        "version": VIEW_SPEC_VERSION,
-        "kind": "project-slice",
-        "blocks": [
+    return _view(
+        "project-slice",
+        [
             {
                 "id": safe_filename(project_slice["outline_path"]),
                 "kind": "table",
@@ -794,7 +795,7 @@ def _slice_table_view(project_slice: dict[str, Any]) -> dict[str, Any]:
                 "rows": rows,
             }
         ],
-    }
+    )
 
 
 def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
@@ -812,10 +813,9 @@ def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
         for row in draft["evidence_sets"]
     ]
     ready = bool(rows) and all(row["check_status"] == "checked" for row in rows)
-    return {
-        "version": VIEW_SPEC_VERSION,
-        "kind": "project-draft",
-        "blocks": [
+    return _view(
+        "project-draft",
+        [
             {
                 "id": safe_filename(draft["draft_path"]),
                 "kind": "table",
@@ -826,7 +826,7 @@ def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
                 "rows": rows,
             }
         ],
-    }
+    )
 
 
 def _view_check_status(card: dict[str, Any]) -> str:
