@@ -43,6 +43,9 @@ _KNOWN_BUGS: dict[str, str] = {
     "analyze-claims": _PROMPT_STAGING_GITIGNORE_BUG,
     "compare-and-contrast": _PROMPT_STAGING_GITIGNORE_BUG,
     "extract-claim-stubs": _PROMPT_STAGING_GITIGNORE_BUG,
+    # Task 7b-2: the fifth of the six run_prompt_operation ids named in
+    # #1391 — same root cause, confirmed live (see task-7b2-report.md).
+    "red-team-argument": _PROMPT_STAGING_GITIGNORE_BUG,
 }
 
 OPERATION_PARAMS = [

@@ -890,6 +890,85 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
+    # worker.py:446-467 pops digest_path (required)/candidates (required
+    # list of dicts), dispatching to knowledge.py:emit_note_candidates,
+    # which requires `digest_path` to resolve to an existing *checked*
+    # digest Concept (`_checked_frontmatter`, raising FileNotFoundError when
+    # the path doesn't exist at all). The seed builds no digest by default
+    # (compile-source-digest, the op that creates digests/demo-work.md, is
+    # its own separate registry entry — each sweep case gets its own fresh
+    # `seed_vault()` clone, so that op's own test run never runs here). This
+    # is the same "missing precondition" bucket as compose-project-draft
+    # (Task 7b-1): confirmed live, refused with a FileNotFoundError whose
+    # message is the absolute digest path, ending in "digests/demo-work.md"
+    # (`_digest_rel` normalizes the payload's own "digests/demo-work.md"
+    # unchanged — that suffix is a stable substring regardless of the
+    # per-test tmp_path prefix).
+    "propose-note-candidates": {
+        "payload": {
+            "digest_path": "digests/demo-work.md",
+            "candidates": [{"title": "Floor candidate", "body": "Body text."}],
+        },
+        "expect": "refused",
+        "reason": "digests/demo-work.md",
+    },
+    # worker.py:748-757 has no required payload, dispatching to
+    # search_index.py:rebuild_checked_search_index, which rebuilds the
+    # disposable checked-only BM25 tree/manifest from current checked
+    # Concepts. Confirmed live: "done", 4 documents indexed (the seed's
+    # checked fulltext/notes/project).
+    "rebuild-checked-search-index": {
+        "payload": {},
+        "expect": "done",
+        "creates": [".memoria/index/search/manifest.json"],
+    },
+    # worker.py:56, 424-445 pops work_id (required)/response (required)
+    # plus optional prompt/project_id, dispatching to
+    # operations.py:record_copi_interview_turn. record-copi-interview is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op; same actor-check-fires-first
+    # shape as acknowledge-attention — confirmed live.
+    "record-copi-interview": {
+        "payload": {"work_id": "{work_id}", "response": "Interview response."},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py:936-952, same run_prompt_operation path as check-falsifiability/
+    # analyze-claims/compare-and-contrast/extract-claim-stubs above.
+    # input_text stands in for this op's own "selected_argument" io_schema
+    # input. Confirmed live: identical #1391 gitignored-staging crash —
+    # xfail(strict=True), the fifth of the six prompt-family ops.
+    "red-team-argument": {
+        "payload": {"input_text": "Claim: coffee consumption causally reduces default risk."},
+        "expect": "done",
+    },
+    # worker.py:1077-1085 has no required payload, dispatching to
+    # capabilities.py:write_capability_index, which renders
+    # `.memoria/index/capability-index.json` from the packaged capability
+    # manifests (no vault-content dependency). Confirmed live: "done".
+    "regenerate-capability-index": {
+        "payload": {},
+        "expect": "done",
+        "creates": [".memoria/index/capability-index.json"],
+    },
+    # worker.py:1086-1094 has no required payload, dispatching to
+    # projections.py:write_workspace_indexes, which renders root/bundle
+    # `index.md` files from checked Concepts. Confirmed live: "done",
+    # outputs ["index.md"] (the seed has no sub-bundle indexes).
+    "regenerate-indexes": {
+        "payload": {},
+        "expect": "done",
+        "creates": ["index.md"],
+    },
+    # worker.py:1068-1076 has no required payload, dispatching to
+    # capture.py:write_references_bib, which renders `bibliography.bib` from
+    # checked SQLite catalog rows. Confirmed live: "done" (the seed's own
+    # bibliography.bib is already current, so `changed: false`, but the
+    # projection still exists as asserted).
+    "regenerate-references-bib": {
+        "payload": {},
+        "expect": "done",
+        "creates": ["bibliography.bib"],
+    },
 }
 
 
