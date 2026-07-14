@@ -479,6 +479,27 @@ def observe_pi_edits_explicit_from_status(
     )
 
 
+def _foreign_edit_finding(target: str, prior: str, current: str) -> dict[str, str]:
+    return {
+        "kind": "foreign-edit",
+        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+        "route": "ask",
+        "subject_id": target,
+        "prior_human_sha256": prior,
+        "current_human_sha256": current,
+    }
+
+
+def _restriction_key_removed_finding(target: str, key: str) -> dict[str, str]:
+    return {
+        "kind": "restriction-key-removed",
+        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+        "route": "ask",
+        "subject_id": target,
+        "key": key,
+    }
+
+
 def _observe_pi_edits_from_status(
     vault: Path,
     *,
@@ -520,29 +541,12 @@ def _observe_pi_edits_from_status(
             str(baseline["human_sha256"]) if baseline is not None else ""
         )
         if baseline is not None and expected_hash != current_hash:
-            findings.append(
-                {
-                    "kind": "foreign-edit",
-                    "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                    "route": "ask",
-                    "subject_id": target,
-                    "prior_human_sha256": expected_hash,
-                    "current_human_sha256": current_hash,
-                }
-            )
+            findings.append(_foreign_edit_finding(target, expected_hash, current_hash))
         observed.append(event)
         snapshots[target] = (current_hash, restriction_keys)
         if baseline is not None:
             for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
-                findings.append(
-                    {
-                        "kind": "restriction-key-removed",
-                        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                        "route": "ask",
-                        "subject_id": target,
-                        "key": key,
-                    }
-                )
+                findings.append(_restriction_key_removed_finding(target, key))
     if observed:
         from memoria_vault.runtime.integrity import (
             propagate_scan_demotion,
@@ -942,26 +946,9 @@ def _reconcile_file_baselines(
                     restriction_keys=restriction_keys,
                 )
             continue
-        findings.append(
-            {
-                "kind": "foreign-edit",
-                "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                "route": "ask",
-                "subject_id": target,
-                "prior_human_sha256": expected_hash,
-                "current_human_sha256": current_hash,
-            }
-        )
+        findings.append(_foreign_edit_finding(target, expected_hash, current_hash))
         for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
-            findings.append(
-                {
-                    "kind": "restriction-key-removed",
-                    "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                    "route": "ask",
-                    "subject_id": target,
-                    "key": key,
-                }
-            )
+            findings.append(_restriction_key_removed_finding(target, key))
     return findings
 
 
