@@ -202,7 +202,6 @@ def capture_source(
     workflow: str = "capture_source",
 ) -> dict[str, Any]:
     """Capture one source as a checked SQLite catalog row plus blob payloads."""
-    validate_operation_context(vault, context)
     return stage_catalog_source(
         vault,
         work_id,
