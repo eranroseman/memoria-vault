@@ -12,26 +12,8 @@ import pytest
 import memoria_vault.cli as cli_module
 from memoria_vault.cli import main
 from memoria_vault.runtime import backup, state
+from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import WORKSPACE_SEED, git, patch_pydantic_ai
-
-
-def write_runner_provider_config(
-    workspace: Path, *, local_url: str = "http://model.test/v1"
-) -> None:
-    config = workspace / ".memoria/config/providers.yaml"
-    config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(
-        "\n".join(
-            [
-                "version: 1",
-                "runner_providers:",
-                f"  local: {{url: {local_url}, key_env: null}}",
-                "  gateway: {url: https://gateway.test/v1, key_env: KILOCODE_API_KEY}",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
 
 
 def test_cli_doctor_reports_backup_contract(

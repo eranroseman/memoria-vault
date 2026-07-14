@@ -15,30 +15,12 @@ from memoria_vault.runtime.worker import (
     enqueue_trusted_write,
     run_request,
 )
+from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import mark_file_status
 
 
 def append_journal_event(vault: Path, event: dict, *, machine: str):
     return append_explicit_journal_event(vault, event, actor="operation", machine=machine)
-
-
-def write_runner_provider_config(
-    workspace: Path, *, local_url: str = "http://model.test/v1"
-) -> None:
-    config = workspace / ".memoria/config/providers.yaml"
-    config.parent.mkdir(parents=True, exist_ok=True)
-    config.write_text(
-        "\n".join(
-            [
-                "version: 1",
-                "runner_providers:",
-                f"  local: {{url: {local_url}, key_env: null}}",
-                "  gateway: {url: https://gateway.test/v1, key_env: KILOCODE_API_KEY}",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
 
 
 def test_cli_operation_list_and_run_use_workspace_operation_concepts(
