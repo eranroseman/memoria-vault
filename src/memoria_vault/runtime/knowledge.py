@@ -2130,6 +2130,8 @@ def _verify_project_draft_snapshot(
                 "findings": [{"kind": "missing-draft", "severity": "high"}],
                 "evidence_sets": [],
                 "rebuild": {"deleted": 0, "inserted": 0},
+                "max_findings": 0,
+                "triaged_count": 0,
             },
             None,
         )
