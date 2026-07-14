@@ -5,13 +5,13 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
+    _parse_git_status_porcelain,
     append_explicit_journal_event,
     append_journal_event,
     commit_explicit_writer_changes,
@@ -54,23 +54,17 @@ def render_tracked_projection(vault: Path, projection_path: str) -> str:
 
 
 def check_tracked_projections(vault: Path) -> dict[str, Any]:
-    """Regenerate tracked projections into a temp tree and report drift."""
+    """Regenerate tracked projections and report drift."""
     vault = Path(vault)
     projection_paths = _tracked_projection_paths(vault)
     findings = []
-    with TemporaryDirectory(prefix="memoria-projections-") as tmp:
-        generated_root = Path(tmp)
-        for rel in projection_paths:
-            expected = render_tracked_projection(vault, rel)
-            generated = generated_root / rel
-            generated.parent.mkdir(parents=True, exist_ok=True)
-            generated.write_text(expected, encoding="utf-8")
-
-            actual = vault / rel
-            if not actual.is_file():
-                findings.append({"path": rel, "status": "missing"})
-            elif actual.read_text(encoding="utf-8") != generated.read_text(encoding="utf-8"):
-                findings.append({"path": rel, "status": "stale"})
+    for rel in projection_paths:
+        expected = render_tracked_projection(vault, rel)
+        actual = vault / rel
+        if not actual.is_file():
+            findings.append({"path": rel, "status": "missing"})
+        elif actual.read_text(encoding="utf-8") != expected:
+            findings.append({"path": rel, "status": "stale"})
     return {
         "ok": not findings,
         "paths": projection_paths,
@@ -99,15 +93,11 @@ def changed_tracked_projection_paths(vault: Path) -> list[str]:
     if proc.returncode:
         detail = proc.stderr.strip() or proc.stdout.strip()
         raise RuntimeError(f"git status failed: {detail}")
-    changed: list[str] = []
-    for line in proc.stdout.splitlines():
-        if len(line) < 4:
-            continue
-        path = line[3:]
-        if " -> " in path:
-            path = path.rsplit(" -> ", 1)[1]
-        if _is_tracked_projection_path(path):
-            changed.append(path)
+    changed = [
+        path
+        for _status, path in _parse_git_status_porcelain(proc.stdout)
+        if _is_tracked_projection_path(path)
+    ]
     return sorted(set(changed))
 
 

@@ -353,16 +353,7 @@ def _run_operation_job(
             event,
             context=context,
         )
-    if operation_id in {
-        "integrity-evidence-check",
-        "integrity-claim-quote-check",
-        "integrity-quote-anchor-check",
-        "integrity-prompt-injection-check",
-        "integrity-provenance-checkpoint",
-        "integrity-citation-survival-check",
-        "integrity-contradiction-check",
-        "integrity-link-target-check",
-    }:
+    if operation_id in INTEGRITY_FINDING_OPERATIONS:
         return _run_integrity_finding_operation(vault, operation_id, payload, context)
     if operation_id == "trace-integrity-scan":
         from memoria_vault.runtime.trusted_writer import (
@@ -385,16 +376,7 @@ def _run_operation_job(
                 reason=reason,
                 context=context,
             )
-        commit = ""
-        if events:
-            tracked_targets = [
-                str(event["target_id"])
-                for event in events
-                if _git_path_tracked(vault, str(event["target_id"]))
-            ]
-            commit = commit_writer_changes(
-                vault, "trace integrity scan", tracked_targets, context=context
-            )
+        commit = _commit_tracked_targets(vault, "trace integrity scan", events, context)
         return {"commit": commit, "finding_count": len(events), "findings": events}
     if operation_id == "compile-source-digest":
         from memoria_vault.runtime.operations import compile_source_digest
@@ -866,17 +848,10 @@ def _run_operation_job(
             context=context,
             reason="workspace-scan-generated-projection",
         )
-        projection_commit = ""
+        projection_commit = _commit_tracked_targets(
+            vault, "trace integrity scan", projection_events, context
+        )
         regeneration: dict[str, Any] = {}
-        if projection_events:
-            tracked_targets = [
-                str(event["target_id"])
-                for event in projection_events
-                if _git_path_tracked(vault, str(event["target_id"]))
-            ]
-            projection_commit = commit_writer_changes(
-                vault, "trace integrity scan", tracked_targets, context=context
-            )
         if regeneration_paths:
             regeneration = write_tracked_projections(
                 vault,
@@ -1077,7 +1052,7 @@ def _run_operation_job(
     if operation_id == "regenerate-capability-index":
         from memoria_vault.runtime.capabilities import write_capability_index
 
-        result = write_capability_index(vault, commit=True, context=context)
+        result = write_capability_index(vault, context=context)
         return {
             "commit": result["commit"],
             "changed": result["changed"],
@@ -1391,6 +1366,22 @@ def _git_path_tracked(vault: Path, relpath: str) -> bool:
         capture_output=True,
     )
     return proc.returncode == 0
+
+
+def _commit_tracked_targets(
+    vault: Path,
+    message: str,
+    events: list[dict[str, Any]],
+    context: OperationContext,
+) -> str:
+    if not events:
+        return ""
+    tracked_targets = [
+        str(event["target_id"])
+        for event in events
+        if _git_path_tracked(vault, str(event["target_id"]))
+    ]
+    return commit_writer_changes(vault, message, tracked_targets, context=context)
 
 
 def main(argv: list[str] | None = None) -> int:

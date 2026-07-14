@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from importlib import resources
 from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.policy.audit import sha256_bytes
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -44,7 +44,6 @@ def write_capability_index(
     *,
     context: OperationContext,
     output_path: str = CAPABILITY_INDEX_PATH,
-    commit: bool = False,
 ) -> dict[str, Any]:
     """Write an ignored local cache of the product capability catalog."""
     validate_operation_context(vault, context)
@@ -56,25 +55,22 @@ def write_capability_index(
     if changed:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text, encoding="utf-8")
-    event = None
-    commit_id = ""
-    if commit:
-        event = append_journal_event(
-            vault,
-            {
-                "event": "run",
-                "workflow": "generate_capability_index",
-                "status": "done",
-                "outputs": [normalize_path(output_path)],
-            },
-            context=context,
-        )
-        commit_id = commit_writer_changes(
-            vault,
-            "regenerate capability-index.json",
-            [],
-            context=context,
-        )
+    event = append_journal_event(
+        vault,
+        {
+            "event": "run",
+            "workflow": "generate_capability_index",
+            "status": "done",
+            "outputs": [normalize_path(output_path)],
+        },
+        context=context,
+    )
+    commit_id = commit_writer_changes(
+        vault,
+        "regenerate capability-index.json",
+        [],
+        context=context,
+    )
     return {
         "path": normalize_path(output_path),
         "changed": changed,
@@ -205,4 +201,4 @@ def _capability_id(path: str, frontmatter: dict[str, Any]) -> str:
 
 
 def _sha256_text(text: str) -> str:
-    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return sha256_bytes(text.encode("utf-8"))

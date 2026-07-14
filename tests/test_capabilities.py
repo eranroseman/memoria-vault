@@ -63,6 +63,13 @@ def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
     worker_ids = set(re.findall(r'operation_id == "([^"]+)"', worker))
     for block in re.findall(r"operation_id in \{([^}]+)\}", worker):
         worker_ids.update(re.findall(r'"([^"]+)"', block))
+    # Some checks dispatch through a module-level dict (`operation_id in SOME_DICT`)
+    # instead of a literal set; pull its keys too so the dispatch dict doesn't
+    # have to be spelled out twice just to keep this scan honest.
+    for dict_name in re.findall(r"operation_id in (\w+)", worker):
+        dict_block = re.search(rf"^{dict_name} = \{{(.*?)^\}}", worker, re.M | re.S)
+        if dict_block:
+            worker_ids.update(re.findall(r'"([^"]+)":', dict_block.group(1)))
     catalog = json.loads(render_capability_index())
     catalog_ids = {row["id"] for row in catalog["capabilities"]}
 
@@ -75,7 +82,7 @@ def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
 def test_capability_index_projection_drift_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
-    result = write_capability_index(vault, commit=True, machine="test-machine")
+    result = write_capability_index(vault, machine="test-machine")
 
     assert result["changed"] is True
     assert check_capability_index(vault)

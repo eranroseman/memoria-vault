@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import platform
 import re
@@ -23,7 +22,7 @@ from memoria_vault.runtime.content_security import (
 )
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
-from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
+from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
@@ -303,7 +302,7 @@ def _staged_sha256(vault: Path, target: str) -> str:
     )
     if proc.returncode:
         return ""
-    return "sha256:" + hashlib.sha256(proc.stdout).hexdigest()
+    return sha256_bytes(proc.stdout)
 
 
 def _unstage_path(vault: Path, target: str) -> None:
@@ -480,6 +479,27 @@ def observe_pi_edits_explicit_from_status(
     )
 
 
+def _foreign_edit_finding(target: str, prior: str, current: str) -> dict[str, str]:
+    return {
+        "kind": "foreign-edit",
+        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+        "route": "ask",
+        "subject_id": target,
+        "prior_human_sha256": prior,
+        "current_human_sha256": current,
+    }
+
+
+def _restriction_key_removed_finding(target: str, key: str) -> dict[str, str]:
+    return {
+        "kind": "restriction-key-removed",
+        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+        "route": "ask",
+        "subject_id": target,
+        "key": key,
+    }
+
+
 def _observe_pi_edits_from_status(
     vault: Path,
     *,
@@ -521,29 +541,12 @@ def _observe_pi_edits_from_status(
             str(baseline["human_sha256"]) if baseline is not None else ""
         )
         if baseline is not None and expected_hash != current_hash:
-            findings.append(
-                {
-                    "kind": "foreign-edit",
-                    "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                    "route": "ask",
-                    "subject_id": target,
-                    "prior_human_sha256": expected_hash,
-                    "current_human_sha256": current_hash,
-                }
-            )
+            findings.append(_foreign_edit_finding(target, expected_hash, current_hash))
         observed.append(event)
         snapshots[target] = (current_hash, restriction_keys)
         if baseline is not None:
             for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
-                findings.append(
-                    {
-                        "kind": "restriction-key-removed",
-                        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                        "route": "ask",
-                        "subject_id": target,
-                        "key": key,
-                    }
-                )
+                findings.append(_restriction_key_removed_finding(target, key))
     if observed:
         from memoria_vault.runtime.integrity import (
             propagate_scan_demotion,
@@ -943,26 +946,9 @@ def _reconcile_file_baselines(
                     restriction_keys=restriction_keys,
                 )
             continue
-        findings.append(
-            {
-                "kind": "foreign-edit",
-                "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                "route": "ask",
-                "subject_id": target,
-                "prior_human_sha256": expected_hash,
-                "current_human_sha256": current_hash,
-            }
-        )
+        findings.append(_foreign_edit_finding(target, expected_hash, current_hash))
         for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
-            findings.append(
-                {
-                    "kind": "restriction-key-removed",
-                    "event": EVENT_OBSERVED_EXTERNAL_EDIT,
-                    "route": "ask",
-                    "subject_id": target,
-                    "key": key,
-                }
-            )
+            findings.append(_restriction_key_removed_finding(target, key))
     return findings
 
 
@@ -974,7 +960,21 @@ def _file_baseline_snapshot(
     data = (vault / target).read_bytes()
     frontmatter, _body = split_frontmatter(data.decode("utf-8"))
     _validate_concept(contract, target, frontmatter, strict_writer=False)
-    return "sha256:" + hashlib.sha256(data).hexdigest(), _restriction_keys(frontmatter)
+    return sha256_bytes(data), _restriction_keys(frontmatter)
+
+
+def _parse_git_status_porcelain(output: str) -> list[tuple[str, str]]:
+    """Parse `git status --porcelain` lines into (status_code, path) pairs."""
+    parsed: list[tuple[str, str]] = []
+    for line in output.splitlines():
+        if len(line) < 4:
+            continue
+        status = line[:2]
+        path = line[3:]
+        if " -> " in path:
+            path = path.rsplit(" -> ", 1)[1]
+        parsed.append((status, path))
+    return parsed
 
 
 def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
@@ -991,15 +991,7 @@ def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
     if proc.returncode:
         detail = proc.stderr.strip() or proc.stdout.strip()
         raise RuntimeError(f"git status failed: {detail}")
-    paths: list[str] = []
-    for line in proc.stdout.splitlines():
-        if len(line) < 4 or "D" in line[:2]:
-            continue
-        path = line[3:]
-        if " -> " in path:
-            path = path.rsplit(" -> ", 1)[1]
-        paths.append(path)
-    return paths
+    return [path for status, path in _parse_git_status_porcelain(proc.stdout) if "D" not in status]
 
 
 def _validate_pi_edit_target(vault: Path, contract: dict[str, Any], target: str) -> None:
@@ -1061,7 +1053,7 @@ def _write_checked(
             frontmatter.pop(field, None)
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
-    output_sha256 = "sha256:" + hashlib.sha256(payload_text.encode("utf-8")).hexdigest()
+    output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
     events = []
     for check in promotion_checks:
         event = {
@@ -1222,9 +1214,7 @@ def _head_sha256(vault: Path, target: str) -> str:
     )
     if proc.returncode:
         return EMPTY_SHA256
-    import hashlib
-
-    return "sha256:" + hashlib.sha256(proc.stdout).hexdigest()
+    return sha256_bytes(proc.stdout)
 
 
 def _unique_quarantine_path(path: Path) -> Path:
