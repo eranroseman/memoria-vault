@@ -57,6 +57,16 @@ def operation_context(
     return OperationContext(actor, run_id, request_id, operation_id, machine)
 
 
+def _assert_request_columns(columns: set[str]) -> None:
+    assert {
+        "input_refs_json",
+        "output_intents_json",
+        "primary_target",
+        "precondition_hashes_json",
+    } <= columns
+    assert {"trigger_type", "target_path", "target_hash"}.isdisjoint(columns)
+
+
 def call_with_context(function: Any, vault: Path, *args: Any, **kwargs: Any) -> Any:
     """Call a context-required request seam from a direct-call unit test."""
     actor = str(kwargs.pop("actor", "operation"))
