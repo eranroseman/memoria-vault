@@ -121,60 +121,43 @@ def _schema_claim_errors(claim: dict[str, Any], live: dict[str, Any], type_name:
     return errors
 
 
+def _map_section_errors(
+    claim: dict[str, Any],
+    live: dict[str, Any],
+    type_name: str,
+    section: str,
+    label: str,
+    normalize: Any = lambda v: v,
+) -> list[str]:
+    documented = claim.get(section) or {}
+    live_map = live.get(section) or {}
+    if not isinstance(documented, dict):
+        return [f"{type_name}.{section}: documented value is not a map"]
+    if not isinstance(live_map, dict):
+        live_map = {}
+    errors = []
+    for key, value in documented.items():
+        if key not in live_map:
+            errors.append(f"{type_name}.{section}.{key}: documented {label} is not live")
+        elif normalize(live_map[key]) != normalize(value):
+            errors.append(
+                f"{type_name}.{section}.{key}: documented {value!r} != live {live_map[key]!r}"
+            )
+    return errors
+
+
 def _field_map_errors(
     claim: dict[str, Any], live: dict[str, Any], type_name: str, section: str
 ) -> list[str]:
-    documented = claim.get(section) or {}
-    live_fields = live.get(section) or {}
-    errors = []
-    if not isinstance(documented, dict):
-        return [f"{type_name}.{section}: documented value is not a map"]
-    if not isinstance(live_fields, dict):
-        live_fields = {}
-    for field, kind in documented.items():
-        if field not in live_fields:
-            errors.append(f"{type_name}.{section}.{field}: documented field is not live")
-        elif live_fields[field] != kind:
-            errors.append(
-                f"{type_name}.{section}.{field}: documented {kind!r} != live {live_fields[field]!r}"
-            )
-    return errors
+    return _map_section_errors(claim, live, type_name, section, "field")
 
 
 def _enum_errors(claim: dict[str, Any], live: dict[str, Any], type_name: str) -> list[str]:
-    documented = claim.get("enums") or {}
-    live_enums = live.get("enums") or {}
-    errors = []
-    if not isinstance(documented, dict):
-        return [f"{type_name}.enums: documented value is not a map"]
-    if not isinstance(live_enums, dict):
-        live_enums = {}
-    for enum, values in documented.items():
-        if enum not in live_enums:
-            errors.append(f"{type_name}.enums.{enum}: documented enum is not live")
-        elif list(live_enums[enum]) != list(values):
-            errors.append(
-                f"{type_name}.enums.{enum}: documented {values!r} != live {live_enums[enum]!r}"
-            )
-    return errors
+    return _map_section_errors(claim, live, type_name, "enums", "enum", normalize=list)
 
 
 def _required_when_errors(claim: dict[str, Any], live: dict[str, Any], type_name: str) -> list[str]:
-    documented = claim.get("required_when") or {}
-    live_rules = live.get("required_when") or {}
-    errors = []
-    if not isinstance(documented, dict):
-        return [f"{type_name}.required_when: documented value is not a map"]
-    if not isinstance(live_rules, dict):
-        live_rules = {}
-    for field, rule in documented.items():
-        if field not in live_rules:
-            errors.append(f"{type_name}.required_when.{field}: documented rule is not live")
-        elif live_rules[field] != rule:
-            errors.append(
-                f"{type_name}.required_when.{field}: documented {rule!r} != live {live_rules[field]!r}"
-            )
-    return errors
+    return _map_section_errors(claim, live, type_name, "required_when", "rule")
 
 
 def _list_subset_errors(
