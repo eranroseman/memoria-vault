@@ -1052,7 +1052,7 @@ def _run_operation_job(
     if operation_id == "regenerate-capability-index":
         from memoria_vault.runtime.capabilities import write_capability_index
 
-        result = write_capability_index(vault, commit=True, context=context)
+        result = write_capability_index(vault, context=context)
         return {
             "commit": result["commit"],
             "changed": result["changed"],

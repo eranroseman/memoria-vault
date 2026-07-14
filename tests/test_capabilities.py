@@ -75,7 +75,7 @@ def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
 def test_capability_index_projection_drift_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
-    result = write_capability_index(vault, commit=True, machine="test-machine")
+    result = write_capability_index(vault, machine="test-machine")
 
     assert result["changed"] is True
     assert check_capability_index(vault)
