@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from importlib import resources
 from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.policy.audit import sha256_bytes
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -201,4 +201,4 @@ def _capability_id(path: str, frontmatter: dict[str, Any]) -> str:
 
 
 def _sha256_text(text: str) -> str:
-    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return sha256_bytes(text.encode("utf-8"))

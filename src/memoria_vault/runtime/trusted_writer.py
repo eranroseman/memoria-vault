@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import platform
 import re
@@ -23,7 +22,7 @@ from memoria_vault.runtime.content_security import (
 )
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
-from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
+from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
@@ -303,7 +302,7 @@ def _staged_sha256(vault: Path, target: str) -> str:
     )
     if proc.returncode:
         return ""
-    return "sha256:" + hashlib.sha256(proc.stdout).hexdigest()
+    return sha256_bytes(proc.stdout)
 
 
 def _unstage_path(vault: Path, target: str) -> None:
@@ -974,7 +973,7 @@ def _file_baseline_snapshot(
     data = (vault / target).read_bytes()
     frontmatter, _body = split_frontmatter(data.decode("utf-8"))
     _validate_concept(contract, target, frontmatter, strict_writer=False)
-    return "sha256:" + hashlib.sha256(data).hexdigest(), _restriction_keys(frontmatter)
+    return sha256_bytes(data), _restriction_keys(frontmatter)
 
 
 def _parse_git_status_porcelain(output: str) -> list[tuple[str, str]]:
@@ -1071,7 +1070,7 @@ def _write_checked(
             frontmatter.pop(field, None)
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
-    output_sha256 = "sha256:" + hashlib.sha256(payload_text.encode("utf-8")).hexdigest()
+    output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
     events = []
     for check in promotion_checks:
         event = {
@@ -1232,9 +1231,7 @@ def _head_sha256(vault: Path, target: str) -> str:
     )
     if proc.returncode:
         return EMPTY_SHA256
-    import hashlib
-
-    return "sha256:" + hashlib.sha256(proc.stdout).hexdigest()
+    return sha256_bytes(proc.stdout)
 
 
 def _unique_quarantine_path(path: Path) -> Path:
