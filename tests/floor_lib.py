@@ -303,3 +303,61 @@ def run_mcp(vault: Path, tool: str, arguments: dict) -> dict:
 
     app = make_mcp_app(vault, read_scope=MCP_READ_SCOPE, agent_identity="floor")
     return asyncio.run(app._tool_manager.call_tool(tool, arguments, convert_result=False))
+
+
+def _fill(template, manifest: dict):
+    """Recursively substitute `{manifest_key}` placeholders (str.format) into
+    a CLI argv list, an HTTP (method, path) pair, or an MCP (tool, arguments)
+    pair — shared by the read and write action sweeps (Task 5, Task 6)."""
+    if isinstance(template, str):
+        return template.format(**manifest)
+    if isinstance(template, (list, tuple)):
+        return type(template)(_fill(t, manifest) for t in template)
+    if isinstance(template, dict):
+        return {k: _fill(v, manifest) for k, v in template.items()}
+    return template
+
+
+# Per read action id: {"cli": [argv...] | None, "http": (method, path) | None,
+# "mcp": (tool, arguments) | None}. `None` means the transport genuinely has
+# no binding for the action (Task 7's coverage test enforces this against
+# `surface_contract.actions_by_id()`). `{placeholders}` are manifest keys
+# from `seed_vault`'s returned manifest, filled in by `_fill`.
+#
+# Seeded here: status.read, operations.list, concepts.list, concepts.get,
+# requests.list, attention.list. The remaining read actions (attention.get,
+# exploration.list, journal.get, journal.list, project.draft.read,
+# project.slice.read, requests.get, surface.openapi, surface.schema,
+# work.get) are completed in Task 7.
+ARG_TABLE: dict[str, dict] = {
+    "status.read": {
+        "cli": ["status"],
+        "http": ("GET", "/status"),
+        "mcp": ("status", {}),
+    },
+    "operations.list": {
+        "cli": ["operation", "list"],
+        "http": ("GET", "/operations"),
+        "mcp": ("operations", {}),
+    },
+    "concepts.list": {
+        "cli": ["list", "--type", "note"],
+        "http": ("GET", "/concepts?type=note"),
+        "mcp": ("concepts", {"concept_type": "note"}),
+    },
+    "concepts.get": {
+        "cli": ["show", "{note_claim}"],
+        "http": ("GET", "/concept?target={note_claim}"),
+        "mcp": ("concept", {"target": "{note_claim}"}),
+    },
+    "requests.list": {
+        "cli": ["request", "list"],
+        "http": ("GET", "/requests"),
+        "mcp": ("requests", {}),
+    },
+    "attention.list": {
+        "cli": ["attention", "list"],
+        "http": ("GET", "/attention"),
+        "mcp": ("attention", {}),
+    },
+}
