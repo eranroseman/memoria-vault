@@ -20,33 +20,37 @@ from tests.floor_lib import (
     seed_vault,
 )
 
-READ_ACTIONS = sorted(a for a, d in actions_by_id().items() if d["kind"] == "read")
+ACTIONS_BY_ID = actions_by_id()
+READ_ACTIONS = sorted(a for a, d in ACTIONS_BY_ID.items() if d["kind"] == "read")
 TRANSPORTS = ("cli", "http", "mcp")
 
+
+def _assert_response_envelope(action_id: str, payload: dict) -> None:
+    """ok is always required. api_version is only required when the action's
+    surface_contract entry declares a response_version — actions whose
+    transport response intentionally isn't a Memoria read-API envelope (e.g.
+    surface.openapi's raw OpenAPI document over http) leave response_version
+    unset and carry no api_version key."""
+    assert payload.get("ok") is True
+    expected_version = ACTIONS_BY_ID[action_id].get("response_version")
+    if expected_version is not None:
+        assert payload.get("api_version") == expected_version
+
+
 # Real, pre-existing contract/implementation mismatches uncovered by
-# completing the ARG_TABLE (Task 7a) — not ARG_TABLE binding errors. The
-# surface_contract entry for `surface.openapi` declares
-# `response_version: "engine-read-api.v1"`, but its http handler
-# (`http_transport.openapi_schema`) returns a raw OpenAPI 3.1 document
-# (`{"ok": True, "openapi": "3.1.0", "info": {...}, "paths": {...}}`) with no
-# `api_version` key — unlike every other read action, which goes through
-# `engine_api._read_payload()` and always sets it. This is deliberate on the
-# http side (a valid OpenAPI document has its own `openapi` version field;
-# splicing in an unrelated `api_version` would be odd for tooling consuming
-# `/openapi.json`), but it means the contract's declared response_version is
-# not honored for this one action — a real, narrow inconsistency, not a
-# sweep-harness mistake. `xfail(strict=True)`, following the same "found a
-# real bug, don't fake the assertion, flag if it's ever silently fixed"
-# convention `tests/test_floor_sweep_operations.py` set for
-# `check-falsifiability` (task-6-report.md).
-KNOWN_CONTRACT_GAPS = {
-    ("surface.openapi", "http"): (
-        "surface.openapi's http handler (http_transport.openapi_schema) returns a raw "
-        "OpenAPI document with no api_version key, though its surface_contract entry "
-        "declares response_version=engine-read-api.v1 — see test_floor_sweep_reads.py "
-        "module docstring/comment for the full root cause."
-    ),
-}
+# completing the ARG_TABLE (Task 7a) — not ARG_TABLE binding errors. Empty
+# for now (surface.openapi's response_version/api_version gap, formerly
+# registered here, was fixed by dropping response_version from that action's
+# surface_contract entry — its http handler intentionally returns a raw
+# OpenAPI document, not a Memoria read-API envelope). When the sweep
+# uncovers a genuine contract/implementation gap, register it here as
+# (action_id, transport) -> reason; the test below marks it
+# `xfail(strict=True)`, following the same "found a real bug, don't fake the
+# assertion, flag if it's ever silently fixed" convention
+# `tests/test_floor_sweep_operations.py` set for `check-falsifiability`
+# (task-6-report.md). `strict=True` means an unexpected pass fails the
+# suite, so resolving a registered gap requires removing its entry here.
+KNOWN_CONTRACT_GAPS: dict[tuple[str, str], str] = {}
 
 
 @pytest.fixture(scope="module")
@@ -81,8 +85,7 @@ def test_read_action(vault, action_id: str, transport: str, request: pytest.Fixt
         else:
             tool, arguments = binding
             payload = run_mcp(v, tool, _fill(arguments, manifest))
-    assert payload.get("ok") is True
-    assert payload.get("api_version") == "engine-read-api.v1"
+    _assert_response_envelope(action_id, payload)
     assert_invariants(v)
 
 
@@ -126,6 +129,5 @@ def test_read_action_variant(
         else:
             tool, arguments = binding
             payload = run_mcp(v, tool, _fill(arguments, manifest))
-    assert payload.get("ok") is True
-    assert payload.get("api_version") == "engine-read-api.v1"
+    _assert_response_envelope(action_id, payload)
     assert_invariants(v)
