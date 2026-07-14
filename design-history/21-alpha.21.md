@@ -125,15 +125,16 @@ changes, and the four-type knowledge model and control surfaces are untouched.
 
 - **What:** `scripts/verify` was widened from a contract-only pytest roster to
   also run the `runtime`, `package`, and `floor` levels (only the
-  network-dependent `live` level stays out). CI defers the `runtime` level
-  (`VERIFY_CI` in `verify.yml`): it holds environment-sensitive tests
-  (fsync/filesystem) that pass locally but can fail on CI runners — to be
-  hardened before CI gates them (tracked in #1480). The floor golden-digest
-  determinism bug — date-only fields were not redacted, so the golden digests
-  re-drifted every calendar day — was fixed with a `<DATE>` redaction. **Why:** the widened
-  gate immediately surfaced drifted or stale tests that the contract-only gate
-  had hidden (a schema-version assertion, a stale seed-set assertion), which is
-  exactly the blind spot the widening exists to close.
+  network-dependent `live` level stays out), and CI runs the same roster. The
+  widening surfaced tests the contract-only gate had hidden: a stale
+  schema-version assertion and a stale seed-set assertion (fixed), a
+  golden-digest determinism bug where date-only fields were not redacted so the
+  digests re-drifted every calendar day (fixed with a `<DATE>` redaction), and a
+  backup/restore test whose fsync-failure injection re-fired non-
+  deterministically during recovery cleanup depending on directory iteration
+  order (made one-shot, matching its stated first-move-failure intent). **Why:**
+  a gate that only runs a third of the suite hides exactly this class of drift;
+  finding and fixing it is the point of widening.
 
 ### 6. Deferred scope
 
@@ -142,8 +143,6 @@ changes, and the four-type knowledge model and control surfaces are untouched.
   planning, PI evidence review, onboarding seed corpus, the feedback dashboard
   and full I1 package, deep-work/gate topology, multi-device topology, and raw
   empirical-dataset packaging.
-- **Runtime-level CI gating** waits on hardening the environment-sensitive
-  runtime tests (#1480).
 - **Remote API** — remote bind, CORS, OAuth, cookies, SSE, WebSockets, and
   multi-user service behavior — remains out of scope.
 

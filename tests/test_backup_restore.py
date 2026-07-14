@@ -932,10 +932,22 @@ def test_restore_first_move_fsync_failure_preserves_original_wal(
     stage = tmp_path / f".{vault.name}.restore-stage-fsync-failure"
     stage.mkdir()
     real_fsync_directory = backup._fsync_directory
+    # Fire once, on the first rollback-dir fsync after the database is moved in —
+    # the "first move" failure this test targets. Recovery then rolls back and
+    # cleans up normally; without the one-shot guard the same injection re-fires
+    # during recovery's per-child cleanup fsync whenever the (filesystem-ordered)
+    # `iterdir()` sweep reaches `memoria.sqlite` last, so the marker cleanup is
+    # aborted and the test fails only on filesystems with that iteration order.
+    injected = {"fired": False}
 
     def fail_after_database_move(path: Path) -> None:
         candidate = Path(path)
-        if ".restore-rollback-" in candidate.name and (candidate / "memoria.sqlite").exists():
+        if (
+            not injected["fired"]
+            and ".restore-rollback-" in candidate.name
+            and (candidate / "memoria.sqlite").exists()
+        ):
+            injected["fired"] = True
             raise OSError("injected rollback-directory fsync failure")
         real_fsync_directory(candidate)
 
