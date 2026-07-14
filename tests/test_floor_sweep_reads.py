@@ -10,7 +10,9 @@ import pytest
 from memoria_vault.engine.surface_contract import actions_by_id
 from tests.floor_lib import (
     ARG_TABLE,
+    VARIANTS,
     _fill,
+    _overlay,
     assert_invariants,
     read_only_guard,
     run_cli,
@@ -65,6 +67,51 @@ def test_read_action(vault, action_id: str, transport: str, request: pytest.Fixt
         # test_floor_coverage.py (Task 7), not by an erroring sweep case.
         pytest.skip(f"{action_id} not yet in ARG_TABLE")
     binding = entry.get(transport)
+    if binding is None:
+        pytest.skip(f"{action_id} declares no {transport} binding")
+    if transport == "mcp":
+        pytest.importorskip("mcp")
+        from tests.floor_lib import run_mcp
+    with read_only_guard(v):
+        if transport == "cli":
+            payload = run_cli(v, _fill(binding, manifest))
+        elif transport == "http":
+            method, path = binding
+            payload = run_http(v, method, _fill(path, manifest))
+        else:
+            tool, arguments = binding
+            payload = run_mcp(v, tool, _fill(arguments, manifest))
+    assert payload.get("ok") is True
+    assert payload.get("api_version") == "engine-read-api.v1"
+    assert_invariants(v)
+
+
+# Task 9: (action_id, overlay) pairs flattened out of VARIANTS, one case per
+# hand-picked pairwise combination — see floor_lib.py's VARIANTS docstring
+# for the corrections this table needed vs. the original brief.
+VARIANT_CASES = [
+    (action_id, index, overlay)
+    for action_id, overlays in VARIANTS.items()
+    for index, overlay in enumerate(overlays)
+]
+
+
+@pytest.mark.parametrize("transport", TRANSPORTS)
+@pytest.mark.parametrize(
+    ("action_id", "variant_index", "overlay"),
+    VARIANT_CASES,
+    ids=[f"{action_id}-{index}" for action_id, index, _ in VARIANT_CASES],
+)
+def test_read_action_variant(
+    vault, action_id: str, variant_index: int, overlay: dict, transport: str
+) -> None:
+    """Each VARIANTS overlay x each transport the action declares a binding
+    for — same read-only/ok/api_version contract as test_read_action above,
+    just with `_overlay` splicing the extra params into the CLI flags / HTTP
+    query / MCP arguments before dispatch."""
+    v, manifest = vault
+    entry = ARG_TABLE[action_id]
+    binding = _overlay(entry, transport, overlay)
     if binding is None:
         pytest.skip(f"{action_id} declares no {transport} binding")
     if transport == "mcp":

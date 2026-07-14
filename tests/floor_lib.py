@@ -1248,3 +1248,95 @@ ARG_TABLE: dict[str, dict] = {
         "mcp": ("work", {"work_id": "{work_id}"}),
     },
 }
+
+
+# Task 9: pairwise option variants for a handful of read actions whose
+# params actually branch on value (filters/limits) — small, hand-picked
+# all-pairs combinations, never the full param-value cross product (spec
+# §3.4 forbids it). Each value below was checked against the action's own
+# `actions_by_id()[id]["params"]` and the seeded vault's real data, with two
+# corrections vs the original task-9-brief.md table (see task-9-report.md):
+#   - attention.list's third variant used `"kind": "finding"` in the brief,
+#     which is not a real `attention_kind` anywhere in the product (real
+#     values are "flag"/"candidate"/"gap"/"work-prompt" — grep
+#     `attention_kind` under src/). The seed's one attention card (built by
+#     analyze-gaps, knowledge.py's `_write_full_text_gap_attention`) carries
+#     `attention_kind: "flag"`, `attention_status: "open"` — corrected to
+#     "flag" so the combined status+kind filter actually matches a real row
+#     instead of trivially returning zero results every run.
+#   - journal.list's `limit` is typed `int` in its own params entry
+#     (surface_contract.py) and in the MCP tool's own signature
+#     (mcp_transport.py: `journal(..., limit: int = 50)`); the brief's
+#     string "5" would pass through CLI/HTTP fine (both parse strings) but
+#     is unnecessary risk against MCP's typed arg model, so the value here
+#     is the real `int` 5 instead — correct for all three transports with
+#     no coercion.
+VARIANTS: dict[str, list[dict]] = {
+    "concepts.list": [
+        {"type": "note"},
+        {"type": "work"},
+        {"type": "hub"},
+        {"type": "project"},
+    ],
+    "attention.list": [
+        {"status": "open"},
+        {"status": "resolved"},
+        {"status": "open", "kind": "flag"},
+    ],
+    "requests.list": [{"status": "done"}, {"status": "pending"}],
+    "journal.list": [{"limit": 5}],
+}
+
+# concepts.list's filter param is named `concept_type` in the surface
+# contract and in the MCP tool's own signature (mcp_transport.py:
+# `concepts(concept_type: str = "")`), but its CLI flag and HTTP query key
+# are both spelled "type" (cli.py: `list_cmd.add_argument("--type", ...)`;
+# http_transport.py: `_one(query, "type")`) — ARG_TABLE's own concepts.list
+# bindings already encode that same split (cli ["--type", ...], http
+# "?type=...", mcp {"concept_type": ...}). VARIANTS above spells the
+# overlay key "type" (matching two of three transports); verified live that
+# FastMCP's generated pydantic arg model defaults to `extra="ignore"`, so an
+# un-aliased "type" key would be silently dropped rather than raising —
+# `_overlay`'s mcp branch would then pass the *base* concept_type through
+# unchanged and never actually exercise the overlay. This is the one place
+# `_overlay` needs a key rename; every other VARIANTS key (status/kind/limit)
+# already matches its CLI flag, HTTP query key, and MCP kwarg name exactly.
+_MCP_KEY_ALIASES = {"type": "concept_type"}
+
+
+def _overlay(entry: dict, transport: str, overlay: dict[str, object]):
+    """Splice one VARIANTS overlay dict into `entry`'s binding for `transport`.
+
+    Returns None when the transport has no binding at all for this action
+    (mirrors ARG_TABLE's own None-means-no-binding convention), so the
+    caller can skip that (action, overlay, transport) combination cleanly.
+    """
+    binding = entry.get(transport)
+    if binding is None:
+        return None
+    if transport == "cli":
+        argv = list(binding)
+        for key, value in overlay.items():
+            argv.extend([f"--{key}", str(value)])
+        return argv
+    if transport == "http":
+        method, path = binding
+        base, _, query = path.partition("?")
+        # Parse/rebuild as plain "key=value" pairs, not urllib.parse's
+        # urlencode/parse_qsl: ARG_TABLE's own http paths are unencoded
+        # literals (e.g. "/concept?target={note_claim}"), and re-encoding
+        # would percent-escape any `{placeholder}` braces before `_fill`
+        # runs. Rebuilding through a dict (not a blind "&key=value" append)
+        # also matters on its own: http_transport._one() reads only the
+        # *first* value for a repeated query key, so appending after
+        # concepts.list's own baked-in "?type=note" would silently keep
+        # "note" and never apply the overlay at all.
+        params = dict(pair.split("=", 1) for pair in query.split("&") if pair)
+        params.update({key: str(value) for key, value in overlay.items()})
+        new_query = "&".join(f"{key}={value}" for key, value in params.items())
+        return method, f"{base}?{new_query}" if new_query else base
+    if transport == "mcp":
+        tool, arguments = binding
+        aliased = {_MCP_KEY_ALIASES.get(key, key): value for key, value in overlay.items()}
+        return tool, {**arguments, **aliased}
+    raise ValueError(f"unknown transport: {transport!r}")
