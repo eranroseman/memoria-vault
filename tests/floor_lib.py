@@ -262,7 +262,15 @@ REDACTIONS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?"),
         "<TS>",
     ),
-    (re.compile(r"\b[0-9a-f]{40,64}\b"), "<HASH>"),
+    # Lower bound 32 (not 40): scripts/test_vault/e2e_smoke.py's
+    # `_operation_context` mints a fresh `f"e2e-{uuid.uuid4().hex}"` request
+    # id (32 lowercase hex chars, no dashes) on every seed build, recorded as
+    # the run_id/request_id fields in `.memoria/journal/e2e.jsonl` — a real
+    # cross-build nondeterministic token a cross-process golden-stability
+    # check caught (it is below the sha1/sha256 40-64 floor this pattern
+    # otherwise targets). Verified this range introduces no other matches
+    # anywhere else in the seeded vault's file content.
+    (re.compile(r"\b[0-9a-f]{32,64}\b"), "<HASH>"),
 )
 
 
@@ -309,6 +317,36 @@ def vault_digest(vault: Path) -> dict:
             else []
         )
     return {"files": files, "db": db, "journal_kinds": kinds}
+
+
+GOLDENS_DIR = ROOT / "tests/fixtures/floor/goldens"
+
+
+def assert_golden(name: str, digest: dict) -> None:
+    """Compare `digest` against the checked-in golden for `name`.
+
+    Spec §3.4: invariants are the always-on battery (assert_invariants);
+    goldens are a supplement for exact-state regression detection. Updates
+    are opt-in (`MEMORIA_FLOOR_UPDATE_GOLDENS=1`) and refused in CI so a
+    forgotten env var can never silently rewrite the committed goldens on a
+    CI box.
+    """
+    import os
+
+    path = GOLDENS_DIR / f"{name}.json"
+    rendered = json.dumps(digest, indent=2, sort_keys=True) + "\n"
+    if os.environ.get("MEMORIA_FLOOR_UPDATE_GOLDENS") == "1":
+        assert not os.environ.get("CI"), "golden update refused in CI"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(rendered, encoding="utf-8")
+        return
+    assert path.exists(), (
+        f"missing golden {path.name}; run once with MEMORIA_FLOOR_UPDATE_GOLDENS=1 "
+        "and review the diff"
+    )
+    assert path.read_text(encoding="utf-8") == rendered, (
+        f"golden drift for {name}; review with git diff after MEMORIA_FLOOR_UPDATE_GOLDENS=1"
+    )
 
 
 def assert_invariants(vault: Path) -> None:

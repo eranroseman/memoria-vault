@@ -10,7 +10,14 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime.capabilities import iter_capability_manifests
-from tests.floor_lib import OPERATION_REGISTRY, _fill, assert_invariants, seed_vault, vault_digest
+from tests.floor_lib import (
+    OPERATION_REGISTRY,
+    _fill,
+    assert_golden,
+    assert_invariants,
+    seed_vault,
+    vault_digest,
+)
 
 OPERATION_IDS = sorted(
     m["frontmatter"]["operation_id"] for m in iter_capability_manifests("operation")
@@ -151,3 +158,10 @@ def test_operation(tmp_path: Path, operation_id: str) -> None:
     kinds = vault_digest(vault)["journal_kinds"]
     assert kinds, "operation left no journal event"
     assert_invariants(vault)
+    # Invariants (above) are the always-on correctness battery; the golden
+    # digest is a supplement for exact-state regression detection, generated
+    # only for the done branch (spec §3.4) — refused ops never write vault
+    # state, and xfail ops (the known-bugs table above) crash before reaching
+    # this line at all.
+    if entry["expect"] == "done":
+        assert_golden(operation_id, vault_digest(vault))
