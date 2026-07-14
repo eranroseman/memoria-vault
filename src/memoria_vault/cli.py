@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import uuid
+from collections.abc import Callable
 from contextlib import contextmanager
 from importlib.resources import files
 from pathlib import Path
@@ -1395,36 +1396,40 @@ def _request_attempt_event_exists(
     return row is not None
 
 
-def _cmd_request_answer(args: argparse.Namespace) -> int:
+def _apply_request_mutation(
+    workspace: Path,
+    args: argparse.Namespace,
+    *,
+    command: str,
+    event_name: str,
+    build_payload: Callable[[dict[str, Any]], dict[str, Any]],
+    event_payload_extra: dict[str, Any],
+) -> int:
+    """Shared tail for `_cmd_request_answer`/`_cmd_request_amend`: lock, load the
+    request, mint a successor, idempotently journal the event, then reload and
+    emit. Callers differ only in the successor payload and the journal event.
+    """
     from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
-    _require_pi_request_control(args)
-    workspace = _workspace(args)
-    answers = _key_values(args.answers)
     with _workspace_lock(workspace):
         row = _request_control_row(workspace, args)
         request = state.request_detail(row)
         source_request_id = str(request["request_id"])
-        current_answers = request["args"].get("answers", {})
-        if not isinstance(current_answers, dict):
-            raise ValueError("request answers must be a mapping")
         successor = _request_successor(
             workspace,
             request,
-            payload={**request["args"], "answers": {**current_answers, **answers}},
+            payload=build_payload(request),
             idempotency_key=args.idempotency_key,
-            command="answer",
+            command=command,
         )
-        if not _request_lifecycle_event_exists(
-            workspace, "request_answered", str(successor["job_id"])
-        ):
+        if not _request_lifecycle_event_exists(workspace, event_name, str(successor["job_id"])):
             append_explicit_journal_event(
                 workspace,
                 {
-                    "event": "request_answered",
+                    "event": event_name,
                     "request_id": source_request_id,
                     "successor_request_id": successor["job_id"],
-                    "answers": sorted(answers),
+                    **event_payload_extra,
                 },
                 actor="pi",
                 machine="memoria-cli",
@@ -1440,48 +1445,42 @@ def _cmd_request_answer(args: argparse.Namespace) -> int:
     )
 
 
-def _cmd_request_amend(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+def _cmd_request_answer(args: argparse.Namespace) -> int:
+    _require_pi_request_control(args)
+    workspace = _workspace(args)
+    answers = _key_values(args.answers)
 
+    def build_payload(request: dict[str, Any]) -> dict[str, Any]:
+        current_answers = request["args"].get("answers", {})
+        if not isinstance(current_answers, dict):
+            raise ValueError("request answers must be a mapping")
+        return {**request["args"], "answers": {**current_answers, **answers}}
+
+    return _apply_request_mutation(
+        workspace,
+        args,
+        command="answer",
+        event_name="request_answered",
+        build_payload=build_payload,
+        event_payload_extra={"answers": sorted(answers)},
+    )
+
+
+def _cmd_request_amend(args: argparse.Namespace) -> int:
     _require_pi_request_control(args)
     workspace = _workspace(args)
     updates = _key_values(args.updates)
     scoped = _scope_bearing_request_fields(updates)
     if scoped:
         raise ValueError(f"request amend cannot change scope-bearing field: {', '.join(scoped)}")
-    with _workspace_lock(workspace):
-        row = _request_control_row(workspace, args)
-        request = state.request_detail(row)
-        source_request_id = str(request["request_id"])
-        successor = _request_successor(
-            workspace,
-            request,
-            payload={**request["args"], **updates},
-            idempotency_key=args.idempotency_key,
-            command="amend",
-        )
-        if not _request_lifecycle_event_exists(
-            workspace, "request_amended", str(successor["job_id"])
-        ):
-            append_explicit_journal_event(
-                workspace,
-                {
-                    "event": "request_amended",
-                    "request_id": source_request_id,
-                    "successor_request_id": successor["job_id"],
-                    "updates": sorted(updates),
-                },
-                actor="pi",
-                machine="memoria-cli",
-            )
-    updated = state.request_row(workspace, str(successor["job_id"]))
-    return _emit(
-        {
-            "ok": True,
-            "request": state.request_detail(updated),
-            "supersedes_request_id": source_request_id,
-        },
+
+    return _apply_request_mutation(
+        workspace,
         args,
+        command="amend",
+        event_name="request_amended",
+        build_payload=lambda request: {**request["args"], **updates},
+        event_payload_extra={"updates": sorted(updates)},
     )
 
 
