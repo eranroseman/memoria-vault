@@ -28,7 +28,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 11
+    assert state.SCHEMA_VERSION == 12
     assert {
         "passages",
         "passage_fts",

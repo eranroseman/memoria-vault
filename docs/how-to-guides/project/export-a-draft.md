@@ -47,8 +47,10 @@ memoria project export \
 For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
 `--output`; Memoria fails clearly if Pandoc is not installed. Omit
 `--ready-only` for a review packet before the paper plan is complete. Add
-`--draft` to export the composed `draft.md`; Memoria refuses unclean drafts
-with evidence-incomplete or review-required markers.
+`--draft` to export the composed `draft.md`; Memoria refuses drafts with
+evidence-incomplete, review-required, evidence-text-drift, or
+evidence-text-unbound findings. Repair drift or an unbound claim, then run
+verification again; a PI evidence disposition cannot clear either finding.
 
 **3. Export a manuscript draft to Word with Pandoc when needed.**
 
@@ -96,6 +98,8 @@ Pandoc does not understand `[[wikilink]]` syntax. Convert any body wikilinks to 
 
 - The output file opens cleanly and the bibliography renders at the end
 - All `[@citekey]` citations resolved — none appear as bare `[@...]` in the output
+- Draft verification reports no `evidence-text-drift` or `evidence-text-unbound`
+  finding
 - The export landed where you pointed it; the draft `.md` under
   `projects/<project>/` remains the source of truth
 

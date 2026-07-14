@@ -14,10 +14,30 @@ The durable source is the inline marker on a draft claim:
 %%ev: ev-1234abcd type=single-span state=complete review=false items=source-alpha#^p0001%%
 ```
 
+Only a plain, top-level Markdown paragraph claim can establish a new binding.
+Markers and block anchors inside Markdown code, headings, HTML comments or
+elements, frontmatter, title metadata, reference definitions, fenced Divs,
+multiline inline constructs, tables, line blocks, blockquote, list, or
+definition-list containers cannot mint a new evidence ID. If they repeat an
+existing ID, Memoria retains them as unbound and blocks draft export.
+A duplicate group containing a direct visible marker or an ID already in the
+immutable ledger is unbound and blocks export for every draft that contains it.
+Hidden-only, never-bound occurrences stay nonbinding and cannot mint an ID.
+
+Memoria fails closed when renderer syntax can make a line ambiguous: raw HTML
+elements, raw TeX or math syntax, Pandoc attributes, footnote definitions,
+initial MultiMarkdown-style metadata, abbreviation definitions, and table
+syntax make the whole draft ineligible to mint a new binding. This conservative
+rule also applies when the syntax appears in otherwise literal code. Ordinary
+literal-code delimiters do not taint unrelated visible prose, but controls
+inside code are never direct evidence. These rules avoid giving a hidden
+renderer construct an evidence binding that only visible prose may establish.
+
 The marker owns the ordered `items=` list. SQLite table `evidence_sets` is
-derived state rebuilt from those markers. The exception is the block-text
-binding: the first resolvable appearance of an evidence ID binds that ID to its
-claim text, and later rebuilds preserve the original binding.
+derived active state rebuilt from those markers. A separate `evidence_bindings`
+ledger records the first observed appearance of each evidence ID: its anchored
+claim hash when resolvable, or `null` when it is not. The ledger survives marker
+removal, so a reappearing ID always retains its original binding.
 
 | Field | Meaning |
 | --- | --- |
@@ -26,14 +46,18 @@ claim text, and later rebuilds preserve the original binding.
 | `type` | Derived as `single-span`, `multi-span`, `multi-hop`, `implicit`, or `computed`. |
 | `state` | `complete` only when every item resolves. |
 | `review_required` | `true` for implicit or multi-hop evidence, independent of `state`. |
-| `block_text_sha256` | Mint-once SHA-256 binding to the anchored claim block; nullable only to represent an unbound, fail-closed row. |
+| `block_text_sha256` | The mint-once SHA-256 binding copied from the immutable `evidence_bindings` ledger; nullable only to represent an unbound, fail-closed row. |
 
 The hash covers the Markdown paragraph or block containing the matching
 `^blk-<8hex>` anchor. Before hashing, Memoria removes that anchor and its
-`%%ev: ... %%` control marker, then trims outer whitespace. Rebuilding the
-table never refreshes an existing ID's hash, even when the stored value is
-null. Changing the claim therefore cannot silently bless the edit with a new
-binding.
+`%%ev: ... %%` control marker, then trims outer whitespace. The first observed
+ID records that hash, or `null` if the block cannot resolve. Later rebuilds,
+including removal and reappearance of the marker, never refresh that value.
+Changing the claim therefore cannot silently bless the edit with a new binding.
+
+The ledger establishes only this identity-to-text binding. Markers remain the
+source for active evidence items; making SQLite authoritative for all evidence
+truth is deferred and unshipped.
 
 Source-span refs use stable `work_id`, never citekeys. Citekeys are rendered
 only during export.

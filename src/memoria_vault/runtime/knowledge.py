@@ -2051,8 +2051,6 @@ def compose_project_draft(
 
 def read_project_draft(vault: Path, project_path: str) -> dict[str, Any]:
     """Read a composed project draft and its evidence markers."""
-    from memoria_vault.runtime.evidence import extract_evidence_markers
-
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     _checked_frontmatter(vault, project_rel, "project")
@@ -2067,7 +2065,7 @@ def read_project_draft(vault: Path, project_path: str) -> dict[str, Any]:
             "evidence_sets": [],
         }
     content = draft_path.read_text(encoding="utf-8")
-    markers = extract_evidence_markers(content)
+    markers = state.evidence_markers_from_markdown(content)
     evidence_sets = [
         row for row in state.evidence_sets(vault) if str(row["block_ref"]).startswith(draft_rel)
     ]
@@ -2097,6 +2095,23 @@ def verify_project_draft(
     max_findings: int = 20,
 ) -> dict[str, Any]:
     """Run deterministic structural/evidence checks for a composed project draft."""
+    verification, _draft = _verify_project_draft_snapshot(
+        vault,
+        project_path,
+        context=context,
+        max_findings=max_findings,
+    )
+    return verification
+
+
+def _verify_project_draft_snapshot(
+    vault: Path,
+    project_path: str,
+    *,
+    context: OperationContext,
+    max_findings: int = 20,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Verify a draft and retain the exact content snapshot used for that check."""
     validate_operation_context(vault, context)
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
@@ -2104,27 +2119,52 @@ def verify_project_draft(
     draft_rel = _project_draft_rel(project_rel)
     draft_path = vault / draft_rel
     if not draft_path.is_file():
-        return {
-            "project_path": project_rel,
-            "draft_path": draft_rel,
-            "ready": False,
-            "ok": False,
-            "status": "missing-draft",
-            "missing": ["draft"],
-            "findings": [{"kind": "missing-draft", "severity": "high"}],
-            "evidence_sets": [],
-            "rebuild": {"deleted": 0, "inserted": 0},
-        }
+        return (
+            {
+                "project_path": project_rel,
+                "draft_path": draft_rel,
+                "ready": False,
+                "ok": False,
+                "status": "missing-draft",
+                "missing": ["draft"],
+                "findings": [{"kind": "missing-draft", "severity": "high"}],
+                "evidence_sets": [],
+                "rebuild": {"deleted": 0, "inserted": 0},
+            },
+            None,
+        )
     rebuild = state.rebuild_evidence_sets_from_markers(
         vault,
         run_id=context.run_id,
     )
     draft = read_project_draft(vault, project_rel)
-    findings = []
+    duplicate_ids = {str(evidence_id) for evidence_id in rebuild.get("duplicate_ids", [])}
+    rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}
+    draft_occurrence_ids = {
+        marker.evidence_id
+        for marker, _is_direct in state._evidence_marker_occurrences_from_markdown(draft["content"])
+    }
+    findings = [
+        {
+            "kind": "evidence-id-duplicate",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": str(
+                rows_by_id.get(evidence_id, {}).get(
+                    "block_ref",
+                    f"{draft_rel}#^blk-{evidence_id.removeprefix('ev-')}",
+                )
+            ),
+        }
+        for evidence_id in sorted(duplicate_ids & draft_occurrence_ids)
+    ]
     disposed = _disposed_evidence_ids(vault)
     for row in draft["evidence_sets"]:
         stored_block_hash = row.get("block_text_sha256")
-        current_block_hash = state._block_text_sha256(vault, row["block_ref"])
+        current_block_hash = state._block_text_sha256_from_text(
+            draft["content"],
+            row["block_ref"],
+        )
         if not stored_block_hash:
             findings.append(
                 {
@@ -2181,19 +2221,22 @@ def verify_project_draft(
     max_findings = max(1, int(max_findings))
     findings = findings[:max_findings]
     ok = not findings and bool(draft["evidence_sets"])
-    return {
-        "project_path": project_rel,
-        "draft_path": draft_rel,
-        "ready": ok,
-        "ok": ok,
-        "status": "verified" if ok else "needs-review",
-        "missing": [] if ok else _verification_finding_labels(findings),
-        "findings": findings,
-        "evidence_sets": draft["evidence_sets"],
-        "rebuild": rebuild,
-        "max_findings": max_findings,
-        "triaged_count": total_findings,
-    }
+    return (
+        {
+            "project_path": project_rel,
+            "draft_path": draft_rel,
+            "ready": ok,
+            "ok": ok,
+            "status": "verified" if ok else "needs-review",
+            "missing": [] if ok else _verification_finding_labels(findings),
+            "findings": findings,
+            "evidence_sets": draft["evidence_sets"],
+            "rebuild": rebuild,
+            "max_findings": max_findings,
+            "triaged_count": total_findings,
+        },
+        draft,
+    )
 
 
 def resolve_evidence_review(
@@ -2516,13 +2559,13 @@ def render_project_draft_export_markdown(
     vault: Path, project_path: str, *, context: OperationContext
 ) -> dict[str, Any]:
     """Render a verified project draft with internal evidence markers stripped."""
-    validate_operation_context(vault, context)
     vault = Path(vault)
-    verification = verify_project_draft(vault, project_path, context=context)
+    verification, draft = _verify_project_draft_snapshot(vault, project_path, context=context)
     if not verification["ok"]:
         reasons = ", ".join(_verification_finding_labels(verification["findings"]))
         raise ValueError(f"project draft is not export-ready: {reasons}")
-    draft = read_project_draft(vault, project_path)
+    if draft is None:
+        raise RuntimeError("verified project draft snapshot is missing")
     _frontmatter, body = split_frontmatter(draft["content"])
     content = neutralize_untrusted_markdown(_render_draft_export_body(vault, body).strip() + "\n")
     return {
