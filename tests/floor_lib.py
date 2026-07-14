@@ -273,3 +273,33 @@ def read_only_guard(vault: Path):
     yield
     after = vault_digest(vault)
     assert before == after, "read operation modified vault state"
+
+
+MCP_READ_SCOPE = ["notes", "digests", "hubs", "projects", "catalog", "inbox", "system"]
+
+
+def run_cli(vault: Path, argv: list[str]) -> dict:
+    """Run a CLI command in-process and parse its JSON stdout."""
+    code, out = _run_cli([*argv, "--workspace", str(vault), "--json"])
+    assert code == 0, (argv, code, out[:500])
+    return json.loads(out)
+
+
+def run_http(vault: Path, method: str, path: str, body: dict | None = None) -> dict:
+    """Dispatch an HTTP-transport request in-process; asserts a 2xx status."""
+    from memoria_vault.runtime.http_transport import _dispatch
+
+    body_source = (lambda: body) if body is not None else dict
+    payload, status = _dispatch(vault, method, path, body_source)
+    assert 200 <= int(status) < 300, (method, path, status, payload)
+    return payload
+
+
+def run_mcp(vault: Path, tool: str, arguments: dict) -> dict:
+    """Call an MCP tool in-process via the FastMCP tool manager."""
+    import asyncio
+
+    from memoria_vault.runtime.mcp_transport import make_mcp_app
+
+    app = make_mcp_app(vault, read_scope=MCP_READ_SCOPE, agent_identity="floor")
+    return asyncio.run(app._tool_manager.call_tool(tool, arguments, convert_result=False))
