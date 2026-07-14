@@ -66,29 +66,6 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _assert_gap_contract(gap: dict[str, object], kind: str) -> None:
-    assert gap["kind"] == kind
-    assert gap["gap_type"] == kind
-    assert gap["severity"] in {"high", "medium", "low"}
-    assert gap["impact"] in {0, 1, 2}
-    assert gap["confidence"] in {0, 1, 2}
-    assert gap["actionability"] in {0, 1, 2}
-    assert gap["score"] == gap["impact"] * gap["confidence"] * gap["actionability"]
-    assert isinstance(gap["why"], str) and gap["why"]
-    assert isinstance(gap["next_actions"], list)
-    assert isinstance(gap["candidate_work_ids"], list)
-
-
-def _checked(vault: Path, rel: str, concept_type: str) -> None:
-    state.record_observed_file_edit(
-        vault,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(vault / rel),
-    )
-    state.set_concept_verdict(vault, rel, "checked")
-
-
 def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_source(
@@ -474,16 +451,3 @@ def _vault_root(path: Path) -> Path:
         }:
             return parent.parent
     return path.parent
-
-
-def _valid_paper_plan() -> dict[str, object]:
-    return {
-        "target": "Journal of Testable Systems",
-        "audience": "local-first tool builders",
-        "research_question": "Can Memoria support standalone CLI research?",
-        "central_contribution": "A checked CLI loop can produce usable evidence.",
-        "gap_statement": "Existing PKM loops lack local checked export.",
-        "claim_evidence_map": {"CLI loop works": "notes/support.md"},
-        "figure_plan": {"Figure 1": "CLI loop stages"},
-        "limitations": "Single-corpus dogfood run.",
-    }
