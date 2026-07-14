@@ -30,37 +30,19 @@ OPERATION_IDS = sorted(
 # turns into a loud failure the moment the underlying bug is fixed without
 # this entry being updated.
 #
-# The six run_prompt_operation ids (#1391) and verify-project-draft (#1393)
-# were fixed and no longer have entries here; write-project-slice's bug is a
-# side effect on a DIFFERENT tracked projection. render_project_argument_
-# canvas (knowledge.py:1735-1743) branches on outline.md's mere existence:
-# with no outline.md it renders canvas nodes/edges from
-# analyze_project_argument's full graph traversal; once outline.md exists it
-# renders from the BM25-ranked project slice instead (a different,
-# order-dependent node/edge set). check_tracked_projections
-# (projections.py:56-78) — the floor's own tracked-projection drift
-# detector, asserted after every operation via assert_invariants — calls
-# this same render function as its "live" canonical renderer. So any
-# project whose argument.canvas was already rendered (via
-# render-project-argument-canvas, e.g. during typed-graph seeding) *before*
-# its first write-project-slice run is retroactively flagged "stale" the
-# moment outline.md appears, even though write-project-slice never touches,
-# recommits, or is documented to invalidate the canvas file. Confirmed
-# live: assert_invariants' check_tracked_projections reports
-# `{"path": "projects/package-gate/argument.canvas", "status": "stale"}`
-# immediately after a real write-project-slice run against the seed. Filed
-# as GitHub issue #1394.
-_KNOWN_BUGS: dict[str, str] = {
-    "write-project-slice": (
-        "render_project_argument_canvas (knowledge.py:1735-1743) branches "
-        "on outline.md's mere existence, switching from a full "
-        "argument-graph traversal to a BM25-ranked project-slice ordering; "
-        "check_tracked_projections (projections.py:56-78) uses the same "
-        "renderer as its canonical 'expected' value, so write-project-slice "
-        "retroactively marks any pre-existing argument.canvas 'stale' "
-        "without itself regenerating or recommitting it."
-    ),
-}
+# All four bugs the floor sweep found here have been fixed and no longer
+# have entries: the six run_prompt_operation ids (#1391), verify-project-
+# draft (#1393), and write-project-slice (#1394) — the last of these was a
+# side effect on a DIFFERENT tracked projection, where render_project_
+# argument_canvas (knowledge.py:1735-1743) switched its rendering strategy
+# the moment outline.md existed, and check_tracked_projections used that
+# same render as its canonical "expected" value, so write-project-slice
+# retroactively flagged any pre-existing argument.canvas "stale" without
+# regenerating or recommitting it. Fixed by having write_project_outline
+# (knowledge.py) refresh an already-rendered, owned argument.canvas in the
+# same write whenever writing outline.md would change what the canvas's
+# canonical render evaluates to. See knowledge.py:write_project_outline.
+_KNOWN_BUGS: dict[str, str] = {}
 
 OPERATION_PARAMS = [
     pytest.param(

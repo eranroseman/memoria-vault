@@ -1899,6 +1899,33 @@ def write_project_outline(
     outline_path.parent.mkdir(parents=True, exist_ok=True)
     write_text_durable(outline_path, _outline_text(proposal["members"]))
     project_slice = read_project_slice(vault, str(proposal["project_path"]))
+    # render_project_argument_canvas switches its rendering strategy the
+    # moment outline.md exists (it prefers the outline's slice ordering over
+    # analyze_project_argument's full graph traversal), and
+    # check_tracked_projections treats that same render as the canvas's
+    # canonical value. Writing outline.md therefore changes what an
+    # already-rendered, tracked argument.canvas is expected to contain — keep
+    # it from being retroactively flagged stale by refreshing it here, the
+    # same way workspace scan refreshes any other owned tracked projection
+    # whose authoritative inputs changed. A project with no canvas yet is
+    # left alone: rendering one is still an opt-in step (render-project-
+    # argument-canvas / write-tracked-projections), not a side effect of
+    # writing an outline.
+    outputs = [outline_rel]
+    canvas_rel = _project_canvas_rel(str(proposal["project_path"]))
+    canvas_path = vault / canvas_rel
+    if canvas_path.is_file():
+        rendered_canvas = (
+            json.dumps(
+                render_project_argument_canvas(vault, str(proposal["project_path"])),
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        )
+        if canvas_path.read_text(encoding="utf-8") != rendered_canvas:
+            canvas_path.write_text(rendered_canvas, encoding="utf-8")
+            outputs.append(canvas_rel)
     event = None
     commit_id = ""
     if commit:
@@ -1909,7 +1936,7 @@ def write_project_outline(
                 "workflow": "write-project-slice",
                 "status": "done",
                 "inputs": [proposal["project_path"]],
-                "outputs": [outline_rel],
+                "outputs": outputs,
                 "retrieval_engine": proposal["retrieval_engine"],
                 "query": proposal["query"],
                 "member_count": len(project_slice["members"]),
@@ -1919,7 +1946,7 @@ def write_project_outline(
         commit_id = commit_writer_changes(
             vault,
             "write project slice outline",
-            [outline_rel],
+            outputs,
             context=context,
         )
     return {
