@@ -519,8 +519,7 @@ def _provider_endpoint(config: dict[str, Any], provider: str, doi: str) -> str:
     template = str(spec.get("endpoint_template") or "").strip()
     if not template:
         raise ValueError(f"{PROVIDER_CONFIG} provider {provider} missing endpoint_template")
-    email = os.environ.get(str(spec.get("email_env") or ""), "")
-    endpoint = template.format(doi=parse.quote(doi, safe=""), email=parse.quote(email))
+    endpoint = template.format(doi=parse.quote(doi, safe=""))
     return _append_env_query_params(endpoint, spec)
 
 
