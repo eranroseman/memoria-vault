@@ -53,6 +53,23 @@ def _assert_response_envelope(action_id: str, payload: dict) -> None:
 KNOWN_CONTRACT_GAPS: dict[tuple[str, str], str] = {}
 
 
+def _dispatch_and_check(v, action_id: str, binding, transport: str, manifest) -> None:
+    if transport == "mcp":
+        pytest.importorskip("mcp")
+        from tests.floor_lib import run_mcp
+    with read_only_guard(v):
+        if transport == "cli":
+            payload = run_cli(v, _fill(binding, manifest))
+        elif transport == "http":
+            method, path = binding
+            payload = run_http(v, method, _fill(path, manifest))
+        else:
+            tool, arguments = binding
+            payload = run_mcp(v, tool, _fill(arguments, manifest))
+    _assert_response_envelope(action_id, payload)
+    assert_invariants(v)
+
+
 @pytest.fixture(scope="module")
 def vault(tmp_path_factory: pytest.TempPathFactory):
     v, manifest = seed_vault(tmp_path_factory.mktemp("floor-reads"))
@@ -73,20 +90,7 @@ def test_read_action(vault, action_id: str, transport: str, request: pytest.Fixt
     binding = entry.get(transport)
     if binding is None:
         pytest.skip(f"{action_id} declares no {transport} binding")
-    if transport == "mcp":
-        pytest.importorskip("mcp")
-        from tests.floor_lib import run_mcp
-    with read_only_guard(v):
-        if transport == "cli":
-            payload = run_cli(v, _fill(binding, manifest))
-        elif transport == "http":
-            method, path = binding
-            payload = run_http(v, method, _fill(path, manifest))
-        else:
-            tool, arguments = binding
-            payload = run_mcp(v, tool, _fill(arguments, manifest))
-    _assert_response_envelope(action_id, payload)
-    assert_invariants(v)
+    _dispatch_and_check(v, action_id, binding, transport, manifest)
 
 
 # Task 9: (action_id, overlay) pairs flattened out of VARIANTS, one case per
@@ -117,17 +121,4 @@ def test_read_action_variant(
     binding = _overlay(entry, transport, overlay)
     if binding is None:
         pytest.skip(f"{action_id} declares no {transport} binding")
-    if transport == "mcp":
-        pytest.importorskip("mcp")
-        from tests.floor_lib import run_mcp
-    with read_only_guard(v):
-        if transport == "cli":
-            payload = run_cli(v, _fill(binding, manifest))
-        elif transport == "http":
-            method, path = binding
-            payload = run_http(v, method, _fill(path, manifest))
-        else:
-            tool, arguments = binding
-            payload = run_mcp(v, tool, _fill(arguments, manifest))
-    _assert_response_envelope(action_id, payload)
-    assert_invariants(v)
+    _dispatch_and_check(v, action_id, binding, transport, manifest)
