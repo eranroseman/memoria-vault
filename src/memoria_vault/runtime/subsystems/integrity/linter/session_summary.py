@@ -29,6 +29,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from memoria_vault.runtime.time import parse_iso
 from memoria_vault.runtime.vaultio import write_text_durable
 
 AUDIT_RELPATH = "system/logs/audit.jsonl"
@@ -37,11 +38,8 @@ QUIET_HOURS = 24.0
 
 
 def _parse_ts(value) -> datetime | None:
-    try:
-        ts = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return ts if ts.tzinfo else ts.replace(tzinfo=UTC)
+    ts = parse_iso(value)
+    return ts if ts is None or ts.tzinfo else ts.replace(tzinfo=UTC)
 
 
 def load_sessions(vault: Path) -> dict[str, list[dict]]:
