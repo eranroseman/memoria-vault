@@ -167,7 +167,12 @@ Without `--json`, a successful command prints an allowlisted path, identifier,
 count, or status when one is available. A detail-free success prints `ok`, and
 an opaque result points to `--json`; the generic presenter never prints a
 complete worker request, result payload, or Concept body. Use `--json` for full
-machine-readable operation details.
+machine-readable operation details. When a command fails, the non-`--json`
+presenter prints `FAILED: <detail>` — the engine's error, evidence, or status,
+or `operation failed` when none is available — and the command exits nonzero;
+it never prints a path or success token for an operation the engine did not
+perform. In `--json` mode the payload carries `"ok": false` alongside the same
+failing detail.
 Agent-facing adapters use [HTTP](local-http-transport.md) or
 [MCP](mcp-transport.md), which always record request actor `agent`.
 `workspace scan`, `workspace check`, and scans performed by `serve --watch`

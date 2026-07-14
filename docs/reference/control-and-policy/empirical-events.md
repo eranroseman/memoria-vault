@@ -31,8 +31,9 @@ Every payload uses schema `empirical_event.v1` and must include:
 | `surface` | One of `cli`, `rest`, `mcp`, `obsidian`, `vscode`, or `manual`. |
 
 Optional fields are limited to `workflow`, `decision`, `outcome`,
-`reason_code`, `duration_s`, `project_id`, `item_type`, `item_id`, and
-`variant`. Unknown fields are rejected.
+`reason_code`, `duration_s`, `project_id`, `item_type`, `item_id`,
+`variant`, `loudness`, and `staleness_hit` (a boolean). Unknown fields are
+rejected.
 
 ## Event Types
 
@@ -55,6 +56,20 @@ Optional fields are limited to `workflow`, `decision`, `outcome`,
 | `decision` | `accept`, `reject`, `edit`, `defer`, `override`, `abandon` |
 | `outcome` | `connected`, `queued`, `flushed`, `kept-artifact`, `fallback`, `exported`, `blocked`, `failed`, `stopped` |
 | `reason_code` | `useful`, `not-useful`, `too-slow`, `missing-context`, `wrong-scope`, `duplicate`, `confusing`, `privacy`, `offline`, `external-tool`, `other` |
+| `loudness` | `quiet`, `notice`, `alert`, `block` |
+
+## Server-side events
+
+Two further schemas live in the same schema owner but are handled by the
+runtime itself, not submitted by clients through `empirical-event-record`. A
+server-side event carries no client `session_id` or `surface`; it joins its
+originating request through the journal row's own provenance (the actor and
+`request_id` stamped when the row is appended).
+
+| Schema | Required fields | Source |
+| --- | --- | --- |
+| `disposition.v1` | `decision`, `item_type`, `item_id` | Appended to the journal as an `event: disposition` row when `resolve-attention` resolves a PI attention disposition. `decision` uses the same enum as `empirical_event.v1`; `item_id` here is the vault-relative path of the resolved target, so the opaque-id rule below does not apply to it. |
+| `read-observed.v1` | `workflow`, `staleness_hit` | A validator that ships as schema plumbing for the deferred read-path signal. Nothing emits it yet: a read must not mutate the git-tracked journal, so real emission is deferred. |
 
 ## Privacy Boundary
 
