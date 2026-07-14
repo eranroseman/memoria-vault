@@ -88,9 +88,3 @@ def test_acp_exposed_local_history_tools_are_blocked_or_actor_scoped(tmp_path):
     assert decision.get("decision") == "block", f"gate did not block memory: {decision}"
     assert "denied for actor adapter" in decision.get("reason", "")
     assert evaluate_pre(_payload("mcp_x__memory"), "adapter", vault).get("decision") == "block"
-
-
-if __name__ == "__main__":  # pragma: no cover — manual smoke
-    test_every_denylisted_tool_is_blocked_bare_and_prefixed()
-    test_process_is_blocked_regression()
-    print("policy-gate completeness sweep: OK")
