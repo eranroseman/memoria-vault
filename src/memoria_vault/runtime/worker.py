@@ -353,16 +353,7 @@ def _run_operation_job(
             event,
             context=context,
         )
-    if operation_id in {
-        "integrity-evidence-check",
-        "integrity-claim-quote-check",
-        "integrity-quote-anchor-check",
-        "integrity-prompt-injection-check",
-        "integrity-provenance-checkpoint",
-        "integrity-citation-survival-check",
-        "integrity-contradiction-check",
-        "integrity-link-target-check",
-    }:
+    if operation_id in INTEGRITY_FINDING_OPERATIONS:
         return _run_integrity_finding_operation(vault, operation_id, payload, context)
     if operation_id == "trace-integrity-scan":
         from memoria_vault.runtime.trusted_writer import (
