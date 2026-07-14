@@ -627,7 +627,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:1274-1298 (`_run_capture_url_source_operation`) requires
     # url, then calls `require_allowed_network(policy, url)`
-    # (operations.py:1020) *before* any real fetch. The manifest's own
+    # (operations.py:1016-1020) *before* any real fetch. The manifest's own
     # `allowed_network` is `[http://, https://]` — genuinely unrestrictive,
     # so any real http(s) URL would need live network to succeed or fail,
     # which this offline floor harness cannot depend on (this sandbox
@@ -635,7 +635,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # `ftp://` URL fails the network-prefix check deterministically, with no
     # network call at all — confirmed live: "operation capture-url-source
     # cannot access ftp://example.test/floor-sweep-file"
-    # (operations.py:1013-1017, `_require_network`).
+    # (operations.py:1016-1020, `require_allowed_network`).
     "capture-url-source": {
         "payload": {"url": "ftp://example.test/floor-sweep-file"},
         "expect": "refused",
