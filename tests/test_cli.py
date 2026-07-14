@@ -12,17 +12,7 @@ from memoria_vault.cli import _build_parser, main
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
-from tests.helpers import ROOT, git, mark_file_status
-
-
-def _assert_request_columns(columns: set[str]) -> None:
-    assert {
-        "input_refs_json",
-        "output_intents_json",
-        "primary_target",
-        "precondition_hashes_json",
-    } <= columns
-    assert {"trigger_type", "target_path", "target_hash"}.isdisjoint(columns)
+from tests.helpers import ROOT, _assert_request_columns, git, mark_file_status
 
 
 def write_runner_provider_config(

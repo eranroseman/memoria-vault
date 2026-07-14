@@ -8,17 +8,7 @@ import pytest
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import mark_file_status
-
-
-def _assert_request_columns(columns: set[str]) -> None:
-    assert {
-        "input_refs_json",
-        "output_intents_json",
-        "primary_target",
-        "precondition_hashes_json",
-    } <= columns
-    assert {"trigger_type", "target_path", "target_hash"}.isdisjoint(columns)
+from tests.helpers import _assert_request_columns, mark_file_status
 
 
 def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
