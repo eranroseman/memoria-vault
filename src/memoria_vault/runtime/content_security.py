@@ -296,7 +296,11 @@ def _mask_inline_code_spans(text: str) -> tuple[str, list[tuple[str, str]]]:
             cursor = closing_end
             continue
         output.append(text[plain_start:cursor])
-        token = f"<{marker}{len(spans)}{marker}>"
+        # The token must not contain literal `<`/`>`: the later HTML-tag pass
+        # would otherwise swallow it, dropping the code-span content and leaving
+        # a NUL-containing artifact (#1399). The NUL marker is already unique
+        # (extended above until absent from the input), so it needs no brackets.
+        token = f"{marker}{len(spans)}{marker}"
         output.append(token)
         spans.append((token, text[cursor:closing_end]))
         raw_attribute = _RAW_FORMAT_INLINE_ATTRIBUTE_RE.match(text, closing_end)

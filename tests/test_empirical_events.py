@@ -6,7 +6,11 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.engine import api as engine_api
-from memoria_vault.engine.empirical_events import validate_empirical_event
+from memoria_vault.engine.empirical_events import (
+    validate_disposition_event,
+    validate_empirical_event,
+    validate_read_event,
+)
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
@@ -34,6 +38,79 @@ def _event(**overrides: object) -> dict[str, object]:
     }
     event.update(overrides)
     return event
+
+
+def test_disposition_event_accepts_valid_payload() -> None:
+    event = validate_disposition_event(
+        {"decision": "accept", "item_type": "attention", "item_id": "inbox/attention/x.md"}
+    )
+    assert event == {
+        "decision": "accept",
+        "item_type": "attention",
+        "item_id": "inbox/attention/x.md",
+    }
+
+
+def test_disposition_event_rejects_bad_decision() -> None:
+    with pytest.raises(ValueError, match="decision must be one of"):
+        validate_disposition_event({"decision": "maybe", "item_type": "attention", "item_id": "x"})
+
+
+def test_disposition_event_rejects_unknown_field() -> None:
+    with pytest.raises(ValueError, match="unsupported fields"):
+        validate_disposition_event(
+            {"decision": "accept", "item_type": "attention", "item_id": "x", "rating": 5}
+        )
+
+
+def test_disposition_event_requires_all_fields() -> None:
+    with pytest.raises(ValueError, match="missing required fields"):
+        validate_disposition_event({"decision": "accept"})
+
+
+def test_read_event_accepts_valid_payload() -> None:
+    assert validate_read_event({"workflow": "ask", "staleness_hit": True}) == {
+        "workflow": "ask",
+        "staleness_hit": True,
+    }
+
+
+def test_read_event_requires_workflow_and_staleness_hit() -> None:
+    with pytest.raises(ValueError, match="missing required fields"):
+        validate_read_event({"workflow": "ask"})
+
+
+def test_read_event_rejects_non_bool_staleness_hit() -> None:
+    with pytest.raises(ValueError, match="staleness_hit must be a boolean"):
+        validate_read_event({"workflow": "ask", "staleness_hit": "yes"})
+
+
+def test_empirical_event_accepts_loudness_and_staleness_hit() -> None:
+    event = validate_empirical_event(
+        _event(
+            event_type="session.stopped",
+            outcome="stopped",
+            duration_s=1,
+            loudness="alert",
+            staleness_hit=True,
+        )
+    )
+    assert event["loudness"] == "alert"
+    assert event["staleness_hit"] is True
+
+
+def test_empirical_event_rejects_bad_loudness() -> None:
+    event = _event(event_type="session.stopped", outcome="stopped", duration_s=1, loudness="loud")
+    with pytest.raises(ValueError, match="loudness must be one of"):
+        validate_empirical_event(event)
+
+
+def test_empirical_event_rejects_non_bool_staleness_hit() -> None:
+    event = _event(
+        event_type="session.stopped", outcome="stopped", duration_s=1, staleness_hit="yes"
+    )
+    with pytest.raises(ValueError, match="staleness_hit must be a boolean"):
+        validate_empirical_event(event)
 
 
 def test_empirical_event_validator_accepts_normalized_event() -> None:

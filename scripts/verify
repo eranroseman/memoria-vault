@@ -30,6 +30,16 @@ ROOT = Path(__file__).resolve().parents[1]
 # CI sets this to "1" only for provably docs-only PRs (see the module docstring).
 DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
 
+# The `runtime` level holds environment-sensitive tests (fsync/filesystem
+# semantics) that pass locally but can fail on CI runners. Gate it locally, not
+# in CI, until those are hardened; .github/workflows/verify.yml sets VERIFY_CI.
+CI = os.environ.get("VERIFY_CI") == "1"
+PYTEST_MARKER = (
+    "static or unit or contract or package or floor"
+    if CI
+    else "static or unit or contract or runtime or package or floor"
+)
+
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
 # this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
 # yamllint, shellcheck, cspell, markdownlint); the commit-stage hooks
@@ -50,7 +60,7 @@ GATES: list[list[str]] = [
         "tests/",
         "-q",
         "-m",
-        "static or unit or contract",
+        PYTEST_MARKER,
     ],
     ["python3", "scripts/test_vault/e2e_smoke.py"],
     [
@@ -97,7 +107,7 @@ def _gates_for_run(docs_only: bool) -> list[list[str]]:
         if any(marker in joined for marker in _DOCS_SKIP):
             continue
         if "pytest" in joined:
-            command = ["static" if arg == "static or unit or contract" else arg for arg in command]
+            command = ["static" if arg == PYTEST_MARKER else arg for arg in command]
         reduced.append(command)
     return reduced
 

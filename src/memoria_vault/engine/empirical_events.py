@@ -10,6 +10,8 @@ from memoria_vault.runtime.time import parse_iso
 EMPIRICAL_EVENT_SCHEMA = "empirical_event.v1"
 JOURNAL_EVENT_REF_SCHEMA = "journal_event_ref.v1"
 EMPIRICAL_EVENT_RECORD_OPERATION = "empirical-event-record"
+DISPOSITION_EVENT_SCHEMA = "disposition.v1"
+READ_EVENT_SCHEMA = "read-observed.v1"
 
 SURFACES = frozenset({"cli", "rest", "mcp", "obsidian", "vscode", "manual"})
 WORKFLOWS = frozenset(
@@ -57,6 +59,8 @@ REASON_CODES = frozenset(
     }
 )
 
+LOUDNESS = frozenset({"quiet", "notice", "alert", "block"})
+
 BASE_REQUIRED_FIELDS = frozenset({"event_id", "event_type", "timestamp", "session_id", "surface"})
 EVENT_REQUIRED_FIELDS = {
     "session.started": frozenset({"workflow"}),
@@ -80,6 +84,8 @@ ALLOWED_FIELDS = frozenset(
         "item_type",
         "item_id",
         "variant",
+        "loudness",
+        "staleness_hit",
     }
 )
 ENUM_FIELDS = {
@@ -88,8 +94,11 @@ ENUM_FIELDS = {
     "decision": DECISIONS,
     "outcome": OUTCOMES,
     "reason_code": REASON_CODES,
+    "loudness": LOUDNESS,
 }
 OPAQUE_ID_FIELDS = frozenset({"session_id", "project_id", "item_id"})
+DISPOSITION_REQUIRED_FIELDS = frozenset({"decision", "item_type", "item_id"})
+READ_REQUIRED_FIELDS = frozenset({"workflow", "staleness_hit"})
 
 
 def validate_empirical_event(payload: dict[str, Any]) -> dict[str, Any]:
@@ -121,6 +130,8 @@ def validate_empirical_event(payload: dict[str, Any]) -> dict[str, Any]:
             event[field] = _uuid_string(value)
         elif field == "timestamp":
             event[field] = _timestamp(value)
+        elif field == "staleness_hit":
+            event[field] = _bool_field(field, value)
         else:
             event[field] = _string_field(field, value)
 
@@ -132,6 +143,45 @@ def validate_empirical_event(payload: dict[str, Any]) -> dict[str, Any]:
         if field in event:
             _reject_pathlike(field, event[field])
     return event
+
+
+def validate_disposition_event(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return a normalized server-side disposition event or raise ``ValueError``."""
+    if not isinstance(payload, dict):
+        raise ValueError("disposition event payload must be an object")
+    unknown = sorted(set(payload) - DISPOSITION_REQUIRED_FIELDS)
+    if unknown:
+        raise ValueError(f"disposition event contains unsupported fields: {', '.join(unknown)}")
+    missing = sorted(field for field in DISPOSITION_REQUIRED_FIELDS if _missing(payload.get(field)))
+    if missing:
+        raise ValueError(f"disposition event missing required fields: {', '.join(missing)}")
+    decision = _string_field("decision", payload["decision"])
+    if decision not in DECISIONS:
+        raise ValueError(f"decision must be one of: {', '.join(sorted(DECISIONS))}")
+    return {
+        "decision": decision,
+        "item_type": _string_field("item_type", payload["item_type"]),
+        "item_id": _string_field("item_id", payload["item_id"]),
+    }
+
+
+def validate_read_event(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return a normalized server-side read-observation event or raise ``ValueError``."""
+    if not isinstance(payload, dict):
+        raise ValueError("read event payload must be an object")
+    unknown = sorted(set(payload) - READ_REQUIRED_FIELDS)
+    if unknown:
+        raise ValueError(f"read event contains unsupported fields: {', '.join(unknown)}")
+    missing = sorted(field for field in READ_REQUIRED_FIELDS if _missing(payload.get(field)))
+    if missing:
+        raise ValueError(f"read event missing required fields: {', '.join(missing)}")
+    workflow = _string_field("workflow", payload["workflow"])
+    if workflow not in WORKFLOWS:
+        raise ValueError(f"workflow must be one of: {', '.join(sorted(WORKFLOWS))}")
+    return {
+        "workflow": workflow,
+        "staleness_hit": _bool_field("staleness_hit", payload["staleness_hit"]),
+    }
 
 
 def _missing(value: Any) -> bool:
@@ -174,6 +224,12 @@ def _duration(value: Any) -> float | int:
         raise ValueError("duration_s must be numeric")
     if value <= 0:
         raise ValueError("duration_s must be positive")
+    return value
+
+
+def _bool_field(field: str, value: Any) -> bool:
+    if not isinstance(value, bool):
+        raise ValueError(f"{field} must be a boolean")
     return value
 
 

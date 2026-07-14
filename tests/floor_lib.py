@@ -263,6 +263,11 @@ REDACTIONS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?"),
         "<TS>",
     ),
+    # Date-only fields (e.g. an attention flag's `created:`) that the timestamp
+    # pattern above misses because they carry no time component. Ordered after
+    # `<TS>` so a full timestamp is still fully scrubbed first. Without this the
+    # goldens re-drift every day the seed is rebuilt on a new calendar date.
+    (re.compile(r"\d{4}-\d{2}-\d{2}"), "<DATE>"),
     # Lower bound 32 (not 40): scripts/test_vault/e2e_smoke.py's
     # `_operation_context` mints a fresh `f"e2e-{uuid.uuid4().hex}"` request
     # id (32 lowercase hex chars, no dashes) on every seed build, recorded as

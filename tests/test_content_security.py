@@ -62,6 +62,18 @@ def test_raw_html_is_inert() -> None:
     assert "hi" in rendered
 
 
+def test_inline_code_span_inside_html_tag_survives_without_nul_bytes() -> None:
+    # Regression for #1399: the code-span mask token embedded literal `<`/`>`,
+    # so the HTML-tag pass swallowed the token, dropped the code-span content,
+    # and left a mangled, HTML-entity-escaped artifact containing a raw NUL.
+    rendered = neutralize_untrusted_markdown('<img src="`evil`"></img>')
+
+    assert "\x00" not in rendered
+    assert "evil" in rendered
+    assert "&lt;img" in rendered  # the tag itself is still neutralized
+    assert neutralize_untrusted_markdown(rendered) == rendered  # idempotent
+
+
 @pytest.mark.parametrize(
     ("source", "forbidden_html_attribute"),
     [
