@@ -187,7 +187,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
-        csl_json={"memoria": {"topics": ["catalog-only"]}},
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
     )
     state.upsert_catalog_record(
         tmp_path,
@@ -195,7 +195,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
         title="DB Archived",
         text_status="full-text",
         check_status="checked",
-        csl_json={"memoria": {"topics": ["archived-only"], "standing": "archived"}},
+        csl_json={"memoria": {"research_area": ["archived-only"], "standing": "archived"}},
     )
     state.upsert_catalog_record(
         tmp_path,
@@ -203,7 +203,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
         title="DB Unchecked",
         text_status="full-text",
         check_status="unchecked",
-        csl_json={"memoria": {"topics": ["unchecked-only"]}},
+        csl_json={"memoria": {"research_area": ["unchecked-only"]}},
     )
     state.replace_work_graph_edges(
         tmp_path,
@@ -252,6 +252,26 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     assert gaps["Graph-only Keyword"]["source_count"] == 1
     assert gaps["Graph-only Keyword"]["digest_count"] == 0
     assert gaps["Graph-only Keyword"]["note_count"] == 0
+
+
+def test_analyze_gaps_ignores_retired_topics_from_untouched_catalog_work(tmp_path: Path) -> None:
+    state.upsert_catalog_record(
+        tmp_path,
+        work_id="legacy-work",
+        title="Legacy Work",
+        check_status="checked",
+        text_status="full-text",
+        csl_json={
+            "memoria": {
+                "topics": ["legacy-only"],
+                "research_area": ["current-area"],
+            }
+        },
+    )
+
+    result = analyze_gaps(tmp_path, dense_threshold=1)
+
+    assert {gap["topic"] for gap in result["gaps"]} == {"current-area"}
 
 
 def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path) -> None:
@@ -368,7 +388,7 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_search
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
-        csl_json={"memoria": {"topics": ["catalog-only"]}},
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
     )
     state.replace_work_graph_edges(
         vault,
@@ -416,7 +436,7 @@ def test_analyze_gaps_ranks_discovery_candidates_against_steering(tmp_path: Path
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
-        csl_json={"memoria": {"topics": ["catalog-only"]}},
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
     )
     state.replace_work_graph_edges(
         vault,

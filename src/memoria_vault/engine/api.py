@@ -198,6 +198,19 @@ def read_concepts(
     workspace: Path, *, concept_type: str = "", read_scope: list[str] | None = None
 ) -> dict[str, Any]:
     workspace = Path(workspace)
+    if concept_type == "work":
+        rows = [
+            {
+                "path": str(row["concept_path"]),
+                "type": "work",
+                "title": str(row["title"]),
+                "check_status": str(row["check_status"]),
+                "verdict": str(row["check_status"]),
+            }
+            for row in state.catalog_sources(workspace, checked_only=False)
+            if _scope_allows(str(row["concept_path"]), read_scope)
+        ]
+        return _read_payload(concepts=sorted(rows, key=lambda row: row["path"]))
     rows = []
     for path in iter_markdown(workspace):
         rel = path.relative_to(workspace).as_posix()

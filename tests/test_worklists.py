@@ -1,5 +1,8 @@
+import shutil
+import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 from memoria_vault.runtime.subsystems.lib import worklists
@@ -47,6 +50,59 @@ def test_emit_worklist_writes_projection_rows_and_one_prompt(tmp_path):
     assert prompt_fm["target"] == "system/worklists/transformer-screening/"
     assert "lane" not in prompt_fm
     assert "task_id" not in prompt_fm
+
+
+def test_emit_worklist_neutralizes_report_derived_text(tmp_path):
+    result = worklists.emit_worklist(
+        tmp_path,
+        "![Batch](http://beacon.example/batch.png)",
+        [
+            {
+                "title": "![Work](http://beacon.example/work.png)",
+                "item_ref": "https://beacon.example/ref",
+                "reason": '<img src="http://beacon.example/reason.png">',
+            }
+        ],
+    )
+
+    [item] = result["items"]
+    rendered = item.read_text(encoding="utf-8")
+    prompt = result["prompt"].read_text(encoding="utf-8")
+    assert "![" not in rendered + prompt
+    assert "<img" not in rendered
+    for url in (
+        "http://beacon.example/batch.png",
+        "http://beacon.example/work.png",
+        "http://beacon.example/reason.png",
+    ):
+        assert f"`{url}`" in rendered + prompt
+
+
+def test_emit_worklist_renders_composed_title_and_reference_inert(tmp_path):
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    result = worklists.emit_worklist(
+        tmp_path,
+        "Security review",
+        [
+            {
+                "title": '```\n<img src="https://evil.example/item-title">\n```',
+                "item_ref": 'ref ` <img src="https://evil.example/item-ref"> `',
+            }
+        ],
+    )
+
+    [item] = result["items"]
+    rendered = subprocess.run(
+        [pandoc, "-f", "commonmark", "-t", "html"],
+        input=item.read_text(encoding="utf-8"),
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert "<img" not in rendered
 
 
 def test_emit_worklist_rejects_unknown_decision(tmp_path):

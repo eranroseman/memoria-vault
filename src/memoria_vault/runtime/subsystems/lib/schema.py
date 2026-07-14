@@ -3,7 +3,7 @@
 
 `.memoria/schemas/` is the single source for the vault's document-type vocabulary
 with per-type frontmatter schemas (`types/<type>.yaml`), the type→folder map
-(`folders.yaml`), and the calibrated thresholds (`calibration.yaml`).
+(`folders.yaml`), and the controlled vocabulary (`system/vocabulary.md`).
 This module is the reader shared by the Linter, the pre-commit hook,
 `memoria init`, package-spine tests, and no-Bases seed tests, so a schema change is a
 one-file edit, never a hunt across hardcoded lists.

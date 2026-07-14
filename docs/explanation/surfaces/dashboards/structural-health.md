@@ -8,41 +8,43 @@ permalink: /explanation/surfaces/dashboards/structural-health/
 
 # Structural health
 
-Structural health surfaces drift, loose ends, request state, and the weekly
-maintenance agenda: the Linter operation's structural debt plus the
-request/attention view. The synthesis-agenda group is the PI's unfinished
-thinking; this group is the system's visible maintenance debt.
+Structural-health data ships through linter output, file-backed attention, and
+request/attention reads. Planned adapter views may group that data into drift,
+loose ends, Board state, and a weekly maintenance agenda.
 
 ## Drift watch
 
-Drift watch is the structural view over open `flag` and `alert` attention items
-produced by the Linter and verification sweeps. It sorts loudest-first and feeds the rail
-health band.
+The planned Drift watch combines linter findings with open `flag` and `alert`
+attention items created by separately invoked integrity and verification
+operations. The linter reports severity-ranked findings; it does not write
+attention cards. The view would keep those inputs distinct while prioritizing
+urgent work in the rail health band.
 
-It is not the audit log or eval trend. Those are operational views; Drift watch
-is the structural layer over detectable integrity findings.
+It is not the audit log or eval trend. Those are operational evidence; a Drift
+watch would be the structural layer over detectable integrity findings.
 
 ## Loose ends
 
-Loose ends is the weekly batch for `notice`-loudness `flag` attention items.
-Louder findings belong higher in Drift watch; Notice findings wait here so daily
-work stays quiet without losing the debt.
+The planned Loose ends view is a weekly batch for `notice`-loudness `flag`
+attention items. Today, filter the output of `memoria attention list` during the
+weekly review. Louder findings should be handled sooner.
 
 ## Board state
 
-Board state is the full maintenance/debugging view under the compact Inbox
-activity strip. It exists so runtime queue state can be inspected without
-turning the daily Inbox into a debugging surface.
+Request and attention state ship through `memoria request list` and
+`memoria attention list`. A planned Board view may combine those reads without
+becoming an editable state store.
 
 ## Weekly review
 
-Weekly review is the operator-run structural-health ritual. It gathers Inbox
-cleanup, Maintenance, new content, and claim state into one deliberate rhythm.
+Weekly review is the operator-run structural-health ritual. Today it gathers
+Inbox cleanup, linter output, new content, and claim state through CLI and file
+inspection.
 The step-by-step ritual lives in [Run the weekly
 review](../../../how-to-guides/inbox/run-the-weekly-review.md).
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
+- Availability and backing surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
 - Detector severity reference: [Linter: detectors and auto-fix](../../../reference/analysis-and-surfaces/linter.md)
 - The attention prompt format behind `flag` and `alert`: [The honesty prompt](../../execution/control-plane/honesty-card.md)

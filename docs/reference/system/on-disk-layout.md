@@ -58,8 +58,7 @@ writable runtime directories are created from `folders.yaml`:
 .memoria/
 ├── schemas/                 single source for schema contracts
 │   ├── types/<type>.yaml      per-type Concept schemas
-│   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
-│   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores)
+│   └── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 ├── config/                  provider and runtime policy (`providers.yaml`)
 │   └── last-backup           gitignored local backup stamp bound to the current blob inventory
 ├── eval/                    seeded-error verdict bundle and last-run.md
@@ -107,7 +106,6 @@ The package seed contains only files with direct runtime readers:
 | `.memoria/config/providers.yaml` | Provider config for enrichment and operation runners. |
 | `.memoria/eval/alpha15-seeded-errors.json` | Seeded-error verdict bundle read by CLI, worker, and seeded-error runtime tests. |
 | `.memoria/patterns/_preamble.md` | Shared operation prompt preamble read by operation prompt assembly. |
-| `.memoria/schemas/calibration.yaml` | Runtime thresholds for classification, matching, and drift-sensitive checks. |
 | `.memoria/schemas/folders.yaml` | Type homes, staging roots, quarantine root, and `memoria init` skeleton. |
 | `.memoria/schemas/types/*.yaml` | Per-type frontmatter contracts used by schema validation, linter, and pre-commit. |
 | `.obsidian/app.json` | Obsidian file/link defaults chosen to avoid root clutter and frontmatter UI rewriting. |

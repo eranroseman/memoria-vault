@@ -72,6 +72,26 @@ def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
         assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
 
 
+def test_file_baseline_round_trips_hash_and_restriction_keys(tmp_path: Path) -> None:
+    with state.connect(tmp_path) as conn:
+        assert conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'file_baseline'"
+        ).fetchone()
+
+    state.upsert_file_baseline(
+        tmp_path,
+        "notes/alpha.md",
+        human_sha256="sha256:alpha",
+        restriction_keys=["superseded"],
+    )
+
+    assert state.file_baseline(tmp_path, "notes/alpha.md") == {
+        "subject_id": "notes/alpha.md",
+        "human_sha256": "sha256:alpha",
+        "restriction_keys": ["superseded"],
+    }
+
+
 def test_state_connect_context_closes_database_connection(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         assert conn.execute("SELECT 1").fetchone()[0] == 1

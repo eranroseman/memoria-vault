@@ -11,9 +11,7 @@ The frontmatter contract for every typed document. The single source is
 `.memoria/schemas/`: per-document-type field schemas in
 `src/memoria_vault/product/workspace_seed/.memoria/schemas/types`, the
 type-to-folder map in
-`src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml`, and
-calibrated thresholds in
-`src/memoria_vault/product/workspace_seed/.memoria/schemas/calibration.yaml`.
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml`.
 The shared loader/validator is
 `src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit
 hook, and package-seed tests all read it.
@@ -36,6 +34,7 @@ plus an `enums:` block and optionally `required_any:`, `required_when:`, and
 | `list` | a YAML sequence |
 | `map` | a YAML mapping |
 | `links` | a YAML mapping from `supports`, `contradicts`, or `extends` to target lists |
+| `ulid` | a valid ULID string |
 | `literal:<value>` | exactly that value; for example, `type: literal:note` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
@@ -47,7 +46,6 @@ rejected even though other unknown extras are allowed. A schema example
 ```yaml
 type: note
 category: notes
-gated: false
 enums:
   mode: [claim, question, definition, work]
   question_status: [open, resolved]
@@ -61,12 +59,24 @@ required:
   links: links
 optional:
   aliases: list
+  annotation_ref: map
   archived: bool
+  claim_text: str
   description: str
+  extraction_confidence: str
   item_type: enum:item_type
   mode: enum:mode
   question_status: enum:question_status
+  quote: str
   work_id: str
+  temporal_scope: str
+  tense: str
+  topics: list
+  qualifier: str
+  certainty: enum:certainty
+  superseded: bool
+  reading: str
+  anchors: list
   todo: list
   x: map
 required_when:
@@ -81,6 +91,21 @@ required_when:
     equals: work
 forbidden: [citations, evidence_set, citekey, project]
 ```
+
+### Note modes and conditional fields
+
+`mode` is optional. When present, its value and extra requirement come directly
+from `types/note.yaml`:
+
+| `mode` | Conditional requirement |
+| --- | --- |
+| `claim` | `claim_text` must be present. |
+| `question` | `question_status` must be `open` or `resolved`. |
+| `definition` | No additional field is required. |
+| `work` | `work_id` must be present as a string. |
+
+These are the only mode-specific required fields. Other optional note fields
+retain their declared kind regardless of mode.
 
 ## Creation forms
 
@@ -130,7 +155,7 @@ checked against the generated `bibliography.bib`.
 | Field | Kind | Notes |
 | --- | --- | --- |
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
-| `id` | `str` | Required on every typed document. ULID for note/hub/project; source `work_id` for digest/fulltext; artifact id for code-artifact. |
+| `id` | `ulid` for `note`, `hub`, and `project`; `str` for `code-artifact`, `digest`, and `fulltext` | Required on every typed document. Digest and fulltext use their source `work_id`; code-artifact uses its artifact id. |
 | `title` | `str` | Human-readable Concept title. |
 | `links` | `links` | Required for knowledge Concepts, even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |

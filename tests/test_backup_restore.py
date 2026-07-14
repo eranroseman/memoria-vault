@@ -590,6 +590,9 @@ def test_workspace_backup_cli_requires_pi_and_publishes_snapshot(tmp_path: Path,
     assert payload["ok"] is True
     assert Path(payload["target"]) == target.resolve()
 
+    assert main(["workspace", "backup", str(target), "--workspace", str(vault)]) == 0
+    assert capsys.readouterr().out == f"{target.resolve()}\n"
+
 
 def test_restore_round_trip_rebuilds_exports_and_preserves_source(tmp_path: Path, capsys) -> None:
     vault = init_cli_workspace(tmp_path, capsys)
@@ -2384,6 +2387,21 @@ def test_workspace_restore_cli_requires_force_and_pi_authority(tmp_path: Path, c
         == 0
     )
     assert json.loads(capsys.readouterr().out)["ok"] is True
+
+    assert (
+        main(
+            [
+                "workspace",
+                "restore",
+                str(source),
+                "--workspace",
+                str(vault),
+                "--force",
+            ]
+        )
+        == 0
+    )
+    assert capsys.readouterr().out == f"{source.resolve()}\n"
 
 
 def test_backup_report_requires_current_blob_inventory_coverage(tmp_path: Path, capsys) -> None:

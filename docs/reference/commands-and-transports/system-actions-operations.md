@@ -41,12 +41,27 @@ Request controls, evidence-review dispositions, steering edits, and vocabulary
 mutations require PI authority. The worker enforces the operation authority
 matrix before payload validation or domain mutation.
 
+## Content neutralization boundary
+
+Code-owned Markdown insertions neutralize model- and provider-derived prose
+before apply. Markdown images and Obsidian embeds become inert, raw HTML is
+escaped, and external URLs become code spans. Vault wikilinks and existing code
+spans or fences remain unchanged. This applies to prompt reports, digest and hub
+suggestions, note candidates, generated outlines and drafts, promoted draft
+passages, provider attention cards, worklists, and extracted-edge prompts.
+
+`stage_concept` and the shared Inbox writers remain byte-preserving
+mixed-author seams. They cannot infer which substring a human authored. Their
+code-owned callers neutralize fields whose provenance is known. Structural IDs
+and paths remain unchanged state; display prose derived from them is inert or
+rendered as code.
+
 ## Capture pipeline (`memoria_vault.runtime.capture`)
 
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Capture source | worker operation `capture-source` + runtime helpers (`capture_source`, `stage_catalog_source`) | Records a capture run, writes catalog state plus durable source blobs, and keeps DOI/portable imports unchecked until enrichment or worker checks pass ([Ingest routing](../pipelines-and-io/ingest.md)). |
-| Enrich staged source | worker operation `enrich-source` + runtime helper (`enrich_source`) | Resolves required DOI providers, records provenance, blocks failed or contested records with attention, then checks passing rows and refreshes `bibliography.bib`. |
+| Enrich staged source | worker operation `enrich-source` + runtime helper (`enrich_source`) | Resolves required DOI providers, records provenance, blocks failed or contested records with attention, neutralizes provider prose in generated attention/candidate Markdown, then checks passing rows and refreshes `bibliography.bib`. |
 | Capture BibTeX source | worker operation `capture-bibtex-source` + runtime helper (`bibtex_capture_payload`) | Parses one BibTeX entry into unchecked catalog metadata, a raw `.bib` blob, and a DOI enrichment request when a DOI is present. |
 | Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses one CSL-JSON item into unchecked catalog metadata, a raw `.csl.json` blob, and a DOI enrichment request when a DOI is present. |
 | Update Work | worker operation `update-work` | Applies PI-owned Work metadata, standing, and classification changes to the SQLite catalog row, then records the journal event through the worker request queue. |
@@ -54,7 +69,7 @@ matrix before payload validation or domain mutation.
 | Capture PDF source | worker operation `capture-pdf-source` + runtime helper (`capture_pdf_source`) | Uses the optional PyMuPDF parser to extract page text from raw PDF bytes and writes an unchecked catalog row plus source-content blobs. |
 | Regenerate bibliography | runtime capture helper (`write_references_bib`) / worker operation `regenerate-references-bib` | Rebuilds `bibliography.bib` from checked SQLite catalog rows and can commit the projection plus journal event through the worker. |
 | Capture trace | trusted writer + journal | Records `run`, `derived`, and `check-fired` events for the catalog Work row; raw blobs stay gitignored and are referenced by path + hash. |
-| Extract typed edge candidates | trusted writer materialization (`commit_writer_changes`) | Parses explicit argument-class body links such as `[[supports::notes/x.md]]` into unchecked `edge-candidate` attention prompts in the same commit; bare `[[wikilink]]` body links do not create `supports`, `contradicts`, or `extends` edges. |
+| Extract typed edge candidates | trusted writer materialization (`commit_writer_changes`) | Parses explicit argument-class body links such as `[[supports::notes/x.md]]` into unchecked `edge-candidate` attention prompts in the same commit, neutralizing copied title/target prose; bare `[[wikilink]]` body links do not create `supports`, `contradicts`, or `extends` edges. |
 | Create Concept | engine API (`write_new_concept`) + worker operation `create-concept` | Queues PI or CLI-agent `note`/`hub`/`project` creation through the request envelope, validates and commits the Concept through the trusted writer, and leaves it `unchecked` until a later `check` operation passes. |
 | Foreign-write quarantine | worker operation `trace-integrity-scan` + trusted writer (`quarantine_untraced_from_status` / `quarantine_untraced`) | Scans git-status or explicit bundle paths, moves untraced bundle files into `.memoria/quarantine/`, and records a failed `trace-integrity` check event. |
 
@@ -66,8 +81,8 @@ matrix before payload validation or domain mutation.
 | Select model pins | `memoria eval select-models` | Runs the seeded-error bar for manifest-declared `runner.test`/`runner.live` pins in a disposable fixture, emits a selection record, and refuses to select a runner whose bar fails. |
 | Record empirical event | worker operation `empirical-event-record` + runtime helper (`record_empirical_event`) | Validates one strict [`empirical_event.v1`](../control-and-policy/empirical-events.md) payload, requires `idempotency_key=empirical-event:<event_id>`, rejects raw text/path-like fields, and appends a queryable `empirical-event` journal row with `journal_event_ref.v1` output metadata. |
 | Record Co-PI interview | worker operation `record-copi-interview` + runtime helper (`record_copi_interview_turn`) | Records a PI interview takeaway for a checked Work as a committed `copi-interview` journal event; digest compile can consume it as traced context. |
-| Compile source digest | worker operation `compile-source-digest` + runtime helper (`compile_source_digest`) | Builds a checked digest from one checked Work using the manifest-pinned runner, records model provenance, embeds citation-survival payloads, and stages hub suggestions. |
-| Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md` and `bibliography.bib` in one worker-owned projection run. |
+| Compile source digest | worker operation `compile-source-digest` + runtime helper (`compile_source_digest`) | Builds a checked digest from one checked Work using the manifest-pinned runner, records the raw model-output hash, neutralizes source/model/topic prose before apply, embeds citation-survival payloads, and stages hub suggestions. |
+| Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md`, `bibliography.bib`, and owned `projects/<project>/argument.canvas` files in one worker-owned projection run. An orphan Canvas has no project owner, so scan quarantines it without regeneration. |
 | Regenerate workspace indexes | runtime projection helper (`write_workspace_indexes`) / worker operation `regenerate-indexes` | Rebuilds the root and bundle `index.md` projections from checked Concept files. |
 | Regenerate capability index | runtime capability helper (`write_capability_index`) / worker operation `regenerate-capability-index` | Rebuilds ignored `.memoria/index/capability-index.json` from packaged capability manifests and records product SHA-256 trust hashes. |
 
@@ -82,13 +97,13 @@ matrix before payload validation or domain mutation.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Emit note candidates | worker operation `propose-note-candidates` + runtime helper (`emit_note_candidates`) | Reads one checked digest, records resolved runner provenance in `model_call`, promotes checked `note` Concepts, and records note-candidate state in SQLite's authoritative event log rather than frontmatter. |
+| Emit note candidates | worker operation `propose-note-candidates` + runtime helper (`emit_note_candidates`) | Reads one checked digest, records resolved runner provenance in `model_call`, neutralizes model-derived prose fields before apply, promotes checked `note` Concepts, and records note-candidate state in SQLite's authoritative event log rather than frontmatter. |
 | Curate note candidate | worker operation `curate-note-candidate` + runtime helper (`curate_note_candidate`) | Records a PI accept/reject decision for one checked candidate `note` as a journal `resolved` row without mutating Concept frontmatter. |
 | Curate note link | worker operation `curate-note-link` + runtime helper (`curate_note_link`) | Records one PI-authored `supports`, `contradicts`, or `extends` link from a checked note to a checked Concept, updating the note's `links` map and committing it with a journal `resolved` row. |
 | Analyze gaps | worker operation `analyze-gaps` + runtime helper (`analyze_gaps`) | Reports topic, digest, warrant, and project argument gaps from checked state; provider candidates and tag candidates surface as unchecked attention, never direct writes. |
 | Analyze project argument | worker operation `analyze-project-argument` + runtime helper (`analyze_project_argument`) | Follows checked, non-candidate note links around a checked project's `thesis` note and returns relation counts, stage, saturation, gap/advisory taxonomy, nodes, and edges. |
 | Render project argument Canvas | worker operation `render-project-argument-canvas` + runtime helper (`write_project_argument_canvas`) | Renders the checked-note argument graph for one project as a generated `projects/<project>/argument.canvas` projection and commits it with a journal row. |
-| Run prompt operation | worker operation `<pattern-id>` + runtime helper (`run_prompt_operation`) | Reads checked input refs for package-owned prompt-operation manifests such as `analyze-claims`, records request/journal provenance, and stages one unchecked report note under `.memoria/staging/notes/`. |
+| Run prompt operation | worker operation `<pattern-id>` + runtime helper (`run_prompt_operation`) | Reads checked input refs for package-owned prompt-operation manifests such as `analyze-claims`, records request/journal provenance and the raw model-output hash, neutralizes the rendered model output, and stages one unchecked report note under `.memoria/staging/notes/`. |
 
 ## Integrity loop (`memoria_vault.runtime.integrity`)
 
@@ -115,7 +130,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all registered structural detectors over the vault; findings surface on the drift dashboards. |
+| Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all registered structural detectors over the vault; severity-ranked findings return in command output. The linter does not write attention; separately invoked integrity operations may do so. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation - the one check that prevents rather than reports. |
 | Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([the quarantine-and-verify with durable, audit-logged crash recovery decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; `hubs/` stays PI-curated. |
@@ -128,7 +143,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Eval score | telemetry operation (`eval_score.py`, operator-managed scheduled task) | Computes recall@k / support-rate / FAMA-clean from local result blocks; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | retraction operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
 | Retraction sweep | retraction operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
-| Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed worklist projections and one aggregate `work-prompt` attention projection. |
+| Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed worklist projections and one aggregate `work-prompt` attention projection; report-derived display prose is neutralized while structural row references remain unchanged. |
 
 ## Runtime policy and helper modules
 

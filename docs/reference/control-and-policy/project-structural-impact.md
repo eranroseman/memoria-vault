@@ -54,7 +54,7 @@ The renderer compares the new payload to the previous embedded JSON after removi
 
 ## Gap taxonomy
 
-The payload separates confident gap kinds from advisory gap kinds. Confident gaps are counted in `gap_findings`; advisory gaps are shown separately so dashboards can surface them without treating them as blocking structural defects.
+The payload separates confident gap kinds from advisory gap kinds. Confident gaps are counted in `gap_findings`; advisory gaps are shown separately so an optional dashboard can surface them without treating them as blocking structural defects.
 
 ## Related
 

@@ -278,7 +278,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
-        csl_json={"memoria": {"topics": ["catalog-only"]}},
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
     )
     state.upsert_catalog_record(
         vault,
@@ -987,6 +987,37 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, ".memoria/overrides.jsonl"}
     assert git(vault, "status", "--short", "--", ".memoria/overrides.jsonl") == ""
+
+
+def test_update_work_removes_legacy_topics_from_pre_f4_catalog_row(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    state.upsert_catalog_record(
+        vault,
+        work_id="legacy",
+        title="Pre-F4 Work",
+        csl_json={"memoria": {"topics": ["legacy-topic"], "standing": "current"}},
+        check_status="checked",
+    )
+
+    enqueue_operation(
+        vault,
+        "update-work",
+        payload={"work_id": "legacy", "methodology": ["rct"]},
+        idempotency_key="normalize-legacy-work",
+        actor="pi",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["work"]["csl_json"]["memoria"] == {
+        "standing": "current",
+        "methodology": ["rct"],
+    }
+    assert state.catalog_source(vault, "legacy")["csl_json"]["memoria"] == {
+        "standing": "current",
+        "methodology": ["rct"],
+    }
 
 
 def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) -> None:

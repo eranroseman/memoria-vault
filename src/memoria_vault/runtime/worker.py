@@ -850,6 +850,7 @@ def _run_operation_job(
     if operation_id == "observe-pi-edits":
         from memoria_vault.runtime.projections import (
             changed_tracked_projection_paths,
+            regenerable_tracked_projection_paths,
             write_tracked_projections,
         )
         from memoria_vault.runtime.trusted_writer import (
@@ -858,6 +859,7 @@ def _run_operation_job(
         )
 
         projection_paths = changed_tracked_projection_paths(vault)
+        regeneration_paths = regenerable_tracked_projection_paths(vault, projection_paths)
         projection_events = quarantine_untraced(
             vault,
             projection_paths,
@@ -875,7 +877,13 @@ def _run_operation_job(
             projection_commit = commit_writer_changes(
                 vault, "trace integrity scan", tracked_targets, context=context
             )
-            regeneration = write_tracked_projections(vault, commit=True, context=context)
+        if regeneration_paths:
+            regeneration = write_tracked_projections(
+                vault,
+                commit=True,
+                context=context,
+                projection_paths=regeneration_paths,
+            )
         result = observe_pi_edits_from_status(vault, context=context)
         commits = [
             commit
@@ -889,6 +897,8 @@ def _run_operation_job(
         return {
             "commit": commits[-1] if commits else "",
             "observed_count": len(result["observed"]),
+            "finding_count": len(result["findings"]),
+            "findings": result["findings"],
             "paths": result["paths"],
             "projection_quarantine_count": len(projection_events),
             "projection_paths": projection_paths,
@@ -956,20 +966,23 @@ def _run_operation_job(
         if "resource" in payload:
             csl_json["URL"] = str(payload.get("resource") or "")
 
-        memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+        memoria = dict(csl_json["memoria"]) if isinstance(csl_json.get("memoria"), dict) else {}
+        memoria.pop("topics", None)
         if standing := str(payload.get("standing") or "").strip():
             if standing not in {"current", "archived", "retracted", "superseded"}:
                 raise ValueError(f"update-work standing is invalid: {standing}")
             memoria["standing"] = standing
-        for payload_key, memoria_key in (("research_area", "research_area"), ("topic", "topics")):
+        for payload_key in ("research_area", "methodology"):
             if payload_key not in payload:
                 continue
             values = payload[payload_key]
             if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
                 raise ValueError(f"update-work {payload_key} must be a list of strings")
-            memoria[memoria_key] = [value for value in values if value.strip()]
+            memoria[payload_key] = [value for value in values if value.strip()]
         if memoria:
             csl_json["memoria"] = memoria
+        else:
+            csl_json.pop("memoria", None)
 
         provider_coverage = str(payload.get("provider_coverage") or source["provider_coverage"])
         if provider_coverage not in {"full", "partial", "degraded"}:
@@ -1082,7 +1095,18 @@ def _run_operation_job(
     if operation_id == "regenerate-tracked-projections":
         from memoria_vault.runtime.projections import write_tracked_projections
 
-        result = write_tracked_projections(vault, commit=True, context=context)
+        projection_paths = payload.get("paths")
+        if projection_paths is not None and (
+            not isinstance(projection_paths, list)
+            or not all(isinstance(path, str) and path.strip() for path in projection_paths)
+        ):
+            raise ValueError("regenerate-tracked-projections paths must be a list of strings")
+        result = write_tracked_projections(
+            vault,
+            commit=True,
+            context=context,
+            projection_paths=projection_paths,
+        )
         return {
             "commit": result["commit"],
             "changed": result["changed"],

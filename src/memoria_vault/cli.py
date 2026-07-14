@@ -155,7 +155,8 @@ def _new_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> N
     body = note.add_mutually_exclusive_group(required=True)
     body.add_argument("--body")
     body.add_argument("--file")
-    note.add_argument("--mode", choices=("claim", "question", "definition"))
+    note.add_argument("--mode", choices=("claim", "question", "definition", "work"))
+    note.add_argument("--work-id")
     note.add_argument("--tag", action="append", default=[])
     note.set_defaults(handler=_cmd_new_note)
 
@@ -244,7 +245,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     update.add_argument("--check-status", choices=("unchecked", "checked", "quarantined"))
     update.add_argument("--standing", choices=("current", "archived", "retracted", "superseded"))
     update.add_argument("--research-area", action="append", default=[])
-    update.add_argument("--topic", action="append", default=[])
+    update.add_argument("--methodology", action="append", default=[])
     update.set_defaults(handler=_cmd_work_update)
 
     export = work_sub.add_parser("export")
@@ -812,6 +813,8 @@ def _cmd_migrate(args: argparse.Namespace) -> int:
 def _cmd_new_note(args: argparse.Namespace) -> int:
     body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
     extra = {"mode": args.mode}
+    if args.work_id:
+        extra["work_id"] = args.work_id
     if args.mode == "claim":
         extra["claim_text"] = body.strip()
     elif args.mode == "question":
@@ -1827,6 +1830,9 @@ def _workspace_scan_payload(
     fixture_name = getattr(args, "fixture", "")
     fixture = _workspace_scan_fixture(workspace, fixture_name) if fixture_name else None
     projection_paths = _changed_generated_projection_paths(workspace)
+    from memoria_vault.runtime.projections import regenerable_tracked_projection_paths
+
+    regeneration_paths = regenerable_tracked_projection_paths(workspace, projection_paths)
     quarantine = None
     regeneration = None
     if projection_paths:
@@ -1838,11 +1844,12 @@ def _workspace_scan_payload(
                 "reason": "workspace-scan-generated-projection",
             },
         )
-        regeneration = _enqueue_and_run(
-            auxiliary_args("regenerate-tracked-projections"),
-            "regenerate-tracked-projections",
-            {},
-        )
+        if regeneration_paths:
+            regeneration = _enqueue_and_run(
+                auxiliary_args("regenerate-tracked-projections"),
+                "regenerate-tracked-projections",
+                {"paths": regeneration_paths},
+            )
     observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})
     needs_check_paths = list(observed["result"].get("paths") or [])
     payload = {
@@ -2817,7 +2824,7 @@ def _present_updates(args: argparse.Namespace) -> dict[str, Any]:
         "check_status",
         "standing",
         "research_area",
-        "topic",
+        "methodology",
     )
     return {
         field: value
@@ -3121,11 +3128,145 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
 
 
 def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:
+    ok = bool(payload.get("ok", True))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
     elif not args.quiet:
-        print(payload.get("workspace") or payload.get("ok") or "ok")
-    return 0 if payload.get("ok", True) else 1
+        if not ok:
+            result = payload.get("result")
+            nested = result if isinstance(result, dict) else {}
+            detail = str(
+                payload.get("error")
+                or nested.get("error")
+                or payload.get("evidence")
+                or nested.get("evidence")
+                or payload.get("status")
+                or nested.get("status")
+                or "operation failed"
+            )
+            print(f"FAILED: {detail}")
+        else:
+            for key in ("workspace", "output_path", "path"):
+                value = payload.get(key)
+                if isinstance(value, str) and value:
+                    print(value)
+                    break
+            else:
+                print(_success_detail(payload))
+    return 0 if ok else 1
+
+
+def _success_detail(payload: dict[str, Any]) -> str:
+    containers = [payload]
+    for key in (
+        "result",
+        "request",
+        "work",
+        "event",
+        "attention",
+        "exploration",
+        "export",
+        "journal",
+        "search",
+        "projections",
+    ):
+        value = payload.get(key)
+        if isinstance(value, dict):
+            containers.append(value)
+
+    for container in containers:
+        for key in (
+            "output_path",
+            "path",
+            "note_path",
+            "draft_path",
+            "project_path",
+            "outline_path",
+            "source_path",
+            "record_path",
+            "target",
+            "restored_from",
+        ):
+            value = container.get(key)
+            if isinstance(value, str) and value:
+                return value
+
+    for container in containers:
+        for key in (
+            "work_id",
+            "project_id",
+            "request_id",
+            "job_id",
+            "artifact_id",
+            "event_id",
+            "operation_id",
+            "run_id",
+        ):
+            summary = _summary_value(container.get(key))
+            if summary:
+                return f"{key}: {summary}"
+
+    for container in containers:
+        value = container.get("content_path")
+        if isinstance(value, str) and value:
+            return value
+
+    for container in containers:
+        for key, value in container.items():
+            if (
+                key.endswith("_count")
+                and isinstance(value, (int, float))
+                and not isinstance(value, bool)
+            ):
+                return f"{key}: {value}"
+        for key in (
+            "concepts",
+            "works",
+            "requests",
+            "operations",
+            "events",
+            "attention",
+            "suggestions",
+            "findings",
+            "results",
+            "outputs",
+            "restored",
+        ):
+            value = container.get(key)
+            if isinstance(value, (list, tuple, set)):
+                return f"{key}: {len(value)}"
+
+    safe_statuses = {
+        "complete",
+        "completed",
+        "created",
+        "done",
+        "passed",
+        "pending",
+        "restored",
+        "running",
+        "succeeded",
+        "success",
+        "updated",
+        "verified",
+    }
+    for container in containers:
+        status = _summary_value(container.get("status"))
+        if status.lower() in safe_statuses:
+            return f"status: {status}"
+
+    if any(key not in {"api_version", "ok"} for key in payload):
+        return "completed; details available with --json"
+    return "ok"
+
+
+def _summary_value(value: Any) -> str:
+    if isinstance(value, bool) or not isinstance(value, (str, int)):
+        return ""
+    text = " ".join(str(value).split())
+    if len(text) > 200:
+        return f"{text[:197]}..."
+    return text
 
 
 def _fail(message: str, *, json_output: bool) -> int:

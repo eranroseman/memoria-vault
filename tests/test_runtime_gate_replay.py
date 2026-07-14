@@ -102,7 +102,7 @@ def test_runtime_gate_replays_user_facing_commands(
         "--workspace",
         str(workspace),
         "doi-10.1000_alpha",
-        "--topic",
+        "--research-area",
         "framing",
         "--idempotency-key",
         "gate-update",
@@ -193,6 +193,16 @@ def test_runtime_gate_replays_user_facing_commands(
     )
     assert runner["checks"]["runner_agent_constructed"] is True
     _run_json(capsys, "doctor", "self-test", "--workspace", str(workspace))
+    backup_target = tmp_path / "runtime-gate-backup"
+    backup = _run_json(
+        capsys,
+        "workspace",
+        "backup",
+        str(backup_target),
+        "--workspace",
+        str(workspace),
+    )
+    assert Path(backup["target"]) == backup_target.resolve()
     bundle = _run_json(capsys, "doctor", "bundle", "--workspace", str(workspace), "--redacted")
     assert bundle["redacted"] is True
 

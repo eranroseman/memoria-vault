@@ -13,7 +13,7 @@ operator-managed scheduled run. The eval is diagnostic, never gating.
 ## When to run it by hand
 
 - After adding or updating local eval-task fixtures
-- When the eval-trend dashboard shows a dip you want to reproduce immediately
+- When the eval log or an optional Eval trend view shows a dip you want to reproduce immediately
 - To compare a local workflow against a workspace-authored gold set
 
 ## Prerequisites

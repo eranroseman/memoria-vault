@@ -25,6 +25,7 @@ from memoria_vault.runtime.evidence import (
     evidence_ref_kind,
     extract_evidence_markers,
     parse_code_warrant_ref,
+    parse_evidence_marker,
     parse_source_span_ref,
 )
 from memoria_vault.runtime.paths import safe_filename
@@ -48,7 +49,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 11
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -1215,6 +1216,51 @@ def record_observed_file_edit(
         )
 
 
+def upsert_file_baseline(
+    vault: Path,
+    subject_id: str,
+    *,
+    human_sha256: str,
+    restriction_keys: list[str],
+) -> None:
+    target = normalize_path(subject_id)
+    keys = [str(key) for key in restriction_keys]
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO file_baseline(subject_id, human_sha256, restriction_keys_json, observed_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(subject_id) DO UPDATE SET
+                human_sha256 = excluded.human_sha256,
+                restriction_keys_json = excluded.restriction_keys_json,
+                observed_at = excluded.observed_at
+            """,
+            (target, human_sha256, _json(keys), now_iso()),
+        )
+
+
+def file_baseline(vault: Path, subject_id: str) -> dict[str, Any] | None:
+    if not db_path(vault).is_file():
+        return None
+    target = normalize_path(subject_id)
+    with connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT subject_id, human_sha256, restriction_keys_json
+            FROM file_baseline
+            WHERE subject_id = ?
+            """,
+            (target,),
+        ).fetchone()
+    if row is None:
+        return None
+    return {
+        "subject_id": row["subject_id"],
+        "human_sha256": row["human_sha256"],
+        "restriction_keys": json.loads(row["restriction_keys_json"] or "[]"),
+    }
+
+
 def mark_materialized(vault: Path, output_id: str, *, commit: str = "") -> None:
     target = normalize_path(output_id)
     with connect(vault) as conn:
@@ -2217,9 +2263,19 @@ def code_run(vault: Path, run_id: str) -> dict[str, Any] | None:
 def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
     rows = list(rows)
     with connect(vault) as conn:
+        existing_bindings = {
+            row["id"]: row["block_text_sha256"]
+            for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_sets")
+        }
         deleted = conn.execute("DELETE FROM evidence_sets").rowcount
         for row in rows:
+            evidence_id = str(row["id"])
             items = [str(item) for item in row.get("items", [])]
+            block_text_sha256 = (
+                existing_bindings[evidence_id]
+                if evidence_id in existing_bindings
+                else row.get("block_text_sha256")
+            )
             conn.execute(
                 """
                 INSERT INTO evidence_sets(
@@ -2229,18 +2285,20 @@ def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[s
                     type,
                     state,
                     review_required,
-                    run_id
+                    run_id,
+                    block_text_sha256
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    str(row["id"]),
+                    evidence_id,
                     normalize_path(str(row["block_ref"])),
                     _json(items),
                     str(row["type"]),
                     str(row["state"]),
                     1 if bool(row.get("review_required")) else 0,
                     str(row.get("run_id") or ""),
+                    block_text_sha256,
                 ),
             )
     return {"deleted": int(deleted), "inserted": len(rows)}
@@ -2252,7 +2310,8 @@ def evidence_sets(vault: Path) -> list[dict[str, Any]]:
     with connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT id, block_ref, items_json, type, state, review_required, run_id
+            SELECT id, block_ref, items_json, type, state, review_required, run_id,
+                   block_text_sha256
             FROM evidence_sets
             ORDER BY block_ref, id
             """
@@ -2355,6 +2414,16 @@ def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str,
 
 
 def _source_row(row: sqlite3.Row) -> dict[str, Any]:
+    csl_json = json.loads(row["csl_json"] or "{}")
+    memoria = csl_json.get("memoria") if isinstance(csl_json, dict) else None
+    if isinstance(memoria, dict) and "topics" in memoria:
+        csl_json = dict(csl_json)
+        memoria = dict(memoria)
+        memoria.pop("topics")
+        if memoria:
+            csl_json["memoria"] = memoria
+        else:
+            csl_json.pop("memoria", None)
     return {
         "work_id": row["work_id"],
         "concept_path": row["concept_path"],
@@ -2364,7 +2433,7 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "item_type": row["item_type"],
         "identifiers": json.loads(row["identifiers_json"] or "{}"),
         "citekey": row["citekey"],
-        "csl_json": json.loads(row["csl_json"] or "{}"),
+        "csl_json": csl_json,
         "provider_coverage": row["provider_coverage"],
         "text_status": row["text_status"],
         "check_status": row["check_status"],
@@ -2384,6 +2453,7 @@ def _evidence_set_row(row: sqlite3.Row) -> dict[str, Any]:
         "state": row["state"],
         "review_required": bool(row["review_required"]),
         "run_id": row["run_id"],
+        "block_text_sha256": row["block_text_sha256"],
     }
 
 
@@ -2468,9 +2538,10 @@ def _derived_evidence_row(
 ) -> dict[str, Any]:
     items = list(marker.items)
     evidence_type = _derived_evidence_type(items)
+    block_ref = _evidence_block_ref(rel, marker.evidence_id)
     return {
         "id": marker.evidence_id,
-        "block_ref": _evidence_block_ref(rel, marker.evidence_id),
+        "block_ref": block_ref,
         "items": items,
         "type": evidence_type,
         "state": "complete"
@@ -2478,6 +2549,7 @@ def _derived_evidence_row(
         else "evidence-incomplete",
         "review_required": evidence_type in {"implicit", "multi-hop"},
         "run_id": run_id,
+        "block_text_sha256": _block_text_sha256(vault, block_ref),
     }
 
 
@@ -2543,6 +2615,166 @@ def _source_span_pages(vault: Path) -> dict[str, set[str]]:
 
 def _evidence_block_ref(rel: str, evidence_id: str) -> str:
     return f"{normalize_path(rel)}#^blk-{evidence_id.removeprefix('ev-')}"
+
+
+def _block_text_sha256(vault: Path, block_ref: str) -> str | None:
+    rel, separator, anchor = str(block_ref).partition("#^")
+    if not separator or not rel or not anchor:
+        return None
+    evidence_id = _evidence_id_for_block_anchor(anchor)
+    if evidence_id is None:
+        return None
+    try:
+        path = Path(vault) / normalize_path(rel)
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError, ValueError):
+        return None
+
+    anchor_token = f"^{anchor}"
+    anchor_pattern = rf"(?<!\S){re.escape(anchor_token)}(?=\s|$)"
+    visible = _markdown_control_text(text)
+    original_blocks = re.split(r"\n[ \t]*\n+", text)
+    visible_blocks = re.split(r"\n[ \t]*\n+", visible)
+    if len(original_blocks) != len(visible_blocks):
+        return None
+
+    blocks = [
+        (original, control)
+        for original, control in zip(original_blocks, visible_blocks, strict=True)
+        if re.search(anchor_pattern, control)
+    ]
+    if len(blocks) != 1:
+        return None
+
+    block, control = blocks[0]
+    anchor_matches = list(re.finditer(anchor_pattern, control))
+    if len(anchor_matches) != 1:
+        return None
+    try:
+        markers = [
+            (match, parse_evidence_marker(match.group(0)))
+            for match in re.finditer(r"%%ev:\s*.*?%%", control)
+        ]
+    except ValueError:
+        return None
+    matching_markers = [match for match, marker in markers if marker.evidence_id == evidence_id]
+    if len(matching_markers) != 1:
+        return None
+    first_control, second_control = sorted((anchor_matches[0].start(), matching_markers[0].start()))
+    # Generated drafts put both controls on one line. Cross-line controls are
+    # deliberately unbound because adjacent Markdown lines may be separate blocks.
+    if "\n" in control[first_control:second_control]:
+        return None
+
+    canonical = block
+    for start, end in sorted(
+        (anchor_matches[0].span(), matching_markers[0].span()),
+        reverse=True,
+    ):
+        canonical = canonical[:start] + canonical[end:]
+    canonical = canonical.strip()
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _evidence_id_for_block_anchor(anchor: str) -> str | None:
+    if not anchor.startswith("blk-"):
+        return None
+    evidence_id = f"ev-{anchor.removeprefix('blk-')}"
+    return evidence_id if re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id) else None
+
+
+def _mask_markdown_code(value: str) -> str:
+    return re.sub(r"\S", "x", value)
+
+
+def _backtick_run_end(text: str, start: int) -> int:
+    end = start
+    while end < len(text) and text[end] == "`":
+        end += 1
+    return end
+
+
+def _preceding_backslash_count(text: str, index: int) -> int:
+    count = 0
+    index -= 1
+    while index >= 0 and text[index] == "\\":
+        count += 1
+        index -= 1
+    return count
+
+
+def _matching_inline_code_closer(text: str, start: int, length: int) -> int | None:
+    index = start
+    while index < len(text):
+        if text[index] != "`":
+            index += 1
+            continue
+        run_end = _backtick_run_end(text, index)
+        if run_end - index == length:
+            return index
+        index = run_end
+    return None
+
+
+def _mask_inline_code_spans(text: str) -> str:
+    """Mask equal, unescaped inline-code delimiter runs without moving offsets."""
+    masked: list[str] = []
+    copied_until = 0
+    index = 0
+    while index < len(text):
+        if text[index] != "`":
+            index += 1
+            continue
+        opener_end = _backtick_run_end(text, index)
+        if _preceding_backslash_count(text, index) % 2:
+            index = opener_end
+            continue
+        closer_start = _matching_inline_code_closer(text, opener_end, opener_end - index)
+        if closer_start is None:
+            index = opener_end
+            continue
+        closer_end = _backtick_run_end(text, closer_start)
+        masked.append(text[copied_until:index])
+        masked.append(_mask_markdown_code(text[index:closer_end]))
+        copied_until = closer_end
+        index = closer_end
+    masked.append(text[copied_until:])
+    return "".join(masked)
+
+
+def _markdown_control_text(text: str) -> str:
+    """Mask Markdown code so only rendered control tokens can bind evidence."""
+
+    lines: list[str] = []
+    fence_char = ""
+    fence_length = 0
+    for line in text.splitlines(keepends=True):
+        body = line.rstrip("\r\n")
+        if fence_char:
+            lines.append(_mask_markdown_code(line))
+            closing = re.match(r"^[ \t]{0,3}([`~]+)[ \t]*$", body)
+            if (
+                closing
+                and closing.group(1)[0] == fence_char
+                and len(closing.group(1)) >= fence_length
+            ):
+                fence_char = ""
+                fence_length = 0
+            continue
+
+        opening = re.match(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})", body)
+        if opening:
+            fence = opening.group("fence")
+            fence_char = fence[0]
+            fence_length = len(fence)
+            lines.append(_mask_markdown_code(line))
+        elif re.match(r"^(?: {4}|\t)", line):
+            lines.append(_mask_markdown_code(line))
+        else:
+            lines.append(line)
+
+    fenced = "".join(lines)
+    return _mask_inline_code_spans(fenced)
 
 
 def _upsert_concept_mirror_conn(

@@ -27,9 +27,9 @@ ingest: repeated runs may refresh metadata, but they should not race each other.
 
 The bottleneck is human attention, not machine capacity. If completed prompts
 pile up faster than the PI can review them, "reviewed" quietly turns into "machine
-finished." The design goal is visible pressure: dashboards, attention views, and
-weekly review make overload explicit instead of letting machine output silently
-accumulate.
+finished." The design goal is visible pressure: file-backed attention, CLI
+reads, weekly review, and any optional dashboard make overload explicit instead
+of letting machine output silently accumulate.
 
 That visibility is the point. A visible bottleneck is better than an invisible
 loss of review quality.

@@ -405,6 +405,27 @@ def test_hub_threshold(tmp_path):
     assert _m.hub_threshold(v, threshold=3) == []
 
 
+def test_hub_threshold_ignores_retired_topics_from_untouched_catalog_work(tmp_path):
+    state.upsert_catalog_record(
+        tmp_path,
+        work_id="legacy-work",
+        title="Legacy Work",
+        check_status="checked",
+        csl_json={
+            "memoria": {
+                "topics": ["legacy-only"],
+                "research_area": ["current-area"],
+            }
+        },
+    )
+
+    findings = _m.hub_threshold(tmp_path, threshold=1)
+
+    assert [finding.message for finding in findings] == [
+        "topic 'current-area' has 1 notes (threshold 1) and no hub -- consider creating one"
+    ]
+
+
 def test_hub_threshold_default_threshold_is_15(tmp_path):
     v = tmp_path
     for i in range(14):

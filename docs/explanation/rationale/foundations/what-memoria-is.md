@@ -99,7 +99,7 @@ canonical. The full autonomy argument lives in
 **Explanation**
 
 - The intellectual roots of the design: [Intellectual foundations](intellectual-foundations.md)
-- The seven-layer architecture: [Architecture](../../architecture/README.md)
+- The standalone architecture: [Architecture](../../architecture/README.md)
 - Why the human gate is structural: [Why the review gate is structural](../boundaries/why-review-gate-is-structural.md)
 - Why L3 is the ceiling: [Why Memoria doesn't pursue full autonomy](../boundaries/why-not-autonomous.md)
 - The principles this framing produces: [Design principles](design-principles.md)

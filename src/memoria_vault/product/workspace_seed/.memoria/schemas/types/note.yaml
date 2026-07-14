@@ -1,6 +1,5 @@
 type: note
 category: notes
-gated: false
 enums:
   mode: [claim, question, definition, work]
   question_status: [open, resolved]

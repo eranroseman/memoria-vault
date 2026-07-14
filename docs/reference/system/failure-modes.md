@@ -9,14 +9,22 @@ grand_parent: Reference
 
 All known failure modes, sorted by severity. Each entry: symptom, severity, cause, and fix. For full symptom → diagnosis → fix recipes on the most common failures see [Troubleshooting](../../how-to-guides/troubleshooting/README.md).
 
-**Severity scale.** These rows use the same `LOW`/`MEDIUM`/`HIGH`/`CRITICAL` scale defined by [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md#the-detectors); what this page adds is where each level escalates:
+**Severity scale.** These rows use the same `LOW`/`MEDIUM`/`HIGH`/`CRITICAL`
+labels defined by [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md#the-detectors).
+For linter findings, severity alone controls the verdict:
 
-| Severity | Escalates to |
+| Severity | Linter verdict |
 | --- | --- |
-| `CRITICAL` | Raises `loudness: block`: blocks new delegation or worker promotion until acknowledged, surfaces in the rail's **Now**, and records a Telegram push attempt when the bot environment is configured ([Control plane](../control-and-policy/control-plane.md)). |
-| `HIGH` | Surfaced in the rail's **Now** and in Maintenance's Drift watch. |
-| `MEDIUM` | Surfaced in Maintenance during the weekly review. |
-| `LOW` | Aggregated weekly. |
+| `CRITICAL` | `FAIL` |
+| `HIGH` | `REVIEW` |
+| `MEDIUM` | `REVIEW` |
+| `LOW` | `PASS` when no higher-severity finding exists |
+
+Attention loudness is independent metadata assigned by operations that create
+attention cards; there is no automatic severity-to-loudness mapping. Open
+`loudness: block` cards affect only the optional policy-hook path, and
+alert/block cards attempt a Telegram push only when that adapter is configured.
+The standalone CLI/worker path is not paused by loudness.
 
 ---
 
@@ -35,7 +43,7 @@ Sorted by severity, then topic.
 | Broken frontmatter YAML | MEDIUM | YAML parse error: unclosed string, list indentation error, missing closing `---` | Fix raw YAML outside Obsidian; verify with the Linter. |
 | Optional editor adapter can't connect | MEDIUM | The local HTTP server, token, read scope, or adapter configuration is stale | Use the standalone `memoria` CLI first, then repair the adapter configuration outside the core installer. |
 | Classification attention not appearing | MEDIUM | The source was added but enrichment/classification did not run or did not produce a checked result | Run `memoria work enrich <id>` and inspect the request with `memoria request show`. |
-| Schema mismatch in filtered views | MEDIUM | A hand-authored note or stale test-vault fixture does not match the current schema | Repair the specific note or reinitialize the test-vault from the current package seed, then validate with `python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .`. |
+| Schema mismatch in filtered views | MEDIUM | A hand-authored note or stale test-vault fixture does not match the current schema | Repair the specific note or reinitialize the test-vault from the current package seed, then validate with `./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .` (on Windows, replace the interpreter path with `.\.memoria\.venv\Scripts\python.exe`). |
 | Scheduled task did not run | MEDIUM | Host scheduler is disabled, asleep, or pointing at a stale workspace path | Run the same `memoria` command manually, then repair the operator-managed scheduler entry. |
 | Same request fails after explicit retry | MEDIUM | Brittle prompt, broken input payload, or unavailable dependency | Inspect `memoria request show`. If the original arguments remain correct, fix the underlying error and retry the failed request. For changed non-scope arguments, create a successor with `request amend` and a fresh key; for a changed ID, reference, path, or target, submit a new original operation. Cancel only obsolete pending work; never retry a superseded request. |
 | Request not progressing (`pending` / `running` / `failed`) | MEDIUM | Worker has not run, crashed mid-run, or recovery marked an interrupted run failed for explicit retry | See full recipe in [Fix a stuck request](../../how-to-guides/troubleshooting/fix-stuck-card.md). |

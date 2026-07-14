@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -24,6 +25,7 @@ TRACKED_PROJECTION_PATHS = (
     *INDEX_PATHS,
     "bibliography.bib",
 )
+TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
 
 
 def render_workspace_index(vault: Path, index_path: str) -> str:
@@ -43,16 +45,22 @@ def render_tracked_projection(vault: Path, projection_path: str) -> str:
         from memoria_vault.runtime.capture import render_references_bib
 
         return render_references_bib(vault)
+    if _is_argument_canvas(rel):
+        from memoria_vault.runtime.knowledge import render_project_argument_canvas
+
+        canvas = render_project_argument_canvas(vault, Path(rel).parent.name)
+        return json.dumps(canvas, indent=2, sort_keys=True) + "\n"
     raise ValueError(f"unsupported tracked projection: {projection_path}")
 
 
 def check_tracked_projections(vault: Path) -> dict[str, Any]:
     """Regenerate tracked projections into a temp tree and report drift."""
     vault = Path(vault)
+    projection_paths = _tracked_projection_paths(vault)
     findings = []
     with TemporaryDirectory(prefix="memoria-projections-") as tmp:
         generated_root = Path(tmp)
-        for rel in TRACKED_PROJECTION_PATHS:
+        for rel in projection_paths:
             expected = render_tracked_projection(vault, rel)
             generated = generated_root / rel
             generated.parent.mkdir(parents=True, exist_ok=True)
@@ -65,7 +73,7 @@ def check_tracked_projections(vault: Path) -> dict[str, Any]:
                 findings.append({"path": rel, "status": "stale"})
     return {
         "ok": not findings,
-        "paths": list(TRACKED_PROJECTION_PATHS),
+        "paths": projection_paths,
         "findings": findings,
     }
 
@@ -81,6 +89,7 @@ def changed_tracked_projection_paths(vault: Path) -> list[str]:
             "--untracked-files=all",
             "--",
             *TRACKED_PROJECTION_PATHS,
+            *TRACKED_PROJECTION_GLOBS,
         ],
         cwd=vault,
         check=False,
@@ -92,12 +101,12 @@ def changed_tracked_projection_paths(vault: Path) -> list[str]:
         raise RuntimeError(f"git status failed: {detail}")
     changed: list[str] = []
     for line in proc.stdout.splitlines():
-        if len(line) < 4 or "D" in line[:2]:
+        if len(line) < 4:
             continue
         path = line[3:]
         if " -> " in path:
             path = path.rsplit(" -> ", 1)[1]
-        if path in TRACKED_PROJECTION_PATHS:
+        if _is_tracked_projection_path(path):
             changed.append(path)
     return sorted(set(changed))
 
@@ -107,6 +116,7 @@ def write_tracked_projections(
     *,
     context: OperationContext,
     commit: bool = False,
+    projection_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Write all tracked generated projections."""
     validate_operation_context(vault, context)
@@ -116,6 +126,7 @@ def write_tracked_projections(
         context=context,
         actor=context.actor,
         machine=context.machine,
+        projection_paths=projection_paths,
     )
 
 
@@ -125,6 +136,7 @@ def write_tracked_projections_explicit(
     actor: str,
     machine: str,
     commit: bool = False,
+    projection_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Write tracked projections outside an operation envelope."""
     if actor not in state.ACTORS:
@@ -137,6 +149,7 @@ def write_tracked_projections_explicit(
         context=None,
         actor=actor,
         machine=machine,
+        projection_paths=projection_paths,
     )
 
 
@@ -147,6 +160,7 @@ def _write_tracked_projections(
     context: OperationContext | None,
     actor: str,
     machine: str,
+    projection_paths: list[str] | None,
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import (
         write_references_bib,
@@ -154,6 +168,7 @@ def _write_tracked_projections(
     )
 
     vault = Path(vault)
+    paths = _tracked_projection_paths(vault, projection_paths)
     if context:
         index_result = write_workspace_indexes(vault, context=context)
         references_result = write_references_bib(vault, context=context)
@@ -164,6 +179,17 @@ def _write_tracked_projections(
         *index_result["changed"],
         *([references_result["path"]] if references_result["changed"] else []),
     ]
+    for rel in paths:
+        if rel in TRACKED_PROJECTION_PATHS:
+            continue
+        output = vault / rel
+        text = render_tracked_projection(vault, rel)
+        old = output.read_text(encoding="utf-8") if output.is_file() else None
+        if old == text:
+            continue
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        changed.append(rel)
     event = None
     commit_id = ""
     if commit:
@@ -171,14 +197,14 @@ def _write_tracked_projections(
             "event": "run",
             "workflow": "generate_tracked_projections",
             "status": "done",
-            "outputs": list(TRACKED_PROJECTION_PATHS),
+            "outputs": paths,
         }
         if context:
             event = append_journal_event(vault, payload, context=context)
             commit_id = commit_writer_changes(
                 vault,
                 "regenerate tracked projections",
-                TRACKED_PROJECTION_PATHS,
+                paths,
                 context=context,
             )
         else:
@@ -186,16 +212,98 @@ def _write_tracked_projections(
             commit_id = commit_explicit_writer_changes(
                 vault,
                 "regenerate tracked projections",
-                TRACKED_PROJECTION_PATHS,
+                paths,
                 actor=actor,
                 machine=machine,
             )
     return {
-        "paths": list(TRACKED_PROJECTION_PATHS),
+        "paths": paths,
         "changed": changed,
         "event": event,
         "commit": commit_id,
     }
+
+
+def _tracked_projection_paths(vault: Path, requested_paths: list[str] | None = None) -> list[str]:
+    dynamic = set(
+        regenerable_tracked_projection_paths(vault, _git_tracked_dynamic_projection_paths(vault))
+    )
+    dynamic.update(
+        regenerable_tracked_projection_paths(
+            vault,
+            [
+                path.relative_to(vault).as_posix()
+                for pattern in TRACKED_PROJECTION_GLOBS
+                for path in Path(vault).glob(pattern)
+                if path.is_file()
+            ],
+        )
+    )
+    if (Path(vault) / ".git").exists():
+        dynamic.update(
+            path
+            for path in regenerable_tracked_projection_paths(
+                vault, changed_tracked_projection_paths(vault)
+            )
+            if path not in TRACKED_PROJECTION_PATHS
+        )
+    for raw_path in requested_paths or []:
+        rel = normalize_path(raw_path)
+        if not _is_tracked_projection_path(rel):
+            raise ValueError(f"unsupported tracked projection: {raw_path}")
+        if rel not in TRACKED_PROJECTION_PATHS and _is_regenerable_tracked_projection(vault, rel):
+            dynamic.add(rel)
+    return [*TRACKED_PROJECTION_PATHS, *sorted(dynamic)]
+
+
+def _git_tracked_dynamic_projection_paths(vault: Path) -> set[str]:
+    if not (Path(vault) / ".git").exists():
+        return set()
+    pathspecs = [f":(glob){pattern}" for pattern in TRACKED_PROJECTION_GLOBS]
+    proc = subprocess.run(
+        ["git", "ls-files", "--", *pathspecs],
+        cwd=vault,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if proc.returncode:
+        detail = proc.stderr.strip() or proc.stdout.strip()
+        raise RuntimeError(f"git ls-files failed: {detail}")
+    return {
+        normalize_path(path)
+        for path in proc.stdout.splitlines()
+        if path and _is_tracked_projection_path(path)
+    }
+
+
+def _is_tracked_projection_path(path: str) -> bool:
+    rel = normalize_path(path)
+    return rel in TRACKED_PROJECTION_PATHS or _is_argument_canvas(rel)
+
+
+def regenerable_tracked_projection_paths(vault: Path, paths: list[str]) -> list[str]:
+    """Return changed projections whose current owners can be rendered."""
+    return sorted(
+        {
+            rel
+            for path in paths
+            if _is_tracked_projection_path(rel := normalize_path(path))
+            and _is_regenerable_tracked_projection(vault, rel)
+        }
+    )
+
+
+def _is_regenerable_tracked_projection(vault: Path, path: str) -> bool:
+    rel = normalize_path(path)
+    return rel in TRACKED_PROJECTION_PATHS or (
+        _is_argument_canvas(rel) and (Path(vault) / Path(rel).parent / "project.md").is_file()
+    )
+
+
+def _is_argument_canvas(path: str) -> bool:
+    parts = Path(path).parts
+    return len(parts) == 3 and parts[0] == "projects" and parts[2] == "argument.canvas"
 
 
 def write_workspace_indexes(

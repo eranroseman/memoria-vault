@@ -9,11 +9,9 @@ nav_order: 2
 
 Memoria separates orchestration, execution, and settled knowledge because those
 states fail differently. The separation makes retries safe, handoffs lossless,
-and review enforceable. The
-[alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)
-records the older layered version of this rule; the current standalone baseline
-implements the same separation through the CLI, SQLite request table, worker
-operations, and checked workspace.
+and review enforceable. The standalone runtime implements those boundaries
+through the CLI, SQLite request table, worker operations, runtime policy, and
+checked workspace.
 
 For the current shared vocabulary, start with [Home](../README.md).
 
@@ -66,30 +64,23 @@ claim-level corroboration.
 
 ---
 
-## From three layers to seven
+## Current boundaries
 
-The original three-layer framing separated board, workers, and vault, but
-conflated two distinctions: *where* things live (structure) and *who* acts
-(actor-kind). [The alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md) pulled them apart
-into the seven-layer stack. The current standalone baseline keeps that boundary
-but replaces the board, MCP, and installed-profile mechanics with CLI/API
-requests, runtime policy, and operation manifests.
+The standalone runtime has five components with distinct jobs:
 
-Each refinement carries the same argument further:
+- The **CLI** accepts PI commands and creates explicit requests.
+- **SQLite state** records requests, catalog rows, journals, and read verdicts.
+- The **worker** executes requests and records their outcomes.
+- **Operation manifests and runtime policy** constrain allowed execution and
+  machine writes.
+- The **workspace** holds checked Concepts and generated projections.
 
-- The **request table and workers** are the control layer, with the **Co-PI**
-  posture kept read-only and separated from deterministic operations.
-- The **policy boundary** is explicit runtime code rather than an adapter
-  convention — naming where allow-listing, write-scoping, and audit actually
-  live.
-- Deterministic work lives in **operations** — reproducible mechanism that needs
-  no installed profile or background lane.
-- The **Interface** and the **PI** are named layers so the boundary is scoped
-  honestly: it binds the machine write path. PI edits and operator-managed
-  scheduled jobs are direct edges the engine observes or executes through
-  explicit requests.
+Optional adapters use the same request and read surfaces. They do not own
+runtime state. PI edits and operator-managed scheduled jobs enter through
+explicit requests or are observed by the integrity path.
 
-The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in [the alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md).
+The system keeps control thin and durable knowledge thick: requests and journal
+state coordinate work, while checked workspace files carry settled knowledge.
 
 ---
 
@@ -121,7 +112,7 @@ work cannot bypass the checked request/write lifecycle."
 
 **Explanation**
 
-- The seven layers described: [Architecture](../../architecture/README.md)
+- The current standalone structure: [Architecture](../../architecture/README.md)
 - How the agent layer is structured: [Why operation postures](why-operation-postures.md)
 - Why the vault's review gate is structural: [Why the review gate is structural](why-review-gate-is-structural.md)
 

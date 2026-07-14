@@ -22,19 +22,21 @@ Run it by hand after a large batch ingest, after structural edits, or when a fil
 
 **1. Run the detectors.**
 
-From the vault root:
+From the vault root, use the interpreter installed with the vault:
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .
+./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
+  --vault . --json
 ```
 
-Add `--json` for machine-readable output.
+On Windows, replace `./.memoria/.venv/bin/python` with
+`.\.memoria\.venv\Scripts\python.exe`.
 
 **2. Read the report by severity.**
 
 | Severity | Meaning | Action |
 | --- | --- | --- |
-| CRITICAL | Vault integrity at risk | Fix immediately — the verdict rolls to FAIL and blocks new delegation or worker promotion |
+| CRITICAL | Vault integrity at risk | Fix immediately — the verdict rolls to FAIL. Only an installed optional policy hook pauses review-gated adapter writes. |
 | HIGH | Silent or active breakage | Fix this session |
 | MEDIUM | Real drift, will compound | Address in the weekly review |
 | LOW | Cosmetic or easily recovered | Defer or accept |
@@ -54,11 +56,11 @@ memoria workspace check --workspace . --schedule-id lint-manual --json
 ## Verify
 
 - A re-run reports no CRITICAL or HIGH findings
-- Request/attention and linter views show the improvement after the next scheduled or manual pass
+- A fresh command run no longer reports the resolved finding
 
 ## Related
 
 - Weekly review (the structural-health step): [Run the weekly review](../inbox/run-the-weekly-review.md)
 - Fix broken frontmatter: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
 - The detector inventory and gate flags: [Linter: detectors and auto-fix](../../reference/analysis-and-surfaces/linter.md)
-- Where findings surface: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)
+- Shipped and planned finding surfaces: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)

@@ -72,7 +72,8 @@ vocabulary-specific points are:
 
 - **Update every existing use in the same pass.** Edit Concept frontmatter as
   the PI and run `memoria workspace scan --workspace <workspace>`; use
-  `memoria work update --research-area` for supported catalog Work changes.
+  `memoria work update --research-area` or `--methodology` for catalog Work
+  changes.
 - **Your selector is a frontmatter or catalog metadata value**, so enumerate with
   `memoria ask`/read-API inspection, Obsidian global search, or `grep -rl
   "old-term" digests/ fulltexts/ notes/ hubs/ projects/ system/` before editing
@@ -92,10 +93,16 @@ As with rename, update existing Work `research_area` and note `topics` uses
 separately. Mutating `topics` directly is rejected because it has no independent
 controlled list.
 
-> **Deferred — Foundation F4:** `work update` currently exposes
-> `--research-area` and `--topic`, but not `--methodology`. F4 aligns that Work
-> mutation surface with the vocabulary model. Mutating the methodology list
-> does not make existing Work methodology writable through the current CLI.
+Update an existing Work classification with the matching repeatable flag:
+
+```bash
+memoria work update --workspace <workspace> <work-id> \
+  --research-area personal-informatics \
+  --methodology field-study
+```
+
+Work has no `topics` field. Claim-bearing note `topics` continue to draw from
+the `research_area` controlled list.
 
 ## Verify
 

@@ -21,10 +21,10 @@ raw file edit has no equivalent journal provenance. Note frontmatter values
 and catalog Work metadata must move in lockstep. The raw CLI records declared
 provenance rather than authenticating its caller, so keep it PI-owned.
 
-> **Deferred — Foundation F4:** the current `work update` mutation surface
-> accepts `--research-area` and `--topic`; it does not accept `--methodology`.
-> F4 aligns Work mutation with this model, where Work uses `research_area` and
-> `methodology` and claim-bearing notes use inherited `topics`.
+`memoria work update` writes Work classifications with repeatable
+`--research-area` and `--methodology` flags. It does not expose `--topic`:
+claim-bearing note `topics` inherit the `research_area` list and are not Work
+metadata.
 
 ## Fields
 

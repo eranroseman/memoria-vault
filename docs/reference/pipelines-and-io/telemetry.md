@@ -34,12 +34,13 @@ Rationale: [the vault-eval-benchmark-first publication path](https://github.com/
 | `audit.jsonl` | runtime policy gate or optional adapter hook | per gated decision or paired write | one policy decision or before/after write record |
 | `lint-findings.jsonl` | linter detector run | per manual or scheduled lint run | one detector finding |
 | `sessions/YYYY-MM-DD-HHMM.jsonl` | `session_summary.py` | per summary run | one compact per-session digest file |
-| `attention.jsonl` | attention disposition runtime | per attention resolution | one PI outcome over an attention projection |
-| `triage.jsonl` | attention/import adapters when present | per triage event | one PI triage decision |
 | `system/metrics/eval/runs.jsonl` | `eval_score.py` | per eval score run | one scored eval run |
 
 The authoritative operational state is `.memoria/memoria.sqlite`; logs are
 evidence streams and diagnostics, not a second state store.
+Attention dispositions currently live in resolved `inbox/*.md` projections and
+request/journal evidence; no runtime writer produces `attention.jsonl` or
+`triage.jsonl`.
 
 ## Log schemas
 

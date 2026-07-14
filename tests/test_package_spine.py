@@ -59,7 +59,7 @@ def test_runtime_sqlite_schema_is_packaged_resource():
     source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
 
     assert "CREATE TABLE IF NOT EXISTS operation_requests" in schema
-    assert "PRAGMA user_version = 9" in schema
+    assert "PRAGMA user_version = 11" in schema
     assert "CREATE TABLE IF NOT EXISTS" not in source
 
 
@@ -88,7 +88,6 @@ def test_workspace_seed_is_packaged_runtime_minimum():
         ".memoria/config/providers.yaml",
         ".memoria/eval/alpha15-seeded-errors.json",
         ".memoria/patterns/_preamble.md",
-        ".memoria/schemas/calibration.yaml",
         ".memoria/schemas/folders.yaml",
         ".memoria/schemas/types/note.yaml",
         ".obsidian/app.json",

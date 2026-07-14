@@ -26,7 +26,7 @@ history, see [Design rationale](rationale/README.md).
 
 ## Reading map
 
-1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
+1. **[Architecture](architecture/README.md)** — the standalone engine, workspace, and trust boundaries.
 2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
 3. **[Execution](execution/README.md)** — operations, operation postures, requests, attention, and review state.
 4. **[Surfaces](surfaces/README.md)** — dashboards and optional editor integration boundaries.

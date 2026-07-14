@@ -18,6 +18,10 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.content_security import (
+    neutralize_untrusted_markdown,
+    neutralize_untrusted_markdown_fragment,
+)
 from memoria_vault.runtime.operations import (
     load_operation_policy,
     required_promotion_checks,
@@ -232,30 +236,39 @@ def emit_note_candidates(
     for row in rows:
         title = _required_text(row, "title")
         body = _required_text(row, "body")
+        safe_title = neutralize_untrusted_markdown_fragment(title)
+        safe_body = neutralize_untrusted_markdown(body)
         note_rel = _unique_note_rel(vault, title)
         require_policy_path(policy, note_rel)
         row_work_id = _draft_work_id(str(row.get("work_id") or ""))
         work_ref = f"catalog/sources/{row_work_id}" if row_work_id else digest_source_ref
         frontmatter = {
             "type": "note",
-            "title": title,
+            "title": safe_title,
             "work_id": work_ref,
-            "extraction_confidence": str(row.get("extraction_confidence") or "medium"),
-            "tags": _string_list(row.get("tags")),
+            "extraction_confidence": neutralize_untrusted_markdown(
+                str(row.get("extraction_confidence") or "medium")
+            ),
+            "tags": [neutralize_untrusted_markdown(tag) for tag in _string_list(row.get("tags"))],
         }
         if row.get("description"):
-            frontmatter["description"] = str(row["description"])
+            frontmatter["description"] = neutralize_untrusted_markdown(str(row["description"]))
         if row.get("claim_text"):
-            frontmatter["claim_text"] = str(row["claim_text"])
+            frontmatter["claim_text"] = neutralize_untrusted_markdown(str(row["claim_text"]))
         if row.get("quote"):
-            frontmatter["quote"] = str(row["quote"])
+            frontmatter["quote"] = neutralize_untrusted_markdown(str(row["quote"]))
         if isinstance(row.get("annotation_ref"), dict):
-            frontmatter["annotation_ref"] = dict(row["annotation_ref"])
+            annotation_ref = dict(row["annotation_ref"])
+            if annotation_ref.get("text_quote"):
+                annotation_ref["text_quote"] = neutralize_untrusted_markdown(
+                    str(annotation_ref["text_quote"])
+                )
+            frontmatter["annotation_ref"] = annotation_ref
 
         stage = stage_concept(
             vault,
             note_rel,
-            concept_text(frontmatter, title, body),
+            concept_text(frontmatter, safe_title, safe_body),
             context=context,
             inputs=[{"id": digest_rel, "sha256": sha256_file(vault / digest_rel)}],
         )
@@ -1960,7 +1973,7 @@ def compose_project_draft(
         "generated_by: compose-project-draft",
         "---",
         "",
-        f"# {project.get('title') or Path(project_rel).stem}",
+        f"# {neutralize_untrusted_markdown_fragment(str(project.get('title') or Path(project_rel).stem))}",
         "",
         f"Slice includes {len(members)} checked notes.",
         "",
@@ -1983,10 +1996,11 @@ def compose_project_draft(
         )
         evidence_markers.append(marker)
         block_anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
-        excerpt = _draft_note_excerpt(body, per_node_budget)
+        excerpt = neutralize_untrusted_markdown(_draft_note_excerpt(body, per_node_budget))
+        member_title = neutralize_untrusted_markdown_fragment(str(member["title"]))
         lines.extend(
             [
-                f"## {member['title']}",
+                f"## {member_title}",
                 "",
                 f"Source note: `{note_rel}`",
                 "",
@@ -2109,6 +2123,38 @@ def verify_project_draft(
     findings = []
     disposed = _disposed_evidence_ids(vault)
     for row in draft["evidence_sets"]:
+        stored_block_hash = row.get("block_text_sha256")
+        current_block_hash = state._block_text_sha256(vault, row["block_ref"])
+        if not stored_block_hash:
+            findings.append(
+                {
+                    "kind": "evidence-text-unbound",
+                    "severity": "high",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "reason": "stored block-text binding is missing",
+                }
+            )
+        elif current_block_hash is None:
+            findings.append(
+                {
+                    "kind": "evidence-text-unbound",
+                    "severity": "high",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "reason": "anchored block text cannot be resolved",
+                }
+            )
+        elif current_block_hash != stored_block_hash:
+            findings.append(
+                {
+                    "kind": "evidence-text-drift",
+                    "severity": "high",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "reason": "anchored block text differs from its stored binding",
+                }
+            )
         if row["id"] in disposed:
             continue
         if row["state"] == "evidence-incomplete":
@@ -2220,7 +2266,7 @@ def promote_draft_passage(
     if note_source:
         frontmatter["work_id"] = f"catalog/sources/{note_source}"
     apply_universal_concept_frontmatter(frontmatter, note_rel)
-    content = frontmatter_doc(frontmatter, selected + "\n")
+    content = frontmatter_doc(frontmatter, neutralize_untrusted_markdown(selected) + "\n")
     stage = stage_concept(
         vault,
         note_rel,
@@ -2324,14 +2370,18 @@ def render_project_export_markdown(vault: Path, project_path: str) -> dict[str, 
     project_frontmatter, project_body = split_frontmatter(
         (vault / project_rel).read_text(encoding="utf-8")
     )
-    project_title = str(project_frontmatter.get("title") or Path(project_rel).stem)
+    project_title = neutralize_untrusted_markdown_fragment(
+        str(project_frontmatter.get("title") or Path(project_rel).stem)
+    )
     node_titles = {node["path"]: node["title"] for node in argument["nodes"]}
 
     lines = [f"# {project_title}", ""]
-    description = str(project_frontmatter.get("description") or "").strip()
+    description = neutralize_untrusted_markdown(
+        str(project_frontmatter.get("description") or "").strip()
+    )
     if description:
         lines.extend([description, ""])
-    body = project_body.strip()
+    body = neutralize_untrusted_markdown(project_body.strip())
     if body:
         lines.extend(["## Project", "", body, ""])
     _append_project_export_paper_plan(lines, project_frontmatter.get("paper_plan"))
@@ -2359,10 +2409,11 @@ def render_project_export_markdown(vault: Path, project_path: str) -> dict[str, 
     _append_project_export_findings(lines, "Gap Findings", argument["gap_findings"])
     _append_project_export_findings(lines, "Advisories", argument["advisories"])
     _append_project_export_references(lines, vault)
+    content = neutralize_untrusted_markdown("\n".join(lines).rstrip() + "\n")
     return {
         "project_path": project_rel,
         "format": "markdown",
-        "content": "\n".join(lines).rstrip() + "\n",
+        "content": content,
         "node_count": argument["node_count"],
         "edge_count": len(argument["edges"]),
         "relation_count": argument["relation_count"],
@@ -2382,14 +2433,16 @@ def _append_project_export_paper_plan(lines: list[str], paper_plan: object) -> N
     }
     lines.extend(["## Paper Plan", ""])
     for key, label in labels.items():
-        value = str(paper_plan.get(key) or "").strip()
+        value = neutralize_untrusted_markdown_fragment(str(paper_plan.get(key) or "").strip())
         if value:
             lines.append(f"- {label}: {value}")
     for key, label in (("claim_evidence_map", "Claim evidence"), ("figure_plan", "Figure plan")):
         value = paper_plan.get(key)
         if isinstance(value, dict) and value:
             rendered = "; ".join(
-                f"{claim}: {evidence}" for claim, evidence in sorted(value.items())
+                f"{neutralize_untrusted_markdown_fragment(str(claim))}: "
+                f"{neutralize_untrusted_markdown_fragment(str(evidence))}"
+                for claim, evidence in sorted(value.items())
             )
             lines.append(f"- {label}: {rendered}")
     lines.append("")
@@ -2420,7 +2473,7 @@ def write_project_export(
             missing = ", ".join(readiness["missing"])
             raise ValueError(f"project is not export-ready: {missing}")
         rendered = render_project_export_markdown(vault, project_path)
-    content = str(rendered["content"])
+    content = neutralize_untrusted_markdown(str(rendered["content"]))
     output = output_path.strip()
     if export_format == "markdown":
         display_path = _write_project_export_output(vault, output, content) if output else ""
@@ -2471,12 +2524,13 @@ def render_project_draft_export_markdown(
         raise ValueError(f"project draft is not export-ready: {reasons}")
     draft = read_project_draft(vault, project_path)
     _frontmatter, body = split_frontmatter(draft["content"])
+    content = neutralize_untrusted_markdown(_render_draft_export_body(vault, body).strip() + "\n")
     return {
         "project_path": draft["project_path"],
         "draft_path": draft["draft_path"],
         "readiness": verification,
         "format": "markdown",
-        "content": _render_draft_export_body(vault, body).strip() + "\n",
+        "content": content,
         "node_count": 0,
         "edge_count": 0,
         "relation_count": 0,
@@ -2515,7 +2569,8 @@ def _append_project_export_nodes(lines: list[str], nodes: list[dict[str, Any]]) 
         return
     lines.extend(["## Argument Nodes", ""])
     for node in nodes:
-        lines.append(f"- {node['title']} ({node['role']}): `{node['path']}`")
+        title = neutralize_untrusted_markdown_fragment(str(node["title"]))
+        lines.append(f"- {title} ({node['role']}): `{node['path']}`")
     lines.append("")
 
 
@@ -2526,8 +2581,12 @@ def _append_project_export_edges(
         return
     lines.extend(["## Argument Links", ""])
     for edge in edges:
-        source = node_titles.get(edge["source"], edge["source"])
-        target = node_titles.get(edge["target"], edge["target"])
+        source = neutralize_untrusted_markdown_fragment(
+            str(node_titles.get(edge["source"], edge["source"]))
+        )
+        target = neutralize_untrusted_markdown_fragment(
+            str(node_titles.get(edge["target"], edge["target"]))
+        )
         lines.append(f"- {source} --{edge['type']}--> {target}")
     lines.append("")
 
@@ -2537,8 +2596,13 @@ def _append_project_export_hubs(lines: list[str], hubs: list[dict[str, str]]) ->
         return
     lines.extend(["## Project Hubs", ""])
     for hub in hubs:
-        description = f" -- {hub['description']}" if hub["description"] else ""
-        lines.append(f"- {hub['title']}: `{hub['path']}`{description}")
+        title = neutralize_untrusted_markdown_fragment(hub["title"])
+        description = (
+            f" -- {neutralize_untrusted_markdown_fragment(hub['description'])}"
+            if hub["description"]
+            else ""
+        )
+        lines.append(f"- {title}: `{hub['path']}`{description}")
     lines.append("")
 
 
@@ -2549,9 +2613,9 @@ def _append_project_export_findings(
         return
     lines.extend([f"## {heading}", ""])
     for row in rows:
-        severity = row.get("severity", "info")
-        kind = row.get("kind", "finding")
-        advice = str(row.get("advice") or "").strip()
+        severity = neutralize_untrusted_markdown_fragment(str(row.get("severity", "info")))
+        kind = neutralize_untrusted_markdown_fragment(str(row.get("kind", "finding")))
+        advice = neutralize_untrusted_markdown_fragment(str(row.get("advice") or "").strip())
         suffix = f": {advice}" if advice else ""
         lines.append(f"- {severity}: {kind}{suffix}")
     lines.append("")
@@ -3027,7 +3091,9 @@ def _outline_text(members: Iterable[dict[str, Any]]) -> str:
     lines = []
     for member in members:
         note_id = str(member["id"]).strip()
-        reasoning = str(member.get("reasoning") or "").strip()
+        reasoning = neutralize_untrusted_markdown_fragment(
+            str(member.get("reasoning") or "").strip()
+        )
         lines.append(f"- {note_id} — {reasoning}")
     return "\n".join(lines) + ("\n" if lines else "")
 
@@ -3213,7 +3279,14 @@ def _render_draft_export_body(vault: Path, content: str) -> str:
 def _draft_note_markdown_link(draft_rel: str, note_rel: str, title: str) -> str:
     start = Path(draft_rel).parent.as_posix()
     href = posixpath.relpath(note_rel, start=start)
-    return f"[{title}]({href}) %%embed: {note_rel}%%"
+    label = _draft_note_link_label(title)
+    return f"[{label}]({href}) %%embed: {note_rel}%%"
+
+
+def _draft_note_link_label(title: str) -> str:
+    """Make an untrusted title safe inside a writer-owned Markdown link label."""
+    label = neutralize_untrusted_markdown_fragment(title)
+    return label.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
 
 
 def _parse_outline_members(text: str) -> list[dict[str, Any]]:

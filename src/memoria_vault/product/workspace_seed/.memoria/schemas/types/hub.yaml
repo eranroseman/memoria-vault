@@ -1,6 +1,5 @@
 type: hub
 category: hubs
-gated: false
 required:
   type: literal:hub
   id: ulid

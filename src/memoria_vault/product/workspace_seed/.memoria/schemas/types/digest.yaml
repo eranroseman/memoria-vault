@@ -1,6 +1,5 @@
 type: digest
 category: digests
-gated: false
 required:
   type: literal:digest
   id: str

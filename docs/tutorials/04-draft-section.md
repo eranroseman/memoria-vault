@@ -23,7 +23,16 @@ memoria new project "Tutorial project" \
 Save the created project path.
 Notice that the path is under `projects/`.
 
-**2. Propose a slice.**
+**2. Check the project before checked-read operations use it.**
+
+```bash
+memoria check --workspace . <project-path>
+```
+
+New Concepts start unchecked. The slice operation reads only checked project
+and note state.
+
+**3. Propose a slice.**
 
 ```bash
 memoria project slice --workspace . <project-path> --query "jitai receptivity"
@@ -33,14 +42,14 @@ The slice writes `projects/<project>/outline.md`. It is a proposal, not a final
 argument map.
 Notice the outline path printed by the command.
 
-**3. Edit the outline.**
+**4. Edit the outline.**
 
 Open the outline and keep only the notes that belong in the draft. The line
 order is the draft order.
 For this tutorial, keep the two checked notes from Tutorial 03 and put the
 receptivity note first.
 
-**4. Compose and verify.**
+**5. Compose and verify.**
 
 ```bash
 memoria project compose --workspace . <project-path>

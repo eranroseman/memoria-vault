@@ -13,7 +13,7 @@ GIT_ENV_VARS = (
     "GIT_PREFIX",
 )
 
-TEST_LEVEL_NAMES = frozenset({"static", "unit", "contract", "package", "runtime", "live"})
+TEST_LEVEL_NAMES = frozenset({"static", "unit", "contract", "package", "runtime", "live", "floor"})
 
 TEST_LEVELS = {
     "test_operation_context.py": "runtime",
@@ -23,11 +23,13 @@ TEST_LEVELS = {
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",
     "test_cli.py": "contract",
+    "test_cli_honesty.py": "contract",
     "test_cli_doctor_eval.py": "contract",
     "test_cli_work_project.py": "contract",
     "test_cli_workspace_requests.py": "contract",
     "test_code_artifacts.py": "runtime",
     "test_concept_types.py": "contract",
+    "test_content_security.py": "runtime",
     "test_cspell_scope.py": "static",
     "test_detectors.py": "static",
     "test_diagnostics.py": "unit",
@@ -43,6 +45,12 @@ TEST_LEVELS = {
     "test_evidence_sets.py": "runtime",
     "test_exploration_channel.py": "runtime",
     "test_exploration_trace.py": "contract",
+    "test_floor_coverage.py": "floor",
+    "test_floor_invariants.py": "floor",
+    "test_floor_seed.py": "floor",
+    "test_floor_sweep_operations.py": "floor",
+    "test_floor_sweep_reads.py": "floor",
+    "test_floor_transports.py": "floor",
     "test_frontmatter_contract.py": "contract",
     "test_gap_analysis.py": "runtime",
     "test_gap_freejoin.py": "contract",
@@ -53,6 +61,7 @@ TEST_LEVELS = {
     "test_inbox_cards.py": "contract",
     "test_mcp_transport.py": "contract",
     "test_memoria_obsidian_package.py": "contract",
+    "test_mc_hash_binding.py": "runtime",
     "test_installer_skeleton.py": "package",
     "test_install_test_vault_local_llm.py": "package",
     "test_integrity.py": "runtime",
@@ -86,7 +95,7 @@ TEST_LEVELS = {
     "test_runtime_state.py": "runtime",
     "test_sample_vault.py": "package",
     "test_schema_doc_drift.py": "static",
-    "test_schema_v9.py": "unit",
+    "test_schema_v10.py": "unit",
     "test_schema_version.py": "contract",
     "test_schemas.py": "contract",
     "test_search_index.py": "contract",

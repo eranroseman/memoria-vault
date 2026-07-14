@@ -50,12 +50,14 @@ Detector notes:
 - `audit-log-size` is advisory because the audit log is append-only and never
   rotated ([quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
-CLI entry point:
+Vault-local CLI entry point (Linux/WSL):
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault <vault> [--json] [--gate detector-name]
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault <vault> [--threshold 15] [--json]
+<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault <vault> [--json] [--gate detector-name]
+<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault <vault> [--threshold 15] [--json]
 ```
+
+On Windows, use `<vault>\.memoria\.venv\Scripts\python.exe` instead.
 
 `--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
 
@@ -80,19 +82,23 @@ The installer wires the package seed's `.githooks/pre-commit` into the deployed 
 | Quiet window | Requests active within the last **24 h** (`--quiet-hours`) wait for a later run. |
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault <vault> [--quiet-hours H]
+<vault>/.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault <vault> [--quiet-hours H]
 ```
+
+On Windows, use `<vault>\.memoria\.venv\Scripts\python.exe` instead.
 
 ---
 
 ## Scheduled checks
 
-The standalone baseline can run linter checks on demand through
+The standalone baseline can run integrity checks on demand through
 `memoria workspace check`. Operators may wire the same check through cron,
-systemd timers, launchd, Task Scheduler, or another local scheduler. The lint
-wrapper runs the detectors, the per-session digests, and the worker
-`integrity-sweep` over the vault. Findings surface in Maintenance views and CLI
-output; no external scheduler is required.
+systemd timers, launchd, Task Scheduler, or another local scheduler. The
+command checks tracked projections and runs the worker `integrity-sweep`; it
+does not run per-session digests. Schedule the command above separately when
+you want those digests. Findings return in CLI output and may produce file-backed
+Inbox attention. A planned Maintenance adapter may aggregate them; no dashboard
+or external scheduler is required.
 
 ---
 

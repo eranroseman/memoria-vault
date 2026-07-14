@@ -1,4 +1,4 @@
-"""tests/test_schema_v9.py — v9 schema contract."""
+"""tests/test_schema_v10.py — v10 schema contract."""
 
 import hashlib
 import sqlite3
@@ -36,9 +36,9 @@ def _record_derivation(vault, *, input_id, output_id="concepts/output.md", actor
     )
 
 
-def test_user_version_is_9(tmp_path):
+def test_user_version_is_11(tmp_path):
     with _conn(tmp_path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 11
 
 
 def test_operation_requests_actor_accepts_agent_and_rejects_bogus(tmp_path):
