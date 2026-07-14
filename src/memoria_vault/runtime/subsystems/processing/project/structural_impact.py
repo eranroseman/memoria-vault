@@ -390,9 +390,7 @@ def previous_payload(path: Path) -> dict[str, Any] | None:
 
 
 def stable_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    stable = json.loads(json.dumps(payload, sort_keys=True))
-    stable.pop("computed_at", None)
-    return stable
+    return {k: v for k, v in payload.items() if k != "computed_at"}
 
 
 def render(payload: dict[str, Any]) -> str:
