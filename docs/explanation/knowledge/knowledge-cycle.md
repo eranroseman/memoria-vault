@@ -139,7 +139,7 @@ every actor but the PI.
 - The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
 - The daily practice surface: [Knowledge how-to guides](../../how-to-guides/knowledge/README.md)
 - The epistemic roles of document types: [Document types and epistemic roles](document-types.md)
-- Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
+- Why promotion is gated: [Promotion and the write boundary](promotion-and-gated-zones.md)
 - The folder structure the cycle flows through: [The vault](../architecture/vault.md)
 - The project drafting task flow: [Compose a draft](../../how-to-guides/project/compose-a-draft.md)
 - The read contract behind project slices: [Engine read API](../../reference/commands-and-transports/read-api.md)

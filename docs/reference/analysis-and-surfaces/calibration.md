@@ -42,3 +42,8 @@ a scoring model, embedding model, upstream classification source, prompt, or
 feature-extraction change. Until recalibration passes the same sample and
 error-budget checks, it will set `production_enabled: false` and return the
 score to shadow mode.
+
+## Related
+
+- The seeded-error bundle behind the current report-only marker: [Vault eval](vault-eval.md)
+- Why an uncalibrated score must stay report-only: [Design principles](../../explanation/rationale/foundations/design-principles.md) (Grounding, not truth)

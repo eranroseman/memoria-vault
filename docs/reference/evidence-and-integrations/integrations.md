@@ -10,7 +10,14 @@ grand_parent: Reference
 APIs and tools Memoria reaches during capture, enrichment, metadata checks, and
 retrieval. External calls are allowed only through declared operation policy;
 captured Concepts, SQLite state, and worker-owned projections remain Memoria's
-source of truth.
+source of truth. Free-text values pulled from these calls — discovered Work
+titles, enrichment findings, provider metadata — are passed through
+`neutralize_untrusted_markdown` or `neutralize_untrusted_markdown_fragment`
+(`src/memoria_vault/runtime/content_security.py`) before they are written into
+any vault file, including generated attention/candidate notes, so
+provider-controlled text cannot pose as trusted Markdown. Work titles use the
+fragment variant, tuned for interpolation into a larger line; enrichment
+findings use the base variant.
 
 ---
 

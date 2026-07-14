@@ -48,6 +48,19 @@ The local CLI's `--actor` value records declared provenance; it does not
 authenticate a caller. Keep the raw CLI PI-owned. Agent integrations use HTTP
 or MCP, which bind their request actor to `agent`.
 
+## Actor Authority Guard
+
+A fixed subset of operations requires a specific actor before the worker will
+run them at all. `_require_operation_actor` is the first check inside
+`_run_operation_job` — it runs before any payload validation. A mismatched
+actor fails the job with `"{operation_id} requires {label} actor authority"`
+and the rejected job appends zero `event_log` rows.
+
+| Required actor | Operations |
+| --- | --- |
+| `pi` | `acknowledge-attention`, `resolve-attention`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback` |
+| `integrity` | `trace-integrity-scan`, `observe-pi-edits` |
+
 ## WIP Limits
 
 The standalone runtime does not enforce external board WIP limits. Concurrency

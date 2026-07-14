@@ -67,3 +67,9 @@ fields such as `path`, `uri`, `source_path`, `target_path`, and
 The shipped Obsidian proof adapter stores its bearer token with Obsidian
 SecretStorage, spools only validated event payloads while offline, and sends
 events through the same `empirical-event-record` operation.
+
+## Related
+
+- The worker operation that validates and appends these events: [System action operations](../commands-and-transports/system-actions-operations.md)
+- The shipped adapter that records and sends them: [External integrations](../evidence-and-integrations/integrations.md)
+- How this `event_log`-based schema fits Memoria's broader logging map: [Telemetry & logs](../pipelines-and-io/telemetry.md)

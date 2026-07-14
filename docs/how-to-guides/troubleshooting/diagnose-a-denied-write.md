@@ -36,10 +36,11 @@ changed ID, reference, path, or target requires a new original operation.
 **2. Check the audit log.**
 
 ```bash
+memoria journal verify --workspace <workspace> --json
 memoria journal tail --workspace <workspace> --json
 ```
 
-For optional adapter writes, also inspect `system/logs/audit.jsonl`. A matching
+`journal verify` confirms the authoritative chain and head anchor before you trust anything `journal tail` shows. For optional adapter writes, also inspect `system/logs/audit.jsonl`. A matching
 `deny` or `dry_run` means the gate worked; read `policy_rule` and `reason`.
 
 **3. Scan Concept edits and tracked-projection drift.**
@@ -85,3 +86,8 @@ edit to a generated target is not authoritative.
 - `memoria workspace scan --workspace <workspace> --json` reports the expected
   Concept paths and no unexpected projection quarantine
 - The expected file, projection, or journal event is present
+
+## Related
+
+- `policy_rule`, `reason`, `deny`, and `dry_run` field semantics: [Policy audit log](../../reference/control-and-policy/policy-audit-log.md)
+- Full failure-modes catalog: [Failure modes](../../reference/system/failure-modes.md)

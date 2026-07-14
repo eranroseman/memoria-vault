@@ -66,5 +66,5 @@ capability files are knowledge Concepts.
 
 - Complete type reference: [Document types](../../reference/data-model/document-types.md)
 - Field grammar and verdict state: [Frontmatter fields](../../reference/data-model/frontmatter.md)
-- How material crosses the review gate: [Why promotion is gated](promotion-and-gated-zones.md)
+- How material crosses the review gate: [Promotion and the write boundary](promotion-and-gated-zones.md)
 - The how of note bodies: [Note body structure](note-body-structure.md)

@@ -51,3 +51,4 @@ memoria workspace check --workspace .
 
 - Workspace layout: [On-disk layout](../../reference/system/on-disk-layout.md)
 - CLI reference: [Memoria CLI](../../reference/commands-and-transports/cli.md)
+- Troubleshooting: [Troubleshooting](../troubleshooting/README.md)

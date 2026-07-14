@@ -43,7 +43,13 @@ Common YAML errors:
 
 Obsidian masks the raw YAML in Properties view. Open the file in VS Code or Notepad++ to see exactly what's in the frontmatter block:
 
+```bash
+# Linux / WSL2:
+code "notes/<note>.md"
+```
+
 ```powershell
+# Windows:
 code "notes\<note>.md"
 ```
 

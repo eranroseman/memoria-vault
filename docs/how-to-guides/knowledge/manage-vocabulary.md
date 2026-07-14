@@ -115,3 +115,4 @@ the `research_area` controlled list.
 
 - The validation pass: [Run the Linter](../operate/run-the-linter.md)
 - Why three open fields and a small list: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)
+- The full allowed-values table: [Vocabulary](../../reference/data-model/vocabulary.md)

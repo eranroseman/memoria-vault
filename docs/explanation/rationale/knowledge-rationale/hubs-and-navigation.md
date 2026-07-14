@@ -56,7 +56,7 @@ child hub rather than letting one map become a dumping ground.
 
 ## Where hubs sit in the knowledge model
 
-Claims are the atomic units: what the PI has come to think, in their own words ([Why promotion is gated](../../knowledge/promotion-and-gated-zones.md)). Hubs keep those units findable as they multiply. They are human-owned end to end because navigation of one's own knowledge does not survive full delegation. To build one, see [Build a hub](../../../how-to-guides/knowledge/build-a-hub.md).
+Claims are the atomic units: what the PI has come to think, in their own words ([Promotion and the write boundary](../../knowledge/promotion-and-gated-zones.md)). Hubs keep those units findable as they multiply. They are human-owned end to end because navigation of one's own knowledge does not survive full delegation. To build one, see [Build a hub](../../../how-to-guides/knowledge/build-a-hub.md).
 
 ---
 

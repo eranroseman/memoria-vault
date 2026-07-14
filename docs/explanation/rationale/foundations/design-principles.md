@@ -49,7 +49,10 @@ Every claim-bearing note traces back to checked Work evidence through
 event/read-API state. Every agent action traces back to an audit log entry. Untraceable
 content is not knowledge — it is a liability that will fail when cited. The
 [Policy gate](../../../reference/control-and-policy/policy-mcp.md), trusted writer, per-write SHA-256 hash
-pairing, and SQLite journal/read model all enforce this.
+pairing, and SQLite journal/read model all enforce this. An evidence marker's
+binding to its exact cited text is itself immutable: the hash ledger that
+pairs a marker to its source span accepts new rows, never edits to existing
+ones, so a citation cannot be silently re-pointed at different text later.
 
 **6. Prefer incremental over full rewrites.**
 

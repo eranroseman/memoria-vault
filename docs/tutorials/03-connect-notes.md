@@ -67,4 +67,6 @@ receptivity note.
 - `check_status` is runtime state, not frontmatter.
 - Typed links make notes usable as a graph.
 
+For more detail: [Link checked notes](../how-to-guides/knowledge/link-checked-notes.md).
+
 Next: [04: Draft section](04-draft-section.md).

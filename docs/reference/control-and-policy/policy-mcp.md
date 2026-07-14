@@ -94,5 +94,10 @@ hook.
 | --- | --- |
 | `tests/test_runtime_policy.py` | Policy decision and audit core behavior. |
 | `tests/test_policy_hook.py` | Hook protocol and fail-closed tool/path behavior. |
-| `tests/test_policy_gate_plugin.py` | Optional plugin import/failure behavior. |
 | `tests/test_policy_gate_completeness.py` | Direct-tool deny coverage. |
+
+## Related
+
+- Why the gate is structural: [Why review-gate is structural](../../explanation/rationale/boundaries/why-review-gate-is-structural.md)
+- Diagnosing a denied write: [Diagnose a denied write](../../how-to-guides/troubleshooting/diagnose-a-denied-write.md)
+- Safe-mode fallback: [Safe mode](../../how-to-guides/troubleshooting/safe-mode.md)

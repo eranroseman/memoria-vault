@@ -85,7 +85,7 @@ project. A hub is authored perspective over the graph, not a folder in disguise.
 ## Related
 
 - The type system the folders encode: [Document types and epistemic roles](../../knowledge/document-types.md)
-- How state changes are gated: [Why promotion is gated](../../knowledge/promotion-and-gated-zones.md)
+- How state changes are gated: [Promotion and the write boundary](../../knowledge/promotion-and-gated-zones.md)
 - The schema/home decision: [the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md)
 - The folder tree itself: [The vault](../../architecture/vault.md)
 - The facet fields: [Frontmatter fields](../../../reference/data-model/frontmatter.md)
