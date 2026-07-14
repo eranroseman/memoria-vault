@@ -26,7 +26,7 @@ from memoria_vault.runtime.knowledge import (
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+from tests.helpers import _md, call_with_context, copy_memoria_dirs, git, init_git
 
 
 def frame_project_paper(vault: Path, *args, **kwargs):
@@ -59,37 +59,6 @@ def _checked(vault: Path, rel: str, concept_type: str) -> None:
         output_sha256=sha256_file(vault / rel),
     )
     state.set_concept_verdict(vault, rel, "checked")
-
-
-def _md(path: Path, frontmatter: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
-    fm = read_frontmatter(path)
-    status = fm.get("check_status")
-    if status in state.CHECK_STATUSES:
-        vault = _vault_root(path)
-        rel = path.relative_to(vault).as_posix()
-        state.record_observed_file_edit(
-            vault,
-            output_id=rel,
-            concept_type=str(fm.get("type") or "note"),
-            output_sha256=sha256_file(path),
-        )
-        state.set_concept_verdict(vault, rel, str(status))
-
-
-def _vault_root(path: Path) -> Path:
-    for parent in path.parents:
-        if parent.name in {
-            "notes",
-            "hubs",
-            "projects",
-            "digests",
-            "fulltext",
-            "capabilities",
-        }:
-            return parent.parent
-    return path.parent
 
 
 def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> None:

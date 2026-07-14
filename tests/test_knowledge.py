@@ -19,11 +19,17 @@ from memoria_vault.runtime.knowledge import (
     emit_note_candidates as _emit_note_candidates,
 )
 from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import mark_checked as _mark_checked
 from memoria_vault.runtime.trusted_writer import observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, operation_context
+from tests.helpers import (
+    _md,
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_git,
+    operation_context,
+)
 
 
 def _call(function, vault: Path, *args, **kwargs):
@@ -420,34 +426,3 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert event["reason"] == "PI linked claims"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/source.md"}
-
-
-def _md(path: Path, frontmatter: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
-    fm = read_frontmatter(path)
-    status = fm.get("check_status")
-    if status in state.CHECK_STATUSES:
-        vault = _vault_root(path)
-        rel = path.relative_to(vault).as_posix()
-        state.record_observed_file_edit(
-            vault,
-            output_id=rel,
-            concept_type=str(fm.get("type") or "note"),
-            output_sha256=sha256_file(path),
-        )
-        state.set_concept_verdict(vault, rel, str(status))
-
-
-def _vault_root(path: Path) -> Path:
-    for parent in path.parents:
-        if parent.name in {
-            "notes",
-            "hubs",
-            "projects",
-            "digests",
-            "fulltext",
-            "capabilities",
-        }:
-            return parent.parent
-    return path.parent
