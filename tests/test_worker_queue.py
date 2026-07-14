@@ -34,7 +34,7 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def note_text(status: str = "checked") -> str:
+def note_text() -> str:
     return "---\ntype: note\ntitle: Worker note\ntags: []\nlinks: {}\n---\nBody.\n"
 
 
@@ -94,7 +94,7 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
     queued = enqueue_trusted_write(
         vault,
         "notes/worker.md",
-        note_text(status="checked"),
+        note_text(),
         inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
         idempotency_key="write-worker",
         actor="operation",
@@ -126,7 +126,7 @@ def test_worker_create_concept_operation_materializes_unchecked(tmp_path: Path) 
         "create-concept",
         payload={
             "target_path": "notes/agent.md",
-            "content": note_text(status="unchecked"),
+            "content": note_text(),
             "concept_type": "note",
         },
         idempotency_key="agent-create",
