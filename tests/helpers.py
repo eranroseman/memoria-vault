@@ -212,6 +212,15 @@ def _md(path: Path, frontmatter: str) -> None:
         state.set_concept_verdict(vault, rel, str(status))
 
 
+def note_text(title: str, *, status: str = "checked") -> str:
+    return (
+        "---\n"
+        f"type: note\ncheck_status: {status}\ntitle: {title}\n"
+        "status: accepted\n---\n"
+        f"# {title}\n\nBody.\n"
+    )
+
+
 def patch_pydantic_ai(
     monkeypatch: Any,
     *,
