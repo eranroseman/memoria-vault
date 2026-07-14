@@ -42,10 +42,10 @@ from tests.helpers import (
     write_note,
 )
 from tests.helpers import (
-    worker_workspace as workspace,
+    capture_bibtex_source_checked as _capture_bibtex_source,
 )
 from tests.helpers import (
-    capture_bibtex_source_checked as _capture_bibtex_source,
+    worker_workspace as workspace,
 )
 
 
