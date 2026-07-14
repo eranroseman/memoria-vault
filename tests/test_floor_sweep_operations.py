@@ -126,11 +126,16 @@ def test_operation(tmp_path: Path, operation_id: str) -> None:
         # test_floor_coverage.py (Task 7), not by an erroring sweep case.
         pytest.skip(f"{operation_id} not yet in OPERATION_REGISTRY")
     payload = _fill(entry["payload"], manifest)
+    idempotency_key = (
+        _fill(entry["idempotency_key"], manifest)
+        if "idempotency_key" in entry
+        else f"floor:{operation_id}"
+    )
     queued = enqueue_operation(
         vault,
         operation_id,
         payload=payload,
-        idempotency_key=f"floor:{operation_id}",
+        idempotency_key=idempotency_key,
         actor="agent",
     )
     done = run_next_job(vault, machine="floor")

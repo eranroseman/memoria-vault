@@ -388,22 +388,21 @@ def _fill(template, manifest: dict):
 
 # Per operation id: {"payload": dict-template, "expect": "done" | "refused",
 # "reason": str (required when expect=="refused"), "creates": [rel-templates]
-# (optional)}. `{placeholders}` are manifest keys from `seed_vault`'s returned
-# manifest, filled in by `_fill`. Payload keys are read off the worker's
-# dispatch branch for the operation_id (src/memoria_vault/runtime/worker.py),
-# not guessed from the manifest's io_schema — see task-6-report.md for the
-# worker-branch evidence behind each entry, including two corrections vs the
-# original brief (curate-note-link, enrich-source).
+# (optional), "idempotency_key": str (optional; defaults to
+# f"floor:{operation_id}" in test_floor_sweep_operations.py when omitted —
+# only empirical-event-record needs an override, since it's the one
+# operation whose dispatch branch validates the idempotency_key itself)}.
+# `{placeholders}` are manifest keys from `seed_vault`'s returned manifest,
+# filled in by `_fill` (for both "payload" and "idempotency_key"). Payload
+# keys are read off the worker's dispatch branch for the operation_id
+# (src/memoria_vault/runtime/worker.py), not guessed from the manifest's
+# io_schema — see task-6-report.md for the worker-branch evidence behind
+# each entry, including two corrections vs the original brief
+# (curate-note-link, enrich-source).
 #
-# Seeded here: create-concept, curate-note-link, analyze-gaps,
-# analyze-project-argument, render-project-argument-canvas,
-# check-falsifiability, enrich-source. The remaining ~47 operation ids are
-# completed in Task 7: for each missing id the coverage test names it; read
-# its manifest (src/memoria_vault/product/capabilities/operations/<id>.md
-# frontmatter: io_schema.input, allowed_paths, allowed_network) and the
-# worker dispatch branch for its payload keys
-# (grep '"<id>"' src/memoria_vault/runtime/worker.py), then add the entry.
-# expect=="refused" requires asserting the real reason string.
+# Complete as of Task 7b-2: all 52 cataloged operation ids are registered
+# (7 seeded in Task 6, 22 in Task 7b-1, the final 23 in Task 7b-2) — see
+# test_floor_coverage.py's test_every_operation_has_a_floor_entry.
 OPERATION_REGISTRY: dict[str, dict] = {
     "create-concept": {
         "payload": {
@@ -699,19 +698,21 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # worker.py:340-355 requires the *enqueue's own idempotency_key* to
     # equal f"empirical-event:{event['event_id']}" exactly (checked against
-    # `job["request_envelope"]["idempotency_key"]`, not the payload). The
-    # sweep's harness (test_floor_sweep_operations.py) hardcodes
-    # `idempotency_key=f"floor:{operation_id}"` for every operation, which
-    # can never match "empirical-event:<uuid>" regardless of payload — a
-    # deterministic refusal forced by the sweep's own fixed harness, the
-    # same category as curate-note-link's actor mismatch in Task 6. Payload
-    # below is otherwise a fully valid `session.started` empirical event
-    # (validate_empirical_event, engine/empirical_events.py) so the
-    # observed refusal is genuinely the idempotency-key check, not an
-    # earlier schema-validation error — confirmed live, and matches the
-    # existing precedent test
-    # `test_empirical_event_operation_requires_event_id_idempotency_key`
-    # (tests/test_empirical_events.py:204-221).
+    # `job["request_envelope"]["idempotency_key"]`, not the payload). Task
+    # 7b-1 registered this "refused" only because the sweep's harness then
+    # hardcoded `idempotency_key=f"floor:{operation_id}"` for every
+    # operation, which can never match "empirical-event:<uuid>" — leaving
+    # this op's real "done" path with zero coverage (flagged in
+    # task-7b1-report.md's review). Task 7b-2 fixes the gap: the sweep
+    # (test_floor_sweep_operations.py) now supports an OPTIONAL per-entry
+    # `idempotency_key` template, filled the same way as `payload`, and
+    # substituted for the default `f"floor:{operation_id}"` when present.
+    # The literal event_id below has no `{}` placeholders, so it needs no
+    # doubled braces. Payload is a fully valid `session.started` empirical
+    # event (validate_empirical_event, engine/empirical_events.py);
+    # dispatches to operations.py:record_empirical_event, which appends the
+    # journal event and returns (no file outputs: `"outputs": []`).
+    # Confirmed live with the matching idempotency_key: "done".
     "empirical-event-record": {
         "payload": {
             "event_id": "0699e2c1-6b31-7c9e-9e9b-2f6a2c9d4a11",
@@ -721,8 +722,8 @@ OPERATION_REGISTRY: dict[str, dict] = {
             "surface": "cli",
             "workflow": "session",
         },
-        "expect": "refused",
-        "reason": "requires idempotency_key=empirical-event:",
+        "idempotency_key": "empirical-event:0699e2c1-6b31-7c9e-9e9b-2f6a2c9d4a11",
+        "expect": "done",
     },
     # worker.py:791-797 pops dry_run (bool, default False). eval_dispatch.
     # dispatch (subsystems/telemetry/eval/eval_dispatch.py) reads
