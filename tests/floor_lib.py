@@ -688,6 +688,78 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "project outline has no checked members",
     },
+    # worker.py:468-488 pops note_path/status. curate-note-candidate is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:57); same
+    # actor-check-fires-first shape as acknowledge-attention above —
+    # confirmed live.
+    "curate-note-candidate": {
+        "payload": {"note_path": "{note_claim}", "status": "accepted"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py:340-355 requires the *enqueue's own idempotency_key* to
+    # equal f"empirical-event:{event['event_id']}" exactly (checked against
+    # `job["request_envelope"]["idempotency_key"]`, not the payload). The
+    # sweep's harness (test_floor_sweep_operations.py) hardcodes
+    # `idempotency_key=f"floor:{operation_id}"` for every operation, which
+    # can never match "empirical-event:<uuid>" regardless of payload — a
+    # deterministic refusal forced by the sweep's own fixed harness, the
+    # same category as curate-note-link's actor mismatch in Task 6. Payload
+    # below is otherwise a fully valid `session.started` empirical event
+    # (validate_empirical_event, engine/empirical_events.py) so the
+    # observed refusal is genuinely the idempotency-key check, not an
+    # earlier schema-validation error — confirmed live, and matches the
+    # existing precedent test
+    # `test_empirical_event_operation_requires_event_id_idempotency_key`
+    # (tests/test_empirical_events.py:204-221).
+    "empirical-event-record": {
+        "payload": {
+            "event_id": "0699e2c1-6b31-7c9e-9e9b-2f6a2c9d4a11",
+            "event_type": "session.started",
+            "timestamp": "2026-07-13T00:00:00Z",
+            "session_id": "floor-sweep-session",
+            "surface": "cli",
+            "workflow": "session",
+        },
+        "expect": "refused",
+        "reason": "requires idempotency_key=empirical-event:",
+    },
+    # worker.py:791-797 pops dry_run (bool, default False). eval_dispatch.
+    # dispatch (subsystems/telemetry/eval/eval_dispatch.py) reads
+    # `.memoria/eval/*.md` gold-task fixtures (none are seeded — the
+    # packaged workspace ships only alpha15-seeded-errors.json) and, when
+    # there are none, still writes an empty last-run.md — a fully local,
+    # no-network path (create_task_intent is pure string formatting, not a
+    # real dispatch). Confirmed live: "done".
+    "eval-run": {
+        "payload": {},
+        "expect": "done",
+        "creates": [".memoria/eval/last-run.md"],
+    },
+    # worker.py:723-747 pops project_path (required) plus optional
+    # format/output_path/ready_only/draft. With the defaults (markdown,
+    # ready_only=False, no output_path), knowledge.py:write_project_export
+    # renders and returns the export content inline rather than writing a
+    # file (output_path is only written when the payload supplies one) —
+    # confirmed live: "done", output_path "" and a populated `content`
+    # field; no file to assert via `creates`.
+    "export-project": {
+        "payload": {"project_path": "{project}"},
+        "expect": "done",
+    },
+    # worker.py:936-952, same run_prompt_operation path as analyze-claims
+    # above. input_text stands in for "checked Work text" (this op's own
+    # io_schema.input). Confirmed live: identical #1391 gitignored-staging
+    # crash — xfail(strict=True).
+    "extract-claim-stubs": {
+        "payload": {
+            "input_text": (
+                "Demo Work reports a significant reduction in default risk "
+                "associated with coffee consumption (p<0.05)."
+            )
+        },
+        "expect": "done",
+    },
 }
 
 

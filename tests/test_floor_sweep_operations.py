@@ -42,6 +42,7 @@ _KNOWN_BUGS: dict[str, str] = {
     # task-7b1-report.md), not assumed by analogy alone.
     "analyze-claims": _PROMPT_STAGING_GITIGNORE_BUG,
     "compare-and-contrast": _PROMPT_STAGING_GITIGNORE_BUG,
+    "extract-claim-stubs": _PROMPT_STAGING_GITIGNORE_BUG,
 }
 
 OPERATION_PARAMS = [
