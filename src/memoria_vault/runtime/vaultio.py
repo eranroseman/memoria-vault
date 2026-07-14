@@ -42,12 +42,18 @@ def safe_read(path: Path) -> str:
         return ""
 
 
+def _frontmatter_end(text: str) -> int | None:
+    """Return the index of the closing ``---`` line, or ``None`` if absent."""
+    if not text.startswith("---"):
+        return None
+    end = text.find("\n---", 3)
+    return None if end == -1 else end
+
+
 def parse_frontmatter(text: str) -> dict[str, Any]:
     """Parse leading YAML frontmatter, returning ``{}`` when absent or invalid."""
-    if not text.startswith("---"):
-        return {}
-    end = text.find("\n---", 3)
-    if end == -1:
+    end = _frontmatter_end(text)
+    if end is None:
         return {}
     raw = text[3:end]
     try:
@@ -62,10 +68,8 @@ def read_frontmatter(path: Path) -> dict[str, Any]:
 
 
 def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    if not text.startswith("---"):
-        return {}, text
-    end = text.find("\n---", 3)
-    if end == -1:
+    end = _frontmatter_end(text)
+    if end is None:
         return {}, text
     body_start = end + len("\n---")
     if body_start < len(text) and text[body_start] == "\n":
