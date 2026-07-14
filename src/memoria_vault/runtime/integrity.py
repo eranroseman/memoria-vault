@@ -972,13 +972,43 @@ def _propagate_scan_demotion(
             continue
         actor = str(event.get("actor") or "")
         if actor == "pi":
-            _flag_human_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="cascade-rollback",
+                route="ask",
+            )
             needs_human.append(output_id)
         elif depth == 1:
-            _demote_machine_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="scan-demotion-propagation",
+                route="act",
+                state_update=lambda output_id=output_id: state.set_concept_verdict(
+                    vault, output_id, "unchecked"
+                ),
+            )
             demoted.append(output_id)
         else:
-            _flag_stale_machine_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="scan-demotion-stale",
+                route="log",
+                state_update=lambda output_id=output_id: state.set_concept_flag(
+                    vault, output_id, "stale", reason=reason, trigger_id=target
+                ),
+            )
             stale.append(output_id)
     return {
         "target_id": target,
@@ -1057,7 +1087,15 @@ def cascade_rollback(
         seen.add(output_id)
 
         if event.get("actor") == "pi":
-            _flag_human_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="cascade-rollback",
+                route="ask",
+            )
             needs_human.append(output_id)
             continue
 
@@ -1143,19 +1181,25 @@ def resolve_attention(
     return {"event": row, "commit": commit}
 
 
-def _flag_human_descendant(
+def _flag_descendant(
     vault: Path,
     output_id: str,
     target: str,
     reason: str,
     append_event: Callable[[dict[str, Any]], dict[str, Any]],
+    *,
+    check: str,
+    route: str,
+    state_update: Callable[[], None] | None = None,
 ) -> None:
     path = vault / output_id
     target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
+    if state_update:
+        state_update()
     append_event(
         {
             "event": EVENT_CHECK_FIRED,
-            "check": "cascade-rollback",
+            "check": check,
             "status": "failed",
             "reason": reason,
             "target_id": output_id,
@@ -1163,59 +1207,7 @@ def _flag_human_descendant(
             "output_sha256": target_sha,
             "trigger_id": target,
             "shadow": False,
-            "route": "ask",
-        },
-    )
-
-
-def _demote_machine_descendant(
-    vault: Path,
-    output_id: str,
-    target: str,
-    reason: str,
-    append_event: Callable[[dict[str, Any]], dict[str, Any]],
-) -> None:
-    path = vault / output_id
-    target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
-    state.set_concept_verdict(vault, output_id, "unchecked")
-    append_event(
-        {
-            "event": EVENT_CHECK_FIRED,
-            "check": "scan-demotion-propagation",
-            "status": "failed",
-            "reason": reason,
-            "target_id": output_id,
-            "target_sha256": target_sha,
-            "output_sha256": target_sha,
-            "trigger_id": target,
-            "shadow": False,
-            "route": "act",
-        },
-    )
-
-
-def _flag_stale_machine_descendant(
-    vault: Path,
-    output_id: str,
-    target: str,
-    reason: str,
-    append_event: Callable[[dict[str, Any]], dict[str, Any]],
-) -> None:
-    path = vault / output_id
-    target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
-    state.set_concept_flag(vault, output_id, "stale", reason=reason, trigger_id=target)
-    append_event(
-        {
-            "event": EVENT_CHECK_FIRED,
-            "check": "scan-demotion-stale",
-            "status": "failed",
-            "reason": reason,
-            "target_id": output_id,
-            "target_sha256": target_sha,
-            "output_sha256": target_sha,
-            "trigger_id": target,
-            "shadow": False,
-            "route": "log",
+            "route": route,
         },
     )
 
