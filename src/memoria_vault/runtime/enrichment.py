@@ -59,6 +59,48 @@ def provider_allowlist_issues(config: dict[str, Any], policy: dict[str, Any]) ->
     return issues
 
 
+def _flag_and_commit(
+    vault: Path,
+    source: dict[str, Any],
+    run_id: str,
+    *,
+    status: str,
+    check: str,
+    reason: str,
+    evidence: str,
+    commit_message: str,
+    context: OperationContext,
+    include_run_id: bool = True,
+) -> dict[str, Any]:
+    state.finish_enrichment_run(vault, run_id, status)
+    finding = record_integrity_check(
+        vault,
+        f"catalog/sources/{source['work_id']}",
+        check=check,
+        status="failed",
+        reason=reason,
+        shadow=False,
+        context=context,
+    )
+    attention_path = _write_attention_flag(
+        vault,
+        source,
+        check=check,
+        finding=reason,
+        evidence=evidence,
+    )
+    commit = commit_writer_changes(vault, commit_message, [attention_path], context=context)
+    result = {
+        "enrichment_status": status,
+        "finding": finding,
+        "attention_path": attention_path,
+        "commit": commit,
+    }
+    if include_run_id:
+        result["run_id"] = run_id
+    return result
+
+
 def enrich_source(
     vault: Path,
     work_id: str,
@@ -143,37 +185,18 @@ def enrich_source(
 
     if missing:
         reason = "missing required provider: " + "; ".join(missing)
-        state.finish_enrichment_run(vault, run_id, "needs_human")
-        finding = record_integrity_check(
-            vault,
-            f"catalog/sources/{source['work_id']}",
-            check="source-enrichment",
-            status="failed",
-            reason=reason,
-            shadow=False,
-            context=context,
-        )
-        attention_path = _write_attention_flag(
+        return _flag_and_commit(
             vault,
             source,
+            run_id,
+            status="needs_human",
             check="source-enrichment",
-            finding=reason,
+            reason=reason,
             evidence="Required DOI provider payloads did not all resolve."
             + _provider_hash_evidence(payload_hashes),
-        )
-        commit = commit_writer_changes(
-            vault,
-            f"flag source enrichment {source['work_id']}",
-            [attention_path],
+            commit_message=f"flag source enrichment {source['work_id']}",
             context=context,
         )
-        return {
-            "run_id": run_id,
-            "enrichment_status": "needs_human",
-            "finding": finding,
-            "attention_path": attention_path,
-            "commit": commit,
-        }
 
     canonical = _merge_doi_source(source, payloads, payload_hashes)
     state.replace_external_ids(vault, canonical["external_ids"])
@@ -228,69 +251,33 @@ def enrich_source(
     )
 
     if blocked_status:
-        state.finish_enrichment_run(vault, run_id, blocked_status)
         check = "source-retraction" if blocked_status == "contested" else "source-enrichment"
-        finding = record_integrity_check(
-            vault,
-            f"catalog/sources/{source['work_id']}",
-            check=check,
-            status="failed",
-            reason=canonical["block_reason"],
-            shadow=False,
-            context=context,
-        )
-        attention_path = _write_attention_flag(
+        return _flag_and_commit(
             vault,
             source,
+            run_id,
+            status=blocked_status,
             check=check,
-            finding=canonical["block_reason"],
+            reason=canonical["block_reason"],
             evidence="Provider evidence blocked checked promotion."
             + _provider_hash_evidence(payload_hashes),
-        )
-        commit = commit_writer_changes(
-            vault,
-            f"flag source enrichment {source['work_id']}",
-            [attention_path],
+            commit_message=f"flag source enrichment {source['work_id']}",
             context=context,
         )
-        return {
-            "run_id": run_id,
-            "enrichment_status": blocked_status,
-            "finding": finding,
-            "attention_path": attention_path,
-            "commit": commit,
-        }
 
     if full_text_block:
-        state.finish_enrichment_run(vault, run_id, "needs_human")
-        finding = record_integrity_check(
-            vault,
-            f"catalog/sources/{source['work_id']}",
-            check="source-full-text",
-            status="failed",
-            reason=full_text_block,
-            shadow=False,
-            context=context,
-        )
-        attention_path = _write_attention_flag(
+        return _flag_and_commit(
             vault,
             source,
+            run_id,
+            status="needs_human",
             check="source-full-text",
-            finding=full_text_block,
+            reason=full_text_block,
             evidence="Required provider metadata resolved, but no digestible full text was acquired.",
-        )
-        commit = commit_writer_changes(
-            vault,
-            f"flag source full text {source['work_id']}",
-            [attention_path],
+            commit_message=f"flag source full text {source['work_id']}",
             context=context,
+            include_run_id=False,
         )
-        return {
-            "enrichment_status": "needs_human",
-            "finding": finding,
-            "attention_path": attention_path,
-            "commit": commit,
-        }
 
     candidate_paths = [
         _write_discovery_candidate(vault, source, edge)
@@ -532,8 +519,7 @@ def _provider_endpoint(config: dict[str, Any], provider: str, doi: str) -> str:
     template = str(spec.get("endpoint_template") or "").strip()
     if not template:
         raise ValueError(f"{PROVIDER_CONFIG} provider {provider} missing endpoint_template")
-    email = os.environ.get(str(spec.get("email_env") or ""), "")
-    endpoint = template.format(doi=parse.quote(doi, safe=""), email=parse.quote(email))
+    endpoint = template.format(doi=parse.quote(doi, safe=""))
     return _append_env_query_params(endpoint, spec)
 
 
@@ -663,57 +649,41 @@ def _append_url(urls: list[str], value: Any) -> None:
         urls.append(url)
 
 
-def _open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    locations = []
-    best = payload.get("best_oa_location")
-    if isinstance(best, dict):
-        locations.append(best)
-    oa_locations = payload.get("oa_locations")
-    if isinstance(oa_locations, list):
-        for location in oa_locations:
-            if isinstance(location, dict) and location not in locations:
+def _collect_locations(
+    payload: dict[str, Any],
+    singular_keys: tuple[str, ...],
+    list_key: str,
+    *,
+    require_oa: bool = False,
+) -> list[dict[str, Any]]:
+    def _ok(location: Any) -> bool:
+        return isinstance(location, dict) and (not require_oa or location.get("is_oa") is not False)
+
+    locations = [payload.get(key) for key in singular_keys if _ok(payload.get(key))]
+    all_locations = payload.get(list_key)
+    if isinstance(all_locations, list):
+        for location in all_locations:
+            if _ok(location) and location not in locations:
                 locations.append(location)
     return locations
+
+
+def _open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    return _collect_locations(payload, ("best_oa_location",), "oa_locations")
 
 
 def _openalex_open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    locations = []
-    for key in ("best_oa_location", "primary_location"):
-        location = payload.get(key)
-        if isinstance(location, dict) and location.get("is_oa") is not False:
-            locations.append(location)
-    all_locations = payload.get("locations")
-    if isinstance(all_locations, list):
-        for location in all_locations:
-            if (
-                isinstance(location, dict)
-                and location.get("is_oa") is not False
-                and location not in locations
-            ):
-                locations.append(location)
-    return locations
+    return _collect_locations(
+        payload, ("best_oa_location", "primary_location"), "locations", require_oa=True
+    )
 
 
 def _openalex_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    locations = []
-    for key in ("primary_location", "best_oa_location"):
-        location = payload.get(key)
-        if isinstance(location, dict):
-            locations.append(location)
-    all_locations = payload.get("locations")
-    if isinstance(all_locations, list):
-        for location in all_locations:
-            if isinstance(location, dict) and location not in locations:
-                locations.append(location)
-    return locations
+    return _collect_locations(payload, ("primary_location", "best_oa_location"), "locations")
 
 
 def _response_content_type(resp: Any) -> str:
-    headers = getattr(resp, "headers", None)
-    if hasattr(headers, "get"):
-        return str(headers.get("Content-Type") or "")
-    info = resp.info() if hasattr(resp, "info") else None
-    return str(info.get("Content-Type") or "") if hasattr(info, "get") else ""
+    return str(resp.headers.get("Content-Type") or "")
 
 
 def _extract_full_text(url: str, raw: bytes, content_type: str) -> str:
