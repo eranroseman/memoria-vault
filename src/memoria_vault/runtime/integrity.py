@@ -8,7 +8,7 @@ import re
 import shutil
 import subprocess
 from collections import deque
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -367,14 +367,16 @@ def check_source_metadata(
     }
 
 
-def _duplicate_source_external_id_findings(
+def _duplicate_group_findings(
     vault: Path,
+    groups: Iterable[list[str]],
+    reason_fn: Callable[[list[str]], str],
     *,
     context: OperationContext,
     shadow: bool,
 ) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
-    for namespace, value, work_ids in _duplicate_source_external_id_groups(vault):
+    for work_ids in groups:
         for work_id in work_ids:
             target_id = f"catalog/sources/{work_id}"
             if state.concept_check_status(vault, target_id) != "checked":
@@ -388,14 +390,34 @@ def _duplicate_source_external_id_findings(
                     target_id,
                     check="record-linkage",
                     status="failed",
-                    reason=(
-                        f"duplicate source external id {namespace}={value} also used by "
-                        f"{', '.join(others)}"
-                    ),
+                    reason=reason_fn(others),
                     shadow=shadow,
                     context=context,
                 )
             )
+    return findings
+
+
+def _duplicate_source_external_id_findings(
+    vault: Path,
+    *,
+    context: OperationContext,
+    shadow: bool,
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for namespace, value, work_ids in _duplicate_source_external_id_groups(vault):
+        findings.extend(
+            _duplicate_group_findings(
+                vault,
+                [work_ids],
+                lambda others, namespace=namespace, value=value: (
+                    f"duplicate source external id {namespace}={value} also used by "
+                    f"{', '.join(others)}"
+                ),
+                context=context,
+                shadow=shadow,
+            )
+        )
     return findings
 
 
@@ -433,30 +455,16 @@ def _duplicate_source_string_block_findings(
     context: OperationContext,
     shadow: bool,
 ) -> list[dict[str, Any]]:
-    findings: list[dict[str, Any]] = []
-    for work_ids in _duplicate_source_string_block_groups(vault):
-        for work_id in work_ids:
-            target_id = f"catalog/sources/{work_id}"
-            if state.concept_check_status(vault, target_id) != "checked":
-                continue
-            others = [f"catalog/sources/{other}" for other in work_ids if other != work_id]
-            if not others:
-                continue
-            findings.append(
-                record_integrity_check(
-                    vault,
-                    target_id,
-                    check="record-linkage",
-                    status="failed",
-                    reason=(
-                        "possible duplicate source metadata block also matches "
-                        f"{', '.join(others)} (title/year/first-author)"
-                    ),
-                    shadow=shadow,
-                    context=context,
-                )
-            )
-    return findings
+    return _duplicate_group_findings(
+        vault,
+        _duplicate_source_string_block_groups(vault),
+        lambda others: (
+            "possible duplicate source metadata block also matches "
+            f"{', '.join(others)} (title/year/first-author)"
+        ),
+        context=context,
+        shadow=shadow,
+    )
 
 
 def _duplicate_source_string_block_groups(vault: Path) -> list[list[str]]:
