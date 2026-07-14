@@ -31,6 +31,7 @@ def test_package_seed_is_runtime_minimum():
     expected_files = {
         ".githooks/pre-commit",
         ".gitignore",
+        ".memoria/config/feedback.yaml",
         ".memoria/config/providers.yaml",
         ".memoria/eval/alpha15-seeded-errors.json",
         ".memoria/patterns/_preamble.md",

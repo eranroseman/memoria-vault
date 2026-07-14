@@ -143,6 +143,27 @@ def record_empirical_event(
     }
 
 
+def emit_disposition_event(
+    vault: Path,
+    *,
+    decision: str,
+    item_type: str,
+    item_id: str,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Append one honest server-side disposition event to the journal."""
+    from memoria_vault.engine.empirical_events import (
+        DISPOSITION_EVENT_SCHEMA,
+        validate_disposition_event,
+    )
+
+    event = validate_disposition_event(
+        {"decision": decision, "item_type": item_type, "item_id": item_id}
+    )
+    journal_event = {"event": "disposition", "schema": DISPOSITION_EVENT_SCHEMA, **event}
+    return append_journal_event(vault, journal_event, context=context)
+
+
 def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict[str, Any]:
     """Validate one operation policy frontmatter map."""
     if policy.get("type") != "operation":

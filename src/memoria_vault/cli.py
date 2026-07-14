@@ -664,6 +664,8 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 
 def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.feedback import feedback_production_enabled
+
     workspace = _workspace(args)
     with _doctor_maintenance(workspace):
         doctor = _doctor_checks(workspace)
@@ -686,6 +688,7 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
             "workspace": str(workspace),
             "doctor": doctor,
             "backup": backup,
+            "feedback": {"production_enabled": feedback_production_enabled(workspace)},
             "requests": requests,
             "journal_head": journal_head,
         },

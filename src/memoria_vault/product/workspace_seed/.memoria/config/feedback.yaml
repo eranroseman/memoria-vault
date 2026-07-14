@@ -1,0 +1,3 @@
+# Shadow-first discipline: the I1 feedback signal is recorded always, but no
+# consumer may act on it until this is explicitly set true. Default is false.
+production_enabled: false

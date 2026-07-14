@@ -2,15 +2,38 @@
 
 from __future__ import annotations
 
+import os
 import runpy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+_VERIFY_ENV = ("VERIFY_CI", "VERIFY_DOCS_ONLY")
 
-def _verify_namespace() -> dict:
+
+def _verify_namespace(**env: str) -> dict:
     # run_name != "__main__" so the module defines the roster without executing main().
-    return runpy.run_path(str(ROOT / "scripts/verify"), run_name="_verify_probe")
+    # scripts/verify reads VERIFY_CI/VERIFY_DOCS_ONLY at import; clear them so the
+    # default call is deterministic, and apply any explicit override for this call.
+    saved = {key: os.environ.get(key) for key in _VERIFY_ENV}
+    try:
+        for key in _VERIFY_ENV:
+            os.environ.pop(key, None)
+        os.environ.update(env)
+        return runpy.run_path(str(ROOT / "scripts/verify"), run_name="_verify_probe")
+    finally:
+        for key, value in saved.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+def test_ci_defers_runtime_level() -> None:
+    flat = [" ".join(cmd) for cmd in _verify_namespace(VERIFY_CI="1")["GATES"]]
+    pytest_cmd = next(f for f in flat if "pytest" in f)
+    assert "static or unit or contract or package or floor" in pytest_cmd
+    assert "runtime" not in pytest_cmd
 
 
 def test_roster_covers_lint_tests_and_product_gates() -> None:
@@ -25,7 +48,10 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
         "python3 scripts/test_vault/e2e_smoke.py",
     ):
         assert gate in flat
-    assert any("pytest" in f and "static or unit or contract" in f for f in flat)
+    assert any(
+        "pytest" in f and "static or unit or contract or runtime or package or floor" in f
+        for f in flat
+    )
     assert any(f.startswith("python3 -m compileall") for f in flat)
     assert any(f.startswith("bash -n scripts/install.sh") for f in flat)
 
@@ -72,7 +98,7 @@ def test_docs_only_scope_narrows_the_roster() -> None:
 
     # Docs scope narrows pytest to `static` and drops the code-only gates.
     assert any("pytest" in d and d.endswith("-m static") for d in docs)
-    assert not any("static or unit or contract" in d for d in docs)
+    assert not any("static or unit or contract or runtime or package or floor" in d for d in docs)
     assert not any("e2e_smoke.py" in d for d in docs)
     assert not any("compileall" in d for d in docs)
     assert not any(d.startswith("bash -n") for d in docs)

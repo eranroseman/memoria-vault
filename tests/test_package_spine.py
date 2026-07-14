@@ -11,6 +11,7 @@ from pathlib import Path
 
 import memoria_vault
 import memoria_vault.runtime.policy as packaged_policy
+from memoria_vault.runtime import state
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -59,7 +60,7 @@ def test_runtime_sqlite_schema_is_packaged_resource():
     source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
 
     assert "CREATE TABLE IF NOT EXISTS operation_requests" in schema
-    assert "PRAGMA user_version = 11" in schema
+    assert f"PRAGMA user_version = {state.SCHEMA_VERSION}" in schema
     assert "CREATE TABLE IF NOT EXISTS" not in source
 
 

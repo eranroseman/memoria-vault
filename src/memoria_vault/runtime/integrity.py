@@ -1161,6 +1161,16 @@ def resolve_attention(
         "source": "attention",
     }
     row = append_journal_event(vault, event, context=context)
+    if resolution == "resolved":
+        from memoria_vault.runtime.operations import emit_disposition_event
+
+        emit_disposition_event(
+            vault,
+            decision={"apply": "accept", "reject": "reject", "defer": "defer"}[outcome],
+            item_type="attention",
+            item_id=target,
+            context=context,
+        )
     touched: list[str] = []
     target_path = vault / target
     if resolution == "resolved" and target_path.is_file():
