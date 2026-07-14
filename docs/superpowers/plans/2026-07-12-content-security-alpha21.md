@@ -43,7 +43,7 @@ Spec: `docs/superpowers/specs/2026-07-12-beta.1-content-security.md` (CS1, CS3) 
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `content_security.neutralize_untrusted_markdown(body: str) -> str` — escapes Markdown image/embed syntax, inerts raw HTML tags, wraps external URLs as non-clickable code spans, and leaves vault-internal `[[wikilinks]]` plus ordinary literal code spans/fences untouched. Pandoc raw-format attributes and fence headers are neutralized even when otherwise well formed; malformed or unclosed code candidates are treated as prose. Tasks 3–4 consume it.
+- Produces: `content_security.neutralize_untrusted_markdown(body: str) -> str` — escapes Markdown image/embed syntax, inerts raw HTML tags, wraps external URLs as non-clickable code spans, and leaves vault-internal `[[wikilinks]]` plus ordinary literal code spans/top-level fences untouched. Container-nested code is handled conservatively. Pandoc attribute lists become literal; top-level fence attributes are stripped and ambiguous container-nested headers are made literal. Malformed or unclosed code candidates are treated as prose. Tasks 3–4 consume it.
 
 - [x] **Step 1: Write the failing test**
 
@@ -443,9 +443,10 @@ gh pr create --title "feat(integrity): out-of-band change witness (CS3)" --body 
 - [x] A journal-backed current hash reconciles an affected baseline, while a generic writer commit cannot bless a disk edit with no journal record; a direct restore to an older revision remains witnessable.
 - [x] The observe sweep binds the baseline to the journaled snapshot, verifies the file before staging, and verifies the staged bytes before commit; a concurrent later edit remains dirty for a later sweep rather than becoming the baseline.
 - [x] The first observed evidence ID keeps its hash-or-null binding across marker removal and reappearance; verification and export use one draft snapshot.
-- [x] Untrusted Markdown escapes Pandoc raw-format directives (`{=html}`, `{=latex}`, and other format names) on well-formed inline code and fence openers while retaining ordinary literal code spans and fences. Malformed or unclosed candidates are treated as prose.
+- [x] New evidence bindings originate only in plain top-level Markdown claim prose. Metadata, raw/non-rendering syntax, code, headings, Markdown containers, tables, and line blocks cannot mint an ID; renderer-ambiguous syntax makes the draft fail closed for fresh bindings, while an existing hidden ID or a duplicate involving a direct or existing ID remains unbound and blocks export.
+- [x] Untrusted Markdown makes Pandoc attribute lists literal and strips top-level fence attributes, including raw-format directives (`{=html}`, `{=latex}`, and other format names). Ambiguous container-nested fence headers are made literal; top-level literal code spans and fence content remain unchanged. Nested code is handled conservatively, and malformed or unclosed candidates are treated as prose.
 
-Focused regressions cover each invariant, including Pandoc rendering for raw HTML attributes. The full repository gate is the final authority for this plan.
+Focused regressions cover each invariant, including Pandoc rendering for generic HTML attributes. The full repository gate is the final authority for this plan.
 
 ---
 

@@ -62,6 +62,210 @@ def test_raw_html_is_inert() -> None:
     assert "hi" in rendered
 
 
+@pytest.mark.parametrize(
+    ("source", "forbidden_html_attribute"),
+    [
+        (
+            '# Beacon {style="background-image:url(&#x68;ttps://evil.example/beacon.png)"}\n',
+            " style=",
+        ),
+        ("# Trigger {onclick=alert(1)}\n", " onclick="),
+        ("# Class {#beacon .danger}\n", ' class="danger"'),
+        ("# Hyphen {-onclick=alert(1)}\n", " onclick="),
+        (r"# Double {onclick=\" onmouseover=alert(1) x=\"}" + "\n", " onmouseover="),
+        (r"# Single {onclick=\' onmouseover=alert(1) x=\'}" + "\n", " onmouseover="),
+        (r"# Closer {data-x=\} onclick=alert(1)}" + "\n", " onclick="),
+        (r"# Opener {data-x=\{foo onclick=alert(1)}" + "\n", " onclick="),
+    ],
+)
+def test_generic_pandoc_attributes_are_inert_through_export_boundaries(
+    tmp_path: Path,
+    source: str,
+    forbidden_html_attribute: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+
+    direct = neutralize_untrusted_markdown(source)
+
+    assert direct != source
+    assert neutralize_untrusted_markdown(direct) == direct
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=source,
+    )
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (direct, rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "markdown", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert forbidden_html_attribute not in html
+
+
+def test_generic_pandoc_attributes_in_inline_code_are_untouched() -> None:
+    source = "`# Literal {onclick=alert(1)}`\n"
+
+    assert neutralize_untrusted_markdown(source) == source
+
+
+@pytest.mark.parametrize(
+    ("fence", "info", "forbidden_html_attribute"),
+    [
+        ("```", " {onclick=alert(1)}", " onclick="),
+        ("~~~", " {.python onclick=alert(1)}", " onclick="),
+        ("```", ' {style="background-image:url(https://evil.example/beacon.png)"}', " style="),
+        ("~~~", " {-onclick=alert(1)}", " onclick="),
+        ("~~~", r" {data-x=\} onclick=alert(1)}", " onclick="),
+    ],
+)
+def test_fence_attributes_are_inert_through_export_boundaries(
+    tmp_path: Path,
+    fence: str,
+    info: str,
+    forbidden_html_attribute: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    source = f"{fence}{info}\npayload\n{fence}\n"
+
+    direct = neutralize_untrusted_markdown(source)
+
+    assert direct != source
+    assert neutralize_untrusted_markdown(direct) == direct
+    write_checked_concept(
+        tmp_path,
+        "projects/argument/project.md",
+        "type: project\ncheck_status: checked\ntitle: Argument project\n",
+        "project",
+        body=source,
+    )
+    rendered = _render_project_export_markdown(tmp_path, "argument")
+    written = call_with_context(
+        _write_project_export,
+        tmp_path,
+        "argument",
+        machine="argument-export-machine",
+    )
+
+    for markdown in (direct, rendered["content"], written["content"]):
+        html = subprocess.run(
+            [pandoc, "-f", "markdown", "-t", "html"],
+            input=markdown,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert forbidden_html_attribute not in html
+
+
+@pytest.mark.parametrize(
+    ("source", "forbidden_html_attribute"),
+    [
+        ("> ``` {onclick=alert(1)}\n> payload\n> ```\n", " onclick="),
+        ("> ~~~ {-onclick=alert(1)}\n> payload\n> ~~~\n", " onclick="),
+        ("- ~~~ {=html}\n  payload\n  ~~~\n", " onclick="),
+        ("Term\n: ~~~ {onclick=alert(1)}\n  payload\n  ~~~\n", " onclick="),
+        ("Term\n~ ~~~ {onclick=alert(1)}\n  payload\n  ~~~\n", " onclick="),
+        ("(@) ~~~ {onclick=alert(1)}\n    payload\n    ~~~\n", " onclick="),
+        ("#. ~~~ {onclick=alert(1)}\n   payload\n   ~~~\n", " onclick="),
+        ("I) ~~~ {onclick=alert(1)}\n   payload\n   ~~~\n", " onclick="),
+        ("- top\n    - ~~~ {onclick=alert(1)}\n      payload\n      ~~~\n", " onclick="),
+        ("1. top\n    - ``` {onclick=alert(1)}\n      payload\n      ````\n", " onclick="),
+        (
+            "123456789. top\n\n           ``` {onclick=alert(1)}\n"
+            "           payload\n           ```\n",
+            " onclick=",
+        ),
+        ("# Heading\n~~~ {onclick=alert(1)}\npayload\n~~~\n", " onclick="),
+        ("- top\n~~~ {onclick=alert(1)}\npayload\n~~~\n", " onclick="),
+    ],
+)
+def test_nested_fence_attributes_are_inert(
+    source: str,
+    forbidden_html_attribute: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+
+    rendered = neutralize_untrusted_markdown(source)
+    html = subprocess.run(
+        [pandoc, "-f", "markdown", "-t", "html"],
+        input=rendered,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert rendered != source
+    assert neutralize_untrusted_markdown(rendered) == rendered
+    if "{=html}" in source:
+        assert r"\{=html}" in rendered
+    assert forbidden_html_attribute not in html
+
+
+def test_line_block_pseudo_fence_does_not_preserve_raw_html() -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    source = '| ``` {=html}\n| <img src=x onerror="window.__memoria_xss=1">\n| ```\n'
+
+    rendered = neutralize_untrusted_markdown(source)
+    html = subprocess.run(
+        [pandoc, "-f", "markdown", "-t", "html"],
+        input=rendered,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert rendered != source
+    assert neutralize_untrusted_markdown(rendered) == rendered
+    assert "<img" not in html
+    assert "&lt;img src=x onerror=" in html
+
+
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+@pytest.mark.parametrize("separator", ["\r", "\v", "\f", "\x85", "\u2028", "\u2029"])
+def test_nonphysical_fence_separators_do_not_preserve_raw_html(
+    fence: str,
+    separator: str,
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    source = f"{fence}{separator}<script>alert(1)</script>{separator}{fence}{fence[0]}\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+    html = subprocess.run(
+        [pandoc, "-f", "markdown", "-t", "html"],
+        input=rendered,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+
+    assert rendered != source
+    assert neutralize_untrusted_markdown(rendered) == rendered
+    assert "<script>alert(1)</script>" not in html
+
+
 def test_multiline_raw_html_is_inert() -> None:
     source = '<img\nsrc="&#x68;ttps://evil.example/beacon.png">\n'
 
@@ -280,10 +484,12 @@ def test_noncode_fence_candidates_are_inert_through_export_boundaries(
         assert "<iframe" not in html
 
 
-def test_closed_valid_tilde_fence_with_regular_attributes_is_untouched() -> None:
+def test_closed_valid_tilde_fence_with_regular_attributes_has_plain_text_header() -> None:
     source = '~~~ {.python key="literal value"}\n<iframe src="https://example.invalid/literal"></iframe>\n~~~\n'
 
-    assert neutralize_untrusted_markdown(source) == source
+    assert neutralize_untrusted_markdown(source) == (
+        '~~~text\n<iframe src="https://example.invalid/literal"></iframe>\n~~~\n'
+    )
 
 
 @pytest.mark.parametrize(

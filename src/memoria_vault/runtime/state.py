@@ -20,10 +20,11 @@ from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import yaml
+
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
     evidence_ref_kind,
-    extract_evidence_markers,
     parse_code_warrant_ref,
     parse_evidence_marker,
     parse_source_span_ref,
@@ -57,6 +58,19 @@ WORK_ASPECT_TYPES = frozenset(
     {"context", "key_idea", "method", "outcome", "limitation", "assumption"}
 )
 EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
+_DIRECT_EVIDENCE_MARKER_RE = re.compile(
+    r"(?m)^(?![ \t>|\ufeff])(?!(?:[-+*]|\d+[.)]|:)[ \t]+)"
+    r"(?P<prefix>[^\r\n]*\S)[ \t]+(?P<marker>%%ev:\s*[^\r\n]*?%%)"
+    r"[ \t`\\*_~]*\r?$"
+)
+_RAW_EVIDENCE_MARKER_RE = re.compile(r"%%ev:\s*.*?%%")
+_FENCED_DIV_RE = re.compile(r"^[ \t]{0,3}(?P<fence>:{3,})(?P<suffix>[^\r\n]*)$")
+_MARKDOWN_CONTAINER_RE = re.compile(
+    r"^[ ]{0,3}(?:>[ \t]*|(?:[-+*~:]|\d+[.)]|"
+    r"\((?:\d+|[IVXLCDMivxlcdm]+|@[^\s)]*|[A-Za-z#])\)|"
+    r"@[^\s.)]*[.)]|[A-Za-z#][.)]|[IVXLCDMivxlcdm]+[.)])(?:[ \t]+|$))"
+)
+_MAX_YAML_FRONTMATTER_INDENT = 256
 _WORKSPACE_LOCKS_GUARD = threading.Lock()
 _WORKSPACE_LOCKS: dict[str, threading.RLock] = {}
 _WORKSPACE_LOCK_DEPTH = threading.local()
@@ -2264,6 +2278,8 @@ def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[s
     rows = list(rows)
     with connect(vault) as conn:
         for row in rows:
+            if not bool(row.get("bind", True)):
+                continue
             conn.execute(
                 """
                 INSERT INTO evidence_bindings(id, block_text_sha256)
@@ -2280,10 +2296,13 @@ def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[s
         for row in rows:
             evidence_id = str(row["id"])
             items = [str(item) for item in row.get("items", [])]
+            bind = bool(row.get("bind", True))
             block_text_sha256 = (
                 existing_bindings[evidence_id]
-                if evidence_id in existing_bindings
+                if bind and evidence_id in existing_bindings
                 else row.get("block_text_sha256")
+                if bind
+                else None
             )
             conn.execute(
                 """
@@ -2328,10 +2347,13 @@ def evidence_sets(vault: Path) -> list[dict[str, Any]]:
     return [_evidence_set_row(row) for row in rows]
 
 
-def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict[str, int]:
+def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict[str, Any]:
     vault = Path(vault)
-    marker_rows = _evidence_marker_rows(vault, run_id=run_id)
-    return replace_evidence_sets(vault, marker_rows)
+    marker_rows, duplicate_ids = _evidence_marker_rows(vault, run_id=run_id)
+    result = replace_evidence_sets(vault, marker_rows)
+    if duplicate_ids:
+        result["duplicate_ids"] = duplicate_ids
+    return result
 
 
 def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
@@ -2507,20 +2529,41 @@ def _code_run_row(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
-def _evidence_marker_rows(vault: Path, *, run_id: str) -> list[dict[str, Any]]:
-    found: list[tuple[str, EvidenceMarker]] = []
+def _evidence_marker_rows(
+    vault: Path,
+    *,
+    run_id: str,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    occurrences_by_id: dict[str, list[tuple[str, EvidenceMarker, bool]]] = {}
+    bound_ids = _evidence_binding_ids(vault)
     for path in sorted(vault.rglob("*.md")):
         if _skip_evidence_scan_path(path.relative_to(vault)):
             continue
         rel = normalize_path(path.relative_to(vault).as_posix())
-        found.extend(
-            (rel, marker) for marker in extract_evidence_markers(path.read_text(encoding="utf-8"))
-        )
+        text = path.read_text(encoding="utf-8")
+        for marker, is_direct in _evidence_marker_occurrences_from_markdown(text):
+            occurrences_by_id.setdefault(marker.evidence_id, []).append((rel, marker, is_direct))
 
-    marker_ids = {marker.evidence_id for _rel, marker in found}
+    prior_block_refs = _evidence_set_block_refs(vault)
+    selected: list[tuple[str, EvidenceMarker, bool, str | None]] = []
+    duplicate_ids: list[str] = []
+    for evidence_id in sorted(occurrences_by_id):
+        occurrences = occurrences_by_id[evidence_id]
+        direct = [occurrence for occurrence in occurrences if occurrence[2]]
+        if not direct and evidence_id not in bound_ids:
+            continue
+        rel, marker, _is_direct = direct[0] if direct else occurrences[0]
+        bind = bool(direct) and len(occurrences) == 1
+        if len(occurrences) > 1:
+            duplicate_ids.append(evidence_id)
+        prior_block_ref = None if direct else prior_block_refs.get(evidence_id)
+        selected.append((rel, marker, bind, prior_block_ref))
+
+    marker_ids = {marker.evidence_id for _rel, marker, _bind, _prior in selected}
     source_spans = _source_span_pages(vault)
-    return [
-        _derived_evidence_row(
+    rows = []
+    for rel, marker, bind, prior_block_ref in selected:
+        row = _derived_evidence_row(
             vault,
             rel,
             marker,
@@ -2528,12 +2571,33 @@ def _evidence_marker_rows(vault: Path, *, run_id: str) -> list[dict[str, Any]]:
             source_spans=source_spans,
             run_id=run_id,
         )
-        for rel, marker in found
-    ]
+        if prior_block_ref is not None:
+            row["block_ref"] = prior_block_ref
+            row["block_text_sha256"] = _block_text_sha256(vault, prior_block_ref)
+        row["bind"] = bind
+        rows.append(row)
+    return rows, duplicate_ids
 
 
 def _skip_evidence_scan_path(rel: Path) -> bool:
     return any(part in {".git", ".memoria"} for part in rel.parts)
+
+
+def _evidence_binding_ids(vault: Path) -> set[str]:
+    if not db_path(vault).is_file():
+        return set()
+    with connect(vault) as conn:
+        return {str(row["id"]) for row in conn.execute("SELECT id FROM evidence_bindings")}
+
+
+def _evidence_set_block_refs(vault: Path) -> dict[str, str]:
+    if not db_path(vault).is_file():
+        return {}
+    with connect(vault) as conn:
+        return {
+            str(row["id"]): str(row["block_ref"])
+            for row in conn.execute("SELECT id, block_ref FROM evidence_sets")
+        }
 
 
 def _derived_evidence_row(
@@ -2663,28 +2727,26 @@ def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
         return None
 
     block, control = blocks[0]
-    anchor_matches = list(re.finditer(anchor_pattern, control))
-    if len(anchor_matches) != 1:
-        return None
-    try:
-        markers = [
-            (match, parse_evidence_marker(match.group(0)))
-            for match in re.finditer(r"%%ev:\s*.*?%%", control)
-        ]
-    except ValueError:
-        return None
-    matching_markers = [match for match, marker in markers if marker.evidence_id == evidence_id]
+    matching_markers = [
+        (match, marker)
+        for match, marker in _direct_evidence_marker_matches(control)
+        if marker.evidence_id == evidence_id
+    ]
     if len(matching_markers) != 1:
         return None
-    first_control, second_control = sorted((anchor_matches[0].start(), matching_markers[0].start()))
-    # Generated drafts put both controls on one line. Cross-line controls are
-    # deliberately unbound because adjacent Markdown lines may be separate blocks.
-    if "\n" in control[first_control:second_control]:
+    marker_match, _marker = matching_markers[0]
+    anchor_matches = [
+        match
+        for match in re.finditer(anchor_pattern, control)
+        if "\n" not in control[match.end() : marker_match.start("marker")]
+        and not control[match.end() : marker_match.start("marker")].strip()
+    ]
+    if len(anchor_matches) != 1:
         return None
 
     canonical = block
     for start, end in sorted(
-        (anchor_matches[0].span(), matching_markers[0].span()),
+        (anchor_matches[0].span(), marker_match.span("marker")),
         reverse=True,
     ):
         canonical = canonical[:start] + canonical[end:]
@@ -2703,6 +2765,423 @@ def _mask_markdown_code(value: str) -> str:
     return re.sub(r"\S", "x", value)
 
 
+def _markdown_lines(text: str) -> list[str]:
+    """Split only physical Markdown LF lines, preserving offsets and endings."""
+    return [line for line in re.findall(r"[^\n]*(?:\n|$)", text) if line]
+
+
+def _is_markdown_blank_line(line: str) -> bool:
+    """Return whether a physical line is blank in Markdown's ASCII sense."""
+    return not line.rstrip("\r\n").strip(" \t")
+
+
+def _mask_html_comments(text: str) -> str:
+    """Mask HTML comments without changing offsets or line boundaries."""
+    masked: list[str] = []
+    copied_until = 0
+    cursor = 0
+    while cursor < len(text):
+        start = text.find("<!--", cursor)
+        if start < 0:
+            break
+        end = text.find("-->", start + 4)
+        end = len(text) if end < 0 else end + 3
+        masked.append(text[copied_until:start])
+        masked.append(_mask_markdown_code(text[start:end]))
+        copied_until = end
+        cursor = end
+    masked.append(text[copied_until:])
+    return "".join(masked)
+
+
+def _html_tag_at(text: str, start: int) -> tuple[str, bool, int] | None:
+    """Return an HTML tag's name, shape, and end offset when one starts at *start*."""
+    index = start + 1
+    closing = index < len(text) and text[index] == "/"
+    if closing:
+        index += 1
+    if index >= len(text) or text[index].isspace() or text[index] in "/!?><":
+        return None
+    name_start = index
+    while index < len(text) and not text[index].isspace() and text[index] not in "/><":
+        index += 1
+    name = text[name_start:index].lower()
+    quote = ""
+    while index < len(text):
+        character = text[index]
+        if quote:
+            if character == quote:
+                quote = ""
+        elif character in {'"', "'"}:
+            quote = character
+        elif character == "<":
+            return None
+        elif character == ">":
+            return name, closing, index + 1
+        index += 1
+    return None
+
+
+def _has_raw_html_element(text: str) -> bool:
+    """Return whether *text* contains an unescaped raw HTML element."""
+    cursor = 0
+    while cursor < len(text):
+        start = text.find("<", cursor)
+        if start < 0:
+            return False
+        if _preceding_backslash_count(text, start) % 2:
+            cursor = start + 1
+            continue
+        if text.startswith("</", start):
+            return True
+        tag = _html_tag_at(text, start)
+        if tag is not None:
+            return True
+        cursor = start + 1
+    return False
+
+
+def _mask_html_declarations(text: str) -> str:
+    """Mask processing instructions and declarations without moving offsets."""
+    masked: list[str] = []
+    copied_until = 0
+    cursor = 0
+    while cursor < len(text):
+        processing_start = text.find("<?", cursor)
+        declaration_start = text.find("<!", cursor)
+        starts = [start for start in (processing_start, declaration_start) if start >= 0]
+        if not starts:
+            break
+        start = min(starts)
+        if start == declaration_start and text.startswith("<!--", start):
+            cursor = start + 4
+            continue
+        if text.startswith("<![CDATA[", start):
+            end = text.find("]]>", start + len("<![CDATA["))
+            end = len(text) if end < 0 else end + 3
+        elif start == processing_start:
+            end = text.find("?>", start + 2)
+            end = len(text) if end < 0 else end + 2
+        else:
+            end = text.find(">", start + 2)
+            end = len(text) if end < 0 else end + 1
+        masked.append(text[copied_until:start])
+        masked.append(_mask_markdown_code(text[start:end]))
+        copied_until = end
+        cursor = end
+    masked.append(text[copied_until:])
+    return "".join(masked)
+
+
+def _yaml_frontmatter_bounds(text: str) -> tuple[int, int, int] | None:
+    """Return the body and closing offsets for closed initial YAML frontmatter."""
+    opening = re.match(r"\A\ufeff?(?:[ \t]*\r?\n)*---[ \t]*(?:\r?\n)", text)
+    if opening is None:
+        return None
+    closing = re.search(r"(?m)^(?:---|\.\.\.)[ \t]*(?:\r?\n|$)", text[opening.end() :])
+    if closing is None:
+        return None
+    body_end = opening.end() + closing.start()
+    end = opening.end() + closing.end()
+    return opening.end(), body_end, end
+
+
+def _mask_yaml_frontmatter(text: str) -> str:
+    """Mask a closed YAML frontmatter block at the beginning of a Markdown file."""
+    bounds = _yaml_frontmatter_bounds(text)
+    if bounds is None:
+        return text
+    _body_start, _body_end, end = bounds
+    return _mask_markdown_code(text[:end]) + text[end:]
+
+
+def _mask_yaml_mapping_frontmatter(text: str) -> str | None:
+    """Mask initial YAML mappings, or return ``None`` when they fail closed."""
+    bounds = _yaml_frontmatter_bounds(text)
+    if bounds is None:
+        return text
+    body_start, body_end, end = bounds
+    body = text[body_start:body_end]
+    if any(
+        len(line) - len(line.lstrip(" \t")) > _MAX_YAML_FRONTMATTER_INDENT
+        for line in _markdown_lines(body)
+    ):
+        return None
+    try:
+        frontmatter = yaml.safe_load(body)
+    except RecursionError:
+        return None
+    except yaml.YAMLError:
+        return text
+    if not isinstance(frontmatter, dict):
+        return text
+    return _mask_markdown_code(text[:end]) + text[end:]
+
+
+def _has_mmd_title_field(text: str) -> bool:
+    """Return whether an initial mmd_title_block field could hide a control."""
+    return re.match(r"\A\ufeff?[ \t]*[\w-][\w \t-]*:", text) is not None
+
+
+def _has_abbreviation_syntax(text: str) -> bool:
+    """Return whether an abbreviation definition could hide a control."""
+    return re.search(r"(?m)^\*\[", text) is not None
+
+
+def _mask_markdown_containers(text: str) -> str:
+    """Mask container blocks so only top-level prose can establish a binding."""
+    masked: list[str] = []
+    in_container = False
+    for line in _markdown_lines(text):
+        body = line.rstrip("\r\n")
+        if _is_markdown_blank_line(line):
+            in_container = False
+            masked.append(line)
+        elif in_container or _MARKDOWN_CONTAINER_RE.match(body):
+            in_container = True
+            masked.append(_mask_markdown_code(line))
+        else:
+            masked.append(line)
+    return "".join(masked)
+
+
+def _mask_definition_terms(text: str) -> str:
+    """Mask a definition-list term when its marker line follows it."""
+    lines = _markdown_lines(text)
+    for index, line in enumerate(lines):
+        body = line.rstrip("\r\n")
+        if not index or not re.match(r"^[ ]{0,3}[:~][ \t]+", body):
+            continue
+        term_index = index - 1
+        if _is_markdown_blank_line(lines[term_index]):
+            term_index -= 1
+        if term_index >= 0 and not _is_markdown_blank_line(lines[term_index]):
+            lines[term_index] = _mask_markdown_code(lines[term_index])
+    return "".join(lines)
+
+
+def _mask_markdown_headings(text: str) -> str:
+    """Mask ATX and Setext headings, which are not direct prose claims."""
+    lines = _markdown_lines(text)
+    for index, line in enumerate(lines):
+        body = line.rstrip("\r\n")
+        if re.match(r"^[ ]{0,3}#{1,6}(?:[ \t]+|$)", body):
+            lines[index] = _mask_markdown_code(line)
+        if index and re.match(r"^[ ]{0,3}(?:=+|-+)[ \t]*$", body):
+            if not _is_markdown_blank_line(lines[index - 1]):
+                lines[index - 1] = _mask_markdown_code(lines[index - 1])
+    return "".join(lines)
+
+
+def _mask_markdown_ranges(text: str, ranges: list[tuple[int, int]]) -> str:
+    """Mask sorted or overlapping ranges without changing text offsets."""
+    if not ranges:
+        return text
+    masked: list[str] = []
+    copied_until = 0
+    for start, end in sorted(ranges):
+        if end <= copied_until:
+            continue
+        start = max(start, copied_until)
+        masked.append(text[copied_until:start])
+        masked.append(_mask_markdown_code(text[start:end]))
+        copied_until = end
+    masked.append(text[copied_until:])
+    return "".join(masked)
+
+
+def _mask_multiline_delimited_constructs(text: str, opener: str, closer: str) -> str:
+    """Mask multiline balanced constructs with one delimiter pass."""
+    starts: list[int] = []
+    ranges: list[tuple[int, int]] = []
+    last_line_break = -1
+    index = 0
+    while index < len(text):
+        character = text[index]
+        if character == "\\":
+            index += 2
+            continue
+        if character in "\r\n":
+            last_line_break = index
+        elif character == opener:
+            starts.append(index)
+        elif character == closer and starts:
+            start = starts.pop()
+            if last_line_break > start:
+                ranges.append((start, index + 1))
+        index += 1
+    if starts and last_line_break > starts[0]:
+        ranges.append((starts[0], len(text)))
+    return _mask_markdown_ranges(text, ranges)
+
+
+def _mask_multiline_bracket_constructs(text: str) -> str:
+    """Mask multiline Markdown inline constructs before accepting controls."""
+    return _mask_multiline_delimited_constructs(text, "[", "]")
+
+
+def _mask_multiline_parenthesized_constructs(text: str) -> str:
+    """Mask multiline Markdown destinations and titles before accepting controls."""
+    return _mask_multiline_delimited_constructs(text, "(", ")")
+
+
+def _reference_definition_header_end(text: str, start: int) -> int | None:
+    """Return the end of a reference-definition header beginning at *start*."""
+    index = start
+    while index < len(text) and index - start < 3 and text[index] == " ":
+        index += 1
+    if index >= len(text) or text[index] != "[":
+        return None
+    index += 1
+    while index < len(text):
+        character = text[index]
+        if character == "\\":
+            index += 2
+            continue
+        if character in "\r\n":
+            next_line = index + (2 if text.startswith("\r\n", index) else 1)
+            if next_line >= len(text) or text[next_line] in "\r\n":
+                return None
+            index = next_line
+            continue
+        if character == "]":
+            probe = index + 1
+            while probe < len(text) and text[probe] in " \t":
+                probe += 1
+            if probe < len(text) and text[probe] == ":":
+                return probe + 1
+        index += 1
+    return None
+
+
+def _line_end(text: str, start: int) -> int:
+    newline = text.find("\n", start)
+    return len(text) if newline < 0 else newline + 1
+
+
+def _mask_reference_definitions(text: str) -> str:
+    """Mask reference and footnote definitions, including multiline labels."""
+    masked: list[str] = []
+    copied_until = 0
+    cursor = 0
+    while cursor < len(text):
+        header_end = _reference_definition_header_end(text, cursor)
+        if header_end is None:
+            cursor = _line_end(text, cursor)
+            continue
+        end = _line_end(text, header_end)
+        while end < len(text) and not _is_markdown_blank_line(text[end : _line_end(text, end)]):
+            end = _line_end(text, end)
+        masked.append(text[copied_until:cursor])
+        masked.append(_mask_markdown_code(text[cursor:end]))
+        copied_until = end
+        cursor = end
+    masked.append(text[copied_until:])
+    return "".join(masked)
+
+
+def _mask_fenced_divs(text: str) -> str:
+    """Mask Pandoc fenced Divs, including nested attributed Divs."""
+    masked: list[str] = []
+    fences: list[int] = []
+    for line in _markdown_lines(text):
+        body = line.rstrip("\r\n")
+        divider = _FENCED_DIV_RE.match(body)
+        if not fences:
+            if divider is None:
+                masked.append(line)
+                continue
+            fences.append(len(divider["fence"]))
+            masked.append(_mask_markdown_code(line))
+            continue
+
+        masked.append(_mask_markdown_code(line))
+        if divider is None:
+            continue
+        fence_length = len(divider["fence"])
+        if divider["suffix"].strip(" \t"):
+            fences.append(fence_length)
+        elif fence_length >= fences[-1]:
+            fences.pop()
+    return "".join(masked)
+
+
+def _has_tex_math_pair(
+    text: str,
+    opener: str,
+    closer: str,
+    *,
+    active_closer_required: bool,
+) -> bool:
+    """Return whether a Pandoc single-backslash TeX-math pair is active."""
+    opened = False
+    index = 0
+    while index < len(text):
+        if text[index] != "\\":
+            index += 1
+            continue
+        run_start = index
+        while index < len(text) and text[index] == "\\":
+            index += 1
+        if index == len(text):
+            break
+        delimiter = text[index]
+        run_length = index - run_start
+        if delimiter == opener and run_length % 2:
+            opened = True
+        elif opened and delimiter == closer and (not active_closer_required or run_length % 2):
+            return True
+        index += 1
+    return False
+
+
+def _has_raw_tex_syntax(text: str) -> bool:
+    """Return whether active raw TeX syntax can affect draft visibility."""
+    for match in re.finditer(r"\\(.)", text, flags=re.DOTALL):
+        if _preceding_backslash_count(text, match.start()) % 2 == 0 and match[1].isalpha():
+            return True
+    if _has_tex_math_pair(text, "[", "]", active_closer_required=False):
+        return True
+    if _has_tex_math_pair(text, "(", ")", active_closer_required=True):
+        return True
+    for match in re.finditer(r"\$", text):
+        if _preceding_backslash_count(text, match.start()) % 2 == 0:
+            return True
+    for match in re.finditer(r"(?m)^[ \t]{0,3}%", text):
+        if _preceding_backslash_count(text, match.end() - 1) % 2 == 0:
+            return True
+    return False
+
+
+def _has_pandoc_attribute_syntax(text: str) -> bool:
+    """Return whether active Pandoc attribute syntax can affect draft visibility."""
+    for match in re.finditer(r"\{\s*(?:=|[#.]|[^{}\s=]+[ \t]*=)", text):
+        if _preceding_backslash_count(text, match.start()) % 2 == 0:
+            return True
+    return False
+
+
+def _has_footnote_definition(text: str) -> bool:
+    """Return whether a footnote definition makes direct binding ambiguous."""
+    return re.search(r"(?m)^[ \t]*\[\^[^\]\r\n]+\]:", text) is not None
+
+
+def _has_pandoc_table_syntax(text: str) -> bool:
+    """Return whether Pandoc table syntax makes direct claim binding ambiguous."""
+    if re.search(
+        r"(?m)^[ \t]*[|+]?[ \t]*:?-+:?[ \t]*(?:[|+][ \t]*:?-+:?[ \t]*)+[|+]?[ \t]*$",
+        text,
+    ):
+        return True
+    if re.search(r"(?m)^[ \t]*\+(?:[-=]+\+)+[ \t]*$", text):
+        return True
+    if re.search(r"(?m)^[ \t]*:?-+:?(?:[ \t]+:?-+:?)+[ \t]*$", text):
+        return True
+    if re.search(r"(?m)^[ \t]+:?-+:?[ \t]*$", text):
+        return True
+    return len(re.findall(r"(?m)^[ \t]*-+[ \t]*$", text)) >= 2
+
+
 def _backtick_run_end(text: str, start: int) -> int:
     end = start
     while end < len(text) and text[end] == "`":
@@ -2719,21 +3198,39 @@ def _preceding_backslash_count(text: str, index: int) -> int:
     return count
 
 
-def _matching_inline_code_closer(text: str, start: int, length: int) -> int | None:
-    index = start
+def _mask_inline_code_spans(text: str) -> str:
+    """Mask inline-code delimiter runs using an indexed linear scan."""
+    runs: list[tuple[int, int]] = []
+    index = 0
     while index < len(text):
         if text[index] != "`":
             index += 1
             continue
         run_end = _backtick_run_end(text, index)
-        if run_end - index == length:
-            return index
+        runs.append((index, run_end))
         index = run_end
-    return None
 
+    choices: list[tuple[tuple[int, int] | None, tuple[int, int] | None]] = [(None, None)] * len(
+        runs
+    )
+    next_closer_by_length: dict[int, int] = {}
+    for run_index in range(len(runs) - 1, -1, -1):
+        start, end = runs[run_index]
+        length = end - start
+        full_choice = None
+        for delimiter_length in range(length, 0, -1):
+            if closer_start := next_closer_by_length.get(delimiter_length):
+                full_choice = (delimiter_length, closer_start)
+                break
+        suffix_choice = None
+        for delimiter_length in range(length - 1, 0, -1):
+            if closer_start := next_closer_by_length.get(delimiter_length):
+                suffix_choice = (delimiter_length, closer_start)
+                break
+        choices[run_index] = (full_choice, suffix_choice)
+        next_closer_by_length[length] = start
 
-def _mask_inline_code_spans(text: str) -> str:
-    """Mask equal, unescaped inline-code delimiter runs without moving offsets."""
+    runs_by_start = {start: (run_index, end) for run_index, (start, end) in enumerate(runs)}
     masked: list[str] = []
     copied_until = 0
     index = 0
@@ -2741,17 +3238,17 @@ def _mask_inline_code_spans(text: str) -> str:
         if text[index] != "`":
             index += 1
             continue
-        opener_end = _backtick_run_end(text, index)
-        if _preceding_backslash_count(text, index) % 2:
+        run_index, opener_end = runs_by_start[index]
+        escaped = _preceding_backslash_count(text, index) % 2
+        choice = choices[run_index][1 if escaped else 0]
+        if choice is None:
             index = opener_end
             continue
-        closer_start = _matching_inline_code_closer(text, opener_end, opener_end - index)
-        if closer_start is None:
-            index = opener_end
-            continue
-        closer_end = _backtick_run_end(text, closer_start)
-        masked.append(text[copied_until:index])
-        masked.append(_mask_markdown_code(text[index:closer_end]))
+        delimiter_length, closer_start = choice
+        span_start = opener_end - delimiter_length
+        closer_end = closer_start + delimiter_length
+        masked.append(text[copied_until:span_start])
+        masked.append(_mask_markdown_code(text[span_start:closer_end]))
         copied_until = closer_end
         index = closer_end
     masked.append(text[copied_until:])
@@ -2759,12 +3256,36 @@ def _mask_inline_code_spans(text: str) -> str:
 
 
 def _markdown_control_text(text: str) -> str:
-    """Mask Markdown code so only rendered control tokens can bind evidence."""
+    """Mask non-rendering syntax so only direct Markdown controls can bind evidence."""
 
+    yaml_for_table = _mask_yaml_mapping_frontmatter(text)
+    if yaml_for_table is None:
+        return _mask_markdown_code(text)
+    if (
+        "\r" in text
+        or _has_raw_html_element(text)
+        or _has_pandoc_attribute_syntax(text)
+        or _has_raw_tex_syntax(text)
+        or _has_footnote_definition(text)
+        or _has_mmd_title_field(text)
+        or _has_abbreviation_syntax(text)
+        or _has_pandoc_table_syntax(yaml_for_table)
+    ):
+        return _mask_markdown_code(text)
+    nonbinding = _mask_html_comments(text)
+    nonbinding = _mask_html_declarations(nonbinding)
+    nonbinding = _mask_yaml_frontmatter(nonbinding)
+    nonbinding = _mask_definition_terms(nonbinding)
+    nonbinding = _mask_markdown_headings(nonbinding)
+    nonbinding = _mask_markdown_containers(nonbinding)
+    nonbinding = _mask_reference_definitions(nonbinding)
+    nonbinding = _mask_multiline_bracket_constructs(nonbinding)
+    nonbinding = _mask_multiline_parenthesized_constructs(nonbinding)
+    nonbinding = _mask_fenced_divs(nonbinding)
     lines: list[str] = []
     fence_char = ""
     fence_length = 0
-    for line in text.splitlines(keepends=True):
+    for line in _markdown_lines(nonbinding):
         body = line.rstrip("\r\n")
         if fence_char:
             lines.append(_mask_markdown_code(line))
@@ -2791,6 +3312,42 @@ def _markdown_control_text(text: str) -> str:
 
     fenced = "".join(lines)
     return _mask_inline_code_spans(fenced)
+
+
+def _direct_evidence_marker_matches(text: str) -> list[tuple[re.Match[str], EvidenceMarker]]:
+    """Return evidence markers in direct Markdown claim lines from control text."""
+    matches: list[tuple[re.Match[str], EvidenceMarker]] = []
+    for match in _DIRECT_EVIDENCE_MARKER_RE.finditer(text):
+        try:
+            marker = parse_evidence_marker(match["marker"])
+        except ValueError:
+            continue
+        matches.append((match, marker))
+    return matches
+
+
+def _evidence_marker_occurrences_from_markdown(
+    text: str,
+) -> list[tuple[EvidenceMarker, bool]]:
+    """Return raw evidence markers and whether each is a direct visible occurrence."""
+    control_text = _markdown_control_text(text)
+    direct_spans = {
+        match.span("marker") for match, _marker in _direct_evidence_marker_matches(control_text)
+    }
+    occurrences: list[tuple[EvidenceMarker, bool]] = []
+    for match in _RAW_EVIDENCE_MARKER_RE.finditer(text):
+        try:
+            marker = parse_evidence_marker(match.group(0))
+        except ValueError:
+            continue
+        occurrences.append((marker, match.span() in direct_spans))
+    return occurrences
+
+
+def evidence_markers_from_markdown(text: str) -> list[EvidenceMarker]:
+    """Return markers that appear on direct, visible Markdown claim lines."""
+    control_text = _markdown_control_text(text)
+    return [marker for _match, marker in _direct_evidence_marker_matches(control_text)]
 
 
 def _upsert_concept_mirror_conn(

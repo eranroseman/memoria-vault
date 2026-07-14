@@ -486,6 +486,196 @@ def test_relocated_evidence_marker_refuses_export_with_unbound_text(tmp_path: Pa
         write_project_export(tmp_path, "project-alpha", draft=True)
 
 
+@pytest.mark.parametrize(
+    ("opening", "closing"),
+    [
+        ("<!-- ", " -->"),
+        ("<script>", "</script>"),
+        ("<span hidden>", "</span>"),
+        ("<span hidden/>", "</span>"),
+        ('<span hidden data="\\">', "</span>"),
+        ("<span hidden data='\\'>", "</span>"),
+        ("<?hidden ", " ?>"),
+        ("---\nhidden: |\n  ", "\n---"),
+        ('[hidden]: https://example.invalid "', '"'),
+    ],
+)
+def test_hidden_marker_cannot_make_external_edit_export_ready(
+    tmp_path: Path,
+    opening: str,
+    closing: str,
+) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    fresh_evidence_id = "ev-1234abcd"
+    fresh_marker = marker.replace(evidence_id, fresh_evidence_id)
+    fresh_anchor = f"^blk-{fresh_evidence_id.removeprefix('ev-')}"
+    draft.write_text(
+        f"{opening}Hidden claim. {fresh_anchor} {fresh_marker}{closing}\n\n"
+        "Source note: `notes/support.md`\n",
+        encoding="utf-8",
+    )
+    state.rebuild_evidence_sets_from_markers(tmp_path)
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert state.evidence_sets(tmp_path) == []
+    assert verification["ready"] is False
+    assert knowledge.read_project_draft(tmp_path, "project-alpha")["evidence_markers"] == []
+    with state.connect(tmp_path) as conn:
+        assert (
+            conn.execute(
+                "SELECT id FROM evidence_bindings WHERE id = ?", (fresh_evidence_id,)
+            ).fetchone()
+            is None
+        )
+    with pytest.raises(ValueError, match="project draft is not export-ready"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_hidden_existing_evidence_marker_remains_unbound(tmp_path: Path) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    draft.write_text(
+        f"<!-- Hidden claim. {anchor} {marker} -->\n\nSource note: `notes/support.md`\n",
+        encoding="utf-8",
+    )
+    state.rebuild_evidence_sets_from_markers(tmp_path)
+
+    [bound] = state.evidence_sets(tmp_path)
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert bound["id"] == evidence_id
+    assert verification["ready"] is False
+    assert verification["findings"][0]["kind"] == "evidence-text-unbound"
+    assert knowledge.read_project_draft(tmp_path, "project-alpha")["evidence_markers"] == []
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+@pytest.mark.parametrize("hidden_rel", ["", "notes/duplicate-marker.md"])
+def test_duplicate_evidence_id_refuses_export(tmp_path: Path, hidden_rel: str) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    hidden = f"<!-- Hidden claim. {anchor} {marker} -->\n"
+    if hidden_rel:
+        duplicate = tmp_path / hidden_rel
+        duplicate.parent.mkdir(parents=True, exist_ok=True)
+        duplicate.write_text(hidden, encoding="utf-8")
+    else:
+        draft.write_text(original + "\n" + hidden, encoding="utf-8")
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert any(
+        finding["kind"] == "evidence-id-duplicate" and finding["evidence_id"] == evidence_id
+        for finding in verification["findings"]
+    )
+    with pytest.raises(ValueError, match="evidence-id-duplicate"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_hidden_duplicate_in_one_draft_blocks_that_draft_when_direct_elsewhere(
+    tmp_path: Path,
+) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    other_id = "ev-1234abcd"
+    other_marker = marker.replace(evidence_id, other_id)
+    other_anchor = f"^blk-{other_id.removeprefix('ev-')}"
+    hidden = f"<!-- Hidden claim. {anchor} {marker} -->\n"
+    draft.write_text(
+        original.replace(f"{anchor} {marker}", "")
+        + f"\nValid second claim. {other_anchor} {other_marker}\n\n{hidden}",
+        encoding="utf-8",
+    )
+    duplicate = tmp_path / "projects/project-beta/draft.md"
+    duplicate.parent.mkdir(parents=True, exist_ok=True)
+    duplicate.write_text(
+        f"Foreign duplicate. {anchor} {marker}\n",
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert any(
+        finding["kind"] == "evidence-id-duplicate" and finding["evidence_id"] == evidence_id
+        for finding in verification["findings"]
+    )
+    with pytest.raises(ValueError, match="evidence-id-duplicate"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_hidden_existing_id_moved_outside_draft_remains_unbound(tmp_path: Path) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    other_id = "ev-1234abcd"
+    other_marker = marker.replace(evidence_id, other_id)
+    other_anchor = f"^blk-{other_id.removeprefix('ev-')}"
+    draft.write_text(
+        original + f"\nValid second claim. {other_anchor} {other_marker}\n",
+        encoding="utf-8",
+    )
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(f"{anchor} {marker}", ""),
+        encoding="utf-8",
+    )
+    external = tmp_path / "notes/external-hidden.md"
+    external.parent.mkdir(parents=True, exist_ok=True)
+    external.write_text(
+        f"<!-- Hidden claim. {anchor} {marker} -->\n",
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert any(
+        finding["kind"] == "evidence-text-unbound" and finding["evidence_id"] == evidence_id
+        for finding in verification["findings"]
+    )
+    with pytest.raises(ValueError, match="evidence-text-unbound"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
 def test_even_escaped_inline_code_controls_refuse_export(tmp_path: Path) -> None:
     draft, evidence_id = _compose_source_backed_draft(
         tmp_path,
@@ -512,7 +702,7 @@ def test_even_escaped_inline_code_controls_refuse_export(tmp_path: Path) -> None
             "severity": "high",
             "evidence_id": evidence_id,
             "block_ref": bound["block_ref"],
-            "reason": "anchored block text cannot be resolved",
+            "reason": "stored block-text binding is missing",
         }
     ]
     with pytest.raises(ValueError, match="evidence-text-unbound"):
@@ -547,7 +737,7 @@ def test_backslash_before_inline_code_closer_controls_refuse_export(tmp_path: Pa
             "severity": "high",
             "evidence_id": evidence_id,
             "block_ref": bound["block_ref"],
-            "reason": "anchored block text cannot be resolved",
+            "reason": "stored block-text binding is missing",
         }
     ]
     with pytest.raises(ValueError, match="evidence-text-unbound"):
@@ -569,9 +759,7 @@ def test_heading_and_following_paragraph_cannot_share_evidence_binding(
     fresh_marker = marker.replace(evidence_id, fresh_evidence_id)
     fresh_anchor = f"^blk-{fresh_evidence_id.removeprefix('ev-')}"
     draft.write_text(
-        f"# Supported claim {fresh_anchor} {fresh_marker}\n"
-        "Changed unsupported claim.\n\n"
-        "Source note: `notes/support.md`\n",
+        f"Supported claim. {fresh_anchor} {fresh_marker}\n\nSource note: `notes/support.md`\n",
         encoding="utf-8",
     )
     state.rebuild_evidence_sets_from_markers(tmp_path)
@@ -583,7 +771,7 @@ def test_heading_and_following_paragraph_cannot_share_evidence_binding(
     )
 
     draft.write_text(
-        f"# Supported claim {fresh_anchor} \n"
+        f"# Supported claim {fresh_anchor}\n"
         f"Changed unsupported claim. {fresh_marker}\n\n"
         "Source note: `notes/support.md`\n",
         encoding="utf-8",

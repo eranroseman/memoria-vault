@@ -107,9 +107,11 @@ Both project renderers return content with machine/third-party beacons inert.
 again at the final Markdown/Pandoc content boundary. Markdown images and
 Obsidian embeds are escaped, raw HTML is escaped, and external URLs become
 non-clickable code spans. Vault wikilinks and ordinary literal code spans or
-fences remain unchanged. Pandoc raw-format attributes and fence headers are
-neutralized even when otherwise well formed; malformed or unclosed code
-candidates are treated as prose.
+top-level fences remain unchanged. Container-nested code is handled
+conservatively. Pandoc attribute lists, including raw-format attributes, become
+literal. Top-level fence attributes are stripped; ambiguous container-nested
+fence headers are made literal. Malformed or unclosed code candidates are treated as
+prose.
 
 This gate covers both direct draft exports and argument exports, including
 callers that bypass file output and consume a renderer's returned `content`.

@@ -2051,8 +2051,6 @@ def compose_project_draft(
 
 def read_project_draft(vault: Path, project_path: str) -> dict[str, Any]:
     """Read a composed project draft and its evidence markers."""
-    from memoria_vault.runtime.evidence import extract_evidence_markers
-
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     _checked_frontmatter(vault, project_rel, "project")
@@ -2067,7 +2065,7 @@ def read_project_draft(vault: Path, project_path: str) -> dict[str, Any]:
             "evidence_sets": [],
         }
     content = draft_path.read_text(encoding="utf-8")
-    markers = extract_evidence_markers(content)
+    markers = state.evidence_markers_from_markdown(content)
     evidence_sets = [
         row for row in state.evidence_sets(vault) if str(row["block_ref"]).startswith(draft_rel)
     ]
@@ -2140,7 +2138,26 @@ def _verify_project_draft_snapshot(
         run_id=context.run_id,
     )
     draft = read_project_draft(vault, project_rel)
-    findings = []
+    duplicate_ids = {str(evidence_id) for evidence_id in rebuild.get("duplicate_ids", [])}
+    rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}
+    draft_occurrence_ids = {
+        marker.evidence_id
+        for marker, _is_direct in state._evidence_marker_occurrences_from_markdown(draft["content"])
+    }
+    findings = [
+        {
+            "kind": "evidence-id-duplicate",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": str(
+                rows_by_id.get(evidence_id, {}).get(
+                    "block_ref",
+                    f"{draft_rel}#^blk-{evidence_id.removeprefix('ev-')}",
+                )
+            ),
+        }
+        for evidence_id in sorted(duplicate_ids & draft_occurrence_ids)
+    ]
     disposed = _disposed_evidence_ids(vault)
     for row in draft["evidence_sets"]:
         stored_block_hash = row.get("block_text_sha256")

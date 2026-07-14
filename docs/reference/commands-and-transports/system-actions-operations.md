@@ -46,9 +46,11 @@ matrix before payload validation or domain mutation.
 Code-owned Markdown insertions neutralize model- and provider-derived prose
 before apply. Markdown images and Obsidian embeds become inert, raw HTML is
 escaped, and external URLs become code spans. Vault wikilinks and ordinary
-literal code spans or fences remain unchanged. Pandoc raw-format attributes and
-fence headers are neutralized even when otherwise well formed; malformed or
-unclosed code candidates are treated as prose. This applies to prompt reports, digest and hub
+literal code spans or top-level fences remain unchanged. Container-nested code
+is handled conservatively. Pandoc attribute lists, including raw-format
+attributes, become literal. Top-level fence attributes are stripped; ambiguous
+container-nested fence headers are made literal. Malformed or unclosed code
+candidates are treated as prose. This applies to prompt reports, digest and hub
 suggestions, note candidates, generated outlines and drafts, promoted draft
 passages, provider attention cards, worklists, and extracted-edge prompts.
 

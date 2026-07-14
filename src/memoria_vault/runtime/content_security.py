@@ -6,6 +6,11 @@ import re
 import shlex
 
 _FENCE_OPEN_RE = re.compile(r"^ {0,3}(?P<fence>`{3,}|~{3,})")
+_NESTED_FENCE_OPEN_RE = re.compile(
+    r"^(?P<prefix>(?:[ \t]*(?:(?:>[ \t]*)|(?:[-+*~:][ \t]+)|"
+    r"(?:[^\s`~]+[.)][ \t]+))+|[ \t]+))"
+    r"(?P<fence>`{3,}|~{3,})(?P<info>[^\r\n]*)(?P<line_ending>\r?\n)?$"
+)
 _RAW_FORMAT_FENCE_INFO_RE = re.compile(r"^[ \t]*\{[ \t]*=[^ \t}]+[ \t]*\}[ \t]*(?:\r?\n)?$")
 _RAW_FORMAT_INLINE_ATTRIBUTE_RE = re.compile(r"\{[ \t]*=[^ \t}]+[ \t]*\}")
 _TILDE_FENCE_LANGUAGE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9+._-]*$")
@@ -51,6 +56,11 @@ _EXTERNAL_URL_RE = re.compile(
 _TRAILING_URL_PUNCTUATION = ".,;:!?"
 
 
+def _markdown_physical_lines(text: str) -> list[str]:
+    """Split only physical Markdown LF lines, preserving their endings."""
+    return [line for line in re.findall(r"[^\n]*(?:\n|$)", text) if line]
+
+
 def _code_span(value: str) -> str:
     """Return a code span whose delimiter cannot occur in *value*."""
     longest_run = max((len(run) for run in re.findall(r"`+", value)), default=0)
@@ -93,7 +103,22 @@ def _replace_external_url(match: re.Match[str]) -> str:
     return f"{_code_span(value)}{trailing}"
 
 
+def _neutralize_pandoc_attribute_lists(text: str) -> str:
+    """Make all untrusted Pandoc attribute-list openers literal."""
+    output: list[str] = []
+    copied_until = 0
+    for index, character in enumerate(text):
+        if character != "{" or _is_escaped_markdown_character(text, index):
+            continue
+        output.append(text[copied_until:index])
+        output.append("\\{")
+        copied_until = index + 1
+    output.append(text[copied_until:])
+    return "".join(output)
+
+
 def _neutralize_plain_text(text: str) -> str:
+    text = _neutralize_pandoc_attribute_lists(text)
     text = _INLINE_LINK_RE.sub(_replace_inline_link, text)
     text = _REFERENCE_LINK_RE.sub(_replace_reference_link, text)
     text = _REFERENCE_DEFINITION_RE.sub(_replace_reference_definition, text)
@@ -176,6 +201,8 @@ def _markdown_block_line_context(line: str) -> tuple[str, bool]:
     while content.startswith(">"):
         has_block_prefix = True
         content = content[1:].lstrip(" \t")
+    if content.startswith("|"):
+        return content[1:].lstrip(" \t"), True
     for prefix in (_ATX_HEADING_PREFIX_RE, _LIST_PREFIX_RE):
         match = prefix.match(content)
         if match:
@@ -203,7 +230,7 @@ def _line_starts_interrupting_markdown_block(line: str) -> bool:
 
 def _contains_interrupting_html_block(content: str) -> bool:
     """Return whether raw HTML can make a multiline code span parse as blocks."""
-    lines = f"\0{content}\0".splitlines()
+    lines = _markdown_physical_lines(f"\0{content}\0")
     has_unescaped_html_tag = False
     has_interrupting_markdown_block = False
     for line in lines:
@@ -300,13 +327,37 @@ def _neutralize_inline_text(text: str) -> str:
     return neutralized
 
 
-def _inert_raw_format_fence_opening(line: str, opening: re.Match[str]) -> str:
-    """Turn a Pandoc raw-format fence into an ordinary text fence."""
+def _neutralize_fence_opening(line: str, opening: re.Match[str]) -> str:
+    """Strip untrusted Pandoc attributes from a fenced-code opener."""
     suffix = line[opening.end() :]
-    if not _RAW_FORMAT_FENCE_INFO_RE.fullmatch(suffix):
+    info = suffix.rstrip("\r\n").strip(" \t")
+    if "{" not in info:
         return line
     line_ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
-    return f"{line[: opening.end()]}text{line_ending}"
+    language = info.partition("{")[0].strip()
+    safe_info = language if _TILDE_FENCE_LANGUAGE_RE.fullmatch(language) else "text"
+    return f"{line[: opening.end()]}{safe_info}{line_ending}"
+
+
+def _literalize_fence_opening(line: str, opening: re.Match[str]) -> str:
+    """Make an ambiguous fence opener prose before neutralizing its contents."""
+    entity = "&#96;" if opening["fence"].startswith("`") else "&#126;"
+    return f"{line[: opening.start('fence')]}{entity * len(opening['fence'])}{line[opening.end('fence') :]}"
+
+
+def _neutralize_nested_fence_opening(line: str) -> str:
+    """Make attribute-bearing nested fence openers literal."""
+    opening = _NESTED_FENCE_OPEN_RE.match(line)
+    if opening is None or "{" not in opening["info"]:
+        return line
+    return _literalize_fence_opening(line, opening)
+
+
+def _neutralize_nested_fence_attributes(body: str) -> str:
+    """Neutralize attributes on container-nested fence headers before code masking."""
+    return "".join(
+        _neutralize_nested_fence_opening(line) for line in _markdown_physical_lines(body)
+    )
 
 
 def neutralize_untrusted_markdown(body: str) -> str:
@@ -314,15 +365,17 @@ def neutralize_untrusted_markdown(body: str) -> str:
 
     Image embeds and raw HTML become inert. Markdown links and external URLs
     become non-clickable code spans. Vault wikilinks and existing inline or
-    fenced code remain unchanged. The transformation is idempotent.
+    fenced-code content remains unchanged. Pandoc attribute lists become literal,
+    and fenced-code attributes are stripped. The transformation is idempotent.
     """
+    body = _neutralize_nested_fence_attributes(body)
     output: list[str] = []
     plain_lines: list[str] = []
     fence_character: str | None = None
     fence_length = 0
     fence_lines: list[str] = []
 
-    for line in body.splitlines(keepends=True):
+    for line in _markdown_physical_lines(body):
         if fence_character is not None:
             fence_lines.append(line)
             closing = re.match(
@@ -339,6 +392,15 @@ def neutralize_untrusted_markdown(body: str) -> str:
 
         opening = _FENCE_OPEN_RE.match(line)
         tilde_fence = bool(opening and opening.group("fence")[0] == "~")
+        tilde_fence_has_attributes = bool(opening and "{" in line[opening.end() :])
+        if (
+            opening
+            and tilde_fence
+            and tilde_fence_has_attributes
+            and not _tilde_fence_can_start_block(plain_lines)
+        ):
+            plain_lines.append(_literalize_fence_opening(line, opening))
+            continue
         if (
             opening
             and _is_fenced_code_opening(line, opening)
@@ -346,7 +408,7 @@ def neutralize_untrusted_markdown(body: str) -> str:
                 not tilde_fence
                 or (
                     _tilde_fence_can_start_block(plain_lines)
-                    and _has_valid_tilde_fence_info(line, opening)
+                    and (tilde_fence_has_attributes or _has_valid_tilde_fence_info(line, opening))
                 )
             )
         ):
@@ -355,7 +417,7 @@ def neutralize_untrusted_markdown(body: str) -> str:
             fence = opening.group("fence")
             fence_character = fence[0]
             fence_length = len(fence)
-            fence_lines.append(_inert_raw_format_fence_opening(line, opening))
+            fence_lines.append(_neutralize_fence_opening(line, opening))
             continue
 
         plain_lines.append(line)
