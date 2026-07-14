@@ -8,9 +8,6 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import (
-    capture_bibtex_source as _capture_bibtex_source,
-)
-from memoria_vault.runtime.capture import (
     capture_source as _capture_source,
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
@@ -43,6 +40,9 @@ from tests.helpers import (
     git,
     init_git,
     mark_file_status,
+)
+from tests.helpers import (
+    capture_bibtex_source_checked as _capture_bibtex_source,
 )
 
 

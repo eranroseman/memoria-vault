@@ -110,7 +110,11 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
     add_repo_paths(root)
 
     from memoria_vault.runtime import state
-    from memoria_vault.runtime.capture import capture_bibtex_source, write_references_bib
+    from memoria_vault.runtime.capture import (
+        bibtex_capture_payload,
+        stage_capture_payload,
+        write_references_bib,
+    )
 
     bib = (
         "@article{x2024demo,\n"
@@ -120,12 +124,22 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
         "  journal = {Demo Journal},\n"
         "}\n"
     )
-    result = capture_bibtex_source(
-        vault,
+    # capture_bibtex_source() (the checked-forcing convenience wrapper) was
+    # removed as dead product code -- it had no worker/CLI callers, only
+    # test/dev-script fixture seeding. Build the same checked row via its
+    # two underlying pieces directly, matching worker.py's own dispatch
+    # shape minus the check_status override.
+    payload = bibtex_capture_payload(
         bib,
-        context=_operation_context(vault, "capture-bibtex-source"),
         work_id="demo-work",
         content_text="Demo Work package-gate source.",
+    )
+    result = stage_capture_payload(
+        vault,
+        payload,
+        context=_operation_context(vault, "capture-bibtex-source"),
+        workflow="capture_bibtex_source",
+        check_status="checked",
     )
     source = state.catalog_source(vault, result["work_id"])
     assert result["source_path"] == "catalog/sources/demo-work"
