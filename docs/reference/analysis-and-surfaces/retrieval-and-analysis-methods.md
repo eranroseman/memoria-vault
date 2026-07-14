@@ -43,7 +43,7 @@ writes checked Concepts plus generated checked Work text and graph neighborhoods
 `.memoria/index/search/checked/`; Memoria filters results back through the
 DB/read API `check_status = checked` verdict. `answer_query()` uses deterministic Python BM25.
 For project-scoped Ask, it expands the query with checked project scope/facet
-terms and checked linked thesis terms before ranking. `run_bm25_eval()`
+terms and checked linked thesis terms before ranking. `evaluate_bm25()`
 provides the eval harness. Rerank and broader global query expansion are not
 active product modes.
 
@@ -77,13 +77,13 @@ hash-based fixture embedder.
 
 ---
 
-### Graph algorithms (BFS, PageRank, shortest path)
+### Orphan detection (in-degree count)
 
-**For:** orphan detection, hub identification, dependency walks, link density measurement.
+**For:** orphan detection — finding synthesis notes with zero inbound wikilinks.
 
 **Used by:** Linter `graph-analyze`.
 
-**Implementation:** the current `graph-analyze` command is the `graph_analyze` function in the Linter's `detectors.py` — pure stdlib in-degree arithmetic over the wikilink graph for orphan detection.
+**Implementation:** the current `graph-analyze` command is the `graph_analyze` function in the Linter's `detectors.py` — pure stdlib in-degree arithmetic over the wikilink graph. Hub identification, dependency walks, link-density measurement, and general graph algorithms (BFS, PageRank, shortest path) are not implemented.
 
 **Cost:** linear in graph size. Determinism: total.
 

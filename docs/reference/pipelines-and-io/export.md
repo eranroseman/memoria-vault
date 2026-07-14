@@ -38,8 +38,9 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | State | Form | Lives in | Editable / restylable downstream? |
 | --- | --- | --- | --- |
 | Citekey | `[@smith2020]` | Obsidian Markdown draft | — (source form; always editable here) |
-| Pandoc-static | Rendered text string | `.docx` / `.odt` | ❌ Frozen — no restyling |
+| Pandoc-static | Rendered text string | `.docx` / `.odt` (direct Pandoc route) | ❌ Frozen — no restyling |
 | Word field | Binary field code | Word (live) | ✅ Live; restyle via Zotero Word plugin |
+| Reference Mark | Field code | `.odt` (via Zotero RTF/ODF Scan) | ✅ Live; restyle via Zotero LibreOffice plugin |
 
 ---
 

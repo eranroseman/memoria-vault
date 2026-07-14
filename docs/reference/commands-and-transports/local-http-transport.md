@@ -117,7 +117,10 @@ different envelope is rejected with `400`.
 ## Responses
 
 Responses are JSON with `Content-Type: application/json; charset=utf-8`. Engine
-read payloads include `ok: true` and `api_version: engine-read-api.v1`.
+read payloads include `ok: true` and `api_version: engine-read-api.v1`. The
+exception is `GET /openapi.json`: its response also carries `ok: true` but has
+no `api_version` key, since it returns a raw OpenAPI 3.1 document rather than
+an engine-read envelope.
 
 Current status behavior is intentionally small:
 
