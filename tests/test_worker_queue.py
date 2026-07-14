@@ -11,7 +11,6 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import (
     _workspace_lock,
@@ -23,7 +22,7 @@ from memoria_vault.runtime.worker import (
 from memoria_vault.runtime.worker import (
     main as worker_main,
 )
-from tests.helpers import copy_memoria_dirs, git, init_git
+from tests.helpers import copy_memoria_dirs, git, init_git, work_text, write_note
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -63,29 +62,6 @@ def test_worker_workspace_lock_serializes_processes(tmp_path: Path) -> None:
         if process.is_alive():
             process.terminate()
             process.join(timeout=2)
-
-
-def work_text(title: str, body: str) -> str:
-    return (
-        f"---\ntype: digest\ntitle: {title}\ntags: []\nlinks: {{}}\nwork_id: {title}\n---\n{body}\n"
-    )
-
-
-def write_note(vault: Path, name: str, status: str, body: str) -> Path:
-    path = vault / "notes" / f"{name}.md"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        f"---\ntype: note\ntitle: {name}\ntags: []\nlinks: {{}}\n---\n{body}\n",
-        encoding="utf-8",
-    )
-    state.record_observed_file_edit(
-        vault,
-        output_id=path.relative_to(vault).as_posix(),
-        concept_type="note",
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(vault, path.relative_to(vault).as_posix(), status)
-    return path
 
 
 def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: Path) -> None:
