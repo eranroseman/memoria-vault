@@ -588,6 +588,106 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": [".memoria/blobs/source-content/floor-sweep-capture-source/content.txt"],
     },
+    # worker.py:1274-1298 (`_run_capture_url_source_operation`) requires
+    # url, then calls `require_allowed_network(policy, url)`
+    # (operations.py:1020) *before* any real fetch. The manifest's own
+    # `allowed_network` is `[http://, https://]` — genuinely unrestrictive,
+    # so any real http(s) URL would need live network to succeed or fail,
+    # which this offline floor harness cannot depend on (this sandbox
+    # happens to have outbound network, but the harness must not). Using an
+    # `ftp://` URL fails the network-prefix check deterministically, with no
+    # network call at all — confirmed live: "operation capture-url-source
+    # cannot access ftp://example.test/floor-sweep-file"
+    # (operations.py:1013-1017, `_require_network`).
+    "capture-url-source": {
+        "payload": {"url": "ftp://example.test/floor-sweep-file"},
+        "expect": "refused",
+        "reason": "operation capture-url-source cannot access ftp://",
+    },
+    # worker.py:812-830 pops target_id/reason/include_target. cascade-rollback
+    # is a PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:63); same
+    # actor-check-fires-first shape as acknowledge-attention above —
+    # confirmed live: refused before runtime/integrity.py:cascade_rollback's
+    # own body runs, regardless of target validity.
+    "cascade-rollback": {
+        "payload": {"target_id": "{note_claim}", "reason": "floor sweep cascade rollback"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py:798-811 has no required payload keys (shadow/commit both
+    # default). check_source_metadata (runtime/integrity.py:304) scans all
+    # checked catalog sources for thin bibliographic metadata; the seed's
+    # checked sources don't trip a finding, but an empty-findings run is
+    # still a legitimate "done" (commit is "" only because there's nothing
+    # to commit — findings and commit are both conditioned on `if findings`).
+    # Confirmed live: "done".
+    "check-source-metadata": {
+        "payload": {},
+        "expect": "done",
+    },
+    # worker.py:936-952, same run_prompt_operation path as analyze-claims
+    # above. input_text describes two disagreeing sources (matching this
+    # op's own "two-or-more-notes" io_schema.input intent). Confirmed live:
+    # identical #1391 gitignored-staging crash — xfail(strict=True).
+    "compare-and-contrast": {
+        "payload": {
+            "input_text": (
+                "Source A found the intervention improved recall. "
+                "Source B found no significant effect on recall."
+            )
+        },
+        "expect": "done",
+    },
+    # worker.py:399-423 pops work_id (str) and hub_topics (list of 5-15
+    # non-blank strings), dispatching to operations.py:compile_source_digest.
+    # Unlike run_prompt_operation, this path stages the digest/hub Concepts
+    # and then *promotes* them (trusted_writer.py:promote_checked, which
+    # materializes to the real output path and unlinks the staging copy)
+    # before its own commit_writer_changes call — so it does not share
+    # #1391's bug of committing a still-staged, gitignored path. Uses
+    # work_id "demo-work" (checked, text_status "full-text" per
+    # build_floor_seed's own docstring) since compile_source_digest requires
+    # a digestable (full-text) checked source
+    # (operations.py:_require_digestable_text). mode defaults to "test",
+    # which resolves to the deterministic-fixture runner offline
+    # (operations.py:_run_digest_model), so no network/model dependency.
+    # Confirmed live: "done", creates digests/demo-work.md plus one hub per
+    # topic (topic slugs are lower-cased/dash-joined,
+    # operations.py:_topic_slug).
+    "compile-source-digest": {
+        "payload": {
+            "work_id": "demo-work",
+            "hub_topics": [
+                "Floor Topic One",
+                "Floor Topic Two",
+                "Floor Topic Three",
+                "Floor Topic Four",
+                "Floor Topic Five",
+            ],
+        },
+        "expect": "done",
+        "creates": [
+            "digests/demo-work.md",
+            "hubs/floor-topic-one.md",
+            "hubs/floor-topic-two.md",
+            "hubs/floor-topic-three.md",
+            "hubs/floor-topic-four.md",
+            "hubs/floor-topic-five.md",
+        ],
+    },
+    # worker.py:658-679 pops project_path, dispatching to
+    # knowledge.py:compose_project_draft, which reads the project's outline
+    # slice (read_project_slice) and raises "project outline has no checked
+    # members" when there is no members list — the seed has no outline.md
+    # for package-gate (write-project-slice, the op that creates it, is not
+    # yet seeded; it lands in Task 7b-2). This is a genuine missing
+    # precondition of the current seed state, not an actor/network
+    # restriction — confirmed live.
+    "compose-project-draft": {
+        "payload": {"project_path": "{project}"},
+        "expect": "refused",
+        "reason": "project outline has no checked members",
+    },
 }
 
 

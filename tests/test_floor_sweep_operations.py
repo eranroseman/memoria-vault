@@ -41,6 +41,7 @@ _KNOWN_BUGS: dict[str, str] = {
     # — same root cause, confirmed live against a real seeded vault (see
     # task-7b1-report.md), not assumed by analogy alone.
     "analyze-claims": _PROMPT_STAGING_GITIGNORE_BUG,
+    "compare-and-contrast": _PROMPT_STAGING_GITIGNORE_BUG,
 }
 
 OPERATION_PARAMS = [
