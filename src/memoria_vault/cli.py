@@ -95,7 +95,6 @@ def _build_parser() -> argparse.ArgumentParser:
     doctor.set_defaults(handler=_cmd_doctor)
     bundle = doctor_sub.add_parser("bundle")
     _common(bundle)
-    bundle.add_argument("--redacted", action="store_true")
     bundle.set_defaults(handler=_cmd_doctor_bundle)
     self_test = doctor_sub.add_parser("self-test")
     _common(self_test)
@@ -685,7 +684,6 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
         {
             "ok": all(doctor.values()) and backup["ok"],
             "workspace": str(workspace),
-            "redacted": bool(args.redacted),
             "doctor": doctor,
             "backup": backup,
             "requests": requests,

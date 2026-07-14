@@ -1231,9 +1231,9 @@ def test_cli_wires_maintenance_and_pi_commands(
     self_test = json.loads(capsys.readouterr().out)
     assert self_test["checks"]["operation_catalog"] is True
 
-    assert main(["doctor", "bundle", "--workspace", str(workspace), "--redacted", "--json"]) == 0
+    assert main(["doctor", "bundle", "--workspace", str(workspace), "--json"]) == 0
     bundle = json.loads(capsys.readouterr().out)
-    assert bundle["redacted"] is True
+    assert "redacted" not in bundle
 
     assert (
         main(
