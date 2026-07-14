@@ -709,11 +709,7 @@ def _openalex_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _response_content_type(resp: Any) -> str:
-    headers = getattr(resp, "headers", None)
-    if hasattr(headers, "get"):
-        return str(headers.get("Content-Type") or "")
-    info = resp.info() if hasattr(resp, "info") else None
-    return str(info.get("Content-Type") or "") if hasattr(info, "get") else ""
+    return str(resp.headers.get("Content-Type") or "")
 
 
 def _extract_full_text(url: str, raw: bytes, content_type: str) -> str:
