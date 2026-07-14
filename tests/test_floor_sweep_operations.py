@@ -21,19 +21,26 @@ OPERATION_IDS = sorted(
 # but a real defect in the current implementation makes every seeded run of
 # it crash. Recorded here — not silently special-cased — so the strict xfail
 # turns into a loud failure the moment the underlying bug is fixed without
-# this entry being updated. See task-6-report.md for the full trace.
+# this entry being updated. See task-6-report.md for the full trace; filed as
+# GitHub issue #1391 ("run_prompt_operation commits the gitignored staging
+# path — 6 prompt-family operations crash on real init vaults").
+_PROMPT_STAGING_GITIGNORE_BUG = (
+    "run_prompt_operation (runtime/operations.py) commits its staged "
+    "output via commit_writer_changes(..., [stage['staging_id']]), but "
+    ".memoria/staging/ is gitignored by the packaged workspace "
+    ".gitignore template; `git add` (trusted_writer.py:_commit_writer_"
+    "changes, no -f) fails with 'ignored by one of your .gitignore "
+    "files' on any vault built via `memoria init`. Affects every "
+    "prompt-family op sharing run_prompt_operation (analyze-claims, "
+    "check-falsifiability, compare-and-contrast, extract-claim-stubs, "
+    "red-team-argument, summarize-for-recall). GitHub issue #1391."
+)
 _KNOWN_BUGS: dict[str, str] = {
-    "check-falsifiability": (
-        "run_prompt_operation (runtime/operations.py) commits its staged "
-        "output via commit_writer_changes(..., [stage['staging_id']]), but "
-        ".memoria/staging/ is gitignored by the packaged workspace "
-        ".gitignore template; `git add` (trusted_writer.py:_commit_writer_"
-        "changes, no -f) fails with 'ignored by one of your .gitignore "
-        "files' on any vault built via `memoria init`. Affects every "
-        "prompt-family op sharing run_prompt_operation (analyze-claims, "
-        "check-falsifiability, compare-and-contrast, extract-claim-stubs, "
-        "red-team-argument, summarize-for-recall)."
-    ),
+    "check-falsifiability": _PROMPT_STAGING_GITIGNORE_BUG,
+    # Task 7b-1: registered alongside check-falsifiability's Task-6 finding
+    # — same root cause, confirmed live against a real seeded vault (see
+    # task-7b1-report.md), not assumed by analogy alone.
+    "analyze-claims": _PROMPT_STAGING_GITIGNORE_BUG,
 }
 
 OPERATION_PARAMS = [

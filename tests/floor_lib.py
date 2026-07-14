@@ -485,6 +485,109 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires a DOI catalog identifier",
     },
+    # Task 7b-1 (22 ids, alphabetical acknowledge-attention..
+    # integrity-evidence-check). Every payload key below is read off the
+    # worker dispatch branch (grep '"<id>"' src/memoria_vault/runtime/
+    # worker.py), then run once against a real seeded vault via a scratch
+    # probe before being written here — see task-7b1-report.md for the
+    # per-op evidence trail.
+    #
+    # worker.py:831-849 (`operation_id in {"acknowledge-attention",
+    # "resolve-attention"}`) pops target_id, dispatched to
+    # runtime/integrity.py:resolve_attention. acknowledge-attention is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:54), and
+    # _require_operation_actor (worker.py:308) runs before every operation's
+    # own branch — same shape as curate-note-link in Task 6: with a real
+    # attention-card target, the sweep's fixed actor="agent" is
+    # deterministically refused before resolve_attention's body ever runs.
+    "acknowledge-attention": {
+        "payload": {"target_id": "{attention_path}"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py:936-952 routes analyze-claims through the same
+    # runtime/operations.py:run_prompt_operation path as check-falsifiability
+    # (Task 6) — payload key is input_text, for the same reason
+    # check-falsifiability uses it (none of the seed's own notes are
+    # "checked", so an input_ref would additionally fail
+    # _checked_prompt_input). Design intent is "done" via the offline
+    # deterministic-fixture runner; the actual run crashes on the identical
+    # #1391 gitignored-staging bug Task 6 found (confirmed live: same `git
+    # add ... ignored by one of your .gitignore files` error, just a
+    # different staging filename) — xfail(strict=True) in
+    # test_floor_sweep_operations.py, not a forced assertion.
+    "analyze-claims": {
+        "payload": {"input_text": "Claim: coffee consumption causally reduces default risk."},
+        "expect": "done",
+    },
+    # worker.py:758-774 pops query (str) and k (int >= 1); answer_query
+    # (runtime/search_index.py) builds its BM25 index from checked documents
+    # on the fly (no prebuilt index required) and returns an empty-but-valid
+    # sourced-answer contract when nothing matches — confirmed live: 0 hits
+    # for "floor" still completes "done".
+    "answer-query": {
+        "payload": {"query": "floor", "k": 5},
+        "expect": "done",
+    },
+    # worker.py:1220-1271 (`_run_capture_bibtex_source_operation`) requires
+    # only `bibtex`; work_id defaults to the BibTeX citekey when omitted
+    # (capture.py:_bibtex_default_work_id). Braces inside the built BibTeX
+    # string are doubled ("{{"/"}}"): this payload value passes through the
+    # sweep's own `_fill(entry["payload"], manifest)` call, which runs
+    # `.format(**manifest)` over every payload string — the same literal-
+    # brace lesson Task 6 recorded for create-concept's content template.
+    # No DOI field, so (like enrich-source) no enrichment job is queued.
+    # Confirmed live: "done", new checked-free row at work_id "floorsweep2025".
+    "capture-bibtex-source": {
+        "payload": {
+            "bibtex": (
+                "@article{{floorsweep2025,\n"
+                "  title = {{Floor Sweep Bibtex Source}},\n"
+                "  author = {{Roe, Alex}},\n"
+                "  year = {{2025}},\n"
+                "  journal = {{Floor Sweep Journal}},\n"
+                "}}\n"
+            )
+        },
+        "expect": "done",
+        "creates": [".memoria/blobs/source-content/floorsweep2025/content.txt"],
+    },
+    # worker.py:1301-1339 (`_run_capture_pdf_source_operation`) requires
+    # work_id/title/description/raw_pdf_base64, dispatching to
+    # capture.py:stage_pdf_source -> _extract_pdf_pages, which does `import
+    # fitz` (PyMuPDF) and raises `RuntimeError("PDF capture requires
+    # PyMuPDF from the vault MCP requirements")` on ImportError
+    # (capture.py:783-787) before ever looking at the payload bytes.
+    # PyMuPDF is not in requirements-dev.txt (it ships only with the
+    # separate vault-MCP requirements) and is not importable in this
+    # environment — confirmed live: any raw_pdf_base64 refuses identically.
+    # This is a real, by-design refusal (a clean typed error on a missing
+    # optional native dependency), not a code defect like #1391 — no xfail.
+    "capture-pdf-source": {
+        "payload": {
+            "work_id": "floor-sweep-pdf",
+            "title": "Floor sweep PDF source",
+            "description": "A PDF captured by the floor sweep.",
+            "raw_pdf_base64": "JVBERi0xLjQKZmxvb3Igc3dlZXAgZml4dHVyZQo=",
+        },
+        "expect": "refused",
+        "reason": "PDF capture requires PyMuPDF",
+    },
+    # worker.py:1156-1194 (`_run_capture_source_operation`) requires
+    # work_id/title/description/content_text; dispatches to
+    # capture.py:stage_capture_payload -> stage_catalog_source, which has no
+    # coherence check on the supplied text (unlike the PDF path). Confirmed
+    # live: "done", new unchecked row.
+    "capture-source": {
+        "payload": {
+            "work_id": "floor-sweep-capture-source",
+            "title": "Floor sweep capture source",
+            "description": "A source captured directly by the floor sweep.",
+            "content_text": "Floor sweep capture-source body text for offline testing.",
+        },
+        "expect": "done",
+        "creates": [".memoria/blobs/source-content/floor-sweep-capture-source/content.txt"],
+    },
 }
 
 
