@@ -21,7 +21,7 @@ from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-from tests.helpers import WORKSPACE_SEED, copy_memoria_dirs, git, init_git
+from tests.helpers import WORKSPACE_SEED, git, worker_workspace
 
 
 @pytest.fixture(autouse=True)
@@ -43,11 +43,12 @@ def sha_text(text: str) -> str:
 
 
 def workspace(tmp_path: Path) -> Path:
-    copy_memoria_dirs(tmp_path, "schemas", "config")
-    init_git(tmp_path, "enrichment@example.invalid", "Enrichment Tests")
-    git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
-    git(tmp_path, "commit", "-m", "seed enrichment workspace")
-    return tmp_path
+    return worker_workspace(
+        tmp_path,
+        email="enrichment@example.invalid",
+        name="Enrichment Tests",
+        message="seed enrichment workspace",
+    )
 
 
 def allow_example_full_text(monkeypatch) -> None:

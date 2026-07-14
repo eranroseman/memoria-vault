@@ -23,15 +23,8 @@ from memoria_vault.runtime.worker import (
 from memoria_vault.runtime.worker import (
     main as worker_main,
 )
-from tests.helpers import copy_memoria_dirs, git, init_git
-
-
-def workspace(tmp_path: Path) -> Path:
-    copy_memoria_dirs(tmp_path, "schemas", "config")
-    init_git(tmp_path, "worker@example.invalid", "Alpha Worker")
-    git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
-    git(tmp_path, "commit", "-m", "seed worker workspace")
-    return tmp_path
+from tests.helpers import git
+from tests.helpers import worker_workspace as workspace
 
 
 def note_text(status: str = "checked") -> str:

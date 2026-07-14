@@ -39,10 +39,11 @@ from memoria_vault.runtime.worker import (
 from tests.helpers import (
     WORKSPACE_SEED,
     call_with_context,
-    copy_memoria_dirs,
     git,
-    init_git,
     mark_file_status,
+)
+from tests.helpers import (
+    worker_workspace as workspace,
 )
 
 
@@ -68,14 +69,6 @@ def write_tracked_projections(vault: Path, *args, **kwargs):
 
 def answer_query(vault: Path, *args, **kwargs):
     return call_with_context(_answer_query, vault, *args, **kwargs)
-
-
-def workspace(tmp_path: Path) -> Path:
-    copy_memoria_dirs(tmp_path, "schemas", "config")
-    init_git(tmp_path, "worker@example.invalid", "Alpha Worker")
-    git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
-    git(tmp_path, "commit", "-m", "seed worker workspace")
-    return tmp_path
 
 
 def note_text(status: str = "checked") -> str:
