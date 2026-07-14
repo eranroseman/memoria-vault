@@ -145,6 +145,15 @@ def write_checked_note(workspace: Path, rel: str, title: str) -> None:
     )
 
 
+def note_text(title: str, *, status: str = "checked") -> str:
+    return (
+        "---\n"
+        f"type: note\ncheck_status: {status}\ntitle: {title}\n"
+        "status: accepted\n---\n"
+        f"# {title}\n\nBody.\n"
+    )
+
+
 def patch_pydantic_ai(
     monkeypatch: Any,
     *,

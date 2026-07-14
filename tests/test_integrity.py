@@ -40,7 +40,7 @@ from memoria_vault.runtime.trusted_writer import (
     stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import call_with_context, copy_memoria_dirs, init_git
+from tests.helpers import call_with_context, copy_memoria_dirs, init_git, note_text
 
 
 def _context_wrapper(function):
@@ -64,15 +64,6 @@ def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas", "config")
     init_git(tmp_path, "integrity@example.invalid", "Integrity")
     return tmp_path
-
-
-def note_text(title: str, *, status: str = "checked") -> str:
-    return (
-        "---\n"
-        f"type: note\ncheck_status: {status}\ntitle: {title}\n"
-        "status: accepted\n---\n"
-        f"# {title}\n\nBody.\n"
-    )
 
 
 def _stage_checked_note(vault: Path, rel: str, title: str, body: str) -> None:
