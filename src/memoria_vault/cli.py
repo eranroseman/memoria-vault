@@ -1117,8 +1117,7 @@ def _cmd_project_verify(args: argparse.Namespace) -> int:
 def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.knowledge import read_project_draft, resolve_evidence_review
 
-    if args.actor != "pi":
-        raise ValueError("resolve-evidence-review requires PI actor authority")
+    _require_pi_actor(args, "resolve-evidence-review")
     workspace = _workspace(args)
     verification_request = _enqueue_and_run(
         args,
@@ -1291,6 +1290,11 @@ def _cmd_request_resume(args: argparse.Namespace) -> int:
 def _require_pi_request_control(args: argparse.Namespace) -> None:
     if args.actor != "pi":
         raise ValueError("request control requires PI actor authority")
+
+
+def _require_pi_actor(args: argparse.Namespace, action: str) -> None:
+    if args.actor != "pi":
+        raise ValueError(f"{action} requires PI actor authority")
 
 
 def _request_control_row(workspace: Path, args: argparse.Namespace) -> Any:
@@ -1716,8 +1720,7 @@ def _cmd_workspace_run(args: argparse.Namespace) -> int:
 def _cmd_workspace_recover(args: argparse.Namespace) -> int:
     from memoria_vault.runtime import backup as runtime_backup
 
-    if args.actor != "pi":
-        raise ValueError("workspace recover requires PI actor authority")
+    _require_pi_actor(args, "workspace recover")
     workspace = _workspace(args)
     runtime_backup.validate_runtime_root(workspace)
     fixture = _workspace_recover_fixture(workspace, args.fixture) if args.fixture else None
@@ -1752,8 +1755,7 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
 def _cmd_workspace_backup(args: argparse.Namespace) -> int:
     from memoria_vault.runtime import backup as runtime_backup
 
-    if args.actor != "pi":
-        raise ValueError("workspace backup requires PI actor authority")
+    _require_pi_actor(args, "workspace backup")
     return _emit(
         runtime_backup.create_backup(
             _workspace(args),
@@ -1768,8 +1770,7 @@ def _cmd_workspace_backup(args: argparse.Namespace) -> int:
 def _cmd_workspace_restore(args: argparse.Namespace) -> int:
     from memoria_vault.runtime import backup as runtime_backup
 
-    if args.actor != "pi":
-        raise ValueError("workspace restore requires PI actor authority")
+    _require_pi_actor(args, "workspace restore")
     return _emit(
         runtime_backup.restore_backup(
             _workspace(args),
@@ -2009,8 +2010,7 @@ def _cmd_steering_edit(args: argparse.Namespace) -> int:
         commit_explicit_writer_changes,
     )
 
-    if args.actor != "pi":
-        raise ValueError("steering edit requires PI actor authority")
+    _require_pi_actor(args, "steering edit")
     workspace = _workspace(args)
     body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
     path = workspace / "steering.md"
@@ -2892,8 +2892,7 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         commit_explicit_writer_changes,
     )
 
-    if args.actor != "pi":
-        raise ValueError(f"vocabulary {mode} requires PI actor authority")
+    _require_pi_actor(args, f"vocabulary {mode}")
     if args.field not in {"research_area", "methodology"}:
         raise ValueError(
             "vocabulary mutations support research_area and methodology; "
