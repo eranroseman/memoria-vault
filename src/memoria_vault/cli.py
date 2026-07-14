@@ -617,11 +617,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             return _fail("doctor --repair requires an existing workspace", json_output=args.json)
         with _doctor_maintenance(workspace, repair=True):
             repaired = _repair_workspace(workspace)
-    checks: dict[str, Any] = {
-        "workspace_exists": workspace.is_dir(),
-        "state_db": state.db_path(workspace).is_file(),
-        "git": shutil.which("git") is not None,
-    }
+    checks: dict[str, Any] = _doctor_checks(workspace)
     if args.check == "search":
         status = _search_status(workspace)
         checks.update(status["checks"])
