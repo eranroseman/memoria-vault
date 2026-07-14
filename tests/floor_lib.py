@@ -50,13 +50,17 @@ def _write_note(
     extra: str = "",
     body: str = "Seed body.",
     concept_type: str = "note",
-) -> None:
+) -> dict:
     """Create a concept through the real write path (queue -> trusted writer).
 
     Each note gets its own minted ULID (`vaultio.new_ulid()`): `create-concept`
     validates the frontmatter `id` but never mints or replaces it (confirmed in
     `runtime.worker._create_concept_payload`), so reusing one fixed placeholder
     across every seeded note would leave them all sharing a single "unique" id.
+
+    Returns the completed job dict (`done["job_id"]` is the real
+    `operation_requests.request_id` the queue assigned this write — read
+    actions that need a genuine request id reuse it via the manifest).
     """
     from memoria_vault.runtime.vaultio import new_ulid
     from memoria_vault.runtime.worker import enqueue_operation, run_next_job
@@ -81,6 +85,7 @@ def _write_note(
     )
     done = run_next_job(vault, machine="floor-seed")
     assert done is not None and done["status"] == "done", (rel, done)
+    return done
 
 
 def _backfill_tags(vault: Path, rel: str, concept_type: str) -> None:
@@ -127,13 +132,16 @@ def build_floor_seed(workspace: Path) -> dict:
         "note_work": "notes/floor-work.md",
         "hub": "hubs/floor-hub.md",
     }
-    _write_note(
+    claim_job = _write_note(
         workspace,
         manifest["note_claim"],
         title="Floor claim",
         mode="claim",
         extra="claim_text: Seeded falsifiable claim.\n",
     )
+    # requests.get needs a real, stable operation_requests id: reuse the
+    # note_claim write's own request (job_id == the queue's request_id).
+    manifest["request_id"] = claim_job["job_id"]
     _write_note(
         workspace,
         manifest["note_question"],
@@ -171,7 +179,67 @@ def build_floor_seed(workspace: Path) -> dict:
         workspace, manifest["hub"], title="Floor hub", concept_type="hub", extra="tag: floor-seed\n"
     )
     manifest["work_id"] = row["work_id"]
+    manifest["attention_path"] = _seed_attention_item(workspace, manifest["project"])
     return manifest
+
+
+def _seed_attention_item(workspace: Path, project_path: str) -> str:
+    """attention.get/attention.list need a real inbox/*.md attention card, and
+    the seed otherwise has none: demo-work already carries `text_status:
+    full-text` (assert_offline_ingest gives it content_text), so `analyze-gaps`
+    finds no full-text gap on its own. Capture a second, deliberately
+    metadata-only source (checked, so `analyze-gaps`' `state.catalog_sources`
+    query sees it) the same way `assert_offline_ingest` captures demo-work —
+    direct `capture_bibtex_source` call with a manual `OperationContext`, not
+    through the worker queue, because the worker's own capture-bibtex-source
+    dispatch always leaves `check_status: unchecked` (worker.py's
+    `_run_capture_bibtex_source_operation` omits the `check_status` kwarg) and
+    `_missing_full_text_gaps` only looks at checked sources. Then run the real
+    `analyze-gaps` operation (already in OPERATION_REGISTRY) through the
+    normal worker queue, which writes the attention card via its own
+    `_write_full_text_gap_attention` — an authentic product-code artifact, not
+    a fabricated frontmatter file.
+    """
+    from test_vault.e2e_smoke import _operation_context
+
+    from memoria_vault.runtime.capture import capture_bibtex_source, write_references_bib
+    from memoria_vault.runtime.worker import enqueue_operation, run_next_job
+
+    bib = (
+        "@article{floorgap2024,\n"
+        "  title = {Floor Gap Work},\n"
+        "  author = {Roe, Sam},\n"
+        "  year = {2024},\n"
+        "  journal = {Floor Journal},\n"
+        "}\n"
+    )
+    capture_bibtex_source(
+        workspace,
+        bib,
+        context=_operation_context(workspace, "capture-bibtex-source"),
+        work_id="floor-gap-work",
+        # No content_text: leaves text_status at "metadata-only", the gap
+        # analyze-gaps is meant to detect.
+    )
+    # Keep the bibliography.bib tracked projection in sync with the new
+    # source, or assert_invariants' check_tracked_projections flags it stale.
+    write_references_bib(
+        workspace, context=_operation_context(workspace, "regenerate-references-bib")
+    )
+    enqueue_operation(
+        workspace,
+        "analyze-gaps",
+        payload={"project_path": project_path},
+        idempotency_key="floor-seed-analyze-gaps",
+        actor="agent",
+    )
+    done = run_next_job(workspace, machine="floor-seed")
+    assert done is not None and done["status"] == "done", done
+    rel = "inbox/flag-gap-full-text-floor-gap-work.md"
+    assert (workspace / rel).is_file(), (
+        f"analyze-gaps did not raise the expected full-text flag: {done}"
+    )
+    return rel
 
 
 def seed_vault(tmp_path: Path) -> tuple[Path, dict]:
@@ -409,9 +477,9 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # Correction vs the brief: reason corrected from a guessed "network" to
     # the real, deterministic refusal. worker.py:1060-1061 pops work_id
     # (matches the brief) and dispatches to runtime/enrichment.py:
-    # enrich_source, which raises before any network call because the
-    # seed's only catalog source (a BibTeX capture, scripts/test_vault/
-    # e2e_smoke.py:assert_offline_ingest) carries no DOI identifier.
+    # enrich_source, which raises before any network call because demo-work
+    # (the BibTeX capture from scripts/test_vault/e2e_smoke.py:
+    # assert_offline_ingest) carries no DOI identifier.
     "enrich-source": {
         "payload": {"work_id": "{work_id}"},
         "expect": "refused",
@@ -422,15 +490,9 @@ OPERATION_REGISTRY: dict[str, dict] = {
 
 # Per read action id: {"cli": [argv...] | None, "http": (method, path) | None,
 # "mcp": (tool, arguments) | None}. `None` means the transport genuinely has
-# no binding for the action (Task 7's coverage test enforces this against
+# no binding for the action (test_floor_coverage.py enforces this against
 # `surface_contract.actions_by_id()`). `{placeholders}` are manifest keys
 # from `seed_vault`'s returned manifest, filled in by `_fill`.
-#
-# Seeded here: status.read, operations.list, concepts.list, concepts.get,
-# requests.list, attention.list. The remaining read actions (attention.get,
-# exploration.list, journal.get, journal.list, project.draft.read,
-# project.slice.read, requests.get, surface.openapi, surface.schema,
-# work.get) are completed in Task 7.
 ARG_TABLE: dict[str, dict] = {
     "status.read": {
         "cli": ["status"],
@@ -461,5 +523,74 @@ ARG_TABLE: dict[str, dict] = {
         "cli": ["attention", "list"],
         "http": ("GET", "/attention"),
         "mcp": ("attention", {}),
+    },
+    "attention.get": {
+        "cli": ["attention", "show", "{attention_path}"],
+        "http": ("GET", "/attention/card?path={attention_path}"),
+        "mcp": ("attention_card", {"path": "{attention_path}"}),
+    },
+    # No cli binding: the contract declares http+mcp only for exploration.list
+    # (surface_contract.py has no "cli" key for this action).
+    "exploration.list": {
+        "cli": None,
+        "http": ("GET", "/exploration"),
+        "mcp": ("exploration", {}),
+    },
+    # event_id=3 is the seed's create-concept event for note_claim — the
+    # first journal event carrying a real output_id/path (event 1-2 are the
+    # demo-work capture's started/done events, which have no path fields, so
+    # a restricted read_scope like MCP_READ_SCOPE filters them out of
+    # `_journal_in_scope`; event 3 is always "notes/floor-claim.md" given
+    # build_floor_seed's fixed write order, so it is deterministic and
+    # in-scope for all three transports).
+    "journal.get": {
+        "cli": ["journal", "show", "3"],
+        "http": ("GET", "/journal/event?event_id=3"),
+        "mcp": ("journal_event", {"event_id": 3}),
+    },
+    "journal.list": {
+        "cli": ["journal", "tail"],
+        "http": ("GET", "/journal"),
+        "mcp": ("journal", {}),
+    },
+    # No cli binding: project.draft.read is http+mcp only in the contract.
+    "project.draft.read": {
+        "cli": None,
+        "http": ("GET", "/project/draft?project_path={project}"),
+        "mcp": ("project_draft", {"project_path": "{project}"}),
+    },
+    # No cli binding: project.slice.read is http+mcp only in the contract.
+    "project.slice.read": {
+        "cli": None,
+        "http": ("GET", "/project/slice?project_path={project}"),
+        "mcp": ("project_slice", {"project_path": "{project}"}),
+    },
+    "requests.get": {
+        "cli": ["request", "show", "{request_id}"],
+        # http param remap: the action's own params use "request_id", but the
+        # http binding's query param is "id" (surface_contract.py's http
+        # params override for requests.get) — see http_transport.py:152
+        # (`_required(query, "id")`).
+        "http": ("GET", "/request?id={request_id}"),
+        "mcp": ("request", {"request_id": "{request_id}"}),
+    },
+    # http only: surface.openapi has no cli/mcp binding in the contract.
+    "surface.openapi": {
+        "cli": None,
+        "http": ("GET", "/openapi.json"),
+        "mcp": None,
+    },
+    # cli only: surface.schema has no http/mcp binding in the contract.
+    "surface.schema": {
+        "cli": ["surface", "schema"],
+        "http": None,
+        "mcp": None,
+    },
+    # No cli binding: work.get is http+mcp only in the contract. http param
+    # remap: "id" query param -> work_id (http_transport.py:172).
+    "work.get": {
+        "cli": None,
+        "http": ("GET", "/work?id={work_id}"),
+        "mcp": ("work", {"work_id": "{work_id}"}),
     },
 }

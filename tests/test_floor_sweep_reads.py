@@ -21,6 +21,31 @@ from tests.floor_lib import (
 READ_ACTIONS = sorted(a for a, d in actions_by_id().items() if d["kind"] == "read")
 TRANSPORTS = ("cli", "http", "mcp")
 
+# Real, pre-existing contract/implementation mismatches uncovered by
+# completing the ARG_TABLE (Task 7a) — not ARG_TABLE binding errors. The
+# surface_contract entry for `surface.openapi` declares
+# `response_version: "engine-read-api.v1"`, but its http handler
+# (`http_transport.openapi_schema`) returns a raw OpenAPI 3.1 document
+# (`{"ok": True, "openapi": "3.1.0", "info": {...}, "paths": {...}}`) with no
+# `api_version` key — unlike every other read action, which goes through
+# `engine_api._read_payload()` and always sets it. This is deliberate on the
+# http side (a valid OpenAPI document has its own `openapi` version field;
+# splicing in an unrelated `api_version` would be odd for tooling consuming
+# `/openapi.json`), but it means the contract's declared response_version is
+# not honored for this one action — a real, narrow inconsistency, not a
+# sweep-harness mistake. `xfail(strict=True)`, following the same "found a
+# real bug, don't fake the assertion, flag if it's ever silently fixed"
+# convention `tests/test_floor_sweep_operations.py` set for
+# `check-falsifiability` (task-6-report.md).
+KNOWN_CONTRACT_GAPS = {
+    ("surface.openapi", "http"): (
+        "surface.openapi's http handler (http_transport.openapi_schema) returns a raw "
+        "OpenAPI document with no api_version key, though its surface_contract entry "
+        "declares response_version=engine-read-api.v1 — see test_floor_sweep_reads.py "
+        "module docstring/comment for the full root cause."
+    ),
+}
+
 
 @pytest.fixture(scope="module")
 def vault(tmp_path_factory: pytest.TempPathFactory):
@@ -30,7 +55,9 @@ def vault(tmp_path_factory: pytest.TempPathFactory):
 
 @pytest.mark.parametrize("action_id", READ_ACTIONS)
 @pytest.mark.parametrize("transport", TRANSPORTS)
-def test_read_action(vault, action_id: str, transport: str) -> None:
+def test_read_action(vault, action_id: str, transport: str, request: pytest.FixtureRequest) -> None:
+    if reason := KNOWN_CONTRACT_GAPS.get((action_id, transport)):
+        request.node.add_marker(pytest.mark.xfail(strict=True, reason=reason))
     v, manifest = vault
     entry = ARG_TABLE.get(action_id)
     if entry is None:
