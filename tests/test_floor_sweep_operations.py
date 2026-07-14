@@ -28,62 +28,29 @@ OPERATION_IDS = sorted(
 # but a real defect in the current implementation makes every seeded run of
 # it crash. Recorded here — not silently special-cased — so the strict xfail
 # turns into a loud failure the moment the underlying bug is fixed without
-# this entry being updated. See task-6-report.md for the full trace; filed as
-# GitHub issue #1391 ("run_prompt_operation commits the gitignored staging
-# path — 6 prompt-family operations crash on real init vaults").
-_PROMPT_STAGING_GITIGNORE_BUG = (
-    "run_prompt_operation (runtime/operations.py) commits its staged "
-    "output via commit_writer_changes(..., [stage['staging_id']]), but "
-    ".memoria/staging/ is gitignored by the packaged workspace "
-    ".gitignore template; `git add` (trusted_writer.py:_commit_writer_"
-    "changes, no -f) fails with 'ignored by one of your .gitignore "
-    "files' on any vault built via `memoria init`. Affects every "
-    "prompt-family op sharing run_prompt_operation (analyze-claims, "
-    "check-falsifiability, compare-and-contrast, extract-claim-stubs, "
-    "red-team-argument, summarize-for-recall). GitHub issue #1391."
-)
+# this entry being updated.
+#
+# The six run_prompt_operation ids (#1391) and verify-project-draft (#1393)
+# were fixed and no longer have entries here; write-project-slice's bug is a
+# side effect on a DIFFERENT tracked projection. render_project_argument_
+# canvas (knowledge.py:1735-1743) branches on outline.md's mere existence:
+# with no outline.md it renders canvas nodes/edges from
+# analyze_project_argument's full graph traversal; once outline.md exists it
+# renders from the BM25-ranked project slice instead (a different,
+# order-dependent node/edge set). check_tracked_projections
+# (projections.py:56-78) — the floor's own tracked-projection drift
+# detector, asserted after every operation via assert_invariants — calls
+# this same render function as its "live" canonical renderer. So any
+# project whose argument.canvas was already rendered (via
+# render-project-argument-canvas, e.g. during typed-graph seeding) *before*
+# its first write-project-slice run is retroactively flagged "stale" the
+# moment outline.md appears, even though write-project-slice never touches,
+# recommits, or is documented to invalidate the canvas file. Confirmed
+# live: assert_invariants' check_tracked_projections reports
+# `{"path": "projects/package-gate/argument.canvas", "status": "stale"}`
+# immediately after a real write-project-slice run against the seed. Filed
+# as GitHub issue #1394.
 _KNOWN_BUGS: dict[str, str] = {
-    "check-falsifiability": _PROMPT_STAGING_GITIGNORE_BUG,
-    # Task 7b-1: registered alongside check-falsifiability's Task-6 finding
-    # — same root cause, confirmed live against a real seeded vault (see
-    # task-7b1-report.md), not assumed by analogy alone.
-    "analyze-claims": _PROMPT_STAGING_GITIGNORE_BUG,
-    "compare-and-contrast": _PROMPT_STAGING_GITIGNORE_BUG,
-    "extract-claim-stubs": _PROMPT_STAGING_GITIGNORE_BUG,
-    # Task 7b-2: the fifth of the six run_prompt_operation ids named in
-    # #1391 — same root cause, confirmed live (see task-7b2-report.md).
-    "red-team-argument": _PROMPT_STAGING_GITIGNORE_BUG,
-    # Task 7b-2: the sixth and last of the six run_prompt_operation ids
-    # named in #1391 — same root cause, confirmed live (see
-    # task-7b2-report.md). #1391's full blast radius is now entirely
-    # registered and xfailed.
-    "summarize-for-recall": _PROMPT_STAGING_GITIGNORE_BUG,
-    # Task 7b-2: a third distinct, newly-found bug (not #1391). A second
-    # distinct bug found in this same sweep — knowledge.py:verify_project_
-    # draft's missing-draft early return omitting max_findings/triaged_count,
-    # crashing worker.py's verify-project-draft dispatch branch with
-    # KeyError: 'max_findings' — was filed as GitHub issue #1393 and has
-    # since been fixed, so it no longer has an entry here. write-project-
-    # slice itself completes "done" and writes outline.md correctly — the
-    # bug documented below is a side
-    # effect on a DIFFERENT tracked projection. render_project_argument_
-    # canvas (knowledge.py:1735-1743) branches on outline.md's mere
-    # existence: with no outline.md it renders canvas nodes/edges from
-    # analyze_project_argument's full graph traversal; once outline.md
-    # exists it renders from the BM25-ranked project slice instead (a
-    # different, order-dependent node/edge set). check_tracked_projections
-    # (projections.py:56-78) — the floor's own tracked-projection drift
-    # detector, asserted after every operation via assert_invariants — calls
-    # this same render function as its "live" canonical renderer. So any
-    # project whose argument.canvas was already rendered (via
-    # render-project-argument-canvas, e.g. during typed-graph seeding)
-    # *before* its first write-project-slice run is retroactively flagged
-    # "stale" the moment outline.md appears, even though write-project-slice
-    # never touches, recommits, or is documented to invalidate the canvas
-    # file. Confirmed live: assert_invariants' check_tracked_projections
-    # reports `{"path": "projects/package-gate/argument.canvas", "status":
-    # "stale"}` immediately after a real write-project-slice run against the
-    # seed. Filed as GitHub issue #1394.
     "write-project-slice": (
         "render_project_argument_canvas (knowledge.py:1735-1743) branches "
         "on outline.md's mere existence, switching from a full "

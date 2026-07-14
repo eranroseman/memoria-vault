@@ -26,6 +26,7 @@ from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_journal_event,
     commit_writer_changes,
+    materialize_unchecked,
     normalize_promotion_checks,
     promote_checked,
     stage_concept,
@@ -382,6 +383,7 @@ def run_prompt_operation(
         context=context,
         inputs=inputs,
     )
+    materialized = materialize_unchecked(vault, output_path, context=context)
     finished = append_journal_event(
         vault,
         {
@@ -395,7 +397,7 @@ def run_prompt_operation(
     commit = commit_writer_changes(
         vault,
         f"run prompt operation {operation_id}",
-        [stage["staging_id"]],
+        [output_path],
         context=context,
     )
     return {
@@ -407,6 +409,7 @@ def run_prompt_operation(
         "started": started,
         "model_call": model_call,
         "derived": stage,
+        "materialized": materialized,
         "finished": finished,
         "commit": commit,
     }

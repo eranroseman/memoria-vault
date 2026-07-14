@@ -508,17 +508,17 @@ def test_worker_runs_prompt_operation_manifest_jobs(tmp_path: Path) -> None:
     assert done["status"] == "done"
     assert done["output_path"] == "notes/analyze-claims-analyze-claims.md"
     assert done["staging_id"] == (".memoria/staging/notes/analyze-claims-analyze-claims.md")
-    assert not (vault / done["output_path"]).exists()
-    staged = vault / done["staging_id"]
-    fm = read_frontmatter(staged)
+    assert not (vault / done["staging_id"]).exists()
+    materialized = vault / done["output_path"]
+    fm = read_frontmatter(materialized)
     assert "check_status" not in fm
     assert state.concept_check_status(vault, done["output_path"]) == "unchecked"
     assert "status" not in fm
     assert "evidence_set" not in fm
     assert "citations" not in fm
-    assert "Alpha reduces beta" in staged.read_text(encoding="utf-8")
+    assert "Alpha reduces beta" in materialized.read_text(encoding="utf-8")
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {state.JOURNAL_HEAD_REL, done["staging_id"]}
+    assert committed == {state.JOURNAL_HEAD_REL, done["output_path"]}
 
 
 def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
