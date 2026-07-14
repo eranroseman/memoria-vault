@@ -657,9 +657,7 @@ def _collect_locations(
     require_oa: bool = False,
 ) -> list[dict[str, Any]]:
     def _ok(location: Any) -> bool:
-        return isinstance(location, dict) and (
-            not require_oa or location.get("is_oa") is not False
-        )
+        return isinstance(location, dict) and (not require_oa or location.get("is_oa") is not False)
 
     locations = [payload.get(key) for key in singular_keys if _ok(payload.get(key))]
     all_locations = payload.get(list_key)
