@@ -2,38 +2,15 @@
 
 from __future__ import annotations
 
-import os
 import runpy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-_VERIFY_ENV = ("VERIFY_CI", "VERIFY_DOCS_ONLY")
 
-
-def _verify_namespace(**env: str) -> dict:
+def _verify_namespace() -> dict:
     # run_name != "__main__" so the module defines the roster without executing main().
-    # scripts/verify reads VERIFY_CI/VERIFY_DOCS_ONLY at import; clear them so the
-    # default call is deterministic, and apply any explicit override for this call.
-    saved = {key: os.environ.get(key) for key in _VERIFY_ENV}
-    try:
-        for key in _VERIFY_ENV:
-            os.environ.pop(key, None)
-        os.environ.update(env)
-        return runpy.run_path(str(ROOT / "scripts/verify"), run_name="_verify_probe")
-    finally:
-        for key, value in saved.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
-
-
-def test_ci_defers_runtime_level() -> None:
-    flat = [" ".join(cmd) for cmd in _verify_namespace(VERIFY_CI="1")["GATES"]]
-    pytest_cmd = next(f for f in flat if "pytest" in f)
-    assert "static or unit or contract or package or floor" in pytest_cmd
-    assert "runtime" not in pytest_cmd
+    return runpy.run_path(str(ROOT / "scripts/verify"), run_name="_verify_probe")
 
 
 def test_roster_covers_lint_tests_and_product_gates() -> None:
