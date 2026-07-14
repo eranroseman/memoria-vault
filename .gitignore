@@ -48,3 +48,7 @@ TODO*
 # Local tool + harness state at the repo root, never committed.
 .kilo/
 claude-plans/
+
+# subagent-driven-development scratch (task briefs, reports, review packages,
+# progress ledger) — per-session working state, never committed.
+.superpowers/
