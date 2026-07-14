@@ -1790,6 +1790,14 @@ def _cmd_workspace_restore(args: argparse.Namespace) -> int:
     )
 
 
+def _scoped_operation_args(base_args: argparse.Namespace, operation_id: str) -> argparse.Namespace:
+    operation_args = argparse.Namespace(**vars(base_args))
+    base_key = str(getattr(operation_args, "idempotency_key", "") or "")
+    if base_key:
+        operation_args.idempotency_key = f"{base_key}:{operation_id}"
+    return operation_args
+
+
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
     return _emit(_workspace_scan_payload(args), args)
 
@@ -1806,13 +1814,6 @@ def _workspace_scan_payload(
         scan_args.schedule_id = schedule_id
     if idempotency_key is not None:
         scan_args.idempotency_key = idempotency_key
-
-    def auxiliary_args(operation_id: str) -> argparse.Namespace:
-        operation_args = argparse.Namespace(**vars(scan_args))
-        base_key = str(getattr(operation_args, "idempotency_key", "") or "")
-        if base_key:
-            operation_args.idempotency_key = f"{base_key}:{operation_id}"
-        return operation_args
 
     workspace = _workspace(args)
     with _workspace_lock(workspace):
@@ -1837,7 +1838,7 @@ def _workspace_scan_payload(
     regeneration = None
     if projection_paths:
         quarantine = _enqueue_and_run(
-            auxiliary_args("trace-integrity-scan"),
+            _scoped_operation_args(scan_args, "trace-integrity-scan"),
             "trace-integrity-scan",
             {
                 "paths": projection_paths,
@@ -1846,7 +1847,7 @@ def _workspace_scan_payload(
         )
         if regeneration_paths:
             regeneration = _enqueue_and_run(
-                auxiliary_args("regenerate-tracked-projections"),
+                _scoped_operation_args(scan_args, "regenerate-tracked-projections"),
                 "regenerate-tracked-projections",
                 {"paths": regeneration_paths},
             )
@@ -1946,15 +1947,12 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
     check_args = argparse.Namespace(**vars(args))
     check_args.actor = "integrity"
 
-    def operation_args(operation_id: str) -> argparse.Namespace:
-        item_args = argparse.Namespace(**vars(check_args))
-        base_key = str(getattr(item_args, "idempotency_key", "") or "")
-        if base_key:
-            item_args.idempotency_key = f"{base_key}:{operation_id}"
-        return item_args
-
     results = [
-        _enqueue_and_run(operation_args(operation_id), operation_id, {"shadow": bool(args.shadow)})
+        _enqueue_and_run(
+            _scoped_operation_args(check_args, operation_id),
+            operation_id,
+            {"shadow": bool(args.shadow)},
+        )
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
     ]
     return _emit(
