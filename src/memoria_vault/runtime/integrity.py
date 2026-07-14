@@ -8,7 +8,7 @@ import re
 import shutil
 import subprocess
 from collections import deque
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -120,6 +120,19 @@ def _is_checked_concept(vault: Path, relpath: str) -> bool:
     return state.concept_check_status(vault, relpath) == "checked"
 
 
+def _findings_result(
+    vault: Path,
+    context: OperationContext,
+    message: str,
+    findings: list[dict[str, Any]],
+    commit: bool,
+) -> dict[str, Any]:
+    commit_hash = ""
+    if findings and commit:
+        commit_hash = commit_writer_changes(vault, message, [], context=context)
+    return {"findings": findings, "commit": commit_hash}
+
+
 def check_evidence_integrity(
     vault: Path,
     *,
@@ -139,7 +152,7 @@ def check_evidence_integrity(
         if frontmatter.get("type") not in {"work", "digest", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
-            status = _evidence_status(vault, evidence_rel)
+            status = _concept_status(vault, evidence_rel)
             if status["status"] in {"missing", "unchecked"}:
                 findings.append(
                     record_integrity_check(
@@ -164,10 +177,7 @@ def check_evidence_integrity(
                         context=context,
                     )
                 )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(vault, "integrity evidence check", [], context=context)
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity evidence check", findings, commit)
 
 
 def check_claim_quote_support(
@@ -200,12 +210,7 @@ def check_claim_quote_support(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity claim quote check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity claim quote check", findings, commit)
 
 
 def check_prompt_injection_markers(
@@ -253,12 +258,7 @@ def check_prompt_injection_markers(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity prompt injection check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity prompt injection check", findings, commit)
 
 
 def check_quote_anchor_support(
@@ -293,12 +293,7 @@ def check_quote_anchor_support(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity quote anchor check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity quote anchor check", findings, commit)
 
 
 def check_source_metadata(
@@ -367,14 +362,16 @@ def check_source_metadata(
     }
 
 
-def _duplicate_source_external_id_findings(
+def _duplicate_group_findings(
     vault: Path,
+    groups: Iterable[list[str]],
+    reason_fn: Callable[[list[str]], str],
     *,
     context: OperationContext,
     shadow: bool,
 ) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
-    for namespace, value, work_ids in _duplicate_source_external_id_groups(vault):
+    for work_ids in groups:
         for work_id in work_ids:
             target_id = f"catalog/sources/{work_id}"
             if state.concept_check_status(vault, target_id) != "checked":
@@ -388,14 +385,34 @@ def _duplicate_source_external_id_findings(
                     target_id,
                     check="record-linkage",
                     status="failed",
-                    reason=(
-                        f"duplicate source external id {namespace}={value} also used by "
-                        f"{', '.join(others)}"
-                    ),
+                    reason=reason_fn(others),
                     shadow=shadow,
                     context=context,
                 )
             )
+    return findings
+
+
+def _duplicate_source_external_id_findings(
+    vault: Path,
+    *,
+    context: OperationContext,
+    shadow: bool,
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for namespace, value, work_ids in _duplicate_source_external_id_groups(vault):
+        findings.extend(
+            _duplicate_group_findings(
+                vault,
+                [work_ids],
+                lambda others, namespace=namespace, value=value: (
+                    f"duplicate source external id {namespace}={value} also used by "
+                    f"{', '.join(others)}"
+                ),
+                context=context,
+                shadow=shadow,
+            )
+        )
     return findings
 
 
@@ -433,30 +450,16 @@ def _duplicate_source_string_block_findings(
     context: OperationContext,
     shadow: bool,
 ) -> list[dict[str, Any]]:
-    findings: list[dict[str, Any]] = []
-    for work_ids in _duplicate_source_string_block_groups(vault):
-        for work_id in work_ids:
-            target_id = f"catalog/sources/{work_id}"
-            if state.concept_check_status(vault, target_id) != "checked":
-                continue
-            others = [f"catalog/sources/{other}" for other in work_ids if other != work_id]
-            if not others:
-                continue
-            findings.append(
-                record_integrity_check(
-                    vault,
-                    target_id,
-                    check="record-linkage",
-                    status="failed",
-                    reason=(
-                        "possible duplicate source metadata block also matches "
-                        f"{', '.join(others)} (title/year/first-author)"
-                    ),
-                    shadow=shadow,
-                    context=context,
-                )
-            )
-    return findings
+    return _duplicate_group_findings(
+        vault,
+        _duplicate_source_string_block_groups(vault),
+        lambda others: (
+            "possible duplicate source metadata block also matches "
+            f"{', '.join(others)} (title/year/first-author)"
+        ),
+        context=context,
+        shadow=shadow,
+    )
 
 
 def _duplicate_source_string_block_groups(vault: Path) -> list[list[str]]:
@@ -581,12 +584,7 @@ def check_citation_survival(
                 context=context,
             )
         )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity citation survival check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity citation survival check", findings, commit)
 
 
 def check_provenance_checkpoint(
@@ -622,12 +620,7 @@ def check_provenance_checkpoint(
                     )
                 )
                 break
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity provenance checkpoint", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity provenance checkpoint", findings, commit)
 
 
 def check_contradiction_links(
@@ -667,17 +660,10 @@ def check_contradiction_links(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity contradiction check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity contradiction check", findings, commit)
 
 
-def contradiction_tier1_gate(
-    *, comparator: Any | None = None, min_accuracy: float = 1.0
-) -> dict[str, Any]:
+def contradiction_tier1_gate(*, comparator: Any | None = None) -> dict[str, Any]:
     """Run the high-overlap/opposite-meaning gate before Tier-1 may classify pairs."""
     compare = comparator or _compare_claims
     failures: list[dict[str, Any]] = []
@@ -699,7 +685,7 @@ def contradiction_tier1_gate(
     total = len(_HANS_ACCEPTANCE)
     accuracy = (total - len(failures)) / total
     return {
-        "passed": accuracy >= min_accuracy and baseline_failures > 0,
+        "passed": len(failures) == 0 and baseline_failures > 0,
         "accuracy": accuracy,
         "total": total,
         "failures": failures,
@@ -914,12 +900,7 @@ def check_link_targets(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity link target check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity link target check", findings, commit)
 
 
 def trace_downstream(vault: Path, target_id: str) -> list[dict[str, Any]]:
@@ -991,13 +972,43 @@ def _propagate_scan_demotion(
             continue
         actor = str(event.get("actor") or "")
         if actor == "pi":
-            _flag_human_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="cascade-rollback",
+                route="ask",
+            )
             needs_human.append(output_id)
         elif depth == 1:
-            _demote_machine_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="scan-demotion-propagation",
+                route="act",
+                state_update=lambda output_id=output_id: state.set_concept_verdict(
+                    vault, output_id, "unchecked"
+                ),
+            )
             demoted.append(output_id)
         else:
-            _flag_stale_machine_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="scan-demotion-stale",
+                route="log",
+                state_update=lambda output_id=output_id: state.set_concept_flag(
+                    vault, output_id, "stale", reason=reason, trigger_id=target
+                ),
+            )
             stale.append(output_id)
     return {
         "target_id": target,
@@ -1076,7 +1087,15 @@ def cascade_rollback(
         seen.add(output_id)
 
         if event.get("actor") == "pi":
-            _flag_human_descendant(vault, output_id, target, reason, append_event)
+            _flag_descendant(
+                vault,
+                output_id,
+                target,
+                reason,
+                append_event,
+                check="cascade-rollback",
+                route="ask",
+            )
             needs_human.append(output_id)
             continue
 
@@ -1162,19 +1181,25 @@ def resolve_attention(
     return {"event": row, "commit": commit}
 
 
-def _flag_human_descendant(
+def _flag_descendant(
     vault: Path,
     output_id: str,
     target: str,
     reason: str,
     append_event: Callable[[dict[str, Any]], dict[str, Any]],
+    *,
+    check: str,
+    route: str,
+    state_update: Callable[[], None] | None = None,
 ) -> None:
     path = vault / output_id
     target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
+    if state_update:
+        state_update()
     append_event(
         {
             "event": EVENT_CHECK_FIRED,
-            "check": "cascade-rollback",
+            "check": check,
             "status": "failed",
             "reason": reason,
             "target_id": output_id,
@@ -1182,59 +1207,7 @@ def _flag_human_descendant(
             "output_sha256": target_sha,
             "trigger_id": target,
             "shadow": False,
-            "route": "ask",
-        },
-    )
-
-
-def _demote_machine_descendant(
-    vault: Path,
-    output_id: str,
-    target: str,
-    reason: str,
-    append_event: Callable[[dict[str, Any]], dict[str, Any]],
-) -> None:
-    path = vault / output_id
-    target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
-    state.set_concept_verdict(vault, output_id, "unchecked")
-    append_event(
-        {
-            "event": EVENT_CHECK_FIRED,
-            "check": "scan-demotion-propagation",
-            "status": "failed",
-            "reason": reason,
-            "target_id": output_id,
-            "target_sha256": target_sha,
-            "output_sha256": target_sha,
-            "trigger_id": target,
-            "shadow": False,
-            "route": "act",
-        },
-    )
-
-
-def _flag_stale_machine_descendant(
-    vault: Path,
-    output_id: str,
-    target: str,
-    reason: str,
-    append_event: Callable[[dict[str, Any]], dict[str, Any]],
-) -> None:
-    path = vault / output_id
-    target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
-    state.set_concept_flag(vault, output_id, "stale", reason=reason, trigger_id=target)
-    append_event(
-        {
-            "event": EVENT_CHECK_FIRED,
-            "check": "scan-demotion-stale",
-            "status": "failed",
-            "reason": reason,
-            "target_id": output_id,
-            "target_sha256": target_sha,
-            "output_sha256": target_sha,
-            "trigger_id": target,
-            "shadow": False,
-            "route": "log",
+            "route": route,
         },
     )
 
@@ -1767,10 +1740,6 @@ def _concept_rel(value: str) -> str:
     if source_ref := _source_ref(rel):
         return source_ref
     return rel
-
-
-def _evidence_status(vault: Path, rel: str) -> dict[str, str]:
-    return _concept_status(vault, rel)
 
 
 def _concept_status(vault: Path, rel: str) -> dict[str, str]:
