@@ -119,6 +119,21 @@ def init_git(workspace: Path, email: str, name: str) -> None:
     git(workspace, "config", "user.name", name)
 
 
+def worker_workspace(
+    tmp_path: Path,
+    *,
+    email: str = "worker@example.invalid",
+    name: str = "Alpha Worker",
+    message: str = "seed worker workspace",
+) -> Path:
+    """Seed a tmp_path with .memoria schemas/config and an initial git commit."""
+    copy_memoria_dirs(tmp_path, "schemas", "config")
+    init_git(tmp_path, email, name)
+    git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
+    git(tmp_path, "commit", "-m", message)
+    return tmp_path
+
+
 def mark_file_status(
     workspace: Path,
     rel: str,

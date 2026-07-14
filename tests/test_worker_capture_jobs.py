@@ -7,15 +7,8 @@ from pathlib import Path
 from memoria_vault.runtime import state
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job, run_request
-from tests.helpers import copy_memoria_dirs, git, init_git
-
-
-def workspace(tmp_path: Path) -> Path:
-    copy_memoria_dirs(tmp_path, "schemas", "config")
-    init_git(tmp_path, "worker@example.invalid", "Alpha Worker")
-    git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
-    git(tmp_path, "commit", "-m", "seed worker workspace")
-    return tmp_path
+from tests.helpers import git
+from tests.helpers import worker_workspace as workspace
 
 
 def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
