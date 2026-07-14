@@ -47,6 +47,7 @@ TEST_LEVELS = {
     "test_exploration_trace.py": "contract",
     "test_floor_invariants.py": "floor",
     "test_floor_seed.py": "floor",
+    "test_floor_sweep_operations.py": "floor",
     "test_floor_sweep_reads.py": "floor",
     "test_floor_transports.py": "floor",
     "test_frontmatter_contract.py": "contract",

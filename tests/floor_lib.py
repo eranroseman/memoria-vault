@@ -318,6 +318,108 @@ def _fill(template, manifest: dict):
     return template
 
 
+# Per operation id: {"payload": dict-template, "expect": "done" | "refused",
+# "reason": str (required when expect=="refused"), "creates": [rel-templates]
+# (optional)}. `{placeholders}` are manifest keys from `seed_vault`'s returned
+# manifest, filled in by `_fill`. Payload keys are read off the worker's
+# dispatch branch for the operation_id (src/memoria_vault/runtime/worker.py),
+# not guessed from the manifest's io_schema — see task-6-report.md for the
+# worker-branch evidence behind each entry, including two corrections vs the
+# original brief (curate-note-link, enrich-source).
+#
+# Seeded here: create-concept, curate-note-link, analyze-gaps,
+# analyze-project-argument, render-project-argument-canvas,
+# check-falsifiability, enrich-source. The remaining ~47 operation ids are
+# completed in Task 7: for each missing id the coverage test names it; read
+# its manifest (src/memoria_vault/product/capabilities/operations/<id>.md
+# frontmatter: io_schema.input, allowed_paths, allowed_network) and the
+# worker dispatch branch for its payload keys
+# (grep '"<id>"' src/memoria_vault/runtime/worker.py), then add the entry.
+# expect=="refused" requires asserting the real reason string.
+OPERATION_REGISTRY: dict[str, dict] = {
+    "create-concept": {
+        "payload": {
+            "target_path": "notes/floor-op-create.md",
+            # links="{{}}" (not "{}"): this built content string is a
+            # payload value, so it passes through _fill's own str.format
+            # pass in the test; the doubled braces survive that pass as a
+            # literal "{}" in the final frontmatter (single-brace "{}"
+            # would be read as an empty positional field by that pass and
+            # raise IndexError).
+            "content": _NOTE_TEMPLATE.format(
+                ulid="01ARZ3NDEKTSV4RRFFQ69G5FAV",
+                title="Floor op note",
+                links="{{}}",
+                concept_type="note",
+                extra="mode: claim\nclaim_text: Created by the floor sweep.\n",
+                body="Body.",
+            ),
+            "concept_type": "note",
+        },
+        "expect": "done",
+        "creates": ["notes/floor-op-create.md"],
+    },
+    # Correction vs the brief: worker.py:489-514 (`operation_id ==
+    # "curate-note-link"`) pops source_note_path/link_type/target_path, not
+    # source/relation/target. It also requires the source note to already
+    # be checked (runtime/knowledge.py:curate_note_link) and is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:58); the sweep
+    # always enqueues as actor="agent", so — with a real checked
+    # source/target pair — the run is deterministically refused on the
+    # actor-authority check before curate_note_link's own body ever runs.
+    "curate-note-link": {
+        "payload": {
+            "source_note_path": "notes/package-support.md",
+            "link_type": "supports",
+            "target_path": "notes/package-thesis.md",
+        },
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # Correction vs the brief: worker.py:516-527 pops project_path, not
+    # project.
+    "analyze-gaps": {"payload": {"project_path": "{project}"}, "expect": "done"},
+    # Correction vs the brief: worker.py:587-593 pops project_path, not
+    # project.
+    "analyze-project-argument": {
+        "payload": {"project_path": "{project}"},
+        "expect": "done",
+    },
+    # Correction vs the brief: worker.py:612-618 pops project_path, not
+    # project. "package-gate" is the fixed project slug assert_typed_graph
+    # always builds (scripts/test_vault/e2e_smoke.py), so the canvas path is
+    # deterministic.
+    "render-project-argument-canvas": {
+        "payload": {"project_path": "{project}"},
+        "expect": "done",
+        "creates": ["projects/package-gate/argument.canvas"],
+    },
+    # Correction vs the brief: worker.py:936-952 routes check-falsifiability
+    # through runtime/operations.py:run_prompt_operation, whose payload key
+    # is input_text (or input_refs/input_ref pointing at an already-checked
+    # note) — not "input". input_text is used here (not input_ref) because
+    # none of the seed's own notes are "checked" except the package-*
+    # fixtures, and _checked_prompt_input requires check_status=="checked".
+    # Runs "done" offline via the packaged deterministic-fixture runner —
+    # see task-6-report.md for a known bug this uncovers (xfail in the test).
+    "check-falsifiability": {
+        "payload": {"input_text": "Claim: coffee consumption causally reduces default risk."},
+        "expect": "done",
+    },
+    # Correction vs the brief: reason corrected from a guessed "network" to
+    # the real, deterministic refusal. worker.py:1060-1061 pops work_id
+    # (matches the brief) and dispatches to runtime/enrichment.py:
+    # enrich_source, which raises before any network call because the
+    # seed's only catalog source (a BibTeX capture, scripts/test_vault/
+    # e2e_smoke.py:assert_offline_ingest) carries no DOI identifier.
+    "enrich-source": {
+        "payload": {"work_id": "{work_id}"},
+        "expect": "refused",
+        "reason": "requires a DOI catalog identifier",
+    },
+}
+
+
 # Per read action id: {"cli": [argv...] | None, "http": (method, path) | None,
 # "mcp": (tool, arguments) | None}. `None` means the transport genuinely has
 # no binding for the action (Task 7's coverage test enforces this against
