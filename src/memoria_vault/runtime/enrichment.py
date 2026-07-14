@@ -663,49 +663,39 @@ def _append_url(urls: list[str], value: Any) -> None:
         urls.append(url)
 
 
-def _open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    locations = []
-    best = payload.get("best_oa_location")
-    if isinstance(best, dict):
-        locations.append(best)
-    oa_locations = payload.get("oa_locations")
-    if isinstance(oa_locations, list):
-        for location in oa_locations:
-            if isinstance(location, dict) and location not in locations:
+def _collect_locations(
+    payload: dict[str, Any],
+    singular_keys: tuple[str, ...],
+    list_key: str,
+    *,
+    require_oa: bool = False,
+) -> list[dict[str, Any]]:
+    def _ok(location: Any) -> bool:
+        return isinstance(location, dict) and (
+            not require_oa or location.get("is_oa") is not False
+        )
+
+    locations = [payload.get(key) for key in singular_keys if _ok(payload.get(key))]
+    all_locations = payload.get(list_key)
+    if isinstance(all_locations, list):
+        for location in all_locations:
+            if _ok(location) and location not in locations:
                 locations.append(location)
     return locations
+
+
+def _open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    return _collect_locations(payload, ("best_oa_location",), "oa_locations")
 
 
 def _openalex_open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    locations = []
-    for key in ("best_oa_location", "primary_location"):
-        location = payload.get(key)
-        if isinstance(location, dict) and location.get("is_oa") is not False:
-            locations.append(location)
-    all_locations = payload.get("locations")
-    if isinstance(all_locations, list):
-        for location in all_locations:
-            if (
-                isinstance(location, dict)
-                and location.get("is_oa") is not False
-                and location not in locations
-            ):
-                locations.append(location)
-    return locations
+    return _collect_locations(
+        payload, ("best_oa_location", "primary_location"), "locations", require_oa=True
+    )
 
 
 def _openalex_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    locations = []
-    for key in ("primary_location", "best_oa_location"):
-        location = payload.get(key)
-        if isinstance(location, dict):
-            locations.append(location)
-    all_locations = payload.get("locations")
-    if isinstance(all_locations, list):
-        for location in all_locations:
-            if isinstance(location, dict) and location not in locations:
-                locations.append(location)
-    return locations
+    return _collect_locations(payload, ("primary_location", "best_oa_location"), "locations")
 
 
 def _response_content_type(resp: Any) -> str:
