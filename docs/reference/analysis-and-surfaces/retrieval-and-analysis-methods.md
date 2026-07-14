@@ -65,12 +65,12 @@ making them the default answer path.
 **Used by:** `memoria_vault.runtime.indexing` and
 `memoria_vault.runtime.retrieval` tests/fixtures. Product Ask reports `bm25`.
 
-**Implementation:** fresh schema v10 creates `passages`, `passage_fts`,
-`passage_vec`, `file_index_state`, and `concept_edges`. Passage rows are derived
-from checked documents and generated checked Work text. `passage_vec` stores the
-embedding model id, vector dimension, cosine metric, text hash, and vector JSON;
-`sqlite-vec` remains an optional `[vector]` extra and dense production
-capability fails closed when it is absent.
+**Implementation:** `passages`, `passage_fts`, `passage_vec`,
+`file_index_state`, and `concept_edges` are derived tables. Passage rows are
+derived from checked documents and generated checked Work text. `passage_vec`
+stores the embedding model id, vector dimension, cosine metric, text hash, and
+vector JSON; `sqlite-vec` remains an optional `[vector]` extra and dense
+production capability fails closed when it is absent.
 
 **Cost:** local SQLite writes and candidate ranking. Determinism: total for the
 hash-based fixture embedder.

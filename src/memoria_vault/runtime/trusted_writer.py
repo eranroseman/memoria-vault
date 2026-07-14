@@ -291,11 +291,6 @@ def _commit_writer_changes(
     commit = _git(vault, ["git", "rev-parse", "HEAD"])
     for rel in sorted(output_rels):
         state.mark_materialized(vault, rel, commit=commit)
-    _refresh_committed_file_baselines(
-        vault,
-        output_rels,
-        expected_sha256s=expected_sha256s,
-    )
     return commit
 
 
@@ -325,44 +320,6 @@ def _unstage_path(vault: Path, target: str) -> None:
         _git(vault, ["git", "restore", "--staged", "--", target])
     else:
         _git(vault, ["git", "rm", "--cached", "--ignore-unmatch", "--", target])
-
-
-def _refresh_committed_file_baselines(
-    vault: Path,
-    output_rels: Iterable[str],
-    *,
-    expected_sha256s: Mapping[str, str] | None,
-) -> None:
-    if not (vault / ".memoria/schemas/folders.yaml").is_file():
-        return
-    contract = _load_contract(vault, None)
-    expected = {
-        _commit_relpath(vault, path): output_hash
-        for path, output_hash in (expected_sha256s or {}).items()
-    }
-    known = _known_current_hashes(vault)
-    for target in sorted(set(output_rels)):
-        if not target.endswith(".md") or not _is_bundle_target(contract, target):
-            continue
-        proc = subprocess.run(
-            ["git", "show", f"HEAD:{target}"],
-            cwd=vault,
-            check=False,
-            capture_output=True,
-        )
-        if proc.returncode:
-            continue
-        committed_hash = "sha256:" + hashlib.sha256(proc.stdout).hexdigest()
-        if expected.get(target) != committed_hash and known.get(target) != committed_hash:
-            continue
-        text = proc.stdout.decode("utf-8")
-        frontmatter, _body = split_frontmatter(text)
-        state.upsert_file_baseline(
-            vault,
-            target,
-            human_sha256=committed_hash,
-            restriction_keys=_restriction_keys(frontmatter),
-        )
 
 
 def _write_edge_candidate_prompts(vault: Path, output_rels: set[str]) -> list[str]:
@@ -534,13 +491,19 @@ def _observe_pi_edits_from_status(
 ) -> dict[str, Any]:
     vault = Path(vault)
     contract = _load_contract(vault, schemas_dir)
+    known_hashes = _known_current_hashes(vault)
     targets = _pi_edit_targets(vault, contract, paths)
     for target in targets:
         _validate_pi_edit_target(vault, contract, target)
-    _seed_missing_file_baselines(vault, contract, excluded=targets)
 
     observed = []
-    findings = []
+    snapshots: dict[str, tuple[str, list[str]]] = {}
+    findings = _reconcile_file_baselines(
+        vault,
+        contract,
+        known_hashes=known_hashes,
+        excluded=targets,
+    )
     for target in targets:
         baseline = state.file_baseline(vault, target)
         event = observe_pi_edit_from_head(
@@ -551,26 +514,25 @@ def _observe_pi_edits_from_status(
             machine=context.machine if context else explicit_machine,
             schemas_dir=schemas_dir,
         )
-        path = vault / target
-        current_hash = sha256_file(path)
+        current_hash, restriction_keys = _file_baseline_snapshot(vault, contract, target)
         if event["output_sha256"] != current_hash:
             raise RuntimeError(f"file changed while observing edit: {target}")
-        frontmatter, _body = split_frontmatter(path.read_text(encoding="utf-8"))
-        if sha256_file(path) != current_hash:
-            raise RuntimeError(f"file changed while observing edit: {target}")
-        if baseline is not None and baseline["human_sha256"] != current_hash:
+        expected_hash = known_hashes.get(target) or (
+            str(baseline["human_sha256"]) if baseline is not None else ""
+        )
+        if baseline is not None and expected_hash != current_hash:
             findings.append(
                 {
                     "kind": "foreign-edit",
                     "event": EVENT_OBSERVED_EXTERNAL_EDIT,
                     "route": "ask",
                     "subject_id": target,
-                    "prior_human_sha256": baseline["human_sha256"],
+                    "prior_human_sha256": expected_hash,
                     "current_human_sha256": current_hash,
                 }
             )
         observed.append(event)
-        restriction_keys = _restriction_keys(frontmatter)
+        snapshots[target] = (current_hash, restriction_keys)
         if baseline is not None:
             for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
                 findings.append(
@@ -627,6 +589,15 @@ def _observe_pi_edits_from_status(
                 expected_sha256s={
                     str(event["output_id"]): str(event["output_sha256"]) for event in observed
                 },
+            )
+        for target, (current_hash, restriction_keys) in snapshots.items():
+            if sha256_file(vault / target) != current_hash:
+                continue
+            state.upsert_file_baseline(
+                vault,
+                target,
+                human_sha256=current_hash,
+                restriction_keys=restriction_keys,
             )
     return {"paths": targets, "observed": observed, "findings": findings, "commit": commit}
 
@@ -920,15 +891,7 @@ def _pi_edit_targets(
     paths: Iterable[str] | None,
 ) -> list[str]:
     known = _known_current_hashes(vault)
-    dirty_targets = set(_git_status_paths(vault, contract))
-    raw_paths = (
-        list(paths)
-        if paths is not None
-        else [
-            *dirty_targets,
-            *(path.relative_to(vault).as_posix() for path in iter_markdown(vault)),
-        ]
-    )
+    raw_paths = list(paths) if paths is not None else _git_status_paths(vault, contract)
     targets: list[str] = []
     for raw_path in raw_paths:
         try:
@@ -938,42 +901,80 @@ def _pi_edit_targets(
         path = vault / target
         if not path.is_file() or not _is_bundle_target(contract, target):
             continue
-        current_hash = sha256_file(path)
-        baseline = state.file_baseline(vault, target)
-        if baseline is not None:
-            if baseline["human_sha256"] != current_hash:
-                targets.append(target)
+        if known.get(target) == sha256_file(path):
             continue
-        if target in dirty_targets and known.get(target) != current_hash:
-            targets.append(target)
+        targets.append(target)
     return sorted(set(targets))
 
 
-def _seed_missing_file_baselines(
+def _reconcile_file_baselines(
     vault: Path,
     contract: dict[str, Any],
     *,
+    known_hashes: Mapping[str, str],
     excluded: Iterable[str],
-) -> None:
+) -> list[dict[str, str]]:
     excluded_targets = set(excluded)
-    dirty_targets = set(_git_status_paths(vault, contract))
+    findings = []
     for path in iter_markdown(vault):
         target = path.relative_to(vault).as_posix()
-        if (
-            target in excluded_targets
-            or target in dirty_targets
-            or not _is_bundle_target(contract, target)
-            or state.file_baseline(vault, target) is not None
-        ):
+        if target in excluded_targets or not _is_bundle_target(contract, target):
             continue
-        frontmatter, _body = split_frontmatter(path.read_text(encoding="utf-8"))
-        _validate_concept(contract, target, frontmatter, strict_writer=False)
-        state.upsert_file_baseline(
-            vault,
-            target,
-            human_sha256=sha256_file(path),
-            restriction_keys=_restriction_keys(frontmatter),
+        current_hash, restriction_keys = _file_baseline_snapshot(vault, contract, target)
+        baseline = state.file_baseline(vault, target)
+        if baseline is None:
+            state.upsert_file_baseline(
+                vault,
+                target,
+                human_sha256=current_hash,
+                restriction_keys=restriction_keys,
+            )
+            continue
+        expected_hash = known_hashes.get(target) or str(baseline["human_sha256"])
+        if expected_hash == current_hash:
+            if (
+                baseline["human_sha256"] != current_hash
+                or baseline["restriction_keys"] != restriction_keys
+            ):
+                state.upsert_file_baseline(
+                    vault,
+                    target,
+                    human_sha256=current_hash,
+                    restriction_keys=restriction_keys,
+                )
+            continue
+        findings.append(
+            {
+                "kind": "foreign-edit",
+                "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+                "route": "ask",
+                "subject_id": target,
+                "prior_human_sha256": expected_hash,
+                "current_human_sha256": current_hash,
+            }
         )
+        for key in sorted(set(baseline["restriction_keys"]) - set(restriction_keys)):
+            findings.append(
+                {
+                    "kind": "restriction-key-removed",
+                    "event": EVENT_OBSERVED_EXTERNAL_EDIT,
+                    "route": "ask",
+                    "subject_id": target,
+                    "key": key,
+                }
+            )
+    return findings
+
+
+def _file_baseline_snapshot(
+    vault: Path,
+    contract: dict[str, Any],
+    target: str,
+) -> tuple[str, list[str]]:
+    data = (vault / target).read_bytes()
+    frontmatter, _body = split_frontmatter(data.decode("utf-8"))
+    _validate_concept(contract, target, frontmatter, strict_writer=False)
+    return "sha256:" + hashlib.sha256(data).hexdigest(), _restriction_keys(frontmatter)
 
 
 def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
