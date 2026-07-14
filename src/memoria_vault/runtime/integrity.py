@@ -120,6 +120,19 @@ def _is_checked_concept(vault: Path, relpath: str) -> bool:
     return state.concept_check_status(vault, relpath) == "checked"
 
 
+def _findings_result(
+    vault: Path,
+    context: OperationContext,
+    message: str,
+    findings: list[dict[str, Any]],
+    commit: bool,
+) -> dict[str, Any]:
+    commit_hash = ""
+    if findings and commit:
+        commit_hash = commit_writer_changes(vault, message, [], context=context)
+    return {"findings": findings, "commit": commit_hash}
+
+
 def check_evidence_integrity(
     vault: Path,
     *,
@@ -164,10 +177,7 @@ def check_evidence_integrity(
                         context=context,
                     )
                 )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(vault, "integrity evidence check", [], context=context)
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity evidence check", findings, commit)
 
 
 def check_claim_quote_support(
@@ -200,12 +210,7 @@ def check_claim_quote_support(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity claim quote check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity claim quote check", findings, commit)
 
 
 def check_prompt_injection_markers(
@@ -253,12 +258,7 @@ def check_prompt_injection_markers(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity prompt injection check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity prompt injection check", findings, commit)
 
 
 def check_quote_anchor_support(
@@ -293,12 +293,7 @@ def check_quote_anchor_support(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity quote anchor check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity quote anchor check", findings, commit)
 
 
 def check_source_metadata(
@@ -581,12 +576,7 @@ def check_citation_survival(
                 context=context,
             )
         )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity citation survival check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity citation survival check", findings, commit)
 
 
 def check_provenance_checkpoint(
@@ -622,12 +612,7 @@ def check_provenance_checkpoint(
                     )
                 )
                 break
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity provenance checkpoint", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity provenance checkpoint", findings, commit)
 
 
 def check_contradiction_links(
@@ -667,12 +652,7 @@ def check_contradiction_links(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity contradiction check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity contradiction check", findings, commit)
 
 
 def contradiction_tier1_gate(*, comparator: Any | None = None) -> dict[str, Any]:
@@ -912,12 +892,7 @@ def check_link_targets(
                     context=context,
                 )
             )
-    commit_hash = ""
-    if findings and commit:
-        commit_hash = commit_writer_changes(
-            vault, "integrity link target check", [], context=context
-        )
-    return {"findings": findings, "commit": commit_hash}
+    return _findings_result(vault, context, "integrity link target check", findings, commit)
 
 
 def trace_downstream(vault: Path, target_id: str) -> list[dict[str, Any]]:
