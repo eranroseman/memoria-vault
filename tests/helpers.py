@@ -83,6 +83,112 @@ def call_with_context(function: Any, vault: Path, *args: Any, **kwargs: Any) -> 
     return function(vault, *args, context=context, **kwargs)
 
 
+def capture_bibtex_source_checked(
+    vault: Path,
+    bibtex: str,
+    *,
+    context: OperationContext,
+    content_text: str | None = None,
+    work_id: str | None = None,
+    description: str | None = None,
+) -> dict[str, Any]:
+    """Seed one checked BibTeX source directly, bypassing the worker queue.
+
+    The worker's own capture-bibtex-source dispatch always leaves
+    check_status unchecked by design (new sources route through human
+    review before promotion -- see AGENTS.md's catalog trust model), so
+    fixtures that need an already-checked row call the payload builder and
+    stage_capture_payload directly instead of going through the queue.
+    """
+    from memoria_vault.runtime.capture import bibtex_capture_payload, stage_capture_payload
+
+    payload = bibtex_capture_payload(
+        bibtex,
+        content_text=content_text,
+        work_id=work_id,
+        description=description,
+    )
+    return stage_capture_payload(
+        vault,
+        payload,
+        context=context,
+        workflow="capture_bibtex_source",
+        check_status="checked",
+    )
+
+
+def capture_url_source_checked(
+    vault: Path,
+    url: str,
+    *,
+    context: OperationContext,
+    title: str | None = None,
+    description: str | None = None,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    """Seed one checked URL snapshot directly, bypassing the worker queue.
+
+    Mirrors capture_bibtex_source_checked's rationale, for the URL capture
+    path: stage_url_source only ever writes unchecked rows, so this reaches
+    the same shared `_store_url_source` core that capture.py's own
+    stage_url_source uses, just with check_status="checked".
+    """
+    from memoria_vault.runtime.capture import _store_url_source
+
+    return _store_url_source(
+        vault,
+        url,
+        context=context,
+        title=title,
+        description=description,
+        timeout=timeout,
+        check_status="checked",
+    )
+
+
+def capture_pdf_source_checked(
+    vault: Path,
+    work_id: str,
+    title: str,
+    description: str,
+    raw_bytes: bytes,
+    *,
+    context: OperationContext,
+    raw_filename: str = "source.pdf",
+    resource: str = "",
+    item_type: str = "article",
+    identifiers: dict[str, Any] | None = None,
+    csl_json: dict[str, Any] | None = None,
+    provider_coverage: str = "partial",
+    citekey: str = "",
+) -> dict[str, Any]:
+    """Seed one checked PDF source directly, bypassing the worker queue.
+
+    Mirrors capture_bibtex_source_checked's rationale, for the PDF capture
+    path: stage_pdf_source only ever writes unchecked rows, so this reaches
+    the same shared `_store_pdf_source` core that capture.py's own
+    stage_pdf_source uses, just with check_status="checked".
+    """
+    from memoria_vault.runtime.capture import _store_pdf_source
+
+    return _store_pdf_source(
+        vault,
+        work_id,
+        title,
+        description,
+        raw_bytes,
+        context=context,
+        raw_filename=raw_filename,
+        resource=resource,
+        item_type=item_type,
+        identifiers=identifiers,
+        csl_json=csl_json,
+        provider_coverage=provider_coverage,
+        citekey=citekey,
+        check_status="checked",
+    )
+
+
 def init_cli_workspace(tmp_path: Path, capsys: Any) -> Path:
     from memoria_vault.cli import main
 

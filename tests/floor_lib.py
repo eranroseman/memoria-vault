@@ -190,20 +190,21 @@ def _seed_attention_item(workspace: Path, project_path: str) -> str:
     finds no full-text gap on its own. Capture a second, deliberately
     metadata-only source (checked, so `analyze-gaps`' `state.catalog_sources`
     query sees it) the same way `assert_offline_ingest` captures demo-work —
-    direct `capture_bibtex_source` call with a manual `OperationContext`, not
-    through the worker queue, because the worker's own capture-bibtex-source
-    dispatch always leaves `check_status: unchecked` (worker.py's
-    `_run_capture_bibtex_source_operation` omits the `check_status` kwarg) and
-    `_missing_full_text_gaps` only looks at checked sources. Then run the real
-    `analyze-gaps` operation (already in OPERATION_REGISTRY) through the
-    normal worker queue, which writes the attention card via its own
-    `_write_full_text_gap_attention` — an authentic product-code artifact, not
-    a fabricated frontmatter file.
+    a direct `capture_bibtex_source_checked` call (tests/helpers.py) with a
+    manual `OperationContext`, not through the worker queue, because the
+    worker's own capture-bibtex-source dispatch always leaves `check_status:
+    unchecked` (worker.py's `_run_capture_bibtex_source_operation` omits the
+    `check_status` kwarg) and `_missing_full_text_gaps` only looks at checked
+    sources. Then run the real `analyze-gaps` operation (already in
+    OPERATION_REGISTRY) through the normal worker queue, which writes the
+    attention card via its own `_write_full_text_gap_attention` — an
+    authentic product-code artifact, not a fabricated frontmatter file.
     """
     from test_vault.e2e_smoke import _operation_context
 
-    from memoria_vault.runtime.capture import capture_bibtex_source, write_references_bib
+    from memoria_vault.runtime.capture import write_references_bib
     from memoria_vault.runtime.worker import enqueue_operation, run_next_job
+    from tests.helpers import capture_bibtex_source_checked
 
     bib = (
         "@article{floorgap2024,\n"
@@ -213,7 +214,7 @@ def _seed_attention_item(workspace: Path, project_path: str) -> str:
         "  journal = {Floor Journal},\n"
         "}\n"
     )
-    capture_bibtex_source(
+    capture_bibtex_source_checked(
         workspace,
         bib,
         context=_operation_context(workspace, "capture-bibtex-source"),

@@ -18,9 +18,9 @@ The runtime helper `memoria_vault.runtime.capture.stage_catalog_source()` handle
 source payloads: it records a capture run, writes raw and extracted text blobs,
 writes source metadata into SQLite catalog state, and records derived
 aspects/edges there. Portable BibTeX/CSL imports use the same unchecked SQLite
-staging path. The PDF adapter `capture_pdf_source()` uses the optional PyMuPDF
+staging path. The PDF adapter `stage_pdf_source()` uses the optional PyMuPDF
 parser when it is installed to extract page text. URL snapshots use
-`capture_url_source()` with stdlib HTML text extraction.
+`stage_url_source()` with stdlib HTML text extraction.
 
 ## Pipeline contract
 

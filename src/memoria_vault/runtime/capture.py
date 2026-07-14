@@ -292,32 +292,6 @@ def _aspect_row(aspect_type: str, aspect_text: str, check_status: str) -> dict[s
     }
 
 
-def capture_bibtex_source(
-    vault: Path,
-    bibtex: str,
-    *,
-    context: OperationContext,
-    content_text: str | None = None,
-    work_id: str | None = None,
-    description: str | None = None,
-) -> dict[str, Any]:
-    """Capture one source from a local BibTeX entry."""
-    validate_operation_context(vault, context)
-    payload = bibtex_capture_payload(
-        bibtex,
-        content_text=content_text,
-        work_id=work_id,
-        description=description,
-    )
-    return stage_capture_payload(
-        vault,
-        payload,
-        context=context,
-        workflow="capture_bibtex_source",
-        check_status="checked",
-    )
-
-
 def bibtex_capture_payload(
     bibtex: str,
     *,
@@ -421,28 +395,6 @@ def stage_capture_payload(
     )
 
 
-def capture_url_source(
-    vault: Path,
-    url: str,
-    *,
-    context: OperationContext,
-    title: str | None = None,
-    description: str | None = None,
-    timeout: float = 10.0,
-) -> dict[str, Any]:
-    """Capture one URL snapshot with stdlib HTML text extraction."""
-    validate_operation_context(vault, context)
-    return _store_url_source(
-        vault,
-        url,
-        context=context,
-        title=title,
-        description=description,
-        timeout=timeout,
-        check_status="checked",
-    )
-
-
 def stage_url_source(
     vault: Path,
     url: str,
@@ -503,42 +455,6 @@ def _store_url_source(
         text_status="full-text",
         workflow="capture_url_source",
         check_status=check_status,
-    )
-
-
-def capture_pdf_source(
-    vault: Path,
-    work_id: str,
-    title: str,
-    description: str,
-    raw_bytes: bytes,
-    *,
-    context: OperationContext,
-    raw_filename: str = "source.pdf",
-    resource: str = "",
-    item_type: str = "article",
-    identifiers: dict[str, Any] | None = None,
-    csl_json: dict[str, Any] | None = None,
-    provider_coverage: str = "partial",
-    citekey: str = "",
-) -> dict[str, Any]:
-    """Capture a PDF raw blob and extracted page text."""
-    validate_operation_context(vault, context)
-    return _store_pdf_source(
-        vault,
-        work_id,
-        title,
-        description,
-        raw_bytes,
-        context=context,
-        raw_filename=raw_filename,
-        resource=resource,
-        item_type=item_type,
-        identifiers=identifiers,
-        csl_json=csl_json,
-        provider_coverage=provider_coverage,
-        citekey=citekey,
-        check_status="checked",
     )
 
 
