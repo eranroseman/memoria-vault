@@ -969,6 +969,86 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": ["bibliography.bib"],
     },
+    # worker.py:1095-1114 pops an optional `paths` list (omitted here to
+    # regenerate every tracked projection), dispatching to
+    # projections.py:write_tracked_projections. Confirmed live: "done",
+    # outputs ["index.md", "bibliography.bib",
+    # "projects/package-gate/argument.canvas"] (the seed's one project's
+    # existing canvas).
+    "regenerate-tracked-projections": {
+        "payload": {},
+        "expect": "done",
+        "creates": ["index.md", "bibliography.bib", "projects/package-gate/argument.canvas"],
+    },
+    # worker.py:55, shares acknowledge-attention's branch (worker.py:831-849,
+    # `operation_id in {"acknowledge-attention", "resolve-attention"}`).
+    # resolve-attention is also a PROTECTED_OPERATION_ACTORS "pi"-only op —
+    # same actor-check-fires-first shape as acknowledge-attention itself
+    # (Task 7b-1) — confirmed live.
+    "resolve-attention": {
+        "payload": {"target_id": "{attention_path}"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py:775-790 has no required payload; target_operation_id
+    # defaults to this op's own id (seeded_errors.py:DEFAULT_OPERATION_ID).
+    # Dispatches to seeded_errors.py:run_seeded_error_verdict, which reads
+    # the packaged, frozen `.memoria/eval/alpha15-seeded-errors.json` bundle
+    # (shipped by every `memoria init` workspace) and builds its own
+    # disposable fixture vault under a `tempfile.TemporaryDirectory` (the
+    # worker branch itself wraps the call) — it does not mutate our real
+    # seeded vault's Concepts. Fully offline (deterministic-fixture runner).
+    # Confirmed live: "done" (`passed: true`), ~6-30s runtime (it runs all
+    # 8 integrity checks plus check-source-metadata against the fixture).
+    # No `creates`: every mutation happens inside the disposable tmp fixture.
+    "run-seeded-error-verdict": {
+        "payload": {},
+        "expect": "done",
+    },
+    # worker.py:936-952, same run_prompt_operation path as red-team-argument
+    # above. input_text stands in for this op's own "selection_or_note"
+    # io_schema input. Confirmed live: identical #1391 gitignored-staging
+    # crash — xfail(strict=True), the sixth and last of the six
+    # prompt-family ops (GitHub issue #1391's full blast radius is now
+    # entirely registered).
+    "summarize-for-recall": {
+        "payload": {"input_text": "Some passage to summarize for recall."},
+        "expect": "done",
+    },
+    # worker.py:925-935 pops optional max_pairs/tier2/mode (all defaulted),
+    # dispatching to integrity.py:surface_tensions. Unlike the six
+    # run_prompt_operation ids, this path's own Tier-2 judge helper
+    # (`_run_tier2_tension_judge`) never calls `stage_concept`/
+    # `commit_writer_changes` against a gitignored staging path, so it does
+    # not share #1391's structural bug. In the seed, Tier-1 finds zero
+    # candidate note pairs at all (too few checked notes to form a tension
+    # pair), so neither Tier-1 nor Tier-2 classification runs — confirmed
+    # live: "done", `candidate_count: 0`, `commit: ""`.
+    "surface-tensions": {
+        "payload": {},
+        "expect": "done",
+    },
+    # worker.py:64, 367-398. trace-integrity-scan is a
+    # PROTECTED_OPERATION_ACTORS entry whose required actor is the literal
+    # "integrity" (not "pi") — same non-"pi" label shape as observe-pi-edits
+    # above. Confirmed live: refused before quarantine_untraced_from_status
+    # ever runs, regardless of the (omitted, optional) `paths`/`reason`
+    # payload keys.
+    "trace-integrity-scan": {
+        "payload": {},
+        "expect": "refused",
+        "reason": "requires integrity actor authority",
+    },
+    # worker.py:60, 953-1057 pops work_id (required) plus a large set of
+    # optional catalog-metadata fields (doi/standing/research_area/...,
+    # none supplied here). update-work is a PROTECTED_OPERATION_ACTORS
+    # "pi"-only op; same actor-check-fires-first shape as
+    # acknowledge-attention — confirmed live.
+    "update-work": {
+        "payload": {"work_id": "{work_id}"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
 }
 
 

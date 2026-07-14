@@ -46,6 +46,11 @@ _KNOWN_BUGS: dict[str, str] = {
     # Task 7b-2: the fifth of the six run_prompt_operation ids named in
     # #1391 — same root cause, confirmed live (see task-7b2-report.md).
     "red-team-argument": _PROMPT_STAGING_GITIGNORE_BUG,
+    # Task 7b-2: the sixth and last of the six run_prompt_operation ids
+    # named in #1391 — same root cause, confirmed live (see
+    # task-7b2-report.md). #1391's full blast radius is now entirely
+    # registered and xfailed.
+    "summarize-for-recall": _PROMPT_STAGING_GITIGNORE_BUG,
 }
 
 OPERATION_PARAMS = [
