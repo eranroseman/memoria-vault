@@ -68,8 +68,7 @@ _KNOWN_BUGS: dict[str, str] = {
     # omits both keys, so the worker job crashes with `KeyError:
     # 'max_findings'` instead of completing "done" with
     # `verification_status: "missing-draft"`. Confirmed live against a real
-    # seeded vault (see task-7b2-report.md). Not yet filed as a GitHub
-    # issue (flagged for the controller in task-7b2-report.md).
+    # seeded vault. Filed as GitHub issue #1393.
     "verify-project-draft": (
         "knowledge.py:verify_project_draft's missing-draft early return "
         "(knowledge.py:2106-2117) omits max_findings/triaged_count, which "
@@ -99,8 +98,7 @@ _KNOWN_BUGS: dict[str, str] = {
     # file. Confirmed live: assert_invariants' check_tracked_projections
     # reports `{"path": "projects/package-gate/argument.canvas", "status":
     # "stale"}` immediately after a real write-project-slice run against the
-    # seed. Not yet filed as a GitHub issue (flagged for the controller in
-    # task-7b2-report.md).
+    # seed. Filed as GitHub issue #1394.
     "write-project-slice": (
         "render_project_argument_canvas (knowledge.py:1735-1743) branches "
         "on outline.md's mere existence, switching from a full "

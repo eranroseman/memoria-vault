@@ -1101,7 +1101,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # returning the designed "done" verification report
     # (`verification_status: "missing-draft"`). This is the realistic
     # default state of any project before its first `compose-project-draft`
-    # run — not an edge case. Not yet filed as a GitHub issue (flagged for
+    # run — not an edge case. Filed as GitHub issue #1393 (flagged from
     # the controller in task-7b2-report.md — filing was outside this task's
     # granted permissions). Registered as `expect: "done"` (the manifest's
     # actual design intent) and
