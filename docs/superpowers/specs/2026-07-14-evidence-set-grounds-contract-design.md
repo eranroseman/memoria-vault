@@ -35,7 +35,8 @@ wording (§1.4) is the collision the brief required this session to resolve.
 
 **Ruling: full identifier sweep, warrant → grounds**, for every use of
 "warrant" that means the evidence-set concept. Highlights (the complete
-file:line manifest lives with the session artifacts, appendix):
+file:line manifest:
+[2026-07-14-warrant-grounds-rename-manifest.md](2026-07-14-warrant-grounds-rename-manifest.md)):
 
 - `code-warrant:` marker-item prefix → `code-grounds:`
 - `CodeWarrantRef` → `CodeGroundsRef`; `parse_code_warrant_ref` →
@@ -337,11 +338,12 @@ Slices 3–6 are small independent PRs; nothing blocks alpha.21.
 
 ## Appendix: session artifacts
 
-Produced 2026-07-14 during the PI design session (scratchpad + task
-outputs; git-recoverable from this session's records): the rename sweep
-manifest (43 files audited, per-hit classification), the blinded clean-slate
-design and its 17-finding adversarial critique, four prior-art research
-digests (integrity/attestation, legal citators, document-embedded
+Produced 2026-07-14 during the PI design session. Persisted in-repo: the
+rename sweep manifest (43 files audited, per-hit classification) —
+[2026-07-14-warrant-grounds-rename-manifest.md](2026-07-14-warrant-grounds-rename-manifest.md).
+Session-ephemeral (conclusions folded into this spec): the blinded
+clean-slate design and its 17-finding adversarial critique, four prior-art
+research digests (integrity/attestation, legal citators, document-embedded
 contracts, scholarly claim-evidence), the machine-checked partition proof
 for R1–R4 (252 quotient shapes), and the confirmed code-divergence
 verification with file:line citations.
