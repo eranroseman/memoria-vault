@@ -139,7 +139,7 @@ def check_evidence_integrity(
         if frontmatter.get("type") not in {"work", "digest", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
-            status = _evidence_status(vault, evidence_rel)
+            status = _concept_status(vault, evidence_rel)
             if status["status"] in {"missing", "unchecked"}:
                 findings.append(
                     record_integrity_check(
@@ -1767,10 +1767,6 @@ def _concept_rel(value: str) -> str:
     if source_ref := _source_ref(rel):
         return source_ref
     return rel
-
-
-def _evidence_status(vault: Path, rel: str) -> dict[str, str]:
-    return _concept_status(vault, rel)
 
 
 def _concept_status(vault: Path, rel: str) -> dict[str, str]:
