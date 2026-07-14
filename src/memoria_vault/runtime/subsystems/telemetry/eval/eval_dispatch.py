@@ -42,7 +42,6 @@ EVAL_ROLE_ASSIGNEE = {
 
 EVAL_DIR = ".memoria/eval"
 LAST_RUN = "last-run.md"
-CREATED_BY = "memoria-eval"
 
 # the non-committing eval task contract: task work never mutates Concepts/catalog data
 EVAL_PREAMBLE = (
