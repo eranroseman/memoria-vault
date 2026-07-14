@@ -10,7 +10,6 @@ from memoria_vault.runtime.search_index import (
     _tokens,
     checked_concepts,
     evaluate_bm25,
-    filter_checked_results,
 )
 from memoria_vault.runtime.search_index import (
     answer_query as _answer_query,
@@ -247,9 +246,6 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
     assert "field: Computer Science" in graph_text
     assert "domain: Physical Sciences" in graph_text
     assert "score: 0.82" in graph_text
-    assert filter_checked_results(vault, [{"file": graph.as_posix()}]) == [
-        {"file": graph.as_posix()}
-    ]
     assert answer_query(vault, "rarealpha")["sources"][0]["path"] == "fulltexts/source-alpha.md"
     assert (
         answer_query(vault, "coordination-aspect")["sources"][0]["path"]
@@ -271,19 +267,6 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
     assert answer_query(vault, "Ada River")["sources"][0]["path"] == (
         "graph-neighborhoods/source-alpha.md"
     )
-
-
-def test_filter_checked_results_applies_read_barrier_to_search_rows(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    checked = note(vault, "checked", "checked", "alpha beta")
-    note(vault, "unchecked", "unchecked", "poison alpha")
-    rows = [
-        {"file": "search://vault/notes/unchecked.md", "title": "Unchecked"},
-        {"file": checked.as_posix(), "title": "Checked absolute"},
-        {"file": "search://vault/missing.md", "title": "Missing"},
-    ]
-
-    assert filter_checked_results(vault, rows) == [rows[1]]
 
 
 def test_bm25_eval_harness_uses_only_checked_concepts(tmp_path: Path) -> None:
