@@ -145,6 +145,21 @@ def write_checked_note(workspace: Path, rel: str, title: str) -> None:
     )
 
 
+def work_text(title: str, body: str) -> str:
+    return f"---\ntype: digest\ntitle: {title}\ntags: []\nlinks: {{}}\nwork_id: {title}\n---\n{body}\n"
+
+
+def write_note(vault: Path, name: str, status: str, body: str) -> Path:
+    path = vault / "notes" / f"{name}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"---\ntype: note\ntitle: {name}\ntags: []\nlinks: {{}}\n---\n{body}\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, path.relative_to(vault).as_posix(), "note", status)
+    return path
+
+
 def patch_pydantic_ai(
     monkeypatch: Any,
     *,

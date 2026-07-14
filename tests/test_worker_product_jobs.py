@@ -43,6 +43,8 @@ from tests.helpers import (
     git,
     init_git,
     mark_file_status,
+    work_text,
+    write_note,
 )
 
 
@@ -80,29 +82,6 @@ def workspace(tmp_path: Path) -> Path:
 
 def note_text(status: str = "checked") -> str:
     return "---\ntype: note\ntitle: Worker note\ntags: []\nlinks: {}\n---\nBody.\n"
-
-
-def work_text(title: str, body: str) -> str:
-    return (
-        f"---\ntype: digest\ntitle: {title}\ntags: []\nlinks: {{}}\nwork_id: {title}\n---\n{body}\n"
-    )
-
-
-def write_note(vault: Path, name: str, status: str, body: str) -> Path:
-    path = vault / "notes" / f"{name}.md"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        f"---\ntype: note\ntitle: {name}\ntags: []\nlinks: {{}}\n---\n{body}\n",
-        encoding="utf-8",
-    )
-    state.record_observed_file_edit(
-        vault,
-        output_id=path.relative_to(vault).as_posix(),
-        concept_type="note",
-        output_sha256=sha256_file(path),
-    )
-    state.set_concept_verdict(vault, path.relative_to(vault).as_posix(), status)
-    return path
 
 
 def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path) -> None:
