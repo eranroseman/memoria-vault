@@ -11,6 +11,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
+    _parse_git_status_porcelain,
     append_explicit_journal_event,
     append_journal_event,
     commit_explicit_writer_changes,
@@ -92,15 +93,11 @@ def changed_tracked_projection_paths(vault: Path) -> list[str]:
     if proc.returncode:
         detail = proc.stderr.strip() or proc.stdout.strip()
         raise RuntimeError(f"git status failed: {detail}")
-    changed: list[str] = []
-    for line in proc.stdout.splitlines():
-        if len(line) < 4:
-            continue
-        path = line[3:]
-        if " -> " in path:
-            path = path.rsplit(" -> ", 1)[1]
-        if _is_tracked_projection_path(path):
-            changed.append(path)
+    changed = [
+        path
+        for _status, path in _parse_git_status_porcelain(proc.stdout)
+        if _is_tracked_projection_path(path)
+    ]
     return sorted(set(changed))
 
 

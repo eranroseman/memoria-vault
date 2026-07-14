@@ -977,6 +977,20 @@ def _file_baseline_snapshot(
     return "sha256:" + hashlib.sha256(data).hexdigest(), _restriction_keys(frontmatter)
 
 
+def _parse_git_status_porcelain(output: str) -> list[tuple[str, str]]:
+    """Parse `git status --porcelain` lines into (status_code, path) pairs."""
+    parsed: list[tuple[str, str]] = []
+    for line in output.splitlines():
+        if len(line) < 4:
+            continue
+        status = line[:2]
+        path = line[3:]
+        if " -> " in path:
+            path = path.rsplit(" -> ", 1)[1]
+        parsed.append((status, path))
+    return parsed
+
+
 def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
     roots = [str(root).strip("/") for root in contract["folders"].get("bundle_roots") or ()]
     if not roots:
@@ -991,15 +1005,11 @@ def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
     if proc.returncode:
         detail = proc.stderr.strip() or proc.stdout.strip()
         raise RuntimeError(f"git status failed: {detail}")
-    paths: list[str] = []
-    for line in proc.stdout.splitlines():
-        if len(line) < 4 or "D" in line[:2]:
-            continue
-        path = line[3:]
-        if " -> " in path:
-            path = path.rsplit(" -> ", 1)[1]
-        paths.append(path)
-    return paths
+    return [
+        path
+        for status, path in _parse_git_status_porcelain(proc.stdout)
+        if "D" not in status
+    ]
 
 
 def _validate_pi_edit_target(vault: Path, contract: dict[str, Any], target: str) -> None:
