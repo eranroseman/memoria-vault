@@ -760,6 +760,54 @@ OPERATION_REGISTRY: dict[str, dict] = {
         },
         "expect": "done",
     },
+    # worker.py:567-586 pops project_path (required); the rest of the
+    # payload is passed through as `paper_plan` to
+    # knowledge.py:frame_project_paper. frame-paper is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op (worker.py:61); same
+    # actor-check-fires-first shape as acknowledge-attention above —
+    # confirmed live.
+    "frame-paper": {
+        "payload": {"project_path": "{project}"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py:356-366 routes the four INTEGRITY_FINDING_OPERATIONS ids
+    # (this one plus the next three) through the same generic
+    # `_run_integrity_finding_operation` (worker.py:1126-1142), whose only
+    # payload keys are shadow/commit (both optional, defaulting True/False).
+    # check_citation_survival (runtime/integrity.py:561) just checks whether
+    # bibliography.bib is current for checked sources — no required payload.
+    # Confirmed live: "done", commit "" (no findings, so no commit — see
+    # `if findings and commit` in every one of these four check functions).
+    "integrity-citation-survival-check": {
+        "payload": {},
+        "expect": "done",
+    },
+    # See integrity-citation-survival-check above for the shared dispatch
+    # path. check_claim_quote_support (runtime/integrity.py:173) flags
+    # checked notes whose claim/quote share no terms; none of the seed's
+    # checked notes trip it. Confirmed live: "done".
+    "integrity-claim-quote-check": {
+        "payload": {},
+        "expect": "done",
+    },
+    # See integrity-citation-survival-check above for the shared dispatch
+    # path. check_contradiction_links (runtime/integrity.py:633) flags
+    # checked digests/works with stale `contradictions` targets; none exist
+    # in the seed. Confirmed live: "done".
+    "integrity-contradiction-check": {
+        "payload": {},
+        "expect": "done",
+    },
+    # See integrity-citation-survival-check above for the shared dispatch
+    # path. check_evidence_integrity (runtime/integrity.py:123) flags
+    # checked notes/digests/works whose declared evidence doesn't resolve
+    # through the checked read barrier; none exist in the seed. Confirmed
+    # live: "done".
+    "integrity-evidence-check": {
+        "payload": {},
+        "expect": "done",
+    },
 }
 
 
