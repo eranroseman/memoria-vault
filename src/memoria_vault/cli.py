@@ -67,7 +67,7 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="memoria",
         description="Memoria standalone engine control surface.",
     )
-    parser.add_argument("--version", action="version", version=f"memoria {_package_version()}")
+    parser.add_argument("--version", action="version", version=f"memoria {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     init = sub.add_parser("init")
@@ -2274,7 +2274,7 @@ def _init_dry_run_report(
         "package": {
             "seed_trees": seed_trees,
             "seed_files": seed_files,
-            "version": _package_version(),
+            "version": __version__,
         },
         "generated_targets": list(TRACKED_PROJECTION_PATHS),
         "concepts": {
@@ -3275,10 +3275,6 @@ def _fail(message: str, *, json_output: bool) -> int:
     else:
         print(f"memoria: error: {message}", file=sys.stderr)
     return 2
-
-
-def _package_version() -> str:
-    return __version__
 
 
 if __name__ == "__main__":
