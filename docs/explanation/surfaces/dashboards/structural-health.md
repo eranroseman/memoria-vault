@@ -47,4 +47,5 @@ review](../../../how-to-guides/inbox/run-the-weekly-review.md).
 
 - Availability and backing surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
 - Detector severity reference: [Linter: detectors and auto-fix](../../../reference/analysis-and-surfaces/linter.md)
-- The attention prompt format behind `flag` and `alert`: [The honesty prompt](../../execution/control-plane/honesty-card.md)
+- The `flag`/`alert` attention-projection types: [Glossary](../../../reference/data-model/glossary.md)
+- The `quiet`/`notice`/`alert`/`block` loudness levels: [Architecture — Interaction channels](../../architecture/README.md#interaction-channels)

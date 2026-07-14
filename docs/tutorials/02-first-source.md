@@ -73,4 +73,7 @@ artifact you can inspect.
 - A captured Work remains unchecked until the PI checks it.
 - A digest is source-derived material keyed by `work_id`.
 
+For more detail on capturing sources by DOI, URL, or PDF (skipped here for
+simplicity): [Capture and ingest](../how-to-guides/library/capture-and-ingest.md).
+
 Next: [03: Connect notes](03-connect-notes.md).

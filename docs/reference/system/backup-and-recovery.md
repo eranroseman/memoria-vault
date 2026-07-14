@@ -149,6 +149,7 @@ the lock closes.
 
 ## Related
 
+- [Back up and restore the workspace](../../how-to-guides/operate/back-up-and-restore-the-workspace.md) — how-to steps.
 - [Failure modes](failure-modes.md) — recovery symptoms and responses.
 - [On-disk layout](on-disk-layout.md) — live workspace paths.
 - [CLI](../commands-and-transports/cli.md) — command inventory.

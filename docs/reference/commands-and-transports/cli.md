@@ -19,9 +19,9 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria status` | Show workspace state. |
 | `memoria surface schema --json` | Print the shared surface-contract action registry used by CLI/HTTP/MCP drift checks. |
 | `memoria doctor --check search` | Check local search index state. |
-| `memoria doctor --check runner [--provider local\|gateway]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. |
+| `memoria doctor --check runner [--provider local\|gateway] [--repair]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. `--repair` reseeds workspace scaffold files (overwriting existing ones) before reporting. |
 | `memoria doctor` | Report local runtime checks and backup health. It exits nonzero when blob files lack configured coverage or a current valid local-backup stamp. |
-| `memoria doctor bundle` | Emit a diagnostic bundle and propagate the same failing backup-health status. |
+| `memoria doctor bundle [--redacted]` | Emit a diagnostic bundle and propagate the same failing backup-health status; `--redacted` marks the bundle as redacted for sharing. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
 | `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |
@@ -51,7 +51,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria workspace backup <target>` | PI-only coherent backup of SQLite, blobs, and journal head into a manifest-bound directory outside the live vault. |
 | `memoria workspace restore <source> [--force]` | PI-only validated, rollback-capable restore; `--force` is required while a live database exists. |
 | `memoria workspace recover` | PI-only recovery of interrupted backup publication, restore, request, and materialization work. |
-| `memoria workspace scan/run/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots; quarantine changed tracked projections; regenerate projections with a current owner; run queued work; and maintain projections/search. An orphan `projects/<project>/argument.canvas` remains quarantined. |
+| `memoria workspace scan/run/rollback/check/rebuild/export` | Observe valid direct Concept edits under bundle roots; quarantine changed tracked projections; regenerate projections with a current owner (add `--search` to `rebuild` to also rebuild the search index); and run queued work. An orphan `projects/<project>/argument.canvas` remains quarantined. |
 | `memoria attention list/show/resolve/worklist` | Review PI attention items. |
 
 ## Knowledge And Projects
@@ -61,7 +61,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria new note/hub/project` | Author new Concepts through the CLI's code-owned frontmatter/body contract. |
 | `memoria link` | Curate a PI-owned typed relation between checked Concepts. |
 | `memoria check` | Mark a Concept checked as the PI, or run integrity-owned workspace checks when no target is given. |
-| `memoria show/list/export` | Inspect and export Concepts. |
+| `memoria show/list [--type note\|work\|hub\|project]/export` | Inspect and export Concepts; `--type` filters to exactly one type per invocation — `list --type work` enumerates only catalog Works, never merged with note/hub/project Concepts. |
 | `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
 | `memoria steering show/edit` | Read steering; editing is PI-only. |
 | `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
@@ -153,8 +153,9 @@ This roster mirrors the live argparse tree:
 Run `memoria <command> --help` for exact flags.
 
 `memoria new note` accepts `--description` plus `--body` or `--file`, optional
-`--mode claim|question|definition|work`, and `--work-id` when `--mode work` is
-selected. `memoria new hub` accepts `--description` plus optional `--body`;
+`--mode claim|question|definition|work`, `--work-id` when `--mode work` is
+selected, and a repeatable `--tag` (may be passed multiple times). `memoria new
+hub` accepts `--description` plus optional `--body`;
 `memoria new project` accepts `--description` plus optional `--direction`. The
 generated files include the same frontmatter defaults and body heading shape as
 the CLI concept writers.

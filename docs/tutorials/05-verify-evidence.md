@@ -69,4 +69,7 @@ instead of claiming success.
 - Evidence decisions are recorded.
 - Draft passages become notes only through an intentional promotion path.
 
+For more detail: [Project slice, outline, draft composition, verification, and
+write-back](../how-to-guides/project/compose-a-draft.md).
+
 Next: [06: Close loop](06-close-loop.md).

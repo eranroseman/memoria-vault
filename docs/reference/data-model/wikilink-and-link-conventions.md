@@ -49,8 +49,8 @@ links:
 
 Rules:
 
-- Link for usefulness, not exhaustive coverage.
-- Prefer vault-relative paths over title-only links.
+- Convention: links target usefulness over exhaustive coverage.
+- Convention: link targets use vault-relative paths over title-only links.
 - A `note` with `mode: claim` needs evidence in its body, anchors, checked
   digests, or catalog Work rows; `links:` records the argument relation, not
   the evidence store.
@@ -89,10 +89,10 @@ project
 
 ## Hub thresholds
 
-The `hub-threshold` linter detector is advisory. When a topic has roughly 15 or
-more checked notes and no covering hub, create a `hub` Concept with one owned
-tag. Below that, the missing hub is usually cheaper than maintaining a premature
-navigation page.
+The `hub-threshold` linter detector is advisory: it fires when a topic has
+roughly 15 or more checked notes and no covering hub. Convention: a `hub`
+Concept for that topic owns one tag. Below the threshold, an absent hub is
+treated as cheaper than a premature navigation page.
 
 ---
 

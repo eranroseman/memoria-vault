@@ -48,10 +48,10 @@ Epistemic consequences are origin-blind: the blast radius of a wrong claim is
 identical whether a human or a machine authored it. Write and revert
 *authority* stays origin-gated — human-authored text is never auto-destroyed;
 machine material can auto-revert. See
-[Design principles](../rationale/foundations/design-principles.md), axioms 11–12.
+[Design principles](../rationale/foundations/design-principles.md), principles 11–12.
 
 ## Related
 
 - [Intellectual foundations](../rationale/foundations/intellectual-foundations.md) — the Toulmin pillar.
 - [Knowledge cycle](knowledge-cycle.md) — where propagation sits in the daily loop.
-- [Promotion and gated zones](promotion-and-gated-zones.md) — states, not places.
+- [Promotion and the write boundary](promotion-and-gated-zones.md) — states, not places.

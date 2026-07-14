@@ -67,4 +67,7 @@ one explicit review item and resolve it.
 - Draft composition is repeatable from checked project state.
 - Verification is a gate before export, not an afterthought.
 
+For more detail: [Project slice, outline, draft composition, verification, and
+write-back](../how-to-guides/project/compose-a-draft.md).
+
 Next: [05: Verify evidence](05-verify-evidence.md).

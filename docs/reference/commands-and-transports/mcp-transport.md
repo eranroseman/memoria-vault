@@ -116,9 +116,9 @@ arguments:
 }
 ```
 
-Prefer the narrowest useful `--read-scope` for the agent's task. Start another
-server with a different scope rather than giving one long-lived agent broad
-workspace access by default.
+`--read-scope` sets the subset of the workspace a given server instance can
+read; narrowing it restricts that instance's visibility, and a separate server
+instance is required for a different scope.
 
 ## Boundaries
 

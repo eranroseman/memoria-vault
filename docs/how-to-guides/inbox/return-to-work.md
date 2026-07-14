@@ -17,6 +17,7 @@ common standalone runtime failures before they cost time mid-session.
 ```bash
 memoria doctor bundle --workspace <workspace>
 memoria status --workspace <workspace>
+memoria journal verify --workspace <workspace>
 ```
 
 If `memoria` is not on `PATH`, run the workspace-local command:

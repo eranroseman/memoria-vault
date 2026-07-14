@@ -27,7 +27,7 @@ Use the CLI:
 memoria new hub receptivity-timing --workspace .
 ```
 
-Or create a Markdown file in `hubs/` with the same required shape:
+Or create a Markdown file in `hubs/` with the same shape (`description` is optional):
 
 ```yaml
 type: hub

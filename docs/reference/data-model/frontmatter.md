@@ -112,7 +112,12 @@ retain their declared kind regardless of mode.
 Templates and optional form adapters are entry points, not schema authority. The
 Concept schemas above remain the validator contract. Forms may collect values
 that are not frontmatter fields. The writer maps those values into the body or
-structured frontmatter before validation.
+structured frontmatter before validation. Free-text values from forms,
+templates, or agent-proposed note candidates (the `propose-note-candidates`
+worker operation) pass through content-security masking
+(`neutralize_untrusted_markdown`, `src/memoria_vault/runtime/content_security.py`)
+as the writer maps them in, so untrusted or agent-controlled text cannot pose
+as trusted Markdown.
 
 ## Display order and grouping
 
@@ -157,7 +162,7 @@ checked against the generated `bibliography.bib`.
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
 | `id` | `ulid` for `note`, `hub`, and `project`; `str` for `code-artifact`, `digest`, and `fulltext` | Required on every typed document. Digest and fulltext use their source `work_id`; code-artifact uses its artifact id. |
 | `title` | `str` | Human-readable Concept title. |
-| `links` | `links` | Required for knowledge Concepts, even when empty. |
+| `links` | `links` | Required by most Concept types (see each type's schema for exact requirements), even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |
 | `tags` | `list` | Required local classification list, even when empty. |
 

@@ -12,13 +12,16 @@ installable Python package ([standalone engine with operations as product code, 
 You clone it, or run the one-line bootstrap that clones it for you, and the
 bootstrap installer at the repo root deploys the standalone workspace.
 
-| Path | Contents | Audience |
-| --- | --- | --- |
-| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both install the standalone CLI/runtime package and call `memoria init`. | End users (run once). |
-| `src/memoria_vault/product/workspace_seed/` | The **runtime seed** packaged with `memoria`: schemas, provider config, pre-commit hook, seeded-error bundle, prompt preamble, steering, vocabulary, `.gitignore`, and Memoria's Obsidian adapter/default settings. | The CLI initializer and tests. |
-| `src/memoria_vault/` | The installable Python package for runtime helpers, operation manifests, policy logic, and the workspace seed. | Memoria operations, optional adapter servers, tests, and contributors. |
-| `packages/memoria-obsidian/` | Source package for the Obsidian proof adapter. Its built release files are copied into the package seed so new workspaces have the Memoria plugin installed by default. | Adapter testers and contributors. |
-| `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
+The repo holds four kinds of path, each with a different audience. The
+**bootstrap installers** at the repo root (`scripts/install.ps1` /
+`scripts/install.sh`) are run once by end users. The **runtime seed and
+installable package** under `src/memoria_vault/` are read by the CLI
+initializer, operations, and tests. The **Obsidian adapter source** under
+`packages/memoria-obsidian/` has its built release files copied into the
+package seed, so new workspaces install the Memoria plugin by default. And
+`docs/` is for developers and contributors only - never shipped at runtime.
+See [On-disk layout](../../../reference/system/on-disk-layout.md) for the
+full path inventory.
 
 The installer derives the running workspace by installing the package and
 calling `memoria init` at a working location. The deployed workspace is
@@ -57,10 +60,9 @@ reconciliation inside the vault.
 
 Memoria ships capability manifests inside the Python package under
 `src/memoria_vault/product/capabilities/`, with one checked Markdown file per
-operation. Those manifests are the runtime
-allowlist: they describe the operation id, input/output schema, allowed tools,
-allowed paths, network ceiling, runner test/live branch policy, and required
-checks.
+operation. Those manifests are the runtime allowlist; see
+[Operations](../../../reference/commands-and-transports/operations.md) for
+the manifest fields.
 
 The repo deliberately does not ship `.memoria/profiles/`,
 `.memoria/lane-overrides/`, or a profile-rendering script. The

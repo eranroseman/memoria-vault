@@ -13,6 +13,10 @@ surface, and the checked-read boundary before adding research material.
 
 - A fresh workspace from [Quickstart](../how-to-guides/setup/quickstart.md).
 - A shell opened at the workspace root.
+- The `memoria` command on `PATH`: activate the venv —
+  `source .memoria/.venv/bin/activate` (Linux/macOS/WSL) or
+  `.memoria\.venv\Scripts\Activate.ps1` (Windows) — or otherwise ensure
+  `memoria` resolves before running the bare `memoria ...` commands below.
 
 ## Steps
 

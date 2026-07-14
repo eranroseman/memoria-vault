@@ -38,7 +38,7 @@ repo tree copy.
 | Source | Uses the local checkout or clones `memoria-vault` to a temporary staging directory. |
 | Runtime dependencies | Creates `<workspace>/.memoria/.venv`, upgrades pip, then installs the Memoria Python package from the repo. |
 | Workspace init | Runs the installed `memoria init --workspace <workspace> --yes`, which copies the package seed, including Obsidian defaults, and creates schema-owned folders from `folders.yaml`. The installer refuses an existing Memoria workspace. |
-| Git hooks | Initializes Git when needed and wires `.githooks/pre-commit`. The installer never commits, sets identity, or adds a remote. File-change work is observed with `memoria workspace scan`. |
+| Git hooks | Initializes Git when needed and wires `.githooks/pre-commit`. On a freshly created repository it falls back to a local `memoria@example.invalid` / `Memoria` identity if none is configured, and commits the seed as `initialize memoria workspace`. The installer never adds a remote. File-change work is observed with `memoria workspace scan`. |
 | Next steps | Prints vault-local Python commands for `memoria doctor bundle`, `memoria workspace rebuild --search`, and `memoria ask`. |
 
 ## Scheduled Work
@@ -61,6 +61,7 @@ None. The installer does not wire host scheduler entries during bootstrap.
 
 ## Related
 
+- How-to guide: [Set up the vault](../../how-to-guides/setup/set-up-the-vault.md)
 - Runtime layout: [On-disk layout](on-disk-layout.md)
 - CLI commands: [CLI](../commands-and-transports/cli.md)
 - Search: [Search](../pipelines-and-io/search.md)

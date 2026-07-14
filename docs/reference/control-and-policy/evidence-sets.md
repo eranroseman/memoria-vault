@@ -81,3 +81,10 @@ memoria project resolve-evidence <project> --evidence-id ev-1234abcd --decision 
 The disposition is journal provenance; it does not edit the marker or assert
 that the claim is true. It can clear evidence-completeness review, but it cannot
 clear text drift or an unbound claim.
+
+## Related
+
+- Where markers are minted and resolved during drafting: [Compose a draft](../../how-to-guides/project/compose-a-draft.md)
+- How resolved markers become citations at export, and what blocks export: [Export routes and formats](../pipelines-and-io/export.md)
+- Why the engine may verify markers but not decide a claim is true: [Why the write half is bounded](../../explanation/rationale/boundaries/why-write-half-is-bounded.md)
+- The principle behind the immutable binding ledger: [Design principles](../../explanation/rationale/foundations/design-principles.md) (Provenance everywhere)

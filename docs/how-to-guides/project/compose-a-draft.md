@@ -71,3 +71,10 @@ The promoted note is unchecked until reviewed.
 - `projects/<project>/outline.md` contains the intended checked notes.
 - `projects/<project>/draft.md` exists.
 - `memoria project verify` reports no unresolved evidence item you still need to handle.
+
+## Related
+
+- Argument analysis before drafting: [Analyze a project argument](analyze-a-project-argument.md)
+- Export the verified draft: [Export a draft](export-a-draft.md)
+- Routes, states, and failure modes: [Export routes and formats](../../reference/pipelines-and-io/export.md)
+- Project type: [Document types](../../reference/data-model/document-types.md)

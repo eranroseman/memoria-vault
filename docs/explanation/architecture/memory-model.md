@@ -63,6 +63,12 @@ Every mediated write consumes one validated `OperationContext`, whose actor is
 one of `pi`, `agent`, `operation`, or `integrity`. Engine and worker interfaces
 never default a missing actor.
 
+A fixed subset of operations goes further and requires one specific actor:
+the worker rejects any other actor before payload processing runs at all, and
+the rejected job appends zero `event_log` rows. See [Control
+plane](../../reference/control-and-policy/control-plane.md) for the
+authoritative, complete list of actor-restricted operations.
+
 ---
 
 ## Why each substrate has its scope
@@ -112,6 +118,7 @@ field-by-field routing matrix.
 
 - Audit log format: [Policy gate](../../reference/control-and-policy/policy-mcp.md)
 - The substrate table as reference: [Memory substrates](../../reference/pipelines-and-io/memory-substrates.md)
+- Actor-restricted operations: [Control plane](../../reference/control-and-policy/control-plane.md)
 
 **Background**
 

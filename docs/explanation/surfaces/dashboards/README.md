@@ -23,8 +23,10 @@ The planned dashboard rail starts with **Now**. Today, the file-backed Inbox and
 weekly structural-debt collection behind the health band.
 Board state is the worker-debug view over request and attention state, surfaced
 through `memoria request list` and `memoria attention list`, not a shipped
-dashboard file. The Project gate is its own steering surface, not part of the dashboard
-collection. The synthesis-vs-structural split is by *actor*:
+dashboard file. The generated Project gate index (`project-gate-index.md`) is a
+deterministic on-disk artifact, not a dashboard view — the separate, planned
+Project dashboard in the reference inventory would surface that gate state
+(and other project steering signals) over the read API. The synthesis-vs-structural split is by *actor*:
 open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and
 drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
 

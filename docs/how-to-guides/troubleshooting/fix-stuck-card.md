@@ -9,6 +9,10 @@ nav_order: 2
 
 Memoria tracks CLI and engine work as operation requests.
 
+This guide covers stuck operation **requests** only. Attention items
+(`candidate`, `gap`, `work-prompt`, `alert`) are a separate, currently-shipped
+concept — see [Work the action queue](../inbox/work-the-action-queue.md).
+
 ## Detect
 
 ```bash

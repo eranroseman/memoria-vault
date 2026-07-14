@@ -116,7 +116,7 @@ machine output is never self-disposing.
 - Why operation postures support this: [Why operation postures](why-operation-postures.md)
 - Why the vault won't automate synthesis: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
 - How request review state works: [Request states and the review gate](../../execution/control-plane/states.md)
-- What the gate enforces at the synthesis boundary: [Why promotion is gated](../../knowledge/promotion-and-gated-zones.md)
+- What the gate enforces at the synthesis boundary: [Promotion and the write boundary](../../knowledge/promotion-and-gated-zones.md)
 
 **Reference**
 

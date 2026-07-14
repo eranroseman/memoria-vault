@@ -46,14 +46,13 @@ external agent runtimes, the Obsidian app, or Zotero integration. Direct
 `memoria init` calls can skip the seeded Obsidian settings with `--no-obsidian`;
 the bootstrap path keeps the default.
 
-**3. Make your first git checkpoint** (recommended).
+**3. Add a remote** (optional).
 
-The installer initializes Git so hooks work immediately, but the runtime vault is your repo, under your identity. From the runtime folder:
+The installer already committed the seeded workspace (`initialize memoria workspace`); the runtime vault is your repo, under your identity. If you want a remote, add one and push:
 
 ```bash
-git add -A && git commit -m "Initial Memoria vault"
 git remote add origin git@github.com:<your-handle>/<your-vault-repo>.git   # optional — your own repo
-git push -u origin main                                                    # if you added a remote
+git push -u origin main                                                    # replace `main` if your default branch differs
 ```
 
 The remote is your own vault repository, not the starter repo.
@@ -68,3 +67,5 @@ The remote is your own vault repository, not the starter repo.
 ## Related
 
 - Obsidian adapter setup: [Set up Obsidian](set-up-obsidian.md)
+- Back up the vault outside Git: [Back up and restore the workspace](../operate/back-up-and-restore-the-workspace.md)
+- Installer reference: [Installer (bootstrap)](../../reference/system/installer.md)

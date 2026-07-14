@@ -13,7 +13,7 @@ Start from the symptom you're seeing. Each guide takes one failure mode from sym
 | Symptom                                                           | Guide                                                            |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Optional UI adapter is down and you still need to work            | [Safe mode](safe-mode.md)                                        |
-| A request or old "card" won't advance                             | [Fix a stuck request](fix-stuck-card.md)                         |
+| A request won't advance (`pending` / `running` / `failed`)        | [Fix a stuck request](fix-stuck-card.md)                         |
 | YAML parse error; a note is missing from filtered views           | [Fix broken frontmatter](fix-broken-frontmatter.md)              |
 | An agent's write didn't land — denied, or never reached the gate  | [Diagnose a denied or blocked write](diagnose-a-denied-write.md) |
 | Enrichment is empty after ingest; classification never applied    | [Fix empty enrichment after ingest](fix-empty-enrichment.md)    |

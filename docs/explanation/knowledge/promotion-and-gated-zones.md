@@ -55,6 +55,7 @@ checked; whether the claim is important is represented by its relationships.
 - The attention prompt in detail: [The honesty prompt](../execution/control-plane/honesty-card.md)
 - Review gates vs work prompts: [Decision points](../execution/control-plane/decision-points.md)
 - The operations behind the boundary: [Operations](../execution/operations.md)
+- Why the gate is structural, not a policy toggle: [Why the review gate is structural](../rationale/boundaries/why-review-gate-is-structural.md)
 
 **Decisions**
 

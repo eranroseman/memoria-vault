@@ -48,11 +48,7 @@ The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%
 & "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\memoria.exe" workspace rebuild --workspace "$env:USERPROFILE\Memoria" --search
 ```
 
-**3. Make the first checkpoint.** The installer initializes Git and wires hooks, but it does not create the first commit or set a remote:
-
-```bash
-cd ~/Memoria && git add -A && git commit -m "Initial Memoria vault"
-```
+**3. First checkpoint already made.** The installer already committed the seeded workspace (`initialize memoria workspace`); the working tree is clean.
 
 The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 

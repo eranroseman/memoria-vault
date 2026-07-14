@@ -28,13 +28,9 @@ bash scripts/install.sh --vault ~/Memoria-project2
 .\scripts\install.ps1 -Vault "$env:USERPROFILE\Memoria-project2"
 ```
 
-**3. Make the first checkpoint.**
+**3. First checkpoint already made.**
 
-```bash
-cd ~/Memoria-project2
-git add -A
-git commit -m "Initial Memoria workspace"
-```
+The installer already committed the seeded workspace (`initialize memoria workspace`) at `~/Memoria-project2`; the working tree is clean.
 
 **4. Keep adapters isolated.**
 

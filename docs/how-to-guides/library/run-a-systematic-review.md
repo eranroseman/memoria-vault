@@ -32,17 +32,17 @@ Record the review title, protocol date, reviewer, and review type.
 
 **2. Write your research question and criteria.**
 
-In the protocol note, complete:
-
-- **Research question** — one sentence, specific enough to determine inclusion at the abstract stage
-- **Inclusion criteria** — 3–5 explicit conditions a source must meet
-- **Exclusion criteria** — 3–5 explicit grounds for rejection
-
-Commit the protocol before running any searches. A protocol written after seeing the results is not a protocol.
+Write your research question, inclusion criteria, and exclusion criteria using
+your own systematic-review method, then record them in the protocol note.
+Commit the protocol before running any searches — a protocol written after
+seeing the results is not a protocol.
 
 **3. Run database searches.**
 
-Run your search string in each database. Record in a protocol table: database, search date, records retrieved. Export each result set to RIS or BibTeX, combine, and deduplicate.
+Run your search strategy in each database using your own method. Record
+database, search date, and records retrieved in the protocol note, then
+export, combine, and deduplicate the result sets into one RIS or BibTeX file —
+that file feeds screening in the next step.
 
 **4. Screen titles and abstracts.**
 
@@ -62,13 +62,14 @@ import so the provenance survives.
 
 **5. Full-text assess included records.**
 
-For each record marked relevant at the abstract stage: retrieve the full text, re-apply the criteria, record the final decision and any exclusion reason.
+Full-text screen each record marked relevant at the abstract stage using your
+own criteria; record the final decision and any exclusion reason in the
+protocol note.
 
 **6. Update the PRISMA counts.**
 
-Complete the protocol's flow counts: identified, duplicates removed, screened,
-title/abstract exclusions, full-text assessed, full-text exclusions, and
-included.
+Complete your PRISMA flow-diagram counts using your own method, then record
+the final counts in the protocol note.
 
 **7. Capture the included sources.**
 
@@ -81,11 +82,10 @@ record the protocol outcome, and resolve the resulting attention item.
 
 ## Verify
 
-- The protocol note has all PRISMA counts filled in and `lifecycle: current`
+- The protocol note has all PRISMA counts filled in
 - Every included source has a catalog Work row with a stable `work_id`
 - Every excluded source has a decision and reason recorded in the protocol
 
 ## Related
 
 - The intake path per paper: [Capture and ingest a source](capture-and-ingest.md)
-- The decision: [adopt-on-demand systematic-review tooling](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
