@@ -49,6 +49,14 @@ GATES: list[list[str]] = [
         "pytest",
         "tests/",
         "-q",
+        # Parallelize across cores (pytest-xdist); `-p xdist` because plugin
+        # autoload is disabled above. The vault-mutating tests are I/O-bound and
+        # per-test isolated (tmp_path), so this cuts the suite ~3x. `-m` stays
+        # last so the docs-only narrowing can swap the marker for `static`.
+        "-n",
+        "auto",
+        "-p",
+        "xdist",
         "-m",
         "static or unit or contract or runtime or package or floor",
     ],
