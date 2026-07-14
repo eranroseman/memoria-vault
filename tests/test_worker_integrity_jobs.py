@@ -18,7 +18,7 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def note_text(status: str = "checked") -> str:
+def note_text() -> str:
     return "---\ntype: note\ntitle: Worker note\ntags: []\nlinks: {}\n---\nBody.\n"
 
 
