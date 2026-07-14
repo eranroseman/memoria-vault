@@ -93,15 +93,22 @@ def frontmatter_doc(frontmatter: dict[str, Any], body: str) -> str:
     return f"---\n{dump_frontmatter(frontmatter)}\n---{body}"
 
 
+def _concept_bundle_parts(rel_path: str) -> list[str] | None:
+    """Split ``rel_path`` into bundle/rest if it lives in a universal-concept bundle."""
+    normalized = rel_path.replace("\\", "/")
+    if not normalized.endswith(".md"):
+        return None
+    parts = normalized.split("/", 1)
+    if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
+        return None
+    return parts
+
+
 def apply_universal_concept_frontmatter(
     frontmatter: dict[str, Any], rel_path: str
 ) -> dict[str, Any]:
     """Add universal meaning fields for knowledge Concepts."""
-    normalized = rel_path.replace("\\", "/")
-    if not normalized.endswith(".md"):
-        return frontmatter
-    parts = normalized.split("/", 1)
-    if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
+    if _concept_bundle_parts(rel_path) is None:
         return frontmatter
     if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
         if frontmatter.get("type") in {"digest", "fulltext"}:
@@ -114,11 +121,7 @@ def apply_universal_concept_frontmatter(
 
 
 def universal_concept_frontmatter_errors(frontmatter: dict[str, Any], rel_path: str) -> list[str]:
-    normalized = rel_path.replace("\\", "/")
-    if not normalized.endswith(".md"):
-        return []
-    parts = normalized.split("/", 1)
-    if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
+    if _concept_bundle_parts(rel_path) is None:
         return []
     errors: list[str] = []
     if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
