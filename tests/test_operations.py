@@ -255,12 +255,12 @@ def test_prompt_operation_neutralizes_model_output_before_staging(
         run_id="prompt-alpha",
     )
 
-    staged = (vault / result["staging_id"]).read_text(encoding="utf-8")
-    assert "![model]" not in staged
-    assert "<script>" not in staged
-    assert "](http://beacon.example" not in staged
-    assert "`http://beacon.example/model.png`" in staged
-    assert "`http://beacon.example/bare`" in staged
+    materialized = (vault / result["output_path"]).read_text(encoding="utf-8")
+    assert "![model]" not in materialized
+    assert "<script>" not in materialized
+    assert "](http://beacon.example" not in materialized
+    assert "`http://beacon.example/model.png`" in materialized
+    assert "`http://beacon.example/bare`" in materialized
     events = list(iter_jsonl(vault / ".memoria/journal/prompt-machine.jsonl"))
     assert events[1]["output_hash"] == (
         "sha256:" + hashlib.sha256(raw_output.encode("utf-8")).hexdigest()
