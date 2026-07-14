@@ -929,7 +929,7 @@ def _sealed_untrusted_block(name: str, text: str) -> str:
 
 def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> str:
     base_url = str(runner["base_url"])
-    _require_network(policy, base_url)
+    require_allowed_network(policy, base_url)
     key_env = runner.get("key_env")
     if isinstance(key_env, str) and key_env:
         api_key = os.environ.get(key_env)
@@ -1013,15 +1013,11 @@ def _significant_terms(*values: str) -> set[str]:
     return terms
 
 
-def _require_network(policy: dict[str, Any], base_url: str) -> None:
+def require_allowed_network(policy: dict[str, Any], base_url: str) -> None:
     for allowed in _allowed_network_prefixes(policy):
         if _network_target(base_url).startswith(allowed):
             return
     raise PermissionError(f"operation {policy['operation_id']} cannot access {base_url}")
-
-
-def require_allowed_network(policy: dict[str, Any], target_url: str) -> None:
-    _require_network(policy, target_url)
 
 
 def network_allowed(policy: dict[str, Any], target_url: str) -> bool:

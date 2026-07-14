@@ -8,16 +8,7 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import (
-    capture_bibtex_source as _capture_bibtex_source,
-)
-from memoria_vault.runtime.capture import (
-    capture_pdf_source as _capture_pdf_source,
-)
-from memoria_vault.runtime.capture import (
     capture_source as _capture_source,
-)
-from memoria_vault.runtime.capture import (
-    capture_url_source as _capture_url_source,
 )
 from memoria_vault.runtime.capture import (
     check_references_bib,
@@ -28,7 +19,21 @@ from memoria_vault.runtime.capture import (
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+from tests.helpers import (
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_git,
+)
+from tests.helpers import (
+    capture_bibtex_source_checked as _capture_bibtex_source,
+)
+from tests.helpers import (
+    capture_pdf_source_checked as _capture_pdf_source,
+)
+from tests.helpers import (
+    capture_url_source_checked as _capture_url_source,
+)
 
 
 def capture_source(vault: Path, *args, **kwargs):

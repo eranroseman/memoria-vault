@@ -19,11 +19,17 @@ from memoria_vault.runtime.knowledge import (
     emit_note_candidates as _emit_note_candidates,
 )
 from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import mark_checked as _mark_checked
 from memoria_vault.runtime.trusted_writer import observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, operation_context
+from tests.helpers import (
+    _md,
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_git,
+    operation_context,
+)
 
 
 def _call(function, vault: Path, *args, **kwargs):
@@ -64,29 +70,6 @@ def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas", "config")
     init_git(tmp_path, "knowledge@example.invalid", "Knowledge")
     return tmp_path
-
-
-def _assert_gap_contract(gap: dict[str, object], kind: str) -> None:
-    assert gap["kind"] == kind
-    assert gap["gap_type"] == kind
-    assert gap["severity"] in {"high", "medium", "low"}
-    assert gap["impact"] in {0, 1, 2}
-    assert gap["confidence"] in {0, 1, 2}
-    assert gap["actionability"] in {0, 1, 2}
-    assert gap["score"] == gap["impact"] * gap["confidence"] * gap["actionability"]
-    assert isinstance(gap["why"], str) and gap["why"]
-    assert isinstance(gap["next_actions"], list)
-    assert isinstance(gap["candidate_work_ids"], list)
-
-
-def _checked(vault: Path, rel: str, concept_type: str) -> None:
-    state.record_observed_file_edit(
-        vault,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(vault / rel),
-    )
-    state.set_concept_verdict(vault, rel, "checked")
 
 
 def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -> None:
@@ -443,47 +426,3 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert event["reason"] == "PI linked claims"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/source.md"}
-
-
-def _md(path: Path, frontmatter: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
-    fm = read_frontmatter(path)
-    status = fm.get("check_status")
-    if status in state.CHECK_STATUSES:
-        vault = _vault_root(path)
-        rel = path.relative_to(vault).as_posix()
-        state.record_observed_file_edit(
-            vault,
-            output_id=rel,
-            concept_type=str(fm.get("type") or "note"),
-            output_sha256=sha256_file(path),
-        )
-        state.set_concept_verdict(vault, rel, str(status))
-
-
-def _vault_root(path: Path) -> Path:
-    for parent in path.parents:
-        if parent.name in {
-            "notes",
-            "hubs",
-            "projects",
-            "digests",
-            "fulltext",
-            "capabilities",
-        }:
-            return parent.parent
-    return path.parent
-
-
-def _valid_paper_plan() -> dict[str, object]:
-    return {
-        "target": "Journal of Testable Systems",
-        "audience": "local-first tool builders",
-        "research_question": "Can Memoria support standalone CLI research?",
-        "central_contribution": "A checked CLI loop can produce usable evidence.",
-        "gap_statement": "Existing PKM loops lack local checked export.",
-        "claim_evidence_map": {"CLI loop works": "notes/support.md"},
-        "figure_plan": {"Figure 1": "CLI loop stages"},
-        "limitations": "Single-corpus dogfood run.",
-    }

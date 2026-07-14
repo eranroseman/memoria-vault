@@ -203,8 +203,8 @@ def test_runtime_gate_replays_user_facing_commands(
         str(workspace),
     )
     assert Path(backup["target"]) == backup_target.resolve()
-    bundle = _run_json(capsys, "doctor", "bundle", "--workspace", str(workspace), "--redacted")
-    assert bundle["redacted"] is True
+    bundle = _run_json(capsys, "doctor", "bundle", "--workspace", str(workspace))
+    assert "redacted" not in bundle
 
     scan = _run_json(
         capsys,

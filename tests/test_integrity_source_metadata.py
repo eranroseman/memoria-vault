@@ -5,9 +5,14 @@ from pathlib import Path
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.integrity import check_source_metadata as _check_source_metadata
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+from tests.helpers import (
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_git,
+    sync_file_verdicts,
+)
 
 
 def capture_source(vault: Path, *args, **kwargs):
@@ -22,36 +27,6 @@ def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas", "config")
     init_git(tmp_path, "integrity@example.invalid", "Integrity")
     return tmp_path
-
-
-def sync_file_verdicts(vault: Path) -> None:
-    for root in (
-        "catalog",
-        "knowledge",
-        "notes",
-        "hubs",
-        "projects",
-        "digests",
-        "fulltext",
-    ):
-        base = vault / root
-        if not base.exists():
-            continue
-        for path in base.rglob("*.md"):
-            fm = read_frontmatter(path)
-            status = fm.get("check_status")
-            if status not in state.CHECK_STATUSES:
-                continue
-            if fm.get("type") == "source":
-                continue
-            rel = path.relative_to(vault).as_posix()
-            state.record_observed_file_edit(
-                vault,
-                output_id=rel,
-                concept_type=str(fm.get("type") or "note"),
-                output_sha256=sha256_file(path),
-            )
-            state.set_concept_verdict(vault, rel, str(status))
 
 
 def test_source_metadata_check_flags_incomplete_checked_source(tmp_path: Path) -> None:
