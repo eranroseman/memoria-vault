@@ -675,9 +675,7 @@ def check_contradiction_links(
     return {"findings": findings, "commit": commit_hash}
 
 
-def contradiction_tier1_gate(
-    *, comparator: Any | None = None, min_accuracy: float = 1.0
-) -> dict[str, Any]:
+def contradiction_tier1_gate(*, comparator: Any | None = None) -> dict[str, Any]:
     """Run the high-overlap/opposite-meaning gate before Tier-1 may classify pairs."""
     compare = comparator or _compare_claims
     failures: list[dict[str, Any]] = []
@@ -699,7 +697,7 @@ def contradiction_tier1_gate(
     total = len(_HANS_ACCEPTANCE)
     accuracy = (total - len(failures)) / total
     return {
-        "passed": accuracy >= min_accuracy and baseline_failures > 0,
+        "passed": len(failures) == 0 and baseline_failures > 0,
         "accuracy": accuracy,
         "total": total,
         "failures": failures,
