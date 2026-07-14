@@ -134,6 +134,31 @@ def mark_file_status(
     state.set_concept_verdict(workspace, rel, status)
 
 
+def sync_file_verdicts(vault: Path) -> None:
+    """Mark every checked/rejected concept file under vault with its recorded verdict."""
+    for root in (
+        "catalog",
+        "knowledge",
+        "notes",
+        "hubs",
+        "projects",
+        "digests",
+        "fulltext",
+    ):
+        base = vault / root
+        if not base.exists():
+            continue
+        for path in base.rglob("*.md"):
+            fm = read_frontmatter(path)
+            status = fm.get("check_status")
+            if status not in state.CHECK_STATUSES:
+                continue
+            if fm.get("type") == "source":
+                continue
+            rel = path.relative_to(vault).as_posix()
+            mark_file_status(vault, rel, str(fm.get("type") or "note"), str(status))
+
+
 def write_checked_concept(
     workspace: Path,
     rel: str,

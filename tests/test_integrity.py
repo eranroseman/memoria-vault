@@ -32,15 +32,18 @@ from memoria_vault.runtime.integrity import (
 from memoria_vault.runtime.integrity import (
     record_integrity_check as _record_integrity_check,
 )
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
     promote_checked as _promote_checked,
 )
 from memoria_vault.runtime.trusted_writer import (
     stage_concept as _stage_concept,
 )
-from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import call_with_context, copy_memoria_dirs, init_git
+from tests.helpers import (
+    call_with_context,
+    copy_memoria_dirs,
+    init_git,
+    sync_file_verdicts,
+)
 
 
 def _context_wrapper(function):
@@ -80,36 +83,6 @@ def _stage_checked_note(vault: Path, rel: str, title: str, body: str) -> None:
     stage_concept(vault, rel, content, machine="writer")
     promote_checked(vault, rel, machine="writer")
     state.mark_materialized(vault, rel)
-
-
-def sync_file_verdicts(vault: Path) -> None:
-    for root in (
-        "catalog",
-        "knowledge",
-        "notes",
-        "hubs",
-        "projects",
-        "digests",
-        "fulltext",
-    ):
-        base = vault / root
-        if not base.exists():
-            continue
-        for path in base.rglob("*.md"):
-            fm = read_frontmatter(path)
-            status = fm.get("check_status")
-            if status not in state.CHECK_STATUSES:
-                continue
-            if fm.get("type") == "source":
-                continue
-            rel = path.relative_to(vault).as_posix()
-            state.record_observed_file_edit(
-                vault,
-                output_id=rel,
-                concept_type=str(fm.get("type") or "note"),
-                output_sha256=sha256_file(path),
-            )
-            state.set_concept_verdict(vault, rel, str(status))
 
 
 def catalog_db_source(vault: Path, work_id: str, content_text: str) -> str:
