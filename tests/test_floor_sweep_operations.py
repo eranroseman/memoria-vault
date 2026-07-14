@@ -58,29 +58,14 @@ _KNOWN_BUGS: dict[str, str] = {
     # task-7b2-report.md). #1391's full blast radius is now entirely
     # registered and xfailed.
     "summarize-for-recall": _PROMPT_STAGING_GITIGNORE_BUG,
-    # Task 7b-2: a distinct, newly-found bug (not #1391). worker.py's
-    # verify-project-draft dispatch branch (worker.py:680-699)
-    # unconditionally reads `result["max_findings"]` and
-    # `result["triaged_count"]` off knowledge.py:verify_project_draft's
-    # return value, but that function's own "missing-draft" early return
-    # (knowledge.py:2106-2117 — the case where the project has no draft.md
-    # yet, the default state before compose-project-draft has ever run)
-    # omits both keys, so the worker job crashes with `KeyError:
-    # 'max_findings'` instead of completing "done" with
-    # `verification_status: "missing-draft"`. Confirmed live against a real
-    # seeded vault. Filed as GitHub issue #1393.
-    "verify-project-draft": (
-        "knowledge.py:verify_project_draft's missing-draft early return "
-        "(knowledge.py:2106-2117) omits max_findings/triaged_count, which "
-        "worker.py's verify-project-draft dispatch branch "
-        "(worker.py:680-699) reads unconditionally — every project without "
-        "a draft.md yet (the default pre-compose state) crashes with "
-        "KeyError: 'max_findings' instead of completing done with "
-        "verification_status: 'missing-draft'."
-    ),
-    # Task 7b-2: a third distinct, newly-found bug (not #1391, not the
-    # verify-project-draft KeyError above). write-project-slice itself
-    # completes "done" and writes outline.md correctly — the bug is a side
+    # Task 7b-2: a third distinct, newly-found bug (not #1391). A second
+    # distinct bug found in this same sweep — knowledge.py:verify_project_
+    # draft's missing-draft early return omitting max_findings/triaged_count,
+    # crashing worker.py's verify-project-draft dispatch branch with
+    # KeyError: 'max_findings' — was filed as GitHub issue #1393 and has
+    # since been fixed, so it no longer has an entry here. write-project-
+    # slice itself completes "done" and writes outline.md correctly — the
+    # bug documented below is a side
     # effect on a DIFFERENT tracked projection. render_project_argument_
     # canvas (knowledge.py:1735-1743) branches on outline.md's mere
     # existence: with no outline.md it renders canvas nodes/edges from
