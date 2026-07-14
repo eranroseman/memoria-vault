@@ -103,9 +103,7 @@ def build_resolver(notes: dict[str, Note]) -> dict[str, str]:
 
 
 def build_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
-    return [
-        edge for edge in build_descriptive_edges(notes, resolver) if edge.relation in RELATIONS
-    ]
+    return [edge for edge in build_descriptive_edges(notes, resolver) if edge.relation in RELATIONS]
 
 
 def build_descriptive_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
