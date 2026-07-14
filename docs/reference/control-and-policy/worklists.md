@@ -15,12 +15,11 @@ report into one file-backed batch review surface. The operation writes many
 ## Command
 
 ```bash
-python3 -m memoria_vault.runtime.subsystems.lib.worklists emit --vault <vault> --report report.json --title "Batch title"
+python3 -m memoria_vault.runtime.subsystems.lib.worklists --vault <vault> --report report.json --title "Batch title"
 ```
 
 | Option | Contract |
 | --- | --- |
-| `emit` | The only CLI subcommand. |
 | `--vault <vault>` | Runtime vault root. Required. |
 | `--report <file>` | JSON report containing `items` or `rows`. Required. |
 | `--title <text>` | Overrides the report title. Optional. |
