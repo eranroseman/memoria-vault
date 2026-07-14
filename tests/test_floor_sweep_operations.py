@@ -51,6 +51,58 @@ _KNOWN_BUGS: dict[str, str] = {
     # task-7b2-report.md). #1391's full blast radius is now entirely
     # registered and xfailed.
     "summarize-for-recall": _PROMPT_STAGING_GITIGNORE_BUG,
+    # Task 7b-2: a distinct, newly-found bug (not #1391). worker.py's
+    # verify-project-draft dispatch branch (worker.py:680-699)
+    # unconditionally reads `result["max_findings"]` and
+    # `result["triaged_count"]` off knowledge.py:verify_project_draft's
+    # return value, but that function's own "missing-draft" early return
+    # (knowledge.py:2106-2117 — the case where the project has no draft.md
+    # yet, the default state before compose-project-draft has ever run)
+    # omits both keys, so the worker job crashes with `KeyError:
+    # 'max_findings'` instead of completing "done" with
+    # `verification_status: "missing-draft"`. Confirmed live against a real
+    # seeded vault (see task-7b2-report.md). Not yet filed as a GitHub
+    # issue (flagged for the controller in task-7b2-report.md).
+    "verify-project-draft": (
+        "knowledge.py:verify_project_draft's missing-draft early return "
+        "(knowledge.py:2106-2117) omits max_findings/triaged_count, which "
+        "worker.py's verify-project-draft dispatch branch "
+        "(worker.py:680-699) reads unconditionally — every project without "
+        "a draft.md yet (the default pre-compose state) crashes with "
+        "KeyError: 'max_findings' instead of completing done with "
+        "verification_status: 'missing-draft'."
+    ),
+    # Task 7b-2: a third distinct, newly-found bug (not #1391, not the
+    # verify-project-draft KeyError above). write-project-slice itself
+    # completes "done" and writes outline.md correctly — the bug is a side
+    # effect on a DIFFERENT tracked projection. render_project_argument_
+    # canvas (knowledge.py:1735-1743) branches on outline.md's mere
+    # existence: with no outline.md it renders canvas nodes/edges from
+    # analyze_project_argument's full graph traversal; once outline.md
+    # exists it renders from the BM25-ranked project slice instead (a
+    # different, order-dependent node/edge set). check_tracked_projections
+    # (projections.py:56-78) — the floor's own tracked-projection drift
+    # detector, asserted after every operation via assert_invariants — calls
+    # this same render function as its "live" canonical renderer. So any
+    # project whose argument.canvas was already rendered (via
+    # render-project-argument-canvas, e.g. during typed-graph seeding)
+    # *before* its first write-project-slice run is retroactively flagged
+    # "stale" the moment outline.md appears, even though write-project-slice
+    # never touches, recommits, or is documented to invalidate the canvas
+    # file. Confirmed live: assert_invariants' check_tracked_projections
+    # reports `{"path": "projects/package-gate/argument.canvas", "status":
+    # "stale"}` immediately after a real write-project-slice run against the
+    # seed. Not yet filed as a GitHub issue (flagged for the controller in
+    # task-7b2-report.md).
+    "write-project-slice": (
+        "render_project_argument_canvas (knowledge.py:1735-1743) branches "
+        "on outline.md's mere existence, switching from a full "
+        "argument-graph traversal to a BM25-ranked project-slice ordering; "
+        "check_tracked_projections (projections.py:56-78) uses the same "
+        "renderer as its canonical 'expected' value, so write-project-slice "
+        "retroactively marks any pre-existing argument.canvas 'stale' "
+        "without itself regenerating or recommitting it."
+    ),
 }
 
 OPERATION_PARAMS = [

@@ -1049,6 +1049,57 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
+    # worker.py:680-699 pops project_path (required), dispatching to
+    # knowledge.py:verify_project_draft. NEW PRODUCT BUG (not #1391): when
+    # the project has no draft.md yet (build_floor_seed's own baseline
+    # state — write-project-slice/compose-project-draft are each their own
+    # separate registry entries with their own fresh vault clones),
+    # verify_project_draft's "missing-draft" early return
+    # (knowledge.py:2106-2117) omits the `max_findings`/`triaged_count`
+    # keys that worker.py's own dispatch branch unconditionally reads
+    # (worker.py:697-698: `result["max_findings"]`, `result["triaged_count"]`),
+    # so the worker job crashes with `KeyError: 'max_findings'` instead of
+    # returning the designed "done" verification report
+    # (`verification_status: "missing-draft"`). This is the realistic
+    # default state of any project before its first `compose-project-draft`
+    # run — not an edge case. Not yet filed as a GitHub issue (flagged for
+    # the controller in task-7b2-report.md — filing was outside this task's
+    # granted permissions). Registered as `expect: "done"` (the manifest's
+    # actual design intent) and
+    # xfail(strict=True) in test_floor_sweep_operations.py, following the
+    # exact #1391 precedent shape (same "instructed not to force the
+    # assertion, and not to fix out-of-scope product code" rule) — a
+    # distinct bug, its own `_KNOWN_BUGS` entry, not folded into
+    # `_PROMPT_STAGING_GITIGNORE_BUG`.
+    "verify-project-draft": {
+        "payload": {"project_path": "{project}"},
+        "expect": "done",
+    },
+    # worker.py:631-657 pops project_path (required) plus optional
+    # query/limit (both defaulted), dispatching to
+    # knowledge.py:write_project_outline, which BM25-ranks checked notes
+    # against the project's own title/description (when query is omitted)
+    # and writes `outline.md`. Confirmed live: "done", 2 members (the
+    # seed's package-thesis/package-support notes), 1 edge — the op itself
+    # behaves exactly as designed. NEW PRODUCT BUG (not #1391, not
+    # verify-project-draft's KeyError): this "done" run has an undocumented
+    # side effect on a *different* tracked projection — it retroactively
+    # makes the seed's existing `projects/package-gate/argument.canvas`
+    # (rendered during typed-graph seeding, before outline.md existed)
+    # "stale" per `assert_invariants`' tracked-projections check, because
+    # `render_project_argument_canvas` (knowledge.py:1735-1743) switches its
+    # node/edge rendering strategy the moment outline.md exists, and that
+    # same renderer is what `check_tracked_projections` treats as canonical.
+    # xfail(strict=True) in test_floor_sweep_operations.py (its own
+    # `_KNOWN_BUGS` entry) — the per-op "done"/`creates` assertions below
+    # are both genuinely true; only the harness's own later
+    # `assert_invariants(vault)` call fails, which the xfail still catches
+    # (it wraps the whole parametrized test case, not a specific assertion).
+    "write-project-slice": {
+        "payload": {"project_path": "{project}"},
+        "expect": "done",
+        "creates": ["projects/package-gate/outline.md"],
+    },
 }
 
 
