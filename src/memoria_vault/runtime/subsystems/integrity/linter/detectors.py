@@ -143,23 +143,6 @@ def read(p: Path) -> str:
         return ""
 
 
-_FM_KEY = re.compile(r"^\s*([A-Za-z_][\w-]*)\s*:", re.M)
-
-
-def all_frontmatter_keys(text: str) -> set[str]:
-    """Every field name declared in the frontmatter at *any* nesting depth.
-
-    Unlike parse_frontmatter (top-level only), this captures keys nested under
-    blocks like `_proposed_classification:` -- which is where source and note
-    Concepts keep `topics`, `research_area`, `methodology`, etc."""
-    if not text.startswith("---"):
-        return set()
-    end = text.find("\n---", 3)
-    if end == -1:
-        return set()
-    return set(_FM_KEY.findall(text[3:end]))
-
-
 def orphan_working_files(vault: Path) -> list[Finding]:
     out = []
     for p in iter_files(vault):
