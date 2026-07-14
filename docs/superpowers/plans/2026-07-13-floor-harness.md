@@ -80,14 +80,14 @@ existing engine seams: `cli.main`, `http_transport._dispatch`,
   `"test_floor_seed.py": "floor"` … `"test_floor_coverage.py": "floor"`.
   Later tasks rely on `pytest -m floor` selecting exactly these files.
 
-- [ ] **Step 1: Read the current pins**
+- [x] **Step 1: Read the current pins**
 
 Run: `grep -n "TEST_LEVEL_NAMES\|floor" tests/conftest.py tests/test_testing_levels.py pyproject.toml`
 Expected: `TEST_LEVEL_NAMES` frozenset without `floor`; note whether
 `test_testing_levels.py` asserts the roster contents (if it does, it will
 fail after the edit — that is the failing test for this task).
 
-- [ ] **Step 2: Make the change**
+- [x] **Step 2: Make the change**
 
 In `tests/conftest.py`:
 
@@ -117,12 +117,12 @@ In `pyproject.toml` markers list, after the `live` entry:
 If `tests/test_testing_levels.py` pins the roster, update its expected set to
 include `"floor"` the same way.
 
-- [ ] **Step 3: Run the level meta-test**
+- [x] **Step 3: Run the level meta-test**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_testing_levels.py -q`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/conftest.py pyproject.toml tests/test_testing_levels.py
@@ -149,7 +149,7 @@ git commit -m "test: register the floor test level"
     `(vault, manifest)`.
   - `ROOT: Path` — the repo root.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/test_floor_seed.py`:
 
@@ -181,14 +181,14 @@ def test_floor_seed_is_deterministic(tmp_path: Path) -> None:
     assert vault_digest(a) == vault_digest(b)
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_seed.py -q`
 Expected: FAIL — `ModuleNotFoundError: tests.floor_lib` (vault_digest arrives
 in Task 3; stub it as `raise NotImplementedError` for now so this file
 imports — the determinism test stays red until Task 3).
 
-- [ ] **Step 3: Implement the seed in `tests/floor_lib.py`**
+- [x] **Step 3: Implement the seed in `tests/floor_lib.py`**
 
 ```python
 """Floor-harness support: seed, invariants, digest, transports, registries.
@@ -324,12 +324,12 @@ does not create `projects/*/project.md`, read its body in
 `scripts/test_vault/e2e_smoke.py:143` and take the project rel it actually
 writes. Both are exact-file references, consult before changing this module.
 
-- [ ] **Step 4: Run the first test**
+- [x] **Step 4: Run the first test**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_seed.py::test_floor_seed_builds_and_passes_detectors -q`
 Expected: PASS (determinism test still red — Task 3).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/floor_lib.py tests/test_floor_seed.py
@@ -355,7 +355,7 @@ git commit -m "test(floor): seed builder with clone-per-test template"
     digest-after.
   - `REDACTIONS` — the redaction regex table (goldens reuse it).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/test_floor_invariants.py`:
 
@@ -418,12 +418,12 @@ def test_read_only_guard_catches_writes(tmp_path: Path) -> None:
             (vault / "notes/sneaky.md").write_text("x", encoding="utf-8")
 ```
 
-- [ ] **Step 2: Run to verify failures**
+- [x] **Step 2: Run to verify failures**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_invariants.py -q`
 Expected: FAIL — `NotImplementedError` / missing names.
 
-- [ ] **Step 3: Implement in `tests/floor_lib.py`**
+- [x] **Step 3: Implement in `tests/floor_lib.py`**
 
 ```python
 import re
@@ -517,12 +517,12 @@ the seed's `note_claim` is `unchecked` and detectors tolerate that edit,
 switch the target to a `checked` file from the manifest (e.g. the bib
 projection) which `check_tracked_projections` covers.
 
-- [ ] **Step 4: Run all invariant tests + the Task-2 determinism test**
+- [x] **Step 4: Run all invariant tests + the Task-2 determinism test**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_invariants.py tests/test_floor_seed.py -q`
 Expected: PASS (all)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/floor_lib.py tests/test_floor_invariants.py
@@ -551,7 +551,7 @@ git commit -m "test(floor): invariant battery, redacted digest, read-only guard"
     FastMCP call. Skips module-level if `mcp` missing.
   - `MCP_READ_SCOPE: list[str]` — the standard scope for floor MCP calls.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/test_floor_transports.py`:
 
@@ -579,12 +579,12 @@ def test_status_parity_across_transports(tmp_path: Path) -> None:
     assert via_http.keys() == via_mcp.keys()
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_transports.py -q`
 Expected: FAIL — `ImportError: run_cli`.
 
-- [ ] **Step 3: Implement runners in `tests/floor_lib.py`**
+- [x] **Step 3: Implement runners in `tests/floor_lib.py`**
 
 ```python
 MCP_READ_SCOPE = ["notes", "digests", "hubs", "projects", "catalog", "inbox", "system"]
@@ -623,9 +623,9 @@ unwrapping — `tests/test_mcp_transport.py:331`. Match those, not memory. If a
 CLI read command rejects `--json`, add the command to a small
 `CLI_NO_JSON` set and parse accordingly (record it in the ARG_TABLE entry).
 
-- [ ] **Step 4: Run to verify pass** — same command, Expected: PASS.
+- [x] **Step 4: Run to verify pass** — same command, Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/floor_lib.py tests/test_floor_transports.py
@@ -647,7 +647,7 @@ git commit -m "test(floor): in-process CLI/HTTP/MCP runners with status parity"
   `None` means the transport genuinely has no binding for the action
   (must match the contract — the coverage test in Task 7 enforces this).
 
-- [ ] **Step 1: Write the failing sweep**
+- [x] **Step 1: Write the failing sweep**
 
 `tests/test_floor_sweep_reads.py`:
 
@@ -707,9 +707,9 @@ def test_read_action(vault, action_id: str, transport: str) -> None:
     assert_invariants(v)
 ```
 
-- [ ] **Step 2: Run to verify failure** — `ImportError: ARG_TABLE`.
+- [x] **Step 2: Run to verify failure** — `ImportError: ARG_TABLE`.
 
-- [ ] **Step 3: Add ARG_TABLE to `tests/floor_lib.py`**
+- [x] **Step 3: Add ARG_TABLE to `tests/floor_lib.py`**
 
 Seed it with the fully-known entries; `{placeholders}` are manifest keys:
 
@@ -747,12 +747,12 @@ ARG_TABLE: dict[str, dict] = {
 }
 ```
 
-- [ ] **Step 4: Run the sweep for the seeded entries**
+- [x] **Step 4: Run the sweep for the seeded entries**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_sweep_reads.py -q -k "status or operations or concepts"`
 Expected: PASS for filled entries (others KeyError — Task 7 closes them).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/floor_lib.py tests/test_floor_sweep_reads.py
@@ -778,7 +778,7 @@ git commit -m "test(floor): read-action sweep across CLI/HTTP/MCP"
   satisfy still gets an entry with `expect: "refused"` and the exact refusal
   reason asserted — a skip without a registry entry is a coverage failure.
 
-- [ ] **Step 1: Write the failing sweep**
+- [x] **Step 1: Write the failing sweep**
 
 `tests/test_floor_sweep_operations.py`:
 
@@ -835,9 +835,9 @@ def test_operation(tmp_path: Path, operation_id: str) -> None:
     assert_invariants(vault)
 ```
 
-- [ ] **Step 2: Run to verify failure** — `ImportError: OPERATION_REGISTRY`.
+- [x] **Step 2: Run to verify failure** — `ImportError: OPERATION_REGISTRY`.
 
-- [ ] **Step 3: Seed OPERATION_REGISTRY in `tests/floor_lib.py`**
+- [x] **Step 3: Seed OPERATION_REGISTRY in `tests/floor_lib.py`**
 
 ```python
 OPERATION_REGISTRY: dict[str, dict] = {
@@ -883,13 +883,13 @@ OPERATION_REGISTRY: dict[str, dict] = {
 }
 ```
 
-- [ ] **Step 4: Run for the seeded ids**
+- [x] **Step 4: Run for the seeded ids**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_sweep_operations.py -q -k "create_concept or analyze_gaps or falsifiability"`
 Expected: PASS for these (payload-key mismatches are fixed against the
 worker dispatch branch, which is the authoritative payload contract).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/floor_lib.py tests/test_floor_sweep_operations.py
@@ -909,7 +909,7 @@ git commit -m "test(floor): operation sweep with done/refused expectations"
 - Produces: the completeness guarantee — op #55 or action #17 added to the
   product without a floor entry turns the floor red.
 
-- [ ] **Step 1: Write the meta-tests (these are the drivers, written to fail NOW)**
+- [x] **Step 1: Write the meta-tests (these are the drivers, written to fail NOW)**
 
 `tests/test_floor_coverage.py`:
 
@@ -954,10 +954,10 @@ def test_refused_entries_carry_reasons() -> None:
     assert not bad, f"refused without asserted reason: {bad}"
 ```
 
-- [ ] **Step 2: Run — expected FAIL listing every missing id.** This failing
+- [x] **Step 2: Run — expected FAIL listing every missing id.** This failing
   list is the work queue for this task.
 
-- [ ] **Step 3: The completion loop (mechanical, repeat until green)**
+- [x] **Step 3: The completion loop (mechanical, repeat until green)**
 
 For each name in the failure output:
 1. Operation: open
@@ -981,12 +981,12 @@ git add tests/floor_lib.py
 git commit -m "test(floor): registry entries batch N"
 ```
 
-- [ ] **Step 4: Full floor run**
+- [x] **Step 4: Full floor run**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -m floor -q`
 Expected: PASS — every coverage, sweep, invariant, seed, transport test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/test_floor_coverage.py tests/floor_lib.py
@@ -1005,7 +1005,7 @@ git commit -m "test(floor): coverage meta-tests; registries complete"
   against `tests/fixtures/floor/goldens/<name>.json`; writes only when
   `MEMORIA_FLOOR_UPDATE_GOLDENS=1` AND `CI` unset.
 
-- [ ] **Step 1: Write the failing guard tests** (append to
+- [x] **Step 1: Write the failing guard tests** (append to
   `tests/test_floor_coverage.py`):
 
 ```python
@@ -1030,9 +1030,9 @@ def test_golden_mismatch_fails_without_update_flag(monkeypatch) -> None:
         assert_golden("floor-nonexistent-golden", {"x": 1})
 ```
 
-- [ ] **Step 2: Run — FAIL (`assert_golden` missing).**
+- [x] **Step 2: Run — FAIL (`assert_golden` missing).**
 
-- [ ] **Step 3: Implement `assert_golden` in `tests/floor_lib.py`**
+- [x] **Step 3: Implement `assert_golden` in `tests/floor_lib.py`**
 
 ```python
 GOLDENS_DIR = ROOT / "tests/fixtures/floor/goldens"
@@ -1064,14 +1064,14 @@ Then add one line at the end of `test_operation` in
         assert_golden(operation_id, vault_digest(vault))
 ```
 
-- [ ] **Step 4: Generate + review the goldens**
+- [x] **Step 4: Generate + review the goldens**
 
 Run: `MEMORIA_FLOOR_UPDATE_GOLDENS=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_floor_sweep_operations.py -q`
 Then: `git diff --stat tests/fixtures/floor/goldens/` — **read the diff**
 (this is the golden-review ritual the spec mandates), then rerun WITHOUT the
 flag: Expected PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/floor_lib.py tests/test_floor_sweep_operations.py \
@@ -1088,7 +1088,7 @@ git commit -m "test(floor): per-operation golden digests with CI-refused updates
 - Produces: `VARIANTS: dict[str, list[dict]]` — action id → list of param
   overlays; each overlay is one pairwise-chosen combination.
 
-- [ ] **Step 1: Add explicit pairwise tables** (small spaces — all-pairs by
+- [x] **Step 1: Add explicit pairwise tables** (small spaces — all-pairs by
   hand; spec forbids the full cross-product):
 
 ```python
@@ -1105,7 +1105,7 @@ VARIANTS: dict[str, list[dict]] = {
 }
 ```
 
-- [ ] **Step 2: Extend the read sweep** — in
+- [x] **Step 2: Extend the read sweep** — in
   `tests/test_floor_sweep_reads.py`, add a second parametrized test that, for
   each `(action_id, overlay)` in `VARIANTS`, formats the overlay into the
   HTTP query / CLI flags / MCP arguments for that action's ARG_TABLE entry
@@ -1114,9 +1114,9 @@ VARIANTS: dict[str, list[dict]] = {
   `floor_lib.py` that appends `--key value` pairs for CLI, `&key=value` for
   HTTP, and merges dicts for MCP.)
 
-- [ ] **Step 3: Run** `pytest tests/test_floor_sweep_reads.py -q` — PASS.
+- [x] **Step 3: Run** `pytest tests/test_floor_sweep_reads.py -q` — PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/floor_lib.py tests/test_floor_sweep_reads.py
@@ -1128,7 +1128,7 @@ git commit -m "test(floor): pairwise option variants for read actions"
 **Files:**
 - Modify: none (verification only; fixes fold back into their tasks)
 
-- [ ] **Step 1: Full floor suite**
+- [x] **Step 1: Full floor suite**
 
 Run: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -m floor -q`
 Expected: PASS; note the wall-clock (the floor should stay minutes, not
@@ -1136,13 +1136,13 @@ hours — if the per-test seed copy dominates, promote the module-scoped vault
 fixture pattern from `test_floor_sweep_reads.py` to the operation sweep for
 read-only ops only).
 
-- [ ] **Step 2: Confirm the fast gate is untouched**
+- [x] **Step 2: Confirm the fast gate is untouched**
 
 Run: `python3 scripts/verify`
 Expected: unchanged PASS — the floor level is not in verify's roster (spec
 build-order item 2 wires CI).
 
-- [ ] **Step 3: Sanity — completeness proof**
+- [x] **Step 3: Sanity — completeness proof**
 
 Run: `python3 - <<'EOF'
 from memoria_vault.runtime.capabilities import iter_capability_manifests
@@ -1152,12 +1152,26 @@ print(len({m["frontmatter"]["operation_id"] for m in iter_capability_manifests("
 EOF`
 Expected: equal counts.
 
-- [ ] **Step 4: Final commit**
+- [x] **Step 4: Final commit**
 
 ```bash
 git add -u
 git commit -m "test(floor): floor harness complete — every command x every API, invariants + goldens"
 ```
+
+---
+
+## Delivered
+
+Implemented and merged to `main` as commit `e0ff3cfe` (PR #1395 — "test(floor):
+the test-vault floor harness — every command x every API, catalog-driven"),
+145 files changed. Every artifact this plan names shipped: `tests/floor_lib.py`,
+`OPERATION_REGISTRY`, `ARG_TABLE`, the invariant battery, the redacted vault
+digest, in-process CLI/HTTP/MCP runners, per-operation golden digests under
+`tests/fixtures/floor/goldens/`, and the coverage meta-tests
+(`tests/test_floor_coverage.py`). The `floor` pytest level is registered in
+`tests/conftest.py` and `pyproject.toml`, unwired from `scripts/verify` by
+design (CI wiring is spec build-order item 2, out of scope here).
 
 ---
 

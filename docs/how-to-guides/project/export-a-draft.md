@@ -52,7 +52,11 @@ evidence-incomplete, review-required, evidence-text-drift, or
 evidence-text-unbound findings. Repair drift or an unbound claim, then run
 verification again; a PI evidence disposition cannot clear either finding.
 
-**3. Export a manuscript draft to Word with Pandoc when needed.**
+**3. Convert wikilinks before exporting with Pandoc.**
+
+Pandoc does not understand `[[wikilink]]` syntax. Convert any body wikilinks to plain text (or standard Markdown links) before export, or use a Pandoc Lua filter.
+
+**4. Export a manuscript draft to Word with Pandoc when needed.**
 
 Run from the vault root; keep project drafts under the project folder:
 
@@ -66,7 +70,7 @@ pandoc projects/<project>/<draft>.md \
   --output projects/<project>/exports/<output>.docx
 ```
 
-**4. Export a manuscript draft to PDF when needed.**
+**5. Export a manuscript draft to PDF when needed.**
 
 Requires a LaTeX operation (`pdflatex` or `lualatex` on your `PATH`):
 
@@ -81,7 +85,7 @@ pandoc projects/<project>/<draft>.md \
   --output projects/<project>/exports/<output>.pdf
 ```
 
-**5. Export a manuscript draft to clean Markdown when needed.**
+**6. Export a manuscript draft to clean Markdown when needed.**
 
 ```bash
 pandoc projects/<project>/<draft>.md \
@@ -89,10 +93,6 @@ pandoc projects/<project>/<draft>.md \
   --bibliography bibliography.bib \
   --output projects/<project>/exports/<output>.md
 ```
-
-**6. Convert wikilinks first.**
-
-Pandoc does not understand `[[wikilink]]` syntax. Convert any body wikilinks to plain text (or standard Markdown links) before export, or use a Pandoc Lua filter.
 
 ## Verify
 

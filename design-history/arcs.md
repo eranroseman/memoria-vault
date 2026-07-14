@@ -129,7 +129,7 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 
 **Current (as of alpha.20):** SQLite owns catalog Work records, derived passage/query indexes, checks, code artifacts/runs, jobs, costs, incidents, Guard logs, provider payload metadata, `event_log`, empirical-event journal mirrors, and rebuildable `evidence_sets`; markdown/PDF/BibTeX own the human keep-set and survival artifacts, with evidence markers as the canonical draft-side source for evidence-set rows. The runtime schema is `user_version = 8` and legacy DB versions fail fast.
 
-**Pending (unreleased):** Future output work must keep proving crash/rebuild behavior on the full read/write path.
+**Pending (unreleased):** Future output work must keep proving crash/rebuild behavior on the full read/write path. Merged-but-unreleased alpha.21 work has already advanced the schema to `user_version = 12`, adding actor/provenance columns (F1), an immutable `evidence_bindings` block-text-hash ledger, and a `file_baseline` out-of-band change-witness table (PR-MC, PR-CS3); this becomes a Current fact only when alpha.21 closes.
 
 ### (h) Enrichment / graph (DOI, OpenAlex, Crossref — alpha.13/14)
 
@@ -181,7 +181,7 @@ follow.
 
 **Current (as of alpha.20):** Alpha.20 is the current closed checkpoint technical baseline. Its close-out durable record is the frozen chapter, updated arcs, updated latest-checkpoint marker in `design-history/README.md`, and retired scratch release workspace.
 
-**Pending (unreleased):** The beta.1 release workspace must carry open Y-statement decisions until they are implemented, rejected, or folded into the next frozen chapter.
+**Pending (unreleased):** The alpha.21 release workspace must carry open Y-statement decisions until they are implemented, rejected, or folded into the next frozen chapter; beta.1 is the release after that.
 
 ### (k) Roads worked out and set aside
 
