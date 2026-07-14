@@ -67,7 +67,8 @@ eligible bundle Concepts under the configured bundle roots. A direct PI edit
 gets a baseline only after its observed snapshot survives staging and commit; a
 later edit remains dirty for the next sweep. A later mismatch without a matching
 journaled current hash returns a `route: ask` `foreign-edit` finding; removing a
-previously recorded restriction key returns `restriction-key-removed`. These
+tracked restriction key — the `superseded` or `local-only` frontmatter boolean
+recorded as `true` in the baseline — returns `restriction-key-removed`. These
 structured operation findings do not block the file or create an attention
 projection.
 

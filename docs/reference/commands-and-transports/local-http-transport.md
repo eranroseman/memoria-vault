@@ -100,7 +100,13 @@ unscoped; that is appropriate only for a trusted local adapter.
 treated as `{}`. The transport records every operation request with actor
 `agent`; callers cannot select another actor. `agent_identity`, when supplied,
 is provenance metadata. This adapter has no PI request-control or
-evidence-disposition endpoint. The transport records write provenance as:
+evidence-disposition endpoint. Because every request is bound to actor `agent`,
+`POST /operation/run` also cannot invoke the PI- or integrity-reserved
+operations in the
+[Actor Authority Guard](../control-and-policy/control-plane.md#actor-authority-guard):
+the worker fails such a request (`<operation_id> requires <label> actor
+authority`), surfaced through the `Operation ran but worker failed it` →
+`200 {ok: false}` row below. The transport records write provenance as:
 
 ```json
 {"surface": "memoria-http", "command": "http:<operation_id>"}
@@ -151,3 +157,4 @@ No CORS, `OPTIONS`, SSE, or WebSocket behavior is implemented.
 - MCP agent surface: [MCP transport](mcp-transport.md)
 - Command list: [CLI](cli.md)
 - Write boundary: [Policy gate](../control-and-policy/policy-mcp.md)
+- Actor restrictions: [Control plane](../control-and-policy/control-plane.md#actor-authority-guard)

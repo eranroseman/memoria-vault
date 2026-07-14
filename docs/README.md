@@ -20,7 +20,7 @@ If you want a guided first experience, start with the
 something, see [How-to guides](how-to-guides/). If you need exact values, field
 names, or configuration formats, see [Reference](reference/).
 
-**Status: v0.1 alpha source install** — alpha.20 is the latest closed
+**Status: v0.1 alpha source install** — alpha.21 is the latest closed
 checkpoint; the formal package/tag release gate remains open. ·
 [GitHub](https://github.com/eranroseman/memoria-vault) ·
 [Install](https://github.com/eranroseman/memoria-vault#install) ·

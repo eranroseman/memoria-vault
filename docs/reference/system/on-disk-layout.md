@@ -59,7 +59,7 @@ writable runtime directories are created from `folders.yaml`:
 ├── schemas/                 single source for schema contracts
 │   ├── types/<type>.yaml      per-type Concept schemas
 │   └── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
-├── config/                  provider and runtime policy (`providers.yaml`)
+├── config/                  provider config (`providers.yaml`) and the shadow-first feedback flag (`feedback.yaml`)
 │   └── last-backup           gitignored local backup stamp bound to the current blob inventory
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
@@ -104,6 +104,7 @@ The package seed contains only files with direct runtime readers:
 | `.githooks/pre-commit` | Installer copies it to `.git/hooks/pre-commit`; the hook runs schema/frontmatter checks before commit. |
 | `.gitignore` | `memoria init` installs it so generated DBs, journals, indexes, blobs, and local caches stay out of git. |
 | `.memoria/config/providers.yaml` | Provider config for enrichment and operation runners. |
+| `.memoria/config/feedback.yaml` | Shadow-first I1 feedback flag (`production_enabled`, default false), read by `feedback_production_enabled` and surfaced read-only in `memoria doctor bundle`. |
 | `.memoria/eval/alpha15-seeded-errors.json` | Seeded-error verdict bundle read by CLI, worker, and seeded-error runtime tests. |
 | `.memoria/patterns/_preamble.md` | Shared operation prompt preamble read by operation prompt assembly. |
 | `.memoria/schemas/folders.yaml` | Type homes, staging roots, quarantine root, and `memoria init` skeleton. |

@@ -91,6 +91,12 @@ The MCP tool does not accept an actor argument. The server records its
 and final materialization. New Concepts created through `create-concept` remain
 unchecked until the normal check path promotes them.
 MCP exposes no PI request-control or evidence-disposition tool.
+Because every request is bound to actor `agent`, `operation_run` also cannot
+invoke the PI- or integrity-reserved operations in the
+[Actor Authority Guard](../control-and-policy/control-plane.md#actor-authority-guard):
+the worker fails such a request with `<operation_id> requires <label> actor
+authority` before any payload processing, returned as a worker-failed
+(`ok: false`) result.
 
 An idempotency key binds the complete request envelope. Repeating the same
 envelope returns the existing request. A request that reuses the key with a
@@ -136,3 +142,4 @@ instance is required for a different scope.
 - Local editor HTTP surface: [Local HTTP transport](local-http-transport.md)
 - Command list: [CLI](cli.md)
 - Write boundary: [Policy gate](../control-and-policy/policy-mcp.md)
+- Actor restrictions: [Control plane](../control-and-policy/control-plane.md#actor-authority-guard)
