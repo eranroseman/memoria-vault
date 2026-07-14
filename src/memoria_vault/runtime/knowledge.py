@@ -3379,16 +3379,6 @@ def _parse_outline_members(text: str) -> list[dict[str, Any]]:
     return members
 
 
-def _source_rel(path: str) -> str:
-    rel = normalize_path(path)
-    if not rel.startswith("catalog/sources/"):
-        rel = f"catalog/sources/{rel}"
-    rel = rel.rstrip("/")
-    if rel == "catalog/sources" or rel.count("/") != 2:
-        raise ValueError(f"source must be a catalog source row ref: {rel}")
-    return rel
-
-
 def _note_rel(path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel:
