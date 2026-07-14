@@ -59,6 +59,48 @@ def provider_allowlist_issues(config: dict[str, Any], policy: dict[str, Any]) ->
     return issues
 
 
+def _flag_and_commit(
+    vault: Path,
+    source: dict[str, Any],
+    run_id: str,
+    *,
+    status: str,
+    check: str,
+    reason: str,
+    evidence: str,
+    commit_message: str,
+    context: OperationContext,
+    include_run_id: bool = True,
+) -> dict[str, Any]:
+    state.finish_enrichment_run(vault, run_id, status)
+    finding = record_integrity_check(
+        vault,
+        f"catalog/sources/{source['work_id']}",
+        check=check,
+        status="failed",
+        reason=reason,
+        shadow=False,
+        context=context,
+    )
+    attention_path = _write_attention_flag(
+        vault,
+        source,
+        check=check,
+        finding=reason,
+        evidence=evidence,
+    )
+    commit = commit_writer_changes(vault, commit_message, [attention_path], context=context)
+    result = {
+        "enrichment_status": status,
+        "finding": finding,
+        "attention_path": attention_path,
+        "commit": commit,
+    }
+    if include_run_id:
+        result["run_id"] = run_id
+    return result
+
+
 def enrich_source(
     vault: Path,
     work_id: str,
@@ -143,37 +185,18 @@ def enrich_source(
 
     if missing:
         reason = "missing required provider: " + "; ".join(missing)
-        state.finish_enrichment_run(vault, run_id, "needs_human")
-        finding = record_integrity_check(
-            vault,
-            f"catalog/sources/{source['work_id']}",
-            check="source-enrichment",
-            status="failed",
-            reason=reason,
-            shadow=False,
-            context=context,
-        )
-        attention_path = _write_attention_flag(
+        return _flag_and_commit(
             vault,
             source,
+            run_id,
+            status="needs_human",
             check="source-enrichment",
-            finding=reason,
+            reason=reason,
             evidence="Required DOI provider payloads did not all resolve."
             + _provider_hash_evidence(payload_hashes),
-        )
-        commit = commit_writer_changes(
-            vault,
-            f"flag source enrichment {source['work_id']}",
-            [attention_path],
+            commit_message=f"flag source enrichment {source['work_id']}",
             context=context,
         )
-        return {
-            "run_id": run_id,
-            "enrichment_status": "needs_human",
-            "finding": finding,
-            "attention_path": attention_path,
-            "commit": commit,
-        }
 
     canonical = _merge_doi_source(source, payloads, payload_hashes)
     state.replace_external_ids(vault, canonical["external_ids"])
@@ -228,69 +251,33 @@ def enrich_source(
     )
 
     if blocked_status:
-        state.finish_enrichment_run(vault, run_id, blocked_status)
         check = "source-retraction" if blocked_status == "contested" else "source-enrichment"
-        finding = record_integrity_check(
-            vault,
-            f"catalog/sources/{source['work_id']}",
-            check=check,
-            status="failed",
-            reason=canonical["block_reason"],
-            shadow=False,
-            context=context,
-        )
-        attention_path = _write_attention_flag(
+        return _flag_and_commit(
             vault,
             source,
+            run_id,
+            status=blocked_status,
             check=check,
-            finding=canonical["block_reason"],
+            reason=canonical["block_reason"],
             evidence="Provider evidence blocked checked promotion."
             + _provider_hash_evidence(payload_hashes),
-        )
-        commit = commit_writer_changes(
-            vault,
-            f"flag source enrichment {source['work_id']}",
-            [attention_path],
+            commit_message=f"flag source enrichment {source['work_id']}",
             context=context,
         )
-        return {
-            "run_id": run_id,
-            "enrichment_status": blocked_status,
-            "finding": finding,
-            "attention_path": attention_path,
-            "commit": commit,
-        }
 
     if full_text_block:
-        state.finish_enrichment_run(vault, run_id, "needs_human")
-        finding = record_integrity_check(
-            vault,
-            f"catalog/sources/{source['work_id']}",
-            check="source-full-text",
-            status="failed",
-            reason=full_text_block,
-            shadow=False,
-            context=context,
-        )
-        attention_path = _write_attention_flag(
+        return _flag_and_commit(
             vault,
             source,
+            run_id,
+            status="needs_human",
             check="source-full-text",
-            finding=full_text_block,
+            reason=full_text_block,
             evidence="Required provider metadata resolved, but no digestible full text was acquired.",
-        )
-        commit = commit_writer_changes(
-            vault,
-            f"flag source full text {source['work_id']}",
-            [attention_path],
+            commit_message=f"flag source full text {source['work_id']}",
             context=context,
+            include_run_id=False,
         )
-        return {
-            "enrichment_status": "needs_human",
-            "finding": finding,
-            "attention_path": attention_path,
-            "commit": commit,
-        }
 
     candidate_paths = [
         _write_discovery_candidate(vault, source, edge)
