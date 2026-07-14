@@ -12,6 +12,7 @@ from typing import Any
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import OperationContext
+from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_SEED = ROOT / "src/memoria_vault/product/workspace_seed"
@@ -121,6 +122,31 @@ def mark_file_status(
         output_sha256=sha256_file(workspace / rel),
     )
     state.set_concept_verdict(workspace, rel, status)
+
+
+def sync_file_verdicts(vault: Path) -> None:
+    """Mark every checked/rejected concept file under vault with its recorded verdict."""
+    for root in (
+        "catalog",
+        "knowledge",
+        "notes",
+        "hubs",
+        "projects",
+        "digests",
+        "fulltext",
+    ):
+        base = vault / root
+        if not base.exists():
+            continue
+        for path in base.rglob("*.md"):
+            fm = read_frontmatter(path)
+            status = fm.get("check_status")
+            if status not in state.CHECK_STATUSES:
+                continue
+            if fm.get("type") == "source":
+                continue
+            rel = path.relative_to(vault).as_posix()
+            mark_file_status(vault, rel, str(fm.get("type") or "note"), str(status))
 
 
 def write_checked_concept(
