@@ -10,15 +10,15 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from memoria_vault.engine import api as engine_api
-from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_CONTRACT_VERSION
+from memoria_vault.engine.surface_contract import (
+    SURFACE_ACTIONS,
+    SURFACE_CONTRACT_VERSION,
+    http_routes,
+)
 from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 
 MAX_BODY_BYTES = 1_000_000
-HTTP_ROUTES = {
-    (str(action["http"]["method"]), str(action["http"]["path"]))
-    for action in SURFACE_ACTIONS
-    if isinstance(action.get("http"), dict)
-}
+HTTP_ROUTES = http_routes()
 HTTP_PATHS = {path for _method, path in HTTP_ROUTES}
 
 
