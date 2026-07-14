@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
@@ -31,7 +32,6 @@ CONCEPT_HOMES = {
     "project": "projects",
 }
 VIEW_SPEC_VERSION = "view-spec.v1"
-READ_API_VERSION = "engine-read-api.v1"
 
 
 def read_status(workspace: Path) -> dict[str, Any]:
