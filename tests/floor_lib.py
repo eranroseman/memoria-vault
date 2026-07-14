@@ -808,6 +808,88 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "payload": {},
         "expect": "done",
     },
+    # Task 7b-2 (the final 23 ids, alphabetical integrity-link-target-check..
+    # write-project-slice). Every payload key below is read off the worker
+    # dispatch branch (grep '"<id>"' src/memoria_vault/runtime/worker.py),
+    # then run once against a real seeded vault via a scratch probe before
+    # being written here — see task-7b2-report.md for the per-op evidence
+    # trail. This batch also fixes empirical-event-record's own coverage gap
+    # (see its updated entry below) and finds two new product bugs
+    # (verify-project-draft, write-project-slice — see their entries below).
+    #
+    # See integrity-citation-survival-check above for the shared
+    # `_run_integrity_finding_operation` dispatch path (worker.py:356-366 ->
+    # worker.py:1126-1142). check_link_targets (runtime/integrity.py:886)
+    # flags checked Concepts whose declared link targets aren't a checked
+    # current Concept; none of the seed's checked links trip it. Confirmed
+    # live: "done".
+    "integrity-link-target-check": {
+        "payload": {},
+        "expect": "done",
+    },
+    # See integrity-citation-survival-check above for the shared dispatch
+    # path. check_prompt_injection_markers (runtime/integrity.py:211) flags
+    # checked Work text containing seeded prompt-injection markers; the
+    # seed's one checked Work (demo-work) carries none. Confirmed live:
+    # "done".
+    "integrity-prompt-injection-check": {
+        "payload": {},
+        "expect": "done",
+    },
+    # See integrity-citation-survival-check above for the shared dispatch
+    # path. check_provenance_checkpoint (runtime/integrity.py:592) flags
+    # checked notes/digests depending on checked sources with partial or
+    # degraded provider coverage; the seed's checked sources are all "full".
+    # Confirmed live: "done".
+    "integrity-provenance-checkpoint": {
+        "payload": {},
+        "expect": "done",
+    },
+    # See integrity-citation-survival-check above for the shared dispatch
+    # path. check_quote_anchor_support (runtime/integrity.py:264) flags
+    # anchored note quotes absent from their source content; the seed has no
+    # anchored quotes. Confirmed live: "done".
+    "integrity-quote-anchor-check": {
+        "payload": {},
+        "expect": "done",
+    },
+    # worker.py:59, 907-924 pops target_path (required), dispatching to
+    # trusted_writer.py:mark_checked. mark-checked is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op; same actor-check-fires-first
+    # shape as acknowledge-attention (Task 7b-1) — confirmed live: refused
+    # before mark_checked's own body runs, regardless of target_path's real
+    # check status.
+    "mark-checked": {
+        "payload": {"target_path": "{note_claim}"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py:65, 850-906. observe-pi-edits is a PROTECTED_OPERATION_ACTORS
+    # entry whose required actor is the literal string "integrity" (not
+    # "pi") — `_require_operation_actor`'s label is the required actor
+    # itself for any non-"pi" value (worker.py:1122), so the refusal message
+    # is "... requires integrity actor authority", not "PI". Same
+    # actor-check-fires-first shape as the "pi"-protected ops otherwise —
+    # confirmed live.
+    "observe-pi-edits": {
+        "payload": {},
+        "expect": "refused",
+        "reason": "requires integrity actor authority",
+    },
+    # worker.py:62, 700-722 pops project_path (required)/title/passage
+    # (required)/work_id (optional), dispatching to
+    # knowledge.py:promote_draft_passage. promote-draft-passage is a
+    # PROTECTED_OPERATION_ACTORS "pi"-only op; same actor-check-fires-first
+    # shape as acknowledge-attention — confirmed live.
+    "promote-draft-passage": {
+        "payload": {
+            "project_path": "{project}",
+            "title": "Promoted passage",
+            "passage": "Some passage.",
+        },
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
 }
 
 
