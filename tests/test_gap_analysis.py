@@ -7,13 +7,20 @@ from pathlib import Path
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.knowledge import analyze_gaps as _analyze_gaps
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import (
     rebuild_checked_search_index as _rebuild_checked_search_index,
 )
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import WORKSPACE_SEED, _md, call_with_context, copy_memoria_dirs, git, init_git
+from tests.helpers import (
+    WORKSPACE_SEED,
+    _md,
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_git,
+    mark_file_status,
+)
 
 
 def capture_source(vault: Path, *args, **kwargs):
@@ -45,16 +52,6 @@ def _assert_gap_contract(gap: dict[str, object], kind: str) -> None:
     assert isinstance(gap["why"], str) and gap["why"]
     assert isinstance(gap["next_actions"], list)
     assert isinstance(gap["candidate_work_ids"], list)
-
-
-def _checked(vault: Path, rel: str, concept_type: str) -> None:
-    state.record_observed_file_edit(
-        vault,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(vault / rel),
-    )
-    state.set_concept_verdict(vault, rel, "checked")
 
 
 def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
@@ -328,7 +325,7 @@ def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) ->
         "Personal informatics supports reflection.\n",
         encoding="utf-8",
     )
-    _checked(vault, work_rel, "digest")
+    mark_file_status(vault, work_rel, "digest")
 
     result = analyze_gaps(vault, machine="gap-machine")
 
