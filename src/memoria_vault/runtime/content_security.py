@@ -61,17 +61,12 @@ def _markdown_physical_lines(text: str) -> list[str]:
     return [line for line in re.findall(r"[^\n]*(?:\n|$)", text) if line]
 
 
-def _code_span(value: str) -> str:
+def markdown_code_span(value: str) -> str:
     """Return a code span whose delimiter cannot occur in *value*."""
     longest_run = max((len(run) for run in re.findall(r"`+", value)), default=0)
     delimiter = "`" * (longest_run + 1)
     padding = " " if value.startswith("`") or value.endswith("`") else ""
     return f"{delimiter}{padding}{value}{padding}{delimiter}"
-
-
-def markdown_code_span(value: str) -> str:
-    """Return a code span that cannot be closed by *value*."""
-    return _code_span(value)
 
 
 def _replace_inline_link(match: re.Match[str]) -> str:
@@ -80,14 +75,14 @@ def _replace_inline_link(match: re.Match[str]) -> str:
     if destination.startswith("<") and destination.endswith(">"):
         destination = destination[1:-1]
     prefix = rf"\[{label}]" if match.group("image") else label
-    return f"{prefix} ({_code_span(destination)})"
+    return f"{prefix} ({markdown_code_span(destination)})"
 
 
 def _replace_reference_link(match: re.Match[str]) -> str:
     label = match.group(2)
     reference = match.group(3) or label
     prefix = rf"\[{label}]" if match.group("image") else label
-    return f"{prefix} ({_code_span(reference)})"
+    return f"{prefix} ({markdown_code_span(reference)})"
 
 
 def _replace_reference_definition(match: re.Match[str]) -> str:
@@ -100,7 +95,7 @@ def _replace_external_url(match: re.Match[str]) -> str:
     while value and value[-1] in _TRAILING_URL_PUNCTUATION:
         trailing = value[-1] + trailing
         value = value[:-1]
-    return f"{_code_span(value)}{trailing}"
+    return f"{markdown_code_span(value)}{trailing}"
 
 
 def _neutralize_pandoc_attribute_lists(text: str) -> str:
