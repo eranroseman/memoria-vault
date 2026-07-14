@@ -64,7 +64,6 @@ GAP_KINDS = {
     "argument-uncountered",
     "argument-fragile",
     "paper-readiness",
-    "bounded-universe-incomplete",
 }
 _TAG_CANDIDATE_MIN_COUNT = 2
 _TAG_CANDIDATE_LIMIT = 5
