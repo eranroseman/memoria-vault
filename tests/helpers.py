@@ -343,7 +343,9 @@ def note_text(title: str, *, status: str = "checked") -> str:
 
 
 def work_text(title: str, body: str) -> str:
-    return f"---\ntype: digest\ntitle: {title}\ntags: []\nlinks: {{}}\nwork_id: {title}\n---\n{body}\n"
+    return (
+        f"---\ntype: digest\ntitle: {title}\ntags: []\nlinks: {{}}\nwork_id: {title}\n---\n{body}\n"
+    )
 
 
 def write_note(vault: Path, name: str, status: str, body: str) -> Path:
