@@ -40,12 +40,12 @@ class Violation:
 
 def _load_cli_paths(root: Path) -> frozenset[str]:
     sys.path.insert(0, str(root / "src"))
-    from memoria_vault.cli import _build_parser  # noqa: PLC0415
+    from memoria_vault.cli import _build_parser
 
     def walk(parser: argparse.ArgumentParser, prefix: tuple[str, ...] = ()) -> set[str]:
         paths = {prefix} if prefix else set()
-        for action in parser._actions:  # noqa: SLF001
-            if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001
+        for action in parser._actions:
+            if isinstance(action, argparse._SubParsersAction):
                 for name, sub in action.choices.items():
                     paths |= walk(sub, (*prefix, name))
         return paths
@@ -103,7 +103,10 @@ def main(argv: list[str] | None = None) -> int:
     if violations:
         print("doc-claims-gate: FAIL", file=sys.stderr)
         for v in violations:
-            print(f"  {v.file}:{v.line}: {v.kind} '{v.claim}' not found in the shipped surface", file=sys.stderr)
+            print(
+                f"  {v.file}:{v.line}: {v.kind} '{v.claim}' not found in the shipped surface",
+                file=sys.stderr,
+            )
         return 1
     print("doc-claims-gate: clean")
     return 0
