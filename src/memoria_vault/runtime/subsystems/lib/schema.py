@@ -132,6 +132,64 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
     return f"unknown kind {kind!r}"
 
 
+_LINK_TARGET_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+def _normalized_link_target(target: str) -> tuple[str, str | None]:
+    """Return one local Concept target and an invalidity reason, if any."""
+    raw = target.strip()
+    wrapped = raw.startswith("[[") or raw.endswith("]]")
+    if wrapped:
+        if not (raw.startswith("[[") and raw.endswith("]]")):
+            return "", "invalid"
+        raw = raw[2:-2]
+        if "[" in raw or "]" in raw:
+            return "", "invalid"
+        raw = raw.split("|", 1)[0].split("#", 1)[0].strip()
+    elif "[" in raw or "]" in raw:
+        return "", "invalid"
+
+    if not raw:
+        return "", "empty"
+
+    path = raw.replace("\\", "/")
+    if path.startswith("/") or _LINK_TARGET_URI_RE.match(raw):
+        return "", "invalid"
+    if ".." in [part for part in path.split("/") if part and part != "."]:
+        return "", "traversal"
+
+    suffix = Path(path.rsplit("/", 1)[-1]).suffix
+    if suffix and suffix != ".md":
+        return "", "invalid"
+    return raw, None
+
+
+def normalize_link_target(target: str) -> str:
+    """Normalize one valid local Concept target, or return an empty string for junk."""
+    if not isinstance(target, str):
+        return ""
+    return _normalized_link_target(target)[0]
+
+
+def parse_links(links: object) -> list[tuple[str, str]]:
+    """Return ``(relation, normalized target)`` pairs from a links frontmatter map."""
+    pairs: list[tuple[str, str]] = []
+    if not isinstance(links, dict):
+        return pairs
+    for relation, targets in links.items():
+        if (
+            not isinstance(relation, str)
+            or relation not in LINK_RELATIONS
+            or not isinstance(targets, list)
+        ):
+            continue
+        for target in targets:
+            normalized = normalize_link_target(target) if isinstance(target, str) else ""
+            if normalized:
+                pairs.append((relation, normalized))
+    return pairs
+
+
 def _check_links(value) -> str | None:
     if not isinstance(value, dict):
         return f"expected links map, got {type(value).__name__}"
@@ -145,16 +203,13 @@ def _check_links(value) -> str | None:
         for index, target in enumerate(targets):
             if not isinstance(target, str) or not target.strip():
                 return f"links.{relation}[{index}]: expected non-empty target string"
-            raw = target.strip()
-            if raw.startswith("[[") and raw.endswith("]]"):
-                raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
+            raw, reason = _normalized_link_target(target)
             if not raw:
-                return f"links.{relation}[{index}]: expected non-empty target string"
-            if "://" in raw or raw.startswith(("mailto:", "/")):
+                if reason == "traversal":
+                    return f"links.{relation}[{index}]: target must not escape the workspace"
+                if reason == "empty":
+                    return f"links.{relation}[{index}]: expected non-empty target string"
                 return f"links.{relation}[{index}]: expected local Concept target"
-            parts = [part for part in raw.replace("\\", "/").split("/") if part and part != "."]
-            if ".." in parts:
-                return f"links.{relation}[{index}]: target must not escape the workspace"
     return None
 
 

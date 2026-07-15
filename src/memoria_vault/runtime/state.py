@@ -2029,11 +2029,69 @@ def file_index_states(vault: Path) -> dict[str, dict[str, Any]]:
     return {str(row["path"]): dict(row) for row in rows}
 
 
-def replace_concept_edges(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
-    rows = list(rows)
+def replace_concept_edges(
+    vault: Path,
+    rows: Iterable[dict[str, Any]],
+    *,
+    paths: Iterable[str] | None = None,
+) -> dict[str, int]:
+    """Reconcile the links mirror without changing PI-owned tension rows."""
+    target_paths = (
+        {normalize_path(str(path)) for path in paths if normalize_path(str(path))}
+        if paths is not None
+        else None
+    )
+    if target_paths == set():
+        return {"deleted": 0, "inserted": 0}
+
+    mirror_rows = []
+    for value in rows:
+        row = dict(value)
+        relation = _concept_edge_relation(str(row["relation_type"]))
+        if relation == "tension":
+            continue
+        source_path = normalize_path(str(row.get("source_path") or ""))
+        if target_paths is not None and source_path not in target_paths:
+            continue
+        row["relation_type"] = relation
+        mirror_rows.append(row)
+
     with connect(vault) as conn:
-        deleted = conn.execute("DELETE FROM concept_edges").rowcount
-        for row in rows:
+        keep = {
+            (
+                normalize_path(str(row["source_concept_id"])),
+                str(row["relation_type"]),
+                normalize_path(str(row["target_concept_id"])),
+            )
+            for row in mirror_rows
+        }
+        existing = conn.execute(
+            """
+            SELECT source_concept_id, relation_type, target_concept_id, source_path
+            FROM concept_edges
+            WHERE relation_type != 'tension'
+            """
+        ).fetchall()
+        deleted = 0
+        for stale in existing:
+            key = (
+                str(stale["source_concept_id"]),
+                str(stale["relation_type"]),
+                str(stale["target_concept_id"]),
+            )
+            if key in keep:
+                continue
+            if target_paths is not None and str(stale["source_path"]) not in target_paths:
+                continue
+            conn.execute(
+                """
+                DELETE FROM concept_edges
+                WHERE source_concept_id = ? AND relation_type = ? AND target_concept_id = ?
+                """,
+                key,
+            )
+            deleted += 1
+        for row in mirror_rows:
             conn.execute(
                 """
                 INSERT INTO concept_edges(
@@ -2045,17 +2103,22 @@ def replace_concept_edges(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[s
                     updated_at
                 )
                 VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source_concept_id, relation_type, target_concept_id)
+                DO UPDATE SET
+                    check_status = excluded.check_status,
+                    source_path = excluded.source_path,
+                    updated_at = excluded.updated_at
                 """,
                 (
                     normalize_path(str(row["source_concept_id"])),
-                    _concept_edge_relation(str(row["relation_type"])),
+                    str(row["relation_type"]),
                     normalize_path(str(row["target_concept_id"])),
                     _check_status(str(row.get("check_status") or "unchecked")),
                     normalize_path(str(row.get("source_path") or "")),
                     now_iso(),
                 ),
             )
-    return {"deleted": int(deleted), "inserted": len(rows)}
+    return {"deleted": int(deleted), "inserted": len(mirror_rows)}
 
 
 def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:

@@ -1,7 +1,7 @@
 {
   "db": {
     "catalog_sources": 2,
-    "concept_edges": 0,
+    "concept_edges": 1,
     "concepts": 10,
     "event_log": 10,
     "operation_requests": 12,

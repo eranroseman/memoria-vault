@@ -9,6 +9,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib.schema import parse_links
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
@@ -123,6 +124,7 @@ def _passage_row(vault: Path, document: dict[str, Any]) -> dict[str, Any]:
         "check_status": _check_status(vault, path, work_id),
         "mode": str(frontmatter.get("mode") or ""),
         "question_status": str(frontmatter.get("question_status") or ""),
+        "links": frontmatter.get("links") if isinstance(frontmatter.get("links"), dict) else {},
         "source_mtime_ns": _source_mtime_ns(document),
         "embedding_model_id": EMBEDDING_MODEL_ID,
         "vector_dim": VECTOR_DIM,
@@ -131,9 +133,22 @@ def _passage_row(vault: Path, document: dict[str, Any]) -> dict[str, Any]:
 
 
 def _concept_edges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    # ponytail: explicit concept-edge extraction waits for curated link rows; this keeps
-    # the table rebuildable without inventing edges from prose.
-    return []
+    """Mirror each concept's links frontmatter into concept-edge rows."""
+    edges = []
+    for row in rows:
+        if row.get("origin") != "file":
+            continue
+        for relation, target in parse_links(row.get("links")):
+            edges.append(
+                {
+                    "source_concept_id": row["path"],
+                    "relation_type": relation,
+                    "target_concept_id": target if target.endswith(".md") else f"{target}.md",
+                    "check_status": row["check_status"],
+                    "source_path": row["path"],
+                }
+            )
+    return edges
 
 
 def _work_id(frontmatter: dict[str, Any], path: str) -> str:

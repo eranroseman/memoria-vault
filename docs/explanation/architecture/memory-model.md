@@ -50,7 +50,7 @@ saturation) are computed on read or projected one-way, never stored as if
 authored. Files may never self-assert judgment (no verdict fields in
 frontmatter), and any "both places" data must be a declared one-direction
 projection — `bibliography.bib` from the catalog, `concept_edges` from
-frontmatter links **(planned: G2, alpha.22/B1)** — so drift is detectable and
+frontmatter links — so drift is detectable and
 one side is always authority.
 
 ### Provenance actors
