@@ -2412,21 +2412,32 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
     while current not in {0, SCHEMA_VERSION}:
-        if current not in MIGRATIONS:
-            raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
-        to_version, steps = MIGRATIONS[current]
-        if to_version != current + 1:
-            raise RuntimeError(
-                f"migration from schema version {current} must target {current + 1}, "
-                f"not {to_version}"
-            )
-        for step in steps:
-            if callable(step):
-                step(conn)
-            else:
-                conn.execute(step)
-        conn.execute(f"PRAGMA user_version = {to_version}")
-        current = to_version
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            current = int(conn.execute("PRAGMA user_version").fetchone()[0])
+            if current not in {0, SCHEMA_VERSION}:
+                if current not in MIGRATIONS:
+                    raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
+                to_version, steps = MIGRATIONS[current]
+                if to_version != current + 1:
+                    raise RuntimeError(
+                        f"migration from schema version {current} must target {current + 1}, "
+                        f"not {to_version}"
+                    )
+                for step in steps:
+                    if callable(step):
+                        step(conn)
+                    else:
+                        conn.execute(step)
+                conn.execute(f"PRAGMA user_version = {to_version}")
+                current = to_version
+            conn.execute("COMMIT")
+        except BaseException:
+            try:
+                conn.execute("ROLLBACK")
+            except sqlite3.Error:
+                pass
+            raise
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])
     if applied != SCHEMA_VERSION:

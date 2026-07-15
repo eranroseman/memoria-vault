@@ -173,6 +173,51 @@ def test_sqlite_migrations_apply_registered_steps_in_order(
     assert seen_versions == [state.SCHEMA_VERSION - 1]
 
 
+def test_sqlite_migration_step_failure_rolls_back_and_keeps_version(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db = tmp_path / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.execute(f"PRAGMA user_version = {state.SCHEMA_VERSION - 1}")
+
+    monkeypatch.setattr(
+        state,
+        "MIGRATIONS",
+        {
+            state.SCHEMA_VERSION - 1: (
+                state.SCHEMA_VERSION,
+                [
+                    "CREATE TABLE migration_probe (step INTEGER PRIMARY KEY)",
+                    "INSERT INTO missing_table VALUES (1)",
+                ],
+            )
+        },
+    )
+
+    with pytest.raises(sqlite3.OperationalError, match="missing_table"):
+        state.connect(tmp_path)
+
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION - 1
+        assert not conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'migration_probe'"
+        ).fetchone()
+
+
+def test_sqlite_schema_rejects_future_user_version(tmp_path: Path) -> None:
+    db = tmp_path / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.execute(f"PRAGMA user_version = {state.SCHEMA_VERSION + 1}")
+
+    with pytest.raises(
+        RuntimeError,
+        match=f"unsupported Memoria DB schema version: {state.SCHEMA_VERSION + 1}",
+    ):
+        state.connect(tmp_path)
+
+
 def test_sqlite_migrations_refuse_non_sequential_target(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
