@@ -27,6 +27,11 @@ forensic review. Request rows, journal events, and per-request summaries show
 what worker-controlled work accomplished so the PI can inspect a session without
 reading every event.
 
+These two logs are the **audit** and **analytics** planes of the three planes
+described in [Telemetry architecture](telemetry-architecture.md); this page
+does not cover the third (diagnostics), which is intentionally out of the
+session-inspection surface.
+
 The exact paths, writers, and retention contract belong in [Memory
 substrates](../../reference/pipelines-and-io/memory-substrates.md) and [Policy audit
 log](../../reference/control-and-policy/policy-audit-log.md).

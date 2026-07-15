@@ -42,6 +42,9 @@ stance collapse into one operation family.
   and interview flow.
 - Scaffolding a code handoff is a *delegating* stance: the **Engineer** handoff
   posture.
+- Composing project prose from checked claims is a *generative, draft-scoped*
+  stance, so it is the **Writer** posture — bounded to traceable files,
+  verification, and refusal gates rather than open-ended authorship.
 - Deterministic, zero-LLM work has no judgment posture at all. It is simply an
   **operation**: the Linter, sweeps, projections, and rebuilds.
 

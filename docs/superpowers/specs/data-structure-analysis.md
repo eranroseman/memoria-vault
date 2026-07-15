@@ -1,5 +1,21 @@
 # Memoria — data structure: as-built map + clean-slate rethink
 
+> **Superseded status (2026-07-14):** this document is NOT a live backlog.
+> Parts 2, 4, 5, 6, 7, and 8's "clean-slate rethink" proposals — deleting the
+> markdown `work` type, folding `source-note` into `note` as `mode: work`,
+> the `notes/hubs/projects/digests/fulltexts` bundle roots, `work_id`/
+> `item_type` catalog naming, the `passages`/`concept_edges`/`event_log`
+> schema — are **already shipped** (the query-substrate schema landed
+> 2026-07-07 in alpha.19, five days before this document's first commit).
+> Part 1's own "as-built" section was patched in place to describe the new
+> state without updating the surrounding pre-decision text, which is why it
+> now visibly contradicts itself (compare the `BUNDLE_ROOTS` claims a few
+> paragraphs apart). Do not treat any "not yet built" / "no vault has ever
+> been installed" framing in this document as current; check the live schema
+> (`src/memoria_vault/runtime/schema.sql`, `folders.yaml`) and published
+> `docs/reference/data-model/` instead. Kept for its once-useful prior-art and
+> trade-off discussion, not as a to-do list.
+
 > **Eight parts, in the order they were worked.** Part 1 is the exhaustive
 > *as-built* map — read it for "what is." Parts 2, 5, 7 and Part 4's embedded
 > sub-rethink are first-principles redesigns, each following the same

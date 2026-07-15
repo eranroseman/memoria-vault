@@ -44,6 +44,12 @@ not prompt patterns and are listed through `memoria operation list`.
 `project` operations for a writing project, `knowledge` operations for the
 digest-to-note loop, and `both` for library or project use.
 
+`posture` here is a lowercase voice/stance value on the operation manifest
+(matching the operation postures described in [Operation
+postures](../../explanation/execution/operation-postures/README.md)) — it is
+not the same thing as "the Co-PI," the capitalized name for the read-only
+`memoria ask` / `memoria project ask` conversational feature.
+
 ---
 
 ## The prompt-operation shape

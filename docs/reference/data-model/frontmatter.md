@@ -176,7 +176,8 @@ checked against the generated `bibliography.bib`.
 
 ## Related
 
-- The per-document-type field tables: [Document types](document-types.md)
+- The type roster and folder homes (per-type field detail lives in the schema
+  directory, not either page): [Document types](document-types.md)
 - The controlled classification values: [Vocabulary](vocabulary.md)
 - What validates this contract: [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md)
 - Where the schema files live: [On-disk layout](../system/on-disk-layout.md)

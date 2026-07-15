@@ -31,8 +31,8 @@ in [Evidence sets](../control-and-policy/evidence-sets.md).
 
 ## Related
 
-- Field kinds, enums, and per-type field inventory:
-  [Frontmatter fields](frontmatter.md)
+- Field kinds and enum values (no full per-type table exists; the schema
+  directory above is authoritative): [Frontmatter fields](frontmatter.md)
 - The folder tree the homes map into: [On-disk layout](../system/on-disk-layout.md)
 - What enforces the schemas: [Linter: detectors and auto-fix](../analysis-and-surfaces/linter.md) and
   [Policy gate](../control-and-policy/policy-mcp.md)

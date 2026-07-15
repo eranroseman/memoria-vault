@@ -7,7 +7,10 @@ nav_order: 2
 
 # Compose a draft
 
-Use the project WRITE loop when checked notes are ready to become prose.
+Use the project **WRITE loop** — the engine's produce-and-write-back path
+(project slice → outline → draft → verify/export → passage write-back; see
+[Why the write half is bounded](../../explanation/rationale/boundaries/why-write-half-is-bounded.md))
+— when checked notes are ready to become prose.
 
 ## Prerequisites
 

@@ -18,9 +18,9 @@ The short version: the PI works through CLI and files; the engine turns requests
 into checked or staged workspace state; optional adapters can wrap the engine,
 but they do not own the write path.
 
-Who the three actor-kinds are (PI, Agents, Operations), and why the layering
-contract binds only the machine write path, are covered in [The
-vault](vault.md#actor-kinds-and-the-write-path).
+Who the four actor-kinds are (PI, Agents, Operations, and the Integrity
+checker), and why the layering contract binds only the machine write path, are
+covered in [The vault](vault.md#actor-kinds-and-the-write-path).
 
 ## Interaction channels
 
@@ -32,15 +32,20 @@ An optional adapter is not authoritative. Programs may wrap the CLI or watch
 files, but the request queue, operation manifests, policy gate, and journal
 remain the write boundary.
 
+**The 30-minute test.** A signal earns escalation only if it changes what the
+PI should do in the next 30 minutes. Routine progress and quiet/notice-level
+findings stay pull-only; only findings that pass this test may reach alert or
+block loudness (see [Signal routing](#signal-routing)).
+
 ### Signal routing
 
-Linter findings and attention cards are separate signals. Linter findings have
+Linter findings and attention prompts are separate signals. Linter findings have
 severity, which orders their output and determines the linter verdict. Operations
-that create file-backed Inbox attention assign loudness: quiet and notice cards
-remain pull-only, while alert and block cards may push to Telegram when configured.
+that create file-backed Inbox attention assign loudness: quiet and notice prompts
+remain pull-only, while alert and block prompts may push to Telegram when configured.
 A planned Maintenance adapter may collect both sources without conflating them.
 
-Routine attention should not push to the phone. If it does, the card's loudness
+Routine attention should not push to the phone. If it does, the prompt's loudness
 is wrong.
 
 ## Documents in this section

@@ -24,7 +24,6 @@ def test_seeded_probe_batch_is_contained_and_load_capped() -> None:
 
     batch = seeded_probe_review_batch(cases, max_items=1)
 
-    assert batch["production_enabled"] is False
     assert batch["max_items_per_batch"] == 1
     assert len(batch["probes"]) == 1
     probe = batch["probes"][0]

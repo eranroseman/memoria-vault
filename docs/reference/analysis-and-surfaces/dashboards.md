@@ -17,7 +17,7 @@ navigation.
 
 ## Dashboard inventory
 
-| Surface | View | Availability | Backing surface | Shows |
+| Dashboard area | View | Availability | Backing surface | Shows |
 | --- | --- | --- | --- | --- |
 | Queue | Inbox | Shipped CLI/read API | `inbox/` | Daily attention queue (`projection: attention`), surfaced by the request/attention commands. |
 | Maintenance | Maintenance | Planned optional adapter | request/attention/linter reads | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
@@ -26,7 +26,7 @@ navigation.
 | Corpus | Project | Planned optional adapter | `projects/` | Project steering: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | Shipped CLI/read API | `memoria request list` / `memoria attention list` | Queue and attention projections for debugging worker state and PI-facing prompts. |
 | Runtime ops | Audit log | Planned view; log shipped | `system/logs/audit.jsonl` | Recent writes; an adapter may render row-capped views. |
-| Runtime ops | Eval trend | Planned view; metric log shipped | `system/metrics/eval/runs.jsonl` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) — diagnostic, never gating. |
+| Runtime ops | Eval trend | Planned view; metric log shipped | `system/metrics/eval/runs.jsonl` | Quarterly vault-eval capability scores (`recall_at_k`, `support_rate`, `fama_clean`, `evidence_clean`) — diagnostic, never gating. |
 
 The **Surface** column names the corpus home, queue, maintenance collection, or
 support context where a shipped read or planned view belongs.

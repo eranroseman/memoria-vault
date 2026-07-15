@@ -12,7 +12,7 @@ boundary.
 
 ## ACID trust plane
 
-Judgment state — verdicts, provenance, the operation queue, the hash-chained
+Judgment state — verdicts, provenance, the request queue, the hash-chained
 event log — lives in SQLite under `.memoria/`, with WAL, full synchronous
 durability, CHECK constraints, and append-only triggers on the journal. What
 the system asserts about trust is transactional: a verdict either committed

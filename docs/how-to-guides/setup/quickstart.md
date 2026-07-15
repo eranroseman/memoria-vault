@@ -8,12 +8,13 @@ nav_order: 1
 
 # Quickstart
 
-Four steps from zero to an installed standalone CLI/runtime workspace. For the
+Three steps from zero to an installed standalone CLI/runtime workspace. For the
 full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 ## Prerequisites
 
 - Git and Python 3.12+ with venv support on your `PATH`; sandbox images must include Git too.
+- Native Windows 10/11, Ubuntu/Debian, or WSL2. **macOS is not supported.**
 - Provider keys are optional and needed only for live model-backed operations.
   `memoria ask` uses the local checked-only BM25 index and needs no provider key.
 - Obsidian is optional as an app; the workspace seed already includes Memoria's

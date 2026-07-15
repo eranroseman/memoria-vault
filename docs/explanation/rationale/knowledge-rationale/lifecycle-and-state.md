@@ -64,7 +64,7 @@ and `hubs/` are stable paths that never gain or lose members through state
 changes. The policy gate reasons about *where an agent may write*, and the answer
 never shifts under it mid-task.
 
-One consequence to know: attention projections are separate from checked Concepts, so
+One consequence to know: attention items are separate from checked Concepts, so
 "what needs me?" and "what is checked knowledge?" are distinct queries.
 
 ---

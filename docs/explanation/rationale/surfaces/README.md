@@ -1,5 +1,5 @@
 ---
-title: Surfaces
+title: Surface design rationale
 parent: Design rationale
 nav_order: 4
 has_children: true
@@ -7,10 +7,12 @@ permalink: /explanation/rationale/surfaces/
 grand_parent: Explanation
 ---
 
-# Surfaces
+# Surface design rationale
 
 These pages explain the visual and voice constraints for Memoria's Markdown,
-export, and optional editor surfaces.
+export, and optional editor surfaces — distinct from
+[Surfaces](../../surfaces/README.md), which explains the editor/plugin/agent/
+engine division of write authority.
 
 | Page | The question it answers |
 | --- | --- |

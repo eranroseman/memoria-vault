@@ -26,7 +26,7 @@ Ordered steps and the component checklist are owned by [Installer (bootstrap)](.
 One installer-specific sequencing choice worth calling out: Zotero stays outside
 the installer. It is an optional import/export workflow, not core provisioning,
 so its setup lives in the dedicated Zotero how-to. Optional adapters may wrap the
-CLI/engine, but this bootstrap path is standalone.
+CLI/runtime, but this bootstrap path is standalone.
 
 The install contract is narrow: fresh install, detect-then-install, no
 clobbering user content, no writing secrets, and no in-place release migration.

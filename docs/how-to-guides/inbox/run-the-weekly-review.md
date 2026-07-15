@@ -15,7 +15,7 @@ success**.
 ## Prerequisites
 
 - A local workspace available to the `memoria` CLI
-- The CLI attention, request, list, and linter commands available
+- The CLI attention, request, list, and Linter commands available
 
 ## Steps
 
@@ -33,7 +33,7 @@ weekly review is the backstop that keeps the queue from aging past a week.
 
 **Step 3 — Run the structural checks (5 min).**
 
-Run the vault-local linter and read its JSON report by severity:
+Run the vault-local Linter and read its JSON report by severity:
 
 ```bash
 ./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors \
@@ -81,11 +81,11 @@ severity meanings are in [Run the Linter](../operate/run-the-linter.md).
 
 - `memoria attention list --workspace . --json` has no open item that needs PI action
 - No stale unchecked note backlog remains
-- A fresh linter run has no HIGH or CRITICAL finding
+- A fresh Linter run has no HIGH or CRITICAL finding
 - `steering.md` reflects what you actually intend to read next week
 
 ## Related
 
 - The Inbox discipline: [Work the action queue](work-the-action-queue.md)
-- The detectors behind Maintenance drift watch: [Run the Linter](../operate/run-the-linter.md)
+- The detectors behind Drift watch: [Run the Linter](../operate/run-the-linter.md)
 - The dashboard inventory: [Dashboards](../../reference/analysis-and-surfaces/dashboards.md)

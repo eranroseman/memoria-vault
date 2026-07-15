@@ -1,6 +1,6 @@
 ---
 title: Design system
-parent: Surfaces
+parent: Surface design rationale
 grand_parent: Design rationale
 nav_order: 1
 ---

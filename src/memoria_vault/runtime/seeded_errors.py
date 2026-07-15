@@ -70,7 +70,6 @@ def seeded_probe_review_batch(
             }
         )
     return {
-        "production_enabled": False,
         "max_items_per_batch": max_items_per_batch,
         "sentinel": SEEDED_PROBE_SENTINEL,
         "probes": probes,
@@ -578,7 +577,7 @@ def run_seeded_error_verdict(
         "detection_timing_by_error_class": detection_timing_by_error_class,
         "metrics": metrics,
         "bar_failures": bar_failures,
-        "calibration": {"production_enabled": False, "max_items_per_batch": 5},
+        "calibration": {"max_items_per_batch": 5},
         "review_batch": seeded_probe_review_batch(bundle["cases"]),
         "by_error_class": by_error_class,
         "detected": detected,

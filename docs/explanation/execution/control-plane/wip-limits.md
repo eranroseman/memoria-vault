@@ -8,8 +8,9 @@ nav_order: 4
 # WIP limits and back-pressure
 
 Back-pressure exists to make overload visible before it becomes rubber-stamping.
-In the standalone baseline, concurrency belongs to the engine/runner and to any
-operator-managed scheduler that invokes it. The current reference records that
+In the standalone baseline, concurrency belongs to the worker (and, for prompt
+operations, the runner it invokes) and to any operator-managed scheduler that
+invokes it. The current reference records that
 external-board WIP caps are not a baseline control:
 [Control plane reference](../../../reference/control-and-policy/control-plane.md#wip-limits).
 
@@ -18,7 +19,7 @@ external-board WIP caps are not a baseline control:
 Parallel runs that write the same output family would contend for the same write
 scope and make the audit trail ambiguous about which request touched which file.
 The design principle is to keep each write attributable to one request; exact
-runtime concurrency rules belong to the worker/runner contract and reference.
+runtime concurrency rules belong to the worker's own contract and reference.
 
 The same pressure applies to idempotent-but-not-output-stable work such as source
 ingest: repeated runs may refresh metadata, but they should not race each other.

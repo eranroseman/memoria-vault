@@ -96,6 +96,13 @@ payloads may narrow that scope, but never widen it.
 CLI commands, scans, and scheduled tasks create request rows, and the worker runs
 pending jobs.
 
+**Runner** — the model-provider execution backend resolved for one prompt
+operation invocation (test vs. live mode, provider, model, base URL); see
+`resolve_operation_runner` in [Operations](../commands-and-transports/operations.md).
+Distinct from the **worker** (the request-dispatch loop that runs both
+prompt and deterministic operations) and the **engine** (the whole
+verdict-tagged read/write API surface, `src/memoria_vault/engine/`).
+
 **Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Control plane reference](../control-and-policy/control-plane.md).
 
 **Task/request** — a unit of work represented by a SQLite request row. Attention
@@ -114,6 +121,17 @@ sweep in any editor or adapter view.
 `alert`, `work-prompt`) carrying PI-facing work. It is not a durable Concept;
 the owning state is SQLite event-log, check, and queue data. Per-machine journal
 JSONL files are derived synchronization exports.
+
+**Concept** — the umbrella name for every typed document Memoria manages
+(`note`, `hub`, `project`, `digest`, `fulltext`, `code-artifact`): YAML
+frontmatter declaring a schema-backed type, followed by a Markdown body. See
+[Document types](document-types.md) for the full roster and folder homes.
+
+**Work** — a catalog source's SQLite record (title, identifiers, provenance,
+`work_id`); not a markdown Concept type. A Work's only file-backed keep-set
+presence is its `digests/<work_id>.md` digest and `fulltexts/<work_id>.md`
+reproduction. Human interpretation of a Work lives in a `note` with `mode:
+work`.
 
 **Hub** — a checked `hub` Concept in `hubs/` aggregating a topic's
 members and links. Machine-curated hub changes are suggestions until the PI

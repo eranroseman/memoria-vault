@@ -49,7 +49,7 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | Option | Output format | Use case | Tool chain |
 | --- | --- | --- | --- |
 | **Memoria project export** | `.md` / `.docx` / `.pdf` / `.odt` | Checked project composition or review packet | `memoria project export <project> --format <format> --output <path> [--ready-only]` |
-| **Memoria draft export** | `.md` / `.docx` / `.pdf` / `.odt` | Verified `projects/<project>/draft.md` with evidence markers converted to citations | `memoria project export <project> --draft --format <format> --output <path> [--ready-only]` |
+| **Memoria draft export** | `.md` / `.docx` / `.pdf` / `.odt` | Checked `projects/<project>/draft.md` with evidence markers converted to citations | `memoria project export <project> --draft --format <format> --output <path> [--ready-only]` |
 | **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography bibliography.bib --csl .memoria/csl/<style>.csl` |
 | **B — Live Word fields** | `.docx` with Zotero fields | Advisor feedback rounds on Word | Pandoc + `zotero.lua` filter → Word + Zotero plugin |
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |

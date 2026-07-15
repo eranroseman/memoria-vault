@@ -1,6 +1,6 @@
 ---
 title: Visual discipline
-parent: Surfaces
+parent: Surface design rationale
 grand_parent: Design rationale
 nav_order: 2
 ---
@@ -57,7 +57,7 @@ entry points plus CLI/read-API views; `spaces/` is not part of the current seed.
 The proof adapter is a control surface over local
 HTTP, not a saved workspace layout. The historical
 workspace-swap model lives in [UI / navigation design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md#i-ui--navigation--the-alpha7-clean-slate);
-the current boundary is the engine/read-API surface.
+the current boundary is the CLI/read-API surface.
 
 ---
 

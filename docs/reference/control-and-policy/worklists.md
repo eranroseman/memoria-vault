@@ -38,7 +38,7 @@ The report must contain either `items` or `rows` as a list. Each row may be an o
 
 Row objects may include `title` or `name`, `item_ref` or `target` or `path` or `citekey` or `url` or `id`, `group` or `category`, `decision`, `rank`, `reason`, `evidence`, and `source_report`.
 
-`decision` defaults to `proposed` and must be one of `proposed`, `include`, `exclude`, `maybe`, or `archived`.
+`decision` defaults to `proposed` and must be one of `proposed`, `include`, `exclude`, `maybe`, or `archived` — this is the worklist-row `decision` enum, unrelated to the disposition `decision` enum (`accept`/`reject`/`edit`/`defer`/`override`/`abandon`) documented in [Empirical events](empirical-events.md#base-fields).
 
 Report-derived titles, reasons, and aggregate-prompt prose are untrusted display
 text. Apply neutralizes image/embed syntax, raw HTML, and external URLs in those

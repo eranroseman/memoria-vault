@@ -13,6 +13,56 @@ There is no release automation and no formal tagged release yet; installs run
 from current `main`. The earlier `v0.1.0`–`v0.3.2` tags were artifacts of the
 removed release-please setup, not real releases, and have been deleted.
 
+## [0.1.0a21] - 2026-07-14
+
+Alpha.21 is a source-install checkpoint, not a formal tag or GitHub Release.
+It hardens the machinery alpha.20 delivered into enforceable, verifiable
+behavior — provenance-honest actor authority, a verifiable journal, durable
+off-machine backup, and honest control surfaces — then hardens the content
+layer against untrusted markdown and plants the feedback-instrumentation seam.
+
+### Changed
+
+- Added per-operation actor enforcement: every mediated write consumes a
+  validated `OperationContext` (`pi | agent | operation | integrity`), and a
+  fixed `PROTECTED_OPERATION_ACTORS` map reserves destructive operations
+  (`cascade-rollback`, `mark-checked`, `promote-draft-passage`, and peers) to
+  the required actor, checked before any payload processing.
+- Made `memoria journal verify` the one authoritative trust-read path over the
+  `event_log` hash chain, checking the chain, live-tip anchor, committed-anchor
+  prefix, and JSONL export subset together.
+- Added `memoria workspace backup`/`restore`/`recover` for durable, PI-only,
+  off-machine snapshots (SQLite, blobs, journal head), with `memoria doctor`
+  failing when a blob has no corresponding backup coverage.
+- Fixed control-surface honesty gaps: `_emit` no longer reports successes it
+  did not perform, `list --type work` and `new-note --mode work` work
+  correctly, dead CLI knobs were removed, and `argument.canvas` projection
+  drift is now covered by the tracked-projection check.
+- Added content-security hardening: `neutralize_untrusted_markdown` masks
+  machine- or third-party-derived markdown at operation/knowledge field
+  boundaries and the export choke; an insert-only `evidence_bindings` ledger
+  binds evidence markers to their exact cited text; a `file_baseline` table
+  witnesses foreign edits and restriction-key removal outside the operation
+  envelope.
+- Bumped the runtime SQLite schema to `user_version = 12`.
+- Added `empirical_event.v1` `loudness` and `staleness_hit` fields and a
+  server-side `disposition.v1` journal event emitted from `resolve-attention`,
+  as the first (non-backfillable) slice of the I1 feedback-instrumentation
+  seam; the dashboard and full package remain deferred to beta.1.
+- Folded the pre-`main` corpus doctrine into the published Diátaxis `docs/`
+  tree and retired `docs/superpowers/` as the tracked-but-unpublished working
+  design record.
+- Widened `scripts/verify` to also run the `runtime`, `package`, and `floor`
+  test levels (only `live` stays out of the gate).
+
+### Release management
+
+- The Python package version is `0.1.0a21`.
+- `release-please` remains `workflow_dispatch`-only and was not dispatched for
+  this checkpoint; no tag or GitHub Release is cut.
+- Formal release-please versioning, generated release notes, tags, and GitHub
+  Releases remain deferred until the first real release.
+
 ## [0.1.0a20] - 2026-07-08
 
 Alpha.20 is a source-install checkpoint, not a formal tag or GitHub Release.

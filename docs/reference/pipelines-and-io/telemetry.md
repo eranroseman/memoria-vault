@@ -38,9 +38,10 @@ Rationale: [the vault-eval-benchmark-first publication path](https://github.com/
 
 The authoritative operational state is `.memoria/memoria.sqlite`; logs are
 evidence streams and diagnostics, not a second state store.
-Attention dispositions currently live in resolved `inbox/*.md` projections and
-request/journal evidence; no runtime writer produces `attention.jsonl` or
-`triage.jsonl`.
+Resolved attention items currently live in `inbox/*.md` projections and
+request/journal evidence (the PI's disposition — accept, reject, or defer — is
+recorded there, not in a separate log); no runtime writer produces
+`attention.jsonl` or `triage.jsonl`.
 
 ## Log schemas
 

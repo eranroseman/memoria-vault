@@ -39,6 +39,7 @@ Where every file lives.
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
     ├── manifest.jsonl         generated visible audit manifest
+    ├── logs/                  audit.jsonl, lint-findings.jsonl, sessions/*.jsonl
     └── metrics/               exported metrics
 ```
 
@@ -63,7 +64,9 @@ writable runtime directories are created from `folders.yaml`:
 │   └── last-backup           gitignored local backup stamp bound to the current blob inventory
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
+├── overrides.jsonl          Git-tracked log of PI overrides recorded at init and beyond
 ├── blobs/                   gitignored provider payloads and staged source content
+├── code-runs/<run-id>/      gitignored recorded code-execution run artifacts
 ├── journal/                 derived per-machine JSONL synchronization exports
 ├── journal-head             Git-tracked live hash-chain tip for the event log
 ├── backup-transaction.json  Git-ignored identity-bound backup recovery marker
