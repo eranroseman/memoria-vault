@@ -24,15 +24,15 @@ judgment to the one human. It should feel like a co-PI, not a knowledge base.
   `verify` and `gitleaks` checks.
 - **Merge** by squash. No required commit-message format (Conventional Commits
   earns back with release tooling).
-- **Sessions each work in their own worktree.** The git index is shared per
-  checkout, so two sessions in one checkout can sweep each other's staged files
-  into a commit — stage explicit paths, never `git add -A`.
+- **The git index is shared per checkout** — two sessions in one checkout can
+  sweep each other's staged files into a commit. Stage explicit paths, never
+  `git add -A`; see Cross-tool parity for per-tool isolation.
 - **Test only against disposable vaults under `test-vault/`** (never a personal
   vault). The installed test-vault carries its own nested `.git` (vault
   versioning is product behavior) and must stay reconstructible — `git clean
   -fdx` destroys it.
-- **Obsidian** is seeded by `memoria init` unless `--no-obsidian`; it is not
-  required. Zotero, MCP hosts, and external editors are optional adapters.
+- **Obsidian** is seeded by `memoria init` unless `--no-obsidian`. Zotero, MCP
+  hosts, and external editors are optional adapters.
 - **When layers disagree, trust order is schema → tests → code → docs.**
 
 ## Code shape
@@ -56,13 +56,17 @@ judgment to the one human. It should feel like a co-PI, not a knowledge base.
 
 ## Cross-tool parity (Codex, Kilo)
 
-Codex and Kilo read this file natively. Two justified asymmetries, same outcome
-by platform-appropriate mechanism:
+Codex and Kilo read this file natively. Justified asymmetries, platform-
+appropriate mechanism per case:
 
 - **Security review:** Claude runs it through always-on security-guidance hooks;
   Codex has no passive-hook equivalent, so it runs an explicit `codex-security`
   scan on installer or runtime-policy changes.
 - **Write perimeter:** Claude via native permission prompts and bash sandboxing;
   Codex via the sandbox's `writable_roots`.
+- **Session isolation:** Codex isolates each session in its own worktree by
+  default; Claude has to run `git worktree add .worktrees/<name> -b
+  wip/<name> origin/main`, then `EnterWorktree(path: ".worktrees/<name>")`
+  before editing.
 
 `CLAUDE.md` is a loader (`@AGENTS.md`) with no content of its own.
