@@ -86,6 +86,29 @@ are derived exports for synchronization. `memoria workspace scan` holds the
 workspace writer lock while it verifies the chain and export subset, removes an
 incomplete final JSONL fragment, and re-emits any missing export rows.
 
+### Schema versioning: numbered migrations
+
+`memoria.sqlite` carries its schema version in SQLite `PRAGMA user_version`
+(`SCHEMA_VERSION` in `memoria_vault.runtime.state`; the full schema is
+`memoria_vault/runtime/schema.sql`). Schema changes follow the numbered
+migrations rule:
+
+- Every schema change increments `SCHEMA_VERSION` by exactly one and updates
+  the trailing `PRAGMA user_version` in `schema.sql` to match.
+- The same change registers one `state.MIGRATIONS` entry keyed by its
+  `from_version`: `{from_version: (from_version + 1, [SQL statements or
+  callables])}`. Each entry is one version step; startup follows registered
+  entries sequentially.
+- Before deciding which step to run, the runtime starts `BEGIN IMMEDIATE` and
+  rereads `PRAGMA user_version`. This serializes migration writers and prevents
+  a stale opener from applying a step chosen before it acquired the write lock.
+- One registered step list and its `user_version` bump commit in that
+  transaction. If a step fails, the transaction rolls back, including the
+  version bump.
+- A noncurrent version with no registered migration path — including a database
+  written by a newer Memoria — fails closed with an error instead of applying
+  the schema.
+
 Backups live outside this tree. `memoria workspace backup <target>` publishes a
 manifest-bound SQLite/blob/head snapshot; `last-backup` records the target and
 blob inventory used by the failing doctor health check. See
