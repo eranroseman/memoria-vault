@@ -14,6 +14,6 @@ Start here when the rest of the design vocabulary is unfamiliar.
 
 | Page | The question it answers |
 | --- | --- |
-| [What Memoria is](what-memoria-is.md) | What the system is, what it is not, and where the autonomy boundary starts |
-| [Intellectual foundations](intellectual-foundations.md) | The four pillars Memoria stands on — LLM-Wiki, Zettelkasten, Toulmin, autoresearch — plus the AI-research-systems survey |
 | [Design principles](design-principles.md) | Which rules settle ambiguous design choices |
+| [Intellectual foundations](intellectual-foundations.md) | The four pillars Memoria stands on — LLM-Wiki, Zettelkasten, Toulmin, autoresearch — plus the AI-research-systems survey |
+| [What Memoria is](what-memoria-is.md) | What the system is, what it is not, and where the autonomy boundary starts |

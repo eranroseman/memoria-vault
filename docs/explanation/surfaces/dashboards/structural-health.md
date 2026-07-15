@@ -17,7 +17,7 @@ loose ends, Board state, and a weekly maintenance agenda.
 The planned Drift watch combines linter findings with open `flag` and `alert`
 attention items created by separately invoked integrity and verification
 operations. The linter reports severity-ranked findings; it does not write
-attention cards. The view would keep those inputs distinct while prioritizing
+attention prompts. The view would keep those inputs distinct while prioritizing
 urgent work in the rail health band.
 
 It is not the audit log or eval trend. Those are operational evidence; a Drift

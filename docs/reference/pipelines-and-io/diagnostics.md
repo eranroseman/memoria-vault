@@ -23,9 +23,11 @@ Local troubleshooting records for Memoria-owned Python runtime modules and Opera
 | Redaction self-test | `python3 -m memoria_vault.runtime.diagnostics --self-test` |
 
 Diagnostic detail fields hash strings and paths instead of writing them verbatim.
-The user-triggered bundle is a compressed archive with a README and redacted JSONL
-files; review it before sharing. Use `--include-raw` only when a one-shot raw
-capture was deliberately enabled and the redacted payload is needed for support.
+The user-triggered **diagnostics bundle** (`--bundle`, above) is a compressed
+archive with a README and redacted JSONL files; review it before sharing. Use
+`--include-raw` only when a one-shot raw capture was deliberately enabled and
+the redacted payload is needed for support. This is a different artifact from
+`memoria doctor bundle`'s health-check output.
 
 ## Related
 

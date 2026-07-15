@@ -19,6 +19,9 @@ The three planes answer different questions. Audit asks whether an authorized
 write happened and what changed. Analytics asks how the system is performing
 over time. Diagnostics asks why Memoria-side code failed. They stay separate
 because each plane has a different retention, privacy, and trust requirement.
+[Session logging](session-logging.md) covers the audit and analytics planes
+from the PI's session-inspection point of view; this page is the operating
+model for all three.
 
 ## How the planes differ
 

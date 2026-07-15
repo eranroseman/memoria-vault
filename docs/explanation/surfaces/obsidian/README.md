@@ -52,7 +52,7 @@ trusted-writer path.
 | [Visual discipline](../../rationale/surfaces/visual-discipline.md) | The restraint that makes the above work — bounded visual signals, hidden chrome, and why each default is deliberate.                                    |
 | [Design system](../../rationale/surfaces/design-system.md)               | The cross-context visual and voice spec — why a portable design system exists, and why the specific choices are what they are. |
 
-The shipped CLI/read-model data and planned **dashboards** have their own
+The shipped CLI/read-API data and planned **dashboards** have their own
 section: [explanation/surfaces/dashboards/](../dashboards/README.md).
 
 ---

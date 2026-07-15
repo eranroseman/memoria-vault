@@ -52,7 +52,7 @@ attributes, become literal. Top-level fence attributes are stripped; ambiguous
 container-nested fence headers are made literal. Malformed or unclosed code
 candidates are treated as prose. This applies to prompt reports, digest and hub
 suggestions, note candidates, generated outlines and drafts, promoted draft
-passages, provider attention cards, worklists, and extracted-edge prompts.
+passages, provider attention prompts, worklists, and extracted-edge prompts.
 
 `stage_concept` and the shared Inbox writers remain byte-preserving
 mixed-author seams. They cannot infer which substring a human authored. Their

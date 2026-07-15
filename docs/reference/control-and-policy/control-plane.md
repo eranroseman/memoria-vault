@@ -61,6 +61,12 @@ and the rejected job appends zero `event_log` rows.
 | `pi` | `acknowledge-attention`, `resolve-attention`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback` |
 | `integrity` | `trace-integrity-scan`, `observe-pi-edits` |
 
+A few CLI-only PI actions — `memoria project resolve-evidence` among them —
+are not worker operations dispatched through this table at all; they enforce
+PI-only authority directly in the CLI handler (`_require_pi_actor`) before
+calling their runtime function. The table above is the complete list of
+*worker-dispatched* protected operations, not of every PI-only action.
+
 ## WIP Limits
 
 The standalone runtime does not enforce external board WIP limits. Concurrency

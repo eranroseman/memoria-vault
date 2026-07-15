@@ -15,7 +15,7 @@ only when you need the extra detail.
 
 | Guide | What it covers |
 | --- | --- |
-| [Quickstart](quickstart.md) | Four-step fast path for a new machine |
+| [Quickstart](quickstart.md) | Three-step fast path for a new machine |
 | [Set up the vault](set-up-the-vault.md) | Clone the repo and run the install script |
 
 ## Optional setup

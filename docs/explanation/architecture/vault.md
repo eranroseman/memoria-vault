@@ -47,11 +47,17 @@ surfaces that require passing checks can consume them.
 
 ## Actor-kinds and the write path
 
-The PI owns judgment, curation, and attention disposition. Runner-backed agents
-and optional adapters may propose; deterministic operations may report or
-materialize bounded outputs. Only the trusted worker materializes outputs after
-runtime checks, and the PI separately disposes attention and curation decisions. Why
-that boundary is structural rather than a convention is [Why the review gate is
+Every mediated write carries exactly one declared actor: `pi`, `agent`,
+`operation`, or `integrity`. The PI owns judgment, curation, and attention
+disposition. Runner-backed agents and optional adapters may propose;
+deterministic operations may report or materialize bounded outputs; the
+integrity actor runs scans and edit-observation sweeps that no other actor may
+invoke. A fixed guard rejects the wrong actor for a protected operation before
+any payload processing (see [Control plane
+reference](../../reference/control-and-policy/control-plane.md#actor-authority-guard)).
+Only the trusted worker materializes outputs after runtime checks, and the PI
+separately disposes attention and curation decisions. Why that boundary is
+structural rather than a convention is [Why the review gate is
 structural](../rationale/boundaries/why-review-gate-is-structural.md).
 
 The strict each-layer-depends-only-on-the-one-below contract holds along this

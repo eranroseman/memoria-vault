@@ -21,9 +21,9 @@ For linter findings, severity alone controls the verdict:
 | `LOW` | `PASS` when no higher-severity finding exists |
 
 Attention loudness is independent metadata assigned by operations that create
-attention cards; there is no automatic severity-to-loudness mapping. Open
-`loudness: block` cards affect only the optional policy-hook path, and
-alert/block cards attempt a Telegram push only when that adapter is configured.
+attention prompts; there is no automatic severity-to-loudness mapping. Open
+`loudness: block` prompts affect only the optional policy-hook path, and
+alert/block prompts attempt a Telegram push only when that adapter is configured.
 The standalone CLI/worker path is not paused by loudness.
 
 ---

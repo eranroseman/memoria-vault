@@ -14,6 +14,11 @@ the selected product answer mode. To rebuild a stale index, see
 to query conversationally, see
 [Query the vault](../../how-to-guides/knowledge/query-the-vault.md).
 
+Bare "manifest" on this page always means the search-index manifest
+(`.memoria/index/search/manifest.json`) — distinct from the operation,
+capability, backup, and audit manifests documented elsewhere in the reference
+tier.
+
 Memoria builds the disposable input tree from checked retrieval documents and
 keeps product reads behind the checked-only read barrier. There is no required
 external retrieval executable in the shipped product. `sqlite-vec` is optional

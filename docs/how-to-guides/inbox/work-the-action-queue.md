@@ -7,12 +7,12 @@ nav_order: 2
 
 # Work the action queue
 
-Clear the Inbox items waiting on your judgment. Work this guide when **Needs
-me** has open proposals, gaps, or work prompts.
+Clear the Inbox items waiting on your judgment. Work this guide when
+the action queue has open proposals, gaps, or work prompts.
 
 ## Prerequisites
 
-- Open `candidate`, `gap`, or `work-prompt` attention items in **Needs me**
+- Open `candidate`, `gap`, or `work-prompt` attention items in the action queue
 
 ## Steps
 
@@ -67,9 +67,9 @@ attention items before adding more requests.
 
 ## Verify
 
-- No Needs me item sits open longer than your review cadence
+- No action-queue item sits open longer than your review cadence
 - Every accepted proposal resulted in a checked worker promotion or a change made by your hand; rejected items left nothing behind
-- the Inbox's **Needs me** view is empty at the end of the pass
+- the action queue is empty at the end of the pass
 
 ## Related
 

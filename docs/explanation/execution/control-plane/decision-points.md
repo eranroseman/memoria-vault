@@ -7,9 +7,11 @@ nav_order: 3
 
 # Decision points
 
-Not every Inbox item asks for the same kind of human action. Memoria keeps three
-decision shapes separate so the daily queue does not become a pile of fake
-decisions.
+Not every Inbox item asks for the same kind of human action. Memoria keeps
+three decision shapes — Review gates, Work prompts, and Batch worklists —
+separate from two non-decision mechanisms — Automated steps and Workflow
+triggers — that share the same Inbox space but never require PI judgment, so
+the daily queue does not become a pile of fake decisions.
 
 ## Review gates
 
@@ -31,7 +33,10 @@ High-cardinality decisions become one worklist, not many prompts. When a coverag
 report finds forty sources to screen, the Inbox gets one aggregate prompt that
 points to a file-backed worklist where each row carries its own decision field.
 Optional editor views may render the same rows, but they do not own the worklist.
-Forty prompts would flood a queue meant to converge to zero.
+Forty prompts would flood a queue meant to converge to zero. The aggregate
+prompt itself uses the Proposal shape from [the honesty
+prompt](honesty-card.md); the worklist is what's aggregated, not a fourth
+prompt shape.
 
 ## Automated steps
 

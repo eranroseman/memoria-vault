@@ -107,8 +107,10 @@ treated as cheaper than a premature navigation page.
 | `hub` | `hubs/<topic>.md` | `jitai.md` |
 | `project` | `projects/<project>/project.md` | `projects/dissertation/project.md` |
 
-The stable identity is the ULID `id`, not the filename. Renames are still rare:
-they churn links and require a scan/check pass.
+The stable **internal id** is the ULID `id`, not the filename — distinct from
+the path-derived **OKF Concept ID** used at the export boundary (see [OKF
+compliance contract](okf-compliance.md)). Renames are still rare: they churn
+links and require a scan/check pass.
 
 ---
 

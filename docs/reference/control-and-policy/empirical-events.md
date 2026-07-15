@@ -11,6 +11,11 @@ Empirical events are local, allowlisted records for self-use measurement. The
 schema owner is `src/memoria_vault/engine/empirical_events.py`;
 this page mirrors that schema and is kept in sync by hand.
 
+Schema-version identifiers in this family are not uniformly cased
+(`empirical_event.v1`, `disposition.v1`, `read-observed.v1`) — an inherited
+inconsistency, not a convention to copy. New schema ids should use
+`lower_snake_case.vN`.
+
 The only storage operation is `empirical-event-record`. Call it through
 `operation_run` or `POST /operation/run` with
 `idempotency_key=empirical-event:<event_id>`. Accepted events append a

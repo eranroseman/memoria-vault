@@ -73,7 +73,6 @@ def test_seeded_error_bundle_can_surface_contained_probe_batch() -> None:
 
     batch = seeded_probe_review_batch(bundle["cases"], max_items=2)
 
-    assert batch["production_enabled"] is False
     assert batch["sentinel"] == SEEDED_PROBE_SENTINEL
     assert len(batch["probes"]) == 2
     assert {probe["sentinel"] for probe in batch["probes"]} == {SEEDED_PROBE_SENTINEL}

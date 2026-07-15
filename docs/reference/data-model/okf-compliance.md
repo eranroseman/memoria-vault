@@ -16,7 +16,9 @@ conformance bar; the rationale lives in
 - Every non-reserved `.md` file has parseable YAML frontmatter with a
   non-empty `type`.
 - Reserved files (`index.md`, `log.md`) follow their reserved structure.
-- Concept identity is path-derived; internal ids are producer metadata, not
+- The **OKF Concept ID** is path-derived (the file path minus `.md`); a
+  Concept's **internal id** (the live-engine ULID, see [Wikilink and link
+  conventions](wikilink-and-link-conventions.md)) is producer metadata, not
   OKF identity. (Planned: G3, alpha.22/B1.)
 - OKF-facing relationships and citations use standard Markdown links
   (bundle-relative); wikilinks remain a local authoring affordance. **Planned
