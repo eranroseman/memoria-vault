@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import Module from "node:module";
 
 const require = createRequire(import.meta.url);
-const { sanitizeItemId, validateEvent } = require("../src/schema.js");
+const { sanitizeItemId, validateEvent } = require("../schema.js");
 
 const base = {
   event_id: "11111111-1111-4111-8111-111111111111",

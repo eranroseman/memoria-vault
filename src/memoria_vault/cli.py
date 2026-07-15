@@ -1243,7 +1243,7 @@ def _cmd_list(args: argparse.Namespace) -> int:
 
 def _cmd_export(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    path = _resolve_concept_path(workspace, args.target)
+    path = engine_api._resolve_concept_path(workspace, args.target)
     if path is None:
         return _fail(f"target not found: {args.target}", json_output=args.json)
     content = path.read_text(encoding="utf-8")
@@ -2193,36 +2193,6 @@ def _changed_generated_projection_paths(workspace: Path) -> list[str]:
     from memoria_vault.runtime.projections import changed_tracked_projection_paths
 
     return changed_tracked_projection_paths(workspace)
-
-
-def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
-    from memoria_vault.runtime.paths import safe_filename
-    from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter
-
-    raw = Path(target)
-    direct = raw if raw.is_absolute() else workspace / raw
-    if direct.is_file():
-        return direct.resolve()
-    slug = safe_filename(target.strip().lower())
-    for path in iter_markdown(workspace):
-        frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") not in {
-            "note",
-            "digest",
-            "hub",
-            "project",
-        }:
-            continue
-        if target in {
-            str(frontmatter.get("id") or ""),
-            str(frontmatter.get("title") or ""),
-            path.stem,
-            path.relative_to(workspace).as_posix(),
-        }:
-            return path.resolve()
-        if slug and slug == safe_filename(str(frontmatter.get("title") or "").lower()):
-            return path.resolve()
-    return None
 
 
 def _workspace_plan(workspace: Path) -> list[str]:

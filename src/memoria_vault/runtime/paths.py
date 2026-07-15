@@ -17,10 +17,10 @@ def safe_filename(value: str) -> str:
     return "".join(char if char.isalnum() or char in "._-" else "_" for char in str(value))
 
 
-def resolve_vault(arg: str | None, *env_vars: str) -> Path:
+def resolve_vault(arg: str | None) -> Path:
     """Resolve a vault root from an argument or environment variables."""
     raw = arg
-    candidates = env_vars or ("MEMORIA_VAULT_PATH", "OBSIDIAN_VAULT_PATH")
+    candidates = ("MEMORIA_VAULT_PATH", "OBSIDIAN_VAULT_PATH")
     if not raw:
         for var in candidates:
             raw = os.environ.get(var)

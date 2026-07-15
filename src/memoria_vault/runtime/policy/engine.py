@@ -31,8 +31,7 @@ class PolicyEngine:
 
     def set_session_skill(self, request_id: str, skill_policy: dict | None) -> None:
         """Register one loaded skill's additive write-deny policy for a session."""
-        policy_stub = ActorPolicy(actor="")
-        extra = compose_skill_deny(policy_stub, skill_policy)
+        extra = compose_skill_deny(skill_policy)
         if extra:
             self._session_skill_deny[request_id] = extra
         else:

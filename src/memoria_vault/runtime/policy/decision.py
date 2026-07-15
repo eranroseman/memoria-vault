@@ -148,7 +148,7 @@ def decide(
     return Decision("allow_with_log", f"{rule}.{action}.{_zone(npath)}", log_required=True)
 
 
-def compose_skill_deny(policy: ActorPolicy, skill_policy: dict | None) -> list[str]:
+def compose_skill_deny(skill_policy: dict | None) -> list[str]:
     """Compose a loaded skill's ``policy.deny.write`` onto the actor policy."""
     if not skill_policy:
         return []

@@ -51,16 +51,10 @@ def test_runtime_policy_core():
     )
     assert normalize_path("./a/b.md") == "a/b.md", "normalize_path: strip leading './'"
     assert normalize_path("/a/b.md") == "a/b.md", "normalize_path: strip leading '/'"
-    try:
+    with pytest.raises(ValueError):
         normalize_path("../../etc/passwd")
-        pytest.fail("normalize_path: reject escape above root")
-    except ValueError:
-        pass
-    try:
+    with pytest.raises(ValueError):
         normalize_path("a/../../../etc/passwd")
-        pytest.fail("normalize_path: reject deep escape above root")
-    except ValueError:
-        pass
 
     # ---- engine: traversal attempt -> deny --------------------------------- #
     with tempfile.TemporaryDirectory() as td_trav:
@@ -258,7 +252,7 @@ def test_runtime_policy_core():
 
     # ---- skill-conditional one-way narrowing ------------------------------- #
     # counter-outline narrows a write-enabled fixture to framing-only; drafts then deny.
-    co_deny = compose_skill_deny(write_fixture, {"deny": {"write": ["projects/*/drafts/**"]}})
+    co_deny = compose_skill_deny({"deny": {"write": ["projects/*/drafts/**"]}})
     assert co_deny == ["projects/*/drafts/**"], "counter-outline composes a draft-deny"
     assert d(write_fixture, "write", "projects/x/drafts/d.md", None, co_deny) == "deny", (
         "Writer+counter-outline: draft write now denied"

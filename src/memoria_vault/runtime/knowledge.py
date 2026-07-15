@@ -1501,8 +1501,6 @@ def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, st
         return []
     rows = []
     for candidate in candidates:
-        if candidate.get("verdict") != NLI_REFUTED:
-            continue
         left = str(candidate.get("left") or "").strip()
         right = str(candidate.get("right") or "").strip()
         if not left or not right:
