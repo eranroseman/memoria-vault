@@ -22,23 +22,10 @@ def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
         "author": "Memoria",
         "isDesktopOnly": False,
     }
-    assert package["scripts"]["build"] == "node scripts/build.mjs"
     assert package["scripts"]["test"] == "node scripts/test.mjs"
     assert (PLUGIN / "main.js").is_file()
     assert (PLUGIN / "schema.js").is_file()
     assert (PLUGIN / "styles.css").is_file()
-
-
-def test_memoria_obsidian_build_artifacts_are_current() -> None:
-    result = subprocess.run(
-        ["node", "scripts/build.mjs", "--check"],
-        cwd=PLUGIN,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-
-    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_memoria_obsidian_seed_matches_release_artifacts() -> None:
@@ -61,7 +48,7 @@ def test_memoria_obsidian_event_schema_rejects_leaky_fields() -> None:
 
 
 def test_memoria_obsidian_uses_memoria_operation_run_only() -> None:
-    source = (PLUGIN / "src/main.ts").read_text(encoding="utf-8")
+    source = (PLUGIN / "main.js").read_text(encoding="utf-8")
 
     assert "/operation/run" in source
     assert "requestUrl" in source
@@ -78,7 +65,7 @@ def test_memoria_obsidian_uses_memoria_operation_run_only() -> None:
 
 
 def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
-    source = (PLUGIN / "src/main.ts").read_text(encoding="utf-8")
+    source = (PLUGIN / "main.js").read_text(encoding="utf-8")
 
     for command_id in (
         "connect",

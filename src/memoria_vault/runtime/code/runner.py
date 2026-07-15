@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import platform
 import shutil
 import subprocess
@@ -11,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.policy.audit import sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_bytes_durable
@@ -150,14 +149,14 @@ def _run_with_bwrap(
         sanitized_env=["HOME", "PATH"],
         input_hashes=_output_hashes(vault, artifact["declared_inputs"]),
         output_hashes=outputs,
-        stdout_sha256=_sha256_bytes(stdout),
-        stderr_sha256=_sha256_bytes(stderr),
+        stdout_sha256=sha256_bytes(stdout),
+        stderr_sha256=sha256_bytes(stderr),
         stdout_path=stdout_path.relative_to(vault).as_posix(),
         stderr_path=stderr_path.relative_to(vault).as_posix(),
         exit_status=int(proc.returncode),
         timeout_result=timeout_result,
         sandbox_backend="bwrap",
-        sandbox_profile_hash=_sha256_bytes(b"bwrap:v1:no-network"),
+        sandbox_profile_hash=sha256_bytes(b"bwrap:v1:no-network"),
         run_state="succeeded" if proc.returncode == 0 and not timeout_result else "failed",
         started_at=started,
         ended_at=now_iso(),
@@ -181,7 +180,3 @@ def _output_hashes(vault: Path, relpaths: list[str]) -> dict[str, str]:
         if path.is_file():
             hashes[rel] = sha256_file(path)
     return hashes
-
-
-def _sha256_bytes(data: bytes) -> str:
-    return "sha256:" + hashlib.sha256(data).hexdigest()

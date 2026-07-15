@@ -1639,7 +1639,6 @@ def _tension_candidate(
     judge: Any | None = None,
     escalation: str = "",
 ) -> dict[str, Any]:
-    route = "ask"
     candidate = {
         "left": left["id"],
         "right": right["id"],
@@ -1647,7 +1646,7 @@ def _tension_candidate(
         "right_title": right["title"],
         "verdict": verdict,
         "tier": tier,
-        "route": route,
+        "route": "ask",
         "lexical_overlap": round(overlap, 3),
         "warrant": warrant or "Tier-1 unavailable; route lexical candidate to PI review",
     }

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC
 from pathlib import Path
 
+from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.time import parse_iso
 
 
@@ -97,9 +98,6 @@ def vault_hash_drift(vault: Path) -> list[Finding]:
     in Obsidian surfaces here too, by design -- the finding tells the PI the
     trail lost its pin, not that the edit was malicious. Malformed log lines
     are skipped, mirroring audit_unpaired_writes."""
-    import hashlib
-
-    empty = "sha256:" + hashlib.sha256(b"").hexdigest()
     log = vault / "system" / "logs" / "audit.jsonl"
     if not log.is_file():
         return []
@@ -118,16 +116,14 @@ def vault_hash_drift(vault: Path) -> list[Finding]:
     for path, e in sorted(latest.items()):
         f = vault / path
         try:
-            current = (
-                "sha256:" + hashlib.sha256(f.read_bytes()).hexdigest() if f.exists() else empty
-            )
+            current = sha256_file(f)
         except OSError as exc:
             out.append(
                 Finding("vault-hash-drift", "CRITICAL", path, f"cannot hash audited file: {exc}")
             )
             continue
         if current != e["after_hash"]:
-            state = "missing" if current == empty else "edited"
+            state = "missing" if current == EMPTY_SHA256 else "edited"
             out.append(
                 Finding(
                     "vault-hash-drift",

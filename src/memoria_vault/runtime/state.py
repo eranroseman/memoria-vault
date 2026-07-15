@@ -30,7 +30,7 @@ from memoria_vault.runtime.evidence import (
     parse_source_span_ref,
 )
 from memoria_vault.runtime.paths import safe_filename
-from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_text_durable
@@ -3567,4 +3567,4 @@ def _journal_hash(
         "payload": json.loads(payload_json),
         "prev_hash": prev_hash,
     }
-    return hashlib.sha256(_json(payload).encode("utf-8")).hexdigest() or EMPTY_SHA256
+    return hashlib.sha256(_json(payload).encode("utf-8")).hexdigest()

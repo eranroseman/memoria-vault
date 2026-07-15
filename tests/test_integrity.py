@@ -32,12 +32,6 @@ from memoria_vault.runtime.integrity import (
 from memoria_vault.runtime.integrity import (
     record_integrity_check as _record_integrity_check,
 )
-from memoria_vault.runtime.trusted_writer import (
-    promote_checked as _promote_checked,
-)
-from memoria_vault.runtime.trusted_writer import (
-    stage_concept as _stage_concept,
-)
 from tests.helpers import (
     call_with_context,
     copy_memoria_dirs,
@@ -60,21 +54,12 @@ check_prompt_injection_markers = _context_wrapper(_check_prompt_injection_marker
 check_provenance_checkpoint = _context_wrapper(_check_provenance_checkpoint)
 check_quote_anchor_support = _context_wrapper(_check_quote_anchor_support)
 record_integrity_check = _context_wrapper(_record_integrity_check)
-promote_checked = _context_wrapper(_promote_checked)
-stage_concept = _context_wrapper(_stage_concept)
 
 
 def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas", "config")
     init_git(tmp_path, "integrity@example.invalid", "Integrity")
     return tmp_path
-
-
-def _stage_checked_note(vault: Path, rel: str, title: str, body: str) -> None:
-    content = f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n# {title}\n\n{body}\n"
-    stage_concept(vault, rel, content, machine="writer")
-    promote_checked(vault, rel, machine="writer")
-    state.mark_materialized(vault, rel)
 
 
 def catalog_db_source(vault: Path, work_id: str, content_text: str) -> str:
