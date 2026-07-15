@@ -23,7 +23,7 @@ names, or configuration formats, see [Reference](reference/).
 **Status: v0.1 alpha source install** — alpha.21 is the latest closed
 checkpoint; the formal package/tag release gate remains open. ·
 [GitHub](https://github.com/eranroseman/memoria-vault) ·
-[Install](https://github.com/eranroseman/memoria-vault#install) ·
+[Install](https://github.com/eranroseman/memoria-vault#install-from-main) ·
 [Issues](https://github.com/eranroseman/memoria-vault/issues)
 
 ---

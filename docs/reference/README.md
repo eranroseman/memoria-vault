@@ -36,7 +36,7 @@ every field and count.
 | [System action adapters](commands-and-transports/system-actions-adapters.md) | Optional external adapters and reusable prompt surfaces | Manual |
 | [System action scheduled tasks](commands-and-transports/system-actions-scheduled.md) | Optional local scheduler wiring around the CLI/runtime package | Manual |
 | [Operations](commands-and-transports/operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
-| [CLI](commands-and-transports/cli.md) | Alpha.20 `memoria` command surface | Guarded mirror |
+| [CLI](commands-and-transports/cli.md) | `memoria` command surface | Guarded mirror |
 | [Engine read API](commands-and-transports/read-api.md) | Host-neutral read/write API functions and project WRITE views | Manual |
 | [Local HTTP transport](commands-and-transports/local-http-transport.md) | REST-like loopback adapter surface, auth, endpoints, scope, write payload, and limits | Manual |
 | [MCP transport](commands-and-transports/mcp-transport.md) | Optional FastMCP stdio agent surface, required read scope, tool roster, and write provenance | Manual |

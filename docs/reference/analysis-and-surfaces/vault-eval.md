@@ -32,7 +32,7 @@ with nothing but the file.
 | `type` | `literal:eval-task` | Diagnostic fixture marker; not a Concept schema. |
 | `title` | str | The request title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
-| `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …) — this gold-task field is unrelated to the `workflow` enum on empirical events ([Empirical events](../control-and-policy/empirical-events.md#base-fields)). |
+| `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …) — this gold-task field is unrelated to the `workflow` enum on empirical events ([Empirical events](../control-and-policy/empirical-events.md#enum-values)). |
 | `eval_role` | enum | Diagnostic routing bucket: `catalog` · `extract` · `link` · `map` · `verify` ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). It does not imply shipped lane packages. |
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |

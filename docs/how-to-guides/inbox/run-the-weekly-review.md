@@ -21,7 +21,7 @@ success**.
 
 **Step 1 — Refresh research priorities (2 min).**
 
-Open `steering.md`. Confirm or update the active questions and reading focus — the Librarian reads this to aim discovery, and it sets the lens for every decision below.
+Open `steering.md`. Confirm or update the active questions and reading focus — the [Librarian](../../explanation/execution/operation-postures/librarian.md) reads this to aim discovery, and it sets the lens for every decision below.
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
