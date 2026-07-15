@@ -17,9 +17,10 @@ conformance bar; the rationale lives in
   non-empty `type`.
 - Reserved files (`index.md`, `log.md`) follow their reserved structure.
 - The **OKF Concept ID** is path-derived (the file path minus `.md`); a
-  Concept's **internal id** (the live-engine ULID, see [Wikilink and link
-  conventions](wikilink-and-link-conventions.md)) is producer metadata, not
-  OKF identity. (Planned: G3, alpha.22/B1.)
+  Concept's **internal id** (a ULID for `note`/`hub`/`project`; the source
+  `work_id` for `digest`/`fulltext`; the artifact id for `code-artifact` —
+  see [Frontmatter fields](frontmatter.md#other-universal-fields)) is
+  producer metadata, not OKF identity. (Planned: G3, alpha.22/B1.)
 - OKF-facing relationships and citations use standard Markdown links
   (bundle-relative); wikilinks remain a local authoring affordance. **Planned
   beta.1 — K1.**

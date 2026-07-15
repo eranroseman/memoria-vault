@@ -28,7 +28,7 @@ navigation.
 | Runtime ops | Audit log | Planned view; log shipped | `system/logs/audit.jsonl` | Recent writes; an adapter may render row-capped views. |
 | Runtime ops | Eval trend | Planned view; metric log shipped | `system/metrics/eval/runs.jsonl` | Quarterly vault-eval capability scores (`recall_at_k`, `support_rate`, `fama_clean`, `evidence_clean`) — diagnostic, never gating. |
 
-The **Surface** column names the corpus home, queue, maintenance collection, or
+The **Dashboard area** column names the corpus home, queue, maintenance collection, or
 support context where a shipped read or planned view belongs.
 The explanation site groups the support dashboards by the *kind of attention* they
 demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational

@@ -36,6 +36,9 @@ memoria link --workspace <vault> notes/receptivity-varies-by-burden.md \
   notes/receptivity-decreases-under-high-cognitive-load.md --rel contradicts
 ```
 
+`--reason` is optional (it defaults to empty) but including it, as in the
+tutorial's example, helps future readers understand why the link exists.
+
 For a direct PI edit, extend the note's `links:` map:
 
 ```yaml

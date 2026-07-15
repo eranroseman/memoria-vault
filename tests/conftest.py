@@ -33,6 +33,7 @@ TEST_LEVELS = {
     "test_cspell_scope.py": "static",
     "test_detectors.py": "static",
     "test_diagnostics.py": "unit",
+    "test_doc_claims_gate.py": "static",
     "test_draft_compose.py": "runtime",
     "test_draft_verification.py": "runtime",
     "test_draft_writeback.py": "runtime",

@@ -30,7 +30,7 @@ section develops in [Requests and notes are different things](../execution/contr
 
 | Page                                                               | What it covers                                                                                                                           |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [Document types and epistemic roles](document-types.md)                    | The three epistemic roles (source / synthesis / working) behind the document types, and why agent permissions follow from them.              |
+| [Document types and epistemic roles](document-types.md)                    | Why source catalog state, durable knowledge Concepts, and packaged operation metadata are kept as separate stores, and how read state (not frontmatter) gates what's readable as checked knowledge.              |
 | [The knowledge cycle](knowledge-cycle.md)                          | The progression from ingested source to written output, including project slices, exploration, and why the vault compounds rather than merely accumulates.                      |
 | [Note body structure](note-body-structure.md)                      | Why works, notes, hubs, and projects have distinct bodies, and what each structure makes the Concept able to do.                  |
 | [Promotion and the write boundary](promotion-and-gated-zones.md)                       | What promotion means, how the trusted writer protects checked readers, and why PI curation sits at the synthesis boundary.         |

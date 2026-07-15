@@ -85,6 +85,7 @@ This roster mirrors the live argparse tree:
 - `memoria attention show`
 - `memoria attention worklist`
 - `memoria check`
+- `memoria doctor`
 - `memoria doctor bundle`
 - `memoria doctor self-test`
 - `memoria eval run`

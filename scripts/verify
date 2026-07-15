@@ -41,6 +41,7 @@ GATES: list[list[str]] = [
     ["python3", "scripts/checks/removed_surface_gate.py"],
     ["python3", "scripts/checks/checked_terminology_gate.py"],
     ["python3", "scripts/checks/plugin_provenance_doctor.py"],
+    ["python3", "scripts/checks/doc_claims_gate.py"],
     [
         "env",
         "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",

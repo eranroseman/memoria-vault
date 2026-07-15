@@ -32,7 +32,7 @@ Where every file lives.
 ├── bibliography.bib         generated portable bibliography
 ├── notes/                   claim and question notes
 ├── hubs/                    topic hubs with human salience
-├── projects/<slug>/         project.md, outline.md, draft.md, evidence/gap/export artifacts
+├── projects/<slug>/         project.md, outline.md, draft.md, code/<artifact-id>.md, evidence/gap/export artifacts
 ├── digests/<work_id>.md     checked source digests
 ├── fulltexts/<work_id>.md    generated full-text reproductions
 ├── inbox/                   transient attention projections, not Concepts
@@ -40,6 +40,7 @@ Where every file lives.
     ├── vocabulary.md          controlled vocabularies
     ├── manifest.jsonl         generated visible audit manifest
     ├── logs/                  audit.jsonl, lint-findings.jsonl, sessions/*.jsonl
+    ├── worklists/<slug>/      batch worklist-item projections (see glossary: Worklist)
     └── metrics/               exported metrics
 ```
 
