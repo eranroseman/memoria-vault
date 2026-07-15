@@ -105,9 +105,9 @@ migrations rule:
 - One registered step list and its `user_version` bump commit in that
   transaction. If a step fails, the transaction rolls back, including the
   version bump.
-- A noncurrent version with no registered migration path — including a database
-  written by a newer Memoria — fails closed with an error instead of applying
-  the schema.
+- An existing nonzero version with no registered next step — including a
+  database written by a newer Memoria — fails closed with an error instead of
+  applying the schema. Version `0` is initialized from `schema.sql`.
 
 Backups live outside this tree. `memoria workspace backup <target>` publishes a
 manifest-bound SQLite/blob/head snapshot; `last-backup` records the target and
