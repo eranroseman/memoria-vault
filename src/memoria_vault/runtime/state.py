@@ -15,7 +15,7 @@ import subprocess
 import threading
 import time
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -51,6 +51,10 @@ if TYPE_CHECKING:
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
 SCHEMA_VERSION = 12
+# Numbered migrations: each entry upgrades an on-disk DB by exactly one version
+# step, {from_version: (from_version + 1, [SQL statement or callable(conn)])}.
+# _init refuses (fail-closed) any user_version with no registered path here.
+MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]] = {}
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -2407,8 +2411,22 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
 
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
-    if current not in {0, SCHEMA_VERSION}:
-        raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
+    while current not in {0, SCHEMA_VERSION}:
+        if current not in MIGRATIONS:
+            raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
+        to_version, steps = MIGRATIONS[current]
+        if to_version != current + 1:
+            raise RuntimeError(
+                f"migration from schema version {current} must target {current + 1}, "
+                f"not {to_version}"
+            )
+        for step in steps:
+            if callable(step):
+                step(conn)
+            else:
+                conn.execute(step)
+        conn.execute(f"PRAGMA user_version = {to_version}")
+        current = to_version
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])
     if applied != SCHEMA_VERSION:

@@ -138,6 +138,59 @@ def test_sqlite_schema_rejects_legacy_user_version(tmp_path: Path) -> None:
         state.connect(tmp_path)
 
 
+def test_sqlite_migrations_apply_registered_steps_in_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db = tmp_path / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.execute(f"PRAGMA user_version = {state.SCHEMA_VERSION - 2}")
+
+    seen_versions: list[int] = []
+
+    def probe(conn: sqlite3.Connection) -> None:
+        seen_versions.append(int(conn.execute("PRAGMA user_version").fetchone()[0]))
+
+    monkeypatch.setattr(
+        state,
+        "MIGRATIONS",
+        {
+            state.SCHEMA_VERSION - 2: (
+                state.SCHEMA_VERSION - 1,
+                ["CREATE TABLE migration_probe (step INTEGER PRIMARY KEY)"],
+            ),
+            state.SCHEMA_VERSION - 1: (state.SCHEMA_VERSION, [probe]),
+        },
+    )
+
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
+        assert conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'migration_probe'"
+        ).fetchone()
+
+    # The callable step ran after the first step's version bump committed.
+    assert seen_versions == [state.SCHEMA_VERSION - 1]
+
+
+def test_sqlite_migrations_refuse_non_sequential_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db = tmp_path / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.execute(f"PRAGMA user_version = {state.SCHEMA_VERSION - 2}")
+
+    monkeypatch.setattr(
+        state,
+        "MIGRATIONS",
+        {state.SCHEMA_VERSION - 2: (state.SCHEMA_VERSION, [])},
+    )
+
+    with pytest.raises(RuntimeError, match="must target"):
+        state.connect(tmp_path)
+
+
 def note_text(title: str = "Alpha note") -> str:
     return f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n# {title}\n\nBody.\n"
 
