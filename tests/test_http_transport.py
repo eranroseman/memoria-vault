@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import http.client
 import json
+import threading
 import uuid
 from http import HTTPStatus
 from pathlib import Path
@@ -12,7 +14,14 @@ import pytest
 from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import http_routes
 from memoria_vault.runtime import state, worker
-from memoria_vault.runtime.http_transport import PayloadTooLarge, _dispatch, is_authorized
+from memoria_vault.runtime.http_transport import (
+    MAX_BODY_BYTES,
+    PayloadTooLarge,
+    _dispatch,
+    _scope_intersection,
+    is_authorized,
+    make_http_server,
+)
 from memoria_vault.runtime.jsonl import iter_jsonl
 from tests.helpers import init_cli_workspace, write_checked_note
 
@@ -227,6 +236,26 @@ def test_http_transport_startup_read_scope_cannot_be_widened(workspace: Path) ->
     assert [row["path"] for row in widened["concepts"]] == ["notes/alpha.md"]
     assert disjoint_status == HTTPStatus.OK
     assert disjoint["concepts"] == []
+
+
+def test_http_transport_scope_intersection_narrows_to_requested_subscope(
+    workspace: Path,
+) -> None:
+    write_checked_note(workspace, "notes/alpha.md", "Alpha")
+    write_checked_note(workspace, "notes/beta.md", "Beta")
+
+    assert _scope_intersection(["notes"], ["notes/alpha.md"]) == ["notes/alpha.md"]
+
+    narrowed, status = _dispatch(
+        workspace,
+        "GET",
+        "/concepts?read_scope=notes/alpha.md",
+        dict,
+        read_scope=["notes"],
+    )
+
+    assert status == HTTPStatus.OK
+    assert [row["path"] for row in narrowed["concepts"]] == ["notes/alpha.md"]
 
 
 def test_http_transport_exploration_respects_read_scope(workspace: Path) -> None:
@@ -606,8 +635,60 @@ def test_http_transport_unknown_write_does_not_create_request(workspace: Path) -
     assert count == 0
 
 
+def test_http_server_handler_enforces_bearer_auth_and_body_size(workspace: Path) -> None:
+    server = make_http_server(workspace, host="127.0.0.1", port=0, token="test-token")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address[0], server.server_address[1]
+    try:
+        no_auth = _http_request(host, port, "GET", "/status", {})
+        wrong_auth = _http_request(host, port, "GET", "/status", {"Authorization": "Bearer wrong"})
+        authorized = _http_request(
+            host, port, "GET", "/status", {"Authorization": "Bearer test-token"}
+        )
+        oversized = _http_request(
+            host,
+            port,
+            "POST",
+            "/operation/run",
+            {
+                "Authorization": "Bearer test-token",
+                "Content-Length": str(MAX_BODY_BYTES + 1),
+            },
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+    assert no_auth == (HTTPStatus.UNAUTHORIZED, {"ok": False, "error": "unauthorized"})
+    assert wrong_auth == (HTTPStatus.UNAUTHORIZED, {"ok": False, "error": "unauthorized"})
+    assert authorized[0] == HTTPStatus.OK
+    assert authorized[1]["ok"] is True
+    assert authorized[1]["api_version"] == "engine-read-api.v1"
+    assert oversized == (
+        HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+        {"ok": False, "error": "request body too large"},
+    )
+
+
 def _raise(exc: Exception) -> None:
     raise exc
+
+
+def _http_request(
+    host: str, port: int, method: str, path: str, headers: dict[str, str]
+) -> tuple[HTTPStatus, dict]:
+    conn = http.client.HTTPConnection(host, port, timeout=10)
+    try:
+        conn.putrequest(method, path)
+        for name, value in headers.items():
+            conn.putheader(name, value)
+        conn.endheaders()
+        response = conn.getresponse()
+        return HTTPStatus(response.status), json.loads(response.read().decode("utf-8"))
+    finally:
+        conn.close()
 
 
 def _openapi_query_names(response: dict[str, object], path: str) -> set[str]:
