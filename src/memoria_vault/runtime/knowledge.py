@@ -3202,12 +3202,6 @@ def _draft_work_id(value: str) -> str:
     return ""
 
 
-def _draft_evidence_type(items: list[str]) -> str:
-    if not items:
-        return "implicit"
-    return "single-span" if len(items) == 1 else "multi-span"
-
-
 def _draft_note_excerpt(body: str, token_budget: int) -> str:
     text = body.strip()
     if not text:
