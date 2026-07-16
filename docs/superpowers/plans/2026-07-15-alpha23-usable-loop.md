@@ -2340,7 +2340,7 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 `conversational-ask`.
 
 **Files:**
-- Create: `docs/superpowers/specs/$(date +%F)-u4-copi-skill-design.md`
+- Create: `docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md`
 - Test: none — design gate.
 
 **Interfaces:**
@@ -2362,18 +2362,18 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 
 - [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U4 co-PI skill / MCP surface. Inputs: consolidation §2 U4 (line 199, copi-surface-split: engine authors the method, the user's agent voices it); 2026-07-12-surface-design-notes.md; U1 MCP scoping (operation_run only write tool); runtime/mcp_transport.py and memoria mcp (cli.py:125); the trust axiom (inspectable grounding structure, never author trust). Conversational answers must carry resolvable sources like answer_query.")`
 - [ ] Write the spec to
-  `docs/superpowers/specs/$(date +%F)-u4-copi-skill-design.md` with the four
+  `docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md` with the four
   Produces sections.
 - [ ] Commit:
 
   ```
-  git add docs/superpowers/specs/$(date +%F)-u4-copi-skill-design.md
+  git add docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md
   git commit -m "docs(specs): U4 co-PI skill / MCP surface-split design
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u4-copi-skill-design.md — produce docs/superpowers/plans/$(date +%F)-u4-copi-skill.md")`
+- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md — produce docs/superpowers/plans/$(date +%F)-u4-copi-skill.md")`
   and commit the plan.
 - [ ] Acceptance: spec exists; the write path is exclusively `operation_run`;
   the engine-authored vs agent-voiced boundary is explicit per artifact.
