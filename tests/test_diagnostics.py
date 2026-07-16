@@ -149,3 +149,72 @@ def test_redacted_bundle_tolerates_bad_rotated_jsonl(tmp_path):
 
 def test_redaction_self_test_blocks_known_sensitive_strings():
     diagnostics.redaction_self_test()
+
+
+def test_content_light_hashes_sequence_items_and_arbitrary_objects(tmp_path, monkeypatch):
+    state = tmp_path / "state"
+    monkeypatch.setenv("MEMORIA_DIAGNOSTIC_LEVEL", "warn")
+
+    class Opaque:
+        def __str__(self) -> str:
+            return "opaque-secret-body"
+
+    event = diagnostics.record_event(
+        component="ingest",
+        level="error",
+        code="sequence_details",
+        details={
+            "titles": ["Secret Draft", "Second Secret"],
+            "pair": ("left-secret", 2),
+            "opaque": Opaque(),
+        },
+        state_dir=state,
+        now=datetime(2026, 6, 19, 12, 0, tzinfo=UTC),
+    )
+
+    text = (state / "diagnostics-2026-06-19.jsonl").read_text(encoding="utf-8")
+    assert event["details"]["titles"][0]["sha256"]
+    assert event["details"]["titles"][1]["length"] > 0
+    assert event["details"]["pair"][0]["sha256"]
+    assert event["details"]["pair"][1] == 2
+    assert event["details"]["opaque"]["sha256"]
+    for secret in ("Secret Draft", "Second Secret", "left-secret", "opaque-secret-body"):
+        assert secret not in text
+
+
+def test_redacted_bundle_include_raw_re_redacts_captured_payloads(tmp_path, monkeypatch):
+    state = tmp_path / "state"
+    state.mkdir(parents=True)
+    forged = {
+        "timestamp": "2026-06-19T12:00:00Z",
+        "component": "bundle",
+        "level": "error",
+        "code": "imported_row",
+        "raw_capture": "ephemeral-redacted",
+        "payload_redacted": "Bearer forgedtokenabcdefghijklmn body text",
+    }
+    (state / "diagnostics-2026-06-19.jsonl").write_text(json.dumps(forged) + "\n", encoding="utf-8")
+    monkeypatch.setenv(diagnostics.RAW_ONCE_ENV, "1")
+    diagnostics.record_event(
+        component="bundle",
+        level="error",
+        code="raw_once_bundle",
+        payload="api_key=0123456789abcdef",
+        state_dir=state,
+        now=datetime(2026, 6, 19, 12, 0, tzinfo=UTC),
+    )
+
+    bundle = diagnostics.create_redacted_bundle(
+        tmp_path / "bundle.tgz", state_dir=state, include_raw=True
+    )
+
+    with tarfile.open(bundle, "r:gz") as tar:
+        payload = tar.extractfile("diagnostics-2026-06-19.redacted.jsonl")
+        text = payload.read().decode("utf-8") if payload else ""
+
+    assert "payload_redacted" in text
+    assert "raw_capture" in text
+    assert "forgedtokenabcdefghijklmn" not in text
+    assert "0123456789abcdef" not in text
+    assert "[REDACTED]" in text
+    assert "body text" in text
