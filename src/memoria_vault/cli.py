@@ -123,6 +123,13 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--stop", action="store_true")
     serve.set_defaults(handler=_cmd_serve)
 
+    handshake = sub.add_parser("handshake")
+    handshake.add_argument("--vault", required=True)
+    handshake.add_argument("--spawn", action="store_true")
+    handshake.add_argument("--json", action="store_true")
+    handshake.add_argument("--quiet", action="store_true")
+    handshake.set_defaults(handler=_cmd_handshake)
+
     migrate = sub.add_parser("migrate")
     _common(migrate)
     migrate.add_argument("--from-alpha15", required=True)
@@ -895,6 +902,25 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
     ):
         return _fail("no memoria server is running for this vault", json_output=args.json)
     return _emit({"ok": True, "stopped": True, "port": int(record["port"])}, args)
+
+
+def _handshake_fail(args: argparse.Namespace, message: str) -> int:
+    if args.json:
+        print(message, file=sys.stderr, flush=True)
+    return _fail(message, json_output=args.json)
+
+
+def _cmd_handshake(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import rendezvous
+
+    try:
+        vault = Path(args.vault).expanduser().resolve()
+        if not vault.is_dir():
+            return _handshake_fail(args, f"vault path is not a directory: {vault}")
+        coordinates = rendezvous.handshake(vault, spawn=args.spawn)
+    except Exception as exc:  # noqa: BLE001 -- preserve the handshake JSON/stderr contract.
+        return _handshake_fail(args, str(exc))
+    return _emit({"ok": True, **coordinates}, args)
 
 
 def _cmd_mcp(args: argparse.Namespace) -> int:

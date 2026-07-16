@@ -2346,3 +2346,144 @@ def test_handshake_converges_with_a_direct_serve_race(
         assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
         direct.join(timeout=10)
         assert not direct.is_alive()
+
+
+def test_handshake_cli_reports_when_no_server(
+    workspace: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    rc = main(["handshake", "--vault", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert "--spawn" in output["error"]
+
+
+def test_handshake_cli_json_failure_keeps_json_and_writes_stderr(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise rendezvous.HandshakeError("server did not publish; see /state/serve.log")
+
+    monkeypatch.setattr(rendezvous, "handshake", fail)
+
+    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+
+    assert rc == 2
+    assert output == {
+        "ok": False,
+        "error": "server did not publish; see /state/serve.log",
+    }
+    assert captured.err == f"{output['error']}\n"
+
+
+def test_handshake_cli_json_unexpected_failure_keeps_json_and_writes_stderr(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise OSError("state directory is unavailable")
+
+    monkeypatch.setattr(rendezvous, "handshake", fail)
+
+    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "state directory is unavailable"}
+    assert captured.err == f"{output['error']}\n"
+
+
+def test_handshake_cli_rejects_missing_vault(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    rc = main(["handshake", "--vault", str(tmp_path / "missing"), "--json"])
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+
+    assert rc == 2
+    assert "not a directory" in output["error"]
+    assert captured.err == f"{output['error']}\n"
+
+
+def test_handshake_cli_spawns_detached_server_and_reuses_it(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _require_loopback()
+    state_dir = rendezvous.vault_state_dir(workspace)
+    output: dict[str, object] = {}
+    owned_port = 0
+    owned_token = ""
+    owned_boot_id = ""
+    child_pid = 0
+    try:
+        rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+        output = json.loads(capsys.readouterr().out)
+        child_pid = int(output.get("pid", 0))  # Arm cleanup before assertions.
+        owned_port = int(output.get("port", 0))
+        owned_token = str(output.get("token", ""))
+        owned_boot_id = str(output.get("boot_id", ""))
+
+        assert rc == 0
+        assert set(output) == {"ok", "port", "token", "engine_version", "boot_id", "pid"}
+        assert output["ok"] is True
+        assert output["engine_version"] == __version__
+        assert output["pid"] > 0
+        assert rendezvous.probe_boot_id(int(output["port"]), timeout=2.0) == output["boot_id"]
+        assert (state_dir / "serve.log").exists()
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None
+        assert output["pid"] == record["pid"]
+        assert output["pid"] != os.getpid()
+        if os.name == "posix":
+            assert os.getpgid(int(record["pid"])) != os.getpgid(0)
+
+        rc_again = main(["handshake", "--vault", str(workspace), "--json"])
+        second = json.loads(capsys.readouterr().out)
+        assert rc_again == 0
+        assert second == output
+
+        token_hits = []
+        for path in workspace.rglob("*"):
+            if not path.is_file():
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            if output["token"] in text:
+                token_hits.append(path)
+        assert token_hits == []
+
+        original_post_shutdown = rendezvous.post_shutdown
+
+        def stop_but_lose_response(*args: object, **kwargs: object) -> None:
+            original_post_shutdown(*args, **kwargs)
+
+        monkeypatch.setattr(rendezvous, "post_shutdown", stop_but_lose_response)
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if (
+            record is not None
+            and child_pid > 0
+            and int(record["pid"]) == child_pid
+            and str(record["boot_id"]) == owned_boot_id
+        ):
+            rendezvous.post_shutdown(owned_port, owned_token, owned_boot_id)
+        if child_pid > 0:
+            if os.name == "posix":
+                deadline = time.monotonic() + 10
+                while True:
+                    try:
+                        reaped, _status = os.waitpid(child_pid, os.WNOHANG)
+                    except ChildProcessError:  # pragma: no cover - harness already reaped it.
+                        break
+                    if reaped == child_pid:
+                        break
+                    assert time.monotonic() < deadline, "spawned server did not exit"
+                    time.sleep(0.05)
+            else:
+                assert _wait_until(lambda: not rendezvous.pid_alive(child_pid))
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)

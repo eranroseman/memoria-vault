@@ -79,6 +79,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria doctor bundle",
         "memoria doctor self-test",
         "memoria ask",
+        "memoria handshake",
         "memoria serve",
         "memoria migrate",
         "memoria mcp",
