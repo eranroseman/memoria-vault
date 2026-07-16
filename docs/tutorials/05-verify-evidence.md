@@ -11,16 +11,18 @@ review decision.
 
 ## Steps
 
-**1. Add one review-required marker to the draft.**
+**1. Add one deliberately incomplete evidence marker to the draft.**
 
 Open `projects/<project>/draft.md` and add this sentence near the end:
 
 ```text
-Participant burden always predicts receptivity. %%ev: ev-00000001 type=implicit state=evidence-incomplete review=true items=missing-work#^p0001%%
+Participant burden always predicts receptivity. %%ev: ev-00000001 items=missing-work#^p0001%%
 ```
 
-This is deliberately too strong. It gives verification something concrete to
-report.
+This derives a `single-span` evidence set. Because `missing-work#^p0001` does
+not resolve, its state is `evidence-incomplete` and `review_required=false`.
+The claim is deliberately too strong, giving verification incomplete evidence
+to report.
 
 **2. Re-run verification.**
 
@@ -28,14 +30,14 @@ report.
 memoria project verify --workspace . <project-path> --json
 ```
 
-Read the JSON for evidence IDs, review-required markers, and incomplete
-evidence. The command is deterministic: a clean draft should stay clean until
-the draft, evidence, or checked corpus changes.
+Read the JSON for evidence IDs and incomplete evidence. The command is
+deterministic: a clean draft should stay clean until the draft, evidence, or
+checked corpus changes.
 Notice `ev-00000001` in the output.
 
-**3. Resolve the evidence review item.**
+**3. Record a disposition for the incomplete evidence.**
 
-Because the claim is unsupported, reject the marker:
+Because the evidence is incomplete, reject the marker:
 
 ```bash
 memoria project resolve-evidence --workspace . <project-path> \
@@ -45,8 +47,8 @@ memoria project resolve-evidence --workspace . <project-path> \
 ```
 
 Then remove or rewrite the unsupported sentence and verify again.
-Reject records the PI disposition; it does not silently rewrite the draft or
-remove its durable evidence marker.
+Reject records the PI disposition of incomplete evidence; it does not silently
+rewrite the draft or remove its durable evidence marker.
 
 **4. Promote reusable prose deliberately.**
 

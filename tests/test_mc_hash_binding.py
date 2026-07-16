@@ -10,7 +10,7 @@ from memoria_vault.runtime import state
 
 _EVIDENCE_ID = "ev-11111111"
 _BLOCK_REF = "projects/project-alpha/draft.md#^blk-11111111"
-_MARKER = "%%ev: ev-11111111 type=implicit state=evidence-incomplete review=true items=%%"
+_MARKER = "%%ev: ev-11111111 items=%%"
 
 
 def test_evidence_sets_schema_has_block_text_hash_binding(tmp_path: Path) -> None:
@@ -529,8 +529,8 @@ def test_block_text_binding_requires_anchor_and_marker_on_one_line(
     [
         ("`%%ev: alpha%%`", "`%%ev: beta%%`"),
         (
-            "%%ev: ev-22222222 type=implicit state=evidence-incomplete review=true items=%%",
-            "%%ev: ev-22222222 type=implicit state=evidence-incomplete review=false items=%%",
+            "%%ev: ev-22222222 items=%%",
+            "%%ev: ev-22222222 items=ev-33333333%%",
         ),
     ],
 )
