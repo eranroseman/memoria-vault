@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 # Numbered migrations: each entry upgrades an on-disk DB by exactly one version
 # step, {from_version: (from_version + 1, [SQL statement or callable(conn)])}.
 # _init refuses (fail-closed) any user_version with no registered path here.
@@ -3582,10 +3582,133 @@ MIGRATIONS[13] = (
     ],
 )
 
+MIGRATIONS[14] = (
+    15,
+    [
+        """
+        CREATE TABLE code_artifacts_v15 (
+            artifact_id TEXT PRIMARY KEY,
+            project_path TEXT NOT NULL,
+            record_path TEXT NOT NULL UNIQUE,
+            source_dir TEXT NOT NULL,
+            output_dir TEXT NOT NULL,
+            purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both')),
+            approved_command_json TEXT NOT NULL DEFAULT '[]',
+            declared_inputs_json TEXT NOT NULL DEFAULT '[]',
+            declared_outputs_json TEXT NOT NULL DEFAULT '[]',
+            dependency_notes TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL CHECK (status IN ('draft', 'ready', 'failed', 'retired')),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        """,
+        """
+        INSERT INTO code_artifacts_v15(
+            artifact_id,
+            project_path,
+            record_path,
+            source_dir,
+            output_dir,
+            purpose,
+            approved_command_json,
+            declared_inputs_json,
+            declared_outputs_json,
+            dependency_notes,
+            status,
+            created_at,
+            updated_at
+        )
+        SELECT
+            artifact_id,
+            project_path,
+            record_path,
+            source_dir,
+            output_dir,
+            CASE purpose WHEN 'warrant' THEN 'grounds' ELSE purpose END,
+            approved_command_json,
+            declared_inputs_json,
+            declared_outputs_json,
+            dependency_notes,
+            status,
+            created_at,
+            updated_at
+        FROM code_artifacts
+        """,
+        """
+        CREATE TABLE code_runs_v15 (
+            run_id TEXT PRIMARY KEY,
+            artifact_id TEXT NOT NULL REFERENCES code_artifacts_v15(artifact_id) ON DELETE CASCADE,
+            command_json TEXT NOT NULL,
+            cwd TEXT NOT NULL,
+            sanitized_env_json TEXT NOT NULL DEFAULT '[]',
+            input_hashes_json TEXT NOT NULL DEFAULT '{}',
+            output_hashes_json TEXT NOT NULL DEFAULT '{}',
+            stdout_sha256 TEXT NOT NULL DEFAULT '',
+            stderr_sha256 TEXT NOT NULL DEFAULT '',
+            stdout_path TEXT NOT NULL DEFAULT '',
+            stderr_path TEXT NOT NULL DEFAULT '',
+            exit_status INTEGER,
+            timeout_result TEXT NOT NULL DEFAULT '',
+            sandbox_backend TEXT NOT NULL DEFAULT '',
+            sandbox_profile_hash TEXT NOT NULL DEFAULT '',
+            state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
+            started_at TEXT NOT NULL,
+            ended_at TEXT
+        )
+        """,
+        """
+        INSERT INTO code_runs_v15(
+            run_id,
+            artifact_id,
+            command_json,
+            cwd,
+            sanitized_env_json,
+            input_hashes_json,
+            output_hashes_json,
+            stdout_sha256,
+            stderr_sha256,
+            stdout_path,
+            stderr_path,
+            exit_status,
+            timeout_result,
+            sandbox_backend,
+            sandbox_profile_hash,
+            state,
+            started_at,
+            ended_at
+        )
+        SELECT
+            run_id,
+            artifact_id,
+            command_json,
+            cwd,
+            sanitized_env_json,
+            input_hashes_json,
+            output_hashes_json,
+            stdout_sha256,
+            stderr_sha256,
+            stdout_path,
+            stderr_path,
+            exit_status,
+            timeout_result,
+            sandbox_backend,
+            sandbox_profile_hash,
+            state,
+            started_at,
+            ended_at
+        FROM code_runs
+        """,
+        "DROP TABLE code_runs",
+        "DROP TABLE code_artifacts",
+        "ALTER TABLE code_artifacts_v15 RENAME TO code_artifacts",
+        "ALTER TABLE code_runs_v15 RENAME TO code_runs",
+    ],
+)
+
 
 def _code_purpose(value: str) -> str:
     purpose = value.strip().lower()
-    if purpose not in {"warrant", "deliverable", "both"}:
+    if purpose not in {"grounds", "deliverable", "both"}:
         raise ValueError(f"invalid code artifact purpose: {value!r}")
     return purpose
 

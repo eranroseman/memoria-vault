@@ -17,6 +17,8 @@ removed release-please setup, not real releases, and have been deleted.
 
 - Renamed computed-evidence `code-warrant` references to `code-grounds`.
   Retired `code-warrant:` markers are rejected without an alias or migration.
+- Migrated `code_artifacts.purpose` from `warrant` to `grounds` in the SQLite
+  14→15 upgrade while preserving `code_runs` history.
 
 ## [0.1.0a21] - 2026-07-14
 

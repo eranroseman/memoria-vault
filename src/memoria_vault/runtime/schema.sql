@@ -306,7 +306,7 @@ CREATE TABLE IF NOT EXISTS code_artifacts (
     record_path TEXT NOT NULL UNIQUE,
     source_dir TEXT NOT NULL,
     output_dir TEXT NOT NULL,
-    purpose TEXT NOT NULL CHECK (purpose IN ('warrant', 'deliverable', 'both')),
+    purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both')),
     approved_command_json TEXT NOT NULL DEFAULT '[]',
     declared_inputs_json TEXT NOT NULL DEFAULT '[]',
     declared_outputs_json TEXT NOT NULL DEFAULT '[]',
@@ -383,4 +383,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 14;
+PRAGMA user_version = 15;

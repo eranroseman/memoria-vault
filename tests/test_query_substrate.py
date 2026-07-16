@@ -12,6 +12,44 @@ from memoria_vault.runtime.search_index import answer_query as _answer_query
 from memoria_vault.runtime.subsystems.lib import schema
 from tests.helpers import call_with_context, copy_memoria_dirs, write_checked_concept
 
+V14_CODE_TABLES_SQL = """
+CREATE TABLE code_artifacts (
+    artifact_id TEXT PRIMARY KEY,
+    project_path TEXT NOT NULL,
+    record_path TEXT NOT NULL UNIQUE,
+    source_dir TEXT NOT NULL,
+    output_dir TEXT NOT NULL,
+    purpose TEXT NOT NULL CHECK (purpose IN ('warrant', 'deliverable', 'both')),
+    approved_command_json TEXT NOT NULL DEFAULT '[]',
+    declared_inputs_json TEXT NOT NULL DEFAULT '[]',
+    declared_outputs_json TEXT NOT NULL DEFAULT '[]',
+    dependency_notes TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL CHECK (status IN ('draft', 'ready', 'failed', 'retired')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE code_runs (
+    run_id TEXT PRIMARY KEY,
+    artifact_id TEXT NOT NULL REFERENCES code_artifacts(artifact_id) ON DELETE CASCADE,
+    command_json TEXT NOT NULL,
+    cwd TEXT NOT NULL,
+    sanitized_env_json TEXT NOT NULL DEFAULT '[]',
+    input_hashes_json TEXT NOT NULL DEFAULT '{}',
+    output_hashes_json TEXT NOT NULL DEFAULT '{}',
+    stdout_sha256 TEXT NOT NULL DEFAULT '',
+    stderr_sha256 TEXT NOT NULL DEFAULT '',
+    stdout_path TEXT NOT NULL DEFAULT '',
+    stderr_path TEXT NOT NULL DEFAULT '',
+    exit_status INTEGER,
+    timeout_result TEXT NOT NULL DEFAULT '',
+    sandbox_backend TEXT NOT NULL DEFAULT '',
+    sandbox_profile_hash TEXT NOT NULL DEFAULT '',
+    state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
+    started_at TEXT NOT NULL,
+    ended_at TEXT
+);
+"""
+
 
 def answer_query(vault: Path, *args, **kwargs):
     return call_with_context(_answer_query, vault, *args, **kwargs)
@@ -30,7 +68,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 14
+    assert state.SCHEMA_VERSION == 15
     assert {
         "passages",
         "passage_fts",
@@ -364,7 +402,7 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
     with state.connect(fresh) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_edges)")}
         assert {"edge_id", "attributes_json"}.issubset(columns)
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 14
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 15
 
     state.replace_concept_edges(
         fresh,
@@ -475,6 +513,7 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
             "discovered_at TEXT NOT NULL, "
             "PRIMARY KEY (work_id, relation_type, target_id))"
         )
+        conn.executescript(V14_CODE_TABLES_SQL)
         conn.executemany(
             "INSERT INTO concept_edges("
             "source_concept_id, relation_type, target_concept_id, check_status, source_path, updated_at) "
@@ -510,7 +549,7 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
             )
         }
 
-    assert version == state.SCHEMA_VERSION == 14
+    assert version == state.SCHEMA_VERSION == 15
     assert legacy_rows[("./notes/mirror.md", "supports", "notes/target.md")] == {
         "source_concept_id": "./notes/mirror.md",
         "relation_type": "supports",
@@ -559,6 +598,7 @@ def test_reverse_traversal_indexes_migrate_v13_database(tmp_path: Path) -> None:
             PRAGMA user_version = 13;
             """
         )
+        conn.executescript(V14_CODE_TABLES_SQL)
 
     assert 13 in state.MIGRATIONS
     to_version, steps = state.MIGRATIONS[13]
@@ -575,7 +615,7 @@ def test_reverse_traversal_indexes_migrate_v13_database(tmp_path: Path) -> None:
             for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
         }
 
-    assert version == state.SCHEMA_VERSION == 14
+    assert version == state.SCHEMA_VERSION == 15
     assert {"idx_concept_edges_target", "idx_work_graph_edges_target"}.issubset(names)
 
 

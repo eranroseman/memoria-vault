@@ -1,11 +1,29 @@
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.code.records import create_code_artifact
 from memoria_vault.runtime.code.runner import Availability, run_artifact
 from memoria_vault.runtime.policy.audit import sha256_file
+
+
+def test_code_artifact_default_purpose_is_grounds_in_database_and_markdown(
+    tmp_path: Path,
+) -> None:
+    try:
+        artifact = create_code_artifact(
+            tmp_path,
+            "project-alpha",
+            "analysis",
+            approved_command=["python3", "main.py"],
+        )
+    except sqlite3.IntegrityError as exc:
+        raise AssertionError("the default code artifact purpose must be valid") from exc
+
+    assert artifact["purpose"] == "grounds"
+    assert "purpose: grounds\n" in (tmp_path / artifact["record_path"]).read_text(encoding="utf-8")
 
 
 def test_code_artifact_record_and_unavailable_runner_fail_closed(
