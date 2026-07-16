@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import http.client
 import json
 import os
+import socket
 import stat
 import subprocess
 import sys
+import threading
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from memoria_vault import __version__
 from memoria_vault.runtime import rendezvous
+from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed
+from tests.helpers import init_cli_workspace
 
 
 def test_vault_key_is_sha256_prefix_of_canonical_path(tmp_path: Path) -> None:
@@ -591,3 +598,250 @@ def test_gc_stale_entries_ignores_a_junctioned_entry(
 
     assert rendezvous.gc_stale_entries(root) == []
     assert rendezvous.read_runtime(entry_dir) is not None
+
+
+@pytest.fixture
+def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
+    return init_cli_workspace(tmp_path, capsys)
+
+
+def _make_server(workspace: Path, **kwargs: object):
+    try:
+        return make_http_server(workspace, host="127.0.0.1", port=0, **kwargs)
+    except PermissionError as exc:  # pragma: no cover - sandbox guard
+        pytest.skip(f"loopback socket unavailable in this sandbox: {exc}")
+
+
+@contextlib.contextmanager
+def _running_server(
+    workspace: Path, *, token: str = "test-token", boot_id: str = "boot-1"
+) -> Iterator[tuple[object, int, threading.Thread]]:
+    server = _make_server(workspace, token=token, boot_id=boot_id)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield server, int(server.server_address[1]), thread
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def _request(
+    port: int,
+    method: str,
+    path: str,
+    *,
+    token: str | None = None,
+    host: str | None = None,
+    origin: str | None = None,
+) -> tuple[int, dict[str, object]]:
+    connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+    headers = {"Host": host or f"127.0.0.1:{port}"}
+    if token is not None:
+        headers["Authorization"] = f"Bearer {token}"
+    if origin is not None:
+        headers["Origin"] = origin
+    try:
+        connection.request(method, path, headers=headers)
+        response = connection.getresponse()
+        return response.status, json.loads(response.read().decode("utf-8"))
+    finally:
+        connection.close()
+
+
+def _raw_request(port: int, request: str) -> tuple[int, dict[str, object]]:
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as connection:
+        connection.sendall(request.encode("ascii"))
+        response = http.client.HTTPResponse(connection)
+        response.begin()
+        return response.status, json.loads(response.read().decode("utf-8"))
+
+
+def test_v1_status_is_unauthenticated_and_never_resets_idle_timer(workspace: Path) -> None:
+    with _running_server(workspace, boot_id="boot-status") as (server, port, _thread):
+        server.last_authenticated = 41.0
+        status, payload = _request(port, "GET", "/v1/status")
+
+        assert status == 200
+        assert payload == {
+            "boot_id": "boot-status",
+            "engine_version": __version__,
+            "ok": True,
+        }
+        assert server.last_authenticated == 41.0
+
+
+def test_v1_status_with_valid_token_never_resets_idle_timer(workspace: Path) -> None:
+    with _running_server(workspace) as (server, port, _thread):
+        server.last_authenticated = 42.0
+
+        status, payload = _request(port, "GET", "/v1/status", token="test-token")
+
+        assert status == 200
+        assert payload["ok"] is True
+        assert server.last_authenticated == 42.0
+
+
+def test_authenticated_request_resets_idle_timer_and_unauthorized_does_not(
+    workspace: Path,
+) -> None:
+    with _running_server(workspace) as (server, port, _thread):
+        server.last_authenticated = 0.0
+        status, payload = _request(port, "GET", "/status", token="test-token")
+        assert status == 200
+        assert payload["ok"] is True
+        assert server.last_authenticated > 0.0
+
+        marked = server.last_authenticated
+        status, payload = _request(port, "GET", "/status")
+        assert status == 401
+        assert payload == {"ok": False, "error": "unauthorized"}
+        assert server.last_authenticated == marked
+
+
+def test_host_header_validation_rejects_dns_rebinding(workspace: Path) -> None:
+    with _running_server(workspace) as (_server, port, _thread):
+        forged, payload = _request(port, "GET", "/v1/status", host=f"evil.example:{port}")
+        assert forged == 403
+        assert payload == {"ok": False, "error": "forbidden host"}
+        localhost_ok, _payload = _request(port, "GET", "/v1/status", host=f"localhost:{port}")
+        assert localhost_ok == 200
+
+    assert host_allowed("127.0.0.1:1234", 1234) is True
+    assert host_allowed("localhost:1234", 1234) is True
+    assert host_allowed("127.0.0.1:9999", 1234) is False
+    assert host_allowed(None, 1234) is False
+
+
+def test_host_header_validation_rejects_empty_and_missing_host(workspace: Path) -> None:
+    with _running_server(workspace) as (_server, port, _thread):
+        empty, empty_payload = _raw_request(
+            port,
+            "GET /v1/status HTTP/1.1\r\nHost: \r\nConnection: close\r\n\r\n",
+        )
+        missing, missing_payload = _raw_request(
+            port,
+            "GET /v1/status HTTP/1.1\r\nConnection: close\r\n\r\n",
+        )
+
+    assert empty == 403
+    assert empty_payload == {"ok": False, "error": "forbidden host"}
+    assert missing == 403
+    assert missing_payload == {"ok": False, "error": "forbidden host"}
+
+
+def test_duplicate_host_is_rejected_before_auth_and_never_touches_idle_timer(
+    workspace: Path,
+) -> None:
+    with _running_server(workspace) as (server, port, _thread):
+        server.last_authenticated = 43.0
+        status, payload = _raw_request(
+            port,
+            "GET /status HTTP/1.1\r\n"
+            f"Host: 127.0.0.1:{port}\r\n"
+            f"Host: 127.0.0.1:{port}\r\n"
+            "Authorization: Bearer test-token\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+        )
+
+        assert status == 403
+        assert payload == {"ok": False, "error": "forbidden host"}
+        assert server.last_authenticated == 43.0
+
+
+def test_origin_rejected_unless_obsidian_app(workspace: Path) -> None:
+    with _running_server(workspace) as (_server, port, _thread):
+        rejected, payload = _request(
+            port, "GET", "/status", token="test-token", origin="https://evil.example"
+        )
+        assert rejected == 403
+        assert payload == {"ok": False, "error": "forbidden origin"}
+        allowed, _payload = _request(
+            port, "GET", "/status", token="test-token", origin="app://obsidian.md"
+        )
+        assert allowed == 200
+
+    assert origin_allowed(None) is True
+    assert origin_allowed("app://obsidian.md") is True
+    assert origin_allowed("https://evil.example") is False
+
+
+def test_duplicate_origin_is_rejected_before_auth_and_never_touches_idle_timer(
+    workspace: Path,
+) -> None:
+    with _running_server(workspace) as (server, port, _thread):
+        server.last_authenticated = 44.0
+        status, payload = _raw_request(
+            port,
+            "GET /status HTTP/1.1\r\n"
+            f"Host: 127.0.0.1:{port}\r\n"
+            "Origin: app://obsidian.md\r\n"
+            "Origin: app://obsidian.md\r\n"
+            "Authorization: Bearer test-token\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+        )
+
+        assert status == 403
+        assert payload == {"ok": False, "error": "forbidden origin"}
+        assert server.last_authenticated == 44.0
+
+
+def test_rejected_host_or_origin_with_valid_token_never_touches_idle_timer(
+    workspace: Path,
+) -> None:
+    with _running_server(workspace) as (server, port, _thread):
+        server.last_authenticated = 45.0
+        host_status, host_payload = _request(
+            port, "GET", "/status", token="test-token", host=f"evil.example:{port}"
+        )
+        assert host_status == 403
+        assert host_payload == {"ok": False, "error": "forbidden host"}
+        assert server.last_authenticated == 45.0
+
+        server.last_authenticated = 46.0
+        origin_status, origin_payload = _request(
+            port, "GET", "/status", token="test-token", origin="https://evil.example"
+        )
+        assert origin_status == 403
+        assert origin_payload == {"ok": False, "error": "forbidden origin"}
+        assert server.last_authenticated == 46.0
+
+
+def test_host_validation_precedes_origin_validation(workspace: Path) -> None:
+    with _running_server(workspace) as (server, port, _thread):
+        server.last_authenticated = 47.0
+        status, payload = _request(
+            port,
+            "GET",
+            "/status",
+            token="test-token",
+            host=f"evil.example:{port}",
+            origin="https://evil.example",
+        )
+
+        assert status == 403
+        assert payload == {"ok": False, "error": "forbidden host"}
+        assert server.last_authenticated == 47.0
+
+
+def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
+    server = _make_server(workspace, token="test-token", boot_id="boot-1")
+    port = int(server.server_address[1])
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        denied, payload = _request(port, "POST", "/v1/shutdown")
+        assert denied == 401
+        assert payload == {"ok": False, "error": "unauthorized"}
+        wrong_method, _payload = _request(port, "GET", "/v1/shutdown", token="test-token")
+        assert wrong_method == 405
+        status, payload = _request(port, "POST", "/v1/shutdown", token="test-token")
+        assert status == 200
+        assert payload == {"ok": True, "stopping": True}
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+    finally:
+        server.server_close()

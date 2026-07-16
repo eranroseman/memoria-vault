@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import threading
+import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import (
     SURFACE_ACTIONS,
@@ -20,6 +23,28 @@ from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 MAX_BODY_BYTES = 1_000_000
 HTTP_ROUTES = http_routes()
 HTTP_PATHS = {path for _method, path in HTTP_ROUTES}
+ALLOWED_ORIGIN = "app://obsidian.md"
+
+
+class MemoriaHTTPServer(ThreadingHTTPServer):
+    """Loopback server carrying boot identity and idle-exit bookkeeping."""
+
+    daemon_threads = True
+    boot_id = ""
+    last_authenticated = 0.0
+
+    def record_authenticated_activity(self) -> None:
+        self.last_authenticated = time.monotonic()
+
+
+def host_allowed(host_header: str | None, port: int) -> bool:
+    """Return whether a request names this loopback listener exactly."""
+    return host_header in {f"127.0.0.1:{port}", f"localhost:{port}"}
+
+
+def origin_allowed(origin: str | None) -> bool:
+    """Return whether a browser request originates from the Obsidian app."""
+    return origin is None or origin == ALLOWED_ORIGIN
 
 
 class PayloadTooLarge(ValueError):
@@ -33,7 +58,8 @@ def make_http_server(
     port: int,
     token: str,
     read_scope: list[str] | None = None,
-) -> ThreadingHTTPServer:
+    boot_id: str = "",
+) -> MemoriaHTTPServer:
     """Create a token-authenticated loopback server for one workspace."""
     workspace = Path(workspace).resolve()
     startup_read_scope = _normalize_read_scope(read_scope)
@@ -60,8 +86,40 @@ def make_http_server(
             return
 
         def _handle(self, method: str) -> None:
+            port = int(self.server.server_address[1])
+            hosts = self.headers.get_all("Host") or []
+            if len(hosts) != 1 or not host_allowed(hosts[0], port):
+                self._write({"ok": False, "error": "forbidden host"}, HTTPStatus.FORBIDDEN)
+                return
+            origins = self.headers.get_all("Origin") or []
+            if len(origins) > 1 or (origins and not origin_allowed(origins[0])):
+                self._write({"ok": False, "error": "forbidden origin"}, HTTPStatus.FORBIDDEN)
+                return
+            path = urlparse(self.path).path.rstrip("/") or "/"
+            if path == "/v1/status":
+                if method != "GET":
+                    self._write(
+                        {"ok": False, "error": "method not allowed"},
+                        HTTPStatus.METHOD_NOT_ALLOWED,
+                    )
+                    return
+                self._write(
+                    {"ok": True, "boot_id": self.server.boot_id, "engine_version": __version__}
+                )
+                return
             if not is_authorized(self.headers.get("Authorization"), token):
                 self._write({"ok": False, "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
+                return
+            self.server.record_authenticated_activity()
+            if path == "/v1/shutdown":
+                if method != "POST":
+                    self._write(
+                        {"ok": False, "error": "method not allowed"},
+                        HTTPStatus.METHOD_NOT_ALLOWED,
+                    )
+                    return
+                self._write({"ok": True, "stopping": True})
+                threading.Thread(target=self.server.shutdown, daemon=True).start()
                 return
             try:
                 payload, status = _dispatch(
@@ -94,7 +152,10 @@ def make_http_server(
             self.end_headers()
             self.wfile.write(body)
 
-    return ThreadingHTTPServer((host, port), Handler)
+    server = MemoriaHTTPServer((host, port), Handler)
+    server.boot_id = boot_id
+    server.record_authenticated_activity()
+    return server
 
 
 def is_authorized(authorization: str | None, token: str) -> bool:
