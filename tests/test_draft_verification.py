@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import replace
 from pathlib import Path
 
@@ -22,6 +23,7 @@ from memoria_vault.runtime.knowledge import (
 from memoria_vault.runtime.knowledge import (
     write_project_export as _write_project_export,
 )
+from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from tests.helpers import call_with_context, operation_context, write_checked_concept
 
 
@@ -347,6 +349,148 @@ def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
 
     assert verification["ready"] is True
     assert verification["findings"] == []
+
+
+def test_evidence_items_digest_preserves_nonempty_item_order() -> None:
+    items = ["source-alpha#^p0001", "source-beta#^p0002"]
+
+    digest = knowledge._evidence_items_sha256(items)
+
+    assert digest == hashlib.sha256(b"source-alpha#^p0001|source-beta#^p0002").hexdigest()
+    assert digest != knowledge._evidence_items_sha256(list(reversed(items)))
+
+
+def test_disposition_event_records_empty_items_digest(tmp_path: Path) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim gets a content-bound disposition.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    result = compose_project_draft(vault, "project-alpha")
+    evidence_id = result["evidence_markers"][0]["id"]
+
+    event = resolve_evidence_review(vault, evidence_id, decision="accept", reason="PI accepted")
+
+    assert event["items_sha256"] == hashlib.sha256(b"").hexdigest()
+
+
+def test_editing_items_voids_prior_disposition(tmp_path: Path) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim was accepted, then its grounds changed.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    result = compose_project_draft(vault, "project-alpha")
+    evidence_id = result["evidence_markers"][0]["id"]
+    resolve_evidence_review(vault, evidence_id, decision="accept", reason="PI accepted")
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(
+            "items=%%",
+            "items=source-missing#^p0001%%",
+        ),
+        encoding="utf-8",
+    )
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert verification["ready"] is False
+    assert "evidence-incomplete" in {finding["kind"] for finding in verification["findings"]}
+
+
+def test_disposition_requires_matching_evidence_record(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="unknown evidence id"):
+        resolve_evidence_review(tmp_path, "ev-deadbeef", decision="accept", reason="none")
+
+
+def test_legacy_digestless_disposition_is_inert(tmp_path: Path) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim has a legacy disposition without an items digest.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    result = compose_project_draft(vault, "project-alpha")
+    evidence_id = result["evidence_markers"][0]["id"]
+    append_explicit_journal_event(
+        vault,
+        {
+            "event": "resolved",
+            "operation": "resolve-evidence-review",
+            "evidence_id": evidence_id,
+            "decision": "accept",
+            "reason": "legacy PI acceptance",
+        },
+        actor="pi",
+        machine="test-machine",
+    )
+
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert verification["ready"] is False
+    assert {finding["kind"] for finding in verification["findings"]} == {
+        "evidence-incomplete",
+        "review-required",
+    }
+
+
+def test_latest_digest_bound_reject_disposition_wins(tmp_path: Path) -> None:
+    vault = tmp_path
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim has two PI dispositions for different grounds.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    result = compose_project_draft(vault, "project-alpha")
+    evidence_id = result["evidence_markers"][0]["id"]
+    first = resolve_evidence_review(vault, evidence_id, decision="accept", reason="PI accepted")
+
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(
+            "items=%%",
+            "items=source-missing#^p0001%%",
+        ),
+        encoding="utf-8",
+    )
+    state.rebuild_evidence_sets_from_markers(vault)
+    second = resolve_evidence_review(vault, evidence_id, decision="reject", reason="PI rejected")
+
+    assert second["items_sha256"] == hashlib.sha256(b"source-missing#^p0001").hexdigest()
+    assert knowledge._disposed_evidence_digests(vault)[evidence_id] == second["items_sha256"]
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(
+            "items=source-missing#^p0001%%",
+            "items=%%",
+        ),
+        encoding="utf-8",
+    )
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert first["items_sha256"] == hashlib.sha256(b"").hexdigest()
+    assert verification["ready"] is False
+    assert "evidence-incomplete" in {finding["kind"] for finding in verification["findings"]}
 
 
 def test_draft_text_drift_overrides_pi_disposition_and_refuses_export(

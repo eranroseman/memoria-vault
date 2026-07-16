@@ -2173,7 +2173,7 @@ def _verify_project_draft_snapshot(
         }
         for evidence_id in sorted(duplicate_ids & draft_occurrence_ids)
     ]
-    disposed = _disposed_evidence_ids(vault)
+    disposed = _disposed_evidence_digests(vault)
     for row in draft["evidence_sets"]:
         stored_block_hash = row.get("block_text_sha256")
         current_block_hash = state._block_text_sha256_from_text(
@@ -2210,7 +2210,7 @@ def _verify_project_draft_snapshot(
                     "reason": "anchored block text differs from its stored binding",
                 }
             )
-        if row["id"] in disposed:
+        if disposed.get(row["id"]) == _evidence_items_sha256(row["items"]):
             continue
         if row["state"] == "evidence-incomplete":
             findings.append(
@@ -2272,6 +2272,12 @@ def resolve_evidence_review(
         raise ValueError(f"invalid evidence id: {evidence_id}")
     if decision not in {"accept", "reject"}:
         raise ValueError("evidence review decision must be accept or reject")
+    record = next(
+        (row for row in state.evidence_sets(Path(vault)) if row["id"] == evidence_id),
+        None,
+    )
+    if record is None:
+        raise ValueError(f"unknown evidence id: {evidence_id}")
     return append_explicit_journal_event(
         Path(vault),
         {
@@ -2280,6 +2286,7 @@ def resolve_evidence_review(
             "evidence_id": evidence_id,
             "decision": decision,
             "reason": reason.strip(),
+            "items_sha256": _evidence_items_sha256(record["items"]),
         },
         actor=actor,
         machine=machine,
@@ -3221,17 +3228,28 @@ def _verification_finding_labels(findings: Iterable[dict[str, Any]]) -> list[str
     return labels
 
 
-def _disposed_evidence_ids(vault: Path) -> set[str]:
+def _evidence_items_sha256(items: Iterable[str]) -> str:
+    return hashlib.sha256("|".join(items).encode("utf-8")).hexdigest()
+
+
+def _disposed_evidence_digests(vault: Path) -> dict[str, str]:
+    """Map evidence dispositions to the items digest each one bound (spec §7)."""
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id
+            SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id,
+                   json_extract(payload_json, '$.items_sha256') AS items_sha256
             FROM event_log
             WHERE json_extract(payload_json, '$.operation') = 'resolve-evidence-review'
               AND json_extract(payload_json, '$.decision') IN ('accept', 'reject')
+            ORDER BY rowid
             """
         ).fetchall()
-    return {str(row["evidence_id"]) for row in rows if row["evidence_id"]}
+    return {
+        str(row["evidence_id"]): str(row["items_sha256"])
+        for row in rows
+        if row["evidence_id"] and row["items_sha256"]
+    }
 
 
 def _draft_structural_reference_findings(vault: Path, content: str) -> list[dict[str, Any]]:
