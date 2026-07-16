@@ -25,7 +25,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
+from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     RETIRED_FRONTMATTER_FIELDS,
@@ -500,6 +500,40 @@ def _restriction_key_removed_finding(target: str, key: str) -> dict[str, str]:
     }
 
 
+def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
+    """Land one CS3 scan finding on the durable Inbox attention surface."""
+    subject = str(finding["subject_id"])
+    if finding["kind"] == "restriction-key-removed":
+        key = str(finding["key"])
+        title = f"Restriction key removed: {subject}"
+        detail = (
+            f"Restriction key {markdown_code_span(key)} was removed from "
+            f"{markdown_code_span(subject)} outside the trusted writer; until "
+            "reviewed the file can re-enter Ask and pass the export gate."
+        )
+        slug = f"cs3-restriction-key-removed-{subject}-{key}"
+    else:
+        current = str(finding["current_human_sha256"])
+        title = f"Foreign edit: {subject}"
+        detail = (
+            f"{markdown_code_span(subject)} changed outside the trusted writer: "
+            f"expected {markdown_code_span(str(finding['prior_human_sha256']))}, "
+            f"found {markdown_code_span(current)}."
+        )
+        slug = f"cs3-foreign-edit-{current.removeprefix('sha256:')[:12]}-{subject}"
+    write_finding(
+        vault,
+        "flag",
+        title,
+        detail,
+        raised_by="workspace-scan",
+        agent_recommendation="issues-found",
+        target=subject,
+        loudness="alert",
+        dedupe_slug=slug,
+    )
+
+
 def _observe_pi_edits_from_status(
     vault: Path,
     *,
@@ -602,6 +636,8 @@ def _observe_pi_edits_from_status(
                 human_sha256=current_hash,
                 restriction_keys=restriction_keys,
             )
+    for finding in findings:
+        _route_finding_to_inbox(vault, finding)
     return {"paths": targets, "observed": observed, "findings": findings, "commit": commit}
 
 

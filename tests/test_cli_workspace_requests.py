@@ -1887,3 +1887,40 @@ def test_cli_workspace_rebuild_writes_checked_search_index(
     assert rc == 0
     assert doctor["ok"] is True
     assert doctor["search_document_count"] == 1
+
+
+def test_workspace_scan_prints_and_persists_cs3_findings(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    note = workspace / "notes/witness.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(
+        "---\n"
+        "type: note\n"
+        "id: 01KBN6V6KX0000000000000001\n"
+        "title: Witness note\n"
+        "tags: []\n"
+        "links: {}\n"
+        "---\n"
+        "Witness body.\n",
+        encoding="utf-8",
+    )
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
+    capsys.readouterr()  # first scan observes + baselines the note
+
+    text = note.read_text(encoding="utf-8")
+    note.write_text(text + "\nForeign out-of-band edit.\n", encoding="utf-8")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace)]) == 0
+    out = capsys.readouterr().out
+    assert "finding: foreign-edit notes/witness.md" in out
+    cards = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*notes-witness-md.md"))
+    assert len(cards) == 1
+
+    assert main(["workspace", "scan", "--workspace", str(workspace)]) == 0
+    capsys.readouterr()
+    rescanned = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*notes-witness-md.md"))
+    assert rescanned == cards  # rescan is idempotent on the durable surface

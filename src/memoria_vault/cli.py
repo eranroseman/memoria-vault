@@ -1933,7 +1933,22 @@ def _scoped_operation_args(base_args: argparse.Namespace, operation_id: str) -> 
 
 
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
-    return _emit(_workspace_scan_payload(args), args)
+    payload = _workspace_scan_payload(args)
+    _print_scan_findings(payload, args)
+    return _emit(payload, args)
+
+
+def _print_scan_findings(payload: dict[str, Any], args: argparse.Namespace) -> None:
+    if args.json or args.quiet:
+        return
+    result = payload.get("result")
+    findings = result.get("findings") if isinstance(result, dict) else None
+    for finding in findings or []:
+        kind = str(finding.get("kind") or "finding")
+        subject = str(finding.get("subject_id") or "")
+        key = str(finding.get("key") or "")
+        suffix = f" (key: {key})" if key else ""
+        print(f"finding: {kind} {subject}{suffix}")
 
 
 def _workspace_scan_payload(
