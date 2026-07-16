@@ -9,6 +9,7 @@ import os
 import stat
 import sys
 import tempfile
+import urllib.request
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -224,7 +225,7 @@ def _open_serve_lock_file(state_dir: Path) -> int:
 
 @contextmanager
 def serve_lock(state_dir: Path) -> Iterator[bool]:
-    """Yield True when this holder owns the exclusive spawn lock."""
+    """Yield True when this holder owns the exclusive server-admission lock."""
     fd = _open_serve_lock_file(state_dir)
     try:
         if os.name == "posix":
@@ -243,7 +244,7 @@ def serve_lock(state_dir: Path) -> Iterator[bool]:
                     os.lseek(fd, 0, os.SEEK_SET)
                     msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
                 return
-            yield True
+            yield False
             return
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -274,3 +275,45 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
             clear_runtime(entry_dir)
             removed.append(entry_dir.name)
     return removed
+
+
+def post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None:
+    """POST the authenticated shutdown request, returning None when unreachable."""
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{port}/v1/shutdown",
+        method="POST",
+        headers={"Authorization": f"Bearer {token}"},
+        data=b"",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def probe_boot_id(port: int, timeout: float = 1.0) -> str | None:
+    """Return the unauthenticated status endpoint's non-empty boot ID."""
+    try:
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/v1/status", timeout=timeout
+        ) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (OSError, ValueError):
+        return None
+    boot_id = data.get("boot_id") if isinstance(data, dict) else None
+    return boot_id if isinstance(boot_id, str) and boot_id else None
+
+
+def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None:
+    """Return a matching live entry, removing only records with dead PIDs."""
+    record = read_runtime(state_dir)
+    if record is None:
+        return None
+    if not pid_alive(int(record["pid"])):
+        clear_runtime(state_dir)
+        return None
+    if probe_boot_id(int(record["port"]), timeout=probe_timeout) != record["boot_id"]:
+        return None
+    return record

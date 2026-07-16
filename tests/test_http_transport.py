@@ -33,7 +33,7 @@ def test_serve_http_once_reports_loopback_token(
 
     monkeypatch.setenv("MEMORIA_HTTP_TOKEN", "test-token")
     monkeypatch.setattr(
-        "memoria_vault.runtime.http_transport.make_http_server",
+        "memoria_vault.runtime.http_transport.bind_http_server",
         lambda *args, **kwargs: FakeServer(),
     )
 
@@ -52,12 +52,12 @@ def test_serve_http_once_reports_loopback_token(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    assert output == {
-        "ok": True,
-        "token": None,
-        "token_source": "env",
-        "url": "http://127.0.0.1:43210",
-    }
+    assert output["ok"] is True
+    assert output["url"] == "http://127.0.0.1:43210"
+    assert output["port"] == 43210
+    assert output["boot_id"]
+    assert output["token"] is None
+    assert output["token_source"] == "env"
 
 
 def test_serve_http_rejects_non_loopback_host(
@@ -98,7 +98,7 @@ def test_serve_http_passes_startup_read_scope(
         return FakeServer()
 
     monkeypatch.setenv("MEMORIA_HTTP_TOKEN", "test-token")
-    monkeypatch.setattr("memoria_vault.runtime.http_transport.make_http_server", fake_server)
+    monkeypatch.setattr("memoria_vault.runtime.http_transport.bind_http_server", fake_server)
 
     rc = main(
         [

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import math
 import os
 import secrets
 import shutil
@@ -25,6 +26,7 @@ from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.worker import (
     PROTECTED_OPERATION_ACTORS,
     _workspace_lock,
@@ -115,6 +117,10 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--read-scope", action="append", default=[])
     serve.add_argument("--once", action="store_true")
     serve.add_argument("--poll-interval", type=float, default=1.0)
+    serve.add_argument("--on-demand", action="store_true")
+    serve.add_argument("--ephemeral", action="store_true")
+    serve.add_argument("--idle-exit", type=float, default=900.0)
+    serve.add_argument("--stop", action="store_true")
     serve.set_defaults(handler=_cmd_serve)
 
     migrate = sub.add_parser("migrate")
@@ -713,7 +719,11 @@ def _cmd_ask(args: argparse.Namespace) -> int:
 
 
 def _cmd_serve(args: argparse.Namespace) -> int:
-    if args.http:
+    if args.stop:
+        if args.watch:
+            return _fail("serve accepts one transport at a time", json_output=args.json)
+        return _cmd_serve_stop(args)
+    if args.http or args.on_demand or args.ephemeral:
         if args.watch:
             return _fail("serve accepts one transport at a time", json_output=args.json)
         return _cmd_serve_http(args)
@@ -742,47 +752,145 @@ def _cmd_serve(args: argparse.Namespace) -> int:
         return 0
 
 
-def _cmd_serve_http(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.http_transport import make_http_server
+SERVE_PORT_DEFAULT = 8765
+SERVE_PORT_WALK_END = 8785
 
-    if args.host not in {"127.0.0.1", "localhost", "::1"}:
+
+def _serve_port_candidates(port: int) -> list[int]:
+    """Return the conventional local-port walk or one explicit port."""
+    if port == SERVE_PORT_DEFAULT:
+        return list(range(SERVE_PORT_DEFAULT, SERVE_PORT_WALK_END + 1))
+    return [port]
+
+
+def _vault_id(workspace: Path) -> str:
+    """Read the seeded vault ID when it is available."""
+    try:
+        data = json.loads((workspace / ".memoria/vault.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    return str(data.get("vault_id") or "") if isinstance(data, dict) else ""
+
+
+def _cmd_serve_http(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import rendezvous
+    from memoria_vault.runtime.http_transport import bind_http_server, start_idle_monitor
+
+    if not math.isfinite(args.idle_exit) or args.idle_exit <= 0:
+        return _fail("serve --idle-exit must be positive", json_output=args.json)
+    if args.host not in {"127.0.0.1", "localhost"}:
         return _fail("serve --http only binds loopback hosts", json_output=args.json)
+    workspace = _workspace(args)
     env_token = os.environ.get("MEMORIA_HTTP_TOKEN")
     token = env_token or secrets.token_urlsafe(32)
-    try:
-        server = make_http_server(
-            _workspace(args),
-            host=args.host,
-            port=args.port,
-            token=token,
-            read_scope=args.read_scope,
-        )
-    except ValueError as exc:
-        return _fail(str(exc), json_output=args.json)
-    port = int(server.server_address[1])
-    payload = {
-        "ok": True,
-        "url": f"http://{args.host}:{port}",
-        "token": None if env_token else token,
-        "token_source": "env" if env_token else "generated",
-    }
-    if args.json:
-        print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
-    elif not args.quiet:
-        print(f"Memoria HTTP serving {payload['url']}", flush=True)
-        if env_token:
-            print("Token loaded from MEMORIA_HTTP_TOKEN.", flush=True)
-        else:
-            print(f"Token: {token}", flush=True)
-    if args.once:
-        server.server_close()
-        return 0
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        return 0
-    finally:
-        server.server_close()
+    boot_id = str(uuid.uuid4())
+    candidates = [0] if args.ephemeral else _serve_port_candidates(args.port)
+    state_dir = rendezvous.vault_state_dir(workspace)
+
+    with rendezvous.serve_lock(state_dir) as acquired:
+        if not acquired:
+            return _fail(
+                "serve could not acquire the exclusive admission lock", json_output=args.json
+            )
+
+        live = rendezvous.live_coordinates(state_dir)
+        if live is not None:
+            return _fail(
+                "a memoria server is already running for this vault", json_output=args.json
+            )
+
+        server: Any | None = None
+        runtime_published = False
+        try:
+            try:
+                server = bind_http_server(
+                    workspace,
+                    host=args.host,
+                    candidate_ports=candidates,
+                    token=token,
+                    read_scope=args.read_scope,
+                    boot_id=boot_id,
+                )
+            except ValueError as exc:
+                return _fail(str(exc), json_output=args.json)
+            except OSError as exc:
+                return _fail(f"serve --http could not bind a port: {exc}", json_output=args.json)
+
+            port = int(server.server_address[1])
+            try:
+                rendezvous.write_runtime(
+                    state_dir,
+                    {
+                        "vault_path": str(workspace),
+                        "vault_id": _vault_id(workspace),
+                        "port": port,
+                        "pid": os.getpid(),
+                        "boot_id": boot_id,
+                        "token": token,
+                        "engine_version": __version__,
+                        "started_at": now_iso(),
+                    },
+                )
+                runtime_published = True
+            except (OSError, ValueError) as exc:
+                return _fail(
+                    f"serve --http could not publish runtime: {exc}", json_output=args.json
+                )
+
+            payload = {
+                "ok": True,
+                "url": f"http://{args.host}:{port}",
+                "port": port,
+                "boot_id": boot_id,
+                "token": None if env_token else token,
+                "token_source": "env" if env_token else "generated",
+            }
+            if args.once:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    try:
+                        server.server_close()
+                    finally:
+                        server = None
+                return _emit(payload, args)
+            if args.on_demand:
+                start_idle_monitor(server, args.idle_exit)
+            _emit(payload, args)
+            try:
+                server.serve_forever()
+                return 0
+            except KeyboardInterrupt:
+                return 0
+        finally:
+            if server is not None:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    server.server_close()
+
+
+def _cmd_serve_stop(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import rendezvous
+
+    workspace = _workspace(args)
+    state_dir = rendezvous.vault_state_dir(workspace)
+    record = rendezvous.read_runtime(state_dir)
+    if record is None:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    if not rendezvous.pid_alive(int(record["pid"])):
+        rendezvous.clear_runtime(state_dir)
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    response = rendezvous.post_shutdown(int(record["port"]), str(record["token"]))
+    if not (
+        isinstance(response, dict)
+        and response.get("ok") is True
+        and response.get("stopping") is True
+    ):
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    return _emit({"ok": True, "stopped": True, "port": int(record["port"])}, args)
 
 
 def _cmd_mcp(args: argparse.Namespace) -> int:

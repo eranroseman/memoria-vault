@@ -14,13 +14,14 @@ import subprocess
 import sys
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from http import HTTPStatus
 from pathlib import Path
 
 import pytest
 
 from memoria_vault import __version__
+from memoria_vault.cli import main
 from memoria_vault.runtime import http_transport, rendezvous
 from memoria_vault.runtime.http_transport import (
     bind_http_server,
@@ -393,16 +394,17 @@ def test_serve_lock_is_exclusive_and_released(tmp_path: Path) -> None:
         assert again is True
 
 
-def test_serve_lock_falls_back_without_fcntl(
+def test_serve_lock_fails_closed_without_a_lock_backend(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     vault = tmp_path / "vault"
     vault.mkdir()
     state_dir = rendezvous.vault_state_dir(vault)
     monkeypatch.setattr(rendezvous, "fcntl", None)
+    monkeypatch.setattr(rendezvous, "msvcrt", None)
 
     with rendezvous.serve_lock(state_dir) as locked:
-        assert locked is True
+        assert locked is False
 
 
 def test_serve_lock_uses_msvcrt_when_fcntl_is_unavailable(
@@ -1150,3 +1152,625 @@ def test_bind_http_server_attempts_candidates_in_order_and_raises_last_error(
 
     assert attempted == [8765, 8766]
     assert exc_info.value is last_error
+
+
+def _require_loopback() -> None:
+    try:
+        probe = socket.socket()
+        probe.bind(("127.0.0.1", 0))
+        probe.close()
+    except OSError as exc:  # pragma: no cover - sandbox guard
+        pytest.skip(f"loopback socket unavailable in this sandbox: {exc}")
+
+
+def _wait_until(predicate: Callable[[], bool], timeout: float = 10.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(0.05)
+    return False
+
+
+class _FakeServeServer:
+    def __init__(self, *, port: int = 43210, on_close: Callable[[], None] | None = None) -> None:
+        self.server_address = ("127.0.0.1", port)
+        self.closed = False
+        self.served = False
+        self._on_close = on_close
+
+    def serve_forever(self) -> None:
+        self.served = True
+
+    def server_close(self) -> None:
+        self.closed = True
+        if self._on_close is not None:
+            self._on_close()
+
+
+def test_probe_boot_id_and_post_shutdown_use_the_status_and_shutdown_endpoints(
+    workspace: Path,
+) -> None:
+    _require_loopback()
+    server = _make_server(workspace, token="stop-token", boot_id="boot-probe")
+    port = int(server.server_address[1])
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        assert rendezvous.probe_boot_id(port) == "boot-probe"
+        assert rendezvous.post_shutdown(port, "stop-token") == {"ok": True, "stopping": True}
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+
+def test_live_coordinates_clears_a_dead_pid_record(
+    workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    rendezvous.write_runtime(state_dir, _runtime_record(workspace, pid=98765))
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: False)
+
+    assert rendezvous.live_coordinates(state_dir) is None
+    assert rendezvous.read_runtime(state_dir) is None
+
+
+def test_live_coordinates_retains_a_pid_live_probe_mismatch(
+    workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    record = _runtime_record(workspace, boot_id="published-boot")
+    rendezvous.write_runtime(state_dir, record)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: True)
+    monkeypatch.setattr(
+        rendezvous, "probe_boot_id", lambda _port, timeout=1.0: "other-boot", raising=False
+    )
+
+    assert rendezvous.live_coordinates(state_dir) is None
+    assert rendezvous.read_runtime(state_dir) is not None
+
+
+def test_live_coordinates_returns_a_matching_live_record(
+    workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    record = _runtime_record(workspace, boot_id="matching-boot")
+    rendezvous.write_runtime(state_dir, record)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: True)
+    monkeypatch.setattr(
+        rendezvous,
+        "probe_boot_id",
+        lambda _port, timeout=1.0: "matching-boot",
+        raising=False,
+    )
+
+    assert rendezvous.live_coordinates(state_dir) == {**record, "schema": rendezvous.RUNTIME_SCHEMA}
+
+
+def test_serve_port_candidates_walk() -> None:
+    from memoria_vault.cli import _serve_port_candidates
+
+    assert _serve_port_candidates(8765) == list(range(8765, 8786))
+    assert _serve_port_candidates(9000) == [9000]
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "nan", "inf", "-inf"])
+def test_serve_rejects_invalid_idle_exit_before_state_or_bind(
+    workspace: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    value: str,
+) -> None:
+    calls: list[str] = []
+
+    def unexpected_state_dir(_workspace: Path) -> Path:
+        calls.append("state")
+        raise AssertionError("invalid idle exit must not create state")
+
+    def unexpected_bind(*_args: object, **_kwargs: object) -> _FakeServeServer:
+        calls.append("bind")
+        raise AssertionError("invalid idle exit must not bind")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", unexpected_state_dir)
+    monkeypatch.setattr(http_transport, "bind_http_server", unexpected_bind, raising=False)
+    monkeypatch.setattr(http_transport, "make_http_server", unexpected_bind)
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", f"--idle-exit={value}", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    if value == "0":
+        assert output == {"ok": False, "error": "serve --idle-exit must be positive"}
+    else:
+        assert output["ok"] is False
+        assert "idle-exit" in output["error"]
+    assert calls == []
+
+
+def test_serve_rejects_ipv6_before_state_or_bind(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[str] = []
+
+    def unexpected_state_dir(_workspace: Path) -> Path:
+        calls.append("state")
+        raise AssertionError("unsupported IPv6 must not create state")
+
+    def unexpected_bind(*_args: object, **_kwargs: object) -> _FakeServeServer:
+        calls.append("bind")
+        raise AssertionError("unsupported IPv6 must not bind")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", unexpected_state_dir)
+    monkeypatch.setattr(http_transport, "bind_http_server", unexpected_bind, raising=False)
+    monkeypatch.setattr(http_transport, "make_http_server", unexpected_bind)
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--host", "::1", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "serve --http only binds loopback hosts"}
+    assert calls == []
+
+
+def test_serve_on_demand_and_ephemeral_route_to_http(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    server = _FakeServeServer(port=45678)
+    bind_calls: list[dict[str, object]] = []
+    monitor_calls: list[tuple[object, float]] = []
+
+    def bind(*_args: object, **kwargs: object) -> _FakeServeServer:
+        bind_calls.append(dict(kwargs))
+        return server
+
+    def monitor(candidate: object, idle_exit_seconds: float) -> object:
+        monitor_calls.append((candidate, idle_exit_seconds))
+        return object()
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(http_transport, "bind_http_server", bind, raising=False)
+    monkeypatch.setattr(http_transport, "make_http_server", bind)
+    monkeypatch.setattr(http_transport, "start_idle_monitor", monitor)
+
+    rc = main(
+        [
+            "serve",
+            "--workspace",
+            str(workspace),
+            "--on-demand",
+            "--ephemeral",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["port"] == 45678
+    assert bind_calls[0]["candidate_ports"] == [0]
+    assert monitor_calls == [(server, 900.0)]
+    assert server.served is True
+    assert server.closed is True
+
+
+def test_serve_ephemeral_once_writes_then_clears_runtime(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _require_loopback()
+    monkeypatch.delenv("MEMORIA_HTTP_TOKEN", raising=False)
+    written: list[dict[str, object]] = []
+    original = rendezvous.write_runtime
+
+    def spy(state_dir: Path, record: dict[str, object]) -> Path:
+        written.append(dict(record))
+        return original(state_dir, record)
+
+    monkeypatch.setattr(rendezvous, "write_runtime", spy)
+
+    rc = main(["serve", "--workspace", str(workspace), "--ephemeral", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["port"] > 0
+    assert output["token_source"] == "generated"
+    assert isinstance(output["token"], str)
+    assert len(output["token"]) >= 43
+    state_dir = rendezvous.vault_state_dir(workspace)
+    assert rendezvous.read_runtime(state_dir) is None
+    assert written
+    record = written[0]
+    assert record["port"] == output["port"]
+    assert record["pid"] == os.getpid()
+    assert record["boot_id"] == output["boot_id"]
+    assert record["token"] == output["token"]
+    assert record["vault_path"] == str(workspace)
+    assert record["engine_version"] == __version__
+
+
+def test_serve_busy_lock_has_no_runtime_or_bind_side_effect(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    record = _runtime_record(workspace, boot_id="newborn")
+    rendezvous.write_runtime(state_dir, record)
+    calls: list[str] = []
+
+    def unexpected_bind(*_args: object, **_kwargs: object) -> _FakeServeServer:
+        calls.append("bind")
+        raise AssertionError("busy invocation must not bind")
+
+    def unexpected_write(*_args: object, **_kwargs: object) -> Path:
+        calls.append("write")
+        raise AssertionError("busy invocation must not publish")
+
+    def unexpected_clear(*_args: object, **_kwargs: object) -> None:
+        calls.append("clear")
+        raise AssertionError("busy invocation must not clear")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(http_transport, "bind_http_server", unexpected_bind, raising=False)
+    monkeypatch.setattr(http_transport, "make_http_server", unexpected_bind)
+    monkeypatch.setattr(rendezvous, "write_runtime", unexpected_write)
+    monkeypatch.setattr(rendezvous, "clear_runtime", unexpected_clear)
+
+    with rendezvous.serve_lock(state_dir) as held:
+        assert held is True
+        rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert calls == []
+    assert rendezvous.read_runtime(state_dir) == {**record, "schema": rendezvous.RUNTIME_SCHEMA}
+
+
+def test_serve_owner_preserves_an_ambiguous_newborn_until_runtime_is_republished(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    prior = _runtime_record(workspace, boot_id="published-boot")
+    rendezvous.write_runtime(state_dir, prior)
+    order: list[str] = []
+    original_clear = rendezvous.clear_runtime
+    original_write = rendezvous.write_runtime
+    server = _FakeServeServer()
+
+    def clear(path: Path) -> None:
+        order.append("clear")
+        original_clear(path)
+
+    def write(path: Path, record: dict[str, object]) -> Path:
+        order.append("write")
+        assert rendezvous.read_runtime(path) == {**prior, "schema": rendezvous.RUNTIME_SCHEMA}
+        return original_write(path, record)
+
+    def bind(*_args: object, **_kwargs: object) -> _FakeServeServer:
+        order.append("bind")
+        return server
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(rendezvous, "probe_boot_id", lambda _port, timeout=1.0: None, raising=False)
+    monkeypatch.setattr(http_transport, "bind_http_server", bind, raising=False)
+    monkeypatch.setattr(http_transport, "make_http_server", bind)
+    monkeypatch.setattr(rendezvous, "clear_runtime", clear)
+    monkeypatch.setattr(rendezvous, "write_runtime", write)
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert order[:2] == ["bind", "write"]
+    assert server.closed is True
+    assert rendezvous.read_runtime(state_dir) is None
+
+
+def test_serve_matching_live_record_does_not_bind_or_overwrite(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    record = _runtime_record(workspace, boot_id="live-boot")
+    rendezvous.write_runtime(state_dir, record)
+    bind_calls: list[object] = []
+
+    def unexpected_bind(*_args: object, **_kwargs: object) -> _FakeServeServer:
+        bind_calls.append(object())
+        raise AssertionError("a matching live record must win admission")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(
+        rendezvous, "probe_boot_id", lambda _port, timeout=1.0: "live-boot", raising=False
+    )
+    monkeypatch.setattr(http_transport, "bind_http_server", unexpected_bind, raising=False)
+    monkeypatch.setattr(
+        http_transport, "make_http_server", lambda *_args, **_kwargs: _FakeServeServer()
+    )
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert bind_calls == []
+    assert rendezvous.read_runtime(state_dir) == {**record, "schema": rendezvous.RUNTIME_SCHEMA}
+
+
+def test_serve_lock_lifetime_includes_runtime_cleanup_and_server_close(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    observed_locks: list[bool] = []
+
+    def observe_lock() -> None:
+        with rendezvous.serve_lock(state_dir) as locked:
+            observed_locks.append(locked)
+
+    server = _FakeServeServer(on_close=observe_lock)
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(
+        http_transport, "bind_http_server", lambda *_args, **_kwargs: server, raising=False
+    )
+    monkeypatch.setattr(http_transport, "make_http_server", lambda *_args, **_kwargs: server)
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert observed_locks == [False]
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is True
+
+
+def test_serve_bind_failure_does_not_clear_runtime_and_releases_lock(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    clear_calls: list[Path] = []
+
+    def failed_bind(*_args: object, **_kwargs: object) -> _FakeServeServer:
+        raise OSError("port unavailable")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(http_transport, "bind_http_server", failed_bind, raising=False)
+    monkeypatch.setattr(http_transport, "make_http_server", failed_bind)
+    monkeypatch.setattr(rendezvous, "clear_runtime", lambda path: clear_calls.append(path))
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert clear_calls == []
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is True
+
+
+def test_serve_bind_failure_preserves_an_ambiguous_runtime_record(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    prior = _runtime_record(workspace, boot_id="published-boot")
+    rendezvous.write_runtime(state_dir, prior)
+
+    def failed_bind(*_args: object, **_kwargs: object) -> _FakeServeServer:
+        raise OSError("port unavailable")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(rendezvous, "probe_boot_id", lambda _port, timeout=1.0: None)
+    monkeypatch.setattr(http_transport, "bind_http_server", failed_bind)
+    monkeypatch.setattr(http_transport, "make_http_server", failed_bind)
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert rendezvous.read_runtime(state_dir) == {**prior, "schema": rendezvous.RUNTIME_SCHEMA}
+
+
+def test_serve_runtime_write_failure_closes_listener_and_releases_lock(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    server = _FakeServeServer()
+    prior = _runtime_record(workspace, boot_id="published-boot")
+    rendezvous.write_runtime(state_dir, prior)
+
+    def failed_write(*_args: object, **_kwargs: object) -> Path:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(
+        http_transport, "bind_http_server", lambda *_args, **_kwargs: server, raising=False
+    )
+    monkeypatch.setattr(http_transport, "make_http_server", lambda *_args, **_kwargs: server)
+    monkeypatch.setattr(rendezvous, "write_runtime", failed_write)
+    monkeypatch.setattr(rendezvous, "probe_boot_id", lambda _port, timeout=1.0: None)
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert "disk full" in output["error"]
+    assert server.closed is True
+    assert rendezvous.read_runtime(state_dir) == {**prior, "schema": rendezvous.RUNTIME_SCHEMA}
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is True
+
+
+def test_serve_cleanup_closes_listener_when_runtime_removal_fails(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    server = _FakeServeServer()
+
+    def failed_clear(_path: Path) -> None:
+        raise OSError("cannot remove runtime")
+
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(
+        http_transport, "bind_http_server", lambda *_args, **_kwargs: server, raising=False
+    )
+    monkeypatch.setattr(http_transport, "make_http_server", lambda *_args, **_kwargs: server)
+    monkeypatch.setattr(rendezvous, "clear_runtime", failed_clear)
+
+    rc = main(["serve", "--workspace", str(workspace), "--http", "--once", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert "cannot remove runtime" in output["error"]
+    assert server.closed is True
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is True
+
+
+@pytest.mark.parametrize(
+    "response",
+    [None, {"ok": True}, {"ok": True, "stopping": False}, {"ok": False, "stopping": True}],
+)
+def test_serve_stop_retains_a_pid_live_record_after_an_unsuccessful_post(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    response: dict[str, bool] | None,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    record = _runtime_record(workspace, pid=os.getpid())
+    rendezvous.write_runtime(state_dir, record)
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: True)
+    monkeypatch.setattr(
+        rendezvous, "post_shutdown", lambda *_args, **_kwargs: response, raising=False
+    )
+
+    rc = main(["serve", "--stop", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert rendezvous.read_runtime(state_dir) == {**record, "schema": rendezvous.RUNTIME_SCHEMA}
+
+
+def test_serve_stop_accepts_only_a_stopping_confirmation(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    record = _runtime_record(workspace, pid=os.getpid())
+    rendezvous.write_runtime(state_dir, record)
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: True)
+    monkeypatch.setattr(
+        rendezvous,
+        "post_shutdown",
+        lambda *_args, **_kwargs: {"ok": True, "stopping": True},
+        raising=False,
+    )
+
+    rc = main(["serve", "--stop", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output == {"ok": True, "port": 43210, "stopped": True}
+    assert rendezvous.read_runtime(state_dir) == {**record, "schema": rendezvous.RUNTIME_SCHEMA}
+
+
+def test_serve_stop_shuts_down_a_running_ephemeral_server(
+    workspace: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _require_loopback()
+    outcome: dict[str, int] = {}
+
+    def run_server() -> None:
+        outcome["rc"] = main(
+            [
+                "serve",
+                "--workspace",
+                str(workspace),
+                "--ephemeral",
+                "--on-demand",
+                "--quiet",
+            ]
+        )
+
+    thread = threading.Thread(target=run_server, daemon=True)
+    thread.start()
+    state_dir = rendezvous.vault_state_dir(workspace)
+    assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is not None)
+
+    rc = main(["serve", "--stop", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    thread.join(timeout=10)
+    assert not thread.is_alive()
+    assert outcome["rc"] == 0
+    assert rendezvous.read_runtime(state_dir) is None
+
+
+def test_serve_stop_reports_when_nothing_runs(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+
+    rc = main(["serve", "--stop", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "no memoria server is running for this vault"}
