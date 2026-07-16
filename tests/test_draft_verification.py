@@ -773,6 +773,35 @@ def test_duplicate_evidence_id_refuses_export(tmp_path: Path, hidden_rel: str) -
         write_project_export(tmp_path, "project-alpha", draft=True)
 
 
+def test_duplicate_evidence_id_uses_the_draft_block_ref_when_foreign_marker_sorts_first(
+    tmp_path: Path,
+) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Original source-backed claim.",
+    )
+    original = draft.read_text(encoding="utf-8")
+    marker_start = f"%%ev: {evidence_id} "
+    _before, marker_and_rest = original.split(marker_start, 1)
+    marker = marker_start + marker_and_rest.split("%%", 1)[0] + "%%"
+    anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+    foreign = tmp_path / "notes/duplicate-marker.md"
+    foreign.parent.mkdir(parents=True, exist_ok=True)
+    foreign.write_text(
+        f"Foreign duplicate. {anchor} {marker}\n",
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    duplicate = next(
+        finding
+        for finding in verification["findings"]
+        if finding["kind"] == "evidence-id-duplicate"
+    )
+    assert duplicate["block_ref"] == f"projects/project-alpha/draft.md#{anchor}"
+
+
 def test_hidden_duplicate_in_one_draft_blocks_that_draft_when_direct_elsewhere(
     tmp_path: Path,
 ) -> None:
@@ -1121,6 +1150,238 @@ def test_gap_analysis_with_existing_draft_uses_analysis_context_for_readiness(
     assert {row["run_id"] for row in state.evidence_sets(vault)} == {"analyze-gaps-request-run"}
 
 
+@pytest.mark.parametrize("standing", ["retracted", "superseded"])
+def test_stale_source_blocks_draft_and_pi_disposition_cannot_clear_it(
+    tmp_path: Path, standing: str
+) -> None:
+    _draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Claim over a source that later loses standing.",
+    )
+    [bound] = state.evidence_sets(tmp_path)
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+
+    _set_source_standing(tmp_path, "source-alpha", standing)
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    stale = [
+        finding
+        for finding in verification["findings"]
+        if finding["kind"] == "evidence-source-stale"
+    ]
+    assert stale == [
+        {
+            "kind": "evidence-source-stale",
+            "severity": "high",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "work_id": "source-alpha",
+            "path": [],
+        }
+    ]
+    assert f"evidence-source-stale:{evidence_id}" in verification["missing"]
+
+    resolve_evidence_review(
+        tmp_path,
+        evidence_id,
+        decision="accept",
+        reason="PI cannot clear staleness",
+    )
+    after = verify_project_draft(tmp_path, "project-alpha")
+
+    assert after["ready"] is False
+    assert any(finding["kind"] == "evidence-source-stale" for finding in after["findings"])
+    with pytest.raises(ValueError, match="evidence-source-stale"):
+        write_project_export(tmp_path, "project-alpha", draft=True)
+
+
+def test_stale_taint_propagates_through_nested_sets_with_path(tmp_path: Path) -> None:
+    vault = tmp_path
+    state.upsert_catalog_record(
+        vault,
+        work_id="source-alpha",
+        title="Alpha Source",
+        check_status="checked",
+        content_path=".memoria/blobs/source-content/source-alpha.md",
+    )
+    _source_span(vault, "source-alpha")
+    _project(vault)
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.parent.mkdir(parents=True, exist_ok=True)
+    draft.write_text(
+        "---\ntype: draft\nproject: projects/project-alpha/project.md\n---\n\n"
+        "# Alpha project\n\n"
+        "Direct claim. ^blk-aaaa1111 %%ev: ev-aaaa1111 "
+        "items=source-alpha#^p0001%%\n\n"
+        "Nested claim. ^blk-bbbb2222 %%ev: ev-bbbb2222 items=ev-aaaa1111%%\n",
+        encoding="utf-8",
+    )
+    _set_source_standing(vault, "source-alpha", "retracted")
+
+    verification = verify_project_draft(vault, "project-alpha")
+
+    stale = sorted(
+        (finding["evidence_id"], finding["work_id"], finding["path"])
+        for finding in verification["findings"]
+        if finding["kind"] == "evidence-source-stale"
+    )
+    assert stale == [
+        ("ev-aaaa1111", "source-alpha", []),
+        ("ev-bbbb2222", "source-alpha", ["ev-aaaa1111"]),
+    ]
+    assert verification["ready"] is False
+
+
+def test_stale_taint_reaches_a_nested_set_outside_the_draft(tmp_path: Path) -> None:
+    vault = tmp_path
+    state.upsert_catalog_record(
+        vault,
+        work_id="source-alpha",
+        title="Alpha Source",
+        check_status="checked",
+        content_path=".memoria/blobs/source-content/source-alpha.md",
+    )
+    _source_span(vault, "source-alpha")
+    _project(vault)
+    external = vault / "notes/external-grounds.md"
+    external.parent.mkdir(parents=True, exist_ok=True)
+    external.write_text(
+        "External grounds. ^blk-aaaa1111 %%ev: ev-aaaa1111 items=source-alpha#^p0001%%\n",
+        encoding="utf-8",
+    )
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.parent.mkdir(parents=True, exist_ok=True)
+    draft.write_text(
+        "---\ntype: draft\nproject: projects/project-alpha/project.md\n---\n\n"
+        "# Alpha project\n\n"
+        "Nested claim. ^blk-bbbb2222 %%ev: ev-bbbb2222 items=ev-aaaa1111%%\n",
+        encoding="utf-8",
+    )
+    _set_source_standing(vault, "source-alpha", "retracted")
+
+    verification = verify_project_draft(vault, "project-alpha")
+
+    stale = [
+        finding
+        for finding in verification["findings"]
+        if finding["kind"] == "evidence-source-stale"
+    ]
+    assert stale == [
+        {
+            "kind": "evidence-source-stale",
+            "severity": "high",
+            "evidence_id": "ev-bbbb2222",
+            "block_ref": "projects/project-alpha/draft.md#^blk-bbbb2222",
+            "work_id": "source-alpha",
+            "path": ["ev-aaaa1111"],
+        }
+    ]
+
+
+def test_archived_source_is_advisory_and_never_blocks_export(tmp_path: Path) -> None:
+    _draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Claim over an archived source.",
+    )
+    [bound] = state.evidence_sets(tmp_path)
+    _set_source_standing(tmp_path, "source-alpha", "archived")
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is True
+    assert verification["ok"] is True
+    assert verification["missing"] == []
+    assert verification["findings"] == [
+        {
+            "kind": "evidence-source-archived",
+            "severity": "medium",
+            "evidence_id": evidence_id,
+            "block_ref": bound["block_ref"],
+            "work_id": "source-alpha",
+            "path": [],
+        }
+    ]
+    exported = write_project_export(tmp_path, "project-alpha", draft=True)
+    assert "%%ev:" not in exported["content"]
+
+
+def test_unset_standing_is_current_and_raises_no_standing_finding(tmp_path: Path) -> None:
+    _compose_source_backed_draft(
+        tmp_path,
+        body="Claim over a source without standing.",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is True
+    assert verification["ok"] is True
+    assert verification["missing"] == []
+    assert not any(
+        finding["kind"].startswith("evidence-source-") for finding in verification["findings"]
+    )
+
+
+def test_advisory_before_stale_truncation_keeps_stale_readiness_and_missing(
+    tmp_path: Path,
+) -> None:
+    draft, evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Claim over sources with distinct standing.",
+    )
+    _set_source_standing(tmp_path, "source-beta", "retracted")
+    _source_span(tmp_path, "source-beta")
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(
+            "items=source-alpha#^p0001%%",
+            "items=source-alpha#^p0001|source-beta#^p0001%%",
+        ),
+        encoding="utf-8",
+    )
+    state.rebuild_evidence_sets_from_markers(tmp_path)
+    resolve_evidence_review(
+        tmp_path,
+        evidence_id,
+        decision="accept",
+        reason="PI accepts the multi-source grounds shape",
+    )
+    _set_source_standing(tmp_path, "source-alpha", "archived")
+
+    verification = verify_project_draft(tmp_path, "project-alpha", max_findings=1)
+
+    assert [finding["kind"] for finding in verification["findings"]] == ["evidence-source-archived"]
+    assert verification["ready"] is False
+    assert verification["ok"] is False
+    assert verification["missing"] == [f"evidence-source-stale:{evidence_id}"]
+
+
+def test_archived_advisory_is_excluded_from_blocking_export_reason(tmp_path: Path) -> None:
+    draft, _evidence_id = _compose_source_backed_draft(
+        tmp_path,
+        body="Claim over an archived source with a separate export problem.",
+    )
+    _set_source_standing(tmp_path, "source-alpha", "archived")
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(
+            "Source note: `notes/support.md`",
+            "Source note: `notes/missing.md`",
+        ),
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert [finding["kind"] for finding in verification["findings"]] == [
+        "evidence-source-archived",
+        "broken-structural-reference",
+    ]
+    assert verification["missing"] == ["broken-structural-reference"]
+    with pytest.raises(ValueError, match="broken-structural-reference") as error:
+        write_project_export(tmp_path, "project-alpha", draft=True)
+    assert "evidence-source-archived" not in str(error.value)
+
+
 def _project(vault: Path) -> None:
     write_checked_concept(
         vault,
@@ -1140,6 +1401,17 @@ def _source_span(vault: Path, work_id: str) -> None:
     path = vault / f".memoria/blobs/source-content/{work_id}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"{work_id} source span. ^p0001\n", encoding="utf-8")
+
+
+def _set_source_standing(vault: Path, work_id: str, standing: str) -> None:
+    state.upsert_catalog_record(
+        vault,
+        work_id=work_id,
+        title=f"{work_id} title",
+        check_status="checked",
+        content_path=f".memoria/blobs/source-content/{work_id}.md",
+        csl_json={"memoria": {"standing": standing}},
+    )
 
 
 def _compose_source_backed_draft(vault: Path, *, body: str) -> tuple[Path, str]:

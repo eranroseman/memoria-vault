@@ -65,6 +65,8 @@ GAP_KINDS = {
     "argument-fragile",
     "paper-readiness",
 }
+_STALE_STANDINGS = frozenset({"retracted", "superseded"})
+_ADVISORY_FINDING_KINDS = frozenset({"evidence-source-archived"})
 _TAG_CANDIDATE_MIN_COUNT = 2
 _TAG_CANDIDATE_LIMIT = 5
 _TAG_CANDIDATE_STOPWORDS = frozenset(
@@ -762,11 +764,15 @@ def _catalog_source_terms(source: dict[str, Any]) -> list[str]:
     return sorted(set(out))
 
 
-def _is_current_catalog_source(source: dict[str, Any]) -> bool:
+def _catalog_source_standing(source: dict[str, Any]) -> str:
     csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
     memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
-    standing = str(memoria.get("standing") or "")
-    return standing not in {"archived", "retracted", "superseded"}
+    # Unset standing is current by contract: the PI curates catalog standing.
+    return str(memoria.get("standing") or "").strip() or "current"
+
+
+def _is_current_catalog_source(source: dict[str, Any]) -> bool:
+    return _catalog_source_standing(source) not in _STALE_STANDINGS | {"archived"}
 
 
 def _add_graph_topic_gap_terms(
@@ -2154,7 +2160,8 @@ def _verify_project_draft_snapshot(
     )
     draft = read_project_draft(vault, project_rel)
     duplicate_ids = {str(evidence_id) for evidence_id in rebuild.get("duplicate_ids", [])}
-    rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}
+    draft_rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}
+    rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
     draft_occurrence_ids = {
         marker.evidence_id
         for marker, _is_direct in state._evidence_marker_occurrences_from_markdown(draft["content"])
@@ -2165,7 +2172,7 @@ def _verify_project_draft_snapshot(
             "severity": "high",
             "evidence_id": evidence_id,
             "block_ref": str(
-                rows_by_id.get(evidence_id, {}).get(
+                draft_rows_by_id.get(evidence_id, {}).get(
                     "block_ref",
                     f"{draft_rel}#^blk-{evidence_id.removeprefix('ev-')}",
                 )
@@ -2232,12 +2239,20 @@ def _verify_project_draft_snapshot(
                     "block_ref": row["block_ref"],
                 }
             )
+    findings.extend(
+        _evidence_source_standing_findings(
+            vault,
+            draft["evidence_sets"],
+            rows_by_id=rows_by_id,
+        )
+    )
     findings.extend(_draft_structural_reference_findings(vault, draft["content"]))
     findings.extend(_draft_number_findings(vault, project_rel, draft["content"]))
     total_findings = len(findings)
     max_findings = max(1, int(max_findings))
+    blocking = [finding for finding in findings if finding["kind"] not in _ADVISORY_FINDING_KINDS]
     findings = findings[:max_findings]
-    ok = not findings
+    ok = not blocking
     return (
         {
             "project_path": project_rel,
@@ -2245,7 +2260,7 @@ def _verify_project_draft_snapshot(
             "ready": ok,
             "ok": ok,
             "status": "verified" if ok else "needs-review",
-            "missing": [] if ok else _verification_finding_labels(findings),
+            "missing": [] if ok else _verification_finding_labels(blocking[:max_findings]),
             "findings": findings,
             "evidence_sets": draft["evidence_sets"],
             "rebuild": rebuild,
@@ -2586,7 +2601,7 @@ def render_project_draft_export_markdown(
     vault = Path(vault)
     verification, draft = _verify_project_draft_snapshot(vault, project_path, context=context)
     if not verification["ok"]:
-        reasons = ", ".join(_verification_finding_labels(verification["findings"]))
+        reasons = ", ".join(verification["missing"])
         raise ValueError(f"project draft is not export-ready: {reasons}")
     if draft is None:
         raise RuntimeError("verified project draft snapshot is missing")
@@ -3252,6 +3267,50 @@ def _disposed_evidence_digests(vault: Path) -> dict[str, str]:
         for row in rows
         if row["evidence_id"] and row["items_sha256"]
     }
+
+
+def _evidence_source_standing_findings(
+    vault: Path,
+    draft_rows: list[dict[str, Any]],
+    *,
+    rows_by_id: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return live standing findings for source-span leaves in each item closure."""
+    from memoria_vault.runtime.evidence import evidence_ref_kind, parse_source_span_ref
+
+    standings = {
+        str(source["work_id"]): _catalog_source_standing(source)
+        for source in state.catalog_sources(vault, checked_only=False)
+    }
+    findings: list[dict[str, Any]] = []
+    for row in draft_rows:
+        seen: set[tuple[str, str, tuple[str, ...]]] = set()
+        for item, path in state.evidence_item_closure(rows_by_id, str(row["id"])):
+            if evidence_ref_kind(item) != "source-span":
+                continue
+            work_id = parse_source_span_ref(item).work_id
+            standing = standings.get(work_id, "current")
+            if standing in _STALE_STANDINGS:
+                kind, severity = "evidence-source-stale", "high"
+            elif standing == "archived":
+                kind, severity = "evidence-source-archived", "medium"
+            else:
+                continue
+            key = (kind, work_id, path)
+            if key in seen:
+                continue
+            seen.add(key)
+            findings.append(
+                {
+                    "kind": kind,
+                    "severity": severity,
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "work_id": work_id,
+                    "path": list(path),
+                }
+            )
+    return findings
 
 
 def _draft_structural_reference_findings(vault: Path, content: str) -> list[dict[str, Any]]:
