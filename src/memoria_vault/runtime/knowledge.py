@@ -2173,6 +2173,8 @@ def _verify_project_draft_snapshot(
         }
         for evidence_id in sorted(duplicate_ids & draft_occurrence_ids)
     ]
+    if not draft["evidence_sets"]:
+        findings.append({"kind": "no-evidence-set", "severity": "high"})
     disposed = _disposed_evidence_digests(vault)
     for row in draft["evidence_sets"]:
         stored_block_hash = row.get("block_text_sha256")
@@ -2235,7 +2237,7 @@ def _verify_project_draft_snapshot(
     total_findings = len(findings)
     max_findings = max(1, int(max_findings))
     findings = findings[:max_findings]
-    ok = not findings and bool(draft["evidence_sets"])
+    ok = not findings
     return (
         {
             "project_path": project_rel,

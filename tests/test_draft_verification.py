@@ -330,6 +330,33 @@ def test_draft_verification_routes_analysis_number_references_to_incomplete(
     ]
 
 
+def test_draft_with_zero_evidence_sets_reports_no_evidence_set_finding(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _project(vault)
+    draft = vault / "projects/project-alpha/draft.md"
+    draft.parent.mkdir(parents=True, exist_ok=True)
+    draft.write_text(
+        "---\ntype: draft\nproject: projects/project-alpha/project.md\n---\n\n"
+        "# Alpha project\n\nA claim with no evidence marker at all.\n",
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert verification["ready"] is False
+    assert verification["ok"] is False
+    assert [finding["kind"] for finding in verification["findings"]] == [
+        "no-evidence-set",
+        "missing-structural-reference",
+    ]
+    assert verification["missing"] == [
+        "no-evidence-set",
+        "missing-structural-reference",
+    ]
+
+
 def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
     vault = tmp_path
     _project(vault)
