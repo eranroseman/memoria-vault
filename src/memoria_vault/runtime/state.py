@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 14
 # Numbered migrations: each entry upgrades an on-disk DB by exactly one version
 # step, {from_version: (from_version + 1, [SQL statement or callable(conn)])}.
 # _init refuses (fail-closed) any user_version with no registered path here.
@@ -3571,6 +3571,14 @@ MIGRATIONS[12] = (
         CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
         ON concept_edges(edge_id) WHERE edge_id != ''
         """,
+    ],
+)
+
+MIGRATIONS[13] = (
+    14,
+    [
+        "CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON concept_edges(target_concept_id)",
+        "CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target ON work_graph_edges(target_id)",
     ],
 )
 

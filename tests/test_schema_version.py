@@ -11,10 +11,10 @@ from memoria_vault.runtime import state
 from tests.helpers import ROOT
 
 
-def test_schema_lands_at_user_version_13(tmp_path: Path) -> None:
+def test_schema_lands_at_user_version_14(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
-        assert state.SCHEMA_VERSION == 13
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
+        assert state.SCHEMA_VERSION == 14
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 14
 
 
 def test_rejects_v6_without_migration(tmp_path: Path) -> None:

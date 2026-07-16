@@ -184,6 +184,8 @@ CREATE TABLE IF NOT EXISTS work_graph_edges (
     discovered_at TEXT NOT NULL,
     PRIMARY KEY (work_id, relation_type, target_id)
 );
+CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target
+    ON work_graph_edges(target_id);
 CREATE TABLE IF NOT EXISTS work_aspects (
     work_id TEXT NOT NULL,
     aspect_type TEXT NOT NULL CHECK (
@@ -252,6 +254,8 @@ CREATE TABLE IF NOT EXISTS concept_edges (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
     ON concept_edges(edge_id) WHERE edge_id != '';
+CREATE INDEX IF NOT EXISTS idx_concept_edges_target
+    ON concept_edges(target_concept_id);
 CREATE TRIGGER IF NOT EXISTS concept_verdicts_passage_cascade_insert
 AFTER INSERT ON concept_verdicts
 BEGIN
@@ -379,4 +383,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 13;
+PRAGMA user_version = 14;

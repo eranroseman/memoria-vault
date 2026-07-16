@@ -30,7 +30,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 13
+    assert state.SCHEMA_VERSION == 14
     assert {
         "passages",
         "passage_fts",
@@ -364,7 +364,7 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
     with state.connect(fresh) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_edges)")}
         assert {"edge_id", "attributes_json"}.issubset(columns)
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 14
 
     state.replace_concept_edges(
         fresh,
@@ -463,6 +463,18 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
             "updated_at TEXT NOT NULL, "
             "PRIMARY KEY (source_concept_id, relation_type, target_concept_id))"
         )
+        conn.execute(
+            "CREATE TABLE work_graph_edges ("
+            "work_id TEXT NOT NULL, "
+            "relation_type TEXT NOT NULL, "
+            "target_id TEXT NOT NULL, "
+            "target_title TEXT NOT NULL DEFAULT '', "
+            "target_doi TEXT NOT NULL DEFAULT '', "
+            "source_provider TEXT NOT NULL DEFAULT '', "
+            "raw_json TEXT NOT NULL DEFAULT '{}', "
+            "discovered_at TEXT NOT NULL, "
+            "PRIMARY KEY (work_id, relation_type, target_id))"
+        )
         conn.executemany(
             "INSERT INTO concept_edges("
             "source_concept_id, relation_type, target_concept_id, check_status, source_path, updated_at) "
@@ -498,7 +510,7 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
             )
         }
 
-    assert version == state.SCHEMA_VERSION == 13
+    assert version == state.SCHEMA_VERSION == 14
     assert legacy_rows[("./notes/mirror.md", "supports", "notes/target.md")] == {
         "source_concept_id": "./notes/mirror.md",
         "relation_type": "supports",
@@ -513,3 +525,66 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
         "edge_id": hashlib.sha256(b"notes/tension.md\0tension\0notes/target.md").hexdigest()[:24],
         "attributes_json": "{}",
     }
+
+
+def test_reverse_traversal_indexes_migrate_v13_database(tmp_path: Path) -> None:
+    legacy = tmp_path / "legacy"
+    db = legacy / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE concept_edges (
+                edge_id TEXT NOT NULL DEFAULT '',
+                source_concept_id TEXT NOT NULL,
+                relation_type TEXT NOT NULL,
+                target_concept_id TEXT NOT NULL,
+                attributes_json TEXT NOT NULL DEFAULT '{}',
+                check_status TEXT NOT NULL,
+                source_path TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (source_concept_id, relation_type, target_concept_id)
+            );
+            CREATE TABLE work_graph_edges (
+                work_id TEXT NOT NULL,
+                relation_type TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                target_title TEXT NOT NULL DEFAULT '',
+                target_doi TEXT NOT NULL DEFAULT '',
+                source_provider TEXT NOT NULL DEFAULT '',
+                raw_json TEXT NOT NULL DEFAULT '{}',
+                discovered_at TEXT NOT NULL,
+                PRIMARY KEY (work_id, relation_type, target_id)
+            );
+            PRAGMA user_version = 13;
+            """
+        )
+
+    assert 13 in state.MIGRATIONS
+    to_version, steps = state.MIGRATIONS[13]
+    assert to_version == 14
+    assert steps == [
+        "CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON concept_edges(target_concept_id)",
+        "CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target ON work_graph_edges(target_id)",
+    ]
+
+    with state.connect(legacy) as conn:
+        version = conn.execute("PRAGMA user_version").fetchone()[0]
+        names = {
+            row["name"]
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
+        }
+
+    assert version == state.SCHEMA_VERSION == 14
+    assert {"idx_concept_edges_target", "idx_work_graph_edges_target"}.issubset(names)
+
+
+def test_reverse_traversal_indexes_exist(tmp_path: Path) -> None:
+    with state.connect(tmp_path) as conn:
+        names = {
+            row["name"]
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
+        }
+
+    assert "idx_concept_edges_target" in names
+    assert "idx_work_graph_edges_target" in names
