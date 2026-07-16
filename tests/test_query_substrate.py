@@ -145,6 +145,8 @@ def test_parse_links_normalizes_alias_anchor_and_keeps_bare_concept_targets() ->
         ("/notes/absolute", "expected local Concept target"),
         ("https://example.test/concept", "expected local Concept target"),
         ("notes/target.txt", "expected local Concept target"),
+        ("notes/target.md/", "expected local Concept target"),
+        ("#Evidence", "expected local Concept target"),
     ],
 )
 def test_link_parser_and_validation_reject_invalid_local_targets(target: str, message: str) -> None:

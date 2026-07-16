@@ -153,7 +153,7 @@ def _normalized_link_target(target: str) -> tuple[str, str | None]:
         return "", "empty"
 
     path = raw.replace("\\", "/")
-    if path.startswith("/") or _LINK_TARGET_URI_RE.match(raw):
+    if path.startswith(("/", "#")) or path.endswith("/") or _LINK_TARGET_URI_RE.match(raw):
         return "", "invalid"
     if ".." in [part for part in path.split("/") if part and part != "."]:
         return "", "traversal"
