@@ -1588,7 +1588,7 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
   - A.6 provides `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` — unauthenticated `GET /v1/status`, returns `boot_id` or `None`
   - `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — returns only a valid, PID-live, boot-ID-matching entry; clears dead-PID entries but retains a PID-live/probe-mismatch entry for its lock owner to resolve
   - `rendezvous.handshake(vault_path: Path, *, spawn: bool = False, timeout: float = 5.0, spawn_command: list[str] | None = None) -> dict[str, Any]` — returns exactly `{"port": int, "token": str, "engine_version": str, "boot_id": str, "pid": int}`; raises `HandshakeError` (message contains `--spawn` when reporting no-server, and the `serve.log` path on spawn timeout)
-  - Default spawn command: `[sys.executable, "-m", "memoria_vault.cli", "serve", "--workspace", str(vault), "--http", "--on-demand", "--ephemeral", "--quiet"]`, detached with platform-appropriate process-group flags, stdout+stderr appended to `<state>/serve.log`
+  - Default spawn command: `[sys.executable, "-m", "memoria_vault.cli", "serve", "--workspace", str(vault), "--http", "--on-demand", "--ephemeral", "--quiet"]`, detached with platform-appropriate process-group flags, stdout+stderr appended to `<state>/serve.log`; its child cwd is the trusted package root and its environment omits `PYTHONPATH` and `PYTHONHOME`
 
 > **Adopted handoff amendment (2026-07-16):** Handshake never holds or
 > inherits `serve.lock`: after a miss, it launches a detached child and waits
@@ -1616,6 +1616,17 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
 > guaranteeing spawned-child cleanup. A live engine-version mismatch is not
 > stale in this slice: return its coordinates and let the skew UI report it
 > until an explicit authenticated stop→wait→spawn upgrade handoff is designed.
+
+> **Adopted A.7 spawn-import amendment (2026-07-16):** `python -m` resolves
+> modules relative to its current directory. Spawn the fixed command from the
+> trusted package root (`Path(__file__).resolve().parents[2]`), not the caller's
+> or vault's working directory, and remove `PYTHONPATH` and `PYTHONHOME` from
+> the inherited child environment. Keep `XDG_STATE_HOME` and ordinary runtime
+> configuration intact so parent and child share the keyed rendezvous directory.
+> Extend the mocked-Popen test to assert the trusted cwd and stripped overrides,
+> and add a real shadow-package regression: a `memoria_vault/cli.py` in an
+> untrusted caller cwd must not execute while the actual server publishes and is
+> cleanly stopped.
 
 **Steps:**
 
@@ -1864,10 +1875,15 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
         "--quiet",
     ]
     log_path = Path(state_dir) / "serve.log"
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
     popen_kwargs: dict[str, Any] = {
         "stdin": subprocess.DEVNULL,
         "stderr": subprocess.STDOUT,
         "close_fds": True,
+        "cwd": str(Path(__file__).resolve().parents[2]),
+        "env": environment,
     }
     if os.name == "posix":
         popen_kwargs["start_new_session"] = True
