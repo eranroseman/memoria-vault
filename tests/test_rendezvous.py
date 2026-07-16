@@ -2153,6 +2153,8 @@ def test_spawn_server_uses_platform_appropriate_detachment(
     state_dir = tmp_path / "state"
     state_dir.mkdir()
     seen: dict[str, object] = {}
+    monkeypatch.setenv("PYTHONPATH", "/untrusted/pythonpath")
+    monkeypatch.setenv("PYTHONHOME", "/untrusted/pythonhome")
 
     def fake_popen(command: list[str], **kwargs: object) -> object:
         seen["command"] = command
@@ -2180,6 +2182,10 @@ def test_spawn_server_uses_platform_appropriate_detachment(
     assert kwargs["stdin"] is rendezvous.subprocess.DEVNULL
     assert kwargs["stderr"] is rendezvous.subprocess.STDOUT
     assert kwargs["close_fds"] is True
+    assert kwargs["cwd"] == str(Path(rendezvous.__file__).resolve().parents[2])
+    assert isinstance(kwargs["env"], dict)
+    assert "PYTHONPATH" not in kwargs["env"]
+    assert "PYTHONHOME" not in kwargs["env"]
     if os.name == "posix":
         assert kwargs["start_new_session"] is True
         assert "creationflags" not in kwargs
@@ -2230,6 +2236,36 @@ def test_spawn_server_refuses_a_junctioned_state_dir(
         rendezvous._spawn_server(workspace, state_dir, None)
 
     assert not (state_dir / "serve.log").exists()
+
+
+def test_spawn_server_ignores_an_untrusted_cwd_module_shadow(
+    workspace: Path, tmp_path: Path
+) -> None:
+    _require_loopback()
+    state_dir = rendezvous.vault_state_dir(workspace)
+    shadow_cwd = tmp_path / "untrusted-cwd"
+    package = shadow_cwd / "memoria_vault"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "cli.py").write_text("print('CWD-SHADOW-EXECUTED', flush=True)\n", encoding="utf-8")
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(shadow_cwd)
+        rendezvous._spawn_server(workspace, state_dir, None)
+    finally:
+        os.chdir(original_cwd)
+
+    try:
+        record = rendezvous._wait_for_live(state_dir, timeout=8.0)
+        assert record is not None
+        assert "CWD-SHADOW-EXECUTED" not in (state_dir / "serve.log").read_text(encoding="utf-8")
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
+            )
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
 
 
 def test_concurrent_spawn_handshakes_converge_on_one_listener(

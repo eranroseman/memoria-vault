@@ -426,10 +426,15 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
         "--quiet",
     ]
     log_path = Path(state_dir) / "serve.log"
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
     popen_kwargs: dict[str, Any] = {
         "stdin": subprocess.DEVNULL,
         "stderr": subprocess.STDOUT,
         "close_fds": True,
+        "cwd": str(Path(__file__).resolve().parents[2]),
+        "env": environment,
     }
     if os.name == "posix":
         popen_kwargs["start_new_session"] = True
