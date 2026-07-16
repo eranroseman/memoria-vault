@@ -168,6 +168,10 @@ def make_http_server(
                             HTTPStatus.METHOD_NOT_ALLOWED,
                         )
                         return
+                    boot_ids = self.headers.get_all("X-Memoria-Boot-Id") or []
+                    if len(boot_ids) != 1 or boot_ids[0] != self.server.boot_id:
+                        self._write({"ok": False, "error": "stale server"}, HTTPStatus.CONFLICT)
+                        return
                     self._write({"ok": True, "stopping": True})
                     threading.Thread(target=self.server.shutdown, daemon=True).start()
                     return

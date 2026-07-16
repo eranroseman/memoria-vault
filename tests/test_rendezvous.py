@@ -16,6 +16,7 @@ import threading
 import time
 from collections.abc import Callable, Iterator
 from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
@@ -644,6 +645,7 @@ def _request(
     path: str,
     *,
     token: str | None = None,
+    boot_id: str | None = None,
     host: str | None = None,
     origin: str | None = None,
 ) -> tuple[int, dict[str, object]]:
@@ -651,6 +653,8 @@ def _request(
     headers = {"Host": host or f"127.0.0.1:{port}"}
     if token is not None:
         headers["Authorization"] = f"Bearer {token}"
+    if boot_id is not None:
+        headers["X-Memoria-Boot-Id"] = boot_id
     if origin is not None:
         headers["Origin"] = origin
     try:
@@ -849,11 +853,62 @@ def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
         assert payload == {"ok": False, "error": "unauthorized"}
         wrong_method, _payload = _request(port, "GET", "/v1/shutdown", token="test-token")
         assert wrong_method == 405
-        status, payload = _request(port, "POST", "/v1/shutdown", token="test-token")
+        status, payload = _request(
+            port,
+            "POST",
+            "/v1/shutdown",
+            token="test-token",
+            boot_id="boot-1",
+        )
         assert status == 200
         assert payload == {"ok": True, "stopping": True}
         thread.join(timeout=5)
         assert not thread.is_alive()
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+
+def test_shutdown_rejects_a_nonunique_or_mismatched_boot_identity(workspace: Path) -> None:
+    server = _make_server(workspace, token="test-token", boot_id="boot-current")
+    port = int(server.server_address[1])
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        missing_status, missing_payload = _request(
+            port,
+            "POST",
+            "/v1/shutdown",
+            token="test-token",
+        )
+        assert missing_status == 409
+        assert missing_payload == {"ok": False, "error": "stale server"}
+
+        mismatch_status, mismatch_payload = _request(
+            port,
+            "POST",
+            "/v1/shutdown",
+            token="test-token",
+            boot_id="boot-stale",
+        )
+        assert mismatch_status == 409
+        assert mismatch_payload == {"ok": False, "error": "stale server"}
+
+        duplicate_status, duplicate_payload = _raw_request(
+            port,
+            "POST /v1/shutdown HTTP/1.1\r\n"
+            f"Host: 127.0.0.1:{port}\r\n"
+            "Authorization: Bearer test-token\r\n"
+            "X-Memoria-Boot-Id: boot-current\r\n"
+            "X-Memoria-Boot-Id: boot-current\r\n"
+            "Content-Length: 0\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+        )
+        assert duplicate_status == 409
+        assert duplicate_payload == {"ok": False, "error": "stale server"}
+        assert thread.is_alive()
     finally:
         server.shutdown()
         thread.join(timeout=5)
@@ -895,10 +950,10 @@ def test_idle_monitor_extends_on_authenticated_requests(workspace: Path) -> None
     )
     serve_thread.start()
     assert server.serve_forever_started.wait(timeout=5)
-    monitor = start_idle_monitor(server, idle_exit_seconds=0.15, poll_interval=0.01)
+    monitor = start_idle_monitor(server, idle_exit_seconds=1.0, poll_interval=0.01)
     try:
         for _ in range(3):
-            time.sleep(0.06)
+            time.sleep(0.4)
             status, _payload = _request(port, "GET", "/status", token="test-token")
             assert status == 200
 
@@ -1198,13 +1253,176 @@ def test_probe_boot_id_and_post_shutdown_use_the_status_and_shutdown_endpoints(
     thread.start()
     try:
         assert rendezvous.probe_boot_id(port) == "boot-probe"
-        assert rendezvous.post_shutdown(port, "stop-token") == {"ok": True, "stopping": True}
+        assert rendezvous.post_shutdown(port, "stop-token", "boot-probe") == {
+            "ok": True,
+            "stopping": True,
+        }
         thread.join(timeout=5)
         assert not thread.is_alive()
     finally:
         server.shutdown()
         thread.join(timeout=5)
         server.server_close()
+
+
+def test_lifecycle_clients_bypass_ambient_proxy_and_redirects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    requests: list[object] = []
+    handlers: list[object] = []
+
+    class Response:
+        def __init__(self, payload: dict[str, object]) -> None:
+            self.payload = payload
+
+        def __enter__(self) -> Response:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self, _limit: int = -1) -> bytes:
+            return json.dumps(self.payload).encode("utf-8")
+
+    class Opener:
+        def open(self, request: object, *, timeout: float) -> Response:
+            requests.append(request)
+            method = request.get_method()  # type: ignore[attr-defined]
+            payload: dict[str, object] = (
+                {"ok": True, "boot_id": "boot-direct"}
+                if method == "GET"
+                else {"ok": True, "stopping": True}
+            )
+            return Response(payload)
+
+    def build_opener(*configured: object) -> Opener:
+        handlers.extend(configured)
+        return Opener()
+
+    monkeypatch.setenv("HTTP_PROXY", "http://proxy.invalid:8080")
+    monkeypatch.setattr(
+        rendezvous.urllib.request,
+        "urlopen",
+        lambda *_args, **_kwargs: pytest.fail("lifecycle clients must not use global urlopen"),
+    )
+    monkeypatch.setattr(rendezvous.urllib.request, "build_opener", build_opener)
+
+    assert rendezvous.probe_boot_id(43210) == "boot-direct"
+    assert rendezvous.post_shutdown(43210, "stop-token", "boot-direct") == {
+        "ok": True,
+        "stopping": True,
+    }
+    assert any(getattr(handler, "proxies", None) == {} for handler in handlers)
+    assert any(type(handler).__name__ == "_NoRedirect" for handler in handlers)
+    shutdown = requests[-1]
+    assert shutdown.get_header("X-memoria-boot-id") == "boot-direct"  # type: ignore[attr-defined]
+
+
+def test_post_shutdown_refuses_a_real_redirect_without_forwarding_the_bearer() -> None:
+    _require_loopback()
+    redirect_seen = threading.Event()
+    target_seen = threading.Event()
+    redirect_authorizations: list[str | None] = []
+    target_authorizations: list[str | None] = []
+
+    class CaptureHandler(BaseHTTPRequestHandler):
+        def _capture(self) -> None:
+            target_authorizations.append(self.headers.get("Authorization"))
+            target_seen.set()
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def do_GET(self) -> None:
+            self._capture()
+
+        def do_POST(self) -> None:
+            self._capture()
+
+        def log_message(self, message_format: str, *args: object) -> None:
+            return
+
+    capture_server = ThreadingHTTPServer(("127.0.0.1", 0), CaptureHandler)
+    capture_port = int(capture_server.server_address[1])
+    capture_thread = threading.Thread(target=capture_server.serve_forever, daemon=True)
+    capture_thread.start()
+
+    class RedirectHandler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            redirect_authorizations.append(self.headers.get("Authorization"))
+            redirect_seen.set()
+            self.send_response(HTTPStatus.FOUND)
+            self.send_header("Location", f"http://127.0.0.1:{capture_port}/capture")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, message_format: str, *args: object) -> None:
+            return
+
+    redirect_server = ThreadingHTTPServer(("127.0.0.1", 0), RedirectHandler)
+    redirect_port = int(redirect_server.server_address[1])
+    redirect_thread = threading.Thread(target=redirect_server.serve_forever, daemon=True)
+    redirect_thread.start()
+    try:
+        assert rendezvous.post_shutdown(redirect_port, "stop-token", "boot-direct") is None
+        assert redirect_seen.is_set()
+        assert redirect_authorizations == ["Bearer stop-token"]
+        assert not target_seen.wait(timeout=0.2)
+        assert target_authorizations == []
+    finally:
+        redirect_server.shutdown()
+        redirect_thread.join(timeout=5)
+        redirect_server.server_close()
+        capture_server.shutdown()
+        capture_thread.join(timeout=5)
+        capture_server.server_close()
+
+
+def test_no_redirect_closes_the_first_hop_response() -> None:
+    class Response:
+        closed = False
+
+        def close(self) -> None:
+            self.closed = True
+
+    response = Response()
+    request = rendezvous.urllib.request.Request("http://127.0.0.1:43210/v1/shutdown")
+
+    with pytest.raises(rendezvous.urllib.error.HTTPError):
+        rendezvous._NoRedirect().http_error_302(request, response, 302, "Found", {})
+
+    assert response.closed is True
+
+
+def test_lifecycle_clients_reject_an_oversized_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    read_limits: list[int] = []
+
+    class Response:
+        def __enter__(self) -> Response:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self, limit: int = -1) -> bytes:
+            read_limits.append(limit)
+            return b"x" * limit
+
+    class Opener:
+        def open(self, _request: object, *, timeout: float) -> Response:
+            return Response()
+
+    monkeypatch.setattr(
+        rendezvous.urllib.request,
+        "urlopen",
+        lambda *_args, **_kwargs: pytest.fail("lifecycle clients must not use global urlopen"),
+    )
+    monkeypatch.setattr(rendezvous.urllib.request, "build_opener", lambda *_handlers: Opener())
+
+    assert rendezvous.probe_boot_id(43210) is None
+    assert read_limits == [rendezvous.MAX_LIFECYCLE_RESPONSE_BYTES + 1]
 
 
 def test_live_coordinates_clears_a_dead_pid_record(
@@ -1687,6 +1905,11 @@ def test_serve_stop_retains_a_pid_live_record_after_an_unsuccessful_post(
     monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
     monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: True)
     monkeypatch.setattr(
+        rendezvous,
+        "probe_boot_id",
+        lambda _port, timeout=1.0: str(record["boot_id"]),
+    )
+    monkeypatch.setattr(
         rendezvous, "post_shutdown", lambda *_args, **_kwargs: response, raising=False
     )
 
@@ -1712,6 +1935,11 @@ def test_serve_stop_accepts_only_a_stopping_confirmation(
     monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: True)
     monkeypatch.setattr(
         rendezvous,
+        "probe_boot_id",
+        lambda _port, timeout=1.0: str(record["boot_id"]),
+    )
+    monkeypatch.setattr(
+        rendezvous,
         "post_shutdown",
         lambda *_args, **_kwargs: {"ok": True, "stopping": True},
         raising=False,
@@ -1722,6 +1950,33 @@ def test_serve_stop_accepts_only_a_stopping_confirmation(
 
     assert rc == 0
     assert output == {"ok": True, "port": 43210, "stopped": True}
+    assert rendezvous.read_runtime(state_dir) == {**record, "schema": rendezvous.RUNTIME_SCHEMA}
+
+
+def test_serve_stop_rejects_a_pid_live_boot_mismatch_without_sending_bearer(
+    workspace: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    record = _runtime_record(workspace, pid=os.getpid(), boot_id="published-boot")
+    rendezvous.write_runtime(state_dir, record)
+    monkeypatch.setattr(rendezvous, "vault_state_dir", lambda _workspace: state_dir)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: True)
+    monkeypatch.setattr(rendezvous, "probe_boot_id", lambda _port, timeout=1.0: "other-boot")
+    monkeypatch.setattr(
+        rendezvous,
+        "post_shutdown",
+        lambda *_args, **_kwargs: pytest.fail("stale coordinates must not receive the bearer"),
+    )
+
+    rc = main(["serve", "--stop", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "no memoria server is running for this vault"}
     assert rendezvous.read_runtime(state_dir) == {**record, "schema": rendezvous.RUNTIME_SCHEMA}
 
 

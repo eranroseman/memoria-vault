@@ -9,6 +9,7 @@ import os
 import stat
 import sys
 import tempfile
+import urllib.error
 import urllib.request
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -26,6 +27,7 @@ except ImportError:  # pragma: no cover - POSIX test environment.
     msvcrt = None
 
 STATE_KEY_LENGTH = 16
+MAX_LIFECYCLE_RESPONSE_BYTES = 64 * 1024
 RUNTIME_SCHEMA = "memoria-runtime.v1"
 RUNTIME_FIELDS = (
     "schema",
@@ -277,30 +279,65 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
     return removed
 
 
-def post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None:
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Fail lifecycle requests rather than following a redirected endpoint."""
+
+    def http_error_302(
+        self,
+        request: urllib.request.Request,
+        response: Any,
+        status: int,
+        message: str,
+        headers: Any,
+    ) -> None:
+        response.close()
+        raise urllib.error.HTTPError(request.full_url, status, message, headers, response)
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
+
+
+def _open_lifecycle_request(request: urllib.request.Request, *, timeout: float) -> Any:
+    """Open a loopback lifecycle request without ambient proxy or redirect policy."""
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+    return opener.open(request, timeout=timeout)
+
+
+def _read_lifecycle_json(response: Any) -> dict[str, Any] | None:
+    """Read one bounded JSON response from a lifecycle endpoint."""
+    body = response.read(MAX_LIFECYCLE_RESPONSE_BYTES + 1)
+    if len(body) > MAX_LIFECYCLE_RESPONSE_BYTES:
+        return None
+    data = json.loads(body.decode("utf-8"))
+    return data if isinstance(data, dict) else None
+
+
+def post_shutdown(
+    port: int, token: str, boot_id: str, timeout: float = 2.0
+) -> dict[str, Any] | None:
     """POST the authenticated shutdown request, returning None when unreachable."""
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}/v1/shutdown",
         method="POST",
-        headers={"Authorization": f"Bearer {token}"},
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Memoria-Boot-Id": boot_id,
+        },
         data=b"",
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (OSError, ValueError):
+        with _open_lifecycle_request(request, timeout=timeout) as response:
+            return _read_lifecycle_json(response)
+    except (OSError, ValueError, urllib.error.HTTPError):
         return None
-    return data if isinstance(data, dict) else None
 
 
 def probe_boot_id(port: int, timeout: float = 1.0) -> str | None:
     """Return the unauthenticated status endpoint's non-empty boot ID."""
+    request = urllib.request.Request(f"http://127.0.0.1:{port}/v1/status", method="GET")
     try:
-        with urllib.request.urlopen(
-            f"http://127.0.0.1:{port}/v1/status", timeout=timeout
-        ) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (OSError, ValueError):
+        with _open_lifecycle_request(request, timeout=timeout) as response:
+            data = _read_lifecycle_json(response)
+    except (OSError, ValueError, urllib.error.HTTPError):
         return None
     boot_id = data.get("boot_id") if isinstance(data, dict) else None
     return boot_id if isinstance(boot_id, str) and boot_id else None

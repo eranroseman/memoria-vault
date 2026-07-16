@@ -883,7 +883,11 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
     if not rendezvous.pid_alive(int(record["pid"])):
         rendezvous.clear_runtime(state_dir)
         return _fail("no memoria server is running for this vault", json_output=args.json)
-    response = rendezvous.post_shutdown(int(record["port"]), str(record["token"]))
+    port = int(record["port"])
+    boot_id = str(record["boot_id"])
+    if rendezvous.probe_boot_id(port) != boot_id:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    response = rendezvous.post_shutdown(port, str(record["token"]), boot_id)
     if not (
         isinstance(response, dict)
         and response.get("ok") is True
