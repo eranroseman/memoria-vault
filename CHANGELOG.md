@@ -21,6 +21,10 @@ removed release-please setup, not real releases, and have been deleted.
   14→15 upgrade while preserving `code_runs` history.
 - Renamed the `analyze-gaps` gap kind `under-warranted` to `under-grounded`
   (breaking for scripts that branch on `gap_type`; no compatibility alias).
+- Marker grammar v2: `%%ev: ev-<8hex> items=a|b%%`. The `type=`, `state=`,
+  and `review=` fields are removed from markers and rejected as unknown
+  (fail-closed); type, state, and review-required are always re-derived from
+  `items=`, the sole authoritative field.
 
 ## [0.1.0a21] - 2026-07-14
 

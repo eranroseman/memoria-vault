@@ -7,9 +7,6 @@ import secrets
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
-EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
-EVIDENCE_STATES = frozenset({"complete", "evidence-incomplete"})
-
 _EV_ID_RE = re.compile(r"^ev-[0-9a-f]{8}$")
 _EV_MARKER_RE = re.compile(r"%%ev:\s*(?P<body>.*?)%%")
 _SOURCE_SPAN_RE = re.compile(r"^(?P<work_id>[A-Za-z0-9][A-Za-z0-9._-]*)#\^p(?P<page>\d{4,})$")
@@ -35,9 +32,6 @@ class CodeGroundsRef:
 @dataclass(frozen=True)
 class EvidenceMarker:
     evidence_id: str
-    evidence_type: str
-    state: str
-    review_required: bool
     items: tuple[str, ...]
 
 
@@ -80,52 +74,34 @@ def parse_evidence_marker(marker: str) -> EvidenceMarker:
     if not parts or not _EV_ID_RE.fullmatch(parts[0]):
         raise ValueError(f"invalid evidence marker id: {marker!r}")
 
-    fields: dict[str, str] = {}
+    items: tuple[str, ...] = ()
+    has_items_field = False
     for part in parts[1:]:
         if "=" not in part:
             raise ValueError(f"invalid evidence marker field: {part!r}")
         key, raw = part.split("=", 1)
-        fields[key] = raw
+        if key != "items":
+            raise ValueError(f"unknown evidence marker field: {key!r}")
+        if has_items_field:
+            raise ValueError("duplicate evidence marker field: 'items'")
+        has_items_field = True
+        if raw:
+            items = tuple(raw.split("|"))
+            if any(not item for item in items):
+                raise ValueError("empty evidence marker item")
 
-    unknown = set(fields) - {"type", "state", "review", "items"}
-    if unknown:
-        raise ValueError(f"unknown evidence marker field(s): {sorted(unknown)}")
-
-    evidence_type = fields.get("type", "")
-    state = fields.get("state", "")
-    if evidence_type not in EVIDENCE_TYPES:
-        raise ValueError(f"invalid evidence type: {evidence_type!r}")
-    if state not in EVIDENCE_STATES:
-        raise ValueError(f"invalid evidence state: {state!r}")
-
-    items = tuple(item for item in fields.get("items", "").split("|") if item)
     for item in items:
         evidence_ref_kind(item)
 
-    return EvidenceMarker(
-        evidence_id=parts[0],
-        evidence_type=evidence_type,
-        state=state,
-        review_required=_parse_review(fields.get("review", "")),
-        items=items,
-    )
+    return EvidenceMarker(evidence_id=parts[0], items=items)
 
 
 def serialize_evidence_marker(marker: EvidenceMarker) -> str:
     if not _EV_ID_RE.fullmatch(marker.evidence_id):
         raise ValueError(f"invalid evidence id: {marker.evidence_id!r}")
-    if marker.evidence_type not in EVIDENCE_TYPES:
-        raise ValueError(f"invalid evidence type: {marker.evidence_type!r}")
-    if marker.state not in EVIDENCE_STATES:
-        raise ValueError(f"invalid evidence state: {marker.state!r}")
     for item in marker.items:
         evidence_ref_kind(item)
-    review = "true" if marker.review_required else "false"
-    items = "|".join(marker.items)
-    return (
-        f"%%ev: {marker.evidence_id} type={marker.evidence_type} "
-        f"state={marker.state} review={review} items={items}%%"
-    )
+    return f"%%ev: {marker.evidence_id} items={'|'.join(marker.items)}%%"
 
 
 def extract_evidence_markers(text: str) -> list[EvidenceMarker]:
@@ -149,12 +125,3 @@ def mint_evidence_id(
         if _EV_ID_RE.fullmatch(candidate) and candidate not in existing:
             return candidate
     raise RuntimeError("could not mint a unique evidence id")
-
-
-def _parse_review(value: str) -> bool:
-    normalized = value.strip().lower()
-    if normalized in {"true", "required", "yes", "1"}:
-        return True
-    if normalized in {"false", "clear", "none", "no", "0"}:
-        return False
-    raise ValueError(f"invalid evidence review flag: {value!r}")
