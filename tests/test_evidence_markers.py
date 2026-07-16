@@ -23,7 +23,7 @@ def test_evidence_marker_v2_has_only_id_and_items_fields() -> None:
 
     assert tuple(marker.__dataclass_fields__) == ("evidence_id", "items")
     with pytest.raises(FrozenInstanceError):
-        setattr(marker, "items", ("source-alpha#^p0001",))
+        marker.items = ("source-alpha#^p0001",)  # type: ignore[misc]
 
 
 def test_evidence_marker_round_trips_canonical_v2_form() -> None:
@@ -51,12 +51,12 @@ def test_empty_and_omitted_items_both_parse_as_no_items() -> None:
 
 @pytest.mark.parametrize(
     "field",
-    (
+    [
         "type=single-span",
         "state=complete",
         "review=false",
         "unrecognized=value",
-    ),
+    ],
 )
 def test_parser_rejects_retired_and_unknown_fields_individually(field: str) -> None:
     with pytest.raises(ValueError, match="unknown evidence marker field"):
@@ -65,12 +65,12 @@ def test_parser_rejects_retired_and_unknown_fields_individually(field: str) -> N
 
 @pytest.mark.parametrize(
     "marker",
-    (
+    [
         "%%ev: ev-deadbeef items=work-a#^p0001 items=work-b#^p0002%%",
         "%%ev: ev-deadbeef items= items=work-a#^p0001%%",
         "%%ev: ev-deadbeef items=work-a#^p0001 items=%%",
         "%%ev: ev-deadbeef items= items=%%",
-    ),
+    ],
 )
 def test_parser_rejects_duplicate_items_fields(marker: str) -> None:
     with pytest.raises(ValueError, match="duplicate evidence marker field"):
@@ -84,11 +84,11 @@ def test_parser_rejects_a_trailing_token_without_an_equals_sign() -> None:
 
 @pytest.mark.parametrize(
     "items",
-    (
+    [
         "work-a#^p0001||ev-feedcafe",
         "|work-a#^p0001",
         "work-a#^p0001|",
-    ),
+    ],
 )
 def test_parser_rejects_empty_pipe_components(items: str) -> None:
     with pytest.raises(ValueError, match="empty evidence marker item"):
