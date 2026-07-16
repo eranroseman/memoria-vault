@@ -6,6 +6,7 @@ import ctypes
 import hashlib
 import json
 import os
+import stat
 import sys
 import tempfile
 from collections.abc import Iterator
@@ -36,6 +37,7 @@ RUNTIME_FIELDS = (
     "engine_version",
     "started_at",
 )
+_REDIRECT_ERROR = "rendezvous state path must not redirect through a symlink or junction"
 
 
 def canonical_vault_path(vault_path: Path) -> str:
@@ -190,17 +192,45 @@ def _windows_pid_alive(pid: int) -> bool:
         close_handle(handle)
 
 
+def _path_redirects(path: Path) -> bool:
+    return path.is_symlink() or path.is_junction()
+
+
+def _open_serve_lock_file(state_dir: Path) -> int:
+    """Open a regular serve lock without following direct reparse points."""
+    state_dir = Path(state_dir)
+    lock_path = state_dir / "serve.lock"
+    if _path_redirects(state_dir) or _path_redirects(lock_path):
+        raise ValueError(_REDIRECT_ERROR)
+
+    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+    if os.name == "posix" and hasattr(os, "O_NOFOLLOW"):
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        state_fd = os.open(state_dir, directory_flags)
+        try:
+            fd = os.open("serve.lock", flags, 0o600, dir_fd=state_fd)
+        finally:
+            os.close(state_fd)
+    else:
+        fd = os.open(lock_path, flags, 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ValueError("rendezvous serve lock must be a regular file")
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
 @contextmanager
 def serve_lock(state_dir: Path) -> Iterator[bool]:
     """Yield True when this holder owns the exclusive spawn lock."""
-    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
-    fd = os.open(Path(state_dir) / "serve.lock", flags, 0o600)
+    fd = _open_serve_lock_file(state_dir)
     try:
         if os.name == "posix":
             os.fchmod(fd, 0o600)
         if fcntl is None:
             if msvcrt is not None:
-                os.write(fd, b"\0")
                 os.lseek(fd, 0, os.SEEK_SET)
                 try:
                     msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
@@ -230,12 +260,12 @@ def serve_lock(state_dir: Path) -> Iterator[bool]:
 
 def gc_stale_entries(root: Path | None = None) -> list[str]:
     """Delete rendezvous entries whose recorded pid is dead; return removed keys."""
-    base = root if root is not None else state_root()
+    base = Path(root) if root is not None else state_root()
     removed: list[str] = []
-    if not base.is_dir():
+    if _path_redirects(base) or not base.is_dir():
         return removed
     for entry_dir in sorted(
-        path for path in base.iterdir() if path.is_dir() and not path.is_symlink()
+        path for path in base.iterdir() if not _path_redirects(path) and path.is_dir()
     ):
         record = read_runtime(entry_dir)
         if record is None:

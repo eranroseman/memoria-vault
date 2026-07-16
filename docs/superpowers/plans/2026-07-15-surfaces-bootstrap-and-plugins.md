@@ -576,14 +576,18 @@ def _windows_pid_alive(pid: int) -> bool:
   - `rendezvous.serve_lock(state_dir: Path)` — `@contextmanager`, yields `bool` (`True` = this holder owns the exclusive non-blocking lock on a private `<state>/serve.lock`; `False` = someone else holds it). It uses `flock` when available, `msvcrt.locking` on Windows, and yields `True` only when neither locking backend exists.
   - `rendezvous.gc_stale_entries(root: Path | None = None) -> list[str]` — deletes `runtime.json` under real child directories of `<root or state_root()>/<key>/` whose pid is dead; returns removed key names; ignores symlinked entries.
 
-> **Adopted safety amendment (2026-07-16):** The state directory is private but
-> lock and GC paths must still refuse/ignore redirections. On platforms with
-> `O_NOFOLLOW`, open `serve.lock` with it and restore mode `0600` through the
-> descriptor; test a symlinked lock is rejected. GC skips symlinked child
-> entries. The design's one-server-per-vault invariant also requires the
-> existing `msvcrt` nonblocking lock pattern when `fcntl` is unavailable;
-> yielding `True` is reserved for a platform with neither backend. Tests
-> exercise POSIX, `msvcrt`, and no-backend fallback paths.
+> **Adopted post-review repair (2026-07-16):** These helpers reject/ignore
+> direct state/root, `serve.lock`, and child symlink or junction redirections.
+> On POSIX, `serve_lock` opens the direct state directory with
+> `O_DIRECTORY | O_NOFOLLOW`, then opens a regular `serve.lock` relative to
+> that descriptor with `O_NOFOLLOW` and restores mode `0600`; GC skips direct
+> redirected roots and children. The private per-user state-directory contract
+> deliberately excludes arbitrary ancestor redirects and concurrent same-user
+> path replacement; it does not claim hostile-path traversal safety. The
+> `msvcrt` backend locks a one-byte range without first writing it—Windows
+> permits a locked range beyond EOF—so contention yields `False` rather than a
+> pre-lock write error. Tests cover POSIX links, mocked junctions, `msvcrt`,
+> and the no-backend fallback.
 
 **Steps:**
 

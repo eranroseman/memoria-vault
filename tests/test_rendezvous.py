@@ -415,6 +415,31 @@ def test_serve_lock_uses_msvcrt_when_fcntl_is_unavailable(
     assert fake_msvcrt.calls == [(fake_msvcrt.LK_NBLCK, 1), (fake_msvcrt.LK_UNLCK, 1)]
 
 
+def test_serve_lock_msvcrt_locks_beyond_eof_without_writing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class FakeMsvcrt:
+        LK_NBLCK = 1
+        LK_UNLCK = 2
+
+        def locking(self, _fd: int, _mode: int, _count: int) -> None:
+            pass
+
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+    monkeypatch.setattr(rendezvous, "fcntl", None)
+    monkeypatch.setattr(rendezvous, "msvcrt", FakeMsvcrt(), raising=False)
+
+    def unexpected_write(*_args: object) -> int:
+        raise AssertionError("msvcrt locking must not write the locked byte first")
+
+    monkeypatch.setattr(rendezvous.os, "write", unexpected_write)
+
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is True
+
+
 def test_serve_lock_reports_a_busy_msvcrt_lock(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -448,11 +473,47 @@ def test_serve_lock_refuses_a_symlinked_lock_file(tmp_path: Path) -> None:
     outside.write_text("unchanged", encoding="utf-8")
     (state_dir / "serve.lock").symlink_to(outside)
 
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError, match="must not redirect"):
         with rendezvous.serve_lock(state_dir):
             pass
 
     assert outside.read_text(encoding="utf-8") == "unchanged"
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+    reason="POSIX no-follow semantics unavailable",
+)
+def test_serve_lock_refuses_a_symlinked_state_dir(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    redirected_state_dir = tmp_path / "redirected-state"
+    redirected_state_dir.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="must not redirect"):
+        with rendezvous.serve_lock(redirected_state_dir):
+            pass
+
+    assert not (outside / "serve.lock").exists()
+
+
+def test_serve_lock_refuses_a_junctioned_state_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    original_is_junction = Path.is_junction
+    monkeypatch.setattr(
+        Path,
+        "is_junction",
+        lambda path: path == state_dir or original_is_junction(path),
+    )
+
+    with pytest.raises(ValueError, match="must not redirect"):
+        with rendezvous.serve_lock(state_dir):
+            pass
+
+    assert not (state_dir / "serve.lock").exists()
 
 
 def test_gc_stale_entries_removes_dead_pid_entries(
@@ -493,3 +554,40 @@ def test_gc_stale_entries_ignores_symlinked_entry(
 
     assert rendezvous.gc_stale_entries(root) == []
     assert rendezvous.read_runtime(outside) is not None
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX symlink semantics")
+def test_gc_stale_entries_ignores_a_symlinked_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    entry_dir = outside / "dead-entry"
+    entry_dir.mkdir()
+    rendezvous.write_runtime(entry_dir, _runtime_record(tmp_path, pid=222))
+    redirected_root = tmp_path / "redirected-root"
+    redirected_root.symlink_to(outside, target_is_directory=True)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: False)
+
+    assert rendezvous.gc_stale_entries(redirected_root) == []
+    assert rendezvous.read_runtime(entry_dir) is not None
+
+
+def test_gc_stale_entries_ignores_a_junctioned_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "state"
+    root.mkdir()
+    entry_dir = root / "dead-entry"
+    entry_dir.mkdir()
+    rendezvous.write_runtime(entry_dir, _runtime_record(tmp_path, pid=222))
+    original_is_junction = Path.is_junction
+    monkeypatch.setattr(
+        Path,
+        "is_junction",
+        lambda path: path == entry_dir or original_is_junction(path),
+    )
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: False)
+
+    assert rendezvous.gc_stale_entries(root) == []
+    assert rendezvous.read_runtime(entry_dir) is not None
