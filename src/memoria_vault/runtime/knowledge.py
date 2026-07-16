@@ -2009,15 +2009,7 @@ def compose_project_draft(
         evidence_id = mint_evidence_id(allocated_ids)
         allocated_ids.add(evidence_id)
         items = _draft_evidence_items(vault, frontmatter)
-        evidence_type = _draft_evidence_type(items)
-        state_value = "complete" if items else "evidence-incomplete"
-        marker = EvidenceMarker(
-            evidence_id=evidence_id,
-            evidence_type=evidence_type,
-            state=state_value,
-            review_required=evidence_type in {"implicit", "multi-hop"},
-            items=tuple(items),
-        )
+        marker = EvidenceMarker(evidence_id=evidence_id, items=tuple(items))
         evidence_markers.append(marker)
         block_anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
         excerpt = neutralize_untrusted_markdown(_draft_note_excerpt(body, per_node_budget))
@@ -2100,9 +2092,6 @@ def read_project_draft(vault: Path, project_path: str) -> dict[str, Any]:
         "evidence_markers": [
             {
                 "id": marker.evidence_id,
-                "type": marker.evidence_type,
-                "state": marker.state,
-                "review_required": marker.review_required,
                 "items": list(marker.items),
             }
             for marker in markers
