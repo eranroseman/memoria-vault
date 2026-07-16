@@ -2719,7 +2719,7 @@ def _derived_evidence_row(
     run_id: str,
 ) -> dict[str, Any]:
     items = list(marker.items)
-    evidence_type = _derived_evidence_type(items)
+    evidence_type = derive_evidence_type(items)
     block_ref = _evidence_block_ref(rel, marker.evidence_id)
     return {
         "id": marker.evidence_id,
@@ -2735,13 +2735,21 @@ def _derived_evidence_row(
     }
 
 
-def _derived_evidence_type(items: list[str]) -> str:
+def derive_evidence_type(items: list[str]) -> str:
+    """Derive the grounds type from a record's own items (spec §4, rules R1-R4)."""
     if not items:
         return "implicit"
-    if any(evidence_ref_kind(item) == "code-grounds" for item in items):
-        return "computed"
-    if any(evidence_ref_kind(item) == "evidence-set" for item in items):
+    kinds = [evidence_ref_kind(item) for item in items]
+    span_works = {
+        parse_source_span_ref(item).work_id
+        for item, kind in zip(items, kinds, strict=True)
+        if kind == "source-span"
+    }
+    has_code = "code-grounds" in kinds
+    if "evidence-set" in kinds or len(span_works) >= 2 or (has_code and span_works):
         return "multi-hop"
+    if has_code:
+        return "computed"
     return "single-span" if len(items) == 1 else "multi-span"
 
 
