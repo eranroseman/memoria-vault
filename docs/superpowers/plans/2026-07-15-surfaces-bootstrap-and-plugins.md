@@ -1963,6 +1963,21 @@ def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
 > Its `finally` block stops the owned runtime, waits for process exit, reaps the
 > child where possible, then waits for runtime removal.
 
+> **Adopted A.8 import-isolation test amendment (2026-07-16):** The child now
+> starts from the trusted source/package root and deliberately strips
+> `PYTHONPATH` and `PYTHONHOME` (A.7's spawn-import repair). Do not restore a
+> source-path environment injection in this end-to-end test; the detached child
+> must prove it starts successfully through its trusted cwd alone.
+
+> **Adopted A.8 review-repair amendment (2026-07-16):** Treat every normal
+> handler exception — validation, path-resolution, and rendezvous failures — as
+> a handshake diagnostic: with `--json`, mirror its exact text to stderr and
+> retain the same JSON error object on stdout. Route those paths through one
+> helper. The cleanup test owns only coordinates captured from successful stdout;
+> it may stop a current runtime only when its PID and boot ID still match, never
+> by adopting a mutable replacement record. A lost shutdown response must not
+> bypass reap and runtime-removal cleanup.
+
 **Steps:**
 
 - [ ] Write the failing tests. In `tests/test_cli.py`, add `"memoria handshake",` to the set in `test_cli_command_surface_is_exact` (after line 81, `"memoria ask",`). In `tests/test_rendezvous.py`, append:
@@ -1993,38 +2008,60 @@ def test_handshake_cli_json_failure_keeps_json_and_writes_stderr(
 
     rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
     captured = capsys.readouterr()
+    output = json.loads(captured.out)
 
     assert rc == 2
-    assert json.loads(captured.out)["ok"] is False
-    assert "serve.log" in captured.err
+    assert output == {"ok": False, "error": "server did not publish; see /state/serve.log"}
+    assert captured.err == f"{output['error']}\n"
+
+
+def test_handshake_cli_json_unexpected_failure_keeps_json_and_writes_stderr(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise OSError("state directory is unavailable")
+
+    monkeypatch.setattr(rendezvous, "handshake", fail)
+
+    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "state directory is unavailable"}
+    assert captured.err == f"{output['error']}\n"
 
 
 def test_handshake_cli_rejects_missing_vault(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     rc = main(["handshake", "--vault", str(tmp_path / "missing"), "--json"])
-    output = json.loads(capsys.readouterr().out)
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
 
     assert rc == 2
     assert "not a directory" in output["error"]
+    assert captured.err == f"{output['error']}\n"
 
 
 def test_handshake_cli_spawns_detached_server_and_reuses_it(
     workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _require_loopback()
-    src_dir = Path(rendezvous.__file__).resolve().parents[2]
-    monkeypatch.setenv(
-        "PYTHONPATH", f"{src_dir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}"
-    )
 
     state_dir = rendezvous.vault_state_dir(workspace)
-    output: dict[str, Any] = {}
+    output: dict[str, object] = {}
+    owned_port = 0
+    owned_token = ""
+    owned_boot_id = ""
     child_pid = 0
     try:
         rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
         output = json.loads(capsys.readouterr().out)
         child_pid = int(output.get("pid", 0))  # arm cleanup before assertions
+        owned_port = int(output.get("port", 0))
+        owned_token = str(output.get("token", ""))
+        owned_boot_id = str(output.get("boot_id", ""))
 
         assert rc == 0
         assert set(output) == {"ok", "port", "token", "engine_version", "boot_id", "pid"}
@@ -2056,14 +2093,22 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
             if output["token"] in text:
                 token_hits.append(path)
         assert token_hits == []  # zero secrets in the vault tree
+
+        original_post_shutdown = rendezvous.post_shutdown
+
+        def stop_but_lose_response(*args: object, **kwargs: object) -> None:
+            original_post_shutdown(*args, **kwargs)
+
+        monkeypatch.setattr(rendezvous, "post_shutdown", stop_but_lose_response)
     finally:
         record = rendezvous.read_runtime(state_dir)
-        if record is not None:
-            stopped = rendezvous.post_shutdown(
-                int(record["port"]), str(record["token"]), str(record["boot_id"])
-            )
-            assert stopped == {"ok": True, "stopping": True}
-            child_pid = child_pid or int(record["pid"])
+        if (
+            record is not None
+            and child_pid > 0
+            and int(record["pid"]) == child_pid
+            and str(record["boot_id"]) == owned_boot_id
+        ):
+            rendezvous.post_shutdown(owned_port, owned_token, owned_boot_id)
         if child_pid > 0:
             if os.name == "posix":
                 deadline = time.monotonic() + 10
@@ -2098,22 +2143,25 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
     handshake.set_defaults(handler=_cmd_handshake)
 ```
 
-  Handler, placed after `_cmd_serve_stop`:
+  Failure helper and handler, placed after `_cmd_serve_stop`:
 
 ```python
+def _handshake_fail(args: argparse.Namespace, message: str) -> int:
+    if args.json:
+        print(message, file=sys.stderr, flush=True)
+    return _fail(message, json_output=args.json)
+
+
 def _cmd_handshake(args: argparse.Namespace) -> int:
     from memoria_vault.runtime import rendezvous
 
-    vault = Path(args.vault).expanduser().resolve()
-    if not vault.is_dir():
-        return _fail(f"vault path is not a directory: {vault}", json_output=args.json)
     try:
+        vault = Path(args.vault).expanduser().resolve()
+        if not vault.is_dir():
+            return _handshake_fail(args, f"vault path is not a directory: {vault}")
         coordinates = rendezvous.handshake(vault, spawn=args.spawn)
-    except rendezvous.HandshakeError as exc:
-        message = str(exc)
-        if args.json:
-            print(message, file=sys.stderr, flush=True)
-        return _fail(message, json_output=args.json)
+    except Exception as exc:  # preserve the handshake JSON/stderr contract
+        return _handshake_fail(args, str(exc))
     return _emit({"ok": True, **coordinates}, args)
 ```
 
