@@ -40,6 +40,7 @@ class MemoriaHTTPServer(ThreadingHTTPServer):
         self.last_authenticated = time.monotonic()
         self._authenticated_lock = threading.Lock()
         self._authenticated_in_flight = 0
+        self._idle_shutdown_reserved = False
         self.serve_forever_started = threading.Event()
 
     def record_authenticated_activity(self) -> None:
@@ -48,24 +49,31 @@ class MemoriaHTTPServer(ThreadingHTTPServer):
             self.last_authenticated = time.monotonic()
 
     @contextmanager
-    def authenticated_request(self) -> Iterator[None]:
+    def authenticated_request(self) -> Iterator[bool]:
         """Count all work after a request has passed bearer authentication."""
         with self._authenticated_lock:
-            self._authenticated_in_flight += 1
-            self.last_authenticated = time.monotonic()
+            admitted = not self._idle_shutdown_reserved
+            if admitted:
+                self._authenticated_in_flight += 1
+                self.last_authenticated = time.monotonic()
         try:
-            yield
+            yield admitted
         finally:
-            with self._authenticated_lock:
-                self._authenticated_in_flight -= 1
+            if admitted:
+                with self._authenticated_lock:
+                    self._authenticated_in_flight -= 1
 
-    def idle_expired_without_authenticated_request(self, idle_exit_seconds: float) -> bool:
-        """Return whether the idle window has elapsed with no authenticated work running."""
+    def reserve_idle_shutdown(self, idle_exit_seconds: float) -> bool:
+        """Atomically prevent later authenticated work when the server is idle."""
         with self._authenticated_lock:
-            return (
-                self._authenticated_in_flight == 0
-                and time.monotonic() - self.last_authenticated >= idle_exit_seconds
-            )
+            if (
+                self._idle_shutdown_reserved
+                or self._authenticated_in_flight != 0
+                or time.monotonic() - self.last_authenticated < idle_exit_seconds
+            ):
+                return False
+            self._idle_shutdown_reserved = True
+            return True
 
     def service_actions(self) -> None:
         """Signal only after the stdlib serve loop has safely started."""
@@ -146,7 +154,13 @@ def make_http_server(
             if not is_authorized(self.headers.get("Authorization"), token):
                 self._write({"ok": False, "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
                 return
-            with self.server.authenticated_request():
+            with self.server.authenticated_request() as admitted:
+                if not admitted:
+                    self._write(
+                        {"ok": False, "error": "server stopping"},
+                        HTTPStatus.SERVICE_UNAVAILABLE,
+                    )
+                    return
                 if path == "/v1/shutdown":
                     if method != "POST":
                         self._write(
@@ -215,7 +229,7 @@ def start_idle_monitor(
     def watch() -> None:
         server.serve_forever_started.wait()
         while True:
-            if server.idle_expired_without_authenticated_request(idle_exit_seconds):
+            if server.reserve_idle_shutdown(idle_exit_seconds):
                 server.shutdown()
                 return
             time.sleep(poll_interval)

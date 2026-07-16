@@ -1014,10 +1014,13 @@ def origin_allowed(origin: str | None) -> bool:
 > `MemoriaHTTPServer`; make the handler enter it after auth and leave it only
 > after shutdown/dispatch work completes. The monitor may call `shutdown()`
 > only after the server's `serve_forever`-started event is set, the timer is
-> expired, and the in-flight count is zero. Require both monitor durations to
-> be finite positive floats. Tests must cover a blocked authenticated dispatch
-> surviving its idle deadline then stopping after release, plus a monitor that
-> starts before `serve_forever`. Cleanup is always shutdown → join → close.
+> expired, and the in-flight count is zero. Reserve that shutdown atomically
+> under the same lock before calling it; requests that authenticate after the
+> reservation receive 503 and must not dispatch. Require both monitor durations
+> to be finite positive floats. Tests must cover a blocked authenticated
+> dispatch surviving its idle deadline then stopping after release, a
+> reservation/admission interleaving, and a monitor that starts before
+> `serve_forever`. Cleanup is always shutdown → join → close.
 > For binding, add a mocked candidate-order/last-error test as well as the
 > socket test; do not use port `0` as the only fallback proof, and do not add
 > `allow_reuse_address` without a cross-platform exclusivity decision.

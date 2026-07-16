@@ -1029,6 +1029,57 @@ def test_idle_monitor_waits_for_an_authenticated_dispatch_to_finish(
         server.server_close()
 
 
+def test_idle_shutdown_rejects_authenticated_request_after_reservation(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    server = _make_server(workspace, token="test-token")
+    port = int(server.server_address[1])
+    server.last_authenticated = 0.0
+    original_shutdown = server.shutdown
+    shutdown_entered = threading.Event()
+    release_shutdown = threading.Event()
+
+    def held_shutdown() -> None:
+        shutdown_entered.set()
+        assert release_shutdown.wait(timeout=5)
+        original_shutdown()
+
+    monkeypatch.setattr(server, "shutdown", held_shutdown)
+    serve_thread = threading.Thread(
+        target=lambda: server.serve_forever(poll_interval=0.01), daemon=True
+    )
+    serve_thread.start()
+    assert server.serve_forever_started.wait(timeout=5)
+    monitor = start_idle_monitor(server, idle_exit_seconds=0.01, poll_interval=0.01)
+    try:
+        assert shutdown_entered.wait(timeout=5)
+
+        status, payload = _request(port, "GET", "/status", token="test-token")
+
+        assert status == 503
+        assert payload == {"ok": False, "error": "server stopping"}
+    finally:
+        release_shutdown.set()
+        serve_thread.join(timeout=5)
+        monitor.join(timeout=5)
+        server.server_close()
+
+
+def test_idle_shutdown_reservation_rejects_authenticated_admission() -> None:
+    server = object.__new__(http_transport.MemoriaHTTPServer)
+    server.last_authenticated = 0.0
+    server._authenticated_lock = threading.Lock()
+    server._authenticated_in_flight = 0
+    server._idle_shutdown_reserved = False
+
+    assert server.reserve_idle_shutdown(0.01) is True
+
+    with server.authenticated_request() as admitted:
+        assert admitted is False
+
+    assert server._authenticated_in_flight == 0
+
+
 def _free_loopback_port() -> int:
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
