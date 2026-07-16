@@ -361,13 +361,26 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     assert core_plugins["backlink"] is True
     assert core_plugins["canvas"] is True
     assert core_plugins["bases"] is True
-    assert core_plugins["properties"] is False
+    assert core_plugins["graph"] is True
+    assert core_plugins["properties"] is True
     assert core_plugins["daily-notes"] is False
     assert core_plugins["templates"] is False
     assert app["propertiesInDocument"] == "source"
     assert app["alwaysUpdateLinks"] is True
     assert community_plugins == ["memoria-obsidian"]
     assert manifest["id"] == "memoria-obsidian"
+    graph = json.loads((workspace / ".obsidian/graph.json").read_text("utf-8"))
+    types = json.loads((workspace / ".obsidian/types.json").read_text("utf-8"))
+    assert {group["query"] for group in graph["colorGroups"]} == {
+        "path:notes/",
+        "path:hubs/",
+        "path:projects/",
+        "path:digests/",
+        "path:fulltexts/",
+        "path:inbox/",
+    }
+    assert types["types"]["superseded"] == "checkbox"
+    assert types["types"]["loudness"] == "text"
     assert (workspace / ".obsidian/plugins/memoria-obsidian/main.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/schema.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()

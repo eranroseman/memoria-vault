@@ -503,8 +503,50 @@ EOF
 - Create: `src/memoria_vault/product/workspace_seed/.obsidian/graph.json`
 - Create: `src/memoria_vault/product/workspace_seed/.obsidian/types.json`
 - Modify: `src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json:14,20` (`"graph"`, `"properties"`)
+- Modify: `scripts/checks/plugin_provenance_doctor.py:27-35` (closed seed allowlist: admit the two static Ring 1 view-preference JSON files, and nothing executable)
 - Modify: `tests/test_cli.py:341-374` (`test_cli_init_seeds_obsidian_defaults_and_memoria_plugin`, incl. line 364)
 - Modify: `tests/test_installer_skeleton.py:45-51` (expected `.obsidian` files)
+- Modify: `tests/test_package_spine.py:84-111` (installed-package resource assertions for both JSON files)
+- Modify: `tests/test_plugin_provenance.py` (a focused temporary-root contract for the two newly admitted files)
+- Modify: exactly these 35 `tests/fixtures/floor/goldens/*.json` files, regenerated through the supported floor mechanism:
+
+  ```text
+  analyze-claims.json
+  analyze-gaps.json
+  analyze-project-argument.json
+  answer-query.json
+  capture-bibtex-source.json
+  capture-source.json
+  check-falsifiability.json
+  check-source-metadata.json
+  compare-and-contrast.json
+  compile-source-digest.json
+  create-concept.json
+  empirical-event-record.json
+  eval-run.json
+  export-project.json
+  extract-claim-stubs.json
+  integrity-citation-survival-check.json
+  integrity-claim-quote-check.json
+  integrity-contradiction-check.json
+  integrity-evidence-check.json
+  integrity-link-target-check.json
+  integrity-prompt-injection-check.json
+  integrity-provenance-checkpoint.json
+  integrity-quote-anchor-check.json
+  rebuild-checked-search-index.json
+  red-team-argument.json
+  regenerate-capability-index.json
+  regenerate-indexes.json
+  regenerate-references-bib.json
+  regenerate-tracked-projections.json
+  render-project-argument-canvas.json
+  run-seeded-error-verdict.json
+  summarize-for-recall.json
+  surface-tensions.json
+  verify-project-draft.json
+  write-project-slice.json
+  ```
 - Test: `tests/test_cli.py` (existing `contract` registration)
 
 **Interfaces:**
@@ -514,6 +556,17 @@ EOF
 Honesty note in force: H7 — the design names the files and plugins only; file
 content is completion (types.json derived from seeded type schemas; graph.json
 color groups per type home).
+
+**Preflight amendment (2026-07-16):** `.obsidian` has a deliberately closed
+provenance allowlist, so the two new static configurations must be explicitly
+listed there. The existing `.obsidian/*.json` package-data glob and `.obsidian`
+seed tree already include them; no CLI or packaging registration changes are
+needed. Adding seed files changes every operation-floor vault digest that
+currently records `core-plugins.json`: regenerate exactly the 35 files listed
+above with the supported mechanism, then review each diff. In every such file,
+the only expected changes are the `core-plugins.json` hash replacement and new
+`graph.json` / `types.json` hashes; all other digest entries, database counts,
+and journal kinds must remain unchanged.
 
 **Steps:**
 
@@ -543,6 +596,14 @@ color groups per type home).
     assert types["types"]["superseded"] == "checkbox"
     assert types["types"]["loudness"] == "text"
 ```
+
+- [ ] Add the matching package/provenance contracts before writing the seed
+      files: assert both paths are present in
+      `test_workspace_seed_is_packaged_runtime_minimum`, and add a
+      temporary-root `test_plugin_provenance` case that writes only
+      `.obsidian/graph.json` and `.obsidian/types.json` and expects
+      `doctor.check(root) == []`. The latter must fail until the closed
+      allowlist is updated.
 
 - [ ] Run and verify it fails:
       `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin -v`
@@ -606,15 +667,31 @@ color groups per type home).
         ".obsidian/types.json",
 ```
 
+- [ ] In `scripts/checks/plugin_provenance_doctor.py`, add exactly
+      `Path("graph.json")` and `Path("types.json")` to
+      `ALLOWED_SEED_OBSIDIAN_FILES`. Do not broaden the rule or admit plugin
+      payloads.
+
+- [ ] Regenerate the 35 preflight-listed floor goldens only through the
+      supported update path:
+
+```bash
+MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q
+```
+
+      Inspect the resulting fixture diff before continuing: each listed file
+      must have only the three expected `.obsidian` digest changes described
+      above; no other golden may be touched.
+
 - [ ] Run and verify pass:
-      `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin tests/test_installer_skeleton.py -v`
+      `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin tests/test_installer_skeleton.py tests/test_package_spine.py tests/test_plugin_provenance.py -v`
 
 - [ ] Run the full gate: `python scripts/verify` — expected: pass.
 
 - [ ] Commit:
 
 ```bash
-git add src/memoria_vault/product/workspace_seed/.obsidian/graph.json src/memoria_vault/product/workspace_seed/.obsidian/types.json src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json tests/test_cli.py tests/test_installer_skeleton.py
+git add -- docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md scripts/checks/plugin_provenance_doctor.py src/memoria_vault/product/workspace_seed/.obsidian/graph.json src/memoria_vault/product/workspace_seed/.obsidian/types.json src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json tests/test_cli.py tests/test_installer_skeleton.py tests/test_package_spine.py tests/test_plugin_provenance.py <the-35-explicit-floor-golden-paths-listed-above>
 git commit -m "$(cat <<'EOF'
 feat(surface): seed graph.json + types.json, enable graph/properties core plugins
 

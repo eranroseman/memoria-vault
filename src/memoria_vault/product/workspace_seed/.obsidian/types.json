@@ -1,0 +1,18 @@
+{
+  "types": {
+    "archived": "checkbox",
+    "attention_kind": "text",
+    "attention_status": "text",
+    "certainty": "text",
+    "claim_text": "text",
+    "id": "text",
+    "loudness": "text",
+    "mode": "text",
+    "projection": "text",
+    "question_status": "text",
+    "superseded": "checkbox",
+    "title": "text",
+    "type": "text",
+    "work_id": "text"
+  }
+}
