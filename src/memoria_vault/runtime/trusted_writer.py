@@ -18,6 +18,7 @@ import yaml
 from memoria_vault.runtime import state
 from memoria_vault.runtime.content_security import (
     markdown_code_span,
+    neutralize_untrusted_markdown,
     neutralize_untrusted_markdown_fragment,
 )
 from memoria_vault.runtime.jsonl import append_jsonl
@@ -714,6 +715,8 @@ def stage_concept(
     _bundle_for_target(contract, target)
 
     frontmatter, body = split_frontmatter(content)
+    if context.actor != "pi":
+        body = neutralize_untrusted_markdown(body)
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
@@ -762,6 +765,8 @@ def promote_checked(
     if not staged_path.is_file():
         raise FileNotFoundError(staged_path)
     frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
+    if context.actor != "pi":
+        body = neutralize_untrusted_markdown(body)
     output_path = vault / target
     event = _write_checked(
         vault,
@@ -788,6 +793,8 @@ def materialize_unchecked(
     if not staged_path.is_file():
         raise FileNotFoundError(staged_path)
     frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
+    if context.actor != "pi":
+        body = neutralize_untrusted_markdown(body)
     output_path = vault / target
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     staged_path.unlink()

@@ -16,6 +16,9 @@ from memoria_vault.runtime.trusted_writer import (
     mark_checked as _mark_checked,
 )
 from memoria_vault.runtime.trusted_writer import (
+    materialize_unchecked as _materialize_unchecked,
+)
+from memoria_vault.runtime.trusted_writer import (
     observe_pi_edit,
     observe_pi_edit_from_head,
     rebuild_trace_state,
@@ -45,6 +48,10 @@ def stage_concept(vault: Path, *args, **kwargs):
 
 def promote_checked(vault: Path, *args, **kwargs):
     return call_with_context(_promote_checked, vault, *args, **kwargs)
+
+
+def materialize_unchecked(vault: Path, *args, **kwargs):
+    return call_with_context(_materialize_unchecked, vault, *args, **kwargs)
 
 
 def mark_checked(vault: Path, *args, **kwargs):
@@ -85,6 +92,25 @@ def note_text(*, title: str = "Alpha note") -> str:
         "---\n"
         "Alpha body.\n"
     )
+
+
+HOSTILE_BODY = (
+    "Alpha body.\n\n"
+    "![beacon](https://evil.test/pixel.png)\n"
+    "<script>alert(1)</script>\n"
+    "Visit https://evil.test/exfil now.\n"
+)
+
+
+def hostile_note_text() -> str:
+    return note_text().replace("Alpha body.\n", HOSTILE_BODY)
+
+
+def assert_neutralized(text: str) -> None:
+    assert "![beacon]" not in text  # image embed made inert
+    assert "<script>" not in text and "&lt;script" in text  # raw HTML escaped
+    assert "](https://evil.test/pixel.png)" not in text  # no live link destination
+    assert "`https://evil.test/exfil`" in text  # external URL is a code span
 
 
 def events(vault: Path) -> list[dict]:
@@ -135,10 +161,52 @@ def test_stage_concept_preserves_mixed_author_caller_content(tmp_path: Path) -> 
     payload = "Human-selected ![figure](https://example.test/figure.png)."
     content = note_text().replace("Alpha body.", payload)
 
-    stage_concept(vault, "notes/alpha.md", content, machine="test-machine")
+    stage_concept(vault, "notes/alpha.md", content, actor="pi", machine="test-machine")
 
     staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
     assert payload in staged
+
+
+def test_stage_concept_neutralizes_machine_actor_bodies(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    stage_concept(vault, "notes/alpha.md", hostile_note_text(), machine="test-machine")
+
+    staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
+    assert_neutralized(staged)
+
+
+def test_stage_concept_preserves_pi_authored_body(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    stage_concept(vault, "notes/alpha.md", hostile_note_text(), actor="pi", machine="test-machine")
+
+    staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
+    assert "![beacon](https://evil.test/pixel.png)" in staged  # PI content not mangled
+
+
+def test_promote_checked_neutralizes_even_when_the_stager_forgot(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.write_text(hostile_note_text(), encoding="utf-8")  # bypassed neutralization
+
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert_neutralized((vault / "notes/alpha.md").read_text(encoding="utf-8"))
+
+
+def test_materialize_unchecked_neutralizes_even_when_the_stager_forgot(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.write_text(hostile_note_text(), encoding="utf-8")  # bypassed neutralization
+
+    materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert_neutralized((vault / "notes/alpha.md").read_text(encoding="utf-8"))
 
 
 def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> None:
