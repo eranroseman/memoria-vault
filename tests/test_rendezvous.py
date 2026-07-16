@@ -2029,3 +2029,284 @@ def test_serve_stop_reports_when_nothing_runs(
 
     assert rc == 2
     assert output == {"ok": False, "error": "no memoria server is running for this vault"}
+
+
+def test_handshake_reports_when_no_server_and_no_spawn(workspace: Path) -> None:
+    with pytest.raises(rendezvous.HandshakeError, match="--spawn"):
+        rendezvous.handshake(workspace, spawn=False)
+
+
+def test_handshake_returns_live_coordinates_without_spawning(workspace: Path) -> None:
+    _require_loopback()
+    state_dir = rendezvous.vault_state_dir(workspace)
+    try:
+        with _running_server(workspace, token="live-token", boot_id="boot-live") as (
+            _server,
+            port,
+            _thread,
+        ):
+            rendezvous.write_runtime(
+                state_dir,
+                _runtime_record(workspace, port=port, boot_id="boot-live", token="live-token"),
+            )
+
+            coordinates = rendezvous.handshake(workspace, spawn=False)
+
+        assert coordinates == {
+            "port": port,
+            "token": "live-token",
+            "engine_version": __version__,
+            "boot_id": "boot-live",
+            "pid": os.getpid(),
+        }
+    finally:
+        rendezvous.clear_runtime(state_dir)
+
+
+def test_handshake_retains_pid_live_boot_id_mismatch_for_lock_owner(workspace: Path) -> None:
+    _require_loopback()
+    state_dir = rendezvous.vault_state_dir(workspace)
+    try:
+        with _running_server(workspace, token="t", boot_id="boot-new") as (_server, port, _thread):
+            rendezvous.write_runtime(
+                state_dir, _runtime_record(workspace, port=port, boot_id="boot-old")
+            )
+
+            with pytest.raises(rendezvous.HandshakeError):
+                rendezvous.handshake(workspace, spawn=False)
+
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None  # A.6 admission owner resolves an unready PID-live entry.
+        assert record["boot_id"] == "boot-old"
+    finally:
+        rendezvous.clear_runtime(state_dir)
+
+
+@pytest.mark.parametrize("pid", [0, -1, "42", True, None, 1.5])
+def test_wait_for_live_rejects_invalid_pid_despite_matching_status(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, pid: object
+) -> None:
+    state_dir = rendezvous.vault_state_dir(workspace)
+    matching = _runtime_record(workspace, port=8765, boot_id="matching-boot")
+    matching["pid"] = pid
+    monkeypatch.setattr(rendezvous, "live_coordinates", lambda *_args, **_kwargs: matching)
+
+    assert rendezvous._wait_for_live(state_dir, timeout=0.01) is None
+
+
+def test_wait_for_live_rejects_a_dead_pid_despite_matching_status(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = rendezvous.vault_state_dir(workspace)
+    matching = _runtime_record(workspace, port=8765, boot_id="matching-boot")
+    matching["pid"] = 4242
+    monkeypatch.setattr(rendezvous, "live_coordinates", lambda *_args, **_kwargs: matching)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: False)
+
+    assert rendezvous._wait_for_live(state_dir, timeout=0.01) is None
+
+
+def test_handshake_spawn_timeout_names_the_log_path(workspace: Path) -> None:
+    with pytest.raises(rendezvous.HandshakeError, match=r"serve\.log"):
+        rendezvous.handshake(
+            workspace,
+            spawn=True,
+            timeout=1.0,
+            spawn_command=[sys.executable, "-c", "pass"],
+        )
+
+
+@pytest.mark.parametrize("timeout", [0.0, -1.0, float("inf"), float("nan"), True, "1"])
+def test_handshake_rejects_invalid_timeout_before_spawning(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, timeout: object
+) -> None:
+    monkeypatch.setattr(
+        rendezvous,
+        "_spawn_server",
+        lambda *_args, **_kwargs: pytest.fail("invalid timeout must not spawn"),
+        raising=False,
+    )
+
+    with pytest.raises(rendezvous.HandshakeError, match="finite positive"):
+        rendezvous.handshake(workspace, spawn=True, timeout=timeout)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("failure", ["log-open", "popen"])
+def test_handshake_spawn_failures_name_the_log_path(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise OSError("permission denied")
+
+    if failure == "log-open":
+        monkeypatch.setattr(Path, "open", fail)
+    else:
+        monkeypatch.setattr(rendezvous.subprocess, "Popen", fail, raising=False)
+
+    with pytest.raises(rendezvous.HandshakeError, match=r"serve\.log"):
+        rendezvous.handshake(workspace, spawn=True)
+
+
+def test_spawn_server_uses_platform_appropriate_detachment(
+    workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    seen: dict[str, object] = {}
+
+    def fake_popen(command: list[str], **kwargs: object) -> object:
+        seen["command"] = command
+        seen["kwargs"] = kwargs
+        return object()
+
+    monkeypatch.setattr(rendezvous.subprocess, "Popen", fake_popen)
+
+    rendezvous._spawn_server(workspace, state_dir, None)
+
+    assert seen["command"] == [
+        sys.executable,
+        "-m",
+        "memoria_vault.cli",
+        "serve",
+        "--workspace",
+        str(workspace),
+        "--http",
+        "--on-demand",
+        "--ephemeral",
+        "--quiet",
+    ]
+    kwargs = seen["kwargs"]
+    assert isinstance(kwargs, dict)
+    assert kwargs["stdin"] is rendezvous.subprocess.DEVNULL
+    assert kwargs["stderr"] is rendezvous.subprocess.STDOUT
+    assert kwargs["close_fds"] is True
+    if os.name == "posix":
+        assert kwargs["start_new_session"] is True
+        assert "creationflags" not in kwargs
+    elif os.name == "nt":
+        assert kwargs["creationflags"] == rendezvous.subprocess.CREATE_NEW_PROCESS_GROUP
+        assert "start_new_session" not in kwargs
+    assert (state_dir / "serve.log").is_file()
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+    reason="POSIX no-follow semantics unavailable",
+)
+def test_spawn_server_refuses_a_redirected_log_path(
+    workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    outside = tmp_path / "outside.log"
+    outside.write_text("preserved", encoding="utf-8")
+    (state_dir / "serve.log").symlink_to(outside)
+    monkeypatch.setattr(rendezvous.subprocess, "Popen", lambda *_args, **_kwargs: object())
+
+    with pytest.raises(rendezvous.HandshakeError, match=r"serve\.log"):
+        rendezvous._spawn_server(workspace, state_dir, None)
+
+    assert outside.read_text(encoding="utf-8") == "preserved"
+
+
+def test_spawn_server_refuses_a_junctioned_state_dir(
+    workspace: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = tmp_path / "state"
+    state_dir.mkdir()
+    original_is_junction = Path.is_junction
+    monkeypatch.setattr(
+        Path,
+        "is_junction",
+        lambda path: path == state_dir or original_is_junction(path),
+    )
+    monkeypatch.setattr(
+        rendezvous.subprocess,
+        "Popen",
+        lambda *_args, **_kwargs: pytest.fail("redirected state must not spawn"),
+    )
+
+    with pytest.raises(rendezvous.HandshakeError, match=r"serve\.log"):
+        rendezvous._spawn_server(workspace, state_dir, None)
+
+    assert not (state_dir / "serve.log").exists()
+
+
+def test_concurrent_spawn_handshakes_converge_on_one_listener(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    handshake = rendezvous.handshake  # Resolve before any child-side effects in the red phase.
+    _require_loopback()
+    src_dir = Path(__file__).parents[1] / "src"
+    monkeypatch.setenv("PYTHONPATH", f"{src_dir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}")
+    state_dir = rendezvous.vault_state_dir(workspace)
+    barrier = threading.Barrier(2)
+    results: list[dict[str, object]] = []
+    errors: list[Exception] = []
+
+    def call_handshake() -> None:
+        try:
+            barrier.wait(timeout=5)
+            results.append(handshake(workspace, spawn=True, timeout=8.0))
+        except Exception as exc:  # noqa: BLE001 -- surfaced below.
+            errors.append(exc)
+
+    threads = [threading.Thread(target=call_handshake) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    try:
+        for thread in threads:
+            thread.join(timeout=12)
+        assert not any(thread.is_alive() for thread in threads)
+        assert not errors
+        assert len(results) == 2
+        assert results[0] == results[1]
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None
+        assert results[0]["pid"] == record["pid"]
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
+            )
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
+
+
+def test_handshake_converges_with_a_direct_serve_race(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    handshake = rendezvous.handshake  # Resolve before starting the direct server in the red phase.
+    _require_loopback()
+    src_dir = Path(__file__).parents[1] / "src"
+    monkeypatch.setenv("PYTHONPATH", f"{src_dir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}")
+    state_dir = rendezvous.vault_state_dir(workspace)
+    direct = threading.Thread(
+        target=main,
+        args=(
+            [
+                "serve",
+                "--workspace",
+                str(workspace),
+                "--ephemeral",
+                "--on-demand",
+                "--quiet",
+            ],
+        ),
+    )
+    direct.start()
+    try:
+        coordinates = handshake(workspace, spawn=True, timeout=8.0)
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None
+        assert coordinates["boot_id"] == record["boot_id"]
+        assert coordinates["pid"] == record["pid"]
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
+            )
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
+        direct.join(timeout=10)
+        assert not direct.is_alive()

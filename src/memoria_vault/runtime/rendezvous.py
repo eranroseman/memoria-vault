@@ -5,10 +5,13 @@ from __future__ import annotations
 import ctypes
 import hashlib
 import json
+import math
 import os
 import stat
+import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Iterator
@@ -354,3 +357,113 @@ def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str
     if probe_boot_id(int(record["port"]), timeout=probe_timeout) != record["boot_id"]:
         return None
     return record
+
+
+class HandshakeError(RuntimeError):
+    """Raised when no live server can be reached or spawned."""
+
+
+def handshake(
+    vault_path: Path,
+    *,
+    spawn: bool = False,
+    timeout: float = 5.0,
+    spawn_command: list[str] | None = None,
+) -> dict[str, Any]:
+    """Connect to a live server, or spawn and wait for one when requested."""
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or not math.isfinite(timeout)
+        or timeout <= 0
+    ):
+        raise HandshakeError("handshake timeout must be finite positive seconds")
+    vault = Path(vault_path).expanduser().resolve()
+    state_dir = vault_state_dir(vault)
+    gc_stale_entries()
+    record = live_coordinates(state_dir)
+    if record is None and not spawn:
+        raise HandshakeError("no memoria server is running for this vault (rerun with --spawn)")
+    if record is None:
+        record = _spawn_and_wait(vault, state_dir, timeout=timeout, spawn_command=spawn_command)
+    return {
+        "port": int(record["port"]),
+        "token": str(record["token"]),
+        "engine_version": str(record["engine_version"]),
+        "boot_id": str(record["boot_id"]),
+        "pid": int(record["pid"]),
+    }
+
+
+def _spawn_and_wait(
+    vault: Path,
+    state_dir: Path,
+    *,
+    timeout: float,
+    spawn_command: list[str] | None,
+) -> dict[str, Any]:
+    _spawn_server(vault, state_dir, spawn_command)
+    record = _wait_for_live(state_dir, timeout=timeout)
+    if record is None:
+        raise HandshakeError(
+            f"server did not publish rendezvous within {timeout:.0f}s; see {state_dir / 'serve.log'}"
+        )
+    return record
+
+
+def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None) -> None:
+    """Start a detached on-demand server and direct output to its private log."""
+    command = spawn_command or [
+        sys.executable,
+        "-m",
+        "memoria_vault.cli",
+        "serve",
+        "--workspace",
+        str(vault),
+        "--http",
+        "--on-demand",
+        "--ephemeral",
+        "--quiet",
+    ]
+    log_path = Path(state_dir) / "serve.log"
+    popen_kwargs: dict[str, Any] = {
+        "stdin": subprocess.DEVNULL,
+        "stderr": subprocess.STDOUT,
+        "close_fds": True,
+    }
+    if os.name == "posix":
+        popen_kwargs["start_new_session"] = True
+    elif os.name == "nt":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    try:
+        if _path_redirects(state_dir) or _path_redirects(log_path):
+            raise ValueError(_REDIRECT_ERROR)
+        with log_path.open("ab") as log_file:
+            subprocess.Popen(command, stdout=log_file, **popen_kwargs)
+    except (OSError, ValueError) as exc:
+        raise HandshakeError(f"could not spawn memoria server; see {log_path}: {exc}") from exc
+
+
+def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
+    """Return a PID-live published record before the finite wait expires."""
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or not math.isfinite(timeout)
+        or timeout <= 0
+    ):
+        return None
+    deadline = time.monotonic() + timeout
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        record = live_coordinates(state_dir, probe_timeout=min(0.5, remaining))
+        if record is not None:
+            pid = record.get("pid")
+            if type(pid) is int and pid > 0 and pid_alive(pid):
+                return record
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        time.sleep(min(0.1, remaining))
