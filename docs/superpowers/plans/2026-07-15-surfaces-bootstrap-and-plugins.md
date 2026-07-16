@@ -81,7 +81,7 @@ Assumptions other sections must honor (all defensible defaults; no hard spec gap
 6. Handshake spawns the server as `[sys.executable, "-m", "memoria_vault.cli", "serve", …]` (the engine's own interpreter), not a PATH lookup of `memoria` — robust for pipx/uv installs and tests alike.
 7. Host/Origin rejection returns HTTP 403 with `{"ok": false, "error": "forbidden host"|"forbidden origin"}`.
 8. `boot_id` is `str(uuid.uuid4())`.
-9. Allowed Host values are exactly `127.0.0.1:<port>` and `localhost:<port>` (spec §4 verbatim); a server started with `--host ::1` is therefore unreachable past the Host check — accepted, spec is strict.
+9. Accepted HTTP bind hosts are exactly `127.0.0.1` and `localhost`; their Host values are exactly `127.0.0.1:<port>` and `localhost:<port>` (spec §4 verbatim). Reject `--host ::1` until a separate IPv6 coordinate, Host-validation, and shutdown design exists.
 10. A new **autouse** conftest fixture points `XDG_STATE_HOME` at a per-test temp dir so no test ever writes the developer's real `~/.local/state` (mirrors the existing `diagnostics.py:48` XDG convention).
 11. `vault_id` in `runtime.json` is read from `.memoria/vault.json` key `"vault_id"` when that file exists, else `""` — the section that seeds `vault.json` must keep that key name.
 
@@ -1158,7 +1158,7 @@ def bind_http_server(
 
 **Files:**
 - Modify: `src/memoria_vault/cli.py` (serve parser lines 109–118; `_cmd_serve` lines 715–742; `_cmd_serve_http` lines 745–785; imports lines 1–35)
-- Modify: `src/memoria_vault/runtime/rendezvous.py` (add `post_shutdown`)
+- Modify: `src/memoria_vault/runtime/rendezvous.py` (add `probe_boot_id`, non-destructive `live_coordinates`, `post_shutdown`, and fail-closed no-lock-backend behavior)
 - Modify: `tests/test_rendezvous.py`
 - Modify: `tests/test_http_transport.py` (payload assertions lines 54–60)
 
@@ -1171,6 +1171,7 @@ def bind_http_server(
   - `cli._serve_port_candidates(port: int) -> list[int]` — `[8765..8785]` when port is the default 8765, else `[port]`
   - `cli._vault_id(workspace: Path) -> str` — `.memoria/vault.json` `vault_id` or `""`
   - `rendezvous.post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None` — authenticated POST to `/v1/shutdown`; `None` on failure
+  - `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` and `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — shared direct-serve/handshake liveness check; dead PID is stale, PID-live probe mismatch is retained for the admission-lock owner
 
 > **Adopted startup-race amendment (2026-07-16):** `serve.lock` is the
 > listener's server-lifetime admission lock, not a parent spawn mutex. Every
@@ -1187,6 +1188,21 @@ def bind_http_server(
 > Add busy-lock, lock-lifetime, live-recheck, ambiguous-newborn, and
 > runtime-publication-failure tests. `--stop` must not delete a PID-live entry
 > merely because its POST races a newborn server.
+
+> **Adopted A.6 preflight amendment (2026-07-16):** Replace the copied HTTP
+> body rather than layering on it. The no-backend `serve_lock` branch yields
+> `False`, so no direct server starts unlocked. Before any state or bind side
+> effect, reject non-finite and nonpositive `--idle-exit`, and reject `::1`
+> instead of advertising incomplete IPv6 support. While holding the admission
+> lock, distinguish no record/dead PID from a retained PID-live probe mismatch
+> with an explicit record read; only then may the owner clear the latter and
+> bind. Bind failure does not clear a record; after bind, nested cleanup closes
+> the listener even if runtime removal fails. A runtime-write failure closes
+> the listener, leaves no success payload, and releases the lock. A successful
+> stop requires `{"ok": true, "stopping": true}`; a failed POST retains the
+> PID-live record. Update existing HTTP CLI tests to patch `bind_http_server`,
+> not `make_http_server`, and add busy-lock/no-side-effect, lock-lifetime,
+> bind/write-failure, finite-input, routing, and newborn-stop-race coverage.
 
 **Steps:**
 
@@ -1574,7 +1590,7 @@ def test_handshake_returns_live_coordinates_without_spawning(workspace: Path) ->
     }
 
 
-def test_handshake_treats_boot_id_mismatch_as_stale(workspace: Path) -> None:
+def test_handshake_retains_pid_live_boot_id_mismatch_for_lock_owner(workspace: Path) -> None:
     _require_loopback()
     state_dir = rendezvous.vault_state_dir(workspace)
     with _running_server(workspace, token="t", boot_id="boot-new") as (_server, port, _thread):
@@ -1585,7 +1601,9 @@ def test_handshake_treats_boot_id_mismatch_as_stale(workspace: Path) -> None:
         with pytest.raises(rendezvous.HandshakeError):
             rendezvous.handshake(workspace, spawn=False)
 
-    assert rendezvous.read_runtime(state_dir) is None  # stale entry deleted
+    record = rendezvous.read_runtime(state_dir)
+    assert record is not None  # A6 admission owner resolves an unready PID-live entry.
+    assert record["boot_id"] == "boot-old"
 
 
 def test_handshake_spawn_timeout_names_the_log_path(workspace: Path) -> None:
