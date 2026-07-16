@@ -573,7 +573,7 @@ def _windows_pid_alive(pid: int) -> bool:
 
 **Interfaces:**
 - Produces:
-  - `rendezvous.serve_lock(state_dir: Path)` — `@contextmanager`, yields `bool` (`True` = this holder owns the exclusive non-blocking lock on a private `<state>/serve.lock`; `False` = someone else holds it). It uses `flock` when available, `msvcrt.locking` on Windows, and yields `True` only when neither locking backend exists.
+  - `rendezvous.serve_lock(state_dir: Path)` — `@contextmanager`, yields `bool` (`True` = this holder owns the exclusive non-blocking server-lifetime admission lock on a private `<state>/serve.lock`; `False` = someone else holds it). It uses `flock` when available and `msvcrt.locking` on Windows; a platform with neither backend fails closed rather than permitting an unlocked server.
   - `rendezvous.gc_stale_entries(root: Path | None = None) -> list[str]` — deletes `runtime.json` under real child directories of `<root or state_root()>/<key>/` whose pid is dead; returns removed key names; ignores symlinked entries.
 
 > **Adopted post-review repair (2026-07-16):** These helpers reject/ignore
@@ -587,7 +587,7 @@ def _windows_pid_alive(pid: int) -> bool:
 > `msvcrt` backend locks a one-byte range without first writing it—Windows
 > permits a locked range beyond EOF—so contention yields `False` rather than a
 > pre-lock write error. Tests cover POSIX links, mocked junctions, `msvcrt`,
-> and the no-backend fallback.
+> and the fail-closed no-backend path.
 
 **Steps:**
 
@@ -654,7 +654,7 @@ except ImportError:  # pragma: no cover - POSIX test environment
 ```python
 @contextmanager
 def serve_lock(state_dir: Path) -> Iterator[bool]:
-    """Yield True when this holder owns the exclusive spawn lock."""
+    """Yield True when this holder owns the exclusive server-admission lock."""
     flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
     fd = os.open(Path(state_dir) / "serve.lock", flags, 0o600)
     try:
@@ -1008,6 +1008,20 @@ def origin_allowed(origin: str | None) -> bool:
   - `http_transport.start_idle_monitor(server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0) -> threading.Thread` — daemon thread; calls `server.shutdown()` once `time.monotonic() - server.last_authenticated >= idle_exit_seconds`
   - `http_transport.bind_http_server(workspace: Path, *, host: str, candidate_ports: list[int], token: str, read_scope: list[str] | None = None, boot_id: str = "") -> MemoriaHTTPServer` — first free candidate wins; re-raises the last `OSError` when all fail
 
+> **Adopted lifecycle amendment (2026-07-16):** `daemon_threads=True` means an
+> idle monitor must not stop the server while an authenticated handler is in
+> flight. Add lock-protected authenticated in-flight accounting to
+> `MemoriaHTTPServer`; make the handler enter it after auth and leave it only
+> after shutdown/dispatch work completes. The monitor may call `shutdown()`
+> only after the server's `serve_forever`-started event is set, the timer is
+> expired, and the in-flight count is zero. Require both monitor durations to
+> be finite positive floats. Tests must cover a blocked authenticated dispatch
+> surviving its idle deadline then stopping after release, plus a monitor that
+> starts before `serve_forever`. Cleanup is always shutdown → join → close.
+> For binding, add a mocked candidate-order/last-error test as well as the
+> socket test; do not use port `0` as the only fallback proof, and do not add
+> `allow_reuse_address` without a cross-platform exclusivity decision.
+
 **Steps:**
 
 - [ ] Write the failing tests. In `tests/test_rendezvous.py` add `import time` and extend the http_transport import line with `bind_http_server, start_idle_monitor`; append:
@@ -1149,7 +1163,7 @@ def bind_http_server(
 - Modify: `tests/test_http_transport.py` (payload assertions lines 54–60)
 
 **Interfaces:**
-- Consumes: `rendezvous.vault_state_dir/write_runtime/read_runtime/clear_runtime/pid_alive` (A.1–A.2), `http_transport.bind_http_server/start_idle_monitor` (A.5), `runtime.time.now_iso`.
+- Consumes: `rendezvous.vault_state_dir/write_runtime/read_runtime/clear_runtime/pid_alive/serve_lock` (A.1–A.3), `http_transport.bind_http_server/start_idle_monitor` (A.5), `runtime.time.now_iso`.
 - Produces:
   - CLI flags on `memoria serve`: `--on-demand` (idle-exit enabled, implies `--http`), `--ephemeral` (bind port 0, implies `--http`), `--idle-exit <seconds>` (float, default `900.0`), `--stop` (POST `/v1/shutdown` at the vault's recorded coordinates)
   - `serve --http` JSON payload now includes `"port": <int>` and `"boot_id": <str>` alongside existing `ok/url/token/token_source`
@@ -1157,6 +1171,22 @@ def bind_http_server(
   - `cli._serve_port_candidates(port: int) -> list[int]` — `[8765..8785]` when port is the default 8765, else `[port]`
   - `cli._vault_id(workspace: Path) -> str` — `.memoria/vault.json` `vault_id` or `""`
   - `rendezvous.post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None` — authenticated POST to `/v1/shutdown`; `None` on failure
+
+> **Adopted startup-race amendment (2026-07-16):** `serve.lock` is the
+> listener's server-lifetime admission lock, not a parent spawn mutex. Every
+> `serve --http` path acquires it before binding and retains it through runtime
+> removal and `server_close`; a busy invocation neither binds nor
+> writes/clears `runtime.json`. After acquiring it, recheck live coordinates;
+> only that owner may clear a PID-live record whose status probe is not yet
+> ready, then bind and publish. Move `probe_boot_id` and this non-destructive
+> `live_coordinates` check forward from A.7: dead PID entries may be cleared,
+> but PID-live/probe-mismatch entries survive because they can be newborn
+> servers between publication and `serve_forever`. Validate `--idle-exit` with
+> `math.isfinite(value) and value > 0`. Any failure after a successful bind,
+> including `write_runtime`, closes the listener before releasing the lock.
+> Add busy-lock, lock-lifetime, live-recheck, ambiguous-newborn, and
+> runtime-publication-failure tests. `--stop` must not delete a PID-live entry
+> merely because its POST races a newborn server.
 
 **Steps:**
 
@@ -1491,13 +1521,24 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
 - Modify: `tests/test_rendezvous.py`
 
 **Interfaces:**
-- Consumes: `serve_lock`, `read_runtime`, `clear_runtime`, `pid_alive`, `gc_stale_entries`, the `/v1/status` endpoint (A.4).
+- Consumes: `read_runtime`, `clear_runtime`, `pid_alive`, `gc_stale_entries`, the `/v1/status` endpoint (A.4), and A.6's `probe_boot_id`/`live_coordinates` helpers.
 - Produces:
   - `rendezvous.HandshakeError(RuntimeError)`
-  - `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` — unauthenticated `GET /v1/status`, returns `boot_id` or `None`
-  - `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — full stale check (record valid AND pid alive AND probed boot_id matches); **deletes** the entry when stale
-  - `rendezvous.handshake(vault_path: Path, *, spawn: bool = False, timeout: float = 5.0, spawn_command: list[str] | None = None) -> dict[str, Any]` — returns exactly `{"port": int, "token": str, "engine_version": str, "boot_id": str}`; raises `HandshakeError` (message contains `--spawn` when reporting no-server, and the `serve.log` path on spawn timeout)
-  - Default spawn command: `[sys.executable, "-m", "memoria_vault.cli", "serve", "--workspace", str(vault), "--http", "--on-demand", "--ephemeral", "--quiet"]`, detached (`start_new_session=True`), stdout+stderr appended to `<state>/serve.log`
+  - A.6 provides `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` — unauthenticated `GET /v1/status`, returns `boot_id` or `None`
+  - `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — returns only a valid, PID-live, boot-ID-matching entry; clears dead-PID entries but retains a PID-live/probe-mismatch entry for its lock owner to resolve
+  - `rendezvous.handshake(vault_path: Path, *, spawn: bool = False, timeout: float = 5.0, spawn_command: list[str] | None = None) -> dict[str, Any]` — returns exactly `{"port": int, "token": str, "engine_version": str, "boot_id": str, "pid": int}`; raises `HandshakeError` (message contains `--spawn` when reporting no-server, and the `serve.log` path on spawn timeout)
+  - Default spawn command: `[sys.executable, "-m", "memoria_vault.cli", "serve", "--workspace", str(vault), "--http", "--on-demand", "--ephemeral", "--quiet"]`, detached with platform-appropriate process-group flags, stdout+stderr appended to `<state>/serve.log`
+
+> **Adopted handoff amendment (2026-07-16):** Handshake never holds or
+> inherits `serve.lock`: after a miss, it launches a detached child and waits
+> for a live record. Concurrent handshakes may create short-lived losing
+> children, but the A.6 child-owned admission lock permits only one listener
+> and runtime publication; every waiting parent returns the winner's
+> coordinates. `_wait_for_live` is non-destructive for PID-live/probe-mismatch
+> records. Add newborn-record, concurrent-spawn, and direct-serve-race tests.
+> For cross-platform detachment, use `start_new_session=True` only on POSIX;
+> use the narrow Windows new-process-group flag otherwise, with no lock-handle
+> inheritance. Make process-group assertions POSIX-only.
 
 **Steps:**
 
@@ -1529,6 +1570,7 @@ def test_handshake_returns_live_coordinates_without_spawning(workspace: Path) ->
         "token": "live-token",
         "engine_version": __version__,
         "boot_id": "boot-live",
+        "pid": os.getpid(),
     }
 
 
@@ -1615,7 +1657,7 @@ def probe_boot_id(port: int, timeout: float = 1.0) -> str | None:
 
 
 def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None:
-    """Return the entry when its pid is alive AND /v1/status echoes its boot_id; else GC it."""
+    """Return a live matching entry; clear only records with a dead pid."""
     record = read_runtime(state_dir)
     if record is None:
         return None
@@ -1623,7 +1665,6 @@ def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str
         clear_runtime(state_dir)
         return None
     if probe_boot_id(int(record["port"]), timeout=probe_timeout) != record["boot_id"]:
-        clear_runtime(state_dir)
         return None
     return record
 
@@ -1635,7 +1676,7 @@ def handshake(
     timeout: float = 5.0,
     spawn_command: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Connect-else-spawn-else-report; returns {port, token, engine_version, boot_id}."""
+    """Connect-else-spawn-else-report; returns port, token, version, boot ID, and pid."""
     vault = Path(vault_path).expanduser().resolve()
     state_dir = vault_state_dir(vault)
     gc_stale_entries()
@@ -1651,6 +1692,7 @@ def handshake(
         "token": str(record["token"]),
         "engine_version": str(record["engine_version"]),
         "boot_id": str(record["boot_id"]),
+        "pid": int(record["pid"]),
     }
 
 
@@ -1661,13 +1703,8 @@ def _spawn_and_wait(
     timeout: float,
     spawn_command: list[str] | None,
 ) -> dict[str, Any]:
-    with serve_lock(state_dir) as acquired:
-        if acquired:
-            record = live_coordinates(state_dir)
-            if record is not None:
-                return record
-            _spawn_server(vault, state_dir, spawn_command)
-        record = _wait_for_live(state_dir, timeout=timeout)
+    _spawn_server(vault, state_dir, spawn_command)
+    record = _wait_for_live(state_dir, timeout=timeout)
     if record is None:
         raise HandshakeError(
             f"server did not publish rendezvous within {timeout:.0f}s;"
@@ -1737,8 +1774,13 @@ def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
 - Consumes: `rendezvous.handshake`, `rendezvous.HandshakeError`, `rendezvous.post_shutdown`, `rendezvous.probe_boot_id`.
 - Produces:
   - CLI verb `memoria handshake --vault <path> [--spawn] [--json] [--quiet]`
-  - stdout on success (`--json`): exactly `{"boot_id": …, "engine_version": …, "ok": true, "port": …, "token": …}` (sorted keys); exit 0
+  - stdout on success (`--json`): exactly `{"boot_id": …, "engine_version": …, "ok": true, "pid": …, "port": …, "token": …}` (sorted keys); exit 0
   - on failure: `{"ok": false, "error": …}` via `_fail`, exit 2 (error text contains `--spawn` when no server runs and spawn was not requested)
+
+> **Adopted handshake-contract amendment (2026-07-16):** Include the positive
+> runtime PID in the CLI payload and end-to-end assertion; the U3 consumer and
+> cross-section contract already require it. The detached-process assertion is
+> POSIX-only, matching the platform-conditional spawning rule in A.7.
 
 **Steps:**
 
@@ -1779,9 +1821,10 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    assert set(output) == {"ok", "port", "token", "engine_version", "boot_id"}
+    assert set(output) == {"ok", "port", "token", "engine_version", "boot_id", "pid"}
     assert output["ok"] is True
     assert output["engine_version"] == __version__
+    assert output["pid"] > 0
     state_dir = rendezvous.vault_state_dir(workspace)
     try:
         assert rendezvous.probe_boot_id(output["port"], timeout=2.0) == output["boot_id"]
@@ -7569,7 +7612,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 **Interfaces:**
 - Produces (CommonJS exports of `handshake.js`):
   - `buildHandshakeArgv(engineCommand: string, vaultPath: string) -> {command: string, args: string[]}` — whitespace-splits the setting so `wsl memoria` works; args end `["handshake", "--vault", vaultPath, "--spawn", "--json"]`.
-  - `parseHandshake(stdoutText: string) -> {port: number, token: string, bootId: string, engineVersion: string, pid: number}` — throws `Error("handshake: …")` on non-JSON or missing port/token/boot_id/engine_version.
+  - `parseHandshake(stdoutText: string) -> {port: number, token: string, bootId: string, engineVersion: string, pid: number}` — throws `Error("handshake: …")` on non-JSON or missing/nonpositive port or pid, or missing token/boot_id/engine_version.
   - `classifySpawnError(error) -> "engine-missing" | "spawn-failed"` — ENOENT means the engine binary is absent.
   - `createRespawnGate(now = Date.now) -> {tryAcquire(): boolean, exhausted(): boolean}` — at most `RESPAWN_LIMIT` (3) acquisitions per sliding `RESPAWN_WINDOW_MS` (3 min); injectable clock.
   - Constants: `HANDSHAKE_TIMEOUT_MS = 10000`, `RESPAWN_LIMIT = 3`, `RESPAWN_WINDOW_MS = 180000`.
@@ -8495,7 +8538,7 @@ The big wiring task: replaces the hardcoded `serverUrl` + SecretStorage token wi
   - Settings: `DEFAULT_SETTINGS.engineCommand = "memoria"`; `serverUrl` and `hasToken` **removed**.
   - Constants: `STATUS_PATH = "/v1/status"`, `ATTENTION_VIEW_PATH = "/v1/views/attention"`, `OPERATION_PATH = "/operation/run"` (see SPEC GAP), `EMPTY_ENGINE`.
 
-Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --vault <vaultPath> — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --vault <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
+Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --workspace <vaultPath> --http — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --workspace <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
 
 **Steps:**
 
@@ -8969,7 +9012,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       if (this.pillState === "server-down") {
         new Notice(
           `Memoria server down after 3 spawn attempts. ${this.lastHandshakeError} — ` +
-            `Start it manually: memoria serve --vault ${this.vaultPath()} — then click to retry.`,
+            `Start it manually: memoria serve --workspace ${this.vaultPath()} --http — then click to retry.`,
           10000,
         );
         retry();
@@ -8977,7 +9020,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       }
       if (this.pillState === "token-invalid") {
         new Notice(
-          `Memoria token invalid — restart the server: memoria serve --stop --vault ${this.vaultPath()}, ` +
+          `Memoria token invalid — restart the server: memoria serve --stop --workspace ${this.vaultPath()}, ` +
             "then click to reconnect.",
           10000,
         );
@@ -9686,9 +9729,9 @@ The Obsidian runtime itself (real spawn, real SecretStorage-free token flow, rea
 - [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block **above** the for/against line, `tipped by:` + certainty chip, named text action verbs (primary tinted with the theme accent), meta line. Press `Enter` again — collapses. Only one row expands at a time.
 - [ ] Click an evidence link. **Expect:** the vault note opens. Click an action verb (e.g. `Resolve`). **Expect:** toast `Memoria queued resolve-attention: <request id>`; the card leaves the queue on the next poll (≤30 s with the window focused).
 - [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the three server verbs as a segmented control; Queue edge with an empty To shows `relate: To note is required`; a complete submit toasts `Memoria queued curate-note-link: <request id>` and `memoria journal` (or the request log) shows the queued request.
-- [ ] Kill the server (`memoria serve --stop --vault test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
+- [ ] Kill the server (`memoria serve --stop --workspace test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
 - [ ] Rename the engine binary away (`pipx` venv or PATH shadow), reload Obsidian. **Expect:** gray `Memoria · engine missing`; click shows the install remediation naming the tried command; the vault stays fully readable/editable. Restore the binary, click — recovers.
-- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --vault …`; no infinite silent retry.
+- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --workspace … --http`; no infinite silent retry.
 - [ ] Edit `manifest.json` version in the *installed* plugin copy to `0.1.0-alpha.19`, reload. **Expect:** the plugin-older skew banner at the top of the pane, wording per spec; set it above the engine version — the vault-newer banner. Restore afterward.
 - [ ] Switch Obsidian between a light and a dark community theme. **Expect:** pill dot, loudness accents, evidence inset, chips, and the segmented control all follow the theme (no fixed colors anywhere).
 - [ ] Leave the window unfocused >2 min with the server up. **Expect:** requests slow to the 2-minute cadence (watch `serve.log`); refocusing snaps a poll immediately.
