@@ -28,7 +28,7 @@ through the `[vector]` extra and dense retrieval fails closed when it is absent.
 
 | Property | Value |
 | --- | --- |
-| Backend | deterministic BM25 in `memoria_vault.runtime.search_index`; derived `passages`, `passage_fts`, `passage_vec`, `file_index_state`, and `concept_edges` rows for candidate evaluation |
+| Backend | deterministic BM25 in `memoria_vault.runtime.search_index`; candidate evaluation uses derived `passages`, `passage_fts`, `passage_vec`, `file_index_state`, and only frontmatter-mirrored `concept_edges` triples; tensions and edge metadata are DB-owned |
 | Product mode | `memoria workspace rebuild --search` builds the checked tree and manifest; `memoria ask` and `memoria project ask` read checked retrieval documents |
 | Access | read-only retrieval; search never writes Concepts, catalog rows, or journal rows |
 | Required gate | `memoria doctor --check search` reports checked-tree and manifest state |

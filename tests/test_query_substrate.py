@@ -423,6 +423,31 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
                 "VALUES ('duplicate-id', 'notes/three.md', 'supports', 'notes/four.md', "
                 "'checked', 'notes/three.md', '2026-07-15T00:00:00Z')"
             )
+        conn.execute(
+            "INSERT INTO concept_edges("
+            "source_concept_id, relation_type, target_concept_id, "
+            "check_status, source_path, updated_at) "
+            "VALUES ('notes/blank-one.md', 'supports', 'notes/target-one.md', "
+            "'checked', 'notes/blank-one.md', '2026-07-15T00:00:00Z')"
+        )
+        conn.execute(
+            "INSERT INTO concept_edges("
+            "source_concept_id, relation_type, target_concept_id, "
+            "check_status, source_path, updated_at) "
+            "VALUES ('notes/blank-two.md', 'supports', 'notes/target-two.md', "
+            "'checked', 'notes/blank-two.md', '2026-07-15T00:00:00Z')"
+        )
+        blank_edge_ids = [
+            row["edge_id"]
+            for row in conn.execute(
+                "SELECT edge_id FROM concept_edges "
+                "WHERE source_concept_id IN (?, ?) "
+                "ORDER BY source_concept_id",
+                ("notes/blank-one.md", "notes/blank-two.md"),
+            )
+        ]
+
+    assert blank_edge_ids == ["", ""]
 
     legacy = tmp_path / "legacy"
     db = legacy / state.DB_REL
@@ -444,7 +469,7 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
             "VALUES (?, ?, ?, ?, ?, ?)",
             [
                 (
-                    "notes/mirror.md",
+                    "./notes/mirror.md",
                     "supports",
                     "notes/target.md",
                     "checked",
@@ -474,8 +499,8 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
         }
 
     assert version == state.SCHEMA_VERSION == 13
-    assert legacy_rows[("notes/mirror.md", "supports", "notes/target.md")] == {
-        "source_concept_id": "notes/mirror.md",
+    assert legacy_rows[("./notes/mirror.md", "supports", "notes/target.md")] == {
+        "source_concept_id": "./notes/mirror.md",
         "relation_type": "supports",
         "target_concept_id": "notes/target.md",
         "edge_id": hashlib.sha256(b"notes/mirror.md\0supports\0notes/target.md").hexdigest()[:24],
