@@ -28,6 +28,7 @@ TEST_LEVELS = {
     "test_cli_work_project.py": "contract",
     "test_cli_workspace_requests.py": "contract",
     "test_code_artifacts.py": "runtime",
+    "test_concept_type_registry.py": "contract",
     "test_concept_types.py": "contract",
     "test_content_security.py": "runtime",
     "test_cspell_scope.py": "static",
