@@ -264,3 +264,11 @@ def test_schema_has_no_gated_prefixes_while_review_gate_keeps_fallback():
 
     assert schema.load_folders().get("gated_prefixes", []) == []
     assert REVIEW_GATED_PREFIXES == ("notes/", "hubs/")
+
+
+def test_schema_module_carries_no_dead_validation_machinery():
+    assert not hasattr(schema, "UNIVERSAL_LIFECYCLE")
+    source = Path(schema.__file__).read_text(encoding="utf-8")
+    assert "required_any" not in source
+    assert "promotion_gate" not in source
+    assert "promoted_at" not in source

@@ -22,8 +22,8 @@ Per-type schemas currently exist for `code-artifact`, `digest`, `fulltext`,
 ## The field-kind grammar
 
 Each type schema declares `required:` and `optional:` maps of `field: kind`,
-plus an `enums:` block and optionally `required_any:`, `required_when:`, and
-`forbidden:`. The kinds:
+plus an `enums:` block and optionally `required_when:` and `forbidden:`. The
+kinds:
 
 | Kind | Accepts |
 | --- | --- |

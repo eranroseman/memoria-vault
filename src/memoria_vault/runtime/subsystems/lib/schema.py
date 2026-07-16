@@ -9,7 +9,6 @@ This module is the reader shared by the Linter, the pre-commit hook,
 one-file edit, never a hunt across hardcoded lists.
 
 Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.
-`required_any` lists field names of which at least one must be present.
 `required_when` maps a field to {field, equals}; `forbidden` lists retired fields.
 """
 
@@ -34,7 +33,6 @@ def _default_schemas_dir() -> Path:
 
 SCHEMAS_DIR = _default_schemas_dir()
 
-UNIVERSAL_LIFECYCLE = ["proposed", "provisional", "current", "retracted", "archived"]
 VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
 LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})
 
@@ -239,9 +237,6 @@ def validate_frontmatter(
             err = _check_kind(fm[field], kind, enums)
             if err:
                 errors.append(f"{field}: {err}")
-    any_of = schema.get("required_any") or []
-    if any_of and not any(fm.get(f) not in (None, "") for f in any_of):
-        errors.append(f"at least one of {any_of} is required")
     for field, rule in (schema.get("required_when") or {}).items():
         if not isinstance(rule, dict):
             errors.append(f"required_when.{field}: expected map")
@@ -249,9 +244,6 @@ def validate_frontmatter(
         controller = str(rule.get("field") or "")
         if fm.get(controller) == rule.get("equals") and not _present(fm.get(field)):
             errors.append(f"{field}: required when {controller} is {rule.get('equals')!r}")
-    gate = schema.get("promotion_gate")
-    if gate and fm.get("lifecycle") == gate and fm.get("promoted_at") in (None, ""):
-        errors.append(f"lifecycle {gate!r} requires promoted_at promotion provenance")
     if vocabulary_terms:
         for field, vocabulary in VOCABULARY_FIELDS.get(str(schema.get("type")), {}).items():
             values = fm.get(field)
