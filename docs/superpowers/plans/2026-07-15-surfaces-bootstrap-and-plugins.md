@@ -18,7 +18,7 @@
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
-2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `schema.LINK_RELATIONS`, `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG tasks written against `open_count` read `open`.
+2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `schema.LINK_RELATIONS`, `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG reads `open`.
 3. **View payload envelope**: `{ok: true, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
@@ -1173,7 +1173,7 @@ def bind_http_server(
   - `runtime.json` written immediately after bind, deleted on every clean exit path (`--once`, serve_forever return, KeyboardInterrupt)
   - `cli._serve_port_candidates(port: int) -> list[int]` — `[8765..8785]` when port is the default 8765, else `[port]`
   - `cli._vault_id(workspace: Path) -> str` — `.memoria/vault.json` `vault_id` or `""`
-  - `rendezvous.post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None` — authenticated POST to `/v1/shutdown`; `None` on failure
+  - `rendezvous.post_shutdown(port: int, token: str, boot_id: str, timeout: float = 2.0) -> dict[str, Any] | None` — direct authenticated POST to `/v1/shutdown`, carrying `X-Memoria-Boot-Id`; it bypasses ambient proxies, rejects redirects, bounds its response body, and returns `None` on failure
   - `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` and `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — shared direct-serve/handshake liveness check; dead PID is stale, PID-live probe mismatch is retained for the admission-lock owner
 
 > **Adopted startup-race amendment (2026-07-16):** `serve.lock` is the
@@ -1181,8 +1181,9 @@ def bind_http_server(
 > `serve --http` path acquires it before binding and retains it through runtime
 > removal and `server_close`; a busy invocation neither binds nor
 > writes/clears `runtime.json`. After acquiring it, recheck live coordinates;
-> only that owner may clear a PID-live record whose status probe is not yet
-> ready, then bind and publish. Move `probe_boot_id` and this non-destructive
+> only that owner may replace a PID-live record whose status probe is not yet
+> ready: retain it through bind and atomically supersede it only on successful
+> runtime publication. Move `probe_boot_id` and this non-destructive
 > `live_coordinates` check forward from A.7: dead PID entries may be cleared,
 > but PID-live/probe-mismatch entries survive because they can be newborn
 > servers between publication and `serve_forever`. Validate `--idle-exit` with
@@ -1190,7 +1191,13 @@ def bind_http_server(
 > including `write_runtime`, closes the listener before releasing the lock.
 > Add busy-lock, lock-lifetime, live-recheck, ambiguous-newborn, and
 > runtime-publication-failure tests. `--stop` must not delete a PID-live entry
-> merely because its POST races a newborn server.
+> merely because its POST races a newborn server. Before its authenticated POST,
+> `--stop` compares the direct status probe's boot ID with the record and retains
+> a mismatch without sending the bearer; the shutdown handler repeats that boot
+> ID check so a listener change between probe and POST cannot stop the wrong
+> server. Cover direct lifecycle clients with ambient-proxy, redirect, and
+> oversized-response regressions; cover both the client-side boot mismatch
+> (no bearer POST) and the handler's 409 stale-server response.
 
 > **Adopted A.6 preflight amendment (2026-07-16):** Replace the copied HTTP
 > body rather than layering on it. The no-backend `serve_lock` branch yields
@@ -1198,10 +1205,10 @@ def bind_http_server(
 > effect, reject non-finite and nonpositive `--idle-exit`, and reject `::1`
 > instead of advertising incomplete IPv6 support. While holding the admission
 > lock, distinguish no record/dead PID from a retained PID-live probe mismatch
-> with an explicit record read; only then may the owner clear the latter and
-> bind. Bind failure does not clear a record; after bind, nested cleanup closes
-> the listener even if runtime removal fails. A runtime-write failure closes
-> the listener, leaves no success payload, and releases the lock. A successful
+> with an explicit record read; only then may the owner attempt a replacement.
+> Bind failure and runtime-write failure leave that prior record intact; after
+> bind, nested cleanup closes the listener even if runtime removal fails. A
+> runtime-write failure leaves no success payload and releases the lock. A successful
 > stop requires `{"ok": true, "stopping": true}`; a failed POST retains the
 > PID-live record. Update existing HTTP CLI tests to patch `bind_http_server`,
 > not `make_http_server`, and add busy-lock/no-side-effect, lock-lifetime,
@@ -1357,23 +1364,54 @@ def test_serve_stop_reports_when_nothing_runs(
 
 - [ ] Write the implementation.
 
-  In `rendezvous.py` add `import urllib.request` to the imports and append:
+  In `rendezvous.py` add `import urllib.error` and `import urllib.request` to
+  the imports and append:
 
 ```python
-def post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None:
-    """POST /v1/shutdown with the bearer token; None when the server cannot be reached."""
+MAX_LIFECYCLE_RESPONSE_BYTES = 64 * 1024
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Fail lifecycle requests rather than following a redirected endpoint."""
+
+    def http_error_302(self, request, response, status, message, headers):
+        response.close()
+        raise urllib.error.HTTPError(request.full_url, status, message, headers, response)
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
+
+
+def _open_lifecycle_request(request: urllib.request.Request, *, timeout: float) -> Any:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+    return opener.open(request, timeout=timeout)
+
+
+def _read_lifecycle_json(response: Any) -> dict[str, Any] | None:
+    body = response.read(MAX_LIFECYCLE_RESPONSE_BYTES + 1)
+    if len(body) > MAX_LIFECYCLE_RESPONSE_BYTES:
+        return None
+    data = json.loads(body.decode("utf-8"))
+    return data if isinstance(data, dict) else None
+
+
+def post_shutdown(
+    port: int, token: str, boot_id: str, timeout: float = 2.0
+) -> dict[str, Any] | None:
+    """POST the boot-bound shutdown request, returning None when unreachable."""
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}/v1/shutdown",
         method="POST",
-        headers={"Authorization": f"Bearer {token}"},
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Memoria-Boot-Id": boot_id,
+        },
         data=b"",
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (OSError, ValueError):
+        with _open_lifecycle_request(request, timeout=timeout) as response:
+            return _read_lifecycle_json(response)
+    except (OSError, ValueError, urllib.error.HTTPError):
         return None
-    return data if isinstance(data, dict) else None
 ```
 
   In `src/memoria_vault/cli.py`:
@@ -1514,7 +1552,11 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
     if record is None or not rendezvous.pid_alive(int(record["pid"])):
         rendezvous.clear_runtime(state_dir)
         return _fail("no memoria server is running for this vault", json_output=args.json)
-    response = rendezvous.post_shutdown(int(record["port"]), str(record["token"]))
+    port = int(record["port"])
+    boot_id = str(record["boot_id"])
+    if rendezvous.probe_boot_id(port) != boot_id:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    response = rendezvous.post_shutdown(port, str(record["token"]), boot_id)
     if response is None:
         return _fail("no memoria server is running for this vault", json_output=args.json)
     return _emit({"ok": True, "stopped": True, "port": int(record["port"])}, args)
@@ -1558,6 +1600,22 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
 > For cross-platform detachment, use `start_new_session=True` only on POSIX;
 > use the narrow Windows new-process-group flag otherwise, with no lock-handle
 > inheritance. Make process-group assertions POSIX-only.
+
+> **Adopted A.7 preflight amendment (2026-07-16):** A.6 exclusively owns
+> `probe_boot_id` and `live_coordinates`; remove their duplicate A.7
+> definitions. Validate a finite positive timeout before any spawn side effect.
+> `_wait_for_live` calls A.6's liveness helper and accepts only a returned
+> positive, PID-live, boot-ID-matching record: a matching status response must
+> never make a zero, negative, dead, or malformed PID live. It remains
+> non-destructive for a PID-live/probe-mismatch newborn and caps every
+> probe/sleep by a strictly positive remaining deadline. Normalize log-open and
+> `Popen` failures into `HandshakeError` naming `serve.log`; use
+> `start_new_session=True` only on POSIX, `CREATE_NEW_PROCESS_GROUP` only on
+> Windows, and `close_fds=True` on both. Replace the parent-lock/manual-runtime
+> test with actual concurrent `spawn=True` handshakes plus a direct-serve race,
+> guaranteeing spawned-child cleanup. A live engine-version mismatch is not
+> stale in this slice: return its coordinates and let the skew UI report it
+> until an explicit authenticated stop→wait→spawn upgrade handoff is designed.
 
 **Steps:**
 
@@ -1609,6 +1667,32 @@ def test_handshake_retains_pid_live_boot_id_mismatch_for_lock_owner(workspace: P
     assert record["boot_id"] == "boot-old"
 
 
+@pytest.mark.parametrize("pid", [0, -1])
+def test_wait_for_live_rejects_nonpositive_pid_despite_matching_status(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, pid: int
+) -> None:
+    state_dir = rendezvous.vault_state_dir(workspace)
+    matching = _runtime_record(workspace, port=8765, boot_id="matching-boot")
+    matching["pid"] = pid
+    # Defend the A.7 consumer even if a future A.6 regression returns a record
+    # whose status probe matches but whose PID cannot identify a live server.
+    monkeypatch.setattr(rendezvous, "live_coordinates", lambda *_args, **_kwargs: matching)
+
+    assert rendezvous._wait_for_live(state_dir, timeout=0.01) is None
+
+
+def test_wait_for_live_rejects_a_dead_pid_despite_matching_status(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = rendezvous.vault_state_dir(workspace)
+    matching = _runtime_record(workspace, port=8765, boot_id="matching-boot")
+    matching["pid"] = 4242
+    monkeypatch.setattr(rendezvous, "live_coordinates", lambda *_args, **_kwargs: matching)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: False)
+
+    assert rendezvous._wait_for_live(state_dir, timeout=0.01) is None
+
+
 def test_handshake_spawn_timeout_names_the_log_path(workspace: Path) -> None:
     with pytest.raises(rendezvous.HandshakeError, match="serve.log"):
         rendezvous.handshake(
@@ -1619,75 +1703,105 @@ def test_handshake_spawn_timeout_names_the_log_path(workspace: Path) -> None:
         )
 
 
-def test_handshake_race_loser_returns_winner_coordinates(workspace: Path) -> None:
+@pytest.mark.parametrize("timeout", [0.0, -1.0, float("inf"), float("nan")])
+def test_handshake_rejects_invalid_timeout_before_spawning(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, timeout: float
+) -> None:
+    monkeypatch.setattr(
+        rendezvous,
+        "_spawn_server",
+        lambda *_args, **_kwargs: pytest.fail("invalid timeout must not spawn"),
+    )
+    with pytest.raises(rendezvous.HandshakeError, match="finite positive"):
+        rendezvous.handshake(workspace, spawn=True, timeout=timeout)
+
+
+@pytest.mark.parametrize("failure", ["log-open", "popen"])
+def test_handshake_spawn_failures_name_the_log_path(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    # Patch the log opener and Popen independently; both normalize OSError.
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise OSError("permission denied")
+
+    if failure == "log-open":
+        monkeypatch.setattr(Path, "open", fail)
+    else:
+        monkeypatch.setattr(rendezvous.subprocess, "Popen", fail)
+    with pytest.raises(rendezvous.HandshakeError, match="serve.log"):
+        rendezvous.handshake(workspace, spawn=True)
+
+
+def test_concurrent_spawn_handshakes_converge_on_one_listener(workspace: Path) -> None:
     _require_loopback()
     state_dir = rendezvous.vault_state_dir(workspace)
-    results: dict[str, object] = {}
+    barrier = threading.Barrier(2)
+    results: list[dict[str, Any]] = []
+    errors: list[Exception] = []
 
-    def losing_handshake() -> None:
+    def call_handshake() -> None:
         try:
-            results.update(rendezvous.handshake(workspace, spawn=True, timeout=8.0))
-        except Exception as exc:  # noqa: BLE001 -- surfaced via assertion below.
-            results["error"] = str(exc)
+            barrier.wait(timeout=5)
+            results.append(rendezvous.handshake(workspace, spawn=True, timeout=8.0))
+        except Exception as exc:  # noqa: BLE001 -- asserted below.
+            errors.append(exc)
 
-    with rendezvous.serve_lock(state_dir) as acquired:
-        assert acquired
-        thread = threading.Thread(target=losing_handshake, daemon=True)
+    threads = [threading.Thread(target=call_handshake) for _ in range(2)]
+    for thread in threads:
         thread.start()
-        time.sleep(0.2)
-        with _running_server(workspace, token="winner-token", boot_id="winner-boot") as (
-            _server,
-            port,
-            _serve_thread,
-        ):
-            rendezvous.write_runtime(
-                state_dir,
-                _runtime_record(
-                    workspace, port=port, boot_id="winner-boot", token="winner-token"
-                ),
+    try:
+        for thread in threads:
+            thread.join(timeout=12)
+        assert not errors
+        assert len(results) == 2
+        assert results[0] == results[1]
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None
+        assert results[0]["pid"] == record["pid"]
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
             )
-            thread.join(timeout=10)
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
 
-    assert "error" not in results
-    assert results["token"] == "winner-token"
-    assert results["port"] == port
-    assert results["boot_id"] == "winner-boot"
+
+def test_handshake_converges_with_a_direct_serve_race(workspace: Path) -> None:
+    _require_loopback()
+    state_dir = rendezvous.vault_state_dir(workspace)
+    direct = threading.Thread(
+        target=main,
+        args=(["serve", "--workspace", str(workspace), "--ephemeral", "--on-demand", "--quiet"],),
+    )
+    direct.start()
+    try:
+        coordinates = rendezvous.handshake(workspace, spawn=True, timeout=8.0)
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None
+        assert coordinates["boot_id"] == record["boot_id"]
+        assert coordinates["pid"] == record["pid"]
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
+            )
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
+        direct.join(timeout=10)
+        assert not direct.is_alive()
 ```
 
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k handshake -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'HandshakeError'`.
 
-- [ ] Write the minimal implementation. In `rendezvous.py` add `import subprocess` and `import time` to the imports, then append:
+- [ ] Write the minimal implementation. In `rendezvous.py` add `import math`,
+  `import subprocess`, and `import time` to the imports, then append:
 
 ```python
 class HandshakeError(RuntimeError):
     """Raised when no live server can be reached or spawned."""
-
-
-def probe_boot_id(port: int, timeout: float = 1.0) -> str | None:
-    """Read boot_id from the unauthenticated /v1/status liveness probe."""
-    try:
-        with urllib.request.urlopen(
-            f"http://127.0.0.1:{port}/v1/status", timeout=timeout
-        ) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (OSError, ValueError):
-        return None
-    return str(data.get("boot_id") or "") if isinstance(data, dict) else None
-
-
-def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None:
-    """Return a live matching entry; clear only records with a dead pid."""
-    record = read_runtime(state_dir)
-    if record is None:
-        return None
-    if not pid_alive(int(record["pid"])):
-        clear_runtime(state_dir)
-        return None
-    if probe_boot_id(int(record["port"]), timeout=probe_timeout) != record["boot_id"]:
-        return None
-    return record
 
 
 def handshake(
@@ -1698,6 +1812,8 @@ def handshake(
     spawn_command: list[str] | None = None,
 ) -> dict[str, Any]:
     """Connect-else-spawn-else-report; returns port, token, version, boot ID, and pid."""
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise HandshakeError("handshake timeout must be finite positive seconds")
     vault = Path(vault_path).expanduser().resolve()
     state_dir = vault_state_dir(vault)
     gc_stale_entries()
@@ -1747,29 +1863,47 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
         "--ephemeral",
         "--quiet",
     ]
-    with (Path(state_dir) / "serve.log").open("ab") as log_file:
-        subprocess.Popen(
-            command,
-            stdin=subprocess.DEVNULL,
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            start_new_session=True,
-        )
+    log_path = Path(state_dir) / "serve.log"
+    popen_kwargs: dict[str, Any] = {
+        "stdin": subprocess.DEVNULL,
+        "stderr": subprocess.STDOUT,
+        "close_fds": True,
+    }
+    if os.name == "posix":
+        popen_kwargs["start_new_session"] = True
+    elif os.name == "nt":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    try:
+        with log_path.open("ab") as log_file:
+            subprocess.Popen(command, stdout=log_file, **popen_kwargs)
+    except OSError as exc:
+        raise HandshakeError(f"could not spawn memoria server; see {log_path}: {exc}") from exc
 
 
 def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
+    if not math.isfinite(timeout) or timeout <= 0:
+        return None
     deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        record = read_runtime(state_dir)
-        if record is not None and probe_boot_id(int(record["port"]), timeout=0.5) == record[
-            "boot_id"
-        ]:
-            return record
-        time.sleep(0.1)
-    return None
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        record = live_coordinates(state_dir, probe_timeout=min(0.5, remaining))
+        if record is not None:
+            try:
+                pid = int(record["pid"])
+            except (KeyError, TypeError, ValueError):
+                pid = 0
+            if pid > 0 and pid_alive(pid):
+                return record
+        time.sleep(min(0.1, remaining))
 ```
 
-  (Deliberate: `_wait_for_live` never deletes the entry — a freshly bound server writes `runtime.json` a few milliseconds before `serve_forever` starts answering, and clearing in that window would GC a healthy newborn. Only the up-front `live_coordinates` check treats mismatches as stale, per spec §3.)
+  (Deliberate: `_wait_for_live` delegates to A.6's liveness helper. It may clear
+  a dead-PID entry, but it never deletes a PID-live/probe-mismatch entry: a
+  freshly bound server writes `runtime.json` a few milliseconds before
+  `serve_forever` starts answering, and clearing in that window would GC a
+  healthy newborn.)
 
 - [ ] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
@@ -1803,6 +1937,16 @@ def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
 > cross-section contract already require it. The detached-process assertion is
 > POSIX-only, matching the platform-conditional spawning rule in A.7.
 
+> **Adopted A.8 diagnostics amendment (2026-07-16):** With `--json`, preserve
+> the machine-readable failure object on stdout *and* print the same diagnostic
+> to stderr so the plugin can surface the `serve.log` remediation. Test both
+> channels. Immediately after parsing successful stdout, the spawned-server
+> test captures its owned child PID and arms cleanup before any assertion. It
+> asserts that the PID is positive, matches `runtime.json`, and differs from
+> the calling process; process-group and `os.waitpid` assertions are POSIX-only.
+> Its `finally` block stops the owned runtime, waits for process exit, reaps the
+> child where possible, then waits for runtime removal.
+
 **Steps:**
 
 - [ ] Write the failing tests. In `tests/test_cli.py`, add `"memoria handshake",` to the set in `test_cli_command_surface_is_exact` (after line 81, `"memoria ask",`). In `tests/test_rendezvous.py`, append:
@@ -1817,6 +1961,26 @@ def test_handshake_cli_reports_when_no_server(
     assert rc == 2
     assert output["ok"] is False
     assert "--spawn" in output["error"]
+
+
+def test_handshake_cli_json_failure_keeps_json_and_writes_stderr(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise rendezvous.HandshakeError("server did not publish; see /state/serve.log")
+
+    monkeypatch.setattr(
+        rendezvous,
+        "handshake",
+        fail,
+    )
+
+    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+    captured = capsys.readouterr()
+
+    assert rc == 2
+    assert json.loads(captured.out)["ok"] is False
+    assert "serve.log" in captured.err
 
 
 def test_handshake_cli_rejects_missing_vault(
@@ -1838,21 +2002,27 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
         "PYTHONPATH", f"{src_dir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}"
     )
 
-    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 0
-    assert set(output) == {"ok", "port", "token", "engine_version", "boot_id", "pid"}
-    assert output["ok"] is True
-    assert output["engine_version"] == __version__
-    assert output["pid"] > 0
     state_dir = rendezvous.vault_state_dir(workspace)
+    output: dict[str, Any] = {}
+    child_pid = 0
     try:
+        rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+        output = json.loads(capsys.readouterr().out)
+        child_pid = int(output.get("pid", 0))  # arm cleanup before assertions
+
+        assert rc == 0
+        assert set(output) == {"ok", "port", "token", "engine_version", "boot_id", "pid"}
+        assert output["ok"] is True
+        assert output["engine_version"] == __version__
+        assert output["pid"] > 0
         assert rendezvous.probe_boot_id(output["port"], timeout=2.0) == output["boot_id"]
         assert (state_dir / "serve.log").exists()
         record = rendezvous.read_runtime(state_dir)
         assert record is not None
-        assert os.getpgid(int(record["pid"])) != os.getpgid(0)  # detached session
+        assert output["pid"] == record["pid"]
+        assert output["pid"] != os.getpid()
+        if os.name == "posix":
+            assert os.getpgid(int(record["pid"])) != os.getpgid(0)  # detached session
 
         rc_again = main(["handshake", "--vault", str(workspace), "--json"])
         second = json.loads(capsys.readouterr().out)
@@ -1871,8 +2041,27 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
                 token_hits.append(path)
         assert token_hits == []  # zero secrets in the vault tree
     finally:
-        stopped = rendezvous.post_shutdown(output["port"], output["token"])
-        assert stopped == {"ok": True, "stopping": True}
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            stopped = rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
+            )
+            assert stopped == {"ok": True, "stopping": True}
+            child_pid = child_pid or int(record["pid"])
+        if child_pid > 0:
+            if os.name == "posix":
+                deadline = time.monotonic() + 10
+                while True:
+                    try:
+                        reaped, _status = os.waitpid(child_pid, os.WNOHANG)
+                    except ChildProcessError:  # pragma: no cover - harness already reaped it.
+                        break
+                    if reaped == child_pid:
+                        break
+                    assert time.monotonic() < deadline, "spawned server did not exit"
+                    time.sleep(0.05)
+            else:
+                assert _wait_until(lambda: not rendezvous.pid_alive(child_pid))
         assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
 ```
 
@@ -1905,7 +2094,10 @@ def _cmd_handshake(args: argparse.Namespace) -> int:
     try:
         coordinates = rendezvous.handshake(vault, spawn=args.spawn)
     except rendezvous.HandshakeError as exc:
-        return _fail(str(exc), json_output=args.json)
+        message = str(exc)
+        if args.json:
+            print(message, file=sys.stderr, flush=True)
+        return _fail(message, json_output=args.json)
     return _emit({"ok": True, **coordinates}, args)
 ```
 
@@ -7573,12 +7765,12 @@ regeneration needed**.
 
 - `memoria handshake --vault <path> --spawn --json` prints exactly one JSON object to stdout carrying at least `{"port": int, "token": str, "boot_id": str, "engine_version": str, "pid": int}` (the BOOT §1 runtime.json fields; extra keys ignored). On failure, its stderr names `<state>/serve.log` — the plugin surfaces that stderr verbatim in the server-down remediation because BOOT §4 forbids the plugin from locating the state file itself.
 - `GET /v1/status` — unauthenticated liveness probe, 200 when alive.
-- `GET /v1/views/attention?summary=true` (Bearer auth) → `{"ok": true, "open_count": int, "missing_required_credentials": [str], "link_relations": [str], "engine_version": str}`.
+- `GET /v1/views/attention?summary=true` (Bearer auth) → `{"ok": true, "open": int, "missing_required_credentials": [str], "link_relations": [str], "engine_version": str}`.
 - `GET /v1/views/attention` (Bearer auth) → `{"ok": true, "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [Block]}}` where `Block.kind ∈ {card, text, badge, action-row, evidence-list}`:
   - `card`: `{kind, id, ref, title, loudness, kind_line, certainty, argument_for, argument_against, tipped_by, raised_by, raised_at, age_label, age_s, blocks: [Block]}` (children carry the card's `evidence-list` and `action-row`).
   - `text`: `{kind, id, text}` · `badge`: `{kind, id, label, loudness}` · `evidence-list`: `{kind, id, items: [{label, ref}]}` · `action-row`: `{kind, id, actions: [{label, operation_id, payload, primary?}]}`.
   - Any other `kind` (including today's `"table"` from `engine/api.py:719`) renders as a labeled fallback box — fail visible, never silent.
-- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key", "actor": "agent"}` → `{"ok": bool, "job": {"job_id": str, …}, "result": …}` (today's `engine/api.py:440-444` shape; the toast names `job.job_id`).
+- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key", "actor": "pi"}` → `{"ok": bool, "job": {"job_id": str, …}, "result": …}` (today's `engine/api.py:440-444` shape; the toast names `job.job_id`).
 
 **Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` and U3 §4 names it "the single source"; a plugin-side copy is a second source that drifts exactly along the skew axis BOOT §6 exists to police, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
 
@@ -7633,7 +7825,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 **Interfaces:**
 - Produces (CommonJS exports of `handshake.js`):
   - `buildHandshakeArgv(engineCommand: string, vaultPath: string) -> {command: string, args: string[]}` — whitespace-splits the setting so `wsl memoria` works; args end `["handshake", "--vault", vaultPath, "--spawn", "--json"]`.
-  - `parseHandshake(stdoutText: string) -> {port: number, token: string, bootId: string, engineVersion: string, pid: number}` — throws `Error("handshake: …")` on non-JSON or missing/nonpositive port or pid, or missing token/boot_id/engine_version.
+  - `parseHandshake(stdoutText: string) -> {port: number, token: string, bootId: string, engineVersion: string, pid: number}` — throws `Error("handshake: …")` on non-JSON, or a missing/nonpositive/non-integer port or PID, or a missing token/boot_id/engine_version; no plugin action may use a PID before this validation.
   - `classifySpawnError(error) -> "engine-missing" | "spawn-failed"` — ENOENT means the engine binary is absent.
   - `createRespawnGate(now = Date.now) -> {tryAcquire(): boolean, exhausted(): boolean}` — at most `RESPAWN_LIMIT` (3) acquisitions per sliding `RESPAWN_WINDOW_MS` (3 min); injectable clock.
   - Constants: `HANDSHAKE_TIMEOUT_MS = 10000`, `RESPAWN_LIMIT = 3`, `RESPAWN_WINDOW_MS = 180000`.
@@ -7697,6 +7889,21 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       () => parseHandshake(JSON.stringify({ port: 1, token: "t", boot_id: "b" })),
       /handshake: missing engine_version/,
     );
+    for (const pid of [0, -1, 1.5]) {
+      assert.throws(
+        () =>
+          parseHandshake(
+            JSON.stringify({
+              port: 1,
+              token: "t",
+              boot_id: "b",
+              engine_version: "0.1.0-alpha.21",
+              pid,
+            }),
+          ),
+        /handshake: missing pid/,
+      );
+    }
   });
 
   test("classifySpawnError maps ENOENT to engine-missing", () => {
@@ -7769,6 +7976,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     }
     if (!coordinates.engineVersion) {
       throw new Error("handshake: missing engine_version");
+    }
+    if (!Number.isInteger(coordinates.pid) || coordinates.pid <= 0) {
+      throw new Error("handshake: missing pid");
     }
     return coordinates;
   }
@@ -8640,7 +8850,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
             status: 200,
             json: {
               ok: true,
-              open_count: 2,
+              open: 2,
               missing_required_credentials: [],
               link_relations: ["supports", "contradicts", "extends"],
               engine_version: "0.1.0-alpha.20",
@@ -8699,7 +8909,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       operation_id: "demo-operation",
       payload: { ok: true },
       idempotency_key: "demo-key",
-      actor: "agent",
+      actor: "pi",
     });
 
     // 3) Poll updates pill inputs from the summary payload.
@@ -8942,14 +9152,14 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
         operation_id: operationId,
         payload,
         idempotency_key: idempotencyKey,
-        actor: "agent",
+        actor: "pi",
       });
     }
 
     async poll() {
       try {
         const summary = await this.authedJson(`${ATTENTION_VIEW_PATH}?summary=true`);
-        this.openCount = Number(summary.open_count || 0);
+        this.openCount = Number(summary.open || 0);
         this.lastPollAt = Date.now();
         this.missingCredential = String((summary.missing_required_credentials || [])[0] || "");
         this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
@@ -9770,7 +9980,7 @@ rule only) from `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md`.
 Repo: `/home/eranr/memoria-vault`, main @ 80e62bbd.
 
 **DEPENDENCY NOTE (cross-section, not invented here):** plugin enqueues over
-HTTP arrive with `actor="agent"` (`src/memoria_vault/runtime/http_transport.py:216`),
+HTTP arrive with `actor="pi"` (`src/memoria_vault/runtime/http_transport.py:216`),
 and `curate-note-link` is a `pi`-protected operation
 (`src/memoria_vault/runtime/worker.py:58`, enforced at `worker.py:1093-1098`).
 The graduate command (Task U3-CANVAS.5) enqueues `curate-note-link` exactly as
