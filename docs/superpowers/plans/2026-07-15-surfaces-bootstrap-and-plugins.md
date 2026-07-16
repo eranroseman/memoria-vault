@@ -320,10 +320,15 @@ def _case_insensitive_filesystem(path: Path) -> bool:
   - `rendezvous.RUNTIME_SCHEMA = "memoria-runtime.v1"`
   - `rendezvous.RUNTIME_FIELDS = ("schema", "vault_path", "vault_id", "port", "pid", "boot_id", "token", "engine_version", "started_at")`
   - `rendezvous.runtime_path(state_dir: Path) -> Path`
-  - `rendezvous.write_runtime(state_dir: Path, record: dict[str, Any]) -> Path` — injects `schema`, validates all fields present, atomic tmp+`os.replace`, mode 0600; raises `ValueError` on missing fields
+  - `rendezvous.write_runtime(state_dir: Path, record: dict[str, Any]) -> Path` — injects `schema`, validates all fields present, atomically replaces from a unique private temp file, mode 0600; raises `ValueError` on missing fields
   - `rendezvous.read_runtime(state_dir: Path) -> dict[str, Any] | None` — `None` on missing/corrupt/wrong-schema/missing-field/non-int port or pid
   - `rendezvous.clear_runtime(state_dir: Path) -> None` — idempotent unlink
   - `rendezvous.pid_alive(pid: int) -> bool`
+
+> **Adopted post-review amendment (2026-07-16):** A fixed staging name plus a
+> single `os.write` is not an atomic publication contract: an existing staging
+> file can be reused and a short write can be published. Use a unique,
+> owner-only `tempfile.mkstemp` file, write until the full body is accepted, clean it on every failure, then `os.replace`. Retain tests for legacy regular/symlinked fixed-temp paths (they must not affect publication), forced short writes, cleanup after a failed write, missing fields, and JSON booleans. On Windows, `os.kill(pid, 0)` invokes `TerminateProcess`; `pid_alive` must instead use a non-destructive `OpenProcess`/`GetExitCodeProcess` query, with a platform-route test proving it never calls `os.kill`.
 
 **Steps:**
 
@@ -358,7 +363,8 @@ def test_runtime_roundtrip_is_atomic_and_private(tmp_path: Path) -> None:
     written = rendezvous.write_runtime(state_dir, _runtime_record(vault))
 
     assert written == state_dir / "runtime.json"
-    assert stat.S_IMODE(written.stat().st_mode) == 0o600
+    if os.name == "posix":
+        assert stat.S_IMODE(written.stat().st_mode) == 0o600
     assert not list(state_dir.glob("*.tmp"))
     record = rendezvous.read_runtime(state_dir)
     assert record is not None
@@ -425,7 +431,9 @@ def test_pid_alive_detects_live_and_dead_processes() -> None:
   `python -m pytest tests/test_rendezvous.py -k "runtime or pid_alive" -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'write_runtime'` (and siblings).
 
-- [ ] Write the minimal implementation. In `rendezvous.py`, add `import json` and `from typing import Any` to the imports, then append:
+- [ ] Write the minimal implementation. In `rendezvous.py`, add `import ctypes`,
+  `import json`, `import tempfile`, and `from typing import Any` to the imports,
+  then append:
 
 ```python
 RUNTIME_SCHEMA = "memoria-runtime.v1"
@@ -452,15 +460,26 @@ def write_runtime(state_dir: Path, record: dict[str, Any]) -> Path:
     missing = [field for field in RUNTIME_FIELDS if field not in entry]
     if missing:
         raise ValueError(f"runtime record missing fields: {', '.join(missing)}")
-    target = runtime_path(state_dir)
-    temp = target.with_suffix(".json.tmp")
     body = json.dumps(entry, ensure_ascii=False, sort_keys=True).encode("utf-8")
-    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    target = runtime_path(state_dir)
+    fd, temporary = tempfile.mkstemp(prefix="runtime.", suffix=".tmp", dir=state_dir)
+    temp = Path(temporary)
     try:
-        os.write(fd, body)
-    finally:
-        os.close(fd)
-    os.replace(temp, target)
+        try:
+            if os.name == "posix":
+                os.fchmod(fd, 0o600)
+            remaining = memoryview(body)
+            while remaining:
+                written = os.write(fd, remaining)
+                if written <= 0:
+                    raise OSError("failed to write runtime record")
+                remaining = remaining[written:]
+        finally:
+            os.close(fd)
+        os.replace(temp, target)
+    except BaseException:
+        temp.unlink(missing_ok=True)
+        raise
     return target
 
 
@@ -474,7 +493,7 @@ def read_runtime(state_dir: Path) -> dict[str, Any] | None:
         return None
     if any(field not in data for field in RUNTIME_FIELDS):
         return None
-    if not isinstance(data.get("port"), int) or not isinstance(data.get("pid"), int):
+    if type(data.get("port")) is not int or type(data.get("pid")) is not int:
         return None
     return data
 
@@ -483,9 +502,15 @@ def clear_runtime(state_dir: Path) -> None:
     runtime_path(state_dir).unlink(missing_ok=True)
 
 
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
 def pid_alive(pid: int) -> bool:
     if pid <= 0:
         return False
+    if _is_windows():
+        return _windows_pid_alive(pid)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -495,6 +520,36 @@ def pid_alive(pid: int) -> bool:
     except OSError:
         return False
     return True
+
+
+def _windows_pid_alive(pid: int) -> bool:
+    """Query Windows process state without sending it a signal."""
+    from ctypes import wintypes
+
+    process_query_limited_information = 0x1000
+    error_access_denied = 5
+    still_active = 259
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    open_process = kernel32.OpenProcess
+    open_process.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    open_process.restype = wintypes.HANDLE
+    get_exit_code = kernel32.GetExitCodeProcess
+    get_exit_code.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    get_exit_code.restype = wintypes.BOOL
+    close_handle = kernel32.CloseHandle
+    close_handle.argtypes = [wintypes.HANDLE]
+    close_handle.restype = wintypes.BOOL
+
+    handle = open_process(process_query_limited_information, False, pid)
+    if not handle:
+        return ctypes.get_last_error() == error_access_denied
+    try:
+        exit_code = wintypes.DWORD()
+        if not get_exit_code(handle, ctypes.byref(exit_code)):
+            return True
+        return exit_code.value == still_active
+    finally:
+        close_handle(handle)
 ```
 
 - [ ] Run tests to verify they pass:

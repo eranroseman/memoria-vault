@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import ctypes
 import hashlib
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -83,17 +85,25 @@ def write_runtime(state_dir: Path, record: dict[str, Any]) -> Path:
     if missing:
         raise ValueError(f"runtime record missing fields: {', '.join(missing)}")
     target = runtime_path(state_dir)
-    temp = target.with_suffix(".json.tmp")
     body = json.dumps(entry, ensure_ascii=False, sort_keys=True).encode("utf-8")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
-    fd = os.open(temp, flags, 0o600)
+    fd, temporary = tempfile.mkstemp(prefix="runtime.", suffix=".tmp", dir=state_dir)
+    temp = Path(temporary)
     try:
-        if os.name == "posix":
-            os.fchmod(fd, 0o600)
-        os.write(fd, body)
-    finally:
-        os.close(fd)
-    os.replace(temp, target)
+        try:
+            if os.name == "posix":
+                os.fchmod(fd, 0o600)
+            remaining = memoryview(body)
+            while remaining:
+                written = os.write(fd, remaining)
+                if written <= 0:
+                    raise OSError("failed to write runtime record")
+                remaining = remaining[written:]
+        finally:
+            os.close(fd)
+        os.replace(temp, target)
+    except BaseException:
+        temp.unlink(missing_ok=True)
+        raise
     return target
 
 
@@ -117,10 +127,16 @@ def clear_runtime(state_dir: Path) -> None:
     runtime_path(state_dir).unlink(missing_ok=True)
 
 
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
 def pid_alive(pid: int) -> bool:
     """Return whether the operating system reports a process as live."""
     if pid <= 0:
         return False
+    if _is_windows():
+        return _windows_pid_alive(pid)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -130,3 +146,33 @@ def pid_alive(pid: int) -> bool:
     except OSError:
         return False
     return True
+
+
+def _windows_pid_alive(pid: int) -> bool:
+    """Query Windows process state without sending it a signal."""
+    from ctypes import wintypes
+
+    process_query_limited_information = 0x1000
+    error_access_denied = 5
+    still_active = 259
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    open_process = kernel32.OpenProcess
+    open_process.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    open_process.restype = wintypes.HANDLE
+    get_exit_code = kernel32.GetExitCodeProcess
+    get_exit_code.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    get_exit_code.restype = wintypes.BOOL
+    close_handle = kernel32.CloseHandle
+    close_handle.argtypes = [wintypes.HANDLE]
+    close_handle.restype = wintypes.BOOL
+
+    handle = open_process(process_query_limited_information, False, pid)
+    if not handle:
+        return ctypes.get_last_error() == error_access_denied
+    try:
+        exit_code = wintypes.DWORD()
+        if not get_exit_code(handle, ctypes.byref(exit_code)):
+            return True
+        return exit_code.value == still_active
+    finally:
+        close_handle(handle)

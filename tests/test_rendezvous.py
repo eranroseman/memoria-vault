@@ -155,37 +155,79 @@ def test_write_runtime_rejects_missing_fields(tmp_path: Path) -> None:
         rendezvous.write_runtime(state_dir, {"port": 1})
 
 
-@pytest.mark.skipif(os.name != "posix", reason="POSIX permission semantics")
-def test_write_runtime_restricts_an_existing_temp_file(tmp_path: Path) -> None:
+def test_write_runtime_ignores_a_legacy_temp_file(tmp_path: Path) -> None:
     vault = tmp_path / "vault"
     vault.mkdir()
     state_dir = rendezvous.vault_state_dir(vault)
-    temp = rendezvous.runtime_path(state_dir).with_suffix(".json.tmp")
-    temp.write_text("old", encoding="utf-8")
-    temp.chmod(0o644)
+    legacy = rendezvous.runtime_path(state_dir).with_suffix(".json.tmp")
+    legacy.write_text("old", encoding="utf-8")
+    legacy.chmod(0o644)
 
     written = rendezvous.write_runtime(state_dir, _runtime_record(vault))
 
-    assert stat.S_IMODE(written.stat().st_mode) == 0o600
+    assert legacy.read_text(encoding="utf-8") == "old"
+    if os.name == "posix":
+        assert stat.S_IMODE(written.stat().st_mode) == 0o600
 
 
 @pytest.mark.skipif(
     os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
     reason="POSIX no-follow semantics unavailable",
 )
-def test_write_runtime_refuses_a_symlinked_temp_file(tmp_path: Path) -> None:
+def test_write_runtime_ignores_a_legacy_symlinked_temp_file(tmp_path: Path) -> None:
     vault = tmp_path / "vault"
     vault.mkdir()
     state_dir = rendezvous.vault_state_dir(vault)
     outside = tmp_path / "outside.json"
     outside.write_text("unchanged", encoding="utf-8")
-    temp = rendezvous.runtime_path(state_dir).with_suffix(".json.tmp")
-    temp.symlink_to(outside)
+    legacy = rendezvous.runtime_path(state_dir).with_suffix(".json.tmp")
+    legacy.symlink_to(outside)
 
-    with pytest.raises(OSError):
+    written = rendezvous.write_runtime(state_dir, _runtime_record(vault))
+
+    assert rendezvous.read_runtime(state_dir) is not None
+    assert written.is_file()
+    assert outside.read_text(encoding="utf-8") == "unchanged"
+
+
+def test_write_runtime_retries_short_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+    real_write = os.write
+    calls = 0
+
+    def short_write(fd: int, body: bytes | memoryview) -> int:
+        nonlocal calls
+        calls += 1
+        return real_write(fd, body[:1])
+
+    monkeypatch.setattr(rendezvous.os, "write", short_write)
+
+    rendezvous.write_runtime(state_dir, _runtime_record(vault))
+
+    assert calls > 1
+    assert rendezvous.read_runtime(state_dir) is not None
+
+
+def test_write_runtime_cleans_temp_after_write_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+
+    def failed_write(_fd: int, _body: bytes | memoryview) -> int:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(rendezvous.os, "write", failed_write)
+
+    with pytest.raises(OSError, match="disk full"):
         rendezvous.write_runtime(state_dir, _runtime_record(vault))
 
-    assert outside.read_text(encoding="utf-8") == "unchanged"
+    assert not list(state_dir.glob("*.tmp"))
 
 
 def test_read_runtime_rejects_bad_payloads(tmp_path: Path) -> None:
@@ -201,6 +243,12 @@ def test_read_runtime_rejects_bad_payloads(tmp_path: Path) -> None:
     rendezvous.write_runtime(state_dir, _runtime_record(vault))
     tampered = json.loads((state_dir / "runtime.json").read_text(encoding="utf-8"))
     tampered["schema"] = "something-else"
+    (state_dir / "runtime.json").write_text(json.dumps(tampered), encoding="utf-8")
+    assert rendezvous.read_runtime(state_dir) is None
+
+    rendezvous.write_runtime(state_dir, _runtime_record(vault))
+    tampered = json.loads((state_dir / "runtime.json").read_text(encoding="utf-8"))
+    del tampered["token"]
     (state_dir / "runtime.json").write_text(json.dumps(tampered), encoding="utf-8")
     assert rendezvous.read_runtime(state_dir) is None
 
@@ -242,3 +290,75 @@ def test_pid_alive_detects_live_and_dead_processes() -> None:
     assert rendezvous.pid_alive(finished.pid) is False
     assert rendezvous.pid_alive(0) is False
     assert rendezvous.pid_alive(-1) is False
+
+
+def test_pid_alive_uses_a_non_destructive_windows_query(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    queried: list[int] = []
+
+    def windows_query(pid: int) -> bool:
+        queried.append(pid)
+        return True
+
+    def kill_must_not_run(_pid: int, _signal: int) -> None:
+        pytest.fail("Windows liveness checks must not call os.kill")
+
+    monkeypatch.setattr(rendezvous, "_is_windows", lambda: True)
+    monkeypatch.setattr(rendezvous, "_windows_pid_alive", windows_query)
+    monkeypatch.setattr(rendezvous.os, "kill", kill_must_not_run)
+
+    assert rendezvous.pid_alive(12345) is True
+    assert rendezvous.pid_alive(0) is False
+    assert queried == [12345]
+
+
+def test_windows_pid_alive_checks_the_process_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeFunction:
+        def __init__(self, callback):
+            self.callback = callback
+            self.argtypes = None
+            self.restype = None
+
+        def __call__(self, *args):
+            return self.callback(*args)
+
+    class Kernel32:
+        def __init__(self) -> None:
+            self.exit_code = 259
+            self.handle = 123
+            self.opened: list[tuple[int, bool, int]] = []
+            self.closed: list[int] = []
+            self.OpenProcess = FakeFunction(self.open_process)
+            self.GetExitCodeProcess = FakeFunction(self.get_exit_code)
+            self.CloseHandle = FakeFunction(self.close_handle)
+
+        def open_process(self, access: int, inherit: bool, pid: int) -> int:
+            self.opened.append((access, inherit, pid))
+            return self.handle
+
+        def get_exit_code(self, _handle: int, output: object) -> int:
+            output._obj.value = self.exit_code  # type: ignore[attr-defined]
+            return 1
+
+        def close_handle(self, handle: int) -> int:
+            self.closed.append(handle)
+            return 1
+
+    kernel32 = Kernel32()
+    monkeypatch.setattr(
+        rendezvous.ctypes, "WinDLL", lambda *_args, **_kwargs: kernel32, raising=False
+    )
+
+    assert rendezvous._windows_pid_alive(12345) is True
+    kernel32.exit_code = 0
+    assert rendezvous._windows_pid_alive(12345) is False
+    kernel32.handle = 0
+    monkeypatch.setattr(rendezvous.ctypes, "get_last_error", lambda: 5, raising=False)
+    assert rendezvous._windows_pid_alive(12345) is True
+    monkeypatch.setattr(rendezvous.ctypes, "get_last_error", lambda: 87, raising=False)
+    assert rendezvous._windows_pid_alive(12345) is False
+    assert kernel32.opened == [(0x1000, False, 12345)] * 4
+    assert kernel32.closed == [123, 123]
