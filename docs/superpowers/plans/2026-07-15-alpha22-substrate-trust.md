@@ -60,8 +60,9 @@ rerun. Do not cherry-pick the branch’s older Alpha21/COV history as part of Pl
 | S68.2 | `f034ca7a` |
 | S68.5 | `0c1c37e` (also contains the execution-order amendment above) |
 
-Pending: G2S1.5; S68.3, S68.4, and S68.6; and COST.1–.5. `e8e9a154`
-only untracks a session report and is deliberately omitted. The source-complete
+Pending: G2S1.5; S68.3, S68.4, and S68.6; and COST.1–.5. After `8ece209c`,
+cherry-pick ancillary cleanup `e8e9a154` solely to remove its accidentally tracked
+session report; it is cleanup, not S12.1 implementation. The source-complete
 task bodies below are historical TDD/review records: their stale line anchors,
 old migration shapes, and retired names must not be reintroduced. The binding
 contracts and this ledger take precedence when reconciling them.
