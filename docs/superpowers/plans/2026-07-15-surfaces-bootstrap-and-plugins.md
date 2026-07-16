@@ -741,9 +741,25 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
   - HTTP endpoint `POST /v1/shutdown` — authenticated, replies `{"ok": true, "stopping": true}` then stops `serve_forever`
   - Request-handling order (binding for all sections): Host check (403) → Origin check (403) → `/v1/status` → bearer auth (401) → idle-timer touch → `/v1/shutdown` → existing dispatch
 
+> **Adopted preflight amendment (2026-07-16):** This handler is a local
+> security boundary, so duplicate security headers are invalid rather than
+> silently first-wins: obtain `hosts = self.headers.get_all("Host") or []` and
+> reject unless `len(hosts) == 1 and host_allowed(hosts[0], port)`; obtain
+> `origins = self.headers.get_all("Origin") or []` and reject when there is
+> more than one or its sole value fails `origin_allowed`. This preserves the
+> stated Host-before-Origin order. The new tests must send raw duplicate Host
+> and Origin requests, reject an empty/missing Host, prove a valid Bearer on
+> `/v1/status` still leaves `last_authenticated` unchanged, and prove valid
+> credentials paired with rejected Host or Origin do not touch it. Set the
+> server timer to a sentinel before each no-touch assertion rather than relying
+> on monotonic-clock resolution. Use `evil.example:{port}` (not a mismatched
+> `:80`) for the DNS-rebinding test. `from memoria_vault.cli import main` is
+> unused in A.4 and is deferred to A.6. This amends the test and handler
+> pseudocode below wherever they conflict.
+
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_rendezvous.py`, add imports `import contextlib`, `import http.client`, `import threading`, `from collections.abc import Iterator`, `from memoria_vault.cli import main`, `from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed`, `from tests.helpers import init_cli_workspace`; then append:
+- [ ] Write the failing tests. In `tests/test_rendezvous.py`, add imports `import contextlib`, `import http.client`, `import threading`, `from collections.abc import Iterator`, `from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed`, `from tests.helpers import init_cli_workspace`; then append:
 
 ```python
 @pytest.fixture
@@ -829,7 +845,7 @@ def test_authenticated_request_resets_idle_timer_and_unauthorized_does_not(
 
 def test_host_header_validation_rejects_dns_rebinding(workspace: Path) -> None:
     with _running_server(workspace) as (_server, port, _thread):
-        forged, payload = _request(port, "GET", "/v1/status", host="evil.example:80")
+        forged, payload = _request(port, "GET", "/v1/status", host=f"evil.example:{port}")
         assert forged == 403
         assert payload == {"ok": False, "error": "forbidden host"}
         localhost_ok, _payload = _request(port, "GET", "/v1/status", host=f"localhost:{port}")
