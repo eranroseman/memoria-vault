@@ -1893,8 +1893,9 @@ non-backfillable and precedes all ingestion.
   (3) loudness policy (quiet/notice/alert/block) + batch-worklist taxonomy;
   (4) honest-dashboard surface (raw counts, never one health score) and where
   it renders; (5) the pre-registered decision-rule registry shape and where
-  each §4 blocker's rule lives; (6) WIP caps / consuming ritual
-  (human-back-pressure).
+  each §4 blocker's rule lives; (6) flow visibility + PI-owned throttles
+  (human-back-pressure — the WIP-cap concept was retired by the 2026-07-16
+  rethink-audit).
 
 **Steps:**
 
