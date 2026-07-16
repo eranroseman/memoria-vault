@@ -838,7 +838,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # See integrity-citation-survival-check above for the shared dispatch
     # path. check_contradiction_links (runtime/integrity.py:633) flags
-    # checked digests/works with stale `contradictions` targets; none exist
+    # checked digests with stale `links.contradicts` targets; none exist
     # in the seed. Confirmed live: "done".
     "integrity-contradiction-check": {
         "payload": {},

@@ -1458,10 +1458,7 @@ def _coverage_round_robin(candidates: list[dict[str, Any]], limit: int) -> list[
 def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
     rows = []
     for rel, frontmatter in _checked_concepts(vault):
-        contradictions = frontmatter.get("contradictions")
-        if not isinstance(contradictions, list):
-            continue
-        for target in contradictions:
+        for target in _link_values(frontmatter, "contradicts"):
             target_ref = str(target).strip()
             if not target_ref:
                 continue

@@ -35,7 +35,7 @@ def test_exploration_channel_surfaces_uncaptured_citation_candidate(tmp_path: Pa
     _checked_note(
         tmp_path,
         "notes/contrary.md",
-        "type: note\ntitle: Contrary\ncontradictions:\n  - notes/thesis.md\n",
+        "type: note\ntitle: Contrary\nlinks:\n  contradicts:\n    - notes/thesis.md\n",
     )
 
     result = exploration_channel(tmp_path)

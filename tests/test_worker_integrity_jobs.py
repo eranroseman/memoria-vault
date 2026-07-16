@@ -227,10 +227,10 @@ def test_worker_runs_contradiction_integrity_operation_jobs(tmp_path: Path) -> N
         "title: Bad contradiction\n"
         "description: Missing contradiction target.\n"
         "tags: []\n"
-        "links: {}\n"
+        "links:\n"
+        "  contradicts:\n"
+        "    - digests/missing.md\n"
         "work_id: catalog/sources/source-alpha\n"
-        "contradictions:\n"
-        "  - digests/missing.md\n"
         "---\n"
         "# Bad contradiction\n",
         encoding="utf-8",

@@ -233,8 +233,9 @@ def _answer_from_hits(
         stale = _staleness(path, frontmatter)
         if stale:
             staleness.append(stale)
-        if isinstance(frontmatter.get("contradictions"), list):
-            for item in frontmatter["contradictions"]:
+        links = frontmatter.get("links")
+        if isinstance(links, dict) and isinstance(links.get("contradicts"), list):
+            for item in links["contradicts"]:
                 contradictions.append({"path": path, "contradiction": item})
     answer = {
         "query": query,

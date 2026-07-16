@@ -637,9 +637,10 @@ def check_contradiction_links(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") not in {"work", "digest"} or not _is_checked_concept(vault, rel):
+        if frontmatter.get("type") != "digest" or not _is_checked_concept(vault, rel):
             continue
-        contradictions = frontmatter.get("contradictions")
+        links = frontmatter.get("links")
+        contradictions = links.get("contradicts") if isinstance(links, dict) else None
         if not isinstance(contradictions, list):
             continue
         for item in contradictions:
@@ -1702,7 +1703,15 @@ def _evidence_refs(frontmatter: dict[str, Any]) -> list[str]:
 
 def _link_refs(frontmatter: dict[str, Any]) -> list[str]:
     refs: set[str] = set()
-    _collect_link_refs(frontmatter.get("links"), refs)
+    links = frontmatter.get("links")
+    if frontmatter.get("type") == "digest" and isinstance(links, dict):
+        for relation, values in links.items():
+            # The dedicated digest checker owns this relation's finding contract.
+            if relation == "contradicts":
+                continue
+            _collect_link_refs(values, refs)
+    else:
+        _collect_link_refs(links, refs)
     return sorted(refs)
 
 

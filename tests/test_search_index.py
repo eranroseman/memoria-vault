@@ -297,7 +297,7 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
         "checked",
         "checked",
         "alpha beta",
-        "contradictions:\n  - notes/tension.md\n",
+        "links:\n  contradicts:\n    - notes/tension.md\n",
     )
     stale = note(vault, "superseded", "checked", "alpha stale")
     candidate = note(vault, "candidate", "checked", "alpha candidate")
