@@ -7,7 +7,7 @@ grand_parent: Reference
 
 # Evidence sets
 
-Evidence sets are the draft-time warrant contract for composed project prose.
+Evidence sets are the draft-time grounds contract for composed project prose.
 The durable source is the inline marker on a draft claim:
 
 ```text
@@ -42,7 +42,7 @@ removal, so a reappearing ID always retains its original binding.
 | Field | Meaning |
 | --- | --- |
 | `id` | Mint-once `ev-<8hex>` identifier. |
-| `items` | `work_id#^pNNNN` source-span refs, nested `ev-<8hex>` ids, or `code-warrant:<run_id>:<artifact_id>:<sha256>` refs. |
+| `items` | `work_id#^pNNNN` source-span refs, nested `ev-<8hex>` ids, or `code-grounds:<run_id>:<artifact_id>:<sha256>` refs. |
 | `type` | Derived as `single-span`, `multi-span`, `multi-hop`, `implicit`, or `computed`. |
 | `state` | `complete` only when every item resolves. |
 | `review_required` | `true` for implicit or multi-hop evidence, independent of `state`. |
@@ -62,9 +62,9 @@ truth is deferred and unshipped.
 Source-span refs use stable `work_id`, never citekeys. Citekeys are rendered
 only during export.
 
-`computed` is derived when a marker contains a `code-warrant` item. It is
+`computed` is derived when a marker contains a `code-grounds` item. It is
 `complete` only while the referenced code run succeeded and the current output
-hash still matches the marker. Running code warrants the output provenance; it
+hash still matches the marker. Running code grounds the output provenance; it
 does not make the research claim true.
 
 Draft verification reports `evidence-incomplete` and `review-required` markers.

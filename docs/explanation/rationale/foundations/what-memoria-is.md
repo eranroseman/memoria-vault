@@ -29,7 +29,7 @@ Memoria is an **opinionated, phase-gated, bounded, personal tool for thinking an
 **Phase-gated** — work passes through defined phases with explicit outputs. A
 source doesn't become synthesis until it has been captured, enriched, read, and
 compiled; a draft doesn't become a deliverable until it has been verified and
-accepted. Worker `checked` state means required checks and warrants passed, not
+accepted. Worker `checked` state means required checks and grounds passed, not
 that the PI approved the claim as true. Each phase has a clear entry and exit
 condition.
 

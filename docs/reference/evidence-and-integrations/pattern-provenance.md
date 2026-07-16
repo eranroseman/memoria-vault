@@ -71,7 +71,7 @@ used as framing, or rejected. The design argument is
 | Finding | Sources | Design effect |
 | --- | --- | --- |
 | Generator-verifier, sample-and-rank | [Cobbe et al. 2021](bibliography.md#cobbe2021verifiers), [Perez et al. 2022](bibliography.md#perez2022modelwritten) | Formalizes "engines write, agents judge" at claim grain. |
-| Evidence-grounded verification | [FEVER](bibliography.md#thorne2018fever) | Build supports/contradicts on entailment plus recorded warrant, not embedding cosine. |
+| Evidence-grounded verification | [FEVER](bibliography.md#thorne2018fever) | Build supports/contradicts on entailment plus recorded grounds, not embedding cosine. |
 | Temporal coverage | [TEMPO](bibliography.md#abdallah2026tempo) | Treat supersession and evidence date as load-bearing retrieval dimensions. |
 | HCI lineage of the gate | [Horvitz](bibliography.md#horvitz1999mixedinitiative), [Find-Fix-Verify](bibliography.md#bernstein2010soylent), [Amershi](bibliography.md#amershi2019guidelines), [Ackerman](bibliography.md#ackerman2000cscw) | Keeps the PI as adjudicator; separates generation from verification. |
 | Indirect-prompt-injection hardening | [Greshake et al.](bibliography.md#greshake2023injection), [AgentDojo](bibliography.md#debenedetti2024agentdojo) | Confirms least-privilege tool allowlists, runtime write policy, read scopes, and sealed untrusted-data prompt blocks. |

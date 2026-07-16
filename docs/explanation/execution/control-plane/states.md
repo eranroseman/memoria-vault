@@ -72,13 +72,13 @@ decision:
 
 A worker finishing implies nothing about acceptance; a clean recommendation
 never substitutes for the PI acting. The read barrier is enforced, not advisory:
-checked materialization means checks passed and warrants resolve, while PI action
+checked materialization means checks passed and grounds resolve, while PI action
 is recorded separately.
 
 > **Planned — G4 (alpha.22/B1) and V1 (beta.1):** The complete Toulmin
 > warrant graph and its checking model are planned across these milestones.
-> Today, `warrants resolve` covers shipped evidence/check resolution (e.g.
-> code-warrant references), not the complete Toulmin warrant graph.
+> Today, `grounds resolve` covers shipped evidence/check resolution (e.g.
+> code-grounds references), not the complete Toulmin warrant graph.
 
 **Rejection creates a new request, not a revision of the old one.** A rejected
 attempt is closed; rework begins on a fresh request or amended request that

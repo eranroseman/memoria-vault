@@ -11,7 +11,7 @@ nav_order: 1
 *supports* Memoria. This page records where it pushes back. It is drawn from the
 project's adversarial review pass, which inverted the confirm-only method and
 found that the corpus endorses Memoria's **skeleton** — durable state, nightly
-batch or operator-scheduled surfacing, the review gate, verbatim warrants, and
+batch or operator-scheduled surfacing, the review gate, verbatim grounds, and
 tabular projection — while
 contradicting several of the **stronger claims** layered on top. The published
 evidence is the cited [Bibliography](../../../reference/evidence-and-integrations/bibliography.md) and
