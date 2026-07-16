@@ -724,6 +724,12 @@ EOF
   - Changed private signatures: `_copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None`, `_copy_seed_file(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None`.
 - Behavior contract other sections may rely on: `doctor --repair` (and any future upgrade caller of `_initialize_workspace_files(overwrite=True)`) reseeds a *deleted* view preference but never overwrites an *existing* one; data projections are exclusively `runtime.projections.TRACKED_PROJECTION_PATHS` + argument canvases and are regenerated always.
 
+> **Adopted preflight amendment (2026-07-16):** In addition to proving each
+> manifest entry is seeded, the contract test asserts the manifest is exactly the
+> nine PI-owned paths listed in the implementation snippet below. A broad
+> "only seeded paths" check would permit silently classifying another seed as a
+> view preference and changing its repair ownership.
+
 Honesty notes in force: H8 (no `memoria upgrade` command exists — the class
 split lands on the `doctor --repair` path, the only upgrade/reconcile path in
 the codebase), H9 (steering.md / vocabulary.md classified PI-owned).

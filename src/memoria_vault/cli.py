@@ -54,6 +54,27 @@ SEED_FILES = (
     ("projects.base", "projects.base"),
     ("sources.base", "sources.base"),
 )
+# Seeded-config lifecycle — two classes (consolidation 2026-07-12, line 105).
+# View preferences are seeded once and PI-owned afterwards: repair/upgrade must
+# not clobber an existing copy (it does reseed a deleted one). Data projections
+# are never seeded — they are regenerated always via
+# runtime.projections.TRACKED_PROJECTION_PATHS (+ argument canvases). Every
+# seeded path absent from this manifest is a runtime seed and is repair-restored.
+SEED_CLASS_VIEW_PREFERENCE: str = "view-preference"
+SEED_CLASSES: dict[str, str] = {
+    "catalog.base": SEED_CLASS_VIEW_PREFERENCE,
+    "claims.base": SEED_CLASS_VIEW_PREFERENCE,
+    "inbox.base": SEED_CLASS_VIEW_PREFERENCE,
+    "projects.base": SEED_CLASS_VIEW_PREFERENCE,
+    "sources.base": SEED_CLASS_VIEW_PREFERENCE,
+    ".obsidian/graph.json": SEED_CLASS_VIEW_PREFERENCE,
+    ".obsidian/types.json": SEED_CLASS_VIEW_PREFERENCE,
+    "steering.md": SEED_CLASS_VIEW_PREFERENCE,
+    "system/vocabulary.md": SEED_CLASS_VIEW_PREFERENCE,
+}
+VIEW_PREFERENCE_PATHS: frozenset[str] = frozenset(
+    rel for rel, cls in SEED_CLASSES.items() if cls == SEED_CLASS_VIEW_PREFERENCE
+)
 SURFACE_ACTION = actions_by_id()
 
 
@@ -2267,9 +2288,13 @@ def _init_dry_run_report(
 
 def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
     for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
-        _copy_seed_tree(source_rel, workspace / target_rel, overwrite=overwrite)
+        _copy_seed_tree(
+            source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
+        )
     for source_rel, target_rel in SEED_FILES:
-        _copy_seed_file(source_rel, workspace / target_rel, overwrite=overwrite)
+        _copy_seed_file(
+            source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
+        )
 
 
 def _repair_workspace(workspace: Path) -> list[str]:
@@ -2452,7 +2477,7 @@ def _write_no_overwrite(target: Path, frontmatter: dict[str, Any], body: str) ->
     write_frontmatter_doc(target, frontmatter, body, create_parent=True)
 
 
-def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
+def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:
     source = _seed_resource(source_rel)
     if not source.is_dir():
         return
@@ -2461,18 +2486,30 @@ def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
     target.mkdir(parents=True, exist_ok=True)
     for child in source.iterdir():
         child_target = target / child.name
+        child_rel = f"{target_rel}/{child.name}"
         if child.is_dir():
-            _copy_seed_tree(f"{source_rel}/{child.name}", child_target, overwrite=overwrite)
-        elif overwrite or not child_target.exists():
+            _copy_seed_tree(
+                f"{source_rel}/{child.name}",
+                child_target,
+                overwrite=overwrite,
+                target_rel=child_rel,
+            )
+        elif _seed_write_allowed(child_rel, child_target, overwrite=overwrite):
             child_target.parent.mkdir(parents=True, exist_ok=True)
             child_target.write_bytes(child.read_bytes())
 
 
-def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None:
+def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:
     source = _seed_resource(source_rel)
-    if source.is_file() and (overwrite or not target.exists()):
+    if source.is_file() and _seed_write_allowed(target_rel, target, overwrite=overwrite):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(source.read_bytes())
+
+
+def _seed_write_allowed(target_rel: str, target: Path, *, overwrite: bool) -> bool:
+    if not target.exists():
+        return True
+    return overwrite and target_rel not in VIEW_PREFERENCE_PATHS
 
 
 def _seed_resource(source_rel: str):
