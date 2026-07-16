@@ -61,7 +61,10 @@ hairline, quiet → none.
   the honest data age, always.
 - Rows are two-line-height entries: loudness glyph (7px square dot) ·
   title (single line, ellipsis) · age (tabular-nums, right-aligned).
-- Sort: `block` pinned as a sticky top group, then loudness rank, then age.
+- Sort: `block` pinned as a sticky top group, then loudness rank, then age —
+  the I1 ordering contract's default instance (recorded amendment:
+  `2026-07-16-i1-full-wiring-design.md` §6 adds `priority`/impact/staleness
+  factors and per-row `rank_factors` disclosure when I1 lands).
 - One row expands in place at a time to the full card: kind line
   (10px uppercase, loudness-colored) → title (13px/600) → **evidence block
   first** (inset, one step darker than the card surface) → compact

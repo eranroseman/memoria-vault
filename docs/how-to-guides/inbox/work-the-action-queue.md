@@ -58,12 +58,12 @@ terminal and is marked as superseded. Retry only when its original arguments
 remain correct. If an ID, reference, path, target, or other scope-bearing field
 must change, submit a new original operation instead of amending the request.
 
-**5. Clear back-pressure before adding more work.**
+**5. Clear open blockers before adding more work.**
 
-The action queue intentionally back-pressures new work when too many finished
-requests still need your judgment. That's the system protecting your review
-capacity, not a malfunction. If work appears stalled, clear or resolve the open
-attention items before adding more requests.
+While any `block`-loudness attention item is open, policy denies review-gated
+mutating operations (rule `loudness.block.active`). That's the system
+protecting your review capacity, not a malfunction. If work appears stalled,
+clear or resolve the open attention items before adding more requests.
 
 ## Verify
 

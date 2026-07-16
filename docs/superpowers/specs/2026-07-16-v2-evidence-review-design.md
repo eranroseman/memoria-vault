@@ -134,7 +134,9 @@ blocker closes with this ruling.
 Default batch 10 (the decision rule's "ten items"). Facets shared by both
 fronts (query params ↔ CLI flags): routing type
 (`implicit`/`multi-hop`/`incomplete`), project, age. Filters compose;
-the payload carries total counts per facet (honest denominators).
+the payload carries total counts per facet (honest denominators). Recorded
+amendment: batch ordering follows the I1 ordering contract's default
+instance (`2026-07-16-i1-full-wiring-design.md` §6) once I1 lands.
 
 ## 7. Out of scope
 

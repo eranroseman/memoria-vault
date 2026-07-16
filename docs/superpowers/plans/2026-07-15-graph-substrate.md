@@ -6897,7 +6897,7 @@ not as the queryable consequence record. v18 it is.
 - Modify: `tests/test_propagation_engine.py` (append)
 
 **Interfaces:**
-- Consumes: `inbox.write_finding(vault, card_type, title, finding, raised_by, agent_recommendation="issues-found", target="", citekey="", loudness="alert", evidence="", dedupe_slug="") -> Path | None` (inbox.py:75, post-Plan-21 — `dedupe_slug` makes the filename stable and returns None when the card already exists; `alert` is in `PUSH_LOUDNESS`, loudness.py:21, so the card is push-routed), `iter_markdown` / `read_frontmatter` (vaultio.py), `state.concept_edges(vault, checked_only=False)`, `inbox._slug`-compatible slugging is inbox's job (dedupe_slug is slugged internally).
+- Consumes: `inbox.write_finding(vault, card_type, title, finding, raised_by, agent_recommendation="issues-found", target="", citekey="", loudness="alert", evidence="", dedupe_slug="") -> Path | None` (inbox.py:75, post-Plan-21 — `dedupe_slug` makes the filename stable and returns None when the card already exists; `alert` renders as the top non-block band — Plan 21.5 removes the push tier, so no push routing applies; recorded amendment per `2026-07-16-i1-full-wiring-design.md` §3), `iter_markdown` / `read_frontmatter` (vaultio.py), `state.concept_edges(vault, checked_only=False)`, `inbox._slug`-compatible slugging is inbox's job (dedupe_slug is slugged internally).
 - Produces:
   - `propagation.active_project_slices(vault: Path) -> dict[str, set[str]]` — the deterministic rule: one entry per `type: project` markdown file whose frontmatter `archived` is not `True`; the slice = {project rel} ∪ {normalized `thesis` target rel, if any} ∪ every concept reachable undirected over all `concept_edges` rows from those seeds.
   - `propagation.route_consequence_cards(vault: Path, marked: Mapping[str, str], *, trigger_id: str, reason: str) -> list[str]` — the loudness tier rule: marks intersecting an active project's slice ⇒ exactly ONE `flag` card per (trigger, project) at `loudness="alert"` (`dedupe_slug=f"consequence-{trigger_id}-{project_rel}"` — idempotent across re-runs), card `target` = the project rel, finding = per-consequence-type counts; marks outside every active slice ⇒ NO card (labels + journal only — quiet tier). This engine never emits `block` (reserved; flood mechanics beyond routing are O2's, spec §9). Returns vault-relative card paths for the caller's commit.
@@ -7636,9 +7636,11 @@ Repo gate: `python scripts/verify`. No new test files are created (every task ex
 existing registered file), so `tests/conftest.py` `TEST_LEVELS` (tests/conftest.py:18-121)
 is untouched.
 
-**Floor-golden manifest note:** Tasks ERP-D.1, ERP-D.5, and ERP-D.6 add journal events
-(`disposition.v1` with `item_type="claim"`, `curate-note-link` events with `warrant`/`edge_id`
-fields, and the new `edge-write.v1` events). After each of those tasks passes locally, run the
+**Floor-golden manifest note:** Tasks ERP-D.1 and ERP-D.5 add journal events
+(`disposition.v1` with `item_type="claim"` and `curate-note-link` events with `warrant`/`edge_id`
+fields). ERP-D.6's `edge-write.v1` rows land in the non-chained `telemetry_events` table
+(recorded amendment, `2026-07-16-i1-full-wiring-design.md` §1) — no journal writes and no
+golden drift from D.6. After each of the journal-touching tasks passes locally, run the
 floor suite once and regenerate goldens if they drift:
 `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_invariants.py -v`
 (refused in CI by design, tests/floor_lib.py:331-354), review with `git diff
@@ -8436,6 +8438,14 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
 
 ### Task ERP-D.6: I1 per-relation-type edge-write counters
 
+**Recorded amendment (I1 full-wiring spec §1, storage-plane ruling):**
+`edge-write.v1` is analytics-only — it lands in the non-chained
+`telemetry_events` table, never the journal. **Cross-plan dependency:** this
+task requires the I1 full-wiring plan's slice 1 (schema v19
+`telemetry_events` + `runtime/telemetry.py` `record_telemetry_event`) — land
+it first; check before starting:
+`grep -n "telemetry_events" src/memoria_vault/runtime/state.py` must hit.
+
 **Files:**
 - Modify: `src/memoria_vault/engine/empirical_events.py` (append after `validate_read_event`, line 185; new constants beside `READ_EVENT_SCHEMA`, line 14)
 - Modify: `src/memoria_vault/runtime/operations.py` (append after `emit_disposition_event`, line 164)
@@ -8443,8 +8453,8 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
 - Modify: `tests/test_empirical_events.py` (append after line 85), `tests/test_knowledge.py` (append)
 
 **Interfaces:**
-- Consumes: the I1 skeleton server-side event shape (`validate_disposition_event` / `validate_read_event`, `engine/empirical_events.py:148-184`: closed field set, `schema` stamped by the emitter, journaled via `append_journal_event`); **ERP-A:** `edges.EDGE_RELATIONS` (the seven-relation roster) as the `relation_type` enum; Task ERP-D.5's `warrant` param (emission point).
-- Produces: `empirical_events.EDGE_WRITE_EVENT_SCHEMA = "edge-write.v1"`; `empirical_events.validate_edge_write_event(payload: dict) -> dict` (required: `relation_type` ∈ `EDGE_RELATIONS`, `write_path` ∈ {"curate-note-link", "insert-concept-edge"}); `operations.emit_edge_write_event(vault, *, relation_type: str, write_path: str, context) -> dict`; `operations.edge_write_counts(vault) -> dict[str, int]` (the beta.2 touch-budget gate's input, EDGES section 4 instrumentation line). **Constraint on ERP-B:** its `confirm-tension` / `insert_concept_edge` write path must call `emit_edge_write_event(..., write_path="insert-concept-edge")` — record this in the assembled plan if ERP-B's tasks are already frozen.
+- Consumes: the I1 skeleton server-side event shape (`validate_disposition_event` / `validate_read_event`, `engine/empirical_events.py:148-184`: closed field set, `schema` stamped by the emitter); **I1 full-wiring slice 1:** `record_telemetry_event(vault, event_type, payload) -> str` (`runtime/telemetry.py`) + the `telemetry_events` table (v19); **ERP-A:** `edges.EDGE_RELATIONS` (the seven-relation roster) as the `relation_type` enum; Task ERP-D.5's `warrant` param (emission point).
+- Produces: `empirical_events.EDGE_WRITE_EVENT_SCHEMA = "edge-write.v1"`; `empirical_events.validate_edge_write_event(payload: dict) -> dict` (required: `relation_type` ∈ `EDGE_RELATIONS`, `write_path` ∈ {"curate-note-link", "insert-concept-edge"}); `operations.emit_edge_write_event(vault, *, relation_type: str, write_path: str, context) -> dict`; `operations.edge_write_counts(vault) -> dict[str, int]` (the beta.2 touch-budget gate's input, EDGES section 4 instrumentation line); both write/read the `telemetry_events` table — no journal event, no golden drift. **Constraint on ERP-B:** its `confirm-tension` / `insert_concept_edge` write path must call `emit_edge_write_event(..., write_path="insert-concept-edge")` — record this in the assembled plan if ERP-B's tasks are already frozen.
 
 **Steps:**
 
@@ -8546,28 +8556,29 @@ def emit_edge_write_event(
     write_path: str,
     context: OperationContext,
 ) -> dict[str, Any]:
-    """Append one per-relation-type edge-write counter event (I1 touch-budget input)."""
+    """Record one per-relation-type edge-write counter row in telemetry (I1 touch-budget input)."""
     from memoria_vault.engine.empirical_events import (
         EDGE_WRITE_EVENT_SCHEMA,
         validate_edge_write_event,
     )
+    from memoria_vault.runtime.telemetry import record_telemetry_event
 
     event = validate_edge_write_event(
         {"relation_type": relation_type, "write_path": write_path}
     )
-    journal_event = {"event": "edge-write", "schema": EDGE_WRITE_EVENT_SCHEMA, **event}
-    return append_journal_event(vault, journal_event, context=context)
+    event_id = record_telemetry_event(vault, EDGE_WRITE_EVENT_SCHEMA, event)
+    return {"event_id": event_id, **event}
 
 
 def edge_write_counts(vault: Path) -> dict[str, int]:
-    """Return journal edge-write counts per relation type (beta.2 touch-budget gate input)."""
+    """Return telemetry edge-write counts per relation type (beta.2 touch-budget gate input)."""
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
             SELECT json_extract(payload_json, '$.relation_type') AS relation_type,
                    COUNT(*) AS n
-            FROM event_log
-            WHERE json_extract(payload_json, '$.schema') = 'edge-write.v1'
+            FROM telemetry_events
+            WHERE event_type = 'edge-write.v1'
             GROUP BY relation_type
             ORDER BY relation_type
             """

@@ -4447,9 +4447,11 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
 3. **After V2R-B (slice 2)** — the extended seam
    `resolve_evidence_review(vault, evidence_id, *, actor, machine, decision, reason="", warrant="")`
    with the four decisions (`accept`/`reject`/`edit`/`defer`), the **reject flip**
-   (only `accept` clears holds), and per-action `disposition.v1` emission (V2R-B
-   reuses `emit_disposition_event`, `src/memoria_vault/runtime/operations.py:146` —
-   the existing resolve-attention-seam helper, per `runtime/integrity.py:1165-1167`).
+   (only `accept` clears holds), and per-action `disposition.v1` emission (via V2R-A's
+   `emit_explicit_disposition_event` — plan contract 3 supersedes this
+   dependency's earlier `operations.py:146` reuse line; the context-bound
+   `emit_disposition_event` stays the worker-path helper, per
+   `runtime/integrity.py:1165-1167`).
    Task V2R-D.1 is written order-tolerantly against the **shipped** signature
    (`knowledge.py:2268-2297`, accept/reject only) and passes `warrant` through only
    when present, so it runs before or after V2R-B; V2R-D.5's reject test requires
