@@ -370,3 +370,28 @@ def test_schema_module_carries_no_dead_validation_machinery():
     assert "required_any" not in source
     assert "promotion_gate" not in source
     assert "promoted_at" not in source
+
+
+def test_consequence_mark_fields_registered_on_kb_doc_types():
+    types = schema.load_types()
+    enum = ["grounds-lost", "warrant-lost", "qualifier-regression", "rebuttal-strengthened"]
+    for name in ("note", "hub", "project", "digest"):
+        type_schema = types[name]
+        optional = type_schema.get("optional") or {}
+        assert optional.get("stale") == "bool", name
+        assert optional.get("consequence") == "enum:consequence", name
+        assert type_schema.get("enums", {}).get("consequence") == enum, name
+    marked = {
+        "id": "01KBN6V6KX0000000000000001",
+        "type": "note",
+        "title": "T",
+        "tags": [],
+        "links": {},
+        "stale": True,
+        "consequence": "grounds-lost",
+    }
+    assert schema.validate_frontmatter(marked, types["note"]) == []
+    bad = schema.validate_frontmatter(dict(marked, consequence="vibes"), types["note"])
+    assert any("not in enum consequence" in error for error in bad)
+    bad_stale = schema.validate_frontmatter(dict(marked, stale="yes"), types["note"])
+    assert any("stale: expected bool" in error for error in bad_stale)
