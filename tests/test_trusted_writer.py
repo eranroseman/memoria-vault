@@ -812,3 +812,26 @@ def test_observe_sweep_routes_findings_to_durable_inbox_cards(tmp_path: Path) ->
         "restriction-key-removed",
     ]
     assert cs3_inbox_cards(vault) == cards  # rescan mints no duplicate cards
+
+
+def test_long_target_restriction_findings_keep_distinct_durable_cards(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    subject = f"notes/{'very-long-segment-' * 8}witness.md"
+    findings = [
+        {"kind": "restriction-key-removed", "subject_id": subject, "key": "superseded"},
+        {"kind": "restriction-key-removed", "subject_id": subject, "key": "local-only"},
+    ]
+
+    for finding in findings:
+        trusted_writer._route_finding_to_inbox(vault, finding)
+
+    cards = cs3_inbox_cards(vault)
+    assert len(cards) == 2
+    assert len({card.name for card in cards}) == 2
+    finding_text = "\n".join(str(read_frontmatter(card)["finding"]) for card in cards)
+    assert "superseded" in finding_text
+    assert "local-only" in finding_text
+
+    for finding in findings:
+        trusted_writer._route_finding_to_inbox(vault, finding)
+    assert cs3_inbox_cards(vault) == cards

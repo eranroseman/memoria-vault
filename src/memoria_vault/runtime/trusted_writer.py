@@ -511,7 +511,8 @@ def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
             f"{markdown_code_span(subject)} outside the trusted writer; until "
             "reviewed the file can re-enter Ask and pass the export gate."
         )
-        slug = f"cs3-restriction-key-removed-{subject}-{key}"
+        subject_digest = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
+        slug = f"cs3-restriction-key-removed-{key}-{subject_digest}-{subject}"
     else:
         current = str(finding["current_human_sha256"])
         title = f"Foreign edit: {subject}"
