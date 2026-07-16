@@ -1,0 +1,50 @@
+# Ring 1 seeded view — claims and open questions (view preference: PI-owned after init).
+# Design: docs/superpowers/specs/2026-07-12-surface-design-notes.md.
+filters:
+  and:
+    - file.inFolder("notes")
+    - 'file.ext == "md"'
+
+formulas:
+  is_orphan: 'file.backlinks.isEmpty()'
+
+views:
+  - type: table
+    name: "By maturity"
+    filters:
+      and:
+        - 'mode == "claim"'
+    groupBy:
+      property: certainty
+      direction: ASC
+    order:
+      - title
+      - certainty
+      - claim_text
+  - type: table
+    name: "Open questions"
+    filters:
+      and:
+        - 'file.backlinks.isEmpty()'
+    order:
+      - title
+      - mode
+      - question_status
+  - type: table
+    name: "Contradictions"
+    filters:
+      and:
+        - '!links.contradicts.isEmpty()'
+    order:
+      - title
+      - certainty
+      - mode
+  - type: table
+    name: "Retracted"
+    filters:
+      and:
+        - 'superseded == true'
+    order:
+      - title
+      - mode
+      - certainty

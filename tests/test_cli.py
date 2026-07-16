@@ -411,7 +411,16 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert output["db"] == {"path": ".memoria/memoria.sqlite", "exists": False}
     assert "capabilities" not in output["skeleton"]["directories"]
     assert ".memoria/index/search" in output["skeleton"]["missing"]
-    assert output["package"]["seed_files"] == [".gitignore", "steering.md", "system/vocabulary.md"]
+    assert output["package"]["seed_files"] == [
+        ".gitignore",
+        "steering.md",
+        "system/vocabulary.md",
+        "catalog.base",
+        "claims.base",
+        "inbox.base",
+        "projects.base",
+        "sources.base",
+    ]
     assert "capabilities" not in output["package"]["seed_trees"]
     assert {
         "index.md",

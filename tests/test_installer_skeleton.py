@@ -49,6 +49,11 @@ def test_package_seed_is_runtime_minimum():
         ".obsidian/plugins/memoria-obsidian/manifest.json",
         ".obsidian/plugins/memoria-obsidian/schema.js",
         ".obsidian/plugins/memoria-obsidian/styles.css",
+        "catalog.base",
+        "claims.base",
+        "inbox.base",
+        "projects.base",
+        "sources.base",
         "steering.md",
         "system/vocabulary.md",
     }

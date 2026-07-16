@@ -1,0 +1,27 @@
+# Ring 1 seeded view — projects (view preference: PI-owned after init).
+# Design gives only the view names; "Active" uses the schema's archived flag.
+filters:
+  and:
+    - file.inFolder("projects")
+    - 'type == "project"'
+
+views:
+  - type: table
+    name: "Active"
+    filters:
+      not:
+        - 'archived == true'
+    order:
+      - title
+      - thesis
+      - question
+  - type: table
+    name: "Saturation"
+    order:
+      - title
+      - thesis
+  - type: table
+    name: "Gaps"
+    order:
+      - title
+      - question

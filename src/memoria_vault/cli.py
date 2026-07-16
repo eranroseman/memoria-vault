@@ -48,6 +48,11 @@ SEED_FILES = (
     (".gitignore", ".gitignore"),
     ("steering.md", "steering.md"),
     ("system/vocabulary.md", "system/vocabulary.md"),
+    ("catalog.base", "catalog.base"),
+    ("claims.base", "claims.base"),
+    ("inbox.base", "inbox.base"),
+    ("projects.base", "projects.base"),
+    ("sources.base", "sources.base"),
 )
 SURFACE_ACTION = actions_by_id()
 
