@@ -90,6 +90,7 @@ TEST_LEVELS = {
     "test_projections.py": "contract",
     "test_query_substrate.py": "contract",
     "test_refresh_test_vault.py": "package",
+    "test_rendezvous.py": "runtime",
     "test_retrieval_substrate.py": "contract",
     "test_runtime_gate_replay.py": "runtime",
     "test_runtime_helpers.py": "unit",
@@ -132,3 +133,11 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         level = TEST_LEVELS.get(item.path.name)
         if level:
             item.add_marker(getattr(pytest.mark, level))
+
+
+@pytest.fixture(autouse=True)
+def _isolated_memoria_state(
+    monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory
+) -> None:
+    """Keep per-vault rendezvous state out of the developer's real state dir."""
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path_factory.mktemp("memoria-state")))
