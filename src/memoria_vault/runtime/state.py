@@ -15,7 +15,7 @@ import subprocess
 import threading
 import time
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -2668,16 +2668,18 @@ def _evidence_marker_rows(
         prior_block_ref = None if direct else prior_block_refs.get(evidence_id)
         selected.append((rel, marker, bind, prior_block_ref))
 
-    marker_ids = {marker.evidence_id for _rel, marker, _bind, _prior in selected}
+    items_by_id = {
+        marker.evidence_id: tuple(marker.items) for _rel, marker, _bind, _prior in selected
+    }
     source_spans = _source_span_pages(vault)
+    states = _evidence_set_states(vault, items_by_id, source_spans=source_spans)
     rows = []
     for rel, marker, bind, prior_block_ref in selected:
         row = _derived_evidence_row(
             vault,
             rel,
             marker,
-            marker_ids=marker_ids,
-            source_spans=source_spans,
+            state_value=states[marker.evidence_id],
             run_id=run_id,
         )
         if prior_block_ref is not None:
@@ -2714,8 +2716,7 @@ def _derived_evidence_row(
     rel: str,
     marker: EvidenceMarker,
     *,
-    marker_ids: set[str],
-    source_spans: dict[str, set[str]],
+    state_value: str,
     run_id: str,
 ) -> dict[str, Any]:
     items = list(marker.items)
@@ -2726,9 +2727,7 @@ def _derived_evidence_row(
         "block_ref": block_ref,
         "items": items,
         "type": evidence_type,
-        "state": "complete"
-        if _evidence_items_resolve(vault, items, marker_ids=marker_ids, source_spans=source_spans)
-        else "evidence-incomplete",
+        "state": state_value,
         "review_required": evidence_type in {"implicit", "multi-hop"},
         "run_id": run_id,
         "block_text_sha256": _block_text_sha256(vault, block_ref),
@@ -2753,29 +2752,66 @@ def derive_evidence_type(items: list[str]) -> str:
     return "single-span" if len(items) == 1 else "multi-span"
 
 
-def _evidence_items_resolve(
+def _evidence_set_states(
     vault: Path,
-    items: list[str],
+    items_by_id: dict[str, tuple[str, ...]],
     *,
-    marker_ids: set[str],
     source_spans: dict[str, set[str]],
-) -> bool:
-    if not items:
-        return False
-    for item in items:
-        kind = evidence_ref_kind(item)
-        if kind == "code-grounds":
-            if not _code_grounds_resolves(vault, item):
-                return False
-            continue
-        if kind == "evidence-set":
-            if item not in marker_ids:
-                return False
-            continue
-        source = parse_source_span_ref(item)
-        if source.page not in source_spans.get(source.work_id, set()):
-            return False
-    return True
+) -> dict[str, str]:
+    """Resolve completeness bottom-up over nested sets; cycles fail closed."""
+    states: dict[str, str] = {}
+
+    def visit(evidence_id: str, visiting: frozenset[str]) -> str:
+        known = states.get(evidence_id)
+        if known is not None:
+            return known
+        if evidence_id in visiting:
+            return "evidence-incomplete"
+
+        items = items_by_id.get(evidence_id) or ()
+        complete = bool(items)
+        visiting = visiting | {evidence_id}
+        for item in items:
+            kind = evidence_ref_kind(item)
+            if kind == "code-grounds":
+                resolved = _code_grounds_resolves(vault, item)
+            elif kind == "evidence-set":
+                resolved = item in items_by_id and visit(item, visiting) == "complete"
+            else:
+                source = parse_source_span_ref(item)
+                resolved = source.page in source_spans.get(source.work_id, set())
+            if not resolved:
+                complete = False
+                break
+
+        states[evidence_id] = "complete" if complete else "evidence-incomplete"
+        return states[evidence_id]
+
+    for evidence_id in sorted(items_by_id):
+        visit(evidence_id, frozenset())
+    return states
+
+
+def evidence_item_closure(
+    rows_by_id: Mapping[str, Mapping[str, Any]], evidence_id: str
+) -> list[tuple[str, tuple[str, ...]]]:
+    """Return non-set evidence leaves with their nested evidence-set paths."""
+    leaves: list[tuple[str, tuple[str, ...]]] = []
+
+    def visit(current_id: str, path: tuple[str, ...], visiting: frozenset[str]) -> None:
+        row = rows_by_id.get(current_id)
+        if row is None:
+            return
+        for item in row.get("items", ()):
+            if evidence_ref_kind(item) != "evidence-set":
+                leaves.append((item, path))
+                continue
+            if item in visiting or item not in rows_by_id:
+                continue
+            visit(item, (*path, item), visiting | {item})
+
+    visit(evidence_id, (), frozenset({evidence_id}))
+    return leaves
 
 
 def _code_grounds_resolves(vault: Path, item: str) -> bool:
