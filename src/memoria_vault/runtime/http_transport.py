@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
+import math
 import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -30,11 +33,44 @@ class MemoriaHTTPServer(ThreadingHTTPServer):
     """Loopback server carrying boot identity and idle-exit bookkeeping."""
 
     daemon_threads = True
-    boot_id = ""
-    last_authenticated = 0.0
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.boot_id = ""
+        self.last_authenticated = time.monotonic()
+        self._authenticated_lock = threading.Lock()
+        self._authenticated_in_flight = 0
+        self.serve_forever_started = threading.Event()
 
     def record_authenticated_activity(self) -> None:
-        self.last_authenticated = time.monotonic()
+        """Mark an authenticated request without changing the in-flight count."""
+        with self._authenticated_lock:
+            self.last_authenticated = time.monotonic()
+
+    @contextmanager
+    def authenticated_request(self) -> Iterator[None]:
+        """Count all work after a request has passed bearer authentication."""
+        with self._authenticated_lock:
+            self._authenticated_in_flight += 1
+            self.last_authenticated = time.monotonic()
+        try:
+            yield
+        finally:
+            with self._authenticated_lock:
+                self._authenticated_in_flight -= 1
+
+    def idle_expired_without_authenticated_request(self, idle_exit_seconds: float) -> bool:
+        """Return whether the idle window has elapsed with no authenticated work running."""
+        with self._authenticated_lock:
+            return (
+                self._authenticated_in_flight == 0
+                and time.monotonic() - self.last_authenticated >= idle_exit_seconds
+            )
+
+    def service_actions(self) -> None:
+        """Signal only after the stdlib serve loop has safely started."""
+        self.serve_forever_started.set()
+        super().service_actions()
 
 
 def host_allowed(host_header: str | None, port: int) -> bool:
@@ -110,28 +146,28 @@ def make_http_server(
             if not is_authorized(self.headers.get("Authorization"), token):
                 self._write({"ok": False, "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
                 return
-            self.server.record_authenticated_activity()
-            if path == "/v1/shutdown":
-                if method != "POST":
-                    self._write(
-                        {"ok": False, "error": "method not allowed"},
-                        HTTPStatus.METHOD_NOT_ALLOWED,
-                    )
+            with self.server.authenticated_request():
+                if path == "/v1/shutdown":
+                    if method != "POST":
+                        self._write(
+                            {"ok": False, "error": "method not allowed"},
+                            HTTPStatus.METHOD_NOT_ALLOWED,
+                        )
+                        return
+                    self._write({"ok": True, "stopping": True})
+                    threading.Thread(target=self.server.shutdown, daemon=True).start()
                     return
-                self._write({"ok": True, "stopping": True})
-                threading.Thread(target=self.server.shutdown, daemon=True).start()
-                return
-            try:
-                payload, status = _dispatch(
-                    workspace,
-                    method,
-                    self.path,
-                    self._json_body,
-                    read_scope=startup_read_scope,
-                )
-            except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns JSON errors.
-                payload, status = {"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST
-            self._write(payload, status)
+                try:
+                    payload, status = _dispatch(
+                        workspace,
+                        method,
+                        self.path,
+                        self._json_body,
+                        read_scope=startup_read_scope,
+                    )
+                except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns JSON errors.
+                    payload, status = {"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST
+                self._write(payload, status)
 
         def _json_body(self) -> dict[str, Any]:
             length = int(self.headers.get("Content-Length") or "0")
@@ -156,6 +192,65 @@ def make_http_server(
     server.boot_id = boot_id
     server.record_authenticated_activity()
     return server
+
+
+def _finite_positive_duration(value: object, name: str) -> float:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int | float)
+        or not math.isfinite(value)
+        or value <= 0
+    ):
+        raise ValueError(f"{name} must be a finite positive duration")
+    return float(value)
+
+
+def start_idle_monitor(
+    server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0
+) -> threading.Thread:
+    """Stop a ready server once its authenticated idle window expires."""
+    idle_exit_seconds = _finite_positive_duration(idle_exit_seconds, "idle_exit_seconds")
+    poll_interval = _finite_positive_duration(poll_interval, "poll_interval")
+
+    def watch() -> None:
+        server.serve_forever_started.wait()
+        while True:
+            if server.idle_expired_without_authenticated_request(idle_exit_seconds):
+                server.shutdown()
+                return
+            time.sleep(poll_interval)
+
+    thread = threading.Thread(target=watch, daemon=True, name="memoria-idle-exit")
+    thread.start()
+    return thread
+
+
+def bind_http_server(
+    workspace: Path,
+    *,
+    host: str,
+    candidate_ports: list[int],
+    token: str,
+    read_scope: list[str] | None = None,
+    boot_id: str = "",
+) -> MemoriaHTTPServer:
+    """Bind the first free candidate port, retaining the final bind error."""
+    last_error: OSError | None = None
+    for candidate in candidate_ports:
+        try:
+            return make_http_server(
+                workspace,
+                host=host,
+                port=candidate,
+                token=token,
+                read_scope=read_scope,
+                boot_id=boot_id,
+            )
+        except OSError as exc:
+            last_error = exc
+    if last_error is None:
+        raise OSError("no candidate ports given")
+    raise last_error
 
 
 def is_authorized(authorization: str | None, token: str) -> bool:

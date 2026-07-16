@@ -6,20 +6,29 @@ import contextlib
 import hashlib
 import http.client
 import json
+import math
 import os
 import socket
 import stat
 import subprocess
 import sys
 import threading
+import time
 from collections.abc import Iterator
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
 
 from memoria_vault import __version__
-from memoria_vault.runtime import rendezvous
-from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed
+from memoria_vault.runtime import http_transport, rendezvous
+from memoria_vault.runtime.http_transport import (
+    bind_http_server,
+    host_allowed,
+    make_http_server,
+    origin_allowed,
+    start_idle_monitor,
+)
 from tests.helpers import init_cli_workspace
 
 
@@ -623,8 +632,8 @@ def _running_server(
         yield server, int(server.server_address[1]), thread
     finally:
         server.shutdown()
-        server.server_close()
         thread.join(timeout=5)
+        server.server_close()
 
 
 def _request(
@@ -844,4 +853,249 @@ def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
         thread.join(timeout=5)
         assert not thread.is_alive()
     finally:
+        server.shutdown()
+        thread.join(timeout=5)
         server.server_close()
+
+
+def test_idle_monitor_exits_despite_unauthenticated_probes(workspace: Path) -> None:
+    server = _make_server(workspace, token="test-token", boot_id="boot-idle")
+    port = int(server.server_address[1])
+    serve_thread = threading.Thread(
+        target=lambda: server.serve_forever(poll_interval=0.01), daemon=True
+    )
+    serve_thread.start()
+    assert server.serve_forever_started.wait(timeout=5)
+    monitor = start_idle_monitor(server, idle_exit_seconds=0.2, poll_interval=0.01)
+    try:
+        deadline = time.monotonic() + 0.1
+        while time.monotonic() < deadline:
+            status, _payload = _request(port, "GET", "/v1/status")
+            assert status == 200
+            time.sleep(0.01)
+
+        serve_thread.join(timeout=5)
+        assert not serve_thread.is_alive()
+        monitor.join(timeout=5)
+        assert not monitor.is_alive()
+    finally:
+        server.shutdown()
+        serve_thread.join(timeout=5)
+        monitor.join(timeout=5)
+        server.server_close()
+
+
+def test_idle_monitor_extends_on_authenticated_requests(workspace: Path) -> None:
+    server = _make_server(workspace, token="test-token", boot_id="boot-live")
+    port = int(server.server_address[1])
+    serve_thread = threading.Thread(
+        target=lambda: server.serve_forever(poll_interval=0.01), daemon=True
+    )
+    serve_thread.start()
+    assert server.serve_forever_started.wait(timeout=5)
+    monitor = start_idle_monitor(server, idle_exit_seconds=0.15, poll_interval=0.01)
+    try:
+        for _ in range(3):
+            time.sleep(0.06)
+            status, _payload = _request(port, "GET", "/status", token="test-token")
+            assert status == 200
+
+        assert serve_thread.is_alive()
+        serve_thread.join(timeout=5)
+        assert not serve_thread.is_alive()
+        monitor.join(timeout=5)
+        assert not monitor.is_alive()
+    finally:
+        server.shutdown()
+        serve_thread.join(timeout=5)
+        monitor.join(timeout=5)
+        server.server_close()
+
+
+@pytest.mark.parametrize(
+    ("idle_exit_seconds", "poll_interval"),
+    [
+        (0.0, 0.01),
+        (-1.0, 0.01),
+        (math.inf, 0.01),
+        (math.nan, 0.01),
+        (0.01, 0.0),
+        (0.01, -1.0),
+        (0.01, math.inf),
+        (0.01, math.nan),
+        (True, 0.01),
+        (0.01, True),
+        ("0.01", 0.01),
+        (0.01, "0.01"),
+    ],
+)
+def test_idle_monitor_requires_finite_positive_durations(
+    idle_exit_seconds: object, poll_interval: object
+) -> None:
+    with pytest.raises(ValueError, match="finite positive"):
+        start_idle_monitor(
+            object(),
+            idle_exit_seconds=idle_exit_seconds,
+            poll_interval=poll_interval,
+        )
+
+
+def test_idle_monitor_waits_for_serve_forever_before_shutdown(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    server = _make_server(workspace, token="test-token")
+    server.last_authenticated = 0.0
+    original_shutdown = server.shutdown
+    shutdown_called = threading.Event()
+
+    def shutdown() -> None:
+        shutdown_called.set()
+        original_shutdown()
+
+    monkeypatch.setattr(server, "shutdown", shutdown)
+    monitor = start_idle_monitor(server, idle_exit_seconds=0.01, poll_interval=0.01)
+    serve_thread: threading.Thread | None = None
+    try:
+        assert not shutdown_called.wait(timeout=0.1)
+
+        serve_thread = threading.Thread(
+            target=lambda: server.serve_forever(poll_interval=0.01), daemon=True
+        )
+        serve_thread.start()
+        assert shutdown_called.wait(timeout=5)
+        serve_thread.join(timeout=5)
+        assert not serve_thread.is_alive()
+        monitor.join(timeout=5)
+        assert not monitor.is_alive()
+    finally:
+        if serve_thread is None:
+            serve_thread = threading.Thread(target=server.serve_forever, daemon=True)
+            serve_thread.start()
+        server.shutdown()
+        serve_thread.join(timeout=5)
+        monitor.join(timeout=5)
+        server.server_close()
+
+
+def test_idle_monitor_waits_for_an_authenticated_dispatch_to_finish(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    entered_dispatch = threading.Event()
+    release_dispatch = threading.Event()
+
+    def blocked_dispatch(*_args: object, **_kwargs: object) -> tuple[dict[str, object], HTTPStatus]:
+        entered_dispatch.set()
+        assert release_dispatch.wait(timeout=5)
+        return {"ok": True}, HTTPStatus.OK
+
+    monkeypatch.setattr(http_transport, "_dispatch", blocked_dispatch)
+    server = _make_server(workspace, token="test-token")
+    port = int(server.server_address[1])
+    serve_thread = threading.Thread(
+        target=lambda: server.serve_forever(poll_interval=0.01), daemon=True
+    )
+    serve_thread.start()
+    assert server.serve_forever_started.wait(timeout=5)
+    monitor = start_idle_monitor(server, idle_exit_seconds=0.03, poll_interval=0.01)
+    response: dict[str, object] = {}
+
+    def request() -> None:
+        status, payload = _request(port, "GET", "/status", token="test-token")
+        response.update(status=status, payload=payload)
+
+    request_thread = threading.Thread(target=request, daemon=True)
+    request_thread.start()
+    try:
+        assert entered_dispatch.wait(timeout=5)
+        time.sleep(0.1)
+        assert serve_thread.is_alive()
+        assert monitor.is_alive()
+
+        release_dispatch.set()
+        request_thread.join(timeout=5)
+        assert not request_thread.is_alive()
+        assert response == {"status": 200, "payload": {"ok": True}}
+
+        serve_thread.join(timeout=5)
+        assert not serve_thread.is_alive()
+        monitor.join(timeout=5)
+        assert not monitor.is_alive()
+    finally:
+        release_dispatch.set()
+        server.shutdown()
+        request_thread.join(timeout=5)
+        serve_thread.join(timeout=5)
+        monitor.join(timeout=5)
+        server.server_close()
+
+
+def _free_loopback_port() -> int:
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
+
+def test_bind_http_server_walks_past_occupied_port_to_next_candidate(workspace: Path) -> None:
+    blocker = _make_server(workspace, token="blocker", boot_id="boot-a")
+    occupied = int(blocker.server_address[1])
+    available = _free_loopback_port()
+    server = None
+    try:
+        server = bind_http_server(
+            workspace,
+            host="127.0.0.1",
+            candidate_ports=[occupied, available],
+            token="test-token",
+            boot_id="boot-b",
+        )
+
+        assert int(server.server_address[1]) == available
+        with pytest.raises(OSError):
+            bind_http_server(
+                workspace,
+                host="127.0.0.1",
+                candidate_ports=[occupied],
+                token="test-token",
+                boot_id="boot-c",
+            )
+    finally:
+        if server is not None:
+            server.server_close()
+        blocker.server_close()
+
+
+def test_bind_http_server_attempts_candidates_in_order_and_raises_last_error(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first_error = OSError("first candidate unavailable")
+    last_error = OSError("last candidate unavailable")
+    attempted: list[int] = []
+
+    def fail_to_bind(
+        _workspace: Path,
+        *,
+        host: str,
+        port: int,
+        token: str,
+        read_scope: list[str] | None = None,
+        boot_id: str = "",
+    ) -> object:
+        del host, token, read_scope, boot_id
+        attempted.append(port)
+        if port == 8765:
+            raise first_error
+        raise last_error
+
+    monkeypatch.setattr(http_transport, "make_http_server", fail_to_bind)
+
+    with pytest.raises(OSError) as exc_info:
+        bind_http_server(
+            workspace,
+            host="127.0.0.1",
+            candidate_ports=[8765, 8766],
+            token="test-token",
+            boot_id="boot-b",
+        )
+
+    assert attempted == [8765, 8766]
+    assert exc_info.value is last_error
