@@ -50,7 +50,7 @@ still decides whether to accept, edit, reject, or link them.
 **Gap analysis.** The runtime compares checked catalog, fulltext, and digest
 signals with checked notes. `new-topic` means no checked material exists for a
 seed term; `undigested` means source/digest signals are dense but notes are
-absent; `under-warranted` means notes exist without enough source support.
+absent; `under-grounded` means notes exist without enough source support.
 
 **Readable boundaries.** A Concept can exist before checks pass. Consumers that
 need checked knowledge filter to DB/read API `check_status = checked`; repair surfaces can
