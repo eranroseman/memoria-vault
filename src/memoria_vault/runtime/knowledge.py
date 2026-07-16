@@ -3242,7 +3242,7 @@ def _disposed_evidence_digests(vault: Path) -> dict[str, str]:
             FROM event_log
             WHERE json_extract(payload_json, '$.operation') = 'resolve-evidence-review'
               AND json_extract(payload_json, '$.decision') IN ('accept', 'reject')
-            ORDER BY rowid
+            ORDER BY event_id
             """
         ).fetchall()
     return {
