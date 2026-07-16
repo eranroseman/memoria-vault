@@ -112,7 +112,9 @@ class _WindowsLockFile:
             self._directory_handles.clear()
 
 
-def _open_workspace_lock_file_windows(_vault: Path, lock_path: Path):  # pragma: no cover - runs only on Windows.
+def _open_workspace_lock_file_windows(
+    _vault: Path, lock_path: Path
+):  # pragma: no cover - runs only on Windows.
     """Open a lock without resolving Windows symlinks or junctions.
 
     The vault root is opened with ``FILE_FLAG_OPEN_REPARSE_POINT``. Every later
