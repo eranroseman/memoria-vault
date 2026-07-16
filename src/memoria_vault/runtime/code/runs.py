@@ -23,7 +23,7 @@ def verify_code_run(vault: Path, run_id: str) -> dict[str, Any]:
     return {"ready": True, "run_id": row["run_id"], "artifact_id": row["artifact_id"]}
 
 
-def code_warrant_complete(
+def code_grounds_complete(
     vault: Path,
     *,
     run_id: str,

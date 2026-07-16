@@ -3315,7 +3315,7 @@ def _draft_number_findings(vault: Path, project_rel: str, content: str) -> list[
                     "observed": observed,
                 }
             )
-    if re.search(r"\b(analysis-computed|analysis code|code-warrant)\b", content, re.I):
+    if re.search(r"\b(analysis-computed|analysis code|code-grounds)\b", content, re.I):
         findings.append(
             {
                 "kind": "analysis-number-evidence-incomplete",

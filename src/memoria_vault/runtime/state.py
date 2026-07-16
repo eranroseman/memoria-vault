@@ -25,7 +25,7 @@ import yaml
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
     evidence_ref_kind,
-    parse_code_warrant_ref,
+    parse_code_grounds_ref,
     parse_evidence_marker,
     parse_source_span_ref,
 )
@@ -2738,7 +2738,7 @@ def _derived_evidence_row(
 def _derived_evidence_type(items: list[str]) -> str:
     if not items:
         return "implicit"
-    if any(evidence_ref_kind(item) == "code-warrant" for item in items):
+    if any(evidence_ref_kind(item) == "code-grounds" for item in items):
         return "computed"
     if any(evidence_ref_kind(item) == "evidence-set" for item in items):
         return "multi-hop"
@@ -2756,8 +2756,8 @@ def _evidence_items_resolve(
         return False
     for item in items:
         kind = evidence_ref_kind(item)
-        if kind == "code-warrant":
-            if not _code_warrant_resolves(vault, item):
+        if kind == "code-grounds":
+            if not _code_grounds_resolves(vault, item):
                 return False
             continue
         if kind == "evidence-set":
@@ -2770,15 +2770,15 @@ def _evidence_items_resolve(
     return True
 
 
-def _code_warrant_resolves(vault: Path, item: str) -> bool:
-    from memoria_vault.runtime.code.runs import code_warrant_complete
+def _code_grounds_resolves(vault: Path, item: str) -> bool:
+    from memoria_vault.runtime.code.runs import code_grounds_complete
 
-    warrant = parse_code_warrant_ref(item)
-    return code_warrant_complete(
+    grounds = parse_code_grounds_ref(item)
+    return code_grounds_complete(
         vault,
-        run_id=warrant.run_id,
-        artifact_id=warrant.artifact_id,
-        output_sha256=warrant.output_sha256,
+        run_id=grounds.run_id,
+        artifact_id=grounds.artifact_id,
+        output_sha256=grounds.output_sha256,
     )
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from memoria_vault.runtime import evidence
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
     SourceSpanRef,
@@ -51,6 +52,21 @@ def test_evidence_ref_validation_accepts_source_spans_and_nested_evidence_sets()
     assert parse_source_span_ref("source-alpha#^p0001") == SourceSpanRef("source-alpha", "p0001")
     assert evidence_ref_kind("ev-deadbeef") == "evidence-set"
     assert evidence_ref_kind("source-alpha#^p0001") == "source-span"
+
+
+def test_code_grounds_refs_validate_and_retired_refs_fail_closed() -> None:
+    ref = "code-grounds:run-1:analysis:sha256:" + "0" * 64
+
+    assert evidence.parse_code_grounds_ref(ref) == evidence.CodeGroundsRef(
+        run_id="run-1",
+        artifact_id="analysis",
+        output_sha256="sha256:" + "0" * 64,
+    )
+    assert evidence_ref_kind(ref) == "code-grounds"
+    with pytest.raises(ValueError, match="invalid code-grounds ref"):
+        evidence.parse_code_grounds_ref(ref.replace("code-grounds", "code-warrant"))
+    with pytest.raises(ValueError, match="invalid source-span ref"):
+        evidence_ref_kind(ref.replace("code-grounds", "code-warrant"))
 
 
 def test_evidence_ref_validation_rejects_citekey_shaped_span() -> None:

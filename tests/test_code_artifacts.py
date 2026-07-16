@@ -61,7 +61,7 @@ def test_computed_evidence_tracks_code_run_output_hash(tmp_path: Path) -> None:
     draft.parent.mkdir(parents=True, exist_ok=True)
     draft.write_text(
         "Computed. %%ev: ev-11111111 type=computed state=evidence-incomplete "
-        f"review=false items=code-warrant:run-1:analysis:{output_hash}%%\n",
+        f"review=false items=code-grounds:run-1:analysis:{output_hash}%%\n",
         encoding="utf-8",
     )
 

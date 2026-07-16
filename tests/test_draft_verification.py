@@ -285,8 +285,13 @@ def test_draft_verification_flags_deterministic_number_mismatch(tmp_path: Path) 
     ]
 
 
-def test_draft_verification_routes_analysis_code_numbers_to_incomplete(
+@pytest.mark.parametrize(
+    "analysis_reference",
+    ["analysis-computed", "analysis code", "code-grounds"],
+)
+def test_draft_verification_routes_analysis_number_references_to_incomplete(
     tmp_path: Path,
+    analysis_reference: str,
 ) -> None:
     vault = tmp_path
     state.upsert_catalog_record(
@@ -304,13 +309,14 @@ def test_draft_verification_routes_analysis_code_numbers_to_incomplete(
         "type: note\ncheck_status: checked\ntitle: Support\n"
         "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nwork_id: catalog/sources/source-alpha\n",
         "note",
-        body="This source-backed claim is clean until analysis code is cited.",
+        body="This source-backed claim is clean until its evidence is cited.",
     )
     _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — Support\n")
     compose_project_draft(vault, "project-alpha")
     draft = vault / "projects/project-alpha/draft.md"
     draft.write_text(
-        draft.read_text(encoding="utf-8").rstrip() + "\n\nThe effect size is analysis-computed.\n",
+        draft.read_text(encoding="utf-8").rstrip()
+        + f"\n\nThe effect size is {analysis_reference}.\n",
         encoding="utf-8",
     )
 

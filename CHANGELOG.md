@@ -13,6 +13,11 @@ There is no release automation and no formal tagged release yet; installs run
 from current `main`. The earlier `v0.1.0`–`v0.3.2` tags were artifacts of the
 removed release-please setup, not real releases, and have been deleted.
 
+### Changed
+
+- Renamed computed-evidence `code-warrant` references to `code-grounds`.
+  Retired `code-warrant:` markers are rejected without an alias or migration.
+
 ## [0.1.0a21] - 2026-07-14
 
 Alpha.21 is a source-install checkpoint, not a formal tag or GitHub Release.
