@@ -66,11 +66,13 @@ making them the default answer path.
 `memoria_vault.runtime.retrieval` tests/fixtures. Product Ask reports `bm25`.
 
 **Implementation:** `passages`, `passage_fts`, `passage_vec`,
-`file_index_state`, and `concept_edges` are derived tables. Passage rows are
-derived from checked documents and generated checked Work text. `passage_vec`
-stores the embedding model id, vector dimension, cosine metric, text hash, and
-vector JSON; `sqlite-vec` remains an optional `[vector]` extra and dense
-production capability fails closed when it is absent.
+`file_index_state`, and the frontmatter-triple projection in `concept_edges`
+are derived tables. Passage rows are derived from checked documents and
+generated checked Work text. Tensions and edge metadata (`edge_id`,
+`attributes_json`) are database-owned rather than frontmatter-mirrored.
+`passage_vec` stores the embedding model id, vector dimension, cosine metric,
+text hash, and vector JSON; `sqlite-vec` remains an optional `[vector]` extra
+and dense production capability fails closed when it is absent.
 
 **Cost:** local SQLite writes and candidate ranking. Determinism: total for the
 hash-based fixture embedder.

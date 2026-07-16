@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 # Numbered migrations: each entry upgrades an on-disk DB by exactly one version
 # step, {from_version: (from_version + 1, [SQL statement or callable(conn)])}.
 # _init refuses (fail-closed) any user_version with no registered path here.
@@ -2047,13 +2047,17 @@ def replace_concept_edges(
     mirror_rows = []
     for value in rows:
         row = dict(value)
+        source = normalize_path(str(row["source_concept_id"]))
         relation = _concept_edge_relation(str(row["relation_type"]))
+        target = normalize_path(str(row["target_concept_id"]))
         if relation == "tension":
             continue
         source_path = normalize_path(str(row.get("source_path") or ""))
         if target_paths is not None and source_path not in target_paths:
             continue
+        row["source_concept_id"] = source
         row["relation_type"] = relation
+        row["target_concept_id"] = target
         mirror_rows.append(row)
 
     with connect(vault) as conn:
@@ -2095,24 +2099,33 @@ def replace_concept_edges(
             conn.execute(
                 """
                 INSERT INTO concept_edges(
+                    edge_id,
                     source_concept_id,
                     relation_type,
                     target_concept_id,
+                    attributes_json,
                     check_status,
                     source_path,
                     updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(source_concept_id, relation_type, target_concept_id)
                 DO UPDATE SET
+                    edge_id = excluded.edge_id,
                     check_status = excluded.check_status,
                     source_path = excluded.source_path,
                     updated_at = excluded.updated_at
                 """,
                 (
-                    normalize_path(str(row["source_concept_id"])),
+                    concept_edge_id(
+                        str(row["source_concept_id"]),
+                        str(row["relation_type"]),
+                        str(row["target_concept_id"]),
+                    ),
+                    str(row["source_concept_id"]),
                     str(row["relation_type"]),
-                    normalize_path(str(row["target_concept_id"])),
+                    str(row["target_concept_id"]),
+                    str(row.get("attributes_json") or "{}"),
                     _check_status(str(row.get("check_status") or "unchecked")),
                     normalize_path(str(row.get("source_path") or "")),
                     now_iso(),
@@ -2128,7 +2141,8 @@ def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, A
         if checked_only:
             rows = conn.execute(
                 """
-                SELECT source_concept_id, relation_type, target_concept_id, check_status, source_path
+                SELECT edge_id, source_concept_id, relation_type, target_concept_id,
+                       attributes_json, check_status, source_path
                 FROM concept_edges
                 WHERE check_status = 'checked'
                 ORDER BY source_concept_id, relation_type, target_concept_id
@@ -2137,7 +2151,8 @@ def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, A
         else:
             rows = conn.execute(
                 """
-                SELECT source_concept_id, relation_type, target_concept_id, check_status, source_path
+                SELECT edge_id, source_concept_id, relation_type, target_concept_id,
+                       attributes_json, check_status, source_path
                 FROM concept_edges
                 ORDER BY source_concept_id, relation_type, target_concept_id
                 """
@@ -3516,6 +3531,48 @@ def _concept_edge_relation(value: str) -> str:
     if relation not in {"supports", "contradicts", "extends", "tension"}:
         raise ValueError(f"unknown concept edge relation: {value}")
     return relation
+
+
+def concept_edge_id(source_concept_id: str, relation_type: str, target_concept_id: str) -> str:
+    """Return the deterministic id for a normalized concept-edge triple."""
+    key = f"{source_concept_id}\0{relation_type}\0{target_concept_id}"
+    return hashlib.sha256(key.encode()).hexdigest()[:24]
+
+
+def _backfill_concept_edge_ids(conn: sqlite3.Connection) -> None:
+    for source, relation, target in conn.execute(
+        "SELECT source_concept_id, relation_type, target_concept_id FROM concept_edges"
+    ):
+        normalized_source = normalize_path(str(source))
+        normalized_relation = _concept_edge_relation(str(relation))
+        normalized_target = normalize_path(str(target))
+        conn.execute(
+            """
+            UPDATE concept_edges
+            SET edge_id = ?
+            WHERE source_concept_id = ? AND relation_type = ? AND target_concept_id = ?
+            """,
+            (
+                concept_edge_id(normalized_source, normalized_relation, normalized_target),
+                source,
+                relation,
+                target,
+            ),
+        )
+
+
+MIGRATIONS[12] = (
+    13,
+    [
+        "ALTER TABLE concept_edges ADD COLUMN edge_id TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE concept_edges ADD COLUMN attributes_json TEXT NOT NULL DEFAULT '{}'",
+        _backfill_concept_edge_ids,
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
+        ON concept_edges(edge_id) WHERE edge_id != ''
+        """,
+    ],
+)
 
 
 def _code_purpose(value: str) -> str:

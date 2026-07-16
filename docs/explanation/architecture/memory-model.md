@@ -49,9 +49,10 @@ engine-space, re-derivable trust; **derived** values (counts, health,
 saturation) are computed on read or projected one-way, never stored as if
 authored. Files may never self-assert judgment (no verdict fields in
 frontmatter), and any "both places" data must be a declared one-direction
-projection — `bibliography.bib` from the catalog, `concept_edges` from
-frontmatter links — so drift is detectable and
-one side is always authority.
+projection — `bibliography.bib` from the catalog and Concept-frontmatter
+triples into `concept_edges` — so drift is detectable and one side is always
+authority. Tensions and edge metadata (`edge_id`, `attributes_json`) are
+database-owned; they never mirror frontmatter.
 
 ### Provenance actors
 

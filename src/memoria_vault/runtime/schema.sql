@@ -238,16 +238,20 @@ CREATE TABLE IF NOT EXISTS file_index_state (
     indexed_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS concept_edges (
+    edge_id TEXT NOT NULL DEFAULT '',
     source_concept_id TEXT NOT NULL,
     relation_type TEXT NOT NULL CHECK (
         relation_type IN ('supports', 'contradicts', 'extends', 'tension')
     ),
     target_concept_id TEXT NOT NULL,
+    attributes_json TEXT NOT NULL DEFAULT '{}',
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
     source_path TEXT NOT NULL DEFAULT '',
     updated_at TEXT NOT NULL,
     PRIMARY KEY (source_concept_id, relation_type, target_concept_id)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
+    ON concept_edges(edge_id) WHERE edge_id != '';
 CREATE TRIGGER IF NOT EXISTS concept_verdicts_passage_cascade_insert
 AFTER INSERT ON concept_verdicts
 BEGIN
@@ -375,4 +379,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 12;
+PRAGMA user_version = 13;

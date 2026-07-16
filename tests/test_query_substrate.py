@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 from pathlib import Path
 
@@ -29,7 +30,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 12
+    assert state.SCHEMA_VERSION == 13
     assert {
         "passages",
         "passage_fts",
@@ -188,8 +189,22 @@ def test_concept_edges_mirror_links_and_persist_across_reindex(tmp_path: Path) -
         ("notes/alpha.md", "supports", "notes/beta.md"),
         ("notes/alpha.md", "contradicts", "notes/gamma.md"),
     }
+    assert {edge["edge_id"] for edge in edges} == {
+        state.concept_edge_id("notes/alpha.md", "supports", "notes/beta.md"),
+        state.concept_edge_id("notes/alpha.md", "contradicts", "notes/gamma.md"),
+    }
 
     with state.connect(vault) as conn:
+        conn.execute(
+            "UPDATE concept_edges SET attributes_json = ? "
+            "WHERE source_concept_id = ? AND relation_type = ? AND target_concept_id = ?",
+            (
+                '{"warrant_ref":"evidence/items/alpha"}',
+                "notes/alpha.md",
+                "supports",
+                "notes/beta.md",
+            ),
+        )
         conn.execute(
             "INSERT INTO concept_edges("
             " source_concept_id, relation_type, target_concept_id,"
@@ -207,6 +222,11 @@ def test_concept_edges_mirror_links_and_persist_across_reindex(tmp_path: Path) -
         "contradicts",
         "tension",
     }
+    support = next(edge for edge in edges if edge["relation_type"] == "supports")
+    assert support["attributes_json"] == '{"warrant_ref":"evidence/items/alpha"}'
+    assert support["edge_id"] == state.concept_edge_id(
+        "notes/alpha.md", "supports", "notes/beta.md"
+    )
 
 
 def test_replace_concept_edges_preserves_direct_tension_and_ignores_tension_mirror_rows(
@@ -335,3 +355,136 @@ def test_replace_concept_edges_scopes_upserts_pruning_and_distinguishes_empty_sc
 
     assert state.replace_concept_edges(vault, []) == {"deleted": 1, "inserted": 0}
     assert state.concept_edges(vault) == []
+
+
+def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields(
+    tmp_path: Path,
+) -> None:
+    fresh = tmp_path / "fresh"
+    with state.connect(fresh) as conn:
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_edges)")}
+        assert {"edge_id", "attributes_json"}.issubset(columns)
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
+
+    state.replace_concept_edges(
+        fresh,
+        [
+            {
+                "edge_id": "caller-selected-id",
+                "source_concept_id": "./notes/fresh.md",
+                "relation_type": "SUPPORTS",
+                "target_concept_id": "/notes/target.md",
+                "attributes_json": '{"warrant_ref":"evidence/items/fresh"}',
+                "check_status": "checked",
+                "source_path": "notes/fresh.md",
+            }
+        ],
+    )
+    state.replace_concept_edges(
+        fresh,
+        [
+            {
+                "edge_id": "another-caller-selected-id",
+                "source_concept_id": "notes/fresh.md",
+                "relation_type": "supports",
+                "target_concept_id": "notes/target.md",
+                "attributes_json": "{}",
+                "check_status": "unchecked",
+                "source_path": "notes/fresh.md",
+            }
+        ],
+    )
+    fresh_edge = state.concept_edges(fresh, checked_only=False)
+    assert fresh_edge == [
+        {
+            "edge_id": state.concept_edge_id("notes/fresh.md", "supports", "notes/target.md"),
+            "source_concept_id": "notes/fresh.md",
+            "relation_type": "supports",
+            "target_concept_id": "notes/target.md",
+            "attributes_json": '{"warrant_ref":"evidence/items/fresh"}',
+            "check_status": "unchecked",
+            "source_path": "notes/fresh.md",
+        }
+    ]
+
+    with state.connect(fresh) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            "edge_id, source_concept_id, relation_type, target_concept_id, "
+            "check_status, source_path, updated_at) "
+            "VALUES ('duplicate-id', 'notes/one.md', 'supports', 'notes/two.md', "
+            "'checked', 'notes/one.md', '2026-07-15T00:00:00Z')"
+        )
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO concept_edges("
+                "edge_id, source_concept_id, relation_type, target_concept_id, "
+                "check_status, source_path, updated_at) "
+                "VALUES ('duplicate-id', 'notes/three.md', 'supports', 'notes/four.md', "
+                "'checked', 'notes/three.md', '2026-07-15T00:00:00Z')"
+            )
+
+    legacy = tmp_path / "legacy"
+    db = legacy / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.execute(
+            "CREATE TABLE concept_edges ("
+            "source_concept_id TEXT NOT NULL, "
+            "relation_type TEXT NOT NULL, "
+            "target_concept_id TEXT NOT NULL, "
+            "check_status TEXT NOT NULL, "
+            "source_path TEXT NOT NULL DEFAULT '', "
+            "updated_at TEXT NOT NULL, "
+            "PRIMARY KEY (source_concept_id, relation_type, target_concept_id))"
+        )
+        conn.executemany(
+            "INSERT INTO concept_edges("
+            "source_concept_id, relation_type, target_concept_id, check_status, source_path, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            [
+                (
+                    "notes/mirror.md",
+                    "supports",
+                    "notes/target.md",
+                    "checked",
+                    "notes/mirror.md",
+                    "2026-07-15T00:00:00Z",
+                ),
+                (
+                    "notes/tension.md",
+                    "tension",
+                    "notes/target.md",
+                    "checked",
+                    "",
+                    "2026-07-15T00:00:00Z",
+                ),
+            ],
+        )
+        conn.execute("PRAGMA user_version = 12")
+
+    with state.connect(legacy) as conn:
+        version = conn.execute("PRAGMA user_version").fetchone()[0]
+        legacy_rows = {
+            (row["source_concept_id"], row["relation_type"], row["target_concept_id"]): dict(row)
+            for row in conn.execute(
+                "SELECT source_concept_id, relation_type, target_concept_id, edge_id, attributes_json "
+                "FROM concept_edges"
+            )
+        }
+
+    assert version == state.SCHEMA_VERSION == 13
+    assert legacy_rows[("notes/mirror.md", "supports", "notes/target.md")] == {
+        "source_concept_id": "notes/mirror.md",
+        "relation_type": "supports",
+        "target_concept_id": "notes/target.md",
+        "edge_id": hashlib.sha256(b"notes/mirror.md\0supports\0notes/target.md").hexdigest()[:24],
+        "attributes_json": "{}",
+    }
+    assert legacy_rows[("notes/tension.md", "tension", "notes/target.md")] == {
+        "source_concept_id": "notes/tension.md",
+        "relation_type": "tension",
+        "target_concept_id": "notes/target.md",
+        "edge_id": hashlib.sha256(b"notes/tension.md\0tension\0notes/target.md").hexdigest()[:24],
+        "attributes_json": "{}",
+    }

@@ -36,9 +36,9 @@ def _record_derivation(vault, *, input_id, output_id="concepts/output.md", actor
     )
 
 
-def test_user_version_is_12(tmp_path):
+def test_user_version_is_current_schema_version(tmp_path):
     with _conn(tmp_path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
 
 
 def test_operation_requests_actor_accepts_agent_and_rejects_bogus(tmp_path):
