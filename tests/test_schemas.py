@@ -3,6 +3,7 @@
 import shutil
 from pathlib import Path
 
+import pytest
 import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
@@ -78,6 +79,103 @@ def _m0_schema_reset_fixture(root: Path) -> Path:
 def test_concept_types_load():
     types = schema.load_types()
     assert set(types) == SCHEMA_TYPES
+
+
+def test_concept_type_registry_is_seeded_and_every_doc_type_names_a_member():
+    registry = schema.load_concept_types()
+    assert set(registry) == {
+        "work",
+        "digest",
+        "note",
+        "hub",
+        "project",
+        "capability",
+        "operation",
+        "skill",
+        "adapter",
+        "workflow",
+    }
+    assert all(str(role).strip() for role in registry.values())
+    for name, type_schema in schema.load_types().items():
+        assert type_schema.get("concept_type") in registry, name
+
+
+def test_load_types_rejects_doc_type_outside_registry(tmp_path):
+    shutil.copytree(schema.SCHEMAS_DIR, tmp_path / "schemas")
+    rogue = tmp_path / "schemas/types/note.yaml"
+    data = yaml.safe_load(rogue.read_text(encoding="utf-8"))
+    data["concept_type"] = "gizmo"
+    rogue.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"not in concept-types\.yaml"):
+        schema.load_types(tmp_path / "schemas")
+
+
+def test_vault_schemas_dir_without_registry_falls_back_to_packaged_roster(tmp_path):
+    shutil.copytree(schema.SCHEMAS_DIR, tmp_path / "schemas")
+    (tmp_path / "schemas/concept-types.yaml").unlink()
+    assert set(schema.load_concept_types(tmp_path / "schemas")) == set(schema.load_concept_types())
+
+
+def test_legacy_vault_schemas_without_registry_keep_packaged_type_mappings(tmp_path):
+    schemas_dir = tmp_path / "schemas"
+    shutil.copytree(schema.SCHEMAS_DIR, schemas_dir)
+    (schemas_dir / "concept-types.yaml").unlink()
+    for type_file in (schemas_dir / "types").glob("*.yaml"):
+        data = yaml.safe_load(type_file.read_text(encoding="utf-8"))
+        data.pop("concept_type")
+        type_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+    loaded = schema.load_types(schemas_dir)
+
+    assert {name: data["concept_type"] for name, data in loaded.items()} == {
+        "code-artifact": "project",
+        "digest": "digest",
+        "fulltext": "work",
+        "hub": "hub",
+        "note": "note",
+        "project": "project",
+    }
+    assert all(
+        "concept_type" not in yaml.safe_load(type_file.read_text(encoding="utf-8"))
+        for type_file in (schemas_dir / "types").glob("*.yaml")
+    )
+
+
+def test_load_types_rejects_unmapped_legacy_doc_type(tmp_path):
+    schemas_dir = tmp_path / "schemas"
+    shutil.copytree(schema.SCHEMAS_DIR, schemas_dir)
+    (schemas_dir / "concept-types.yaml").unlink()
+    (schemas_dir / "types/legacy.yaml").write_text(
+        "type: legacy\ncategory: notes\n", encoding="utf-8"
+    )
+
+    with pytest.raises(
+        ValueError, match=r"legacy\.yaml: concept_type None is not in concept-types\.yaml"
+    ):
+        schema.load_types(schemas_dir)
+
+
+def test_concept_type_for_resolves_each_document_type():
+    assert {
+        name: schema.concept_type_for(name)
+        for name in {
+            "code-artifact",
+            "digest",
+            "fulltext",
+            "hub",
+            "note",
+            "project",
+        }
+    } == {
+        "code-artifact": "project",
+        "digest": "digest",
+        "fulltext": "work",
+        "hub": "hub",
+        "note": "note",
+        "project": "project",
+    }
+    with pytest.raises(ValueError, match=r"unknown document type"):
+        schema.concept_type_for("gizmo")
 
 
 def test_type_schemas_do_not_ship_dead_gated_keys():

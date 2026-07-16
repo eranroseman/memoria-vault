@@ -1,5 +1,6 @@
 type: note
 category: notes
+concept_type: note
 enums:
   mode: [claim, question, definition, work]
   question_status: [open, resolved]

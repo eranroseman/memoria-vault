@@ -1,5 +1,6 @@
 type: fulltext
 category: fulltext
+concept_type: work
 required:
   type: literal:fulltext
   id: str

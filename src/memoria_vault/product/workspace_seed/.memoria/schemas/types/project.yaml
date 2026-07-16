@@ -1,5 +1,6 @@
 type: project
 category: projects
+concept_type: project
 required:
   type: literal:project
   id: ulid

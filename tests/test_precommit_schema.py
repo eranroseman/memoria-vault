@@ -132,7 +132,8 @@ def test_vault_local_schema_overrides_packaged_default(tmp_path):
     schemas = vault / ".memoria/schemas/types"
     schemas.mkdir(parents=True)
     (schemas / "local-note.yaml").write_text(
-        "type: local-note\nrequired:\n  type: literal:local-note\n  title: str\n",
+        "type: local-note\nconcept_type: note\nrequired:\n  type: literal:local-note\n"
+        "  title: str\n",
         encoding="utf-8",
     )
     (vault / "notes/local.md").write_text(

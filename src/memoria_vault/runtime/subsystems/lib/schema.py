@@ -2,8 +2,9 @@
 """Loader and validator for the canonical type schemas.
 
 `.memoria/schemas/` is the single source for the vault's document-type vocabulary
-with per-type frontmatter schemas (`types/<type>.yaml`), the type→folder map
-(`folders.yaml`), and the controlled vocabulary (`system/vocabulary.md`).
+with per-type frontmatter schemas (`types/<type>.yaml`), the Concept-type roster
+(`concept-types.yaml`), the type→folder map (`folders.yaml`), and the controlled
+vocabulary (`system/vocabulary.md`).
 This module is the reader shared by the Linter, the pre-commit hook,
 `memoria init`, package-spine tests, and no-Bases seed tests, so a schema change is a
 one-file edit, never a hunt across hardcoded lists.
@@ -45,13 +46,58 @@ def _schemas_dir(schemas_dir: Path | None = None) -> Path:
     return Path(schemas_dir) if schemas_dir else SCHEMAS_DIR
 
 
+def load_concept_types(schemas_dir: Path | None = None) -> dict[str, str]:
+    """Return {concept type: one-line role} from the seeded registry.
+
+    concept-types.yaml is the single source of the DB Concept-type roster;
+    the schema.sql CHECK is held to it by the registry parity test. A
+    vault-local schemas dir that predates the registry falls back to the
+    packaged seed copy.
+    """
+    registry_file = _schemas_dir(schemas_dir) / "concept-types.yaml"
+    if not registry_file.is_file():
+        registry_file = SCHEMAS_DIR / "concept-types.yaml"
+    data = yaml.safe_load(registry_file.read_text(encoding="utf-8"))
+    return {str(name): str(role) for name, role in data["concept_types"].items()}
+
+
 def load_types(schemas_dir: Path | None = None) -> dict[str, dict]:
-    """Return {document type: schema dict} for every types/<type>.yaml."""
+    """Return {document type: schema dict} for every types/<type>.yaml.
+
+    Raises ValueError when a doc-type yaml names no concept-type registry
+    member in its concept_type key (the NODES §2 load-time check). A local
+    schemas directory without the registry is legacy: its shipped type-file
+    names retain their packaged mappings in memory only.
+    """
+    schema_dir = _schemas_dir(schemas_dir)
+    legacy_schema_dir = (
+        schemas_dir is not None and not (schema_dir / "concept-types.yaml").is_file()
+    )
+    registry = load_concept_types(schemas_dir)
     out: dict[str, dict] = {}
-    for f in sorted((_schemas_dir(schemas_dir) / "types").glob("*.yaml")):
+    for f in sorted((schema_dir / "types").glob("*.yaml")):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        if legacy_schema_dir and "concept_type" not in data:
+            packaged_type_file = SCHEMAS_DIR / "types" / f.name
+            if packaged_type_file.is_file():
+                packaged_data = yaml.safe_load(packaged_type_file.read_text(encoding="utf-8"))
+                if "concept_type" in packaged_data:
+                    data["concept_type"] = packaged_data["concept_type"]
+        member = data.get("concept_type")
+        if member not in registry:
+            raise ValueError(
+                f"{f.name}: concept_type {member!r} is not in concept-types.yaml {sorted(registry)}"
+            )
         out[data["type"]] = data
     return out
+
+
+def concept_type_for(type_name: str, schemas_dir: Path | None = None) -> str:
+    """Return the validated registry member for one document type."""
+    type_schema = load_types(schemas_dir).get(type_name)
+    if type_schema is None:
+        raise ValueError(f"unknown document type: {type_name}")
+    return str(type_schema["concept_type"])
 
 
 def load_folders(schemas_dir: Path | None = None) -> dict:

@@ -1,5 +1,6 @@
 type: hub
 category: hubs
+concept_type: hub
 required:
   type: literal:hub
   id: ulid

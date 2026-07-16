@@ -1,5 +1,6 @@
 type: digest
 category: digests
+concept_type: digest
 required:
   type: literal:digest
   id: str
