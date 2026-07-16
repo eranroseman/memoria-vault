@@ -8,8 +8,20 @@ import json
 import os
 import sys
 import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - non-POSIX fallback.
+    fcntl = None
+
+try:
+    import msvcrt
+except ImportError:  # pragma: no cover - POSIX test environment.
+    msvcrt = None
 
 STATE_KEY_LENGTH = 16
 RUNTIME_SCHEMA = "memoria-runtime.v1"
@@ -176,3 +188,59 @@ def _windows_pid_alive(pid: int) -> bool:
         return exit_code.value == still_active
     finally:
         close_handle(handle)
+
+
+@contextmanager
+def serve_lock(state_dir: Path) -> Iterator[bool]:
+    """Yield True when this holder owns the exclusive spawn lock."""
+    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(Path(state_dir) / "serve.lock", flags, 0o600)
+    try:
+        if os.name == "posix":
+            os.fchmod(fd, 0o600)
+        if fcntl is None:
+            if msvcrt is not None:
+                os.write(fd, b"\0")
+                os.lseek(fd, 0, os.SEEK_SET)
+                try:
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                except OSError:
+                    yield False
+                    return
+                try:
+                    yield True
+                finally:
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                return
+            yield True
+            return
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
+
+
+def gc_stale_entries(root: Path | None = None) -> list[str]:
+    """Delete rendezvous entries whose recorded pid is dead; return removed keys."""
+    base = root if root is not None else state_root()
+    removed: list[str] = []
+    if not base.is_dir():
+        return removed
+    for entry_dir in sorted(
+        path for path in base.iterdir() if path.is_dir() and not path.is_symlink()
+    ):
+        record = read_runtime(entry_dir)
+        if record is None:
+            continue
+        if not pid_alive(int(record["pid"])):
+            clear_runtime(entry_dir)
+            removed.append(entry_dir.name)
+    return removed

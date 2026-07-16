@@ -362,3 +362,134 @@ def test_windows_pid_alive_checks_the_process_exit_code(
     assert rendezvous._windows_pid_alive(12345) is False
     assert kernel32.opened == [(0x1000, False, 12345)] * 4
     assert kernel32.closed == [123, 123]
+
+
+def test_serve_lock_is_exclusive_and_released(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+
+    with rendezvous.serve_lock(state_dir) as first:
+        assert first is True
+        with rendezvous.serve_lock(state_dir) as second:
+            assert second is False
+    with rendezvous.serve_lock(state_dir) as again:
+        assert again is True
+
+
+def test_serve_lock_falls_back_without_fcntl(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+    monkeypatch.setattr(rendezvous, "fcntl", None)
+
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is True
+
+
+def test_serve_lock_uses_msvcrt_when_fcntl_is_unavailable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class FakeMsvcrt:
+        LK_NBLCK = 1
+        LK_UNLCK = 2
+
+        def __init__(self) -> None:
+            self.calls: list[tuple[int, int]] = []
+
+        def locking(self, _fd: int, mode: int, count: int) -> None:
+            self.calls.append((mode, count))
+
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+    fake_msvcrt = FakeMsvcrt()
+    monkeypatch.setattr(rendezvous, "fcntl", None)
+    monkeypatch.setattr(rendezvous, "msvcrt", fake_msvcrt, raising=False)
+
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is True
+
+    assert fake_msvcrt.calls == [(fake_msvcrt.LK_NBLCK, 1), (fake_msvcrt.LK_UNLCK, 1)]
+
+
+def test_serve_lock_reports_a_busy_msvcrt_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class FakeMsvcrt:
+        LK_NBLCK = 1
+        LK_UNLCK = 2
+
+        def locking(self, _fd: int, mode: int, _count: int) -> None:
+            if mode == self.LK_NBLCK:
+                raise OSError("busy")
+
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+    monkeypatch.setattr(rendezvous, "fcntl", None)
+    monkeypatch.setattr(rendezvous, "msvcrt", FakeMsvcrt(), raising=False)
+
+    with rendezvous.serve_lock(state_dir) as locked:
+        assert locked is False
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+    reason="POSIX no-follow semantics unavailable",
+)
+def test_serve_lock_refuses_a_symlinked_lock_file(tmp_path: Path) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    state_dir = rendezvous.vault_state_dir(vault)
+    outside = tmp_path / "outside.lock"
+    outside.write_text("unchanged", encoding="utf-8")
+    (state_dir / "serve.lock").symlink_to(outside)
+
+    with pytest.raises(OSError):
+        with rendezvous.serve_lock(state_dir):
+            pass
+
+    assert outside.read_text(encoding="utf-8") == "unchanged"
+
+
+def test_gc_stale_entries_removes_dead_pid_entries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alive_vault = tmp_path / "alive"
+    dead_vault = tmp_path / "dead"
+    alive_vault.mkdir()
+    dead_vault.mkdir()
+    alive_dir = rendezvous.vault_state_dir(alive_vault)
+    dead_dir = rendezvous.vault_state_dir(dead_vault)
+    rendezvous.write_runtime(alive_dir, _runtime_record(alive_vault, pid=111))
+    rendezvous.write_runtime(dead_dir, _runtime_record(dead_vault, pid=222))
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda pid: pid == 111)
+
+    removed = rendezvous.gc_stale_entries()
+
+    assert removed == [dead_dir.name]
+    assert rendezvous.read_runtime(alive_dir) is not None
+    assert rendezvous.read_runtime(dead_dir) is None
+
+
+def test_gc_stale_entries_tolerates_missing_root(tmp_path: Path) -> None:
+    assert rendezvous.gc_stale_entries(tmp_path / "nowhere") == []
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX symlink semantics")
+def test_gc_stale_entries_ignores_symlinked_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "state"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    rendezvous.write_runtime(outside, _runtime_record(tmp_path, pid=222))
+    (root / "not-a-key").symlink_to(outside, target_is_directory=True)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: False)
+
+    assert rendezvous.gc_stale_entries(root) == []
+    assert rendezvous.read_runtime(outside) is not None

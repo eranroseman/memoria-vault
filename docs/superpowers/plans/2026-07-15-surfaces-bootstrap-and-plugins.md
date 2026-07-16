@@ -573,8 +573,17 @@ def _windows_pid_alive(pid: int) -> bool:
 
 **Interfaces:**
 - Produces:
-  - `rendezvous.serve_lock(state_dir: Path)` — `@contextmanager`, yields `bool` (`True` = this holder owns the exclusive non-blocking `flock` on `<state>/serve.lock`; `False` = someone else holds it). On platforms without `fcntl` it yields `True` (same best-effort posture as `state.py:426`).
-  - `rendezvous.gc_stale_entries(root: Path | None = None) -> list[str]` — deletes `runtime.json` under `<root or state_root()>/<key>/` whose pid is dead; returns removed key names.
+  - `rendezvous.serve_lock(state_dir: Path)` — `@contextmanager`, yields `bool` (`True` = this holder owns the exclusive non-blocking lock on a private `<state>/serve.lock`; `False` = someone else holds it). It uses `flock` when available, `msvcrt.locking` on Windows, and yields `True` only when neither locking backend exists.
+  - `rendezvous.gc_stale_entries(root: Path | None = None) -> list[str]` — deletes `runtime.json` under real child directories of `<root or state_root()>/<key>/` whose pid is dead; returns removed key names; ignores symlinked entries.
+
+> **Adopted safety amendment (2026-07-16):** The state directory is private but
+> lock and GC paths must still refuse/ignore redirections. On platforms with
+> `O_NOFOLLOW`, open `serve.lock` with it and restore mode `0600` through the
+> descriptor; test a symlinked lock is rejected. GC skips symlinked child
+> entries. The design's one-server-per-vault invariant also requires the
+> existing `msvcrt` nonblocking lock pattern when `fcntl` is unavailable;
+> yielding `True` is reserved for a platform with neither backend. Tests
+> exercise POSIX, `msvcrt`, and no-backend fallback paths.
 
 **Steps:**
 
@@ -629,6 +638,11 @@ try:
     import fcntl
 except ImportError:  # pragma: no cover - non-POSIX fallback
     fcntl = None  # type: ignore[assignment]
+
+try:
+    import msvcrt
+except ImportError:  # pragma: no cover - POSIX test environment
+    msvcrt = None  # type: ignore[assignment]
 ```
 
   then append:
@@ -637,9 +651,26 @@ except ImportError:  # pragma: no cover - non-POSIX fallback
 @contextmanager
 def serve_lock(state_dir: Path) -> Iterator[bool]:
     """Yield True when this holder owns the exclusive spawn lock."""
-    fd = os.open(Path(state_dir) / "serve.lock", os.O_RDWR | os.O_CREAT, 0o600)
+    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(Path(state_dir) / "serve.lock", flags, 0o600)
     try:
+        if os.name == "posix":
+            os.fchmod(fd, 0o600)
         if fcntl is None:
+            if msvcrt is not None:
+                os.write(fd, b"\0")
+                os.lseek(fd, 0, os.SEEK_SET)
+                try:
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                except OSError:
+                    yield False
+                    return
+                try:
+                    yield True
+                finally:
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                return
             yield True
             return
         try:
@@ -661,7 +692,9 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
     removed: list[str] = []
     if not base.is_dir():
         return removed
-    for entry_dir in sorted(path for path in base.iterdir() if path.is_dir()):
+    for entry_dir in sorted(
+        path for path in base.iterdir() if path.is_dir() and not path.is_symlink()
+    ):
         record = read_runtime(entry_dir)
         if record is None:
             continue
