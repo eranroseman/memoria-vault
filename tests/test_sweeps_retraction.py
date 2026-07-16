@@ -152,7 +152,9 @@ def test_build_rw_index_severity_tie_break_keeps_retraction_over_concern():
     assert idx["10.1/twice"]["retracted"] is True
     assert idx["10.1/twice"]["nature"] == "Retraction"
     assert idx["10.1/twice"]["retraction_doi"] == "10.1/rw-ret2"
+    assert idx_reversed["10.1/twice"]["retracted"] is True
     assert idx_reversed["10.1/twice"]["nature"] == "Retraction"
+    assert idx_reversed["10.1/twice"]["retraction_doi"] == "10.1/rw-ret2"
 
 
 def test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert(tmp_path, monkeypatch):
