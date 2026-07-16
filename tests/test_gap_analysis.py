@@ -70,8 +70,8 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     )
     for idx in range(2):
         _md(
-            tmp_path / f"notes/warrant-{idx}.md",
-            f"type: note\ncheck_status: checked\ntitle: Warrant {idx}\ntags: [warrant]\n",
+            tmp_path / f"notes/grounds-{idx}.md",
+            f"type: note\ncheck_status: checked\ntitle: Grounds {idx}\ntags: [grounds]\n",
         )
     state.upsert_catalog_record(
         tmp_path,
@@ -129,18 +129,20 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     result = analyze_gaps(tmp_path, seed_terms=["new area"], dense_threshold=2)
 
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
-    assert set(gaps) == {"sleep", "warrant", "new area"}
+    assert set(gaps) == {"sleep", "grounds", "new area"}
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["sleep"]["source_count"] == 1
     assert gaps["sleep"]["digest_count"] == 1
     assert gaps["sleep"]["note_count"] == 0
     _assert_gap_contract(gaps["sleep"], "undigested")
-    assert gaps["warrant"]["gap_type"] == "under-warranted"
-    assert gaps["warrant"]["note_count"] == 2
-    _assert_gap_contract(gaps["warrant"], "under-warranted")
+    assert gaps["grounds"]["gap_type"] == "under-grounded"
+    assert gaps["grounds"]["note_count"] == 2
+    _assert_gap_contract(gaps["grounds"], "under-grounded")
     assert gaps["new area"]["gap_type"] == "new-topic"
     _assert_gap_contract(gaps["new area"], "new-topic")
     assert result["summary"]["total"] == 3
+    assert result["summary"]["by_kind"]["under-grounded"] == 1
+    assert "under-warranted" not in result["summary"]["by_kind"]
     assert result["summary"]["by_severity"]["high"] == 2
     assert result["saturation"]["ready"] is False
     assert result["checked_topics"] == 5
@@ -567,6 +569,6 @@ def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> No
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
     assert gaps["sensemaking"]["gap_type"] == "new-topic"
     assert gaps["qualitative"]["gap_type"] == "new-topic"
-    assert gaps["patient-generated-data"]["gap_type"] == "under-warranted"
+    assert gaps["patient-generated-data"]["gap_type"] == "under-grounded"
     assert gaps["patient-generated-data"]["note_count"] == 1
-    assert gaps["care coordination"]["gap_type"] == "under-warranted"
+    assert gaps["care coordination"]["gap_type"] == "under-grounded"

@@ -35,7 +35,7 @@ that stores the roles can route each dependent to the right disposition.
 ## Consequences are marked at write time
 
 Derivation happens on write: the moment a change lands, its blast radius is
-computed and affected nodes are marked — stale, under-warranted, needing
+computed and affected nodes are marked — stale, under-grounded, needing
 re-confirmation — so the knowledge base is always current and the researcher
 gets immediate feedback. Reads may come weeks later; even hours of staleness
 can mislead. Re-confirmation of impacted nodes is then *lazy and

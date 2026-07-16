@@ -57,7 +57,7 @@ from memoria_vault.runtime.vaultio import (
 GAP_KINDS = {
     "new-topic",
     "undigested",
-    "under-warranted",
+    "under-grounded",
     "citation-neighborhood",
     "full-text-missing",
     "argument-unsupported",
@@ -483,11 +483,11 @@ def analyze_gaps(
             )
             impact, confidence, actionability = 2, 2, 1
         elif note_count >= dense_threshold and source_count == 0:
-            kind = "under-warranted"
+            kind = "under-grounded"
             seed = "capture or link supporting sources"
             why = (
                 f"{note_count} checked note(s) mention this topic, "
-                "but no checked sources or digests warrant it."
+                "but no checked sources or digests ground it."
             )
             impact, confidence, actionability = 2, 2, 1
         else:

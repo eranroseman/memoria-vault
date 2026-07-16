@@ -19,6 +19,8 @@ removed release-please setup, not real releases, and have been deleted.
   Retired `code-warrant:` markers are rejected without an alias or migration.
 - Migrated `code_artifacts.purpose` from `warrant` to `grounds` in the SQLite
   14→15 upgrade while preserving `code_runs` history.
+- Renamed the `analyze-gaps` gap kind `under-warranted` to `under-grounded`
+  (breaking for scripts that branch on `gap_type`; no compatibility alias).
 
 ## [0.1.0a21] - 2026-07-14
 
