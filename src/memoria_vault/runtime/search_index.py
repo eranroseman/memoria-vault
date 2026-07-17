@@ -13,7 +13,7 @@ from typing import Any
 
 import yaml
 
-from memoria_vault.runtime import indexing, state
+from memoria_vault.runtime import indexing, retrieval_pipeline, state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -28,6 +28,7 @@ from memoria_vault.runtime.vaultio import (
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
+SEARCHABLE_TYPES = frozenset({"work", "digest", "note", "hub", "project"})
 
 
 def rebuild_checked_search_index(
@@ -113,22 +114,51 @@ def _rebuild_checked_search_index(
 
 
 def checked_search_documents(vault: Path, *, include_stale: bool = False) -> list[dict[str, Any]]:
+    return checked_search_universe(vault, include_stale=include_stale)["documents"]
+
+
+def checked_search_universe(vault: Path, *, include_stale: bool = False) -> dict[str, Any]:
+    """Return the searchable universe and its excluded-strata counts."""
     vault = Path(vault)
+    strata = retrieval_pipeline.excluded_strata()
     docs: list[dict[str, Any]] = []
-    for path in checked_concepts(vault, include_stale=include_stale):
-        text = safe_read(path)
-        rel = path.relative_to(vault).as_posix()
-        docs.append(
-            {
-                "path": rel,
-                "text": text,
-                "frontmatter": _frontmatter_with_flags(vault, rel, text),
-                "source": path,
-            }
-        )
+    for root in _bundle_roots(vault):
+        base = vault / root
+        if not base.exists():
+            continue
+        for path in iter_markdown(base, skip_dirs=frozenset()):
+            rel = path.relative_to(vault).as_posix()
+            status = state.concept_check_status(vault, rel)
+            if status == "quarantined":
+                strata["gated"] += 1
+                continue
+            if status != "checked":
+                strata["unchecked"] += 1
+                continue
+            if not is_consumable_checked_file(vault, rel):
+                strata["gated"] += 1
+                continue
+            text = safe_read(path)
+            frontmatter = _frontmatter_with_flags(vault, rel, text)
+            if frontmatter.get("type") not in SEARCHABLE_TYPES:
+                continue
+            if not include_stale and _hard_staleness(rel, frontmatter):
+                strata["stale"] += 1
+                continue
+            docs.append(
+                {
+                    "path": rel,
+                    "text": text,
+                    "frontmatter": frontmatter,
+                    "source": path,
+                }
+            )
     if not include_stale:
         docs.extend(_checked_work_documents(vault))
-    return sorted(docs, key=lambda row: str(row["path"]))
+    return {
+        "documents": sorted(docs, key=lambda row: str(row["path"])),
+        "excluded_strata": strata,
+    }
 
 
 def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
@@ -163,17 +193,28 @@ def answer_query(
     validate_operation_context(vault, context)
     vault = Path(vault)
     indexing.refresh_stale_passages(vault, context=context)
+    universe = checked_search_universe(vault, include_stale=include_stale)
     docs = [
         (document["path"], document["text"], document["frontmatter"])
-        for document in checked_search_documents(vault, include_stale=include_stale)
+        for document in universe["documents"]
     ]
     project_context = _project_context(project_id, docs)
     retrieval_query = _project_query(query, project_context)
     tokenized = [(path, _tokens(text)) for path, text, _frontmatter in docs]
     frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
-    hits = _bm25(tokenized, retrieval_query)[:k]
+    ranked = _bm25(tokenized, retrieval_query)
+    hits = retrieval_pipeline.rerank(ranked[:k])
+    stages = retrieval_pipeline.PipelineStages(len(docs))
+    stages.add_ranked(len(ranked))
+    stages.add_returned(len(hits))
     return _answer_from_hits(
-        query, hits, frontmatter_by_path, engine="bm25", project_context=project_context
+        query,
+        hits,
+        frontmatter_by_path,
+        engine="bm25",
+        project_context=project_context,
+        pipeline_counts=stages.rows(),
+        excluded_strata=universe["excluded_strata"],
     )
 
 
@@ -214,6 +255,8 @@ def _answer_from_hits(
     frontmatter_by_path: dict[str, dict[str, Any]],
     *,
     engine: str,
+    pipeline_counts: list[dict[str, Any]],
+    excluded_strata: dict[str, int],
     project_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     sources = []
@@ -241,9 +284,13 @@ def _answer_from_hits(
         "query": query,
         "engine": engine,
         "sources": sources,
-        "unknowns": [] if sources else [f"No checked current sources matched: {query}"],
+        "unknowns": (
+            [] if sources else [retrieval_pipeline.honest_empty(pipeline_counts, excluded_strata)]
+        ),
         "staleness": staleness,
         "contradictions": contradictions,
+        "pipeline_counts": pipeline_counts,
+        "excluded_strata": excluded_strata,
     }
     if project_context:
         answer["project_context"] = project_context
@@ -378,7 +425,7 @@ def evaluate_bm25(
 
 
 def _is_searchable_frontmatter(frontmatter: dict[str, Any], *, include_stale: bool = False) -> bool:
-    if frontmatter.get("type") not in {"work", "digest", "note", "hub", "project"}:
+    if frontmatter.get("type") not in SEARCHABLE_TYPES:
         return False
     return include_stale or not _hard_staleness("", frontmatter)
 

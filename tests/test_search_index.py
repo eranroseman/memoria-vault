@@ -348,7 +348,60 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
 
     missing = answer_query(vault, "absent")
     assert missing["sources"] == []
-    assert missing["unknowns"] == ["No checked current sources matched: absent"]
+    assert missing["unknowns"] == [
+        "0 of 2 candidates matched; 0 unchecked documents were not searched"
+    ]
+    assert missing["pipeline_counts"] == [
+        {"stage": "universe", "count": 2},
+        {"stage": "ranked", "count": 0},
+        {"stage": "returned", "count": 0},
+    ]
+    assert missing["excluded_strata"] == {"unchecked": 0, "stale": 1, "gated": 0}
+
+
+def test_zero_hit_answer_query_is_honest_about_denominators(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha beta")
+    note(vault, "pending", "unchecked", "poison alpha")
+
+    answer = answer_query(vault, "absentterm")
+
+    assert answer["sources"] == []
+    assert answer["unknowns"] == [
+        "0 of 1 candidates matched; 1 unchecked documents were not searched"
+    ]
+    assert answer["pipeline_counts"] == [
+        {"stage": "universe", "count": 1},
+        {"stage": "ranked", "count": 0},
+        {"stage": "returned", "count": 0},
+    ]
+    assert answer["excluded_strata"] == {"unchecked": 1, "stale": 0, "gated": 0}
+
+
+def test_gated_document_rides_through_as_stratum_count_without_text(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "visible", "checked", "alpha beta")
+    gated = note(vault, "gated", "checked", "alpha zzgatedsecret")
+    gated.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: gated\n---\ntampered zzgatedsecret\n",
+        encoding="utf-8",
+    )
+    note(vault, "quarantined", "quarantined", "alpha zzquarantinesecret")
+
+    answer = answer_query(vault, "alpha")
+
+    assert [source["path"] for source in answer["sources"]] == ["notes/visible.md"]
+    assert answer["pipeline_counts"] == [
+        {"stage": "universe", "count": 1},
+        {"stage": "ranked", "count": 1},
+        {"stage": "returned", "count": 1},
+    ]
+    assert answer["excluded_strata"] == {"unchecked": 0, "stale": 0, "gated": 2}
+    payload = json.dumps(answer)
+    assert "zzgatedsecret" not in payload
+    assert "zzquarantinesecret" not in payload
+    assert "notes/gated.md" not in payload
+    assert "notes/quarantined.md" not in payload
 
 
 def test_answer_query_carries_project_context(tmp_path: Path) -> None:

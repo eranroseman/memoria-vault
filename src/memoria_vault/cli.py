@@ -725,6 +725,21 @@ def _cmd_ask(args: argparse.Namespace) -> int:
         "answer-query",
         {"query": args.question, "k": 5},
     )
+    return _emit_ask_result(result, args)
+
+
+def _emit_ask_result(result: dict[str, Any], args: argparse.Namespace) -> int:
+    raw = result.get("result")
+    answer: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    if (
+        bool(result.get("ok"))
+        and not args.json
+        and not args.quiet
+        and not answer.get("sources")
+        and answer.get("unknowns")
+    ):
+        print(str(answer["unknowns"][0]))
+        return 0
     return _emit(result, args)
 
 
@@ -1149,7 +1164,7 @@ def _cmd_work_update(args: argparse.Namespace) -> int:
 
 
 def _cmd_project_ask(args: argparse.Namespace) -> int:
-    return _emit(
+    return _emit_ask_result(
         _enqueue_and_run(
             args,
             "answer-query",
