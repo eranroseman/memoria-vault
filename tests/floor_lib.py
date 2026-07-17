@@ -1017,13 +1017,18 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # worker.py:1095-1114 pops an optional `paths` list (omitted here to
     # regenerate every tracked projection), dispatching to
     # projections.py:write_tracked_projections. Confirmed live: "done",
-    # outputs ["index.md", "bibliography.bib",
+    # outputs ["index.md", "bibliography.bib", "AGENTS.md",
     # "projects/package-gate/argument.canvas"] (the seed's one project's
     # existing canvas).
     "regenerate-tracked-projections": {
         "payload": {},
         "expect": "done",
-        "creates": ["index.md", "bibliography.bib", "projects/package-gate/argument.canvas"],
+        "creates": [
+            "index.md",
+            "bibliography.bib",
+            "AGENTS.md",
+            "projects/package-gate/argument.canvas",
+        ],
     },
     # worker.py:55, shares acknowledge-attention's branch (worker.py:831-849,
     # `operation_id in {"acknowledge-attention", "resolve-attention"}`).

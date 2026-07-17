@@ -1032,9 +1032,14 @@ EOF
 **Files:**
 - Modify: `src/memoria_vault/runtime/projections.py:22-28` (`TRACKED_PROJECTION_PATHS`; add `_DELEGATED_PROJECTION_PATHS`)
 - Modify: `src/memoria_vault/runtime/projections.py:39-53` (`render_tracked_projection` branch)
-- Modify: `src/memoria_vault/runtime/projections.py:172-174` (delegated-writer skip in `_write_tracked_projections`)
+- Modify: `src/memoria_vault/runtime/projections.py:64-75` (redirect-aware drift check)
+- Modify: `src/memoria_vault/runtime/projections.py:163-176` (preflight and delegated-writer skip in `_write_tracked_projections`)
+- Modify: `src/memoria_vault/runtime/projections.py:361-379` (standalone index-writer preflight)
 - Modify: `src/memoria_vault/runtime/projections.py:391-417` (add `_vault_agents_md` next to `_workspace_index`)
-- Modify: `tests/test_projections.py:106-113` (extend the init test) and append the drift test
+- Modify: `src/memoria_vault/product/capabilities/operations/regenerate-tracked-projections.md` (declare `AGENTS.md` output)
+- Modify: `tests/floor_lib.py` and its generated goldens (operation output contract)
+- Modify: `tests/test_projections.py` (init, drift, redirect, manifest, and worker-write tests)
+- Modify: `docs/reference/commands-and-transports/{operations,system-actions-operations}.md` (published lifecycle contract)
 - Test: `tests/test_projections.py` (existing `contract` registration)
 
 **Interfaces:**
@@ -1044,7 +1049,7 @@ EOF
   - `_DELEGATED_PROJECTION_PATHS: tuple[str, ...] = ("index.md", "bibliography.bib")` (private: paths written by dedicated writers, skipped by the generic render loop).
   - `render_tracked_projection(vault: Path, "AGENTS.md") -> str` now supported.
   - `_vault_agents_md() -> str` (private, static content — deterministic drift check).
-- Behavior other sections may rely on: `memoria init` writes vault-root `AGENTS.md`; `doctor --repair` and the `regenerate-tracked-projections` operation regenerate it; `check_tracked_projections` reports PI edits as `{"path": "AGENTS.md", "status": "stale"}`; the file carries `type: system` frontmatter and the standard generated-file comment marker.
+- Behavior other sections may rely on: `memoria init` writes vault-root `AGENTS.md`; `doctor --repair` and the `regenerate-tracked-projections` operation regenerate it; `check_tracked_projections` reports PI edits as `{"path": "AGENTS.md", "status": "stale"}` and symlink/junction redirects as `{"path": "AGENTS.md", "status": "redirected"}`; regeneration rejects redirects before writing; the file carries `type: system` frontmatter and the standard generated-file comment marker.
 
 Load-bearing code fact (found by reading, not the design doc): the write loop
 at projections.py:172-174 skips every `rel in TRACKED_PROJECTION_PATHS`
@@ -1052,9 +1057,26 @@ because `index.md`/`bibliography.bib` have dedicated writers — naively adding
 `AGENTS.md` to the constant would mean it is never written. The skip set must
 become `_DELEGATED_PROJECTION_PATHS`.
 
+**Fixture reconciliation amendment (2026-07-17):** because `memoria init`
+now writes a generated root `AGENTS.md`, regenerate the same 35 operation-floor
+goldens through the supported update path and add it to the floor operation's
+expected outputs. Each golden gains only the `AGENTS.md` digest, except
+`regenerate-tracked-projections.json`, whose journal digest also changes because
+the operation's recorded output list gains `AGENTS.md`, and
+`regenerate-capability-index.json`, whose capability-index digest changes because
+the operation manifest declares the new write.
+
+**Security and contract repair amendment (2026-07-17):** preflight every
+computed projection path with `validate_workspace_write_targets` before either
+delegated writer runs, and preflight the independently exposed workspace-index
+writer, so a symlink or junction cannot redirect a worker-owned write. Make
+`check_tracked_projections` report such paths as `redirected`, add `AGENTS.md`
+to the packaged operation manifest, and update the two public reference rows
+that enumerate regeneration outputs.
+
 **Steps:**
 
-- [ ] Append the failing test to `tests/test_projections.py` (imports at the
+- [x] Append the failing test to `tests/test_projections.py` (imports at the
       top of the file already provide `TRACKED_PROJECTION_PATHS`,
       `check_tracked_projections`, the `write_tracked_projections` wrapper,
       and the `workspace` fixture helper):
@@ -1080,7 +1102,7 @@ def test_vault_agents_md_is_a_regenerated_read_contract(tmp_path: Path) -> None:
     assert (vault / "AGENTS.md").read_text(encoding="utf-8") == generated
 ```
 
-- [ ] Extend `test_initialized_workspace_indexes_are_current`
+- [x] Extend `test_initialized_workspace_indexes_are_current`
       (tests/test_projections.py:106-113) with one assertion after the
       existing two, so init coverage is explicit:
 
@@ -1088,12 +1110,12 @@ def test_vault_agents_md_is_a_regenerated_read_contract(tmp_path: Path) -> None:
     assert (vault / "AGENTS.md").is_file()
 ```
 
-- [ ] Run and verify failure:
+- [x] Run and verify failure:
       `python -m pytest tests/test_projections.py::test_vault_agents_md_is_a_regenerated_read_contract tests/test_projections.py::test_initialized_workspace_indexes_are_current -v`
       — expected: `assert 'AGENTS.md' in ('index.md', 'bibliography.bib')`
       fails, and the init test fails on the missing file.
 
-- [ ] In `src/memoria_vault/runtime/projections.py:22-28`, replace the
+- [x] In `src/memoria_vault/runtime/projections.py:22-28`, replace the
       constants block:
 
 ```python
@@ -1110,7 +1132,7 @@ TRACKED_PROJECTION_PATHS = (
 TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
 ```
 
-- [ ] In `render_tracked_projection` (projections.py:39-53), add the branch
+- [x] In `render_tracked_projection` (projections.py:39-53), add the branch
       after the `bibliography.bib` branch:
 
 ```python
@@ -1118,7 +1140,7 @@ TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
         return _vault_agents_md()
 ```
 
-- [ ] In `_write_tracked_projections`, change the skip at lines 172-174 from
+- [x] In `_write_tracked_projections`, change the skip at lines 172-174 from
       `if rel in TRACKED_PROJECTION_PATHS:` to:
 
 ```python
@@ -1126,7 +1148,7 @@ TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
             continue
 ```
 
-- [ ] Add the renderer next to `_workspace_index` (after projections.py:404),
+- [x] Add the renderer next to `_workspace_index` (after projections.py:404),
       static content only so the drift check is deterministic:
 
 ```python
@@ -1152,24 +1174,73 @@ def _vault_agents_md() -> str:
     )
 ```
 
-- [ ] Run and verify pass: `python -m pytest tests/test_projections.py -v`
+- [x] Apply the security and contract repair amendment: preflight every
+      projection write target, including the standalone index writer; report
+      redirects in drift checks; declare the output in the operation manifest;
+      and cover worker refusal plus matching-content redirect detection.
+
+- [x] Run and verify pass: `python -m pytest tests/test_projections.py -v`
       — the pre-existing equality assertions
       (`result["paths"] == list(TRACKED_PROJECTION_PATHS)`, committed set
       `== {*TRACKED_PROJECTION_PATHS, state.JOURNAL_HEAD_REL}`) pick up
       `AGENTS.md` through the constant and must pass unchanged; if any fails,
       stop and fix the implementation, not the assertion.
 
-- [ ] Confirm the seed-purity guard still holds (AGENTS.md is generated, never
+- [x] Confirm the seed-purity guard still holds (AGENTS.md is generated, never
       seeded — `tests/test_installer_skeleton.py:59-79` forbids it in the
       seed) and run the surfaces that enumerate projection paths:
       `python -m pytest tests/test_installer_skeleton.py tests/test_cli.py tests/test_seed_lifecycle.py tests/test_cli_doctor_eval.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
+- [x] Run the full gate: `python scripts/verify` — passed: 2,449 tests, 11
+      skipped; lint, product gates, offline smoke, syntax, and shell checks
+      all green.
 
 - [ ] Commit:
 
 ```bash
-git add src/memoria_vault/runtime/projections.py tests/test_projections.py
+git add -- \
+  docs/reference/commands-and-transports/operations.md \
+  docs/reference/commands-and-transports/system-actions-operations.md \
+  docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md \
+  src/memoria_vault/product/capabilities/operations/regenerate-tracked-projections.md \
+  src/memoria_vault/runtime/projections.py \
+  tests/floor_lib.py \
+  tests/test_projections.py \
+  tests/fixtures/floor/goldens/analyze-claims.json \
+  tests/fixtures/floor/goldens/analyze-gaps.json \
+  tests/fixtures/floor/goldens/analyze-project-argument.json \
+  tests/fixtures/floor/goldens/answer-query.json \
+  tests/fixtures/floor/goldens/capture-bibtex-source.json \
+  tests/fixtures/floor/goldens/capture-source.json \
+  tests/fixtures/floor/goldens/check-falsifiability.json \
+  tests/fixtures/floor/goldens/check-source-metadata.json \
+  tests/fixtures/floor/goldens/compare-and-contrast.json \
+  tests/fixtures/floor/goldens/compile-source-digest.json \
+  tests/fixtures/floor/goldens/create-concept.json \
+  tests/fixtures/floor/goldens/empirical-event-record.json \
+  tests/fixtures/floor/goldens/eval-run.json \
+  tests/fixtures/floor/goldens/export-project.json \
+  tests/fixtures/floor/goldens/extract-claim-stubs.json \
+  tests/fixtures/floor/goldens/integrity-citation-survival-check.json \
+  tests/fixtures/floor/goldens/integrity-claim-quote-check.json \
+  tests/fixtures/floor/goldens/integrity-contradiction-check.json \
+  tests/fixtures/floor/goldens/integrity-evidence-check.json \
+  tests/fixtures/floor/goldens/integrity-link-target-check.json \
+  tests/fixtures/floor/goldens/integrity-prompt-injection-check.json \
+  tests/fixtures/floor/goldens/integrity-provenance-checkpoint.json \
+  tests/fixtures/floor/goldens/integrity-quote-anchor-check.json \
+  tests/fixtures/floor/goldens/rebuild-checked-search-index.json \
+  tests/fixtures/floor/goldens/red-team-argument.json \
+  tests/fixtures/floor/goldens/regenerate-capability-index.json \
+  tests/fixtures/floor/goldens/regenerate-indexes.json \
+  tests/fixtures/floor/goldens/regenerate-references-bib.json \
+  tests/fixtures/floor/goldens/regenerate-tracked-projections.json \
+  tests/fixtures/floor/goldens/render-project-argument-canvas.json \
+  tests/fixtures/floor/goldens/run-seeded-error-verdict.json \
+  tests/fixtures/floor/goldens/summarize-for-recall.json \
+  tests/fixtures/floor/goldens/surface-tensions.json \
+  tests/fixtures/floor/goldens/verify-project-draft.json \
+  tests/fixtures/floor/goldens/write-project-slice.json
 git commit -m "$(cat <<'EOF'
 feat(projections): vault AGENTS.md generated read-contract projection
 

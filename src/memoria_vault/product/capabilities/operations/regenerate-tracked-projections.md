@@ -8,6 +8,7 @@ allowed_tools:
 allowed_paths:
 - index.md
 - bibliography.bib
+- AGENTS.md
 - projects/
 - .memoria/journal/
 allowed_network: []
@@ -27,5 +28,5 @@ links: {}
 
 # Operation
 
-Render `index.md`, `bibliography.bib`, and existing project `argument.canvas`
-projections.
+Render `index.md`, `bibliography.bib`, `AGENTS.md`, and existing project
+`argument.canvas` projections.
