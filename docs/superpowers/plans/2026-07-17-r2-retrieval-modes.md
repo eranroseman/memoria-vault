@@ -30,10 +30,15 @@
   `origin_id`, rather than the historical `source_id`.
 - Verification: `python scripts/verify` passed (**2,391 passed, 9 skipped**;
   one existing multiprocessing-fork warning).
+- **G.2 complete:** `0282a170` adds project-slice and type/status filtering
+  to `graph_sql`, including an order-tolerant graph-owned slice seam and
+  strict concept-link target normalization.
+- Verification: `python scripts/verify` passed (**2,395 passed, 9 skipped**;
+  one existing multiprocessing-fork warning).
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
-1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (prefers `state.active_project_slices` via getattr; `links:` closure fallback).
+1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (lazily selects the graph plan's `propagation.active_project_slices(vault)[project_rel]`; before that producer exists, uses the project `links:` closure).
 2. **Pipeline staging** (P produces; E consumes): `retrieval_pipeline.PipelineStages` (`add_filter` unique-suffixing repeats, `rows() -> [{stage, count}]` ordered), `excluded_strata(*, unchecked=0, stale=0, gated=0)` (zeros always present), `RERANK_MODE = "off"` rendered in every trace.
 3. **Explore** (E produces): `explore.explore_topic(vault, topic, *, project="", depth=1, versus="") -> dict` — kind groups `{claims, questions, tensions, works, hubs}`, per-entry edges + `grounds_count` (complete evidence-set rows via `block_ref`), `SEED_K = 5`, stage order `universe → [project-slice] → ranked → seed → neighborhood → returned`, per-side payloads + intersection + crossing tensions under `--versus`, `honest_empty` string on zero-return; CLI `memoria explore` with the pinned `test_cli_command_surface_is_exact` edit, both-direction help disambiguation vs `memoria project explore`, and the U1 registry row (grep-first both-branch).
 4. **Span refs + fixtures** (F produces): `span_refs.resolve_span_ref(vault, ref) -> {work_id, anchor, path} | None` (passages `(work_id, anchor)` match; file-scan interim fallback); `tests/retrieval_fixtures.py` loader (`load_retrieval_fixtures(*, spike_mode=False)` refusing unfrozen rows in spike mode), `shape1_bm25_cases` (gold span refs → doc paths for `evaluate_bm25` — doc-level hit@k stated), `score_present_at_depth(payload, gold_ids) -> bool`, `FIXTURES_DIR = tests/fixtures/retrieval/`, the seeded `cases.yaml` (registered, unfrozen, over O1 seed-corpus work ids).
@@ -54,7 +59,7 @@ in order. Its fixture remains extraction-independent: mirrored rows use
 inserted directly because that writer preserves tensions rather than mirroring
 them.
 
-**Cross-plan order tolerance (binding):** (a) the relation roster is read at runtime from the shipped `concept_edges` CHECK (four relations today, schema.sql:240-250); when the graph plan widens the CHECK to the seven-relation `EDGE_RELATIONS` roster, it flows through with **no code change here** — the parity test asserts subset, not equality. (b) `project_slice` prefers `state.active_project_slices` (ERP-C, graph plan) via `getattr` the moment it exists; until then the fallback is the project file's own `links:` closure (spec §2, Filters bullet).
+**Cross-plan order tolerance (binding):** (a) the relation roster is read at runtime from the shipped `concept_edges` CHECK (four relations today, schema.sql:240-250); when the graph plan widens the CHECK to the seven-relation `EDGE_RELATIONS` roster, it flows through with **no code change here** — the parity test asserts subset, not equality. (b) `project_slice` lazily consumes ERP-C's `propagation.active_project_slices(vault)` mapping by resolved project rel; until that module/provider exists, the fallback is the project file's own `links:` closure. Once present, a missing key is deliberately empty (the graph plan excludes inactive/archived projects).
 
 **Implementation notes verified at 51395f15:**
 - `work_graph_edges` CHECK admits `'references', 'related', 'topic', 'keyword', 'authorship', 'institution', 'published_in'` (schema.sql:171-186); `co_citation`/`coupling` operate on `references` rows only, as §2 specifies.
@@ -529,18 +534,36 @@ git commit -m "feat(retrieval): add graph-SQL structural primitives (R2 slice 1,
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
-### Task G.2 — project_slice + type/status filters composing with neighborhood
+### Task G.2 — project_slice + type/status filters composing with neighborhood — completed
 
 **Files:**
 - `src/memoria_vault/runtime/graph_sql.py` (extend)
 - `tests/test_graph_sql.py` (extend)
 
 **Interfaces:**
+
+> **Current G.2 contract (supersedes the historical `state` wording below):**
+> `project_slice` lazily loads ERP-C's
+> `propagation.active_project_slices(vault) -> dict[str, set[str]]`, resolves
+> the requested project with `_project_rel`, and selects that mapping by key.
+> Before the producer exists it uses the project `links:` closure; after it
+> exists, a missing key means an intentionally empty inactive/archived slice.
+
 - `project_slice(vault: Path, project: str) -> dict[str, Any]` — `{"ids": list[str], "counts": {"members": int}, "source": "active-project-slices" | "links-closure"}`; order-tolerant source per spec §2: `getattr(state, "active_project_slices", None)` wins the moment ERP-C lands it; fallback is the project file's `links:` closure (project path resolution mirrors `knowledge._project_rel`, knowledge.py:3074-3084; link-target semantics mirror `knowledge._link_target`, knowledge.py:3036-3047)
 - `filter_ids(vault: Path, ids: list[str], *, types: set[str] | None = None, check_status: set[str] | None = None) -> dict[str, Any]` — `{"ids": list[str], "counts": {"before": int, "after": int}}` over the `concept_status` view (schema.sql:72-79)
 - Composition is caller-side set intersection — slice 2 (pipeline assembly) owns stitching the per-stage counts into the ordered `pipeline_counts` list.
 
-- [ ] **G.2.1 — failing tests.** Append to `tests/test_graph_sql.py`:
+> **Executed amendment (authoritative over the historical listing below):**
+> `project_slice` lazily imports the actual graph-owned
+> `propagation.active_project_slices(vault)` mapping and selects it by
+> `_project_rel`; the seam test patches that private loader with
+> `monkeypatch`, never mutates `state`. A present mapping missing the project
+> key intentionally returns an empty active slice (archived/inactive policy),
+> while the links closure is only the pre-propagation fallback. The local link
+> parser now matches `knowledge._link_target`: escaping and unsupported
+> targets are ignored.
+
+- [x] **G.2.1 — failing tests.** Append to `tests/test_graph_sql.py`:
 
 ```python
 def _seed_project_files(vault: Path) -> None:
@@ -636,7 +659,7 @@ def test_primitives_compose_neighborhood_slice_filter(tmp_path: Path) -> None:
     assert final["counts"] == {"before": 2, "after": 1}
 ```
 
-- [ ] **G.2.2 — run, expect the red attribute failures:**
+- [x] **G.2.2 — run, expect the red attribute failures:**
 
 ```bash
 python -m pytest tests/test_graph_sql.py -q
@@ -649,7 +672,7 @@ E       AttributeError: module 'memoria_vault.runtime.graph_sql' has no attribut
 E       AttributeError: module 'memoria_vault.runtime.graph_sql' has no attribute 'filter_ids'
 ```
 
-- [ ] **G.2.3 — minimal implementation.** In `src/memoria_vault/runtime/graph_sql.py`, extend the import block — old:
+- [x] **G.2.3 — minimal implementation.** In `src/memoria_vault/runtime/graph_sql.py`, extend the import block — old:
 
 ```python
 from memoria_vault.runtime import state
@@ -793,7 +816,7 @@ def filter_ids(
     return {"ids": kept, "counts": {"before": len(wanted), "after": len(kept)}}
 ```
 
-- [ ] **G.2.4 — run to green:**
+- [x] **G.2.4 — run to green:**
 
 ```bash
 python -m pytest tests/test_graph_sql.py -q
@@ -801,7 +824,7 @@ python -m pytest tests/test_graph_sql.py -q
 
   Expected: `14 passed` (verified against the shipped `state`/schema at 51395f15).
 
-- [ ] **G.2.5 — section-final gate:**
+- [x] **G.2.5 — section-final gate:**
 
 ```bash
 python scripts/verify
@@ -809,7 +832,7 @@ python scripts/verify
 
   Expected: green (lint, product gates, tests, offline smoke, syntax). The module and test file as written pass `ruff check` and `ruff format --check` under the repo config — verified at both the G.1 and G.2 stage boundaries.
 
-- [ ] **G.2.6 — commit (explicit paths):**
+- [x] **G.2.6 — commit (explicit paths):**
 
 ```bash
 git add src/memoria_vault/runtime/graph_sql.py tests/test_graph_sql.py
