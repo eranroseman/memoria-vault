@@ -3253,22 +3253,27 @@ def _evidence_items_sha256(items: Iterable[str]) -> str:
 
 
 def _disposed_evidence_digests(vault: Path) -> dict[str, str]:
-    """Map evidence dispositions to the items digest each one bound (spec §7)."""
+    """Map only latest accept dispositions to their bound items digest."""
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
             SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id,
+                   json_extract(payload_json, '$.decision') AS decision,
                    json_extract(payload_json, '$.items_sha256') AS items_sha256
             FROM event_log
             WHERE json_extract(payload_json, '$.operation') = 'resolve-evidence-review'
-              AND json_extract(payload_json, '$.decision') IN ('accept', 'reject')
             ORDER BY event_id
             """
         ).fetchall()
-    return {
-        str(row["evidence_id"]): str(row["items_sha256"])
+    latest = {
+        str(row["evidence_id"]): (str(row["decision"] or ""), row["items_sha256"])
         for row in rows
-        if row["evidence_id"] and row["items_sha256"]
+        if row["evidence_id"]
+    }
+    return {
+        evidence_id: str(items_sha256)
+        for evidence_id, (decision, items_sha256) in latest.items()
+        if decision == "accept" and items_sha256
     }
 
 

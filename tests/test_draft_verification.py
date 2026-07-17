@@ -379,6 +379,90 @@ def test_evidence_review_disposition_clears_draft_gate(tmp_path: Path) -> None:
     assert verification["findings"] == []
 
 
+def _compose_implicit_draft(vault: Path, *, body: str) -> str:
+    """Compose project-alpha around one checked note with no evidence items."""
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body=body,
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    return compose_project_draft(vault, "project-alpha")["evidence_markers"][0]["id"]
+
+
+def test_reject_disposition_keeps_export_hold(tmp_path: Path) -> None:
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="This rejected implicit claim must stay blocked."
+    )
+
+    resolve_evidence_review(
+        tmp_path,
+        evidence_id,
+        decision="reject",
+        reason="grounds do not support the claim",
+    )
+
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert "evidence-incomplete" in {finding["kind"] for finding in verification["findings"]}
+
+
+def test_reject_after_accept_reblocks_export(tmp_path: Path) -> None:
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="This claim was accepted, then the PI reversed."
+    )
+
+    resolve_evidence_review(tmp_path, evidence_id, decision="accept", reason="PI accepted")
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+
+    resolve_evidence_review(tmp_path, evidence_id, decision="reject", reason="PI reversed")
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+
+
+def test_accept_after_reject_clears_export_hold(tmp_path: Path) -> None:
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="This rejected claim was later accepted by the PI."
+    )
+
+    resolve_evidence_review(tmp_path, evidence_id, decision="reject", reason="PI rejected")
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is False
+
+    resolve_evidence_review(tmp_path, evidence_id, decision="accept", reason="PI accepted")
+
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+
+
+def test_latest_legacy_digestless_disposition_voids_prior_accept(tmp_path: Path) -> None:
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="A legacy disposition must not revive an older acceptance."
+    )
+
+    resolve_evidence_review(tmp_path, evidence_id, decision="accept", reason="PI accepted")
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+
+    append_explicit_journal_event(
+        tmp_path,
+        {
+            "event": "resolved",
+            "operation": "resolve-evidence-review",
+            "evidence_id": evidence_id,
+            "decision": "accept",
+            "reason": "legacy digestless acceptance",
+        },
+        actor="pi",
+        machine="test-machine",
+    )
+
+    assert evidence_id not in knowledge._disposed_evidence_digests(tmp_path)
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is False
+
+
 def test_evidence_items_digest_preserves_nonempty_item_order() -> None:
     items = ["source-alpha#^p0001", "source-beta#^p0002"]
 
@@ -477,7 +561,7 @@ def test_legacy_digestless_disposition_is_inert(tmp_path: Path) -> None:
     }
 
 
-def test_latest_digest_bound_reject_disposition_wins(tmp_path: Path) -> None:
+def test_latest_digest_bound_reject_disposition_reblocks_export(tmp_path: Path) -> None:
     vault = tmp_path
     _project(vault)
     write_checked_concept(
@@ -504,8 +588,8 @@ def test_latest_digest_bound_reject_disposition_wins(tmp_path: Path) -> None:
     second = resolve_evidence_review(vault, evidence_id, decision="reject", reason="PI rejected")
 
     assert second["items_sha256"] == hashlib.sha256(b"source-missing#^p0001").hexdigest()
-    assert knowledge._disposed_evidence_digests(vault)[evidence_id] == second["items_sha256"]
-    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    assert evidence_id not in knowledge._disposed_evidence_digests(vault)
+    assert verify_project_draft(vault, "project-alpha")["ready"] is False
 
     draft.write_text(
         draft.read_text(encoding="utf-8").replace(

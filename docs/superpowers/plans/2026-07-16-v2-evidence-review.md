@@ -228,7 +228,7 @@ latest disposition per id wins, and only `accept` clears.
 
 **Steps:**
 
-- [ ] Determine the S35.4 state — run:
+- [x] Determine the S35.4 state — run:
 
   ```
   grep -n "_disposed_evidence_digests\|_disposed_evidence_ids" src/memoria_vault/runtime/knowledge.py
@@ -239,7 +239,7 @@ latest disposition per id wins, and only `accept` clears.
   main steps but use the ids-form implementation given at the end of this
   task, and expect no `items_sha256` in journaled events until S35.4 lands.
 
-- [ ] Write the failing tests. In `tests/test_draft_verification.py`, append
+- [x] Write the failing tests. In `tests/test_draft_verification.py`, append
   after `_compose_source_backed_draft` (end of file):
 
   ```python
@@ -294,7 +294,24 @@ latest disposition per id wins, and only `accept` clears.
   `review_required=True` — `state.py:_derived_evidence_row` — so the surviving
   hold finding is `evidence-incomplete`.)
 
-- [ ] Run the tests to verify they fail against shipped behavior — this is the
+- [x] Reconcile the inherited S35.4 regression
+  `test_latest_digest_bound_reject_disposition_wins`: rename it to
+  `test_latest_digest_bound_reject_disposition_reblocks_export`, retain its
+  differing-items-digest setup, and assert that the late reject removes the id from
+  `_disposed_evidence_digests` and keeps verification unready. Its old assertion
+  that a digest-bound reject clears the gate encodes the superseded S35.4 contract;
+  the later restore-to-empty assertion remains unready because the latest event is
+  still reject.
+- [x] Add `test_accept_after_reject_clears_export_hold` alongside the two red
+  regressions, pinning the opposite latest-event transition: a later bound accept
+  reopens the normal accept-only clearance.
+- [x] Add `test_latest_legacy_digestless_disposition_voids_prior_accept`: after a
+  valid bound accept clears the gate, append a later legacy
+  `resolve-evidence-review` accept without `items_sha256` and assert the id is
+  absent from `_disposed_evidence_digests` and verification is unready. This pins
+  the required all-events-before-filtering, fail-closed ordering.
+
+- [x] Run the tests to verify they fail against shipped behavior — this is the
   proof that reject currently unblocks:
 
   ```
@@ -305,7 +322,7 @@ latest disposition per id wins, and only `accept` clears.
   `assert True is False` (the rejected id is suppressed and the draft reads
   export-ready).
 
-- [ ] Write the minimal implementation. **Digests form** — replace the body of
+- [x] Write the minimal implementation. **Digests form** — replace the body of
   `_disposed_evidence_digests` in `src/memoria_vault/runtime/knowledge.py`
   (locate by name) with:
 
@@ -376,7 +393,7 @@ latest disposition per id wins, and only `accept` clears.
   unchanged. When S35.4 later executes, its replacement must preserve this
   task's accept-only + latest-wins semantics (the two new tests pin it).
 
-- [ ] Run the tests to verify they pass, and that the existing disposition
+- [x] Run the tests to verify they pass, and that the existing disposition
   tests still hold (accept still clears; drift still overrides):
 
   ```
@@ -387,7 +404,7 @@ latest disposition per id wins, and only `accept` clears.
   `test_evidence_review_disposition_clears_draft_gate` and
   `test_draft_text_drift_overrides_pi_disposition_and_refuses_export`.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
