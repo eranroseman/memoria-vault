@@ -138,6 +138,27 @@ def test_draft_export_refuses_unresolved_citation_naming_the_finding(
         write_project_export(vault, "project-alpha", draft=True)
 
 
+def test_draft_export_ignores_literal_fenced_marker_outside_direct_claims(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _catalog_source(vault, "source-literal", doi="10.1000/literal")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip()
+        + "\n\n```text\nliteral %%ev: ev-12345678 items=source-literal#^p0001%%\n```\n",
+        encoding="utf-8",
+    )
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    exported = write_project_export(vault, "project-alpha", draft=True)
+
+    assert "[@safe2026]" in exported["content"]
+    assert "source-literal" not in exported["content"]
+
+
 @pytest.mark.parametrize(
     "citekey",
     ["foo,bar", "foo;bar", "foo]bar", "unsafe\n```bibtex", "unsafe`key"],
@@ -242,6 +263,38 @@ def test_draft_export_refuses_unterminated_body_code_fence(tmp_path: Path, fence
     _source_backed_draft(vault)
     draft_path = vault / "projects/project-alpha/draft.md"
     draft_path.write_text(draft_path.read_text(encoding="utf-8").rstrip() + f"\n\n{fence}\n")
+
+    with pytest.raises(ValueError, match="unterminated-code-fence"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_draft_export_refuses_fence_created_by_rendered_body_trimming(tmp_path: Path) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").replace("\n---\n\n", "\n---\n\n    ```\n", 1),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="unterminated-code-fence"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_draft_export_refuses_fence_exposed_by_anchor_removal_and_unicode_trim(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").replace(
+            "\n---\n\n", "\n---\n\n\N{NO-BREAK SPACE} ^blk-rendered-away\n    ```\n", 1
+        ),
+        encoding="utf-8",
+    )
 
     with pytest.raises(ValueError, match="unterminated-code-fence"):
         write_project_export(vault, "project-alpha", draft=True)

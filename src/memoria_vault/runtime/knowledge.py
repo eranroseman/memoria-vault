@@ -2640,9 +2640,10 @@ def render_project_draft_export_markdown(
         labels = ", ".join(f"unresolved-citation:{work_id}" for work_id in unresolved)
         raise ValueError(f"project draft is not export-ready: {labels}")
     _frontmatter, body = split_frontmatter(draft["content"])
-    if has_unterminated_fenced_code_block(body):
+    rendered_body = _render_draft_export_body(vault, body).strip()
+    if has_unterminated_fenced_code_block(rendered_body):
         raise ValueError("project draft is not export-ready: unterminated-code-fence")
-    lines = [_render_draft_export_body(vault, body).strip(), ""]
+    lines = [rendered_body, ""]
     _append_draft_export_references(lines, vault)
     content = neutralize_untrusted_markdown("\n".join(lines).rstrip() + "\n")
     return {
@@ -2767,12 +2768,11 @@ def _draft_citekeys(vault: Path) -> dict[str, str]:
 
 
 def _draft_unresolved_citations(vault: Path, content: str) -> list[str]:
-    from memoria_vault.runtime.evidence import parse_evidence_marker, parse_source_span_ref
+    from memoria_vault.runtime.evidence import parse_source_span_ref
 
     citekeys = _draft_citekeys(vault)
     unresolved = set()
-    for match in re.finditer(r"%%ev:\s*.*?%%", content):
-        marker = parse_evidence_marker(match.group(0).strip())
+    for marker in state.evidence_markers_from_markdown(content):
         for item in marker.items:
             try:
                 source = parse_source_span_ref(item)
