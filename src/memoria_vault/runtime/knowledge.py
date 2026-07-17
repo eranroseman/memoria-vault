@@ -2283,6 +2283,7 @@ def resolve_evidence_review(
     machine: str,
     decision: str,
     reason: str = "",
+    warrant: str = "",
 ) -> dict[str, Any]:
     """Record a PI disposition for one evidence-set review item."""
     if actor != "pi":
@@ -2293,6 +2294,9 @@ def resolve_evidence_review(
         raise ValueError(f"invalid evidence id: {evidence_id}")
     if decision not in {"accept", "reject", "edit", "defer"}:
         raise ValueError("evidence review decision must be accept, reject, edit, or defer")
+    warrant = warrant.strip()
+    if warrant and decision != "accept":
+        raise ValueError("warrant text rides only the accept decision")
     record = next(
         (row for row in state.evidence_sets(Path(vault)) if row["id"] == evidence_id),
         None,
@@ -2307,6 +2311,8 @@ def resolve_evidence_review(
         "reason": reason.strip(),
         "items_sha256": _evidence_items_sha256(record["items"]),
     }
+    if warrant:
+        event["warrant"] = warrant
     if decision == "defer":
         event["timestamp"] = now_iso()
         event["suppressed_until"] = _defer_suppressed_until(event["timestamp"])

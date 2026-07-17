@@ -811,7 +811,7 @@ edge — both out of scope here).
 
 **Steps:**
 
-- [ ] Write the failing seam tests — append to `tests/test_draft_verification.py`:
+- [x] Write the failing seam tests — append to `tests/test_draft_verification.py`:
 
   ```python
   def test_accept_disposition_journals_optional_warrant(tmp_path: Path) -> None:
@@ -847,7 +847,7 @@ edge — both out of scope here).
           )
   ```
 
-- [ ] Run the tests to verify they fail:
+- [x] Run the tests to verify they fail:
 
   ```
   python -m pytest tests/test_draft_verification.py -v -k "optional_warrant or warrant_refused"
@@ -856,7 +856,7 @@ edge — both out of scope here).
   Expected: both ERROR with
   `TypeError: resolve_evidence_review() got an unexpected keyword argument 'warrant'`.
 
-- [ ] Write the minimal seam implementation in
+- [x] Write the minimal seam implementation in
   `src/memoria_vault/runtime/knowledge.py`:
 
   (a) Add `warrant: str = ""` to the signature after `reason: str = ""`.
@@ -876,7 +876,7 @@ edge — both out of scope here).
           event["warrant"] = warrant
   ```
 
-- [ ] Run the seam tests to verify they pass:
+- [x] Run the seam tests to verify they pass:
 
   ```
   python -m pytest tests/test_draft_verification.py -v
@@ -884,7 +884,7 @@ edge — both out of scope here).
 
   Expected: all pass.
 
-- [ ] Write the failing CLI test — append to `tests/test_cli_work_project.py`:
+- [x] Write the failing CLI test — append to `tests/test_cli_work_project.py`:
 
   ```python
   def test_cli_project_resolve_evidence_accept_carries_warrant(
@@ -943,7 +943,7 @@ edge — both out of scope here).
       assert accepted["event"]["warrant"] == "Spans jointly entail the claim."
   ```
 
-- [ ] Run the CLI test to verify it fails:
+- [x] Run the CLI test to verify it fails:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_accept_carries_warrant -v
@@ -952,7 +952,7 @@ edge — both out of scope here).
   Expected: ERROR with `SystemExit: 2` — argparse:
   `unrecognized arguments: --warrant`.
 
-- [ ] Write the minimal CLI implementation in `src/memoria_vault/cli.py`:
+- [x] Write the minimal CLI implementation in `src/memoria_vault/cli.py`:
 
   (a) After `resolve_evidence.add_argument("--reason", default="")` (`:333`) add:
 
@@ -967,7 +967,7 @@ edge — both out of scope here).
           warrant=args.warrant,
   ```
 
-- [ ] Run the CLI test to verify it passes:
+- [x] Run the CLI test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_accept_carries_warrant -v
@@ -975,7 +975,7 @@ edge — both out of scope here).
 
   Expected: PASSED.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_draft_verification.py tests/test_cli_work_project.py

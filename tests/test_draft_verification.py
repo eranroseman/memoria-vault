@@ -534,6 +534,40 @@ def test_unknown_decision_names_all_four(tmp_path: Path) -> None:
         resolve_evidence_review(tmp_path, evidence_id, decision="override", reason="nope")
 
 
+def test_accept_disposition_journals_optional_warrant(tmp_path: Path) -> None:
+    vault = tmp_path
+    evidence_id = _compose_implicit_draft(
+        vault, body="This accepted claim carries a stated warrant."
+    )
+
+    event = resolve_evidence_review(
+        vault,
+        evidence_id,
+        decision="accept",
+        reason="PI accepted",
+        warrant="The cited spans jointly entail the claim.",
+    )
+    bare = resolve_evidence_review(vault, evidence_id, decision="accept", reason="again")
+
+    assert event["warrant"] == "The cited spans jointly entail the claim."
+    assert "warrant" not in bare
+
+
+@pytest.mark.parametrize("decision", ["reject", "edit", "defer"])
+def test_warrant_refused_on_non_accept_decisions(tmp_path: Path, decision: str) -> None:
+    vault = tmp_path
+    evidence_id = _compose_implicit_draft(vault, body="A warrant cannot ride a rejection.")
+
+    with pytest.raises(ValueError, match="warrant text rides only the accept decision"):
+        resolve_evidence_review(
+            vault,
+            evidence_id,
+            decision=decision,
+            reason="no",
+            warrant="This should be refused.",
+        )
+
+
 def test_evidence_items_digest_preserves_nonempty_item_order() -> None:
     items = ["source-alpha#^p0001", "source-beta#^p0002"]
 

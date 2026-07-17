@@ -1019,6 +1019,62 @@ def test_cli_project_resolve_evidence_supports_defer_and_edit(
     assert edited["event"]["edit_target"]["draft_path"] == "projects/project-alpha/draft.md"
 
 
+def test_cli_project_resolve_evidence_accept_carries_warrant(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+    (workspace / "projects/project-alpha/outline.md").write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 -- Support\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "project",
+                "compose",
+                "--workspace",
+                str(workspace),
+                "project-alpha",
+                "--json",
+                "--idempotency-key",
+                "compose-for-warrant",
+            ]
+        )
+        == 0
+    )
+    composed = json.loads(capsys.readouterr().out)
+    evidence_id = composed["result"]["evidence_markers"][0]["id"]
+
+    rc = main(
+        [
+            "project",
+            "resolve-evidence",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--evidence-id",
+            evidence_id,
+            "--decision",
+            "accept",
+            "--reason",
+            "reviewed",
+            "--warrant",
+            "Spans jointly entail the claim.",
+            "--json",
+            "--idempotency-key",
+            "verify-for-warrant",
+        ]
+    )
+    accepted = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert accepted["ok"] is True
+    assert accepted["event"]["warrant"] == "Spans jointly entail the claim."
+
+
 def test_cli_new_note_check_and_link_flow(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

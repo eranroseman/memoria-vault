@@ -346,6 +346,7 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
         "--decision", choices=("accept", "reject", "edit", "defer"), required=True
     )
     resolve_evidence.add_argument("--reason", default="")
+    resolve_evidence.add_argument("--warrant", default="")
     resolve_evidence.set_defaults(handler=_cmd_project_resolve_evidence)
     promote = project_sub.add_parser("promote")
     _common(promote)
@@ -1281,6 +1282,7 @@ def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
         args.evidence_id,
         decision=args.decision,
         reason=args.reason,
+        warrant=args.warrant,
         actor=args.actor,
         machine="memoria-cli",
     )
