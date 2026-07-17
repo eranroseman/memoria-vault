@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import sqlite3
 from dataclasses import replace
 from datetime import timedelta
@@ -485,15 +486,31 @@ def test_defer_disposition_uses_utc_day_at_offset_boundary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     timestamp = "2026-07-17T23:30:00-02:00"
-    monkeypatch.setattr(knowledge, "now_iso", lambda: timestamp)
     evidence_id = _compose_implicit_draft(
         tmp_path, body="This deferred claim crosses a UTC-day boundary."
     )
+    calls = 0
+
+    def now_once() -> str:
+        nonlocal calls
+        calls += 1
+        if calls > 1:
+            raise AssertionError("one disposition action must use one timestamp")
+        return timestamp
+
+    monkeypatch.setattr(knowledge, "now_iso", now_once)
 
     event = resolve_evidence_review(tmp_path, evidence_id, decision="defer", reason="revisit")
 
+    with state.connect(tmp_path) as conn:
+        disposition = conn.execute(
+            "SELECT payload_json FROM event_log WHERE event_type = 'disposition'"
+        ).fetchone()
+
+    assert calls == 1
     assert event["timestamp"] == timestamp
     assert event["suppressed_until"] == "2026-07-19T00:00:00Z"
+    assert json.loads(disposition["payload_json"])["timestamp"] == timestamp
 
 
 def test_edit_disposition_records_deep_link_and_keeps_hold(tmp_path: Path) -> None:
@@ -1830,3 +1847,65 @@ def _compose_source_backed_draft(vault: Path, *, body: str) -> tuple[Path, str]:
         vault / "projects/project-alpha/draft.md",
         composed["evidence_markers"][0]["id"],
     )
+
+
+def test_every_disposition_emits_disposition_v1_event(tmp_path: Path) -> None:
+    vault = tmp_path
+    evidence_id = _compose_implicit_draft(
+        vault, body="Each seam action lands one disposition.v1 event."
+    )
+
+    for decision in ("defer", "edit", "reject", "accept"):
+        resolve_evidence_review(
+            vault, evidence_id, decision=decision, reason=f"PI chose {decision}"
+        )
+
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT payload_json FROM event_log WHERE event_type = 'disposition' ORDER BY event_id"
+        ).fetchall()
+    payloads = [json.loads(row["payload_json"]) for row in rows]
+
+    assert [payload["decision"] for payload in payloads] == [
+        "defer",
+        "edit",
+        "reject",
+        "accept",
+    ]
+    assert {payload["schema"] for payload in payloads} == {"disposition.v1"}
+    assert {payload["item_type"] for payload in payloads} == {"evidence-set"}
+    assert {payload["item_id"] for payload in payloads} == {evidence_id}
+
+    with state.connect(vault) as conn:
+        paired_rows = conn.execute(
+            """
+            SELECT event_type, timestamp, machine, payload_json
+            FROM event_log
+            WHERE event_type IN ('resolved', 'disposition')
+            ORDER BY event_id
+            """
+        ).fetchall()
+
+    assert len(paired_rows) == 8
+    for decision, offset in zip(("defer", "edit", "reject", "accept"), range(0, 8, 2), strict=True):
+        resolved, disposition = paired_rows[offset : offset + 2]
+        resolved_payload = json.loads(resolved["payload_json"])
+        disposition_payload = json.loads(disposition["payload_json"])
+
+        assert [resolved["event_type"], disposition["event_type"]] == ["resolved", "disposition"]
+        assert resolved["timestamp"] == disposition["timestamp"]
+        assert resolved_payload["timestamp"] == disposition_payload["timestamp"]
+        assert resolved_payload["timestamp"] == resolved["timestamp"]
+        assert [resolved_payload["decision"], disposition_payload["decision"]] == [
+            decision,
+            decision,
+        ]
+        assert [resolved_payload["actor"], disposition_payload["actor"]] == ["pi", "pi"]
+        assert [resolved_payload["machine"], disposition_payload["machine"]] == [
+            "test-machine",
+            "test-machine",
+        ]
+        assert [resolved["machine"], disposition["machine"]] == [
+            "test-machine",
+            "test-machine",
+        ]

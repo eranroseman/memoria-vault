@@ -262,6 +262,51 @@ def rebuild_evidence_sets_and_journal_mints(
     return rebuild
 
 
+def append_explicit_event_batch(
+    vault: Path,
+    events: Iterable[Mapping[str, Any]],
+    *,
+    actor: str,
+    machine: str,
+) -> list[dict[str, Any]]:
+    """Append explicit-provenance events as one authoritative journal batch."""
+    if not isinstance(actor, str) or actor not in state.ACTORS:
+        raise ValueError(f"journal actor must be one of {sorted(state.ACTORS)}")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("journal machine must be a nonblank string")
+    machine_name = safe_filename(machine)
+    rows = [
+        _prepare_explicit_journal_event(event, actor=actor, machine_name=machine_name)
+        for event in events
+    ]
+    if not rows:
+        return []
+    vault = Path(vault)
+    with state.workspace_lock(vault):
+        if _has_unterminated_journal_export_tail(vault):
+            reconcile_journal_export(vault)
+        with state.connect(vault) as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            for row in rows:
+                state._insert_journal_row_conn(conn, row, machine=machine_name)
+        state.write_journal_head_anchor(vault)
+        append_jsonl(_journal_path(vault, machine_name), rows)
+    return rows
+
+
+def _prepare_explicit_journal_event(
+    event: Mapping[str, Any], *, actor: str, machine_name: str
+) -> dict[str, Any]:
+    """Decorate one explicit-provenance event before batch persistence."""
+    row = dict(event)
+    for key, expected in (("actor", actor), ("machine", machine_name)):
+        if key in row and row[key] != expected:
+            raise ValueError(f"journal event {key} conflicts with explicit provenance")
+        row[key] = expected
+    row.setdefault("timestamp", now_iso())
+    return row
+
+
 def append_explicit_journal_event(
     vault: Path,
     event: Mapping[str, Any],
@@ -269,19 +314,8 @@ def append_explicit_journal_event(
     actor: str,
     machine: str,
 ) -> dict[str, Any]:
-    """Append an event created outside an operation envelope."""
-    if not isinstance(actor, str) or actor not in state.ACTORS:
-        raise ValueError(f"journal actor must be one of {sorted(state.ACTORS)}")
-    if not isinstance(machine, str) or not machine.strip():
-        raise ValueError("journal machine must be a nonblank string")
-    machine_name = safe_filename(machine)
-    row = dict(event)
-    for key, expected in (("actor", actor), ("machine", machine_name)):
-        if key in row and row[key] != expected:
-            raise ValueError(f"journal event {key} conflicts with explicit provenance")
-        row[key] = expected
-    row.setdefault("timestamp", now_iso())
-    _append_decorated_event(Path(vault), row, machine=machine_name)
+    """Append one event created outside an operation envelope."""
+    (row,) = append_explicit_event_batch(vault, [event], actor=actor, machine=machine)
     return row
 
 

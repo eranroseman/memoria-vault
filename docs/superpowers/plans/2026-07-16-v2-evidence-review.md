@@ -18,7 +18,11 @@
 
 1. **The queue row shape** (V2R-B produces, C and D consume): evidence-set rows carry `evidence_id, claim_text, items, item_count, routing, routing_reason, reviewable, cure, project, age_days, latest_decision, warrant, analysis`. B's `evidence_review.assemble_evidence_review_queue(...)` is the pure assembler. `engine_api.read_evidence_review_queue(...)` is the single engine-direct collector/projection for the CLI (no HTTP — keep-test); `engine_api.read_evidence_review_view(...)` consumes that same collector for the view. SRD-gap cards are view-only and never enter the CLI DTO.
 2. **Age facet naming:** `min_age_days` everywhere — B's param, C's flag `--min-age-days`, the endpoint's query param. (C's drafted `--max-age-days` is superseded.)
-3. **Disposition emission:** V2R-A's `emit_explicit_disposition_event(...)` is the one helper for the keep-test path (the context-bound `emit_disposition_event` requires a running request the CLI lacks). C's contract line naming `operations.py:146` is superseded by A's actual Produces.
+3. **Disposition emission:** V2R-A's `build_disposition_event(...)` is the
+   shared validated payload builder. The keep-test seam batches that payload
+   atomically with its resolved row; `emit_explicit_disposition_event(...)` is
+   the standalone explicit-provenance convenience. C's contract line naming
+   `operations.py:146` is superseded by A's actual Produces.
 4. **The reject flip is owned by V2R-A.1** (only accept clears; latest-event-wins; written against `_disposed_evidence_digests` with the ids-form variant). B's queue applies the same accept-only rule independently in its pure logic (consistent by contract, tested in both). D.5's xfail ordering note reads "pre-V2R-A", not pre-V2R-B.
 5. **`resolve-evidence` worker operation** (V2R-D.1, resolving the declared SPEC GAP) is a thin wrapper over A's seam — one implementation, PI-protected, floor-listed as refused; the pane's four buttons enqueue it via SEAM.1's `actor="pi"` door; the CLI never uses it.
 6. **View envelope:** B follows the surfaces plan's binding contract 3 exactly: `{ok: true, api_version: "engine-read-api.v1", view: {version: "view-spec.v1", kind, blocks}, facets}`. Flat `spec`/`blocks` payloads are superseded; repair U3 before beginning B if it does not meet this contract.
@@ -57,9 +61,10 @@ execute a superseded snippet merely because it remains below as drafting history
    the B.3/B.4/B.5 tests to assert that nested shape and remove their assertions of
    flat block sequences or absent action rows. View-only SRD-gap cards append after
    these cards and never enter the CLI DTO.
-4. **One seam owner:** V2R-A.1–A.4 own the four decisions, warrant semantics, reject
-   flip, and `emit_explicit_disposition_event`. B reads the resulting events; C calls
-   `resolve_evidence_review` directly; D.1 is only its PI-protected worker wrapper.
+4. **One seam owner:** V2R-A.1–A.4 own the four decisions, warrant semantics,
+   reject flip, and atomic disposition emission. B reads the resulting events;
+   C calls `resolve_evidence_review` directly; D.1 is only its PI-protected
+   worker wrapper.
    Replace every remaining “V2R-B owns the flip”, “V2R-C owns the flip”,
    `emit_disposition_event`, `V2R-E`, and pre-V2R-B ordering reference with that
    ownership model.
@@ -174,10 +179,11 @@ re-render belongs to the view/queue sections).
   never suppress findings.
 - Every disposition additionally lands one `disposition.v1` journal event
   (`event_type = "disposition"`) with `item_type="evidence-set"`,
-  `item_id=<ev-id>`, `decision` mapped 1:1 — emitted through
-  `emit_explicit_disposition_event(vault: Path, *, decision: str, item_type:
-  str, item_id: str, actor: str, machine: str) -> dict[str, Any]`
-  (new, `runtime/operations.py`).
+  `item_id=<ev-id>`, `decision` mapped 1:1. `build_disposition_event(...)`
+  validates its payload; the seam persists it atomically with the resolved row
+  through `append_explicit_event_batch(...)`. The standalone
+  `emit_explicit_disposition_event(...)` remains available for independent
+  explicit-provenance events.
 - CLI: `memoria project resolve-evidence --decision
   {accept,reject,edit,defer} [--warrant TEXT]`.
 
@@ -1001,31 +1007,49 @@ constant, and event shape. The closed `DECISIONS` enum
 validator is unchanged, exactly as the spec states.
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/operations.py` — extend the
-  `trusted_writer` import block (`:25-34`) with
-  `append_explicit_journal_event`; add `emit_explicit_disposition_event`
-  immediately after `emit_disposition_event` (`:146-164`).
-- Modify: `src/memoria_vault/runtime/knowledge.py` — extend the existing
-  module-level `from memoria_vault.runtime.operations import (...)` block
-  (`:25-29`; no cycle — operations does not import knowledge); call site at
-  the tail of `resolve_evidence_review`.
-- Modify: `tests/test_draft_verification.py` (imports `:1-25`; one new test).
+- Modify: `src/memoria_vault/runtime/trusted_writer.py` — add
+  `append_explicit_event_batch`, with the existing singular API delegating
+  to it.
+- Modify: `src/memoria_vault/runtime/operations.py` — add the pure
+  `build_disposition_event` payload builder and
+  `emit_explicit_disposition_event`; keep the existing context-bound emitter
+  delegating to the same builder.
+- Modify: `src/memoria_vault/runtime/knowledge.py` — batch the resolved row
+  with the disposition row using one timestamp (operations does not import
+  knowledge, so no cycle).
+- Modify: `tests/test_draft_verification.py`, `tests/test_journal_trust.py`,
+  `tests/test_operation_context.py`, `tests/test_operations.py`.
 
 **Interfaces:**
 - Consumes: `validate_disposition_event(payload) -> dict[str, Any]` and
   `DISPOSITION_EVENT_SCHEMA = "disposition.v1"`
   (`engine/empirical_events.py:13,148`);
-  `append_explicit_journal_event(vault, event, *, actor, machine)`
-  (`trusted_writer.py:215-236`).
+  `state._insert_journal_row_conn` and `append_jsonl` through the
+  explicit-provenance writer.
 - Produces: `emit_explicit_disposition_event(vault: Path, *, decision: str,
   item_type: str, item_id: str, actor: str, machine: str) -> dict[str, Any]`
-  (`runtime/operations.py`, public); `resolve_evidence_review` emits one
-  `disposition.v1` event (journal `event_type = "disposition"`) per action in
-  addition to its `resolve-evidence-review` event, and returns the latter.
+  and `append_explicit_event_batch(vault: Path, events:
+  Iterable[Mapping[str, Any]], *, actor: str, machine: str) -> list[dict[str,
+  Any]]`; `resolve_evidence_review` persists exactly one resolved row and one
+  `disposition.v1` row per action in one batch, then returns the resolved row.
+
+> **Adopted review amendment (2026-07-17):** The resolved row and its required
+> `disposition.v1` companion are one logical action, so they must not be
+> independently committed. Add an explicit-provenance batch append helper in
+> `trusted_writer` that validates/decorates every row before a single
+> workspace-lock / SQLite transaction, inserts all rows through
+> `state._insert_journal_row_conn`, writes one head anchor, then exports the
+> complete batch to JSONL. Keep `append_explicit_journal_event` as the
+> single-row delegation. Build and validate the disposition payload before the
+> batch; a failure on the second database insert rolls back both rows. Give the
+> resolved row and disposition row one shared `timestamp`, and derive defer's
+> `suppressed_until` from that same timestamp. A post-commit JSONL failure may
+> leave the paired authoritative DB rows for normal reconciliation, matching
+> the existing DB-first export contract.
 
 **Steps:**
 
-- [ ] Write the failing test. In `tests/test_draft_verification.py`, add
+- [x] Write the failing test. In `tests/test_draft_verification.py`, add
   `import json` after `from datetime import timedelta`, then append:
 
   ```python
@@ -1057,7 +1081,7 @@ validator is unchanged, exactly as the spec states.
       assert {payload["item_id"] for payload in payloads} == {evidence_id}
   ```
 
-- [ ] Run the test to verify it fails:
+- [x] Run the test to verify it fails:
 
   ```
   python -m pytest tests/test_draft_verification.py::test_every_disposition_emits_disposition_v1_event -v
@@ -1066,65 +1090,40 @@ validator is unchanged, exactly as the spec states.
   Expected: FAILS at the first assert with `[] == ['defer', 'edit', 'reject',
   'accept']` — no `disposition` events exist.
 
-- [ ] Write the minimal implementation.
+- [x] Review amendment — write failing batch tests. Add a second-insert fault
+  to prove both rows roll back, a JSONL-export fault to prove both
+  authoritative rows and the anchor survive for reconciliation, a one-export
+  assertion, a later-row provenance conflict asserting no mutation, and a
+  shared-timestamp assertion that fails if `knowledge.now_iso` is called twice
+  for one disposition action.
 
-  (a) In `src/memoria_vault/runtime/operations.py`, add
-  `append_explicit_journal_event,` to the `from
-  memoria_vault.runtime.trusted_writer import (...)` block (alphabetical,
-  before `append_journal_event`), then insert after `emit_disposition_event`:
+- [x] Run the amended tests to verify they fail before the batch API exists.
 
-  ```python
-  def emit_explicit_disposition_event(
-      vault: Path,
-      *,
-      decision: str,
-      item_type: str,
-      item_id: str,
-      actor: str,
-      machine: str,
-  ) -> dict[str, Any]:
-      """Append one disposition.v1 event created outside an operation envelope."""
-      from memoria_vault.engine.empirical_events import (
-          DISPOSITION_EVENT_SCHEMA,
-          validate_disposition_event,
-      )
+- [x] Write the minimal implementation.
 
-      event = validate_disposition_event(
-          {"decision": decision, "item_type": item_type, "item_id": item_id}
-      )
-      journal_event = {"event": "disposition", "schema": DISPOSITION_EVENT_SCHEMA, **event}
-      return append_explicit_journal_event(vault, journal_event, actor=actor, machine=machine)
-  ```
+  (a) In `trusted_writer.py`, make
+  `append_explicit_event_batch(vault, events, *, actor, machine)` validate
+  actor/machine, normalize the machine once, and decorate **all** rows before
+  acquiring the lock. Under one `state.workspace_lock`, reconcile an existing
+  export tail, open one `state.connect` transaction with `BEGIN IMMEDIATE`,
+  loop `state._insert_journal_row_conn`, then—only after the transaction has
+  committed—write the anchor and call `append_jsonl` once with the complete
+  row list. Let `append_explicit_journal_event` delegate to this API with a
+  singleton list.
 
-  (b) In `src/memoria_vault/runtime/knowledge.py`, add
-  `emit_explicit_disposition_event,` to the module-level `from
-  memoria_vault.runtime.operations import (...)` block (`:25-29`,
-  alphabetical), and replace `resolve_evidence_review`'s tail
+  (b) In `operations.py`, factor the schema validation into
+  `build_disposition_event(decision, item_type, item_id)`, returning
+  `{event: "disposition", schema: "disposition.v1", ...}`. Both the
+  context-bound and explicit single-event emitters delegate to that builder.
 
-  ```python
-      return append_explicit_journal_event(Path(vault), event, actor=actor, machine=machine)
-  ```
+  (c) In `knowledge.py`, call `now_iso()` once after record lookup, attach
+  that timestamp to the resolved event and its validated disposition payload,
+  derive defer's `suppressed_until` from it, and persist `[resolved,
+  disposition]` through the batch API. Return the first row. The clearance
+  reader still filters on `payload.operation = 'resolve-evidence-review'`, so
+  the companion event never pollutes hold-clearing.
 
-  with:
-
-  ```python
-      row = append_explicit_journal_event(Path(vault), event, actor=actor, machine=machine)
-      emit_explicit_disposition_event(
-          Path(vault),
-          decision=decision,
-          item_type="evidence-set",
-          item_id=evidence_id,
-          actor=actor,
-          machine=machine,
-      )
-      return row
-  ```
-
-  (The `_disposed_evidence_digests` query filters on
-  `payload.operation = 'resolve-evidence-review'`, so the additional
-  `disposition` events never pollute hold-clearing.)
-
-- [ ] Run the full seam and CLI suites to verify everything passes:
+- [x] Run the full seam and CLI suites to verify everything passes:
 
   ```
   python -m pytest tests/test_draft_verification.py tests/test_cli_work_project.py -v
@@ -1132,7 +1131,7 @@ validator is unchanged, exactly as the spec states.
 
   Expected: all pass.
 
-- [ ] Run the repo gate:
+- [x] Run the repo gate:
 
   ```
   python scripts/verify
@@ -1141,11 +1140,11 @@ validator is unchanged, exactly as the spec states.
   Expected: green. If a floor golden reports drift here, see the golden note
   below before touching anything.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
-  git add src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
-  git commit -m "feat(evidence): every resolve-evidence action emits disposition.v1" -m "Adds emit_explicit_disposition_event (explicit-provenance twin of the resolve-attention seam's helper - same validator, schema, and event shape; the context-bound writer requires a bound running request the keep-test CLI path does not have). item_type=evidence-set, item_id=ev-id, decision mapped 1:1; DECISIONS already holds all four, validator unchanged." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+  git add src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py tests/test_journal_trust.py tests/test_operation_context.py tests/test_operations.py docs/superpowers/plans/2026-07-16-v2-evidence-review.md
+  git commit -m "feat(evidence): atomically journal evidence dispositions" -m "Each resolve-evidence action now persists its resolved row and disposition.v1 companion in one explicit-provenance batch with a shared timestamp. The batch validates every row before its transaction, rolls back together on an insert failure, and preserves paired authoritative rows for JSONL reconciliation after an export failure."
   ```
 
 ---
@@ -1178,7 +1177,7 @@ shift lines). Governing spec: §1 (queue union), §2 (honesty-card row schema), 
 **slice 1** of spec §9: queue assembly, the row payload, and the faceted endpoint.
 It emits **no** journal events and changes **no** seam behavior — dispositions are
 *read*, never written, here. V2R-A.1–A.4 own the four-decision seam, reject flip,
-warrant behavior, and `emit_explicit_disposition_event`; B only applies the same
+warrant behavior, and atomic disposition batching; B only applies the same
 accept-only clearing rule in its pure read model.
 
 ## Execution-order dependencies (cross-plan facts)
@@ -3377,9 +3376,9 @@ the S35.4 grep decision) V2R-D.1 → V2R-B → V2R-C.**
    `evidence_id`, `decision`, `reason`, `items_sha256` (S35.4), `warrant` (accept only;
    raises `ValueError` when warrant text rides a non-accept decision), raises
    `ValueError("unknown evidence id: …")` for ids with no evidence-set record (S35.4),
-   and emits one `disposition.v1` event per action via
-   `emit_explicit_disposition_event`
-   with `item_type="evidence-set"`, `item_id=ev-<8hex>`.
+   and atomically batches one `disposition.v1` companion per action, built by
+   `build_disposition_event`, with `item_type="evidence-set"`,
+   `item_id=ev-<8hex>`.
 
 3. **From Plan 22 S35.4** (`docs/superpowers/plans/2026-07-15-alpha22-substrate-trust.md`):
    `_disposed_evidence_ids` (`knowledge.py:3241-3251` on main) is REPLACED by
@@ -4871,9 +4870,9 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
 3. **After V2R-A** — the extended seam
    `resolve_evidence_review(vault, evidence_id, *, actor, machine, decision, reason="", warrant="")`
    with the four decisions (`accept`/`reject`/`edit`/`defer`), the **reject flip**
-   (only `accept` clears holds), and per-action `disposition.v1` emission through
-   `emit_explicit_disposition_event`. V2R-A owns this seam; D.1 wraps it, and D.5's
-   reject test requires V2R-A rather than V2R-B.
+   (only `accept` clears holds), and per-action atomic `disposition.v1`
+   emission. V2R-A owns this seam; D.1 wraps it, and D.5's reject test requires
+   V2R-A rather than V2R-B.
 
 ## SPEC GAPs (decisions made here, one line each)
 

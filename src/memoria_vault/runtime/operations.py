@@ -24,6 +24,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
+    append_explicit_journal_event,
     append_journal_event,
     commit_writer_changes,
     materialize_unchecked,
@@ -143,6 +144,24 @@ def record_empirical_event(
     }
 
 
+def build_disposition_event(
+    *,
+    decision: str,
+    item_type: str,
+    item_id: str,
+) -> dict[str, Any]:
+    """Build one validated server-side disposition journal payload."""
+    from memoria_vault.engine.empirical_events import (
+        DISPOSITION_EVENT_SCHEMA,
+        validate_disposition_event,
+    )
+
+    event = validate_disposition_event(
+        {"decision": decision, "item_type": item_type, "item_id": item_id}
+    )
+    return {"event": "disposition", "schema": DISPOSITION_EVENT_SCHEMA, **event}
+
+
 def emit_disposition_event(
     vault: Path,
     *,
@@ -152,16 +171,37 @@ def emit_disposition_event(
     context: OperationContext,
 ) -> dict[str, Any]:
     """Append one honest server-side disposition event to the journal."""
-    from memoria_vault.engine.empirical_events import (
-        DISPOSITION_EVENT_SCHEMA,
-        validate_disposition_event,
+    return append_journal_event(
+        vault,
+        build_disposition_event(
+            decision=decision,
+            item_type=item_type,
+            item_id=item_id,
+        ),
+        context=context,
     )
 
-    event = validate_disposition_event(
-        {"decision": decision, "item_type": item_type, "item_id": item_id}
+
+def emit_explicit_disposition_event(
+    vault: Path,
+    *,
+    decision: str,
+    item_type: str,
+    item_id: str,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
+    """Append one explicit-provenance disposition event to the journal."""
+    return append_explicit_journal_event(
+        vault,
+        build_disposition_event(
+            decision=decision,
+            item_type=item_type,
+            item_id=item_id,
+        ),
+        actor=actor,
+        machine=machine,
     )
-    journal_event = {"event": "disposition", "schema": DISPOSITION_EVENT_SCHEMA, **event}
-    return append_journal_event(vault, journal_event, context=context)
 
 
 def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict[str, Any]:

@@ -23,6 +23,7 @@ from memoria_vault.runtime.content_security import (
     neutralize_untrusted_markdown_fragment,
 )
 from memoria_vault.runtime.operations import (
+    build_disposition_event,
     load_operation_policy,
     required_promotion_checks,
     resolve_operation_runner,
@@ -35,7 +36,7 @@ from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
-    append_explicit_journal_event,
+    append_explicit_event_batch,
     append_journal_event,
     commit_writer_changes,
     mark_checked,
@@ -2303,6 +2304,7 @@ def resolve_evidence_review(
     )
     if record is None:
         raise ValueError(f"unknown evidence id: {evidence_id}")
+    timestamp = now_iso()
     event: dict[str, Any] = {
         "event": "resolved",
         "operation": "resolve-evidence-review",
@@ -2310,19 +2312,31 @@ def resolve_evidence_review(
         "decision": decision,
         "reason": reason.strip(),
         "items_sha256": _evidence_items_sha256(record["items"]),
+        "timestamp": timestamp,
     }
     if warrant:
         event["warrant"] = warrant
     if decision == "defer":
-        event["timestamp"] = now_iso()
-        event["suppressed_until"] = _defer_suppressed_until(event["timestamp"])
+        event["suppressed_until"] = _defer_suppressed_until(timestamp)
     if decision == "edit":
         block_ref = str(record["block_ref"])
         event["edit_target"] = {
             "draft_path": block_ref.partition("#^")[0],
             "block_ref": block_ref,
         }
-    return append_explicit_journal_event(Path(vault), event, actor=actor, machine=machine)
+    disposition = build_disposition_event(
+        decision=decision,
+        item_type="evidence-set",
+        item_id=evidence_id,
+    )
+    disposition["timestamp"] = timestamp
+    row, _disposition = append_explicit_event_batch(
+        Path(vault),
+        [event, disposition],
+        actor=actor,
+        machine=machine,
+    )
+    return row
 
 
 def promote_draft_passage(

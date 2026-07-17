@@ -13,6 +13,7 @@ from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
     _source_interviews,
+    emit_explicit_disposition_event,
     load_operation_policy,
     load_runner_provider_config,
     require_allowed_network,
@@ -63,6 +64,31 @@ def compile_policy(**updates):
         policy["runner"]["test"]["provider"] = provider
     policy.update(updates)
     return policy
+
+
+def test_explicit_disposition_event_uses_the_validated_server_schema(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    event = emit_explicit_disposition_event(
+        vault,
+        decision="accept",
+        item_type="evidence-set",
+        item_id="ev-deadbeef",
+        actor="pi",
+        machine="PI laptop",
+    )
+
+    assert {key: event[key] for key in event if key != "timestamp"} == {
+        "event": "disposition",
+        "schema": "disposition.v1",
+        "decision": "accept",
+        "item_type": "evidence-set",
+        "item_id": "ev-deadbeef",
+        "actor": "pi",
+        "machine": "PI_laptop",
+    }
+    assert event["timestamp"]
+    assert state.read_event_log(vault, event_types=("disposition",)) == [event]
 
 
 def patch_compile_policy(monkeypatch: pytest.MonkeyPatch, **updates) -> dict:

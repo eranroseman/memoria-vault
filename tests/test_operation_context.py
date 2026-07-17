@@ -401,6 +401,22 @@ def test_explicit_journal_metadata_conflict_changes_neither_store(
     assert _event_log_payloads(tmp_path) == []
 
 
+def test_explicit_journal_batch_validates_every_row_before_mutation(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="actor"):
+        trusted_writer.append_explicit_event_batch(
+            tmp_path,
+            [
+                {"event": "manual"},
+                {"event": "manual", "actor": "agent"},
+            ],
+            actor="pi",
+            machine="PI laptop",
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
 def test_explicit_journal_machine_is_normalized_once_across_both_stores(
     tmp_path: Path,
 ) -> None:
@@ -820,6 +836,7 @@ def test_request_writer_interfaces_require_only_context_provenance(
     ("function", "required"),
     [
         (trusted_writer.append_explicit_journal_event, {"actor", "machine"}),
+        (trusted_writer.append_explicit_event_batch, {"actor", "machine"}),
         (trusted_writer.commit_explicit_writer_changes, {"actor", "machine"}),
         (trusted_writer.observe_pi_edit, {"machine"}),
         (trusted_writer.observe_pi_edit_from_head, {"machine"}),

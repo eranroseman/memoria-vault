@@ -274,6 +274,121 @@ def test_append_is_authoritative_before_jsonl_and_advances_anchor(tmp_path, caps
     ).strip() == state.journal_head(vault)
 
 
+def test_explicit_batch_rolls_back_when_second_insert_fails(tmp_path, capsys, monkeypatch):
+    vault = init_cli_workspace(tmp_path, capsys)
+    before = _event_count(vault)
+    anchor_path = vault / state.JOURNAL_HEAD_REL
+    anchor_before = anchor_path.read_text(encoding="utf-8") if anchor_path.exists() else None
+    original_insert = state._insert_journal_row_conn
+    insert_count = 0
+
+    def fail_second_insert(conn, row, *, machine):
+        nonlocal insert_count
+        insert_count += 1
+        if insert_count == 2:
+            raise RuntimeError("second batch insert crashed")
+        original_insert(conn, row, machine=machine)
+
+    monkeypatch.setattr(state, "_insert_journal_row_conn", fail_second_insert)
+
+    with pytest.raises(RuntimeError, match="second batch insert crashed"):
+        trusted_writer.append_explicit_event_batch(
+            vault,
+            [
+                {"event": "resolved", "operation": "resolve-evidence-review"},
+                {
+                    "event": "disposition",
+                    "schema": "disposition.v1",
+                    "decision": "accept",
+                },
+            ],
+            actor="pi",
+            machine="journal-test",
+        )
+
+    assert insert_count == 2
+    assert _event_count(vault) == before
+    assert (
+        anchor_path.read_text(encoding="utf-8") if anchor_path.exists() else None
+    ) == anchor_before
+
+
+def test_explicit_batch_keeps_rows_and_anchor_when_jsonl_export_fails(
+    tmp_path, capsys, monkeypatch
+):
+    vault = init_cli_workspace(tmp_path, capsys)
+    before = _event_count(vault)
+    original_append_jsonl = trusted_writer.append_jsonl
+
+    def crash_jsonl(*_args, **_kwargs):
+        raise RuntimeError("jsonl batch export crashed")
+
+    monkeypatch.setattr(trusted_writer, "append_jsonl", crash_jsonl)
+
+    with pytest.raises(RuntimeError, match="jsonl batch export crashed"):
+        trusted_writer.append_explicit_event_batch(
+            vault,
+            [
+                {"event": "resolved", "operation": "resolve-evidence-review"},
+                {
+                    "event": "disposition",
+                    "schema": "disposition.v1",
+                    "decision": "accept",
+                },
+            ],
+            actor="pi",
+            machine="journal-test",
+        )
+
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            "SELECT event_type, machine, payload_json FROM event_log ORDER BY event_id"
+        ).fetchall()
+
+    assert _event_count(vault) == before + 2
+    assert [row["event_type"] for row in rows[-2:]] == ["resolved", "disposition"]
+    assert [json.loads(row["payload_json"])["actor"] for row in rows[-2:]] == ["pi", "pi"]
+    assert [row["machine"] for row in rows[-2:]] == ["journal-test", "journal-test"]
+    assert state.journal_head(vault) == state.journal_head_anchor(vault)
+    assert (vault / state.JOURNAL_HEAD_REL).read_text(
+        encoding="utf-8"
+    ).strip() == state.journal_head(vault)
+    monkeypatch.setattr(trusted_writer, "append_jsonl", original_append_jsonl)
+
+    assert trusted_writer.reconcile_journal_export(vault) == 2
+    assert [
+        event["event"] for event in iter_jsonl(vault / ".memoria/journal/journal-test.jsonl")
+    ] == [
+        "resolved",
+        "disposition",
+    ]
+
+
+def test_explicit_batch_exports_all_rows_in_one_jsonl_call(tmp_path, capsys, monkeypatch):
+    vault = init_cli_workspace(tmp_path, capsys)
+    original_append_jsonl = trusted_writer.append_jsonl
+    exported: list[list[dict]] = []
+
+    def observe_jsonl(path, rows):
+        rows = list(rows)
+        exported.append(rows)
+        original_append_jsonl(path, rows)
+
+    monkeypatch.setattr(trusted_writer, "append_jsonl", observe_jsonl)
+
+    stored = trusted_writer.append_explicit_event_batch(
+        vault,
+        [
+            {"event": "resolved", "operation": "resolve-evidence-review"},
+            {"event": "disposition", "schema": "disposition.v1", "decision": "accept"},
+        ],
+        actor="pi",
+        machine="journal-test",
+    )
+
+    assert exported == [stored]
+
+
 def test_mediated_append_keeps_context_when_jsonl_crashes(tmp_path, capsys, monkeypatch):
     vault = init_cli_workspace(tmp_path, capsys)
     context = operation_context(
@@ -724,12 +839,12 @@ def test_append_and_reconcile_do_not_overlap_their_journal_snapshots(tmp_path, c
     reconcile_lock_attempted = threading.Event()
     export_scan_started = threading.Event()
     thread_role = threading.local()
-    original_append = state._append_journal_row
+    original_insert = state._insert_journal_row_conn
     original_exports = trusted_writer._iter_journal_exports
     original_workspace_lock = state.workspace_lock
 
-    def pause_after_authoritative_write(vault, event, *, machine):
-        original_append(vault, event, machine=machine)
+    def pause_after_authoritative_write(conn, event, *, machine):
+        original_insert(conn, event, machine=machine)
         row_written.set()
         assert release_append.wait(timeout=2)
 
@@ -744,7 +859,7 @@ def test_append_and_reconcile_do_not_overlap_their_journal_snapshots(tmp_path, c
         with original_workspace_lock(vault):
             yield
 
-    monkeypatch.setattr(state, "_append_journal_row", pause_after_authoritative_write)
+    monkeypatch.setattr(state, "_insert_journal_row_conn", pause_after_authoritative_write)
     monkeypatch.setattr(trusted_writer, "_iter_journal_exports", observe_export_scan)
     monkeypatch.setattr(state, "workspace_lock", observe_workspace_lock)
 
@@ -790,11 +905,11 @@ def test_journal_verify_cli_waits_for_inflight_append(tmp_path, capsys, monkeypa
     release_append = threading.Event()
     verify_lock_attempted = threading.Event()
     emitted: list[dict] = []
-    original_append = state._append_journal_row
+    original_insert = state._insert_journal_row_conn
     original_lock = cli._workspace_lock
 
-    def pause_after_authoritative_write(vault, event, *, machine):
-        original_append(vault, event, machine=machine)
+    def pause_after_authoritative_write(conn, event, *, machine):
+        original_insert(conn, event, machine=machine)
         row_written.set()
         assert release_append.wait(timeout=2)
 
@@ -808,7 +923,7 @@ def test_journal_verify_cli_waits_for_inflight_append(tmp_path, capsys, monkeypa
         emitted.append(payload)
         return 0 if payload["ok"] else 1
 
-    monkeypatch.setattr(state, "_append_journal_row", pause_after_authoritative_write)
+    monkeypatch.setattr(state, "_insert_journal_row_conn", pause_after_authoritative_write)
     monkeypatch.setattr(cli, "_workspace_lock", observe_verify_lock)
     monkeypatch.setattr(cli, "_emit", capture_emit)
 
