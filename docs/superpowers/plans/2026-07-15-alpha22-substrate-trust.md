@@ -59,9 +59,12 @@ rerun. Do not cherry-pick the branch’s older Alpha21/COV history as part of Pl
 | S35.4 | `a25f709f`, repair `1c85f90f` |
 | S68.1 | `84f81f10` |
 | S68.2 | `f034ca7a` |
+| S68.3 | `921169f0` (with contract amendment `858ae29d`; formatting `60164d49`) |
+| S68.4 | `ebf1aa75`, repair `6f5d29e8`, hardening `9d43a79d` |
 | S68.5 | `0c1c37e` (also contains the execution-order amendment above) |
+| S68.6 | `d93dc1b4` |
 
-Pending: S68.3, S68.4, and S68.6; and COST.1–.5. After `8ece209c`,
+Pending: COST.1–.5. After `8ece209c`,
 cherry-pick ancillary cleanup `e8e9a154` solely to remove its accidentally tracked
 session report; it is cleanup, not S12.1 implementation. The source-complete
 task bodies below are historical TDD/review records: their stale line anchors,
@@ -3848,7 +3851,7 @@ future design.
 
 **Steps:**
 
-- [ ] Replace the entire file content with:
+- [x] Replace the entire file content with:
 
   ````markdown
   ---
@@ -4007,10 +4010,10 @@ future design.
   - The principle behind the immutable binding ledger: [Design principles](../../explanation/rationale/foundations/design-principles.md) (Provenance everywhere)
   ````
 
-- [ ] Run the gate: `python scripts/verify`
+- [x] Run the gate: `python scripts/verify`
   (docs lint and any doc-link product gates run here; fix only what the gate
   reports on this file).
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add docs/reference/control-and-policy/evidence-sets.md
