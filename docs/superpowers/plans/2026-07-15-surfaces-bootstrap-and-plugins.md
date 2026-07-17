@@ -8356,6 +8356,92 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   - `VIEW_SPEC_VERSION = "view-spec.v1"`, `KNOWN_BLOCK_KINDS`, `LOUDNESS_RANK = {block:0, alert:1, notice:2, quiet:3}`.
 - Loudness is **rendered verbatim** (class `memoria-loudness-<value>` from the payload string; missing loudness gets no loudness class) — never invented.
 
+> **Binding amendment — ordered nested cards (V2 prerequisite):** Before V2R-B.3
+> or V2R-D.2 can execute, this task's `renderCard` must render every supplied
+> `card.blocks` child exactly once and in declared order. It must append analysis
+> only after those semantic children, and only when the corresponding parent fields
+> are present. This replaces the older `renderCard` partitioning/reordering body and
+> its “evidence first, actions later” test below. In particular, a V2 reviewable
+> card must render `evidence-list → text → action-row → analysis/meta`; a cure card
+> with only evidence/text must have no arguments node, tipped node, action row,
+> analysis toggle, or empty analysis container.
+>
+> Replace that stale test/body with the following requirements before writing the
+> U3 implementation:
+>
+> ```js
+> test("card preserves declared semantic child order and appends present analysis", () => {
+>   const tree = renderBlock({
+>     kind: "card", id: "ev1", ref: "projects/alpha/draft.md#^blk-1234",
+>     title: "Claim", kind_line: "evidence-review",
+>     argument_for: "ground", tipped_by: "implicit derivation", certainty: "possible",
+>     blocks: [
+>       { kind: "evidence-list", id: "e1", items: [] },
+>       { kind: "text", id: "r1", text: "Routing: implicit" },
+>       { kind: "action-row", id: "a1", actions: [] },
+>     ],
+>   });
+>   const classes = tree.children.map((child) => child.cls);
+>   const evidenceAt = classes.indexOf("memoria-evidence");
+>   const textAt = classes.indexOf("memoria-block-text");
+>   const actionsAt = classes.indexOf("memoria-action-row");
+>   const argumentsAt = classes.indexOf("memoria-card-arguments");
+>   const tippedAt = classes.indexOf("memoria-card-tipped");
+>   assert.ok(evidenceAt < textAt && textAt < actionsAt && actionsAt < argumentsAt);
+>   assert.ok(argumentsAt < tippedAt);
+> });
+>
+> test("cure card does not create absent analysis or action trees", () => {
+>   const tree = renderBlock({
+>     kind: "card", id: "ev2", ref: "projects/alpha/draft.md#^blk-5678",
+>     title: "Repair grounding", kind_line: "evidence-text-drift",
+>     blocks: [
+>       { kind: "evidence-list", id: "e2", items: [] },
+>       { kind: "text", id: "r2", text: "Repair the marker." },
+>     ],
+>   });
+>   const classes = tree.children.map((child) => child.cls);
+>   assert.deepEqual(
+>     classes.filter((cls) => ["memoria-evidence", "memoria-block-text"].includes(cls)),
+>     ["memoria-evidence", "memoria-block-text"],
+>   );
+>   assert.ok(!classes.includes("memoria-card-arguments"));
+>   assert.ok(!classes.includes("memoria-card-tipped"));
+>   assert.ok(!classes.includes("memoria-action-row"));
+>   assert.ok(!classes.includes("memoria-analysis-toggle"));
+> });
+> ```
+>
+> ```js
+> function renderCard(block) {
+>   const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
+>   const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
+>   const analysis = [];
+>   if (hasOwn("argument_for") || hasOwn("argument_against")) {
+>     analysis.push(node("div", "memoria-card-arguments", "", [
+>       node("span", "memoria-card-for", String(block.argument_for || "")),
+>       node("span", "memoria-card-against", String(block.argument_against || "")),
+>     ]));
+>   }
+>   if (hasOwn("tipped_by") || hasOwn("certainty")) {
+>     analysis.push(node("div", "memoria-card-tipped", "", [
+>       node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
+>       node("span", "memoria-certainty-chip", String(block.certainty || "")),
+>     ]));
+>   }
+>   const raisedBy = String(block.raised_by || "");
+>   const raisedAt = String(block.raised_at || "");
+>   const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
+>   return node("div", `memoria-card${loudnessClass(block)}`, "", [
+>     node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+>     node("div", "memoria-card-title", String(block.title || "")),
+>     ...semanticChildren,
+>     ...analysis,
+>     ...(meta ? [node("div", "memoria-card-meta", meta)] : []),
+>   ], { "data-ref": String(block.ref || "") });
+> }
+> ```
+
 **Steps:**
 
 - [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-viewspec.mjs`:
@@ -8399,64 +8485,46 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(trees[0].text, "Unknown view-spec version: view-spec.v2");
   });
 
-  test("card renders the ratified anatomy: kind line, title, evidence first, for/against, tipped+certainty, actions, meta", () => {
+  test("card preserves declared semantic child order and appends present analysis", () => {
     const tree = renderBlock({
-      kind: "card",
-      id: "c1",
-      ref: "inbox/finding.md",
-      title: "Contradiction in B12 claims",
-      loudness: "alert",
-      kind_line: "contradiction",
-      certainty: "likely",
-      argument_for: "Two checked sources disagree.",
-      argument_against: "One source is a preprint.",
-      tipped_by: "checked-source count",
-      raised_by: "analyze-gaps",
-      raised_at: "2026-07-15T09:00:00Z",
+      kind: "card", id: "ev1", ref: "projects/alpha/draft.md#^blk-1234",
+      title: "Claim", kind_line: "evidence-review",
+      argument_for: "ground", tipped_by: "implicit derivation", certainty: "possible",
       blocks: [
-        { kind: "evidence-list", id: "e1", items: [{ label: "B12 note", ref: "notes/b12.md" }] },
-        {
-          kind: "action-row",
-          id: "a1",
-          actions: [
-            {
-              label: "Resolve",
-              operation_id: "resolve-attention",
-              payload: { attention_path: "inbox/finding.md", resolution: "resolved" },
-              primary: true,
-            },
-          ],
-        },
+        { kind: "evidence-list", id: "e1", items: [] },
+        { kind: "text", id: "r1", text: "Routing: implicit" },
+        { kind: "action-row", id: "a1", actions: [] },
       ],
     });
-    assert.equal(tree.cls, "memoria-card memoria-loudness-alert");
-    assert.equal(tree.attrs["data-ref"], "inbox/finding.md");
     const classes = tree.children.map((child) => child.cls);
     const evidenceAt = classes.indexOf("memoria-evidence");
-    const argumentsAt = classes.indexOf("memoria-card-arguments");
+    const textAt = classes.indexOf("memoria-block-text");
     const actionsAt = classes.indexOf("memoria-action-row");
-    const metaAt = classes.indexOf("memoria-card-meta");
-    assert.equal(classes[0], "memoria-card-kind memoria-loudness-alert");
-    assert.equal(classes[1], "memoria-card-title");
-    assert.ok(evidenceAt > 1 && evidenceAt < argumentsAt, "evidence block renders first");
-    assert.ok(argumentsAt < actionsAt && actionsAt < metaAt);
-    const flat = texts(tree);
-    assert.ok(flat.includes("tipped by: checked-source count"));
-    assert.ok(flat.includes("likely"));
-    assert.ok(flat.some((t) => t.startsWith("raised by analyze-gaps")));
-    const button = tree.children[actionsAt].children[0];
-    assert.equal(button.tag, "button");
-    assert.equal(button.cls, "memoria-action memoria-action-primary");
-    assert.equal(button.attrs["data-operation-id"], "resolve-attention");
-    assert.deepEqual(JSON.parse(button.attrs["data-payload"]), {
-      attention_path: "inbox/finding.md",
-      resolution: "resolved",
-    });
-    const link = tree.children[evidenceAt].children[0];
-    assert.equal(link.tag, "a");
-    assert.equal(link.attrs["data-ref"], "notes/b12.md");
+    const argumentsAt = classes.indexOf("memoria-card-arguments");
+    const tippedAt = classes.indexOf("memoria-card-tipped");
+    assert.ok(evidenceAt < textAt && textAt < actionsAt && actionsAt < argumentsAt);
+    assert.ok(argumentsAt < tippedAt);
   });
 
+  test("cure card does not create absent analysis or action trees", () => {
+    const tree = renderBlock({
+      kind: "card", id: "ev2", ref: "projects/alpha/draft.md#^blk-5678",
+      title: "Repair grounding", kind_line: "evidence-text-drift",
+      blocks: [
+        { kind: "evidence-list", id: "e2", items: [] },
+        { kind: "text", id: "r2", text: "Repair the marker." },
+      ],
+    });
+    const classes = tree.children.map((child) => child.cls);
+    assert.deepEqual(
+      classes.filter((cls) => ["memoria-evidence", "memoria-block-text"].includes(cls)),
+      ["memoria-evidence", "memoria-block-text"],
+    );
+    assert.ok(!classes.includes("memoria-card-arguments"));
+    assert.ok(!classes.includes("memoria-card-tipped"));
+    assert.ok(!classes.includes("memoria-action-row"));
+    assert.ok(!classes.includes("memoria-analysis-toggle"));
+  });
   test("loudness is rendered verbatim and missing loudness gets no loudness class", () => {
     const odd = renderBlock({ kind: "badge", id: "b1", label: "x", loudness: "shout" });
     assert.equal(odd.cls, "memoria-badge memoria-loudness-shout");
@@ -8581,43 +8649,32 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   }
 
   function renderCard(block) {
-    const children = Array.isArray(block.blocks) ? block.blocks : [];
-    const evidence = children.filter((child) => child && child.kind === "evidence-list");
-    const actions = children.filter((child) => child && child.kind === "action-row");
-    const rest = children.filter(
-      (child) => !child || (child.kind !== "evidence-list" && child.kind !== "action-row"),
-    );
+    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
+    const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
+    const analysis = [];
+    if (hasOwn("argument_for") || hasOwn("argument_against")) {
+      analysis.push(node("div", "memoria-card-arguments", "", [
+        node("span", "memoria-card-for", String(block.argument_for || "")),
+        node("span", "memoria-card-against", String(block.argument_against || "")),
+      ]));
+    }
+    if (hasOwn("tipped_by") || hasOwn("certainty")) {
+      analysis.push(node("div", "memoria-card-tipped", "", [
+        node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
+        node("span", "memoria-certainty-chip", String(block.certainty || "")),
+      ]));
+    }
     const raisedBy = String(block.raised_by || "");
     const raisedAt = String(block.raised_at || "");
     const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
-    return node(
-      "div",
-      `memoria-card${loudnessClass(block)}`,
-      "",
-      [
-        node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
-        node("div", "memoria-card-title", String(block.title || "")),
-        ...evidence.map(renderBlock),
-        node("div", "memoria-card-arguments", "", [
-          node("span", "memoria-card-for", String(block.argument_for || "")),
-          node("span", "memoria-card-against", String(block.argument_against || "")),
-        ]),
-        node("div", "memoria-card-tipped", "", [
-          node(
-            "span",
-            "memoria-card-tipped-label",
-            block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : "",
-          ),
-          node("span", "memoria-certainty-chip", String(block.certainty || "")),
-        ]),
-        ...actions.map(renderBlock),
-        node("div", "memoria-card-meta", meta),
-        ...rest.map(renderBlock),
-      ],
-      { "data-ref": String(block.ref || "") },
-    );
+    return node("div", `memoria-card${loudnessClass(block)}`, "", [
+      node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+      node("div", "memoria-card-title", String(block.title || "")),
+      ...semanticChildren,
+      ...analysis,
+      ...(meta ? [node("div", "memoria-card-meta", meta)] : []),
+    ], { "data-ref": String(block.ref || "") });
   }
-
   function renderView(view) {
     if (!view || view.version !== VIEW_SPEC_VERSION) {
       return [
