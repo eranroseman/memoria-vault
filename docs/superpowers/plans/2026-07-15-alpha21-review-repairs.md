@@ -665,6 +665,13 @@ import pytest
 from memoria_vault.runtime import vaultio
 
 
+# The production contract deliberately tolerates unavailable directory fsync on
+# Windows; these tests pin the complementary POSIX failure behavior.
+pytestmark = pytest.mark.skipif(
+    os.name == "nt", reason="directory fsync failures are tolerated on Windows"
+)
+
+
 def _fail_directory_fsync(real_fsync):
     """Deterministic injection: fail fsync only for directory fds.
 
@@ -718,7 +725,7 @@ def test_fsync_dir_raises_when_directory_cannot_be_opened(
         vaultio._fsync_dir(tmp_path)
 ```
 
-- [ ] Run them and verify they fail: `python -m pytest tests/test_vaultio.py -v` — expected failure: all three fail with `Failed: DID NOT RAISE <class 'OSError'>` (the current `_fsync_dir` swallows both the open error and the fsync error).
+- [ ] Run them and verify they fail: `python -m pytest tests/test_vaultio.py -v` — on POSIX, expected failure: all three fail with `Failed: DID NOT RAISE <class 'OSError'>` (the current `_fsync_dir` swallows both the open error and the fsync error). On Windows, the module skips because the required production behavior is to tolerate unavailable directory fsync.
 - [ ] Write the implementation. In `src/memoria_vault/runtime/vaultio.py`, replace `_fsync_dir` (lines 204-214) with the exact semantics of `backup._fsync_directory`:
 
 ```python
