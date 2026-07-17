@@ -4940,7 +4940,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Steps:**
 
-- [ ] Write the failing tests — in `tests/test_operation_context.py`, add
+- [x] Write the failing tests — in `tests/test_operation_context.py`, add
   `"resolve-evidence",` to the `PI_AUTHORITY_OPERATIONS` tuple (after
   `"resolve-attention",` at line 976), and append after
   `test_attention_resolution_accepts_pi_and_records_pi` (ends line 1071).
@@ -5045,7 +5045,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
       assert "unknown evidence id" in result["error"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_operation_context.py -k "resolve_evidence or (protected_operation_rejects and resolve-evidence)" -v`
   Expected: the two new tests fail (`FileNotFoundError:
   product/capabilities/operations/resolve-evidence.md` surfaces as a failed job,
@@ -5053,7 +5053,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   `test_protected_operation_rejects_wrong_actor_before_payload_validation[resolve-evidence-*]`
   params fail the same way.
 
-- [ ] Write the minimal implementation.
+- [x] Write the minimal implementation.
 
   Create `src/memoria_vault/product/capabilities/operations/resolve-evidence.md`:
 
@@ -5132,7 +5132,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
       },
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```bash
   python -m pytest tests/test_operation_context.py -v
@@ -5148,7 +5148,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   then `git diff tests/fixtures/floor/goldens/` — only
   `regenerate-capability-index.json` (and no other golden) may change.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/product/capabilities/operations/resolve-evidence.md \
