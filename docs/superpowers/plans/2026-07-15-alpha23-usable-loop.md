@@ -2430,19 +2430,24 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
   step below, before any import.)
 
 - [ ] Measure time-to-first-answer (O1 bar: ≤ 1800 s from clean init to first
-  grounded answer). `seed-dois.txt` is the ~8-source list from LOOP.5's spec
-  section 2:
+  grounded answer). **Recorded amendment (O1 spec
+  `2026-07-16-o1-onboarding-seed-design.md` §5):** the earlier
+  `seed-dois.txt` + `work add --doi` + shell wall-clock protocol is
+  superseded — `--doi` capture is metadata-only (grounds over titles), and
+  the O1 spec's `onboarding-step` telemetry events are the measurement of
+  record:
 
   ```
-  START=$(date +%s)
   memoria init --workspace "$VAULT" --yes
-  cp "$VAULT_TEMPLATE_STEERING" "$VAULT/steering.md"   # steering.md BEFORE first import (empirical plan Phase 1); authored per LOOP.5 section 4
-  while read -r DOI; do
-    memoria work add --workspace "$VAULT" --doi "$DOI" --json --idempotency-key "seed-$DOI"
-  done < seed-dois.txt
-  memoria ask --workspace "$VAULT" --question "What does the seed corpus say about its central topic?" --json
-  END=$(date +%s)
-  echo "time_to_first_answer_s=$((END-START))" | tee -a staged-import-metrics.txt
+  memoria new project --workspace "$VAULT" "Acceptance project"   # frame BEFORE import (O1 spec §4; steering derives from it)
+  memoria seed install --workspace "$VAULT" --json                # the manifest from O1 spec §2
+  memoria ask --workspace "$VAULT" --question "What does the seed corpus say about retrieval practice?" --json
+  # The bar, from the telemetry events (first-answer.ts - init-done.ts):
+  sqlite3 "$VAULT/.memoria/memoria.sqlite" \
+    "SELECT CAST((julianday(MAX(CASE WHEN json_extract(payload_json,'$.step')='first-answer' THEN ts END)) \
+                - julianday(MIN(CASE WHEN json_extract(payload_json,'$.step')='init-done' THEN ts END))) * 86400 AS INT) \
+     FROM telemetry_events WHERE event_type='onboarding-step';" \
+    | xargs -I{} echo "time_to_first_answer_s={}" | tee -a staged-import-metrics.txt
   ```
 
   Record the number; > 1800 s is a finding, not a silent failure.
