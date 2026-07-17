@@ -35,6 +35,12 @@
   strict concept-link target normalization.
 - Verification: `python scripts/verify` passed (**2,395 passed, 9 skipped**;
   one existing multiprocessing-fork warning).
+- **P.1 complete:** `073f8c40` adds the pure-stdlib pipeline staging module,
+  its unit contract suite, and the required test-level registration. Emitted
+  filter labels remain globally unique even when a caller supplies a
+  suffix-looking name.
+- Verification: `python scripts/verify` passed (**2,405 passed, 9 skipped**;
+  one existing multiprocessing-fork warning).
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
@@ -846,13 +852,19 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
 
 **Sequencing and stop-notes.** P has **no** dependency on Plan 22 G2S1.1: nothing here touches `concept_edges` (that stop-note binds the graph_sql section only). P can start directly at `51395f15`. Section E (`memoria explore`) consumes the seams produced here (`PipelineStages`, `excluded_strata`, `rerank`, `honest_empty`, `build_trace`, and the `--trace` contract), so P merges before E's payload work. All line references below were verified at `51395f15`; if a file has drifted, re-anchor by symbol name, not line number.
 
+**Recorded E handoff amendment (binding).** `PipelineStages` deliberately
+models only `universe → [filters] → ranked → returned`. When E needs its
+post-rank structural `seed` and `neighborhood` counters, it must build the
+common rows through `PipelineStages` and insert those two counters immediately
+before the terminal `returned` row; do not widen P.1's narrow API.
+
 **Module-location decision (required by the task): new file `src/memoria_vault/runtime/retrieval_pipeline.py`, not an extension of `search_index.py`.** Evidence: `wc -l` at `51395f15` gives `search_index.py` 606 lines (owns BM25, doc assembly, project-context expansion) and `retrieval.py` 184 lines (owns substrate capability checks and the fts/vector/hybrid legs). The staging contract is consumed by two fronts — ask (`search_index.answer_query`, `search_index.py:153`) and explore (section E's new module). Housing it in `search_index.py` would force explore to import a 600+-line module (plus `yaml`, `state`, `indexing`) for pure accounting; housing it in `retrieval.py` would conflate substrate legs with the honesty contract. The new module is pure stdlib (`collections.Counter`, `typing.Any`), so no import cycle is possible: `search_index` → `retrieval_pipeline` only.
 
 **One resolved wording rule:** the honest-empty sentence is spec-verbatim plural (`"0 of 1 candidates matched; 1 unchecked documents were not searched"`) — deterministic, no smart pluralization. The trace carries no invented explanation: it is the §4 counts plus BM25 scores plus `rerank: off`, exactly (spec §6 closing line).
 
 ---
 
-### Task P.1 — Shared retrieval-pipeline module: ordered counts, strata, no-op rerank, trace builder
+### Task P.1 — Shared retrieval-pipeline module: ordered counts, strata, no-op rerank, trace builder — completed
 
 **Files:**
 - `src/memoria_vault/runtime/retrieval_pipeline.py` (new)
@@ -868,9 +880,15 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
 - `rerank(hits: list[Any]) -> list[Any]` — the explicit no-op stage.
 - `build_trace(pipeline_counts: list[dict[str, Any]], returned: list[tuple[str, float]], *, fusion_inputs: list[dict[str, Any]] | None = None) -> dict[str, Any]` — the §6 trace; `fusion_inputs` emitted only when more than one ranked leg exists.
 
+> **Executed amendments (authoritative over the historical listing below):**
+> the absent-submodule collection error is `ImportError`, not
+> `ModuleNotFoundError`. Emitted filter labels are globally unique, including
+> when callers supply a suffix-looking name, and the test suite pins duplicate
+> `returned` refusal.
+
 **Steps:**
 
-- [ ] Register the new test file in `tests/conftest.py` (level `unit` — the module is pure, no vault, no network). Edit (`old_string` → `new_string`):
+- [x] Register the new test file in `tests/conftest.py` (level `unit` — the module is pure, no vault, no network). Edit (`old_string` → `new_string`):
 
   ```python
       "test_retrieval_substrate.py": "contract",
@@ -881,7 +899,7 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       "test_retrieval_substrate.py": "contract",
   ```
 
-- [ ] Write the failing test — full content of `tests/test_retrieval_pipeline.py` (pytest-independent try/except/else style for refusals, matching the suite's CheckHarness convention noted in `pyproject.toml`'s ruff `ignore` comments):
+- [x] Write the failing test — full content of `tests/test_retrieval_pipeline.py` (pytest-independent try/except/else style for refusals, matching the suite's CheckHarness convention noted in `pyproject.toml`'s ruff `ignore` comments):
 
   ```python
   """R2 pipeline staging: ordered counts, strata, no-op rerank, trace (spec 1/4/6)."""
@@ -1025,9 +1043,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       ]
   ```
 
-- [ ] Run `python -m pytest tests/test_retrieval_pipeline.py -q` — expected failure: collection error, `ModuleNotFoundError: No module named 'memoria_vault.runtime.retrieval_pipeline'`.
+- [x] Run `python -m pytest tests/test_retrieval_pipeline.py -q` — expected failure: collection error, `ImportError: cannot import name 'retrieval_pipeline' from 'memoria_vault.runtime'`.
 
-- [ ] Minimal implementation — full content of `src/memoria_vault/runtime/retrieval_pipeline.py`:
+- [x] Minimal implementation — full content of `src/memoria_vault/runtime/retrieval_pipeline.py`:
 
   ```python
   """Shared retrieval-pipeline staging (R2 design spec sections 1, 4, 6).
@@ -1144,9 +1162,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       return trace
   ```
 
-- [ ] Run `python -m pytest tests/test_retrieval_pipeline.py tests/test_testing_levels.py -q` — expected: all pass (the second file proves the `TEST_LEVELS` registration is complete).
+- [x] Run `python -m pytest tests/test_retrieval_pipeline.py tests/test_testing_levels.py -q` — expected: all pass (the second file proves the `TEST_LEVELS` registration is complete).
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/retrieval_pipeline.py tests/test_retrieval_pipeline.py tests/conftest.py
