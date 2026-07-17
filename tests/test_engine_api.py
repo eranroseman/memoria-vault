@@ -34,6 +34,33 @@ def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
         api.read_concept(workspace, "notes/beta.md", read_scope=["notes/alpha.md"])
 
 
+def test_engine_read_explore_wraps_the_pure_engine_payload(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    observed: dict[str, object] = {}
+    expected = {"topic": "spacing", "claims": [], "pipeline_counts": []}
+
+    def fake_explore(vault: Path, topic: str, **kwargs: object) -> dict[str, object]:
+        observed.update({"vault": vault, "topic": topic, **kwargs})
+        return expected
+
+    monkeypatch.setattr(api, "explore_topic", fake_explore)
+
+    payload = api.read_explore(
+        workspace, "spacing", versus="massed", project="memory", depth=2, trace=True
+    )
+
+    assert observed == {
+        "vault": workspace,
+        "topic": "spacing",
+        "versus": "massed",
+        "project": "memory",
+        "depth": 2,
+        "trace": True,
+    }
+    assert payload == {"ok": True, "api_version": api.READ_API_VERSION, "explore": expected}
+
+
 def test_engine_read_work_omits_retired_topics_from_untouched_legacy_row(
     workspace: Path,
 ) -> None:

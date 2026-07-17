@@ -52,6 +52,10 @@ SEED_FILES = (
     ("system/vocabulary.md", "system/vocabulary.md"),
 )
 SURFACE_ACTION = actions_by_id()
+PROJECT_EXPLORE_HELP = (
+    "List exploration-channel candidates. Distinct from memoria explore <topic>, "
+    "which surfaces a checked topic neighborhood."
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -108,6 +112,15 @@ def _build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--question", required=True)
     ask.add_argument("--trace", action="store_true")
     ask.set_defaults(handler=_cmd_ask)
+
+    explore = sub.add_parser("explore", **_surface_help("explore.read"))
+    _common(explore)
+    explore.add_argument("topic")
+    explore.add_argument("--versus", default="")
+    explore.add_argument("--project", default="")
+    explore.add_argument("--depth", type=int, default=1)
+    explore.add_argument("--trace", action="store_true")
+    explore.set_defaults(handler=_cmd_explore)
 
     serve = sub.add_parser("serve")
     _common(serve)
@@ -364,7 +377,11 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     export.add_argument("--ready-only", action="store_true")
     export.add_argument("--draft", action="store_true")
     export.set_defaults(handler=_cmd_project_export)
-    explore = project_sub.add_parser("explore")
+    explore = project_sub.add_parser(
+        "explore",
+        help=PROJECT_EXPLORE_HELP,
+        description=PROJECT_EXPLORE_HELP,
+    )
     _common(explore)
     explore.add_argument("--limit", type=int, default=10)
     explore.set_defaults(handler=_cmd_project_explore)
@@ -728,6 +745,18 @@ def _cmd_ask(args: argparse.Namespace) -> int:
     return _emit_ask_result(result, args, print_trace=args.trace)
 
 
+def _cmd_explore(args: argparse.Namespace) -> int:
+    result = engine_api.read_explore(
+        _workspace(args),
+        args.topic,
+        versus=args.versus,
+        project=args.project,
+        depth=args.depth,
+        trace=args.trace,
+    )
+    return _emit_explore_result(result, args, print_trace=args.trace)
+
+
 def _emit_ask_result(
     result: dict[str, Any], args: argparse.Namespace, *, print_trace: bool = False
 ) -> int:
@@ -752,6 +781,55 @@ def _print_ask_trace(answer: dict[str, Any]) -> None:
     for row in trace.get("pipeline_counts") or []:
         print(f"{row['stage']}: {row['count']}")
     print(f"rerank: {trace.get('rerank', 'off')}")
+
+
+def _emit_explore_result(
+    result: dict[str, Any], args: argparse.Namespace, *, print_trace: bool = False
+) -> int:
+    payload = result.get("explore")
+    explore = payload if isinstance(payload, dict) else {}
+    text_front = bool(result.get("ok")) and not args.json and not args.quiet
+    if not text_front:
+        return _emit(result, args)
+    if "a" in explore and "b" in explore:
+        sides = {
+            side: value
+            for side, value in explore.items()
+            if side in {"a", "b"} and isinstance(value, dict)
+        }
+        nonempty = any(not side.get("honest_empty") for side in sides.values())
+        code = _emit(result, args) if nonempty else 0
+        for name in ("a", "b"):
+            empty = str(sides.get(name, {}).get("honest_empty") or "")
+            if empty:
+                print(f"{name}: {empty}")
+        if print_trace:
+            traces = explore.get("trace")
+            for name in ("a", "b"):
+                _print_explore_trace(
+                    traces.get(name) if isinstance(traces, dict) else None,
+                    prefix=f"{name}: ",
+                )
+        return code
+    empty = str(explore.get("honest_empty") or "")
+    if empty:
+        print(empty)
+        if print_trace:
+            _print_explore_trace(explore.get("trace"))
+        return 0
+    code = _emit(result, args)
+    if print_trace:
+        _print_explore_trace(explore.get("trace"))
+    return code
+
+
+def _print_explore_trace(trace: object, *, prefix: str = "") -> None:
+    if not isinstance(trace, dict):
+        return
+    for row in trace.get("pipeline_counts") or []:
+        if isinstance(row, dict):
+            print(f"{prefix}{row['stage']}: {row['count']}")
+    print(f"{prefix}rerank: {trace.get('rerank', 'off')}")
 
 
 def _cmd_serve(args: argparse.Namespace) -> int:

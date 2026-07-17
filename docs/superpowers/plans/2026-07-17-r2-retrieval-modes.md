@@ -1809,7 +1809,11 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 > `iter_markdown`, or implement a second strata walk. Before ranking, retain
 > only displayable documents (`note` modes `claim`/`question`, `hub`, and
 > work/digest/fulltext representations) via a `PipelineStages` named
-> `displayable-kind` filter; then apply optional `project-slice`. Rank with
+> `displayable-kind` filter; then apply optional `project-slice` from the
+> graph-owned active mapping when it exists, otherwise from that same passive
+> universe's vetted frontmatter (never `graph_sql.project_slice`'s file
+> fallback, which would escape the vetted read set). A gated canonical project
+> yields an empty slice, never a fallback to a same-named project. Rank with
 > `_bm25`, pass the top `SEED_K` hits through `rerank`, expand with
 > `graph_sql.neighborhood`, and intersect expansion with the displayable
 > candidate ids. Build common rows through `PipelineStages`, insert `seed` and
@@ -1857,12 +1861,16 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 > explicit `codex-security:security-diff-scan` over the read-barrier,
 > search-universe, explore, adapter/surface, and CLI diff before commit.
 
+> **Executed 2026-07-17.** ER.0–ER.3 replace and complete the historical E.1–E.3
+> implementation below. The full repository gate passed (2,425 passed, 11
+> skipped), and the required security diff scan closed with no findings.
+
 ### Task E.1 — engine: `explore_topic` (seed → expand → group → mark)
 
 **Files:** `src/memoria_vault/runtime/explore.py` (new), `tests/test_explore.py` (new), `tests/conftest.py` (register test level).
 **Interfaces:** `explore_topic(vault: Path, topic: str, *, project: str = "", depth: int = 1, versus: str = "") -> dict[str, Any]`; constants `SEED_K = 5`, `DEPTH_CAP = 2`. Consumes `graph_sql.neighborhood` / `graph_sql.project_slice` (slice-1 seams), `state.concept_edges`, `checked_search_documents`, the `evidence_sets` table.
 
-- [ ] Register the new test file (the `test_testing_levels.py` gate pins every `tests/test_*.py` into `TEST_LEVELS`). Edit `tests/conftest.py`:
+- [x] Register the new test file (the `test_testing_levels.py` gate pins every `tests/test_*.py` into `TEST_LEVELS`). Edit `tests/conftest.py`:
 
   old:
   ```python
@@ -1876,7 +1884,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
     "test_exploration_channel.py": "runtime",
   ```
 
-- [ ] Write the failing test — create `tests/test_explore.py` (tmp_path vault only, no network; fixture helpers mirror `tests/test_search_index.py`'s `note()`/`upsert_catalog_record` idiom; tension edges seeded **in both directions** so the fixture is agnostic to slice 1's traversal-direction choice):
+- [x] Write the failing test — create `tests/test_explore.py` (tmp_path vault only, no network; fixture helpers mirror `tests/test_search_index.py`'s `note()`/`upsert_catalog_record` idiom; tension edges seeded **in both directions** so the fixture is agnostic to slice 1's traversal-direction choice):
 
   ```python
   from __future__ import annotations
@@ -2105,8 +2113,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert two_hop["depth"] == 2
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `ModuleNotFoundError: No module named 'memoria_vault.runtime.explore'` at collection.
-- [ ] Minimal implementation — create `src/memoria_vault/runtime/explore.py`. The grounds mark is the real SQL over `evidence_sets` (schema `schema.sql:330-343`): `block_ref` is `<claim-relpath>#^blk-<id>` (`state._evidence_block_ref`, `state.py:2689-2690`), so the claim path is the half before `#`, and only `state = 'complete'` rows count:
+- [x] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `ModuleNotFoundError: No module named 'memoria_vault.runtime.explore'` at collection.
+- [x] Minimal implementation — create `src/memoria_vault/runtime/explore.py`. The grounds mark is the real SQL over `evidence_sets` (schema `schema.sql:330-343`): `block_ref` is `<claim-relpath>#^blk-<id>` (`state._evidence_block_ref`, `state.py:2689-2690`), so the claim path is the half before `#`, and only `state = 'complete'` rows count:
 
   ```python
   """Shape-2 topic surfacing (`memoria explore`) — a pure read, no telemetry.
@@ -2386,8 +2394,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       return strata
   ```
 
-- [ ] Run to pass: `python -m pytest tests/test_explore.py -q` — 3 passed. Also run the neighbor contract file to catch import fallout: `python -m pytest tests/test_search_index.py -q`.
-- [ ] Commit (explicit paths only — the git index is shared per checkout):
+- [x] Run to pass: `python -m pytest tests/test_explore.py -q` — 3 passed. Also run the neighbor contract file to catch import fallout: `python -m pytest tests/test_search_index.py -q`.
+- [x] Commit (explicit paths only — the git index is shared per checkout):
 
   ```bash
   git add src/memoria_vault/runtime/explore.py tests/test_explore.py tests/conftest.py
@@ -2399,7 +2407,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 **Files:** `src/memoria_vault/cli.py`, `tests/test_cli.py`.
 **Interfaces:** `memoria explore <topic> [--versus B] [--project P] [--depth N] [--trace]` (plus `_common`'s `--workspace/--json/--quiet/--idempotency-key/--schedule-id/--actor`); handler `_cmd_explore` — a pure read calling `explore_topic` directly (no `_enqueue_and_run`, mirroring `_cmd_project_explore` `cli.py:1199-1205`); `--depth` > 2 exits 2 with the cap named (`main`'s CLI boundary, `cli.py:55-63`).
 
-- [ ] **The pinned `test_cli_command_surface_is_exact` edit (named step, spec §3/§9).** Edit `tests/test_cli.py` (roster at `:73`):
+- [x] **The pinned `test_cli_command_surface_is_exact` edit (named step, spec §3/§9).** Edit `tests/test_cli.py` (roster at `:73`):
 
   old:
   ```python
@@ -2413,7 +2421,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
           "memoria serve",
   ```
 
-- [ ] **U1 surface-contract registry row (grep-first, both branches).** Run:
+- [x] **U1 surface-contract registry row (grep-first, both branches).** Run:
 
   ```bash
   ls src/memoria_vault/engine/ && grep -rln "registry" src/memoria_vault/engine/
@@ -2422,7 +2430,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
   - **If a U1 surface-contract registry module has landed** (an `engine/` module beyond the shipped `api.py`/`empirical_events.py`/`surface_contract.py` that registers CLI command rows — the U1 gate owns it): add the `memoria explore` row there following that module's established row form and its own contract test, and include that file in this task's commit.
   - **Else (the shipped state at 51395f15):** the only registry is `SURFACE_ACTIONS` in `engine/surface_contract.py`, which registers engine *read actions* — `memoria ask` itself carries no row there, and the floor-coverage gate (`tests/test_floor_coverage.py`) keys off `actions_by_id()`, so adding an action row would demand ARG_TABLE floor entries this slice does not own. Add **nothing** to `surface_contract.py`; the pinned roster edit above is the entire surface registration.
 
-- [ ] Add the two failing CLI tests — append to the end of `tests/test_cli.py` (all names used — `json`, `pytest`, `Path`, `main`, `_build_parser`, `_parser_for_command`, `_parser_dests`, `state` — are already imported at `:1-16`):
+- [x] Add the two failing CLI tests — append to the end of `tests/test_cli.py` (all names used — `json`, `pytest`, `Path`, `main`, `_build_parser`, `_parser_for_command`, `_parser_dests`, `state` — are already imported at `:1-16`):
 
   ```python
   def test_cli_explore_help_disambiguates_project_explore_both_directions() -> None:
@@ -2460,8 +2468,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert after == before
   ```
 
-- [ ] Run: `python -m pytest tests/test_cli.py -q` — expected failures: `test_cli_command_surface_is_exact` (roster mismatch: `memoria explore` missing from the parser), `KeyError: 'explore'` in both new tests.
-- [ ] Minimal implementation — three edits to `src/memoria_vault/cli.py`:
+- [x] Run: `python -m pytest tests/test_cli.py -q` — expected failures: `test_cli_command_surface_is_exact` (roster mismatch: `memoria explore` missing from the parser), `KeyError: 'explore'` in both new tests.
+- [x] Minimal implementation — three edits to `src/memoria_vault/cli.py`:
 
   1. Help constants, after the `SURFACE_ACTION` assignment (`:52`):
 
@@ -2577,8 +2585,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
          return {"stages": stages, "rerank": "off"}
      ```
 
-- [ ] Run to pass: `python -m pytest tests/test_cli.py tests/test_explore.py -q` — all passed (including the re-pinned roster).
-- [ ] Commit:
+- [x] Run to pass: `python -m pytest tests/test_cli.py tests/test_explore.py -q` — all passed (including the re-pinned roster).
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/cli.py tests/test_cli.py
@@ -2590,7 +2598,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 **Files:** `src/memoria_vault/runtime/explore.py`, `src/memoria_vault/cli.py`, `tests/test_explore.py`.
 **Interfaces:** `payload["honest_empty"]: str` on any explore side with `returned == 0` — the §4 sentence `"0 of <candidates> candidates matched; <n> unchecked documents were not searched"` (candidates = the last filter-stage count before `ranked`, i.e. the denominator the candidate set defines); the CLI text front prints that sentence instead of a bare summary. The slice-4 (honest-empty/ride-through enforcement) section consumes this field for its cross-front tests.
 
-- [ ] Extend `tests/test_explore.py` imports for the CLI-front tests:
+- [x] Extend `tests/test_explore.py` imports for the CLI-front tests:
 
   old:
   ```python
@@ -2613,7 +2621,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
   from memoria_vault.runtime import state
   ```
 
-- [ ] Write the failing honest-empty test — append to `tests/test_explore.py`:
+- [x] Write the failing honest-empty test — append to `tests/test_explore.py`:
 
   ```python
   def test_explore_honest_empty_renders_counts_on_text_and_json_fronts(
@@ -2642,8 +2650,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert output["explore"]["honest_empty"] == sentence
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`.
-- [ ] Minimal implementation — two edits. In `src/memoria_vault/runtime/explore.py` (`_explore_side`, before the return):
+- [x] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`.
+- [x] Minimal implementation — two edits. In `src/memoria_vault/runtime/explore.py` (`_explore_side`, before the return):
 
   old:
   ```python
@@ -2693,8 +2701,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       return _emit({"ok": True, "explore": payload}, args)
   ```
 
-- [ ] Run to pass: `python -m pytest tests/test_explore.py -q`.
-- [ ] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
+- [x] Run to pass: `python -m pytest tests/test_explore.py -q`.
+- [x] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
 
   ```python
   def test_cli_explore_acceptance_five_groups_versus_counts_and_depth_cap(
@@ -2765,9 +2773,9 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert "hard cap of 2" in refusal["error"]
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.
-- [ ] Section-final gate: `python scripts/verify` — green (the roster gate `test_testing_levels.py` sees `test_explore.py` registered from E.1; the doc-claims gate is unaffected — it only fails on docs citing commands that do not exist, and `memoria explore` now exists).
-- [ ] Commit:
+- [x] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.
+- [x] Section-final gate: `python scripts/verify` — green (the roster gate `test_testing_levels.py` sees `test_explore.py` registered from E.1; the doc-claims gate is unaffected — it only fails on docs citing commands that do not exist, and `memoria explore` now exists).
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/explore.py src/memoria_vault/cli.py tests/test_explore.py

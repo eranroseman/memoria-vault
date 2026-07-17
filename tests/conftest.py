@@ -46,6 +46,7 @@ TEST_LEVELS = {
     "test_eval_score.py": "contract",
     "test_evidence_markers.py": "unit",
     "test_evidence_sets.py": "runtime",
+    "test_explore.py": "contract",
     "test_exploration_channel.py": "runtime",
     "test_exploration_trace.py": "contract",
     "test_export_acceptance.py": "runtime",

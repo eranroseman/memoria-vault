@@ -1204,6 +1204,11 @@ ARG_TABLE: dict[str, dict] = {
         "http": ("GET", "/exploration"),
         "mcp": ("exploration", {}),
     },
+    "explore.read": {
+        "cli": ["explore", "floor"],
+        "http": None,
+        "mcp": None,
+    },
     # event_id=3 is the seed's create-concept event for note_claim — the
     # first journal event carrying a real output_id/path (event 1-2 are the
     # demo-work capture's started/done events, which have no path fields, so

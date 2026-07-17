@@ -13,7 +13,7 @@ from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import _cli_command_surface
-from tests.helpers import ROOT, _assert_request_columns, git
+from tests.helpers import ROOT, _assert_request_columns, git, write_checked_concept
 
 
 def _parser_for_command(parser: argparse.ArgumentParser, command: str) -> argparse.ArgumentParser:
@@ -79,6 +79,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria doctor bundle",
         "memoria doctor self-test",
         "memoria ask",
+        "memoria explore",
         "memoria handshake",
         "memoria serve",
         "memoria migrate",
@@ -182,6 +183,111 @@ def test_cli_shared_surface_help_uses_registry_summaries() -> None:
         for command in cli.get("commands") or []:
             command_parser = _parser_for_command(parser, str(command))
             assert command_parser.description == actions[str(action["id"])]["summary"]
+
+
+def test_cli_explore_help_and_read_envelope_are_pure(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    parser = _build_parser()
+    explore_parser = _parser_for_command(parser, "memoria explore")
+    project_parser = _parser_for_command(parser, "memoria project explore")
+    assert "memoria project explore" in str(explore_parser.description)
+    assert "memoria explore" in str(project_parser.description)
+    assert _parser_dests("memoria explore") >= {"topic", "versus", "project", "depth", "trace"}
+
+    with state.connect(workspace) as conn:
+        before = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    rc = main(["explore", "absent", "--workspace", str(workspace), "--json", "--trace"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["api_version"] == "engine-read-api.v1"
+    assert output["explore"]["trace"]["rerank"] == "off"
+    with state.connect(workspace) as conn:
+        after = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    assert after == before
+
+
+def test_cli_explore_text_reports_empty_sides_and_requested_traces(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    assert main(["explore", "absent", "--workspace", str(workspace), "--json"]) == 0
+    empty = json.loads(capsys.readouterr().out)["explore"]["honest_empty"]
+
+    assert main(["explore", "absent", "--workspace", str(workspace), "--trace"]) == 0
+    text = capsys.readouterr().out
+    assert text.splitlines()[0] == empty
+    assert "universe:" in text
+    assert "rerank: off" in text
+
+    assert (
+        main(
+            [
+                "explore",
+                "absent",
+                "--versus",
+                "also-absent",
+                "--workspace",
+                str(workspace),
+                "--trace",
+            ]
+        )
+        == 0
+    )
+    versus_text = capsys.readouterr().out
+    assert f"a: {empty}" in versus_text
+    assert "b: 0 of " in versus_text
+    assert "a: universe:" in versus_text
+    assert "b: rerank: off" in versus_text
+
+    write_checked_concept(
+        workspace,
+        "notes/known.md",
+        "type: note\ntitle: Known topic\nmode: claim\n",
+        body="Known topic evidence.",
+    )
+    assert (
+        main(
+            [
+                "explore",
+                "known",
+                "--versus",
+                "absent",
+                "--workspace",
+                str(workspace),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    mixed_empty = json.loads(capsys.readouterr().out)["explore"]["b"]["honest_empty"]
+
+    assert (
+        main(
+            [
+                "explore",
+                "known",
+                "--versus",
+                "absent",
+                "--workspace",
+                str(workspace),
+                "--trace",
+            ]
+        )
+        == 0
+    )
+    mixed_text = capsys.readouterr().out
+    assert mixed_text.splitlines()[0] == "completed; details available with --json"
+    assert f"b: {mixed_empty}" in mixed_text
+    assert "a: universe:" in mixed_text
+    assert "b: rerank: off" in mixed_text
 
 
 def test_cli_parent_help_exposes_shared_surface_summaries() -> None:

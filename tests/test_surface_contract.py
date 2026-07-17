@@ -28,6 +28,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "journal.list",
         "journal.get",
         "exploration.list",
+        "explore.read",
         "project.slice.read",
         "project.draft.read",
         "operation.run",
@@ -37,6 +38,30 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
     assert set(actions_by_id()) == expected
     assert len(SURFACE_ACTIONS) == len(expected)
     assert all(hasattr(engine_api, action["engine"]) for action in SURFACE_ACTIONS)
+
+
+def test_surface_contract_explore_is_cli_only_with_current_shape() -> None:
+    action = actions_by_id()["explore.read"]
+
+    assert action == {
+        "id": "explore.read",
+        "summary": (
+            "Surface a checked topic neighborhood. Distinct from memoria project explore, "
+            "which lists exploration-channel candidates."
+        ),
+        "engine": "read_explore",
+        "kind": "read",
+        "scope": "workspace",
+        "params": {
+            "topic": {"type": "string", "required": True},
+            "versus": {"type": "string", "default": ""},
+            "project": {"type": "string", "default": ""},
+            "depth": {"type": "integer", "default": 1},
+            "trace": {"type": "boolean", "default": False},
+        },
+        "cli": {"commands": ["memoria explore"]},
+        "response_version": engine_api.READ_API_VERSION,
+    }
 
 
 def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
@@ -93,4 +118,5 @@ def test_surface_contract_cli_commands_are_current_parser_commands() -> None:
 
     assert commands <= _cli_command_surface()
     assert "memoria surface schema" in commands
+    assert "memoria explore" in commands
     assert "memoria workspace scan" not in commands

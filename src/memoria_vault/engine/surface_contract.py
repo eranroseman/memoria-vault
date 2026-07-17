@@ -195,6 +195,25 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
+        "id": "explore.read",
+        "summary": (
+            "Surface a checked topic neighborhood. Distinct from memoria project explore, "
+            "which lists exploration-channel candidates."
+        ),
+        "engine": "read_explore",
+        "kind": "read",
+        "scope": "workspace",
+        "params": {
+            "topic": {"type": "string", "required": True},
+            "versus": {"type": "string", "default": ""},
+            "project": {"type": "string", "default": ""},
+            "depth": {"type": "integer", "default": 1},
+            "trace": {"type": "boolean", "default": False},
+        },
+        "cli": {"commands": ["memoria explore"]},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
         "id": "project.slice.read",
         "summary": "Read a project slice.",
         "engine": "read_slice",
