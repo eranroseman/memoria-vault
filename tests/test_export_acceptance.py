@@ -119,3 +119,67 @@ def test_draft_export_refuses_unresolved_citation_naming_the_finding(
 
     with pytest.raises(ValueError, match="unresolved-citation:source-alpha"):
         write_project_export(vault, "project-alpha", draft=True)
+
+
+@pytest.mark.parametrize(
+    "citekey",
+    ["foo,bar", "foo;bar", "foo]bar", "unsafe\n```bibtex", "unsafe`key"],
+)
+def test_draft_export_refuses_referenced_unsafe_citekey(tmp_path: Path, citekey: str) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey=citekey)
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    with pytest.raises(ValueError, match="unresolved-citation:source-alpha"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_draft_export_uses_csl_id_when_explicit_citekey_is_whitespace(tmp_path: Path) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey=" \t ", csl_json={"id": "fallback2026"})
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    exported = write_project_export(vault, "project-alpha", draft=True)
+
+    assert "[@fallback2026]" in exported["content"]
+    assert "@article{fallback2026," in _fence(exported["content"])
+
+
+def test_draft_export_preserves_conventional_punctuation_citekey(tmp_path: Path) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="smith:2026")
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    exported = write_project_export(vault, "project-alpha", draft=True)
+
+    assert "[@smith:2026]" in exported["content"]
+    assert "@article{smith:2026," in _fence(exported["content"])
+
+
+def test_draft_export_refuses_referenced_duplicate_citekey(tmp_path: Path) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="shared2026")
+    _catalog_source(vault, "source-beta", citekey="shared2026")
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    with pytest.raises(ValueError, match="unresolved-citation:source-alpha"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_draft_export_omits_unrelated_unsafe_citekey_from_inlined_fence(tmp_path: Path) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _catalog_source(vault, "source-breakout", citekey="breakout\n```bibtex")
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    exported = write_project_export(vault, "project-alpha", draft=True)
+
+    assert "[@safe2026]" in exported["content"]
+    assert "@article{safe2026," in _fence(exported["content"])
+    assert "breakout\n```bibtex" not in exported["content"]
+    assert len(re.findall(r"(?m)^```", exported["content"])) == 2

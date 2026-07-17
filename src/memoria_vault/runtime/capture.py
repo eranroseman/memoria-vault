@@ -24,6 +24,7 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
 WORK_ASPECT_ORDER = ("context", "key_idea", "method", "outcome", "limitation", "assumption")
+_BIBLIOGRAPHY_CITEKEY_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:+/-]*")
 _ASPECT_HEADING_ALIASES = {
     "assumption": "assumption",
     "assumptions": "assumption",
@@ -557,15 +558,38 @@ def parse_bibtex_entry(text: str) -> dict[str, Any]:
 
 def render_references_bib(vault: Path) -> str:
     """Render checked SQLite catalog Works as the generated bibliography.bib projection."""
-    entries = []
-    sources = state.catalog_sources(vault)
-    for frontmatter in sources:
-        csl_json = (
-            frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
-        )
-        if frontmatter.get("citekey") or csl_json.get("id"):
-            entries.append(_render_source_bibtex(frontmatter))
+    entries = [
+        _render_source_bibtex(frontmatter, citekey)
+        for frontmatter, citekey in _bibliography_projection_sources(state.catalog_sources(vault))
+    ]
     return ("\n\n".join(entries) + "\n") if entries else ""
+
+
+def bibliography_citekeys(vault: Path) -> dict[str, str]:
+    """Return the unique, export-safe citekeys in the bibliography projection."""
+    return {
+        str(source.get("work_id") or ""): citekey
+        for source, citekey in _bibliography_projection_sources(state.catalog_sources(vault))
+    }
+
+
+def _bibliography_projection_sources(
+    sources: list[dict[str, Any]],
+) -> list[tuple[dict[str, Any], str]]:
+    selected = [
+        (source, citekey) for source in sources if (citekey := _bibliography_citekey(source))
+    ]
+    counts: dict[str, int] = {}
+    for _source, citekey in selected:
+        counts[citekey] = counts.get(citekey, 0) + 1
+    return [(source, citekey) for source, citekey in selected if counts[citekey] == 1]
+
+
+def _bibliography_citekey(source: dict[str, Any]) -> str:
+    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+    explicit = str(source.get("citekey") or "").strip()
+    citekey = explicit or str(csl.get("id") or "").strip()
+    return citekey if _BIBLIOGRAPHY_CITEKEY_RE.fullmatch(citekey) else ""
 
 
 def write_references_bib(
@@ -1053,9 +1077,8 @@ class _TextHTMLParser(HTMLParser):
             self.parts.append(text)
 
 
-def _render_source_bibtex(frontmatter: dict[str, Any]) -> str:
+def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
     csl = frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
-    citekey = str(frontmatter.get("citekey") or csl.get("id"))
     fields = {
         "title": str(csl.get("title") or frontmatter.get("title") or citekey),
         "author": _render_csl_authors(csl.get("author")),

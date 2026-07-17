@@ -2758,13 +2758,9 @@ def _append_draft_export_references(lines: list[str], vault: Path) -> None:
 
 
 def _draft_citekeys(vault: Path) -> dict[str, str]:
-    citekeys: dict[str, str] = {}
-    for source in state.catalog_sources(vault):
-        csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
-        citekey = str(source.get("citekey") or csl.get("id") or "").strip()
-        if citekey:
-            citekeys[str(source.get("work_id") or "")] = citekey
-    return citekeys
+    from memoria_vault.runtime.capture import bibliography_citekeys
+
+    return bibliography_citekeys(vault)
 
 
 def _draft_unresolved_citations(vault: Path, content: str) -> list[str]:

@@ -62,6 +62,23 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _projection_source(
+    vault: Path,
+    work_id: str,
+    *,
+    citekey: str = "",
+    csl_json: dict[str, str] | None = None,
+) -> None:
+    state.upsert_catalog_record(
+        vault,
+        work_id=work_id,
+        title=f"{work_id} source",
+        check_status="checked",
+        citekey=citekey,
+        csl_json=csl_json,
+    )
+
+
 def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
@@ -652,6 +669,58 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
 
     (vault / "bibliography.bib").write_text("stale\n", encoding="utf-8")
     assert not check_references_bib(vault)
+
+
+@pytest.mark.parametrize(
+    "citekey",
+    ["foo,bar", "foo;bar", "foo]bar", "unsafe\n```bibtex", "unsafe`key"],
+)
+def test_references_bib_omits_unsafe_citekeys(tmp_path: Path, citekey: str) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey=citekey)
+
+    assert render_references_bib(vault) == ""
+
+
+def test_references_bib_uses_csl_id_when_explicit_citekey_is_whitespace(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(
+        vault,
+        "source-alpha",
+        citekey=" \t ",
+        csl_json={"id": "fallback2026"},
+    )
+
+    assert "@article{fallback2026," in render_references_bib(vault)
+
+
+def test_references_bib_preserves_conventional_punctuation_citekey(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey="smith:2026")
+
+    assert "@article{smith:2026," in render_references_bib(vault)
+
+
+def test_references_bib_omits_duplicate_selected_citekeys(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey="shared2026")
+    _projection_source(vault, "source-beta", citekey="shared2026")
+
+    assert render_references_bib(vault) == ""
+
+
+def test_references_bib_omits_unrelated_unsafe_key_without_corrupting_valid_entry(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey="safe2026")
+    _projection_source(vault, "source-breakout", citekey="breakout\n```bibtex")
+
+    rendered = render_references_bib(vault)
+
+    assert "@article{safe2026," in rendered
+    assert "breakout\n```bibtex" not in rendered
+    assert rendered.count("@article{") == 1
 
 
 def test_work_id_survives_pi_citekey_correction(tmp_path: Path) -> None:
