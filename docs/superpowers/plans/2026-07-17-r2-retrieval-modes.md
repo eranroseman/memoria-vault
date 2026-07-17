@@ -1779,6 +1779,84 @@ Stop if missing — the shipped `concept_edges` extractor is a stub returning `[
 
 Shipped seams consumed (verified): `checked_search_documents` `search_index.py:115-131`; module-private ranking core `_bm25`/`_tokens` `search_index.py:580/:576` and `_bundle_roots` `:414` (intra-package reuse; `tests/test_search_index.py` already imports these privates — precedent); `state.concept_edges` `:2055-2076` (checked-only rows); `evidence_sets` schema `schema.sql:330-343` with `block_ref = <claim-relpath>#^blk-<id>` per `state._evidence_block_ref` `:2689-2690`; `replace_evidence_sets` `:2277-2332`; `memoria project explore` `cli.py:350-353`; pinned roster `tests/test_cli.py:73`; CLI plumbing `main`/`_fail` `cli.py:55-63/:3234`, `_common` `:560`, `_emit` `:3092`, `_workspace` `:2130`.
 
+> **E reconciliation plan (binding; supersedes conflicting historical listings
+> below).** P.1–P.3 changed the owned seams after the historical E listing was
+> written. Execute the following four reconciled tasks, then mark the
+> historical E.1–E.3 checkboxes complete as implemented through this
+> replacement. Preserve P.3's top-level Ask parser and shared
+> `_emit_ask_result`; no historical old/new snippet may overwrite it.
+>
+> **ER.0 — pure-read eligibility seam.** Change only the internal guard APIs:
+> `is_consumable_checked_file(vault, relpath, *, enqueue_scan: bool = True)`
+> and `checked_search_universe(vault, *, include_stale: bool = False,
+> enqueue_scan: bool = True)`. Their default is the exact shipped behavior;
+> only the two refusal paths conditionally call `_enqueue_scan`. Keep
+> `checked_search_documents`' public signature/default unchanged. Add a
+> passive-universe contract test with one consumable note, one tampered checked
+> note, and one quarantined note: `enqueue_scan=False` returns only the good
+> document, reports `gated == 2`, serializes neither blocked path nor canary
+> text, and leaves `operation_requests` unchanged. Retain the existing default
+> Ask/read-barrier test that proves a tampered checked document still queues
+> `observe-pi-edits`. The new flag is never a CLI, worker, or payload option.
+>
+> **ER.1 — explore engine and safety contract.** Create
+> `runtime/explore.py` with `SEED_K = 5`, `DEPTH_CAP = 2`, and
+> `explore_topic(vault, topic, *, project="", depth=1, versus="",
+> trace=False) -> dict[str, Any]`. Load
+> `checked_search_universe(vault, enqueue_scan=False)` **once** per request and
+> pass its documents/strata to both versus sides; do not import
+> `checked_search_documents`, the read barrier, `_bundle_roots`,
+> `iter_markdown`, or implement a second strata walk. Before ranking, retain
+> only displayable documents (`note` modes `claim`/`question`, `hub`, and
+> work/digest/fulltext representations) via a `PipelineStages` named
+> `displayable-kind` filter; then apply optional `project-slice`. Rank with
+> `_bm25`, pass the top `SEED_K` hits through `rerank`, expand with
+> `graph_sql.neighborhood`, and intersect expansion with the displayable
+> candidate ids. Build common rows through `PipelineStages`, insert `seed` and
+> `neighborhood` immediately before terminal `returned`, and attach the shared
+> strata. `honest_empty(rows, strata)` is present exactly when a side returns
+> zero groups. Direct-insert both PI-owned tension directions in the fixture —
+> `replace_concept_edges` intentionally preserves/drops mirror tensions.
+>
+> All display edges, tension pairs, intersections, crossings, and trace scores
+> must be restricted to the side's returned consumable ids; a checked edge to a
+> subsequently gated/tampered endpoint is never emitted. Test normal groups,
+> complete-evidence-set grounds count, depth 0/3 refusals, depth two, project
+> filtering, generic-note/project pre-rank exclusion, and a gated-neighbor
+> canary. Wrap the tamper-triggering engine call in `read_only_guard`; assert
+> no blocked id/text in `json.dumps(payload)`, `gated` counts it, and no
+> request/journal/index/vault mutation occurs.
+>
+> **ER.2 — real CLI-only surface.** Add current-shape (no partial U1 `job`
+> field) `explore.read` to `SURFACE_ACTIONS`: engine `read_explore`, kind
+> `read`, workspace scope, required string `topic`, optional string
+> `versus`/`project`, integer `depth=1`, boolean `trace=False`, CLI command
+> `memoria explore`, and `ENGINE_READ_API_VERSION`; it deliberately has no
+> `http` or `mcp` key. Its summary is the top-level help text and names the
+> distinction from `memoria project explore`. Add
+> `engine_api.read_explore(...)`, which returns `_read_payload(explore=
+> explore_topic(...))`; the CLI calls that adapter and constructs the parser
+> with `**_surface_help("explore.read")`. Keep a separate project-explore help
+> string for the reverse disambiguation. Add the `explore.read` CLI-only row to
+> `tests.floor_lib.ARG_TABLE`; keep HTTP/MCP entries `None`, leaving their
+> routes/tools/OpenAPI rosters unchanged. Tests pin the registry shape, engine
+> envelope, parser roster/help, generic floor coverage, and the no-route/no-tool
+> invariants.
+>
+> **ER.3 — trace, text, and acceptance.** For a single side,
+> `trace=True` attaches `build_trace(side["pipeline_counts"], seed_hits)`;
+> for `--versus`, attach `{"a": trace_a, "b": trace_b}`. Never retain the
+> historical `{"stages": ..., "rerank": "off"}` shape. In text mode, a
+> single empty result prints its honest-empty sentence and (when requested) its
+> trace. Under `--versus`, `_emit` still handles the nonempty side and prints
+> `a:`/`b:` prefixed honest-empty sentences for any empty side before its
+> requested per-side trace; JSON carries the unchanged structured payload.
+> Acceptance tests pin normal and zero versus sides, trace scores/counts,
+> groups/grounds/tensions/intersection, depth-cap CLI refusal, and the tampered
+> pure-read case. Run the targeted suites, `python scripts/verify`, then an
+> explicit `codex-security:security-diff-scan` over the read-barrier,
+> search-universe, explore, adapter/surface, and CLI diff before commit.
+
 ### Task E.1 — engine: `explore_topic` (seed → expand → group → mark)
 
 **Files:** `src/memoria_vault/runtime/explore.py` (new), `tests/test_explore.py` (new), `tests/conftest.py` (register test level).
