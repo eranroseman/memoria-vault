@@ -45,6 +45,7 @@ rerun. Do not cherry-pick the branch’s older Alpha21/COV history as part of Pl
 | G2S1.2 | `bcbc725a`, repair `7783d9cd` |
 | G2S1.3 | `9a36a003` |
 | G2S1.4 | `cf8c668b` |
+| G2S1.5 | `9c77ba61` (two-spec design record; supersedes the historical single-file deliverable below) |
 | S12.1 | `8ece209c` |
 | S12.2 | `f0f653be` |
 | S12.3 | `cc4b24bb`, `5bfedc1f` |
@@ -60,7 +61,7 @@ rerun. Do not cherry-pick the branch’s older Alpha21/COV history as part of Pl
 | S68.2 | `f034ca7a` |
 | S68.5 | `0c1c37e` (also contains the execution-order amendment above) |
 
-Pending: G2S1.5; S68.3, S68.4, and S68.6; and COST.1–.5. After `8ece209c`,
+Pending: S68.3, S68.4, and S68.6; and COST.1–.5. After `8ece209c`,
 cherry-pick ancillary cleanup `e8e9a154` solely to remove its accidentally tracked
 session report; it is cleanup, not S12.1 implementation. The source-complete
 task bodies below are historical TDD/review records: their stale line anchors,
@@ -1147,81 +1148,18 @@ own definition; no test exercises any of them. Independent of G1/G2 tasks.
 
 ---
 
-### Task G2S1.5: graph-substrate design gate (process task — no code)
+### Task G2S1.5: graph-substrate design gate — completed
 
-Everything in G2–G5/S1 not mechanically specified today goes through the repo's
-mandated design gate before any implementation task exists. Deliverable is a spec,
-produced by the superpowers brainstorming skill — not code, not a placeholder.
+Completed in `9c77ba61` after the required design sessions. The original intended
+single file was deliberately split into the two audited decision records:
 
-**Files:**
-- Create: `docs/superpowers/specs/2026-07-15-graph-substrate-design.md` (output of
-  the brainstorm; `docs/superpowers/` is tracked, not published)
-- Test: none — acceptance is the spec's existence and coverage checklist below.
+- `docs/superpowers/specs/2026-07-15-graph-nodes-identity-design.md`
+- `docs/superpowers/specs/2026-07-15-graph-edges-roles-propagation-design.md`
 
-**Interfaces:**
-- Consumes (named inputs, all read into the session before brainstorming):
-  - `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md` §2, packages G2–G5
-    and S1 (lines 140-147) plus §6 item 2 (warrant ontology RESOLVED: Option B) and
-    the §"Schema-before-corpus" ruling (line 354).
-  - `docs/superpowers/specs/data-structure-analysis.md` — at minimum the
-    `concept_edges` section (~line 2795), the work_graph_edges/entity-resolution
-    sections (~lines 1700-1880, 2699-2790), and Part-2 G0/G3/G4 findings
-    (~lines 995, 1143-1160, 1164-1176).
-  - `docs/superpowers/specs/warrant-ontology-brief.md` — the interim ruling
-    ("What is already decided") and the pre-registered evidence gate.
-  - This plan's already-shipped ledger (header above) — reconcile before proposing.
-- Produces: the spec file, with a decision record (chosen option + rejected
-  alternatives + migration/version claim) per agenda item. Follow-up implementation
-  tasks are cut from the spec in a later plan, never from this one.
-
-**Steps:**
-
-- [ ] Confirm G2S1.1-.4 are merged (the brainstorm designs on top of the landed
-  substrate): `git log --oneline -10` shows the four commits above.
-- [ ] Invoke the brainstorming skill with the agenda and inputs inline:
-  `Skill(skill="superpowers:brainstorming", args="Graph-substrate design for beta.1 consolidation G2-G5/S1. Inputs: docs/superpowers/specs/2026-07-12-beta.1-consolidation.md §2 G2-G5+S1, docs/superpowers/specs/data-structure-analysis.md, docs/superpowers/specs/warrant-ontology-brief.md interim ruling (Option B, do not relitigate). Output: docs/superpowers/specs/2026-07-15-graph-substrate-design.md")`
-- [ ] Drive the session through this fixed agenda, one decision record each:
-  1. **single-edge-module (G2, full consolidation)** — one owner for the relation
-     roster + all edge parsing; today's substrates to reconcile: schema.py
-     `LINK_RELATIONS`/`_check_links`/`parse_links`, state.py
-     `_concept_edge_relation` roster (state.py:3420), schema.sql `relation_type`
-     CHECK constraints (concept_edges + work_graph_edges), enrichment.py
-     work_graph_edges relation writes (enrichment.py:975).
-  2. **catalog-sources-bridge (G2)** — how claim→work edges resolve across the
-     concept-id / work-id id-space boundary.
-  3. **tension-edge-primitive / tension-relation-write-path (G2)** — the
-     `surface_tensions` PI-confirmation write path onto the (now persistent)
-     `tension` rows; edge existence is the confirmation signal.
-  4. **links-mirror semantics beyond fill (G2)** — dangling-target policy,
-     unchecked-source visibility, `.md` id-space normalization ratified or revised.
-  5. **mode-collapse 6→4 (S1)** — note.yaml already ships the 4-mode enum; audit
-     remaining 6-mode substrates (search/index/CLI) and either record as shipped or
-     spec the residue.
-  6. **concept-type-roster 15→10 (S1)** — roster is already 6 type files; reconcile
-     the consolidation's 15→10 against reality and record the delta.
-  7. **ULID keys + rename map (G3)** — ULID internal / path OKF-facing, rename
-     tracking, real FKs; `work-id-rename`, `source→published_in`,
-     `journal_events→event_log`, `source_type→item_type`; claims schema versions 15+.
-  8. **six-role argument graph (G4)** — roles via typed relations, earn-each-type;
-     within the warrant-brief interim ruling only (node reification stays deferred
-     to the beta.2 evidence gate — do not relitigate).
-  9. **typed propagation / blast-radius (G5)** — derive-and-propagate on write,
-     typed consequences, origin-blind epistemics (integrity.py:915-925/999-1003).
-- [ ] Write the spec to `docs/superpowers/specs/2026-07-15-graph-substrate-design.md`
-  with one `## Decision:` section per agenda item, each carrying: inputs cited,
-  options with pros/cons, the recommendation, and what it consumes from the landed
-  G2S1 substrate (`parse_links`, `concept_edge_id`, edge-row contract, versions
-  13-14).
-- [ ] Acceptance check: all nine agenda items have a decision record; no code was
-  written; already-shipped items are marked as such, not re-specified.
-- [ ] Commit:
-
-  ```
-  git add docs/superpowers/specs/2026-07-15-graph-substrate-design.md
-  git commit -m "docs(specs): graph-substrate design record for G2-G5/S1 (beta.1 consolidation)
-
-  Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
-  ```
+Together they cover the fixed nine-item agenda, record the landed G2S1.1–.4
+substrate they consume, reconcile already-shipped S1 work, and defer implementation
+tasks to later plans. No code was written in this gate. The former single-file
+deliverable and unchecked steps are superseded; do not recreate them.
 # PLAN 22 — #1293 slices 1–2 (package S12)
 
 Governing spec: `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md`
