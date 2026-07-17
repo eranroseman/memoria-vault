@@ -945,6 +945,80 @@ def test_cli_project_resolve_evidence_verifies_current_draft_before_disposition(
     assert tuple(verification) == ("verify-project-draft", "done")
 
 
+def test_cli_project_resolve_evidence_supports_defer_and_edit(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+    (workspace / "projects/project-alpha/outline.md").write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 -- Support\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "project",
+                "compose",
+                "--workspace",
+                str(workspace),
+                "project-alpha",
+                "--json",
+                "--idempotency-key",
+                "compose-for-dispositions",
+            ]
+        )
+        == 0
+    )
+    composed = json.loads(capsys.readouterr().out)
+    evidence_id = composed["result"]["evidence_markers"][0]["id"]
+
+    rc = main(
+        [
+            "project",
+            "resolve-evidence",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--evidence-id",
+            evidence_id,
+            "--decision",
+            "defer",
+            "--reason",
+            "revisit tomorrow",
+            "--json",
+            "--idempotency-key",
+            "verify-for-defer",
+        ]
+    )
+    deferred = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert deferred["ok"] is True
+    assert deferred["decision"] == "defer"
+    assert deferred["event"]["suppressed_until"].endswith("T00:00:00Z")
+
+    rc = main(
+        [
+            "project",
+            "resolve-evidence",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--evidence-id",
+            evidence_id,
+            "--decision",
+            "edit",
+            "--json",
+            "--idempotency-key",
+            "verify-for-edit",
+        ]
+    )
+    edited = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert edited["event"]["edit_target"]["draft_path"] == "projects/project-alpha/draft.md"
+
+
 def test_cli_new_note_check_and_link_flow(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -453,7 +453,7 @@ this task only records them honestly.
 
 **Steps:**
 
-- [ ] Write the failing seam tests. In `tests/test_draft_verification.py`,
+- [x] Write the failing seam tests. In `tests/test_draft_verification.py`,
   extend the imports: after `from pathlib import Path` (`:4`) add
 
   ```python
@@ -513,7 +513,17 @@ this task only records them honestly.
           resolve_evidence_review(vault, evidence_id, decision="override", reason="nope")
   ```
 
-- [ ] Run the tests to verify they fail:
+- [x] Review amendment — add `test_defer_disposition_uses_utc_day_at_offset_boundary`:
+  monkeypatch `knowledge.now_iso` to `2026-07-17T23:30:00-02:00`, then assert
+  the deferred event preserves that timestamp and computes
+  `2026-07-19T00:00:00Z`. This proves UTC conversion occurs before taking the
+  calendar date rather than accidentally using the source offset's local day.
+- [x] Review amendment — parametrically prove `defer` and `edit` after a prior
+  bound `accept` remove the id from `_disposed_evidence_digests` and make the
+  draft unready. This pins A.1's latest-event, accept-only clearance contract
+  for both new non-accept decisions.
+
+- [x] Run the tests to verify they fail:
 
   ```
   python -m pytest tests/test_draft_verification.py -v -k "defer_disposition or edit_disposition or unknown_decision"
@@ -524,7 +534,7 @@ this task only records them honestly.
   test FAILS because the shipped message does not match
   `accept, reject, edit, or defer`.
 
-- [ ] Write the minimal seam implementation in
+- [x] Write the minimal seam implementation in
   `src/memoria_vault/runtime/knowledge.py`:
 
   (a) Change line 14 from `from datetime import date` to:
@@ -610,7 +620,7 @@ this task only records them honestly.
       return f"{next_day.isoformat()}T00:00:00Z"
   ```
 
-- [ ] Run the seam tests to verify they pass:
+- [x] Run the seam tests to verify they pass:
 
   ```
   python -m pytest tests/test_draft_verification.py -v
@@ -619,7 +629,7 @@ this task only records them honestly.
   Expected: all pass (defer/edit journal their payloads and neither clears the
   hold — Task V2R-A.1's accept-only lookup already guarantees the latter).
 
-- [ ] Write the failing CLI test. In `tests/test_cli_work_project.py`, append
+- [x] Write the failing CLI test. In `tests/test_cli_work_project.py`, append
   after `test_cli_project_resolve_evidence_verifies_current_draft_before_disposition`
   (ends `:945`):
 
@@ -698,7 +708,7 @@ this task only records them honestly.
       assert edited["event"]["edit_target"]["draft_path"] == "projects/project-alpha/draft.md"
   ```
 
-- [ ] Run the CLI test to verify it fails:
+- [x] Run the CLI test to verify it fails:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_supports_defer_and_edit -v
@@ -707,7 +717,7 @@ this task only records them honestly.
   Expected: ERROR with `SystemExit: 2` — argparse rejects
   `invalid choice: 'defer'`.
 
-- [ ] Write the minimal CLI implementation. In `src/memoria_vault/cli.py:332`
+- [x] Write the minimal CLI implementation. In `src/memoria_vault/cli.py:332`
   change:
 
   ```python
@@ -725,7 +735,7 @@ this task only records them honestly.
   (`_cmd_project_resolve_evidence` passes `decision` through unchanged — no
   handler edit.)
 
-- [ ] Run the CLI test to verify it passes:
+- [x] Run the CLI test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_supports_defer_and_edit -v
@@ -733,7 +743,7 @@ this task only records them honestly.
 
   Expected: PASSED.
 
-- [ ] Update the two behavior sentences in docs. In
+- [x] Update the two behavior sentences in docs. In
   `docs/how-to-guides/project/compose-a-draft.md` replace:
 
   ```
@@ -765,7 +775,7 @@ this task only records them honestly.
   not silently rewrite the draft or remove its durable evidence marker.
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_draft_verification.py tests/test_cli_work_project.py docs/how-to-guides/project/compose-a-draft.md docs/tutorials/05-verify-evidence.md

@@ -342,7 +342,9 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     _common(resolve_evidence)
     resolve_evidence.add_argument("project_path")
     resolve_evidence.add_argument("--evidence-id", required=True)
-    resolve_evidence.add_argument("--decision", choices=("accept", "reject"), required=True)
+    resolve_evidence.add_argument(
+        "--decision", choices=("accept", "reject", "edit", "defer"), required=True
+    )
     resolve_evidence.add_argument("--reason", default="")
     resolve_evidence.set_defaults(handler=_cmd_project_resolve_evidence)
     promote = project_sub.add_parser("promote")

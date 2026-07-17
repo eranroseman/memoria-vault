@@ -47,8 +47,8 @@ memoria project resolve-evidence --workspace . <project-path> \
 ```
 
 Then remove or rewrite the unsupported sentence and verify again.
-Reject records the PI disposition of incomplete evidence; it does not silently
-rewrite the draft or remove its durable evidence marker.
+Reject records the PI disposition and keeps the export hold blocking; it does
+not silently rewrite the draft or remove its durable evidence marker.
 
 **4. Promote reusable prose deliberately.**
 

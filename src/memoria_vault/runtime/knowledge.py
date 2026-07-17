@@ -11,7 +11,7 @@ import shutil
 import subprocess
 from collections import defaultdict
 from collections.abc import Iterable
-from datetime import date
+from datetime import UTC, date, timedelta
 from itertools import pairwise
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -32,6 +32,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     append_explicit_journal_event,
@@ -2290,27 +2291,32 @@ def resolve_evidence_review(
     decision = decision.strip().lower()
     if not re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id):
         raise ValueError(f"invalid evidence id: {evidence_id}")
-    if decision not in {"accept", "reject"}:
-        raise ValueError("evidence review decision must be accept or reject")
+    if decision not in {"accept", "reject", "edit", "defer"}:
+        raise ValueError("evidence review decision must be accept, reject, edit, or defer")
     record = next(
         (row for row in state.evidence_sets(Path(vault)) if row["id"] == evidence_id),
         None,
     )
     if record is None:
         raise ValueError(f"unknown evidence id: {evidence_id}")
-    return append_explicit_journal_event(
-        Path(vault),
-        {
-            "event": "resolved",
-            "operation": "resolve-evidence-review",
-            "evidence_id": evidence_id,
-            "decision": decision,
-            "reason": reason.strip(),
-            "items_sha256": _evidence_items_sha256(record["items"]),
-        },
-        actor=actor,
-        machine=machine,
-    )
+    event: dict[str, Any] = {
+        "event": "resolved",
+        "operation": "resolve-evidence-review",
+        "evidence_id": evidence_id,
+        "decision": decision,
+        "reason": reason.strip(),
+        "items_sha256": _evidence_items_sha256(record["items"]),
+    }
+    if decision == "defer":
+        event["timestamp"] = now_iso()
+        event["suppressed_until"] = _defer_suppressed_until(event["timestamp"])
+    if decision == "edit":
+        block_ref = str(record["block_ref"])
+        event["edit_target"] = {
+            "draft_path": block_ref.partition("#^")[0],
+            "block_ref": block_ref,
+        }
+    return append_explicit_journal_event(Path(vault), event, actor=actor, machine=machine)
 
 
 def promote_draft_passage(
@@ -3250,6 +3256,15 @@ def _verification_finding_labels(findings: Iterable[dict[str, Any]]) -> list[str
 
 def _evidence_items_sha256(items: Iterable[str]) -> str:
     return hashlib.sha256("|".join(items).encode("utf-8")).hexdigest()
+
+
+def _defer_suppressed_until(timestamp: str) -> str:
+    """Return the next UTC midnight after a disposition timestamp."""
+    moment = parse_iso(timestamp)
+    if moment is None or moment.tzinfo is None:
+        raise ValueError(f"defer timestamp must be timezone-aware ISO-8601: {timestamp}")
+    next_day = moment.astimezone(UTC).date() + timedelta(days=1)
+    return f"{next_day.isoformat()}T00:00:00Z"
 
 
 def _disposed_evidence_digests(vault: Path) -> dict[str, str]:

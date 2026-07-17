@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import sqlite3
 from dataclasses import replace
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -24,6 +25,7 @@ from memoria_vault.runtime.knowledge import (
 from memoria_vault.runtime.knowledge import (
     write_project_export as _write_project_export,
 )
+from memoria_vault.runtime.time import parse_iso
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event, append_journal_event
 from tests.helpers import call_with_context, operation_context, write_checked_concept
 
@@ -461,6 +463,75 @@ def test_latest_legacy_digestless_disposition_voids_prior_accept(tmp_path: Path)
 
     assert evidence_id not in knowledge._disposed_evidence_digests(tmp_path)
     assert verify_project_draft(tmp_path, "project-alpha")["ready"] is False
+
+
+def test_defer_disposition_keeps_hold_and_records_utc_day_suppression(tmp_path: Path) -> None:
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="This implicit claim is deferred until tomorrow."
+    )
+
+    event = resolve_evidence_review(tmp_path, evidence_id, decision="defer", reason="revisit")
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    moment = parse_iso(event["timestamp"])
+    assert moment is not None
+    expected_day = (moment.date() + timedelta(days=1)).isoformat()
+    assert event["suppressed_until"] == f"{expected_day}T00:00:00Z"
+    assert verification["ready"] is False
+    assert "evidence-incomplete" in {finding["kind"] for finding in verification["findings"]}
+
+
+def test_defer_disposition_uses_utc_day_at_offset_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    timestamp = "2026-07-17T23:30:00-02:00"
+    monkeypatch.setattr(knowledge, "now_iso", lambda: timestamp)
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="This deferred claim crosses a UTC-day boundary."
+    )
+
+    event = resolve_evidence_review(tmp_path, evidence_id, decision="defer", reason="revisit")
+
+    assert event["timestamp"] == timestamp
+    assert event["suppressed_until"] == "2026-07-19T00:00:00Z"
+
+
+def test_edit_disposition_records_deep_link_and_keeps_hold(tmp_path: Path) -> None:
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="This implicit claim needs its marker fixed."
+    )
+
+    event = resolve_evidence_review(tmp_path, evidence_id, decision="edit", reason="fix marker")
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    anchor = evidence_id.removeprefix("ev-")
+    assert event["edit_target"] == {
+        "draft_path": "projects/project-alpha/draft.md",
+        "block_ref": f"projects/project-alpha/draft.md#^blk-{anchor}",
+    }
+    assert verification["ready"] is False
+
+
+@pytest.mark.parametrize("decision", ["defer", "edit"])
+def test_defer_or_edit_after_accept_reblocks_export(tmp_path: Path, decision: str) -> None:
+    evidence_id = _compose_implicit_draft(
+        tmp_path, body="A later non-accept decision must revoke clearance."
+    )
+
+    resolve_evidence_review(tmp_path, evidence_id, decision="accept", reason="PI accepted")
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is True
+
+    resolve_evidence_review(tmp_path, evidence_id, decision=decision, reason="PI changed course")
+
+    assert evidence_id not in knowledge._disposed_evidence_digests(tmp_path)
+    assert verify_project_draft(tmp_path, "project-alpha")["ready"] is False
+
+
+def test_unknown_decision_names_all_four(tmp_path: Path) -> None:
+    evidence_id = _compose_implicit_draft(tmp_path, body="Guard message names the seam decisions.")
+
+    with pytest.raises(ValueError, match="accept, reject, edit, or defer"):
+        resolve_evidence_review(tmp_path, evidence_id, decision="override", reason="nope")
 
 
 def test_evidence_items_digest_preserves_nonempty_item_order() -> None:

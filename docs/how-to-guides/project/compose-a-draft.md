@@ -42,8 +42,11 @@ memoria project verify --workspace <vault> projects/<project>/project.md
 
 ## Resolve evidence review
 
-If verification reports an evidence item that you accept or reject after review,
-record the PI disposition:
+If verification reports an evidence item, record the PI disposition — `accept`,
+`reject`, `edit`, or `defer`. Only `accept` clears the export hold; `reject`
+keeps it blocking, `edit` records a fix-the-marker intent with a deep link to
+the draft block, and `defer` suppresses the review item until the next UTC
+calendar day:
 
 ```bash
 memoria project resolve-evidence --workspace <vault> projects/<project>/project.md \
