@@ -1530,13 +1530,13 @@ warning.
 
 ---
 
-### Task P.3 — `--trace` on ask + the explore consumer contract
+### Task P.3 — `--trace` on ask + the explore consumer contract — completed
 
 **Files:**
 - `src/memoria_vault/runtime/search_index.py` (`answer_query` gains `trace: bool = False`)
 - `src/memoria_vault/runtime/worker.py` (`answer-query` dispatch, `worker.py:740-756` — thread `trace`)
 - `src/memoria_vault/cli.py` (ask parser `cli.py:104-107`; `_cmd_ask`; new `_print_ask_trace`)
-- `tests/test_search_index.py`, `tests/test_cli_honesty.py`
+- `tests/test_search_index.py`, `tests/test_cli_honesty.py`, `tests/test_worker_product_jobs.py`
 
 **Interfaces:**
 - `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="", trace=False)` — when `trace=True` the payload gains `trace = build_trace(pipeline_counts, hits)`: same ordered counts, `scores` for returned hits, `rerank: "off"`, and `fusion_inputs` only when more than one ranked leg exists (BM25 is the only leg today, so it is absent — honest by construction).
@@ -1551,9 +1551,13 @@ warning.
 > zero-hit path for top-level and project ask; P.3 extends only top-level
 > `memoria ask` with `--trace`.
 
+- [x] Add the worker contract in `tests/test_worker_product_jobs.py`: an
+  unparseable value is rejected, while `"false"` is accepted and does not add
+  trace output.
+
 **Steps — cycle A (seam):**
 
-- [ ] Failing test. Append to `tests/test_search_index.py`:
+- [x] Failing test. Append to `tests/test_search_index.py`:
 
   ```python
   def test_answer_query_trace_reports_counts_scores_and_rerank_off(tmp_path: Path) -> None:
@@ -1571,9 +1575,9 @@ warning.
       assert "trace" not in answer_query(vault, "alpha")
   ```
 
-- [ ] Run `python -m pytest tests/test_search_index.py -q` — expected failure: `TypeError: answer_query() got an unexpected keyword argument 'trace'`.
+- [x] Run `python -m pytest tests/test_search_index.py -q` — observed the expected unsupported-`trace` failure before implementation.
 
-- [ ] Minimal implementation — `answer_query` final form (replaces the P.2 version; only the signature line, the tail, and the return change):
+- [x] Minimal implementation — `answer_query` final form (replaces the P.2 version; only the signature line, the tail, and the return change):
 
   ```python
   def answer_query(
@@ -1618,11 +1622,11 @@ warning.
       return answer
   ```
 
-- [ ] Run `python -m pytest tests/test_search_index.py -q` — expected: all pass.
+- [x] Run `python -m pytest tests/test_search_index.py -q` — passed.
 
 **Steps — cycle B (CLI flag threading + text render):**
 
-- [ ] Failing test. Append to `tests/test_cli_honesty.py`:
+- [x] Failing test. Append to `tests/test_cli_honesty.py`:
 
   ```python
   def test_ask_trace_flag_threads_through_worker_and_prints_stage_lines(tmp_path, capsys):
@@ -1654,9 +1658,9 @@ warning.
       assert "trace" not in jsonlib.loads(capsys.readouterr().out)["result"]
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py -q` — expected failure: `SystemExit: 2` from argparse (`unrecognized arguments: --trace`).
+- [x] Run `python -m pytest tests/test_cli_honesty.py -q` — observed the expected unrecognized-flag failure before implementation.
 
-- [ ] Minimal implementation, three edits:
+- [x] Minimal implementation, three edits:
 
   1. Ask parser (`cli.py:104-107`), old → new:
   ```python
@@ -1728,14 +1732,14 @@ warning.
       print(f"rerank: {trace.get('rerank', 'off')}")
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py tests/test_search_index.py tests/test_cli.py -q` — expected: all pass.
+- [x] Run `python -m pytest tests/test_cli_honesty.py tests/test_search_index.py tests/test_cli.py -q` — passed with the worker contract suite (44 focused tests).
 
-- [ ] Section-final gate: run `python scripts/verify` — expected: green (lint, product gates, tests, offline smoke, syntax).
+- [x] Section-final gate: `python scripts/verify` — passed (2412 passed, 9 skipped; pre-existing multiprocessing fork warning only).
 
-- [ ] Commit:
+- [x] Commit (`3d35c896`):
 
   ```bash
-  git add src/memoria_vault/runtime/search_index.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_search_index.py tests/test_cli_honesty.py
+  git add src/memoria_vault/runtime/search_index.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_search_index.py tests/test_cli_honesty.py tests/test_worker_product_jobs.py
   git commit -m "$(cat <<'EOF'
   feat(ask): --trace retrieval trace (R2 P.3)
 
@@ -1749,6 +1753,13 @@ warning.
   EOF
   )"
   ```
+
+**Completion record (2026-07-17).** Implemented in `3d35c896`; the worker
+uses `_payload_bool` so false-like values do not enable trace and malformed
+values fail, while the top-level-only flag retains P.2's shared project-ask
+honesty path. Independent review found no code issues, then caught and repaired
+the explicit staging omission for the worker contract test. Final verification:
+2412 passed, 9 skipped, with the pre-existing multiprocessing fork warning.
 
 **Seam handoff to section E (explore) — the consumer contract, binding:** `memoria explore` builds its own `PipelineStages` per side (named filter stages such as `project-slice` and `depth-expansion` via `add_filter`, unique-suffixed automatically), passes its seed ranking through `retrieval_pipeline.rerank(...)` between rank and return, attaches `stages.rows()` / `retrieval_pipeline.excluded_strata(...)` to its payload (per side under `--versus`, spec §3), renders zero-seed results via `retrieval_pipeline.honest_empty(rows, strata)`, and implements `--trace` as `retrieval_pipeline.build_trace(stages.rows(), seed_hits)` with the identical CLI flag semantics shown here. E imports only `memoria_vault.runtime.retrieval_pipeline` for this — not `search_index`.
 # E · `memoria explore` (spec §3 — slice 3)
