@@ -15,6 +15,7 @@ from memoria_vault.runtime.capture import (
     bibliography_citekeys,
     parse_bibtex_entry,
     render_references_bib,
+    write_references_bib_explicit,
 )
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.knowledge import _draft_unresolved_raw_citations
@@ -1223,3 +1224,46 @@ def test_rejected_disposition_leaves_export_blocked(tmp_path: Path) -> None:
     assert reverified["ready"] is False
     with pytest.raises(ValueError, match="project draft is not export-ready"):
         write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_bibliography_projection_round_trips_through_structural_bibtex_parse(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    state.upsert_catalog_record(
+        vault,
+        work_id="work-alpha",
+        title="Alpha & the {Braced} Title",
+        check_status="checked",
+        citekey="alpha2020",
+        identifiers={"doi": "10.1000/alpha"},
+        csl_json={
+            "author": [{"family": "Müller", "given": "A."}],
+            "issued": {"date-parts": [[2020]]},
+            "container-title": "Journal of Tests",
+        },
+    )
+    state.upsert_catalog_record(
+        vault,
+        work_id="work-beta",
+        title="Beta",
+        check_status="checked",
+        citekey="beta2021",
+    )
+
+    write_references_bib_explicit(vault, actor="pi", machine="test-machine")
+
+    text = (vault / "bibliography.bib").read_text(encoding="utf-8")
+    chunks = [f"@{chunk}" for chunk in re.split(r"(?m)^@", text) if chunk.strip()]
+    entries = [parse_bibtex_entry(chunk) for chunk in chunks]
+
+    citekeys = [entry["citekey"] for entry in entries]
+    assert citekeys == ["alpha2020", "beta2021"]
+    assert len(set(citekeys)) == len(citekeys), "duplicate citekeys break Zotero import"
+    for entry in entries:
+        assert entry["entry_type"], "typeless entries break Zotero import"
+        assert entry["fields"].get("title"), "titleless entries import as blanks"
+    alpha = entries[0]["fields"]
+    assert alpha.get("doi") == "10.1000/alpha"
+    assert "Müller" in alpha.get("author", "")
+    assert alpha.get("year") == "2020"
