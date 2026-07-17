@@ -2504,8 +2504,10 @@ def _evidence_mint_event_binding(event: Mapping[str, Any]) -> tuple[str, str | N
     evidence_id = event.get("evidence_id")
     block_ref = event.get("block_ref")
     block_text_sha256 = event.get("block_text_sha256")
+    actor = event.get("actor")
     valid_provenance = (
-        event.get("actor") in ACTORS
+        isinstance(actor, str)
+        and actor in ACTORS
         and isinstance(event.get("request_provenance"), dict)
         and all(
             isinstance(event.get(field), str) and event[field].strip()
@@ -2532,7 +2534,7 @@ def _evidence_mint_event_binding(event: Mapping[str, Any]) -> tuple[str, str | N
         canonical_block_ref = _evidence_block_ref(rel, evidence_id)
     except ValueError as exc:
         raise ValueError("invalid evidence-minted journal event") from exc
-    if not separator or block_ref != canonical_block_ref:
+    if not separator or not rel.strip() or block_ref != canonical_block_ref:
         raise ValueError("invalid evidence-minted journal event")
     return evidence_id, block_text_sha256
 

@@ -714,11 +714,16 @@ def test_bindings_ledger_recovery_refuses_a_broken_journal_chain(tmp_path: Path)
 
 def test_bindings_ledger_recovery_refuses_a_noncanonical_mint_event(tmp_path: Path) -> None:
     _compose_source_backed_draft(tmp_path, body="A canonical mint must have all fields.")
-    append_explicit_journal_event(
+    context = operation_context(tmp_path, operation_id="replay-evidence-bindings")
+    append_journal_event(
         tmp_path,
-        {"event": "evidence-minted", "evidence_id": "ev-deadbeef"},
-        actor="operation",
-        machine="test-machine",
+        {
+            "event": "evidence-minted",
+            "evidence_id": "ev-deadbeef",
+            "block_ref": "#^blk-deadbeef",
+            "block_text_sha256": None,
+        },
+        context=context,
     )
     assert state.verify_journal_chain(tmp_path)["ok"] is True
 
@@ -729,6 +734,25 @@ def test_bindings_ledger_recovery_refuses_a_noncanonical_mint_event(tmp_path: Pa
         state.rebuild_evidence_bindings_from_journal(tmp_path)
     with state.connect(tmp_path) as conn:
         assert conn.execute("SELECT COUNT(*) FROM evidence_bindings").fetchone()[0] == 0
+
+
+def test_evidence_mint_payload_validator_rejects_a_nonstring_actor() -> None:
+    event = {
+        "event": "evidence-minted",
+        "evidence_id": "ev-deadbeef",
+        "block_ref": "projects/project-alpha/draft.md#^blk-deadbeef",
+        "block_text_sha256": None,
+        "actor": [],
+        "request_provenance": {"surface": "pytest"},
+        "run_id": "replay-run",
+        "request_id": "replay-request",
+        "operation": "replay-evidence-bindings",
+        "machine": "test-machine",
+        "timestamp": "2026-07-16T00:00:00Z",
+    }
+
+    with pytest.raises(ValueError, match="invalid evidence-minted journal event"):
+        state._evidence_mint_event_binding(event)
 
 
 def test_bindings_ledger_recovery_uses_first_mint_and_restores_immutability(

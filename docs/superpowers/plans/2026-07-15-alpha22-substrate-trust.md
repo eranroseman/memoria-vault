@@ -3622,16 +3622,18 @@ explicit scope if needed.
 > `verify_journal_chain(vault)["ok"]` is false, then obtain only
 > `read_event_log(..., event_types=("evidence-minted",))` rows and validate each
 > canonical mint payload. The validator accepts only `ev-<8 lowercase hex>` IDs,
-> a canonical `<normalized path>#^blk-<same suffix>` block ref, `null` or
-> `sha256:<64 lowercase hex>` claim hash, and the nonblank request-context fields
-> (`actor`, `run_id`, `request_id`, `operation`, `machine`, `timestamp`) plus a
-> mapping `request_provenance`. It performs all validation before `BEGIN IMMEDIATE`,
+> a canonical `<nonempty normalized path>#^blk-<same suffix>` block ref, `null` or
+> `sha256:<64 lowercase hex>` claim hash, and the request-context fields: a known
+> string `actor`; nonblank `run_id`, `request_id`, `operation`, `machine`, and
+> `timestamp`; plus a mapping `request_provenance`. It performs all validation before `BEGIN IMMEDIATE`,
 > so a malformed later event rolls back the whole replay.
 >
 > The regression set is `test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected`,
 > `test_bindings_ledger_recovery_refuses_a_broken_journal_chain`,
 > `test_bindings_ledger_recovery_refuses_a_noncanonical_mint_event`, and
-> `test_bindings_ledger_recovery_uses_first_mint_and_restores_immutability`.
+> `test_bindings_ledger_recovery_uses_first_mint_and_restores_immutability`;
+> `test_evidence_mint_payload_validator_rejects_a_nonstring_actor` prevents malformed
+> JSON values from escaping as a Python type error.
 > The last test uses `DROP TABLE evidence_bindings` (not `DELETE`, which the
 > immutable trigger correctly forbids), confirms first-event-wins and counts, and
 > confirms the schema-created update/delete triggers still reject mutation.
