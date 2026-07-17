@@ -672,9 +672,7 @@ def test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected(
 
     assert result == {"replayed": 1, "inserted": 1}
     with state.connect(tmp_path) as conn:
-        restored = conn.execute(
-            "SELECT id, block_text_sha256 FROM evidence_bindings"
-        ).fetchall()
+        restored = conn.execute("SELECT id, block_text_sha256 FROM evidence_bindings").fetchall()
     assert [(row["id"], row["block_text_sha256"]) for row in restored] == [
         (bound["id"], bound["block_text_sha256"])
     ]
@@ -689,9 +687,7 @@ def test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected(
     verification = verify_project_draft(tmp_path, "project-alpha")
 
     assert verification["ready"] is False
-    assert any(
-        finding["kind"] == "evidence-text-drift" for finding in verification["findings"]
-    )
+    assert any(finding["kind"] == "evidence-text-drift" for finding in verification["findings"])
 
 
 def test_draft_export_uses_the_verified_draft_snapshot(
