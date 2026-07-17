@@ -19,6 +19,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.content_security import (
+    has_unterminated_fenced_code_block,
     neutralize_untrusted_markdown,
     neutralize_untrusted_markdown_fragment,
 )
@@ -2639,6 +2640,8 @@ def render_project_draft_export_markdown(
         labels = ", ".join(f"unresolved-citation:{work_id}" for work_id in unresolved)
         raise ValueError(f"project draft is not export-ready: {labels}")
     _frontmatter, body = split_frontmatter(draft["content"])
+    if has_unterminated_fenced_code_block(body):
+        raise ValueError("project draft is not export-ready: unterminated-code-fence")
     lines = [_render_draft_export_body(vault, body).strip(), ""]
     _append_draft_export_references(lines, vault)
     content = neutralize_untrusted_markdown("\n".join(lines).rstrip() + "\n")

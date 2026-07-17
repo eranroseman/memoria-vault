@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.content_security import contains_external_url
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
@@ -24,7 +25,7 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
 WORK_ASPECT_ORDER = ("context", "key_idea", "method", "outcome", "limitation", "assumption")
-_BIBLIOGRAPHY_CITEKEY_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:+/-]*")
+_BIBLIOGRAPHY_CITEKEY_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._:+/-]*[A-Za-z0-9_])?$")
 _ASPECT_HEADING_ALIASES = {
     "assumption": "assumption",
     "assumptions": "assumption",
@@ -589,7 +590,9 @@ def _bibliography_citekey(source: dict[str, Any]) -> str:
     csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
     explicit = str(source.get("citekey") or "").strip()
     citekey = explicit or str(csl.get("id") or "").strip()
-    return citekey if _BIBLIOGRAPHY_CITEKEY_RE.fullmatch(citekey) else ""
+    if not _BIBLIOGRAPHY_CITEKEY_RE.fullmatch(citekey) or contains_external_url(citekey):
+        return ""
+    return citekey
 
 
 def write_references_bib(
@@ -1142,4 +1145,4 @@ def _render_csl_year(issued: Any) -> str:
 
 
 def _bibtex_escape(value: str) -> str:
-    return " ".join(value.replace("{", "").replace("}", "").split())
+    return " ".join(value.replace("\\", "\\\\").replace("{", "").replace("}", "").split())

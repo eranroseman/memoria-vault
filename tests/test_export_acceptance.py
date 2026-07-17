@@ -3,16 +3,33 @@
 from __future__ import annotations
 
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.capture import bibliography_citekeys, render_references_bib
 from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
 from memoria_vault.runtime.knowledge import resolve_evidence_review as _resolve_evidence_review
 from memoria_vault.runtime.knowledge import verify_project_draft as _verify_project_draft
 from memoria_vault.runtime.knowledge import write_project_export as _write_project_export
 from tests.helpers import call_with_context, write_checked_concept
+
+_URL_TRIGGER_CITEKEYS = (
+    "http://example.test/key",
+    "HTTPS://example.test/key",
+    "ftp://example.test/key",
+    "www.example.test/key",
+    "mailto:person",
+    "prefix-http://example.test/key",
+    "prefix.https://example.test/key",
+    "prefix+ftp://example.test/key",
+    "prefix-www.example.test/key",
+    "prefix.mailto:person",
+    "prefix-//example.test/key",
+)
 
 
 def compose_project_draft(vault: Path, *args, **kwargs):
@@ -135,6 +152,33 @@ def test_draft_export_refuses_referenced_unsafe_citekey(tmp_path: Path, citekey:
         write_project_export(vault, "project-alpha", draft=True)
 
 
+@pytest.mark.parametrize("citekey", _URL_TRIGGER_CITEKEYS)
+def test_draft_export_refuses_referenced_url_trigger_citekey(tmp_path: Path, citekey: str) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey=citekey)
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    assert render_references_bib(vault) == ""
+    assert bibliography_citekeys(vault) == {}
+    with pytest.raises(ValueError, match="unresolved-citation:source-alpha"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+@pytest.mark.parametrize("citekey", ["alpha-", "alpha.", "alpha/", "alpha+", "alpha:"])
+def test_draft_export_refuses_referenced_terminal_punctuation_citekey(
+    tmp_path: Path, citekey: str
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey=citekey)
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    assert render_references_bib(vault) == ""
+    with pytest.raises(ValueError, match="unresolved-citation:source-alpha"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
 def test_draft_export_uses_csl_id_when_explicit_citekey_is_whitespace(tmp_path: Path) -> None:
     vault = tmp_path
     _catalog_source(vault, "source-alpha", citekey=" \t ", csl_json={"id": "fallback2026"})
@@ -147,16 +191,20 @@ def test_draft_export_uses_csl_id_when_explicit_citekey_is_whitespace(tmp_path: 
     assert "@article{fallback2026," in _fence(exported["content"])
 
 
-def test_draft_export_preserves_conventional_punctuation_citekey(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "citekey",
+    ["alpha_", "a.b_c-d:e+f/g", "doi:10.1000/key", "smith:2026"],
+)
+def test_draft_export_preserves_pandoc_safe_citekey(tmp_path: Path, citekey: str) -> None:
     vault = tmp_path
-    _catalog_source(vault, "source-alpha", citekey="smith:2026")
+    _catalog_source(vault, "source-alpha", citekey=citekey)
     _source_backed_draft(vault)
     verify_project_draft(vault, "project-alpha")
 
     exported = write_project_export(vault, "project-alpha", draft=True)
 
-    assert "[@smith:2026]" in exported["content"]
-    assert "@article{smith:2026," in _fence(exported["content"])
+    assert f"[@{citekey}]" in exported["content"]
+    assert f"@article{{{citekey}," in _fence(exported["content"])
 
 
 def test_draft_export_refuses_referenced_duplicate_citekey(tmp_path: Path) -> None:
@@ -170,10 +218,12 @@ def test_draft_export_refuses_referenced_duplicate_citekey(tmp_path: Path) -> No
         write_project_export(vault, "project-alpha", draft=True)
 
 
-def test_draft_export_omits_unrelated_unsafe_citekey_from_inlined_fence(tmp_path: Path) -> None:
+def test_draft_export_omits_unrelated_url_trigger_citekey_from_inlined_fence(
+    tmp_path: Path,
+) -> None:
     vault = tmp_path
     _catalog_source(vault, "source-alpha", citekey="safe2026")
-    _catalog_source(vault, "source-breakout", citekey="breakout\n```bibtex")
+    _catalog_source(vault, "source-url", citekey="prefix-http://example.test/key")
     _source_backed_draft(vault)
     verify_project_draft(vault, "project-alpha")
 
@@ -181,5 +231,44 @@ def test_draft_export_omits_unrelated_unsafe_citekey_from_inlined_fence(tmp_path
 
     assert "[@safe2026]" in exported["content"]
     assert "@article{safe2026," in _fence(exported["content"])
-    assert "breakout\n```bibtex" not in exported["content"]
+    assert "prefix-http://example.test/key" not in exported["content"]
     assert len(re.findall(r"(?m)^```", exported["content"])) == 2
+
+
+@pytest.mark.parametrize("fence", ["```", "~~~", "````"])
+def test_draft_export_refuses_unterminated_body_code_fence(tmp_path: Path, fence: str) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(draft_path.read_text(encoding="utf-8").rstrip() + f"\n\n{fence}\n")
+
+    with pytest.raises(ValueError, match="unterminated-code-fence"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_draft_export_inlined_bibtex_escapes_backslashes_for_pandoc(tmp_path: Path) -> None:
+    vault = tmp_path
+    _catalog_source(
+        vault,
+        "source-alpha",
+        citekey="slash2026",
+        title="Escaped \\ slash and trailing \\",
+    )
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    bibtex = _fence(write_project_export(vault, "project-alpha", draft=True)["content"])
+
+    assert r"title = {Escaped \\ slash and trailing \\}" in bibtex
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    parsed = subprocess.run(
+        [pandoc, "--from=bibtex", "--to=csljson"],
+        input=bibtex,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert parsed.returncode == 0, parsed.stderr
