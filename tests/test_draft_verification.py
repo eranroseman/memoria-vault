@@ -600,8 +600,7 @@ def test_first_binding_journals_one_evidence_minted_event(tmp_path: Path) -> Non
     events = state.read_event_log(tmp_path, event_types=["evidence-minted"])
 
     assert [
-        (event["evidence_id"], event["block_ref"], event["block_text_sha256"])
-        for event in events
+        (event["evidence_id"], event["block_ref"], event["block_text_sha256"]) for event in events
     ] == [(bound["id"], bound["block_ref"], bound["block_text_sha256"])]
 
     verify_project_draft(tmp_path, "project-alpha")
