@@ -1043,17 +1043,22 @@ entry from the contract, or the hardened gate fails on the real repo.
 
 ---
 
-### Task COV.0: PI confirm-at-review checkpoint (no code)
+### Task COV.0: PI confirm-at-review checkpoint (no code) — approved
 
 **Files:** none (review gate only).
 **Interfaces:** none.
 
-- [ ] Confirm with the PI, at plan review, the spec's "Design decisions (made here; confirm at review)" plus two execution-time additions:
+- [x] Confirmed by the PI on 2026-07-17: the spec's "Design decisions (made here; confirm at review)" plus two execution-time additions:
   1. Scope is exactly the ten items (2–10 test-only, 1 CI-config) plus cleanups 11a/11b; the out-of-scope list above stands as ruled-acceptable and is not re-litigated.
   2. Item 1 (CI `mcp` extra) goes first and stands alone; the chosen mechanism is the `verify.yml` install step, not `requirements-dev.txt` (reason stated in COV.1).
   3. Items 2–10 are mutually independent; any order, any PR split — except COV.3's ordering after Task 21.1 (post-21.1 `write_finding` signature).
   4. No production behavior changes anywhere **except**: (a) the COV.7 missing-search-root hard failure, which the spec itself names as a design hardening, and (b) the newly discovered removal of the stale `.agents` search root from `scripts/checks/removed_surfaces.json` that the hardening forces (evidence: the root does not exist today and the gate still reports clean). 11a/11b remain a pragma and a dead-code deletion.
   5. The `code/runner.py` bwrap-sandbox path stays deferred until the runtime primitive is wired to a live operation.
+
+**Completion record (2026-07-17).** PI approval covers the bounded COV.1–COV.11
+scope, CI-only `mcp` extra, COV.3 ordering, the two stated COV.7 behavior
+changes plus stale `.agents` removal, and the deferred bwrap path. No code was
+required by this checkpoint.
 
 ---
 
