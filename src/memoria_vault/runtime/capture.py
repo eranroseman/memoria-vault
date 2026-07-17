@@ -25,7 +25,7 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
 WORK_ASPECT_ORDER = ("context", "key_idea", "method", "outcome", "limitation", "assumption")
-_BIBLIOGRAPHY_CITEKEY_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._:+/-]*[A-Za-z0-9_])?$")
+_BIBLIOGRAPHY_CITEKEY_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9_]|[.:+/-][A-Za-z0-9_])*$")
 _ASPECT_HEADING_ALIASES = {
     "assumption": "assumption",
     "assumptions": "assumption",
@@ -1146,4 +1146,6 @@ def _render_csl_year(issued: Any) -> str:
 
 def _bibtex_escape(value: str) -> str:
     value = value.replace("{", "").replace("}", "")
-    return " ".join(re.sub(r"[\\%$]", lambda match: "\\" + match.group(), value).split())
+    return " ".join(
+        value.replace("\\", r"\textbackslash{}").replace("%", r"\%").replace("$", r"\$").split()
+    )

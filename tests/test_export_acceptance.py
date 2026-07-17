@@ -259,6 +259,37 @@ def test_draft_export_refuses_referenced_terminal_punctuation_citekey(
         write_project_export(vault, "project-alpha", draft=True)
 
 
+@pytest.mark.parametrize(
+    "citekey",
+    [
+        "foo::bar",
+        "a::b",
+        "a:+b",
+        "a:-b",
+        "a:.b",
+        "a./b",
+        "a/+b",
+        "a-:b",
+        "a.:b",
+        "a++b",
+        "a--b",
+        "a..b",
+    ],
+)
+def test_draft_export_refuses_referenced_citekey_with_pandoc_punctuation_continuation(
+    tmp_path: Path, citekey: str
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey=citekey)
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    assert render_references_bib(vault) == ""
+    assert bibliography_citekeys(vault) == {}
+    with pytest.raises(ValueError, match="unresolved-citation:source-alpha"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
 def test_draft_export_uses_csl_id_when_explicit_citekey_is_whitespace(tmp_path: Path) -> None:
     vault = tmp_path
     _catalog_source(vault, "source-alpha", citekey=" \t ", csl_json={"id": "fallback2026"})
@@ -273,7 +304,7 @@ def test_draft_export_uses_csl_id_when_explicit_citekey_is_whitespace(tmp_path: 
 
 @pytest.mark.parametrize(
     "citekey",
-    ["alpha_", "a.b_c-d:e+f/g", "doi:10.1000/key", "smith:2026"],
+    ["alpha_", "a:b:c", "a.b_c-d:e+f/g", "doi:10.1000/key", "smith:2026"],
 )
 def test_draft_export_preserves_pandoc_safe_citekey(tmp_path: Path, citekey: str) -> None:
     vault = tmp_path
@@ -285,6 +316,7 @@ def test_draft_export_preserves_pandoc_safe_citekey(tmp_path: Path, citekey: str
 
     assert f"[@{citekey}]" in exported["content"]
     assert f"@article{{{citekey}," in _fence(exported["content"])
+    assert _pandoc_citation_ids(exported["content"]) == [citekey]
 
 
 def test_draft_export_refuses_referenced_duplicate_citekey(tmp_path: Path) -> None:
@@ -361,18 +393,18 @@ def test_draft_export_refuses_fence_exposed_by_anchor_removal_and_unicode_trim(
 
 def test_draft_export_inlined_bibtex_escapes_backslashes_for_pandoc(tmp_path: Path) -> None:
     vault = tmp_path
+    title = r"C:\temp with literal \% and \$ plus trailing " + "\\"
     _catalog_source(
         vault,
         "source-alpha",
         citekey="slash2026",
-        title="Escaped \\ slash and trailing \\",
+        title=title,
     )
     _source_backed_draft(vault)
     verify_project_draft(vault, "project-alpha")
 
     bibtex = _fence(write_project_export(vault, "project-alpha", draft=True)["content"])
 
-    assert r"title = {Escaped \\ slash and trailing \\}" in bibtex
     pandoc = shutil.which("pandoc")
     if pandoc is None:
         pytest.skip("Pandoc is optional")
@@ -384,6 +416,7 @@ def test_draft_export_inlined_bibtex_escapes_backslashes_for_pandoc(tmp_path: Pa
         check=False,
     )
     assert parsed.returncode == 0, parsed.stderr
+    assert json.loads(parsed.stdout)[0]["title"] == title
 
 
 def test_draft_export_inlined_bibtex_preserves_percent_and_dollar_metadata(
