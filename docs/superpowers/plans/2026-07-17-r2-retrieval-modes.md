@@ -13,8 +13,23 @@
 - Correctness gate: `python scripts/verify`; PR + `verify`/`gitleaks`; squash merge; explicit-path staging; disposable vaults only.
 - BM25 stays the default; the rerank stage ships as an explicit **off** no-op (R3's frozen-fixture spike owns any change — incumbent-until-beaten, verbatim posture).
 - Structural output never enters fusion; primitives emit sets + counts, never scores.
-- **Sequencing:** section G (and therefore E's expansion) executes after Plan 22 G2S1.1 fills the stubbed `concept_edges` (grep stop-note in the section header); tests are G2S1.1-independent via `state.replace_concept_edges` seeding.
+- **Sequencing:** Plan 22 G2S1.1 has landed, so section G may execute. Its tests seed mirrored edges through `state.replace_concept_edges` and the one PI-owned tension row directly through `state.connect()`.
 - All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
+
+## Execution status — 2026-07-17
+
+- **G.1 complete:** `cc3f49ca` adds the deterministic, parameterized
+  graph-SQL primitives and their 10-test contract suite. The suite covers the
+  live relation CHECK, checked/quarantined edge gating, direct PI-owned tension
+  traversal (default and filtered), distinct-neighbor degree, and
+  references-only co-citation/coupling traps.
+- **Current-state amendments adopted:** Plan 22 G2S1.1 now supplies and persists
+  concept edges; `state.replace_concept_edges` intentionally preserves
+  PI-owned tensions, so the contract fixture inserts that row directly. The
+  repository-wide renamed-identifier gate also requires the CTE alias
+  `origin_id`, rather than the historical `source_id`.
+- Verification: `python scripts/verify` passed (**2,391 passed, 9 skipped**;
+  one existing multiprocessing-fork warning).
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
@@ -30,14 +45,14 @@
 
 Implements the **structural mode primitive set** of `2026-07-17-r2-retrieval-modes-design.md` §2, the first entry of the §10 slice list: one new module, `src/memoria_vault/runtime/graph_sql.py` — deterministic SQL, set-shaped returns, no model judgment. Per the PI ruling in §1, everything here is a **filter + expander, never a ranker**: no function emits a rank signal and nothing here enters fusion. Every set-building primitive returns `{"ids": [...], "counts": {...}}` so denominators are built where sets are built (§4); the primitives return **raw counts dicts** — the ordered `pipeline_counts` list `[{stage, count}, …]` is slice 2's assembly, never emitted here.
 
-**Sequencing stop-note (Plan 22 G2S1.1 — the hard dependency §2 names).** This section executes AFTER Plan 22 G2S1.1 (`2026-07-15-alpha22-substrate-trust.md`) fills the stubbed concept-edge extraction. Grep first:
-
-```bash
-grep -n "return \[\]" src/memoria_vault/runtime/indexing.py
-```
-
-- If `_concept_edges` still returns `[]` (indexing.py:133-136 at 51395f15): G2S1.1 has not landed, `state.concept_edges` returns no persisted rows, and `neighborhood` ranges over an empty table in every real vault — **stop; this section is out of order.**
-- If the stub is replaced: proceed. Either way the tests below stay valid — they seed rows through `state.replace_concept_edges` (state.py:2026), the G2S1.1-independent path, and never depend on extraction.
+**Sequencing status (Plan 22 G2S1.1 — satisfied).** The hard dependency has
+landed: `indexing._concept_edges` now builds rows from parsed links
+(`indexing.py:135-150`) and the rebuild path persists them through
+`state.replace_concept_edges` (`indexing.py:35-39`). G.1 therefore executes
+in order. Its fixture remains extraction-independent: mirrored rows use
+`state.replace_concept_edges`; the PI-owned `tension` row is intentionally
+inserted directly because that writer preserves tensions rather than mirroring
+them.
 
 **Cross-plan order tolerance (binding):** (a) the relation roster is read at runtime from the shipped `concept_edges` CHECK (four relations today, schema.sql:240-250); when the graph plan widens the CHECK to the seven-relation `EDGE_RELATIONS` roster, it flows through with **no code change here** — the parity test asserts subset, not equality. (b) `project_slice` prefers `state.active_project_slices` (ERP-C, graph plan) via `getattr` the moment it exists; until then the fallback is the project file's own `links:` closure (spec §2, Filters bullet).
 
@@ -45,10 +60,10 @@ grep -n "return \[\]" src/memoria_vault/runtime/indexing.py
 - `work_graph_edges` CHECK admits `'references', 'related', 'topic', 'keyword', 'authorship', 'institution', 'published_in'` (schema.sql:171-186); `co_citation`/`coupling` operate on `references` rows only, as §2 specifies.
 - Dynamic `IN (?…)` placeholder lists are expressed as static SQL via `json_each(?)`: the repo's lint gate keeps bandit S608 enabled (pyproject `[tool.ruff.lint]` — "SQL injection stays enabled") and rejects f-string SQL; JSON1 functions are established runtime precedent (`json_extract` at knowledge.py:3245, operations.py:1076) and the venv SQLite is 3.45.1. All module code below passes `ruff check` and `ruff format --check` under the repo config (verified).
 - `neighborhood` traverses **checked edges only**, matching `state.concept_edges`' `checked_only=True` default (state.py:2055) and §4's check-gate-ride-through: an unchecked or quarantined edge never expands the candidate set (it surfaces later as a stratum count in slice 2).
-- `state.replace_concept_edges` normalizes endpoints via `normalize_path` and validates relations through `_concept_edge_relation` (state.py:3420-3424 — hardcodes the four today; the graph plan widens it together with the CHECK).
+- `state.replace_concept_edges` normalizes endpoints via `normalize_path` and validates relations through `_concept_edge_relation`; it deliberately preserves PI-owned `tension` rows, which the G.1 fixture inserts directly.
 - `concept_status` is a view over `concepts` LEFT JOIN `concept_verdicts` (schema.sql:72-79): an id absent from the concept mirror reads as `unchecked` — `filter_ids` relies on exactly that.
 
-### Task G.1 — the four order-tolerant relation primitives
+### Task G.1 — the four order-tolerant relation primitives — completed
 
 **Files:**
 - `src/memoria_vault/runtime/graph_sql.py` (new)
@@ -62,7 +77,15 @@ grep -n "return \[\]" src/memoria_vault/runtime/indexing.py
 - `coupling(vault: Path, work_id: str) -> dict[str, Any]` — `{"work_ids": list[str], "counts": {"references": int, "coupled": int}}`
 - `degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]` — orderer only, per the spec's own signature (the one non-counts return in §2)
 
-- [ ] **G.1.1 — failing test.** Create `tests/test_graph_sql.py`:
+> **Executed amendment (authoritative over the historical listing below):** seed
+> the mirrored relations through `state.replace_concept_edges`, then insert
+> the checked PI-owned `tension` row directly through `state.connect()`.
+> The executed fixture also pins quarantined-edge exclusion, default tension
+> traversal, distinct-neighbor degree under parallel relations, and
+> references-only co-citation/coupling. Use `origin_id` for the CTE alias to
+> satisfy the repository-wide renamed-identifier gate.
+
+- [x] **G.1.1 — failing test.** Create `tests/test_graph_sql.py`:
 
 ```python
 """Contract tests for the deterministic graph-SQL primitives (R2 design §2, slice 1)."""
@@ -255,7 +278,7 @@ def test_degree_centrality_returns_zero_for_isolated_ids(tmp_path: Path) -> None
     "test_graph_sql.py": "contract",
 ```
 
-- [ ] **G.1.2 — run, expect the red import failure:**
+- [x] **G.1.2 — run, expect the red import failure:**
 
 ```bash
 python -m pytest tests/test_graph_sql.py -q
@@ -267,7 +290,7 @@ python -m pytest tests/test_graph_sql.py -q
 E   ImportError: cannot import name 'graph_sql' from 'memoria_vault.runtime' (src/memoria_vault/runtime/__init__.py)
 ```
 
-- [ ] **G.1.3 — minimal implementation.** Create `src/memoria_vault/runtime/graph_sql.py`:
+- [x] **G.1.3 — minimal implementation.** Create `src/memoria_vault/runtime/graph_sql.py`:
 
 ```python
 """Deterministic graph-SQL primitives for structural retrieval (R2 design, section 2).
@@ -489,7 +512,7 @@ def degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]:
     return degrees
 ```
 
-- [ ] **G.1.4 — run to green** (the second file confirms TEST_LEVELS exact-match):
+- [x] **G.1.4 — run to green** (the second file confirms TEST_LEVELS exact-match):
 
 ```bash
 python -m pytest tests/test_graph_sql.py tests/test_testing_levels.py -q
@@ -497,7 +520,7 @@ python -m pytest tests/test_graph_sql.py tests/test_testing_levels.py -q
 
   Expected: `12 passed` (10 new + 2 level-gate tests).
 
-- [ ] **G.1.5 — commit (explicit paths, never `git add -A`):**
+- [x] **G.1.5 — commit (explicit paths, never `git add -A`):**
 
 ```bash
 git add src/memoria_vault/runtime/graph_sql.py tests/test_graph_sql.py tests/conftest.py
