@@ -11,21 +11,23 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.worker import enqueue_operation
 
 
-def is_consumable_checked_file(vault: Path, relpath: str) -> bool:
+def is_consumable_checked_file(vault: Path, relpath: str, *, enqueue_scan: bool = True) -> bool:
     vault = Path(vault)
     rel = normalize_path(relpath)
     if state.concept_check_status(vault, rel) != "checked":
         return False
     record = state.output_record(vault, rel)
     if not record or record["store"] != "file" or record["check_status"] != "checked":
-        _enqueue_scan(vault, rel, "missing checked output record", EMPTY_SHA256)
+        if enqueue_scan:
+            _enqueue_scan(vault, rel, "missing checked output record", EMPTY_SHA256)
         return False
     target = normalize_path(str(record["target_path"] or rel))
     path = vault / target
     expected = str(record["output_sha256"] or "")
     current = sha256_file(path) if path.is_file() else EMPTY_SHA256
     if record["materialization_status"] != "materialized" or current != expected:
-        _enqueue_scan(vault, rel, "checked file changed before consumption", current)
+        if enqueue_scan:
+            _enqueue_scan(vault, rel, "checked file changed before consumption", current)
         return False
     return True
 

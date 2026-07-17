@@ -117,7 +117,9 @@ def checked_search_documents(vault: Path, *, include_stale: bool = False) -> lis
     return checked_search_universe(vault, include_stale=include_stale)["documents"]
 
 
-def checked_search_universe(vault: Path, *, include_stale: bool = False) -> dict[str, Any]:
+def checked_search_universe(
+    vault: Path, *, include_stale: bool = False, enqueue_scan: bool = True
+) -> dict[str, Any]:
     """Return the searchable universe and its excluded-strata counts."""
     vault = Path(vault)
     strata = retrieval_pipeline.excluded_strata()
@@ -135,7 +137,7 @@ def checked_search_universe(vault: Path, *, include_stale: bool = False) -> dict
             if status != "checked":
                 strata["unchecked"] += 1
                 continue
-            if not is_consumable_checked_file(vault, rel):
+            if not is_consumable_checked_file(vault, rel, enqueue_scan=enqueue_scan):
                 strata["gated"] += 1
                 continue
             text = safe_read(path)

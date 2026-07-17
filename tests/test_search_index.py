@@ -9,6 +9,7 @@ from memoria_vault.runtime.search_index import (
     _bm25,
     _tokens,
     checked_concepts,
+    checked_search_universe,
     evaluate_bm25,
 )
 from memoria_vault.runtime.search_index import (
@@ -132,7 +133,6 @@ def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path
         encoding="utf-8",
     )
 
-    assert checked_concepts(vault) == []
     assert answer_query(vault, "tampered alpha")["sources"] == []
     assert state.concept_check_status(vault, rel) == "checked"
     with state.connect(vault) as conn:
@@ -148,6 +148,53 @@ def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path
     assert row["status"] == "pending"
     assert row["schedule_id"] == "read-guard"
     assert json.loads(row["args_json"])["target_path"] == rel
+    assert checked_concepts(vault) == []
+
+
+def test_checked_search_universe_passively_excludes_gated_files(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    good = note(vault, "good", "checked", "safe retrieval content")
+    tampered = note(vault, "tampered", "checked", "original retrieval content")
+    quarantined = note(vault, "quarantined", "quarantined", "QUARANTINED CANARY")
+    tampered.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: tampered\n---\nTAMPERED CANARY\n",
+        encoding="utf-8",
+    )
+
+    with state.connect(vault) as conn:
+        before = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+
+    universe = checked_search_universe(vault, enqueue_scan=False)
+
+    assert [document["path"] for document in universe["documents"]] == [
+        good.relative_to(vault).as_posix()
+    ]
+    assert universe["excluded_strata"] == {"unchecked": 0, "stale": 0, "gated": 2}
+    serialized = json.dumps(universe, default=str, sort_keys=True)
+    assert tampered.relative_to(vault).as_posix() not in serialized
+    assert quarantined.relative_to(vault).as_posix() not in serialized
+    assert "TAMPERED CANARY" not in serialized
+    assert "QUARANTINED CANARY" not in serialized
+    with state.connect(vault) as conn:
+        after = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    assert after == before
+
+
+def test_read_barrier_can_passively_refuse_missing_checked_record(tmp_path: Path) -> None:
+    from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+
+    vault = workspace(tmp_path)
+    path = note(vault, "missing-record", "checked", "safe retrieval content")
+    rel = path.relative_to(vault).as_posix()
+    with state.connect(vault) as conn:
+        conn.execute("DELETE FROM outputs WHERE output_id = ?", (rel,))
+        before = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+
+    assert is_consumable_checked_file(vault, rel, enqueue_scan=False) is False
+
+    with state.connect(vault) as conn:
+        after = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    assert after == before
 
 
 def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
