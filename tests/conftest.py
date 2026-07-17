@@ -111,6 +111,7 @@ TEST_LEVELS = {
     "test_test_env_harness.py": "package",
     "test_testing_levels.py": "static",
     "test_trusted_writer.py": "runtime",
+    "test_vaultio.py": "unit",
     "test_verify_script.py": "static",
     "test_workspace_seed_links.py": "static",
     "test_worker_capture_jobs.py": "runtime",

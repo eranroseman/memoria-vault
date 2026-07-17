@@ -205,11 +205,14 @@ def _fsync_dir(path: Path) -> None:
     try:
         fd = os.open(path, os.O_RDONLY)
     except OSError:
-        return
+        if os.name == "nt":
+            return
+        raise
     try:
         os.fsync(fd)
     except OSError:
-        pass
+        if os.name != "nt":
+            raise
     finally:
         os.close(fd)
 
