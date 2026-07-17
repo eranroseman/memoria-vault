@@ -12,6 +12,7 @@ normal mirror writer intentionally leaves untouched.
 
 from __future__ import annotations
 
+import importlib
 import json
 import re
 from pathlib import Path
@@ -19,6 +20,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.vaultio import read_frontmatter
 
 DEPTH_CAP = 2
 
@@ -197,3 +199,148 @@ def degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]:
     degrees = dict.fromkeys(wanted, 0)
     degrees.update({str(row["concept_id"]): int(row["degree"]) for row in rows})
     return degrees
+
+
+def project_slice(vault: Path, project: str) -> dict[str, Any]:
+    """Return concept ids in one project's slice without emitting a rank signal.
+
+    Once graph propagation supplies active project slices, that authoritative
+    mapping wins. Until then, use the project's own links closure.
+    """
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project)
+    slices = _active_project_slices(vault)
+    if slices is not None:
+        ids = sorted({_member_id(row) for row in slices.get(project_rel, set())} - {""})
+        return {
+            "ids": ids,
+            "counts": {"members": len(ids)},
+            "source": "active-project-slices",
+        }
+    ids = _links_closure(vault, project_rel)
+    return {"ids": ids, "counts": {"members": len(ids)}, "source": "links-closure"}
+
+
+def _active_project_slices(vault: Path) -> dict[str, set[str]] | None:
+    """Load the graph-owned active-slice producer only once it exists."""
+    try:
+        propagation = importlib.import_module("memoria_vault.runtime.propagation")
+    except ModuleNotFoundError as exc:
+        if exc.name == "memoria_vault.runtime.propagation":
+            return None
+        raise
+    provider = getattr(propagation, "active_project_slices", None)
+    return provider(vault) if callable(provider) else None
+
+
+def _member_id(row: Any) -> str:
+    if isinstance(row, dict):
+        row = row.get("concept_id") or row.get("path") or row.get("id") or ""
+    value = str(row).strip()
+    return normalize_path(value) if value else ""
+
+
+def _project_rel(vault: Path, project: str) -> str:
+    rel = normalize_path(str(project))
+    if "/" not in rel:
+        nested = f"projects/{rel}/project.md"
+        return nested if (vault / nested).is_file() else f"projects/{rel}.md"
+    if not rel.endswith(".md"):
+        rel += ".md"
+    if not rel.startswith("projects/"):
+        raise ValueError(f"project must live under projects: {rel}")
+    return rel
+
+
+def _links_closure(vault: Path, project_rel: str) -> list[str]:
+    frontmatter = read_frontmatter(vault / project_rel)
+    seeds = _link_targets(frontmatter)
+    thesis = _link_target(frontmatter.get("thesis"))
+    if thesis:
+        seeds.add(thesis)
+    seen: set[str] = set()
+    queue = sorted(seeds)
+    while queue:
+        rel = queue.pop(0)
+        if rel in seen:
+            continue
+        seen.add(rel)
+        path = vault / rel
+        if not path.is_file():
+            continue
+        queue.extend(sorted(_link_targets(read_frontmatter(path)) - seen))
+    return sorted(seen)
+
+
+def _link_targets(frontmatter: dict[str, Any]) -> set[str]:
+    links = frontmatter.get("links")
+    if not isinstance(links, dict):
+        return set()
+    targets: set[str] = set()
+    for values in links.values():
+        for value in values if isinstance(values, list) else [values]:
+            target = _link_target(value)
+            if target:
+                targets.add(target)
+    return targets
+
+
+def _link_target(value: Any) -> str:
+    if isinstance(value, dict):
+        value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
+    if not isinstance(value, str) or not value.strip():
+        return ""
+    raw = value.strip()
+    if raw.startswith("[[") and raw.endswith("]]"):
+        raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
+    try:
+        rel = normalize_path(raw)
+    except ValueError:
+        return ""
+    if "/" not in rel:
+        rel = f"notes/{rel}"
+    if rel.startswith("catalog/sources/"):
+        rel = rel.rstrip("/")
+        if rel.count("/") != 2:
+            return ""
+    elif not rel.endswith(".md"):
+        rel += ".md"
+    if not rel.startswith(("catalog/sources/", "notes/", "hubs/", "digests/", "fulltexts/")):
+        return ""
+    return rel
+
+
+def filter_ids(
+    vault: Path,
+    ids: list[str],
+    *,
+    types: set[str] | None = None,
+    check_status: set[str] | None = None,
+) -> dict[str, Any]:
+    """Prune ids by concept type and/or status from the concept status view."""
+    wanted = list(dict.fromkeys(normalize_path(str(value)) for value in ids if str(value).strip()))
+    if not wanted:
+        return {"ids": [], "counts": {"before": 0, "after": 0}}
+    if types is None and check_status is None:
+        return {"ids": wanted, "counts": {"before": len(wanted), "after": len(wanted)}}
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT concept_id, concept_type, check_status
+            FROM concept_status
+            WHERE concept_id IN (SELECT value FROM json_each(?))
+            """,
+            (json.dumps(wanted),),
+        ).fetchall()
+    known = {
+        str(row["concept_id"]): (str(row["concept_type"]), str(row["check_status"])) for row in rows
+    }
+    kept = []
+    for concept_id in wanted:
+        concept_type, status = known.get(concept_id, ("", "unchecked"))
+        if types is not None and concept_type not in types:
+            continue
+        if check_status is not None and status not in check_status:
+            continue
+        kept.append(concept_id)
+    return {"ids": kept, "counts": {"before": len(wanted), "after": len(kept)}}

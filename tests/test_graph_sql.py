@@ -6,6 +6,8 @@ import re
 from importlib.resources import files
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import graph_sql, state
 
 SHIPPED_RELATIONS = {"supports", "contradicts", "extends", "tension"}
@@ -202,3 +204,100 @@ def test_degree_centrality_returns_zero_for_isolated_ids(tmp_path: Path) -> None
 
     assert degrees == {"notes/a.md": 1, "notes/b.md": 2, "notes/zzz.md": 0}
     assert graph_sql.degree_centrality(tmp_path, []) == {}
+
+
+def _seed_project_files(vault: Path) -> None:
+    (vault / "projects").mkdir(exist_ok=True)
+    (vault / "notes").mkdir(exist_ok=True)
+    (vault / "projects/p1.md").write_text(
+        "---\ntype: project\nlinks:\n  supports:\n    - notes/a.md\n"
+        "    - archive/legacy.md\n    - '../../outside.md'\n---\nbody\n",
+        encoding="utf-8",
+    )
+    (vault / "notes/a.md").write_text(
+        "---\ntype: note\nlinks:\n  extends:\n    - '[[b]]'\n---\nalpha\n",
+        encoding="utf-8",
+    )
+    (vault / "notes/b.md").write_text("---\ntype: note\n---\nbeta\n", encoding="utf-8")
+    (vault / "notes/orphan.md").write_text("---\ntype: note\n---\norphan\n", encoding="utf-8")
+
+
+def test_project_slice_falls_back_to_links_closure(tmp_path: Path) -> None:
+    _seed_project_files(tmp_path)
+
+    result = graph_sql.project_slice(tmp_path, "p1")
+
+    # [[b]] resolves to notes/b.md. Unsupported and escaping targets are ignored,
+    # and the unlinked orphan note stays outside the project's links closure.
+    assert result["ids"] == ["notes/a.md", "notes/b.md"]
+    assert result["counts"] == {"members": 2}
+    assert result["source"] == "links-closure"
+
+
+def test_project_slice_prefers_active_project_slices_seam(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed_project_files(tmp_path)
+    monkeypatch.setattr(
+        graph_sql,
+        "_active_project_slices",
+        lambda vault: {"projects/p1.md": {"notes/z.md"}},
+    )
+
+    result = graph_sql.project_slice(tmp_path, "p1")
+
+    assert result["ids"] == ["notes/z.md"]
+    assert result["counts"] == {"members": 1}
+    assert result["source"] == "active-project-slices"
+
+
+def test_filter_ids_prunes_by_type_and_check_status(tmp_path: Path) -> None:
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": "notes/a.md", "concept_type": "note"},
+            {"concept_id": "notes/b.md", "concept_type": "note"},
+            {"concept_id": "digests/d.md", "concept_type": "digest"},
+        ],
+    )
+    state.set_concept_verdict(tmp_path, "notes/a.md", "checked")
+
+    typed = graph_sql.filter_ids(
+        tmp_path, ["notes/a.md", "notes/b.md", "digests/d.md"], types={"note"}
+    )
+    assert typed["ids"] == ["notes/a.md", "notes/b.md"]
+    assert typed["counts"] == {"before": 3, "after": 2}
+
+    checked = graph_sql.filter_ids(
+        tmp_path, ["notes/a.md", "notes/b.md", "notes/ghost.md"], check_status={"checked"}
+    )
+    assert checked["ids"] == ["notes/a.md"]
+    assert checked["counts"] == {"before": 3, "after": 1}
+
+    assert graph_sql.filter_ids(tmp_path, []) == {
+        "ids": [],
+        "counts": {"before": 0, "after": 0},
+    }
+
+
+def test_primitives_compose_neighborhood_slice_filter(tmp_path: Path) -> None:
+    _seed_concept_edges(tmp_path)
+    _seed_project_files(tmp_path)
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": "notes/a.md", "concept_type": "note"},
+            {"concept_id": "notes/b.md", "concept_type": "note"},
+            {"concept_id": "notes/c.md", "concept_type": "note"},
+        ],
+    )
+    state.set_concept_verdict(tmp_path, "notes/a.md", "checked")
+
+    hood = graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)
+    sliced = sorted(set(hood["ids"]) & set(graph_sql.project_slice(tmp_path, "p1")["ids"]))
+    final = graph_sql.filter_ids(tmp_path, sliced, check_status={"checked"})
+
+    assert hood["counts"]["returned"] == 3
+    assert sliced == ["notes/a.md", "notes/b.md"]
+    assert final["ids"] == ["notes/a.md"]
+    assert final["counts"] == {"before": 2, "after": 1}
