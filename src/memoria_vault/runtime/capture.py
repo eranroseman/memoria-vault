@@ -1145,4 +1145,5 @@ def _render_csl_year(issued: Any) -> str:
 
 
 def _bibtex_escape(value: str) -> str:
-    return " ".join(value.replace("\\", "\\\\").replace("{", "").replace("}", "").split())
+    value = value.replace("{", "").replace("}", "")
+    return " ".join(re.sub(r"[\\%$]", lambda match: "\\" + match.group(), value).split())

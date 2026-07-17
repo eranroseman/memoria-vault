@@ -3582,10 +3582,7 @@ def _evidence_marker_occurrences_from_markdown(
     text: str,
 ) -> list[tuple[EvidenceMarker, bool]]:
     """Return raw evidence markers and whether each is a direct visible occurrence."""
-    control_text = _markdown_control_text(text)
-    direct_spans = {
-        match.span("marker") for match, _marker in _direct_evidence_marker_matches(control_text)
-    }
+    direct_spans = {span for span, _marker in direct_evidence_marker_spans_from_markdown(text)}
     occurrences: list[tuple[EvidenceMarker, bool]] = []
     for match in _RAW_EVIDENCE_MARKER_RE.finditer(text):
         try:
@@ -3596,10 +3593,20 @@ def _evidence_marker_occurrences_from_markdown(
     return occurrences
 
 
+def direct_evidence_marker_spans_from_markdown(
+    text: str,
+) -> list[tuple[tuple[int, int], EvidenceMarker]]:
+    """Return source spans and markers that appear on direct, visible claim lines."""
+    control_text = _markdown_control_text(text)
+    return [
+        (match.span("marker"), marker)
+        for match, marker in _direct_evidence_marker_matches(control_text)
+    ]
+
+
 def evidence_markers_from_markdown(text: str) -> list[EvidenceMarker]:
     """Return markers that appear on direct, visible Markdown claim lines."""
-    control_text = _markdown_control_text(text)
-    return [marker for _match, marker in _direct_evidence_marker_matches(control_text)]
+    return [marker for _span, marker in direct_evidence_marker_spans_from_markdown(text)]
 
 
 def _upsert_concept_mirror_conn(

@@ -2772,7 +2772,7 @@ def _draft_unresolved_citations(vault: Path, content: str) -> list[str]:
 
     citekeys = _draft_citekeys(vault)
     unresolved = set()
-    for marker in state.evidence_markers_from_markdown(content):
+    for _span, marker in state.direct_evidence_marker_spans_from_markdown(content):
         for item in marker.items:
             try:
                 source = parse_source_span_ref(item)
@@ -3472,12 +3472,15 @@ def _draft_number_findings(vault: Path, project_rel: str, content: str) -> list[
 
 
 def _render_draft_export_body(vault: Path, content: str) -> str:
-    from memoria_vault.runtime.evidence import parse_evidence_marker, parse_source_span_ref
+    from memoria_vault.runtime.evidence import parse_source_span_ref
 
     citekeys_by_work = _draft_citekeys(vault)
+    direct_markers = dict(state.direct_evidence_marker_spans_from_markdown(content))
 
     def citation(match: re.Match[str]) -> str:
-        marker = parse_evidence_marker(match.group(0).strip())
+        marker = direct_markers.get(match.span("marker"))
+        if marker is None:
+            return match.group(0)
         citekeys = []
         for item in marker.items:
             try:
@@ -3488,7 +3491,7 @@ def _render_draft_export_body(vault: Path, content: str) -> str:
                 citekeys.append(f"@{citekey}")
         return f" [{'; '.join(citekeys)}]" if citekeys else ""
 
-    text = re.sub(r"\s*%%ev:\s*.*?%%", citation, content)
+    text = re.sub(r"\s*(?P<marker>%%ev:\s*.*?%%)", citation, content)
     return re.sub(r"\s+\^blk-[A-Za-z0-9_-]+", "", text)
 
 

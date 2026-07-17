@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import subprocess
@@ -103,6 +104,34 @@ def _fence(content: str) -> str:
     return match.group("bib")
 
 
+def _pandoc_citation_ids(markdown: str) -> list[str]:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    parsed = subprocess.run(
+        [pandoc, "--from=markdown", "--to=json"],
+        input=markdown,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert parsed.returncode == 0, parsed.stderr
+    citation_ids: list[str] = []
+
+    def visit(value: object) -> None:
+        if isinstance(value, dict):
+            if value.get("t") == "Cite":
+                citation_ids.extend(str(citation["citationId"]) for citation in value["c"][0])
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(json.loads(parsed.stdout))
+    return citation_ids
+
+
 def test_markdown_draft_export_citations_resolve_against_inlined_fence(
     tmp_path: Path,
 ) -> None:
@@ -156,7 +185,37 @@ def test_draft_export_ignores_literal_fenced_marker_outside_direct_claims(
     exported = write_project_export(vault, "project-alpha", draft=True)
 
     assert "[@safe2026]" in exported["content"]
-    assert "source-literal" not in exported["content"]
+    assert "literal %%ev: ev-12345678 items=source-literal#^p0001%%" in exported["content"]
+
+
+@pytest.mark.parametrize(
+    "hidden_control",
+    [
+        "<!-- %%ev: ev-87654321 items=source-hidden#^p0001%% -->",
+        "`%%ev: ev-87654321 items=source-hidden#^p0001%%`",
+    ],
+)
+def test_draft_export_only_cites_direct_evidence_markers(
+    tmp_path: Path, hidden_control: str
+) -> None:
+    vault = tmp_path
+    hidden_marker = "%%ev: ev-87654321 items=source-hidden#^p0001%%"
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _catalog_source(vault, "source-hidden", citekey="hidden2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip() + f"\n\n{hidden_control}\n",
+        encoding="utf-8",
+    )
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    exported = write_project_export(vault, "project-alpha", draft=True)
+
+    assert hidden_marker in exported["content"]
+    assert "[@safe2026]" in exported["content"]
+    assert "[@hidden2026]" not in exported["content"]
+    assert _pandoc_citation_ids(exported["content"]) == ["safe2026"]
 
 
 @pytest.mark.parametrize(
@@ -325,3 +384,28 @@ def test_draft_export_inlined_bibtex_escapes_backslashes_for_pandoc(tmp_path: Pa
         check=False,
     )
     assert parsed.returncode == 0, parsed.stderr
+
+
+def test_draft_export_inlined_bibtex_preserves_percent_and_dollar_metadata(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    title = "100% success costs $5"
+    _catalog_source(vault, "source-alpha", citekey="percent2026", title=title)
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    bibtex = _fence(write_project_export(vault, "project-alpha", draft=True)["content"])
+
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    parsed = subprocess.run(
+        [pandoc, "--from=bibtex", "--to=csljson"],
+        input=bibtex,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert parsed.returncode == 0, parsed.stderr
+    assert json.loads(parsed.stdout)[0]["title"] == title
