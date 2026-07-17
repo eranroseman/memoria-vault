@@ -1187,8 +1187,7 @@ def _implicit_draft(vault: Path) -> str:
     write_checked_concept(
         vault,
         "notes/thesis.md",
-        "type: note\ncheck_status: checked\ntitle: Thesis\n"
-        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
         "note",
         body="This implicit claim needs review.",
     )
