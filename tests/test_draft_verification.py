@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import sqlite3
 from dataclasses import replace
 from pathlib import Path
 
@@ -23,7 +24,7 @@ from memoria_vault.runtime.knowledge import (
 from memoria_vault.runtime.knowledge import (
     write_project_export as _write_project_export,
 )
-from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
+from memoria_vault.runtime.trusted_writer import append_explicit_journal_event, append_journal_event
 from tests.helpers import call_with_context, operation_context, write_checked_concept
 
 
@@ -688,6 +689,86 @@ def test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected(
 
     assert verification["ready"] is False
     assert any(finding["kind"] == "evidence-text-drift" for finding in verification["findings"])
+
+
+def test_bindings_ledger_recovery_refuses_a_broken_journal_chain(tmp_path: Path) -> None:
+    _compose_source_backed_draft(tmp_path, body="A chain-protected source-backed claim.")
+    [bound] = state.evidence_sets(tmp_path)
+    assert bound["block_text_sha256"]
+
+    with state.connect(tmp_path) as conn:
+        conn.execute("DROP TABLE evidence_bindings")
+        conn.execute("DROP TRIGGER event_log_no_update")
+        conn.execute(
+            "UPDATE event_log SET payload_json = replace(payload_json, ?, ?) "
+            "WHERE event_type = 'evidence-minted'",
+            (bound["block_text_sha256"], "sha256:" + "0" * 64),
+        )
+
+    assert state.verify_journal_chain(tmp_path)["ok"] is False
+    with pytest.raises(ValueError, match="journal chain"):
+        state.rebuild_evidence_bindings_from_journal(tmp_path)
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM evidence_bindings").fetchone()[0] == 0
+
+
+def test_bindings_ledger_recovery_refuses_a_noncanonical_mint_event(tmp_path: Path) -> None:
+    _compose_source_backed_draft(tmp_path, body="A canonical mint must have all fields.")
+    append_explicit_journal_event(
+        tmp_path,
+        {"event": "evidence-minted", "evidence_id": "ev-deadbeef"},
+        actor="operation",
+        machine="test-machine",
+    )
+    assert state.verify_journal_chain(tmp_path)["ok"] is True
+
+    with state.connect(tmp_path) as conn:
+        conn.execute("DROP TABLE evidence_bindings")
+
+    with pytest.raises(ValueError, match="invalid evidence-minted journal event"):
+        state.rebuild_evidence_bindings_from_journal(tmp_path)
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM evidence_bindings").fetchone()[0] == 0
+
+
+def test_bindings_ledger_recovery_uses_first_mint_and_restores_immutability(
+    tmp_path: Path,
+) -> None:
+    _compose_source_backed_draft(tmp_path, body="The original mint remains authoritative.")
+    [bound] = state.evidence_sets(tmp_path)
+    context = operation_context(tmp_path, operation_id="replay-evidence-bindings")
+    append_journal_event(
+        tmp_path,
+        {
+            "event": "evidence-minted",
+            "evidence_id": bound["id"],
+            "block_ref": bound["block_ref"],
+            "block_text_sha256": "sha256:" + "f" * 64,
+        },
+        context=context,
+    )
+    assert state.verify_journal_chain(tmp_path)["ok"] is True
+
+    with state.connect(tmp_path) as conn:
+        conn.execute("DROP TABLE evidence_bindings")
+
+    assert state.rebuild_evidence_bindings_from_journal(tmp_path) == {
+        "replayed": 2,
+        "inserted": 1,
+    }
+    with state.connect(tmp_path) as conn:
+        assert (
+            conn.execute(
+                "SELECT block_text_sha256 FROM evidence_bindings WHERE id = ?", (bound["id"],)
+            ).fetchone()[0]
+            == bound["block_text_sha256"]
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="evidence bindings are immutable"):
+            conn.execute(
+                "UPDATE evidence_bindings SET block_text_sha256 = NULL WHERE id = ?", (bound["id"],)
+            )
+        with pytest.raises(sqlite3.IntegrityError, match="evidence bindings are immutable"):
+            conn.execute("DELETE FROM evidence_bindings WHERE id = ?", (bound["id"],))
 
 
 def test_draft_export_uses_the_verified_draft_snapshot(

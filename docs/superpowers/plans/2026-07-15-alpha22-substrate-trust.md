@@ -3602,18 +3602,42 @@ explicit scope if needed.
 
 **Interfaces:**
 - Consumes: the `evidence-minted` journal contract from Task S68.3
-  (`event_type = "evidence-minted"`, payload keys `evidence_id`,
-  `block_text_sha256`); the `event_log` table shape
-  (state.py:806-814).
+  (`event_type = "evidence-minted"`, payload keys `evidence_id`, `block_ref`,
+  `block_text_sha256`, and the request-context provenance envelope); the
+  fail-closed `verify_journal_chain` and validated `read_event_log` paths; and
+  the `event_log` table shape (state.py:806-814).
 - Produces: `state.rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]`
-  — replays `evidence-minted` events in `event_id` order into
-  `evidence_bindings` in one workspace-locked SQLite transaction with
-  first-event-wins (ON CONFLICT DO NOTHING);
+  — under the workspace lock, it first verifies the complete chain and validates
+  every mint payload (ID grammar, canonical block ref, nullable SHA grammar, and
+  request-context provenance) before it opens the one SQLite replay transaction.
+  It then replays `evidence-minted` events in `event_id` order into
+  `evidence_bindings` with first-event-wins (ON CONFLICT DO NOTHING);
   returns `{"replayed": <events seen>, "inserted": <rows actually written>}`.
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_draft_verification.py`:
+> **Executable review repair — this supersedes the historical source-complete
+> snippets below.** The original raw-`event_log` replay bypassed chain and payload
+> validation. The recovery must fail closed before any insert when
+> `verify_journal_chain(vault)["ok"]` is false, then obtain only
+> `read_event_log(..., event_types=("evidence-minted",))` rows and validate each
+> canonical mint payload. The validator accepts only `ev-<8 lowercase hex>` IDs,
+> a canonical `<normalized path>#^blk-<same suffix>` block ref, `null` or
+> `sha256:<64 lowercase hex>` claim hash, and the nonblank request-context fields
+> (`actor`, `run_id`, `request_id`, `operation`, `machine`, `timestamp`) plus a
+> mapping `request_provenance`. It performs all validation before `BEGIN IMMEDIATE`,
+> so a malformed later event rolls back the whole replay.
+>
+> The regression set is `test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected`,
+> `test_bindings_ledger_recovery_refuses_a_broken_journal_chain`,
+> `test_bindings_ledger_recovery_refuses_a_noncanonical_mint_event`, and
+> `test_bindings_ledger_recovery_uses_first_mint_and_restores_immutability`.
+> The last test uses `DROP TABLE evidence_bindings` (not `DELETE`, which the
+> immutable trigger correctly forbids), confirms first-event-wins and counts, and
+> confirms the schema-created update/delete triggers still reject mutation.
+
+- [ ] Historical source-complete test sketch (superseded by the executable review
+  repair above). Append to `tests/test_draft_verification.py`:
 
   ```python
   def test_deleted_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected(
@@ -3658,11 +3682,12 @@ explicit scope if needed.
   (Without the replay, the verify rebuild would re-mint the **tampered**
   hash as a fresh first binding and the drift would be blessed — the replay
   restoring the original SHA is exactly what keeps tamper detected.)
-- [ ] Run to verify it fails:
-  `python -m pytest tests/test_draft_verification.py::test_deleted_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected -v`
+- [ ] Historical red command (superseded):
+  `python -m pytest tests/test_draft_verification.py::test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected -v`
   — expected failure: `AttributeError: module 'memoria_vault.runtime.state'
   has no attribute 'rebuild_evidence_bindings_from_journal'`.
-- [ ] Write the minimal implementation. In
+- [ ] Historical raw-SQL implementation sketch (superseded by the validated,
+  workspace-locked replay above). In
   `src/memoria_vault/runtime/state.py`, after
   `rebuild_evidence_sets_from_markers` (line 2356), add:
 
@@ -3698,8 +3723,8 @@ explicit scope if needed.
       return {"replayed": replayed, "inserted": inserted}
   ```
 
-- [ ] Run to verify it passes:
-  `python -m pytest tests/test_draft_verification.py::test_deleted_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected -v`
+- [ ] Run the current focused recovery suite:
+  `python -m pytest tests/test_draft_verification.py -q`
 - [ ] Run the correctness gate: `python scripts/verify`
 - [ ] Commit:
 

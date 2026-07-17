@@ -2468,25 +2468,24 @@ def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict
 
 
 def rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]:
-    """Replay first-time evidence mints into the immutable bindings ledger."""
-    replayed = 0
-    inserted = 0
+    """Replay verified first-time evidence mints into the immutable bindings ledger."""
+    vault = Path(vault)
     with workspace_lock(vault):
+        verification = verify_journal_chain(vault)
+        if not verification["ok"]:
+            raise ValueError(
+                "cannot rebuild evidence bindings: journal chain is invalid: "
+                f"{verification['error']}"
+            )
+        mints = [
+            _evidence_mint_event_binding(event)
+            for event in read_event_log(vault, event_types=("evidence-minted",))
+        ]
+        replayed = 0
+        inserted = 0
         with connect(vault) as conn:
             conn.execute("BEGIN IMMEDIATE")
-            rows = conn.execute(
-                """
-                SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id,
-                       json_extract(payload_json, '$.block_text_sha256') AS block_text_sha256
-                FROM event_log
-                WHERE event_type = 'evidence-minted'
-                ORDER BY event_id
-                """
-            ).fetchall()
-            for row in rows:
-                evidence_id = str(row["evidence_id"] or "")
-                if not evidence_id:
-                    continue
+            for evidence_id, block_text_sha256 in mints:
                 replayed += 1
                 cursor = conn.execute(
                     """
@@ -2494,10 +2493,48 @@ def rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]:
                     VALUES (?, ?)
                     ON CONFLICT(id) DO NOTHING
                     """,
-                    (evidence_id, row["block_text_sha256"]),
+                    (evidence_id, block_text_sha256),
                 )
                 inserted += cursor.rowcount
     return {"replayed": replayed, "inserted": inserted}
+
+
+def _evidence_mint_event_binding(event: Mapping[str, Any]) -> tuple[str, str | None]:
+    """Validate the canonical payload used to restore one immutable binding."""
+    evidence_id = event.get("evidence_id")
+    block_ref = event.get("block_ref")
+    block_text_sha256 = event.get("block_text_sha256")
+    valid_provenance = (
+        event.get("actor") in ACTORS
+        and isinstance(event.get("request_provenance"), dict)
+        and all(
+            isinstance(event.get(field), str) and event[field].strip()
+            for field in ("run_id", "request_id", "operation", "machine", "timestamp")
+        )
+    )
+    if (
+        event.get("event") != "evidence-minted"
+        or not isinstance(evidence_id, str)
+        or re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id) is None
+        or not isinstance(block_ref, str)
+        or not valid_provenance
+        or (
+            block_text_sha256 is not None
+            and (
+                not isinstance(block_text_sha256, str)
+                or re.fullmatch(r"sha256:[0-9a-f]{64}", block_text_sha256) is None
+            )
+        )
+    ):
+        raise ValueError("invalid evidence-minted journal event")
+    try:
+        rel, separator, _anchor = block_ref.partition("#^")
+        canonical_block_ref = _evidence_block_ref(rel, evidence_id)
+    except ValueError as exc:
+        raise ValueError("invalid evidence-minted journal event") from exc
+    if not separator or block_ref != canonical_block_ref:
+        raise ValueError("invalid evidence-minted journal event")
+    return evidence_id, block_text_sha256
 
 
 def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
