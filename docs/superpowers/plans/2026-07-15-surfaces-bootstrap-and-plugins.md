@@ -427,6 +427,15 @@ def test_pid_alive_detects_live_and_dead_processes() -> None:
     assert rendezvous.pid_alive(-1) is False
 ```
 
+  Extend this block with the adopted-publication regressions: a pre-existing
+  legacy fixed temp file and a symlink at that legacy name remain untouched;
+  a monkeypatched short `os.write` is retried until the whole body is present;
+  a write failure leaves no `*.tmp`; and `read_runtime` rejects boolean
+  `port` and `pid` values.  Add a platform-route test that forces the Windows
+  branch, proves `_windows_pid_alive` is used, and fails if `os.kill` is
+  reached.  Keep the full `OpenProcess`/`GetExitCodeProcess` fake focused on
+  process-query outcomes rather than calling a real Windows API in tests.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "runtime or pid_alive" -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'write_runtime'` (and siblings).
@@ -631,11 +640,20 @@ def test_gc_stale_entries_tolerates_missing_root(tmp_path: Path) -> None:
     assert rendezvous.gc_stale_entries(tmp_path / "nowhere") == []
 ```
 
+  Add the amendment coverage alongside those baseline tests: a no-backend
+  `serve_lock` yields `False`; mocked `msvcrt` locks one byte beyond EOF without
+  an `os.write`; POSIX symlinked `serve.lock` and state-dir cases raise without
+  touching their targets; mocked junction state-dir cases do the same; and GC
+  leaves redirected roots and children intact.  Keep the POSIX-only cases
+  guarded by the platform/no-follow capability.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "serve_lock or gc_stale" -v`
   Expected: `AttributeError: … has no attribute 'serve_lock'`.
 
-- [ ] Write the minimal implementation. In `rendezvous.py`, add imports `from collections.abc import Iterator` and `from contextlib import contextmanager`, plus the guarded fcntl import after the stdlib imports:
+- [ ] Write the minimal implementation. In `rendezvous.py`, add imports `import stat`,
+  `from collections.abc import Iterator`, and `from contextlib import contextmanager`,
+  plus the guarded fcntl import after the stdlib imports:
 
 ```python
 try:
@@ -652,17 +670,48 @@ except ImportError:  # pragma: no cover - POSIX test environment
   then append:
 
 ```python
+_REDIRECT_ERROR = "rendezvous state path must not redirect through a symlink or junction"
+
+
+def _path_redirects(path: Path) -> bool:
+    return path.is_symlink() or path.is_junction()
+
+
+def _open_serve_lock_file(state_dir: Path) -> int:
+    """Open a regular serve lock without following direct reparse points."""
+    state_dir = Path(state_dir)
+    lock_path = state_dir / "serve.lock"
+    if _path_redirects(state_dir) or _path_redirects(lock_path):
+        raise ValueError(_REDIRECT_ERROR)
+
+    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+    if os.name == "posix" and hasattr(os, "O_NOFOLLOW"):
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        state_fd = os.open(state_dir, directory_flags)
+        try:
+            fd = os.open("serve.lock", flags, 0o600, dir_fd=state_fd)
+        finally:
+            os.close(state_fd)
+    else:
+        fd = os.open(lock_path, flags, 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ValueError("rendezvous serve lock must be a regular file")
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
 @contextmanager
 def serve_lock(state_dir: Path) -> Iterator[bool]:
     """Yield True when this holder owns the exclusive server-admission lock."""
-    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
-    fd = os.open(Path(state_dir) / "serve.lock", flags, 0o600)
+    fd = _open_serve_lock_file(state_dir)
     try:
         if os.name == "posix":
             os.fchmod(fd, 0o600)
         if fcntl is None:
             if msvcrt is not None:
-                os.write(fd, b"\0")
                 os.lseek(fd, 0, os.SEEK_SET)
                 try:
                     msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
@@ -675,7 +724,7 @@ def serve_lock(state_dir: Path) -> Iterator[bool]:
                     os.lseek(fd, 0, os.SEEK_SET)
                     msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
                 return
-            yield True
+            yield False
             return
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -692,12 +741,12 @@ def serve_lock(state_dir: Path) -> Iterator[bool]:
 
 def gc_stale_entries(root: Path | None = None) -> list[str]:
     """Delete rendezvous entries whose recorded pid is dead; return removed keys."""
-    base = root if root is not None else state_root()
+    base = Path(root) if root is not None else state_root()
     removed: list[str] = []
-    if not base.is_dir():
+    if _path_redirects(base) or not base.is_dir():
         return removed
     for entry_dir in sorted(
-        path for path in base.iterdir() if path.is_dir() and not path.is_symlink()
+        path for path in base.iterdir() if not _path_redirects(path) and path.is_dir()
     ):
         record = read_runtime(entry_dir)
         if record is None:
@@ -708,7 +757,7 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
     return removed
 ```
 
-  (`flock` locks belong to the open file description, so a second `os.open` in the same process conflicts — the nested-context test is a real exclusivity test.)
+  (`flock` locks belong to the open file description, so a second `os.open` in the same process conflicts — the nested-context test is a real exclusivity test. Windows permits an `msvcrt` lock beyond EOF, so do not write a byte just to establish the range.)
 
 - [ ] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
@@ -814,7 +863,8 @@ def _request(
 
 def test_v1_status_is_unauthenticated_and_never_resets_idle_timer(workspace: Path) -> None:
     with _running_server(workspace, boot_id="boot-status") as (server, port, _thread):
-        before = server.last_authenticated
+        sentinel = -123.0
+        server.last_authenticated = sentinel
         status, payload = _request(port, "GET", "/v1/status")
 
         assert status == 200
@@ -823,7 +873,7 @@ def test_v1_status_is_unauthenticated_and_never_resets_idle_timer(workspace: Pat
             "engine_version": __version__,
             "ok": True,
         }
-        assert server.last_authenticated == before
+        assert server.last_authenticated == sentinel
 
 
 def test_authenticated_request_resets_idle_timer_and_unauthorized_does_not(
@@ -894,6 +944,13 @@ def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
         server.server_close()
 ```
 
+  Add a `_raw_request` helper that sends literal HTTP headers, then cover an
+  empty/missing Host plus duplicate Host and Origin requests.  Each must be
+  rejected in Host-before-Origin order and leave a sentinel
+  `last_authenticated` unchanged even with a valid bearer.  Also set that
+  sentinel before a bearer-authenticated `/v1/status` request to prove the
+  public lifecycle read never counts as authenticated activity.
+
   (`json` is already imported from A.2; keep the import list alphabetized to satisfy ruff.)
 
 - [ ] Run tests to verify they fail:
@@ -939,10 +996,12 @@ def origin_allowed(origin: str | None) -> bool:
 ```python
         def _handle(self, method: str) -> None:
             port = int(self.server.server_address[1])
-            if not host_allowed(self.headers.get("Host"), port):
+            hosts = self.headers.get_all("Host") or []
+            if len(hosts) != 1 or not host_allowed(hosts[0], port):
                 self._write({"ok": False, "error": "forbidden host"}, HTTPStatus.FORBIDDEN)
                 return
-            if not origin_allowed(self.headers.get("Origin")):
+            origins = self.headers.get_all("Origin") or []
+            if len(origins) > 1 or (origins and not origin_allowed(origins[0])):
                 self._write({"ok": False, "error": "forbidden origin"}, HTTPStatus.FORBIDDEN)
                 return
             path = urlparse(self.path).path.rstrip("/") or "/"
@@ -1000,12 +1059,17 @@ def origin_allowed(origin: str | None) -> bool:
 ### Task BOOT-A.5: Idle-exit monitor + port-walk binder
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/http_transport.py` (append after `make_http_server`)
+- Modify: `src/memoria_vault/runtime/http_transport.py` (`MemoriaHTTPServer`, the
+  authenticated tail of `Handler._handle`, and helpers after `make_http_server`)
 - Modify: `tests/test_rendezvous.py`
 
 **Interfaces:**
 - Produces:
-  - `http_transport.start_idle_monitor(server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0) -> threading.Thread` — daemon thread; calls `server.shutdown()` once `time.monotonic() - server.last_authenticated >= idle_exit_seconds`
+  - `MemoriaHTTPServer.authenticated_request() -> ContextManager[bool]`,
+    `reserve_idle_shutdown(idle_exit_seconds: float) -> bool`, and a
+    `serve_forever_started` event — the lock owns authenticated admission,
+    in-flight count, timer updates, and one-way shutdown reservation
+  - `http_transport.start_idle_monitor(server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0) -> threading.Thread` — daemon thread; validates finite positive durations, waits for `serve_forever`, then reserves and calls `server.shutdown()` only once idle with no admitted request in flight
   - `http_transport.bind_http_server(workspace: Path, *, host: str, candidate_ports: list[int], token: str, read_scope: list[str] | None = None, boot_id: str = "") -> MemoriaHTTPServer` — first free candidate wins; re-raises the last `OSError` when all fail
 
 > **Adopted lifecycle amendment (2026-07-16):** `daemon_threads=True` means an
@@ -1034,9 +1098,10 @@ def test_idle_monitor_exits_despite_unauthenticated_probes(workspace: Path) -> N
     server = _make_server(workspace, token="test-token", boot_id="boot-idle")
     port = int(server.server_address[1])
     serve_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    monitor: threading.Thread | None = None
     serve_thread.start()
     try:
-        start_idle_monitor(server, idle_exit_seconds=0.8, poll_interval=0.05)
+        monitor = start_idle_monitor(server, idle_exit_seconds=0.8, poll_interval=0.05)
         deadline = time.monotonic() + 0.6
         while time.monotonic() < deadline:
             status, _payload = _request(port, "GET", "/v1/status")
@@ -1045,6 +1110,10 @@ def test_idle_monitor_exits_despite_unauthenticated_probes(workspace: Path) -> N
         serve_thread.join(timeout=10)
         assert not serve_thread.is_alive()
     finally:
+        server.shutdown()
+        serve_thread.join(timeout=5)
+        if monitor is not None:
+            monitor.join(timeout=5)
         server.server_close()
 
 
@@ -1052,9 +1121,10 @@ def test_idle_monitor_extends_on_authenticated_requests(workspace: Path) -> None
     server = _make_server(workspace, token="test-token", boot_id="boot-live")
     port = int(server.server_address[1])
     serve_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    monitor: threading.Thread | None = None
     serve_thread.start()
     try:
-        start_idle_monitor(server, idle_exit_seconds=1.2, poll_interval=0.05)
+        monitor = start_idle_monitor(server, idle_exit_seconds=1.2, poll_interval=0.05)
         for _ in range(3):
             time.sleep(0.4)
             status, _payload = _request(port, "GET", "/status", token="test-token")
@@ -1063,6 +1133,10 @@ def test_idle_monitor_extends_on_authenticated_requests(workspace: Path) -> None
         serve_thread.join(timeout=10)
         assert not serve_thread.is_alive()
     finally:
+        server.shutdown()
+        serve_thread.join(timeout=5)
+        if monitor is not None:
+            monitor.join(timeout=5)
         server.server_close()
 
 
@@ -1093,27 +1167,142 @@ def test_bind_http_server_walks_past_occupied_ports(workspace: Path) -> None:
         blocker.server_close()
 ```
 
+  Add the lifecycle-regression tests required by the amendment: invalid finite
+  durations fail before a thread starts; a monitor started before
+  `serve_forever` cannot call `shutdown`; a blocked authenticated dispatch
+  outlives its idle deadline and only then permits shutdown; a reservation
+  interleaved with a new bearer request returns 503 and never dispatches; and
+  a mock binder proves candidate order and re-raises the final `OSError`.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "idle_monitor or bind_http_server" -v`
   Expected: `ImportError: cannot import name 'bind_http_server' from 'memoria_vault.runtime.http_transport'`.
 
-- [ ] Write the minimal implementation. Append to `http_transport.py` (after `make_http_server`):
+- [ ] Write the minimal implementation. Add `import math`,
+  `from collections.abc import Iterator`, and `from contextlib import contextmanager`.
+  Replace A.4's `MemoriaHTTPServer` with:
 
 ```python
+class MemoriaHTTPServer(ThreadingHTTPServer):
+    """Loopback server carrying boot identity and idle-exit bookkeeping."""
+
+    daemon_threads = True
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.boot_id = ""
+        self.last_authenticated = time.monotonic()
+        self._authenticated_lock = threading.Lock()
+        self._authenticated_in_flight = 0
+        self._idle_shutdown_reserved = False
+        self.serve_forever_started = threading.Event()
+
+    def record_authenticated_activity(self) -> None:
+        """Mark an authenticated request without changing the in-flight count."""
+        with self._authenticated_lock:
+            self.last_authenticated = time.monotonic()
+
+    @contextmanager
+    def authenticated_request(self) -> Iterator[bool]:
+        """Count all work after a request has passed bearer authentication."""
+        with self._authenticated_lock:
+            admitted = not self._idle_shutdown_reserved
+            if admitted:
+                self._authenticated_in_flight += 1
+                self.last_authenticated = time.monotonic()
+        try:
+            yield admitted
+        finally:
+            if admitted:
+                with self._authenticated_lock:
+                    self._authenticated_in_flight -= 1
+
+    def reserve_idle_shutdown(self, idle_exit_seconds: float) -> bool:
+        """Atomically prevent later authenticated work when the server is idle."""
+        with self._authenticated_lock:
+            if (
+                self._idle_shutdown_reserved
+                or self._authenticated_in_flight != 0
+                or time.monotonic() - self.last_authenticated < idle_exit_seconds
+            ):
+                return False
+            self._idle_shutdown_reserved = True
+            return True
+
+    def service_actions(self) -> None:
+        """Signal only after the stdlib serve loop has safely started."""
+        self.serve_forever_started.set()
+        super().service_actions()
+```
+
+  In A.4's handler, replace the authenticated tail — from the successful
+  bearer check through its dispatch — with this scoped admission (A.6 adds the
+  boot-ID check inside the shutdown branch):
+
+```python
+            if not is_authorized(self.headers.get("Authorization"), token):
+                self._write({"ok": False, "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
+                return
+            with self.server.authenticated_request() as admitted:
+                if not admitted:
+                    self._write(
+                        {"ok": False, "error": "server stopping"},
+                        HTTPStatus.SERVICE_UNAVAILABLE,
+                    )
+                    return
+                if path == "/v1/shutdown":
+                    if method != "POST":
+                        self._write(
+                            {"ok": False, "error": "method not allowed"},
+                            HTTPStatus.METHOD_NOT_ALLOWED,
+                        )
+                        return
+                    self._write({"ok": True, "stopping": True})
+                    threading.Thread(target=self.server.shutdown, daemon=True).start()
+                    return
+                try:
+                    payload, status = _dispatch(
+                        workspace,
+                        method,
+                        self.path,
+                        self._json_body,
+                        read_scope=startup_read_scope,
+                    )
+                except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns JSON errors.
+                    payload, status = {"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST
+                self._write(payload, status)
+```
+
+  Then append the helpers after `make_http_server`:
+
+```python
+def _finite_positive_duration(value: object, name: str) -> float:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int | float)
+        or not math.isfinite(value)
+        or value <= 0
+    ):
+        raise ValueError(f"{name} must be a finite positive duration")
+    return float(value)
+
+
 def start_idle_monitor(
     server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0
 ) -> threading.Thread:
-    """Shut the server down once no authenticated request lands within the window."""
+    """Stop a ready server once its authenticated idle window expires."""
+    idle_exit_seconds = _finite_positive_duration(idle_exit_seconds, "idle_exit_seconds")
+    poll_interval = _finite_positive_duration(poll_interval, "poll_interval")
 
-    def _watch() -> None:
+    def watch() -> None:
+        server.serve_forever_started.wait()
         while True:
-            idle_for = time.monotonic() - server.last_authenticated
-            if idle_for >= idle_exit_seconds:
+            if server.reserve_idle_shutdown(idle_exit_seconds):
                 server.shutdown()
                 return
-            time.sleep(min(poll_interval, idle_exit_seconds - idle_for))
+            time.sleep(poll_interval)
 
-    thread = threading.Thread(target=_watch, daemon=True, name="memoria-idle-exit")
+    thread = threading.Thread(target=watch, daemon=True, name="memoria-idle-exit")
     thread.start()
     return thread
 
@@ -1127,7 +1316,7 @@ def bind_http_server(
     read_scope: list[str] | None = None,
     boot_id: str = "",
 ) -> MemoriaHTTPServer:
-    """Bind the first free candidate port; re-raise the last OSError when all fail."""
+    """Bind the first free candidate port, retaining the final bind error."""
     last_error: OSError | None = None
     for candidate in candidate_ports:
         try:
@@ -1141,7 +1330,9 @@ def bind_http_server(
             )
         except OSError as exc:
             last_error = exc
-    raise last_error if last_error is not None else OSError("no candidate ports given")
+    if last_error is None:
+        raise OSError("no candidate ports given")
+    raise last_error
 ```
 
 - [ ] Run tests to verify they pass:
@@ -1162,6 +1353,8 @@ def bind_http_server(
 **Files:**
 - Modify: `src/memoria_vault/cli.py` (serve parser lines 109–118; `_cmd_serve` lines 715–742; `_cmd_serve_http` lines 745–785; imports lines 1–35)
 - Modify: `src/memoria_vault/runtime/rendezvous.py` (add `probe_boot_id`, non-destructive `live_coordinates`, `post_shutdown`, and fail-closed no-lock-backend behavior)
+- Modify: `src/memoria_vault/runtime/http_transport.py` (bind `/v1/shutdown` to one
+  non-duplicate `X-Memoria-Boot-Id` after its bearer check)
 - Modify: `tests/test_rendezvous.py`
 - Modify: `tests/test_http_transport.py` (payload assertions lines 54–60)
 
@@ -1357,6 +1550,17 @@ def test_serve_stop_reports_when_nothing_runs(
     assert output == {"ok": False, "error": "no memoria server is running for this vault"}
 ```
 
+  Add the adopted-race coverage before implementation: patch
+  `bind_http_server` (not `make_http_server`) and prove invalid finite input
+  and `--host ::1` reach neither state creation nor bind; a busy lock has no
+  bind/write/clear side effect; a matching live record prevents replacement;
+  a PID-live probe-mismatch record remains until successful replacement; bind
+  and runtime-write failures preserve that prior record and release the lock;
+  cleanup closes the listener even if runtime removal fails; the admission lock
+  spans runtime cleanup and `server_close`; unsuccessful stop replies retain a
+  PID-live record; and a boot mismatch sends no bearer POST.  Exercise direct
+  lifecycle requests with a proxy, redirect, and oversized-body regression.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "serve_" -v`
   Expected: `SystemExit: 2` from argparse (`unrecognized arguments: --ephemeral` / `--stop` / `--idle-exit`), and `ImportError` for `_serve_port_candidates`.
@@ -1412,11 +1616,37 @@ def post_shutdown(
             return _read_lifecycle_json(response)
     except (OSError, ValueError, urllib.error.HTTPError):
         return None
+
+
+def probe_boot_id(port: int, timeout: float = 1.0) -> str | None:
+    """Return the unauthenticated status endpoint's non-empty boot ID."""
+    request = urllib.request.Request(f"http://127.0.0.1:{port}/v1/status", method="GET")
+    try:
+        with _open_lifecycle_request(request, timeout=timeout) as response:
+            data = _read_lifecycle_json(response)
+    except (OSError, ValueError, urllib.error.HTTPError):
+        return None
+    boot_id = data.get("boot_id") if isinstance(data, dict) else None
+    return boot_id if isinstance(boot_id, str) and boot_id else None
+
+
+def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None:
+    """Return a matching live entry, removing only records with dead PIDs."""
+    record = read_runtime(state_dir)
+    if record is None:
+        return None
+    if not pid_alive(int(record["pid"])):
+        clear_runtime(state_dir)
+        return None
+    if probe_boot_id(int(record["port"]), timeout=probe_timeout) != record["boot_id"]:
+        return None
+    return record
 ```
 
   In `src/memoria_vault/cli.py`:
 
-  1. Add to the import block (after line 27, `from memoria_vault.runtime.paths import safe_filename`):
+  1. Add `import math` and, after line 27's
+     `from memoria_vault.runtime.paths import safe_filename`, add:
 
 ```python
 from memoria_vault.runtime.time import now_iso
@@ -1474,73 +1704,100 @@ def _cmd_serve_http(args: argparse.Namespace) -> int:
     from memoria_vault.runtime import rendezvous
     from memoria_vault.runtime.http_transport import bind_http_server, start_idle_monitor
 
-    if args.host not in {"127.0.0.1", "localhost", "::1"}:
-        return _fail("serve --http only binds loopback hosts", json_output=args.json)
-    if args.idle_exit <= 0:
+    if not math.isfinite(args.idle_exit) or args.idle_exit <= 0:
         return _fail("serve --idle-exit must be positive", json_output=args.json)
+    if args.host not in {"127.0.0.1", "localhost"}:
+        return _fail("serve --http only binds loopback hosts", json_output=args.json)
     workspace = _workspace(args)
     env_token = os.environ.get("MEMORIA_HTTP_TOKEN")
     token = env_token or secrets.token_urlsafe(32)
     boot_id = str(uuid.uuid4())
     candidates = [0] if args.ephemeral else _serve_port_candidates(args.port)
-    try:
-        server = bind_http_server(
-            workspace,
-            host=args.host,
-            candidate_ports=candidates,
-            token=token,
-            read_scope=args.read_scope,
-            boot_id=boot_id,
-        )
-    except ValueError as exc:
-        return _fail(str(exc), json_output=args.json)
-    except OSError as exc:
-        return _fail(f"serve --http could not bind a port: {exc}", json_output=args.json)
-    port = int(server.server_address[1])
     state_dir = rendezvous.vault_state_dir(workspace)
-    rendezvous.write_runtime(
-        state_dir,
-        {
-            "vault_path": str(workspace),
-            "vault_id": _vault_id(workspace),
-            "port": port,
-            "pid": os.getpid(),
-            "boot_id": boot_id,
-            "token": token,
-            "engine_version": __version__,
-            "started_at": now_iso(),
-        },
-    )
-    payload = {
-        "ok": True,
-        "url": f"http://{args.host}:{port}",
-        "port": port,
-        "boot_id": boot_id,
-        "token": None if env_token else token,
-        "token_source": "env" if env_token else "generated",
-    }
-    if args.json:
-        print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
-    elif not args.quiet:
-        print(f"Memoria HTTP serving {payload['url']}", flush=True)
-        if env_token:
-            print("Token loaded from MEMORIA_HTTP_TOKEN.", flush=True)
-        else:
-            print(f"Token: {token}", flush=True)
-    if args.once:
-        rendezvous.clear_runtime(state_dir)
-        server.server_close()
-        return 0
-    if args.on_demand:
-        start_idle_monitor(server, args.idle_exit)
-    try:
-        server.serve_forever()
-        return 0
-    except KeyboardInterrupt:
-        return 0
-    finally:
-        rendezvous.clear_runtime(state_dir)
-        server.server_close()
+
+    with rendezvous.serve_lock(state_dir) as acquired:
+        if not acquired:
+            return _fail(
+                "serve could not acquire the exclusive admission lock", json_output=args.json
+            )
+
+        live = rendezvous.live_coordinates(state_dir)
+        if live is not None:
+            return _fail(
+                "a memoria server is already running for this vault", json_output=args.json
+            )
+
+        server: Any | None = None
+        runtime_published = False
+        try:
+            try:
+                server = bind_http_server(
+                    workspace,
+                    host=args.host,
+                    candidate_ports=candidates,
+                    token=token,
+                    read_scope=args.read_scope,
+                    boot_id=boot_id,
+                )
+            except ValueError as exc:
+                return _fail(str(exc), json_output=args.json)
+            except OSError as exc:
+                return _fail(f"serve --http could not bind a port: {exc}", json_output=args.json)
+
+            port = int(server.server_address[1])
+            try:
+                rendezvous.write_runtime(
+                    state_dir,
+                    {
+                        "vault_path": str(workspace),
+                        "vault_id": _vault_id(workspace),
+                        "port": port,
+                        "pid": os.getpid(),
+                        "boot_id": boot_id,
+                        "token": token,
+                        "engine_version": __version__,
+                        "started_at": now_iso(),
+                    },
+                )
+                runtime_published = True
+            except (OSError, ValueError) as exc:
+                return _fail(
+                    f"serve --http could not publish runtime: {exc}", json_output=args.json
+                )
+
+            payload = {
+                "ok": True,
+                "url": f"http://{args.host}:{port}",
+                "port": port,
+                "boot_id": boot_id,
+                "token": None if env_token else token,
+                "token_source": "env" if env_token else "generated",
+            }
+            if args.once:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    try:
+                        server.server_close()
+                    finally:
+                        server = None
+                return _emit(payload, args)
+            if args.on_demand:
+                start_idle_monitor(server, args.idle_exit)
+            _emit(payload, args)
+            try:
+                server.serve_forever()
+                return 0
+            except KeyboardInterrupt:
+                return 0
+        finally:
+            if server is not None:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    server.server_close()
 
 
 def _cmd_serve_stop(args: argparse.Namespace) -> int:
@@ -1549,7 +1806,9 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     state_dir = rendezvous.vault_state_dir(workspace)
     record = rendezvous.read_runtime(state_dir)
-    if record is None or not rendezvous.pid_alive(int(record["pid"])):
+    if record is None:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    if not rendezvous.pid_alive(int(record["pid"])):
         rendezvous.clear_runtime(state_dir)
         return _fail("no memoria server is running for this vault", json_output=args.json)
     port = int(record["port"])
@@ -1557,10 +1816,27 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
     if rendezvous.probe_boot_id(port) != boot_id:
         return _fail("no memoria server is running for this vault", json_output=args.json)
     response = rendezvous.post_shutdown(port, str(record["token"]), boot_id)
-    if response is None:
+    if not (
+        isinstance(response, dict)
+        and response.get("ok") is True
+        and response.get("stopping") is True
+    ):
         return _fail("no memoria server is running for this vault", json_output=args.json)
     return _emit({"ok": True, "stopped": True, "port": int(record["port"])}, args)
 ```
+
+  5. Bind shutdown to the boot record.  In A.5's admitted `/v1/shutdown`
+     branch, after the method check and before writing success, insert:
+
+```python
+                    boot_ids = self.headers.get_all("X-Memoria-Boot-Id") or []
+                    if len(boot_ids) != 1 or boot_ids[0] != self.server.boot_id:
+                        self._write({"ok": False, "error": "stale server"}, HTTPStatus.CONFLICT)
+                        return
+```
+
+  Its tests must reject both a missing/mismatched and duplicate boot ID with
+  409, while the client-side status mismatch proves no bearer POST occurs.
 
 - [ ] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py tests/test_http_transport.py -v` — all pass.
@@ -1803,6 +2079,10 @@ def test_handshake_converges_with_a_direct_serve_race(workspace: Path) -> None:
         assert not direct.is_alive()
 ```
 
+  Extend the liveness proof with malformed PID values (`True`, a numeric
+  string, and a missing value): only a real positive `int` that remains
+  PID-live may be returned.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k handshake -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'HandshakeError'`.
@@ -1823,7 +2103,12 @@ def handshake(
     spawn_command: list[str] | None = None,
 ) -> dict[str, Any]:
     """Connect-else-spawn-else-report; returns port, token, version, boot ID, and pid."""
-    if not math.isfinite(timeout) or timeout <= 0:
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or not math.isfinite(timeout)
+        or timeout <= 0
+    ):
         raise HandshakeError("handshake timeout must be finite positive seconds")
     vault = Path(vault_path).expanduser().resolve()
     state_dir = vault_state_dir(vault)
@@ -1890,14 +2175,21 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
     elif os.name == "nt":
         popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
     try:
+        if _path_redirects(state_dir) or _path_redirects(log_path):
+            raise ValueError(_REDIRECT_ERROR)
         with log_path.open("ab") as log_file:
             subprocess.Popen(command, stdout=log_file, **popen_kwargs)
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         raise HandshakeError(f"could not spawn memoria server; see {log_path}: {exc}") from exc
 
 
 def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
-    if not math.isfinite(timeout) or timeout <= 0:
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or not math.isfinite(timeout)
+        or timeout <= 0
+    ):
         return None
     deadline = time.monotonic() + timeout
     while True:
@@ -1906,12 +2198,12 @@ def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
             return None
         record = live_coordinates(state_dir, probe_timeout=min(0.5, remaining))
         if record is not None:
-            try:
-                pid = int(record["pid"])
-            except (KeyError, TypeError, ValueError):
-                pid = 0
-            if pid > 0 and pid_alive(pid):
+            pid = record.get("pid")
+            if type(pid) is int and pid > 0 and pid_alive(pid):
                 return record
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
         time.sleep(min(0.1, remaining))
 ```
 
