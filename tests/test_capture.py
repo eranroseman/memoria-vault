@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from memoria_vault.runtime.capture import (
 )
 from memoria_vault.runtime.capture import (
     check_references_bib,
+    parse_bibtex_entry,
     render_references_bib,
 )
 from memoria_vault.runtime.capture import (
@@ -54,6 +56,31 @@ def capture_url_source(vault: Path, *args, **kwargs):
 
 def write_references_bib(vault: Path, *args, **kwargs):
     return call_with_context(_write_references_bib, vault, *args, **kwargs)
+
+
+def test_parse_bibtex_entry_scales_linearly_for_backslash_runs() -> None:
+    bibtex = "@article{linear2026,title={" + "\\" * 8_000 + "}}"
+
+    started = time.monotonic()
+    entry = parse_bibtex_entry(bibtex)
+
+    assert entry["citekey"] == "linear2026"
+    assert time.monotonic() - started < 3
+
+
+def test_parse_bibtex_entry_preserves_odd_and_even_escape_runs() -> None:
+    odd_quote = '@article{key,title="left ' + "\\" + '" right",journal={ok}}'
+    even_quote = '@article{key,title="left ' + "\\" * 2 + '",journal={ok}}'
+    even_brace_closer = "@article{key,title={left " + "\\" * 2 + "},journal={ok}}"
+
+    assert parse_bibtex_entry(r"@article{key,title={left \} right},journal={ok}}") == {
+        "entry_type": "article",
+        "citekey": "key",
+        "fields": {"title": "left } right", "journal": "ok"},
+    }
+    assert parse_bibtex_entry(even_brace_closer)["fields"]["title"] == "left " + "\\" * 2
+    assert parse_bibtex_entry(odd_quote)["fields"]["title"] == "left " + "\\" + '" right'
+    assert parse_bibtex_entry(even_quote)["fields"]["title"] == "left " + "\\" * 2
 
 
 def workspace(tmp_path: Path) -> Path:

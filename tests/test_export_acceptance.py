@@ -11,7 +11,11 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import bibliography_citekeys, render_references_bib
+from memoria_vault.runtime.capture import (
+    bibliography_citekeys,
+    parse_bibtex_entry,
+    render_references_bib,
+)
 from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
 from memoria_vault.runtime.knowledge import _draft_unresolved_raw_citations
 from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
@@ -333,6 +337,14 @@ def test_draft_export_preserves_non_direct_anchors_that_prevent_fence_synthesis(
             "Author supplied [see @not-in-fence; -@also-missing, p. 3] and @bare-missing.",
             ["also-missing", "bare-missing", "not-in-fence"],
         ),
+        (
+            "> - ```text\n> - [@not-in-fence]\n> ```",
+            ["not-in-fence"],
+        ),
+        (
+            "> - ```text\nplain [@not-in-fence]\n> - ```",
+            ["not-in-fence"],
+        ),
     ],
 )
 def test_draft_export_refuses_raw_citations_outside_the_bibliography_projection(
@@ -363,10 +375,37 @@ def test_raw_citation_membership_scan_keeps_normalized_inline_html_visible() -> 
     assert _draft_unresolved_raw_citations(content, {"safe2026"}) == ["not-in-fence"]
 
 
+def test_raw_citation_membership_refuses_ambiguous_pandoc_table_citations() -> None:
+    content = "a b\n-- --\n```\n[@evil]\n```\n"
+
+    assert _pandoc_citation_ids(content) == ["e"]
+    assert _draft_unresolved_raw_citations(content, {"evil"}) == ["ambiguous-markdown-table"]
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "> a b\n> -- --\n> ~~~text\n> [@evil]\n> ~~~\n",
+        ">> a b\n>> -- --\n>> ~~~text\n>> [@evil]\n>> ~~~\n",
+        "- a b\n  -- --\n  ~~~text\n  [@evil]\n  ~~~\n",
+        "- > a b\n  > -- --\n  > ~~~text\n  > [@evil]\n  > ~~~\n",
+        "> - a b\n>   -- --\n>   ~~~text\n>   [@evil]\n>   ~~~\n",
+    ],
+)
+def test_raw_citation_membership_refuses_ambiguous_container_table_citations(
+    content: str,
+) -> None:
+    assert _pandoc_citation_ids(content) == ["e"]
+    assert _draft_unresolved_raw_citations(content, {"evil"}) == ["ambiguous-markdown-table"]
+
+
 @pytest.mark.parametrize(
     ("suffix", "expected_id"),
     [
+        ("//", "safe2026/"),
         ("//not", "safe2026//not"),
+        (":/", "safe2026:"),
+        ("://", "safe2026:/"),
         ("~not", "safe2026~not"),
         ("?not", "safe2026?not"),
         ("#not", "safe2026#not"),
@@ -435,11 +474,90 @@ def test_raw_citation_membership_matches_pandoc_left_boundaries(
     assert _draft_unresolved_raw_citations(content, set()) == expected
 
 
-def test_raw_citation_membership_keeps_pandoc_terminal_punctuation_valid() -> None:
-    content = neutralize_untrusted_markdown("[@safe2026.]\n")
+@pytest.mark.parametrize(
+    "suffix",
+    [
+        ".",
+        ",",
+        ";",
+        ":",
+        "!",
+        "?",
+        "#",
+        "%",
+        "&",
+        "+",
+        "-",
+        "~",
+        "<",
+        ">",
+        "$",
+        "/",
+        "*",
+        "./",
+        "/.",
+        "!?/",
+        "/!?",
+        ".//",
+        "~//",
+        "-//",
+        "&//",
+        "/./",
+    ],
+)
+def test_raw_citation_membership_keeps_pandoc_terminal_punctuation_valid(suffix: str) -> None:
+    content = neutralize_untrusted_markdown(f"[@safe2026{suffix}]\n")
 
     assert _pandoc_citation_ids(content) == ["safe2026"]
     assert _draft_unresolved_raw_citations(content, {"safe2026"}) == []
+
+
+@pytest.mark.parametrize(
+    ("content", "unresolved"),
+    [
+        ("`x\n\n[@evil]\ny`\n", ["evil"]),
+        ("`\n---\n[@evil]\n`\n", ["evil"]),
+        ("`x\n---\n[@evil]\ny`\n", ["evil"]),
+        ("`x\n-\n[@evil]\ny`\n", ["evil"]),
+        ("`x\n--\n[@evil]\ny`\n", ["evil"]),
+        ("`x\n-----  -----\n[@evil]\ny`\n", ["ambiguous-markdown-table"]),
+        ("`x\n: definition\n[@evil]\ny`\n", ["evil"]),
+        ("`x\n~ definition\n[@evil]\ny`\n", ["evil"]),
+        ("``\n[@evil]\n\n``\n", ["evil"]),
+        ("> - ```text\n> - [@evil]\n```\n", ["evil"]),
+        ("- ```text\n- [@evil]\n```\n", ["evil"]),
+        ("> - ```text\n> - [@evil]\n> ```\n", ["evil"]),
+        ("> - ```foo}bar\n> - [@evil]\n> ```\n", ["evil"]),
+        ("- > ```text\n  - > [@evil]\n  > ```\n", ["evil"]),
+        ("- > ```foo}bar\n  - > [@evil]\n  > ```\n", ["evil"]),
+        ("> - ```text\n[@evil]\n> - ```\n", ["evil"]),
+        ("> - ```text\nplain [@evil]\n> - ```\n", ["evil"]),
+        ("- > ```text\n[@evil]\n- > ```\n", ["evil"]),
+        ("- > ```text\nplain [@evil]\n- > ```\n", ["evil"]),
+    ],
+)
+def test_raw_citation_membership_does_not_mask_ambiguous_multiline_code_spans(
+    content: str,
+    unresolved: list[str],
+) -> None:
+    normalized = neutralize_untrusted_markdown(content)
+
+    assert _pandoc_citation_ids(normalized) == ["evil"]
+    assert _draft_unresolved_raw_citations(normalized, {"safe2026"}) == unresolved
+
+
+def test_raw_citation_membership_masks_definite_multiline_code_span() -> None:
+    normalized = neutralize_untrusted_markdown("`x\n[@evil]\ny`\n")
+
+    assert _pandoc_citation_ids(normalized) == []
+    assert _draft_unresolved_raw_citations(normalized, {"safe2026"}) == []
+
+
+def test_raw_citation_membership_masks_multiline_code_span_after_opening_line_break() -> None:
+    normalized = neutralize_untrusted_markdown("`\n[@evil]\n`\n")
+
+    assert _pandoc_citation_ids(normalized) == []
+    assert _draft_unresolved_raw_citations(normalized, {"safe2026"}) == []
 
 
 @pytest.mark.parametrize("raw", ["@?", "@.", "@#", "@/", "@%", "@:", "@-", "@<>"])
@@ -460,6 +578,40 @@ def test_raw_citation_membership_ignores_non_citation_token_starters(raw: str) -
         "> ~~~text\n> code\n\nvisible [@not-in-fence]\n~~~\n",
         "- ~~~text\n  code\n\nvisible [@not-in-fence]\n~~~\n",
         "~~~\n> ~~~text\n> code\n~~~\n[@not-in-fence]\n",
+        "> ~~~foo=bar\n> [@not-in-fence]\n>> ~~~\n",
+        "> prose\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~\n",
+        "> ---\n>> prose\n> ~~~text\n> [@not-in-fence]\n> ~~~\n",
+        "> prose\n> # heading\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~\n",
+        "> prose\n>> # heading\n>> ~~~foo=bar\n>> [@not-in-fence]\n>> ~~~\n",
+        "> prose\n>>\n>> ~~~foo=bar\n>> [@not-in-fence]\n>> ~~~\n",
+        "plain prose\n> # heading\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~\n",
+        "plain prose\n# heading\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~\n",
+        "plain prose\n# heading\n    [@not-in-fence]\n",
+        "# heading\n```foo}bar\n[@not-in-fence]\n````\n",
+        "plain prose\n# heading\n~~~text\n[@not-in-fence]\n~~~~\n",
+        "> # heading\noutside prose\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~\n",
+        "- item\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~\n",
+        "- item\n> # heading\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~\n",
+        "1. item\n# heading\n    [@not-in-fence]\n",
+        "- item\n\n    [@not-in-fence]\n",
+        "Term\n: definition\n\n    [@not-in-fence]\n",
+        "-\t ~~~text\n    [@not-in-fence]\n    ~~~\n",
+        "- ~~~text\n\t\t[@not-in-fence]\n\t\t~~~\n",
+        "outer prose\n- ~~~foo=bar\n  [@not-in-fence]\n  ~~~\n",
+        "outer prose\n- prose\n- ~~~foo=bar\n  [@not-in-fence]\n  ~~~\n",
+        "outer prose\n# Heading\n- prose\n- ~~~foo=bar\n  [@not-in-fence]\n  ~~~\n",
+        "* * *\n  continuation\n- ~~~foo=bar\n  [@not-in-fence]\n  ~~~\n",
+        "> ~~~bogus header ???\n> [@not-in-fence]\n> ~~~\n",
+        "- ~~~bogus header ???\n  [@not-in-fence]\n  ~~~\n",
+        "> ~~~foo}bar\n> [@not-in-fence]\n> ~~~\n",
+        "- ~~~foo}bar\n  [@not-in-fence]\n  ~~~\n",
+        "outer prose\n> - ~~~foo=bar\n>   [@not-in-fence]\n>   ~~~\n",
+        "> prose\n> - ~~~foo=bar\n>   [@not-in-fence]\n>   ~~~\n",
+        "> - ~~~foo=bar\n>   [@not-in-fence]\n>> ~~~\n",
+        "> - ~~~bogus header ???\n>   [@not-in-fence]\n>   ~~~\n",
+        "outer prose\n- > ~~~foo=bar\n  > [@not-in-fence]\n  > ~~~\n",
+        "- > ~~~bogus header ???\n  > [@not-in-fence]\n  > ~~~\n",
+        "- > ~~~foo=bar\n  > [@not-in-fence]\n  >> ~~~\n",
     ],
 )
 def test_raw_citation_membership_unmasks_after_container_fence_bare_closer(
@@ -501,16 +653,40 @@ def test_draft_export_allows_raw_projection_citations_with_multiple_ids(tmp_path
     assert _pandoc_citation_ids(exported) == ["safe2026", "safe2026", "beta2026"]
 
 
+def test_raw_citation_table_guard_excludes_generated_bibliography() -> None:
+    body = neutralize_untrusted_markdown("a b\n-- --\nx y\n\n")
+    content = body + "## References\n\n```bibtex\n@article{safe2026,\n}\n```\n"
+
+    assert (
+        _draft_unresolved_raw_citations(
+            content,
+            {"safe2026"},
+            table_ambiguity_content=body,
+        )
+        == []
+    )
+
+
 @pytest.mark.parametrize(
     "literal",
     [
         "`[@not-in-fence]`",
-        "    [@not-in-fence]",
-        "# Heading\n    [@not-in-fence]",
-        "Heading\n---\n    [@not-in-fence]",
         "```text\n[@not-in-fence]\n```",
+        "# Heading\n```text\n[@not-in-fence]\n```",
         "> ~~~text\n> [@not-in-fence]\n> ~~~",
         "- ~~~text\n  [@not-in-fence]\n  ~~~",
+        '> ~~~foo="bar"\n> [@not-in-fence]\n> ~~~',
+        '- ~~~foo="bar"\n  [@not-in-fence]\n  ~~~',
+        "> # Heading\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~",
+        "> prose\n> ---\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~",
+        "> # Outer heading\n>> # Inner heading\n>> ~~~foo=bar\n>> [@not-in-fence]\n>> ~~~",
+        "- item\n\n> # Heading\n> ~~~foo=bar\n> [@not-in-fence]\n> ~~~",
+        "> - ~~~foo=bar\n>   [@not-in-fence]\n>   ~~~",
+        "> - ~~~foo=bar\n>   [@not-in-fence]\n~~~",
+        "- > ~~~foo=bar\n  > [@not-in-fence]\n  > ~~~",
+        "- > ~~~foo=bar\n  > [@not-in-fence]\n~~~",
+        "- prose\n- ~~~foo=bar\n  [@not-in-fence]\n  ~~~",
+        "# Heading\n- prose\n- ~~~foo=bar\n  [@not-in-fence]\n  ~~~",
     ],
 )
 def test_draft_export_does_not_treat_code_literals_as_raw_citations(
@@ -559,6 +735,28 @@ def test_draft_export_refuses_fence_created_after_direct_unicode_anchor_removal(
 
     with pytest.raises(ValueError, match="unterminated-code-fence"):
         write_project_export(vault, "project-alpha", draft=True)
+
+
+def test_draft_export_removes_direct_anchor_after_unicode_line_separator(tmp_path: Path) -> None:
+    vault = tmp_path
+    marker = "%%ev: ev-87654321 items=source-alpha#^p0001%%"
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip()
+        + "\n\nx\u2028\n\n~~~foo ^blk-opener\n"
+        + f"Claim ^blk-87654321 {marker}\n~~~\n",
+        encoding="utf-8",
+    )
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    exported = write_project_export(vault, "project-alpha", draft=True)["content"]
+
+    assert "^blk-opener" in exported
+    assert "^blk-87654321" not in exported
+    assert _pandoc_citation_ids(exported).count("safe2026") == 2
+    assert not any("[@safe2026]" in block for block in _pandoc_code_block_texts(exported))
 
 
 @pytest.mark.parametrize(
@@ -956,3 +1154,28 @@ def test_draft_export_inlined_bibtex_round_trips_literal_braces_and_authors(
     assert item["container-title"] == journal
     assert item["abstract"] == abstract
     assert item["author"] == authors
+
+
+def test_generated_bibtex_parser_preserves_escaped_literal_braces(tmp_path: Path) -> None:
+    vault = tmp_path
+    title = "Open { only"
+    journal = "Close } only"
+    abstract = "Both { and }"
+    _catalog_source(
+        vault,
+        "source-alpha",
+        citekey="braces2026",
+        csl_json={
+            "title": title,
+            "container-title": journal,
+            "abstract": abstract,
+        },
+    )
+
+    parsed = parse_bibtex_entry(render_references_bib(vault))
+
+    assert parsed["fields"] == {
+        "title": title,
+        "journal": journal,
+        "abstract": abstract,
+    }

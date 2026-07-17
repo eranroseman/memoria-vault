@@ -782,7 +782,15 @@ def _matching_container(text: str, open_index: int) -> int:
     opener = text[open_index]
     closer = "}" if opener == "{" else ")"
     depth = 0
+    backslash_run = 0
     for index, char in enumerate(text[open_index:], start=open_index):
+        if char == "\\":
+            backslash_run += 1
+            continue
+        escaped = bool(backslash_run % 2)
+        backslash_run = 0
+        if escaped:
+            continue
         if char == opener:
             depth += 1
         elif char == closer:
@@ -805,8 +813,16 @@ def _split_citekey(body: str) -> tuple[str, str]:
 def _top_level_comma(text: str) -> int:
     depth = 0
     quote = False
+    backslash_run = 0
     for index, char in enumerate(text):
-        if char == '"' and (index == 0 or text[index - 1] != "\\"):
+        if char == "\\":
+            backslash_run += 1
+            continue
+        escaped = bool(backslash_run % 2)
+        backslash_run = 0
+        if escaped:
+            continue
+        if char == '"':
             quote = not quote
         elif not quote and char in "{(":
             depth += 1
@@ -849,8 +865,16 @@ def _read_bibtex_value(text: str, index: int) -> tuple[str, int]:
         return text[index + 1 : close], close + 1
     if text[index] == '"':
         end = index + 1
+        backslash_run = 0
         while end < len(text):
-            if text[end] == '"' and text[end - 1] != "\\":
+            character = text[end]
+            if character == "\\":
+                backslash_run += 1
+                end += 1
+                continue
+            escaped = bool(backslash_run % 2)
+            backslash_run = 0
+            if character == '"' and not escaped:
                 return text[index + 1 : end], end + 1
             end += 1
         raise ValueError("BibTeX quoted value is unclosed")
@@ -863,8 +887,20 @@ def _read_bibtex_value(text: str, index: int) -> tuple[str, int]:
 def _clean_bibtex_value(value: str) -> str:
     cleaned = value.replace("\n", " ").replace("\r", " ")
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    cleaned = cleaned.replace("\\&", "&").replace("\\_", "_")
-    return cleaned.replace("{", "").replace("}", "")
+    result: list[str] = []
+    index = 0
+    while index < len(cleaned):
+        character = cleaned[index]
+        if character == "\\" and index + 1 < len(cleaned):
+            escaped = cleaned[index + 1]
+            if escaped in "&_{}":
+                result.append(escaped)
+                index += 2
+                continue
+        if character not in "{}":
+            result.append(character)
+        index += 1
+    return "".join(result)
 
 
 def _item_type(entry_type: str) -> str:
