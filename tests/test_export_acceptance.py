@@ -1179,3 +1179,47 @@ def test_generated_bibtex_parser_preserves_escaped_literal_braces(tmp_path: Path
         "journal": journal,
         "abstract": abstract,
     }
+
+
+def _implicit_draft(vault: Path) -> str:
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="This implicit claim needs review.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Thesis\n")
+    composed = compose_project_draft(vault, "project-alpha")
+    return composed["evidence_markers"][0]["id"]
+
+
+def test_blocked_export_names_its_findings(tmp_path: Path) -> None:
+    vault = tmp_path
+    evidence_id = _implicit_draft(vault)
+    verification = verify_project_draft(vault, "project-alpha")
+
+    assert verification["ready"] is False
+    with pytest.raises(ValueError) as refusal:
+        write_project_export(vault, "project-alpha", draft=True)
+
+    message = str(refusal.value)
+    assert "project draft is not export-ready" in message
+    assert f"evidence-incomplete:{evidence_id}" in message
+    assert f"review-required:{evidence_id}" in message
+
+
+def test_rejected_disposition_leaves_export_blocked(tmp_path: Path) -> None:
+    """Only accept clears holds; rejecting an evidence set keeps export refused."""
+    vault = tmp_path
+    evidence_id = _implicit_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    resolve_evidence_review(vault, evidence_id, decision="reject", reason="unsupported")
+    reverified = verify_project_draft(vault, "project-alpha")
+
+    assert reverified["ready"] is False
+    with pytest.raises(ValueError, match="project draft is not export-ready"):
+        write_project_export(vault, "project-alpha", draft=True)
