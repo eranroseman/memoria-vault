@@ -497,7 +497,9 @@ def test_contradiction_links_read_only_canonical_contradicts_links(tmp_path: Pat
         "work_id: catalog/sources/source-alpha\n"
         "links:\n"
         "  contradicts:\n"
-        "    - digests/other.md\n"
+        "    - '[[digests/other|Other]]'\n"
+        "    - '[[digests/other.md#Evidence|Other]]'\n"
+        "    - digests/other\n"
         "---\n"
         "# Good contradiction\n",
         encoding="utf-8",
