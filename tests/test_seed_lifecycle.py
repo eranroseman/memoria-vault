@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.cli import (
-    SEED_CLASSES,
     SEED_CLASS_VIEW_PREFERENCE,
+    SEED_CLASSES,
     SEED_FILES,
     SEED_TREES,
     VIEW_PREFERENCE_PATHS,
@@ -41,7 +41,7 @@ def test_seed_classes_manifest_is_exactly_the_nine_view_preferences() -> None:
         }
     )
 
-    assert SEED_CLASSES == {rel: SEED_CLASS_VIEW_PREFERENCE for rel in expected}
+    assert SEED_CLASSES == dict.fromkeys(expected, SEED_CLASS_VIEW_PREFERENCE)
     assert VIEW_PREFERENCE_PATHS == expected
 
 
