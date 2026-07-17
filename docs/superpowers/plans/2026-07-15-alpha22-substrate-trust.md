@@ -17,10 +17,54 @@
 ## Cross-section contracts (BINDING — resolve seam assumptions)
 
 1. **`MIGRATIONS` shape is G1's definition** (G1.1 Produces): `state.MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]]` — key = from_version, value = `(from_version + 1, ordered steps)`; applied sequentially in `_init` BEFORE `executescript(_schema_sql())`, each step list in one explicit `BEGIN`/`COMMIT` (no `with conn:`), `user_version` bumped per step; unregistered version (incl. future) raises. G2S1.2/.3 and S12.2 adapt their migration entries to THIS shape (their sections assumed variants; the mechanics are otherwise unchanged).
-2. **Schema-version allocation (serialized):** G1 ships `MIGRATIONS` empty, `SCHEMA_VERSION` stays 12 → G2S1.2 takes 12→13 (edge_id/attributes) → G2S1.3 takes 13→14 (reverse indexes) → S12.2 takes **14→15** (purpose enum; renumber its written 13→14 accordingly, body unchanged) — G3/ULID work starts at 16. Each schema-touching task updates, in the same commit: its `MIGRATIONS` entry, the `schema.sql` DDL + trailing `PRAGMA user_version`, `SCHEMA_VERSION` in state.py, and the version-pinned tests (`tests/test_schema_version.py:14-17`, `tests/test_schema_v10.py:39-41`, `tests/test_query_substrate.py:31`).
+2. **Schema-version allocation (serialized):** G1 ships `MIGRATIONS` empty, `SCHEMA_VERSION` stays 12 → G2S1.2 takes 12→13 (edge_id/attributes) → G2S1.3 takes 13→14 (reverse indexes) → S12.2 takes **14→15** (purpose enum; rebuild both `code_artifacts` and FK-owning `code_runs`, preserving runs under normal foreign-key enforcement) — G3/ULID work starts at 16. Each schema-touching task updates, in the same commit: its `MIGRATIONS` entry, the `schema.sql` DDL + trailing `PRAGMA user_version`, `SCHEMA_VERSION` in state.py, and the version-pinned tests (`tests/test_schema_version.py:14-17`, `tests/test_schema_v10.py:39-41`, `tests/test_query_substrate.py:31`).
 3. **Closure helper:** S35.3's Produces additionally includes `state.evidence_item_closure(rows_by_id: Mapping[str, Mapping[str, Any]], evidence_id: str) -> list[tuple[str, tuple[str, ...]]]` — (item, path) pairs for non-set items reachable through nested sets, path = tuple of nested ev-ids (empty = direct), cycle-safe, unknown set refs yield nothing. This is the exact interface S68.2 consumes; it is a mechanical exposure of S35.3's DFS reachability.
-4. **Execution order:** G1 → G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1–.6; COST.1–.5 is independent and may run any time EXCEPT COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
+4. **Execution order:** G1 → G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1 → S68.2 → {S68.3 → S68.4 → S68.6; S68.5}. S68.5 is a docs-only type-name/pointer repair and may land after S68.2; it does not depend on the recovery behavior introduced by S68.3/S68.4. COST.1–.5 is independent and may run any time EXCEPT COST.4 must not run concurrently with S68.3: both can require floor-golden refresh/review, so land them sequentially and stage only intentional generated drift. G2S1.5 (graph-substrate design gate) may run in parallel with anything.
 5. **Removed symbols** (S35 manifest) no task may reference after their removal: `_derived_evidence_type`, `_draft_evidence_type`, `_evidence_items_resolve`, `_disposed_evidence_ids`.
+
+---
+
+## Reconciliation ledger — existing Alpha22 execution
+
+`codex/alpha22-s68-doc-pointer` contains a reviewed source-complete prefix of
+this plan through `0c1c37e`. This checklist remains the design record. On this
+worktree, reconcile each source-complete task by cherry-picking its exact
+commit(s) in dependency order, resolving conflicts against the binding contracts
+above, and rerunning the task’s verification; do not replay its red/green
+implementation steps. “Source-complete” does not mean integrated: mark a task
+integrated only once its commit(s) are present on this branch and verification has
+rerun. Do not cherry-pick the branch’s older Alpha21/COV history as part of Plan
+22, and do not merge that branch wholesale.
+
+| Task | Source-complete commit(s) |
+| --- | --- |
+| G1.1 | `153fcb55` |
+| G1.2 | `189bbb35` |
+| G1.3 | `8e4afdd1`, `61d935c4` |
+| G2S1.1 | `8f9c0a87`, repair `20a6b16c` |
+| G2S1.2 | `bcbc725a`, repair `7783d9cd` |
+| G2S1.3 | `9a36a003` |
+| G2S1.4 | `cf8c668b` |
+| S12.1 | `8ece209c` |
+| S12.2 | `f0f653be` |
+| S12.3 | `cc4b24bb`, `5bfedc1f` |
+| S12.4 | `b9d16a14` |
+| S12.5 | `444a24e4` |
+| S12.6 | `2ec76331`, cleanup `c164d071` |
+| S12.7 | `7d11ffac` |
+| S35.1 | `a518a793` |
+| S35.2 | `315a7c4f` |
+| S35.3 | `4b69f9c5` |
+| S35.4 | `a25f709f`, repair `1c85f90f` |
+| S68.1 | `84f81f10` |
+| S68.2 | `f034ca7a` |
+| S68.5 | `0c1c37e` (also contains the execution-order amendment above) |
+
+Pending: G2S1.5; S68.3, S68.4, and S68.6; and COST.1–.5. `e8e9a154`
+only untracks a session report and is deliberately omitted. The source-complete
+task bodies below are historical TDD/review records: their stale line anchors,
+old migration shapes, and retired names must not be reintroduced. The binding
+contracts and this ledger take precedence when reconciling them.
 
 ---
 ## G1 · Migration machinery
@@ -454,22 +498,16 @@ plus one process gate for everything in G2–G5/S1 that has no ratified mechanic
 
 ## Consumed from G1 (this plan's G1 section — assumption other sections must honor)
 
-- `state.MIGRATIONS: dict[int, str]` — target `user_version` → SQL script. `_init`
-  applies `MIGRATIONS[v]` via `conn.executescript` for each `v` in
-  `range(current + 1, SCHEMA_VERSION + 1)` when `0 < current < SCHEMA_VERSION`, then
-  runs `conn.executescript(_schema_sql())` (whose trailing
-  `PRAGMA user_version = <SCHEMA_VERSION>` stamps the final version). Migration
-  scripts therefore do **not** contain their own `user_version` pragma. If G1's landed
-  shape differs (scripts self-stamp, different dict name), adapt the two MIGRATIONS
-  entries below mechanically — the ALTER/CREATE INDEX statements are the contract.
-- **G2S1 claims schema versions 13 and 14.** G1 leaves `SCHEMA_VERSION` at 12 with an
-  empty ladder. Any other package adding a migration must take 15+.
-- Ordering: G2S1.2 and G2S1.3 depend on G1's machinery being merged. G2S1.1, G2S1.4,
-  and G2S1.5 have no dependency on G1 and can land first.
-
-Version-pinned tests that G2S1.2/G2S1.3 must bump (all three verified current):
-tests/test_schema_version.py:14-17, tests/test_schema_v10.py:39-41,
-tests/test_query_substrate.py:31.
+- `state.MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]]`
+  — keys are source versions; values are exactly one next version plus ordered SQL or
+  callable steps. `_init` executes each list in its own explicit transaction, stamps
+  `PRAGMA user_version` after the list, and entries do not self-stamp.
+- G2S1.2 and G2S1.3 consume G1's machinery in that exact form and take 12→13 and
+  13→14 respectively; S12.2 then takes 14→15. Verify the version-pinned tests against
+  the reconciled source rather than treating the historic line references below as
+  live instructions.
+- G2S1.2 and G2S1.3 depend on G1. G2S1.1, G2S1.4, and G2S1.5 have no code dependency
+  on it, though the binding execution order remains authoritative.
 
 ---
 
@@ -747,7 +785,17 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
 
 ---
 
-### Task G2S1.2: concept_edges-reshape — edge_id + attributes_json (migration 13)
+### Task G2S1.2: concept_edges-reshape — edge_id + attributes_json (migration 12→13)
+
+> **Reconciliation correction — source-complete in `bcbc725a` + `7783d9cd`:**
+> consume the canonical G1 registry and install `MIGRATIONS[12] = (13, [...])`.
+> The list adds both columns, calls `_backfill_concept_edge_ids`, then creates the
+> partial unique index; it does not self-stamp. `_backfill_concept_edge_ids`
+> normalizes each legacy triple and populates durable IDs. `replace_concept_edges`
+> always derives its ID from that triple (never trusts a caller-selected ID) and
+> preserves `attributes_json` on conflict. The v10 test is dynamic: verify it
+> against the reconciled source rather than editing a nominal version pin. The
+> checklist below is the historical TDD record, not an executable alternate design.
 
 Promotion-ready edges per the warrant-ontology-brief interim ruling (Option B): a
 warrant reference can hang on an edge, so later node reification stays cheap.
@@ -759,7 +807,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 - Modify: `src/memoria_vault/runtime/schema.sql:240-250` (concept_edges CREATE gains
   two columns + unique partial index) and `:378` (`PRAGMA user_version = 12` → `13`)
 - Modify: `src/memoria_vault/runtime/state.py:53` (`SCHEMA_VERSION = 12` → `13`);
-  G1's `MIGRATIONS` dict (add key 13); `replace_concept_edges` insert (as landed by
+  G1's `MIGRATIONS` dict (add key 12); `replace_concept_edges` insert (as landed by
   G2S1.1); `concept_edges` SELECTs (state.py:2055-2076 pre-G2S1.1 numbering); new
   `concept_edge_id` helper next to `_concept_edge_relation` (state.py:3420)
 - Modify: `tests/test_schema_version.py:14-17`, `tests/test_schema_v10.py:39-41`,
@@ -767,15 +815,18 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 - Test: `tests/test_query_substrate.py`
 
 **Interfaces:**
-- Consumes: `state.MIGRATIONS: dict[int, str]` (G1 section — shape assumption in the
-  package header); `hashlib` (already imported, state.py:8); `state.DB_REL`.
+- Consumes: the canonical `state.MIGRATIONS: dict[int, tuple[int, list[str |
+  Callable[[sqlite3.Connection], None]]]]` contract; `hashlib` (already imported,
+  state.py:8); `state.DB_REL`.
 - Produces:
   - `state.concept_edge_id(source_concept_id: str, relation_type: str,
     target_concept_id: str) -> str` — deterministic 24-hex-char id,
     `sha256(f"{source}\0{relation}\0{target}")[:24]`, stable across reindex.
-  - `MIGRATIONS[13]` — SQL adding `concept_edges.edge_id` (TEXT, unique-indexed where
-    nonblank — "PRIMARY-KEY-ish"; SQLite cannot ALTER in a real PK) and
-    `concept_edges.attributes_json` (TEXT, default `'{}'`).
+  - `MIGRATIONS[12] = (13, [...])` — ordered SQL/callable steps adding
+    `concept_edges.edge_id` (TEXT, unique-indexed where nonblank —
+    "PRIMARY-KEY-ish"; SQLite cannot ALTER in a real PK),
+    `concept_edges.attributes_json` (TEXT, default `'{}'`), and the legacy-ID
+    backfill before the index is created.
   - `state.concept_edges` rows now include `edge_id` and `attributes_json` keys
     (consumed by G4 warrant work and any R2 graph-primitive task).
 
@@ -844,15 +895,21 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
   add to G1's `MIGRATIONS`:
 
   ```python
-  MIGRATIONS[13] = """
-  ALTER TABLE concept_edges ADD COLUMN edge_id TEXT NOT NULL DEFAULT '';
-  ALTER TABLE concept_edges ADD COLUMN attributes_json TEXT NOT NULL DEFAULT '{}';
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
-      ON concept_edges(edge_id) WHERE edge_id != '';
-  """
+  MIGRATIONS[12] = (
+      13,
+      [
+          "ALTER TABLE concept_edges ADD COLUMN edge_id TEXT NOT NULL DEFAULT ''",
+          "ALTER TABLE concept_edges ADD COLUMN attributes_json TEXT NOT NULL DEFAULT '{}'",
+          _backfill_concept_edge_ids,
+          """
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
+          ON concept_edges(edge_id) WHERE edge_id != ''
+          """,
+      ],
+  )
   ```
 
-  (written as a literal `13: """...\n"""` entry inside the dict, matching G1's style);
+  (written as a canonical 12→13 registry entry; no migration entry self-stamps);
   add next to `_concept_edge_relation` (below state.py:3424):
 
   ```python
@@ -890,7 +947,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
                       updated_at = excluded.updated_at
                   """,
                   (
-                      str(row.get("edge_id") or concept_edge_id(source, relation, target)),
+                      concept_edge_id(source, relation, target),
                       source,
                       relation,
                       target,
@@ -924,7 +981,14 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 
 ---
 
-### Task G2S1.3: reverse-traversal-indexes (migration 14)
+### Task G2S1.3: reverse-traversal-indexes (migration 13→14)
+
+> **Reconciliation correction — source-complete in `9a36a003`:** install
+> `MIGRATIONS[13] = (14, ["CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON
+> concept_edges(target_concept_id)", "CREATE INDEX IF NOT EXISTS
+> idx_work_graph_edges_target ON work_graph_edges(target_id)"])`. The entry does not
+> self-stamp; the detailed checklist below is historical and must not replace the
+> canonical registry shape.
 
 The two indexes the consolidation names, on the verified real columns:
 `concept_edges(target_concept_id)` and `work_graph_edges(target_id)` — reverse
@@ -936,7 +1000,7 @@ Depends on: G2S1.2 (takes version 14 after 13).
   the concept_edges block landed by G2S1.2 and after the work_graph_edges block,
   lines 171-186; trailing pragma → 14)
 - Modify: `src/memoria_vault/runtime/state.py` (`SCHEMA_VERSION` 13 → 14; add
-  `MIGRATIONS[14]`)
+  `MIGRATIONS[13]`)
 - Modify: `tests/test_schema_version.py` (pin 13 → 14),
   `tests/test_query_substrate.py:31` (pin 13 → 14)
 - Test: `tests/test_query_substrate.py`
@@ -985,12 +1049,13 @@ Depends on: G2S1.2 (takes version 14 after 13).
 - [ ] In `src/memoria_vault/runtime/state.py`: `SCHEMA_VERSION = 14`; add
 
   ```python
-  MIGRATIONS[14] = """
-  CREATE INDEX IF NOT EXISTS idx_concept_edges_target
-      ON concept_edges(target_concept_id);
-  CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target
-      ON work_graph_edges(target_id);
-  """
+  MIGRATIONS[13] = (
+      14,
+      [
+          "CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON concept_edges(target_concept_id)",
+          "CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target ON work_graph_edges(target_id)",
+      ],
+  )
   ```
 
 - [ ] Bump the two version pins: tests/test_schema_version.py (13 → 14, rename the
@@ -1300,17 +1365,28 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 ### Task S12.2: code-artifact `purpose` enum `warrant` → `grounds` + numbered DB migration (manifest §1.1; AFTER G1)
 
+> **Reconciliation correction — source-complete in `f0f653be`:** G2S1.3 leaves
+> schema version 14 and foreign keys stay enabled. This task installs
+> `MIGRATIONS[14] = (15, [...])`, rebuilds and copies both `code_artifacts` and its
+> FK-owning `code_runs`, then drops and renames in dependency-safe order. Its migration
+> test uses both v14 legacy tables, asserts migrated purpose and copied run data, and
+> checks `PRAGMA foreign_key_check == []`. The old v13→14/foreign-keys-off detail below
+> is historical only; reconcile the named source commit instead of replaying it.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/code/records.py:20` (`purpose: str = "warrant"` default)
 - Modify: `src/memoria_vault/runtime/schema.sql:301` (CHECK constraint), `:378` (`PRAGMA user_version`)
 - Modify: `src/memoria_vault/runtime/state.py:53` (`SCHEMA_VERSION`), `:3429` (`_code_purpose` validation set), plus the `MIGRATIONS` dict G1 added (location fixed by G1; adjacent to `SCHEMA_VERSION`)
-- Modify: `tests/test_schema_version.py` (version-pin test G1 adjusted; today `:14-17` asserts 12)
+- Modify: `tests/test_schema_version.py` and `tests/test_query_substrate.py` (v14 legacy table fixtures and version-pinned tests)
 - Modify: `CHANGELOG.md` (Unreleased → Changed)
-- Test: `tests/test_schema_version.py` (registered `contract` in `tests/conftest.py:100`), `tests/test_code_artifacts.py` (registered `runtime` in `tests/conftest.py:30`)
+- Test: `tests/test_schema_version.py` (registered `contract` in `tests/conftest.py:100`), `tests/test_code_artifacts.py` (registered `runtime` in `tests/conftest.py:30`), and `tests/test_query_substrate.py`
 
 **Interfaces:**
-- Consumes: **G1's migration mechanism — assumed exact shape:** `MIGRATIONS: dict[int, tuple[int, list[str]]]` in `state.py`, mapping `from_version -> (to_version, steps)`, where `steps` is an ordered list of SQL statements the G1 runner executes inside one transaction with `PRAGMA foreign_keys = OFF`, setting `PRAGMA user_version = to_version` on success and chain-walking until `SCHEMA_VERSION`. Also assumed: G1 lands at `SCHEMA_VERSION == 13`. If either differs when this task executes, keep the migration body identical and renumber `13 -> N`, `14 -> N + 1`, reconciling with G1's actual runner contract before writing code.
-- Produces: `purpose` enum value `"grounds"` (frontmatter default, SQLite CHECK, validation set); `MIGRATIONS[13] = (14, [...])` rebuilding `code_artifacts` with the new CHECK and rewriting `'warrant'` rows to `'grounds'`; `SCHEMA_VERSION = 14`
+- Consumes: the canonical G1 registry; G2S1.3 at v14; normal foreign-key enforcement.
+- Produces: `purpose` enum value `"grounds"` (frontmatter default, SQLite CHECK,
+  validation set); `MIGRATIONS[14] = (15, [...])` rebuilding both `code_artifacts`
+  and FK-owning `code_runs` while rewriting `'warrant'` rows to `'grounds'`; and
+  `SCHEMA_VERSION = 15`.
 
 **Steps:**
 
@@ -1396,16 +1472,18 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
       purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both')),
   ```
 
-  and `:378`: `PRAGMA user_version = 14;`
-- [ ] Edit `src/memoria_vault/runtime/state.py:53`: `SCHEMA_VERSION = 14`, and `:3429`: `if purpose not in {"grounds", "deliverable", "both"}:`
-- [ ] Add the migration entry to G1's `MIGRATIONS` dict in `state.py` (SQLite cannot ALTER a CHECK and the old CHECK rejects `UPDATE ... SET purpose='grounds'`, so this is the standard create-copy-drop-rename rebuild; the G1 runner's `foreign_keys = OFF` keeps `code_runs`' `REFERENCES code_artifacts ON DELETE CASCADE` from firing on the DROP):
+  and `:378`: `PRAGMA user_version = 15;`
+- [ ] Edit `src/memoria_vault/runtime/state.py:53`: `SCHEMA_VERSION = 15`, and `:3429`: `if purpose not in {"grounds", "deliverable", "both"}:`
+- [ ] Add the migration entry to G1's `MIGRATIONS` dict in `state.py` (SQLite cannot
+  ALTER a CHECK and the old CHECK rejects `UPDATE ... SET purpose='grounds'`; rebuild
+  and copy the parent and FK-owning child tables under normal foreign-key enforcement):
 
   ```python
-      13: (
-          14,
+      14: (
+          15,
           [
               """
-              CREATE TABLE code_artifacts_v14 (
+              CREATE TABLE code_artifacts_v15 (
                   artifact_id TEXT PRIMARY KEY,
                   project_path TEXT NOT NULL,
                   record_path TEXT NOT NULL UNIQUE,
@@ -1422,34 +1500,72 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
               )
               """,
               """
-              INSERT INTO code_artifacts_v14
+              INSERT INTO code_artifacts_v15
               SELECT artifact_id, project_path, record_path, source_dir, output_dir,
                      CASE WHEN purpose = 'warrant' THEN 'grounds' ELSE purpose END,
                      approved_command_json, declared_inputs_json, declared_outputs_json,
                      dependency_notes, status, created_at, updated_at
               FROM code_artifacts
               """,
+              """
+              CREATE TABLE code_runs_v15 (
+                  run_id TEXT PRIMARY KEY,
+                  artifact_id TEXT NOT NULL REFERENCES code_artifacts_v15(artifact_id) ON DELETE CASCADE,
+                  command_json TEXT NOT NULL,
+                  cwd TEXT NOT NULL,
+                  sanitized_env_json TEXT NOT NULL DEFAULT '[]',
+                  input_hashes_json TEXT NOT NULL DEFAULT '{}',
+                  output_hashes_json TEXT NOT NULL DEFAULT '{}',
+                  stdout_sha256 TEXT NOT NULL DEFAULT '',
+                  stderr_sha256 TEXT NOT NULL DEFAULT '',
+                  stdout_path TEXT NOT NULL DEFAULT '',
+                  stderr_path TEXT NOT NULL DEFAULT '',
+                  exit_status INTEGER,
+                  timeout_result TEXT NOT NULL DEFAULT '',
+                  sandbox_backend TEXT NOT NULL DEFAULT '',
+                  sandbox_profile_hash TEXT NOT NULL DEFAULT '',
+                  state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
+                  started_at TEXT NOT NULL,
+                  ended_at TEXT
+              )
+              """,
+              """
+              INSERT INTO code_runs_v15(
+                  run_id, artifact_id, command_json, cwd, sanitized_env_json,
+                  input_hashes_json, output_hashes_json, stdout_sha256, stderr_sha256,
+                  stdout_path, stderr_path, exit_status, timeout_result, sandbox_backend,
+                  sandbox_profile_hash, state, started_at, ended_at
+              )
+              SELECT run_id, artifact_id, command_json, cwd, sanitized_env_json,
+                     input_hashes_json, output_hashes_json, stdout_sha256, stderr_sha256,
+                     stdout_path, stderr_path, exit_status, timeout_result, sandbox_backend,
+                     sandbox_profile_hash, state, started_at, ended_at
+              FROM code_runs
+              """,
+              "DROP TABLE code_runs",
               "DROP TABLE code_artifacts",
-              "ALTER TABLE code_artifacts_v14 RENAME TO code_artifacts",
+              "ALTER TABLE code_artifacts_v15 RENAME TO code_artifacts",
+              "ALTER TABLE code_runs_v15 RENAME TO code_runs",
           ],
       ),
   ```
 
 - [ ] Edit `src/memoria_vault/runtime/code/records.py:20`: `purpose: str = "grounds",`
-- [ ] Update the version-pin test in `tests/test_schema_version.py` to the new landing version: rename `test_schema_lands_at_user_version_13` to `test_schema_lands_at_user_version_14` and change both literals in its body from `13` to `14` (today, pre-G1, that test is `test_schema_lands_at_user_version_12` at lines 14–17 asserting `12`; G1 will have moved it to 13 — align whatever literal G1 left to 14).
+- [ ] Update the version-pin test in `tests/test_schema_version.py` to landing version
+  15 and verify the v14 fixtures preserve both tables and pass `foreign_key_check`.
 - [ ] Run to verify both pass: `python -m pytest tests/test_schema_version.py tests/test_code_artifacts.py -v`
 - [ ] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
 
   ```markdown
   - Renamed the code-artifact `purpose` enum value `warrant` to `grounds`
-    (frontmatter default, SQLite CHECK, validation set); DB migration 13→14
-    rewrites existing rows.
+    (frontmatter default, SQLite CHECK, validation set); DB migration 14→15
+    preserves runs while rewriting existing rows.
   ```
 
 - [ ] Commit:
 
   ```bash
-  git commit -m "feat(state): rename code-artifact purpose 'warrant' to 'grounds' with 13->14 migration (#1293)
+  git commit -m "feat(state): rename code-artifact purpose 'warrant' to 'grounds' with 14->15 migration (#1293)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" \
     src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py \
@@ -1933,6 +2049,11 @@ conftest change is needed anywhere in this package.
 
 ### Task S35.1: Unified grounds-type derivation R1–R4 in state.py (spec §4)
 
+> **Reconciliation correction — source-complete in `a518a793`:** the canonical
+> ref-kind literal is `code-grounds`, supplied by S12.1; no `code-warrant` spelling
+> or `_code_warrant_resolves` symbol may return during reconciliation. The historic
+> snippets below predate that rename and are not executable instructions.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py:2629-2636` (replace `_derived_evidence_type`
   with public `derive_evidence_type`) and `src/memoria_vault/runtime/state.py:2613`
@@ -2129,26 +2250,24 @@ conftest change is needed anywhere in this package.
 
 ---
 
-### Task S35.2: Compose delegates to `derive_evidence_type`; delete `_draft_evidence_type`; fix the wrong marker fixture
+### Task S35.2: Retire `_draft_evidence_type` after items-only v2 serialization
+
+> **Reconciliation correction — source-complete in `315a7c4f`, after S12.6
+> `2ec76331`:** compose already constructs `EvidenceMarker(evidence_id=evidence_id,
+> items=tuple(items))`; it must not call `state.derive_evidence_type`. State's
+> `_derived_evidence_row` owns derivation. This task deletes only the six-line
+> `_draft_evidence_type` helper, confirms no reference survives, then runs the affected
+> suites and full gate. The old compose-delegation and marker-fixture checklist below is
+> historical only.
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/knowledge.py:2012` (call site in
-  `compose_project_draft`) and `src/memoria_vault/runtime/knowledge.py:3216-3219`
-  (delete `_draft_evidence_type`)
-- Modify: `tests/test_evidence_markers.py:18-33`
-  (`test_evidence_marker_round_trips_canonical_form` declares `multi-span` for a
-  span+set item mix — under R2 that shape is `multi-hop`)
-- Test: existing suites `tests/test_draft_verification.py`, `tests/test_draft_compose.py`,
-  `tests/test_evidence_markers.py` (this is a deletion/refactor task; behavior for every
-  input compose can produce — zero items or spans of a single work, since the retired
-  `evidence_set:` frontmatter field is `forbidden` in the note schema — is identical, and
-  the R1–R4 rules themselves gained their tests in S35.1)
+- Modify: `src/memoria_vault/runtime/knowledge.py` (delete `_draft_evidence_type` only).
+- Test: affected draft/evidence suites and the full gate.
 
 **Interfaces:**
-- Consumes: `state.derive_evidence_type(items: list[str]) -> str` (from S35.1;
-  `knowledge.py` already has `from memoria_vault.runtime import state` at line 20).
+- Consumes: the items-only v2 `EvidenceMarker` construction supplied by S12.6.
 - Produces: none new. `_draft_evidence_type` ceases to exist — no other section may
-  reference it.
+  reference it; `_derived_evidence_row` remains the sole type-derivation owner.
 
 **Steps:**
 
@@ -2245,6 +2364,10 @@ conftest change is needed anywhere in this package.
 
 ### Task S35.3: Transitive nested-set completeness with fail-closed cycles (spec §5)
 
+> **Reconciliation correction — source-complete in `4b69f9c5`:** use
+> `_code_grounds_resolves` and publish the binding `evidence_item_closure` helper
+> described above. The following old-name snippets are historical only.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py:2562-2578` (rebuild wiring in
   `_evidence_marker_rows`), `src/memoria_vault/runtime/state.py:2603-2626`
@@ -2255,9 +2378,9 @@ conftest change is needed anywhere in this package.
 - Test: `tests/test_evidence_sets.py` (append after the S35.1 tests)
 
 **Interfaces:**
-- Consumes: `_code_warrant_resolves(vault: Path, item: str) -> bool` (state.py:2664,
-  kept as-is), `_source_span_pages(vault: Path) -> dict[str, set[str]]` (state.py:2676),
-  `evidence_ref_kind`, `parse_source_span_ref`.
+- Consumes: `_code_grounds_resolves(vault: Path, item: str) -> bool`,
+  `_source_span_pages(vault: Path) -> dict[str, set[str]]`, `evidence_ref_kind`, and
+  `parse_source_span_ref`.
 - Produces:
   - **`_evidence_set_states(vault: Path, items_by_id: dict[str, tuple[str, ...]], *, source_spans: dict[str, set[str]]) -> dict[str, str]`**
     (private to state.py) — maps every marker id to `"complete"` /
@@ -2268,6 +2391,10 @@ conftest change is needed anywhere in this package.
   - **Changed private signature:** `_derived_evidence_row(vault: Path, rel: str, marker: EvidenceMarker, *, state_value: str, run_id: str) -> dict[str, Any]`
     (drops `marker_ids` and `source_spans` — state is now computed by the caller).
   - `_evidence_items_resolve` ceases to exist — no other section may reference it.
+  - `evidence_item_closure(rows_by_id: Mapping[str, Mapping[str, Any]],
+    evidence_id: str) -> list[tuple[str, tuple[str, ...]]]` — cycle-safe non-set item
+    closure with empty direct path and unknown nested refs omitted; S68.2 consumes this
+    exact public state helper.
 
 **Steps:**
 
@@ -2873,6 +3000,12 @@ names it: `no-evidence-set`, severity high, permanent block.
 
 ### Task S68.2: Live catalog-standing findings — `evidence-source-stale` (blocking) and `evidence-source-archived` (advisory)
 
+> **Reconciliation correction — source-complete in `f034ca7a`:** anchor after
+> `_disposed_evidence_digests` by its “Map evidence dispositions…” docstring, never
+> after the removed ids helper. Preserve the draft-only lookup for duplicate checks,
+> separately build `rows_by_id` from all `state.evidence_sets(vault)`, and pass it to
+> the standing helper. The old anchor/checklist below is historical only.
+
 Spec §6: any work in a record's item closure with standing
 `retracted`/`superseded` raises `evidence-source-stale` (high, permanent
 block, **not** PI-disposable, carries `{work_id, path}`); standing `archived`
@@ -2905,7 +3038,8 @@ predicate, so this task introduces an honest blocking/advisory split.
   - `_catalog_source_standing(source: dict[str, Any]) -> str` (knowledge.py,
     module-private) — returns the PI-curated standing string; unset/blank
     maps to `"current"` by contract.
-  - `_evidence_source_standing_findings(vault: Path, draft_rows: list[dict[str, Any]]) -> list[dict[str, Any]]`
+  - `_evidence_source_standing_findings(vault: Path, draft_rows: list[dict[str, Any]], *,
+    rows_by_id: dict[str, dict[str, Any]]) -> list[dict[str, Any]]`
     (knowledge.py, module-private) — finding dicts
     `{"kind", "severity", "evidence_id", "block_ref", "work_id", "path"}`
     with `path: list[str]` (empty = direct, non-empty = the nested ev-id
@@ -3095,13 +3229,15 @@ predicate, so this task introduces an honest blocking/advisory split.
   _ADVISORY_FINDING_KINDS = frozenset({"evidence-source-archived"})
   ```
 
-  Add the helper directly after `_disposed_evidence_ids`
-  (knowledge.py:3241-3251):
+  Add the helper directly after `_disposed_evidence_digests` (anchor by its
+  “Map evidence dispositions…” docstring):
 
   ```python
   def _evidence_source_standing_findings(
       vault: Path,
       draft_rows: list[dict[str, Any]],
+      *,
+      rows_by_id: dict[str, dict[str, Any]],
   ) -> list[dict[str, Any]]:
       """Live-standing findings for every work in each record's item closure."""
       from memoria_vault.runtime.evidence import evidence_ref_kind, parse_source_span_ref
@@ -3110,7 +3246,6 @@ predicate, so this task introduces an honest blocking/advisory split.
           str(source["work_id"]): _catalog_source_standing(source)
           for source in state.catalog_sources(vault, checked_only=False)
       }
-      rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
       findings: list[dict[str, Any]] = []
       for row in draft_rows:
           seen: set[tuple[str, str, tuple[str, ...]]] = set()
@@ -3143,18 +3278,25 @@ predicate, so this task introduces an honest blocking/advisory split.
   ```
 
   Deliberate placement notes (record in the commit message body if useful):
-  the helper runs over `draft_rows` **outside** the per-row loop that honors
-  `_disposed_evidence_ids` — that is what makes `evidence-source-stale`
-  undisposable; and `rows_by_id` is built from all of
-  `state.evidence_sets(vault)`, not just the draft's rows, so nested refs
-  that live outside the draft file still taint.
+  the helper runs over `draft_rows` **outside** the per-row loop that compares
+  `disposed.get(row["id"])` with `_evidence_items_sha256(row["items"])`; that is
+  what makes `evidence-source-stale` undisposable. `rows_by_id` is built from all
+  `state.evidence_sets(vault)`, not just the draft's rows, so nested refs outside
+  the draft still taint.
 - [ ] Write the implementation, part 3 — wire into
   `_verify_project_draft_snapshot`. After the per-row loop and before
   `findings.extend(_draft_structural_reference_findings(...))`
-  (knowledge.py:2244), insert:
+  (knowledge.py:2244), retain the existing draft-only lookup as
+  `draft_rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}` for
+  duplicate-block references, then add the all-record lookup and wire:
 
   ```python
-      findings.extend(_evidence_source_standing_findings(vault, draft["evidence_sets"]))
+      rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
+      findings.extend(_evidence_source_standing_findings(
+          vault,
+          draft["evidence_sets"],
+          rows_by_id=rows_by_id,
+      ))
   ```
 
   Replace the truncate-then-`ok` block (knowledge.py:2246-2249, as amended
@@ -3672,16 +3814,20 @@ prose, and the disposition section. Do **not** link
 `docs/superpowers/specs/` from this page — that tree is tracked but not
 published, so the link would 404 on Pages. This rewrite assumes the slice-1
 rename (`code-warrant:` → `code-grounds:`, warrant→grounds prose) has landed;
-the page below is written post-rename.
+the page below is written post-rename. It runs only after S68.3 and S68.4: this
+page promises `evidence-minted` events and a bindings ledger rebuildable from the
+journal, so it must describe their shipped mint/replay semantics rather than a
+future design.
 
 **Files:**
 - Modify: `docs/reference/control-and-policy/evidence-sets.md` (full-file
   replacement, 91 lines today).
 
 **Interfaces:**
-- Consumes: finding names/severities/classes exactly as produced by Tasks
-  S68.1/S68.2 and by S35 (`evidence-incomplete`, `review-required`,
-  disposition `items_sha256` binding).
+- Consumes: v2 marker serialization and derived fields from S12.5/S12.6/S35;
+  disposition `items_sha256` binding from S35.4; finding names/severities/classes
+  from S68.1/S68.2; and the `evidence-minted` plus journal-rebuild semantics from
+  S68.3/S68.4.
 - Produces: nothing programmatic.
 
 **Steps:**
@@ -3761,8 +3907,7 @@ the page below is written post-rename.
 
   ## The mint-once ledger and the journal
 
-  The marker owns the ordered `items=` list. SQLite table `evidence_sets` is
-  derived active state rebuilt from those markers. A separate
+  SQLite table `evidence_sets` is derived active state rebuilt from those markers. A separate
   `evidence_bindings` ledger records the first observed appearance of each
   evidence ID: its anchored claim hash when resolvable, or `null` when it is
   not. The ledger survives marker removal, so a reappearing ID always retains
