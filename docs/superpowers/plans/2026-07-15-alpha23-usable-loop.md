@@ -1195,7 +1195,8 @@ def _vault_agents_md() -> str:
       skipped; lint, product gates, offline smoke, syntax, and shell checks
       all green.
 
-- [ ] Commit:
+- [x] Commit: `4eb6b49a` (`feat(projections): add vault AGENTS.md generated
+      read-contract projection`).
 
 ```bash
 git add -- \
