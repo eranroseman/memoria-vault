@@ -53,6 +53,7 @@ INTEGRITY_FINDING_OPERATIONS = {
 PROTECTED_OPERATION_ACTORS = {
     "acknowledge-attention": "pi",
     "resolve-attention": "pi",
+    "resolve-evidence": "pi",
     "record-copi-interview": "pi",
     "curate-note-candidate": "pi",
     "curate-note-link": "pi",
@@ -829,6 +830,22 @@ def _run_operation_job(
             reason=str(payload.get("reason") or operation_id),
         )
         return {"commit": result["commit"], "resolution": result["event"]}
+    if operation_id == "resolve-evidence":
+        from memoria_vault.runtime.knowledge import resolve_evidence_review
+
+        evidence_id = str(payload.get("evidence_id") or "").strip()
+        if not evidence_id:
+            raise ValueError("resolve-evidence requires evidence_id")
+        event = resolve_evidence_review(
+            vault,
+            evidence_id,
+            actor=context.actor,
+            machine=context.machine,
+            decision=str(payload.get("decision") or ""),
+            reason=str(payload.get("reason") or ""),
+            warrant=str(payload.get("warrant") or "").strip(),
+        )
+        return {"commit": "", "resolution": event}
     if operation_id == "observe-pi-edits":
         from memoria_vault.runtime.projections import (
             changed_tracked_projection_paths,

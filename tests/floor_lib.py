@@ -1035,6 +1035,14 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
+    # worker.py resolve-evidence branch delegates to
+    # knowledge.py:resolve_evidence_review. PROTECTED_OPERATION_ACTORS is
+    # "pi"-only — same actor-check-fires-first shape as resolve-attention.
+    "resolve-evidence": {
+        "payload": {"evidence_id": "ev-00000000", "decision": "accept"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
     # worker.py:775-790 has no required payload; target_operation_id
     # defaults to this op's own id (seeded_errors.py:DEFAULT_OPERATION_ID).
     # Dispatches to seeded_errors.py:run_seeded_error_verdict, which reads
