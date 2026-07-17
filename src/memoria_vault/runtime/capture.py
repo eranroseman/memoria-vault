@@ -1102,7 +1102,10 @@ def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
             rows.append((key, escaped))
     rendered = [f"@{_bibtex_type(frontmatter, csl)}{{{citekey},"]
     for index, (key, escaped) in enumerate(rows):
-        rendered.append(f"  {key} = {{{escaped}}}{',' if index < len(rows) - 1 else ''}")
+        value = (
+            f"{{{{{escaped}}}}}" if key in {"title", "journal", "abstract"} else f"{{{escaped}}}"
+        )
+        rendered.append(f"  {key} = {value}{',' if index < len(rows) - 1 else ''}")
     rendered.append("}")
     return "\n".join(rendered)
 
@@ -1158,6 +1161,7 @@ def _bibtex_escape(value: str) -> str:
         .replace("#", r"\#")
         .replace("%", r"\%")
         .replace("$", r"\$")
+        .replace("~", r"\textasciitilde{}")
         .split()
     )
 

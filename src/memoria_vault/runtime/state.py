@@ -3221,8 +3221,8 @@ def _mask_markdown_headings(text: str) -> str:
     lines = _markdown_lines(text)
     for index, line in enumerate(lines):
         body = line.rstrip("\r\n")
-        if re.match(r"^[ ]{0,3}#{1,6}(?:[ \t]+|$)", body):
-            lines[index] = _mask_markdown_code(line)
+        if heading := re.match(r"^[ ]{0,3}#{1,6}(?:[ \t]+|$)", body):
+            lines[index] = line[: heading.end()] + _mask_markdown_code(line[heading.end() :])
         if index and re.match(r"^[ ]{0,3}(?:=+|-+)[ \t]*$", body):
             if not _is_markdown_blank_line(lines[index - 1]):
                 lines[index - 1] = _mask_markdown_code(lines[index - 1])

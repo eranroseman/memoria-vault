@@ -218,7 +218,7 @@ def test_draft_export_keeps_tilde_fenced_marker_after_heading_non_direct(
     vault = tmp_path
     hidden_marker = "%%ev: ev-87654321 items=source-hidden#^p0001%%"
     _catalog_source(vault, "source-alpha", citekey="safe2026")
-    _catalog_source(vault, "source-hidden", citekey="hidden2026")
+    _catalog_source(vault, "source-hidden", doi="10.1000/hidden")
     _source_backed_draft(vault)
     draft_path = vault / "projects/project-alpha/draft.md"
     draft_path.write_text(
@@ -237,9 +237,35 @@ def test_draft_export_keeps_tilde_fenced_marker_after_heading_non_direct(
 
     assert hidden_marker in exported["content"]
     assert "[@safe2026]" in exported["content"]
-    assert "[@hidden2026]" not in exported["content"]
     assert any(hidden_marker in block for block in _pandoc_code_block_texts(exported["content"]))
     assert _pandoc_citation_ids(exported["content"]) == ["safe2026"]
+
+
+def test_draft_export_refuses_tilde_marker_after_paragraph_prose(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    hidden_marker = "%%ev: ev-87654321 items=source-hidden#^p0001%%"
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _catalog_source(vault, "source-hidden", doi="10.1000/hidden")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    fragment = f"Prior prose\n~~~text\nClaim {hidden_marker}\n~~~\n"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip() + "\n\n" + fragment,
+        encoding="utf-8",
+    )
+
+    assert _pandoc_code_block_texts(fragment) == []
+    assert "ev-87654321" in {
+        marker.evidence_id
+        for marker in state.evidence_markers_from_markdown(draft_path.read_text(encoding="utf-8"))
+    }
+    verification = verify_project_draft(vault, "project-alpha")
+    assert verification["ready"] is False
+    assert verification["missing"] == ["evidence-text-unbound:ev-87654321"]
+    with pytest.raises(ValueError, match="evidence-text-unbound:ev-87654321"):
+        write_project_export(vault, "project-alpha", draft=True)
 
 
 @pytest.mark.parametrize("invalid_fence", ["~~~bogus header ???", "```bad`info"])
@@ -567,3 +593,49 @@ def test_draft_export_inlined_bibtex_preserves_percent_and_dollar_metadata(
     )
     assert parsed.returncode == 0, parsed.stderr
     assert json.loads(parsed.stdout)[0]["title"] == title
+
+
+def test_draft_export_inlined_bibtex_preserves_display_metadata(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    title = "NASA Study: A_B ~ API"
+    journal = "JOURNAL of A_B ~ APIs"
+    abstract = "NASA Abstract: A_B ~ API"
+    authors = [
+        {"family": "Smith", "given": "Ada"},
+        {"family": "Jones", "given": "Bob"},
+    ]
+    _catalog_source(
+        vault,
+        "source-alpha",
+        citekey="display2026",
+        csl_json={
+            "title": title,
+            "container-title": journal,
+            "abstract": abstract,
+            "author": authors,
+            "issued": {"date-parts": [[2026]]},
+        },
+    )
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    bibtex = _fence(write_project_export(vault, "project-alpha", draft=True)["content"])
+
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    parsed = subprocess.run(
+        [pandoc, "--from=bibtex", "--to=csljson"],
+        input=bibtex,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert parsed.returncode == 0, parsed.stderr
+    item = json.loads(parsed.stdout)[0]
+    assert item["title"] == title
+    assert item["container-title"] == journal
+    assert item["abstract"] == abstract
+    assert item["author"] == authors

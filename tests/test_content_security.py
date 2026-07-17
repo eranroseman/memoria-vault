@@ -507,10 +507,22 @@ def test_closed_valid_tilde_fence_with_regular_attributes_has_plain_text_header(
     )
 
 
-def test_unterminated_plain_tilde_fence_after_heading_is_detected() -> None:
-    source = "# Context\n~~~text\nliteral code\n"
+@pytest.mark.parametrize(
+    "boundary",
+    ["# Context\n", "Context\n---\n", "Prior prose\n***\n"],
+)
+def test_unterminated_plain_tilde_fence_after_markdown_block_boundary_is_detected(
+    boundary: str,
+) -> None:
+    source = boundary + "~~~text\nliteral code\n"
 
     assert has_unterminated_fenced_code_block(source) is True
+
+
+def test_plain_tilde_fence_after_paragraph_prose_is_not_code() -> None:
+    source = "Prior prose\n~~~text\nliteral prose\n"
+
+    assert has_unterminated_fenced_code_block(source) is False
 
 
 @pytest.mark.parametrize(

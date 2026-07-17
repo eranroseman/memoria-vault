@@ -655,7 +655,7 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
     rendered = render_references_bib(vault)
 
     assert "@article{harness2026," in rendered
-    assert "title = {Harnessed Workflows for Durable Research}" in rendered
+    assert "title = {{Harnessed Workflows for Durable Research}}" in rendered
     assert "author = {Ada, River and Lin, Morgan}" in rendered
     assert "year = {2026}" in rendered
     assert "doi = {10.1000/harness.2026}" in rendered

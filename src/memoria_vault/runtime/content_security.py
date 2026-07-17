@@ -39,6 +39,7 @@ _HTML_BLOCK_OPEN_RE = re.compile(
     """
 )
 _ATX_HEADING_PREFIX_RE = re.compile(r"#{1,6}(?:[ \t]+|$)")
+_ATX_HEADING_RE = re.compile(r"^ {0,3}#{1,6}(?:[ \t]+|$)")
 _LIST_PREFIX_RE = re.compile(r"(?:[-+*]|\d{1,9}[.)])[ \t]+")
 _THEMATIC_OR_SETEXT_RE = re.compile(r"^[ \t]{0,3}(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|[-=]+[ \t]*)$")
 _IMAGE_EMBED_RE = re.compile(r"!\[\[([^\]\n]*)\]\]")
@@ -190,7 +191,14 @@ def _has_valid_tilde_fence_info(line: str, opening: re.Match[str]) -> bool:
 
 def _tilde_fence_can_start_block(plain_lines: list[str]) -> bool:
     """Return whether a tilde fence is at a Markdown block boundary."""
-    return not plain_lines or not plain_lines[-1].strip()
+    if not plain_lines:
+        return True
+    previous = plain_lines[-1].rstrip("\r\n")
+    return bool(
+        not previous.strip()
+        or _ATX_HEADING_RE.match(previous)
+        or _THEMATIC_OR_SETEXT_RE.fullmatch(previous)
+    )
 
 
 def classify_fenced_code_opening(
@@ -207,14 +215,11 @@ def classify_fenced_code_opening(
     tilde_fence = opening.group("fence")[0] == "~"
     tilde_fence_has_attributes = "{" in line[opening.end() :]
     tilde_fence_at_block_boundary = _tilde_fence_can_start_block(plain_lines)
-    if tilde_fence and tilde_fence_has_attributes and not tilde_fence_at_block_boundary:
-        return opening, True
+    if tilde_fence and not tilde_fence_at_block_boundary:
+        return (opening, True) if tilde_fence_has_attributes else (None, False)
     if _is_fenced_code_opening(line, opening) and (
         not tilde_fence
-        or (
-            (not tilde_fence_has_attributes and _has_valid_tilde_fence_info(line, opening))
-            or (tilde_fence_at_block_boundary and tilde_fence_has_attributes)
-        )
+        or (tilde_fence_has_attributes or _has_valid_tilde_fence_info(line, opening))
     ):
         return opening, False
     return None, False
