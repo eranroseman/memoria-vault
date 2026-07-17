@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -75,9 +76,9 @@ def check_tracked_projections(vault: Path) -> dict[str, Any]:
 def changed_tracked_projection_paths(vault: Path) -> list[str]:
     """Return tracked generated projections changed in git status."""
     vault = Path(vault)
-    proc = subprocess.run(
+    proc = _projection_git(
+        vault,
         [
-            "git",
             "status",
             "--porcelain",
             "--untracked-files=all",
@@ -85,10 +86,6 @@ def changed_tracked_projection_paths(vault: Path) -> list[str]:
             *TRACKED_PROJECTION_PATHS,
             *TRACKED_PROJECTION_GLOBS,
         ],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
     )
     if proc.returncode:
         detail = proc.stderr.strip() or proc.stdout.strip()
@@ -250,13 +247,7 @@ def _git_tracked_dynamic_projection_paths(vault: Path) -> set[str]:
     if not (Path(vault) / ".git").exists():
         return set()
     pathspecs = [f":(glob){pattern}" for pattern in TRACKED_PROJECTION_GLOBS]
-    proc = subprocess.run(
-        ["git", "ls-files", "--", *pathspecs],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
+    proc = _projection_git(vault, ["ls-files", "--", *pathspecs])
     if proc.returncode:
         detail = proc.stderr.strip() or proc.stdout.strip()
         raise RuntimeError(f"git ls-files failed: {detail}")
@@ -265,6 +256,28 @@ def _git_tracked_dynamic_projection_paths(vault: Path) -> set[str]:
         for path in proc.stdout.splitlines()
         if path and _is_tracked_projection_path(path)
     }
+
+
+def _projection_git(vault: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
+    """Run projection-discovery Git commands without workspace-configured helpers."""
+    env = {name: value for name, value in os.environ.items() if not name.startswith("GIT_")}
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
+    env["GIT_CONFIG_GLOBAL"] = os.devnull
+    return subprocess.run(
+        [
+            "git",
+            "-c",
+            f"core.hooksPath={os.devnull}",
+            "-c",
+            "core.fsmonitor=false",
+            *args,
+        ],
+        cwd=vault,
+        env=env,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
 
 
 def _is_tracked_projection_path(path: str) -> bool:

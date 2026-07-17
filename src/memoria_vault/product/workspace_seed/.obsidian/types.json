@@ -1,0 +1,23 @@
+{
+  "types": {
+    "archived": "checkbox",
+    "attention_kind": "text",
+    "attention_status": "text",
+    "certainty": "text",
+    "claim_text": "text",
+    "consequence": "text",
+    "id": "text",
+    "loudness": "text",
+    "mode": "text",
+    "projection": "text",
+    "question": "text",
+    "question_status": "text",
+    "stale": "checkbox",
+    "superseded": "checkbox",
+    "target": "text",
+    "thesis": "text",
+    "title": "text",
+    "type": "text",
+    "work_id": "text"
+  }
+}

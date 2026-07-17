@@ -15,11 +15,11 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria init [--no-obsidian]` | Create/scaffold a workspace. By default it seeds Memoria's Obsidian plugin and core settings; `--no-obsidian` skips `.obsidian/`. |
+| `memoria init [--no-obsidian]` | Create/scaffold a workspace. By default it seeds Memoria's Obsidian plugin, core settings, and Base views; `--no-obsidian` skips `.obsidian/` and root `.base` view settings. Before writing, init rejects planned paths that traverse a symlink or junction, plus Git-file and common-directory indirection. |
 | `memoria status` | Show workspace state. |
 | `memoria surface schema --json` | Print the shared surface-contract action registry used by CLI/HTTP/MCP drift checks. |
 | `memoria doctor --check search` | Check local search index state. |
-| `memoria doctor --check runner [--provider local\|gateway] [--repair]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. `--repair` reseeds workspace scaffold files (overwriting existing ones) before reporting. |
+| `memoria doctor --check runner [--provider local\|gateway] [--repair]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. `--repair` restores runtime scaffold files and missing view preferences, while preserving existing PI-owned view preferences, before reporting. |
 | `memoria doctor` | Report local runtime checks and backup health. It exits nonzero when blob files lack configured coverage or a current valid local-backup stamp. |
 | `memoria doctor bundle [--redacted]` | Emit a diagnostic bundle and propagate the same failing backup-health status; `--redacted` marks the bundle as redacted for sharing. |
 | `memoria doctor self-test` | Run local runtime self-tests. |

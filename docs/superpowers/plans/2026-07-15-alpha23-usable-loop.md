@@ -115,9 +115,55 @@ classes), line 106 (Surface program — three rings, Ring 1).
 
 Honesty notes in force: H1, H2, H3, H4, H5, H6, H10, H11.
 
+**Reconciliation amendment (2026-07-17):** Root-level `.base` files are
+Obsidian view settings even though they are not inside `.obsidian/`. Therefore
+`memoria init --no-obsidian` must filter them from both initialization and the
+dry-run `package.seed_files` report. Add `_active_seed_files` beside
+`_active_seed_trees`; its no-Obsidian branch excludes `.base` targets. The
+default `doctor --repair` path remains unchanged and restores the complete
+seeded configuration. The init write-target preflight must use that same
+filtered inventory: a pre-existing `.obsidian` or root-`.base` link that
+`--no-obsidian` will not touch must not block initialization.
+
+**Security reconciliation amendment (2026-07-17):** Before normal `init`
+creates any directory or copies any seed, it must apply the existing
+link-aware `runtime_backup.validate_workspace_write_targets` control to the
+complete planned write set (`_repair_write_targets(workspace)`). This closes
+the dangling-root-`.base` escape introduced by the new vault-root targets:
+`Path.exists()` reports a dangling symlink as missing, while `write_bytes()`
+would follow it outside the selected vault. The set must derive generated
+projection paths from the same `_tracked_projection_paths` resolver used by
+the writer, including Git-tracked and filesystem-discovered
+`projects/*/argument.canvas` targets; a static projection list is incomplete.
+Before resolving those paths, reject a redirected `.git`, a Git-file, and a
+`.git/commondir` indirection, so init never reads or writes an external Git
+directory. Projection-path Git discovery must also use a sanitized runner that
+strips inherited Git configuration and disables repository hooks and
+`core.fsmonitor`; a workspace must not execute a configured helper merely to
+enumerate projections. Keep dry-run read-only. Add CLI regressions for a dangling
+`catalog.base`, a Git-tracked dangling argument canvas, a Git-file, and a
+common-directory file; prove the external targets/configuration and
+`.memoria/` are untouched. Also prove `doctor --repair` rejects a dynamic
+argument-canvas redirect through the shared target inventory and that neither
+init nor repair runs a workspace fsmonitor command.
+
+> **Recorded amendment (EDGES §5, graph-edges plan ERP-A.5):** `claims.base`
+> additionally carries a glyph formula column rendering the typed-consequence
+> mark — the two optional frontmatter fields `stale: bool` and `consequence:`
+> (enum: `grounds-lost`, `warrant-lost`, `qualifier-regression`,
+> `rebuttal-strengthened`) written by the consequence engine — so consequence
+> labels are visible in any editor Bases reaches. Formula, mirroring
+> `inbox.base`'s `loudness_glyph` style:
+> `consequence_glyph: 'if(stale, "⚠ " + consequence, "")'`, added to the
+> `formulas:` block and as `formula.consequence_glyph` in the "By maturity"
+> view's `order:` list. If R1NG.1 executes before the consequence fields
+> exist, seed the column anyway (it renders blank until the fields appear);
+> if R1NG.1 already executed, apply this as a follow-up edit to the seeded
+> `claims.base` and its `test_claims_base_matches_the_design` assertions.
+
 **Steps:**
 
-- [ ] Replace `tests/test_bases.py` entirely with the failing contract test:
+- [x] Replace `tests/test_bases.py` entirely with the failing contract test:
 
 ```python
 """Ring 1 seeded Obsidian Base views (2026-07-12-surface-design-notes.md)."""
@@ -189,13 +235,13 @@ def test_catalog_sources_projects_bases_carry_the_designed_view_names():
     ]
 ```
 
-- [ ] Run it and verify it fails on the missing seed files:
+- [x] Run it and verify it fails on the missing seed files:
       `python -m pytest tests/test_bases.py -v`
       — expected: `test_package_seed_ships_exactly_the_ring1_base_views` fails
       with `assert [] == ['catalog.base', ...]`; the loader tests error with
       `FileNotFoundError`.
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/inbox.base` (H1, H2, H3):
+- [x] Write `src/memoria_vault/product/workspace_seed/inbox.base` (H1, H2, H3):
 
 ```yaml
 # Ring 1 seeded view — attention inbox (view preference: PI-owned after init).
@@ -270,7 +316,7 @@ views:
       - target
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/claims.base` (H1, H4, H5, H10):
+- [x] Write `src/memoria_vault/product/workspace_seed/claims.base` (H1, H4, H5, H10):
 
 ```yaml
 # Ring 1 seeded view — claims and open questions (view preference: PI-owned after init).
@@ -325,7 +371,7 @@ views:
       - certainty
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/sources.base` (H1, H6 —
+- [x] Write `src/memoria_vault/product/workspace_seed/sources.base` (H1, H6 —
       design gives only the view names "reading pipeline, discuss queue"):
 
 ```yaml
@@ -351,7 +397,7 @@ views:
       - file.mtime
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/catalog.base` (H1, H6 —
+- [x] Write `src/memoria_vault/product/workspace_seed/catalog.base` (H1, H6 —
       design gives only "Papers / People / Venues / Needs-enrichment"; the
       catalog is SQLite-backed, so these are named placeholders over the
       digests type home):
@@ -391,7 +437,7 @@ views:
       - file.mtime
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/projects.base` (H1, H6 —
+- [x] Write `src/memoria_vault/product/workspace_seed/projects.base` (H1, H6 —
       design gives only "Active / Saturation / Gaps"; *Active* uses the
       schema's `archived` flag):
 
@@ -425,7 +471,7 @@ views:
       - question
 ```
 
-- [ ] In `src/memoria_vault/cli.py:47-51`, extend `SEED_FILES`:
+- [x] In `src/memoria_vault/cli.py:47-51`, extend `SEED_FILES`:
 
 ```python
 SEED_FILES = (
@@ -440,7 +486,7 @@ SEED_FILES = (
 )
 ```
 
-- [ ] In `pyproject.toml`, inside the
+- [x] In `pyproject.toml`, inside the
       `"memoria_vault.product.workspace_seed" = [` list (lines 32-46), add one
       entry so wheels ship the views:
 
@@ -448,7 +494,7 @@ SEED_FILES = (
   "*.base",
 ```
 
-- [ ] In `tests/test_installer_skeleton.py:31-54`
+- [x] In `tests/test_installer_skeleton.py:31-54`
       (`test_package_seed_is_runtime_minimum`), add to `expected_files`:
 
 ```python
@@ -459,7 +505,7 @@ SEED_FILES = (
         "sources.base",
 ```
 
-- [ ] In `tests/test_cli.py:414`, replace the dry-run assertion:
+- [x] In `tests/test_cli.py:414`, replace the dry-run assertion:
 
 ```python
     assert output["package"]["seed_files"] == [
@@ -474,12 +520,12 @@ SEED_FILES = (
     ]
 ```
 
-- [ ] Run the touched suites and verify they pass:
+- [x] Run the touched suites and verify they pass:
       `python -m pytest tests/test_bases.py tests/test_installer_skeleton.py tests/test_cli.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
+- [x] Run the full gate: `python scripts/verify` — expected: pass.
 
-- [ ] Commit (explicit paths only — shared index):
+- [x] Commit (explicit paths only — shared index):
 
 ```bash
 git add src/memoria_vault/product/workspace_seed/inbox.base src/memoria_vault/product/workspace_seed/claims.base src/memoria_vault/product/workspace_seed/sources.base src/memoria_vault/product/workspace_seed/catalog.base src/memoria_vault/product/workspace_seed/projects.base src/memoria_vault/cli.py pyproject.toml tests/test_bases.py tests/test_installer_skeleton.py tests/test_cli.py
@@ -503,8 +549,50 @@ EOF
 - Create: `src/memoria_vault/product/workspace_seed/.obsidian/graph.json`
 - Create: `src/memoria_vault/product/workspace_seed/.obsidian/types.json`
 - Modify: `src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json:14,20` (`"graph"`, `"properties"`)
+- Modify: `scripts/checks/plugin_provenance_doctor.py:27-35` (closed seed allowlist: admit the two static Ring 1 view-preference JSON files, and nothing executable)
 - Modify: `tests/test_cli.py:341-374` (`test_cli_init_seeds_obsidian_defaults_and_memoria_plugin`, incl. line 364)
 - Modify: `tests/test_installer_skeleton.py:45-51` (expected `.obsidian` files)
+- Modify: `tests/test_package_spine.py:84-111` (installed-package resource assertions for both JSON files)
+- Modify: `tests/test_plugin_provenance.py` (a focused temporary-root contract for the two newly admitted files)
+- Modify: exactly these 35 `tests/fixtures/floor/goldens/*.json` files, regenerated through the supported floor mechanism:
+
+  ```text
+  analyze-claims.json
+  analyze-gaps.json
+  analyze-project-argument.json
+  answer-query.json
+  capture-bibtex-source.json
+  capture-source.json
+  check-falsifiability.json
+  check-source-metadata.json
+  compare-and-contrast.json
+  compile-source-digest.json
+  create-concept.json
+  empirical-event-record.json
+  eval-run.json
+  export-project.json
+  extract-claim-stubs.json
+  integrity-citation-survival-check.json
+  integrity-claim-quote-check.json
+  integrity-contradiction-check.json
+  integrity-evidence-check.json
+  integrity-link-target-check.json
+  integrity-prompt-injection-check.json
+  integrity-provenance-checkpoint.json
+  integrity-quote-anchor-check.json
+  rebuild-checked-search-index.json
+  red-team-argument.json
+  regenerate-capability-index.json
+  regenerate-indexes.json
+  regenerate-references-bib.json
+  regenerate-tracked-projections.json
+  render-project-argument-canvas.json
+  run-seeded-error-verdict.json
+  summarize-for-recall.json
+  surface-tensions.json
+  verify-project-draft.json
+  write-project-slice.json
+  ```
 - Test: `tests/test_cli.py` (existing `contract` registration)
 
 **Interfaces:**
@@ -515,9 +603,31 @@ Honesty note in force: H7 — the design names the files and plugins only; file
 content is completion (types.json derived from seeded type schemas; graph.json
 color groups per type home).
 
+**Preflight amendment (2026-07-16):** `.obsidian` has a deliberately closed
+provenance allowlist, so the two new static configurations must be explicitly
+listed there. The existing `.obsidian/*.json` package-data glob and `.obsidian`
+seed tree already include them; no CLI or packaging registration changes are
+needed. Adding seed files changes every operation-floor vault digest that
+currently records `core-plugins.json`: regenerate exactly the 35 files listed
+above with the supported mechanism, then review each diff. In every such file,
+the only expected changes are the `core-plugins.json` hash replacement and new
+`graph.json` / `types.json` hashes; all other digest entries, database counts,
+and journal kinds must remain unchanged.
+
+**Reconciliation amendment (2026-07-17):** `types.json` must expose every
+frontmatter property consumed by Ring 1's seeded views. In particular, the
+seeded type schemas define `stale: bool` and `consequence: enum:consequence`
+for claims-visible concepts, and the EDGES §5 `claims.base` glyph reads both.
+Seed `stale` as an Obsidian `checkbox` and `consequence` as `text`, and pin
+both in the init contract. When R1NG.1 and R1NG.2 are first integrated together,
+the one authoritative fixture update also adds the five `.base` digest entries;
+that combined delta is expected in addition to the three `.obsidian` changes.
+The inbox and projects views additionally consume `target`, `thesis`, and
+`question`; seed all three as `text` and pin them in the same init contract.
+
 **Steps:**
 
-- [ ] Extend `test_cli_init_seeds_obsidian_defaults_and_memoria_plugin`
+- [x] Extend `test_cli_init_seeds_obsidian_defaults_and_memoria_plugin`
       (tests/test_cli.py:341-374). Change line 364 and add assertions after
       the existing `manifest` load:
 
@@ -540,17 +650,30 @@ color groups per type home).
         "path:fulltexts/",
         "path:inbox/",
     }
+    assert types["types"]["stale"] == "checkbox"
+    assert types["types"]["consequence"] == "text"
     assert types["types"]["superseded"] == "checkbox"
     assert types["types"]["loudness"] == "text"
+    assert types["types"]["target"] == "text"
+    assert types["types"]["thesis"] == "text"
+    assert types["types"]["question"] == "text"
 ```
 
-- [ ] Run and verify it fails:
+- [x] Add the matching package/provenance contracts before writing the seed
+      files: assert both paths are present in
+      `test_workspace_seed_is_packaged_runtime_minimum`, and add a
+      temporary-root `test_plugin_provenance` case that writes only
+      `.obsidian/graph.json` and `.obsidian/types.json` and expects
+      `doctor.check(root) == []`. The latter must fail until the closed
+      allowlist is updated.
+
+- [x] Run and verify it fails:
       `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin -v`
       — expected: `FileNotFoundError: ... .obsidian/graph.json` (and, once the
       files exist but plugins are unflipped, `assert False is True` on
       `core_plugins["graph"]`).
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/.obsidian/graph.json`:
+- [x] Write `src/memoria_vault/product/workspace_seed/.obsidian/graph.json`:
 
 ```json
 {
@@ -569,7 +692,7 @@ color groups per type home).
 }
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/.obsidian/types.json`
+- [x] Write `src/memoria_vault/product/workspace_seed/.obsidian/types.json`
       (property → Obsidian property type, derived from
       `.memoria/schemas/types/*.yaml` and the attention projection frontmatter):
 
@@ -581,12 +704,17 @@ color groups per type home).
     "attention_status": "text",
     "certainty": "text",
     "claim_text": "text",
+    "consequence": "text",
     "id": "text",
     "loudness": "text",
     "mode": "text",
     "projection": "text",
+    "question": "text",
     "question_status": "text",
+    "stale": "checkbox",
     "superseded": "checkbox",
+    "target": "text",
+    "thesis": "text",
     "title": "text",
     "type": "text",
     "work_id": "text"
@@ -594,11 +722,11 @@ color groups per type home).
 }
 ```
 
-- [ ] In `src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json`,
+- [x] In `src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json`,
       flip line 14 `"graph": false,` → `"graph": true,` and line 20
       `"properties": false,` → `"properties": true,`.
 
-- [ ] In `tests/test_installer_skeleton.py` `expected_files` (added-to in
+- [x] In `tests/test_installer_skeleton.py` `expected_files` (added-to in
       R1NG.1), add:
 
 ```python
@@ -606,15 +734,31 @@ color groups per type home).
         ".obsidian/types.json",
 ```
 
-- [ ] Run and verify pass:
-      `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin tests/test_installer_skeleton.py -v`
+- [x] In `scripts/checks/plugin_provenance_doctor.py`, add exactly
+      `Path("graph.json")` and `Path("types.json")` to
+      `ALLOWED_SEED_OBSIDIAN_FILES`. Do not broaden the rule or admit plugin
+      payloads.
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
-
-- [ ] Commit:
+- [x] Regenerate the 35 preflight-listed floor goldens only through the
+      supported update path:
 
 ```bash
-git add src/memoria_vault/product/workspace_seed/.obsidian/graph.json src/memoria_vault/product/workspace_seed/.obsidian/types.json src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json tests/test_cli.py tests/test_installer_skeleton.py
+MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q
+```
+
+      Inspect the resulting fixture diff before continuing: each listed file
+      must have only the three expected `.obsidian` digest changes described
+      above; no other golden may be touched.
+
+- [x] Run and verify pass:
+      `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin tests/test_installer_skeleton.py tests/test_package_spine.py tests/test_plugin_provenance.py -v`
+
+- [x] Run the full gate: `python scripts/verify` — expected: pass.
+
+- [x] Commit:
+
+```bash
+git add -- docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md scripts/checks/plugin_provenance_doctor.py src/memoria_vault/product/workspace_seed/.obsidian/graph.json src/memoria_vault/product/workspace_seed/.obsidian/types.json src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json tests/test_cli.py tests/test_installer_skeleton.py tests/test_package_spine.py tests/test_plugin_provenance.py <the-35-explicit-floor-golden-paths-listed-above>
 git commit -m "$(cat <<'EOF'
 feat(surface): seed graph.json + types.json, enable graph/properties core plugins
 
@@ -647,13 +791,27 @@ EOF
   - Changed private signatures: `_copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None`, `_copy_seed_file(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None`.
 - Behavior contract other sections may rely on: `doctor --repair` (and any future upgrade caller of `_initialize_workspace_files(overwrite=True)`) reseeds a *deleted* view preference but never overwrites an *existing* one; data projections are exclusively `runtime.projections.TRACKED_PROJECTION_PATHS` + argument canvases and are regenerated always.
 
+> **Adopted preflight amendment (2026-07-16):** In addition to proving each
+> manifest entry is seeded, the contract test asserts the manifest is exactly the
+> nine PI-owned paths listed in the implementation snippet below. A broad
+> "only seeded paths" check would permit silently classifying another seed as a
+> view preference and changing its repair ownership.
+
 Honesty notes in force: H8 (no `memoria upgrade` command exists — the class
 split lands on the `doctor --repair` path, the only upgrade/reconcile path in
 the codebase), H9 (steering.md / vocabulary.md classified PI-owned).
 
+**Review repair amendment (2026-07-17):** `doctor --repair --json` must report
+the seed-file paths it actually writes, not the static top-level seed roster.
+Runtime seed leaves are rewritten and reported; missing view-preference leaves
+are restored and reported; existing PI-owned view preferences are neither
+written nor reported. Pin both preservation and missing-preference reporting in
+the lifecycle contract, and describe the preservation exception in the CLI
+reference.
+
 **Steps:**
 
-- [ ] Create `tests/test_seed_lifecycle.py` with the failing tests:
+- [x] Create `tests/test_seed_lifecycle.py` with the failing tests:
 
 ```python
 """Seeded-config two-class lifecycle: view preferences survive repair; data projections regenerate."""
@@ -748,21 +906,21 @@ def test_regenerate_overwrites_data_projections(
     assert (workspace / "bibliography.bib").read_text(encoding="utf-8") != "PI edit\n"
 ```
 
-- [ ] Register the file in `tests/conftest.py` `TEST_LEVELS` (insert before the
+- [x] Register the file in `tests/conftest.py` `TEST_LEVELS` (insert before the
       `"test_seeded_errors.py": "runtime",` line):
 
 ```python
     "test_seed_lifecycle.py": "contract",
 ```
 
-- [ ] Run and verify the right failures:
+- [x] Run and verify the right failures:
       `python -m pytest tests/test_seed_lifecycle.py -v`
       — expected: `ImportError: cannot import name 'SEED_CLASSES'` (manifest
       tests) — and after the constant exists but before the copy-helper change,
       `test_repair_leaves_pi_modified_view_preferences` fails with the seeded
       content clobbering `pi_base`.
 
-- [ ] In `src/memoria_vault/cli.py`, insert the manifest directly after the
+- [x] In `src/memoria_vault/cli.py`, insert the manifest directly after the
       `SEED_FILES` tuple (after current line 51, as extended by R1NG.1):
 
 ```python
@@ -789,7 +947,7 @@ VIEW_PREFERENCE_PATHS = frozenset(
 )
 ```
 
-- [ ] Replace `_seed_workspace` (cli.py:2263-2267) to thread the target rel:
+- [x] Replace `_seed_workspace` (cli.py:2263-2267) to thread the target rel:
 
 ```python
 def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
@@ -803,7 +961,7 @@ def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool 
         )
 ```
 
-- [ ] Replace `_copy_seed_tree` and `_copy_seed_file` (cli.py:2450-2470) and
+- [x] Replace `_copy_seed_tree` and `_copy_seed_file` (cli.py:2450-2470) and
       add the predicate:
 
 ```python
@@ -842,16 +1000,16 @@ def _seed_write_allowed(target_rel: str, target: Path, *, overwrite: bool) -> bo
     return overwrite and target_rel not in VIEW_PREFERENCE_PATHS
 ```
 
-- [ ] Run and verify pass: `python -m pytest tests/test_seed_lifecycle.py -v`
+- [x] Run and verify pass: `python -m pytest tests/test_seed_lifecycle.py -v`
 
-- [ ] Run the neighbors that exercise repair and init to prove no regression:
+- [x] Run the neighbors that exercise repair and init to prove no regression:
       `python -m pytest tests/test_cli_doctor_eval.py tests/test_cli.py tests/test_installer_skeleton.py -v`
       — expected: pass (`test_cli_doctor_repair_restores_runtime_seed_files`
       still passes because `providers.yaml` is unclassified → runtime seed).
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
+- [x] Run the full gate: `python scripts/verify` — expected: pass.
 
-- [ ] Commit:
+- [x] Commit:
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_seed_lifecycle.py tests/conftest.py
@@ -1115,7 +1273,7 @@ Two documented boundaries (do not widen this task):
 - Consumes: `state.file_index_states(vault: Path) -> dict[str, dict[str, Any]]`
   (`state.py:2012-2023`); `state.replace_indexed_passages(vault, rows, *,
   paths: Iterable[str] | None = None) -> dict[str, int]` (`state.py:1874`);
-  `is_consumable_checked_file(vault: Path, relpath: str) -> bool`
+  `is_consumable_checked_file(vault: Path, relpath: str, *, enqueue_scan: bool = True) -> bool`
   (`read_barrier.py:14`).
 - Produces:
   - `search_index.stale_checked_search_documents(vault: Path, states: dict[str, dict[str, Any]]) -> tuple[list[dict[str, Any]], set[str]]`
@@ -1139,7 +1297,7 @@ Two documented boundaries (do not widen this task):
   from memoria_vault.runtime.vaultio import safe_read
   ```
 
-  Append both tests at the end of the file:
+  Append the first two tests at the end of the file:
 
   ```python
   def test_refresh_reindexes_only_changed_files_and_keeps_concept_edges(
@@ -1229,17 +1387,30 @@ Two documented boundaries (do not widen this task):
       assert "notes/beta.md" not in state.file_index_states(vault)
   ```
 
+- [ ] Add a third failing regression test,
+  `test_refresh_removes_barrier_refused_changed_checked_file_without_read`, to
+  `tests/test_query_substrate.py`. Seed and rebuild one checked note, overwrite
+  it with a `CANARY` body and advance its mtime beyond the stored index state,
+  then monkeypatch `memoria_vault.runtime.search_index.safe_read` to fail if it
+  is invoked. `refresh_stale_passages` must not invoke that patched reader; it
+  must remove the path from `indexed_passages` and `file_index_states`, and an
+  FTS lookup for the CANARY must return no row. This regression establishes the
+  R2 barrier-before-read rule for incremental refresh, rather than merely
+  asserting its final database state.
+
 - [ ] Run the tests to verify they fail:
 
   ```
-  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" -v
+  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" "tests/test_query_substrate.py::test_refresh_removes_barrier_refused_changed_checked_file_without_read" -v
   ```
 
   Expected: the first test fails at `assert reads == []` (current code reads
   every checked file on every refresh — the list contains `alpha.md`/`beta.md`
   twice each) and would also fail the `concept_edges` assertion (wiped to `[]`);
   the second fails because the deleted file's rows linger in
-  `passages`/`file_index_state`.
+  `passages`/`file_index_state`; the third proves the old refresh path reaches
+  `safe_read` for a changed, barrier-refused checked file, which the canary
+  monkeypatch rejects.
 
 - [ ] Write the bulk-status helper. In
   `src/memoria_vault/runtime/state.py`, insert after `concept_check_status`
@@ -1259,6 +1430,14 @@ Two documented boundaries (do not widen this task):
 - [ ] Write the stale-scan. In `src/memoria_vault/runtime/search_index.py`,
   add `import hashlib` to the stdlib import block (line 5, before `import
   json`), then insert after `checked_concepts` (after line 150):
+
+  > **Binding R2 read-barrier amendment:** for every changed/new file-backed
+  > path whose current DB status is `checked`, call
+  > `is_consumable_checked_file(vault, rel)` with its default
+  > `enqueue_scan=True` *before* `safe_read` or `_frontmatter_with_flags`. On
+  > refusal, add a known path to `removed` and continue. Only a passing barrier
+  > may reach `safe_read`. Preserve the existing mtime/status fast path (no
+  > O(vault) rehash) and the generated Work-document path unchanged.
 
   ```python
   def stale_checked_search_documents(
@@ -1294,12 +1473,13 @@ Two documented boundaries (do not widen this task):
                   if known is not None:
                       removed.add(rel)
                   continue
+              if not is_consumable_checked_file(vault, rel):
+                  if known is not None:
+                      removed.add(rel)
+                  continue
               text = safe_read(path)
               frontmatter = _frontmatter_with_flags(vault, rel, text)
-              if known is None and not (
-                  is_consumable_checked_file(vault, rel)
-                  and _is_searchable_frontmatter(frontmatter)
-              ):
+              if known is None and not _is_searchable_frontmatter(frontmatter):
                   continue
               stale.append(
                   {"path": rel, "text": text, "frontmatter": frontmatter, "source": path}
@@ -1318,12 +1498,12 @@ Two documented boundaries (do not widen this task):
       return sorted(stale, key=lambda row: str(row["path"])), removed
   ```
 
-  Semantics note (mirrors today's behavior on purpose): a *previously indexed*
-  file that is still `checked` is re-read unconditionally when its mtime or
-  verdict changed — even if `is_consumable_checked_file` now returns `False`
-  (a PI-edited checked file) — exactly like `_previously_indexed_documents`
-  does on the rebuild path (`indexing.py:80-98`); a *new* file must pass the
-  consumable + searchable admission that `checked_search_documents` applies.
+  Semantics note: a *previously indexed* file that remains `checked` but fails
+  `is_consumable_checked_file` is never opened by refresh; its prior passages
+  and index state are removed. A new file must likewise pass consumable +
+  searchable admission before it can enter the index. This preserves the R2
+  barrier-before-read invariant while retaining mtime/status gating for
+  unchanged files.
 
 - [ ] Replace `refresh_stale_passages` in
   `src/memoria_vault/runtime/indexing.py` (lines 41-59) with:
@@ -1351,7 +1531,7 @@ Two documented boundaries (do not widen this task):
 - [ ] Run the new tests to verify they pass:
 
   ```
-  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" -v
+  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" "tests/test_query_substrate.py::test_refresh_removes_barrier_refused_changed_checked_file_without_read" -v
   ```
 
 - [ ] Run the neighboring suites that exercise the refresh path end to end:

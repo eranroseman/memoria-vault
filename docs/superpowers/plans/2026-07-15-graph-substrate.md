@@ -5229,7 +5229,7 @@ doc-claims check).
 
 **Steps:**
 
-- [ ] In the surfaces plan, line 21, change
+- [x] In the surfaces plan, line 21, change
 
   `` `link_relations` from `schema.LINK_RELATIONS` ``
 
@@ -5237,7 +5237,7 @@ doc-claims check).
 
   `` `link_relations` from `edges.LINK_RELATIONS` (moved from `schema.LINK_RELATIONS` by the graph-edges plan ERP-A.1; the `schema` re-export stays valid for one release) ``
 
-- [ ] In the surfaces plan, line 7411, change
+- [x] In the surfaces plan, line 7411, change
 
   `` `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` ``
 
@@ -5249,7 +5249,7 @@ doc-claims check).
 
   `` **Recorded amendment (EDGES §4, graph-edges plan ERP-A.5):** once `warrant`/`qualifier`/`rebuttal` activate, the served roster is six verbs; every acceptance here reads "exactly the served verbs" — never a counted three — and the control renders as a segmented control or dropdown accordingly. ``
 
-- [ ] In the surfaces plan, line 9580, change
+- [x] In the surfaces plan, line 9580, change
 
   `Relation shows exactly the three server verbs as a segmented control`
 
@@ -5257,7 +5257,7 @@ doc-claims check).
 
   `Relation shows exactly the served verbs (summary.link_relations — six once the graph-edges plan's roster activation lands) as a segmented control or dropdown`
 
-- [ ] In the alpha.23 plan, insert after the R1NG.1 "Honesty notes in force"
+- [x] In the alpha.23 plan, insert after the R1NG.1 "Honesty notes in force"
   line (line 116) and its trailing blank line:
 
   ```markdown
@@ -5276,9 +5276,9 @@ doc-claims check).
   > `claims.base` and its `test_claims_base_matches_the_design` assertions.
   ```
 
-- [ ] Run `python scripts/verify` — expect PASS (doc-claims gate covers the
+- [x] Run `python scripts/verify` — expect PASS (doc-claims gate covers the
   edited plans).
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md

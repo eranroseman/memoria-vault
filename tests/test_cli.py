@@ -468,13 +468,31 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     assert core_plugins["backlink"] is True
     assert core_plugins["canvas"] is True
     assert core_plugins["bases"] is True
-    assert core_plugins["properties"] is False
+    assert core_plugins["graph"] is True
+    assert core_plugins["properties"] is True
     assert core_plugins["daily-notes"] is False
     assert core_plugins["templates"] is False
     assert app["propertiesInDocument"] == "source"
     assert app["alwaysUpdateLinks"] is True
     assert community_plugins == ["memoria-obsidian"]
     assert manifest["id"] == "memoria-obsidian"
+    graph = json.loads((workspace / ".obsidian/graph.json").read_text("utf-8"))
+    types = json.loads((workspace / ".obsidian/types.json").read_text("utf-8"))
+    assert {group["query"] for group in graph["colorGroups"]} == {
+        "path:notes/",
+        "path:hubs/",
+        "path:projects/",
+        "path:digests/",
+        "path:fulltexts/",
+        "path:inbox/",
+    }
+    assert types["types"]["stale"] == "checkbox"
+    assert types["types"]["consequence"] == "text"
+    assert types["types"]["superseded"] == "checkbox"
+    assert types["types"]["loudness"] == "text"
+    assert types["types"]["target"] == "text"
+    assert types["types"]["thesis"] == "text"
+    assert types["types"]["question"] == "text"
     assert (workspace / ".obsidian/plugins/memoria-obsidian/main.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/schema.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()
@@ -491,6 +509,10 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
 
     assert rc == 0
     assert not (workspace / ".obsidian").exists()
+    assert not any(
+        (workspace / base).exists()
+        for base in ("catalog.base", "claims.base", "inbox.base", "projects.base", "sources.base")
+    )
     assert (workspace / ".memoria/schemas/folders.yaml").is_file()
     assert (workspace / "steering.md").is_file()
 
@@ -499,7 +521,156 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
 
     assert rc == 0
     assert ".obsidian" not in output["package"]["seed_trees"]
+    assert not set(output["package"]["seed_files"]) & {
+        "catalog.base",
+        "claims.base",
+        "inbox.base",
+        "projects.base",
+        "sources.base",
+    }
     assert not dry_workspace.exists()
+
+
+def test_cli_init_no_obsidian_skips_untouched_view_symlinks(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    outside_obsidian = tmp_path / "outside-obsidian"
+    outside_base = tmp_path / "outside-inbox.base"
+    workspace.mkdir()
+    outside_obsidian.mkdir()
+    outside_base.write_text("PI-owned\n", encoding="utf-8")
+    (workspace / ".obsidian").symlink_to(outside_obsidian, target_is_directory=True)
+    (workspace / "inbox.base").symlink_to(outside_base)
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--no-obsidian", "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert (workspace / ".obsidian").is_symlink()
+    assert (workspace / "inbox.base").is_symlink()
+    assert outside_base.read_text(encoding="utf-8") == "PI-owned\n"
+    assert not any(outside_obsidian.iterdir())
+
+
+def test_cli_init_rejects_dangling_seed_symlink(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    outside = tmp_path / "outside-catalog.base"
+    workspace.mkdir()
+    (workspace / "catalog.base").symlink_to(outside)
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {
+        "ok": False,
+        "error": "workspace write target must not redirect through a symlink or junction: "
+        "catalog.base",
+    }
+    assert not outside.exists()
+    assert not (workspace / ".memoria").exists()
+
+
+def test_cli_init_rejects_dynamic_canvas_symlink(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    outside = tmp_path / "outside-argument.canvas"
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_checked_concept(
+        workspace,
+        "projects/dynamic/project.md",
+        "type: project\ncheck_status: checked\ntitle: Dynamic project\n",
+        "project",
+    )
+    canvas = workspace / "projects/dynamic/argument.canvas"
+    canvas.write_text("{}\n", encoding="utf-8")
+    git(workspace, "add", "projects/dynamic/project.md", "projects/dynamic/argument.canvas")
+    git(workspace, "commit", "-m", "track dynamic canvas")
+    canvas.unlink()
+    canvas.symlink_to(outside)
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {
+        "ok": False,
+        "error": "workspace write target must not redirect through a symlink or junction: "
+        "projects/dynamic/argument.canvas",
+    }
+    assert not outside.exists()
+
+
+def test_cli_init_rejects_gitfile_indirection(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    external = tmp_path / "external"
+    workspace.mkdir()
+    external.mkdir()
+    git(external, "init", "-q")
+    external_config = external / ".git/config"
+    before = external_config.read_text(encoding="utf-8")
+    (workspace / ".git").write_text(f"gitdir: {external / '.git'}\n", encoding="utf-8")
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "workspace Git metadata must be a directory"}
+    assert external_config.read_text(encoding="utf-8") == before
+    assert not (workspace / ".memoria").exists()
+
+
+def test_cli_init_rejects_git_common_directory_indirection(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    external = tmp_path / "external"
+    git_metadata = workspace / ".git"
+    external.mkdir()
+    git(external, "init", "-q")
+    external_config = external / ".git/config"
+    before = external_config.read_text(encoding="utf-8")
+    git_metadata.mkdir(parents=True)
+    (git_metadata / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    (git_metadata / "commondir").write_text(f"{external / '.git'}\n", encoding="utf-8")
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {
+        "ok": False,
+        "error": "workspace Git common-directory indirection is not supported",
+    }
+    assert external_config.read_text(encoding="utf-8") == before
+    assert not (workspace / ".memoria").exists()
+
+
+def test_cli_init_does_not_run_workspace_fsmonitor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    marker = tmp_path / "fsmonitor-ran"
+    script = tmp_path / "fsmonitor"
+    workspace.mkdir()
+    script.write_text(f"#!/bin/sh\ntouch {marker}\n", encoding="utf-8")
+    script.chmod(0o700)
+    git(workspace, "init", "-q")
+    git(workspace, "config", "core.fsmonitor", str(script))
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert not marker.exists()
 
 
 def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
@@ -518,7 +689,16 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert output["db"] == {"path": ".memoria/memoria.sqlite", "exists": False}
     assert "capabilities" not in output["skeleton"]["directories"]
     assert ".memoria/index/search" in output["skeleton"]["missing"]
-    assert output["package"]["seed_files"] == [".gitignore", "steering.md", "system/vocabulary.md"]
+    assert output["package"]["seed_files"] == [
+        ".gitignore",
+        "steering.md",
+        "system/vocabulary.md",
+        "catalog.base",
+        "claims.base",
+        "inbox.base",
+        "projects.base",
+        "sources.base",
+    ]
     assert "capabilities" not in output["package"]["seed_trees"]
     assert {
         "index.md",

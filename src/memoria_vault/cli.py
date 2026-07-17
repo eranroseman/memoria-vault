@@ -50,6 +50,32 @@ SEED_FILES = (
     (".gitignore", ".gitignore"),
     ("steering.md", "steering.md"),
     ("system/vocabulary.md", "system/vocabulary.md"),
+    ("catalog.base", "catalog.base"),
+    ("claims.base", "claims.base"),
+    ("inbox.base", "inbox.base"),
+    ("projects.base", "projects.base"),
+    ("sources.base", "sources.base"),
+)
+# Seeded-config lifecycle — two classes (consolidation 2026-07-12, line 105).
+# View preferences are seeded once and PI-owned afterwards: repair/upgrade must
+# not clobber an existing copy (it does reseed a deleted one). Data projections
+# are never seeded — they are regenerated always via
+# runtime.projections.TRACKED_PROJECTION_PATHS (+ argument canvases). Every
+# seeded path absent from this manifest is a runtime seed and is repair-restored.
+SEED_CLASS_VIEW_PREFERENCE: str = "view-preference"
+SEED_CLASSES: dict[str, str] = {
+    "catalog.base": SEED_CLASS_VIEW_PREFERENCE,
+    "claims.base": SEED_CLASS_VIEW_PREFERENCE,
+    "inbox.base": SEED_CLASS_VIEW_PREFERENCE,
+    "projects.base": SEED_CLASS_VIEW_PREFERENCE,
+    "sources.base": SEED_CLASS_VIEW_PREFERENCE,
+    ".obsidian/graph.json": SEED_CLASS_VIEW_PREFERENCE,
+    ".obsidian/types.json": SEED_CLASS_VIEW_PREFERENCE,
+    "steering.md": SEED_CLASS_VIEW_PREFERENCE,
+    "system/vocabulary.md": SEED_CLASS_VIEW_PREFERENCE,
+}
+VIEW_PREFERENCE_PATHS: frozenset[str] = frozenset(
+    rel for rel, cls in SEED_CLASSES.items() if cls == SEED_CLASS_VIEW_PREFERENCE
 )
 SURFACE_ACTION = actions_by_id()
 PROJECT_EXPLORE_HELP = (
@@ -619,6 +645,13 @@ def _cmd_init(args: argparse.Namespace) -> int:
         )
     if not args.yes and workspace.exists() and any(workspace.iterdir()):
         return _fail("init on a non-empty workspace requires --yes", json_output=args.json)
+    from memoria_vault.runtime import backup as runtime_backup
+
+    runtime_backup.validate_workspace_write_targets(workspace, [".git"])
+    _validate_workspace_git_metadata(workspace)
+    runtime_backup.validate_workspace_write_targets(
+        workspace, _repair_write_targets(workspace, include_obsidian=include_obsidian)
+    )
     _initialize_workspace_files(workspace, include_obsidian=include_obsidian)
     return _emit({"ok": True, "workspace": str(workspace), "created": created}, args)
 
@@ -2469,13 +2502,19 @@ def _active_seed_trees(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]
     return tuple(pair for pair in SEED_TREES if pair[1] != ".obsidian")
 
 
+def _active_seed_files(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]:
+    if include_obsidian:
+        return SEED_FILES
+    return tuple(pair for pair in SEED_FILES if not pair[1].endswith(".base"))
+
+
 def _init_dry_run_report(
     workspace: Path, planned_dirs: list[str], *, include_obsidian: bool = True
 ) -> dict[str, Any]:
     from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
 
     seed_trees = [target for _, target in _active_seed_trees(include_obsidian=include_obsidian)]
-    seed_files = [target for _, target in SEED_FILES]
+    seed_files = [target for _, target in _active_seed_files(include_obsidian=include_obsidian)]
     search = {
         "engine": "bm25",
         "checked_root": ".memoria/index/search/checked",
@@ -2524,23 +2563,30 @@ def _init_dry_run_report(
 
 def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
     for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
-        _copy_seed_tree(source_rel, workspace / target_rel, overwrite=overwrite)
-    for source_rel, target_rel in SEED_FILES:
-        _copy_seed_file(source_rel, workspace / target_rel, overwrite=overwrite)
+        _copy_seed_tree(
+            source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
+        )
+    for source_rel, target_rel in _active_seed_files(include_obsidian=include_obsidian):
+        _copy_seed_file(
+            source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
+        )
 
 
 def _repair_workspace(workspace: Path) -> list[str]:
+    repaired = _repair_seed_write_targets(workspace)
     _initialize_workspace_files(workspace, overwrite=True, commit_created_repository=False)
-    return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
+    return repaired
 
 
-def _repair_write_targets(workspace: Path) -> list[str]:
-    from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
+def _repair_write_targets(workspace: Path, *, include_obsidian: bool = True) -> list[str]:
+    from memoria_vault.runtime.projections import _tracked_projection_paths
 
     targets = set(_workspace_plan(workspace))
-    for source_rel, target_rel in SEED_TREES:
+    for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
         targets.update(_seed_tree_write_targets(source_rel, target_rel))
-    targets.update(target for _source, target in SEED_FILES)
+    targets.update(
+        target for _source, target in _active_seed_files(include_obsidian=include_obsidian)
+    )
     targets.update(
         {
             state.DB_REL,
@@ -2550,11 +2596,36 @@ def _repair_write_targets(workspace: Path) -> list[str]:
             state.JOURNAL_HEAD_REL,
             ".memoria/overrides.jsonl",
             "system/manifest.jsonl",
-            *TRACKED_PROJECTION_PATHS,
         }
     )
+    targets.update(_tracked_projection_paths(workspace))
     targets.update(_existing_tree_targets(workspace, ".git"))
     return sorted(targets)
+
+
+def _repair_seed_write_targets(workspace: Path) -> list[str]:
+    targets: list[str] = []
+    for source_rel, target_rel in SEED_TREES:
+        targets.extend(_seed_tree_file_targets(source_rel, target_rel))
+    targets.extend(target for _source, target in SEED_FILES)
+    return sorted(
+        target
+        for target in targets
+        if target not in VIEW_PREFERENCE_PATHS or not (workspace / target).exists()
+    )
+
+
+def _seed_tree_file_targets(source_rel: str, target_rel: str) -> list[str]:
+    source = _seed_resource(source_rel)
+    if source.is_file():
+        return [target_rel]
+    if not source.is_dir():
+        return []
+    targets: list[str] = []
+    for child in source.iterdir():
+        child_target = (Path(target_rel) / child.name).as_posix()
+        targets.extend(_seed_tree_file_targets(f"{source_rel}/{child.name}", child_target))
+    return targets
 
 
 def _seed_tree_write_targets(source_rel: str, target_rel: str) -> list[str]:
@@ -2583,6 +2654,14 @@ def _existing_tree_targets(workspace: Path, root_rel: str) -> list[str]:
     return targets
 
 
+def _validate_workspace_git_metadata(workspace: Path) -> None:
+    git_path = workspace / ".git"
+    if os.path.lexists(git_path) and not git_path.is_dir():
+        raise ValueError("workspace Git metadata must be a directory")
+    if os.path.lexists(git_path / "commondir"):
+        raise ValueError("workspace Git common-directory indirection is not supported")
+
+
 @contextmanager
 def _doctor_maintenance(workspace: Path, *, repair: bool = False):
     from memoria_vault.runtime import backup as runtime_backup
@@ -2590,14 +2669,11 @@ def _doctor_maintenance(workspace: Path, *, repair: bool = False):
     def preflight() -> None:
         runtime_backup.validate_maintenance_preconditions(workspace)
         if repair:
+            runtime_backup.validate_workspace_write_targets(workspace, [".git"])
+            _validate_workspace_git_metadata(workspace)
             runtime_backup.validate_workspace_write_targets(
                 workspace, _repair_write_targets(workspace)
             )
-            git_path = workspace / ".git"
-            if os.path.lexists(git_path) and not git_path.is_dir():
-                raise ValueError("workspace Git metadata must be a directory")
-            if os.path.lexists(git_path / "commondir"):
-                raise ValueError("workspace Git common-directory indirection is not supported")
 
     preflight()
     with _workspace_lock(workspace):
@@ -2709,7 +2785,7 @@ def _write_no_overwrite(target: Path, frontmatter: dict[str, Any], body: str) ->
     write_frontmatter_doc(target, frontmatter, body, create_parent=True)
 
 
-def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
+def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:
     source = _seed_resource(source_rel)
     if not source.is_dir():
         return
@@ -2718,18 +2794,30 @@ def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
     target.mkdir(parents=True, exist_ok=True)
     for child in source.iterdir():
         child_target = target / child.name
+        child_rel = f"{target_rel}/{child.name}"
         if child.is_dir():
-            _copy_seed_tree(f"{source_rel}/{child.name}", child_target, overwrite=overwrite)
-        elif overwrite or not child_target.exists():
+            _copy_seed_tree(
+                f"{source_rel}/{child.name}",
+                child_target,
+                overwrite=overwrite,
+                target_rel=child_rel,
+            )
+        elif _seed_write_allowed(child_rel, child_target, overwrite=overwrite):
             child_target.parent.mkdir(parents=True, exist_ok=True)
             child_target.write_bytes(child.read_bytes())
 
 
-def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None:
+def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:
     source = _seed_resource(source_rel)
-    if source.is_file() and (overwrite or not target.exists()):
+    if source.is_file() and _seed_write_allowed(target_rel, target, overwrite=overwrite):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(source.read_bytes())
+
+
+def _seed_write_allowed(target_rel: str, target: Path, *, overwrite: bool) -> bool:
+    if not target.exists():
+        return True
+    return overwrite and target_rel not in VIEW_PREFERENCE_PATHS
 
 
 def _seed_resource(source_rel: str):

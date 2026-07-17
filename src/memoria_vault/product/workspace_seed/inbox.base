@@ -1,0 +1,70 @@
+# Ring 1 seeded view — attention inbox (view preference: PI-owned after init).
+# Design: docs/superpowers/specs/2026-07-12-surface-design-notes.md.
+filters:
+  and:
+    - file.inFolder("inbox")
+    - 'projection == "attention"'
+
+formulas:
+  loudness_rank: 'if(loudness == "block", 0, if(loudness == "alert", 1, if(loudness == "notice", 2, 3)))'
+  loudness_glyph: 'if(loudness == "block", "🔴", if(loudness == "alert", "🟠", if(loudness == "notice", "🟡", "⚪")))'
+
+properties:
+  formula.loudness_glyph:
+    displayName: ""
+  formula.loudness_rank:
+    displayName: "Loudness rank"
+  attention_kind:
+    displayName: "Kind"
+  attention_status:
+    displayName: "Status"
+
+views:
+  - type: table
+    name: "Needs me"
+    filters:
+      and:
+        - 'attention_status == "open"'
+        - or:
+            - 'attention_kind == "candidate"'
+            - 'attention_kind == "gap"'
+            - 'attention_kind == "work-prompt"'
+    order:
+      - title
+      - formula.loudness_glyph
+      - attention_kind
+      - loudness
+      - target
+  - type: table
+    name: "Drift watch"
+    filters:
+      or:
+        - 'attention_kind == "flag"'
+        - 'attention_kind == "alert"'
+    order:
+      - title
+      - formula.loudness_glyph
+      - attention_status
+      - target
+  - type: table
+    name: "Loose ends"
+    filters:
+      and:
+        - 'loudness == "notice"'
+    order:
+      - title
+      - attention_kind
+      - attention_status
+      - target
+  - type: table
+    name: "All cards"
+    groupBy:
+      property: attention_kind
+      direction: ASC
+    order:
+      - title
+      - formula.loudness_glyph
+      - attention_kind
+      - attention_status
+      - loudness
+      - target
