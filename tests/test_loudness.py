@@ -13,6 +13,21 @@ def test_alert_card_writes_no_push_log(tmp_path):
     assert not (tmp_path / LEGACY_LOG_PATH).exists()
 
 
+def test_deduped_alert_finding_writes_no_push_log(tmp_path):
+    card = inbox.write_finding(
+        tmp_path,
+        "alert",
+        "Critical drift",
+        "system is stopped",
+        "linter",
+        loudness="alert",
+        dedupe_slug="no-push-finding",
+    )
+
+    assert card is not None
+    assert not (tmp_path / LEGACY_LOG_PATH).exists()
+
+
 def test_deduped_alert_work_prompt_writes_no_push_log(tmp_path):
     inbox.write_work_prompt(
         tmp_path,
