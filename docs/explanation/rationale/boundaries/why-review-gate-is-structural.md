@@ -71,8 +71,8 @@ separate attention/curation state, not the meaning of `check_status = checked`.
 
 Because review is structural rather than conversational, attention state is
 queryable. The read API can ask "which items need action?" Dashboards can show
-queue depth. WIP caps can apply back-pressure when done-awaiting-action grows too
-large.
+queue depth and flow, and open `block`-loudness items deny review-gated
+mutations until resolved.
 
 None of this is possible if review lives in comments, tags, or conversation. "The human acted on this" must be recorded state, not a convention.
 
@@ -95,7 +95,8 @@ separate from the review decision:
 ## The trade-off
 
 The structural gate makes the human a bottleneck. Review does not auto-scale. If
-the PI does not act, attention items pile up and WIP pressure slows new work.
+the PI does not act, attention items pile up visibly, and open blockers halt
+review-gated writes.
 
 That visible slowness is deliberate. A full review queue should slow the system
 rather than silently redefine "reviewed" as "agent finished."
