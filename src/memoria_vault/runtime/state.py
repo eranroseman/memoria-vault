@@ -73,6 +73,13 @@ _DIRECT_EVIDENCE_MARKER_RE = re.compile(
 )
 _RAW_EVIDENCE_MARKER_RE = re.compile(r"%%ev:\s*.*?%%")
 _FENCED_DIV_RE = re.compile(r"^[ \t]{0,3}(?P<fence>:{3,})(?P<suffix>[^\r\n]*)$")
+_QUOTED_FENCE_OPEN_RE = re.compile(
+    r"^ {0,3}(?P<quote>(?:>[ \t]*)+)(?P<fence>`{3,}|~{3,})(?P<info>[^\r\n]*)(?:\r?\n)?$"
+)
+_LIST_FENCE_OPEN_RE = re.compile(
+    r"^(?P<indent>[ \t]*)(?P<marker>(?:[-+*]|\d{1,9}[.)]))(?P<spacing>[ \t]+)"
+    r"(?P<fence>`{3,}|~{3,})(?P<info>[^\r\n]*)(?:\r?\n)?$"
+)
 _MARKDOWN_CONTAINER_RE = re.compile(
     r"^[ ]{0,3}(?:>[ \t]*|(?:[-+*~:]|\d+[.)]|"
     r"\((?:\d+|[IVXLCDMivxlcdm]+|@[^\s)]*|[A-Za-z#])\)|"
@@ -3511,6 +3518,248 @@ def _mask_inline_code_spans(text: str) -> str:
     return "".join(masked)
 
 
+def _container_fence_opening(match: re.Match[str]) -> tuple[str, int] | None:
+    """Return one accepted nested fence's delimiter, if its header is trustworthy."""
+    opening, literalize = classify_fenced_code_opening(f"{match['fence']}{match['info']}", [])
+    if opening is None or literalize:
+        return None
+    fence = opening.group("fence")
+    return fence[0], len(fence)
+
+
+def _quoted_fence_closes(line: str, character: str, length: int) -> bool:
+    """Return whether a blockquote fence closes on this physical line."""
+    if fenced_code_closes(line, character, length):
+        return True
+    match = re.match(r"^ {0,3}(?:>[ \t]*)+(?P<content>[^\r\n]*)(?:\r?\n)?$", line)
+    return bool(match and fenced_code_closes(match["content"], character, length))
+
+
+def _quoted_fence_contains(line: str) -> bool:
+    """Return whether a physical line remains inside a blockquote container."""
+    return re.match(r"^ {0,3}(?:>[ \t]*)+(?:[^\r\n]*)(?:\r?\n)?$", line) is not None
+
+
+def _list_fence_closes(line: str, character: str, length: int, indentation: int) -> bool:
+    """Return whether a list-contained fence closes on this physical line."""
+    if fenced_code_closes(line, character, length):
+        return True
+    prefix = line[:indentation]
+    return bool(
+        len(prefix) == indentation
+        and all(prefix_character in " \t" for prefix_character in prefix)
+        and fenced_code_closes(line[indentation:], character, length)
+    )
+
+
+def _list_fence_contains(line: str, indentation: int) -> bool:
+    """Return whether a physical line remains an indented list continuation."""
+    prefix = line[:indentation]
+    return len(prefix) == indentation and all(
+        prefix_character in " \t" for prefix_character in prefix
+    )
+
+
+def _mask_container_fenced_code_literals(text: str) -> str:
+    """Mask only paired blockquote/list fences without hiding later prose."""
+    lines: list[str] = []
+    pending: list[str] = []
+    kind = ""
+    fence_character = ""
+    fence_length = 0
+    list_indentation = 0
+    for line in _markdown_lines(text):
+        if kind:
+            closes = (
+                _quoted_fence_closes(line, fence_character, fence_length)
+                if kind == "quote"
+                else _list_fence_closes(line, fence_character, fence_length, list_indentation)
+            )
+            if closes:
+                pending.append(line)
+                lines.extend(_mask_markdown_code(pending_line) for pending_line in pending)
+                pending.clear()
+                kind = ""
+                fence_character = ""
+                fence_length = 0
+                list_indentation = 0
+                continue
+            contains = (
+                _quoted_fence_contains(line)
+                if kind == "quote"
+                else _list_fence_contains(line, list_indentation)
+            )
+            if contains:
+                pending.append(line)
+                continue
+            lines.extend(pending)
+            pending.clear()
+            kind = ""
+            fence_character = ""
+            fence_length = 0
+            list_indentation = 0
+
+        quote = _QUOTED_FENCE_OPEN_RE.match(line)
+        if quote and (fence := _container_fence_opening(quote)):
+            kind = "quote"
+            fence_character, fence_length = fence
+            pending.append(line)
+            continue
+
+        list_item = _LIST_FENCE_OPEN_RE.match(line)
+        if list_item and (fence := _container_fence_opening(list_item)):
+            kind = "list"
+            fence_character, fence_length = fence
+            list_indentation = list_item.start("fence")
+            pending.append(line)
+            continue
+
+        lines.append(line)
+    lines.extend(pending)
+    return "".join(lines)
+
+
+def _mask_top_level_code_literals(text: str) -> str:
+    """Mask top-level fenced code while preserving the shared fence semantics."""
+    lines: list[str] = []
+    plain_lines: list[str] = []
+    fence_char = ""
+    fence_length = 0
+    literal_tilde_fence_length = 0
+    for line in _markdown_lines(text):
+        if fence_char:
+            lines.append(_mask_markdown_code(line))
+            if fenced_code_closes(line, fence_char, fence_length):
+                fence_char = ""
+                fence_length = 0
+            continue
+
+        if literal_tilde_fence_length:
+            if fenced_code_closes(line, "~", literal_tilde_fence_length):
+                literal_tilde_fence_length = 0
+            plain_lines.append(line)
+            lines.append(_mask_markdown_code(line) if re.match(r"^(?: {4}|\t)", line) else line)
+            continue
+
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
+        if opening is not None and not literalize:
+            fence = opening.group("fence")
+            fence_char = fence[0]
+            fence_length = len(fence)
+            lines.append(_mask_markdown_code(line))
+            plain_lines.clear()
+            continue
+
+        if literalize and opening is not None:
+            if opening.group("fence").startswith("~"):
+                literal_tilde_fence_length = len(opening.group("fence"))
+        plain_lines.append(line)
+        lines.append(_mask_markdown_code(line) if re.match(r"^(?: {4}|\t)", line) else line)
+
+    return "".join(lines)
+
+
+def _visibility_indented_code_can_start(plain_lines: list[str]) -> bool:
+    """Return whether indentation follows a Markdown block rather than prose."""
+    if not plain_lines:
+        return True
+    previous = plain_lines[-1].rstrip("\r\n")
+    if _is_markdown_blank_line(previous):
+        return True
+    if re.match(r"^ {0,3}#{1,6}(?:[ \t]+|$)", previous):
+        return True
+    return (
+        re.fullmatch(
+            r"^[ \t]{0,3}(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|(?:-[ \t]*){3,})[ \t]*$",
+            previous,
+        )
+        is not None
+    )
+
+
+def _mask_visibility_top_level_code_literals(text: str) -> str:
+    """Mask top-level code that is definite without treating prose indents as code."""
+    lines: list[str] = []
+    pending_fence: list[str] = []
+    plain_lines: list[str] = []
+    fence_char = ""
+    fence_length = 0
+    literal_tilde_fence_length = 0
+    indented_code = False
+    for line in _markdown_lines(text):
+        if fence_char:
+            pending_fence.append(line)
+            if fenced_code_closes(line, fence_char, fence_length):
+                lines.extend(_mask_markdown_code(pending_line) for pending_line in pending_fence)
+                pending_fence.clear()
+                fence_char = ""
+                fence_length = 0
+            continue
+
+        if indented_code:
+            if re.match(r"^(?: {4}|\t)", line):
+                lines.append(_mask_markdown_code(line))
+                continue
+            if _is_markdown_blank_line(line):
+                lines.append(line)
+                continue
+            indented_code = False
+
+        if literal_tilde_fence_length:
+            if fenced_code_closes(line, "~", literal_tilde_fence_length):
+                literal_tilde_fence_length = 0
+            plain_lines.append(line)
+            lines.append(line)
+            continue
+
+        if re.match(r"^(?: {4}|\t)", line) and _visibility_indented_code_can_start(plain_lines):
+            lines.append(_mask_markdown_code(line))
+            plain_lines.clear()
+            indented_code = True
+            continue
+
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
+        if opening is not None and not literalize:
+            fence = opening.group("fence")
+            fence_char = fence[0]
+            fence_length = len(fence)
+            pending_fence.append(line)
+            plain_lines.clear()
+            continue
+
+        if literalize and opening is not None:
+            if opening.group("fence").startswith("~"):
+                literal_tilde_fence_length = len(opening.group("fence"))
+        plain_lines.append(line)
+        lines.append(line)
+
+    lines.extend(pending_fence)
+    return "".join(lines)
+
+
+def markdown_code_literals_masked(text: str) -> str:
+    """Mask Markdown code literals while preserving source offsets and visible prose.
+
+    This deliberately leaves headings and other rendered Markdown intact for
+    callers that need to inspect direct Markdown controls.
+    """
+    fenced = _mask_top_level_code_literals(text)
+    fenced = _mask_container_fenced_code_literals(fenced)
+    return _mask_inline_code_spans(fenced)
+
+
+def markdown_visible_code_literals_masked(text: str) -> str:
+    """Mask only definite code literals before checking rendered Markdown syntax.
+
+    Unlike :func:`markdown_code_literals_masked`, this does not treat every
+    four-space or tab-prefixed physical line as code: indented code cannot
+    interrupt a paragraph, so doing so could hide a visible Pandoc citation.
+    """
+    fenced = _mask_visibility_top_level_code_literals(text)
+    fenced = _mask_container_fenced_code_literals(fenced)
+    return _mask_inline_code_spans(fenced)
+
+
 def _markdown_control_text(text: str) -> str:
     """Mask non-rendering syntax so only direct Markdown controls can bind evidence."""
 
@@ -3538,35 +3787,7 @@ def _markdown_control_text(text: str) -> str:
     nonbinding = _mask_multiline_bracket_constructs(nonbinding)
     nonbinding = _mask_multiline_parenthesized_constructs(nonbinding)
     nonbinding = _mask_fenced_divs(nonbinding)
-    lines: list[str] = []
-    plain_lines: list[str] = []
-    fence_char = ""
-    fence_length = 0
-    for line in _markdown_lines(nonbinding):
-        if fence_char:
-            lines.append(_mask_markdown_code(line))
-            if fenced_code_closes(line, fence_char, fence_length):
-                fence_char = ""
-                fence_length = 0
-            continue
-
-        opening, literalize = classify_fenced_code_opening(line, plain_lines)
-        if opening is not None and not literalize:
-            fence = opening.group("fence")
-            fence_char = fence[0]
-            fence_length = len(fence)
-            lines.append(_mask_markdown_code(line))
-            plain_lines.clear()
-            continue
-
-        plain_lines.append(line)
-        if re.match(r"^(?: {4}|\t)", line):
-            lines.append(_mask_markdown_code(line))
-        else:
-            lines.append(line)
-
-    fenced = "".join(lines)
-    return _mask_inline_code_spans(fenced)
+    return markdown_code_literals_masked(nonbinding)
 
 
 def _direct_evidence_marker_matches(text: str) -> list[tuple[re.Match[str], EvidenceMarker]]:

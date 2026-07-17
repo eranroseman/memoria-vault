@@ -12,6 +12,8 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import bibliography_citekeys, render_references_bib
+from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.knowledge import _draft_unresolved_raw_citations
 from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
 from memoria_vault.runtime.knowledge import resolve_evidence_review as _resolve_evidence_review
 from memoria_vault.runtime.knowledge import verify_project_draft as _verify_project_draft
@@ -293,6 +295,273 @@ def test_draft_export_refuses_direct_marker_after_invalid_code_fence(
 
 
 @pytest.mark.parametrize(
+    "prefix",
+    [
+        "~~~foo ^blk-opener\n",
+        "Heading\n--- ^blk-opener\n~~~text\n",
+    ],
+)
+def test_draft_export_preserves_non_direct_anchors_that_prevent_fence_synthesis(
+    tmp_path: Path, prefix: str
+) -> None:
+    vault = tmp_path
+    marker = "%%ev: ev-87654321 items=source-alpha#^p0001%%"
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip()
+        + f"\n\n{prefix}Claim ^blk-87654321 {marker}\n~~~\n",
+        encoding="utf-8",
+    )
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    exported = write_project_export(vault, "project-alpha", draft=True)["content"]
+
+    assert "^blk-opener" in exported
+    assert "^blk-87654321" not in exported
+    assert _pandoc_citation_ids(exported).count("safe2026") == 2
+    assert not any("[@safe2026]" in block for block in _pandoc_code_block_texts(exported))
+
+
+@pytest.mark.parametrize(
+    ("raw_citation", "missing_ids"),
+    [
+        ("Author supplied [@not-in-fence].", ["not-in-fence"]),
+        ("<!-- [@not-in-fence] -->", ["not-in-fence"]),
+        (
+            "Author supplied [see @not-in-fence; -@also-missing, p. 3] and @bare-missing.",
+            ["also-missing", "bare-missing", "not-in-fence"],
+        ),
+    ],
+)
+def test_draft_export_refuses_raw_citations_outside_the_bibliography_projection(
+    tmp_path: Path, raw_citation: str, missing_ids: list[str]
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip() + f"\n\n{raw_citation}\n",
+        encoding="utf-8",
+    )
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    with pytest.raises(ValueError) as error:
+        write_project_export(vault, "project-alpha", draft=True)
+
+    assert str(error.value) == "project draft is not export-ready: " + ", ".join(
+        f"unresolved-citation:{citekey}" for citekey in missing_ids
+    )
+
+
+def test_raw_citation_membership_scan_keeps_normalized_inline_html_visible() -> None:
+    content = neutralize_untrusted_markdown("<span>[@not-in-fence]</span>\n")
+
+    assert _pandoc_citation_ids(content) == ["not-in-fence"]
+    assert _draft_unresolved_raw_citations(content, {"safe2026"}) == ["not-in-fence"]
+
+
+@pytest.mark.parametrize(
+    ("suffix", "expected_id"),
+    [
+        ("//not", "safe2026//not"),
+        ("~not", "safe2026~not"),
+        ("?not", "safe2026?not"),
+        ("#not", "safe2026#not"),
+        ("$not", "safe2026$not"),
+        ("%not", "safe2026%not"),
+        ("&not", "safe2026&not"),
+        ("<not>", "safe2026&lt"),
+        (".not", "safe2026.not"),
+        (":not", "safe2026:not"),
+        ("+not", "safe2026+not"),
+        ("-not", "safe2026-not"),
+    ],
+)
+def test_raw_citation_membership_does_not_prefix_match_pandoc_ids(
+    suffix: str, expected_id: str
+) -> None:
+    content = neutralize_untrusted_markdown(f"[@safe2026{suffix}]\n")
+
+    assert _pandoc_citation_ids(content) == [expected_id]
+    assert _draft_unresolved_raw_citations(content, {"safe2026"}) == [expected_id]
+
+
+def test_raw_citation_membership_splits_adjacent_pandoc_citations() -> None:
+    content = neutralize_untrusted_markdown("[@safe2026@not-in-fence]\n")
+
+    assert _pandoc_citation_ids(content) == ["safe2026", "not-in-fence"]
+    assert _draft_unresolved_raw_citations(content, {"safe2026"}) == ["not-in-fence"]
+    assert _draft_unresolved_raw_citations(content, {"safe2026", "not-in-fence"}) == []
+
+
+def test_raw_citation_membership_accepts_pandoc_star_prefixed_ids() -> None:
+    content = neutralize_untrusted_markdown("[@*not-in-fence]\n")
+
+    assert _pandoc_citation_ids(content) == ["*not-in-fence"]
+    assert _draft_unresolved_raw_citations(content, set()) == ["*not-in-fence"]
+
+
+def test_raw_citation_membership_respects_unicode_word_boundaries() -> None:
+    content = neutralize_untrusted_markdown("\N{LATIN SMALL LETTER E WITH ACUTE}@safe2026\n")
+
+    assert _pandoc_citation_ids(content) == []
+    assert _draft_unresolved_raw_citations(content, set()) == []
+
+
+@pytest.mark.parametrize(
+    ("content", "citation_ids"),
+    [
+        ("/@not-in-fence\n", ["not-in-fence"]),
+        ("foo/@not-in-fence\n", ["not-in-fence"]),
+        ("foo:@not-in-fence\n", ["not-in-fence"]),
+        ("_@not-in-fence\n", ["not-in-fence"]),
+        ("!@not-in-fence\n", ["not-in-fence"]),
+        ("-@not-in-fence\n", ["not-in-fence"]),
+        ("@@not-in-fence\n", ["not-in-fence"]),
+        ("\\@not-in-fence\n", []),
+        ("\\\\@not-in-fence\n", ["not-in-fence"]),
+        (".@not-in-fence\n", []),
+        ("\N{LATIN SMALL LETTER E WITH ACUTE}@not-in-fence\n", []),
+    ],
+)
+def test_raw_citation_membership_matches_pandoc_left_boundaries(
+    content: str, citation_ids: list[str]
+) -> None:
+    assert _pandoc_citation_ids(content) == citation_ids
+    expected = ["not-in-fence"] if citation_ids else []
+    assert _draft_unresolved_raw_citations(content, set()) == expected
+
+
+def test_raw_citation_membership_keeps_pandoc_terminal_punctuation_valid() -> None:
+    content = neutralize_untrusted_markdown("[@safe2026.]\n")
+
+    assert _pandoc_citation_ids(content) == ["safe2026"]
+    assert _draft_unresolved_raw_citations(content, {"safe2026"}) == []
+
+
+@pytest.mark.parametrize("raw", ["@?", "@.", "@#", "@/", "@%", "@:", "@-", "@<>"])
+def test_raw_citation_membership_ignores_non_citation_token_starters(raw: str) -> None:
+    content = neutralize_untrusted_markdown(f"{raw}\n")
+
+    assert _pandoc_citation_ids(content) == []
+    assert _draft_unresolved_raw_citations(content, set()) == []
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "> ~~~text\n> code\n~~~\n[@not-in-fence]\n",
+        "- ~~~text\n  code\n~~~\n[@not-in-fence]\n",
+        "> ~~~text\n> code\n\n~~~\n[@not-in-fence]\n",
+        "- ~~~text\n  code\n\n~~~\n[@not-in-fence]\n",
+        "> ~~~text\n> code\n\nvisible [@not-in-fence]\n~~~\n",
+        "- ~~~text\n  code\n\nvisible [@not-in-fence]\n~~~\n",
+        "~~~\n> ~~~text\n> code\n~~~\n[@not-in-fence]\n",
+    ],
+)
+def test_raw_citation_membership_unmasks_after_container_fence_bare_closer(
+    content: str,
+) -> None:
+    assert _pandoc_citation_ids(content) == ["not-in-fence"]
+    assert _draft_unresolved_raw_citations(content, {"safe2026"}) == ["not-in-fence"]
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "Prose\n    [@not-in-fence]\n",
+        "- Prose\n    [@not-in-fence]\n",
+    ],
+)
+def test_raw_citation_membership_does_not_mask_indented_paragraph_continuations(
+    content: str,
+) -> None:
+    assert _pandoc_citation_ids(content) == ["not-in-fence"]
+    assert _draft_unresolved_raw_citations(content, {"safe2026"}) == ["not-in-fence"]
+
+
+def test_draft_export_allows_raw_projection_citations_with_multiple_ids(tmp_path: Path) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _catalog_source(vault, "source-beta", citekey="beta2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip()
+        + "\n\nAuthor supplied [see @safe2026; -@beta2026, p. 3].\n",
+        encoding="utf-8",
+    )
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    exported = write_project_export(vault, "project-alpha", draft=True)["content"]
+
+    assert _pandoc_citation_ids(exported) == ["safe2026", "safe2026", "beta2026"]
+
+
+@pytest.mark.parametrize(
+    "literal",
+    [
+        "`[@not-in-fence]`",
+        "    [@not-in-fence]",
+        "# Heading\n    [@not-in-fence]",
+        "Heading\n---\n    [@not-in-fence]",
+        "```text\n[@not-in-fence]\n```",
+        "> ~~~text\n> [@not-in-fence]\n> ~~~",
+        "- ~~~text\n  [@not-in-fence]\n  ~~~",
+    ],
+)
+def test_draft_export_does_not_treat_code_literals_as_raw_citations(
+    tmp_path: Path, literal: str
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip() + f"\n\n{literal}\n",
+        encoding="utf-8",
+    )
+
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    exported = write_project_export(vault, "project-alpha", draft=True)["content"]
+
+    assert _pandoc_citation_ids(exported) == ["safe2026"]
+
+
+def test_draft_export_refuses_fence_created_after_direct_unicode_anchor_removal(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    content = draft_path.read_text(encoding="utf-8")
+    implicit_marker = "%%ev: ev-deadbeef items=%%"
+    draft_path.write_text(
+        content.replace(
+            "# Alpha project",
+            "\N{NO-BREAK SPACE}^blk-deadbeef " + implicit_marker + "~~~\n# Alpha project",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(vault, "project-alpha")
+    assert verification["missing"] == [
+        "evidence-incomplete:ev-deadbeef",
+        "review-required:ev-deadbeef",
+    ]
+    resolve_evidence_review(vault, "ev-deadbeef", decision="accept", reason="PI accepted")
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+
+    with pytest.raises(ValueError, match="unterminated-code-fence"):
+        write_project_export(vault, "project-alpha", draft=True)
+
+
+@pytest.mark.parametrize(
     "hidden_control",
     [
         "<!-- %%ev: ev-87654321 items=source-hidden#^p0001%% -->",
@@ -477,7 +746,7 @@ def test_draft_export_refuses_fence_created_by_rendered_body_trimming(tmp_path: 
         write_project_export(vault, "project-alpha", draft=True)
 
 
-def test_draft_export_refuses_fence_exposed_by_anchor_removal_and_unicode_trim(
+def test_draft_export_preserves_non_direct_anchor_that_prevents_unicode_trimmed_fence(
     tmp_path: Path,
 ) -> None:
     vault = tmp_path
@@ -491,8 +760,10 @@ def test_draft_export_refuses_fence_exposed_by_anchor_removal_and_unicode_trim(
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="unterminated-code-fence"):
-        write_project_export(vault, "project-alpha", draft=True)
+    exported = write_project_export(vault, "project-alpha", draft=True)["content"]
+
+    assert "^blk-rendered-away" in exported
+    assert "## References" in exported
 
 
 def test_draft_export_inlined_bibtex_preserves_text_and_identifier_metadata(
@@ -610,6 +881,52 @@ def test_draft_export_inlined_bibtex_preserves_display_metadata(
         vault,
         "source-alpha",
         citekey="display2026",
+        csl_json={
+            "title": title,
+            "container-title": journal,
+            "abstract": abstract,
+            "author": authors,
+            "issued": {"date-parts": [[2026]]},
+        },
+    )
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    bibtex = _fence(write_project_export(vault, "project-alpha", draft=True)["content"])
+
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    parsed = subprocess.run(
+        [pandoc, "--from=bibtex", "--to=csljson"],
+        input=bibtex,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert parsed.returncode == 0, parsed.stderr
+    item = json.loads(parsed.stdout)[0]
+    assert item["title"] == title
+    assert item["container-title"] == journal
+    assert item["abstract"] == abstract
+    assert item["author"] == authors
+
+
+def test_draft_export_inlined_bibtex_round_trips_literal_braces_and_authors(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    title = r"Title \\ {braces} # 100% costs $5 ~"
+    journal = r"Journal \\ {braces} # 100% costs $5 ~"
+    abstract = r"Abstract \\ {braces} # 100% costs $5 ~"
+    authors = [
+        {"literal": "OpenAI and Co."},
+        {"family": "Smith", "given": "Ada"},
+    ]
+    _catalog_source(
+        vault,
+        "source-alpha",
+        citekey="literal2026",
         csl_json={
             "title": title,
             "container-title": journal,

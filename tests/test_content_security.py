@@ -526,6 +526,46 @@ def test_plain_tilde_fence_after_paragraph_prose_is_not_code() -> None:
 
 
 @pytest.mark.parametrize(
+    "opening",
+    [
+        '~~~foo="bar"',
+        "~~~foo:bar",
+        "~~~foo{bar}",
+        "~~~ {notvalid}",
+    ],
+)
+def test_unsupported_tilde_fence_headers_are_literalized_as_a_pair(opening: str) -> None:
+    source = f"{opening}\n\n~~~\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered.splitlines()[0].startswith("&#126;" * 3)
+    assert rendered.splitlines()[-1] == "&#126;" * 3
+    assert has_unterminated_fenced_code_block(source) is False
+    assert neutralize_untrusted_markdown(rendered) == rendered
+
+
+def test_literalized_tilde_opener_does_not_turn_its_bare_closer_into_an_opener() -> None:
+    source = '~~~foo="bar"\n\n~~~\n'
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered == '&#126;&#126;&#126;foo="bar"\n\n&#126;&#126;&#126;\n'
+    assert has_unterminated_fenced_code_block(source) is False
+
+
+@pytest.mark.parametrize("indent", [" ", "  ", "   "])
+def test_literalized_indented_tilde_opener_pairs_its_bare_closer(indent: str) -> None:
+    source = f"{indent}~~~foo{{bar}}\n\n{indent}~~~\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered.splitlines()[0].lstrip().startswith("&#126;" * 3)
+    assert rendered.splitlines()[-1].lstrip() == "&#126;" * 3
+    assert has_unterminated_fenced_code_block(source) is False
+
+
+@pytest.mark.parametrize(
     ("delimiter", "attribute", "multiline"),
     [
         ("`", "{=html}", False),

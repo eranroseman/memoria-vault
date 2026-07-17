@@ -1084,7 +1084,7 @@ def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
     csl = frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
     fields = {
         "title": str(csl.get("title") or frontmatter.get("title") or citekey),
-        "author": _render_csl_authors(csl.get("author")),
+        "author": _render_bibtex_authors(csl.get("author")),
         "year": _render_csl_year(csl.get("issued")),
         "journal": str(csl.get("container-title") or ""),
         "doi": str((frontmatter.get("identifiers") or {}).get("doi") or csl.get("DOI") or ""),
@@ -1095,9 +1095,12 @@ def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
     for key, value in fields.items():
         if not value:
             continue
-        escaped = (
-            _bibtex_identifier_escape(value) if key in {"doi", "url"} else _bibtex_escape(value)
-        )
+        if key == "author":
+            escaped = value
+        elif key in {"doi", "url"}:
+            escaped = _bibtex_identifier_escape(value)
+        else:
+            escaped = _bibtex_escape(value)
         if escaped is not None:
             rows.append((key, escaped))
     rendered = [f"@{_bibtex_type(frontmatter, csl)}{{{citekey},"]
@@ -1128,7 +1131,8 @@ def _bibtex_type(frontmatter: dict[str, Any], csl: dict[str, Any]) -> str:
     return "article"
 
 
-def _render_csl_authors(authors: Any) -> str:
+def _render_bibtex_authors(authors: Any) -> str:
+    """Render CSL names so BibTeX preserves literal organizations and groups."""
     if not isinstance(authors, list):
         return ""
     rendered = []
@@ -1136,11 +1140,13 @@ def _render_csl_authors(authors: Any) -> str:
         if not isinstance(author, dict):
             continue
         if author.get("literal"):
-            rendered.append(str(author["literal"]))
+            rendered.append(f"{{{_bibtex_escape(str(author['literal']))}}}")
         elif author.get("family") and author.get("given"):
-            rendered.append(f"{author['family']}, {author['given']}")
+            rendered.append(
+                f"{_bibtex_escape(str(author['family']))}, {_bibtex_escape(str(author['given']))}"
+            )
         elif author.get("family"):
-            rendered.append(str(author["family"]))
+            rendered.append(_bibtex_escape(str(author["family"])))
     return " and ".join(rendered)
 
 
@@ -1155,15 +1161,16 @@ def _render_csl_year(issued: Any) -> str:
 
 def _bibtex_escape(value: str) -> str:
     """Serialize display text for Pandoc's BibTeX parser."""
-    value = value.replace("{", "").replace("}", "")
-    return " ".join(
-        value.replace("\\", r"\textbackslash{}")
-        .replace("#", r"\#")
-        .replace("%", r"\%")
-        .replace("$", r"\$")
-        .replace("~", r"\textasciitilde{}")
-        .split()
-    )
+    escapes = {
+        "\\": r"\textbackslash{}",
+        "{": r"\{",
+        "}": r"\}",
+        "#": r"\#",
+        "%": r"\%",
+        "$": r"\$",
+        "~": r"\textasciitilde{}",
+    }
+    return " ".join("".join(escapes.get(character, character) for character in value).split())
 
 
 def _bibtex_identifier_escape(value: str) -> str | None:

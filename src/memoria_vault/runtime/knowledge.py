@@ -71,6 +71,9 @@ GAP_KINDS = {
 }
 _STALE_STANDINGS = frozenset({"retracted", "superseded"})
 _ADVISORY_FINDING_KINDS = frozenset({"evidence-source-archived"})
+_DRAFT_BLOCK_ANCHOR_RE = re.compile(r"[^\S\r\n]+\^blk-[A-Za-z0-9_-]+")
+_RAW_DRAFT_CITATION_RE = re.compile(r"@(?P<citekey>(?:[\w]|\*(?=\w))[\w*:.#$%&+?<>~/\-]*)")
+_RAW_DRAFT_CITATION_TERMINAL_PUNCTUATION = ".,;:!?"
 _TAG_CANDIDATE_MIN_COUNT = 2
 _TAG_CANDIDATE_LIMIT = 5
 _TAG_CANDIDATE_STOPWORDS = frozenset(
@@ -2646,6 +2649,10 @@ def render_project_draft_export_markdown(
     lines = [rendered_body, ""]
     _append_draft_export_references(lines, vault)
     content = neutralize_untrusted_markdown("\n".join(lines).rstrip() + "\n")
+    raw_unresolved = _draft_unresolved_raw_citations(content, set(_draft_citekeys(vault).values()))
+    if raw_unresolved:
+        labels = ", ".join(f"unresolved-citation:{citekey}" for citekey in raw_unresolved)
+        raise ValueError(f"project draft is not export-ready: {labels}")
     return {
         "project_path": draft["project_path"],
         "draft_path": draft["draft_path"],
@@ -2781,6 +2788,52 @@ def _draft_unresolved_citations(vault: Path, content: str) -> list[str]:
             if source.work_id not in citekeys:
                 unresolved.add(source.work_id)
     return sorted(unresolved)
+
+
+def _draft_unresolved_raw_citations(content: str, citekeys: set[str]) -> list[str]:
+    """Return visible Pandoc-style citation IDs absent from the bibliography projection.
+
+    The export does not depend on optional Pandoc at runtime. Instead it scans
+    bracket and author-in-text citation forms after normalizing the final Markdown,
+    while masking fenced and inline code literals that Pandoc cannot turn into
+    citations. The check is intentionally fail-closed for all remaining raw
+    ``@citekey`` syntax so a hand-authored citation cannot bypass the projection.
+    """
+    visible = state.markdown_visible_code_literals_masked(content)
+    cited = set()
+    previous_citation_end = -1
+    for match in _RAW_DRAFT_CITATION_RE.finditer(visible):
+        if not _raw_draft_citation_starts_at(
+            visible, match.start(), follows_citation=match.start() == previous_citation_end
+        ):
+            continue
+        cited.add(_raw_draft_citation_id(match["citekey"]))
+        previous_citation_end = match.end()
+    return sorted(cited - citekeys)
+
+
+def _raw_draft_citation_starts_at(text: str, at_index: int, *, follows_citation: bool) -> bool:
+    """Return whether Pandoc can treat this unescaped ``@`` as a cite start."""
+    if follows_citation:
+        return True
+    backslashes = 0
+    cursor = at_index - 1
+    while cursor >= 0 and text[cursor] == "\\":
+        backslashes += 1
+        cursor -= 1
+    if backslashes % 2:
+        return False
+    if backslashes:
+        return True
+    if cursor < 0:
+        return True
+    previous = text[cursor]
+    return previous != "." and not previous.isalnum()
+
+
+def _raw_draft_citation_id(token: str) -> str:
+    """Normalize only Pandoc's terminal citation punctuation, never ID prefixes."""
+    return token.rstrip(_RAW_DRAFT_CITATION_TERMINAL_PUNCTUATION)
 
 
 def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
@@ -3476,6 +3529,7 @@ def _render_draft_export_body(vault: Path, content: str) -> str:
 
     citekeys_by_work = _draft_citekeys(vault)
     direct_markers = dict(state.direct_evidence_marker_spans_from_markdown(content))
+    direct_marker_lines = {content.count("\n", 0, span[0]) for span in direct_markers}
 
     def citation(match: re.Match[str]) -> str:
         marker = direct_markers.get(match.span("marker"))
@@ -3492,7 +3546,19 @@ def _render_draft_export_body(vault: Path, content: str) -> str:
         return f" [{'; '.join(citekeys)}]" if citekeys else ""
 
     text = re.sub(r"\s*(?P<marker>%%ev:\s*.*?%%)", citation, content)
-    return re.sub(r"\s+\^blk-[A-Za-z0-9_-]+", "", text)
+    return _strip_direct_marker_line_block_anchors(text, direct_marker_lines)
+
+
+def _strip_direct_marker_line_block_anchors(text: str, direct_marker_lines: set[int]) -> str:
+    """Remove block anchors only from already-verified direct-marker lines.
+
+    This linewise pass never consumes newlines or non-direct anchors, which could
+    otherwise create headings or fenced-code syntax after evidence markers vanish.
+    """
+    return "".join(
+        _DRAFT_BLOCK_ANCHOR_RE.sub("", line) if index in direct_marker_lines else line
+        for index, line in enumerate(text.splitlines(keepends=True))
+    )
 
 
 def _draft_note_markdown_link(draft_rel: str, note_rel: str, title: str) -> str:

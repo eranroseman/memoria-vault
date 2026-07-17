@@ -355,6 +355,31 @@ def test_inline_tex_with_an_escaped_closer_remains_a_direct_visible_claim() -> N
     assert state._block_text_sha256_from_text(content, _BLOCK_REF) is not None
 
 
+@pytest.mark.parametrize(
+    "opening",
+    [
+        '~~~foo="bar"',
+        "~~~foo:bar",
+        "~~~foo{bar}",
+        "~~~ {notvalid}",
+    ],
+)
+def test_unsupported_tilde_fence_headers_leave_evidence_direct(opening: str) -> None:
+    content = f"{opening}\nVisible claim. ^blk-11111111 {_MARKER}\n~~~\n"
+
+    assert [marker.evidence_id for marker in state.evidence_markers_from_markdown(content)] == [
+        _EVIDENCE_ID
+    ]
+    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is not None
+
+
+def test_valid_raw_tilde_fence_keeps_evidence_nonbinding() -> None:
+    content = f"~~~ {{=html}}\nHidden claim. ^blk-11111111 {_MARKER}\n~~~\n"
+
+    assert state.evidence_markers_from_markdown(content) == []
+    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is None
+
+
 def test_display_tex_math_closer_with_an_extra_backslash_cannot_mint_a_binding() -> None:
     content = f"\\[\nHidden claim. ^blk-11111111 {_MARKER}\n\\\\]\n"
 
