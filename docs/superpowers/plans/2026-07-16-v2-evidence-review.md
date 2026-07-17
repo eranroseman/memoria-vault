@@ -6002,14 +6002,14 @@ shipped refusal plumbing and pins it as acceptance.
 
 **Steps:**
 
-- [ ] Grep the disposition-selector state (records, does not change, which form
+- [x] Grep the disposition-selector state (records, does not change, which form
   is shipped — the tests below are behavior-level and selector-agnostic):
   `grep -n "_disposed_evidence_digests\|_disposed_evidence_ids" src/memoria_vault/runtime/knowledge.py`
   Expected post-Plan-22-S35.4: only `_disposed_evidence_digests(vault) ->
   dict[str, str]`. If the ids form is still shipped, V2R-A (which owns the flip)
   decides which selector it edits; these tests are unaffected either way.
 
-- [ ] Write the tests — append to `tests/test_export_acceptance.py`:
+- [x] Write the tests — append to `tests/test_export_acceptance.py`:
 
   ```python
   def _implicit_draft(vault: Path) -> str:
@@ -6061,7 +6061,7 @@ shipped refusal plumbing and pins it as acceptance.
           write_project_export(vault, "project-alpha", draft=True)
   ```
 
-- [ ] Run to verify the expected split:
+- [x] Run to verify the expected split:
   `python -m pytest tests/test_export_acceptance.py::test_blocked_export_names_its_findings tests/test_export_acceptance.py::test_rejected_disposition_leaves_export_blocked -v`
   Expected: the first **passes immediately** (a deliberate acceptance pin of
   shipped refusal naming — keep it); the second **fails against shipped
@@ -6070,9 +6070,9 @@ shipped refusal plumbing and pins it as acceptance.
   `@pytest.mark.xfail(strict=True, reason="V2R-A reject flip not yet merged")`
   and remove the mark in the same PR that merges V2R-A.
 
-- [ ] Run the file green (post-V2R-B): `python -m pytest tests/test_export_acceptance.py -v`
+- [x] Run the file green (post-V2R-B): `python -m pytest tests/test_export_acceptance.py -v`
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add tests/test_export_acceptance.py
@@ -6080,6 +6080,11 @@ shipped refusal plumbing and pins it as acceptance.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Execution record (2026-07-17):** The shipped selector is
+`_disposed_evidence_digests`; `568281a3` added both refusal-honesty pins.
+The focused acceptance checks passed (2 passed), the full export acceptance
+file passed (226 passed), and independent review found no issues.
 
 ---
 
@@ -6107,7 +6112,7 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
 
 **Steps:**
 
-- [ ] Write the test — append to `tests/test_export_acceptance.py`:
+- [x] Write the test — append to `tests/test_export_acceptance.py`:
 
   ```python
   def test_bibliography_projection_round_trips_through_structural_bibtex_parse(
@@ -6153,7 +6158,7 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
       assert alpha.get("year") == "2020"
   ```
 
-- [ ] Run: `python -m pytest tests/test_export_acceptance.py::test_bibliography_projection_round_trips_through_structural_bibtex_parse -v`
+- [x] Run: `python -m pytest tests/test_export_acceptance.py::test_bibliography_projection_round_trips_through_structural_bibtex_parse -v`
   Expected: **passes immediately** — a deliberate acceptance pin (like
   U3-ENG.5's forward-compat pin): it freezes the structural properties Zotero
   import depends on, so a future renderer change that emits duplicate keys,
@@ -6161,7 +6166,7 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
   assertion fails, that is a real projection bug — stop and fix
   `_render_source_bibtex` (`capture.py:1056`) before proceeding.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add tests/test_export_acceptance.py
@@ -6169,6 +6174,10 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Execution record (2026-07-17):** `b1c00117` adds the structural
+`bibliography.bib` round-trip pin. Its focused test passed, and the combined
+export acceptance file passed (227 passed); independent review found no issues.
 
 ---
 
