@@ -1184,7 +1184,7 @@ before the terminal `returned` row; do not widen P.1's narrow API.
 
 ---
 
-### Task P.2 — Honest-empty + check-gate-ride-through on ask
+### Task P.2 — Honest-empty + check-gate-ride-through on ask — completed
 
 **Files:**
 - `src/memoria_vault/runtime/search_index.py` (universe/strata accounting; `answer_query`; `_answer_from_hits`)
@@ -1200,9 +1200,26 @@ before the terminal `returned` row; do not widen P.1's narrow API.
 
 **Where consumability gating lives (verified):** `read_barrier.is_consumable_checked_file` (`src/memoria_vault/runtime/read_barrier.py:14-30`), called from the checked walk at `search_index.py:145`; it refuses when the DB verdict is not `checked`, when the checked output record is missing, or when the file hash no longer matches the checked record (tamper), enqueuing an `observe-pi-edits` scan. Stratum classification (resolved spec gap, see open questions): DB verdict `quarantined` → **gated** (explicit negative gate); any other non-`checked` verdict (incl. no DB row) → **unchecked**; verdict `checked` but barrier-refused → **gated**; hard staleness (`_hard_staleness` `search_index.py:404-411`: lifecycle retracted/archived, note curation candidate/rejected) with `include_stale=False` → **stale**. Soft-stale flags (`_memoria_stale`) keep the shipped behavior: the doc stays ranked and surfaces in `staleness` rows — the strata count *excluded* documents only, matching §0's "never silently dropped".
 
+> **P.2 preflight amendments (authoritative over the historical listings
+> below):** Preserve the live canonical contradiction reader exactly:
+> `links = frontmatter.get("links")`, followed by `links["contradicts"]` when
+> it is a list. The historical replacement below shows the obsolete top-level
+> `frontmatter["contradictions"]` shape and must not be copied. The gate test
+> also asserts that both gated paths (`notes/gated.md` and
+> `notes/quarantined.md`) are absent from serialized output. The spec binds
+> honest-empty text rendering to every CLI front, so top-level `memoria ask`
+> and `memoria project ask` share one helper that emits the sentence only for
+> successful, non-JSON, non-quiet zero-source responses; their JSON payloads
+> continue through `_emit` unchanged. P.3 must retain that helper when it
+> replaces `_cmd_ask`. Finally, strata classify bundle-root Markdown by check
+> status before `SEARCHABLE_TYPES`, as the historical universe walker does:
+> an unchecked/gated bundle document counts as an excluded stratum even if its
+> type is not a ranking candidate; a checked unsupported type is intentionally
+> absent rather than misreported as excluded.
+
 **Steps — cycle A (seam):**
 
-- [ ] Failing tests. Append to `tests/test_search_index.py`:
+- [x] Failing tests. Append to `tests/test_search_index.py`:
 
   ```python
   def test_zero_hit_answer_query_is_honest_about_denominators(tmp_path: Path) -> None:
@@ -1268,9 +1285,9 @@ before the terminal `returned` row; do not widen P.1's narrow API.
 
   (That vault holds `checked` + soft-stale `superseded` in the universe = 2 candidates; the note-curation `candidate` doc is hard-stale-excluded = the `stale: 1` stratum.)
 
-- [ ] Run `python -m pytest tests/test_search_index.py -q` — expected: 3 failures — the two new tests fail (`AssertionError` on the old `"No checked current sources matched: absentterm"` unknowns; `KeyError: 'pipeline_counts'`), and the edited pinned test fails comparing the old sentence.
+- [x] Run `python -m pytest tests/test_search_index.py -q` — observed the expected 3 failures before implementation.
 
-- [ ] Minimal implementation in `src/memoria_vault/runtime/search_index.py`. Four edits, full code:
+- [x] Minimal implementation in `src/memoria_vault/runtime/search_index.py`. Four edits, full code:
 
   1. Import line (`search_index.py:16`):
   ```python
@@ -1426,11 +1443,11 @@ before the terminal `returned` row; do not widen P.1's narrow API.
       return answer
   ```
 
-- [ ] Run `python -m pytest tests/test_search_index.py tests/test_query_substrate.py tests/test_worker_product_jobs.py -q` — expected: all pass (the additive payload keys break no worker/substrate pins; verified: only `tests/test_search_index.py:351` pinned the old literal).
+- [x] Run `python -m pytest tests/test_search_index.py tests/test_query_substrate.py tests/test_worker_product_jobs.py -q` — passed alongside the CLI and project-ask focused suites.
 
 **Steps — cycle B (CLI text front):**
 
-- [ ] Failing test. Append to `tests/test_cli_honesty.py`:
+- [x] Failing test. Append to `tests/test_cli_honesty.py`:
 
   ```python
   def test_ask_zero_hit_renders_honest_empty_on_text_and_json(tmp_path, capsys):
@@ -1462,9 +1479,9 @@ before the terminal `returned` row; do not widen P.1's narrow API.
       assert sentence in capsys.readouterr().out
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py -q` — expected: 1 failure at the final assertion (the `--json` front already carries the sentence after cycle A; the text front still prints `_success_detail`'s generic summary, not the sentence).
+- [x] Run `python -m pytest tests/test_cli_honesty.py -q` — observed the expected text-front failure before implementation.
 
-- [ ] Minimal implementation — replace `_cmd_ask` (`cli.py:706-712`) in full:
+- [x] Minimal implementation — replace `_cmd_ask` (`cli.py:706-712`) in full:
 
   ```python
   def _cmd_ask(args: argparse.Namespace) -> int:
@@ -1483,9 +1500,9 @@ before the terminal `returned` row; do not widen P.1's narrow API.
       return _emit(result, args)
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py tests/test_cli.py tests/test_cli_work_project.py -q` — expected: all pass (`test_cli_command_surface_is_exact` at `tests/test_cli.py:73` is command-level, untouched here).
+- [x] Run `python -m pytest tests/test_cli_honesty.py tests/test_cli.py tests/test_cli_work_project.py -q` — passed with the search, substrate, and worker focused suites.
 
-- [ ] Commit:
+- [x] Commit (`b7f8db66`):
 
   ```bash
   git add src/memoria_vault/runtime/search_index.py src/memoria_vault/cli.py tests/test_search_index.py tests/test_cli_honesty.py
@@ -1504,6 +1521,13 @@ before the terminal `returned` row; do not widen P.1's narrow API.
   )"
   ```
 
+**Completion record (2026-07-17).** Implemented in `b7f8db66`; the
+preflight amendments are all adopted, including canonical
+`links.contradicts`, quarantined-path non-leakage, and shared top-level/project
+ask text handling. Independent review found no issues. `python scripts/verify`
+passed: 2408 passed, 9 skipped, with the pre-existing multiprocessing fork
+warning.
+
 ---
 
 ### Task P.3 — `--trace` on ask + the explore consumer contract
@@ -1518,6 +1542,14 @@ before the terminal `returned` row; do not widen P.1's narrow API.
 - `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="", trace=False)` — when `trace=True` the payload gains `trace = build_trace(pipeline_counts, hits)`: same ordered counts, `scores` for returned hits, `rerank: "off"`, and `fusion_inputs` only when more than one ranked leg exists (BM25 is the only leg today, so it is absent — honest by construction).
 - `answer-query` worker payload accepts optional `trace: bool` (no capability-doc change needed — `answer-query.md` declares no per-arg schema; `k`/`include_stale`/`project_id` already ride undeclared).
 - `memoria ask --trace` CLI flag; text front prints one `stage: count` line per pipeline row plus `rerank: off`.
+
+> **P.3 preflight amendment (authoritative over the worker listing below):**
+> Thread `trace` with the existing `_payload_bool(payload, "trace", False)`
+> parser, not `bool(payload.get("trace", False))`, so a string such as
+> `"false"` does not enable trace. Add a worker contract test that rejects an
+> unparseable trace value. The P.2 `_emit_ask_result` helper remains the shared
+> zero-hit path for top-level and project ask; P.3 extends only top-level
+> `memoria ask` with `--trace`.
 
 **Steps — cycle A (seam):**
 
