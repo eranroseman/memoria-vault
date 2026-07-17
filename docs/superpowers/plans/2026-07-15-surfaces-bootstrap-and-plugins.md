@@ -15,6 +15,16 @@
 - The plugin never writes vault files and contains zero hardcoded colors; every action is an operation enqueue.
 - All line refs verified against main @ `80e62bbd`; re-anchor by quoted context as earlier tasks shift lines.
 
+## Execution status — 2026-07-17
+
+- **BOOT-B.1 complete:** `93bfe71c` adds the user-scope secrets loader, test-suite
+  XDG isolation, and 11 focused tests. It rejects relative XDG locations,
+  nonregular/corrupt/world-readable files, and NUL-bearing values before an
+  environment merge; descriptor-first mode checks prevent a path re-open race.
+- Verification: `python scripts/verify` passed (**2,381 passed, 9 skipped**).
+  The sealed credential-handling security diff scan found no reportable issue:
+  `/tmp/codex-security-scans/memoria-vault/93bfe71c_20260717T172145Z/report.md`.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
