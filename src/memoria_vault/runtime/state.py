@@ -2467,6 +2467,39 @@ def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict
     return result
 
 
+def rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]:
+    """Replay first-time evidence mints into the immutable bindings ledger."""
+    replayed = 0
+    inserted = 0
+    with workspace_lock(vault):
+        with connect(vault) as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            rows = conn.execute(
+                """
+                SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id,
+                       json_extract(payload_json, '$.block_text_sha256') AS block_text_sha256
+                FROM event_log
+                WHERE event_type = 'evidence-minted'
+                ORDER BY event_id
+                """
+            ).fetchall()
+            for row in rows:
+                evidence_id = str(row["evidence_id"] or "")
+                if not evidence_id:
+                    continue
+                replayed += 1
+                cursor = conn.execute(
+                    """
+                    INSERT INTO evidence_bindings(id, block_text_sha256)
+                    VALUES (?, ?)
+                    ON CONFLICT(id) DO NOTHING
+                    """,
+                    (evidence_id, row["block_text_sha256"]),
+                )
+                inserted += cursor.rowcount
+    return {"replayed": replayed, "inserted": inserted}
+
+
 def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
     if not db_path(vault).is_file():
         return []

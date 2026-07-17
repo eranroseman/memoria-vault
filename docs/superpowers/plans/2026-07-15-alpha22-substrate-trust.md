@@ -3444,6 +3444,11 @@ Direct state-level rebuilds remain context-free and do not journal.
 
 **Steps:**
 
+- [ ] **Fixture amendment:** do not delete an immutable binding row—the schema's
+  `evidence_bindings_no_delete` trigger correctly refuses that. In the disposable
+  test vault, simulate the stated ledger-loss recovery by dropping the entire
+  `evidence_bindings` table; the next `state.connect` re-applies schema DDL and
+  recreates the empty table and its immutability triggers before replay.
 - [ ] Write the failing test. Append to `tests/test_draft_verification.py`:
 
   ```python
@@ -3664,7 +3669,8 @@ explicit scope if needed.
   (state.py:806-814).
 - Produces: `state.rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]`
   — replays `evidence-minted` events in `event_id` order into
-  `evidence_bindings` with first-event-wins (ON CONFLICT DO NOTHING);
+  `evidence_bindings` in one workspace-locked SQLite transaction with
+  first-event-wins (ON CONFLICT DO NOTHING);
   returns `{"replayed": <events seen>, "inserted": <rows actually written>}`.
 
 **Steps:**
@@ -3682,7 +3688,7 @@ explicit scope if needed.
       assert bound["block_text_sha256"]
 
       with state.connect(tmp_path) as conn:
-          conn.execute("DELETE FROM evidence_bindings")
+          conn.execute("DROP TABLE evidence_bindings")
 
       result = state.rebuild_evidence_bindings_from_journal(tmp_path)
 

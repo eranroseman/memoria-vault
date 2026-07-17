@@ -656,6 +656,44 @@ def test_mint_journal_failure_rolls_back_binding_and_active_sets(
     ] == [(bound["id"], bound["block_ref"], bound["block_text_sha256"])]
 
 
+def test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected(
+    tmp_path: Path,
+) -> None:
+    draft, _evidence_id = _compose_source_backed_draft(
+        tmp_path, body="The journal preserves this exact claim text."
+    )
+    [bound] = state.evidence_sets(tmp_path)
+    assert bound["block_text_sha256"]
+
+    with state.connect(tmp_path) as conn:
+        conn.execute("DROP TABLE evidence_bindings")
+
+    result = state.rebuild_evidence_bindings_from_journal(tmp_path)
+
+    assert result == {"replayed": 1, "inserted": 1}
+    with state.connect(tmp_path) as conn:
+        restored = conn.execute(
+            "SELECT id, block_text_sha256 FROM evidence_bindings"
+        ).fetchall()
+    assert [(row["id"], row["block_text_sha256"]) for row in restored] == [
+        (bound["id"], bound["block_text_sha256"])
+    ]
+
+    draft.write_text(
+        draft.read_text(encoding="utf-8").replace(
+            "The journal preserves this exact claim text.",
+            "Tampered claim text after ledger loss.",
+        ),
+        encoding="utf-8",
+    )
+    verification = verify_project_draft(tmp_path, "project-alpha")
+
+    assert verification["ready"] is False
+    assert any(
+        finding["kind"] == "evidence-text-drift" for finding in verification["findings"]
+    )
+
+
 def test_draft_export_uses_the_verified_draft_snapshot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
