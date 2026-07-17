@@ -95,6 +95,7 @@ TEST_LEVELS = {
     "test_query_substrate.py": "contract",
     "test_refresh_test_vault.py": "package",
     "test_rendezvous.py": "runtime",
+    "test_retrieval_pipeline.py": "unit",
     "test_retrieval_substrate.py": "contract",
     "test_runtime_gate_replay.py": "runtime",
     "test_runtime_helpers.py": "unit",
