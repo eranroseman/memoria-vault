@@ -14,6 +14,19 @@
 - **Executes AFTER Plan 22's G1 + G2S1.1–.3 (+S12.2) land** — this plan consumes their Produces (`MIGRATIONS` mechanism, `concept_edge_id`, upsert-and-prune sparing tension, edge_id/attributes columns). All line refs are main @ `9c77ba61` and WILL shift after Plan 22 — re-anchor by symbol, not line.
 - **Version chain (binding):** v16 = NID-B identity re-key · v17 = ERP-A roster CHECK · v18 = ERP-C consequence storage. Each schema task updates its MIGRATIONS entry, schema.sql DDL + PRAGMA tail, SCHEMA_VERSION, and pinned version tests in one commit.
 
+## Execution status — 2026-07-17
+
+- **NID-A.1–A.3 complete:** the registry/loader/seed and golden coverage landed in
+  `24a7a341`; DB-CHECK parity in `e734361c`/`e13200a8`; and the consequence fields in
+  `86d50d4b`.
+- **NID-A.4 partially complete:** canonical `links.contradicts` readers landed in
+  `f7b25575`, with canonical target normalization repaired in `4161cd48`. The remaining
+  closure flip, boundary tests, and alpha.15 importer await the explicit PI importer
+  disposition recorded below.
+- The integrated Graph slice passed `python scripts/verify` (**2370 passed, 9 skipped**)
+  and its sealed security diff scan reported no findings
+  (`/tmp/codex-security-scans/memoria-vault/8d2c9eaf_20260717T163549Z/report.md`).
+
 ## Cross-section contracts (BINDING — manifest seam resolutions)
 
 1. **Edge-table shape:** NID-B's v16 redefines `concept_edges` (adds `target_path`, target nullable ON DELETE SET NULL, PK `(source_concept_id, relation_type, target_path)`). ERP-A.2's v17 CREATE/INSERT column lists extend mechanically to this shape; ERP-B/C/D SQL is written against it.
@@ -25,6 +38,18 @@
 7. **Consequence-mark fields** (`stale: bool`, `consequence:` enum) are registered in the type yamls by NID-A's closed-validation task; ERP-C writes them, never touches yamls.
 8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5/.6 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks.
 9. **Execution order:** NID-A → NID-B → ERP-A → ERP-B → ERP-C → ERP-D → NID-C (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
+10. **Catalog↔Concept FK (v16):** `catalog_sources.work_id` is the sole
+    catalog↔Concept join and references `concepts.concept_id` immediately as the
+    bare work identity, with `ON UPDATE RESTRICT ON DELETE RESTRICT`. Its parent
+    `concepts.path` is exactly the virtual `catalog/sources/<work_id>` rendering.
+    `catalog_sources.concept_path` remains a normalized, non-identity read-scope
+    alias: an omitted value defaults to that virtual rendering, while a valid
+    nonblank v15 alias is preserved. It never keys an FK, mirror, edge, or verdict.
+    NID-B.1 creates/backfills the parent before rebuilding the child table and
+    before normal catalog upserts; it never silently accepts an identity collision.
+    There is no current catalog-source deletion path. A future explicit delete
+    operation must delete the catalog child first, never cascade a Concept deletion
+    into catalog authority.
 
 ## Requires PI ratification at merge (drafter rulings that extend the specs)
 
@@ -466,7 +491,17 @@ either order of later consumers.
 - Modify: `docs/reference/data-model/frontmatter.md`
   (prose :41-43 currently documents the open behavior — "Unknown extra fields are
   accepted during the alpha migration")
-- Modify: FIXTURE SWEEP RESULTS PENDING
+- Modify: `src/memoria_vault/runtime/seeded_errors.py`,
+  `src/memoria_vault/runtime/integrity.py`,
+  `src/memoria_vault/runtime/knowledge.py`, and
+  `src/memoria_vault/runtime/search_index.py` — migrate the legacy root
+  `contradictions` shape to the canonical `links.contradicts` relation.
+- Modify: `tests/test_integrity.py`, `tests/test_worker_integrity_jobs.py`,
+  `tests/test_exploration_channel.py`, `tests/test_search_index.py`,
+  `tests/test_trusted_writer.py`, `tests/test_precommit_schema.py`, and
+  `tests/test_detectors.py` as the closure-boundary sweep requires.
+- Conditional on the PI decision below: modify `src/memoria_vault/cli.py` and
+  `tests/test_cli.py` for the alpha.15 importer.
 
 **Interfaces:**
 - Consumes: `schema.validate_frontmatter(fm, schema, vocabulary_terms=None) -> list[str]`
@@ -478,9 +513,32 @@ either order of later consumers.
   `x: map` (already optional in every type yaml) remains the extension hatch; its nested
   keys are never inspected.
 
+**Preflight closure determinations:**
+
+- **Canonical contradiction relation — no additional PI choice.** Root
+  `contradictions` is not a field in any type schema. Authored contradiction targets
+  are exclusively `links.contradicts`; the seeded-error writer and all readers use
+  that relation, with **no root-field fallback**. The public answer payload may
+  retain its existing `contradictions` key. The digest-only contradiction checker
+  owns this relation so generic link-target checking skips only a digest's
+  `links.contradicts`; non-digest relations remain generically checked.
+- **PI decision required before implementation — alpha.15 importer.** The current
+  `memoria migrate --from-alpha15` copy-through path does not validate imported
+  typed documents. The recommended disposition is to normalize each target document
+  to its current type schema, map a valid legacy `contradictions` list to
+  `links.contradicts`, drop retired verdict fields, preserve other source-only
+  metadata under `x.alpha15`, and validate the completed workspace before reporting
+  success. A stricter alternative is to reject unsupported legacy fields rather
+  than preserving them. Neither choice permits a schema grace path or successful
+  copy-through of invalid typed frontmatter.
+
 **Steps:**
 
-- [ ] FIXTURE SWEEP RESULTS PENDING
+- [x] Complete the fixture sweep before closing validation. All eight live disposable
+  `test-vault` Concepts, four cassette-generated Concepts, and M0 strict-workspace
+  fixtures have no unknown top-level fields. The seeded-error root `contradictions`
+  exception was canonicalized in `4f370c04`; the Alpha15 importer remains pending
+  the PI decision above.
 
 - [ ] Write the failing test. In `tests/test_schemas.py`, replace
   `test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration` (:160-171)
@@ -538,6 +596,16 @@ either order of later consumers.
 - [ ] Run to verify pass:
   `python -m pytest tests/test_schemas.py -v`.
 
+- [ ] Add closure-boundary coverage: strict `stage_concept` rejects an undeclared
+  root field and accepts nested `x:` data; pre-commit and linter report the same
+  root field; seeded contradiction/error, integrity, exploration, and search fixtures
+  use `links.contradicts` while the answer-query response remains compatible.
+
+- [x] Replace the root `contradictions` seeded error with
+  `links: {contradicts: [<target>]}`, remove every active root-field reader, and
+  remove the dead `type == "work"` branch from `check_contradiction_links`
+  (`4f370c04`; independent review approved).
+
 - [ ] Update the docs prose `docs/reference/data-model/frontmatter.md:41-43` — replace
   the three lines beginning "Unknown extra fields are accepted during the alpha
   migration." with:
@@ -547,8 +615,6 @@ either order of later consumers.
   `x:` map is the escape hatch for extension data, and `forbidden:` fields are
   reported as retired rather than unknown.
   ```
-
-- [ ] FIXTURE SWEEP RESULTS PENDING
 
 - [ ] Run the gate: `python scripts/verify`.
 
@@ -685,7 +751,218 @@ executing.
 
 ---
 
-### Task NID-B.1: schema v16 — identity re-key migration (concepts.path, FKs, pending-edge form, bare-endpoint triggers, edge_id recompute)
+### Task NID-B.1: schema v16 — identity re-key safety floor (revised)
+
+This revised task replaces the archived NID-B.1 drafting record below. It is one
+atomic v15→v16 migration-and-runtime-floor commit: the database must be safe to
+open, mirror, and write verdicts/edges before NID-B.2 promotes provisional file
+keys to frontmatter ULIDs. It implements NODES §1.1, §1.4, §1.6–.8 and preserves
+the G2 mirror contract.
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/schema.sql` — v16 `concepts`,
+  `concept_verdicts`, `concept_edges`, `catalog_sources`, triggers/view, and
+  `PRAGMA user_version` definitions.
+- Modify: `src/memoria_vault/runtime/state.py` — `SCHEMA_VERSION`,
+  `MIGRATIONS[15]`, `_rekey_concept_identity`, canonical-ref/parent helpers,
+  catalog upsert, file-mirror rebuild, verdict/status seams, and
+  `replace_concept_edges`.
+- Create: `tests/test_schema_v16_identity.py`.
+- Modify: `tests/test_schema_version.py`, `tests/test_schema_v10.py` if it still
+  contains a literal version pin, `tests/test_query_substrate.py`,
+  `tests/test_runtime_state.py`, and `tests/conftest.py`.
+
+**Interfaces:**
+- Consumes: the Plan-22 `MIGRATIONS` runner, `concept_edge_id`, and G2
+  upsert-and-prune edge seam; `schema.concept_type_for(document_type)` from NID-A.
+- Produces: schema version 16; `concepts.path`; FK-backed verdicts, edges, and
+  catalog parents; `resolve_concept_id(conn, ref) -> str` (read-only resolution);
+  `ensure_concept_parent_conn(conn, ref, *, concept_type, store, path) -> str`
+  (write-only parent creation); registry-normalizing
+  `rebuild_file_concept_mirror`; and the v16 scoped-edge contract below.
+- Contract: `catalog_sources.work_id` is the FK/identity; its parent is exactly
+  `(work_id, 'work', 'db', 'catalog/sources/<work_id>')`. The separate
+  `catalog_sources.concept_path` column is a normalized non-identity read-scope
+  alias. Preserve a nonblank v15 alias unchanged; repair an empty legacy value to
+  `catalog/sources/<work_id>`; never use it to key a mirror, FK, edge, or verdict.
+
+**Steps:**
+
+- [ ] Write the failing v16 contract tests in `tests/test_schema_v16_identity.py`.
+  Build a v15 fixture containing `concepts`, `concept_verdicts`, `concept_flags`,
+  `concept_edges`, `derivations`, `passages`, and `catalog_sources`. Include:
+  a catalog work with `concept_path='notes/alpha.md'`; both
+  `catalog/sources/smith-2020`, `./catalog/sources/smith-2020`, and
+  `./catalog/sources/smith-2020/source.md` legacy references;
+  a path-keyed fulltext; a missing edge target; a direct tension row; and a
+  verdict-bearing deleted file row. Assert after `state.connect(vault)` that:
+
+  ```python
+  assert parent == {
+      "concept_id": "smith-2020",
+      "concept_type": "work",
+      "store": "db",
+      "path": "catalog/sources/smith-2020",
+  }
+  assert catalog["concept_path"] == "notes/alpha.md"
+  assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+  assert not any(str(row[0]).startswith(("./catalog/sources/", "catalog/sources/"))
+                 for row in conn.execute("SELECT concept_id FROM concepts"))
+  ```
+
+  Add separate tests that (a) `PRAGMA foreign_key_list(catalog_sources)` reports
+  `concepts` / `work_id` / `concept_id` / `RESTRICT` / `RESTRICT`, and an orphan
+  catalog insert raises `sqlite3.IntegrityError`; (b) an unrelated legacy Concept
+  collapsing to `smith-2020` raises `RuntimeError` and leaves the DB at user version
+  15; (c) a fulltext remains keyed and pathed as `fulltexts/smith-2020.md` but has
+  `concept_type == 'work'`; (d) `paths=[]` performs zero edge inserts/deletes and
+  leaves direct tension rows untouched; (e) an absent verdictless file mirror row is
+  pruned, while a verdict-bearing row survives and its inbound edge becomes pending;
+  and (f) bare, rendered, `./`, and `/source.md` catalog forms update the same
+  verdict, derivation endpoint, and edge endpoint without minting another parent;
+  and (g) a normal catalog upsert defaults an omitted alias
+  to its virtual rendering while preserving a supplied normalized alias without using
+  either value as graph or verdict identity; and (h) `record_file_output` and
+  `record_observed_file_edit` accept fulltext/code-artifact inputs only after mapping
+  them to `work`/`project`, never exposing raw types to the v16 CHECK; and (i) a
+  post-Plan-22, pre-B.4 `rebuild_passage_index` row with only
+  `target_concept_id` (no `target_path`) persists and resolves under v16.
+
+- [ ] Run the new tests and confirm they fail before the v16 implementation:
+
+  ```bash
+  python -m pytest tests/test_schema_v16_identity.py -v
+  ```
+
+- [ ] Define one normalizer in `state.py` and use it before every v15→v16 mapping or
+  lookup. The migration and runtime resolver must share these semantics:
+
+  ```python
+  def _legacy_rel(value: str) -> str:
+      raw = str(value or "").strip().replace("\\", "/")
+      while raw.startswith("./"):
+          raw = raw[2:]
+      return normalize_path(raw)
+
+
+  def _catalog_identity(ref: str, catalog_ids: set[str]) -> str:
+      rel = _legacy_rel(ref)
+      rendered = rel.removeprefix("catalog/sources/").removesuffix("/source.md")
+      return rendered if rendered in catalog_ids else rel
+  ```
+
+  Apply it to concepts, verdicts, flags, edge endpoints and paths, derivation
+  endpoints, and `passages.concept_id`. A catalog path is only rendered in a path
+  column; its DB identity is the bare `work_id`.
+
+- [ ] Replace `_rekey_concept_identity(conn)` with a collision-safe v16 migration.
+  Snapshot all identity-bearing rows **and full `catalog_sources` rows** before
+  dropping anything. Drop the old cascade triggers and `concept_status` view; create
+  `concepts_v16`; seed one exact DB parent for each catalog work; then add normalized
+  file parents using `schema.concept_type_for` (so `fulltext` becomes `work`). Do
+  not use `INSERT OR IGNORE`, `INSERT OR REPLACE`, or `UPDATE OR REPLACE` where a
+  collapsed canonical key could hide a conflict. A duplicate is valid only when its
+  type/store/path/status are identical; otherwise raise a descriptive `RuntimeError`
+  and let the migration transaction roll back.
+
+  Rebuild in dependency order: parents; `catalog_sources_v16`; verdicts; flags;
+  edges; derivations; then passage `concept_id`s. Define the catalog replacement with
+  the current complete column list and this first column:
+
+  ```sql
+  work_id TEXT PRIMARY KEY
+      REFERENCES concepts(concept_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  ```
+
+  Copy every other catalog column verbatim, preserving a nonblank normalized
+  `concept_path` and defaulting only an empty one to `catalog/sources/<work_id>`.
+  Drop/rename the child only after every parent has been verified or backfilled.
+  Rebuild verdicts and edges only after parents exist. For edges, create sources as
+  needed, resolve but never create targets, preserve `target_path` for a missing
+  target, set its id and `edge_id` to `NULL`/`''`, recompute resolved edge ids over
+  canonical triples, and preserve `attributes_json`. Rewrite flags/derivations
+  without collision-losing replacement; rewrite only `passages.concept_id` (not
+  `path`, `work_id`, or `passage_id`). End with `PRAGMA foreign_key_check` and raise
+  if it is nonempty; let the normal schema pass recreate indexes, triggers, and view.
+
+- [ ] Make the v16 runtime seams safe before NID-B.2. `upsert_catalog_record` first
+  calls `ensure_concept_parent_conn(conn, stable_work_id, concept_type="work",
+  store="db", path=f"catalog/sources/{stable_work_id}")`, then writes the catalog
+  child and its verdict by that bare id. It retains the public `concept_path`
+  parameter as the non-identity alias described above. For file rows,
+  `rebuild_file_concept_mirror` maps document type through
+  `schema.concept_type_for`, upserts normalized path-keyed rows, and prunes only
+  absent `store='file'` rows with no verdict. Deleting a file Concept cascades its
+  outgoing edges; inbound edges become pending through `ON DELETE SET NULL`.
+  `record_file_output` and `record_observed_file_edit` apply the same registry
+  mapping before their B.1 mirror/upsert or parent-ensure calls, so raw `fulltext`
+  and `code-artifact` values can never reach the 10-value DB CHECK.
+
+  `resolve_concept_id` never mints; `ensure_concept_parent_conn` is called before
+  every FK-backed verdict/flag/status write and fails closed for an unknown type.
+  Read-only `concept_check_status` resolves but does not mint. Catalog bare, rendered,
+  and `./` forms resolve to the same bare parent.
+
+- [ ] Replace `replace_concept_edges(vault, rows, *, paths=None)` under this exact
+  contract:
+
+  ```python
+  path_list = None if paths is None else list(paths)
+  if path_list == []:
+      return {"deleted": 0, "inserted": 0}
+  ```
+
+  Use `path_list` for the remainder of the function. `paths is None` alone means a full
+  mirror; a nonempty scope may insert/update/prune only its normalized `source_path`s.
+  Preserve the G2 producer contract until B.4: derive the path key from an old row as
+
+  ```python
+  catalog_ids = {str(row[0]) for row in conn.execute("SELECT work_id FROM catalog_sources")}
+  raw_target = str(row.get("target_path") or row.get("target_concept_id") or "")
+  canonical_target = _catalog_identity(raw_target, catalog_ids)
+  target_path = (
+      f"catalog/sources/{canonical_target}"
+      if canonical_target in catalog_ids
+      else _legacy_rel(raw_target)
+  )
+  ```
+
+  where `catalog_ids` is the current bare work-id set. Thus old G2 rows still work,
+  while `catalog/sources/<id>`, `./catalog/sources/<id>`, and
+  `catalog/sources/<id>/source.md` share one virtual path key. New B.4 producers pass
+  `target_path` directly and take the same path through this normalizer.
+  Ignore incoming `relation_type == 'tension'` rows and exclude persisted tension
+  rows from every prune query. Resolve or ensure sources, resolve but never create
+  targets, key conflicts/prunes only by `(source_concept_id, relation_type,
+  target_path)`, preserve `attributes_json`, and never clear a previously resolved
+  target/edge id on a partial pass.
+
+- [ ] Run the focused migration/runtime suites, then the one correctness gate:
+
+  ```bash
+  python -m pytest tests/test_schema_v16_identity.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_query_substrate.py tests/test_runtime_state.py -v
+  python scripts/verify
+  ```
+
+  Expected: all focused tests pass; `verify: OK`.
+
+- [ ] Commit the atomic safety floor:
+
+  ```bash
+  git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py \
+          tests/test_schema_v16_identity.py tests/test_schema_version.py \
+          tests/test_schema_v10.py tests/test_query_substrate.py \
+          tests/test_runtime_state.py tests/conftest.py
+  git commit -m "feat(schema): v16 identity re-key safety floor"
+  ```
+
+---
+
+### Archived NID-B.1 drafting record (do not execute)
+
+The following original draft is retained for historical comparison only. Its migration,
+mirror, and B.2-boundary instructions are superseded by the revised NID-B.1 task above.
+Do not execute its checkboxes or copy its code snippets.
 
 One migration, per the binding allocation: 15→16. The DB re-keys to frontmatter
 identity (clause 1), `path` becomes a unique updatable attribute, real FKs land
@@ -703,14 +980,15 @@ green; the id-space emission itself is NID-B.2/NID-B.4.
 - Modify: `src/memoria_vault/runtime/schema.sql` — the `concepts` block (`:51-59` at
   9c77ba61), `concept_verdicts` (`:60-63`), `concept_status` view (`:72-79`), the
   `concept_edges` block as landed by G2S1.2/.3 (`:240-250` pre-Plan-22), the three
-  cascade triggers (`:251-276`), trailing pragma (`:378`, 15 → 16)
+  cascade triggers (`:251-276`), `catalog_sources` rebuilt with its v16 FK, trailing
+  pragma (`:378`, 15 → 16)
 - Modify: `src/memoria_vault/runtime/state.py` — `SCHEMA_VERSION` (`:53`, 15 → 16);
   G1's `MIGRATIONS` dict (add key 15); new module function `_rekey_concept_identity`
   next to `_init` (`:2406` pre-Plan-22); `replace_concept_edges` (as landed by
   G2S1.1/.2) INSERT/prune keys; `concept_edges` SELECT column lists (`:2055-2076`
   pre-Plan-22); `_upsert_concept_mirror_conn` (`:3353-3368`) gains a `path` parameter;
   its three in-file callers (`:1097`, `:1124`, `:1206`) and the catalog caller
-  (`:1598-1600`)
+  (`:1598-1600`); catalog parent backfill/rebuild and parent-first normal upserts
 - Modify: `tests/test_schema_version.py` (pin 15 → 16, rename
   `test_schema_lands_at_user_version_15` → `..._16`), `tests/test_query_substrate.py:31`
   (pin 15 → 16) and its G2S1.1 mirror test (new column keys)
@@ -728,7 +1006,9 @@ green; the id-space emission itself is NID-B.2/NID-B.4.
     `concept_edges.source_concept_id → concepts` (`ON UPDATE CASCADE ON DELETE CASCADE`)
     and `concept_edges.target_concept_id → concepts` (nullable,
     `ON UPDATE CASCADE ON DELETE SET NULL`), edge PK
-    `(source_concept_id, relation_type, target_path)`, triggers with bare endpoints.
+    `(source_concept_id, relation_type, target_path)`, triggers with bare endpoints;
+    immediate `catalog_sources.work_id → concepts.concept_id` with `ON UPDATE RESTRICT
+    ON DELETE RESTRICT` and parent shape `work`/`db`/`catalog/sources/<work_id>`.
   - `MIGRATIONS[15] = (16, [_rekey_concept_identity])`;
     `state._rekey_concept_identity(conn: sqlite3.Connection) -> None`.
   - `state._upsert_concept_mirror_conn(conn, concept_id: str, concept_type: str,
@@ -1439,7 +1719,116 @@ green; the id-space emission itself is NID-B.2/NID-B.4.
 
 ---
 
-### Task NID-B.2: trusted-writer state paths key by frontmatter identity (resolution + reconcile-by-path)
+### Task NID-B.2: promote safe provisional file keys to frontmatter ULIDs (revised)
+
+B.2 consumes B.1's safe v16 floor. It does not alter schema DDL, migration version
+pins, catalog-parent backfill, mirror-pruning/tombstone rules, catalog status/verdict
+resolution, or scoped-edge semantics. Its sole identity change is a file Concept's
+path/provisional key to frontmatter-ULID reconciliation.
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/state.py` — `_concept_key_for_file`,
+  `_rekey_concept_conn`, and B.1's mirror upsert reconciliation branch.
+- Modify: `src/memoria_vault/runtime/trusted_writer.py` — registry-aware contract
+  load and id-carrying file-mirror rows.
+- Modify: `tests/test_schema_v16_identity.py`, `tests/test_runtime_state.py`, and
+  `tests/test_operation_context.py`.
+
+**Interfaces:**
+- Consumes: B.1 normalizer, parent helper, registry-normalizing safe mirror/pruning,
+  and status/verdict resolution.
+- Produces: `_concept_key_for_file(vault, path, payload_text="") -> str`,
+  `_rekey_concept_conn(conn, old_id, new_id) -> None`, and a reconcile-by-path mirror
+  upsert. A valid ULID becomes the file Concept id; non-ULID identities remain their
+  B.1 path keys. Catalog works remain bare ids.
+
+**Steps:**
+
+- [ ] Add RED tests proving that a note/hub/project row keyed by its provisional path
+  re-keys to its valid frontmatter ULID on observation, carries verdicts/flags/edges
+  through their required update paths, and retains its path. Verdicts and edges carry
+  through FK `ON UPDATE CASCADE`; `_rekey_concept_conn` moves flags manually because
+  `concept_flags` intentionally has no FK. Test both `derivations.input_id` and
+  `derivations.output_id` when each names the re-keyed Concept. A conflicting target
+  path or collapsed flag/derivation raises rather than using `UPDATE OR REPLACE`. Add a test
+  that every resolved incident edge receives the recomputed
+  `concept_edge_id(source_concept_id, relation_type, target_concept_id)` after that
+  cascade (a pending edge remains `edge_id == ''`). Add a test
+  that a fulltext and code-artifact mirror uses `schema.concept_type_for` (`work` and
+  `project`, respectively), while `strict_writer=False` remains tolerant enough to
+  observe untrusted external files.
+
+  Update `tests/test_operation_context.py` cases that currently assert a path-keyed
+  `derivations.output_id` or a catalog `/source.md` input: first create the referenced
+  catalog row with `state.upsert_catalog_record(..., work_id="source-a", ...)`, look
+  up the staged note's canonical frontmatter ULID, and assert the derivation pair is
+  `("source-a", note_ulid)`.
+
+- [ ] Run the focused tests and confirm the ULID row is absent before implementation:
+
+  ```bash
+  python -m pytest tests/test_schema_v16_identity.py tests/test_runtime_state.py tests/test_operation_context.py -v
+  ```
+
+- [ ] Implement file-key derivation and collision-safe re-keying. A valid ULID wins;
+  otherwise keep the normalized path. The in-transaction re-key must reject a
+  conflicting target id, flag, or derivation before changing rows:
+
+  ```python
+  def _concept_key_for_file(vault: Path, path: str, payload_text: str = "") -> str:
+      text = payload_text or safe_read(vault / path)
+      frontmatter = parse_frontmatter(text)
+      raw_id = str(frontmatter.get("id") or "")
+      return raw_id if is_ulid(raw_id) else normalize_path(path)
+  ```
+
+  Extend B.1's `_upsert_concept_mirror_conn` to look up a different row with the same
+  `path`: re-key a provisional path-keyed row, release a genuinely renamed row's path,
+  then upsert the requested row. After the FK cascade, recompute `edge_id` for every
+  resolved edge incident to the old or new id; leave pending edges at `''`. Do not
+  restore a wipe-and-refill implementation. Before changing the parent id,
+  `_rekey_concept_conn` checks for conflicting `(new_id, flag)` and collapsed
+  derivation rows; it then moves `concept_flags` manually and rewrites **both**
+  `derivations.input_id` and `derivations.output_id` occurrences. `outputs` and
+  materialization-payload tables remain path keyed and are not derivation endpoints.
+
+- [ ] Make trusted-writer mirror inputs registry-aware. `_load_contract` uses
+  `schema.load_types` / `schema.concept_type_for` rather than manually trusting the
+  raw document `type`; mirror rows carry `concept_id`, mapped `concept_type`, and
+  normalized `path`. Preserve `strict_writer=False` as tolerant observation behavior:
+  it records an unchecked external file rather than treating that path as a valid
+  authored write.
+
+- [ ] Route `record_file_output` and `record_observed_file_edit` through
+  `_concept_key_for_file`; write/re-key **both** derivation endpoints through B.1's
+  resolver, while keeping `outputs` and materialization payloads path-keyed. Do not move B.1's parent
+  ensuring, pruning, catalog alias, or status semantics back into this task.
+
+- [ ] Run focused suites and the gate:
+
+  ```bash
+  python -m pytest tests/test_schema_v16_identity.py tests/test_runtime_state.py tests/test_operation_context.py -v
+  python scripts/verify
+  ```
+
+  Expected: all tests pass and `verify: OK`.
+
+- [ ] Commit only ULID-reconciliation changes:
+
+  ```bash
+  git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/trusted_writer.py \
+          tests/test_schema_v16_identity.py tests/test_runtime_state.py \
+          tests/test_operation_context.py
+  git commit -m "feat(state): reconcile file concepts by frontmatter identity"
+  ```
+
+---
+
+### Archived NID-B.2 drafting record (do not execute)
+
+The following original draft predates the B.1 safety-floor transfer. Its mirror-prune,
+parent/status resolution, and catalog instructions now belong solely to revised NID-B.1;
+only the revised B.2 task above is executable.
 
 Runtime writers stop keying file concepts by path: the mirror carries the
 frontmatter ULID (uniform rule: ULID when the `id` is one, else the path; catalog
@@ -1447,6 +1836,11 @@ works bare `work_id` — landed in NID-B.1), and every verdict/flag/status seam
 resolves a path-or-id reference to the canonical key. Legacy path-keyed rows
 (post-v16 provisional keys) re-key in place when the mirror observes the file —
 FK `ON UPDATE CASCADE` carries verdicts and edges with them.
+
+> **B.1 handoff (adopted):** B.1 owns mirror upsert-and-prune/tombstones, parent
+> ensuring for FK-backed writes, canonical status/verdict resolution, and legacy
+> `./` normalization. B.2 builds on those guarantees for ULID re-key and
+> reconcile-by-path, without restoring wipe-and-refill or path-keyed catalog identities.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` — `_upsert_concept_mirror_conn`
