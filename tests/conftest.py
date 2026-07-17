@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import tempfile
 
 import pytest
 
@@ -105,6 +106,7 @@ TEST_LEVELS = {
     "test_schemas.py": "contract",
     "test_search_index.py": "contract",
     "test_seeded_errors.py": "runtime",
+    "test_secrets.py": "unit",
     "test_session_summary.py": "contract",
     "test_slice_outline.py": "runtime",
     "test_source_enrichment.py": "runtime",
@@ -129,6 +131,8 @@ def pytest_configure() -> None:
     for key in GIT_ENV_VARS:
         os.environ.pop(key, None)
     os.environ.setdefault("PRE_COMMIT_ALLOW_NO_CONFIG", "1")
+    # Secrets hermeticity: never read the developer's ~/.config/memoria/secrets.env.
+    os.environ["XDG_CONFIG_HOME"] = tempfile.mkdtemp(prefix="memoria-test-xdg-")
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
