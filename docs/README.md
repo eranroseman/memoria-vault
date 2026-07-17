@@ -132,7 +132,7 @@ engine are being validated as a standalone local product. What is not working to
   replays capture, enrich, digest, ask, project writing/export, recovery, and
   seeded-error evidence (`scripts/verify`), but the RC still needs a live
   provider/package run before release.
-- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Architecture](explanation/architecture/README.md#interaction-channels).
+- **Mobile capture is not available** — no push channel ships; inbound capture from a phone is out of scope for beta.1. See [Architecture](explanation/architecture/README.md#interaction-channels).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
 - **Broad writability scoring is not implemented** — the current alpha baseline
   has structural draft verification and project export readiness, but it does not decide

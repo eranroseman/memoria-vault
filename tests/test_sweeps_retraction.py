@@ -180,14 +180,6 @@ def test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert(tmp_path, monk
         w.writeheader()
         w.writerows(RW_ROWS)
     monkeypatch.setenv("MEMORIA_RW_CSV", str(rw_csv))
-    for var in (
-        "MEMORIA_TELEGRAM_BOT_TOKEN",
-        "TELEGRAM_BOT_TOKEN",
-        "MEMORIA_TELEGRAM_CHAT_ID",
-        "TELEGRAM_CHAT_ID",
-    ):
-        monkeypatch.delenv(var, raising=False)
-
     _m._RW_INDEX = None
     try:
         result = sweep(vault, offline=True)

@@ -12,7 +12,6 @@ import datetime
 import re
 from pathlib import Path
 
-from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 PROPOSAL_TYPES = {"candidate", "gap"}
@@ -123,9 +122,6 @@ def write_finding(
         if path.exists():
             return None
         write_text_durable(path, content)
-        loudness_routing.push_card(
-            vault, path, {"title": title, "loudness": loudness, "type": card_type}
-        )
         return path
     return _write(vault, card_type, title, content, loudness=loudness)
 
@@ -184,7 +180,6 @@ def write_work_prompt(
         if path.exists():
             return None
         write_text_durable(path, content)
-        loudness_routing.push_card(vault, path, {"title": title, "loudness": loudness})
         return path
     return _write(vault, "work-prompt", title, content, loudness=loudness)
 
@@ -199,9 +194,6 @@ def _write(vault: Path, card_type: str, title: str, content: str, loudness: str 
         n += 1
         path = inbox / f"{base}-{n}.md"
     write_text_durable(path, content)
-    loudness_routing.push_card(
-        vault, path, {"title": title, "loudness": loudness, "type": card_type}
-    )
     return path
 
 
