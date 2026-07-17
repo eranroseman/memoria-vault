@@ -5721,7 +5721,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Steps:**
 
-- [ ] Write the failing tests — create `tests/test_export_acceptance.py`:
+- [x] Write the failing tests — create `tests/test_export_acceptance.py`:
 
   ```python
   """Export-target acceptance: markdown + bibliography.bib (V2 spec section 5)."""
@@ -5849,14 +5849,14 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
           write_project_export(vault, "project-alpha", draft=True)
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_export_acceptance.py -v`
   Expected: the resolution test fails at `"exported artifact carries no inlined
   bibtex fence"`; the refusal test fails with `DID NOT RAISE` (the citation is
   silently dropped today). Register the file first (TEST_LEVELS edit above) or
   `tests/test_testing_levels.py` fails the whole run.
 
-- [ ] Write the minimal implementation — in `src/memoria_vault/runtime/knowledge.py`:
+- [x] Write the minimal implementation — in `src/memoria_vault/runtime/knowledge.py`:
 
   1. Insert after `_append_project_export_references` (line 2700):
 
@@ -5946,7 +5946,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   them (`[@source-alpha]` before and after — the explicit citekey equals the
   old work_id fallback), and the sources now genuinely appear in the fence.
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```bash
   python -m pytest tests/test_export_acceptance.py tests/test_draft_verification.py \
@@ -5960,7 +5960,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   review `git diff tests/fixtures/floor/goldens/export-project.json`, include it
   in the commit.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/knowledge.py tests/test_export_acceptance.py \
@@ -5969,6 +5969,17 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Execution record (2026-07-17):** Completed in `e76c8632`
+(`fix(export): harden draft markdown projection`). Review-approved hardening
+expanded the original seam change into a shared conservative Markdown-visibility
+guard, container/table and malformed-fence handling, raw-citation refusal, and
+linear escaped-delimiter BibTeX parsing. Focused export acceptance passed
+224 tests; the related regression suite passed 758 tests (1 skipped); and
+`python scripts/verify` passed (2,358 tests, 9 skipped). The mandatory
+diff-scoped security scan for `c2244663..e76c8632` is sealed at
+`/tmp/codex-security-scans/memoria-vault/e76c8632_20260717T153758Z/report.md`
+with no findings.
 
 ---
 
