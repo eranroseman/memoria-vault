@@ -193,8 +193,14 @@ def _tilde_fence_can_start_block(plain_lines: list[str]) -> bool:
     return not plain_lines or not plain_lines[-1].strip()
 
 
-def _fence_opening(line: str, plain_lines: list[str]) -> tuple[re.Match[str] | None, bool]:
-    """Return a fence opener and whether an ambiguous tilde opener must be literal."""
+def classify_fenced_code_opening(
+    line: str, plain_lines: list[str]
+) -> tuple[re.Match[str] | None, bool]:
+    """Classify a fence opener using the renderer's accepted-fence grammar.
+
+    The second result is true when an ambiguous tilde opener must render as
+    literal prose rather than start a code block.
+    """
     opening = _FENCE_OPEN_RE.match(line)
     if opening is None:
         return None, False
@@ -213,7 +219,8 @@ def _fence_opening(line: str, plain_lines: list[str]) -> tuple[re.Match[str] | N
     return None, False
 
 
-def _fence_closes(line: str, character: str, length: int) -> bool:
+def fenced_code_closes(line: str, character: str, length: int) -> bool:
+    """Return whether *line* closes a fence accepted by the shared classifier."""
     return bool(
         re.match(
             rf"^ {{0,3}}{re.escape(character)}{{{length},}}[ \t]*(?:\r?\n)?$",
@@ -401,11 +408,11 @@ def has_unterminated_fenced_code_block(body: str) -> bool:
     fence_length = 0
     for line in _markdown_physical_lines(body):
         if fence_character is not None:
-            if _fence_closes(line, fence_character, fence_length):
+            if fenced_code_closes(line, fence_character, fence_length):
                 fence_character = None
                 fence_length = 0
             continue
-        opening, literalize = _fence_opening(line, plain_lines)
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
         if literalize:
             plain_lines.append(_literalize_fence_opening(line, opening))
             continue
@@ -437,14 +444,14 @@ def neutralize_untrusted_markdown(body: str) -> str:
     for line in _markdown_physical_lines(body):
         if fence_character is not None:
             fence_lines.append(line)
-            if _fence_closes(line, fence_character, fence_length):
+            if fenced_code_closes(line, fence_character, fence_length):
                 output.extend(fence_lines)
                 fence_character = None
                 fence_length = 0
                 fence_lines.clear()
             continue
 
-        opening, literalize = _fence_opening(line, plain_lines)
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
         if literalize:
             plain_lines.append(_literalize_fence_opening(line, opening))
             continue

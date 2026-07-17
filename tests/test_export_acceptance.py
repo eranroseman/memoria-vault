@@ -167,8 +167,12 @@ def test_draft_export_refuses_unresolved_citation_naming_the_finding(
         write_project_export(vault, "project-alpha", draft=True)
 
 
-def test_draft_export_ignores_literal_fenced_marker_outside_direct_claims(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("opening", "closing"),
+    [("```text", "```"), ("~~~text", "~~~")],
+)
+def test_draft_export_ignores_recognized_fenced_marker_outside_direct_claims(
+    tmp_path: Path, opening: str, closing: str
 ) -> None:
     vault = tmp_path
     _catalog_source(vault, "source-alpha", citekey="safe2026")
@@ -177,15 +181,40 @@ def test_draft_export_ignores_literal_fenced_marker_outside_direct_claims(
     draft_path = vault / "projects/project-alpha/draft.md"
     draft_path.write_text(
         draft_path.read_text(encoding="utf-8").rstrip()
-        + "\n\n```text\nliteral %%ev: ev-12345678 items=source-literal#^p0001%%\n```\n",
+        + f"\n\n{opening}\nliteral %%ev: ev-12345678 items=source-literal#^p0001%%\n{closing}\n",
         encoding="utf-8",
     )
 
-    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    verification = verify_project_draft(vault, "project-alpha")
+    assert verification["ready"] is True
     exported = write_project_export(vault, "project-alpha", draft=True)
 
     assert "[@safe2026]" in exported["content"]
     assert "literal %%ev: ev-12345678 items=source-literal#^p0001%%" in exported["content"]
+
+
+@pytest.mark.parametrize("invalid_fence", ["~~~bogus header ???", "```bad`info"])
+def test_draft_export_refuses_direct_marker_after_invalid_code_fence(
+    tmp_path: Path, invalid_fence: str
+) -> None:
+    vault = tmp_path
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _catalog_source(vault, "source-hidden", doi="10.1000/hidden")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip()
+        + "\n\nPrior prose\n"
+        + f"{invalid_fence}\n"
+        + "Claim %%ev: ev-87654321 items=source-hidden#^p0001%%\n",
+        encoding="utf-8",
+    )
+
+    verification = verify_project_draft(vault, "project-alpha")
+    assert verification["ready"] is False
+    assert verification["missing"] == ["evidence-text-unbound:ev-87654321"]
+    with pytest.raises(ValueError, match="evidence-text-unbound:ev-87654321"):
+        write_project_export(vault, "project-alpha", draft=True)
 
 
 @pytest.mark.parametrize(
@@ -393,7 +422,7 @@ def test_draft_export_refuses_fence_exposed_by_anchor_removal_and_unicode_trim(
 
 def test_draft_export_inlined_bibtex_escapes_backslashes_for_pandoc(tmp_path: Path) -> None:
     vault = tmp_path
-    title = r"C:\temp with literal \% and \$ plus trailing " + "\\"
+    title = r"C:\temp #1 is 100% of $5; literal \% and \$; trailing " + "\\"
     _catalog_source(
         vault,
         "source-alpha",

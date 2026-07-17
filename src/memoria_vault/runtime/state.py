@@ -22,6 +22,10 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from memoria_vault.runtime.content_security import (
+    classify_fenced_code_opening,
+    fenced_code_closes,
+)
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
     evidence_ref_kind,
@@ -3535,29 +3539,28 @@ def _markdown_control_text(text: str) -> str:
     nonbinding = _mask_multiline_parenthesized_constructs(nonbinding)
     nonbinding = _mask_fenced_divs(nonbinding)
     lines: list[str] = []
+    plain_lines: list[str] = []
     fence_char = ""
     fence_length = 0
     for line in _markdown_lines(nonbinding):
-        body = line.rstrip("\r\n")
         if fence_char:
             lines.append(_mask_markdown_code(line))
-            closing = re.match(r"^[ \t]{0,3}([`~]+)[ \t]*$", body)
-            if (
-                closing
-                and closing.group(1)[0] == fence_char
-                and len(closing.group(1)) >= fence_length
-            ):
+            if fenced_code_closes(line, fence_char, fence_length):
                 fence_char = ""
                 fence_length = 0
             continue
 
-        opening = re.match(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})", body)
-        if opening:
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
+        if opening is not None and not literalize:
             fence = opening.group("fence")
             fence_char = fence[0]
             fence_length = len(fence)
             lines.append(_mask_markdown_code(line))
-        elif re.match(r"^(?: {4}|\t)", line):
+            plain_lines.clear()
+            continue
+
+        plain_lines.append(line)
+        if re.match(r"^(?: {4}|\t)", line):
             lines.append(_mask_markdown_code(line))
         else:
             lines.append(line)
