@@ -63,7 +63,14 @@ def test_rebuild_evidence_sets_derives_rows_from_markers(tmp_path: Path) -> None
     result = state.rebuild_evidence_sets_from_markers(vault, run_id="compose-1")
     rows = {row["id"]: row for row in state.evidence_sets(vault)}
 
-    assert result == {"deleted": 0, "inserted": 5}
+    assert (result["deleted"], result["inserted"]) == (0, 5)
+    assert {minted["evidence_id"] for minted in result["minted"]} == {
+        "ev-11111111",
+        "ev-22222222",
+        "ev-33333333",
+        "ev-44444444",
+        "ev-55555555",
+    }
     assert rows["ev-11111111"] == {
         "id": "ev-11111111",
         "block_ref": "notes/draft.md#^blk-11111111",

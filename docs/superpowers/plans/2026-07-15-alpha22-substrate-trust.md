@@ -3389,29 +3389,42 @@ both of which run under a validated `OperationContext` (grep-verified: no
 other non-test caller of `rebuild_evidence_sets_from_markers` /
 `replace_evidence_sets`). Therefore: **state detects the mint** (it alone
 knows whether the insert was a first insert, via `cursor.rowcount` on the
-ON-CONFLICT insert) and reports it in its result dict; **the context-holding
-knowledge.py callers emit the journal event**, mirroring how
-compose already calls `append_journal_event(vault, {...}, context=context)`
-at knowledge.py:2047. Direct state-level rebuilds (tests only) bind without
-journaling — the same trust boundary as today; every production mint
-journals.
+ON-CONFLICT insert) and reports it in its result dict. That detection and the
+context/provenance-aware journal write must nevertheless commit together:
+otherwise a failed post-rebuild append leaves an immutable binding with no
+portable mint record, suppressing every retry.
+
+**Crash-consistency amendment (BINDING — replaces the former post-rebuild
+`knowledge._journal_minted_evidence_events` design and its implementation
+snippets below):** `trusted_writer.rebuild_evidence_sets_and_journal_mints(
+vault: Path, *, run_id: str, context: OperationContext) -> dict[str, Any]`
+is the sole production rebuild seam. It validates/decorates the context,
+holds `state.workspace_lock`, reconciles any prior JSONL tail, and derives
+marker rows before beginning the write transaction (those read-only derivation
+helpers intentionally open their own connections). It then begins one `BEGIN
+IMMEDIATE` SQLite transaction, replaces active evidence sets, detects first
+bindings, and inserts every decorated `evidence-minted` `event_log` row.
+Journal-row insertion failure rolls back the bindings *and* the active-set
+replacement. Only after commit does it write the journal-head and append JSONL,
+retaining the existing authoritative-DB then recoverable-export discipline.
+Direct state-level rebuilds remain context-free and do not journal.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py:2277-2332`
-  (`replace_evidence_sets` — collect `minted`, return it),
-  `src/memoria_vault/runtime/knowledge.py` (new `_journal_minted_evidence_events`
-  helper; call it after the rebuild at :2039-2042 in
-  `compose_project_draft` and after :2162-2165 in
-  `_verify_project_draft_snapshot`),
+  (extract connection-scoped evidence-set and journal-row primitives while
+  preserving the direct rebuild API),
+  `src/memoria_vault/runtime/trusted_writer.py` (the narrow atomic rebuild and
+  mint-journal seam), `src/memoria_vault/runtime/knowledge.py` (both production
+  call sites use that seam),
   `tests/test_evidence_sets.py:71` (exact-dict assertion on the rebuild
   result gains the `minted` key).
 - Test: `tests/test_draft_verification.py` (new test).
 
 **Interfaces:**
-- Consumes: `append_journal_event(vault, event, *, context) -> dict[str, Any]`
-  (trusted_writer.py:193; already imported in knowledge.py:38);
-  `state.read_event_log(vault, *, event_types=None) -> list[dict[str, Any]]`
-  (state.py:930, for the test).
+- Consumes: `state.workspace_lock`, `state.connect`, and the existing
+  context/provenance decoration plus JSONL reconciliation machinery in
+  `trusted_writer`; `state.read_event_log(vault, *, event_types=None) ->
+  list[dict[str, Any]]` (for tests).
 - Produces:
   - `state.replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, Any]`
     — return value gains `"minted": list[dict[str, Any]]` (each
@@ -3419,8 +3432,12 @@ journals.
     present **only when non-empty** (same convention as `duplicate_ids` at
     state.py:2354-2355). `rebuild_evidence_sets_from_markers` passes it
     through unchanged.
-  - `knowledge._journal_minted_evidence_events(vault: Path, rebuild: dict[str, Any], *, context: OperationContext) -> None`
-    (module-private emission seam).
+  - Private state primitives `_replace_evidence_sets_conn(conn, rows)` and
+    `_insert_journal_row_conn(conn, row, *, machine)` used only by the atomic
+    trusted-writer seam; the latter hashes/inserts the normal authoritative
+    `event_log` row without opening a second connection.
+  - `trusted_writer.rebuild_evidence_sets_and_journal_mints(vault: Path, *,
+    run_id: str, context: OperationContext) -> dict[str, Any]`.
   - Journal event contract: `event_type == "evidence-minted"`, payload keys
     `evidence_id`, `block_ref`, `block_text_sha256` plus the standard
     context/provenance decoration. Task S68.4 replays exactly this.
@@ -3453,6 +3470,29 @@ journals.
 - [ ] Run to verify it fails:
   `python -m pytest tests/test_draft_verification.py::test_first_binding_journals_one_evidence_minted_event -v`
   — expected failure: `events == []`.
+- [ ] Implement the atomic trusted-writer seam. Extract
+  `state._replace_evidence_sets_conn(conn, rows)` from the current direct
+  replacement path (including mint detection), and let the public direct
+  functions retain their own connection/context-free behavior. Extract
+  `state._insert_journal_row_conn(conn, row, *, machine)` from the existing
+  hash-chain insertion so it uses the caller's transaction rather than opening
+  another connection. `trusted_writer.rebuild_evidence_sets_and_journal_mints`
+  validates and decorates the context first, then under `workspace_lock`
+  reconciles a prior export tail and derives marker rows before opening one
+  connection for `BEGIN IMMEDIATE`. It calls the connection-scoped replacement,
+  inserts each mint event via the connection-scoped journal helper, and commits.
+  It writes the head and appends the collected JSONL events only after that
+  commit. Replace both knowledge production rebuild calls with this
+  trusted-writer function.
+- [ ] Add a fault-injection regression beside the integration test: monkeypatch
+  `_insert_journal_row_conn` to raise during compose; assert the failed call
+  leaves no `evidence_bindings`, no active `evidence_sets`, and no
+  `evidence-minted` event. Restore the helper, verify the already-written draft,
+  and assert exactly one binding/event. This proves failure cannot permanently
+  consume an ID without portable mint history.
+
+<!-- Historical two-phase instructions, superseded by the crash-consistency
+amendment above. They are retained only as provenance; do not implement them.
 - [ ] Write the state half. In `src/memoria_vault/runtime/state.py`, replace
   the head and tail of `replace_evidence_sets` (lines 2277-2296 and 2332).
   Head — replace:
@@ -3563,6 +3603,8 @@ journals.
       _journal_minted_evidence_events(vault, rebuild, context=context)
   ```
 
+-->
+
 - [ ] Update the exact-dict rebuild assertion at
   `tests/test_evidence_sets.py:71` (five direct markers all mint there).
   Replace:
@@ -3593,7 +3635,7 @@ journals.
 - [ ] Commit:
 
   ```bash
-  git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py tests/test_evidence_sets.py
+  git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py tests/test_evidence_sets.py
   git commit -m "feat(evidence): journal evidence-minted events at first binding (#1293 slice 7a)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -3603,9 +3645,11 @@ journals.
 
 ### Task S68.4: Rebuild the bindings ledger from the journal
 
-Spec §8: the bindings table becomes rebuildable by replaying mint events, so
-a vault whose `.memoria` SQLite state is lost (folder-copied bundle) regains
-its anti-tamper guarantees from the journal.
+Spec §8: the bindings table becomes rebuildable by replaying authoritative
+`event_log` mint events after a bindings-table loss in an otherwise intact or
+restored SQLite state. This task does **not** import journal exports into a
+folder copy that excludes `.memoria`; such portable-journal import is a later,
+explicit scope if needed.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (new function directly after
@@ -3923,8 +3967,9 @@ future design.
 
   At first binding, Memoria also appends an `evidence-minted` journal event
   carrying the evidence ID, block reference, and claim hash. The bindings
-  ledger is rebuildable by replaying mint events, so tamper history travels
-  with the vault rather than living only in local SQLite state.
+  ledger is rebuildable by replaying those authoritative event-log entries in
+  an intact or restored workspace. Exporting/importing a journal into a
+  folder copy that excludes `.memoria` is outside this reference's scope.
 
   Source-span refs use stable `work_id`, never citekeys. Citekeys are rendered
   only during export.

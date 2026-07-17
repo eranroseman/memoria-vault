@@ -593,6 +593,70 @@ def test_reintroduced_evidence_id_refuses_export_when_its_text_changed(tmp_path:
         write_project_export(tmp_path, "project-alpha", draft=True)
 
 
+def test_first_binding_journals_one_evidence_minted_event(tmp_path: Path) -> None:
+    _compose_source_backed_draft(tmp_path, body="A minted claim enters the journal.")
+    [bound] = state.evidence_sets(tmp_path)
+
+    events = state.read_event_log(tmp_path, event_types=["evidence-minted"])
+
+    assert [
+        (event["evidence_id"], event["block_ref"], event["block_text_sha256"])
+        for event in events
+    ] == [(bound["id"], bound["block_ref"], bound["block_text_sha256"])]
+
+    verify_project_draft(tmp_path, "project-alpha")
+    events_after = state.read_event_log(tmp_path, event_types=["evidence-minted"])
+
+    assert len(events_after) == 1
+
+
+def test_mint_journal_failure_rolls_back_binding_and_active_sets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path
+    state.upsert_catalog_record(
+        vault,
+        work_id="source-alpha",
+        title="Alpha Source",
+        check_status="checked",
+        content_path=".memoria/blobs/source-content/source-alpha.md",
+    )
+    _source_span(vault, "source-alpha")
+    _project(vault)
+    write_checked_concept(
+        vault,
+        "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\n"
+        "work_id: catalog/sources/source-alpha\n",
+        "note",
+        body="A claim whose mint event must be atomic with its binding.",
+    )
+    _outline(vault, "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — Support\n")
+
+    def fail_journal_insert(*_args, **_kwargs) -> None:
+        raise RuntimeError("mint journal insert failed")
+
+    monkeypatch.setattr(state, "_insert_journal_row_conn", fail_journal_insert, raising=False)
+
+    with pytest.raises(RuntimeError, match="mint journal insert failed"):
+        compose_project_draft(vault, "project-alpha")
+
+    assert state.evidence_sets(vault) == []
+    with state.connect(vault) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM evidence_bindings").fetchone()[0] == 0
+    assert state.read_event_log(vault, event_types=["evidence-minted"]) == []
+
+    monkeypatch.undo()
+    verify_project_draft(vault, "project-alpha")
+
+    [bound] = state.evidence_sets(vault)
+    assert [
+        (event["evidence_id"], event["block_ref"], event["block_text_sha256"])
+        for event in state.read_event_log(vault, event_types=["evidence-minted"])
+    ] == [(bound["id"], bound["block_ref"], bound["block_text_sha256"])]
+
+
 def test_draft_export_uses_the_verified_draft_snapshot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

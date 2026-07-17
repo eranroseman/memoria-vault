@@ -798,26 +798,33 @@ def _append_journal_row(vault: Path, event: dict[str, Any], *, machine: str) -> 
 
 
 def _insert_journal_row(vault: Path, row: dict[str, Any], *, machine: str) -> None:
+    with connect(vault) as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        _insert_journal_row_conn(conn, row, machine=machine)
+
+
+def _insert_journal_row_conn(
+    conn: sqlite3.Connection, row: dict[str, Any], *, machine: str
+) -> None:
+    """Insert one authoritative journal row using the caller's transaction."""
     timestamp = str(row.get("timestamp") or now_iso())
     event_type = str(row.get("event") or row.get("type") or "event")
     payload = _json(row)
-    with connect(vault) as conn:
-        conn.execute("BEGIN IMMEDIATE")
-        last = conn.execute(
-            "SELECT event_id, row_hash FROM event_log ORDER BY event_id DESC LIMIT 1"
-        ).fetchone()
-        prev_hash = "GENESIS" if last is None else str(last["row_hash"])
-        event_id = 1 if last is None else int(last["event_id"]) + 1
-        row_hash = _journal_hash(event_id, timestamp, event_type, machine, payload, prev_hash)
-        conn.execute(
-            """
-            INSERT INTO event_log(
-                event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (event_id, timestamp, event_type, machine, payload, prev_hash, row_hash),
+    last = conn.execute(
+        "SELECT event_id, row_hash FROM event_log ORDER BY event_id DESC LIMIT 1"
+    ).fetchone()
+    prev_hash = "GENESIS" if last is None else str(last["row_hash"])
+    event_id = 1 if last is None else int(last["event_id"]) + 1
+    row_hash = _journal_hash(event_id, timestamp, event_type, machine, payload, prev_hash)
+    conn.execute(
+        """
+        INSERT INTO event_log(
+            event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
         )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (event_id, timestamp, event_type, machine, payload, prev_hash, row_hash),
+    )
 
 
 def journal_head(vault: Path) -> str:
@@ -2358,62 +2365,82 @@ def code_run(vault: Path, run_id: str) -> dict[str, Any] | None:
     return None if row is None else _code_run_row(row)
 
 
-def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
+def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     rows = list(rows)
     with connect(vault) as conn:
-        for row in rows:
-            if not bool(row.get("bind", True)):
-                continue
-            conn.execute(
-                """
-                INSERT INTO evidence_bindings(id, block_text_sha256)
-                VALUES (?, ?)
-                ON CONFLICT(id) DO NOTHING
-                """,
-                (str(row["id"]), row.get("block_text_sha256")),
+        return _replace_evidence_sets_conn(conn, rows)
+
+
+def _replace_evidence_sets_conn(
+    conn: sqlite3.Connection, rows: Iterable[dict[str, Any]]
+) -> dict[str, Any]:
+    """Replace active evidence sets using an existing transaction."""
+    rows = list(rows)
+    minted: list[dict[str, Any]] = []
+    for row in rows:
+        if not bool(row.get("bind", True)):
+            continue
+        cursor = conn.execute(
+            """
+            INSERT INTO evidence_bindings(id, block_text_sha256)
+            VALUES (?, ?)
+            ON CONFLICT(id) DO NOTHING
+            """,
+            (str(row["id"]), row.get("block_text_sha256")),
+        )
+        if cursor.rowcount:
+            minted.append(
+                {
+                    "evidence_id": str(row["id"]),
+                    "block_ref": normalize_path(str(row["block_ref"])),
+                    "block_text_sha256": row.get("block_text_sha256"),
+                }
             )
-        existing_bindings = {
-            row["id"]: row["block_text_sha256"]
-            for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_bindings")
-        }
-        deleted = conn.execute("DELETE FROM evidence_sets").rowcount
-        for row in rows:
-            evidence_id = str(row["id"])
-            items = [str(item) for item in row.get("items", [])]
-            bind = bool(row.get("bind", True))
-            block_text_sha256 = (
-                existing_bindings[evidence_id]
-                if bind and evidence_id in existing_bindings
-                else row.get("block_text_sha256")
-                if bind
-                else None
+    existing_bindings = {
+        row["id"]: row["block_text_sha256"]
+        for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_bindings")
+    }
+    deleted = conn.execute("DELETE FROM evidence_sets").rowcount
+    for row in rows:
+        evidence_id = str(row["id"])
+        items = [str(item) for item in row.get("items", [])]
+        bind = bool(row.get("bind", True))
+        block_text_sha256 = (
+            existing_bindings[evidence_id]
+            if bind and evidence_id in existing_bindings
+            else row.get("block_text_sha256")
+            if bind
+            else None
+        )
+        conn.execute(
+            """
+            INSERT INTO evidence_sets(
+                id,
+                block_ref,
+                items_json,
+                type,
+                state,
+                review_required,
+                run_id,
+                block_text_sha256
             )
-            conn.execute(
-                """
-                INSERT INTO evidence_sets(
-                    id,
-                    block_ref,
-                    items_json,
-                    type,
-                    state,
-                    review_required,
-                    run_id,
-                    block_text_sha256
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    evidence_id,
-                    normalize_path(str(row["block_ref"])),
-                    _json(items),
-                    str(row["type"]),
-                    str(row["state"]),
-                    1 if bool(row.get("review_required")) else 0,
-                    str(row.get("run_id") or ""),
-                    block_text_sha256,
-                ),
-            )
-    return {"deleted": int(deleted), "inserted": len(rows)}
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                evidence_id,
+                normalize_path(str(row["block_ref"])),
+                _json(items),
+                str(row["type"]),
+                str(row["state"]),
+                1 if bool(row.get("review_required")) else 0,
+                str(row.get("run_id") or ""),
+                block_text_sha256,
+            ),
+        )
+    result: dict[str, Any] = {"deleted": int(deleted), "inserted": len(rows)}
+    if minted:
+        result["minted"] = minted
+    return result
 
 
 def evidence_sets(vault: Path) -> list[dict[str, Any]]:

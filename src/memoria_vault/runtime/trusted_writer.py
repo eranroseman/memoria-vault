@@ -199,6 +199,18 @@ def append_journal_event(
 ) -> dict[str, Any]:
     """Append one request event with provenance owned by its operation context."""
     request = validate_operation_context(vault, context)
+    row = _prepare_context_journal_event(event, context=context, request=request)
+    _append_decorated_event(Path(vault), row, machine=context.machine)
+    return row
+
+
+def _prepare_context_journal_event(
+    event: Mapping[str, Any],
+    *,
+    context: OperationContext,
+    request: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Decorate one already-validated request event for authoritative storage."""
     row = _decorate_context_event(event, context)
     envelope = request.get("request_envelope")
     provenance = envelope.get("provenance") if isinstance(envelope, Mapping) else None
@@ -209,8 +221,45 @@ def append_journal_event(
         raise ValueError("journal event request_provenance conflicts with request envelope")
     row["request_provenance"] = request_provenance
     row.setdefault("timestamp", now_iso())
-    _append_decorated_event(Path(vault), row, machine=context.machine)
     return row
+
+
+def rebuild_evidence_sets_and_journal_mints(
+    vault: Path,
+    *,
+    run_id: str,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Atomically rebuild active evidence sets and journal first-time bindings."""
+    vault = Path(vault)
+    request = validate_operation_context(vault, context)
+    events: list[dict[str, Any]] = []
+    with state.workspace_lock(vault):
+        if _has_unterminated_journal_export_tail(vault):
+            reconcile_journal_export(vault)
+        marker_rows, duplicate_ids = state._evidence_marker_rows(vault, run_id=run_id)
+        with state.connect(vault) as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            rebuild = state._replace_evidence_sets_conn(conn, marker_rows)
+            if duplicate_ids:
+                rebuild["duplicate_ids"] = duplicate_ids
+            for minted in rebuild.get("minted", []):
+                event = _prepare_context_journal_event(
+                    {
+                        "event": "evidence-minted",
+                        "evidence_id": minted["evidence_id"],
+                        "block_ref": minted["block_ref"],
+                        "block_text_sha256": minted["block_text_sha256"],
+                    },
+                    context=context,
+                    request=request,
+                )
+                state._insert_journal_row_conn(conn, event, machine=context.machine)
+                events.append(event)
+        if events:
+            state.write_journal_head_anchor(vault)
+            append_jsonl(_journal_path(vault, context.machine), events)
+    return rebuild
 
 
 def append_explicit_journal_event(

@@ -40,6 +40,7 @@ from memoria_vault.runtime.trusted_writer import (
     mark_checked,
     materialize_unchecked,
     promote_checked,
+    rebuild_evidence_sets_and_journal_mints,
     stage_concept,
     validate_operation_context,
 )
@@ -2034,9 +2035,10 @@ def compose_project_draft(
     draft_path = vault / draft_rel
     draft_path.parent.mkdir(parents=True, exist_ok=True)
     write_text_durable(draft_path, "\n".join(lines).rstrip() + "\n")
-    rebuild = state.rebuild_evidence_sets_from_markers(
+    rebuild = rebuild_evidence_sets_and_journal_mints(
         vault,
         run_id=context.run_id,
+        context=context,
     )
     draft = read_project_draft(vault, project_rel)
     event = None
@@ -2154,9 +2156,10 @@ def _verify_project_draft_snapshot(
             },
             None,
         )
-    rebuild = state.rebuild_evidence_sets_from_markers(
+    rebuild = rebuild_evidence_sets_and_journal_mints(
         vault,
         run_id=context.run_id,
+        context=context,
     )
     draft = read_project_draft(vault, project_rel)
     duplicate_ids = {str(evidence_id) for evidence_id in rebuild.get("duplicate_ids", [])}
