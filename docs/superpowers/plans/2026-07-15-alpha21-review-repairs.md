@@ -15,7 +15,7 @@
 - Test only against disposable vaults (`tmp_path` / `test-vault/`).
 - New test files must be registered in `tests/conftest.py` `TEST_LEVELS` (Task 21.4 adds `"test_vaultio.py": "unit"`).
 - All line refs verified against main @ `d85d8799`; re-anchor by quoted context if drifted.
-- **Ordering:** COV.3 executes AFTER 21.1 (its inbox-alert assertions are written against 21.1's changed `write_finding` signature: `dedupe_slug` param, `Path | None` return). 21.5 must not run concurrently with 21.1 in separate worktrees (both edit `inbox.py`). COV.0 (PI confirm-at-review for the coverage spec's design decisions) precedes COV.1–COV.11. Everything else is independent, any order, one PR-sized unit each.
+- **Ordering:** The required chain is 21.1 → COV.3 → 21.5. COV.3 executes AFTER 21.1 (its inbox-alert assertions are written against 21.1's changed `write_finding` signature: `dedupe_slug` param, `Path | None` return) and BEFORE 21.5 (it retains the pre-deletion Telegram-env isolation that 21.5 removes). 21.5 follows 21.1 because it removes 21.1's deduplicated-finding transport call. It must not run concurrently with 21.1 in separate worktrees (both edit `inbox.py`). COV.0 (PI confirm-at-review for the coverage spec's design decisions) precedes COV.1–COV.11. Everything else is independent, any order, one PR-sized unit each.
 - Sequencing vs Plan 22: if executing concurrently with Plan 22's S68.3 or COST.4 (journal-hashed floor goldens), land those sequentially.
 
 ---
@@ -774,42 +774,54 @@ record — do not touch.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/subsystems/lib/loudness.py` (delete
-  `TELEGRAM_TOKEN_ENV`/`TELEGRAM_CHAT_ENV`/`TELEGRAM_API_BASE_ENV` at :26-28,
-  `should_push` at :62, `_first_env` at :66, `_append_push_log` at :74,
-  `push_card` at :78 through its end, and the `PUSH_LOG_RELPATH` constant;
-  keep `is_open_blocker`, `open_blockers`, `blocker_message`; drop imports that
-  become unused — check `json`/`urllib`/`os` usage after the cut)
-- Modify: `src/memoria_vault/runtime/subsystems/lib/inbox.py:170` and
-  `:185-187` (delete the two `loudness_routing.push_card(...)` calls; cards
-  keep their `loudness` frontmatter) and `:15` (delete the now-unused
-  `from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing`)
-- Modify: `tests/test_loudness.py` (rewrite; see steps)
+  `PUSH_LOUDNESS`, `TELEGRAM_TOKEN_ENV`/`TELEGRAM_CHAT_ENV`/
+  `TELEGRAM_API_BASE_ENV`, `PUSH_LOG_RELPATH`, `should_push`, `_first_env`,
+  `_append_push_log`, and `push_card`; keep `is_open_blocker`, `open_blockers`,
+  `blocker_message`; remove the now-dead `os`, `urllib.parse`,
+  `urllib.request`, `append_jsonl`, and `now_iso` imports, and rewrite the
+  push-worthy module docstring)
+- Modify: `src/memoria_vault/runtime/subsystems/lib/inbox.py` (delete all
+  three `loudness_routing.push_card(...)` calls: the deduplicated
+  `write_finding` path added by Task 21.1, the deduplicated
+  `write_work_prompt` path, and shared `_write`; cards keep their `loudness`
+  frontmatter) and delete the now-unused `loudness_routing` import
+- Modify: `tests/test_loudness.py` and `tests/test_sweeps_retraction.py`
+  (rewrite no-log assertions and remove the obsolete COV.3 Telegram-env test
+  setup; see steps)
 - Modify: `docs/README.md:135`,
-  `docs/explanation/architecture/README.md:45`,
+  `docs/explanation/architecture/README.md` (interaction channels and signal
+  routing), `docs/explanation/execution/control-plane/honesty-card.md:34`,
   `docs/reference/evidence-and-integrations/integrations.md:84`,
-  `docs/reference/system/failure-modes.md:26`
-- Test: `tests/test_loudness.py`
+  `docs/reference/system/failure-modes.md:26`, and
+  `docs/reference/commands-and-transports/system-actions-operations.md:179`
+- Test: `tests/test_loudness.py`, `tests/test_inbox_cards.py`, and
+  `tests/test_sweeps_retraction.py`
 
 **Interfaces:**
-- Consumes: nothing from other tasks. Ordering vs 21.1: both edit files in the
-  inbox/loudness family; either order works, but do not run concurrently in
-  separate worktrees (same-file merge risk with `inbox.py`).
+- Consumes: Task 21.1 and COV.3 are already complete. The required ordering is
+  21.1 → COV.3 → 21.5: 21.1 adds the deduplicated-finding transport call that
+  this task removes, and COV.3 retains legacy transport environment isolation
+  until this task removes the transport. Do not run 21.5 concurrently with
+  21.1 in separate worktrees (both edit `inbox.py`).
 - Produces: `loudness.py` public surface shrinks to
   `is_open_blocker(frontmatter: dict[str, Any]) -> bool`,
   `open_blockers(vault: Path) -> list[dict[str, str]]`,
   `blocker_message(blockers: list[dict[str, str]]) -> str`. Removed symbols no
   task may reference: `push_card`, `should_push`, `PUSH_LOG_RELPATH`,
-  `TELEGRAM_TOKEN_ENV`, `TELEGRAM_CHAT_ENV`, `TELEGRAM_API_BASE_ENV`.
+  `PUSH_LOUDNESS`, `TELEGRAM_TOKEN_ENV`, `TELEGRAM_CHAT_ENV`,
+  `TELEGRAM_API_BASE_ENV`.
 
-- [ ] **Step 1: Rewrite the two push tests as no-push-log assertions (failing)**
+- [ ] **Step 1: Rewrite the transport tests as no-push-log assertions (failing)**
 
 Replace `tests/test_loudness.py` lines 1-39 (the module docstring, `json`
-import, and the two push tests) with:
+import, and the two transport tests) with this final test shape:
 
 ```python
-"""Graded-loudness routing helpers."""
+"""Graded-loudness helpers."""
 
 from memoria_vault.runtime.subsystems.lib import inbox, loudness
+
+LEGACY_LOG_PATH = "system/logs/loudness-push.jsonl"
 
 
 def test_alert_card_writes_no_push_log(tmp_path):
@@ -817,10 +829,22 @@ def test_alert_card_writes_no_push_log(tmp_path):
         tmp_path, "alert", "Critical drift", "system is stopped", "linter", loudness="alert"
     )
 
-    assert not (tmp_path / "system/push-log.jsonl").exists()
-    assert not (tmp_path / ".memoria").exists() or not list(
-        (tmp_path / ".memoria").rglob("push-log*")
+    assert not (tmp_path / LEGACY_LOG_PATH).exists()
+
+
+def test_deduped_alert_work_prompt_writes_no_push_log(tmp_path):
+    inbox.write_work_prompt(
+        tmp_path,
+        "Review the affected work",
+        "Review the affected work and decide what to do next.",
+        "A review gate needs PI attention.",
+        "test",
+        request_id="REQ-NO-PUSH",
+        loudness="alert",
+        dedupe_slug="no-push-work-prompt",
     )
+
+    assert not (tmp_path / LEGACY_LOG_PATH).exists()
 
 
 def test_notice_card_writes_no_push_log(tmp_path):
@@ -837,58 +861,118 @@ def test_notice_card_writes_no_push_log(tmp_path):
         loudness="notice",
     )
 
-    assert not list(tmp_path.rglob("push-log*"))
+    assert not (tmp_path / LEGACY_LOG_PATH).exists()
 ```
 
-Note: the first test's path assertions are written against wherever
-`PUSH_LOG_RELPATH` currently points — read the constant before editing and use
-`tmp_path.rglob("push-log*")` if the relpath differs; the intent is "no push
-log anywhere". Keep `test_open_blockers_only_reads_open_block_attention_projections`
-(lines 42-80) unchanged.
+The literal is the current `PUSH_LOG_RELPATH` value. It catches both the shared
+`_write` path and the separate deduplicated work-prompt write path, which must
+not retain a hidden transport call. Keep
+`test_open_blockers_only_reads_open_block_attention_projections` unchanged.
 
 - [ ] **Step 2: Run tests to verify the alert-card test fails**
 
+Before the one red run, temporarily add this test-local safety helper and call
+it at the top of both alert tests (add a `monkeypatch` parameter to each). It
+prevents a developer's real token/chat configuration from causing a live push:
+
+```python
+def _clear_legacy_push_env(monkeypatch):
+    for var in (
+        "MEMORIA_TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_BOT_TOKEN",
+        "MEMORIA_TELEGRAM_CHAT_ID",
+        "TELEGRAM_CHAT_ID",
+    ):
+        monkeypatch.delenv(var, raising=False)
+```
+
 Run: `python -m pytest tests/test_loudness.py -v`
-Expected: `test_alert_card_writes_no_push_log` FAILS (the transport still
-writes a `not-configured` push-log row); the blocker test still passes.
+Expected: both alert-path tests FAIL (the transport still writes a
+`not-configured` log row); the notice and blocker tests still pass. The helper,
+its calls, and the temporary `monkeypatch` parameters are red-run-only and must
+be removed in Step 3, restoring the symbol-free final test shape above.
 
 - [ ] **Step 3: Delete the transport**
 
-In `src/memoria_vault/runtime/subsystems/lib/loudness.py`: delete the three
-`TELEGRAM_*` constants, `PUSH_LOG_RELPATH`, `should_push`, `_first_env`,
-`_append_push_log`, and `push_card` (whole function). Remove imports that are
-now unused (run `python -m ruff check src/memoria_vault/runtime/subsystems/lib/loudness.py`
-to catch them). In `src/memoria_vault/runtime/subsystems/lib/inbox.py`: delete
-line 170 (`loudness_routing.push_card(vault, path, {...})`), lines 185-187 (the
-second `push_card` call), and the `:15` import alias.
+In `src/memoria_vault/runtime/subsystems/lib/loudness.py`: delete
+`PUSH_LOUDNESS`, the three `TELEGRAM_*` constants, `PUSH_LOG_RELPATH`,
+`should_push`, `_first_env`, `_append_push_log`, and `push_card` (whole
+function). Remove `os`, `urllib.parse`, `urllib.request`, `append_jsonl`, and
+`now_iso`, then rewrite the module docstring to say loudness grades attention
+and open block cards gate review work — it no longer makes anything
+push-worthy. Run `python -m ruff check
+src/memoria_vault/runtime/subsystems/lib/loudness.py` to catch any accidental
+leftover.
+
+In `src/memoria_vault/runtime/subsystems/lib/inbox.py`: delete all three
+`loudness_routing.push_card` calls (deduplicated `write_finding`, deduplicated
+`write_work_prompt`, and `_write`) and the import alias. Keep `LOUDNESS` and
+all card frontmatter intact. In `tests/test_sweeps_retraction.py`, delete the
+now-obsolete four-variable Telegram environment-clearing loop from COV.3; it
+is no longer needed once Inbox cards never push. Also delete the red-run-only
+test-local helper, calls, and `monkeypatch` parameters from Step 2, restoring
+the final `tests/test_loudness.py` form shown in Step 1.
 
 - [ ] **Step 4: Run the module tests to verify green**
 
-Run: `python -m pytest tests/test_loudness.py tests/test_inbox.py -v`
-(if `tests/test_inbox.py` does not exist, run the inbox tests' actual home:
-`grep -rln "write_finding\|write_proposal" tests/ | head` and run those files)
-Expected: PASS across the board.
+Run: `python -m pytest tests/test_loudness.py tests/test_inbox_cards.py
+tests/test_sweeps_retraction.py -v`
+Expected: PASS across the board. Also run
+`python -m pytest tests/test_runtime_policy.py::test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged -v`
+to prove the preserved blocker gate still holds.
 
-- [ ] **Step 5: Fix the four docs claims**
+- [ ] **Step 5: Fix the six docs claims**
 
 - `docs/README.md:135`: replace the bullet with:
   `- **Mobile capture is not available** — no push channel ships; inbound capture from a phone is out of scope for beta.1. See [Architecture](explanation/architecture/README.md#interaction-channels).`
   (drops the "urgent push (via Telegram) ships today" claim and the dead
   closed-issue #382 reference)
-- `docs/explanation/architecture/README.md:45`: end the sentence at
-  "remain pull-only." — delete ", while alert and block prompts may push to
-  Telegram when configured".
+- `docs/explanation/architecture/README.md`: replace the interaction-channels
+  sentence with: “Editor files are the durable working surface, and all Inbox
+  attention is pull-only.” Replace the signal-routing sentence with:
+  “Operations that create file-backed Inbox attention assign loudness; every
+  prompt remains pull-only. A planned Maintenance adapter may collect both
+  sources without conflating them.” Replace the following phone-push paragraph
+  with: “All attention prompts remain pull-only. An open `loudness: block` card
+  blocks review-gated writes through the optional policy-hook path until the PI
+  resolves it.”
+- `docs/explanation/execution/control-plane/honesty-card.md:34`: replace the
+  push-worthy paragraph with `Loudness grades the urgency of a pull-only
+  attention projection. Its purpose is preserving the PI's attention for items
+  that can change near-term work.`
 - `docs/reference/evidence-and-integrations/integrations.md:84`: delete the
   entire `**Telegram Bot API**` table row.
-- `docs/reference/system/failure-modes.md:26`: read the surrounding paragraph
-  and delete the sentence fragment "alert/block prompts attempt a Telegram push
-  only when that adapter is configured", rewording the remainder so the
-  paragraph still reads (alert/block cards are pull-only inbox projections).
+- `docs/reference/system/failure-modes.md:23-27`: replace the paragraph with
+  “Attention loudness is independent metadata assigned by operations that
+  create attention prompts; there is no automatic severity-to-loudness mapping.
+  All attention prompts are pull-only Inbox projections. An open `loudness:
+  block` prompt blocks review-gated writes through the optional policy-hook
+  path until the PI resolves it; the standalone CLI/worker path is not paused
+  by loudness.”
+- `docs/reference/commands-and-transports/system-actions-operations.md:179`:
+  replace the row with one named “Loudness and blockers,” whose shared helper is
+  `memoria_vault.runtime.subsystems.lib.loudness` and whose role is: “Keeps
+  attention projections pull-only and exposes open block attention items to
+  delegation and policy gates.”
 
 - [ ] **Step 6: Repo-wide leftover sweep**
 
-Run: `grep -rni "telegram" src/ tests/ docs/ scripts/ .github/ --include="*" | grep -v design-history`
-Expected: zero hits. (`design-history/` keeps its mentions — frozen record.)
+Run:
+
+```bash
+if rg -ni 'telegram|MEMORIA_TELEGRAM|TELEGRAM_BOT|TELEGRAM_CHAT' \
+  src tests docs scripts .github \
+  --glob '!docs/superpowers/**' --glob '!docs/design-history/**'; then
+  exit 1
+fi
+if rg -n 'push_card|should_push|PUSH_LOG_RELPATH|PUSH_LOUDNESS|TELEGRAM_' src tests; then
+  exit 1
+fi
+```
+
+Expected: zero hits from both commands. `docs/superpowers/` is excluded because
+this historical working plan deliberately records the retired adapter and its
+red-state setup; `design-history/` remains the frozen record.
 
 - [ ] **Step 7: Full gate + commit**
 
@@ -899,10 +983,13 @@ Expected: PASS.
 git add src/memoria_vault/runtime/subsystems/lib/loudness.py \
         src/memoria_vault/runtime/subsystems/lib/inbox.py \
         tests/test_loudness.py \
+        tests/test_sweeps_retraction.py \
         docs/README.md \
         docs/explanation/architecture/README.md \
+        docs/explanation/execution/control-plane/honesty-card.md \
         docs/reference/evidence-and-integrations/integrations.md \
-        docs/reference/system/failure-modes.md
+        docs/reference/system/failure-modes.md \
+        docs/reference/commands-and-transports/system-actions-operations.md
 git commit -m "refactor: remove Hermes-era Telegram push transport (PI ruling; loudness/blocker mechanics kept)
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -917,9 +1004,10 @@ noted.
 **Ordering and independence.** Every COV task is independent of every other COV
 task and of the rest of Plan 21, with exactly two exceptions: COV.1 goes first
 and stands alone (spec decision — highest value-to-effort), and **COV.3 executes
-AFTER Task 21.1** (Task 21.1 changes the `write_finding` signature that COV.3's
-inbox-alert assertion is written against). Tasks may otherwise be picked off in
-any order or split across PRs.
+AFTER Task 21.1 and BEFORE Task 21.5** (Task 21.1 changes the `write_finding`
+signature that COV.3's inbox-alert assertion is written against; Task 21.5
+removes COV.3's now-unneeded legacy transport environment isolation). Tasks may
+otherwise be picked off in any order or split across PRs.
 
 **TDD shape for test-only tasks.** Items 2–6 and 8–10 add tests to existing,
 correct production code, so a freshly written test passes immediately. The red
@@ -1125,13 +1213,15 @@ live service or secret behind it.
 
 ### Task COV.3: `retraction.py` — `sweep()`, `check_doi()` offline warning, severity tie-break
 
-**ORDERING: execute AFTER Task 21.1.** Task 21.1 changes `write_finding`; this
-task's inbox-alert assertions are written against the **post-21.1** signature
-(see Consumes). `retraction.py:321-333` passes no `dedupe_slug` today, so the
-first-write behavior this test observes (one alert card written) is identical
-under both signatures; the assertions below are deliberately filename-agnostic
-(glob + frontmatter) so they also hold if 21.1 wires a `dedupe_slug` into this
-call site.
+**ORDERING: execute AFTER Task 21.1 and BEFORE Task 21.5.** Task 21.1 changes
+`write_finding`; this task's inbox-alert assertions are written against the
+**post-21.1** signature (see Consumes). Task 21.5 removes this test's legacy
+transport environment isolation only after removing the transport itself.
+`retraction.py:321-333` passes no `dedupe_slug` today, so the first-write
+behavior this test observes (one alert card written) is identical under both
+signatures; the assertions below are deliberately filename-agnostic (glob +
+frontmatter) so they also hold if 21.1 wires a `dedupe_slug` into this call
+site.
 
 **Files:**
 - Modify (tests only): `/home/eranr/memoria-vault/tests/test_sweeps_retraction.py` (extend aliases at lines 5-11; append tests after line 127)
