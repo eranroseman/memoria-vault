@@ -132,6 +132,25 @@ def _pandoc_citation_ids(markdown: str) -> list[str]:
     return citation_ids
 
 
+def _pandoc_code_block_texts(markdown: str) -> list[str]:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    parsed = subprocess.run(
+        [pandoc, "--from=markdown", "--to=json"],
+        input=markdown,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert parsed.returncode == 0, parsed.stderr
+    return [
+        str(block["c"][1])
+        for block in json.loads(parsed.stdout)["blocks"]
+        if block["t"] == "CodeBlock"
+    ]
+
+
 def test_markdown_draft_export_citations_resolve_against_inlined_fence(
     tmp_path: Path,
 ) -> None:
@@ -191,6 +210,36 @@ def test_draft_export_ignores_recognized_fenced_marker_outside_direct_claims(
 
     assert "[@safe2026]" in exported["content"]
     assert "literal %%ev: ev-12345678 items=source-literal#^p0001%%" in exported["content"]
+
+
+def test_draft_export_keeps_tilde_fenced_marker_after_heading_non_direct(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    hidden_marker = "%%ev: ev-87654321 items=source-hidden#^p0001%%"
+    _catalog_source(vault, "source-alpha", citekey="safe2026")
+    _catalog_source(vault, "source-hidden", citekey="hidden2026")
+    _source_backed_draft(vault)
+    draft_path = vault / "projects/project-alpha/draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").rstrip()
+        + "\n\n# Context\n~~~text\n"
+        + f"Hidden evidence marker. {hidden_marker}\n~~~\n",
+        encoding="utf-8",
+    )
+
+    assert "ev-87654321" not in {
+        marker.evidence_id
+        for marker in state.evidence_markers_from_markdown(draft_path.read_text(encoding="utf-8"))
+    }
+    assert verify_project_draft(vault, "project-alpha")["ready"] is True
+    exported = write_project_export(vault, "project-alpha", draft=True)
+
+    assert hidden_marker in exported["content"]
+    assert "[@safe2026]" in exported["content"]
+    assert "[@hidden2026]" not in exported["content"]
+    assert any(hidden_marker in block for block in _pandoc_code_block_texts(exported["content"]))
+    assert _pandoc_citation_ids(exported["content"]) == ["safe2026"]
 
 
 @pytest.mark.parametrize("invalid_fence", ["~~~bogus header ???", "```bad`info"])
@@ -420,14 +469,21 @@ def test_draft_export_refuses_fence_exposed_by_anchor_removal_and_unicode_trim(
         write_project_export(vault, "project-alpha", draft=True)
 
 
-def test_draft_export_inlined_bibtex_escapes_backslashes_for_pandoc(tmp_path: Path) -> None:
+def test_draft_export_inlined_bibtex_preserves_text_and_identifier_metadata(
+    tmp_path: Path,
+) -> None:
     vault = tmp_path
     title = r"C:\temp #1 is 100% of $5; literal \% and \$; trailing " + "\\"
+    doi = r"10.1000/a\b#c%25$x"
+    url = r"https://example.test/a\b#frag%25$z\q"
     _catalog_source(
         vault,
         "source-alpha",
         citekey="slash2026",
         title=title,
+        identifiers={"doi": doi},
+        csl_json={"URL": url},
+        resource=url,
     )
     _source_backed_draft(vault)
     verify_project_draft(vault, "project-alpha")
@@ -445,7 +501,47 @@ def test_draft_export_inlined_bibtex_escapes_backslashes_for_pandoc(tmp_path: Pa
         check=False,
     )
     assert parsed.returncode == 0, parsed.stderr
-    assert json.loads(parsed.stdout)[0]["title"] == title
+    item = json.loads(parsed.stdout)[0]
+    assert item["title"] == title
+    assert item["DOI"] == doi
+    assert item["URL"] == url
+
+
+def test_draft_export_omits_identifier_metadata_with_trailing_backslash(
+    tmp_path: Path,
+) -> None:
+    vault = tmp_path
+    doi = "10.1000/trailing" + "\\"
+    url = "https://example.test/trailing" + "\\"
+    _catalog_source(
+        vault,
+        "source-alpha",
+        citekey="trailing2026",
+        title="Trailing identifier source",
+        identifiers={"doi": doi},
+        csl_json={"URL": url},
+        resource=url,
+    )
+    _source_backed_draft(vault)
+    verify_project_draft(vault, "project-alpha")
+
+    bibtex = _fence(write_project_export(vault, "project-alpha", draft=True)["content"])
+
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("Pandoc is optional")
+    parsed = subprocess.run(
+        [pandoc, "--from=bibtex", "--to=csljson"],
+        input=bibtex,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert parsed.returncode == 0, parsed.stderr
+    item = json.loads(parsed.stdout)[0]
+    assert item["title"] == "Trailing identifier source"
+    assert "DOI" not in item
+    assert "URL" not in item
 
 
 def test_draft_export_inlined_bibtex_preserves_percent_and_dollar_metadata(

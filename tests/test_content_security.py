@@ -8,7 +8,10 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
-from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.content_security import (
+    has_unterminated_fenced_code_block,
+    neutralize_untrusted_markdown,
+)
 from memoria_vault.runtime.knowledge import (
     _outline_text,
 )
@@ -502,6 +505,12 @@ def test_closed_valid_tilde_fence_with_regular_attributes_has_plain_text_header(
     assert neutralize_untrusted_markdown(source) == (
         '~~~text\n<iframe src="https://example.invalid/literal"></iframe>\n~~~\n'
     )
+
+
+def test_unterminated_plain_tilde_fence_after_heading_is_detected() -> None:
+    source = "# Context\n~~~text\nliteral code\n"
+
+    assert has_unterminated_fenced_code_block(source) is True
 
 
 @pytest.mark.parametrize(

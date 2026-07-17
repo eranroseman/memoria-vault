@@ -206,13 +206,14 @@ def classify_fenced_code_opening(
         return None, False
     tilde_fence = opening.group("fence")[0] == "~"
     tilde_fence_has_attributes = "{" in line[opening.end() :]
-    if tilde_fence and tilde_fence_has_attributes and not _tilde_fence_can_start_block(plain_lines):
+    tilde_fence_at_block_boundary = _tilde_fence_can_start_block(plain_lines)
+    if tilde_fence and tilde_fence_has_attributes and not tilde_fence_at_block_boundary:
         return opening, True
     if _is_fenced_code_opening(line, opening) and (
         not tilde_fence
         or (
-            _tilde_fence_can_start_block(plain_lines)
-            and (tilde_fence_has_attributes or _has_valid_tilde_fence_info(line, opening))
+            (not tilde_fence_has_attributes and _has_valid_tilde_fence_info(line, opening))
+            or (tilde_fence_at_block_boundary and tilde_fence_has_attributes)
         )
     ):
         return opening, False

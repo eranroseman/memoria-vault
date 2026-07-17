@@ -1091,12 +1091,18 @@ def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
         "url": str(csl.get("URL") or frontmatter.get("resource") or ""),
         "abstract": str(csl.get("abstract") or ""),
     }
-    rows = [(key, value) for key, value in fields.items() if value]
+    rows: list[tuple[str, str]] = []
+    for key, value in fields.items():
+        if not value:
+            continue
+        escaped = (
+            _bibtex_identifier_escape(value) if key in {"doi", "url"} else _bibtex_escape(value)
+        )
+        if escaped is not None:
+            rows.append((key, escaped))
     rendered = [f"@{_bibtex_type(frontmatter, csl)}{{{citekey},"]
-    rendered.extend(
-        f"  {key} = {{{_bibtex_escape(value)}}}{',' if index < len(rows) - 1 else ''}"
-        for index, (key, value) in enumerate(rows)
-    )
+    for index, (key, escaped) in enumerate(rows):
+        rendered.append(f"  {key} = {{{escaped}}}{',' if index < len(rows) - 1 else ''}")
     rendered.append("}")
     return "\n".join(rendered)
 
@@ -1145,6 +1151,7 @@ def _render_csl_year(issued: Any) -> str:
 
 
 def _bibtex_escape(value: str) -> str:
+    """Serialize display text for Pandoc's BibTeX parser."""
     value = value.replace("{", "").replace("}", "")
     return " ".join(
         value.replace("\\", r"\textbackslash{}")
@@ -1153,3 +1160,10 @@ def _bibtex_escape(value: str) -> str:
         .replace("$", r"\$")
         .split()
     )
+
+
+def _bibtex_identifier_escape(value: str) -> str | None:
+    """Serialize opaque DOI and URL fields without TeX-escaping punctuation."""
+    normalized = " ".join(value.replace("{", "").replace("}", "").split())
+    trailing_backslashes = len(normalized) - len(normalized.rstrip("\\"))
+    return normalized if trailing_backslashes % 2 == 0 else None
