@@ -921,6 +921,7 @@ def test_escaped_backtick_delimiters_are_inert_through_export_boundaries(
     state.upsert_catalog_record(
         tmp_path,
         work_id="source-escaped",
+        citekey="source-escaped",
         title="Escaped Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-escaped.md",
@@ -995,6 +996,7 @@ def test_work_title_canary_is_inert_at_apply_and_export(tmp_path: Path) -> None:
         payload,
         "Canary source description.",
         "Canary source content about framing, methods, outcomes, gaps, and impact. ^p0001",
+        citekey="work-canary",
         machine="capture-machine",
     )
     digest = call_with_context(
@@ -1042,18 +1044,35 @@ def test_work_title_canary_is_inert_at_apply_and_export(tmp_path: Path) -> None:
         draft=True,
         machine="export-machine",
     )
+    exported_prose, _, references = exported["content"].partition("## References")
+    assert "```bibtex\n" in references
+    assert payload in references
 
     applied = [
         (vault / digest["digest_path"]).read_text(encoding="utf-8"),
         (vault / note_rel).read_text(encoding="utf-8"),
         (vault / "projects/canary/draft.md").read_text(encoding="utf-8"),
+        exported_prose,
     ]
-    for content in [*applied, exported["content"]]:
+    for content in applied:
         assert "![work]" not in content
         assert "<script>" not in content
         assert "](http://beacon.example" not in content
         assert "`http://beacon.example/work.png`" in content
         assert "`http://beacon.example/bare`" in content
+
+    pandoc = shutil.which("pandoc")
+    if pandoc is not None:
+        rendered = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=exported["content"],
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in rendered
+        assert "<script>" not in rendered
+        assert 'href="http://beacon.example/work.png"' not in rendered
 
 
 def test_observe_sweep_flags_removed_superseded_restriction(tmp_path: Path) -> None:

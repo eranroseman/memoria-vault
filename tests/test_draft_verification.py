@@ -107,6 +107,7 @@ def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path:
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -147,6 +148,7 @@ def test_draft_renderer_and_writer_neutralize_exported_beacons(tmp_path: Path) -
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -208,6 +210,7 @@ def test_draft_verification_flags_broken_structural_reference(tmp_path: Path) ->
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -252,6 +255,7 @@ def test_draft_verification_flags_deterministic_number_mismatch(tmp_path: Path) 
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -303,6 +307,7 @@ def test_draft_verification_routes_analysis_number_references_to_incomplete(
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -823,6 +828,7 @@ def test_mint_journal_failure_rolls_back_binding_and_active_sets(
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -1609,6 +1615,7 @@ def test_stale_taint_propagates_through_nested_sets_with_path(tmp_path: Path) ->
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -1646,6 +1653,7 @@ def test_stale_taint_reaches_a_nested_set_outside_the_draft(tmp_path: Path) -> N
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -1815,6 +1823,7 @@ def _set_source_standing(vault: Path, work_id: str, standing: str) -> None:
     state.upsert_catalog_record(
         vault,
         work_id=work_id,
+        citekey=work_id,
         title=f"{work_id} title",
         check_status="checked",
         content_path=f".memoria/blobs/source-content/{work_id}.md",
@@ -1826,6 +1835,7 @@ def _compose_source_backed_draft(vault: Path, *, body: str) -> tuple[Path, str]:
     state.upsert_catalog_record(
         vault,
         work_id="source-alpha",
+        citekey="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",

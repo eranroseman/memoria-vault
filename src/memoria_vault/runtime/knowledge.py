@@ -2634,8 +2634,14 @@ def render_project_draft_export_markdown(
         raise ValueError(f"project draft is not export-ready: {reasons}")
     if draft is None:
         raise RuntimeError("verified project draft snapshot is missing")
+    unresolved = _draft_unresolved_citations(vault, draft["content"])
+    if unresolved:
+        labels = ", ".join(f"unresolved-citation:{work_id}" for work_id in unresolved)
+        raise ValueError(f"project draft is not export-ready: {labels}")
     _frontmatter, body = split_frontmatter(draft["content"])
-    content = neutralize_untrusted_markdown(_render_draft_export_body(vault, body).strip() + "\n")
+    lines = [_render_draft_export_body(vault, body).strip(), ""]
+    _append_draft_export_references(lines, vault)
+    content = neutralize_untrusted_markdown("\n".join(lines).rstrip() + "\n")
     return {
         "project_path": draft["project_path"],
         "draft_path": draft["draft_path"],
@@ -2740,6 +2746,42 @@ def _append_project_export_references(lines: list[str], vault: Path) -> None:
     if not text:
         return
     lines.extend(["## References", "", "```bibtex", text, "```", ""])
+
+
+def _append_draft_export_references(lines: list[str], vault: Path) -> None:
+    from memoria_vault.runtime.capture import render_references_bib
+
+    text = render_references_bib(vault).strip()
+    if not text:
+        return
+    lines.extend(["## References", "", "```bibtex", text, "```", ""])
+
+
+def _draft_citekeys(vault: Path) -> dict[str, str]:
+    citekeys: dict[str, str] = {}
+    for source in state.catalog_sources(vault):
+        csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+        citekey = str(source.get("citekey") or csl.get("id") or "").strip()
+        if citekey:
+            citekeys[str(source.get("work_id") or "")] = citekey
+    return citekeys
+
+
+def _draft_unresolved_citations(vault: Path, content: str) -> list[str]:
+    from memoria_vault.runtime.evidence import parse_evidence_marker, parse_source_span_ref
+
+    citekeys = _draft_citekeys(vault)
+    unresolved = set()
+    for match in re.finditer(r"%%ev:\s*.*?%%", content):
+        marker = parse_evidence_marker(match.group(0).strip())
+        for item in marker.items:
+            try:
+                source = parse_source_span_ref(item)
+            except ValueError:
+                continue
+            if source.work_id not in citekeys:
+                unresolved.add(source.work_id)
+    return sorted(unresolved)
 
 
 def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
@@ -3433,6 +3475,8 @@ def _draft_number_findings(vault: Path, project_rel: str, content: str) -> list[
 def _render_draft_export_body(vault: Path, content: str) -> str:
     from memoria_vault.runtime.evidence import parse_evidence_marker, parse_source_span_ref
 
+    citekeys_by_work = _draft_citekeys(vault)
+
     def citation(match: re.Match[str]) -> str:
         marker = parse_evidence_marker(match.group(0).strip())
         citekeys = []
@@ -3441,9 +3485,8 @@ def _render_draft_export_body(vault: Path, content: str) -> str:
                 source = parse_source_span_ref(item)
             except ValueError:
                 continue
-            compact = state.compact_citation(vault, source.work_id)
-            if compact.get("citekey"):
-                citekeys.append(f"@{compact['citekey']}")
+            if citekey := citekeys_by_work.get(source.work_id):
+                citekeys.append(f"@{citekey}")
         return f" [{'; '.join(citekeys)}]" if citekeys else ""
 
     text = re.sub(r"\s*%%ev:\s*.*?%%", citation, content)
