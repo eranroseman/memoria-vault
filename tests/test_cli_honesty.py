@@ -143,6 +143,35 @@ def test_ask_zero_hit_renders_honest_empty_on_text_and_json_fronts(tmp_path, cap
     assert sentence in capsys.readouterr().out
 
 
+def test_ask_trace_flag_threads_through_worker_and_prints_stage_lines(tmp_path, capsys):
+    import json as jsonlib
+
+    from memoria_vault.cli import main
+    from tests.helpers import init_cli_workspace
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    args = ["ask", "--question", "zz-trace-canary", "--workspace", str(workspace)]
+
+    assert main([*args, "--trace", "--json"]) == 0
+    trace = jsonlib.loads(capsys.readouterr().out)["result"]["trace"]
+    assert trace["rerank"] == "off"
+    assert [row["stage"] for row in trace["pipeline_counts"]] == [
+        "universe",
+        "ranked",
+        "returned",
+    ]
+    assert "fusion_inputs" not in trace
+
+    assert main([*args, "--trace"]) == 0
+    out = capsys.readouterr().out
+    assert "rerank: off" in out
+    for line in ("universe: ", "ranked: ", "returned: "):
+        assert line in out
+
+    assert main([*args, "--json"]) == 0
+    assert "trace" not in jsonlib.loads(capsys.readouterr().out)["result"]
+
+
 def test_list_type_work_returns_catalog_rows(tmp_path, capsys):
     from memoria_vault.engine import api as engine_api
     from tests.helpers import init_cli_workspace

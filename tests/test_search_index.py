@@ -404,6 +404,21 @@ def test_gated_document_rides_through_as_stratum_count_without_text(tmp_path: Pa
     assert "notes/quarantined.md" not in payload
 
 
+def test_answer_query_trace_reports_counts_scores_and_rerank_off(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha beta")
+
+    traced = answer_query(vault, "alpha", trace=True)
+
+    assert traced["trace"]["rerank"] == "off"
+    assert traced["trace"]["pipeline_counts"] == traced["pipeline_counts"]
+    assert traced["trace"]["scores"] == [
+        {"path": source["path"], "score": source["score"]} for source in traced["sources"]
+    ]
+    assert "fusion_inputs" not in traced["trace"]
+    assert "trace" not in answer_query(vault, "alpha")
+
+
 def test_answer_query_carries_project_context(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     project = vault / "projects/project-alpha/project.md"

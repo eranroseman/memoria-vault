@@ -754,6 +754,7 @@ def _run_operation_job(
             k=k,
             include_stale=bool(payload.get("include_stale", False)),
             project_id=str(payload.get("project_id") or ""),
+            trace=_payload_bool(payload, "trace", False),
         )
     if operation_id == "run-seeded-error-verdict":
         from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict

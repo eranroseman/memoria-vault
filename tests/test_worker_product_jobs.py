@@ -537,6 +537,43 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
     assert [source["path"] for source in done["sources"]] == ["notes/checked.md"]
 
 
+def test_worker_rejects_unparseable_answer_query_trace_flag(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    queued = enqueue_operation(
+        vault,
+        "answer-query",
+        payload={"query": "alpha", "trace": "perhaps"},
+        idempotency_key="answer-query-invalid-trace",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "failed"
+    assert "trace must be a boolean" in done["error"]
+
+
+def test_worker_accepts_false_answer_query_trace_flag_without_trace(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    write_note(vault, "checked", "checked", "alpha beta")
+    queued = enqueue_operation(
+        vault,
+        "answer-query",
+        payload={"query": "alpha", "trace": "false"},
+        idempotency_key="answer-query-false-trace",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "done"
+    assert "trace" not in done
+
+
 def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     eval_dir = vault / ".memoria/eval"

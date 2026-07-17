@@ -188,6 +188,7 @@ def answer_query(
     k: int = 5,
     include_stale: bool = False,
     project_id: str = "",
+    trace: bool = False,
 ) -> dict[str, Any]:
     """Return a deterministic Ask/Query contract over checked retrieval hits."""
     validate_operation_context(vault, context)
@@ -207,7 +208,7 @@ def answer_query(
     stages = retrieval_pipeline.PipelineStages(len(docs))
     stages.add_ranked(len(ranked))
     stages.add_returned(len(hits))
-    return _answer_from_hits(
+    answer = _answer_from_hits(
         query,
         hits,
         frontmatter_by_path,
@@ -216,6 +217,9 @@ def answer_query(
         pipeline_counts=stages.rows(),
         excluded_strata=universe["excluded_strata"],
     )
+    if trace:
+        answer["trace"] = retrieval_pipeline.build_trace(stages.rows(), hits)
+    return answer
 
 
 def search_checked_index(

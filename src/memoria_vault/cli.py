@@ -106,6 +106,7 @@ def _build_parser() -> argparse.ArgumentParser:
     ask = sub.add_parser("ask")
     _common(ask)
     ask.add_argument("--question", required=True)
+    ask.add_argument("--trace", action="store_true")
     ask.set_defaults(handler=_cmd_ask)
 
     serve = sub.add_parser("serve")
@@ -720,27 +721,37 @@ def _cmd_doctor_self_test(args: argparse.Namespace) -> int:
 
 
 def _cmd_ask(args: argparse.Namespace) -> int:
-    result = _enqueue_and_run(
-        args,
-        "answer-query",
-        {"query": args.question, "k": 5},
-    )
-    return _emit_ask_result(result, args)
+    payload: dict[str, Any] = {"query": args.question, "k": 5}
+    if args.trace:
+        payload["trace"] = True
+    result = _enqueue_and_run(args, "answer-query", payload)
+    return _emit_ask_result(result, args, print_trace=args.trace)
 
 
-def _emit_ask_result(result: dict[str, Any], args: argparse.Namespace) -> int:
+def _emit_ask_result(
+    result: dict[str, Any], args: argparse.Namespace, *, print_trace: bool = False
+) -> int:
     raw = result.get("result")
     answer: dict[str, Any] = raw if isinstance(raw, dict) else {}
-    if (
-        bool(result.get("ok"))
-        and not args.json
-        and not args.quiet
-        and not answer.get("sources")
-        and answer.get("unknowns")
-    ):
+    text_front = bool(result.get("ok")) and not args.json and not args.quiet
+    if text_front and not answer.get("sources") and answer.get("unknowns"):
         print(str(answer["unknowns"][0]))
+        if print_trace:
+            _print_ask_trace(answer)
         return 0
-    return _emit(result, args)
+    code = _emit(result, args)
+    if text_front and print_trace:
+        _print_ask_trace(answer)
+    return code
+
+
+def _print_ask_trace(answer: dict[str, Any]) -> None:
+    trace = answer.get("trace")
+    if not isinstance(trace, dict):
+        return
+    for row in trace.get("pipeline_counts") or []:
+        print(f"{row['stage']}: {row['count']}")
+    print(f"rerank: {trace.get('rerank', 'off')}")
 
 
 def _cmd_serve(args: argparse.Namespace) -> int:
