@@ -3191,7 +3191,7 @@ Steps:
 
 Steps:
 
-- [ ] Edit the manifest. Replace lines 4-5 (description) with:
+- [x] Edit the manifest. Replace lines 4-5 (description) with:
   ```yaml
   description: Flag a missing or stale generated bibliography.bib projection for
     checked catalog sources.
@@ -3207,29 +3207,35 @@ Steps:
   operation ids are stable API.
   ```
 
-- [ ] Edit `docs/reference/commands-and-transports/system-actions-operations.md:140`
+- [x] Edit `docs/reference/commands-and-transports/system-actions-operations.md:140`
   — replace the row's third cell so the full row reads:
   ```markdown
   | Check citation survival | runtime integrity helper (`check_citation_survival`) | Flags a missing or stale generated `bibliography.bib` projection for checked catalog sources; this is the vault-level bibliography staleness check, not a per-Concept citation-payload scan. |
   ```
 
-- [ ] Regenerate the one drifted golden and verify the sweep:
+- [x] Regenerate the one drifted golden and verify the sweep:
   `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest "tests/test_floor_sweep_operations.py::test_operation[regenerate-capability-index]" -v`
   then re-run without the env var:
   `python -m pytest "tests/test_floor_sweep_operations.py::test_operation[regenerate-capability-index]" "tests/test_floor_sweep_operations.py::test_operation[integrity-citation-survival-check]" -v`
   — both pass; `git diff tests/fixtures/floor/goldens/` shows only the one
   capability-index file hash changing.
 
-- [ ] Verify gates: `python scripts/checks/doc_claims_gate.py` prints
+- [x] Verify gates: `python scripts/checks/doc_claims_gate.py` prints
   `doc-claims-gate: clean`; `python -m pytest tests/test_capabilities.py tests/test_integrity.py -q` passes.
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/product/capabilities/operations/integrity-citation-survival-check.md docs/reference/commands-and-transports/system-actions-operations.md tests/fixtures/floor/goldens/regenerate-capability-index.json
   git commit -m "docs: describe citation-survival check as the shipped bibliography.bib staleness check (NODES §4)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Completion record (2026-07-17):** Implemented in `8006b641` and approved by
+independent review. The authorized capability-index golden was regenerated;
+both named floor operations, the documentation-claims gate, and the
+capabilities/integrity suite (20 tests) passed. Branch-wide final verification
+remains scheduled with the next behavioral batch.
 
 ---
 
