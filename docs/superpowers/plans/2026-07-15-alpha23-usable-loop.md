@@ -1331,6 +1331,39 @@ Two documented boundaries (do not widen this task):
   (the same-transaction cascade `state.py:3388-3403` already keeps `check_status`
   accurate in the window between verdict write and refresh).
 
+**R2 re-verification reconciliation amendment (2026-07-17):** a direct file
+edit invalidates its checked output hash, so it must take the barrier-refused
+removal path rather than be reindexed. The allowed changed-file reindex test
+must model a completed re-verification by calling the existing test helper
+`mark_file_status` after it changes `alpha.md`; the pre-existing
+`test_passage_index_refreshes_stale_file_and_cascades_status` must do the same.
+The third CANARY regression continues to model the direct, unverified edit and
+must prove it is removed without a `safe_read`.
+
+**Searchability consistency amendment (2026-07-17):** a changed, reverified
+file-backed document that now fails `_is_searchable_frontmatter` must be
+removed when it was previously indexed, matching `checked_concepts` and the
+full rebuild. Replace the stale-scan's `known is None` searchability guard with
+an unconditional guard that adds `known` paths to `removed` before continuing.
+Add a fourth regression that changes an indexed checked note to
+`lifecycle: archived`, refreshes its output record with `mark_file_status`,
+then proves its passages and file-index state are removed. Include it in the
+RED/GREEN focused command.
+
+**Checked-graph provenance amendment (2026-07-18):** “the refresh path never
+touches `concept_edges`” forbids graph reconciliation from
+`refresh_stale_passages`; it does not exempt the verdict transition that
+revokes a source's authority. A non-`checked` concept verdict must centrally
+demote mirror-owned, non-`tension` edge rows whose `source_path` is that
+concept. Re-checking a concept must not revive historical edges; a full rebuild
+is the sole re-admission path. `graph_sql.neighborhood` must additionally
+require the current `concept_status` for mirror-owned edges, so a database
+created during the vulnerable interval cannot bridge through a revoked source.
+Add a regression with A–B–C where B owns both links: after B is demoted and an
+incremental refresh runs, B's passage and both eligible graph paths are absent,
+while a PI-owned `tension` row remains untouched. The focused RED/GREEN command
+must cover this regression and the graph-SQL suite.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/indexing.py:41-59` (replace
   `refresh_stale_passages`)
@@ -1361,7 +1394,7 @@ Two documented boundaries (do not widen this task):
 
 **Steps:**
 
-- [ ] Write the failing tests. Add the import of `safe_read` to
+- [x] Write the failing tests. Add the import of `safe_read` to
   `tests/test_query_substrate.py` (after line 9,
   `from memoria_vault.runtime.policy.audit import sha256_file`):
 
@@ -1422,6 +1455,7 @@ Two documented boundaries (do not widen this task):
           path.read_text(encoding="utf-8").replace("first version", "second version"),
           encoding="utf-8",
       )
+      mark_file_status(vault, "notes/alpha.md")
       refreshed = call_with_context(indexing.refresh_stale_passages, vault)
 
       assert refreshed["passages"] == {"inserted": 1, "paths": 1}
@@ -1459,7 +1493,7 @@ Two documented boundaries (do not widen this task):
       assert "notes/beta.md" not in state.file_index_states(vault)
   ```
 
-- [ ] Add a third failing regression test,
+- [x] Add a third failing regression test,
   `test_refresh_removes_barrier_refused_changed_checked_file_without_read`, to
   `tests/test_query_substrate.py`. Seed and rebuild one checked note, overwrite
   it with a `CANARY` body and advance its mtime beyond the stored index state,
@@ -1470,7 +1504,7 @@ Two documented boundaries (do not widen this task):
   R2 barrier-before-read rule for incremental refresh, rather than merely
   asserting its final database state.
 
-- [ ] Run the tests to verify they fail:
+- [x] Run the tests to verify they fail:
 
   ```
   python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" "tests/test_query_substrate.py::test_refresh_removes_barrier_refused_changed_checked_file_without_read" -v
@@ -1484,7 +1518,7 @@ Two documented boundaries (do not widen this task):
   `safe_read` for a changed, barrier-refused checked file, which the canary
   monkeypatch rejects.
 
-- [ ] Write the bulk-status helper. In
+- [x] Write the bulk-status helper. In
   `src/memoria_vault/runtime/state.py`, insert after `concept_check_status`
   (after line 1072):
 
@@ -1499,7 +1533,7 @@ Two documented boundaries (do not widen this task):
       return {str(row["concept_id"]): str(row["check_status"]) for row in rows}
   ```
 
-- [ ] Write the stale-scan. In `src/memoria_vault/runtime/search_index.py`,
+- [x] Write the stale-scan. In `src/memoria_vault/runtime/search_index.py`,
   add `import hashlib` to the stdlib import block (line 5, before `import
   json`), then insert after `checked_concepts` (after line 150):
 
@@ -1551,7 +1585,9 @@ Two documented boundaries (do not widen this task):
                   continue
               text = safe_read(path)
               frontmatter = _frontmatter_with_flags(vault, rel, text)
-              if known is None and not _is_searchable_frontmatter(frontmatter):
+              if not _is_searchable_frontmatter(frontmatter):
+                  if known is not None:
+                      removed.add(rel)
                   continue
               stale.append(
                   {"path": rel, "text": text, "frontmatter": frontmatter, "source": path}
@@ -1577,7 +1613,7 @@ Two documented boundaries (do not widen this task):
   barrier-before-read invariant while retaining mtime/status gating for
   unchanged files.
 
-- [ ] Replace `refresh_stale_passages` in
+- [x] Replace `refresh_stale_passages` in
   `src/memoria_vault/runtime/indexing.py` (lines 41-59) with:
 
   ```python
@@ -1600,21 +1636,21 @@ Two documented boundaries (do not widen this task):
   `search_index` imports `indexing` at module top, so the reverse import must
   stay lazy.)
 
-- [ ] Run the new tests to verify they pass:
+- [x] Run the new tests to verify they pass:
 
   ```
   python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" "tests/test_query_substrate.py::test_refresh_removes_barrier_refused_changed_checked_file_without_read" -v
   ```
 
-- [ ] Run the neighboring suites that exercise the refresh path end to end:
+- [x] Run the neighboring suites that exercise the refresh path end to end:
 
   ```
   python -m pytest tests/test_query_substrate.py tests/test_search_index.py tests/test_retrieval_substrate.py -v
   ```
 
-- [ ] Run the full gate: `python scripts/verify`
+- [x] Run the full gate: `python scripts/verify`
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/indexing.py src/memoria_vault/runtime/search_index.py src/memoria_vault/runtime/state.py tests/test_query_substrate.py
@@ -1671,6 +1707,17 @@ readiness block in the result so the caller sees what is missing.
   `ValueError("project is not export-ready: <missing…>")`.
 - Consumes: `project_export_readiness(vault, project_path, *, context) ->
   dict[str, Any]` (`knowledge.py:2609`, unchanged).
+
+**Preflight reconciliation amendment (2026-07-17):** the new default
+non-draft gate runs before renderer, output-target, and Pandoc checks. Add
+`allow_unready=True` to the four existing non-ready tests at
+`tests/test_project_knowledge.py:274,314,367,488` so they still exercise their
+intended renderer/output/Pandoc behavior rather than failing at readiness.
+In `docs/reference/pipelines-and-io/export.md`, change only the **Memoria
+project export** route-table cell to `[--allow-not-ready]`; remove the stale
+bracketed readiness flag from the **Memoria draft export** cell because the
+draft route retains its independent, always-on evidence gate and ignores this
+non-draft opt-out.
 
 **Steps:**
 
@@ -1823,8 +1870,9 @@ readiness block in the result so the caller sees what is missing.
   project has required paper framing and checked support." (lines 22-25) with:
   "The export fails closed unless the project has required paper framing and
   checked support; add `--allow-not-ready` to export a review packet anyway."
-  and change both `[--ready-only]` cells in the Export routes table (lines
-  51-52) to `[--allow-not-ready]`.
+  and change the non-draft **Memoria project export** route-table cell (line
+  51) to `[--allow-not-ready]`; remove the stale bracketed readiness flag from
+  the separate draft-route cell (line 52).
 
 - [ ] Run the affected suites:
 
