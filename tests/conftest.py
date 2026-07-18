@@ -110,6 +110,7 @@ TEST_LEVELS = {
     "test_schemas.py": "contract",
     "test_search_index.py": "contract",
     "test_seed_lifecycle.py": "contract",
+    "test_seed_manifest.py": "contract",
     "test_seeded_errors.py": "runtime",
     "test_secrets.py": "unit",
     "test_session_summary.py": "contract",

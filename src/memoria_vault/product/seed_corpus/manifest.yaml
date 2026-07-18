@@ -1,0 +1,88 @@
+# Seed-corpus manifest - the shipped artifact of
+# docs/superpowers/specs/2026-07-16-o1-onboarding-seed-design.md (section 2).
+# Fetch-on-onboard, manifest-only (section 1): pinned identifier + license +
+# evidence URL + fetch method ship here; no third-party content enters the
+# repo or the package. Every fetch is https and needs no credentials.
+# tests/test_seed_manifest.py carries the license impl-start check.
+
+- id: chen-2018-undesirable-difficulty
+  title: "Undesirable Difficulty Effects in the Learning of High-Element Interactivity Materials"
+  identifier: "doi:10.3389/fpsyg.2018.01483"
+  license: CC BY 4.0
+  license_evidence: "https://www.frontiersin.org/articles/10.3389/fpsyg.2018.01483/full"
+  fetch:
+    method: pmc-oa
+    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6099118"
+  role: "Tension pair A: desirable difficulty effects shrink or reverse for high-element-interactivity material"
+
+- id: moreira-2019-retrieval-practice
+  title: "Retrieval Practice in Classroom Settings: A Review of Applied Research"
+  identifier: "doi:10.3389/feduc.2019.00005"
+  license: CC BY
+  license_evidence: "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/full"
+  fetch:
+    method: pdf-url
+    url: "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
+  role: "Tension pair B: retrieval practice benefits complex authentic classroom material"
+
+- id: settles-2016-spaced-repetition
+  title: "A Trainable Spaced Repetition Model for Language Learning"
+  identifier: "doi:10.18653/v1/P16-1174"
+  license: CC BY 4.0
+  license_evidence: "https://aclanthology.org/P16-1174/"
+  fetch:
+    method: pdf-url
+    url: "https://aclanthology.org/P16-1174.pdf"
+  role: "Extends the testing effect to deployed adaptive scheduling"
+  repo: "https://github.com/duolingo/halflife-regression"
+
+- id: morrison-2020-offloading
+  title: "Offloading items from memory: individual differences in cognitive offloading in a short-term memory task"
+  identifier: "doi:10.1186/s41235-019-0201-4"
+  license: CC BY 4.0
+  license_evidence: "https://cognitiveresearchjournal.springeropen.com/articles/10.1186/s41235-019-0201-4"
+  fetch:
+    method: pmc-oa
+    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6942100"
+  role: "External-memory/offloading anchor (registered report); supports the card-index row"
+
+- id: ose-askvik-2020-handwriting
+  title: "The Importance of Cursive Handwriting Over Typewriting for Learning in the Classroom: A High-Density EEG Study of 12-Year-Old Children and Young Adults"
+  identifier: "doi:10.3389/fpsyg.2020.01810"
+  license: CC BY 4.0
+  license_evidence: "https://www.frontiersin.org/articles/10.3389/fpsyg.2020.01810/full"
+  fetch:
+    method: pmc-oa
+    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC7399101"
+  role: "Note-taking medium (encoding vs storage); in tension with the offloading row's storage framing"
+
+- id: schmidt-2018-luhmann-card-index
+  title: "Niklas Luhmann's Card Index: The Fabrication of Serendipity"
+  identifier: "doi:10.6092/issn.1971-8853/8350"
+  license: CC BY 4.0
+  license_evidence: "https://sociologica.unibo.it/article/view/8350"
+  fetch:
+    method: pdf-url
+    url: "https://sociologica.unibo.it/article/download/8350/8272"
+  role: "PKM/Zettelkasten anchor - the vault's own lineage"
+
+- id: mirzababaei-2021-toulmin-agent
+  title: "Developing a Conversational Agent's Capability to Identify Structural Wrongness in Arguments Based on Toulmin's Model of Arguments"
+  identifier: "doi:10.3389/frai.2021.645516"
+  license: CC BY 4.0
+  license_evidence: "https://www.frontiersin.org/articles/10.3389/frai.2021.645516/full"
+  fetch:
+    method: pmc-oa
+    url: "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC8680349"
+  role: "Toulmin argumentation operationalized in an agent; bridges to the OpenScholar row"
+
+- id: asai-2024-openscholar
+  title: "OpenScholar: Synthesizing Scientific Literature with Retrieval-augmented LMs"
+  identifier: "arxiv:2411.14199v1"
+  license: CC BY 4.0
+  license_evidence: "https://arxiv.org/abs/2411.14199v1"
+  fetch:
+    method: arxiv-pdf
+    url: "https://export.arxiv.org/pdf/2411.14199v1"
+  role: "The paper+repo pair: retrieval-augmented literature synthesis with a live companion repo"
+  repo: "https://github.com/AkariAsai/OpenScholar"
