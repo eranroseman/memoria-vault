@@ -222,7 +222,9 @@ def stale_checked_search_documents(
                 continue
             text = safe_read(path)
             frontmatter = _frontmatter_with_flags(vault, rel, text)
-            if known is None and not _is_searchable_frontmatter(frontmatter):
+            if not _is_searchable_frontmatter(frontmatter):
+                if known is not None:
+                    removed.add(rel)
                 continue
             stale.append({"path": rel, "text": text, "frontmatter": frontmatter, "source": path})
     for document in _checked_work_documents(vault):

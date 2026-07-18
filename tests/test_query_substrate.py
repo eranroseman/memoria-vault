@@ -758,3 +758,32 @@ def test_refresh_removes_barrier_refused_changed_checked_file_without_read(
     assert state.indexed_passages(vault) == []
     assert "notes/alpha.md" not in state.file_index_states(vault)
     assert call_with_context(retrieval.fts_search, vault, "CANARY") == []
+
+
+def test_refresh_removes_reverified_non_searchable_file(tmp_path: Path) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/alpha.md",
+        "type: note\ntitle: Alpha\ntags: []\nlinks: {}\n",
+        body="rarealpha indexed version",
+    )
+    rebuild_passage_index(vault)
+
+    path = vault / "notes/alpha.md"
+    stored_mtime_ns = state.file_index_states(vault)["notes/alpha.md"]["source_mtime_ns"]
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("tags: []\n", "tags: []\nlifecycle: archived\n"),
+        encoding="utf-8",
+    )
+    os.utime(
+        path,
+        ns=(path.stat().st_atime_ns, int(stored_mtime_ns) + 1_000_000_000),
+    )
+    mark_file_status(vault, "notes/alpha.md")
+
+    call_with_context(indexing.refresh_stale_passages, vault)
+
+    assert state.indexed_passages(vault) == []
+    assert "notes/alpha.md" not in state.file_index_states(vault)
