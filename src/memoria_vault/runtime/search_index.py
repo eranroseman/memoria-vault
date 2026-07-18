@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
@@ -180,6 +181,60 @@ def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
             if _is_searchable_frontmatter(frontmatter, include_stale=include_stale):
                 docs.append(path)
     return sorted(docs)
+
+
+def stale_checked_search_documents(
+    vault: Path, states: dict[str, dict[str, Any]]
+) -> tuple[list[dict[str, Any]], set[str]]:
+    """Return documents whose mtime or verdict changed, plus removed paths.
+
+    Unchanged files are gated on ``stat`` mtime + the stored verdict and are
+    never opened; generated Work documents are rebuilt from the DB and gated
+    on their text hash.
+    """
+    vault = Path(vault)
+    statuses = state.concept_check_statuses(vault)
+    stale: list[dict[str, Any]] = []
+    removed: set[str] = set()
+    seen: set[str] = set()
+    for root in _bundle_roots(vault):
+        base = vault / root
+        if not base.exists():
+            continue
+        for path in iter_markdown(base, skip_dirs=frozenset()):
+            rel = path.relative_to(vault).as_posix()
+            seen.add(rel)
+            known = states.get(rel)
+            current_status = statuses.get(rel, "unchecked")
+            if (
+                known is not None
+                and int(known.get("source_mtime_ns") or 0) == path.stat().st_mtime_ns
+                and str(known.get("check_status") or "") == current_status
+            ):
+                continue
+            if current_status != "checked":
+                if known is not None:
+                    removed.add(rel)
+                continue
+            if not is_consumable_checked_file(vault, rel):
+                if known is not None:
+                    removed.add(rel)
+                continue
+            text = safe_read(path)
+            frontmatter = _frontmatter_with_flags(vault, rel, text)
+            if known is None and not _is_searchable_frontmatter(frontmatter):
+                continue
+            stale.append({"path": rel, "text": text, "frontmatter": frontmatter, "source": path})
+    for document in _checked_work_documents(vault):
+        rel = str(document["path"])
+        seen.add(rel)
+        known = states.get(rel)
+        text_sha256 = "sha256:" + hashlib.sha256(str(document["text"]).encode()).hexdigest()
+        if known is not None and str(known.get("source_sha256") or "") == text_sha256:
+            continue
+        stale.append(document)
+    removed.update(rel for rel in states if rel not in seen)
+    return sorted(stale, key=lambda row: str(row["path"])), removed
 
 
 def answer_query(

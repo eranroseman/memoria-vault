@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import sqlite3
 from pathlib import Path
 
@@ -10,7 +11,13 @@ from memoria_vault.runtime import indexing, retrieval, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import answer_query as _answer_query
 from memoria_vault.runtime.subsystems.lib import schema
-from tests.helpers import call_with_context, copy_memoria_dirs, write_checked_concept
+from memoria_vault.runtime.vaultio import safe_read
+from tests.helpers import (
+    call_with_context,
+    copy_memoria_dirs,
+    mark_file_status,
+    write_checked_concept,
+)
 
 V14_CODE_TABLES_SQL = """
 CREATE TABLE code_artifacts (
@@ -108,6 +115,7 @@ def test_passage_index_refreshes_stale_file_and_cascades_status(tmp_path: Path) 
         path.read_text(encoding="utf-8").replace("first version", "second version"),
         encoding="utf-8",
     )
+    mark_file_status(vault, "notes/alpha.md")
     answer = answer_query(vault, "rarealpha")
 
     assert answer["engine"] == "bm25"
@@ -628,3 +636,125 @@ def test_reverse_traversal_indexes_exist(tmp_path: Path) -> None:
 
     assert "idx_concept_edges_target" in names
     assert "idx_work_graph_edges_target" in names
+
+
+def test_refresh_reindexes_only_changed_files_and_keeps_concept_edges(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/alpha.md",
+        "type: note\ntitle: Alpha\ntags: []\nlinks: {}\n",
+        body="rarealpha first version",
+    )
+    write_checked_concept(
+        vault,
+        "notes/beta.md",
+        "type: note\ntitle: Beta\ntags: []\nlinks: {}\n",
+        body="rarebeta first version",
+    )
+    rebuild_passage_index(vault)
+    state.replace_concept_edges(
+        vault,
+        [
+            {
+                "source_concept_id": "notes/alpha.md",
+                "relation_type": "supports",
+                "target_concept_id": "notes/beta.md",
+                "check_status": "checked",
+                "source_path": "notes/alpha.md",
+            }
+        ],
+    )
+    reads: list[str] = []
+
+    def counting_safe_read(path: Path) -> str:
+        reads.append(Path(path).name)
+        return safe_read(path)
+
+    monkeypatch.setattr("memoria_vault.runtime.search_index.safe_read", counting_safe_read)
+
+    unchanged = call_with_context(indexing.refresh_stale_passages, vault)
+
+    assert unchanged["passages"] == {"inserted": 0, "paths": 0}
+    assert reads == []
+
+    path = vault / "notes/alpha.md"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("first version", "second version"),
+        encoding="utf-8",
+    )
+    mark_file_status(vault, "notes/alpha.md")
+    refreshed = call_with_context(indexing.refresh_stale_passages, vault)
+
+    assert refreshed["passages"] == {"inserted": 1, "paths": 1}
+    assert reads == ["alpha.md"]
+    texts = {row["path"]: row["text"] for row in state.indexed_passages(vault)}
+    assert texts["notes/alpha.md"].endswith("rarealpha second version\n")
+    assert texts["notes/beta.md"].endswith("rarebeta first version\n")
+    with state.connect(vault) as conn:
+        edges = conn.execute("SELECT source_concept_id FROM concept_edges").fetchall()
+    assert [str(row["source_concept_id"]) for row in edges] == ["notes/alpha.md"]
+
+
+def test_refresh_drops_passages_for_removed_files(tmp_path: Path) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/alpha.md",
+        "type: note\ntitle: Alpha\ntags: []\nlinks: {}\n",
+        body="rarealpha survives",
+    )
+    write_checked_concept(
+        vault,
+        "notes/beta.md",
+        "type: note\ntitle: Beta\ntags: []\nlinks: {}\n",
+        body="rarebeta gets deleted",
+    )
+    rebuild_passage_index(vault)
+    (vault / "notes/beta.md").unlink()
+
+    call_with_context(indexing.refresh_stale_passages, vault)
+
+    paths = {row["path"] for row in state.indexed_passages(vault)}
+    assert paths == {"notes/alpha.md"}
+    assert "notes/beta.md" not in state.file_index_states(vault)
+
+
+def test_refresh_removes_barrier_refused_changed_checked_file_without_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/alpha.md",
+        "type: note\ntitle: Alpha\ntags: []\nlinks: {}\n",
+        body="rarealpha indexed version",
+    )
+    rebuild_passage_index(vault)
+
+    path = vault / "notes/alpha.md"
+    stored_mtime_ns = state.file_index_states(vault)["notes/alpha.md"]["source_mtime_ns"]
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("indexed version", "CANARY"),
+        encoding="utf-8",
+    )
+    os.utime(
+        path,
+        ns=(path.stat().st_atime_ns, int(stored_mtime_ns) + 1_000_000_000),
+    )
+
+    def refusing_safe_read(path: Path) -> str:
+        raise AssertionError(f"refresh opened barrier-refused file: {path}")
+
+    monkeypatch.setattr("memoria_vault.runtime.search_index.safe_read", refusing_safe_read)
+
+    call_with_context(indexing.refresh_stale_passages, vault)
+
+    assert state.indexed_passages(vault) == []
+    assert "notes/alpha.md" not in state.file_index_states(vault)
+    assert call_with_context(retrieval.fts_search, vault, "CANARY") == []

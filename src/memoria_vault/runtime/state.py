@@ -1110,6 +1110,14 @@ def concept_check_status(vault: Path, concept_id: str) -> str:
     return "unchecked" if row is None else str(row["check_status"])
 
 
+def concept_check_statuses(vault: Path) -> dict[str, str]:
+    if not db_path(vault).is_file():
+        return {}
+    with connect(vault) as conn:
+        rows = conn.execute("SELECT concept_id, check_status FROM concept_status").fetchall()
+    return {str(row["concept_id"]): str(row["check_status"]) for row in rows}
+
+
 def output_record(vault: Path, output_id: str) -> dict[str, Any] | None:
     target = normalize_path(output_id)
     if not db_path(vault).is_file():

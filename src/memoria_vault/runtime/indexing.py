@@ -40,24 +40,16 @@ def _rebuild_passage_index(vault: Path) -> dict[str, Any]:
 
 
 def refresh_stale_passages(vault: Path, *, context: OperationContext) -> dict[str, Any]:
-    """Refresh changed checked documents before a query, without a daemon."""
+    """Refresh changed checked documents before a query, without reading unchanged files."""
+    from memoria_vault.runtime.search_index import stale_checked_search_documents
+
     validate_operation_context(vault, context)
-    rows = _passage_rows(vault)
-    states = state.file_index_states(vault)
-    stale_paths = {
-        row["path"]
-        for row in rows
-        if states.get(row["path"], {}).get("source_mtime_ns") != row["source_mtime_ns"]
-        or states.get(row["path"], {}).get("source_sha256") != row["text_sha256"]
-        or states.get(row["path"], {}).get("check_status") != row["check_status"]
-    }
-    if not stale_paths:
-        return {"passages": {"inserted": 0, "paths": 0}, "concept_edges": {"inserted": 0}}
-    stale_rows = [row for row in rows if row["path"] in stale_paths]
-    return {
-        "passages": state.replace_indexed_passages(vault, stale_rows, paths=stale_paths),
-        "concept_edges": state.replace_concept_edges(vault, _concept_edges(rows)),
-    }
+    documents, removed = stale_checked_search_documents(vault, state.file_index_states(vault))
+    if not documents and not removed:
+        return {"passages": {"inserted": 0, "paths": 0}}
+    rows = [_passage_row(vault, document) for document in documents]
+    paths = {row["path"] for row in rows} | removed
+    return {"passages": state.replace_indexed_passages(vault, rows, paths=paths)}
 
 
 def hash_embedding(text: str, *, dim: int = VECTOR_DIM) -> list[float]:
