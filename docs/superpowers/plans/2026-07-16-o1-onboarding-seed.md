@@ -61,7 +61,7 @@ Implements spec §1 (licensing decision, license floor, fetch rule, impl-start c
 - Consumes: `yaml.safe_load` (PyYAML is a runtime dependency, pyproject.toml:15); `importlib.resources.files` (repo precedent: `_capability_resource`, runtime/capabilities.py:107-119); `safe_filename(value: str) -> str` (runtime/paths.py:15-17, in the test).
 - Produces: `load_seed_manifest() -> list[dict[str, Any]]`; `parse_seed_manifest(text: str) -> list[dict[str, Any]]`; `SEED_LICENSE_FLOOR = frozenset({"CC BY", "CC BY 4.0", "CC0"})`; `SEED_FETCH_METHODS = frozenset({"pmc-oa", "pdf-url", "arxiv-pdf"})`; the manifest row schema `{id, title, identifier, license, license_evidence, fetch{method,url}, role, repo?}` with the eight pinned work_ids that M.2/M.3 and the tutorial sections rely on.
 
-- [ ] **Step 1: Write the failing test** — create `tests/test_seed_manifest.py`:
+- [x] **Step 1: Write the failing test** — create `tests/test_seed_manifest.py`:
 
 ```python
 """Contract tests for the shipped seed-corpus manifest (O1 spec sections 1-2).
@@ -207,9 +207,9 @@ def test_parse_rejects_non_https_fetch_url() -> None:
         raise AssertionError("non-https fetch URLs must be rejected")
 ```
 
-- [ ] **Step 2: Run and watch it fail** — `python -m pytest tests/test_seed_manifest.py -v` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.product.seed_corpus'`.
+- [x] **Step 2: Run and watch it fail** — `python -m pytest tests/test_seed_manifest.py -v` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.product.seed_corpus'`.
 
-- [ ] **Step 3: Minimal implementation.** Create `src/memoria_vault/product/seed_corpus/__init__.py`:
+- [x] **Step 3: Minimal implementation.** Create `src/memoria_vault/product/seed_corpus/__init__.py`:
 
 ```python
 """Shipped seed-corpus manifest: pinned identifiers, licenses, fetch methods.
@@ -395,11 +395,11 @@ In `tests/conftest.py` `TEST_LEVELS` (dict at :18), add alphabetically (immediat
     "test_seed_manifest.py": "contract",
 ```
 
-- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_seed_manifest.py -v` → 8 passed.
+- [x] **Step 4: Run to pass** — `python -m pytest tests/test_seed_manifest.py -v` → 8 passed.
 
-- [ ] **Step 5: Perform the manual half of the §1 impl-start check** — open each of the eight `license_evidence` URLs in a browser, confirm the stated CC license and (for rows 4, 5, 7) the full titles the manifest ships; a failed row is replaced, never waived (spec §1). Record the check date in the commit body.
+- [x] **Step 5: Perform the manual half of the §1 impl-start check** — open each of the eight `license_evidence` URLs in a browser, confirm the stated CC license and (for rows 4, 5, 7) the full titles the manifest ships; a failed row is replaced, never waived (spec §1). Record the check date in the commit body.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 git add src/memoria_vault/product/seed_corpus/__init__.py src/memoria_vault/product/seed_corpus/manifest.yaml tests/test_seed_manifest.py tests/conftest.py pyproject.toml
@@ -411,6 +411,13 @@ every row's evidence URL on the commit date.
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+**Completion record (2026-07-17):** Implemented in `860ff1a7` and approved
+by independent review. The planned collection-time RED was observed and the
+focused manifest suite passed 8/8; the reviewed package-data entry was also
+verified in an installed wheel. All eight license-evidence rows and the three
+previously elided full titles were rechecked on 2026-07-17. Branch-wide final
+verification remains scheduled with the next behavioral batch.
 
 ---
 
