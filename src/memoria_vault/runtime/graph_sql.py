@@ -70,16 +70,24 @@ def neighborhood(
         rows = conn.execute(
             """
             WITH RECURSIVE
+            eligible_edges(origin_id, target_id) AS (
+                SELECT edge.source_concept_id, edge.target_concept_id
+                FROM concept_edges AS edge
+                LEFT JOIN concept_status AS source_status
+                  ON source_status.concept_id = edge.source_path
+                WHERE edge.check_status = 'checked'
+                  AND edge.relation_type IN (SELECT value FROM json_each(?))
+                  AND (
+                      edge.source_path = ''
+                      OR source_status.check_status = 'checked'
+                  )
+            ),
             edges(origin_id, target_id) AS (
-                SELECT source_concept_id, target_concept_id
-                FROM concept_edges
-                WHERE check_status = 'checked'
-                  AND relation_type IN (SELECT value FROM json_each(?))
+                SELECT origin_id, target_id
+                FROM eligible_edges
                 UNION
-                SELECT target_concept_id, source_concept_id
-                FROM concept_edges
-                WHERE check_status = 'checked'
-                  AND relation_type IN (SELECT value FROM json_each(?))
+                SELECT target_id, origin_id
+                FROM eligible_edges
             ),
             walk(concept_id, hops) AS (
                 SELECT value, 0 FROM json_each(?)
@@ -91,7 +99,7 @@ def neighborhood(
             )
             SELECT DISTINCT concept_id FROM walk ORDER BY concept_id
             """,
-            (relations_json, relations_json, seeds_json, depth),
+            (relations_json, seeds_json, depth),
         ).fetchall()
     ids = [str(row["concept_id"]) for row in rows]
     return {

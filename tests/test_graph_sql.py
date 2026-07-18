@@ -121,6 +121,39 @@ def test_neighborhood_depth_two_reaches_two_hops(tmp_path: Path) -> None:
     assert result["counts"] == {"seeds": 1, "neighbors": 2, "returned": 3}
 
 
+def test_neighborhood_rejects_stale_checked_mirror_edges_for_revoked_source(tmp_path: Path) -> None:
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": "notes/a.md", "concept_type": "note"},
+            {"concept_id": "notes/b.md", "concept_type": "note"},
+            {"concept_id": "notes/c.md", "concept_type": "note"},
+        ],
+    )
+    state.set_concept_verdict(tmp_path, "notes/b.md", "unchecked")
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            {
+                "source_concept_id": "notes/b.md",
+                "relation_type": "supports",
+                "target_concept_id": "notes/a.md",
+                "check_status": "checked",
+                "source_path": "notes/b.md",
+            },
+            {
+                "source_concept_id": "notes/b.md",
+                "relation_type": "supports",
+                "target_concept_id": "notes/c.md",
+                "check_status": "checked",
+                "source_path": "notes/b.md",
+            },
+        ],
+    )
+
+    assert graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)["ids"] == ["notes/a.md"]
+
+
 def test_neighborhood_relations_filter_restricts_expansion(tmp_path: Path) -> None:
     _seed_concept_edges(tmp_path)
 

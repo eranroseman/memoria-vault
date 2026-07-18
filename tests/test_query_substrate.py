@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import indexing, retrieval, state
+from memoria_vault.runtime import graph_sql, indexing, retrieval, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import answer_query as _answer_query
 from memoria_vault.runtime.subsystems.lib import schema
@@ -697,6 +697,135 @@ def test_refresh_reindexes_only_changed_files_and_keeps_concept_edges(
     with state.connect(vault) as conn:
         edges = conn.execute("SELECT source_concept_id FROM concept_edges").fetchall()
     assert [str(row["source_concept_id"]) for row in edges] == ["notes/alpha.md"]
+
+
+@pytest.mark.parametrize("revoked_status", ["unchecked", "quarantined"])
+def test_verdict_demotion_revokes_mirror_edges_before_passage_refresh(
+    tmp_path: Path, revoked_status: str
+) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/a.md",
+        "type: note\ntitle: A\ntags: []\nlinks: {}\n",
+        body="alpha endpoint",
+    )
+    write_checked_concept(
+        vault,
+        "notes/b.md",
+        "type: note\ntitle: B\ntags: []\nlinks:\n  supports:\n    - notes/a.md\n    - notes/c.md\n",
+        body="bridge endpoint",
+    )
+    write_checked_concept(
+        vault,
+        "notes/c.md",
+        "type: note\ntitle: C\ntags: []\nlinks: {}\n",
+        body="gamma endpoint",
+    )
+    write_checked_concept(
+        vault,
+        "notes/d.md",
+        "type: note\ntitle: D\ntags: []\nlinks: {}\n",
+        body="pi tension endpoint",
+    )
+    rebuild_passage_index(vault)
+
+    assert graph_sql.neighborhood(vault, ["notes/a.md"], depth=2, relations={"supports"})[
+        "ids"
+    ] == [
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c.md",
+    ]
+    with state.connect(vault) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " source_concept_id, relation_type, target_concept_id,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                "notes/a.md",
+                "tension",
+                "notes/d.md",
+                "checked",
+                "",
+                "2026-07-18T00:00:00Z",
+            ),
+        )
+
+    state.set_concept_verdict(vault, "notes/b.md", revoked_status)
+
+    all_edges = state.concept_edges(vault, checked_only=False)
+    mirror_edges = [edge for edge in all_edges if edge["source_path"] == "notes/b.md"]
+    assert {
+        (edge["source_concept_id"], edge["target_concept_id"], edge["check_status"])
+        for edge in mirror_edges
+    } == {
+        ("notes/b.md", "notes/a.md", revoked_status),
+        ("notes/b.md", "notes/c.md", revoked_status),
+    }
+    tension = next(
+        edge
+        for edge in all_edges
+        if edge["relation_type"] == "tension" and edge["source_path"] == ""
+    )
+    assert {
+        key: tension[key]
+        for key in ("source_concept_id", "target_concept_id", "check_status", "source_path")
+    } == {
+        "source_concept_id": "notes/a.md",
+        "target_concept_id": "notes/d.md",
+        "check_status": "checked",
+        "source_path": "",
+    }
+
+    refreshed = call_with_context(indexing.refresh_stale_passages, vault)
+
+    assert refreshed["passages"] == {"inserted": 0, "paths": 0}
+    assert {row["path"] for row in state.indexed_passages(vault)} == {
+        "notes/a.md",
+        "notes/c.md",
+        "notes/d.md",
+    }
+    assert "notes/b.md" not in state.file_index_states(vault)
+    assert graph_sql.neighborhood(vault, ["notes/a.md"], depth=2, relations={"supports"})[
+        "ids"
+    ] == ["notes/a.md"]
+    assert graph_sql.neighborhood(vault, ["notes/a.md"], depth=2, relations={"tension"})["ids"] == [
+        "notes/a.md",
+        "notes/d.md",
+    ]
+
+    state.set_concept_verdict(vault, "notes/b.md", "checked")
+
+    assert {
+        edge["check_status"]
+        for edge in state.concept_edges(vault, checked_only=False)
+        if edge["source_path"] == "notes/b.md"
+    } == {revoked_status}
+    assert graph_sql.neighborhood(vault, ["notes/a.md"], depth=2, relations={"supports"})[
+        "ids"
+    ] == ["notes/a.md"]
+
+    rebuild_passage_index(vault)
+
+    assert {
+        edge["check_status"]
+        for edge in state.concept_edges(vault, checked_only=False)
+        if edge["source_path"] == "notes/b.md"
+    } == {"checked"}
+    assert graph_sql.neighborhood(vault, ["notes/a.md"], depth=2, relations={"supports"})[
+        "ids"
+    ] == [
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c.md",
+    ]
+    assert graph_sql.neighborhood(vault, ["notes/a.md"], depth=2, relations={"tension"})["ids"] == [
+        "notes/a.md",
+        "notes/d.md",
+    ]
 
 
 def test_refresh_drops_passages_for_removed_files(tmp_path: Path) -> None:

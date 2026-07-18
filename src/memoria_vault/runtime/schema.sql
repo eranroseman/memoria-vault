@@ -274,6 +274,26 @@ BEGIN
        OR path = NEW.concept_id
        OR ('catalog/sources/' || work_id) = NEW.concept_id;
 END;
+CREATE TRIGGER IF NOT EXISTS concept_verdicts_edge_demotion_insert
+AFTER INSERT ON concept_verdicts
+WHEN NEW.check_status IN ('unchecked', 'quarantined')
+BEGIN
+    UPDATE concept_edges
+    SET check_status = NEW.check_status
+    WHERE source_path = NEW.concept_id
+      AND source_path != ''
+      AND relation_type != 'tension';
+END;
+CREATE TRIGGER IF NOT EXISTS concept_verdicts_edge_demotion_update
+AFTER UPDATE OF check_status ON concept_verdicts
+WHEN NEW.check_status IN ('unchecked', 'quarantined')
+BEGIN
+    UPDATE concept_edges
+    SET check_status = NEW.check_status
+    WHERE source_path = NEW.concept_id
+      AND source_path != ''
+      AND relation_type != 'tension';
+END;
 CREATE TRIGGER IF NOT EXISTS catalog_sources_passage_cascade_update
 AFTER UPDATE OF check_status ON catalog_sources
 BEGIN
