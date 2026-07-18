@@ -942,31 +942,34 @@ def test_idle_monitor_exits_despite_unauthenticated_probes(workspace: Path) -> N
         server.server_close()
 
 
-def test_idle_monitor_extends_on_authenticated_requests(workspace: Path) -> None:
-    server = _make_server(workspace, token="test-token", boot_id="boot-live")
-    port = int(server.server_address[1])
-    serve_thread = threading.Thread(
-        target=lambda: server.serve_forever(poll_interval=0.01), daemon=True
-    )
-    serve_thread.start()
-    assert server.serve_forever_started.wait(timeout=5)
-    monitor = start_idle_monitor(server, idle_exit_seconds=1.0, poll_interval=0.01)
-    try:
-        for _ in range(3):
-            time.sleep(0.4)
-            status, _payload = _request(port, "GET", "/status", token="test-token")
-            assert status == 200
+def test_authenticated_request_extends_idle_shutdown_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Clock:
+        def __init__(self, value: float) -> None:
+            self.value = value
 
-        assert serve_thread.is_alive()
-        serve_thread.join(timeout=5)
-        assert not serve_thread.is_alive()
-        monitor.join(timeout=5)
-        assert not monitor.is_alive()
-    finally:
-        server.shutdown()
-        serve_thread.join(timeout=5)
-        monitor.join(timeout=5)
-        server.server_close()
+        def monotonic(self) -> float:
+            return self.value
+
+    clock = Clock(100.0)
+    monkeypatch.setattr(http_transport, "time", clock)
+    server = object.__new__(http_transport.MemoriaHTTPServer)
+    server.last_authenticated = 0.0
+    server._authenticated_lock = threading.Lock()
+    server._authenticated_in_flight = 0
+    server._idle_shutdown_reserved = False
+
+    with server.authenticated_request() as admitted:
+        assert admitted is True
+        assert server.last_authenticated == 100.0
+        assert server._authenticated_in_flight == 1
+
+    assert server._authenticated_in_flight == 0
+    clock.value = 100.99
+    assert server.reserve_idle_shutdown(1.0) is False
+    clock.value = 101.0
+    assert server.reserve_idle_shutdown(1.0) is True
 
 
 @pytest.mark.parametrize(
