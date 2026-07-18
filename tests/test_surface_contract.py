@@ -4,6 +4,7 @@ from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import (
     SURFACE_ACTIONS,
     SURFACE_CONTRACT_VERSION,
+    SURFACE_JOBS,
     actions_by_id,
     cli_commands,
     http_routes,
@@ -45,6 +46,7 @@ def test_surface_contract_explore_is_cli_only_with_current_shape() -> None:
 
     assert action == {
         "id": "explore.read",
+        "job": "read",
         "summary": (
             "Surface a checked topic neighborhood. Distinct from memoria project explore, "
             "which lists exploration-channel candidates."
@@ -120,3 +122,37 @@ def test_surface_contract_cli_commands_are_current_parser_commands() -> None:
     assert "memoria surface schema" in commands
     assert "memoria explore" in commands
     assert "memoria workspace scan" not in commands
+
+
+def test_surface_contract_job_vocabulary_is_closed() -> None:
+    assert SURFACE_JOBS == ("read", "knowledge", "project", "review", "upkeep")
+
+
+def test_surface_contract_every_row_carries_a_valid_job() -> None:
+    for action in SURFACE_ACTIONS:
+        assert action.get("job") in SURFACE_JOBS, (
+            f"{action['id']}: job={action.get('job')!r} is missing or outside SURFACE_JOBS"
+        )
+
+
+def test_surface_contract_job_mapping_is_pinned() -> None:
+    assert {str(action["id"]): str(action["job"]) for action in SURFACE_ACTIONS} == {
+        "status.read": "read",
+        "operations.list": "read",
+        "surface.openapi": "read",
+        "surface.schema": "read",
+        "requests.list": "review",
+        "requests.get": "review",
+        "attention.list": "review",
+        "attention.get": "review",
+        "concepts.list": "read",
+        "concepts.get": "read",
+        "work.get": "read",
+        "journal.list": "read",
+        "journal.get": "read",
+        "exploration.list": "read",
+        "explore.read": "read",
+        "project.slice.read": "project",
+        "project.draft.read": "project",
+        "operation.run": "upkeep",
+    }

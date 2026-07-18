@@ -6,10 +6,12 @@ from typing import Any
 
 SURFACE_CONTRACT_VERSION = "surface-contract.v1"
 ENGINE_READ_API_VERSION = "engine-read-api.v1"
+SURFACE_JOBS: tuple[str, ...] = ("read", "knowledge", "project", "review", "upkeep")
 
 SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     {
         "id": "status.read",
+        "job": "read",
         "summary": "Read engine status.",
         "engine": "read_status",
         "kind": "read",
@@ -22,6 +24,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "operations.list",
+        "job": "read",
         "summary": "List packaged operations.",
         "engine": "read_operations",
         "kind": "read",
@@ -34,6 +37,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "surface.openapi",
+        "job": "read",
         "summary": "Read the local HTTP OpenAPI schema.",
         "engine": "read_surface_schema",
         "kind": "read",
@@ -49,6 +53,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "surface.schema",
+        "job": "read",
         "summary": "Print the shared surface contract schema.",
         "engine": "read_surface_schema",
         "kind": "read",
@@ -59,6 +64,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "requests.list",
+        "job": "review",
         "summary": "List operation requests.",
         "engine": "read_requests",
         "kind": "read",
@@ -71,6 +77,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "requests.get",
+        "job": "review",
         "summary": "Read one operation request.",
         "engine": "read_request",
         "kind": "read",
@@ -87,6 +94,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "attention.list",
+        "job": "review",
         "summary": "List attention items.",
         "engine": "read_attention",
         "kind": "read",
@@ -103,6 +111,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "attention.get",
+        "job": "review",
         "summary": "Read one attention item.",
         "engine": "read_attention_card",
         "kind": "read",
@@ -115,6 +124,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "concepts.list",
+        "job": "read",
         "summary": "List scoped Concept summaries.",
         "engine": "read_concepts",
         "kind": "read",
@@ -127,6 +137,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "concepts.get",
+        "job": "read",
         "summary": "Read one Concept.",
         "engine": "read_concept",
         "kind": "read",
@@ -139,6 +150,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "work.get",
+        "job": "read",
         "summary": "Read one Work catalog record.",
         "engine": "read_work",
         "kind": "read",
@@ -154,6 +166,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "journal.list",
+        "job": "read",
         "summary": "List journal events.",
         "engine": "read_journal",
         "kind": "read",
@@ -173,6 +186,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "journal.get",
+        "job": "read",
         "summary": "Read one journal event.",
         "engine": "read_journal_event",
         "kind": "read",
@@ -185,6 +199,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "exploration.list",
+        "job": "read",
         "summary": "Read recent exploration channel events.",
         "engine": "read_exploration",
         "kind": "read",
@@ -196,6 +211,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "explore.read",
+        "job": "read",
         "summary": (
             "Surface a checked topic neighborhood. Distinct from memoria project explore, "
             "which lists exploration-channel candidates."
@@ -215,6 +231,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "project.slice.read",
+        "job": "project",
         "summary": "Read a project slice.",
         "engine": "read_slice",
         "kind": "read",
@@ -226,6 +243,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "project.draft.read",
+        "job": "project",
         "summary": "Read a project draft.",
         "engine": "read_draft",
         "kind": "read",
@@ -237,6 +255,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "operation.run",
+        "job": "upkeep",
         "summary": "Run one packaged operation.",
         "engine": "run_operation",
         "kind": "write",
