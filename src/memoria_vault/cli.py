@@ -85,6 +85,11 @@ PROJECT_EXPLORE_HELP = (
 
 
 def main(argv: list[str] | None = None) -> int:
+    from memoria_vault.runtime.secrets import load_secrets
+
+    secrets_report = load_secrets()
+    if secrets_report["warning"]:
+        print(f"memoria: {secrets_report['warning']}", file=sys.stderr)
     parser = _build_parser()
     args = parser.parse_args(argv)
     try:
