@@ -24,6 +24,14 @@
 - Verification: `python scripts/verify` passed (**2,381 passed, 9 skipped**).
   The sealed credential-handling security diff scan found no reportable issue:
   `/tmp/codex-security-scans/memoria-vault/93bfe71c_20260717T172145Z/report.md`.
+- **BOOT-B.2 complete:** `8658d60f` loads the already-reviewed user-scope
+  secrets file at the sole CLI entry seam before parser construction and handler
+  dispatch, preserving process-environment precedence and printing one
+  value-free `memoria: ` warning when the loader refuses an unsafe file.
+  `tests/test_cli_secrets.py` passed (**3 passed**); the full gate passed
+  (**2,459 passed, 11 skipped, 1 existing warning**); the sealed diff scan found
+  no reportable issue:
+  `/tmp/codex-security-scans/memoria-vault/8658d60f_20260718T021648Z/report.md`.
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
@@ -2809,13 +2817,13 @@ each is the standard reading; assembler may veto):
 
 **Steps:**
 
-- [ ] Register the new test file in `tests/conftest.py` `TEST_LEVELS`:
+- [x] Register the new test file in `tests/conftest.py` `TEST_LEVELS`:
 
   ```python
       "test_cli_secrets.py": "contract",
   ```
 
-- [ ] Write the failing test — create `tests/test_cli_secrets.py`:
+- [x] Write the failing test — create `tests/test_cli_secrets.py`:
 
   ```python
   """CLI contract tests for the secrets seam and `memoria secrets` verbs (spec 4b)."""
@@ -2891,7 +2899,7 @@ each is the standard reading; assembler may veto):
       assert "MEMORIA_TEST_SENTINEL_KEY" not in os.environ
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
 
   ```
   python -m pytest tests/test_cli_secrets.py -v
@@ -2902,7 +2910,7 @@ each is the standard reading; assembler may veto):
   'MEMORIA_TEST_SENTINEL_KEY'` and `AssertionError` on the empty stderr respectively);
   the env-wins test passes trivially.
 
-- [ ] Write minimal implementation — in `src/memoria_vault/cli.py`, replace `main()`
+- [x] Write minimal implementation — in `src/memoria_vault/cli.py`, replace `main()`
   (lines 55-64):
 
   ```python
@@ -2924,7 +2932,7 @@ each is the standard reading; assembler may veto):
 
   (The local import keeps the stdlib `secrets` module import at `cli.py:9` unshadowed.)
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_secrets.py -v
@@ -2932,7 +2940,7 @@ each is the standard reading; assembler may veto):
 
   Expected: 3 passed.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/cli.py tests/test_cli_secrets.py tests/conftest.py
