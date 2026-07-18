@@ -17,6 +17,32 @@
 
 ## Execution status — 2026-07-17
 
+- **BOOT-A.1 complete:** `c0b4c9cf` implements the per-vault state directory
+  and canonical SHA-256 key. Focused tests (11), full verification, an
+  explicit runtime-policy scan, and independent review passed.
+- **BOOT-A.2 complete:** `d4bce192` plus `c8e7625c` implement atomic 0600
+  runtime state and portable PID liveness. Focused tests (20), full
+  verification, a clean security scan, and re-review passed.
+- **BOOT-A.3 complete:** `46b9e522` plus `0e7e7757` implement exclusive
+  locking and stale-entry cleanup, including symlink/junction refusal.
+  Focused tests (33), full verification, a clean security scan, and re-review
+  passed.
+- **BOOT-A.4 complete:** `ab98d890` adds the lifecycle endpoints and
+  Host/Origin validation. Focused lifecycle tests (11), full verification,
+  a clean security scan, and review passed.
+- **BOOT-A.5 complete:** `2a52a3d3` plus `4e52c108` add idle-exit and port
+  walking with atomic shutdown reservation. Focused tests (66), full
+  verification, a clean security scan, and re-review passed.
+- **BOOT-A.6 complete:** `40f41a7c` plus `dfe6b1eb` and plan amendment
+  `c197508b` wire `memoria serve` and harden lifecycle requests against
+  proxies, redirects, stale boot identities, and oversized responses. Focused
+  tests (117), full and docs-only verification, and the security scan passed.
+- **BOOT-A.7 complete:** `4142a774` plus `7cfb6230` and plan amendment
+  `eaf7004c` implement handshake spawn/discovery and trusted child imports.
+  Focused tests (26), full verification, a clean scan, and re-review passed.
+- **BOOT-A.8 complete:** `de473f3d` plus plan amendment `e12f26e2` implements
+  the `memoria handshake` CLI contract. Focused coverage (4), full
+  verification, a clean security scan, and re-review passed.
 - **BOOT-B.1 complete:** `93bfe71c` adds the user-scope secrets loader, test-suite
   XDG isolation, and 11 focused tests. It rejects relative XDG locations,
   nonregular/corrupt/world-readable files, and NUL-bearing values before an
