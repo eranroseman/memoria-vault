@@ -144,6 +144,13 @@ def _build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--trace", action="store_true")
     ask.set_defaults(handler=_cmd_ask)
 
+    secrets_cmd = sub.add_parser("secrets")
+    secrets_sub = secrets_cmd.add_subparsers(dest="secrets_command", required=True)
+    secrets_set = secrets_sub.add_parser("set")
+    _common(secrets_set, workspace_required=False)
+    secrets_set.add_argument("name")
+    secrets_set.set_defaults(handler=_cmd_secrets_set)
+
     explore = sub.add_parser("explore", **_surface_help("explore.read"))
     _common(explore)
     explore.add_argument("topic")
@@ -828,6 +835,20 @@ def _cmd_ask(args: argparse.Namespace) -> int:
         payload["trace"] = True
     result = _enqueue_and_run(args, "answer-query", payload)
     return _emit_ask_result(result, args, print_trace=args.trace)
+
+
+def _cmd_secrets_set(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.secrets import validate_secret_name, write_secret
+
+    validate_secret_name(args.name)
+    if sys.stdin.isatty():
+        import getpass
+
+        value = getpass.getpass(f"{args.name}: ")
+    else:
+        value = sys.stdin.readline().rstrip("\n")
+    path = write_secret(args.name, value)
+    return _emit({"ok": True, "name": args.name, "path": str(path)}, args)
 
 
 def _cmd_explore(args: argparse.Namespace) -> int:

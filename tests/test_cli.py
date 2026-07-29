@@ -138,6 +138,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria doctor bundle",
         "memoria doctor self-test",
         "memoria ask",
+        "memoria secrets set",
         "memoria explore",
         "memoria handshake",
         "memoria serve",
