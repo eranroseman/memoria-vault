@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
+
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import (
     SURFACE_ACTIONS,
@@ -11,6 +15,7 @@ from memoria_vault.engine.surface_contract import (
     mcp_tools,
 )
 from tests.cli_test_helpers import _cli_command_surface
+from tests.helpers import init_cli_workspace
 
 
 def test_surface_contract_registry_is_minimal_and_unique() -> None:
@@ -32,13 +37,26 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "explore.read",
         "project.slice.read",
         "project.draft.read",
+        "context.read",
         "operation.run",
     }
 
     assert SURFACE_CONTRACT_VERSION == "surface-contract.v1"
     assert set(actions_by_id()) == expected
     assert len(SURFACE_ACTIONS) == len(expected)
-    assert all(hasattr(engine_api, action["engine"]) for action in SURFACE_ACTIONS)
+    assert all(
+        hasattr(engine_api, action["engine"])
+        for action in SURFACE_ACTIONS
+        if "reserved" not in action
+    )
+    assert all(
+        isinstance(action.get("reserved"), str)
+        and bool(action["reserved"])
+        and action.get("engine") is None
+        and not any(key in action for key in ("http", "mcp", "cli"))
+        for action in SURFACE_ACTIONS
+        if "reserved" in action
+    )
 
 
 def test_surface_contract_explore_is_cli_only_with_current_shape() -> None:
@@ -154,5 +172,51 @@ def test_surface_contract_job_mapping_is_pinned() -> None:
         "explore.read": "read",
         "project.slice.read": "project",
         "project.draft.read": "project",
+        "context.read": "read",
         "operation.run": "upkeep",
     }
+
+
+def test_surface_contract_status_paths_maps_to_status_read(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """status-paths-action (U1 spec §3) is MAPPED, not reserved: the shipped
+    status.read row already discloses the workspace paths (root + relative
+    state db). This pin enforces the mapping — if read_status stops
+    disclosing them, the unit falls out of 'mapped' and needs its own row."""
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    payload = engine_api.read_status(workspace)
+    action = actions_by_id()["status.read"]
+
+    assert payload["workspace"] == str(workspace)
+    assert payload["db"] == ".memoria/memoria.sqlite"
+    assert action["job"] == "read"
+    assert action["engine"] == "read_status"
+    assert "reserved" not in action
+
+
+def test_surface_contract_reserved_context_read_row_is_declared_untransported() -> None:
+    action = actions_by_id()["context.read"]
+
+    assert action["job"] == "read"
+    assert action["kind"] == "read"
+    assert action["reserved"] == "U2"
+    assert action["engine"] is None
+    assert action["scope"] == "optional-read-scope"
+    assert action["params"] == {}
+    assert "http" not in action
+    assert "mcp" not in action
+    assert "cli" not in action
+
+
+def test_surface_contract_reserved_rows_stay_out_of_transport_projections() -> None:
+    """Negative guard: reserving a row must not leak a route, tool, command,
+    or openapi path. Passes vacuously before the row lands and must KEEP
+    passing after it does."""
+    from memoria_vault.runtime.http_transport import openapi_schema
+
+    assert not any(path.startswith("/context") for _method, path in http_routes())
+    assert not any(tool.startswith("context") for tool in mcp_tools())
+    assert not any(command.startswith("memoria context") for command in cli_commands())
+    assert not any(path.startswith("/context") for path in openapi_schema()["paths"])

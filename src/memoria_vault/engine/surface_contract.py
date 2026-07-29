@@ -9,6 +9,11 @@ ENGINE_READ_API_VERSION = "engine-read-api.v1"
 SURFACE_JOBS: tuple[str, ...] = ("read", "knowledge", "project", "review", "upkeep")
 
 SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
+    # status-paths-action (U1 spec §3): MAPPED here, not reserved — this
+    # row's payload already carries the workspace-paths disclosure
+    # (workspace root + relative state-db path; engine/api.py read_status).
+    # Enforced by tests/test_surface_contract.py::
+    # test_surface_contract_status_paths_maps_to_status_read.
     {
         "id": "status.read",
         "job": "read",
@@ -251,6 +256,22 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "params": {"project_path": {"type": "string", "required": True}},
         "http": {"method": "GET", "path": "/project/draft"},
         "mcp": {"tool": "project_draft"},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
+        # context-read-set-action / situated-context-read (U1 spec §3):
+        # RESERVED — declared in the registry with no transports. U2 owns
+        # the conditional engine binding and transports; U4 consumes the
+        # eventual context bundle. The parity fabric skips reserved rows (see
+        # tests/test_floor_coverage.py and tests/test_floor_sweep_reads.py).
+        "id": "context.read",
+        "job": "read",
+        "summary": "Read the situated context bundle for the active session.",
+        "engine": None,
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {},
+        "reserved": "U2",
         "response_version": ENGINE_READ_API_VERSION,
     },
     {

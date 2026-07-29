@@ -19,7 +19,10 @@ from tests.floor_lib import ARG_TABLE, OPERATION_REGISTRY
 def test_every_read_action_covers_every_declared_transport() -> None:
     problems = []
     for action_id, action in actions_by_id().items():
-        if action["kind"] != "read":
+        if action["kind"] != "read" or action.get("reserved"):
+            # Reserved rows (surface-contract, U1 spec §3) declare no
+            # transports; there is nothing to sweep until the owning
+            # unit wires them.
             continue
         entry = ARG_TABLE.get(action_id)
         if entry is None:

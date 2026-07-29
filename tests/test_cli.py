@@ -111,6 +111,7 @@ def test_cli_help_groups_carry_correct_membership(capsys: pytest.CaptureFixture[
     assert has("review", "memoria attention list")
     assert has("review", "memoria attention worklist")
     assert has("review", "memoria attention show")
+    assert has("read", "context.read (reserved)")
     assert has("upkeep", "memoria operation run")
 
 
