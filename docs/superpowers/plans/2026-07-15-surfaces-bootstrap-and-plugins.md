@@ -58,6 +58,13 @@
   (**2,459 passed, 11 skipped, 1 existing warning**); the sealed diff scan found
   no reportable issue:
   `/tmp/codex-security-scans/memoria-vault/8658d60f_20260718T021648Z/report.md`.
+- **BOOT-B.3 complete:** `f46cdaf0` adds `memoria secrets set <NAME>` and a
+  descriptor-anchored 0600 secret-file upsert. It validates names before a TTY
+  prompt, keeps invalid-name errors non-reflective, rejects direct redirects and
+  nonregular targets, stages before writing, and atomically replaces only after a
+  complete write. The focused suite passed (**35 passed**), `python scripts/verify`
+  completed, and the sealed final-snapshot security scan found no reportable issue:
+  `/tmp/codex-security-scans/memoria-vault/4114cd0b_bootb3_20260729T201022Z/report.md`.
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
@@ -3048,6 +3055,8 @@ each is the standard reading; assembler may veto):
   - `write_secret(name: str, value: str, path: Path | None = None) -> Path` — validates
     `name` against `[A-Z][A-Z0-9_]*`, rejects empty/multi-line values, upserts
     `NAME=value`, always leaves the file 0600 and its parent dir 0700.
+  - `validate_secret_name(name: str) -> None` — shared non-reflective validation
+    used before the CLI can render a TTY prompt.
   - CLI verb `memoria secrets set <NAME>` (JSON output
     `{"ok": true, "name": ..., "path": ...}` — never the value).
 
@@ -3066,10 +3075,12 @@ each is the standard reading; assembler may veto):
 > outside this task's contract (matching the existing rendezvous writer). This
 > amendment hardens the B.3 writer only; B.1 reader no-follow hardening remains a
 > separately tracked follow-up rather than scope-creep here.
+> Validate `NAME` before `getpass` or any other terminal rendering, and keep an
+> invalid-name error generic rather than reflecting raw terminal control text.
 
 **Steps:**
 
-- [ ] Write the failing unit tests — append to `tests/test_secrets.py` (extend the
+- [x] Write the failing unit tests — append to `tests/test_secrets.py` (extend the
   import from `memoria_vault.runtime.secrets` with `write_secret`):
 
   ```python
@@ -3213,7 +3224,7 @@ each is the standard reading; assembler may veto):
   the submitted value appears in neither stdout nor stderr on both successful and
   rejected invocations.
 
-- [ ] Write the failing CLI test — append to `tests/test_cli_secrets.py` (add
+- [x] Write the failing CLI test — append to `tests/test_cli_secrets.py` (add
   `import io` and `import sys` to the imports):
 
   ```python
@@ -3258,7 +3269,7 @@ each is the standard reading; assembler may veto):
   `memoria secrets`. This keeps the exact parser-roster pin current and gives
   the new executable surface an additional red direction.
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
 
   ```
   python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
@@ -3270,16 +3281,15 @@ each is the standard reading; assembler may veto):
   error; and the parser-roster pin fails because the expected `memoria secrets set`
   command is absent.
 
-- [ ] Write minimal implementation. Add small private helpers in
+- [x] Write minimal implementation. Add small helpers in
   `src/memoria_vault/runtime/secrets.py` for the anchored parent, no-follow
-  existing-file read, unique temporary creation, and full writes; then implement
-  `write_secret` through them. The following is the required control flow (not an
-  `O_TRUNC` recipe):
+  existing-file read, unique temporary creation, full writes, and shared
+  non-reflective name validation; then implement `write_secret` through them. The
+  following is the required control flow (not an `O_TRUNC` recipe):
 
   ```python
   def write_secret(name: str, value: str, path: Path | None = None) -> Path:
-      if not _NAME_RE.fullmatch(name):
-          raise ValueError(f"secret name must match [A-Z][A-Z0-9_]*: {name}")
+      validate_secret_name(name)
       cleaned = value.strip()
       if not cleaned:
           raise ValueError("secret value must be non-empty")
@@ -3336,8 +3346,9 @@ each is the standard reading; assembler may veto):
 
   ```python
   def _cmd_secrets_set(args: argparse.Namespace) -> int:
-      from memoria_vault.runtime.secrets import write_secret
+      from memoria_vault.runtime.secrets import validate_secret_name, write_secret
 
+      validate_secret_name(args.name)
       if sys.stdin.isatty():
           import getpass
 
@@ -3348,7 +3359,7 @@ each is the standard reading; assembler may veto):
       return _emit({"ok": True, "name": args.name, "path": str(path)}, args)
   ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
 
   ```
   python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
@@ -3357,7 +3368,7 @@ each is the standard reading; assembler may veto):
 
   Expected: all pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py \
