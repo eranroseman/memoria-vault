@@ -719,7 +719,10 @@ def test_cli_doctor_runner_constructs_local_pydantic_ai_agent(
     assert output["checks"]["runner_dependency"] is True
     assert output["checks"]["runner_base_url"] is True
     assert output["checks"]["runner_agent_constructed"] is True
-    assert seen["provider_kwargs"] == {"base_url": "http://127.0.0.1:11434/v1"}
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://127.0.0.1:11434/v1",
+        "api_key": "api-key-not-set",
+    }
     assert seen["model_name"] == "local-test-model"
     assert seen["model"] is not None
 
@@ -760,7 +763,10 @@ def test_cli_doctor_runner_uses_local_default_base_url(
     assert output["ok"] is True
     assert output["base_url"] == "http://127.0.0.1:11434/v1"
     assert output["checks"]["runner_base_url"] is True
-    assert seen["provider_kwargs"] == {"base_url": "http://127.0.0.1:11434/v1"}
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://127.0.0.1:11434/v1",
+        "api_key": "api-key-not-set",
+    }
     assert seen["model_name"] == "doctor"
 
 
@@ -795,11 +801,165 @@ def test_cli_doctor_runner_live_dispatches_through_pydantic_ai(
     assert rc == 0
     assert output["ok"] is True
     assert output["checks"]["runner_live_dispatch"] is True
-    assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1"}
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://model.test/v1",
+        "api_key": "api-key-not-set",
+    }
     assert seen["model_name"] == "live-test-model"
     assert len(seen["models"]) == 2
     assert "Memoria runner is reachable" in seen["prompt"]
     assert seen["model_settings"]["temperature"] == 0
+
+
+def test_cli_doctor_gateway_refuses_missing_key_before_adapter_construction(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_runner_provider_config(workspace)
+    sentinels = {
+        "MEMORIA_MODEL_API_KEY": "legacy-model-secret",
+        "OPENAI_API_KEY": "legacy-openai-secret",
+        "KILOCODE_API_KEY": "",
+    }
+    for name, value in sentinels.items():
+        monkeypatch.setenv(name, value)
+    seen = patch_pydantic_ai(monkeypatch)
+    loader_calls: list[None] = []
+
+    def unexpected_loader() -> tuple[object, object, object]:
+        loader_calls.append(None)
+        raise AssertionError("pydantic-ai loader must not run without a configured gateway key")
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai", unexpected_loader
+    )
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "gateway",
+            "--live",
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert rc == 1
+    assert payload["ok"] is False
+    assert payload["error"] == (
+        "provider gateway requires KILOCODE_API_KEY - set it: memoria secrets set KILOCODE_API_KEY"
+    )
+    assert payload["checks"]["runner_dependency"] is False
+    assert payload["checks"]["runner_agent_constructed"] is False
+    assert payload["checks"]["runner_live_dispatch"] is False
+    assert seen == {}
+    assert loader_calls == []
+    assert "legacy-model-secret" not in captured.out + captured.err
+    assert "legacy-openai-secret" not in captured.out + captured.err
+
+
+def test_cli_doctor_gateway_uses_configured_key_for_construction_and_dispatch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_runner_provider_config(workspace)
+    monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "legacy-model-secret")
+    monkeypatch.setenv("OPENAI_API_KEY", "legacy-openai-secret")
+    monkeypatch.setenv("KILOCODE_API_KEY", "gateway-key")
+    seen = patch_pydantic_ai(monkeypatch, output="runner ok")
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "gateway",
+            "--live",
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    expected = {"base_url": "https://gateway.test/v1", "api_key": "gateway-key"}
+    assert rc == 0
+    assert payload["ok"] is True
+    assert payload["checks"]["runner_agent_constructed"] is True
+    assert payload["checks"]["runner_live_dispatch"] is True
+    assert seen["provider_kwargs_list"] == [expected, expected]
+
+
+@pytest.mark.parametrize("failure_site", ["provider", "dispatch"])
+def test_cli_doctor_gateway_sdk_failure_does_not_reflect_configured_key(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    failure_site: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_runner_provider_config(workspace)
+    configured_key = "gateway-key"
+    monkeypatch.setenv("KILOCODE_API_KEY", configured_key)
+
+    class FakeProvider:
+        def __init__(self, **kwargs: object) -> None:
+            if failure_site == "provider":
+                raise RuntimeError(f"provider rejected {configured_key}")
+
+    class FakeModel:
+        def __init__(self, model_name: str, *, provider: object) -> None:
+            pass
+
+    class FakeAgent:
+        def __init__(self, model: object) -> None:
+            pass
+
+        def run_sync(self, prompt: str, *, model_settings: dict[str, object]) -> object:
+            if failure_site == "dispatch":
+                raise RuntimeError(f"downstream rejected {configured_key}")
+            return object()
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "gateway",
+            "--live",
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert rc == 1
+    assert payload["error"] == "pydantic-ai model request failed"
+    assert payload["checks"]["runner_dependency"] is True
+    assert payload["checks"]["runner_agent_constructed"] is (failure_site == "dispatch")
+    assert payload["checks"]["runner_live_dispatch"] is False
+    assert configured_key not in captured.out + captured.err
 
 
 def test_cli_doctor_live_requires_runner_check(

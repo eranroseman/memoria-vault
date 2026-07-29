@@ -76,6 +76,89 @@ def test_disabled_ceiling_never_trips(monkeypatch: pytest.MonkeyPatch, ceiling: 
     assert operations._TOKEN_LEDGER["total_tokens"] == 192
 
 
+def test_keyless_direct_chat_uses_inert_placeholder_despite_legacy_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _reset_ledger(monkeypatch)
+    monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
+    monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "legacy-model-secret")
+    monkeypatch.setenv("OPENAI_API_KEY", "legacy-openai-secret")
+    monkeypatch.setenv("KILOCODE_API_KEY", "legacy-gateway-secret")
+    seen = patch_pydantic_ai(monkeypatch, output="fixture reply")
+
+    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt") == "fixture reply"
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://127.0.0.1:11434",
+        "api_key": "api-key-not-set",
+    }
+
+
+@pytest.mark.parametrize(
+    "failure_site",
+    ["loader", "provider", "model", "agent", "dispatch", "output"],
+)
+def test_direct_chat_sdk_failure_does_not_reflect_configured_key(
+    monkeypatch: pytest.MonkeyPatch,
+    failure_site: str,
+) -> None:
+    _reset_ledger(monkeypatch)
+    monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
+    configured_key = "gateway-key"
+    monkeypatch.setenv("KILOCODE_API_KEY", configured_key)
+
+    class FakeProvider:
+        def __init__(self, **kwargs: object) -> None:
+            if failure_site == "provider":
+                raise RuntimeError(f"provider rejected {configured_key}")
+
+    class FakeModel:
+        def __init__(self, model_name: str, *, provider: object) -> None:
+            if failure_site == "model":
+                raise RuntimeError(f"model rejected {configured_key}")
+
+    class FakeResult:
+        @property
+        def output(self) -> str:
+            if failure_site == "output":
+                raise RuntimeError(f"output rejected {configured_key}")
+            return "fixture reply"
+
+    class FakeAgent:
+        def __init__(self, model: object) -> None:
+            if failure_site == "agent":
+                raise RuntimeError(f"agent rejected {configured_key}")
+
+        def run_sync(self, prompt: str, *, model_settings: dict[str, object]) -> FakeResult:
+            if failure_site == "dispatch":
+                raise RuntimeError(f"dispatch rejected {configured_key}")
+            return FakeResult()
+
+    def failing_loader() -> tuple[object, object, object]:
+        if failure_site == "loader":
+            raise RuntimeError(f"loader rejected {configured_key}")
+        return FakeAgent, FakeModel, FakeProvider
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        failing_loader,
+    )
+    runner = {
+        **RUNNER,
+        "provider": "gateway",
+        "base_url": "https://gateway.test/v1",
+        "key_env": "KILOCODE_API_KEY",
+    }
+    policy = {**POLICY, "allowed_network": ["https://gateway.test/v1"]}
+
+    with pytest.raises(RuntimeError) as exc_info:
+        operations._pydantic_ai_chat(policy, runner, "prompt")
+
+    assert str(exc_info.value) == "pydantic-ai model request failed"
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
+    assert configured_key not in str(exc_info.value)
+
+
 def test_reported_usage_is_preferred_over_max_tokens_fallback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

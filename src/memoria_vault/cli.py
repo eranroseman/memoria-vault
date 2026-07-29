@@ -3472,6 +3472,7 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
     from memoria_vault.runtime.operations import (
         _load_pydantic_ai_openai,
         _pydantic_ai_chat,
+        _resolve_runner_api_key,
         load_runner_provider_config,
     )
 
@@ -3482,14 +3483,16 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
     provider_spec = providers[provider_name]
     base_url = str(provider_spec["url"])
     key_env = provider_spec.get("key_env")
-    api_key = os.environ.get(key_env) if isinstance(key_env, str) and key_env else None
-    if not api_key:
-        api_key = (
-            os.environ.get("MEMORIA_MODEL_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-            or os.environ.get("KILOCODE_API_KEY")
-        )
     model_name = os.environ.get("MEMORIA_MODEL") or os.environ.get("OPENAI_MODEL") or "doctor"
+    runner = {
+        "mode": "live" if live else "test",
+        "runner": "pydantic-ai",
+        "provider": provider_name,
+        "model": model_name,
+        "base_url": base_url,
+        "key_env": key_env,
+        "params": {"temperature": 0},
+    }
     checks = {
         "runner_dependency": False,
         "runner_base_url": bool(base_url),
@@ -3499,34 +3502,30 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
         checks["runner_live_dispatch"] = False
     error = ""
     try:
-        Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
-        checks["runner_dependency"] = True
-        provider_kwargs = {"base_url": base_url}
-        if api_key:
-            provider_kwargs["api_key"] = api_key
-        model = OpenAIChatModel(model_name, provider=OpenAIProvider(**provider_kwargs))
-        Agent(model)
-        checks["runner_agent_constructed"] = True
-        if live:
-            _pydantic_ai_chat(
-                {
-                    "operation_id": "doctor-runner-live",
-                    "allowed_network": [base_url],
-                },
-                {
-                    "mode": "live" if live else "test",
-                    "runner": "pydantic-ai",
-                    "provider": provider_name,
-                    "model": model_name,
-                    "base_url": base_url,
-                    "key_env": key_env,
-                    "params": {"temperature": 0},
-                },
-                "Reply with a short confirmation that the Memoria runner is reachable.",
-            )
-            checks["runner_live_dispatch"] = True
-    except Exception as exc:  # noqa: BLE001 -- doctor reports adapter failures as data.
+        api_key = _resolve_runner_api_key(runner)
+    except (RuntimeError, ValueError) as exc:
+        # The resolver's only failures are value-free, actionable credential messages.
         error = str(exc)
+    else:
+        try:
+            Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+            checks["runner_dependency"] = True
+            provider_kwargs = {"base_url": base_url, "api_key": api_key}
+            model = OpenAIChatModel(model_name, provider=OpenAIProvider(**provider_kwargs))
+            Agent(model)
+            checks["runner_agent_constructed"] = True
+            if live:
+                _pydantic_ai_chat(
+                    {
+                        "operation_id": "doctor-runner-live",
+                        "allowed_network": [base_url],
+                    },
+                    runner,
+                    "Reply with a short confirmation that the Memoria runner is reachable.",
+                )
+                checks["runner_live_dispatch"] = True
+        except Exception:  # noqa: BLE001 -- adapter failures must not reflect credentials.
+            error = "pydantic-ai model request failed"
     return {
         "checks": checks,
         "provider": provider_name,

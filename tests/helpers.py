@@ -370,6 +370,7 @@ def patch_pydantic_ai(
     class FakeProvider:
         def __init__(self, **kwargs: Any) -> None:
             seen["provider_kwargs"] = kwargs
+            seen.setdefault("provider_kwargs_list", []).append(kwargs)
 
     class FakeModel:
         def __init__(self, model_name: str, *, provider: object) -> None:

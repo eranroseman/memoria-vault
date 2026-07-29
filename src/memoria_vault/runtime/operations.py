@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -57,6 +57,7 @@ PROVIDER_CONFIG = ".memoria/config/providers.yaml"
 RUNNER_MODES = frozenset({"test", "live"})
 RUNNER_PROVIDER_NAMES = ("local", "gateway")
 _KEY_ENV_RE = re.compile(r"[A-Z][A-Z0-9_]*")
+_KEYLESS_PROVIDER_API_KEY = "api-key-not-set"
 TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"  # noqa: S105 -- public environment name.
 _TOKEN_LEDGER = {"total_tokens": 0}
 
@@ -336,6 +337,27 @@ def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
             )
         resolved[name] = {"url": url, "key_env": key_env}
     return resolved
+
+
+def _resolve_runner_api_key(runner: Mapping[str, Any]) -> str:
+    """Return the configured runner credential without ambient provider fallbacks."""
+    key_env = runner.get("key_env")
+    if key_env is None:
+        return _KEYLESS_PROVIDER_API_KEY
+    if not isinstance(key_env, str) or not _KEY_ENV_RE.fullmatch(key_env):
+        raise ValueError("runner key_env must match [A-Z][A-Z0-9_]*")
+    api_key = os.environ.get(key_env)
+    if api_key:
+        return api_key
+    raw_provider = runner.get("provider")
+    provider = (
+        raw_provider
+        if isinstance(raw_provider, str) and raw_provider in RUNNER_PROVIDER_NAMES
+        else "runner"
+    )
+    raise RuntimeError(
+        f"provider {provider} requires {key_env} - set it: memoria secrets set {key_env}"
+    )
 
 
 def _validate_runner_policy(operation_id: str, runner_policy: Any) -> dict[str, dict[str, Any]]:
@@ -1034,21 +1056,7 @@ def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: st
     _require_token_budget(str(policy.get("operation_id") or "<unknown>"))
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
-    key_env = runner.get("key_env")
-    if isinstance(key_env, str) and key_env:
-        api_key = os.environ.get(key_env)
-    else:
-        api_key = (
-            os.environ.get("MEMORIA_MODEL_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-            or os.environ.get("KILOCODE_API_KEY")
-        )
-    Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
-    provider_kwargs = {"base_url": base_url}
-    if api_key:
-        provider_kwargs["api_key"] = api_key
-    model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
-    agent = Agent(model)
+    api_key = _resolve_runner_api_key(runner)
     params = runner.get("params") if isinstance(runner.get("params"), dict) else {}
     settings = {
         "temperature": params.get("temperature", 0),
@@ -1058,11 +1066,15 @@ def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: st
         "timeout": float(params.get("timeout", os.environ.get("MEMORIA_MODEL_TIMEOUT", 90))),
     }
     try:
+        Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+        provider_kwargs = {"base_url": base_url, "api_key": api_key}
+        model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
+        agent = Agent(model)
         result = agent.run_sync(prompt, model_settings=settings)
-    except Exception as exc:
-        raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
-    _record_token_usage(result, settings)
-    text = str(getattr(result, "output", "") or "").strip()
+        _record_token_usage(result, settings)
+        text = str(getattr(result, "output", "") or "").strip()
+    except Exception:  # noqa: BLE001 -- adapter failures must not reflect credentials.
+        raise RuntimeError("pydantic-ai model request failed") from None
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
     return text

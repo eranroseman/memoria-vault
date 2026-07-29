@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import state, trusted_writer
+from memoria_vault.runtime import operations, state, trusted_writer
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
@@ -631,7 +631,9 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
     seen = {}
 
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
-    monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "test-key")
+    monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "legacy-model-secret")
+    monkeypatch.setenv("OPENAI_API_KEY", "legacy-openai-secret")
+    monkeypatch.setenv("KILOCODE_API_KEY", "legacy-gateway-secret")
     patch_pydantic_ai(
         monkeypatch,
         output=(
@@ -648,7 +650,10 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
         machine="op-machine",
     )
 
-    assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1", "api_key": "test-key"}
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://model.test/v1",
+        "api_key": "api-key-not-set",
+    }
     assert seen["model_name"] == "memoria-test-model"
     assert seen["model"] is not None
     assert seen["model_settings"]["temperature"] == 0
@@ -664,6 +669,143 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
     )
     events = list(iter_jsonl(vault / ".memoria/journal/op-machine.jsonl"))
     assert events[1]["model"] == "memoria-test-model"
+
+
+def test_compile_source_digest_gateway_refuses_missing_configured_key_before_adapter(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path)
+    write_runner_provider_config(vault)
+    patch_compile_policy(
+        monkeypatch,
+        provider="gateway",
+        allowed_network=["https://gateway.test/v1"],
+        model="gateway-test-model",
+    )
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    sentinels = {
+        "MEMORIA_MODEL_API_KEY": "legacy-model-secret",
+        "OPENAI_API_KEY": "legacy-openai-secret",
+        "KILOCODE_API_KEY": "",
+    }
+    for name, value in sentinels.items():
+        monkeypatch.setenv(name, value)
+    seen = patch_pydantic_ai(
+        monkeypatch,
+        output=(
+            "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
+            "## Hub suggestions\n\n- Framing\n"
+        ),
+    )
+    loader_calls: list[None] = []
+
+    def unexpected_loader() -> tuple[object, object, object]:
+        loader_calls.append(None)
+        raise AssertionError("pydantic-ai loader must not run without a configured gateway key")
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai", unexpected_loader
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        compile_source_digest(
+            vault,
+            "source-alpha",
+            ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+            machine="op-machine",
+        )
+
+    assert str(exc_info.value) == (
+        "provider gateway requires KILOCODE_API_KEY - set it: memoria secrets set KILOCODE_API_KEY"
+    )
+    assert seen == {}
+    assert loader_calls == []
+    assert "legacy-model-secret" not in str(exc_info.value)
+    assert "legacy-openai-secret" not in str(exc_info.value)
+
+
+def test_compile_source_digest_gateway_uses_only_configured_key(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path)
+    write_runner_provider_config(vault)
+    patch_compile_policy(
+        monkeypatch,
+        provider="gateway",
+        allowed_network=["https://gateway.test/v1"],
+        model="gateway-test-model",
+    )
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+    monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "legacy-model-secret")
+    monkeypatch.setenv("OPENAI_API_KEY", "legacy-openai-secret")
+    monkeypatch.setenv("KILOCODE_API_KEY", "gateway-key")
+    seen = patch_pydantic_ai(
+        monkeypatch,
+        output=(
+            "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
+            "## Hub suggestions\n\n- Framing\n"
+        ),
+    )
+
+    compile_source_digest(
+        vault,
+        "source-alpha",
+        ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+        machine="op-machine",
+    )
+
+    assert seen["provider_kwargs"] == {
+        "base_url": "https://gateway.test/v1",
+        "api_key": "gateway-key",
+    }
+
+
+@pytest.mark.parametrize(
+    "key_env",
+    ["", "PASTED_SECRET\x1b", 7],
+    ids=["empty", "control-text", "non-string"],
+)
+def test_resolve_runner_api_key_rejects_malformed_direct_runner_without_reflection(
+    key_env: object,
+) -> None:
+
+    with pytest.raises(ValueError) as exc_info:
+        operations._resolve_runner_api_key({"provider": "gateway", "key_env": key_env})
+
+    assert str(exc_info.value) == "runner key_env must match [A-Z][A-Z0-9_]*"
+    if isinstance(key_env, str) and key_env:
+        assert key_env not in str(exc_info.value)
+
+
+def test_resolve_runner_api_key_uses_generic_provider_for_malformed_direct_runner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    supplied_provider = "gateway-secret\x1b"
+    monkeypatch.delenv("KILOCODE_API_KEY", raising=False)
+
+    with pytest.raises(RuntimeError) as exc_info:
+        operations._resolve_runner_api_key(
+            {"provider": supplied_provider, "key_env": "KILOCODE_API_KEY"}
+        )
+
+    assert str(exc_info.value) == (
+        "provider runner requires KILOCODE_API_KEY - set it: memoria secrets set KILOCODE_API_KEY"
+    )
+    assert supplied_provider not in str(exc_info.value)
 
 
 @pytest.mark.parametrize("runner", ["local", "hermes", "raw-http"])
