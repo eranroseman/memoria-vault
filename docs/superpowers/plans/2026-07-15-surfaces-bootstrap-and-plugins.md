@@ -4317,10 +4317,21 @@ each is the standard reading; assembler may veto):
 
   ```
   git add src/memoria_vault/runtime/enrichment.py tests/test_source_enrichment.py
-  git commit -m "feat(secrets): class-2 keyless degradation notices in enrich-source output
-
-  Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+  git commit -m "feat(enrichment): report keyless credential degradation"
   ```
+
+> **Execution receipt (2026-07-29):** BOOT-B.6 completed in `2f71d36c` after
+> the adopted plan amendment `f871c880`. The focused credential-boundary suite
+> passed (5 tests), the full enrichment module passed (24 tests), and Ruff
+> lint/format plus diff checks were clean. Independent plan and implementation
+> review approved the canonical-name filter, fixture suppression, stable
+> de-duplication, and fail-closed optional-gate behavior. Sealed security diff
+> scan `6ab2f99e_20260729T222257Z` found no reportable finding. Full elevated
+> `python scripts/verify` passed: 2,551 passed, 11 skipped, 1 warning; e2e smoke
+> and all repository gates were green. The non-elevated gate's sole failure was
+> sandbox denial of its local HTTP test socket; that exact test and the elevated
+> full gate passed. No journal event changed, so no floor golden was regenerated.
+> The adopted amendment governs any conflicting unchecked snippets above.
 
 ---
 
