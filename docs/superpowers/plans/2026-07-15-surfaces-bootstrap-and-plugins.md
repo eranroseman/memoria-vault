@@ -3833,6 +3833,15 @@ each is the standard reading; assembler may veto):
   task. `MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and implicit `KILOCODE_API_KEY` lose
   all engine credential-resolution meaning. **Other sections must not reintroduce these
   names.**
+- An SDK construction, dispatch, or result-access failure is value-free at this boundary:
+  neither `_pydantic_ai_chat` nor doctor may surface arbitrary loader, provider, model,
+  agent, dispatch, usage, or result-output exception text, because it can contain the
+  configured credential. After the resolver's exact safe errors, the wrapper reports the
+  fixed `pydantic-ai model request failed` error and suppresses the exception context.
+- A grammar-valid `key_env` is treated as a PI-owned workspace configuration name, never
+  as a credential value. The supported provider/configuration seam is B.4's source
+  validation; this task adds direct-call defense but does not broaden that authority
+  boundary.
 - Test seam: `patch_pydantic_ai` retains the existing `seen["provider_kwargs"]` last-value
   behavior and additionally appends each `FakeProvider` kwargs dict to
   `seen["provider_kwargs_list"]`. This is needed because live doctor deliberately
@@ -3852,13 +3861,16 @@ each is the standard reading; assembler may veto):
   `KILOCODE_API_KEY` to `""`, sets both historical fallback names to sentinels, and
   patches Pydantic AI. It must raise the exact gateway refusal, leave the patched loader
   and provider constructor untouched (`seen == {}`), and never contain a sentinel in any
-  captured error.
+  captured error. Install a loader spy (or a loader which fails if invoked) and assert it
+  has zero calls; `patch_pydantic_ai` alone cannot prove loader ordering.
 
   Append an explicit-gateway-key test with the same legacy sentinels and
   `KILOCODE_API_KEY="gateway-key"`; it must complete and pass exactly that configured
-  value, not either sentinel, in `provider_kwargs`. Finally add a direct malformed-runner
-  test (`key_env` containing a pasted sentinel/control text) which gets the generic
-  value-free resolver `ValueError` and cannot reflect the supplied value.
+  value, not either sentinel, in `provider_kwargs`. Finally parameterize direct malformed
+  runner tests over an empty string, a pasted sentinel/control string, and a non-string
+  `key_env`; each gets the generic value-free resolver `ValueError` and cannot reflect the
+  supplied value. Include a malformed provider with a missing key and assert its refusal
+  names literal `runner`, not the supplied provider text.
 
 - [ ] In `tests/test_cli_doctor_eval.py`, update the three existing local doctor assertions
   (construction, default base URL, and live dispatch) so their provider kwargs include
@@ -3909,6 +3921,9 @@ each is the standard reading; assembler may veto):
       assert "legacy-openai-secret" not in captured.out + captured.err
   ```
 
+  In that missing-key doctor test, replace the helper's loader with a `loader_calls` spy
+  (or failing loader) and assert `loader_calls == []` in addition to `seen == {}`.
+
   The second invokes the same gateway doctor path with `KILOCODE_API_KEY="gateway-key"`
   and both legacy sentinels set. It succeeds, including `--live`, and asserts
   `seen["provider_kwargs_list"] == [expected, expected]`, where `expected` is exactly
@@ -3919,6 +3934,12 @@ each is the standard reading; assembler may veto):
   legacy names to distinct sentinels, calls the existing `RUNNER` (`key_env: None`), and
   asserts the patched provider receives the exact inert placeholder. This closes a direct
   internal caller that does not pass through doctor or compile-source-digest.
+
+  Parameterize direct-chat fakes so loader, provider, model, Agent, dispatch, and result
+  output access each fail with a configured-key sentinel in their exception text. Assert
+  each exposes only the fixed `pydantic-ai model request failed` error with no cause and
+  `__suppress_context__ is True`. A `doctor --provider gateway --live --json` run must
+  likewise omit that sentinel from stdout and stderr while marking the live dispatch false.
 
 - [ ] Run the red subset:
 
@@ -3963,7 +3984,13 @@ each is the standard reading; assembler may veto):
   In `_pydantic_ai_chat`, call the resolver after policy/network validation but before
   `_load_pydantic_ai_openai()`, delete the old three-name chain, and always construct
   `provider_kwargs = {"base_url": base_url, "api_key": api_key}`. Never omit the
-  `api_key` argument.
+  `api_key` argument. After resolving the key, wrap the loader, provider/model/agent
+  construction, dispatch, token-usage access, and result-output extraction in one
+  value-free exception boundary: catch an SDK exception with `from None` and raise only
+  `RuntimeError("pydantic-ai model request failed")`; never concatenate its text. Keep the
+  separate empty-output product error outside that boundary. In doctor, preserve the
+  resolver's exact safe refusal, but reduce every SDK construction, dispatch, or result
+  access exception to that same fixed error.
 
   In `cli.py` `_runner_status`, import `_resolve_runner_api_key`, build the one runner
   dict before its `try`, and call the resolver as the first action inside the `try`, before
