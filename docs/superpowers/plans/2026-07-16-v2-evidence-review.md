@@ -107,6 +107,24 @@ execute a superseded snippet merely because it remains below as drafting history
    `evidence-list → routing text` and no analysis/toggle. The U3 plan's cross-plan
    repair owns that renderer change and its tests; D.2 consumes it rather than
    reordering children again.
+10. **Analysis projection is explicit:** a projected evidence DTO's `analysis` is a
+    mapping or `None`, and `tipped_by` is its only tipped-analysis key. B.4 produces
+    `analysis["tipped_by"]` directly and its DTO test asserts that
+    `what_tipped_it` is absent everywhere in the DTO. B.3 never reads analysis fields
+    from the DTO's top level; in
+    `evidence_review_card`, it uses `analysis = row.get("analysis")` and treats any
+    non-mapping as `{}`, then projects the permitted fields onto the parent card.
+    Copy `argument_for` and `argument_against` only when both are non-empty strings;
+    copy non-empty `tipped_by` and `certainty` individually. The reviewable-card
+    test supplies all four fields under `analysis` and asserts them on the parent
+    card; a one-sided argument mapping asserts that neither argument field reaches
+    the card. Cure-card tests assert that no analysis field reaches the card. This
+    preserves the spec's paired-or-absent argument rule and gives U3-PLUG.4/D.2
+    actual parent analysis nodes to render.
+11. **Boundary gates:** after V2R-B.5's route/floor coverage and after V2R-D.3's
+    pane/golden coverage, run `python scripts/verify` before the respective commit.
+    SEAM.1's required full gate and security diff scan are owned by the surfaces
+    plan amendment; D.2/D.3 do not proceed until that authority change is clean.
 
 ---
 
@@ -6070,7 +6088,7 @@ shipped refusal plumbing and pins it as acceptance.
   `@pytest.mark.xfail(strict=True, reason="V2R-A reject flip not yet merged")`
   and remove the mark in the same PR that merges V2R-A.
 
-- [x] Run the file green (post-V2R-B): `python -m pytest tests/test_export_acceptance.py -v`
+- [x] Run the file green (post-V2R-A): `python -m pytest tests/test_export_acceptance.py -v`
 
 - [x] Commit:
 

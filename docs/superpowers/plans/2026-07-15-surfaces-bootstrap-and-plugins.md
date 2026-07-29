@@ -63,7 +63,7 @@
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
 2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `edges.LINK_RELATIONS` (moved from `schema.LINK_RELATIONS` by the graph-edges plan ERP-A.1; the `schema` re-export stays valid for one release), `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG reads `open`.
-3. **View payload envelope**: `{ok: true, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
+3. **View payload envelope**: `{ok: true, api_version: "engine-read-api.v1", view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
 6. **BOOT-C ↔ U4-A interface**: bundle seeding iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`; `memoria doctor --json --quick` emits `{engine_version: str, skew: {status: "in-sync"|"vault-newer"|"engine-newer"}, credentials: [{name, class, status, effect}]}` — BOOT-C.5 implements exactly this shape; U4-A's hook consumes it defensively.
@@ -74,6 +74,50 @@
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
 12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
 13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB, U3-ENG} → SEAM.1 → U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C} (U4-C may run before U4-A; U4-A imports its provider).
+
+### Plan-reconciliation amendment — nested envelopes, cards, and authority verification (2026-07-29)
+
+This amendment supersedes only the conflicting U3-ENG flat-view snippets and
+the narrow U3-PLUG.4/SEAM.1 checks below. The completed BOOT receipts and all
+other task bodies remain unchanged.
+
+1. **Nested view envelope:** every non-summary attention response is exactly
+   `_read_payload(view=_view("attention", blocks))`. `_read_payload` supplies
+   `ok` and `api_version`; the response has no top-level `spec` or `blocks`.
+   `summary=True` remains the documented summary payload and has no `view`.
+   Replace every U3-ENG test/snippet that reads `payload["spec"]` or
+   `payload["blocks"]` with the following shape before executing U3-ENG:
+
+   ```python
+   payload = api.read_attention_view(workspace)
+
+   assert payload["ok"] is True
+   assert payload["api_version"] == api.READ_API_VERSION
+   assert payload["view"]["version"] == api.VIEW_SPEC_VERSION
+   assert payload["view"]["kind"] == "attention"
+   assert "spec" not in payload
+   assert "blocks" not in payload
+   blocks = payload["view"]["blocks"]
+   ```
+
+   The HTTP tests make the same nested assertions. A future-block test copies
+   `payload["view"]`, appends to its `blocks`, and returns
+   `{**payload, "view": amended_view}`. V2R-B uses this base envelope plus
+   its top-level `facets`; it never restores the flat shape.
+2. **Ordered-card test is an exact contract:** the binding replacement at
+   U3-PLUG.4 replaces the duplicate stale test body below. Retain `texts()`
+   because the new test uses it. The test must assert the whole class sequence,
+   payload/link attributes, paired V2 arguments, tipped/certainty text, and
+   metadata, not merely relative first indexes. Its cure case asserts the
+   complete child sequence so duplication and empty analysis/meta trees fail.
+3. **SEAM.1 is an authority change:** before its red test, run
+   `git rev-parse HEAD` and record the resulting literal 40-character SHA as
+   `SEAM1_BASE` in the task report. After the focused HTTP suite, run
+   `python scripts/verify`. After its commit, run `codex-security:security-diff-scan`
+   for the range `<the-recorded-40-character-SHA>..HEAD` (substitute the recorded
+   SHA itself; do not use a shell variable or symbolic placeholder). Commit or amend
+   every scan fix, then rerun the full gate and scan the same literal base-to-HEAD
+   range before the task is complete.
 
 ### Task SEAM.1: Loopback operation door carries PI actor authority
 
@@ -99,7 +143,9 @@ Adapt the arrange block from the file's existing operation-enqueue test verbatim
 - [ ] **Step 2: Run it** — `python -m pytest tests/test_http_transport.py::test_http_operation_enqueue_carries_pi_actor -v` — Expected: FAIL (`actor == "agent"`).
 - [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven, user-held per-boot token (bootstrap spec §4; plan contract 5).`
 - [ ] **Step 4: Sweep existing assertions** — `grep -n '"agent"' tests/test_http_transport.py` and update any assertion pinning the old actor; re-run the file: `python -m pytest tests/test_http_transport.py -v` — Expected: PASS.
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Run the full gate** — `python scripts/verify` — expected: green.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/http_transport.py tests/test_http_transport.py
@@ -107,6 +153,14 @@ git commit -m "feat(http): loopback operation door carries PI actor authority
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+- [ ] **Step 7: Scan the authority diff.** Before Step 1, run
+  `git rev-parse HEAD` and record its literal 40-character output as `SEAM1_BASE`
+  in the task report. After the commit, use `codex-security:security-diff-scan`
+  for `<the-recorded-40-character-SHA>..HEAD`, substituting that value directly
+  (not a shell variable or symbolic placeholder). Commit or amend every scan fix;
+  then rerun `python scripts/verify` and the same literal diff scan. This task is
+  not complete until both are clean.
 
 ---
 # BOOT-A: Server rendezvous + lifecycle
@@ -8706,25 +8760,44 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 > U3 implementation:
 >
 > ```js
-> test("card preserves declared semantic child order and appends present analysis", () => {
+> test("card renders every semantic child once before its present analysis", () => {
 >   const tree = renderBlock({
 >     kind: "card", id: "ev1", ref: "projects/alpha/draft.md#^blk-1234",
->     title: "Claim", kind_line: "evidence-review",
->     argument_for: "ground", tipped_by: "implicit derivation", certainty: "possible",
+>     title: "Claim", kind_line: "evidence-review", loudness: "alert",
+>     argument_for: "ground", argument_against: "counterground",
+>     tipped_by: "implicit derivation", certainty: "possible",
+>     raised_by: "analyze-gaps", raised_at: "2026-07-29T09:00:00Z",
 >     blocks: [
->       { kind: "evidence-list", id: "e1", items: [] },
+>       { kind: "evidence-list", id: "e1", items: [{ label: "Source", ref: "notes/source.md" }] },
 >       { kind: "text", id: "r1", text: "Routing: implicit" },
->       { kind: "action-row", id: "a1", actions: [] },
+>       { kind: "action-row", id: "a1", actions: [{
+>         label: "Accept", operation_id: "resolve-evidence",
+>         payload: { evidence_id: "ev1", decision: "accept" }, primary: true,
+>       }] },
 >     ],
 >   });
+>   assert.equal(tree.cls, "memoria-card memoria-loudness-alert");
+>   assert.equal(tree.attrs["data-ref"], "projects/alpha/draft.md#^blk-1234");
 >   const classes = tree.children.map((child) => child.cls);
->   const evidenceAt = classes.indexOf("memoria-evidence");
->   const textAt = classes.indexOf("memoria-block-text");
->   const actionsAt = classes.indexOf("memoria-action-row");
->   const argumentsAt = classes.indexOf("memoria-card-arguments");
->   const tippedAt = classes.indexOf("memoria-card-tipped");
->   assert.ok(evidenceAt < textAt && textAt < actionsAt && actionsAt < argumentsAt);
->   assert.ok(argumentsAt < tippedAt);
+>   assert.deepEqual(classes, [
+>     "memoria-card-kind memoria-loudness-alert", "memoria-card-title",
+>     "memoria-evidence", "memoria-block-text", "memoria-action-row",
+>     "memoria-card-arguments", "memoria-card-tipped", "memoria-card-meta",
+>   ]);
+>   const evidence = tree.children[2];
+>   assert.equal(evidence.children[0].attrs["data-ref"], "notes/source.md");
+>   const button = tree.children[4].children[0];
+>   assert.equal(button.cls, "memoria-action memoria-action-primary");
+>   assert.equal(button.attrs["data-operation-id"], "resolve-evidence");
+>   assert.deepEqual(JSON.parse(button.attrs["data-payload"]), {
+>     evidence_id: "ev1", decision: "accept",
+>   });
+>   const flat = texts(tree);
+>   assert.ok(flat.includes("ground"));
+>   assert.ok(flat.includes("counterground"));
+>   assert.ok(flat.includes("tipped by: implicit derivation"));
+>   assert.ok(flat.includes("possible"));
+>   assert.ok(flat.some((text) => text.startsWith("raised by analyze-gaps")));
 > });
 >
 > test("cure card does not create absent analysis or action trees", () => {
@@ -8737,14 +8810,14 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 >     ],
 >   });
 >   const classes = tree.children.map((child) => child.cls);
->   assert.deepEqual(
->     classes.filter((cls) => ["memoria-evidence", "memoria-block-text"].includes(cls)),
->     ["memoria-evidence", "memoria-block-text"],
->   );
+>   assert.deepEqual(classes, [
+>     "memoria-card-kind", "memoria-card-title", "memoria-evidence", "memoria-block-text",
+>   ]);
 >   assert.ok(!classes.includes("memoria-card-arguments"));
 >   assert.ok(!classes.includes("memoria-card-tipped"));
 >   assert.ok(!classes.includes("memoria-action-row"));
 >   assert.ok(!classes.includes("memoria-analysis-toggle"));
+>   assert.ok(!classes.includes("memoria-card-meta"));
 > });
 > ```
 >
