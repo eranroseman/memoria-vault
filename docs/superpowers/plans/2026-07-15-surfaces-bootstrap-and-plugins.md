@@ -3048,6 +3048,22 @@ each is the standard reading; assembler may veto):
   - CLI verb `memoria secrets set <NAME>` (JSON output
     `{"ok": true, "name": ..., "path": ...}` — never the value).
 
+> **Adopted security-review amendment (2026-07-29):** `write_secret` is a secret
+> write perimeter, not a convenience `O_TRUNC` update. It must never follow a
+> direct `memoria/` parent or `secrets.env` symlink/junction, and it must refuse
+> every non-regular existing target. On POSIX, anchor the direct parent with
+> `O_DIRECTORY | O_NOFOLLOW`, read any existing target through a relative
+> `O_RDONLY | O_NOFOLLOW | O_NONBLOCK` descriptor plus `fstat`, write a unique
+> same-directory 0600 staging file with a full `os.write` loop, and atomically
+> replace the target only after the complete body is closed. Every failure must
+> retain the previous complete target and remove only that staging file. Do not
+> use `O_TRUNC`; do not chmod an existing public file after writing secret bytes.
+> Fallback platforms must reject direct symlink/junction/non-regular paths before
+> writing. Errors are value-free. Same-user concurrent replacement is explicitly
+> outside this task's contract (matching the existing rendezvous writer). This
+> amendment hardens the B.3 writer only; B.1 reader no-follow hardening remains a
+> separately tracked follow-up rather than scope-creep here.
+
 **Steps:**
 
 - [ ] Write the failing unit tests — append to `tests/test_secrets.py` (extend the
@@ -3098,6 +3114,102 @@ each is the standard reading; assembler may veto):
           write_secret("GOOD_NAME", "   ")
   ```
 
+  Also add `from memoria_vault.runtime import secrets as secrets_module` and the
+  following write-perimeter coverage (use the same POSIX `O_NOFOLLOW` skip guard
+  as `tests/test_rendezvous.py` for the link tests):
+
+  ```python
+  @pytest.mark.skipif(
+      os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+      reason="POSIX no-follow semantics unavailable",
+  )
+  def test_write_secret_refuses_symlink_target_without_touching_outside(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      target = secrets_path()
+      target.parent.mkdir(parents=True)
+      outside = tmp_path / "outside.env"
+      outside.write_text("OUTSIDE=unchanged\n", encoding="utf-8")
+      target.symlink_to(outside)
+
+      with pytest.raises(ValueError, match="must not redirect"):
+          write_secret("OPENALEX_API_KEY", "new-value")
+
+      assert outside.read_text(encoding="utf-8") == "OUTSIDE=unchanged\n"
+      assert target.is_symlink()
+
+
+  @pytest.mark.skipif(
+      os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+      reason="POSIX no-follow semantics unavailable",
+  )
+  def test_write_secret_refuses_symlinked_memoria_parent(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      target = secrets_path()
+      target.parent.parent.mkdir(parents=True)
+      outside = tmp_path / "outside"
+      outside.mkdir()
+      target.parent.symlink_to(outside, target_is_directory=True)
+
+      with pytest.raises(ValueError, match="must not redirect"):
+          write_secret("OPENALEX_API_KEY", "new-value")
+
+      assert not (outside / "secrets.env").exists()
+
+
+  def test_write_secret_refuses_nonregular_target(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      target = secrets_path()
+      target.parent.mkdir(parents=True)
+      target.mkdir()
+
+      with pytest.raises(ValueError, match="regular file"):
+          write_secret("OPENALEX_API_KEY", "new-value")
+
+
+  def test_write_secret_short_write_is_complete_and_failure_keeps_prior_file(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      path = seed_secrets_file(
+          tmp_path, monkeypatch, "OPENALEX_API_KEY=old-value\n", mode=0o644
+      )
+      real_write = os.write
+      calls = 0
+
+      def short_write(fd: int, body: bytes | memoryview) -> int:
+          nonlocal calls
+          calls += 1
+          return real_write(fd, body[:1])
+
+      monkeypatch.setattr(secrets_module.os, "write", short_write)
+      write_secret("OPENALEX_API_KEY", "new-value")
+      assert calls > 1
+      assert path.read_text(encoding="utf-8") == "OPENALEX_API_KEY=new-value\n"
+
+      def failed_write(_fd: int, _body: bytes | memoryview) -> int:
+          raise OSError("disk full")
+
+      monkeypatch.setattr(secrets_module.os, "write", failed_write)
+      with pytest.raises(OSError, match="disk full"):
+          write_secret("OPENALEX_API_KEY", "later-value")
+      assert path.read_text(encoding="utf-8") == "OPENALEX_API_KEY=new-value\n"
+      assert not list(path.parent.glob(".secrets.*.tmp"))
+  ```
+
+  Extend the value-validation test to reject `\0` and every embedded line break
+  recognized by `str.splitlines()` (including `\r`, `\n`, and Unicode separators).
+  Add a POSIX FIFO case when `os.mkfifo` is available; it must return the same
+  regular-file refusal without blocking. Finally, spy on the POSIX replace seam
+  and assert the staging descriptor is 0600 *before* replacement, so an existing
+  0644 file never receives secret bytes in place. Extend the CLI tests to assert
+  the submitted value appears in neither stdout nor stderr on both successful and
+  rejected invocations.
+
 - [ ] Write the failing CLI test — append to `tests/test_cli_secrets.py` (add
   `import io` and `import sys` to the imports):
 
@@ -3147,7 +3259,11 @@ each is the standard reading; assembler may veto):
   tests fail with argparse `SystemExit: 2` (unknown command `secrets`) surfacing as an
   error.
 
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/secrets.py` append:
+- [ ] Write minimal implementation. Add small private helpers in
+  `src/memoria_vault/runtime/secrets.py` for the anchored parent, no-follow
+  existing-file read, unique temporary creation, and full writes; then implement
+  `write_secret` through them. The following is the required control flow (not an
+  `O_TRUNC` recipe):
 
   ```python
   def write_secret(name: str, value: str, path: Path | None = None) -> Path:
@@ -3156,20 +3272,42 @@ each is the standard reading; assembler may veto):
       cleaned = value.strip()
       if not cleaned:
           raise ValueError("secret value must be non-empty")
-      if "\n" in cleaned:
-          raise ValueError("secret value must be a single line")
+      if "\0" in value or len(value.splitlines()) != 1:
+          raise ValueError("secret value must be a single line without control breaks")
       target = path or secrets_path()
-      target.parent.mkdir(parents=True, exist_ok=True)
-      os.chmod(target.parent, 0o700)
-      values = _parse_env_text(target.read_text(encoding="utf-8")) if target.is_file() else {}
-      values[name] = cleaned
-      body = "".join(f"{key}={values[key]}\n" for key in sorted(values))
-      fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-      with os.fdopen(fd, "w", encoding="utf-8") as handle:
-          handle.write(body)
-      os.chmod(target, 0o600)
+      # `_open_secret_parent` creates only the direct parent when absent, rejects
+      # a direct symlink/junction, anchors it with O_DIRECTORY|O_NOFOLLOW on
+      # POSIX, and makes that opened directory 0700 before reading secrets.
+      with _open_secret_parent(target.parent) as parent_fd:
+          values = _read_secret_values(parent_fd, target.name)
+          values[name] = cleaned
+          body = "".join(f"{key}={values[key]}\n" for key in sorted(values)).encode()
+          temp_name, temp_fd = _create_private_secret_temp(parent_fd, target.name)
+          try:
+              _write_all(temp_fd, body)
+              os.fsync(temp_fd)
+              os.close(temp_fd)
+              temp_fd = None
+              _replace_secret_atomically(parent_fd, temp_name, target.name)
+          except BaseException:
+              if temp_fd is not None:
+                  os.close(temp_fd)
+              _unlink_temp_only(parent_fd, temp_name)
+              raise
       return target
   ```
+
+  `_read_secret_values` must open the existing name relative to the anchored
+  parent with `O_NOFOLLOW | O_NONBLOCK`, require `fstat` regular, and return `{}`
+  only for absence; it never calls `Path.is_file()` or `Path.read_text()` on the
+  target. `_create_private_secret_temp` creates a unique `.<target>.*.tmp` in the
+  same anchored directory with `O_CREAT | O_EXCL | O_NOFOLLOW` and mode 0600;
+  `_write_all` retries short writes; `_replace_secret_atomically` uses the same
+  parent descriptor for `os.replace` on POSIX. Direct redirect or nonregular
+  errors must be `ValueError`s that name the path class but never the value. The
+  Windows/fallback branch must preserve the same direct redirect/nonregular
+  refusals and the complete-old-or-complete-new replacement invariant as far as
+  its platform APIs permit.
 
   In `src/memoria_vault/cli.py`, add the parser wiring immediately after the `ask` block
   (after line 107, before `serve = sub.add_parser("serve")`):
