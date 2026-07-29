@@ -740,6 +740,20 @@ def _cmd_surface_schema(args: argparse.Namespace) -> int:
     return 0
 
 
+def _doctor_payload(
+    payload: dict[str, Any], args: argparse.Namespace, workspace: Path
+) -> dict[str, Any]:
+    from memoria_vault.runtime.secrets import credential_report
+
+    payload["credentials"] = credential_report(
+        workspace,
+        loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+    )
+    if warning := getattr(args, "_secrets_warning", ""):
+        payload["warning"] = warning
+    return payload
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     workspace = Path(args.workspace).resolve() if args.workspace else Path.cwd()
     repaired: list[str] = []
@@ -752,47 +766,41 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     if args.check == "search":
         status = _search_status(workspace)
         checks.update(status["checks"])
-        return _emit(
-            {
-                "ok": all(checks.values()),
-                "workspace": str(workspace),
-                "checks": checks,
-                "search_engine": status["engine"],
-                "search_manifest": status["manifest"],
-                "search_document_count": status["document_count"],
-                "repaired": repaired,
-            },
-            args,
-        )
+        payload = {
+            "ok": all(checks.values()),
+            "workspace": str(workspace),
+            "checks": checks,
+            "search_engine": status["engine"],
+            "search_manifest": status["manifest"],
+            "search_document_count": status["document_count"],
+            "repaired": repaired,
+        }
+        return _emit(_doctor_payload(payload, args, workspace), args)
     if args.live and args.check != "runner":
         return _fail("doctor --live is only valid with --check runner", json_output=args.json)
     if args.check == "runner":
         status = _runner_status(workspace, args.provider, live=args.live)
         checks.update(status["checks"])
-        return _emit(
-            {
-                "ok": all(checks.values()),
-                "workspace": str(workspace),
-                "checks": checks,
-                "provider": status["provider"],
-                "base_url": status["base_url"],
-                "model": status["model"],
-                "error": status["error"],
-                "repaired": repaired,
-            },
-            args,
-        )
-    backup = _backup_report(workspace)
-    return _emit(
-        {
-            "ok": all(checks.values()) and backup["ok"],
+        payload = {
+            "ok": all(checks.values()),
             "workspace": str(workspace),
             "checks": checks,
-            "backup": backup,
+            "provider": status["provider"],
+            "base_url": status["base_url"],
+            "model": status["model"],
+            "error": status["error"],
             "repaired": repaired,
-        },
-        args,
-    )
+        }
+        return _emit(_doctor_payload(payload, args, workspace), args)
+    backup = _backup_report(workspace)
+    payload = {
+        "ok": all(checks.values()) and backup["ok"],
+        "workspace": str(workspace),
+        "checks": checks,
+        "backup": backup,
+        "repaired": repaired,
+    }
+    return _emit(_doctor_payload(payload, args, workspace), args)
 
 
 def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
@@ -814,25 +822,24 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
                 )
             ]
         journal_head = state.journal_head(workspace)
-    return _emit(
-        {
-            "ok": all(doctor.values()) and backup["ok"],
-            "workspace": str(workspace),
-            "doctor": doctor,
-            "backup": backup,
-            "feedback": {"production_enabled": feedback_production_enabled(workspace)},
-            "requests": requests,
-            "journal_head": journal_head,
-        },
-        args,
-    )
+    payload = {
+        "ok": all(doctor.values()) and backup["ok"],
+        "workspace": str(workspace),
+        "doctor": doctor,
+        "backup": backup,
+        "feedback": {"production_enabled": feedback_production_enabled(workspace)},
+        "requests": requests,
+        "journal_head": journal_head,
+    }
+    return _emit(_doctor_payload(payload, args, workspace), args)
 
 
 def _cmd_doctor_self_test(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     checks = _doctor_checks(workspace)
     checks["operation_catalog"] = bool(engine_api.read_operations(workspace)["operations"])
-    return _emit({"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}, args)
+    payload = {"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}
+    return _emit(_doctor_payload(payload, args, workspace), args)
 
 
 def _cmd_ask(args: argparse.Namespace) -> int:
