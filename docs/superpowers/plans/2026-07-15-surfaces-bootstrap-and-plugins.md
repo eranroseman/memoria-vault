@@ -4021,6 +4021,17 @@ each is the standard reading; assembler may veto):
   git commit -m "feat(secrets): fail closed model credentials without provider env fallback"
   ```
 
+> **Execution receipt (2026-07-29):** BOOT-B.5 completed in `e10615e5` after
+> the adopted plan amendment `f043a0cc`. The affected runner suite passed (89
+> passed, 1 skipped); Ruff lint/format and diff checks were clean. Independent
+> implementation review approved after direct tests pinned loader, provider,
+> model, Agent, dispatch, and result-output secrecy, including suppressed
+> exception context. Sealed credential-boundary security diff scan
+> `6cc3c84c_20260729T214553Z` found no reportable finding. Full elevated
+> `python scripts/verify` passed: 2,546 passed, 11 skipped, 1 warning; e2e
+> smoke and all repository gates were green. The adopted amendment governs any
+> conflicting unchecked snippets above.
+
 ---
 
 ### Task BOOT-B.6: Class-2 degradation notices in enrichment operation output
