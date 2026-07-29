@@ -2601,7 +2601,10 @@ Spec: `docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md` §4b, sli
   `test_cli_doctor_eval.py`) are `"contract"`.
 - The surface-contract gate (`tests/test_surface_contract.py:91-96`) asserts contract
   commands are a **subset** of parser commands, so adding the `secrets` subcommand needs
-  no surface-contract change.
+  no surface-contract change. The separate exact parser-roster pin
+  (`tests/test_cli.py::test_cli_command_surface_is_exact`) must still be extended in
+  BOOT-B.3 for `memoria secrets`/`memoria secrets set` and in BOOT-B.4 for
+  `memoria secrets list`.
 
 **Decisions this plan makes where the spec is mechanism-silent** (assumptions, not gaps —
 each is the standard reading; assembler may veto):
@@ -3037,7 +3040,7 @@ each is the standard reading; assembler may veto):
 - Modify: `src/memoria_vault/runtime/secrets.py` (add `write_secret`)
 - Modify: `src/memoria_vault/cli.py` (parser wiring after the `ask` block ending line 107;
   new handler next to `_cmd_ask` at line 705)
-- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`
+- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`, `tests/test_cli.py`
 
 **Interfaces:**
 - Consumes: `secrets_path()`, `_parse_env_text` (module-internal).
@@ -3249,15 +3252,22 @@ each is the standard reading; assembler may veto):
       assert "secret name must match" in payload["error"]
   ```
 
+  In `tests/test_cli.py::test_cli_command_surface_is_exact`, add
+  `"memoria secrets"` and `"memoria secrets set"` to the expected set. This
+  keeps the intentionally exact parser-roster pin current and gives the new
+  parser surface an additional red direction.
+
 - [ ] Run tests to verify they fail:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: unit tests fail with `ImportError: cannot import name 'write_secret'`; CLI
   tests fail with argparse `SystemExit: 2` (unknown command `secrets`) surfacing as an
-  error.
+  error; and the parser-roster pin fails because the two expected `memoria secrets`
+  commands are absent.
 
 - [ ] Write minimal implementation. Add small private helpers in
   `src/memoria_vault/runtime/secrets.py` for the anchored parent, no-follow
@@ -3340,7 +3350,8 @@ each is the standard reading; assembler may veto):
 - [ ] Run tests to verify they pass:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: all pass.
@@ -3348,7 +3359,8 @@ each is the standard reading; assembler may veto):
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py tests/test_secrets.py tests/test_cli_secrets.py
+  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py \
+    tests/test_secrets.py tests/test_cli_secrets.py tests/test_cli.py
   git commit -m "feat(secrets): memoria secrets set - 0600 upsert, value via stdin only
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -3363,7 +3375,7 @@ each is the standard reading; assembler may veto):
   `credential_report`)
 - Modify: `src/memoria_vault/cli.py` (extend the `secrets` subparser from BOOT-B.3; new
   handler `_cmd_secrets_list` next to `_cmd_secrets_set`)
-- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`
+- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`, `tests/test_cli.py`
 
 **Interfaces:**
 - Consumes: `load_runner_provider_config(vault) -> dict[str, dict[str, Any]]`
@@ -3504,14 +3516,20 @@ each is the standard reading; assembler may veto):
       assert payload["path"] == str(tmp_path / "config" / "memoria" / "secrets.env")
   ```
 
+  Extend `tests/test_cli.py::test_cli_command_surface_is_exact` once more with
+  `"memoria secrets list"`; its red proves the exact parser roster cannot drift
+  while B.4 adds the new subcommand.
+
 - [ ] Run tests to verify they fail:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: `ImportError: cannot import name 'credential_report'`; the CLI test fails on
-  argparse (`invalid choice: 'list'`).
+  argparse (`invalid choice: 'list'`); and the parser-roster pin fails because
+  `memoria secrets list` is absent.
 
 - [ ] Write minimal implementation. Append to `src/memoria_vault/runtime/secrets.py`:
 
@@ -3638,7 +3656,8 @@ each is the standard reading; assembler may veto):
 - [ ] Run tests to verify they pass:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: all pass.
@@ -3646,7 +3665,8 @@ each is the standard reading; assembler may veto):
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py tests/test_secrets.py tests/test_cli_secrets.py
+  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py \
+    tests/test_secrets.py tests/test_cli_secrets.py tests/test_cli.py
   git commit -m "feat(secrets): credentials registry + memoria secrets list (names/status/source only)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
