@@ -92,6 +92,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"memoria: {secrets_report['warning']}", file=sys.stderr)
     parser = _build_parser()
     args = parser.parse_args(argv)
+    args._secrets_loaded_from_file = frozenset(secrets_report["loaded"])
+    args._secrets_warning = secrets_report["warning"]
+    args._secrets_path = secrets_report["path"]
     try:
         return args.handler(args)
     except BrokenPipeError:
@@ -150,6 +153,9 @@ def _build_parser() -> argparse.ArgumentParser:
     _common(secrets_set, workspace_required=False)
     secrets_set.add_argument("name")
     secrets_set.set_defaults(handler=_cmd_secrets_set)
+    secrets_list = secrets_sub.add_parser("list")
+    _common(secrets_list, workspace_required=False)
+    secrets_list.set_defaults(handler=_cmd_secrets_list)
 
     explore = sub.add_parser("explore", **_surface_help("explore.read"))
     _common(explore)
@@ -849,6 +855,23 @@ def _cmd_secrets_set(args: argparse.Namespace) -> int:
         value = sys.stdin.readline().rstrip("\n")
     path = write_secret(args.name, value)
     return _emit({"ok": True, "name": args.name, "path": str(path)}, args)
+
+
+def _cmd_secrets_list(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.secrets import credential_report, secrets_path
+
+    workspace = Path(args.workspace).resolve() if args.workspace else None
+    payload: dict[str, Any] = {
+        "ok": True,
+        "path": getattr(args, "_secrets_path", str(secrets_path())),
+        "credentials": credential_report(
+            workspace,
+            loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+        ),
+    }
+    if warning := getattr(args, "_secrets_warning", ""):
+        payload["warning"] = warning
+    return _emit(payload, args)
 
 
 def _cmd_explore(args: argparse.Namespace) -> int:

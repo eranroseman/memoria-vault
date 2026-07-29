@@ -11,7 +11,23 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault import cli as cli_module
 from memoria_vault.cli import main
+from tests.cli_test_helpers import write_runner_provider_config
+
+REGISTRY_NAMES = (
+    "KILOCODE_API_KEY",
+    "OPENALEX_API_KEY",
+    "SEMANTIC_SCHOLAR_API_KEY",
+    "PUBMED_API_KEY",
+    "GITHUB_TOKEN",
+    "NCBI_EMAIL",
+)
+
+
+def clear_registry_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in REGISTRY_NAMES:
+        monkeypatch.delenv(name, raising=False)
 
 
 def seed_secrets_file(
@@ -142,3 +158,125 @@ def test_cli_secrets_set_rejects_terminal_control_name_before_prompt(
     assert prompts == []
     assert invalid_name not in captured.out
     assert invalid_name not in captured.err
+
+
+def test_cli_secrets_list_reports_names_and_sources_never_values(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=super-secret\n")
+    clear_registry_env(monkeypatch)
+    try:
+        rc = main(["secrets", "list", "--json"])
+        captured = capsys.readouterr()
+    finally:
+        os.environ.pop("OPENALEX_API_KEY", None)
+
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert "super-secret" not in captured.out
+    assert "super-secret" not in captured.err
+    rows = {row["name"]: row for row in payload["credentials"]}
+    assert rows["OPENALEX_API_KEY"]["status"] == "set"
+    assert rows["OPENALEX_API_KEY"]["source"] == "file"
+    assert rows["NCBI_EMAIL"]["status"] == "unset"
+    assert payload["path"] == str(tmp_path / "config" / "memoria" / "secrets.env")
+
+
+def test_cli_secrets_list_marks_equal_inherited_environment_value_as_env(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=same-secret\n")
+    clear_registry_env(monkeypatch)
+    monkeypatch.setenv("OPENALEX_API_KEY", "same-secret")
+
+    rc = main(["secrets", "list", "--json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    rows = {row["name"]: row for row in payload["credentials"]}
+    assert rc == 0
+    assert rows["OPENALEX_API_KEY"]["status"] == "set"
+    assert rows["OPENALEX_API_KEY"]["source"] == "env"
+    assert "same-secret" not in captured.out
+    assert "same-secret" not in captured.err
+
+
+def test_cli_secrets_list_uses_startup_snapshot_after_file_changes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=before-change\n")
+    clear_registry_env(monkeypatch)
+    real_handler = cli_module._cmd_secrets_list
+
+    def change_file_then_list(args: object) -> int:
+        path.write_text("OPENALEX_API_KEY=after-change\n", encoding="utf-8")
+        return real_handler(args)
+
+    monkeypatch.setattr(cli_module, "_cmd_secrets_list", change_file_then_list)
+    try:
+        rc = main(["secrets", "list", "--json"])
+        captured = capsys.readouterr()
+    finally:
+        os.environ.pop("OPENALEX_API_KEY", None)
+
+    payload = json.loads(captured.out)
+    rows = {row["name"]: row for row in payload["credentials"]}
+    assert rc == 0
+    assert rows["OPENALEX_API_KEY"]["status"] == "set"
+    assert rows["OPENALEX_API_KEY"]["source"] == "file"
+
+
+def test_cli_secrets_list_marks_empty_environment_override_as_unset_env(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=file-secret\n")
+    clear_registry_env(monkeypatch)
+    monkeypatch.setenv("OPENALEX_API_KEY", "")
+
+    rc = main(["secrets", "list", "--json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    rows = {row["name"]: row for row in payload["credentials"]}
+    assert rc == 0
+    assert rows["OPENALEX_API_KEY"]["status"] == "unset"
+    assert rows["OPENALEX_API_KEY"]["source"] == "env"
+    assert "file-secret" not in captured.out
+    assert "file-secret" not in captured.err
+
+
+def test_cli_secrets_list_ignores_current_directory_provider_config(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    write_runner_provider_config(workspace)
+    monkeypatch.chdir(workspace)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    clear_registry_env(monkeypatch)
+
+    rc = main(["secrets", "list", "--json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert "KILOCODE_API_KEY" not in {row["name"] for row in payload["credentials"]}
+
+
+def test_cli_secrets_list_reports_refused_file_warning_without_secret(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed_secrets_file(
+        tmp_path,
+        monkeypatch,
+        "OPENALEX_API_KEY=private-secret\n",
+        mode=0o644,
+    )
+    clear_registry_env(monkeypatch)
+
+    rc = main(["secrets", "list", "--json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert "world-readable" in payload["warning"]
+    assert "private-secret" not in captured.out
+    assert "private-secret" not in captured.err

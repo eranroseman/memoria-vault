@@ -10,11 +10,27 @@ import pytest
 
 from memoria_vault.runtime import secrets as secrets_module
 from memoria_vault.runtime.secrets import (
+    credential_report,
     load_secrets,
     read_secrets_file,
     secrets_path,
     write_secret,
 )
+from tests.cli_test_helpers import write_runner_provider_config
+
+ALL_REGISTRY_NAMES = (
+    "KILOCODE_API_KEY",
+    "OPENALEX_API_KEY",
+    "SEMANTIC_SCHOLAR_API_KEY",
+    "PUBMED_API_KEY",
+    "GITHUB_TOKEN",
+    "NCBI_EMAIL",
+)
+
+
+def clear_registry_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in ALL_REGISTRY_NAMES:
+        monkeypatch.delenv(name, raising=False)
 
 
 def seed_secrets_file(
@@ -118,6 +134,68 @@ def test_read_secrets_file_refuses_nontext_or_nonregular_files(
     assert "refusing to load" in warning
 
 
+@pytest.mark.skipif(
+    os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+    reason="POSIX no-follow semantics unavailable",
+)
+def test_read_secrets_file_refuses_symlink_target_without_loading_outside(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    target = secrets_path()
+    target.parent.mkdir(parents=True)
+    outside = tmp_path / "outside.env"
+    outside.write_text("OPENALEX_API_KEY=outside-secret\n", encoding="utf-8")
+    target.symlink_to(outside)
+
+    values, warning = read_secrets_file()
+
+    assert values == {}
+    assert "outside-secret" not in warning
+    assert "refusing to load" in warning
+    assert outside.read_text(encoding="utf-8") == "OPENALEX_API_KEY=outside-secret\n"
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+    reason="POSIX no-follow semantics unavailable",
+)
+def test_read_secrets_file_refuses_symlinked_memoria_parent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    target = secrets_path()
+    target.parent.parent.mkdir(parents=True)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "secrets.env").write_text("OPENALEX_API_KEY=outside-secret\n", encoding="utf-8")
+    target.parent.symlink_to(outside, target_is_directory=True)
+
+    values, warning = read_secrets_file()
+
+    assert values == {}
+    assert "outside-secret" not in warning
+    assert "refusing to load" in warning
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or not hasattr(os, "mkfifo"),
+    reason="POSIX FIFO semantics unavailable",
+)
+def test_read_secrets_file_refuses_fifo_without_blocking(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    target = secrets_path()
+    target.parent.mkdir(parents=True)
+    os.mkfifo(target)
+
+    values, warning = read_secrets_file()
+
+    assert values == {}
+    assert "regular file" in warning
+
+
 def test_load_secrets_merges_under_process_env(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -164,6 +242,198 @@ def test_load_secrets_refused_file_loads_nothing(
     assert env == {}
     assert report["loaded"] == []
     assert "world-readable" in report["warning"]
+
+
+def test_credential_report_static_rows_without_workspace(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    clear_registry_env(monkeypatch)
+
+    rows = {row["name"]: row for row in credential_report(None)}
+
+    assert rows["OPENALEX_API_KEY"] == {
+        "name": "OPENALEX_API_KEY",
+        "class": "enhancing",
+        "status": "unset",
+        "source": "",
+        "effect_when_unset": "openalex keyless polite-pool mode (lower rate limits)",
+    }
+    assert rows["NCBI_EMAIL"]["class"] == "identity"
+    assert rows["SEMANTIC_SCHOLAR_API_KEY"]["class"] == "enhancing"
+    assert "KILOCODE_API_KEY" not in rows
+
+
+def test_credential_report_skips_file_when_environment_resolves_static_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    clear_registry_env(monkeypatch)
+    for name in ALL_REGISTRY_NAMES[1:]:
+        monkeypatch.setenv(name, "env-value")
+
+    def unexpected_file_read() -> tuple[dict[str, str], str]:
+        pytest.fail("credential_report must not read a masked secrets file")
+
+    monkeypatch.setattr(secrets_module, "read_secrets_file", unexpected_file_read)
+
+    rows = credential_report(None)
+
+    assert all(row["source"] == "env" for row in rows)
+
+
+def test_credential_report_marks_equal_environment_value_as_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=file-key\n")
+    clear_registry_env(monkeypatch)
+    monkeypatch.setenv("OPENALEX_API_KEY", "file-key")
+
+    report = load_secrets()
+    rows = {row["name"]: row for row in credential_report(None, loaded_from_file=report["loaded"])}
+
+    assert rows["OPENALEX_API_KEY"]["status"] == "set"
+    assert rows["OPENALEX_API_KEY"]["source"] == "env"
+
+
+def test_credential_report_marks_empty_environment_override_as_unset_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=file-key\n")
+    clear_registry_env(monkeypatch)
+    monkeypatch.setenv("OPENALEX_API_KEY", "")
+
+    report = load_secrets()
+    rows = {row["name"]: row for row in credential_report(None, loaded_from_file=report["loaded"])}
+
+    assert rows["OPENALEX_API_KEY"]["status"] == "unset"
+    assert rows["OPENALEX_API_KEY"]["source"] == "env"
+
+
+def test_credential_report_marks_startup_loaded_file_as_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=file-key\n")
+    clear_registry_env(monkeypatch)
+    report = load_secrets()
+
+    try:
+        rows = {
+            row["name"]: row for row in credential_report(None, loaded_from_file=report["loaded"])
+        }
+    finally:
+        for name in report["loaded"]:
+            os.environ.pop(name, None)
+
+    assert rows["OPENALEX_API_KEY"]["status"] == "set"
+    assert rows["OPENALEX_API_KEY"]["source"] == "file"
+
+
+def test_credential_report_uses_load_snapshot_after_file_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=before-change\n")
+    clear_registry_env(monkeypatch)
+    report = load_secrets()
+
+    try:
+        path.write_text("OPENALEX_API_KEY=after-change\n", encoding="utf-8")
+        rows = {
+            row["name"]: row for row in credential_report(None, loaded_from_file=report["loaded"])
+        }
+    finally:
+        for name in report["loaded"]:
+            os.environ.pop(name, None)
+
+    assert rows["OPENALEX_API_KEY"]["status"] == "set"
+    assert rows["OPENALEX_API_KEY"]["source"] == "file"
+
+
+def test_credential_report_derives_required_rows_from_workspace(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    clear_registry_env(monkeypatch)
+    write_runner_provider_config(tmp_path)
+
+    rows = {row["name"]: row for row in credential_report(tmp_path)}
+
+    required = rows["KILOCODE_API_KEY"]
+    assert required["class"] == "required-for-operation"
+    assert required["status"] == "unset"
+    assert required["source"] == ""
+    assert "refuse" in required["effect_when_unset"]
+    assert "memoria secrets set KILOCODE_API_KEY" in required["effect_when_unset"]
+
+
+def test_credential_report_tolerates_missing_provider_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    clear_registry_env(monkeypatch)
+
+    rows = credential_report(tmp_path / "no-such-workspace")
+
+    assert [row["name"] for row in rows] == [
+        "OPENALEX_API_KEY",
+        "SEMANTIC_SCHOLAR_API_KEY",
+        "PUBMED_API_KEY",
+        "GITHUB_TOKEN",
+        "NCBI_EMAIL",
+    ]
+
+
+def test_credential_report_tolerates_malformed_provider_yaml(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    clear_registry_env(monkeypatch)
+    config = tmp_path / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text("runner_providers: [\n", encoding="utf-8")
+
+    rows = credential_report(tmp_path, loaded_from_file=())
+
+    assert [row["name"] for row in rows] == [
+        "OPENALEX_API_KEY",
+        "SEMANTIC_SCHOLAR_API_KEY",
+        "PUBMED_API_KEY",
+        "GITHUB_TOKEN",
+        "NCBI_EMAIL",
+    ]
+
+
+def test_credential_report_hides_invalid_provider_key_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    clear_registry_env(monkeypatch)
+    sentinel = "sk-live-pasted-secret"
+    config = tmp_path / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "runner_providers:",
+                "  local: {url: http://model.test/v1, key_env: null}",
+                f"  gateway: {{url: https://gateway.test/v1, key_env: {sentinel}}}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    rows = credential_report(tmp_path, loaded_from_file=())
+
+    assert [row["name"] for row in rows] == [
+        "OPENALEX_API_KEY",
+        "SEMANTIC_SCHOLAR_API_KEY",
+        "PUBMED_API_KEY",
+        "GITHUB_TOKEN",
+        "NCBI_EMAIL",
+    ]
+    assert sentinel not in repr(rows)
 
 
 def test_write_secret_creates_0600_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

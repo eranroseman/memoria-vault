@@ -56,6 +56,7 @@ SUPPORTED_OPERATION_RUNNERS = frozenset({"pydantic-ai"})
 PROVIDER_CONFIG = ".memoria/config/providers.yaml"
 RUNNER_MODES = frozenset({"test", "live"})
 RUNNER_PROVIDER_NAMES = ("local", "gateway")
+_KEY_ENV_RE = re.compile(r"[A-Z][A-Z0-9_]*")
 TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"  # noqa: S105 -- public environment name.
 _TOKEN_LEDGER = {"total_tokens": 0}
 
@@ -306,7 +307,10 @@ def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
     path = Path(vault) / PROVIDER_CONFIG
     if not path.is_file():
         raise FileNotFoundError(path)
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise ValueError(f"{PROVIDER_CONFIG} could not be parsed") from exc
     if not isinstance(data, dict):
         raise ValueError(f"{PROVIDER_CONFIG} must be a map")
     providers = data.get("runner_providers")
@@ -326,6 +330,10 @@ def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
         key_env = spec.get("key_env")
         if key_env is not None and not isinstance(key_env, str):
             raise ValueError(f"{PROVIDER_CONFIG} runner provider {name}.key_env must be a string")
+        if isinstance(key_env, str) and not _KEY_ENV_RE.fullmatch(key_env):
+            raise ValueError(
+                f"{PROVIDER_CONFIG} runner provider {name}.key_env must match [A-Z][A-Z0-9_]*"
+            )
         resolved[name] = {"url": url, "key_env": key_env}
     return resolved
 

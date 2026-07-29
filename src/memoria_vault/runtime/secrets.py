@@ -6,7 +6,7 @@ import errno
 import os
 import re
 import stat
-from collections.abc import Iterator, MutableMapping
+from collections.abc import Collection, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -28,29 +28,80 @@ def secrets_path() -> Path:
 
 def read_secrets_file(path: Path | None = None) -> tuple[dict[str, str], str]:
     target = path or secrets_path()
+    if _supports_anchored_secret_reads():
+        return _read_secrets_file_anchored(target)
+    return _read_secrets_file_fallback(target)
+
+
+def _supports_anchored_secret_reads() -> bool:
+    return os.name == "posix" and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW")
+
+
+def _read_secrets_file_anchored(target: Path) -> tuple[dict[str, str], str]:
+    parent_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
     try:
-        fd = os.open(target, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+        parent_fd = os.open(target.parent, parent_flags)
     except FileNotFoundError:
         return {}, ""
-    except OSError:
-        return {}, f"secrets file {target} could not be opened; refusing to load it"
+    except OSError as exc:
+        return {}, _read_warning(target, _read_error_reason(exc, "parent"))
     try:
-        mode = os.fstat(fd).st_mode
-        if not stat.S_ISREG(mode):
-            return {}, f"secrets file {target} is not a regular file; refusing to load it"
-        if mode & stat.S_IROTH:
-            return {}, (
-                f"secrets file {target} is world-readable; refusing to load it - "
-                f"run: chmod 600 {target}"
-            )
-        with os.fdopen(fd, "r", encoding="utf-8") as source:
-            fd = None
+        flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0)
+        try:
+            fd = os.open(target.name, flags, dir_fd=parent_fd)
+        except FileNotFoundError:
+            return {}, ""
+        except OSError as exc:
+            return {}, _read_warning(target, _read_error_reason(exc, "target"))
+        try:
+            mode = os.fstat(fd).st_mode
+            if not stat.S_ISREG(mode):
+                return {}, _read_warning(target, "target is not a regular file")
+            if mode & stat.S_IROTH:
+                return {}, _read_warning(
+                    target, f"target is world-readable; run: chmod 600 {target}"
+                )
+            with os.fdopen(fd, "r", encoding="utf-8") as source:
+                fd = None
+                return _parse_env_text(source.read()), ""
+        except (OSError, UnicodeDecodeError):
+            return {}, _read_warning(target, "target could not be read")
+        finally:
+            if fd is not None:
+                os.close(fd)
+    finally:
+        os.close(parent_fd)
+
+
+def _read_secrets_file_fallback(target: Path) -> tuple[dict[str, str], str]:
+    parent = target.parent
+    if not parent.exists() and not parent.is_symlink():
+        return {}, ""
+    if _path_redirects(parent) or _path_redirects(target):
+        return {}, _read_warning(target, "path redirects through a symlink or junction")
+    try:
+        mode = target.lstat().st_mode
+    except FileNotFoundError:
+        return {}, ""
+    if not stat.S_ISREG(mode):
+        return {}, _read_warning(target, "target is not a regular file")
+    if mode & stat.S_IROTH:
+        return {}, _read_warning(target, f"target is world-readable; run: chmod 600 {target}")
+    try:
+        with target.open("r", encoding="utf-8") as source:
             return _parse_env_text(source.read()), ""
     except (OSError, UnicodeDecodeError):
-        return {}, f"secrets file {target} could not be read; refusing to load it"
-    finally:
-        if fd is not None:
-            os.close(fd)
+        return {}, _read_warning(target, "target could not be read")
+
+
+def _read_error_reason(exc: OSError, part: str) -> str:
+    if exc.errno in {errno.ELOOP, errno.ENOTDIR}:
+        return f"{part} redirects through a symlink or is not a directory"
+    return f"{part} could not be opened"
+
+
+def _read_warning(target: Path, reason: str) -> str:
+    return f"secrets file {target} {reason}; refusing to load it"
 
 
 def load_secrets(environ: MutableMapping[str, str] | None = None) -> dict[str, Any]:
@@ -61,6 +112,116 @@ def load_secrets(environ: MutableMapping[str, str] | None = None) -> dict[str, A
     for name in loaded:
         env[name] = values[name]
     return {"path": str(path), "loaded": loaded, "warning": warning}
+
+
+CREDENTIAL_REGISTRY: tuple[dict[str, str], ...] = (
+    {
+        "name": "OPENALEX_API_KEY",
+        "class": "enhancing",
+        "effect_when_unset": "openalex keyless polite-pool mode (lower rate limits)",
+    },
+    {
+        "name": "SEMANTIC_SCHOLAR_API_KEY",
+        "class": "enhancing",
+        "effect_when_unset": "semanticscholar adapter off (default_on_when_keyed)",
+    },
+    {
+        "name": "PUBMED_API_KEY",
+        "class": "enhancing",
+        "effect_when_unset": "NCBI keyless tier when the PubMed adapter lands",
+    },
+    {
+        "name": "GITHUB_TOKEN",
+        "class": "enhancing",
+        "effect_when_unset": "anonymous rate limits; private repos refuse honestly",
+    },
+    {
+        "name": "NCBI_EMAIL",
+        "class": "identity",
+        "effect_when_unset": "polite-pool identity (mailto/email query params) omitted",
+    },
+)
+
+
+def credential_report(
+    workspace: Path | None = None,
+    *,
+    loaded_from_file: Collection[str] | None = None,
+) -> list[dict[str, str]]:
+    """Return credentials by name, status, and provenance without values."""
+    required_names = _runner_key_names(workspace)
+    required_set = set(required_names)
+    static_entries = [entry for entry in CREDENTIAL_REGISTRY if entry["name"] not in required_set]
+    names = [*required_names, *(entry["name"] for entry in static_entries)]
+    file_values = (
+        read_secrets_file()[0]
+        if loaded_from_file is None and any(name not in os.environ for name in names)
+        else {}
+    )
+    rows = [
+        _credential_row(
+            name,
+            "required-for-operation",
+            f"live-model calls refuse before the network; set it: memoria secrets set {name}",
+            file_values,
+            loaded_from_file,
+        )
+        for name in required_names
+    ]
+    rows.extend(
+        _credential_row(
+            entry["name"],
+            entry["class"],
+            entry["effect_when_unset"],
+            file_values,
+            loaded_from_file,
+        )
+        for entry in static_entries
+    )
+    return rows
+
+
+def _runner_key_names(workspace: Path | None) -> list[str]:
+    if workspace is None:
+        return []
+    from memoria_vault.runtime.operations import load_runner_provider_config
+
+    try:
+        providers = load_runner_provider_config(workspace)
+    except (OSError, ValueError):
+        return []
+    names = {
+        key_env
+        for spec in providers.values()
+        if isinstance(spec, Mapping)
+        and isinstance((key_env := spec.get("key_env")), str)
+        and _NAME_RE.fullmatch(key_env)
+    }
+    return sorted(names)
+
+
+def _credential_row(
+    name: str,
+    credential_class: str,
+    effect_when_unset: str,
+    file_values: Mapping[str, str],
+    loaded_from_file: Collection[str] | None,
+) -> dict[str, str]:
+    if loaded_from_file is not None and name in loaded_from_file:
+        value, source = os.environ.get(name, ""), "file"
+    elif name in os.environ:
+        value, source = os.environ[name], "env"
+    elif loaded_from_file is None and name in file_values:
+        value, source = file_values[name], "file"
+    else:
+        value, source = "", ""
+    return {
+        "name": name,
+        "class": credential_class,
+        "status": "set" if value else "unset",
+        "source": source,
+        "effect_when_unset": effect_when_unset,
+    }
 
 
 def write_secret(name: str, value: str, path: Path | None = None) -> Path:

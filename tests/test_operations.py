@@ -170,6 +170,60 @@ providers:
         load_runner_provider_config(tmp_path)
 
 
+def test_runner_provider_config_normalizes_malformed_yaml(tmp_path: Path) -> None:
+    config = tmp_path / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text("runner_providers: [\n", encoding="utf-8")
+
+    with pytest.raises(ValueError) as exc_info:
+        load_runner_provider_config(tmp_path)
+
+    assert str(exc_info.value) == ".memoria/config/providers.yaml could not be parsed"
+
+
+def test_runner_provider_config_rejects_invalid_key_env_without_echoing_it(tmp_path: Path) -> None:
+    sentinel = "sk-live-pasted-secret"
+    config = tmp_path / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "runner_providers:",
+                "  local: {url: http://model.test/v1, key_env: null}",
+                f"  gateway: {{url: https://gateway.test/v1, key_env: {sentinel}}}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        load_runner_provider_config(tmp_path)
+
+    assert "gateway.key_env must match [A-Z][A-Z0-9_]*" in str(exc_info.value)
+    assert sentinel not in str(exc_info.value)
+
+
+def test_runner_provider_config_rejects_control_key_env_without_echoing_it(
+    tmp_path: Path,
+) -> None:
+    config = tmp_path / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        "version: 1\n"
+        "runner_providers:\n"
+        "  local: {url: http://model.test/v1, key_env: null}\n"
+        '  gateway: {url: https://gateway.test/v1, key_env: "BAD\\u001bNAME"}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        load_runner_provider_config(tmp_path)
+
+    assert "\x1b" not in str(exc_info.value)
+
+
 def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     tmp_path: Path,
 ) -> None:
