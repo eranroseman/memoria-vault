@@ -4338,18 +4338,24 @@ each is the standard reading; assembler may veto):
 ### Task BOOT-B.7: Doctor credential report rows + full gate
 
 **Files:**
-- Modify: `src/memoria_vault/cli.py` (`_cmd_doctor` default emit block, lines 653-663)
+- Modify: `src/memoria_vault/cli.py` (one doctor-payload helper; `_cmd_doctor`,
+  `_cmd_doctor_bundle`, and `_cmd_doctor_self_test` normal report emits)
 - Modify: `tests/test_cli_doctor_eval.py`
 
 **Interfaces:**
 - Consumes: `credential_report(workspace, loaded_from_file=...)` from BOOT-B.4,
   using the names-only loader snapshot attached by `main()`.
-- Produces: `memoria doctor --json` (default check set) payload gains
+- Produces: every normal `memoria doctor … --json` report — default, `--check search`,
+  `--check runner`, `bundle`, and `self-test` — gains
   `"credentials": [{"name", "class", "status", "source", "effect_when_unset"}, ...]`.
-  Credential rows are informational — they never flip doctor `ok` (keyless modes are
-  first-class; CI/offline stay green). If startup refused the secrets file, it preserves
-  the same value-free top-level `warning` as `secrets list`. BOOT-D/doctor-consuming
-  sections read this key.
+  This applies even when a completed diagnostic report has `ok: false`; credential rows
+  are informational and never change that value (keyless modes are first-class; CI/offline
+  stay green). If startup refused the secrets file, every such report preserves the same
+  value-free top-level `warning` as `secrets list`. BOOT-D/doctor-consuming sections read
+  this key.
+- Preserves: parser/usage and maintenance failures emitted through `_fail` retain the
+  existing `{"ok": false, "error": ...}` shape without credential diagnostics; this is an
+  intentional error-boundary compatibility rule, not an accidental early return.
 
 **Steps:**
 
@@ -4360,9 +4366,9 @@ each is the standard reading; assembler may veto):
       tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
   ) -> None:
       workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
       assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
       capsys.readouterr()
-      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
       for name in (
           "KILOCODE_API_KEY",
           "OPENALEX_API_KEY",
@@ -4393,38 +4399,171 @@ each is the standard reading; assembler may veto):
       assert rows["NCBI_EMAIL"]["class"] == "identity"
       # Unset credentials are informational: doctor stays ok.
       assert report["ok"] is True
+
+
+  def test_cli_doctor_reports_refused_secrets_warning_without_secret(
+      tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+      secret_file.parent.mkdir(parents=True)
+      secret_file.write_text("OPENALEX_API_KEY=private-secret\\n", encoding="utf-8")
+      secret_file.chmod(0o644)
+
+      rc = main(["doctor", "--workspace", str(workspace), "--json"])
+
+      captured = capsys.readouterr()
+      report = json.loads(captured.out)
+      assert rc == 0
+      assert "world-readable" in report["warning"]
+      assert "world-readable" in captured.err
+      assert "private-secret" not in captured.out
+      assert "private-secret" not in captured.err
+  ```
+
+  ```python
+  @pytest.mark.parametrize(
+      ("command", "expected_rc"),
+      [
+          (["doctor"], 0),
+          (["doctor", "--check", "search"], 1),
+          (["doctor", "--check", "runner", "--provider", "local"], 0),
+          (["doctor", "bundle"], 0),
+          (["doctor", "self-test"], 0),
+      ],
+  )
+  def test_cli_doctor_report_modes_include_credential_rows(
+      tmp_path: Path,
+      capsys: pytest.CaptureFixture[str],
+      monkeypatch: pytest.MonkeyPatch,
+      command: list[str],
+      expected_rc: int,
+  ) -> None:
+      workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      for name in (
+          "KILOCODE_API_KEY",
+          "OPENALEX_API_KEY",
+          "SEMANTIC_SCHOLAR_API_KEY",
+          "PUBMED_API_KEY",
+          "GITHUB_TOKEN",
+          "NCBI_EMAIL",
+      ):
+          monkeypatch.delenv(name, raising=False)
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      monkeypatch.setattr(
+          cli_module,
+          "_runner_status",
+          lambda *_args, **_kwargs: {
+              "checks": {
+                  "runner_dependency": True,
+                  "runner_base_url": True,
+                  "runner_agent_constructed": True,
+              },
+              "provider": "local",
+              "base_url": "http://127.0.0.1:11434/v1",
+              "model": "doctor",
+              "error": None,
+          },
+      )
+
+      rc = main([*command, "--workspace", str(workspace), "--json"])
+      report = json.loads(capsys.readouterr().out)
+
+      assert rc == expected_rc
+      assert report["credentials"]
+      assert all(
+          {"name", "class", "status", "source", "effect_when_unset"} <= row.keys()
+          for row in report["credentials"]
+      )
+
+
+  def test_cli_doctor_passes_startup_secret_snapshot_to_credential_report(
+      tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      from memoria_vault.runtime import secrets as secrets_module
+
+      workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+      secret_file.parent.mkdir(parents=True)
+      secret_file.write_text("OPENALEX_API_KEY=file-secret\\n", encoding="utf-8")
+      secret_file.chmod(0o600)
+      seen: list[tuple[Path | None, object]] = []
+      real_report = secrets_module.credential_report
+
+      def report_spy(
+          report_workspace: Path | None, *, loaded_from_file: object = None
+      ) -> list[dict[str, str]]:
+          seen.append((report_workspace, loaded_from_file))
+          return real_report(report_workspace, loaded_from_file=loaded_from_file)
+
+      monkeypatch.setattr(secrets_module, "credential_report", report_spy)
+      assert main(["doctor", "--workspace", str(workspace), "--json"]) == 0
+      captured = capsys.readouterr()
+      report = json.loads(captured.out)
+
+      assert seen == [(workspace, frozenset({"OPENALEX_API_KEY"}))]
+      assert {row["name"]: row for row in report["credentials"]}["OPENALEX_API_KEY"][
+          "source"
+      ] == "file"
+      assert "file-secret" not in captured.out + captured.err
+  ```
+
+  Tighten the existing `test_cli_doctor_live_requires_runner_check` to assert the
+  whole legacy error mapping, rather than only selected fields:
+
+  ```python
+      assert output == {
+          "ok": False,
+          "error": "doctor --live is only valid with --check runner",
+      }
   ```
 
 - [ ] Run test to verify it fails:
 
   ```
-  python -m pytest tests/test_cli_doctor_eval.py::test_cli_doctor_reports_credential_registry_rows -v
+  python -m pytest tests/test_cli_doctor_eval.py::test_cli_doctor_reports_credential_registry_rows tests/test_cli_doctor_eval.py::test_cli_doctor_reports_refused_secrets_warning_without_secret tests/test_cli_doctor_eval.py::test_cli_doctor_report_modes_include_credential_rows tests/test_cli_doctor_eval.py::test_cli_doctor_passes_startup_secret_snapshot_to_credential_report tests/test_cli_doctor_eval.py::test_cli_doctor_live_requires_runner_check -v
   ```
 
   Expected: `KeyError: 'credentials'`.
 
-- [ ] Write minimal implementation — in `src/memoria_vault/cli.py` `_cmd_doctor`,
-  replace the final emit block (lines 653-663):
+- [ ] Write minimal implementation — add one private payload helper immediately before
+  `_cmd_doctor`, then route all five normal report paths through it. Do not apply it to
+  `_fail` paths:
 
   ```python
+  def _doctor_payload(
+      payload: dict[str, Any], args: argparse.Namespace, workspace: Path
+  ) -> dict[str, Any]:
       from memoria_vault.runtime.secrets import credential_report
 
-      backup = _backup_report(workspace)
-      payload = {
-          "ok": all(checks.values()) and backup["ok"],
-          "workspace": str(workspace),
-          "checks": checks,
-          "backup": backup,
-          "credentials": credential_report(
-              workspace,
-              loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
-          ),
-          "repaired": repaired,
-      }
+      payload["credentials"] = credential_report(
+          workspace,
+          loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+      )
       if warning := getattr(args, "_secrets_warning", ""):
           payload["warning"] = warning
-      return _emit(payload, args)
+      return payload
   ```
+
+  Each ordinary mapping emits as:
+
+  ```python
+  return _emit(_doctor_payload(payload, args, workspace), args)
+  ```
+
+  Apply that emit form to the `search`, `runner`, and default branches of
+  `_cmd_doctor`, plus `_cmd_doctor_bundle` and `_cmd_doctor_self_test`. Its sole
+  effect is the two additive diagnostic keys: keep each branch's existing `ok`
+  calculation and every existing branch-specific field unchanged.
 
 - [ ] Run test to verify it passes:
 
