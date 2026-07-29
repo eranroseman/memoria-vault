@@ -3782,6 +3782,15 @@ each is the standard reading; assembler may veto):
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
+> **Execution receipt (2026-07-29):** BOOT-B.4 completed in `ee4c6c12`.
+> The planned RED suite first failed because `credential_report` did not exist;
+> the focused green suite passed (83 tests), and independent implementation
+> review approved the result. The sealed credential-boundary security diff scan
+> `ee4c6c12_20260729T205911Z` found no reportable finding. Full elevated
+> `python scripts/verify` passed: 2,529 passed, 11 skipped, 1 warning; the e2e
+> smoke test and all repository gates were green. The adopted amendment governs
+> any conflicting unchecked snippets above.
+
 ---
 
 ### Task BOOT-B.5: Fail-closed class-1 — remove the silent fallback chain
