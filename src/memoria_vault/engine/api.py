@@ -175,10 +175,10 @@ def read_attention(
 
 
 def read_attention_card(
-    workspace: Path, attention_path: str, *, read_scope: list[str] | None = None
+    workspace: Path, path: str, *, read_scope: list[str] | None = None
 ) -> dict[str, Any]:
-    rel, path = _workspace_file(Path(workspace), attention_path)
-    card = _attention_card(path, Path(workspace))
+    rel, card_path = _workspace_file(Path(workspace), path)
+    card = _attention_card(card_path, Path(workspace))
     if card is None:
         raise FileNotFoundError(f"attention projection not found: {rel}")
     if not _attention_in_scope(card, read_scope):

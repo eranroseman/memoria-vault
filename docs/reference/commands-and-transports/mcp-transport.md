@@ -58,15 +58,18 @@ This table mirrors the MCP bindings in
 | `concepts` | `concept_type=""` | Lists scoped Concept summaries. |
 | `concept` | `target` | Reads one scoped Concept or Work target. |
 | `work` | `work_id` | Reads one catalog Work if one of its paths is inside scope. |
-| `journal` | `operation=""`, `decision=""`, `date=""`, `limit=50` | Reads scoped journal rows. |
+| `journal` | `operation=""`, `request_id=""`, `path=""`, `decision=""`, `date=""`, `limit=50` | Reads scoped journal rows. |
 | `journal_event` | `event_id` | Reads one scoped journal row. |
 | `project_slice` | `project_path` | Reads one scoped project slice. |
 | `project_draft` | `project_path` | Reads one scoped project draft. |
 | `exploration` | `limit=10` | Reads scoped exploration-channel items. |
 | `operation_run` | `operation_id`, `payload=null`, `idempotency_key=""`, `schedule_id=""` | Queues and runs one engine operation through the request envelope. |
 
-The tool roster is closed in tests. Additions should be deliberate API changes,
-not accidental helper exposure.
+The tool roster is closed in tests, and each read tool's input schema is
+generated from its registry row's `params` (the same field the HTTP OpenAPI
+generation consumes), with a parity test pinning every served schema to its
+row. Additions should be deliberate API changes, not accidental helper
+exposure.
 
 ## Read Scope
 
