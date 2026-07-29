@@ -4053,7 +4053,12 @@ each is the standard reading; assembler may veto):
     `query_params`/`header_env` env names are unset, and `"<provider>: adapter off -
     <ENV> unset; set it: memoria secrets set <ENV>"` for branch-declared optional
     providers gated off by `default_on_when_keyed`. Fixture-served providers are
-    excluded (no live call happened — nothing degraded).
+    excluded (no live call happened — nothing degraded). Only strings matching
+    `[A-Z][A-Z0-9_]*` are admitted as `<ENV>`; malformed configuration values are
+    silently skipped rather than reflected. Duplicate provider names or repeated env
+    mappings yield one notice, preserving first branch-list order. The same admission
+    rule applies to `default_on_when_keyed`, so malformed gate values cannot activate
+    an optional adapter.
   - `enrich_source` success payload gains `"credential_notices": list[str]`.
   - No journal event changes → **no floor golden regeneration**.
 
@@ -4131,20 +4136,99 @@ each is the standard reading; assembler may veto):
           "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
           "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY"
       ]
+
+
+  def test_credential_notices_skip_malformed_environment_names(monkeypatch) -> None:
+      malformed = "NOT_AN_ENV_NAME; raw config"
+      config = {
+          "branches": {"doi": {"optional": ["gated"]}},
+          "providers": {
+              "live": {
+                  "query_params": {
+                      "valid": "VALID_QUERY",
+                      "duplicate": "VALID_QUERY",
+                      "malformed": malformed,
+                  },
+                  "header_env": {
+                      "X-Valid": "VALID_HEADER",
+                      "X-Duplicate": "VALID_HEADER",
+                      "X-Malformed": malformed,
+                  },
+              },
+              "gated": {
+                  "default_on_when_keyed": [malformed, "VALID_GATE", 3],
+              },
+          },
+      }
+      for name in ("VALID_QUERY", "VALID_HEADER", "VALID_GATE"):
+          monkeypatch.delenv(name, raising=False)
+      monkeypatch.setenv(malformed, "must-not-activate")
+
+      assert _optional_providers(config, "doi", {}) == []
+      notices = _credential_notices(config, "doi", ["live"], {})
+
+      assert notices == [
+          "live: keyless mode - VALID_HEADER unset; "
+          "set it: memoria secrets set VALID_HEADER",
+          "live: keyless mode - VALID_QUERY unset; "
+          "set it: memoria secrets set VALID_QUERY",
+          "gated: adapter off - VALID_GATE unset; "
+          "set it: memoria secrets set VALID_GATE",
+      ]
+      assert malformed not in "\n".join(notices)
+
+
+  def test_credential_notices_deduplicate_duplicate_branch_providers(monkeypatch) -> None:
+      config = load_provider_config(WORKSPACE_SEED)
+      config["branches"]["doi"]["optional"] = ["semanticscholar", "semanticscholar"]
+      for name in ("OPENALEX_API_KEY", "SEMANTIC_SCHOLAR_API_KEY", "NCBI_EMAIL"):
+          monkeypatch.delenv(name, raising=False)
+
+      notices = _credential_notices(
+          config,
+          "doi",
+          ["crossref", "crossref", "openalex", "unpaywall", "unpaywall"],
+          {},
+      )
+
+      assert notices == [
+          "crossref: keyless mode - NCBI_EMAIL unset; "
+          "set it: memoria secrets set NCBI_EMAIL",
+          "openalex: keyless mode - NCBI_EMAIL unset; "
+          "set it: memoria secrets set NCBI_EMAIL",
+          "openalex: keyless mode - OPENALEX_API_KEY unset; "
+          "set it: memoria secrets set OPENALEX_API_KEY",
+          "unpaywall: keyless mode - NCBI_EMAIL unset; "
+          "set it: memoria secrets set NCBI_EMAIL",
+          "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
+          "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY",
+      ]
   ```
 
 - [ ] Run tests to verify they fail:
 
   ```
-  python -m pytest tests/test_source_enrichment.py::test_credential_notices_name_keyless_and_gated_providers tests/test_source_enrichment.py::test_credential_notices_silent_when_keys_present_or_fixture_served tests/test_source_enrichment.py::test_enrich_source_output_states_keyless_degradation -v
+  python -m pytest tests/test_source_enrichment.py::test_credential_notices_name_keyless_and_gated_providers tests/test_source_enrichment.py::test_credential_notices_silent_when_keys_present_or_fixture_served tests/test_source_enrichment.py::test_enrich_source_output_states_keyless_degradation tests/test_source_enrichment.py::test_credential_notices_skip_malformed_environment_names tests/test_source_enrichment.py::test_credential_notices_deduplicate_duplicate_branch_providers -v
   ```
 
   Expected: `ImportError: cannot import name '_credential_notices'`.
 
 - [ ] Write minimal implementation. In `src/memoria_vault/runtime/enrichment.py`, add
-  after `_provider_default_on` (after line 397):
+  `import re` beside `import os`, add the regex at module scope, replace
+  `_provider_default_on`, and add the helpers after it:
 
   ```python
+  _ENV_NAME_RE = re.compile(r"[A-Z][A-Z0-9_]*")
+
+
+  def _provider_default_on(config: dict[str, Any], provider: str) -> bool:
+      spec = _provider_spec(config, provider)
+      return any(
+          os.environ.get(name)
+          for name in _valid_env_names(spec.get("default_on_when_keyed"))
+      )
+
+
   def _credential_notices(
       config: dict[str, Any],
       branch: str,
@@ -4153,7 +4237,11 @@ each is the standard reading; assembler may veto):
   ) -> list[str]:
       """Spec 4b class-2 honesty: name every keyless degradation in the run output."""
       notices: list[str] = []
+      seen_providers: set[str] = set()
       for provider in fetched:
+          if provider in seen_providers:
+              continue
+          seen_providers.add(provider)
           if provider in fixture_payloads:
               continue
           spec = _provider_spec(config, provider)
@@ -4169,12 +4257,16 @@ each is the standard reading; assembler may veto):
       for provider in declared if isinstance(declared, list) else []:
           if not isinstance(provider, str):
               continue
-          if provider in fetched or provider in fixture_payloads:
+          if provider in seen_providers:
               continue
-          gate = _provider_spec(config, provider).get("default_on_when_keyed")
-          gate_names = [gate] if isinstance(gate, str) else gate if isinstance(gate, list) else []
+          seen_providers.add(provider)
+          if provider in fixture_payloads:
+              continue
+          gate_names = _valid_env_names(
+              _provider_spec(config, provider).get("default_on_when_keyed")
+          )
           for env_name in gate_names:
-              if isinstance(env_name, str) and not os.environ.get(env_name):
+              if not os.environ.get(env_name):
                   notices.append(
                       f"{provider}: adapter off - {env_name} unset; "
                       f"set it: memoria secrets set {env_name}"
@@ -4185,9 +4277,16 @@ each is the standard reading; assembler may veto):
   def _spec_env_names(spec: dict[str, Any]) -> list[str]:
       params = spec.get("query_params") if isinstance(spec.get("query_params"), dict) else {}
       headers = spec.get("header_env") if isinstance(spec.get("header_env"), dict) else {}
-      return sorted(
-          {str(name) for name in [*params.values(), *headers.values()] if name}
-      )
+      return sorted(_valid_env_names([*params.values(), *headers.values()]))
+
+
+  def _valid_env_names(value: Any) -> list[str]:
+      values = [value] if isinstance(value, str) else value if isinstance(value, list) else []
+      names: list[str] = []
+      for name in values:
+          if isinstance(name, str) and _ENV_NAME_RE.fullmatch(name) and name not in names:
+              names.append(name)
+      return names
   ```
 
   In `enrich_source`, add after the `optional = _optional_providers(...)` line (line 128):
