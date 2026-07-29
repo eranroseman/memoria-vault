@@ -2603,7 +2603,7 @@ Spec: `docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md` §4b, sli
   commands are a **subset** of parser commands, so adding the `secrets` subcommand needs
   no surface-contract change. The separate exact parser-roster pin
   (`tests/test_cli.py::test_cli_command_surface_is_exact`) must still be extended in
-  BOOT-B.3 for `memoria secrets`/`memoria secrets set` and in BOOT-B.4 for
+  BOOT-B.3 for `memoria secrets set` and in BOOT-B.4 for
   `memoria secrets list`.
 
 **Decisions this plan makes where the spec is mechanism-silent** (assumptions, not gaps —
@@ -3253,9 +3253,10 @@ each is the standard reading; assembler may veto):
   ```
 
   In `tests/test_cli.py::test_cli_command_surface_is_exact`, add
-  `"memoria secrets"` and `"memoria secrets set"` to the expected set. This
-  keeps the intentionally exact parser-roster pin current and gives the new
-  parser surface an additional red direction.
+  `"memoria secrets set"` to the expected set. The roster intentionally lists
+  runnable commands only, so it excludes the required-subcommand parent
+  `memoria secrets`. This keeps the exact parser-roster pin current and gives
+  the new executable surface an additional red direction.
 
 - [ ] Run tests to verify they fail:
 
@@ -3266,8 +3267,8 @@ each is the standard reading; assembler may veto):
 
   Expected: unit tests fail with `ImportError: cannot import name 'write_secret'`; CLI
   tests fail with argparse `SystemExit: 2` (unknown command `secrets`) surfacing as an
-  error; and the parser-roster pin fails because the two expected `memoria secrets`
-  commands are absent.
+  error; and the parser-roster pin fails because the expected `memoria secrets set`
+  command is absent.
 
 - [ ] Write minimal implementation. Add small private helpers in
   `src/memoria_vault/runtime/secrets.py` for the anchored parent, no-follow
