@@ -4455,6 +4455,10 @@ each is the standard reading; assembler may veto):
           monkeypatch.delenv(name, raising=False)
       assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
       capsys.readouterr()
+      secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+      secret_file.parent.mkdir(parents=True, exist_ok=True)
+      secret_file.write_text("OPENALEX_API_KEY=private-secret\\n", encoding="utf-8")
+      secret_file.chmod(0o644)
       monkeypatch.setattr(
           cli_module,
           "_runner_status",
@@ -4472,10 +4476,14 @@ each is the standard reading; assembler may veto):
       )
 
       rc = main([*command, "--workspace", str(workspace), "--json"])
-      report = json.loads(capsys.readouterr().out)
+      captured = capsys.readouterr()
+      report = json.loads(captured.out)
 
       assert rc == expected_rc
       assert report["credentials"]
+      assert "world-readable" in report["warning"]
+      assert "world-readable" in captured.err
+      assert "private-secret" not in captured.out + captured.err
       assert all(
           {"name", "class", "status", "source", "effect_when_unset"} <= row.keys()
           for row in report["credentials"]
