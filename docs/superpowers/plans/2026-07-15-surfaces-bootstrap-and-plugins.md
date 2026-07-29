@@ -3787,185 +3787,202 @@ each is the standard reading; assembler may veto):
 ### Task BOOT-B.5: Fail-closed class-1 — remove the silent fallback chain
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/operations.py` (`_pydantic_ai_chat`, lines 951-966;
-  the fallback chain is lines 957-962)
-- Modify: `src/memoria_vault/cli.py` (`_runner_status`, fallback copy at lines 3039-3044)
-- Modify: `tests/test_operations.py` (existing test
-  `test_compile_source_digest_can_use_pydantic_ai_runner` at lines 535-589; two new tests)
+- Modify: `src/memoria_vault/runtime/operations.py` (new shared credential resolver and
+  `_pydantic_ai_chat`)
+- Modify: `src/memoria_vault/cli.py` (`_runner_status` uses the same resolver before
+  loading or constructing an adapter)
+- Modify: `tests/test_operations.py` (existing local-runner proof plus gateway refusal,
+  explicit-key, and invalid-direct-runner coverage)
+- Modify: `tests/test_cli_doctor_eval.py` (keyless placeholder assertions; gateway doctor
+  refusal and explicit-key success)
+- Modify: `tests/test_token_ceiling.py` (keyless direct-chat placeholder regression proof)
+- Modify: `tests/helpers.py` (`patch_pydantic_ai` preserves its last-construction
+  `provider_kwargs` seam and records every provider construction in order)
 
 **Interfaces:**
 - Consumes: runner dict from `resolve_operation_runner` (`operations.py:239-251`), which
   carries `"provider"` and `"key_env"`.
-- Produces: `_pydantic_ai_chat` raises
-  `RuntimeError(f"provider {provider} requires {key_env} - set it: memoria secrets set {key_env}")`
-  **before** `_load_pydantic_ai_openai()` and before any network use, whenever `key_env`
-  is a non-empty string that resolves to nothing in `os.environ`. `key_env: null`
-  (local provider) stays keyless-legal: no key is sent and no fallback is consulted.
-  `MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and implicit `KILOCODE_API_KEY` lose all
-  meaning engine-wide. **Other sections must not reintroduce these names.**
+- Produces: `_KEYLESS_PROVIDER_API_KEY = "api-key-not-set"` and
+  `_resolve_runner_api_key(runner: Mapping[str, Any]) -> str` in `operations.py`.
+  `key_env is None` returns that inert, nonsecret placeholder; a validated nonempty
+  `key_env` returns only its nonempty `os.environ` value or raises exactly
+  `RuntimeError(f"provider {provider} requires {key_env} - set it: memoria secrets set {key_env}")`.
+  The resolver must reject any direct malformed runner `key_env` with a generic,
+  value-free `ValueError`; only `None` is keyless. B.4 validates configuration at its
+  source, but the resolver remains defensive because direct callers are a separate seam.
+- `_pydantic_ai_chat` and `_runner_status` both call this one resolver **before**
+  `_load_pydantic_ai_openai()` or constructing an adapter, then always pass its returned
+  value as `OpenAIProvider(api_key=...)`. This blocks Pydantic AI's own implicit
+  `OPENAI_API_KEY` lookup (its `OpenAIProvider` otherwise performs that lookup whenever
+  `api_key` is omitted or `None`). A missing/empty gateway credential therefore leaves
+  doctor with `runner_dependency`, `runner_agent_constructed`, and (when requested)
+  `runner_live_dispatch` all false and reports the exact refusal.
+- `key_env: null` remains local/keyless-legal in the product sense: no configured
+  credential or fallback is selected. The OpenAI-compatible SDK still requires a
+  nonempty API-key argument and will send the inert placeholder as an Authorization value;
+  strict header omission would require a custom transport and is deliberately outside this
+  task. `MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and implicit `KILOCODE_API_KEY` lose
+  all engine credential-resolution meaning. **Other sections must not reintroduce these
+  names.**
+- Test seam: `patch_pydantic_ai` retains the existing `seen["provider_kwargs"]` last-value
+  behavior and additionally appends each `FakeProvider` kwargs dict to
+  `seen["provider_kwargs_list"]`. This is needed because live doctor deliberately
+  constructs once for diagnostics and again for dispatch; a last-value-only fake cannot
+  prove both constructions used the configured credential.
 
 **Steps:**
 
-- [ ] Write the failing tests — in `tests/test_operations.py`, first update the existing
-  test `test_compile_source_digest_can_use_pydantic_ai_runner` (lines 535-589): delete
-  the line `monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "test-key")` (line 554) and
-  change the assertion
+- [ ] Write the failing operation tests in `tests/test_operations.py`.
+  Update `test_compile_source_digest_can_use_pydantic_ai_runner` to set all three old
+  names (`MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and `KILOCODE_API_KEY`) to distinct
+  sentinels, then assert the local provider receives exactly
+  `{"base_url": "http://model.test/v1", "api_key": "api-key-not-set"}`. This proves an
+  exported `OPENAI_API_KEY` cannot win underneath the removed Memoria fallback.
+
+  Append a gateway-missing test that configures the gateway runner, sets
+  `KILOCODE_API_KEY` to `""`, sets both historical fallback names to sentinels, and
+  patches Pydantic AI. It must raise the exact gateway refusal, leave the patched loader
+  and provider constructor untouched (`seen == {}`), and never contain a sentinel in any
+  captured error.
+
+  Append an explicit-gateway-key test with the same legacy sentinels and
+  `KILOCODE_API_KEY="gateway-key"`; it must complete and pass exactly that configured
+  value, not either sentinel, in `provider_kwargs`. Finally add a direct malformed-runner
+  test (`key_env` containing a pasted sentinel/control text) which gets the generic
+  value-free resolver `ValueError` and cannot reflect the supplied value.
+
+- [ ] In `tests/test_cli_doctor_eval.py`, update the three existing local doctor assertions
+  (construction, default base URL, and live dispatch) so their provider kwargs include
+  `"api_key": "api-key-not-set"`. First extend `tests/helpers.py`'s `FakeProvider` to:
 
   ```python
-      assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1", "api_key": "test-key"}
+  seen["provider_kwargs"] = kwargs
+  seen.setdefault("provider_kwargs_list", []).append(kwargs)
   ```
 
-  to
+  Then add these two red tests:
 
   ```python
-      assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1"}
-  ```
-
-  Then append two new tests:
-
-  ```python
-  def test_pydantic_ai_runner_refuses_unresolvable_key_env_before_network(
-      tmp_path: Path, monkeypatch
+  def test_cli_doctor_gateway_refuses_missing_key_before_adapter_construction(
+      tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
   ) -> None:
-      vault = workspace(tmp_path)
-      write_runner_provider_config(vault)
-      patch_compile_policy(
-          monkeypatch,
-          allowed_network=["https://gateway.test/v1"],
-          provider="gateway",
-          model="memoria-test-model",
-      )
-      capture_source(
-          vault,
-          "source-alpha",
-          "Alpha Source",
-          "A fixture source.",
-          "Alpha content about framing, methods, outcomes, gaps, and impact.",
-          machine="capture-machine",
-      )
-      seen = patch_pydantic_ai(monkeypatch, output="unused")
-      for name in ("KILOCODE_API_KEY", "MEMORIA_MODEL_API_KEY", "OPENAI_API_KEY"):
-          monkeypatch.delenv(name, raising=False)
-
-      with pytest.raises(
-          RuntimeError,
-          match=(
-              "provider gateway requires KILOCODE_API_KEY - "
-              "set it: memoria secrets set KILOCODE_API_KEY"
-          ),
-      ):
-          compile_source_digest(
-              vault,
-              "source-alpha",
-              ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
-              machine="op-machine",
-          )
-
-      assert "provider_kwargs" not in seen
-
-
-  def test_pydantic_ai_runner_uses_explicit_key_env(tmp_path: Path, monkeypatch) -> None:
-      vault = workspace(tmp_path)
-      write_runner_provider_config(vault)
-      patch_compile_policy(
-          monkeypatch,
-          allowed_network=["https://gateway.test/v1"],
-          provider="gateway",
-          model="memoria-test-model",
-      )
-      capture_source(
-          vault,
-          "source-alpha",
-          "Alpha Source",
-          "A fixture source.",
-          "Alpha content about framing, methods, outcomes, gaps, and impact.",
-          machine="capture-machine",
-      )
-      monkeypatch.setenv("KILOCODE_API_KEY", "gateway-key")
-      seen = patch_pydantic_ai(
-          monkeypatch,
-          output=(
-              "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
-              "## Hub suggestions\n\n- Framing\n"
-          ),
-      )
-
-      compile_source_digest(
-          vault,
-          "source-alpha",
-          ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
-          machine="op-machine",
-      )
-
-      assert seen["provider_kwargs"] == {
-          "base_url": "https://gateway.test/v1",
-          "api_key": "gateway-key",
+      workspace = tmp_path / "workspace"
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      write_runner_provider_config(workspace)
+      sentinels = {
+          "MEMORIA_MODEL_API_KEY": "legacy-model-secret",
+          "OPENAI_API_KEY": "legacy-openai-secret",
+          "KILOCODE_API_KEY": "",
       }
+      for name, value in sentinels.items():
+          monkeypatch.setenv(name, value)
+      seen = patch_pydantic_ai(monkeypatch)
+
+      rc = main([
+          "doctor", "--workspace", str(workspace), "--check", "runner",
+          "--provider", "gateway", "--live", "--json",
+      ])
+      captured = capsys.readouterr()
+      payload = json.loads(captured.out)
+
+      assert rc == 1
+      assert payload["ok"] is False
+      assert payload["error"] == (
+          "provider gateway requires KILOCODE_API_KEY - "
+          "set it: memoria secrets set KILOCODE_API_KEY"
+      )
+      assert payload["checks"]["runner_dependency"] is False
+      assert payload["checks"]["runner_agent_constructed"] is False
+      assert payload["checks"]["runner_live_dispatch"] is False
+      assert seen == {}
+      assert "legacy-model-secret" not in captured.out + captured.err
+      assert "legacy-openai-secret" not in captured.out + captured.err
   ```
 
-- [ ] Run tests to verify the new behavior fails:
+  The second invokes the same gateway doctor path with `KILOCODE_API_KEY="gateway-key"`
+  and both legacy sentinels set. It succeeds, including `--live`, and asserts
+  `seen["provider_kwargs_list"] == [expected, expected]`, where `expected` is exactly
+  `{"base_url": "https://gateway.test/v1", "api_key": "gateway-key"}`. This proves
+  both construction and live-dispatch adapter paths use only the configured key.
+
+- [ ] In `tests/test_token_ceiling.py`, add one keyless direct-chat proof that sets all
+  legacy names to distinct sentinels, calls the existing `RUNNER` (`key_env: None`), and
+  asserts the patched provider receives the exact inert placeholder. This closes a direct
+  internal caller that does not pass through doctor or compile-source-digest.
+
+- [ ] Run the red subset:
 
   ```
-  python -m pytest tests/test_operations.py::test_pydantic_ai_runner_refuses_unresolvable_key_env_before_network tests/test_operations.py::test_pydantic_ai_runner_uses_explicit_key_env tests/test_operations.py::test_compile_source_digest_can_use_pydantic_ai_runner -v
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
+    tests/test_operations.py tests/test_cli_doctor_eval.py tests/test_token_ceiling.py -q
   ```
 
-  Expected: the refusal test fails with `DID NOT RAISE` (the current code silently falls
-  back to keyless); the explicit-key test passes; the updated existing test may fail if
-  the developer's shell exports any fallback key — the implementation makes it
-  deterministic.
+  Expected before implementation: local assertions fail because the current code omits
+  `api_key` and Pydantic AI can consume `OPENAI_API_KEY`; the missing gateway doctor and
+  operation cases construct via one of the old fallback values instead of refusing.
 
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/operations.py`,
-  replace lines 954-962 (`key_env = ...` through the fallback chain) with:
+- [ ] Write minimal implementation. In `operations.py`, import `Mapping` alongside
+  `Iterable`, add the inert constant and resolver next to `_KEY_ENV_RE`, and preserve
+  source-safe diagnostics:
 
   ```python
+  _KEYLESS_PROVIDER_API_KEY = "api-key-not-set"
+
+
+  def _resolve_runner_api_key(runner: Mapping[str, Any]) -> str:
       key_env = runner.get("key_env")
-      api_key = None
-      if isinstance(key_env, str) and key_env:
-          api_key = os.environ.get(key_env)
-          if not api_key:
-              provider = str(runner.get("provider") or "runner")
-              raise RuntimeError(
-                  f"provider {provider} requires {key_env} - "
-                  f"set it: memoria secrets set {key_env}"
-              )
+      if key_env is None:
+          return _KEYLESS_PROVIDER_API_KEY
+      if not isinstance(key_env, str) or not _KEY_ENV_RE.fullmatch(key_env):
+          raise ValueError("runner key_env must match [A-Z][A-Z0-9_]*")
+      api_key = os.environ.get(key_env)
+      if api_key:
+          return api_key
+      raw_provider = runner.get("provider")
+      provider = (
+          raw_provider
+          if isinstance(raw_provider, str) and raw_provider in RUNNER_PROVIDER_NAMES
+          else "runner"
+      )
+      raise RuntimeError(
+          f"provider {provider} requires {key_env} - "
+          f"set it: memoria secrets set {key_env}"
+      )
   ```
 
-  (Fail-closed refusal happens before `_load_pydantic_ai_openai()` on the next line —
-  strictly before any network dependency.)
+  In `_pydantic_ai_chat`, call the resolver after policy/network validation but before
+  `_load_pydantic_ai_openai()`, delete the old three-name chain, and always construct
+  `provider_kwargs = {"base_url": base_url, "api_key": api_key}`. Never omit the
+  `api_key` argument.
 
-  In `src/memoria_vault/cli.py` `_runner_status`, delete lines 3039-3044:
+  In `cli.py` `_runner_status`, import `_resolve_runner_api_key`, build the one runner
+  dict before its `try`, and call the resolver as the first action inside the `try`, before
+  `_load_pydantic_ai_openai()` or `Agent(...)`. Use the returned value in the first
+  provider construction and reuse that same runner dict for the optional live
+  `_pydantic_ai_chat` call. Delete the duplicated fallback chain completely. The existing
+  broad `except` then turns a missing gateway key into doctor data without constructing an
+  adapter or attempting a network call.
 
-  ```python
-      if not api_key:
-          api_key = (
-              os.environ.get("MEMORIA_MODEL_API_KEY")
-              or os.environ.get("OPENAI_API_KEY")
-              or os.environ.get("KILOCODE_API_KEY")
-          )
-  ```
-
-  leaving line 3038's `api_key = os.environ.get(key_env) if isinstance(key_env, str) and
-  key_env else None` as the only resolution. (`doctor --check runner --live` with an
-  unresolvable `key_env` now reports the refusal message in its `error` field via the
-  existing `except Exception` at line 3082.)
-
-- [ ] Run the full affected files to verify nothing else regressed:
+- [ ] Run the full affected suite:
 
   ```
-  python -m pytest tests/test_operations.py tests/test_cli_doctor_eval.py tests/test_live_runner.py -v
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
+    tests/test_operations.py tests/test_cli_doctor_eval.py tests/test_token_ceiling.py \
+    tests/test_live_runner.py -q
   ```
 
-  Expected: all pass (`test_cli_doctor_eval.py:738-740` deletes the fallback names
-  defensively, which stays valid; `local` provider paths are `key_env: null` and remain
-  keyless-legal).
+  Expected: all non-optional tests pass. `test_live_runner.py` remains opt-in; for a local
+  OpenAI-compatible server it now uses the SDK-required inert placeholder rather than any
+  ambient provider key.
 
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/operations.py src/memoria_vault/cli.py tests/test_operations.py
-  git commit -m "feat(secrets): fail-closed class-1 model keys - remove silent env fallback chain
-
-  Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+  git add src/memoria_vault/runtime/operations.py src/memoria_vault/cli.py \
+    tests/helpers.py tests/test_operations.py tests/test_cli_doctor_eval.py \
+    tests/test_token_ceiling.py
+  git commit -m "feat(secrets): fail closed model credentials without provider env fallback"
   ```
 
 ---

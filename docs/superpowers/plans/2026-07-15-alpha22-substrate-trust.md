@@ -4096,12 +4096,21 @@ ranges; the refs below are the real, current ones):
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:951-984` (`_pydantic_ai_chat`) and `operations.py:5-12` (stdlib import block — add `import time`)
 - Modify: `tests/helpers.py:362-393` (`patch_pydantic_ai` — fake `run_sync` result gains `usage()` and `response.cost()`)
-- Test: `tests/test_operations.py`
+- Modify: `tests/test_token_ceiling.py` (retain the existing charging/fallback proof while
+  adapting direct chat assertions to the telemetry dict)
+- Test: `tests/test_operations.py`, `tests/test_token_ceiling.py`
 
 **Interfaces:**
 - Consumes: `AgentRunResult.usage() -> RunUsage` (fields `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`); `AgentRunResult.response.cost() -> genai_prices PriceCalculation` (`.total_price: Decimal`; raises `LookupError` when the model/provider is not in the local price snapshot); `time.monotonic()`.
 - Produces: `_pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> dict[str, Any]` with keys `text: str` (non-empty), `usage: dict[str, int]` (always populated on a real call), `cost_usd: float | None`, `elapsed_s: float`.
-- Produces: `patch_pydantic_ai(monkeypatch: Any, *, output: str = "", seen: dict[str, Any] | None = None, total_price: Any | None = None) -> dict[str, Any]` — fake result's `usage()` returns fixed counts 17/5/2/1; `response.cost()` raises `LookupError` when `total_price is None`, else returns an object with `.total_price`.
+- Consumes: BOOT-B.5's `_resolve_runner_api_key(runner) -> str` and
+  `_KEYLESS_PROVIDER_API_KEY = "api-key-not-set"`; COST.1 extends telemetry only and
+  must preserve B.5's fail-closed resolution, exact missing-key refusal, and unconditional
+  `OpenAIProvider(api_key=...)` behavior.
+- Consumes: existing `_record_token_usage(result, settings)` behavior. COST.1 must charge
+  the process token ledger once per completed model call before returning telemetry, keeping
+  the existing `total_tokens` preference and `max_tokens` fallback intact.
+- Produces: `patch_pydantic_ai(monkeypatch: Any, *, output: str = "", seen: dict[str, Any] | None = None, total_price: Any | None = None) -> dict[str, Any]` — fake result's `usage()` returns fixed counts 17/5/2/1; `response.cost()` raises `LookupError` when `total_price is None`, else returns an object with `.total_price`; its `FakeProvider` preserves `seen["provider_kwargs"]` and appends every construction to `seen["provider_kwargs_list"]`.
 
 **Steps:**
 
@@ -4122,6 +4131,7 @@ def patch_pydantic_ai(
     class FakeProvider:
         def __init__(self, **kwargs: Any) -> None:
             seen["provider_kwargs"] = kwargs
+            seen.setdefault("provider_kwargs_list", []).append(kwargs)
 
     class FakeModel:
         def __init__(self, model_name: str, *, provider: object) -> None:
@@ -4200,6 +4210,10 @@ def test_pydantic_ai_chat_returns_text_usage_cost_and_timing(
     assert isinstance(result["elapsed_s"], float)
     assert result["elapsed_s"] >= 0.0
     assert seen["prompt"] == "prompt body"
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://model.test/v1",
+        "api_key": "api-key-not-set",
+    }
 
 
 def test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage(
@@ -4225,6 +4239,14 @@ def test_pydantic_ai_chat_still_rejects_empty_output(monkeypatch: pytest.MonkeyP
         _pydantic_ai_chat(CHAT_POLICY, chat_runner(), "prompt body")
 ```
 
+  In `tests/test_token_ceiling.py`, retain every existing boundary and fallback scenario:
+  change the direct result assertions at the current lines 37, 40, 56, 75, 104, and 138
+  from a bare-string comparison to `result["text"]`, while keeping all ledger totals and
+  refusal assertions unchanged. The two custom `UsageAgent` cases intentionally remain
+  minimal: one reports only `total_tokens`, and the parametrized case returns a boolean or
+  raises from `usage()`. They prove telemetry extraction cannot replace or weaken
+  `_record_token_usage`'s existing safe fallback behavior.
+
 - [ ] **Run tests to verify they fail:**
   `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" -v`
   Expected: the first two fail with `TypeError: string indices must be integers, not 'str'` (current `_pydantic_ai_chat` returns a bare `str`, so `result["text"]` is a string index). The third **passes already** — it pins the empty-output `RuntimeError` that must survive the change.
@@ -4235,21 +4257,12 @@ def test_pydantic_ai_chat_still_rejects_empty_output(monkeypatch: pytest.MonkeyP
 def _pydantic_ai_chat(
     policy: dict[str, Any], runner: dict[str, Any], prompt: str
 ) -> dict[str, Any]:
+    _require_token_budget(str(policy.get("operation_id") or "<unknown>"))
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
-    key_env = runner.get("key_env")
-    if isinstance(key_env, str) and key_env:
-        api_key = os.environ.get(key_env)
-    else:
-        api_key = (
-            os.environ.get("MEMORIA_MODEL_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-            or os.environ.get("KILOCODE_API_KEY")
-        )
+    api_key = _resolve_runner_api_key(runner)
     Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
-    provider_kwargs = {"base_url": base_url}
-    if api_key:
-        provider_kwargs["api_key"] = api_key
+    provider_kwargs = {"base_url": base_url, "api_key": api_key}
     model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
     agent = Agent(model)
     params = runner.get("params") if isinstance(runner.get("params"), dict) else {}
@@ -4265,38 +4278,61 @@ def _pydantic_ai_chat(
         result = agent.run_sync(prompt, model_settings=settings)
     except Exception as exc:
         raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
+    _record_token_usage(result, settings)
     elapsed_s = time.monotonic() - started_at
     text = str(getattr(result, "output", "") or "").strip()
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
-    run_usage = result.usage()
+    try:
+        run_usage = result.usage()
+    except Exception:  # telemetry cannot weaken the pre-existing usage fallback.
+        run_usage = None
     usage = {
-        "input_tokens": run_usage.input_tokens,
-        "output_tokens": run_usage.output_tokens,
-        "cache_read_tokens": run_usage.cache_read_tokens,
-        "cache_write_tokens": run_usage.cache_write_tokens,
+        field: value
+        if type(value := getattr(run_usage, field, 0)) is int and value >= 0
+        else 0
+        for field in (
+            "input_tokens",
+            "output_tokens",
+            "cache_read_tokens",
+            "cache_write_tokens",
+        )
     }
     try:
         cost_usd: float | None = float(result.response.cost().total_price)
-    except LookupError:
+    except (AttributeError, LookupError):
         cost_usd = None
     return {"text": text, "usage": usage, "cost_usd": cost_usd, "elapsed_s": elapsed_s}
 ```
 
-  Notes baked into this block: the empty-output check runs on `text` before the return dict is built (spec §1); `float(...)` converts `genai-prices`' `Decimal` so the journal row stays `json.dumps`-serializable; `elapsed_s` brackets only `run_sync`.
+  Notes baked into this block: the existing ledger charge occurs immediately after a
+  completed `run_sync`, before telemetry shaping; the empty-output check runs on `text`
+  before the return dict is built (spec §1); a malformed/unavailable usage object maps to
+  zero telemetry fields without changing `_record_token_usage`'s existing total/max-token
+  fallback; `float(...)` converts `genai-prices`' `Decimal` so the journal row stays
+  `json.dumps`-serializable; `elapsed_s` brackets only `run_sync`.
 
 - [ ] **Run tests to verify they pass:**
-  `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" -v`
-  Expected: 3 passed.
+  `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" tests/test_token_ceiling.py -v`
+  Expected: all pass, including the prior exact-boundary, reported-usage, invalid-usage,
+  and max-token-fallback charging proofs.
 
-- [ ] **Guard the fake's existing consumers:**
-  `python -m pytest tests/test_cli_doctor_eval.py tests/test_runtime_gate_replay.py -v`
-  Expected: all pass (`_runner_status` at `cli.py:3064` discards the return; the fake stays output-compatible). Known transient state, resolved by COST.2/COST.3 in this same branch: `_run_prompt_model`/`_run_digest_model`'s `pydantic-ai` branches now forward a dict where their callers still expect `str` — no gate-level test reaches those branches (operation tests use the `deterministic-fixture` model, which short-circuits before `_pydantic_ai_chat`; `tests/test_live_runner.py` skips without `MEMORIA_MODEL_BASE_URL`).
+- [ ] **Guard the fake and the B.5 contract's existing consumers:**
+  `python -m pytest tests/test_cli_doctor_eval.py tests/test_token_ceiling.py tests/test_runtime_gate_replay.py -v`
+  Expected: all pass. In particular, B.5's gateway doctor test proves both provider
+  constructions use the configured key, and its local/token-ceiling tests prove no
+  ambient `OPENAI_API_KEY` can reappear through the telemetry rewrite. Known transient
+  state, resolved by COST.2/COST.3 in this same branch: `_run_prompt_model`/
+  `_run_digest_model`'s `pydantic-ai` branches now forward a dict where their callers
+  still expect `str` — no gate-level test reaches those branches (operation tests use the
+  `deterministic-fixture` model, which short-circuits before `_pydantic_ai_chat`;
+  `tests/test_live_runner.py` skips without `MEMORIA_MODEL_BASE_URL`).
 
 - [ ] **Commit:**
 
 ```bash
-git add src/memoria_vault/runtime/operations.py tests/helpers.py tests/test_operations.py
+git add src/memoria_vault/runtime/operations.py tests/helpers.py tests/test_operations.py \
+  tests/test_token_ceiling.py
 git commit -m "$(cat <<'EOF'
 feat(operations): return usage/cost/timing from _pydantic_ai_chat
 
