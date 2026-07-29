@@ -48,12 +48,70 @@ def _subparser_help(parser: argparse.ArgumentParser, command: str) -> str:
     return str(choice.help or "")
 
 
+def _job_console_blocks(out: str) -> dict[str, list[str]]:
+    blocks: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in out.splitlines():
+        if line.endswith(":") and not line.startswith(" "):
+            current = line[:-1]
+            blocks[current] = []
+        elif current is not None and line.strip():
+            blocks[current].append(line.strip())
+    return blocks
+
+
 def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         main(["--help"])
 
     assert exc.value.code == 0
     assert "memoria" in capsys.readouterr().out
+
+
+def test_cli_help_renders_exactly_five_job_groups_in_order(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    rc = main(["help"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert _parser_dests("memoria help") == set()
+    headings = [
+        line[:-1] for line in out.splitlines() if line.endswith(":") and not line.startswith(" ")
+    ]
+    assert headings == ["read", "knowledge", "project", "review", "upkeep"]
+
+
+def test_cli_help_groups_carry_correct_membership(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = main(["help"])
+    blocks = _job_console_blocks(capsys.readouterr().out)
+
+    assert rc == 0
+    assert set(blocks) == {"read", "knowledge", "project", "review", "upkeep"}
+
+    def has(job: str, left: str) -> bool:
+        return any(line.startswith(left + "  ") for line in blocks[job])
+
+    assert has("read", "memoria status")
+    assert has("read", "memoria operation list")
+    assert has("read", "memoria surface schema")
+    assert has("read", "surface.openapi (http)")
+    assert has("read", "memoria list")
+    assert has("read", "memoria show")
+    assert has("read", "work.get (http, mcp)")
+    assert has("read", "memoria journal tail")
+    assert has("read", "memoria journal show")
+    assert has("read", "exploration.list (http, mcp)")
+    assert has("read", "memoria explore")
+    assert blocks["knowledge"] == ["(no registered surfaces yet)"]
+    assert has("project", "project.slice.read (http, mcp)")
+    assert has("project", "project.draft.read (http, mcp)")
+    assert has("review", "memoria request list")
+    assert has("review", "memoria request show")
+    assert has("review", "memoria attention list")
+    assert has("review", "memoria attention worklist")
+    assert has("review", "memoria attention show")
+    assert has("upkeep", "memoria operation run")
 
 
 def test_cli_version_uses_source_package_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -84,6 +142,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria serve",
         "memoria migrate",
         "memoria mcp",
+        "memoria help",
         "memoria new hub",
         "memoria new note",
         "memoria new project",

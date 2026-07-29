@@ -23,7 +23,7 @@ import yaml
 
 from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
-from memoria_vault.engine.surface_contract import actions_by_id
+from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.time import now_iso
@@ -185,6 +185,13 @@ def _build_parser() -> argparse.ArgumentParser:
     mcp.add_argument("--read-scope", action="append", default=[])
     mcp.add_argument("--actor", default="agent")
     mcp.set_defaults(handler=_cmd_mcp)
+
+    help_cmd = sub.add_parser(
+        "help",
+        help="Show Memoria surfaces grouped by the five workspace jobs.",
+        description="Show Memoria surfaces grouped by the five workspace jobs.",
+    )
+    help_cmd.set_defaults(handler=_cmd_help)
 
     _surface_commands(sub)
     _new_commands(sub)
@@ -638,6 +645,46 @@ def _surface_help(action_id: str) -> dict[str, str]:
 
 def _surface_summary(action_id: str) -> str:
     return str(SURFACE_ACTION[action_id]["summary"])
+
+
+def _render_job_console() -> str:
+    """U1 §3 cli-console: the CLI organized by the surface contract.
+
+    One heading per SURFACE_JOBS entry, in order; one line per registered
+    CLI command; rows without a CLI binding render as `<id> (<transports>)`
+    and reserved rows as `<id> (reserved)` so the console discloses the
+    whole contract, not just the CLI slice of it.
+    """
+    lines = ["Memoria console — surfaces by workspace job", ""]
+    for job in SURFACE_JOBS:
+        lines.append(f"{job}:")
+        entries: list[tuple[str, str]] = []
+        for action in SURFACE_ACTIONS:
+            if action.get("job") != job:
+                continue
+            summary = str(action["summary"])
+            cli = action.get("cli")
+            commands: list[str] = []
+            if isinstance(cli, dict):
+                commands = [str(command) for command in cli.get("commands") or []]
+            if commands:
+                entries.extend((command, summary) for command in commands)
+            else:
+                transports = [t for t in ("http", "mcp") if isinstance(action.get(t), dict)]
+                suffix = ", ".join(transports) if transports else "reserved"
+                entries.append((f"{action['id']} ({suffix})", summary))
+        if entries:
+            width = max(len(left) for left, _ in entries)
+            lines.extend(f"  {left.ljust(width)}  {summary}" for left, summary in entries)
+        else:
+            lines.append("  (no registered surfaces yet)")
+        lines.append("")
+    return "\n".join(lines).rstrip("\n") + "\n"
+
+
+def _cmd_help(args: argparse.Namespace) -> int:
+    sys.stdout.write(_render_job_console())
+    return 0
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
