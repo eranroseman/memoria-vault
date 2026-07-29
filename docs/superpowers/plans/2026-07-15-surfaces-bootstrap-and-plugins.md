@@ -4359,7 +4359,7 @@ each is the standard reading; assembler may veto):
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_cli_doctor_eval.py`:
+- [x] Write the failing test — append to `tests/test_cli_doctor_eval.py`:
 
   ```python
   def test_cli_doctor_reports_credential_registry_rows(
@@ -4535,7 +4535,7 @@ each is the standard reading; assembler may veto):
       }
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
 
   ```
   python -m pytest tests/test_cli_doctor_eval.py::test_cli_doctor_reports_credential_registry_rows tests/test_cli_doctor_eval.py::test_cli_doctor_reports_refused_secrets_warning_without_secret tests/test_cli_doctor_eval.py::test_cli_doctor_report_modes_include_credential_rows tests/test_cli_doctor_eval.py::test_cli_doctor_passes_startup_secret_snapshot_to_credential_report tests/test_cli_doctor_eval.py::test_cli_doctor_live_requires_runner_check -v
@@ -4543,7 +4543,7 @@ each is the standard reading; assembler may veto):
 
   Expected: `KeyError: 'credentials'`.
 
-- [ ] Write minimal implementation — add one private payload helper immediately before
+- [x] Write minimal implementation — add one private payload helper immediately before
   `_cmd_doctor`, then route all five normal report paths through it. Do not apply it to
   `_fail` paths:
 
@@ -4573,7 +4573,7 @@ each is the standard reading; assembler may veto):
   effect is the two additive diagnostic keys: keep each branch's existing `ok`
   calculation and every existing branch-specific field unchanged.
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_doctor_eval.py -v
@@ -4581,7 +4581,7 @@ each is the standard reading; assembler may veto):
 
   Expected: all pass (no existing doctor test asserts the payload by full equality).
 
-- [ ] Run the one gate:
+- [x] Run the one gate:
 
   ```
   python scripts/verify
@@ -4591,7 +4591,7 @@ each is the standard reading; assembler may veto):
   doc-claims gate flags the new `secrets` verb, the flagged doc line names the exact
   claim to align — fix the doc line, not the gate.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/cli.py tests/test_cli_doctor_eval.py
@@ -4599,6 +4599,22 @@ each is the standard reading; assembler may veto):
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+> **Execution receipt (2026-07-29):** BOOT-B.7 completed in `9b1f4da9` after
+> the adopted plan amendments `b68d527a` and `2d339918`. The initial RED suite
+> produced the expected missing credentials/warning/snapshot failures; the focused
+> green suite passed (9 tests), the full doctor/eval module passed (47 tests), and
+> Ruff lint/format plus diff checks were clean. Independent plan and implementation
+> reviews approved the shared helper, all five normal doctor report modes, warning
+> redaction, startup-snapshot propagation, and unchanged `_fail` JSON compatibility.
+> Sealed security diff scan `2d339918_20260729T230645Z` found no reportable finding.
+> Full elevated `python scripts/verify` passed: 2,559 passed, 11 skipped, 1 warning;
+> e2e smoke and all repository gates were green. No journal event changed, so no floor
+> golden was regenerated. The adopted amendment governs any conflicting unchecked
+> snippets above.
+
+---
+
 # Section BOOT-C: agent-bundle seeding, `.memoria/vault.json` manifest, `memoria upgrade`, skew detection
 
 Implements bootstrap spec §5 (perimeter layers 1–2 + Codex mirror), §6 (upgrade
