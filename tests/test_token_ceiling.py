@@ -63,9 +63,7 @@ def test_ceiling_refuses_at_the_exact_boundary_before_dispatch(
 
 
 @pytest.mark.parametrize("ceiling", [None, ""])
-def test_disabled_ceiling_never_trips(
-    monkeypatch: pytest.MonkeyPatch, ceiling: str | None
-) -> None:
+def test_disabled_ceiling_never_trips(monkeypatch: pytest.MonkeyPatch, ceiling: str | None) -> None:
     _reset_ledger(monkeypatch)
     if ceiling is None:
         monkeypatch.delenv(operations.TOKEN_CEILING_ENV, raising=False)
