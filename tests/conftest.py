@@ -120,6 +120,7 @@ TEST_LEVELS = {
     "test_sweeps_retraction.py": "contract",
     "test_test_env_harness.py": "package",
     "test_testing_levels.py": "static",
+    "test_token_ceiling.py": "unit",
     "test_trusted_writer.py": "runtime",
     "test_vaultio.py": "unit",
     "test_verify_script.py": "static",
@@ -154,3 +155,4 @@ def _isolated_memoria_state(
 ) -> None:
     """Keep per-vault rendezvous state out of the developer's real state dir."""
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path_factory.mktemp("memoria-state")))
+    monkeypatch.delenv("MEMORIA_MODEL_TOKEN_CEILING", raising=False)

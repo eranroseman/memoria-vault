@@ -1970,11 +1970,38 @@ in-flight call completes and is charged; the circuit opens for subsequent
 calls). Unset/empty ceiling = breaker off (default), preserving current
 behavior; turning it on is one env var in the researcher's live profile.
 
+**Review and test-isolation amendment (2026-07-29):** The original
+100-token scenario proves only an overspent breaker, not the stated
+`spent >= ceiling` boundary. Add a 64-token exact-boundary case: one fallback
+charge succeeds and the next call refuses. Both blocked-call tests must prove
+the fake runner did not run (the last observed prompt and constructed-model
+count remain unchanged); malformed ceiling input must likewise construct no
+agent. Parameterize disabled behavior for both an unset and an empty value.
+Because this is a process-wide setting that a researcher may intentionally set
+in a live profile, extend the autouse test-state fixture to clear
+`MEMORIA_MODEL_TOKEN_CEILING`; otherwise unrelated mocked-runner tests could
+be order-dependent. The token-ceiling tests explicitly set their own values.
+
+**Security review amendment (2026-07-29):** Treat the post-dispatch
+`result.usage()` observation as malformed unless it yields a positive plain
+`int`. Python `bool` is an `int` subclass, so `True` must not undercharge the
+ledger as one token; an accessor that raises after a completed call must not
+skip charging altogether. Wrap observation in `try`/`except Exception`, then
+fall back to the selected `max_tokens` value for both cases. Add red/green
+regressions for `total_tokens=True` and a raising `usage()` accessor.
+
+**Lint reconciliation amendment (2026-07-29):** Ruff/Bandit S105 classifies
+the public `TOKEN_CEILING_ENV` *name* as a hardcoded password because it
+contains “TOKEN.” Keep the required public interface and add the repository's
+narrow, explained `# noqa: S105` suppression on that one constant; it is an
+environment-variable identifier, not a credential.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:57` (constants, after
   `RUNNER_PROVIDER_NAMES`) and `:951-984` (`_pydantic_ai_chat` plus two new
   helpers inserted directly above it)
-- Modify: `tests/conftest.py:18-120` (`TEST_LEVELS` registration)
+- Modify: `tests/conftest.py:18-120` (`TEST_LEVELS` registration and
+  live-profile ceiling isolation)
 - Create: `tests/test_token_ceiling.py`
 - Test: `tests/test_token_ceiling.py`
 
@@ -1997,7 +2024,7 @@ behavior; turning it on is one env var in the researcher's live profile.
 
 **Steps:**
 
-- [ ] Write the failing tests. Create `tests/test_token_ceiling.py`:
+- [x] Write the failing tests. Create `tests/test_token_ceiling.py`:
 
   ```python
   """Token-ceiling circuit breaker for live model dispatch."""
@@ -2096,7 +2123,7 @@ behavior; turning it on is one env var in the researcher's live profile.
           operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")
   ```
 
-- [ ] Register the test level. In `tests/conftest.py`, add to `TEST_LEVELS`
+- [x] Register the test level. In `tests/conftest.py`, add to `TEST_LEVELS`
   alphabetically between `"test_testing_levels.py": "static",` (line 110) and
   `"test_trusted_writer.py": "runtime",` (line 111) — matching the `unit`
   level of its deterministic neighbors (`test_loudness.py`,
@@ -2106,20 +2133,20 @@ behavior; turning it on is one env var in the researcher's live profile.
       "test_token_ceiling.py": "unit",
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_token_ceiling.py -v
   ```
 
-  Expected: `AttributeError: module 'memoria_vault.runtime.operations' has no
-  attribute 'TOKEN_CEILING_ENV'` (collection-time failure in every test).
+  Expected: the first access to `operations._TOKEN_LEDGER` raises
+  `AttributeError`, because the token-ledger contract is not implemented yet.
 
-- [ ] Implement. In `src/memoria_vault/runtime/operations.py`, add after
+- [x] Implement. In `src/memoria_vault/runtime/operations.py`, add after
   `RUNNER_PROVIDER_NAMES = ("local", "gateway")` (line 57):
 
   ```python
-  TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"
+  TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"  # noqa: S105 -- public environment name.
   _TOKEN_LEDGER = {"total_tokens": 0}
   ```
 
@@ -2148,9 +2175,12 @@ behavior; turning it on is one env var in the researcher's live profile.
 
 
   def _record_token_usage(result: Any, settings: dict[str, Any]) -> None:
-      usage = getattr(result, "usage", None)
-      total = getattr(usage(), "total_tokens", None) if callable(usage) else None
-      if not isinstance(total, int) or total <= 0:
+      try:
+          usage = getattr(result, "usage", None)
+          total = getattr(usage(), "total_tokens", None) if callable(usage) else None
+      except Exception:  # noqa: BLE001 -- completed calls must still be charged.
+          total = None
+      if type(total) is not int or total <= 0:
           total = int(settings.get("max_tokens") or 0)
       _TOKEN_LEDGER["total_tokens"] += total
   ```
@@ -2169,22 +2199,24 @@ behavior; turning it on is one env var in the researcher's live profile.
       _record_token_usage(result, settings)
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```
   python -m pytest tests/test_token_ceiling.py -v
   ```
 
-- [ ] Confirm existing runner behavior is untouched (fixture and doctor
+- [x] Confirm existing runner behavior is untouched (fixture and doctor
   paths):
 
   ```
   python -m pytest tests/test_runtime_gate_replay.py tests/test_cli_doctor_eval.py tests/test_operations.py -v
   ```
 
-- [ ] Run the full gate: `python scripts/verify`
+- [x] Run the full gate: `python scripts/verify` — passed: 2,480 tests, 11
+  skipped; lint, product gates, offline smoke, syntax, and shell checks all
+  green.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/operations.py tests/test_token_ceiling.py tests/conftest.py

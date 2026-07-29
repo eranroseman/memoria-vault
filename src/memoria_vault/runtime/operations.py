@@ -56,6 +56,8 @@ SUPPORTED_OPERATION_RUNNERS = frozenset({"pydantic-ai"})
 PROVIDER_CONFIG = ".memoria/config/providers.yaml"
 RUNNER_MODES = frozenset({"test", "live"})
 RUNNER_PROVIDER_NAMES = ("local", "gateway")
+TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"  # noqa: S105 -- public environment name.
+_TOKEN_LEDGER = {"total_tokens": 0}
 
 
 def record_copi_interview_turn(
@@ -988,7 +990,40 @@ def _sealed_untrusted_block(name: str, text: str) -> str:
     )
 
 
+def _token_ceiling() -> int:
+    raw = os.environ.get(TOKEN_CEILING_ENV, "").strip()
+    if not raw:
+        return 0
+    try:
+        return max(int(raw), 0)
+    except ValueError as exc:
+        raise ValueError(f"{TOKEN_CEILING_ENV} must be an integer, got {raw!r}") from exc
+
+
+def _require_token_budget(operation_id: str) -> None:
+    ceiling = _token_ceiling()
+    spent = _TOKEN_LEDGER["total_tokens"]
+    if ceiling and spent >= ceiling:
+        raise RuntimeError(
+            f"{operation_id} refused: model token ceiling reached "
+            f"({spent} of {ceiling} tokens spent this process; "
+            f"raise or unset {TOKEN_CEILING_ENV} to continue)"
+        )
+
+
+def _record_token_usage(result: Any, settings: dict[str, Any]) -> None:
+    try:
+        usage = getattr(result, "usage", None)
+        total = getattr(usage(), "total_tokens", None) if callable(usage) else None
+    except Exception:  # noqa: BLE001 -- completed calls must still be charged.
+        total = None
+    if type(total) is not int or total <= 0:
+        total = int(settings.get("max_tokens") or 0)
+    _TOKEN_LEDGER["total_tokens"] += total
+
+
 def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> str:
+    _require_token_budget(str(policy.get("operation_id") or "<unknown>"))
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
     key_env = runner.get("key_env")
@@ -1018,6 +1053,7 @@ def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: st
         result = agent.run_sync(prompt, model_settings=settings)
     except Exception as exc:
         raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
+    _record_token_usage(result, settings)
     text = str(getattr(result, "output", "") or "").strip()
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
