@@ -715,7 +715,7 @@ def _run_operation_job(
             context=context,
             export_format=str(payload.get("format") or "markdown"),
             output_path=str(payload.get("output_path") or ""),
-            ready_only=bool(payload.get("ready_only")),
+            allow_unready=_payload_bool(payload, "allow_unready", False),
             draft=bool(payload.get("draft")),
         )
         return {

@@ -275,6 +275,7 @@ def test_write_project_export_renders_checked_project_markdown(tmp_path: Path) -
         tmp_path,
         "project-alpha",
         output_path="exports/project-alpha.md",
+        allow_unready=True,
     )
 
     assert result["project_path"] == "projects/project-alpha/project.md"
@@ -316,6 +317,7 @@ def test_write_project_export_does_not_replace_read_only_external_target(
                 "project-alpha",
                 export_format=export_format,
                 output_path=str(target),
+                allow_unready=True,
             )
     finally:
         target.chmod(0o600)
@@ -364,7 +366,7 @@ def test_export_writer_neutralizes_unsafe_renderer_content_at_final_choke(
         },
     )
 
-    rendered = write_project_export(tmp_path, "project-alpha")
+    rendered = write_project_export(tmp_path, "project-alpha", allow_unready=True)
 
     assert "![final]" not in rendered["content"]
     assert "`http://beacon.example/final.png`" in rendered["content"]
@@ -425,7 +427,7 @@ def test_frame_project_paper_records_plan_and_leaves_project_unchecked(tmp_path:
     assert committed == {state.JOURNAL_HEAD_REL, "projects/project-alpha/project.md"}
 
 
-def test_ready_only_export_requires_paper_plan_and_checked_support(tmp_path: Path) -> None:
+def test_non_draft_export_gate_enforced_by_default(tmp_path: Path) -> None:
     vault = tmp_path
     _md(
         vault / "projects/project-alpha/project.md",
@@ -436,8 +438,12 @@ def test_ready_only_export_requires_paper_plan_and_checked_support(tmp_path: Pat
         vault / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\n",
     )
-    with pytest.raises(ValueError, match="target"):
-        write_project_export(vault, "project-alpha", ready_only=True)
+    with pytest.raises(ValueError, match="project is not export-ready"):
+        write_project_export(vault, "project-alpha")
+
+    escaped = write_project_export(vault, "project-alpha", allow_unready=True)
+    assert escaped["readiness"]["ready"] is False
+    assert "# Alpha project" in escaped["content"]
 
     project = vault / "projects/project-alpha/project.md"
     frontmatter, body = project.read_text(encoding="utf-8").split("---\n", 2)[1:]
@@ -466,7 +472,7 @@ def test_ready_only_export_requires_paper_plan_and_checked_support(tmp_path: Pat
         "links:\n  supports:\n    - notes/thesis.md\n",
     )
 
-    result = write_project_export(vault, "project-alpha", ready_only=True)
+    result = write_project_export(vault, "project-alpha")
 
     assert result["readiness"]["ready"] is True
     assert result["readiness"]["status"] == "export-ready"
@@ -490,6 +496,7 @@ def test_write_project_export_requires_pandoc_for_non_markdown(
             "project-alpha",
             export_format="docx",
             output_path="exports/project-alpha.docx",
+            allow_unready=True,
         )
 
     assert not output_root.exists()

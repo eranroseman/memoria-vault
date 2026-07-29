@@ -1686,9 +1686,15 @@ readiness block in the result so the caller sees what is missing.
 - Modify: `src/memoria_vault/runtime/worker.py:717` (payload key)
 - Modify: `src/memoria_vault/cli.py:347` (flag) and `:1184` (payload)
 - Modify: `tests/test_project_knowledge.py:428-474` (gate test)
-- Modify: `tests/test_content_security.py` (12 call sites + 1 wrapper)
+- Modify: `tests/test_content_security.py` (10 non-draft call sites + 1 wrapper;
+  leave its 2 `draft=True` calls on the independent draft gate)
 - Modify: `tests/test_cli_work_project.py` (two non-draft export invocations,
   arg lists at ~lines 476-486 and ~656-668)
+- Modify: `tests/test_draft_verification.py` and
+  `tests/test_runtime_gate_replay.py` (existing intentional unready regular
+  exports; one draft-gate regression)
+- Modify: `tests/test_worker_product_jobs.py` (untyped operation-payload
+  opt-out must remain default-deny)
 - Modify: `tests/floor_lib.py:784-794` (export-project sweep entry)
 - Modify: `docs/how-to-guides/project/export-a-draft.md:37-49`,
   `docs/reference/pipelines-and-io/export.md:23-25,51-52`
@@ -1719,9 +1725,31 @@ bracketed readiness flag from the **Memoria draft export** cell because the
 draft route retains its independent, always-on evidence gate and ignores this
 non-draft opt-out.
 
+**Review reconciliation amendment (2026-07-29):** the content-security search
+counted twelve `call_with_context` exports, but two are `draft=True`; repoint
+only the ten non-draft calls to `_write_export_unready` so the security suite
+continues to exercise the independent draft gate without an irrelevant opt-out.
+`test_regular_export_with_existing_draft_uses_export_context_for_readiness` and
+the runtime gate replay deliberately export unready regular projects, so pass
+`allow_unready=True` and `--allow-not-ready` respectively. Strengthen the
+existing unclean-draft refusal by passing `allow_unready=True, draft=True`:
+the draft evidence gate must still refuse. The how-to prerequisite must call
+normal non-draft export readiness-required, not "readiness-gated," and reserve
+the flag for review packets. Generic operation payloads have no typed schema;
+the pre-1.0 removal intentionally ignores a legacy `ready_only` key and thus
+fails closed. Finish with an active-surface search proving the legacy parameter
+and flag are absent from `src`, `tests`, and published export docs.
+
+**Security review amendment (2026-07-29):** `export-project` also accepts
+generic operation payloads. Do not coerce `allow_unready` with Python's
+`bool(...)`: JSON `"false"` is truthy and would bypass the new safety gate.
+Use the worker's existing `_payload_bool(payload, "allow_unready", False)`
+parser, which accepts canonical boolean strings and rejects invalid values.
+Pin both cases at the operation boundary in `tests/test_worker_product_jobs.py`.
+
 **Steps:**
 
-- [ ] Write the failing test. In `tests/test_project_knowledge.py`, replace the
+- [x] Write the failing test. In `tests/test_project_knowledge.py`, replace the
   test at lines 428-474
   (`test_ready_only_export_requires_paper_plan_and_checked_support`) with:
 
@@ -1779,7 +1807,7 @@ non-draft opt-out.
       assert "## Paper Plan" in result["content"]
   ```
 
-- [ ] Run it to verify it fails:
+- [x] Run it to verify it fails:
 
   ```
   python -m pytest "tests/test_project_knowledge.py::test_non_draft_export_gate_enforced_by_default" -v
@@ -1789,7 +1817,7 @@ non-draft opt-out.
   gate defaults off (and the later `allow_unready=True` call raises
   `TypeError: write_project_export() got an unexpected keyword argument`).
 
-- [ ] Implement the gate. In `src/memoria_vault/runtime/knowledge.py` line
+- [x] Implement the gate. In `src/memoria_vault/runtime/knowledge.py` line
   2527 change `ready_only: bool = False,` to `allow_unready: bool = False,`,
   and replace lines 2540-2543 with:
 
@@ -1800,23 +1828,28 @@ non-draft opt-out.
               raise ValueError(f"project is not export-ready: {missing}")
   ```
 
-- [ ] Wire the worker. In `src/memoria_vault/runtime/worker.py` line 717
+- [x] Wire the worker. In `src/memoria_vault/runtime/worker.py` line 717
   change `ready_only=bool(payload.get("ready_only")),` to
-  `allow_unready=bool(payload.get("allow_unready")),`.
+  `allow_unready=_payload_bool(payload, "allow_unready", False),`.
 
-- [ ] Wire the CLI. In `src/memoria_vault/cli.py` line 347 change
+- [x] Pin the generic operation-payload boundary. In
+  `tests/test_worker_product_jobs.py`, prove `allow_unready: "false"` stays
+  readiness-gated and an unparseable string is rejected rather than treated as
+  a truthy opt-out.
+
+- [x] Wire the CLI. In `src/memoria_vault/cli.py` line 347 change
   `export.add_argument("--ready-only", action="store_true")` to
   `export.add_argument("--allow-not-ready", dest="allow_unready", action="store_true")`,
   and line 1184 change `"ready_only": args.ready_only,` to
   `"allow_unready": args.allow_unready,`.
 
-- [ ] Run the new test to verify it passes:
+- [x] Run the new test to verify it passes:
 
   ```
   python -m pytest "tests/test_project_knowledge.py::test_non_draft_export_gate_enforced_by_default" -v
   ```
 
-- [ ] Update the content-security call sites (their minimal projects carry no
+- [x] Update the content-security call sites (their minimal projects carry no
   paper plan, so the enforced default would refuse them; they test
   neutralization, not readiness). In `tests/test_content_security.py`, add one
   wrapper after the import block (after line 40, following the untyped-wrapper
@@ -1828,21 +1861,25 @@ non-draft opt-out.
       return _write_project_export(vault, *args, **kwargs)
   ```
 
-  then repoint the 12 call sites (verified: exactly 12 lines match, all inside
-  `call_with_context(` calls; the import at line 26 has no leading spaces and
-  does not match):
+  then repoint the ten non-draft calls. The two remaining matching calls have
+  `draft=True` and stay on `_write_project_export` to retain draft-gate
+  coverage.
 
-  ```
-  sed -i 's/^        _write_project_export,$/        _write_export_unready,/' tests/test_content_security.py
-  ```
-
-- [ ] Update the two CLI-loop tests in `tests/test_cli_work_project.py` whose
+- [x] Update the two CLI-loop tests in `tests/test_cli_work_project.py` whose
   projects are not export-ready: in the `run_json("project", "export", ...)`
   call (~line 476) and the `main(["project", "export", ...])` arg list
   (~line 657), add the flag `"--allow-not-ready",` immediately after the
   `"project-alpha",` argument.
 
-- [ ] Update the floor sweep. In `tests/floor_lib.py` replace lines 784-794
+- [x] Update the adjacent intentional-unready paths. Add `allow_unready=True`
+  to `tests/test_draft_verification.py::test_regular_export_with_existing_draft_uses_export_context_for_readiness`,
+  add `--allow-not-ready` to
+  `tests/test_runtime_gate_replay.py::test_runtime_gate_replays_user_facing_commands`,
+  and make `test_unclean_draft_refuses_export_with_evidence_reason` pass
+  `allow_unready=True, draft=True` so it pins that the draft evidence gate is
+  unaffected.
+
+- [x] Update the floor sweep. In `tests/floor_lib.py` replace lines 784-794
   (comment + entry) with:
 
   ```python
@@ -1860,7 +1897,7 @@ non-draft opt-out.
       },
   ```
 
-- [ ] Update the docs. In `docs/how-to-guides/project/export-a-draft.md`
+- [x] Update the docs. In `docs/how-to-guides/project/export-a-draft.md`
   remove the `--ready-only` line from the example command (line 44) and
   replace the sentence starting "Omit `--ready-only` for a review packet…"
   (line 48-49) with: "The export refuses by default until the paper plan and
@@ -1874,19 +1911,29 @@ non-draft opt-out.
   51) to `[--allow-not-ready]`; remove the stale bracketed readiness flag from
   the separate draft-route cell (line 52).
 
-- [ ] Run the affected suites:
+- [x] Confirm the old interface is absent from active code, tests, and
+  published export docs:
 
   ```
-  python -m pytest tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py -v
+  rg -n 'ready_only|--ready-only' src tests docs/how-to-guides docs/reference
   ```
 
-- [ ] Run the full gate (includes the floor suites that consume
-  `floor_lib.py`): `python scripts/verify`
+  Expected: no matches. Historical planning and design records remain unchanged.
 
-- [ ] Commit:
+- [x] Run the affected suites:
 
   ```
-  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py tests/floor_lib.py docs/how-to-guides/project/export-a-draft.md docs/reference/pipelines-and-io/export.md
+  python -m pytest tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py tests/test_draft_verification.py tests/test_runtime_gate_replay.py tests/test_worker_product_jobs.py -v
+  ```
+
+- [x] Run the full gate (includes the floor suites that consume
+  `floor_lib.py`): `python scripts/verify` — passed: 2,472 tests, 11 skipped;
+  lint, product gates, offline smoke, syntax, and shell checks all green.
+
+- [x] Commit:
+
+  ```
+  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py tests/test_draft_verification.py tests/test_runtime_gate_replay.py tests/test_worker_product_jobs.py tests/floor_lib.py docs/how-to-guides/project/export-a-draft.md docs/reference/pipelines-and-io/export.md docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md
   git commit -m "fix(export): enforce the non-draft export readiness gate by default
 
   V1 non-draft-export-gate: unready non-draft exports refuse unless

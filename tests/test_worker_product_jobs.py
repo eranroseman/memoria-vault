@@ -574,6 +574,48 @@ def test_worker_accepts_false_answer_query_trace_flag_without_trace(tmp_path: Pa
     assert "trace" not in done
 
 
+@pytest.mark.parametrize(
+    ("allow_unready", "error"),
+    [
+        ("false", "project is not export-ready"),
+        ("perhaps", "allow_unready must be a boolean"),
+    ],
+)
+def test_worker_does_not_fail_open_for_untyped_export_readiness_opt_out(
+    tmp_path: Path, allow_unready: str, error: str
+) -> None:
+    vault = workspace(tmp_path)
+    project = vault / "projects/project-alpha/project.md"
+    project.parent.mkdir(parents=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "check_status: checked\n"
+        "title: Alpha project\n"
+        "description: Project\n"
+        "thesis: notes/thesis.md\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    write_note(vault, "thesis", "checked", "A checked thesis.")
+
+    queued = enqueue_operation(
+        vault,
+        "export-project",
+        payload={"project_path": "project-alpha", "allow_unready": allow_unready},
+        idempotency_key=f"export-project-{allow_unready}",
+        actor="operation",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "failed"
+    assert error in done["error"]
+
+
 def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     eval_dir = vault / ".memoria/eval"

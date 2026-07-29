@@ -43,6 +43,11 @@ from tests.helpers import (
 )
 
 
+def _write_export_unready(vault, *args, **kwargs):
+    kwargs.setdefault("allow_unready", True)
+    return _write_project_export(vault, *args, **kwargs)
+
+
 def test_image_embeds_cannot_render() -> None:
     markdown_image = neutralize_untrusted_markdown("![beacon](http://evil.example/x.png)")
     obsidian_embed = neutralize_untrusted_markdown("![[remote.png]]")
@@ -115,7 +120,7 @@ def test_generic_pandoc_attributes_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -172,7 +177,7 @@ def test_fence_attributes_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -430,7 +435,7 @@ def test_raw_format_fences_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -482,7 +487,7 @@ def test_noncode_fence_candidates_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -604,7 +609,7 @@ def test_raw_format_inline_code_is_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -650,7 +655,7 @@ def test_delayed_raw_inline_closers_with_literal_backslashes_are_inert_through_e
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -758,7 +763,7 @@ def test_multiline_pseudo_code_spans_with_html_block_openers_are_inert_through_e
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -871,7 +876,7 @@ def test_partial_backtick_runs_cannot_borrow_argument_snapshot_code_spans(
 
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -938,7 +943,7 @@ def test_argument_export_neutralizes_interpolated_fragments_before_code_spans(
 
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -973,7 +978,7 @@ def test_escaped_backtick_delimiters_are_inert_through_export_boundaries(
     )
     argument_rendered = _render_project_export_markdown(tmp_path, "argument")
     argument_written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",

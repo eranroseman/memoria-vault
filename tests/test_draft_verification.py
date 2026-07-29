@@ -202,7 +202,7 @@ def test_unclean_draft_refuses_export_with_evidence_reason(tmp_path: Path) -> No
         "review-required",
     }
     with pytest.raises(ValueError, match="project draft is not export-ready"):
-        write_project_export(vault, "project-alpha", draft=True)
+        write_project_export(vault, "project-alpha", allow_unready=True, draft=True)
 
 
 def test_draft_verification_flags_broken_structural_reference(tmp_path: Path) -> None:
@@ -1533,6 +1533,7 @@ def test_regular_export_with_existing_draft_uses_export_context_for_readiness(
         vault,
         "project-alpha",
         run_id="export-project-request-run",
+        allow_unready=True,
     )
 
     assert exported["readiness"]["ready"] is False

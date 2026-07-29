@@ -287,6 +287,7 @@ def test_runtime_gate_replays_user_facing_commands(
         "--workspace",
         str(workspace),
         "project-alpha",
+        "--allow-not-ready",
         "--format",
         "markdown",
         "--output",

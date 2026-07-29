@@ -781,15 +781,16 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": [".memoria/eval/last-run.md"],
     },
-    # worker.py:723-747 pops project_path (required) plus optional
-    # format/output_path/ready_only/draft. With the defaults (markdown,
-    # ready_only=False, no output_path), knowledge.py:write_project_export
-    # renders and returns the export content inline rather than writing a
-    # file (output_path is only written when the payload supplies one) —
-    # confirmed live: "done", output_path "" and a populated `content`
-    # field; no file to assert via `creates`.
+    # worker.py:705-729 pops project_path (required) plus optional
+    # format/output_path/allow_unready/draft. The non-draft readiness gate is
+    # enforced by default (V1 non-draft-export-gate); the floor project has
+    # no paper plan, so the sweep passes allow_unready=True to exercise the
+    # explicit opt-out and keep the render path observable. With markdown and
+    # no output_path, knowledge.py:write_project_export returns the export
+    # content inline rather than writing a file — no file to assert via
+    # `creates`.
     "export-project": {
-        "payload": {"project_path": "{project}"},
+        "payload": {"project_path": "{project}", "allow_unready": True},
         "expect": "done",
     },
     # worker.py:936-952, same run_prompt_operation path as analyze-claims

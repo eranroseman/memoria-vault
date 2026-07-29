@@ -2566,7 +2566,7 @@ def write_project_export(
     context: OperationContext,
     export_format: str = "markdown",
     output_path: str = "",
-    ready_only: bool = False,
+    allow_unready: bool = False,
     draft: bool = False,
 ) -> dict[str, Any]:
     """Write or return a deterministic project export."""
@@ -2580,7 +2580,7 @@ def write_project_export(
         readiness = rendered["readiness"]
     else:
         readiness = project_export_readiness(vault, project_path, context=context)
-        if ready_only and not readiness["ready"]:
+        if not allow_unready and not readiness["ready"]:
             missing = ", ".join(readiness["missing"])
             raise ValueError(f"project is not export-ready: {missing}")
         rendered = render_project_export_markdown(vault, project_path)

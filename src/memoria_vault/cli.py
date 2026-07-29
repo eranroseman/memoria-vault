@@ -405,7 +405,7 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     export.add_argument("project_path")
     export.add_argument("--format", choices=("markdown", "docx", "pdf", "odt"), default="markdown")
     export.add_argument("--output")
-    export.add_argument("--ready-only", action="store_true")
+    export.add_argument("--allow-not-ready", dest="allow_unready", action="store_true")
     export.add_argument("--draft", action="store_true")
     export.set_defaults(handler=_cmd_project_export)
     explore = project_sub.add_parser(
@@ -1465,7 +1465,7 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
             "project_path": args.project_path,
             "format": args.format,
             "output_path": args.output or "",
-            "ready_only": args.ready_only,
+            "allow_unready": args.allow_unready,
             "draft": args.draft,
         },
     )

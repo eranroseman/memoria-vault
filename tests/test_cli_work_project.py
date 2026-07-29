@@ -478,6 +478,7 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "--workspace",
         str(workspace),
         "project-alpha",
+        "--allow-not-ready",
         "--output",
         "exports/project-alpha.md",
         "--idempotency-key",
@@ -667,6 +668,30 @@ def test_cli_project_trace_and_export_markdown(
             "--json",
             "--idempotency-key",
             "project-export",
+        ]
+    )
+    blocked = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert blocked["ok"] is False
+    assert "project is not export-ready" in blocked["result"]["error"]
+    assert not (workspace / "exports/project-alpha.md").exists()
+
+    rc = main(
+        [
+            "project",
+            "export",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--allow-not-ready",
+            "--format",
+            "markdown",
+            "--output",
+            "exports/project-alpha.md",
+            "--json",
+            "--idempotency-key",
+            "project-export-allow-not-ready",
         ]
     )
     exported = json.loads(capsys.readouterr().out)
