@@ -73,7 +73,7 @@
 3. **View payload envelope**: `{ok: true, api_version: "engine-read-api.v1", view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
-6. **BOOT-C ↔ U4-A interface**: bundle seeding iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`; `memoria doctor --json --quick` emits `{engine_version: str, skew: {status: "in-sync"|"vault-newer"|"engine-newer"}, credentials: [{name, class, status, effect}]}` — BOOT-C.5 implements exactly this shape; U4-A's hook consumes it defensively.
+6. **BOOT-C ↔ U4-A interface**: bundle seeding iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`; `memoria doctor --json --quick` emits `{engine_version: str, skew: {status: "in-sync"|"vault-newer"|"engine-newer"}, credentials: [{name, class, status, source, effect_when_unset}]}` — BOOT-C.5 implements exactly this shape; U4-A's hook consumes it defensively.
 7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces).
 8. **Plugin settings**: `serverUrl` + token settings are removed; the empirical-recorder settings (`enabled`, `defaultProjectId`, `retentionDays`, `showPrivacyPreview`) are KEPT (the spec's "one field" governs connection settings only).
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
@@ -3383,11 +3383,14 @@ each is the standard reading; assembler may veto):
 ### Task BOOT-B.4: Credentials registry + `memoria secrets list` (names, set/unset, source — never values)
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/secrets.py` (add `CREDENTIAL_REGISTRY`,
-  `credential_report`)
+- Modify: `src/memoria_vault/runtime/secrets.py` (harden `read_secrets_file`;
+  add `CREDENTIAL_REGISTRY`, `credential_report`)
+- Modify: `src/memoria_vault/runtime/operations.py` (validate runner
+  `key_env` identifiers and normalize malformed provider YAML)
 - Modify: `src/memoria_vault/cli.py` (extend the `secrets` subparser from BOOT-B.3; new
   handler `_cmd_secrets_list` next to `_cmd_secrets_set`)
-- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`, `tests/test_cli.py`
+- Modify: `tests/test_secrets.py`, `tests/test_operations.py`,
+  `tests/test_cli_secrets.py`, `tests/test_cli.py`
 
 **Interfaces:**
 - Consumes: `load_runner_provider_config(vault) -> dict[str, dict[str, Any]]`
@@ -3396,15 +3399,80 @@ each is the standard reading; assembler may veto):
   - `CREDENTIAL_REGISTRY: tuple[dict[str, str], ...]` — static class-2/identity rows
     (`OPENALEX_API_KEY`, `SEMANTIC_SCHOLAR_API_KEY`, `PUBMED_API_KEY`, `GITHUB_TOKEN`,
     `NCBI_EMAIL`).
-  - `credential_report(workspace: Path | None = None) -> list[dict[str, str]]` — rows
+  - `credential_report(workspace: Path | None = None, *,
+    loaded_from_file: Collection[str] | None = None) -> list[dict[str, str]]` — rows
     `{"name", "class", "status", "source", "effect_when_unset"}` with
     `class in {"required-for-operation", "enhancing", "identity"}`,
     `status in {"set", "unset"}`, `source in {"env", "file", ""}`. Required rows are
-    derived from the workspace's `providers.yaml` `runner_providers.*.key_env` and win
-    dedup over static rows. **BOOT-B.7 (doctor) and other sections consume this exact
-    shape.**
+    derived only from the supported `local`/ `gateway` entries in an explicitly
+    supplied workspace's `providers.yaml` and win dedup over static rows. When
+    `loaded_from_file` is supplied, it is the names-only `load_secrets()["loaded"]`
+    snapshot for this invocation and the report must not reread the file. **BOOT-B.7
+    (doctor) and other sections consume this exact shape and snapshot.**
   - CLI verb `memoria secrets list` (JSON: `{"ok": true, "path": ..., "credentials":
-    [rows]}` — never values).
+    [rows]}`, plus a value-free `warning` only when the startup loader refused the
+    file — never values).
+
+> **Adopted BOOT-B.4 security and provenance amendment (2026-07-29):** This
+> amendment supersedes the conflicting source-classification, reader, provider,
+> workspace-default, CLI, and test snippets in this task. Keep the static registry
+> entries, effect strings, and exact parser-roster requirement below.
+>
+> 1. **Harden the reader before using it for status.** BOOT-B.3 deliberately
+>    constrained descriptor no-follow work to its writer; B.4 is its tracked reader
+>    follow-up. On POSIX, `read_secrets_file` must open the existing direct
+>    `memoria/` parent with `O_DIRECTORY | O_NOFOLLOW`, then open
+>    `secrets.env` relative to that descriptor with
+>    `O_RDONLY | O_NOFOLLOW | O_NONBLOCK`, and require a regular `fstat` target
+>    before parsing. Do not create or chmod anything on this read path and do not reuse
+>    the writer helper that does. On fallback platforms, reject a direct parent or
+>    target symlink/junction and every nonregular target before opening it. An absent
+>    parent/target remains quiet; a refusal returns no values and a value-free warning
+>    naming only the configured path/reason. Retain nonblocking FIFO behavior.
+>
+> 2. **Make provider-derived names safe at their source.** In
+>    `load_runner_provider_config`, normalize `yaml.YAMLError` and malformed
+>    UTF-8 to stable, value-free `ValueError` messages. Require every non-null
+>    `key_env` to match the same canonical grammar
+>    `[A-Z][A-Z0-9_]*`; the error names the provider field but never reflects its
+>    supplied value. `_runner_key_names` catches unusable/missing provider config
+>    and defensively admits only a matching string—never `str()`-coerces arbitrary
+>    configuration. The informational registry then falls back to static rows, rather
+>    than crashing or rendering pasted credentials/control text.
+>
+> 3. **Preserve actual precedence with a names-only startup snapshot.** A present
+>    process-environment key wins even when its value is empty. In direct-library
+>    mode (`loaded_from_file is None`), inspect the safe file only after checking
+>    whether the name is present in `os.environ`. In CLI snapshot mode, do not read
+>    the file: a name in `loaded_from_file` is sourced from `file`; any other name
+>    present in `os.environ` is sourced from `env`; an absent name has source
+>    `""`. In all cases, `status` is `set` iff the winning value is nonempty.
+>    Thus equal file/env values report `set/env`, and an explicitly empty
+>    environment value masking a nonempty file reports `unset/env`. Never infer
+>    provenance by comparing secret values.
+>
+> 4. **Carry the snapshot through handlers.** Immediately after `parse_args`,
+>    `main()` attaches private namespace values for
+>    `frozenset(secrets_report["loaded"])`, `secrets_report["warning"]`, and
+>    `secrets_report["path"]`. The list handler passes the first to
+>    `credential_report`, uses the path snapshot, and conditionally includes the
+>    warning in its JSON payload; it continues to print the existing one-line
+>    value-free stderr warning. With no explicit `--workspace`, `secrets list`
+>    passes `None` rather than granting the ambient current directory authority to
+>    contribute dynamic rows. BOOT-B.7 passes the same loader snapshot and conditional
+>    warning to doctor.
+>
+> 5. **Prove the seam with red tests before code.** Add reader tests for a symlinked
+>    target and direct parent (no outside value is loaded) and a FIFO/nonregular
+>    target (no blocking). Add registry/list tests for file-only startup loading,
+>    equal inherited file/env values (`env`), an explicit empty inherited env
+>    masking a file (`unset/env`), and a file changed after `load_secrets()`
+>    (`credential_report(..., loaded_from_file=...)` remains file-provenanced
+>    without rereading it). Clean direct `load_secrets()` mutations from
+>    `os.environ` in `finally`. Add malformed-YAML and invalid/control-character
+>    `key_env` cases that return only static rows and never emit the sentinel.
+>    Add a world-readable/refused-file CLI test that proves its value-free warning is
+>    visible in the JSON payload and that neither stdout nor stderr contains a secret.
 
 **Steps:**
 
@@ -3449,7 +3517,7 @@ each is the standard reading; assembler may veto):
       assert "KILOCODE_API_KEY" not in rows
 
 
-  def test_credential_report_marks_env_and_file_sources(
+  def test_credential_report_marks_env_source_when_env_wins(
       tmp_path: Path, monkeypatch: pytest.MonkeyPatch
   ) -> None:
       seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=file-key\n")
@@ -3460,7 +3528,7 @@ each is the standard reading; assembler may veto):
       rows = {row["name"]: row for row in credential_report(None)}
 
       assert rows["OPENALEX_API_KEY"]["status"] == "set"
-      assert rows["OPENALEX_API_KEY"]["source"] == "file"
+      assert rows["OPENALEX_API_KEY"]["source"] == "env"
       assert rows["SEMANTIC_SCHOLAR_API_KEY"]["source"] == "env"
 
 
@@ -3507,13 +3575,13 @@ each is the standard reading; assembler may veto):
       seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=super-secret\n")
       for name in (
           "KILOCODE_API_KEY",
+          "OPENALEX_API_KEY",
           "SEMANTIC_SCHOLAR_API_KEY",
           "PUBMED_API_KEY",
           "GITHUB_TOKEN",
           "NCBI_EMAIL",
       ):
           monkeypatch.delenv(name, raising=False)
-      monkeypatch.setenv("OPENALEX_API_KEY", "super-secret")
 
       rc = main(["secrets", "list", "--json"])
 
@@ -3535,7 +3603,7 @@ each is the standard reading; assembler may veto):
 - [ ] Run tests to verify they fail:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+  python -m pytest tests/test_secrets.py tests/test_operations.py tests/test_cli_secrets.py \
     tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
@@ -3543,7 +3611,9 @@ each is the standard reading; assembler may veto):
   argparse (`invalid choice: 'list'`); and the parser-roster pin fails because
   `memoria secrets list` is absent.
 
-- [ ] Write minimal implementation. Append to `src/memoria_vault/runtime/secrets.py`:
+- [ ] Write minimal implementation. In `src/memoria_vault/runtime/secrets.py`, extend the
+  `collections.abc` import with `Collection` and `Mapping`, harden the reader and provider
+  loader as the adopted amendment requires, then append:
 
   ```python
   CREDENTIAL_REGISTRY: tuple[dict[str, str], ...] = (
@@ -3575,11 +3645,22 @@ each is the standard reading; assembler may veto):
   )
 
 
-  def credential_report(workspace: Path | None = None) -> list[dict[str, str]]:
-      file_values, _warning = read_secrets_file()
+  def credential_report(
+      workspace: Path | None = None,
+      *,
+      loaded_from_file: Collection[str] | None = None,
+  ) -> list[dict[str, str]]:
+      required_names = _runner_key_names(workspace)
+      seen = set(required_names)
+      static_entries = [entry for entry in CREDENTIAL_REGISTRY if entry["name"] not in seen]
+      names = [*required_names, *(entry["name"] for entry in static_entries)]
+      file_values = (
+          read_secrets_file()[0]
+          if loaded_from_file is None and any(name not in os.environ for name in names)
+          else {}
+      )
       rows: list[dict[str, str]] = []
-      seen: set[str] = set()
-      for name in _runner_key_names(workspace):
+      for name in required_names:
           rows.append(
               _credential_row(
                   name,
@@ -3587,15 +3668,17 @@ each is the standard reading; assembler may veto):
                   "live-model calls refuse before the network; "
                   f"set it: memoria secrets set {name}",
                   file_values,
+                  loaded_from_file,
               )
           )
-          seen.add(name)
-      for entry in CREDENTIAL_REGISTRY:
-          if entry["name"] in seen:
-              continue
+      for entry in static_entries:
           rows.append(
               _credential_row(
-                  entry["name"], entry["class"], entry["effect_when_unset"], file_values
+                  entry["name"],
+                  entry["class"],
+                  entry["effect_when_unset"],
+                  file_values,
+                  loaded_from_file,
               )
           )
       return rows
@@ -3610,37 +3693,48 @@ each is the standard reading; assembler may veto):
           providers = load_runner_provider_config(workspace)
       except (OSError, ValueError):
           return []
-      return sorted(
-          {
-              str(spec["key_env"])
-              for spec in providers.values()
-              if isinstance(spec.get("key_env"), str) and spec["key_env"]
-          }
-      )
+      names: set[str] = set()
+      for spec in providers.values():
+          key_env = spec.get("key_env")
+          if isinstance(key_env, str) and _NAME_RE.fullmatch(key_env):
+              names.add(key_env)
+      return sorted(names)
 
 
   def _credential_row(
-      name: str, cred_class: str, effect: str, file_values: dict[str, str]
+      name: str,
+      cred_class: str,
+      effect: str,
+      file_values: Mapping[str, str],
+      loaded_from_file: Collection[str] | None,
   ) -> dict[str, str]:
-      env_value = os.environ.get(name) or ""
-      file_value = file_values.get(name) or ""
-      if env_value:
-          status = "set"
-          source = "file" if env_value == file_value else "env"
-      elif file_value:
-          status, source = "set", "file"
+      if loaded_from_file is not None and name in loaded_from_file:
+          value, source = os.environ.get(name, ""), "file"
+      elif name in os.environ:
+          value, source = os.environ[name], "env"
+      elif loaded_from_file is None and name in file_values:
+          value, source = file_values[name], "file"
       else:
-          status, source = "unset", ""
+          value, source = "", ""
       return {
           "name": name,
           "class": cred_class,
-          "status": status,
+          "status": "set" if value else "unset",
           "source": source,
           "effect_when_unset": effect,
       }
   ```
 
-  In `src/memoria_vault/cli.py`, extend the `secrets` subparser block from BOOT-B.3:
+  In `src/memoria_vault/cli.py`, immediately after `args = parser.parse_args(argv)` in
+  `main()`, attach the value-free startup snapshot before dispatch:
+
+  ```python
+      args._secrets_loaded_from_file = frozenset(secrets_report["loaded"])
+      args._secrets_warning = secrets_report["warning"]
+      args._secrets_path = secrets_report["path"]
+  ```
+
+  Then extend the `secrets` subparser block from BOOT-B.3:
 
   ```python
       secrets_list = secrets_sub.add_parser("list")
@@ -3654,21 +3748,24 @@ each is the standard reading; assembler may veto):
   def _cmd_secrets_list(args: argparse.Namespace) -> int:
       from memoria_vault.runtime.secrets import credential_report, secrets_path
 
-      workspace = Path(args.workspace).resolve() if args.workspace else Path.cwd()
-      return _emit(
-          {
-              "ok": True,
-              "path": str(secrets_path()),
-              "credentials": credential_report(workspace),
-          },
-          args,
-      )
+      workspace = Path(args.workspace).resolve() if args.workspace else None
+      payload = {
+          "ok": True,
+          "path": getattr(args, "_secrets_path", str(secrets_path())),
+          "credentials": credential_report(
+              workspace,
+              loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+          ),
+      }
+      if warning := getattr(args, "_secrets_warning", ""):
+          payload["warning"] = warning
+      return _emit(payload, args)
   ```
 
 - [ ] Run tests to verify they pass:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+  python -m pytest tests/test_secrets.py tests/test_operations.py tests/test_cli_secrets.py \
     tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
@@ -3677,8 +3774,9 @@ each is the standard reading; assembler may veto):
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py \
-    tests/test_secrets.py tests/test_cli_secrets.py tests/test_cli.py
+  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/runtime/operations.py \
+    src/memoria_vault/cli.py tests/test_secrets.py tests/test_operations.py \
+    tests/test_cli_secrets.py tests/test_cli.py
   git commit -m "feat(secrets): credentials registry + memoria secrets list (names/status/source only)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -4070,11 +4168,14 @@ each is the standard reading; assembler may veto):
 - Modify: `tests/test_cli_doctor_eval.py`
 
 **Interfaces:**
-- Consumes: `credential_report(workspace)` from BOOT-B.4.
+- Consumes: `credential_report(workspace, loaded_from_file=...)` from BOOT-B.4,
+  using the names-only loader snapshot attached by `main()`.
 - Produces: `memoria doctor --json` (default check set) payload gains
   `"credentials": [{"name", "class", "status", "source", "effect_when_unset"}, ...]`.
   Credential rows are informational — they never flip doctor `ok` (keyless modes are
-  first-class; CI/offline stay green). BOOT-D/doctor-consuming sections read this key.
+  first-class; CI/offline stay green). If startup refused the secrets file, it preserves
+  the same value-free top-level `warning` as `secrets list`. BOOT-D/doctor-consuming
+  sections read this key.
 
 **Steps:**
 
@@ -4135,17 +4236,20 @@ each is the standard reading; assembler may veto):
       from memoria_vault.runtime.secrets import credential_report
 
       backup = _backup_report(workspace)
-      return _emit(
-          {
-              "ok": all(checks.values()) and backup["ok"],
-              "workspace": str(workspace),
-              "checks": checks,
-              "backup": backup,
-              "credentials": credential_report(workspace),
-              "repaired": repaired,
-          },
-          args,
-      )
+      payload = {
+          "ok": all(checks.values()) and backup["ok"],
+          "workspace": str(workspace),
+          "checks": checks,
+          "backup": backup,
+          "credentials": credential_report(
+              workspace,
+              loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+          ),
+          "repaired": repaired,
+      }
+      if warning := getattr(args, "_secrets_warning", ""):
+          payload["warning"] = warning
+      return _emit(payload, args)
   ```
 
 - [ ] Run test to verify it passes:
@@ -11923,7 +12027,8 @@ vaults and stamping `.memoria/vault.json`.
    at least `{"engine_version": str, "skew": {"status": "in-sync" |
    "vault-newer" | "engine-newer"}, "credentials": [{"name": str, "class":
    "required-for-operation" | "enhancing" | "identity", "status": "set" |
-   "unset", "effect": str}]}`. The hook is defensive: any missing key emits
+   "unset", "source": "env" | "file" | "", "effect_when_unset": str}]}`. The hook
+   is defensive: any missing key emits
    nothing for that category; unparsable/absent output degrades to a single
    honest line; a pre-`--quick` engine (argparse error, empty stdout) hits the
    same degrade path. Identity-class credentials never produce a context line.
@@ -12360,7 +12465,7 @@ DOCTOR_REPORT_JSON = (
     ' "credentials": ['
     '{"name": "KILOCODE_API_KEY", "class": "required-for-operation", "status": "unset"},'
     '{"name": "OPENALEX_API_KEY", "class": "enhancing", "status": "unset",'
-    ' "effect": "keyless polite-pool mode (lower rate limits)"},'
+    ' "effect_when_unset": "keyless polite-pool mode (lower rate limits)"},'
     '{"name": "NCBI_EMAIL", "class": "identity", "status": "unset"},'
     '{"name": "SEMANTIC_SCHOLAR_API_KEY", "class": "enhancing", "status": "set"}'
     "]}"
@@ -12518,7 +12623,7 @@ def _credential_lines(credentials: object) -> list[str]:
                 f"run `memoria secrets set {name}`."
             )
         elif cred_class == "enhancing":
-            effect = str(cred.get("effect") or "degraded keyless mode").strip().rstrip(".")
+            effect = str(cred.get("effect_when_unset") or "degraded keyless mode").strip().rstrip(".")
             lines.append(f"Memoria: credential {name} is unset (enhancing) — {effect}.")
     return lines
 
