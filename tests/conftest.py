@@ -102,6 +102,7 @@ TEST_LEVELS = {
     "test_schema_version.py": "contract",
     "test_schemas.py": "contract",
     "test_search_index.py": "contract",
+    "test_seed_install.py": "contract",
     "test_seeded_errors.py": "runtime",
     "test_session_summary.py": "contract",
     "test_slice_outline.py": "runtime",
