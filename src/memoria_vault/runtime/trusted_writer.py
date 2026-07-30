@@ -511,7 +511,11 @@ def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
             f"{markdown_code_span(subject)} outside the trusted writer; until "
             "reviewed the file can re-enter Ask and pass the export gate."
         )
-        slug = f"cs3-restriction-key-removed-{subject}-{key}"
+        prefix = "cs3-restriction-key-removed-"
+        key_slug = re.sub(r"[^a-z0-9]+", "-", key.lower()).strip("-")
+        subject_slug = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")
+        subject_limit = 60 - len(prefix) - len(key_slug) - 1
+        slug = f"{prefix}{subject_slug[:subject_limit].rstrip('-')}-{key_slug}"
     else:
         current = str(finding["current_human_sha256"])
         title = f"Foreign edit: {subject}"

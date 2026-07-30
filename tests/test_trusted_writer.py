@@ -558,6 +558,38 @@ def test_observe_sweep_routes_findings_to_durable_inbox_cards(tmp_path: Path) ->
     assert cs3_inbox_cards(vault) == cards  # rescan mints no duplicate cards
 
 
+def test_observe_sweep_keeps_restriction_key_card_ids_distinct_for_long_subjects(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes" / f"{'long-subject-' * 8}witnessed.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Long witnessed note").replace(
+        "tags: []\n", "superseded: true\nlocal-only: true\ntags: []\n"
+    )
+    target.write_text(original, encoding="utf-8")
+    target_id = target.relative_to(vault).as_posix()
+    git(vault, "add", "--", target_id)
+    git(vault, "commit", "-m", "seed long witnessed note")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    target.write_text(note_text(title="Long witnessed note"), encoding="utf-8")
+    git(vault, "add", "--", target_id)
+    git(vault, "commit", "-m", "remove two long-path restriction keys")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    cards = sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md"))
+    assert len(cards) == 2
+    assert len({card.name for card in cards}) == 2  # card IDs remain distinct after slugging
+    assert any(card.name.endswith("-superseded.md") for card in cards)
+    assert any(card.name.endswith("-local-only.md") for card in cards)
+    assert {read_frontmatter(card)["target"] for card in cards} == {target_id}
+
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md")) == cards
+
+
 def test_observe_sweep_seeds_clean_bundle_file_baseline(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     init_git(vault, "writer@example.invalid", "Trusted Writer")
