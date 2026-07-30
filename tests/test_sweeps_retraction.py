@@ -3,7 +3,6 @@
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.subsystems.integrity.retraction import retraction as _m
-from memoria_vault.runtime.subsystems.lib import loudness
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
 
@@ -170,17 +169,6 @@ def test_build_rw_index_severity_tie_break_keeps_retraction_over_concern():
 
 
 def test_sweep_flags_checked_sqlite_retraction_without_legacy_fallback(tmp_path, monkeypatch):
-    # COV.3 runs before 21.5 removes the legacy best-effort push transport.
-    # Keep this retraction assertion local even if the surrounding environment
-    # happens to configure that transport.
-    for name in (
-        "MEMORIA_TELEGRAM_BOT_TOKEN",
-        "TELEGRAM_BOT_TOKEN",
-        "MEMORIA_TELEGRAM_CHAT_ID",
-        "TELEGRAM_CHAT_ID",
-    ):
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr(loudness, "push_card", lambda *args, **kwargs: None, raising=False)
     vault = capture_workspace(tmp_path)
     retracted = capture_source(
         vault,

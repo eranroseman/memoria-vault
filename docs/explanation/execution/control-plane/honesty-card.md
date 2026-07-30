@@ -31,9 +31,9 @@ gate](states.md) owns the "never a gate" rule.
 
 ## Graded loudness
 
-Loudness decides whether attention stays pull-only or becomes push-worthy. The
-point is not notification decoration; it is preserving the PI's attention for
-items that can change near-term work.
+Loudness grades the urgency of pull-only attention. The point is not
+notification decoration; it is preserving the PI's attention for items that can
+change near-term work.
 
 The 30-minute test is owned by [Architecture](../../architecture/README.md#interaction-channels): does this change what the PI should do in the next 30 minutes?
 
