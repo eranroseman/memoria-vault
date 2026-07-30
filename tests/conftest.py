@@ -97,6 +97,7 @@ TEST_LEVELS = {
     "test_projections.py": "contract",
     "test_query_substrate.py": "contract",
     "test_refresh_test_vault.py": "package",
+    "test_retrieval_fixtures.py": "contract",
     "test_rendezvous.py": "runtime",
     "test_retrieval_pipeline.py": "unit",
     "test_retrieval_substrate.py": "contract",
