@@ -8,12 +8,13 @@ grand_parent: Reference
 # Sweeps
 
 Deterministic maintenance passes under `memoria_vault.runtime.subsystems`.
-Retraction sweeps surface review work through worker-owned projections; they do
+Retraction sweeps surface review work through Inbox alert projections; they do
 not directly promote Concept files.
 
 ## Retraction sweep
 
-`retraction.py` performs deterministic, read-only retraction-by-DOI checks from three sources, most authoritative first:
+`retraction.py --doi <doi>` performs deterministic, read-only retraction-by-DOI
+checks from three sources, most authoritative first:
 
 | Source | Role |
 | --- | --- |
@@ -21,8 +22,9 @@ not directly promote Concept files.
 | Crossref `update-to` delta | Live DOI status check. |
 | Open Retractions | Cross-check source. |
 
-`retraction.py --sweep --vault V` scans the Catalog DOIs and raises Inbox
-`alert` attention items on hits. It never flips a note lifecycle.
+`retraction.py --sweep --vault V` scans checked SQLite Catalog Works (not
+legacy source files) and raises an Inbox `alert` attention item for each
+retracted DOI. It never changes a Work's state.
 
 ## Related
 
