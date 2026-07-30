@@ -1976,7 +1976,7 @@ contract file.
   def test_wikilink_detectors_flag_bare_and_broken_links(tmp_path: Path) -> None:
       md = tmp_path / "note.md"
       md.write_text(
-          "\n".join(
+          "\n".join(  # noqa: FLY002 -- fixture lines are clearer than one literal.
               [
                   "A [[Missing Note]] here.",
                   "An [[absent-note|Absent Note]] there.",
