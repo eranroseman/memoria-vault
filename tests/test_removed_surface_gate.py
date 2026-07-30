@@ -46,3 +46,34 @@ def test_reports_removed_paths_and_text_from_contract(tmp_path: Path) -> None:
         "forbidden path exists: old/package",
         "docs/bad.md: contains OldSurface",
     ]
+
+
+def test_scans_file_type_search_roots(tmp_path: Path) -> None:
+    contract = tmp_path / "removed_surfaces.json"
+    contract.write_text(
+        json.dumps(
+            {
+                "search_roots": ["NOTES.md"],
+                "allow_text_files": [],
+                "rules": [
+                    {
+                        "kind": "text",
+                        "needle": "OldSurface",
+                        "owner": "tests",
+                        "reason": "retired prose reference",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "NOTES.md").write_text("intro\nOldSurface\n", encoding="utf-8")
+
+    assert gate.find_violations(tmp_path, contract) == ["NOTES.md: contains OldSurface"]
+
+
+def test_missing_search_root_is_a_hard_failure(tmp_path: Path) -> None:
+    contract = tmp_path / "removed_surfaces.json"
+    write_contract(contract)  # search root "docs" — deliberately not created
+
+    assert gate.find_violations(tmp_path, contract) == ["missing search root: docs"]
