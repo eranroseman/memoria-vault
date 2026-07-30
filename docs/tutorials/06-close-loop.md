@@ -7,7 +7,8 @@ nav_order: 6
 # 06: Close loop
 
 Memoria is useful only if work returns to a visible, reviewable state. This
-tutorial closes requests, refreshes projections, and commits the workspace.
+tutorial inspects that state, refreshes projections, backs up untracked runtime
+state, and makes the workspace commit-ready.
 
 ## Steps
 
@@ -21,19 +22,11 @@ memoria attention worklist --workspace .
 
 Requests are operation state. Attention items are PI-facing work. They are
 different surfaces over the same control plane.
-Notice whether the rejected evidence item from Tutorial 05 still appears.
+This is a read-only checkpoint: attention disposition belongs to
+[Work the action queue](../how-to-guides/inbox/work-the-action-queue.md), not to
+this tutorial.
 
-**2. Resolve attention items you have handled.**
-
-```bash
-memoria attention resolve --workspace . <attention-path> --apply --reason "Handled"
-```
-
-Use `--reject` or `--defer` when that is the true disposition.
-If there are no attention items, continue. An empty queue is a successful
-result in this tutorial.
-
-**3. Refresh projections before you commit.**
+**2. Refresh projections before you commit.**
 
 ```bash
 memoria workspace scan --workspace .
@@ -46,7 +39,7 @@ rebuild, and that `journal verify` is the one authoritative trust-read path:
 it hash-chain-verifies the event journal and its head anchor before you rely
 on anything the refreshed projections reported.
 
-**4. Back up state that Git does not track.**
+**3. Back up state that Git does not track.**
 
 ```bash
 memoria workspace backup --workspace . ../memoria-backup
@@ -59,7 +52,7 @@ durable, and `memoria workspace restore --workspace . <dir>` (add `--force` to o
 live workspace) is how you bring it back. `doctor bundle` from Tutorial 01
 fails this same check when blobs exist with no valid backup.
 
-**5. Commit the vault state.**
+**4. Commit the vault state.**
 
 ```bash
 git status --short

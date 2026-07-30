@@ -26,22 +26,19 @@ watch would be the structural layer over detectable integrity findings.
 ## Loose ends
 
 The planned Loose ends view is a weekly batch for `notice`-loudness `flag`
-attention items. Today, filter the output of `memoria attention list` during the
-weekly review. Louder findings should be handled sooner.
+attention items. The shipped weekly review considers those items alongside
+Linter findings; louder findings carry greater urgency.
 
 ## Board state
 
-Request and attention state ship through `memoria request list` and
-`memoria attention list`. A planned Board view may combine those reads without
-becoming an editable state store.
+Request and attention state are exposed by the standalone runtime. A planned
+Board view may combine those reads without becoming an editable state store.
 
 ## Weekly review
 
-Weekly review is the operator-run structural-health ritual. Today it gathers
-Inbox cleanup, linter output, new content, and claim state through CLI and file
-inspection.
-The step-by-step ritual lives in [Run the weekly
-review](../../../how-to-guides/inbox/run-the-weekly-review.md).
+Weekly review is the operator-run structural-health ritual. It relates Inbox
+cleanup, linter output, new content, and claim state. The task steps live in
+[Run the weekly review](../../../how-to-guides/inbox/run-the-weekly-review.md).
 
 ## Related
 
