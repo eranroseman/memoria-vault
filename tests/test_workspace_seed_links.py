@@ -147,3 +147,29 @@ def _collect_errors() -> list[str]:
 def test_workspace_seed_links_are_clean() -> None:
     errors = _collect_errors()
     assert errors == [], "\n".join(errors)
+
+
+def test_wikilink_detectors_flag_bare_and_broken_links(tmp_path: Path) -> None:
+    md = tmp_path / "note.md"
+    md.write_text(
+        "\n".join(  # noqa: FLY002 -- fixture lines are clearer than one literal.
+            [
+                "A [[Missing Note]] here.",
+                "An [[absent-note|Absent Note]] there.",
+                "A [[real-note|Real Note]] link that resolves.",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    alias_errors: list[str] = []
+    _check_wikilink_aliases(md, alias_errors)
+    broken_errors: list[str] = []
+    _check_broken_wikilinks(md, broken_errors, {"real-note"})
+
+    assert alias_errors == [f"{md}: bare wikilink [[Missing Note]] — alias it with the page title"]
+    assert broken_errors == [
+        f"{md}: wikilink [[Missing Note]] resolves to no vault note",
+        f"{md}: wikilink [[absent-note|Absent Note]] resolves to no vault note",
+    ]
