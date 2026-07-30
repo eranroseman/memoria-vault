@@ -2027,12 +2027,13 @@ def _cmd_steering_edit(args: argparse.Namespace) -> int:
         append_explicit_journal_event,
         commit_explicit_writer_changes,
     )
+    from memoria_vault.runtime.vaultio import write_text_durable
 
     _require_pi_actor(args, "steering edit")
     workspace = _workspace(args)
     body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
     path = workspace / "steering.md"
-    path.write_text(body if body.endswith("\n") else f"{body}\n", encoding="utf-8")
+    write_text_durable(path, body if body.endswith("\n") else f"{body}\n")
     event = append_explicit_journal_event(
         workspace,
         {"event": "steering_updated", "operation": "steering-edit", "output_id": "steering.md"},
@@ -2879,6 +2880,7 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         append_explicit_journal_event,
         commit_explicit_writer_changes,
     )
+    from memoria_vault.runtime.vaultio import write_text_durable
 
     _require_pi_actor(args, f"vocabulary {mode}")
     if args.field not in {"research_area", "methodology"}:
@@ -2903,7 +2905,7 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         text = _vocabulary_merge(text, args.field, args.old, args.new)
         event_name = "vocabulary_merged"
         payload = {"field": args.field, "old": args.old, "new": args.new}
-    path.write_text(text, encoding="utf-8")
+    write_text_durable(path, text)
     event = append_explicit_journal_event(
         workspace,
         {"event": event_name, "operation": f"vocabulary-{mode}", **payload},
