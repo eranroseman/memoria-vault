@@ -148,3 +148,16 @@ def effective_steering_tokens(vault: Path) -> set[str]:
     """
     _watch, mute = steering_overrides(vault)
     return set(_token_sources(vault)) - mute
+
+
+def effective_steering_provenance(vault: Path) -> list[dict[str, Any]]:
+    """Effective tokens with contributing sources, sorted by token.
+
+    Muted tokens are excluded, matching :func:`effective_steering_tokens`.
+    """
+    _watch, mute = steering_overrides(vault)
+    return [
+        {"token": token, "sources": sorted(labels)}
+        for token, labels in sorted(_token_sources(vault).items())
+        if token not in mute
+    ]

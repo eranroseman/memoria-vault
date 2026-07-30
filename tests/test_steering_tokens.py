@@ -6,10 +6,12 @@ from pathlib import Path
 
 from memoria_vault.runtime.steering import (
     RELEVANCE_STOPWORDS,
+    effective_steering_provenance,
     effective_steering_tokens,
     relevance_tokens,
     steering_overrides,
 )
+from tests.helpers import WORKSPACE_SEED
 
 
 def _write(path: Path, text: str) -> None:
@@ -130,3 +132,48 @@ def test_effective_steering_subtracts_muted_tokens_per_word(tmp_path: Path) -> N
     )
 
     assert effective_steering_tokens(tmp_path) == {"scheduling"}
+
+
+def test_effective_steering_provenance_labels_every_source(tmp_path: Path) -> None:
+    _concept(
+        tmp_path / "projects/tutorial/project.md",
+        "type: project\ntitle: Retrieval Practice\ntags: []\nlinks: {}\n",
+    )
+    _concept(
+        tmp_path / "hubs/note-taking.md",
+        "type: hub\ntitle: Note Taking\ntag: note-taking\ntags: []\nlinks: {}\n",
+    )
+    _concept(
+        tmp_path / "notes/q-offloading.md",
+        "type: note\nmode: question\nquestion_status: open\n"
+        "title: Offloading Retrieval\ntags: []\nlinks: {}\n",
+    )
+    _write(
+        tmp_path / "steering.md",
+        "---\ntype: system\ntitle: Steering\n---\n\n"
+        "## Watch for\n\n- interleaving\n\n## Muted\n\n- practice\n",
+    )
+
+    provenance = effective_steering_provenance(tmp_path)
+
+    by_token = {row["token"]: row["sources"] for row in provenance}
+    assert [row["token"] for row in provenance] == sorted(by_token)
+    assert by_token["retrieval"] == [
+        "project:projects/tutorial/project.md",
+        "question:notes/q-offloading.md",
+    ]
+    assert by_token["interleaving"] == ["watch"]
+    assert by_token["note"] == ["hub:hubs/note-taking.md"]
+    assert "practice" not in by_token
+
+
+def test_shipped_seed_steering_is_override_only_and_contributes_no_tokens(
+    tmp_path: Path,
+) -> None:
+    text = (WORKSPACE_SEED / "steering.md").read_text(encoding="utf-8")
+    _write(tmp_path / "steering.md", text)
+
+    assert "## Watch for" in text
+    assert "## Muted" in text
+    assert steering_overrides(tmp_path) == (set(), set())
+    assert effective_steering_tokens(tmp_path) == set()

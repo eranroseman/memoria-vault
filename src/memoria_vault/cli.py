@@ -2396,12 +2396,28 @@ def _cmd_eval_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_steering_show(args: argparse.Namespace) -> int:
-    path = _workspace(args) / "steering.md"
-    if not path.is_file():
-        return _fail("steering.md not found", json_output=args.json)
-    return _emit(
-        {"ok": True, "path": "steering.md", "body": path.read_text(encoding="utf-8")}, args
+    from memoria_vault.runtime.steering import (
+        effective_steering_provenance,
+        steering_overrides,
     )
+
+    workspace = _workspace(args)
+    if not (workspace / "steering.md").is_file():
+        return _fail("steering.md not found", json_output=args.json)
+    tokens = effective_steering_provenance(workspace)
+    _watch, mute = steering_overrides(workspace)
+    payload = {"ok": True, "path": "steering.md", "tokens": tokens, "muted": sorted(mute)}
+    if not args.json and not args.quiet:
+        if tokens:
+            width = max(len(str(row["token"])) for row in tokens)
+            for row in tokens:
+                print(f"{row['token']!s:<{width}}  {', '.join(row['sources'])}")
+        else:
+            print("no effective steering tokens - frame a project or add Watch for bullets")
+        if payload["muted"]:
+            print(f"muted: {', '.join(payload['muted'])}")
+        return 0
+    return _emit(payload, args)
 
 
 def _cmd_steering_edit(args: argparse.Namespace) -> int:
