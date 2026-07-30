@@ -23,9 +23,11 @@ Rationale: [the vault-eval-benchmark-first publication path](https://github.com/
   from the authoritative event log.
 - **Append-only.** Writers append rows; rotation is an explicit authorized
   operation.
-- **Time.** Every row carries `timestamp` in ISO-8601 UTC with a trailing `Z`.
-- **Identity.** Request-scoped rows carry `request_id`; eval rows use
-  `eval_role` for diagnostic role grouping.
+- **Time.** Policy-audit, linter, and eval event rows carry `timestamp` in
+  ISO-8601 UTC with a trailing `Z`. Session-digest headers instead carry
+  `started` and `ended`; their path-summary rows have no per-row timestamp.
+- **Identity.** Policy-audit rows and session-digest headers carry
+  `request_id`; eval rows use `eval_role` for diagnostic role grouping.
 - **Encoding.** UTF-8, `ensure_ascii=false`.
 
 ## Log inventory
@@ -34,7 +36,7 @@ Rationale: [the vault-eval-benchmark-first publication path](https://github.com/
 | --- | --- | --- | --- |
 | `audit.jsonl` | runtime policy gate or optional adapter hook | per gated decision or paired write | one policy decision or before/after write record |
 | `lint-findings.jsonl` | linter detector run | per manual or scheduled lint run | one detector finding |
-| `sessions/YYYY-MM-DD-HHMM.jsonl` | `session_summary.py` | per summary run | one compact per-session digest file |
+| `sessions/YYYY-MM-DD-HHMM[-N].jsonl` | `session_summary.py` | per not-yet-digested request after its latest valid policy-audit row has been quiet for 24 h | one compact per-request audit digest; `-2`, `-3`, … disambiguate a shared start minute |
 | `system/metrics/eval/runs.jsonl` | `eval_score.py` | per eval score run | one scored eval run |
 
 The authoritative operational state is `.memoria/memoria.sqlite`; logs are
@@ -71,14 +73,17 @@ One row per detector finding.
 }
 ```
 
-### sessions/YYYY-MM-DD-HHMM.jsonl
+### sessions/YYYY-MM-DD-HHMM[-N].jsonl
 
-The deterministic session-summary file. It begins with a header row, followed by
-one row per touched path.
+The deterministic session-summary file groups policy-audit rows by
+`request_id`. It begins with a `record: session` header, followed by one
+`record: path` row per touched path. The base filename comes from the first
+audit timestamp; a deterministic `-2`, `-3`, … suffix disambiguates requests
+that share a start minute.
 
 ```json
-{"kind": "summary", "timestamp": "2026-06-01T02:00:00Z", "request_count": 4}
-{"kind": "path", "path": "notes/n.md", "writes": 1, "denies": 0}
+{"record": "session", "request_id": "REQ-A", "actors": ["adapter"], "started": "2026-06-01T09:05:00Z", "ended": "2026-06-01T09:07:00Z", "entries": 3, "actions": {"write": 3}, "decisions": {"allow_with_log": 1, "dry_run": 1, "write_complete": 1}}
+{"record": "path", "path": "projects/a.md", "actions": ["write"], "final_decision": "allow_with_log", "after_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
 ```
 
 ### system/metrics/eval/runs.jsonl
