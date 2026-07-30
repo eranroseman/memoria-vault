@@ -1395,6 +1395,24 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 > code fences remain only for historical context; they must not be copied or
 > executed.
 >
+> **Execution clarification — cross-format identifiers (2026-07-30).**
+> `csl_capture_payload()` carries DOI/ISBN by default, so A.2's pure
+> `build_entry_payload()` adapter must also preserve nonempty case-insensitive
+> `PMCID`/`arXiv` fields as canonical `pmcid`/`arxiv` identifiers. `entry_fetch`
+> recognizes the same raw-field fallback. This keeps I.1's existing
+> `entry_fetch(entry_fields, payload["identifiers"])` handoff complete for both
+> formats and preserves identifiers for A.3 collision checks; it does not grant
+> the adapter any fetch or authorization authority.
+>
+> **Execution clarification — bounded PDF extraction (2026-07-30).**
+> The shared `stage_pdf_source()` seam must reject a PDF before catalog staging
+> when it exceeds 1,000 pages or 8 MiB of cumulative UTF-8 extracted text.
+> This prevents an allowed remote PDF from causing unbounded retained parser
+> output; it applies equally to the existing local-PDF path. Add
+> `src/memoria_vault/runtime/capture.py` and `tests/test_capture.py` to the
+> explicit Step 5 staging list below. The cap is a resource guard, not an
+> authorization substitute or a native-parser sandbox.
+>
 > 1. **Preflight + RED.** Run `test -f
 >    src/memoria_vault/runtime/seed_install.py` and `rg -n
 >    "def resolve_fetch|authorize_url" src/memoria_vault/runtime/seed_install.py`;
@@ -1459,7 +1477,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 >    review, and `python scripts/verify`; then stage and commit explicitly:
 >
 >    ```bash
->    git add -- src/memoria_vault/runtime/bulk_import.py src/memoria_vault/runtime/worker.py src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md tests/test_bulk_import.py tests/test_worker_capture_jobs.py tests/test_capabilities.py tests/floor_lib.py tests/test_floor_coverage.py docs/reference/pipelines-and-io/ingest.md docs/reference/commands-and-transports/system-actions.md docs/reference/commands-and-transports/system-actions-operations.md docs/reference/commands-and-transports/operations.md
+>    git add -- src/memoria_vault/runtime/bulk_import.py src/memoria_vault/runtime/capture.py src/memoria_vault/runtime/worker.py src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md tests/test_bulk_import.py tests/test_capture.py tests/test_worker_capture_jobs.py tests/test_capabilities.py tests/fixtures/floor/goldens/regenerate-capability-index.json tests/floor_lib.py tests/test_floor_coverage.py docs/reference/pipelines-and-io/ingest.md docs/reference/commands-and-transports/system-actions.md docs/reference/commands-and-transports/system-actions-operations.md docs/reference/commands-and-transports/operations.md project-words.txt
 >    git commit -m "feat(bulk-import): route imported PDFs through a policy-bound worker"
 >    ```
 
