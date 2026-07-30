@@ -1015,12 +1015,12 @@ existing package-spine contract pin; it does not authorize a
 > one-file, lower-bound-only scope below.
 
 **Files:**
-- Modify: `/home/eranr/memoria-vault/.github/workflows/verify.yml` (install step, lines 41-44)
-- Modify: `/home/eranr/memoria-vault/pyproject.toml:18-19` (`mcp = ["mcp>=1.27,<2"]`)
-- Modify: `/home/eranr/memoria-vault/tests/test_package_spine.py`
+- Modify: `.github/workflows/verify.yml` (install step, lines 41-44)
+- Modify: `pyproject.toml:18-19` (`mcp = ["mcp>=1.27,<2"]`)
+- Modify: `tests/test_package_spine.py`
   (`test_stack_dependencies_stay_small_and_no_orm` exact optional-extra pin)
-- Read-only context: `/home/eranr/memoria-vault/requirements-dev.txt` (header
-  scopes it to contributor tooling), `/home/eranr/memoria-vault/tests/test_mcp_transport.py`
+- Read-only context: `requirements-dev.txt` (header scopes it to contributor
+  tooling), `tests/test_mcp_transport.py`
   (8 of 13 tests open with `pytest.importorskip("mcp")`)
 
 **Interfaces:**
@@ -1073,8 +1073,8 @@ service or secret behind it.
 ### Task COV.2: `policy/hook.py` — audit deny-path and completion-failure handler
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_policy_hook.py` (append after `test_evaluate_pre_prunes_stale_pending_stashes_but_keeps_fresh_stashes`, line 311)
-- Read-only production: `/home/eranr/memoria-vault/src/memoria_vault/runtime/policy/hook.py` — `_audit_tool_policy_block` at 232-261 (body past the `action is None` check: 238-261; `append_audit` deny row 247-259), call site in `evaluate_pre` at 322; `evaluate_post` at 380-440 (exception handler 413-434; `record_event(..., code="audit_completion_failed")` at 422-432). Spec refs verified — no drift.
+- Modify (tests only): `tests/test_policy_hook.py` (append after `test_evaluate_pre_prunes_stale_pending_stashes_but_keeps_fresh_stashes`, line 311)
+- Read-only production: `src/memoria_vault/runtime/policy/hook.py` — `_audit_tool_policy_block` at 232-261 (body past the `action is None` check: 238-261; `append_audit` deny row 247-259), call site in `evaluate_pre` at 322; `evaluate_post` at 380-440 (exception handler 413-434; `record_event(..., code="audit_completion_failed")` at 422-432). Spec refs verified — no drift.
 - Test: `tests/test_policy_hook.py` (registered `contract` in `TEST_LEVELS` — no conftest change)
 
 **Interfaces:**
@@ -1195,8 +1195,8 @@ under both signatures; the assertions below are deliberately filename-agnostic
 call site.
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_sweeps_retraction.py` (extend aliases at lines 5-11; append tests after line 127)
-- Read-only production: `/home/eranr/memoria-vault/src/memoria_vault/runtime/subsystems/integrity/retraction/retraction.py` — `build_rw_index` at 97-115 (tie-break at 112-114), `check_doi` at 255-300 (one-time offline no-CSV stderr warning at 273-283, `_warned_no_csv` flag at 47), `sweep` at 303-334 (`write_finding` call at 321-333, no `dedupe_slug` passed), `rw_csv_path` honoring `MEMORIA_RW_CSV` at 71-76, module cache `_RW_INDEX` at 46. Spec refs verified — no drift. NOTE: the spec/prompt shorthand "retraction.py" resolves to this subsystems path, not `runtime/retraction.py`.
+- Modify (tests only): `tests/test_sweeps_retraction.py` (extend aliases at lines 5-11; append tests after line 127)
+- Read-only production: `src/memoria_vault/runtime/subsystems/integrity/retraction/retraction.py` — `build_rw_index` at 97-115 (tie-break at 112-114), `check_doi` at 255-300 (one-time offline no-CSV stderr warning at 273-283, `_warned_no_csv` flag at 47), `sweep` at 303-334 (`write_finding` call at 321-333, no `dedupe_slug` passed), `rw_csv_path` honoring `MEMORIA_RW_CSV` at 71-76, module cache `_RW_INDEX` at 46. Spec refs verified — no drift. NOTE: the spec/prompt shorthand "retraction.py" resolves to this subsystems path, not `runtime/retraction.py`.
 - Test: `tests/test_sweeps_retraction.py` (registered `contract` — no conftest change)
 
 **Interfaces:**
@@ -1210,6 +1210,8 @@ call site.
   read_frontmatter = _m.read_frontmatter
   sweep = _m.sweep
   ```
+  Add `from memoria_vault.runtime.subsystems.lib import loudness` to the
+  module imports as well; the sweep-alert test below stubs its legacy transport.
 - [ ] Write the failing test (severity tie-break) at the end of the file:
 
   ```python
@@ -1252,6 +1254,9 @@ call site.
           "TELEGRAM_CHAT_ID",
       ):
           monkeypatch.delenv(name, raising=False)
+      monkeypatch.setattr(
+          loudness, "push_card", lambda *args, **kwargs: None, raising=False
+      )
       vault = tmp_path / "vault"
       retracted_note = vault / "catalog" / "sources" / "smith2020" / "source.md"
       retracted_note.parent.mkdir(parents=True)
@@ -1299,7 +1304,8 @@ call site.
   `10.1/Clean` is absent from the CSV so the second source counts as checked
   but not retracted; (3) COV.3 deliberately runs before 21.5 removes the
   legacy best-effort push transport, so the test clears its four credential
-  variables and remains local; (4) `_RW_INDEX` reset mirrors the file's
+  variables and stubs `push_card` to avoid both an outbound attempt and an
+  irrelevant push-log side effect; (4) `_RW_INDEX` reset mirrors the file's
   existing cache hygiene.
 - [ ] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
 - [ ] Write the failing test (one-time offline no-CSV warning) below it:
@@ -1337,8 +1343,8 @@ call site.
 ### Task COV.4: `diagnostics.py` — content-light sequences/objects and raw-bundle re-redaction
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_diagnostics.py` (append after `test_redaction_self_test_blocks_known_sensitive_strings`, line 151)
-- Read-only production: `/home/eranr/memoria-vault/src/memoria_vault/runtime/diagnostics.py` — `_content_light` at 81-91 (list/tuple/set branch 89-90, `str(value)` fallback 91), `create_redacted_bundle` re-redaction of `payload_redacted` at 237-238. Spec refs verified — no drift.
+- Modify (tests only): `tests/test_diagnostics.py` (append after `test_redaction_self_test_blocks_known_sensitive_strings`, line 151)
+- Read-only production: `src/memoria_vault/runtime/diagnostics.py` — `_content_light` at 81-91 (list/tuple/set branch 89-90, `str(value)` fallback 91), `create_redacted_bundle` re-redaction of `payload_redacted` at 237-238. Spec refs verified — no drift.
 - Test: `tests/test_diagnostics.py` (registered `unit` — no conftest change)
 
 **Interfaces:**
@@ -1436,8 +1442,8 @@ call site.
 ### Task COV.5: `http_transport.py` — real end-to-end auth/size gate + scope-intersection narrowing
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_http_transport.py` (extend imports at lines 3-17; append tests before the module-tail helpers at line 609)
-- Read-only production: `/home/eranr/memoria-vault/src/memoria_vault/runtime/http_transport.py` — `make_http_server` at 29-97 with the inner `Handler` at 41-95 (`_handle` auth gate 62-76, `_json_body` Content-Length guard 78-87, `MAX_BODY_BYTES = 1_000_000` at 20), `is_authorized` at 100-101, `_scope_intersection` at 287-295 (spec's line 292 = `narrowed.add(request_scope)` — verified). Spec's "lines 41-97" verified (Handler body ends 95; `make_http_server` returns at 97).
+- Modify (tests only): `tests/test_http_transport.py` (extend imports at lines 3-17; append tests before the module-tail helpers at line 609)
+- Read-only production: `src/memoria_vault/runtime/http_transport.py` — `make_http_server` at 29-97 with the inner `Handler` at 41-95 (`_handle` auth gate 62-76, `_json_body` Content-Length guard 78-87, `MAX_BODY_BYTES = 1_000_000` at 20), `is_authorized` at 100-101, `_scope_intersection` at 287-295 (spec's line 292 = `narrowed.add(request_scope)` — verified). Spec's "lines 41-97" verified (Handler body ends 95; `make_http_server` returns at 97).
 - Test: `tests/test_http_transport.py` (registered `contract` — no conftest change)
 
 **Interfaces:**
@@ -1553,8 +1559,8 @@ call site.
 ### Task COV.6: `schema_doc_drift.py` — seeded-mismatch fixtures for three unproven dimensions
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_schema_doc_drift.py` (append after `test_schema_doc_lint_fails_on_seeded_type_roster_mismatch`, line 74)
-- Read-only production: `/home/eranr/memoria-vault/scripts/checks/schema_doc_drift.py` — `_schema_claim_errors` at 108-121 (category/gated scalar check at 110-114; spec's line 112 verified), `_map_section_errors` at 124-146 (`"documented {label} is not live"` at 141 — verified), `_required_when_errors` at 159-160, `_list_subset_errors` at 163-175 (spec's 168-175 verified).
+- Modify (tests only): `tests/test_schema_doc_drift.py` (append after `test_schema_doc_lint_fails_on_seeded_type_roster_mismatch`, line 74)
+- Read-only production: `scripts/checks/schema_doc_drift.py` — `_schema_claim_errors` at 108-121 (category/gated scalar check at 110-114; spec's line 112 verified), `_map_section_errors` at 124-146 (`"documented {label} is not live"` at 141 — verified), `_required_when_errors` at 159-160, `_list_subset_errors` at 163-175 (spec's 168-175 verified).
 - Test: `tests/test_schema_doc_drift.py` (registered `static` — no conftest change)
 
 **Interfaces:**
@@ -1634,9 +1640,9 @@ skipped). The hardening therefore ships with the stale-root removal from the
 contract file.
 
 **Files:**
-- Modify: `/home/eranr/memoria-vault/scripts/checks/removed_surface_gate.py` (silent skip at lines 96-98 inside `find_violations`)
-- Modify: `/home/eranr/memoria-vault/scripts/checks/removed_surfaces.json` (drop the stale `".agents"` entry from `search_roots`, currently the first entry)
-- Modify (tests): `/home/eranr/memoria-vault/tests/test_removed_surface_gate.py` (append after line 48)
+- Modify: `scripts/checks/removed_surface_gate.py` (silent skip at lines 96-98 inside `find_violations`)
+- Modify: `scripts/checks/removed_surfaces.json` (drop the stale `".agents"` entry from `search_roots`, currently the first entry)
+- Modify (tests): `tests/test_removed_surface_gate.py` (append after line 48)
 - Read-only production: `iter_files` file-root branch at `removed_surface_gate.py:66-70` (spec said 67-70 — off by one, `if root.is_file():` is line 66).
 - Test: `tests/test_removed_surface_gate.py` (registered `static` — no conftest change)
 
@@ -1712,8 +1718,8 @@ contract file.
 ### Task COV.8: `worker.py` — `main()` subcommand dispatch wiring
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_worker_queue.py` (append after `test_worker_cli_enqueues_operation_payload`, line 517)
-- Read-only production: `/home/eranr/memoria-vault/src/memoria_vault/runtime/worker.py` — `main()` at **1387-1484** (spec said 1436-1484 — drifted; the dispatcher body is 1413-1484: `scan` 1436-1445, `run-scheduled` 1446-1462, `integrity-sweep` 1463-1470, `observe-pi-edits` 1471-1479 with an in-function import from `trusted_writer`, `recover` 1480-1482, `run-pending` fallthrough 1483). Only `enqueue-operation` has a wiring test today.
+- Modify (tests only): `tests/test_worker_queue.py` (append after `test_worker_cli_enqueues_operation_payload`, line 517)
+- Read-only production: `src/memoria_vault/runtime/worker.py` — `main()` at **1387-1484** (spec said 1436-1484 — drifted; the dispatcher body is 1413-1484: `scan` 1436-1445, `run-scheduled` 1446-1462, `integrity-sweep` 1463-1470, `observe-pi-edits` 1471-1479 with an in-function import from `trusted_writer`, `recover` 1480-1482, `run-pending` fallthrough 1483). Only `enqueue-operation` has a wiring test today.
 - Test: `tests/test_worker_queue.py` (registered `runtime` — no conftest change)
 
 **Interfaces:**
@@ -1896,8 +1902,8 @@ contract file.
 ### Task COV.9: `code/runner.py` — `run_artifact` ValueError guards
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_code_artifacts.py` (append after line 76)
-- Read-only production: `/home/eranr/memoria-vault/src/memoria_vault/runtime/code/runner.py` — unknown-artifact guard at 49-51, malformed/empty `approved_command` guard at 52-54. Spec refs (51, 54) verified — no drift. `create_code_artifact` (`code/records.py:14`) performs no `approved_command` validation, confirming these guards are the only backstop.
+- Modify (tests only): `tests/test_code_artifacts.py` (append after line 76)
+- Read-only production: `src/memoria_vault/runtime/code/runner.py` — unknown-artifact guard at 49-51, malformed/empty `approved_command` guard at 52-54. Spec refs (51, 54) verified — no drift. `create_code_artifact` (`code/records.py:14`) performs no `approved_command` validation, confirming these guards are the only backstop.
 - Test: `tests/test_code_artifacts.py` (registered `runtime` — no conftest change)
 
 **Interfaces:**
@@ -1950,7 +1956,7 @@ contract file.
 ### Task COV.10: workspace-seed wikilink detectors — synthetic violation fixture
 
 **Files:**
-- Modify (tests only): `/home/eranr/memoria-vault/tests/test_workspace_seed_links.py` (append after `test_workspace_seed_links_are_clean`, line 149)
+- Modify (tests only): `tests/test_workspace_seed_links.py` (append after `test_workspace_seed_links_are_clean`, line 149)
 - Read-only (same file, module under test): `_check_wikilink_aliases` at **98-108** and `_check_broken_wikilinks` at **111-120** (spec said 101-108 / 114-120 — drifted by 3 lines; verified). Their substantive logic has never run: no packaged seed markdown contains `[[wikilink]]` syntax.
 - Test: `tests/test_workspace_seed_links.py` (registered `static` — no conftest change)
 
@@ -2007,8 +2013,8 @@ first, 11b's deletion lands in the same file COV.10 extended — both touch
 disjoint regions, so either order is safe.
 
 **Files:**
-- Modify: `/home/eranr/memoria-vault/src/memoria_vault/runtime/state.py` — `_open_workspace_lock_file_windows` `def` at line **115** (~71% of the file's missed lines; its sibling Windows-only branches at lines 40 and 45 already carry `# pragma: no cover`; sole caller is the `os.name == "nt"` branch at line 359, unreachable on Linux CI)
-- Modify: `/home/eranr/memoria-vault/tests/test_workspace_seed_links.py` — dead block: `YAML_FENCE_RE` at line 23, `DROPPED_KEYS` at line 24, `_check_template_frontmatter` at lines 75-79, the `tmpl_dir` block in `_collect_errors` at lines 127-130, plus the "the vault note templates' fenced frontmatter, and" phrase in the module docstring (line 5-6). Targets `system/templates`, retired from the shipped seed in commit `cf6fcdae` before this file existed (PR #1349); `tmpl_dir.is_dir()` is always false.
+- Modify: `src/memoria_vault/runtime/state.py` — `_open_workspace_lock_file_windows` `def` at line **115** (~71% of the file's missed lines; its sibling Windows-only branches at lines 40 and 45 already carry `# pragma: no cover`; sole caller is the `os.name == "nt"` branch at line 359, unreachable on Linux CI)
+- Modify: `tests/test_workspace_seed_links.py` — dead block: `YAML_FENCE_RE` at line 23, `DROPPED_KEYS` at line 24, `_check_template_frontmatter` at lines 75-79, the `tmpl_dir` block in `_collect_errors` at lines 127-130, plus the "the vault note templates' fenced frontmatter, and" phrase in the module docstring (line 5-6). Targets `system/templates`, retired from the shipped seed in commit `cf6fcdae` before this file existed (PR #1349); `tmpl_dir.is_dir()` is always false.
 - Test: existing suites only (`tests/test_runtime_state.py`, `tests/test_workspace_seed_links.py`)
 
 **Interfaces:**
