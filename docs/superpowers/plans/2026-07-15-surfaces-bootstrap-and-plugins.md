@@ -7363,7 +7363,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 **Steps:**
 
 - [ ] Write the failing test — add `from memoria_vault import __version__`
-  and `from memoria_vault.runtime.subsystems.lib.schema import LINK_RELATIONS`
+  and `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`
   to `tests/test_attention_view.py`, then append:
 
   ```python
@@ -7406,7 +7406,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 - [ ] Write the minimal implementation. Alongside the existing U3 imports, add
   `from memoria_vault import __version__`,
   `from memoria_vault.runtime.secrets import credential_report`, and
-  `from memoria_vault.runtime.subsystems.lib.schema import LINK_RELATIONS`;
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`;
   add the time import:
 
   ```python
@@ -7476,11 +7476,16 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 - Modify: `tests/floor_lib.py` (ARG_TABLE, after the `attention.get` entry at lines
   1187–1191)
 - Modify: `tests/test_attention_view.py`
+- Modify when U1 M.3 has landed: `tests/test_read_api_scope_walk.py` (add the
+  route-owned `views.attention` probe; its existing seeded `attention_path`
+  marker is sufficient, so do not create a second seed fixture)
 
 **Interfaces:**
 - Consumes: `HTTP_ROUTES = http_routes()` route gate
   (`http_transport.py:21,115`); `_one(query, key)` (`http_transport.py:224`);
-  read-scope plumbing `_read_scope` (`http_transport.py:255`).
+  read-scope plumbing `_read_scope` (`http_transport.py:255`); after U1 M.3,
+  the registry-derived `PROBES` scope-walk gate in
+  `tests/test_read_api_scope_walk.py`.
 - Produces: surface action id **`views.attention`** (engine `read_attention_view`,
   kind `read`, scope `optional-read-scope`, params `{"summary": {"type": "boolean",
   "default": False}}`, http `GET /v1/views/attention`, response_version
@@ -7532,6 +7537,20 @@ No task here writes journal events, so no floor-golden regeneration is needed.
   `expected` set (after `"attention.get",` line 24) and `("GET",
   "/v1/views/attention"),` to the `http_routes()` set (after `("GET",
   "/attention/card"),` line 50).
+
+  If U1 M.3 has already landed, also add its required dynamic scope-walk probe
+  to `tests/test_read_api_scope_walk.py`:
+
+  ```python
+      "views.attention": ("excluded", "{attention_path}"),
+  ```
+
+  This reuses M.3's existing seeded open attention card. It proves the
+  unscoped view actually contains that card and a void scope returns an empty
+  `view.blocks`; it must not weaken the registry-derived `set(PROBES) ==
+  scoped_ids` assertion. If U3-ENG.4 lands first, make the same addition when
+  U1 M.3 is re-anchored; do not create the scope-walk file early or replace
+  its dynamic completeness assertion with a count.
 
 - [ ] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_http_dispatch_serves_attention_view tests/test_attention_view.py::test_http_dispatch_rejects_wrong_method_for_attention_view tests/test_surface_contract.py -v`
@@ -7588,6 +7607,8 @@ No task here writes journal events, so no floor-golden regeneration is needed.
   python -m pytest tests/test_attention_view.py tests/test_surface_contract.py \
       tests/test_http_transport.py tests/test_floor_coverage.py -v
   python -m pytest tests/test_floor_sweep_reads.py -k "views.attention" -v
+  # When U1 M.3 is already present:
+  python -m pytest tests/test_read_api_scope_walk.py -v
   ```
 
   Expected: all pass — including
@@ -7602,6 +7623,8 @@ No task here writes journal events, so no floor-golden regeneration is needed.
   git add src/memoria_vault/engine/surface_contract.py \
       src/memoria_vault/runtime/http_transport.py \
       tests/test_surface_contract.py tests/floor_lib.py tests/test_attention_view.py
+  # When U1 M.3 is already present, also stage its required route-owned probe:
+  git add tests/test_read_api_scope_walk.py
   git commit -m "feat(http): serve GET /v1/views/attention (full view + summary poll)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -8851,18 +8874,20 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 ### Task U3-PLUG.5: `relate.js` — relate-operation payload builder (roster from server)
 
-> **Execution override:** The 2026-07-29 graph-roster/warrant amendment
-> governs. The legacy three-item roster and `reason` snippets below are
-> drafting history: execute the six-served-roster, `payload.warrant` version
-> after graph ERP-D.5 instead.
+> **Binding sequence:** Execute after graph ERP-D.5. The server supplies the
+> sorted six-verb roster and the builder emits the optional edge annotation as
+> `payload.warrant`, never the legacy `reason` alias.
 
 **Files:**
 - Create: `packages/memoria-obsidian/relate.js`
 - Create: `packages/memoria-obsidian/scripts/test-relate.mjs`
 
 **Interfaces:**
-- Consumes: `curate-note-link` worker payload contract (`src/memoria_vault/runtime/worker.py:471-490`): `source_note_path`, `link_type`, `target_path`, optional `reason`. The optional warrant free text maps to `reason` (the edge-hung, promotion-ready text per U3 §4).
-- Produces: `buildRelateOperation({fromPath, relation, toPath, warrant, roster}) -> {operationId: "curate-note-link", payload: {source_note_path, link_type, target_path, reason?}}` — throws `Error` naming the missing/invalid field; `relation` must be a member of the server-provided `roster` (see the roster decision at section top).
+- Consumes: graph ERP-D.5's `curate-note-link` worker payload contract
+  (`src/memoria_vault/runtime/worker.py:471-490`): `source_note_path`,
+  `link_type`, `target_path`, optional `warrant`. The optional Warrant free
+  text is an edge annotation, not a request reason.
+- Produces: `buildRelateOperation({fromPath, relation, toPath, warrant, roster}) -> {operationId: "curate-note-link", payload: {source_note_path, link_type, target_path, warrant?}}` — throws `Error` naming the missing/invalid field; `relation` must be a member of the server-provided `roster` (see the roster decision at section top).
 
 **Steps:**
 
@@ -8875,13 +8900,13 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   const require = createRequire(import.meta.url);
   const { buildRelateOperation } = require("../relate.js");
 
-  const roster = ["supports", "contradicts", "extends"];
+  const roster = ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"];
 
-  test("builds a curate-note-link enqueue with warrant mapped to reason", () => {
+  test("builds a curate-note-link enqueue with a rebuttal and warrant annotation", () => {
     assert.deepEqual(
       buildRelateOperation({
         fromPath: "notes/a.md",
-        relation: "supports",
+        relation: "rebuttal",
         toPath: "notes/b.md",
         warrant: "  B replicates A's cohort.  ",
         roster,
@@ -8890,23 +8915,23 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
         operationId: "curate-note-link",
         payload: {
           source_note_path: "notes/a.md",
-          link_type: "supports",
+          link_type: "rebuttal",
           target_path: "notes/b.md",
-          reason: "B replicates A's cohort.",
+          warrant: "B replicates A's cohort.",
         },
       },
     );
   });
 
-  test("omits reason when the warrant is blank", () => {
+  test("omits warrant when the warrant text is blank", () => {
     const operation = buildRelateOperation({
       fromPath: "notes/a.md",
-      relation: "extends",
+      relation: "warrant",
       toPath: "notes/b.md",
       warrant: "   ",
       roster,
     });
-    assert.ok(!("reason" in operation.payload));
+    assert.ok(!("warrant" in operation.payload));
   });
 
   test("rejects missing endpoints and off-roster relations", () => {
@@ -8920,7 +8945,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     );
     assert.throws(
       () => buildRelateOperation({ fromPath: "a", relation: "refutes", toPath: "b", roster }),
-      /relate: relation must be one of supports, contradicts, extends/,
+      /relate: relation must be one of contradicts, extends, qualifier, rebuttal, supports, warrant/,
     );
     assert.throws(
       () => buildRelateOperation({ fromPath: "a", relation: "supports", toPath: "b", roster: [] }),
@@ -8953,9 +8978,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       throw new Error(`relate: relation must be one of ${relations.join(", ")}`);
     }
     const payload = { source_note_path: source, link_type: relation, target_path: target };
-    const reason = String(warrant || "").trim();
-    if (reason) {
-      payload.reason = reason;
+    const warrantText = String(warrant || "").trim();
+    if (warrantText) {
+      payload.warrant = warrantText;
     }
     return { operationId: "curate-note-link", payload };
   }
@@ -9087,7 +9112,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
               by_loudness: { notice: 2 },
               as_of: "2026-07-29T12:00:00Z",
               missing_required_credentials: [],
-              link_relations: ["supports", "contradicts", "extends"],
+              link_relations: ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"],
               engine_version: "0.1.0-alpha.20",
             },
           };
@@ -9168,7 +9193,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     // 3) Poll updates pill inputs from the summary payload.
     await plugin.poll();
     assert.equal(plugin.openCount, 2);
-    assert.deepEqual(plugin.linkRelations, ["supports", "contradicts", "extends"]);
+    assert.deepEqual(plugin.linkRelations, ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"]);
     assert.ok(plugin.lastPollAt > 0);
     assert.equal(plugin.pillState, "connected");
     assert.ok(plugin.statusBar.children.some((child) => child.text === "Memoria · 2 open"));
@@ -10105,10 +10130,10 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.8: Relate modal — single form, fuzzy pickers, queue edge
 
-> **Execution override:** Execute this after graph ERP-D.5 and follow the
-> 2026-07-29 graph-roster/warrant amendment. Its legacy Warrant copy and
-> `reason` payload path below are drafting history; distinguish the relation
-> from edge-annotation text and emit `payload.warrant`.
+> **Binding sequence:** Execute this after graph ERP-D.5. The Warrant help
+> must say, exactly in substance: “A `warrant` relation links a license note;
+> Warrant text annotates the selected edge.” The builder emits
+> `payload.warrant`, never `payload.reason`.
 
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (require `relate.js`; `relate` command in `onload`; `RelateModal` + `NotePathSuggest` classes appended after `AttentionView`; a `Relate…` button in `AttentionView.render` header)
@@ -10126,6 +10151,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 - [ ] Write the failing test — in `packages/memoria-obsidian/scripts/test.mjs`, next to the `open-attention` assertion add:
   ```js
     assert.ok(plugin.commands.includes("relate"));
+  ```
+  In `tests/test_memoria_obsidian_package.py`, add this source-contract pin to
+  the existing plugin-source test (U3-PLUG.6 already provides
+  `_plugin_js_source()`):
+  ```python
+      assert (
+          "A `warrant` relation links a license note; Warrant text annotates "
+          "the selected edge."
+      ) in _plugin_js_source()
   ```
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected assertion failure on `relate`.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
@@ -10202,7 +10236,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       });
       new Setting(contentEl)
         .setName("Warrant (optional)")
-        .setDesc("Free text hung on the edge; promotion-ready.")
+        .setDesc("A `warrant` relation links a license note; Warrant text annotates the selected edge.")
         .addTextArea((text) => text.onChange((value) => (this.warrant = value)));
       new Setting(contentEl).addButton((button) =>
         button.setButtonText("Queue edge").setCta().onClick(async () => {
@@ -10350,10 +10384,10 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.11: Manual click-through check (what automation cannot reach)
 
-> **Execution override:** Use the 2026-07-29 graph-roster/warrant amendment's
-> private in-process token check and its newly activated-relation completion
-> proof. The historical `grep` command and fixed-three-verb wording below are
-> not executable instructions.
+> **Binding sequence:** Use the private in-process token check and the
+> newly-activated-relation completion proof in the 2026-07-29 graph-roster/
+> warrant amendment above. Never put the per-boot token in a child process's
+> arguments.
 
 **Files:** none (checklist executed against a disposable vault under `test-vault/`; results reported in the PR description, not committed as a file).
 
@@ -10363,11 +10397,14 @@ The Obsidian runtime itself (real spawn, real SecretStorage-free token flow, rea
 
 - [ ] `memoria init test-vault/u3-plug-manual`, open the folder as a vault in desktop Obsidian, accept the trust + community-plugin prompts. **Expect:** pill appears bottom-right as `Memoria · connecting…` then `Memoria · N open` with a green dot within ~5 s (handshake spawned the server; no port/token was ever typed).
 - [ ] Settings → Memoria. **Expect:** an "Engine command" text field (value `memoria`); **no** Server URL field, **no** token field.
-- [ ] `grep -r "$(python -c 'import json,glob,os; p=sorted(glob.glob(os.path.expanduser("~/.local/state/memoria/vaults/*/runtime.json")))[-1]; print(json.load(open(p))["token"])')" test-vault/u3-plug-manual` — **Expect:** zero hits (token never lands inside the vault tree, including `.obsidian/plugins/memoria-obsidian/data.json`).
+- [ ] Run the private in-process handshake token check in the binding amendment
+  above. **Expect:** zero hits (the token never lands inside the vault tree,
+  including `.obsidian/plugins/memoria-obsidian/data.json`), and the token is
+  neither printed nor passed to a child process.
 - [ ] Click the pill. **Expect:** the Attention pane opens on the right: `ATTENTION` header, `N open · as of HH:MM`, rows with loudness dots, ellipsized titles, right-aligned ages; any `block` cards pinned on top.
 - [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block, plain body text, named text action verbs (Resolve primary), then for/against, `tipped by:` + certainty chip, and meta line. Press `Enter` again — collapses. Only one row expands at a time.
 - [ ] Click an evidence link. **Expect:** the vault note opens. Click an action verb (e.g. `Resolve`). **Expect:** toast `Memoria queued resolve-attention: <request id>`; the card leaves the queue on the next poll (≤30 s with the window focused).
-- [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the three server verbs as a segmented control; Queue edge with an empty To shows `relate: To note is required`; a complete submit toasts `Memoria queued curate-note-link: <request id>` and `memoria journal` (or the request log) shows the queued request.
+- [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the server-provided roster (including `rebuttal`) as a segmented control; Queue edge with an empty To shows `relate: To note is required`; submit a `rebuttal`, run its queued job, and verify the resulting edge rather than merely a queued request id.
 - [ ] Kill the server (`memoria serve --stop --workspace test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
 - [ ] Rename the engine binary away (`pipx` venv or PATH shadow), reload Obsidian. **Expect:** gray `Memoria · engine missing`; click shows the install remediation naming the tried command; the vault stays fully readable/editable. Restore the binary, click — recovers.
 - [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --workspace …`; no infinite silent retry.
