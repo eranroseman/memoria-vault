@@ -87,6 +87,11 @@ def note_text(*, title: str = "Alpha note") -> str:
     )
 
 
+def cs3_inbox_cards(vault: Path) -> list[Path]:
+    inbox = vault / "inbox"
+    return sorted(inbox.glob("flag-cs3-*.md")) if inbox.is_dir() else []
+
+
 def events(vault: Path) -> list[dict]:
     return list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
 
@@ -508,6 +513,49 @@ def test_observe_pi_edits_from_status_flags_out_of_band_edit_after_baseline(tmp_
     assert finding["subject_id"] == "notes/foreign.md"
     assert finding["route"] == "ask"
     assert state.file_baseline(vault, "notes/foreign.md")["human_sha256"] == sha256_file(target)
+
+
+def test_observe_sweep_routes_findings_to_durable_inbox_cards(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/witnessed.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Witnessed note").replace(
+        "tags: []\n", "superseded: true\ntags: []\n"
+    )
+    target.write_text(original, encoding="utf-8")
+    git(vault, "add", "--", "notes/witnessed.md")
+    git(vault, "commit", "-m", "seed witnessed note")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert cs3_inbox_cards(vault) == []
+
+    target.write_text(
+        note_text(title="Witnessed note") + "\nChanged out of band.\n", encoding="utf-8"
+    )
+    git(vault, "add", "--", "notes/witnessed.md")
+    git(vault, "commit", "-m", "foreign edit removing restriction key")
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert sorted(finding["kind"] for finding in result["findings"]) == [
+        "foreign-edit",
+        "restriction-key-removed",
+    ]
+    cards = cs3_inbox_cards(vault)
+    assert len(cards) == 2
+    for card in cards:
+        frontmatter = read_frontmatter(card)
+        assert frontmatter["projection"] == "attention"
+        assert frontmatter["attention_kind"] == "flag"
+        assert frontmatter["target"] == "notes/witnessed.md"
+        assert frontmatter["raised_by"] == "workspace-scan"
+        assert frontmatter["loudness"] == "alert"
+
+    rescan = observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted(finding["kind"] for finding in rescan["findings"]) == [
+        "foreign-edit",
+        "restriction-key-removed",
+    ]
+    assert cs3_inbox_cards(vault) == cards  # rescan mints no duplicate cards
 
 
 def test_observe_sweep_seeds_clean_bundle_file_baseline(tmp_path: Path) -> None:

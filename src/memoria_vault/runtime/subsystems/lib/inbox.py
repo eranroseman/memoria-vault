@@ -83,8 +83,13 @@ def write_finding(
     citekey: str = "",
     loudness: str = "alert",
     evidence: str = "",
-) -> Path:
-    """Write a flag/alert card that leads with the finding."""
+    dedupe_slug: str = "",
+) -> Path | None:
+    """Write a flag/alert card that leads with the finding.
+
+    With ``dedupe_slug`` the filename is stable and an already-present card is
+    left untouched — returns None instead of a path.
+    """
     if card_type not in VERIFICATION_TYPES:
         raise ValueError(f"not a verification type: {card_type}")
     if agent_recommendation not in RECOMMENDATION:
@@ -110,7 +115,19 @@ def write_finding(
     body = f"# Finding\n\n{finding}\n"
     if evidence:
         body += f"\n# Evidence\n\n{evidence}\n"
-    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body), loudness=loudness)
+    content = frontmatter_doc(frontmatter, body)
+    if dedupe_slug:
+        inbox = vault / "inbox"
+        inbox.mkdir(parents=True, exist_ok=True)
+        path = inbox / f"{card_type}-{_slug(dedupe_slug)}.md"
+        if path.exists():
+            return None
+        write_text_durable(path, content)
+        loudness_routing.push_card(
+            vault, path, {"title": title, "loudness": loudness, "type": card_type}
+        )
+        return path
+    return _write(vault, card_type, title, content, loudness=loudness)
 
 
 def write_work_prompt(
