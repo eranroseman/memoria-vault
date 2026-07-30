@@ -19,6 +19,7 @@ TEST_LEVELS = {
     "test_operation_context.py": "runtime",
     "test_bases.py": "contract",
     "test_backup_restore.py": "runtime",
+    "test_bulk_import.py": "contract",
     "test_bundle_roots.py": "contract",
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",
