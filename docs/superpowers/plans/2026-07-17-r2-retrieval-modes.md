@@ -22,7 +22,7 @@
 2. **Pipeline staging** (P produces; E consumes): `retrieval_pipeline.PipelineStages` (`add_filter` unique-suffixing repeats, `rows() -> [{stage, count}]` ordered), `excluded_strata(*, unchecked=0, stale=0, gated=0)` (zeros always present), `RERANK_MODE = "off"` rendered in every trace.
 3. **Explore** (E produces): `explore.explore_topic(vault, topic, *, project="", depth=1, versus="") -> dict` — kind groups `{claims, questions, tensions, works, hubs}`, per-entry edges + `grounds_count` (complete evidence-set rows via `block_ref`), `SEED_K = 5`, stage order `universe → [project-slice] → ranked → seed → neighborhood → returned`, per-side payloads + intersection + crossing tensions under `--versus`, `honest_empty` string on zero-return; CLI `memoria explore` with the pinned `test_cli_command_surface_is_exact` edit, both-direction help disambiguation vs `memoria project explore`, and the U1 registry row (grep-first both-branch).
 4. **Span refs + fixtures** (F produces): `span_refs.resolve_span_ref(vault, ref) -> {work_id, anchor, path} | None` (passages `(work_id, anchor)` match; file-scan interim fallback); `tests/retrieval_fixtures.py` loader (`load_retrieval_fixtures(*, spike_mode=False)` refusing unfrozen rows in spike mode), `shape1_bm25_cases` (gold span refs → doc paths for `evaluate_bm25` — doc-level hit@k stated), `score_present_at_depth(payload, gold_ids) -> bool`, `FIXTURES_DIR = tests/fixtures/retrieval/`, the seeded `cases.yaml` (registered, unfrozen, over O1 seed-corpus work ids).
-5. **Execution order:** graph endpoint/path activation → G → P → E → F; P.2 rebases on LOOP.1's checked-search refresh seam, and F.2 precedes LOOP.13's Shape-2 protocol.
+5. **Execution order:** P.1 → P.2 → P.3 → F.1 → F.2 is the no-prose/fixture path; F.3 additionally requires E.1/E.2, graph ERP-A.6, the implemented `explore_topic`, and the O1 seed corpus. Graph endpoint/path activation → G → P → E remains the structural/explore path, but F.1/F.2 do not import graph or explore. P.2 rebases on LOOP.1's checked-search refresh seam, and F.2 precedes LOOP.13's Shape-2 protocol.
 6. **TEST_LEVELS:** `test_graph_sql.py`, `test_explore.py`, `test_retrieval_fixtures.py` — `"contract"`; P extends registered files (exact registrations named in-section).
 
 ---
@@ -78,7 +78,7 @@ final `ask` handler, or score Shape 2 without its declared depth.
    negative test. LOOP.13 then consumes the frozen fixture's topic, depth, and
    metric through `memoria explore`, not `memoria ask`.
 
-6. **Task-level replacement instructions.** The historical G.1/G.2/E.1/P.1/F.2
+6. **Task-level replacement instructions.** The historical G.1/G.2/E.1/P.1/F.1/F.2
    bodies below are superseded where they conflict with this amendment; an
    executor must not combine their raw-ID or local-pipeline snippets with the
    following final contracts.
@@ -2691,7 +2691,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 
 Implements spec §5 (grounded synthesis + the anchor-locator contract — **the composer itself is R1-gated new work and is not built here**; beta.1 ships the contract tests + refusal honesty) and §7 (retrieval-fixture preregistration: the form, the loader with granularity mapping and `present@depth`, freeze semantics, baseline wiring into `evaluate_bm25`) — slices 5 and 7 of §10. Spec: `docs/superpowers/specs/2026-07-17-r2-retrieval-modes-design.md`. All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
 
-**Ordering and independence.** F has **no** dependency on Plan 22 G2S1.1 or this plan's graph_sql/explore sections: nothing here reads `concept_edges`, and `score_present_at_depth` scores a payload dict, not a live explore run. F may execute at any point in the section order. The one cross-section touch is refusal honesty (F.1c), which consumes section P's §4 honest-empty fields with **both-branch tolerance**: the asserts on `pipeline_counts`/`excluded_strata` fire iff the fields are present in the payload, so F is green whether it lands before or after P (P owns the strict, unconditional assertions of those fields). Grep-first note for the implementer: before running F.1, run `grep -n "excluded_strata" src/memoria_vault/runtime/search_index.py` — a hit means P landed first and both branches of the tolerant asserts will execute; an empty grep means only the shipped-core branch runs. Either way the test code below is used exactly as written.
+**Ordering.** F.1 and F.2 have no direct graph/explore dependency: nothing in their no-prose contract, locator, or fixture loader reads `concept_edges`, and `score_present_at_depth` scores a payload dict rather than a live Explore run. They do require the final P.1–P.3 base in the **current worktree**: `runtime/retrieval_pipeline.py` must exist, `search_index.answer_query` must return mandatory `pipeline_counts` and `excluded_strata`, and its final parser form must accept `--trace`. F.3 additionally requires E.1/E.2 and the seeded O1 corpus. This replaces the obsolete pre-P/both-branch-tolerance route; an absent P base is a stop condition, not permission to run the historical snippets.
 
 **Deliberately not built here** (spec §8 + §7's last rule): the extractive composer (R1-gated), any model-synthesis path, and any `scripts/verify` wiring for the freeze check — the loader's own contract test IS the enforcement (spec §7: "enforced by the loader's own contract test, not scripts/verify wiring").
 
@@ -2718,8 +2718,50 @@ Implements spec §5 (grounded synthesis + the anchor-locator contract — **the 
 
 **Interfaces:**
 
-- Consumes: `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="") -> dict` (search_index.py:153-177) and `_answer_from_hits` (:211-249, the shipped no-prose payload); `parse_source_span_ref(ref) -> SourceSpanRef(work_id, page)` (evidence.py:44-49); the `passages` table (schema.sql:199-220) via `state.db_path`/`state.connect` (state.py:460-482); `state.catalog_source(vault, work_id)` (state.py:1603-1612); the interim file-scan rule (`_source_span_pages`, state.py:2676-2686 — the rule is mirrored, the private helper is not imported); one-row-per-doc `_passage_row` (indexing.py:101-131) + `rebuild_passage_index_explicit(vault, *, actor, machine)` (indexing.py:25-31) as the test fixture; `safe_filename` (paths.py:15-17); `tests.helpers.call_with_context`/`copy_memoria_dirs`.
+- Consumes: final-P `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="", trace: bool = False) -> dict` and `_answer_from_hits` (the shipped no-prose payload); `parse_source_span_ref(ref) -> SourceSpanRef(work_id, page)` (evidence.py:44-49); the `passages` table (schema.sql:199-220) via `state.db_path`/`state.connect` (state.py:460-482); `state.catalog_source(vault, work_id)` (state.py:1603-1612); the interim file-scan rule (`_source_span_pages`, state.py:2676-2686 — the rule is mirrored, the private helper is not imported); one-row-per-doc `_passage_row` (indexing.py:101-131) + `rebuild_passage_index_explicit(vault, *, actor, machine)` (indexing.py:25-31) as the test fixture; `safe_filename` (paths.py:15-17); `tests.helpers.call_with_context`/`copy_memoria_dirs`.
 - Produces: `resolve_span_ref(vault: Path, ref: str) -> dict[str, str] | None` (keys `work_id`, `anchor`, `path`) in `memoria_vault.runtime.span_refs` — the one resolution rule the R1-gated composer and F.2's fixture loader share; the `ALLOWED_ANSWER_KEYS` pin any future composer must widen through this contract.
+
+> **Execution amendment (2026-07-30): final-P and safe-grounding handoff.**
+> This supersedes F.1's historical optional-P assertions, permissive resolver,
+> and stale registry context below.
+>
+> 1. **Preflight and stop rule.** Before edits, run `git status --short`,
+>    `git rev-parse --show-toplevel`, `test -f
+>    src/memoria_vault/runtime/retrieval_pipeline.py`, and `rg -n
+>    "excluded_strata|trace: bool = False" src/memoria_vault/runtime/search_index.py`.
+>    All must be present in the
+>    current worktree. On this repair branch they are bootstrap-rendezvous-only,
+>    so stop until that rendezvous; do not cherry-pick prerequisites or create
+>    a second worktree.
+> 2. **Mandatory refusal shape.** Import `retrieval_pipeline`; require the
+>    exact `pipeline_counts` stages `universe`, `ranked`, `returned` and the
+>    complete zeroed `excluded_strata` shape. The honest refusal remains the
+>    single `unknowns` element, asserted as
+>    `retrieval_pipeline.honest_empty(refusal["pipeline_counts"],
+>    refusal["excluded_strata"])` — there is no `honest_empty` answer key.
+> 3. **Checked, canonical span grounding.** `resolve_span_ref` first loads
+>    `state.catalog_source(vault, work_id)` and returns `None` unless its
+>    `check_status` is exactly `"checked"`, before either passages or file
+>    fallback. Its SQL route is restricted to
+>    `path = f"fulltexts/{safe_filename(work_id)}.md"` as well as matching the
+>    work id/anchor; an arbitrary note with a spoofed `work_id` must never
+>    ground a source ref. The file fallback receives the already checked source,
+>    treats path normalization and read failures as `None`, and returns only the
+>    canonical fulltext path.
+> 4. **Additional red pins.** After indexing a checked source with `p0007` and
+>    `p0009`, flip that record in place to `unchecked` and then `quarantined`
+>    without deleting its passage row/blob; both refs resolve `None` in both
+>    states. In a separate fresh fixture, give the checked canonical source only
+>    `p0008` and a checked note declaring the same work id `p0007`, then run
+>    `indexing.rebuild_passage_index_explicit(...)` after creating **both**;
+>    resolving the source's `p0007` ref must be `None`, never the note path.
+> 5. **R1 handoff and registry.** F.1 proves no prose plus a safe locator only.
+>    When an R1 composer introduces prose, it must define sentence/ref shape and
+>    add a test that every sentence ref resolves and is passage-backed; F.1 does
+>    not invent that payload. Re-anchor `TEST_LEVELS` after the final P/G roster
+>    (`test_gate_calibration`, `test_graph_sql`, `test_grounded_synthesis`,
+>    `test_hub_handoff`), run focused tests plus `git diff --check` and the full
+>    verify gate, then stage only its three files explicitly.
 
 - [ ] **Step 1: Write the failing test** — create `tests/test_grounded_synthesis.py`:
 
