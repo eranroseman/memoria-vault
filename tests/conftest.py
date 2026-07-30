@@ -62,6 +62,7 @@ TEST_LEVELS = {
     "test_gap_analysis.py": "runtime",
     "test_gap_freejoin.py": "contract",
     "test_gate_calibration.py": "unit",
+    "test_grounded_synthesis.py": "contract",
     "test_graph_sql.py": "contract",
     "test_hub_handoff.py": "contract",
     "test_identifier_renames.py": "contract",
