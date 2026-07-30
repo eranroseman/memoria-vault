@@ -1242,6 +1242,16 @@ call site.
 
   ```python
   def test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert(tmp_path, monkeypatch):
+      # COV.3 runs before 21.5 removes the legacy best-effort push transport.
+      # Keep this retraction assertion local even if the surrounding environment
+      # happens to configure that transport.
+      for name in (
+          "MEMORIA_TELEGRAM_BOT_TOKEN",
+          "TELEGRAM_BOT_TOKEN",
+          "MEMORIA_TELEGRAM_CHAT_ID",
+          "TELEGRAM_CHAT_ID",
+      ):
+          monkeypatch.delenv(name, raising=False)
       vault = tmp_path / "vault"
       retracted_note = vault / "catalog" / "sources" / "smith2020" / "source.md"
       retracted_note.parent.mkdir(parents=True)
@@ -1287,9 +1297,10 @@ call site.
   the assertions are card-content-based, not filename-based; (2) `RW_ROWS`
   (file lines 13-26) already carries `10.1/Retracted` as a real Retraction, and
   `10.1/Clean` is absent from the CSV so the second source counts as checked
-  but not retracted; (3) no credential environment setup is needed because
-  inbox cards are pull-only after 21.5; (4) `_RW_INDEX` reset mirrors the
-  file's existing cache hygiene.
+  but not retracted; (3) COV.3 deliberately runs before 21.5 removes the
+  legacy best-effort push transport, so the test clears its four credential
+  variables and remains local; (4) `_RW_INDEX` reset mirrors the file's
+  existing cache hygiene.
 - [ ] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
 - [ ] Write the failing test (one-time offline no-CSV warning) below it:
 
