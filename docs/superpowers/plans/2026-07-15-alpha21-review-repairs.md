@@ -1910,10 +1910,12 @@ contract file.
 - Consumes: `run_artifact(vault: Path, artifact_id: str, *, run_id: str | None = None, timeout_s: int = 30, max_output_bytes: int = 1_000_000) -> dict[str, Any]`; `create_code_artifact(vault, project_path, artifact_id, *, title="", purpose="warrant", approved_command, declared_inputs=None, declared_outputs=None, dependency_notes="") -> dict[str, Any]`.
 - Produces: test `test_run_artifact_rejects_unknown_artifact_and_malformed_command`.
 
-- [ ] Write the failing test. This file deliberately does not import pytest, so use the repo's pytest-independent try/except/else idiom (see the PT011 waiver comment in `pyproject.toml`). Pure Python — no `bwrap` needed; both guards raise before any availability check:
+- [ ] Write the failing test. This file deliberately does not import pytest, so use the repo's pytest-independent try/except/else idiom (see the PT011 waiver comment in `pyproject.toml`). Add `monkeypatch` to the test signature and pin the availability seam before the malformed-artifact loop: the stub is inert while both guards are correct, and makes the bite proof deterministic without ever invoking `bwrap`.
 
   ```python
-  def test_run_artifact_rejects_unknown_artifact_and_malformed_command(tmp_path: Path) -> None:
+  def test_run_artifact_rejects_unknown_artifact_and_malformed_command(
+      tmp_path: Path, monkeypatch
+  ) -> None:
       try:
           run_artifact(tmp_path, "missing")
       except ValueError as exc:
@@ -1933,6 +1935,10 @@ contract file.
           "blank-part",
           approved_command=["python3", ""],
       )
+      monkeypatch.setattr(
+          "memoria_vault.runtime.code.runner.execution_availability",
+          lambda vault: Availability("unsupported", "test sandbox unavailable"),
+      )
       for artifact_id in ("empty-argv", "blank-part"):
           try:
               run_artifact(tmp_path, artifact_id)
@@ -1941,7 +1947,7 @@ contract file.
           else:
               raise AssertionError(f"run_artifact executed malformed command {artifact_id!r}")
   ```
-- [ ] Prove the test bites: temporarily change `runner.py:53` from `if not command or not all(isinstance(part, str) and part for part in command):` to `if False:`, run `python -m pytest tests/test_code_artifacts.py::test_run_artifact_rejects_unknown_artifact_and_malformed_command -v` — expect `AssertionError: run_artifact executed malformed command 'empty-argv'` (the malformed command reaches the availability check and comes back as an `unavailable` run record instead of raising). Restore, rerun, expect PASS.
+- [ ] Prove the test bites: temporarily change `runner.py:53` from `if not command or not all(isinstance(part, str) and part for part in command):` to `if False:`, run `python -m pytest tests/test_code_artifacts.py::test_run_artifact_rejects_unknown_artifact_and_malformed_command -v` — expect `AssertionError: run_artifact executed malformed command 'empty-argv'` (the malformed command reaches the stubbed availability check and comes back as an `unavailable` run record instead of raising). Restore, rerun, expect PASS.
 - [ ] Run the whole file: `python -m pytest tests/test_code_artifacts.py -v` — all pass.
 - [ ] Commit:
   ```
