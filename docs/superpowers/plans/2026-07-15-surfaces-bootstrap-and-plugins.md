@@ -11124,7 +11124,7 @@ Steps:
   ```
 
 - [ ] Run to verify failure: `python -m pytest tests/test_engine_api.py::test_engine_read_canvas_forks_reports_edge_diff tests/test_engine_api.py::test_engine_read_canvas_forks_respects_read_scope -v` — expected: `AttributeError: module ... has no attribute 'read_canvas_forks'`.
-- [ ] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas` (`schema_lib` already imported at line 33; `posixpath` at line 8):
+- [ ] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas`: add `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS` alongside the existing imports; `posixpath` is already imported at line 8.
 
   ```python
   def project_canvas_fork_status(vault: Path, project_path: str) -> dict[str, Any]:
@@ -11184,7 +11184,7 @@ Steps:
               continue
           edge_id = str(edge.get("id") or "")
           label = str(edge.get("label") or "").strip().lower()
-          if label not in schema_lib.LINK_RELATIONS:
+          if label not in LINK_RELATIONS:
               unresolved.append({"edge_id": edge_id, "reason": "unknown relation label"})
               continue
           source = files.get(str(edge.get("fromNode")))
@@ -11493,7 +11493,7 @@ Steps:
 TDD deviation, stated honestly: these are characterization pins — the behavior
 already exists (full-file regeneration gives delete-arm; ids are
 `sha256(raw path)` at knowledge.py:1746-1749; labels copy `edge["type"]`
-schema-validated against `LINK_RELATIONS`). The red step below verifies each
+validated against the edges-owned `LINK_RELATIONS`). The red step below verifies each
 test *can* fail by asserting it fails against a deliberately broken mutation,
 then restores.
 
@@ -11563,8 +11563,8 @@ Steps:
           assert node_id == "n-" + hashlib.sha256(rel.encode()).hexdigest()[:12]
 
 
-  def test_canvas_edge_labels_conform_to_schema_link_relations(tmp_path: Path) -> None:
-      from memoria_vault.runtime.subsystems.lib.schema import LINK_RELATIONS
+  def test_canvas_edge_labels_conform_to_link_relations(tmp_path: Path) -> None:
+      from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 
       _md(
           tmp_path / "projects/project-alpha/project.md",
