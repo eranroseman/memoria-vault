@@ -77,9 +77,19 @@ def test_effective_steering_unions_projects_hubs_questions_and_watch(tmp_path: P
     tokens = effective_steering_tokens(tmp_path)
 
     assert tokens == {
-        "testing", "effect", "retrieval", "strengthens", "memory", "cognition",
-        "note", "taking", "handwriting",
-        "does", "offloading", "erode", "recall",
+        "testing",
+        "effect",
+        "retrieval",
+        "strengthens",
+        "memory",
+        "cognition",
+        "note",
+        "taking",
+        "handwriting",
+        "does",
+        "offloading",
+        "erode",
+        "recall",
         "interleaving",
     }
 
