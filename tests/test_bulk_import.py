@@ -1,10 +1,12 @@
-"""Contract tests for multi-entry import splitting (O2 spec section 2, slice 1).
+"""Contract tests for multi-entry import parsing and adapter normalization.
 
 The first test pins the shipped defect the splitters fix: the shipped
 single-entry builder silently truncates a multi-entry BibTeX file to its
 first entry (parse_bibtex_entry stops at the first balanced container).
 The splitters cut the file into per-entry chunks; the shipped builders
-stay untouched and receive one chunk each.
+stay untouched and receive one chunk each. The adapter tests pin the O2
+section-4 type normalization separately, before a later integration seam
+wires it into the bulk driver.
 """
 
 from __future__ import annotations
@@ -13,7 +15,12 @@ import json
 
 import pytest
 
-from memoria_vault.runtime.bulk_import import split_bibtex_entries, split_csl_entries
+from memoria_vault.runtime.bulk_import import (
+    entry_item_type,
+    entry_type_mapped,
+    split_bibtex_entries,
+    split_csl_entries,
+)
 from memoria_vault.runtime.capture import bibtex_capture_payload, csl_capture_payload
 
 TWO_ENTRIES = """@article{alpha2026,
@@ -135,3 +142,127 @@ def test_entry_ref_names_citekey_csl_id_or_entry_index() -> None:
     assert entry_ref("bibtex", "@ not an entry at all", 4) == "entry-4"
     assert entry_ref("csl", '{"id": "beta-csl", "title": ""}', 2) == "beta-csl"
     assert entry_ref("csl", "not json", 2) == "entry-2"
+
+
+def test_entry_item_type_maps_bibtex_and_csl_types_onto_shipped_vocabulary() -> None:
+    cases = (
+        ({"type": "article"}, "article"),
+        ({"type": "inproceedings"}, "article"),
+        ({"type": "incollection"}, "article"),
+        ({"type": "book"}, "book"),
+        ({"type": "techreport"}, "report"),
+        ({"type": "phdthesis"}, "report"),
+        ({"type": "online", "url": "https://example.test/post"}, "webpage"),
+        ({"type": "article-journal"}, "article"),
+        ({"type": "paper-conference"}, "article"),
+        ({"type": "chapter"}, "article"),
+        ({"type": "thesis"}, "report"),
+        ({"type": "post-weblog"}, "webpage"),
+        ({"type": "webpage"}, "webpage"),
+        ({"type": "software"}, "software"),
+        ({"type": "dataset"}, "dataset"),
+        ({"type": "report"}, "report"),
+    )
+
+    for fields, expected in cases:
+        assert entry_item_type(fields) == expected
+        assert entry_type_mapped(fields) is True
+
+
+def test_entry_item_type_agrees_with_shipped_item_type_for_bibtex_aliases() -> None:
+    """Parity pin: the bulk map may not drift from capture.py's _item_type."""
+    from memoria_vault.runtime.capture import _item_type
+
+    bibtex_aliases = (
+        "article",
+        "inproceedings",
+        "conference",
+        "incollection",
+        "book",
+        "inbook",
+        "booklet",
+        "online",
+        "webpage",
+        "www",
+        "dataset",
+        "data",
+        "software",
+        "manual",
+        "techreport",
+        "report",
+        "phdthesis",
+        "mastersthesis",
+    )
+
+    for alias in bibtex_aliases:
+        assert entry_item_type({"type": alias}) == _item_type(alias), alias
+
+
+def test_normalization_covers_the_shipped_csl_raw_type_passthrough() -> None:
+    """The driver will stamp normalized type over the unchanged raw CSL type."""
+    payload = csl_capture_payload(
+        {"id": "x", "type": "article-journal", "title": "T"}, raw_text="{}"
+    )
+
+    assert payload["item_type"] == "article-journal"
+    assert entry_item_type(payload["csl_json"]) == "article"
+
+
+def test_misc_repo_host_url_maps_to_software_and_wins_over_dataset_doi() -> None:
+    fields = {
+        "type": "misc",
+        "url": "https://github.com/org/tool",
+        "doi": "10.5281/zenodo.123",
+    }
+
+    assert entry_item_type(fields) == "software"
+    assert entry_type_mapped(fields) is True
+    assert entry_item_type({"type": "misc", "url": "https://gitlab.com/o/r"}) == "software"
+    assert entry_item_type({"type": "misc", "url": "https://codeberg.org/o/r"}) == "software"
+    assert entry_item_type({"type": "misc", "url": "https://gist.github.com/o/1"}) == "software"
+    csl_fields = {"type": "misc", "URL": "https://github.com/o/r"}
+    assert entry_item_type(csl_fields) == "software"
+    assert entry_type_mapped(csl_fields) is True
+    assert entry_item_type({"type": "misc", "url": "github.com/o/r"}) == "software"
+    assert entry_item_type({"type": "misc", "url": "github.com.evil/o/r"}) == "webpage"
+    assert entry_item_type({"type": "misc", "url": "github.com:thing"}) == "webpage"
+
+
+def test_misc_datacite_doi_prefix_maps_to_dataset() -> None:
+    for prefix in (
+        "10.5281",
+        "10.5061",
+        "10.6084",
+        "10.7910",
+        "10.17632",
+        "10.3886",
+        "10.15468",
+        "10.24432",
+    ):
+        fields = {"type": "misc", "doi": f"{prefix}/fixture"}
+        assert entry_item_type(fields) == "dataset", prefix
+        assert entry_type_mapped(fields) is True, prefix
+    csl_fields = {"type": "misc", "DOI": "10.5061/dryad.abc123"}
+    assert entry_item_type(csl_fields) == "dataset"
+    assert entry_type_mapped(csl_fields) is True
+
+
+def test_misc_with_plain_url_maps_to_webpage() -> None:
+    fields = {"type": "misc", "url": "https://example.org/page"}
+
+    assert entry_item_type(fields) == "webpage"
+    assert entry_type_mapped(fields) is True
+    csl_fields = {"type": "misc", "URL": "https://example.org/page"}
+    assert entry_item_type(csl_fields) == "webpage"
+    assert entry_type_mapped(csl_fields) is True
+
+
+def test_unknown_types_fall_back_to_article_and_are_flagged() -> None:
+    for fields in (
+        {"type": "patent"},
+        {"type": "misc"},
+        {"type": ""},
+        {"type": "misc", "doi": "10.1234/x"},
+    ):
+        assert entry_item_type(fields) == "article", fields
+        assert entry_type_mapped(fields) is False, fields

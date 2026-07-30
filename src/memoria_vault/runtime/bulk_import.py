@@ -1,10 +1,16 @@
-"""Multi-entry splitting for `memoria work import` (O2 spec section 2).
+"""Multi-entry parsing and adapter normalization for `memoria work import`.
 
 The shipped single-entry builders (`bibtex_capture_payload` /
 `csl_capture_payload`, runtime/capture.py) parse exactly one entry and stay
 untouched; these splitters cut a multi-entry file into per-entry chunks that
 feed them. A BibTeX entry whose container never closes is returned as the
 final chunk so the bulk driver can name the failure instead of dropping it.
+
+The O2 section-4 adapter map is deliberately separate from capture.py's
+``_item_type``. That shipped helper silently labels unknown types ``article``;
+this module preserves that fallback while exposing whether it was mapped, so a
+later integration seam can make the guess visible. For ``@misc``, repo-host
+URLs win over DataCite dataset DOI prefixes, which win over ordinary URLs.
 """
 
 from __future__ import annotations
@@ -12,8 +18,40 @@ from __future__ import annotations
 import json
 import re
 from typing import Any
+from urllib.parse import urlparse
 
 from memoria_vault.runtime.capture import bibtex_capture_payload, csl_capture_payload
+
+_ENTRY_TYPE_MAP: dict[str, str] = {
+    "article": "article",
+    "book": "book",
+    "webpage": "webpage",
+    "software": "software",
+    "dataset": "dataset",
+    "report": "report",
+    "inproceedings": "article",
+    "incollection": "article",
+    "conference": "article",
+    "inbook": "book",
+    "booklet": "book",
+    "online": "webpage",
+    "www": "webpage",
+    "data": "dataset",
+    "manual": "software",
+    "techreport": "report",
+    "phdthesis": "report",
+    "mastersthesis": "report",
+    "article-journal": "article",
+    "paper-conference": "article",
+    "chapter": "article",
+    "thesis": "report",
+    "post-weblog": "webpage",
+}
+
+_REPO_HOSTS = ("github.com", "gitlab.com", "codeberg.org")
+_DATASET_DOI_PREFIXES = frozenset(
+    {"10.5281", "10.5061", "10.6084", "10.7910", "10.17632", "10.3886", "10.15468", "10.24432"}
+)
 
 
 def split_bibtex_entries(text: str) -> list[str]:
@@ -99,3 +137,45 @@ def entry_ref(fmt: str, entry_text: str, index: int) -> str:
         if isinstance(item, dict) and str(item.get("id") or "").strip():
             return str(item["id"])
     return f"entry-{index}"
+
+
+def entry_item_type(entry_fields: dict[str, Any]) -> str:
+    """Normalize a BibTeX or CSL entry onto the shipped item-type vocabulary."""
+    return _resolve_item_type(entry_fields)[0]
+
+
+def entry_type_mapped(entry_fields: dict[str, Any]) -> bool:
+    """Whether ``entry_item_type`` was explicit or determined by an approved heuristic."""
+    return _resolve_item_type(entry_fields)[1]
+
+
+def _resolve_item_type(entry_fields: dict[str, Any]) -> tuple[str, bool]:
+    raw_type = str(entry_fields.get("type") or "").strip().lower()
+    if raw_type in _ENTRY_TYPE_MAP:
+        return _ENTRY_TYPE_MAP[raw_type], True
+    if raw_type == "misc":
+        url = _entry_url(entry_fields)
+        if _is_repo_host(url):
+            return "software", True
+        if _doi_prefix(entry_fields) in _DATASET_DOI_PREFIXES:
+            return "dataset", True
+        if url:
+            return "webpage", True
+    return "article", False
+
+
+def _entry_url(entry_fields: dict[str, Any]) -> str:
+    return str(entry_fields.get("url") or entry_fields.get("URL") or "").strip()
+
+
+def _doi_prefix(entry_fields: dict[str, Any]) -> str:
+    doi = str(entry_fields.get("doi") or entry_fields.get("DOI") or "").strip()
+    return doi.partition("/")[0]
+
+
+def _is_repo_host(url: str) -> bool:
+    parsed = urlparse(url)
+    if not parsed.hostname and not parsed.scheme and not url.startswith("//"):
+        parsed = urlparse(f"//{url}")
+    host = (parsed.hostname or "").lower()
+    return any(host == repo or host.endswith(f".{repo}") for repo in _REPO_HOSTS)
