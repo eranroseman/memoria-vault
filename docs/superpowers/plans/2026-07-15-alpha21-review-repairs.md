@@ -2000,7 +2000,7 @@ contract file.
           f"{md}: wikilink [[absent-note|Absent Note]] resolves to no vault note",
       ]
   ```
-- [ ] Prove the test bites: temporarily comment out the `errors.append(...)` at line 108 in `_check_wikilink_aliases`, run `python -m pytest tests/test_workspace_seed_links.py::test_wikilink_detectors_flag_bare_and_broken_links -v` — expect `AssertionError` at the `alias_errors` equality (got `[]`). Restore, rerun, expect PASS.
+- [ ] Prove the test bites: temporarily replace the `errors.append(...)` at line 108 in `_check_wikilink_aliases` with `pass`, run `python -m pytest tests/test_workspace_seed_links.py::test_wikilink_detectors_flag_bare_and_broken_links -v` — expect `AssertionError` at the `alias_errors` equality (got `[]`). Restore, rerun, expect PASS.
 - [ ] Run the whole file: `python -m pytest tests/test_workspace_seed_links.py -v` — both tests pass.
 - [ ] Commit:
   ```
@@ -2036,8 +2036,8 @@ disjoint regions, so either order is safe.
   (E501 is deliberately not enforced in this repo — width is owned by `ruff
   format`, which does not wrap comments.)
 - [ ] Run `python -m pytest tests/test_runtime_state.py tests/test_worker_queue.py -q` — all pass (comment-only change; the Windows lock still works, per the multiprocess lock test).
-- [ ] 11b — in `tests/test_workspace_seed_links.py` delete: line 23 (`YAML_FENCE_RE = ...`), line 24 (`DROPPED_KEYS = ...`), lines 75-79 (`def _check_template_frontmatter(...)` and body), lines 127-130 in `_collect_errors` (`tmpl_dir = SEED / "system/templates"` through the `_check_template_frontmatter(md, errors)` call), and trim the docstring phrase "the vault note templates' fenced frontmatter, and" (lines 5-6) so the module description matches what it still checks. Leave the `"templates" in md.parts` skip at line 139 untouched (it guards the wikilink checks generally, not the retired check).
-- [ ] Run `python -m pytest tests/test_workspace_seed_links.py -v` — passes; then `grep -n "YAML_FENCE_RE\|DROPPED_KEYS\|_check_template_frontmatter\|tmpl_dir" tests/test_workspace_seed_links.py` — no output.
+- [ ] 11b — in `tests/test_workspace_seed_links.py` delete: line 23 (`YAML_FENCE_RE = ...`), line 24 (`DROPPED_KEYS = ...`), lines 75-79 (`def _check_template_frontmatter(...)` and body), lines 127-130 in `_collect_errors` (`tmpl_dir = SEED / "system/templates"` through the `_check_template_frontmatter(md, errors)` call), and replace the two docstring lines with `references to published docs and vault wikilink discipline (link text is the page title, and every [[note]] resolves to a real seed note).` so the module description remains grammatical and matches what it still checks. Leave the `"templates" in md.parts` skip at line 139 untouched (it guards the wikilink checks generally, not the retired check).
+- [ ] Run `python -m pytest tests/test_workspace_seed_links.py -v` — passes; then `! rg -n 'YAML_FENCE_RE|DROPPED_KEYS|_check_template_frontmatter|tmpl_dir' tests/test_workspace_seed_links.py` — no output and a successful absence check.
 - [ ] Run `python scripts/verify` — full gate green.
 - [ ] Commit:
   ```
