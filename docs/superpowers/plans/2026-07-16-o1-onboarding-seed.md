@@ -20,7 +20,7 @@
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Manifest** (M.1 produces): `src/memoria_vault/product/seed_corpus/manifest.yaml`, rows `{id, title, identifier, license, license_evidence, fetch{method,url}, role, repo?}`; `load_seed_manifest() -> list[dict]` / `parse_seed_manifest(text) -> list[dict]` in `memoria_vault.product.seed_corpus`; the eight pinned work_ids: `chen-2018-undesirable-difficulty, moreira-2019-retrieval-practice, settles-2016-spaced-repetition, morrison-2020-offloading, ose-askvik-2020-handwriting, schmidt-2018-luhmann-card-index, mirzababaei-2021-toulmin-agent, asai-2024-openscholar`.
-2. **Seed install** (M.3 produces): engine `seed_install(vault, rows=None, *, opener=None, context) -> {admitted, skipped, failed, notices, telemetry}` (ValueError iff admitted+skipped both empty); worker operation id `seed-install` (PI-only); CLI `memoria seed install --workspace <path>` — the exact backticked path the D-section docs cite (doc-claims gate: M.3 merges before D).
+2. **Seed install** (M.3 produces): engine `seed_install(vault, rows=None, *, opener=None, authorize_url, context) -> {admitted, skipped, failed, notices, telemetry}` (ValueError iff admitted+skipped both empty); worker operation id `seed-install` (PI-only) supplies the mandatory policy authorizer; CLI `memoria seed install --workspace <path>` — the exact backticked path the D-section docs cite (doc-claims gate: M.3 merges before D).
 3. **Steering module** (S produces): `memoria_vault.runtime.steering` — `relevance_tokens`, `steering_overrides(vault) -> (watch, mute)`, `effective_steering_tokens(vault) -> set[str]`, `effective_steering_provenance(vault) -> [{token, sources}]`; source labels `project:<rel> | hub:<rel> | question:<rel> | watch`; the reseeded two-section `steering.md` (`## Watch for` / `## Muted`).
 4. **Onboarding-step helper** (T produces, M.3 consumes): `memoria_vault.runtime.onboarding_steps` — `emit_onboarding_step(vault, step) -> str | None` (never raises into callers), `emit_onboarding_step_once`, `has_onboarding_step`, `emit_first_answer_if_seed_grounded(vault, answer, *, manifest_loader=None)`; `ONBOARDING_STEPS = {init-done, onboard-done, project-framed, seed-installed, first-answer}`; `NATIVE_EVENT_FIELDS['onboarding-step'] = {'step'}` added to the I1-owned table.
 5. **Cross-plan order tolerance:** I1's `runtime/telemetry.py` + v19 table are a **hard block for T.1 and M.3** (grep-first stop-note). Once T.1 has landed, each emitter is non-gating (an insertion failure returns `None` and the command proceeds), but a first seed installation must not silently omit `seed-installed`. The surfaces plan's BOOT-D owns `memoria onboard` — T's onboard-done and D.4's `Start here.md` repoint carry both-branch steps (edit if landed, amend the surfaces plan text if not).
@@ -416,6 +416,111 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task M.2: The per-method fetch/resolve layer (`resolve_fetch`)
 
+> **Execution amendment — policy-bound resolver and pre-rendezvous landing
+> (2026-07-30).** This supersedes M.2's original interface, its permissive
+> `https://` check, the XML `noqa`, the archive selection loop, and the stated
+> eight-test pass count. It also replaces M.3's former bare resolver call and
+> broad `allowed_network: [https://]` manifest policy.
+>
+> 1. **Branch boundary.** M.2 may land on this repair branch before the
+>    bootstrap rendezvous: it creates only `runtime/seed_install.py`,
+>    `tests/test_seed_install.py`, and its `TEST_LEVELS` registration. Do not
+>    recreate M.1's manifest, loader, or package data. Because this branch does
+>    not yet have `test_seed_manifest.py`, insert
+>    `"test_seed_install.py": "contract",` immediately before
+>    `test_seeded_errors.py`; after rendezvous preserve the merged sorted order
+>    `test_seed_install` → `test_seed_manifest` → `test_seeded_errors` and run
+>    both seed suites. M.3 remains blocked on M.1 plus T/I1; reconcile the M.2
+>    completion record at that rendezvous rather than copying bootstrap work.
+> 2. **Mandatory authority seam.** Produce
+>    `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None
+>    = None, authorize_url: Callable[[str], None]) -> bytes`. There is no
+>    default or allow-all authorizer. `_fetch_bytes` must canonicalize/validate
+>    the target, call `authorize_url(canonical_url)` **before** the opener, and
+>    name that URL in every refusal. Apply this to the initial PDF/record URL
+>    and to every PMC XML `href` after its permitted `ftp://` → `https://`
+>    rewrite. Canonicalization is fail-closed: `urlsplit` must yield lowercase
+>    `https`, a nonempty lowercase host, no username/password/fragment, and no
+>    non-default port; reject a raw `%25`, then perform one bounded percent
+>    decode and reject literal or decoded `.`/`..` path segments and encoded
+>    `/` or `\\` separators before reconstructing the URL passed to policy.
+>    That catches double-encoding without an attacker-controlled decode loop
+>    and closes the raw string-prefix policy's `%2e%2e` path escape. Malformed
+>    or unsupported-method
+>    rows refuse before the opener. Catch an authorizer `PermissionError` and
+>    turn it into a URL-naming `ValueError`; likewise normalize redirect,
+>    opener/read, XML, and archive transport failures to `ValueError` without
+>    swallowing programmer errors. The call-time `_default_opener` must use a
+>    no-redirect handler (a 3xx becomes that same URL-naming refusal), so an
+>    authorized origin cannot silently send the request to an unauthorized or
+>    HTTP target.
+> 3. **Bound untrusted bytes.** Define explicit module constants
+>    `MAX_FETCH_BYTES = 32 * 1024 * 1024`, `MAX_TAR_MEMBERS = 128`,
+>    `MAX_TAR_TOTAL_BYTES = 32 * 1024 * 1024`, and
+>    `MAX_PDF_MEMBER_BYTES = 32 * 1024 * 1024`. Read every response with a
+>    `MAX_FETCH_BYTES + 1` limit and reject overflow without trusting a
+>    `Content-Length`. For a TGZ, iterate the archive as a stream (never
+>    `getmembers()`), reject the 129th member, cumulatively sum each declared
+>    regular-member size before extraction and reject a total above
+>    `MAX_TAR_TOTAL_BYTES`, reject a member whose declared size exceeds
+>    `MAX_PDF_MEMBER_BYTES`, and read each candidate with a
+>    `MAX_PDF_MEMBER_BYTES + 1` limit. Scan all permitted members before
+>    accepting it, then reject anything other than exactly one regular `.pdf`
+>    member. Never extract to disk; normalize tar/decompression/read errors to
+>    `ValueError` naming the package URL.
+> 4. **Safe PMC XML.** Decode the record as strict UTF-8 before inspection or
+>    parsing; a non-UTF-8 declaration/payload is a URL-naming `ValueError`.
+>    Then reject text containing `<!DOCTYPE` or `<!ENTITY` (case-insensitive)
+>    before `ElementTree.fromstring`; catch `ElementTree.ParseError` and turn
+>    malformed XML into the same error shape. Do not retain the S314 waiver:
+>    stdlib ElementTree expands internal entities, so the former fixed-endpoint
+>    rationale was false. This UTF-8 boundary prevents UTF-16 entity markup
+>    from bypassing the raw-token guard.
+>    Prefer a `format="pdf"` link if both `pdf` and `tgz` are present; otherwise
+>    use the sole TGZ route.
+> 5. **RED contract.** Keep the existing direct-PDF, arXiv, PMC-PDF, PMC-TGZ,
+>    FTP rewrite, service-error, non-PDF, and no-PDF-member cases, supplying a
+>    explicit local allow callback in **every invocation** (including refusal
+>    tests), so a missing argument never hides the contract under test. Extend
+>    the fake response's `read` to accept an optional limit. Add red tests that
+>    prove: malformed HTTPS/no-host/credentials and an unsupported method
+>    refuse before the opener; literal/encoded/double-encoded dot paths and
+>    encoded separators refuse before both authorizer and poisoned opener; the
+>    default opener is resolved at call time; the authorizer sees both PMC URLs
+>    and a denial prevents the corresponding request; a disallowed PMC link,
+>    redirect, malformed/DTD XML (including a UTF-16 DTD payload), transport
+>    failure, malformed TGZ, oversized response/member, two individually valid
+>    members exceeding a monkeypatched small aggregate cap, a 129th archive
+>    member, and ambiguous multi-PDF archive each raise a URL-naming
+>    `ValueError`. No test opens the network.
+> 6. **M.3 consumer rule.** Extend the future engine seam to
+>    `seed_install(..., opener=None, authorize_url: Callable[[str], None],
+>    context)` and make its worker branch pass
+>    `lambda url: require_allowed_network(policy, url)`. Replace the permissive
+>    manifest policy with exactly these trusted HTTPS path prefixes:
+>
+>    ```yaml
+>    allowed_network:
+>    - https://www.ncbi.nlm.nih.gov/pmc/utils/oa/
+>    - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/
+>    - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/
+>    - https://www.frontiersin.org/articles/
+>    - https://aclanthology.org/
+>    - https://sociologica.unibo.it/article/download/
+>    - https://export.arxiv.org/pdf/
+>    ```
+>
+>    Pin the worker's policy-to-authorizer handoff: a resolver spy must receive
+>    a callback that refuses a URL outside the listed prefixes, never an
+>    allow-all callback. In the M.3 worker test, monkeypatch `resolve_fetch` to
+>    capture its callback, run one manifest-row fixture through the
+>    `seed-install` operation, and assert that callback refuses
+>    `https://outside.test/denied.pdf` before any opener call. Every direct
+>    engine test supplies a local explicit authorizer. O2 A.2 is not allowed to
+>    call this resolver from its CLI-side
+>    adapter: its imported URLs need their own policy-bearing worker route,
+>    specified by that plan's matching amendment before A.2 starts.
+
 **The capture seam, read first (required by this task).** `memoria work add --pdf` builds a `capture-pdf-source` payload from a *local* file (cli.py:877-895: `raw_pdf_base64` = base64 of `path.read_bytes()`), which the worker decodes and hands to the shipped local-PDF seam (worker.py:1276-1314). That seam's exact signature (runtime/capture.py:461-476):
 
 ```python
@@ -448,7 +553,7 @@ It extracts page text via `_extract_pdf_pages` (capture.py:698-720, optional PyM
 **Interfaces:**
 
 - Consumes: `urllib.request.urlopen` (default opener only; never called in tests — bandit S310 is globally ignored for fixed-base URLs, pyproject.toml:122); stdlib `tarfile`, `io`, `xml.etree.ElementTree`.
-- Produces: `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None) -> bytes` — `opener(url)` must return a context-manager response exposing `.read() -> bytes`; `None` means the module-level `_default_opener` (urlopen with a 30 s timeout), resolved at call time so tests and the M.3 CLI test can monkeypatch `memoria_vault.runtime.seed_install._default_opener`. PMC handling: `oa.fcgi` XML record → prefer the `format="pdf"` link, else the `format="tgz"` package (PDF member extracted from the tarball); `ftp://` hrefs are rewritten to `https://` on the same host; `<error>` records and non-`%PDF-` payloads raise `ValueError` naming the URL.
+- Produces: `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None, authorize_url: Callable[[str], None]) -> bytes` — `opener(url)` must return a context-manager response exposing `.read(limit: int | None = None) -> bytes`; `None` resolves the module-level no-redirect `_default_opener` at call time so tests and M.3's CLI test can monkeypatch it. Every request first validates and authorizes its HTTPS URL; PMC handling prefers a `format="pdf"` link, otherwise consumes the single `format="tgz"` package PDF; XML, byte, and archive limits are binding as stated in the execution amendment.
 
 - [ ] **Step 1: Write the failing tests** — create `tests/test_seed_install.py`:
 
@@ -474,7 +579,7 @@ class _FakeResponse:
     def __init__(self, payload: bytes) -> None:
         self._payload = payload
 
-    def read(self) -> bytes:
+    def read(self, _limit: int | None = None) -> bytes:
         return self._payload
 
     def __enter__(self) -> _FakeResponse:
@@ -499,6 +604,10 @@ def _opener(responses: dict[str, bytes]):
 
 def _poisoned_opener(url: str) -> _FakeResponse:
     raise AssertionError(f"this run must not fetch: {url}")
+
+
+def _allow_url(_url: str) -> None:
+    return None
 
 
 def _pdf_url_row() -> dict:
@@ -555,7 +664,7 @@ def test_resolve_fetch_pdf_url_downloads_the_pinned_pdf() -> None:
     row = _pdf_url_row()
     opener = _opener({row["fetch"]["url"]: PDF_BYTES})
 
-    assert resolve_fetch(row, opener=opener) == PDF_BYTES
+    assert resolve_fetch(row, opener=opener, authorize_url=_allow_url) == PDF_BYTES
     assert opener.calls == [row["fetch"]["url"]]
 
 
@@ -564,7 +673,7 @@ def test_resolve_fetch_arxiv_pdf_downloads_the_pinned_version() -> None:
     row["fetch"] = {"method": "arxiv-pdf", "url": "https://export.arxiv.org/pdf/2411.14199v1"}
     opener = _opener({"https://export.arxiv.org/pdf/2411.14199v1": PDF_BYTES})
 
-    assert resolve_fetch(row, opener=opener) == PDF_BYTES
+    assert resolve_fetch(row, opener=opener, authorize_url=_allow_url) == PDF_BYTES
 
 
 def test_resolve_fetch_pmc_oa_follows_the_pdf_link_and_rewrites_ftp() -> None:
@@ -578,7 +687,7 @@ def test_resolve_fetch_pmc_oa_follows_the_pdf_link_and_rewrites_ftp() -> None:
         }
     )
 
-    assert resolve_fetch(row, opener=opener) == PDF_BYTES
+    assert resolve_fetch(row, opener=opener, authorize_url=_allow_url) == PDF_BYTES
     assert opener.calls == [row["fetch"]["url"], https_href]
 
 
@@ -598,7 +707,7 @@ def test_resolve_fetch_pmc_oa_extracts_the_pdf_member_from_a_tgz_package() -> No
         }
     )
 
-    assert resolve_fetch(row, opener=opener) == PDF_BYTES
+    assert resolve_fetch(row, opener=opener, authorize_url=_allow_url) == PDF_BYTES
 
 
 def test_resolve_fetch_pmc_oa_rejects_a_package_without_a_pdf_member() -> None:
@@ -611,7 +720,7 @@ def test_resolve_fetch_pmc_oa_rejects_a_package_without_a_pdf_member() -> None:
         }
     )
     try:
-        resolve_fetch(row, opener=opener)
+        resolve_fetch(row, opener=opener, authorize_url=_allow_url)
     except ValueError as exc:
         assert "no PDF member" in str(exc)
     else:
@@ -623,7 +732,7 @@ def test_resolve_fetch_pmc_oa_surfaces_service_errors() -> None:
     xml = b'<OA><error code="idIsNotOpenAccess">not in the OA subset</error></OA>'
     opener = _opener({row["fetch"]["url"]: xml})
     try:
-        resolve_fetch(row, opener=opener)
+        resolve_fetch(row, opener=opener, authorize_url=_allow_url)
     except ValueError as exc:
         assert "idIsNotOpenAccess" in str(exc)
     else:
@@ -634,7 +743,7 @@ def test_resolve_fetch_rejects_non_pdf_bytes() -> None:
     row = _pdf_url_row()
     opener = _opener({row["fetch"]["url"]: b"<html>login wall</html>"})
     try:
-        resolve_fetch(row, opener=opener)
+        resolve_fetch(row, opener=opener, authorize_url=_allow_url)
     except ValueError as exc:
         assert "not a PDF" in str(exc)
     else:
@@ -645,7 +754,7 @@ def test_resolve_fetch_requires_https() -> None:
     row = _pdf_url_row()
     row["fetch"]["url"] = "http://insecure.test/paper.pdf"
     try:
-        resolve_fetch(row, opener=_opener({}))
+        resolve_fetch(row, opener=_opener({}), authorize_url=_allow_url)
     except ValueError as exc:
         assert "https" in str(exc)
     else:
@@ -789,8 +898,8 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 
-- Consumes: `stage_pdf_source(...)` (exact signature in M.2's header; runtime/capture.py:461-476); `state.catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None` (runtime/state.py:1603-1612); `load_seed_manifest() -> list[dict[str, Any]]` (M.1); `resolve_fetch(row, *, opener=None) -> bytes` (M.2); `iter_markdown(vault, skip_dirs=None) -> Iterator[Path]` (runtime/vaultio.py:217-226) and `read_frontmatter(path) -> dict[str, Any]` (runtime/vaultio.py:66-67); `validate_operation_context(vault, context)` / `OperationContext` (runtime/trusted_writer.py, as used at capture.py:94); `engine_api.run_operation(...)` via `cli._enqueue_and_run(args, operation_id, payload)` (cli.py:2087-2098); `_csl_json` shape (cli.py:2544-2550, mirrored); **section T seam (required):** `emit_onboarding_step(vault: Path, step: str) -> str | None` from `memoria_vault.runtime.onboarding_steps`; run `grep -rn "def emit_onboarding_step" src/memoria_vault/` first and re-anchor if T placed it elsewhere; empty grep ⇒ STOP and land T.1 first.
-- Produces: `seed_install(vault: Path, rows: list[dict[str, Any]] | None = None, *, opener: Callable[[str], Any] | None = None, context: OperationContext) -> dict[str, Any]` returning `{"admitted": list[str], "skipped": list[str], "failed": list[dict[str, str]] (each {"id", "error"}), "notices": list[str], "telemetry": {"status": "emitted", "event_id": str} | {"status": "unavailable"}}` — raises `ValueError` (⇒ failed job ⇒ CLI exit 1) iff `admitted + skipped` is empty; worker operation id `"seed-install"` (PI-only, payload `{}`); CLI `memoria seed install --workspace <path> [--json|--quiet] [--actor pi|agent]` — the tutorial section (chapter 02 rewiring) and LOOP.13's amended time-to-first-answer block cite this exact CLI path, so this task must merge before any docs task backticks it (doc-claims gate sequencing).
+- Consumes: `stage_pdf_source(...)` (exact signature in M.2's header; runtime/capture.py:461-476); `state.catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None` (runtime/state.py:1603-1612); `load_seed_manifest() -> list[dict[str, Any]]` (M.1); `resolve_fetch(row, *, opener=None, authorize_url) -> bytes` (M.2); `require_allowed_network(policy, url)` (operations.py — the worker turns this into the mandatory callback); `iter_markdown(vault, skip_dirs=None) -> Iterator[Path]` (runtime/vaultio.py:217-226) and `read_frontmatter(path) -> dict[str, Any]` (runtime/vaultio.py:66-67); `validate_operation_context(vault, context)` / `OperationContext` (runtime/trusted_writer.py, as used at capture.py:94); `engine_api.run_operation(...)` via `cli._enqueue_and_run(args, operation_id, payload)` (cli.py:2087-2098); `_csl_json` shape (cli.py:2544-2550, mirrored); **section T seam (required):** `emit_onboarding_step(vault: Path, step: str) -> str | None` from `memoria_vault.runtime.onboarding_steps`; run `grep -rn "def emit_onboarding_step" src/memoria_vault/` first and re-anchor if T placed it elsewhere; empty grep ⇒ STOP and land T.1 first.
+- Produces: `seed_install(vault: Path, rows: list[dict[str, Any]] | None = None, *, opener: Callable[[str], Any] | None = None, authorize_url: Callable[[str], None], context: OperationContext) -> dict[str, Any]` returning `{"admitted": list[str], "skipped": list[str], "failed": list[dict[str, str]] (each {"id", "error"}), "notices": list[str], "telemetry": {"status": "emitted", "event_id": str} | {"status": "unavailable"}}` — raises `ValueError` (⇒ failed job ⇒ CLI exit 1) iff `admitted + skipped` is empty; worker operation id `"seed-install"` (PI-only, payload `{}`) supplies the policy authorizer; CLI `memoria seed install --workspace <path> [--json|--quiet] [--actor pi|agent]` — the tutorial section (chapter 02 rewiring) and LOOP.13's amended time-to-first-answer block cite this exact CLI path, so this task must merge before any docs task backticks it (doc-claims gate sequencing).
 
 - [ ] **Step 1: Grep-first hard precondition** — run `grep -rn "def emit_onboarding_step" src/memoria_vault/`. If it hits, note the module and use it below. If empty, STOP: land I1 T.1–T.2 and this plan's T.1 before M.3; do not implement a guarded missing-helper path.
 
@@ -833,7 +942,12 @@ def _patch_pdf_pages(monkeypatch) -> None:
     )
 
 
+def _allow_seed_url(_url: str) -> None:
+    return None
+
+
 def _seed_install(vault: Path, **kwargs):
+    kwargs.setdefault("authorize_url", _allow_seed_url)
     return call_with_context(seed_install, vault, **kwargs)
 
 
@@ -1040,6 +1154,7 @@ def seed_install(
     rows: list[dict[str, Any]] | None = None,
     *,
     opener: Callable[[str], Any] | None = None,
+    authorize_url: Callable[[str], None],
     context: OperationContext,
 ) -> dict[str, Any]:
     """Install the seed corpus through the shipped local-PDF capture seam.
@@ -1062,7 +1177,7 @@ def seed_install(
             skipped.append(work_id)
             continue
         try:
-            raw = resolve_fetch(row, opener=opener)
+            raw = resolve_fetch(row, opener=opener, authorize_url=authorize_url)
             stage_pdf_source(
                 vault,
                 work_id,
@@ -1173,7 +1288,13 @@ allowed_paths:
 - .memoria/blobs/source-content/
 - .memoria/journal/
 allowed_network:
-- https://
+- https://www.ncbi.nlm.nih.gov/pmc/utils/oa/
+- https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/
+- https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/
+- https://www.frontiersin.org/articles/
+- https://aclanthology.org/
+- https://sociologica.unibo.it/article/download/
+- https://export.arxiv.org/pdf/
 prompt_version: seed-install.v1
 io_schema:
   input: seed_manifest
@@ -1202,8 +1323,13 @@ these fetches.
 ```python
     if operation_id == "seed-install":
         from memoria_vault.runtime.seed_install import seed_install
+        from memoria_vault.runtime.operations import require_allowed_network
 
-        return seed_install(vault, context=context)
+        return seed_install(
+            vault,
+            context=context,
+            authorize_url=lambda url: require_allowed_network(policy, url),
+        )
 ```
 
 (The returned dict has no `status` key, so `_run_claimed_job`'s `job.update({..., **result})` at worker.py:228 stays honest.)

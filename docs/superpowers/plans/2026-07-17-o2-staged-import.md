@@ -25,10 +25,10 @@
 
 1. **`runtime/bulk_import.py` module seams:** P.1's `split_bibtex_entries(text) -> list[str]` / `split_csl_entries(text) -> list[str]`; P.2's `build_entry_payload(fmt, entry_text) -> dict` (section A's interception point) and `entry_ref(fmt, entry_text, index) -> str` (citekey / CSL id / `entry-<index>` — the worklist item-ref vocabulary).
 2. **Driver ownership:** P.2/P.3 produce only the baseline capture summary `{ok, run_id (uuid4 hex), format, entries_total, admitted: [work_id…], skipped: [work_id…], failed: [{ref, error}…], enrichment_jobs, index_refresh_s}`. The new I.1 integration task owns adapter application, duplicate/unmapped judgment rows, and the call into the W seams; `admitted`/`skipped` use the **catalog's** work_id vocabulary (SPEC GAP P-1), zero-rows-PRESENT is the failure exit, and keys remain `import-<run_id>-<work_id>`.
-3. **Adapter seams** (A produces): `_ENTRY_TYPE_MAP`, `entry_item_type(entry_fields) -> str` (shipped vocabulary `article/book/webpage/software/dataset/report`), `entry_type_mapped(entry_fields) -> bool`, `entry_fetch(entry_fields, identifiers) -> {method,url} | None` (PMCID→`pmc-oa`, arXiv→`arxiv-pdf`, `.pdf` URL→`pdf-url`, else None), `entry_capture_request(payload, fetch, *, mapped, opener)`, `detect_identifier_collisions(vault, work_id, identifiers) -> [{other_work_id, field}]`, `is_doi_collision_error(error) -> bool`.
+3. **Adapter seams** (A produces): `_ENTRY_TYPE_MAP`, `entry_item_type(entry_fields) -> str` (shipped vocabulary `article/book/webpage/software/dataset/report`), `entry_type_mapped(entry_fields) -> bool`, `entry_fetch(entry_fields, identifiers) -> {method,url} | None` (PMCID→`pmc-oa`, arXiv→`arxiv-pdf`, `.pdf` URL→`pdf-url`, else None), `entry_capture_request(payload, fetch, *, mapped)`, `capture-remote-pdf-source` (PI-only worker operation; the sole O2 caller of O1's policy-bound resolver), `detect_identifier_collisions(vault, work_id, identifiers) -> [{other_work_id, field}]`, `is_doi_collision_error(error) -> bool`.
 4. **Worklist seams** (W produces): `emit_worklist(…, raised_by="worklists", loudness="notice")` passthrough (defaults = shipped behavior); `emit_import_worklist(vault, *, run_id, rows, entries_total, admitted) -> dict | None` (None on zero judgment rows — no worklist, no card); worklist id `import-<run_id>`; rows ranked duplicates → retraction → failed → unmapped.
 5. **Telemetry** (W produces): `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event` (typed ints, `format ∈ {bibtex, csl}`) in `engine/empirical_events.py`; dispatch branch in I1's `record_telemetry_event`; the chosen I.1 finalizer emits exactly one row per run.
-6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener)` is consumed by section A and I.1 (grep-first; if absent, land O1 M.2 first). I1's `runtime/telemetry.py` + seeded `decision-rules.yaml` are consumed by W.2/W.3 and then I.1 (grep-first; W.3 **blocks** with a stop-note if the I1 seed is absent). Section P consumes neither.
+6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener, authorize_url)` is consumed only inside A.2's policy-bearing `capture-remote-pdf-source` worker operation (grep-first; if absent, land O1 M.2 first). I1 calls the pure `entry_capture_request` and never fetches in the CLI process. I1's `runtime/telemetry.py` + seeded `decision-rules.yaml` are consumed by W.2/W.3 and then I.1 (grep-first; W.3 **blocks** with a stop-note if the I1 seed is absent). Section P consumes neither.
 7. **Execution order:** P.1 → P.2 → P.3 → A.1 → A.2 → A.3 → W.1 → W.2 → I.1 → W.3 → W.4. I.1 is blocked on issue #1517's finalization decision; its insertion prevents P.2/P.3 from silently claiming to own later seams. The worker `capture-bibtex-source` auto-enrichment (a different surface) is **not** flipped (SPEC GAP P-5).
 8. **TEST_LEVELS:** `test_bulk_import.py: "contract"` (new, registered once in P.1; A and W extend it and other already-registered files with no further conftest change).
 
@@ -1031,9 +1031,9 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 This section implements spec §4 (per-type adapter matrix: the normalization dict + heuristics onto the **shipped** `item_type` vocabulary, and the fetch-synthesis rule over the O1 resolve layer) and spec §5 (duplicates: identifier-exact detection, the `doi UNIQUE` failure classifier, the same-DOI structural skip) — implementation slices 3–4 of `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md`.
 
-This section extends P.1's existing `src/memoria_vault/runtime/bulk_import.py` with pure seams; **no `cli.py` or `capture.py` change happens here** (single-entry parse/admission stays pinned, per slice 1). I.1 is the only task allowed to wire the adapter seams into the entry loop. The normalization point is a decided contract: it stamps `payload["item_type"] = entry_item_type(...)` after the unchanged shipped builders (`bibtex_capture_payload` capture.py:295-329 / `csl_capture_payload` capture.py:332-364), because the shipped CSL builder passes the raw CSL type straight through (`capture.py:358`, e.g. `article-journal`), which is not the shipped catalog vocabulary. Shipped `_item_type` (capture.py:843-854) is **not duplicated as logic and not called from product code**: it silently maps every unknown type to `article`, which is exactly the behavior the §4 flag must not inherit. Instead the bulk map is one explicit dict (the spec's "the mapping ships as code; this table is its documentation"), and a parity test pins its BibTeX rows to `_item_type` so the two can never drift.
+This section extends P.1's existing `src/memoria_vault/runtime/bulk_import.py` with pure seams; **no `cli.py` or `capture.py` change happens here** (single-entry parse/admission stays pinned, per slice 1). A.2 additionally creates one policy-bearing worker operation for remote PDF bytes; it reuses `stage_pdf_source` unchanged. I.1 is the only task allowed to wire the adapter seams into the entry loop. The normalization point is a decided contract: it stamps `payload["item_type"] = entry_item_type(...)` after the unchanged shipped builders (`bibtex_capture_payload` capture.py:295-329 / `csl_capture_payload` capture.py:332-364), because the shipped CSL builder passes the raw CSL type straight through (`capture.py:358`, e.g. `article-journal`), which is not the shipped catalog vocabulary. Shipped `_item_type` (capture.py:843-854) is **not duplicated as logic and not called from product code**: it silently maps every unknown type to `article`, which is exactly the behavior the §4 flag must not inherit. Instead the bulk map is one explicit dict (the spec's "the mapping ships as code; this table is its documentation"), and a parity test pins its BibTeX rows to `_item_type` so the two can never drift.
 
-Cross-plan preconditions honored here: the plan-level I1 gate is carried by the plan header (this section emits no telemetry and does not consume `record_telemetry_event`); Task A.2 consumes O1's `resolve_fetch(row, *, opener)` (`runtime/seed_install.py`, O1 plan Task M.2 — merged but possibly unexecuted), so A.2 opens with a grep-first dependency check and lands O1 M.2 first if the symbol is absent.
+Cross-plan preconditions honored here: the plan-level I1 gate is carried by the plan header (this section emits no telemetry and does not consume `record_telemetry_event`); Task A.2 consumes O1's `resolve_fetch(row, *, opener, authorize_url)` only inside its new policy-bearing worker operation (`runtime/seed_install.py`, O1 plan Task M.2 — merged but possibly unexecuted), so A.2 opens with a grep-first dependency check and lands O1 M.2 first if the symbol is absent. The CLI-side adapter stays a pure request builder.
 
 Line references verified at `51395f15`; re-anchor by symbol if drifted.
 
@@ -1323,19 +1323,167 @@ git commit -m "feat(bulk-import): normalization dict + heuristics onto shipped i
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution amendment — policy-bearing remote-PDF route (2026-07-30).**
+> This replaces A.2's Files block and Steps 1–5 in their entirety; do **not**
+> execute the historical blocks below. It also replaces A.2's CLI-side
+> `resolve_fetch` call, its `opener` parameter, its `capture-pdf-source` byte
+> payload, and the "no `capture.py`/worker change" claim in the A-section
+> preamble. Imported fetch descriptors are untrusted input; a pure adapter
+> cannot authorize or execute them.
+>
+> 1. **Preflight and ownership.** Grep for O1's final
+>    `resolve_fetch(... authorize_url ...)` interface. If it is absent, stop
+>    and land the amended O1 M.2 first. Do not add an allow-all callback or a
+>    direct CLI fetch. `entry_capture_request(payload, fetch, *, mapped=True)`
+>    remains pure: it imports no fetch module, accepts no opener, and for an
+>    allowed article/report fetch returns `("capture-remote-pdf-source",
+>    request)` with `request["fetch"]` and a separate `request["capture"]`
+>    object containing the existing work/title/description/resource/item-type/
+>    identifier/CSL/citekey fields. It must not contain `raw_pdf_base64`.
+> 2. **New worker operation.** Create the packaged
+>    `capture-remote-pdf-source` operation, a `worker.py` dispatch helper, and
+>    its floor-registry entry. It is `PROTECTED_OPERATION_ACTORS` **PI-only**:
+>    metadata supplied by an imported file cannot cause an agent-actor network
+>    request. Its capability manifest declares source-content/journal paths and
+>    exactly the same finite HTTPS policy as O1 M.3:
+>
+>    ```yaml
+>    allowed_network:
+>    - https://www.ncbi.nlm.nih.gov/pmc/utils/oa/
+>    - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/
+>    - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/
+>    - https://www.frontiersin.org/articles/
+>    - https://aclanthology.org/
+>    - https://sociologica.unibo.it/article/download/
+>    - https://export.arxiv.org/pdf/
+>    ```
+>
+>    The helper validates the nested request fields, calls
+>    `resolve_fetch({"id": work_id, "title": title, "fetch": fetch},
+>    authorize_url=lambda url: require_allowed_network(policy, url))`, then
+>    supplies the resulting bytes to `stage_pdf_source` with the same metadata
+>    contract as `capture-pdf-source`. The resolver's validation, no-redirect,
+>    XML, and byte/archive limits therefore apply before any catalog write.
+>    An arbitrary imported `.pdf` host is a named per-row policy failure, never
+>    a silent metadata downgrade or payload-controlled allowance; a PI-managed
+>    allowlist design is separate future work.
+> 3. **RED tests.** Replace the old base64/opener assertions with pure-request
+>    assertions for article PMC/arXiv/direct-PDF and direct-PDF report routes;
+>    all metadata/reference-only tiers still return `capture-source`, and
+>    webpage remains the existing `capture-url-source` request. Add focused
+>    worker tests that inject canned resolver bytes, prove the resolver receives
+>    the operation-policy authorizer, prove a host outside the seven prefixes
+>    refuses before its opener, and prove an `agent` floor/job is refused before
+>    the helper. Pin the exact seven-prefix policy in `test_capabilities.py`,
+>    update the stale operation-count comments in `floor_lib.py` and
+>    `test_floor_coverage.py`, and use no live network.
+> 4. **I.1 handoff.** I.1 continues to call the pure request builder and
+>    enqueue its returned operation under P's run-scoped key. It may not resolve
+>    bytes itself; a remote-PDF failure is the worker job's per-row failure for
+>    the existing run summary. Its offline CLI test monkeypatches
+>    `seed_install._default_opener`, never injects an opener through the CLI.
+>    Update the ingest and operation-roster docs at
+>    `docs/reference/pipelines-and-io/ingest.md`,
+>    `docs/reference/commands-and-transports/system-actions.md`,
+>    `docs/reference/commands-and-transports/system-actions-operations.md`, and
+>    `docs/reference/commands-and-transports/operations.md`. Re-run M.2's
+>    resolver suite, A.2's adapter and worker tests, `git diff --check`, the
+>    scoped security-diff review, and the full verify gate before explicitly
+>    staging the listed files.
+>
+> **Replacement steps — use these instead of A.2 Steps 0–5 below.** The legacy
+> code fences remain only for historical context; they must not be copied or
+> executed.
+>
+> 1. **Preflight + RED.** Run `test -f
+>    src/memoria_vault/runtime/seed_install.py` and `rg -n
+>    "def resolve_fetch|authorize_url" src/memoria_vault/runtime/seed_install.py`;
+>    either failure is a stop condition. Replace the legacy adapter tests with
+>    pure-router assertions: PMCID/arXiv/direct-PDF article routes and a
+>    direct-PDF report route return `capture-remote-pdf-source` with exact
+>    nested `{"fetch": {"method", "url"}, "capture": {...}}` data, no
+>    `raw_pdf_base64`, and no `opener` argument or import. Preserve the existing
+>    metadata/reference-only and webpage assertions. Add worker tests using a
+>    monkeypatched M.2 default opener: an allowed fixture PDF is staged through
+>    the existing capture seam; an outside-seven-prefix URL is refused before
+>    that opener; an `agent` actor/floor entry is refused before the helper.
+>    Pin the exact capability policy in `tests/test_capabilities.py`.
+> 2. **Run RED.** Run
+>    `python -m pytest tests/test_bulk_import.py tests/test_worker_capture_jobs.py
+>    tests/test_capabilities.py tests/test_floor_coverage.py -v`. Expect missing
+>    remote-operation/dispatch/roster coverage or the obsolete direct-fetch
+>    expectations to fail; do not use live network.
+> 3. **Implement the policy boundary.** Keep `entry_fetch`'s synthesis rules,
+>    but remove `base64`, `Callable`, `safe_filename`, every `opener` parameter,
+>    and the `resolve_fetch` import from `bulk_import.py`. Its eligible route is
+>    exactly:
+>
+>    ```python
+>    return (
+>        "capture-remote-pdf-source",
+>        {
+>            "fetch": {"method": str(fetch["method"]), "url": str(fetch["url"])},
+>            "capture": {
+>                "work_id": work_id,
+>                "title": str(payload.get("title") or work_id),
+>                "description": str(payload.get("description") or ""),
+>                "resource": resource or str(fetch["url"]),
+>                "item_type": item_type,
+>                "identifiers": payload.get("identifiers"),
+>                "csl_json": payload.get("csl_json"),
+>                "citekey": str(payload.get("citekey") or ""),
+>                "provider_coverage": str(payload.get("provider_coverage") or "partial"),
+>            },
+>        },
+>    )
+>    ```
+>
+>    In `worker.py`, validate both nested objects, require `work_id`, `title`,
+>    and `description`, and require object-shaped `identifiers`/`csl_json` when
+>    present; obtain bytes solely from `resolve_fetch` and never validate or
+>    read `raw_pdf_base64`. Add a PI-only
+>    `_run_capture_remote_pdf_source_operation(vault, payload, policy, context)`
+>    that calls M.2 with `authorize_url=lambda url:
+>    require_allowed_network(policy, url)`, then calls `stage_pdf_source` and
+>    returns `_source_result`, deriving `raw_filename` there as
+>    `f"{safe_filename(work_id)}.pdf"` and forwarding `provider_coverage`.
+>    Add the dispatch branch, the operation manifest with the seven prefixes in
+>    the preceding amendment, and the deterministic agent-refused floor entry.
+>    Leave `capture-pdf-source` and the broad HTML `capture-url-source`
+>    unchanged.
+> 4. **Docs + GREEN.** Describe this internal, policy-bound remote-PDF route
+>    and its seven-prefix limit in the four listed reference pages; it is not a
+>    new CLI command. Update the operation-count comments. Re-run the focused
+>    suites plus `python -m pytest tests/test_seed_install.py -v` until green.
+> 5. **Verify + commit.** Run `git diff --check`, the scoped security-diff
+>    review, and `python scripts/verify`; then stage and commit explicitly:
+>
+>    ```bash
+>    git add -- src/memoria_vault/runtime/bulk_import.py src/memoria_vault/runtime/worker.py src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md tests/test_bulk_import.py tests/test_worker_capture_jobs.py tests/test_capabilities.py tests/floor_lib.py tests/test_floor_coverage.py docs/reference/pipelines-and-io/ingest.md docs/reference/commands-and-transports/system-actions.md docs/reference/commands-and-transports/system-actions-operations.md docs/reference/commands-and-transports/operations.md
+>    git commit -m "feat(bulk-import): route imported PDFs through a policy-bound worker"
+>    ```
+
 ### Task A.2: Fetch synthesis + admission-tier routing (`entry_fetch`, `entry_capture_request`)
 
 **Files:**
 
 - Modify `src/memoria_vault/runtime/bulk_import.py`
+- Modify `src/memoria_vault/runtime/worker.py` (PI gate, policy-bearing remote-PDF dispatch)
+- Create `src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md`
 - Modify `tests/test_bulk_import.py`
+- Modify `tests/test_worker_capture_jobs.py`, `tests/test_capabilities.py`, `tests/floor_lib.py`, and `tests/test_floor_coverage.py`
+- Modify `docs/reference/pipelines-and-io/ingest.md`, `docs/reference/commands-and-transports/system-actions.md`, `docs/reference/commands-and-transports/system-actions-operations.md`, and `docs/reference/commands-and-transports/operations.md`
 
 **Interfaces:**
 
-- Consumes: **O1's** `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None) -> bytes` (`src/memoria_vault/runtime/seed_install.py`, O1 plan Task M.2 — the row's `fetch` dict is `{method, url}` with methods `{pmc-oa, pdf-url, arxiv-pdf}`; the opener returns a context-manager response exposing `.read()`; non-PDF payloads and OA-service errors raise `ValueError`). The shipped worker payload contracts this routing emits into: `capture-pdf-source` (worker.py:1276-1314 → `stage_pdf_source` capture.py:461-494), `capture-url-source` (worker.py:1249-1273 → `_store_url_source` capture.py:420-458, `item_type="webpage"` at :447), `capture-source` passthrough (worker.py:1131-1169 → `stage_capture_payload` capture.py:367-395). `safe_filename` (runtime/paths.py:15).
-- Produces: `entry_fetch(entry_fields: dict[str, Any], identifiers: dict[str, Any]) -> dict[str, str] | None` (the §4 fetch-synthesis rule: PMCID → `pmc-oa` `oa.fcgi` URL; arXiv id → `arxiv-pdf` `export.arxiv.org/pdf/<id>`; entry URL ending `.pdf` → `pdf-url`; **bare DOI → None = metadata-only** — no DOI→PMCID conversion exists in beta.1) and `entry_capture_request(payload: dict[str, Any], fetch: dict[str, str] | None, *, mapped: bool = True, opener: Callable[[str], Any] | None = None) -> tuple[str, dict[str, Any]]` (the tier router: returns the `(operation_id, request_payload)` pair the driver enqueues). Decided seam contract: **a fetch failure raises** (the `ValueError` from `resolve_fetch` propagates); the driver's per-row try/except names the row failed (spec §2 "capture refusal") and iteration continues — no silent downgrade to metadata-only.
+- Consumes: **O1's** policy-bound `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None, authorize_url: Callable[[str], None]) -> bytes` (`src/memoria_vault/runtime/seed_install.py`, O1 plan Task M.2 — the row's `fetch` dict is `{method, url}` with methods `{pmc-oa, pdf-url, arxiv-pdf}`; malformed/non-PDF/OA-service bytes raise `ValueError`). Only A.2's new worker operation calls it, using `require_allowed_network(policy, url)` as the authorizer. The routing emits into `capture-remote-pdf-source` (new policy-bearing worker path), the existing `capture-url-source` (webpage), or `capture-source` (passthrough). `safe_filename` remains part of the remote-PDF worker's raw-filename contract.
+- Produces: `entry_fetch(entry_fields: dict[str, Any], identifiers: dict[str, Any]) -> dict[str, str] | None` (the §4 fetch-synthesis rule: PMCID → `pmc-oa` `oa.fcgi` URL; arXiv id → `arxiv-pdf` `export.arxiv.org/pdf/<id>`; entry URL ending `.pdf` → `pdf-url`; **bare DOI → None = metadata-only** — no DOI→PMCID conversion exists in beta.1) and pure `entry_capture_request(payload: dict[str, Any], fetch: dict[str, str] | None, *, mapped: bool = True) -> tuple[str, dict[str, Any]]` (the tier router: returns the `(operation_id, request_payload)` pair the driver enqueues, without fetching). A remote fetch failure is the worker job's per-row failure and iteration continues — no silent downgrade to metadata-only.
 
 Tier policy encoded (spec §4 table): `article` may use any synthesized fetch; `report` only a `pdf-url` fetch (text "via a direct PDF URL when present"); `webpage` with a resource routes to the shipped `capture-url-source` path (which re-derives the same work_id — `_url_work_id`, capture.py:1019-1023, is also `_bibtex_default_work_id`'s URL branch at capture.py:671-672, so the §2 catalog pre-check converges; the shipped path does not carry citekey/csl metadata, accepted as shipped); `book` stays metadata-only (shipped behavior, unchanged); `software`/`dataset` are reference-only; unmapped rows (`mapped=False`) are reference-only regardless of identifiers.
+
+> **Historical A.2 blocks — do not execute.** The remaining Step 0–5 prose and
+> code fences were retained only to preserve the pre-amendment design record.
+> The replacement Steps 1–5 above are the sole executable instructions.
 
 - [ ] **Step 0: O1 dependency check (grep-first)** — `grep -n "def resolve_fetch" src/memoria_vault/runtime/seed_install.py 2>/dev/null`. **If the file or symbol is absent** (O1 plan merged but unexecuted — true at `51395f15`), land O1 plan Task M.2 first (`docs/superpowers/plans/2026-07-16-o1-onboarding-seed.md` — it creates `resolve_fetch` plus `tests/test_seed_install.py`), then return here.
 
