@@ -1051,7 +1051,9 @@ inputs, a named output spec path, and a follow-up `superpowers:writing-plans`
 step. The section closes with the acceptance task (LOOP.13).
 
 **Task order** (encodes the empirical plan's constraints):
-LOOP.1–LOOP.3 (determined code, no ordering constraint among them) →
+LOOP.1 and LOOP.2 may run independently. LOOP.3 has a binding external
+dependency chain: surfaces BOOT-B.5 → Alpha22 COST.1–.5 → LOOP.3; COST.1–.3
+are atomic, so LOOP.3 never consumes an intermediate string-return seam. Then
 LOOP.4 (I1 design gate — highest sequencing priority, before any ingestion) →
 LOOP.5 (O1 — licensing decision inside it precedes seed-corpus selection) →
 LOOP.6 (O2 — explicitly **after** LOOP.4's I1 wiring is implemented) →
@@ -1599,6 +1601,91 @@ readiness block in the result so the caller sees what is missing.
 
 ### Task LOOP.3: E1 — token-ceiling circuit breaker at the single live-dispatch seam
 
+> **Execution override — canonical model-call handoff (2026-07-29):** Execute
+> this task only after surfaces BOOT-B.5 and Alpha22 COST.1–.5. The raw
+> `result.usage()` calls, string-return assertions, unchanged-fake wording,
+> and independent-order claim below are drafting history. LOOP.3 consumes the
+> canonical COST result, never the raw SDK result, and changes no secret
+> resolution or durable telemetry policy.
+
+The shared result is:
+
+```python
+MODEL_CALL_RESULT = {
+    "text": str,
+    "usage": {
+        "input_tokens": int,
+        "output_tokens": int,
+        "cache_read_tokens": int,
+        "cache_write_tokens": int,
+        "total_tokens": int,
+    } | None,
+    "cost_usd": float | None,
+    "elapsed_s": float,
+}
+```
+
+**Binding implementation and proof requirements:**
+
+1. Keep `_require_token_budget(...)` immediately before dispatch. COST.1 has
+   already called the SDK's `result.usage()` exactly once and built `usage`
+   immediately after successful `run_sync`; insert the one ledger charge
+   directly after that handoff and before `text` is read or empty/digest output
+   is rejected. Thus a successful but invalid/empty returned response consumes
+   budget; a `run_sync` exception does not. LOOP must never call
+   `result.usage()` a second time.
+2. Replace the old raw-result recorder with a canonical-data helper, for
+   example (the private name may stay `_record_token_usage`):
+
+   ```python
+   def _record_token_usage(usage: dict[str, Any] | None, settings: dict[str, Any]) -> None:
+       total = usage.get("total_tokens") if isinstance(usage, dict) else None
+       if isinstance(total, int) and not isinstance(total, bool) and total >= 0:
+           charge = total
+       else:
+           fallback = settings.get("max_tokens")
+           charge = (
+               fallback
+               if isinstance(fallback, int)
+               and not isinstance(fallback, bool)
+               and fallback > 0
+               else 0
+           )
+       _TOKEN_LEDGER["total_tokens"] += charge
+   ```
+
+   A valid zero is charged as zero; `max_tokens` is a fallback only for
+   absent/malformed usage. `cost_usd` is nullable telemetry, never a breaker
+   input. The shared five-field `usage` dict is forwarded once to COST.4's
+   existing `model_call` journal rows; this task adds no sink or journal row.
+3. Update every direct assertion to `result["text"]` and import COST's
+   `tests.helpers.LIVE_USAGE` total (`25`), not the stale `max_tokens=64`
+   fallback. Add
+   focused tests for: reported total preferred over max-tokens; absent and
+   malformed usage falling back; valid zero not falling back; an empty response
+   charging before its `RuntimeError`; a `run_sync` exception leaving the
+   ledger unchanged; exactly one SDK `usage()` harvest; and deterministic-
+   fixture execution never entering the live breaker.
+4. Add `tests/test_cli_doctor_eval.py` to this task's Files and a live-doctor
+   proof: reset `_TOKEN_LEDGER`, set a ceiling equal to the fake total, run one
+   `doctor --check runner --live` diagnostic dispatch (it succeeds and spends
+   the budget), then run it again. The second report has
+   `runner_live_dispatch: false` and the explicit `model token ceiling
+   reached` diagnostic. Assert no `model_call` journal row exists in the
+   disposable workspace for either diagnostic. Doctor is a live resource
+   consumer, not durable model-call provenance.
+5. Run and stage the amended contract tests together:
+
+   ```bash
+   python -m pytest tests/test_token_ceiling.py tests/test_cli_doctor_eval.py \
+       tests/test_operations.py tests/test_runtime_gate_replay.py -v
+   ```
+
+   Stage `src/memoria_vault/runtime/operations.py`, `tests/test_token_ceiling.py`,
+   `tests/test_cli_doctor_eval.py`, and `tests/conftest.py` in the LOOP.3
+   commit. Do not stage Alpha22 files here; COST's atomic tranche and journal
+   changes have already landed.
+
 Consolidation E1 unit delivered here: the deterministic slice of
 `cost-discipline` (token ceiling + circuit breaker). **Seam verification (files
 read):** every live model call in the codebase funnels through
@@ -1614,10 +1701,10 @@ design gates' "pre-registered decision rules" plumbing — they are *not* built
 here.
 
 Mechanism: a process-wide cumulative token ledger. Each completed call charges
-the model-reported `result.usage().total_tokens` (pydantic-ai 2.9.1, verified:
-`RunUsage.total_tokens` exists and `AgentRunResult.usage` is callable), falling
-back to the call's `max_tokens` setting when the runner reports no usage (the
-test fake). When `MEMORIA_MODEL_TOKEN_CEILING` is set and spent ≥ ceiling, the
+the canonical COST `usage["total_tokens"]` already harvested from the SDK
+exactly once (pydantic-ai 2.9.1's `RunUsage.total_tokens`); it falls back to
+the call's `max_tokens` setting only when that canonical field is absent or
+malformed, never when a valid value is zero. When `MEMORIA_MODEL_TOKEN_CEILING` is set and spent ≥ ceiling, the
 **next** dispatch refuses before any network call (classic breaker: the
 in-flight call completes and is charged; the circuit opens for subsequent
 calls). Unset/empty ceiling = breaker off (default), preserving current
@@ -1629,7 +1716,9 @@ behavior; turning it on is one env var in the researcher's live profile.
   helpers inserted directly above it)
 - Modify: `tests/conftest.py:18-120` (`TEST_LEVELS` registration)
 - Create: `tests/test_token_ceiling.py`
-- Test: `tests/test_token_ceiling.py`
+- Modify: `tests/test_cli_doctor_eval.py` (live diagnostic spends the same
+  breaker budget but creates no durable `model_call` event)
+- Test: `tests/test_token_ceiling.py`, `tests/test_cli_doctor_eval.py`
 
 **Interfaces:**
 - Produces:
@@ -1642,13 +1731,60 @@ behavior; turning it on is one env var in the researcher's live profile.
     `"model token ceiling reached"` raised by `_pydantic_ai_chat` before
     dispatch. (Internal helpers `_token_ceiling() -> int`,
     `_require_token_budget(operation_id: str) -> None`,
-    `_record_token_usage(result: Any, settings: dict[str, Any]) -> None` are
+    `_record_token_usage(usage: dict[str, Any] | None, settings: dict[str, Any]) -> None` are
     private.)
-- Consumes: `_load_pydantic_ai_openai()` (`operations.py:987`) unchanged;
-  `tests.helpers.patch_pydantic_ai` (`tests/helpers.py:362`) unchanged — its
-  fake result has no `usage` attribute, exercising the fallback.
+- Consumes: Alpha22's canonical `MODEL_CALL_RESULT`; `_load_pydantic_ai_openai()`
+  unchanged; COST's upgraded `tests.helpers.patch_pydantic_ai` fake and
+  `tests.helpers.LIVE_USAGE`, which expose one `usage()` harvest and canonical
+  total. A malformed or absent *canonical* usage dict exercises the fallback
+  without calling the SDK.
 
 **Steps:**
+
+> **Executable replacement (2026-07-29):** The canonical requirements above
+> replace every raw-SDK/string-return sample in the archived draft below. Do
+> not copy or execute that draft. In particular, LOOP.3 must never call
+> `result.usage()` or pass a raw SDK result to `_record_token_usage`.
+
+- [ ] **Write the canonical failing tests.** Create
+  `tests/test_token_ceiling.py` with the existing `POLICY`/keyless `RUNNER`, a
+  ledger reset helper, and `LIVE_USAGE, patch_pydantic_ai` imported from
+  `tests.helpers`. Assert `result["text"]`, and use
+  `LIVE_USAGE["total_tokens"] == 25` rather
+  than `max_tokens=64`, for the ceiling-trip and unset-ceiling paths. Add
+  focused tests that call the canonical-data helper directly for reported
+  total (preferred), absent/malformed total (fall back), valid zero (charge
+  zero), and boolean values (malformed; never silently treated as integers).
+  Make the fake's empty output raise while the ledger has already charged 25
+  and `seen["usage_calls"] == 1`. Exercise a deterministic-fixture operation
+  under a ceiling and assert that it neither dispatches nor changes the
+  ledger. Separately monkeypatch an agent whose `run_sync` raises; assert the
+  wrapped `pydantic-ai model request failed` error, zero ledger change, and no
+  `usage()` harvest.
+
+- [ ] **Add the runner and doctor regressions.** Register
+  `test_token_ceiling.py` as `unit`. In `tests/test_cli_doctor_eval.py`, reset
+  the ledger and set the ceiling to 25; the first `doctor --check runner
+  --live` dispatch succeeds and spends 25, while the second reports
+  `runner_live_dispatch: false` and `model token ceiling reached`. Assert
+  neither diagnostic creates a `model_call` JSONL row in the disposable
+  workspace.
+
+- [ ] **Implement at the canonical seam.** Add the constant, ledger,
+  `_token_ceiling`, and `_require_token_budget` helpers as scoped below.
+  Preserve COST.1's one `run_usage` harvest. Put
+  `_require_token_budget(...)` immediately before dispatch; immediately after
+  COST.1 creates `usage`, call `_record_token_usage(usage, settings)` before
+  inspecting `text`. Use the canonical-data helper above, including its
+  boolean rejection. Do not add a journal sink or alter BOOT-B.5 key handling.
+
+- [ ] **Verify and commit the replacement.** First run
+  `python -m pytest tests/test_token_ceiling.py -v` red, then green; run the
+  combined contract command in the binding requirements, `python scripts/verify`,
+  and commit exactly the four files listed there.
+
+<details>
+<summary>Superseded legacy draft — retained only as review history; do not execute or copy these steps</summary>
 
 - [ ] Write the failing tests. Create `tests/test_token_ceiling.py`:
 
@@ -1840,7 +1976,7 @@ behavior; turning it on is one env var in the researcher's live profile.
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/operations.py tests/test_token_ceiling.py tests/conftest.py
+  git add src/memoria_vault/runtime/operations.py tests/test_token_ceiling.py tests/test_cli_doctor_eval.py tests/conftest.py
   git commit -m "feat(runtime): process-wide token-ceiling circuit breaker for live model dispatch
 
   E1 cost-discipline slice: MEMORIA_MODEL_TOKEN_CEILING caps cumulative
@@ -1850,6 +1986,8 @@ behavior; turning it on is one env var in the researcher's live profile.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+</details>
 
 ---
 

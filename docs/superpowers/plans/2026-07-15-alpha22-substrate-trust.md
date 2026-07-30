@@ -19,7 +19,7 @@
 1. **`MIGRATIONS` shape is G1's definition** (G1.1 Produces): `state.MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]]` — key = from_version, value = `(from_version + 1, ordered steps)`; applied sequentially in `_init` BEFORE `executescript(_schema_sql())`, each step list in one explicit `BEGIN`/`COMMIT` (no `with conn:`), `user_version` bumped per step; unregistered version (incl. future) raises. G2S1.2/.3 and S12.2 adapt their migration entries to THIS shape (their sections assumed variants; the mechanics are otherwise unchanged).
 2. **Schema-version allocation (serialized):** G1 ships `MIGRATIONS` empty, `SCHEMA_VERSION` stays 12 → G2S1.2 takes 12→13 (edge_id/attributes) → G2S1.3 takes 13→14 (reverse indexes) → S12.2 takes **14→15** (purpose enum; renumber its written 13→14 accordingly, body unchanged) — G3/ULID work starts at 16. Each schema-touching task updates, in the same commit: its `MIGRATIONS` entry, the `schema.sql` DDL + trailing `PRAGMA user_version`, `SCHEMA_VERSION` in state.py, and the version-pinned tests (`tests/test_schema_version.py:14-17`, `tests/test_schema_v10.py:39-41`, `tests/test_query_substrate.py:31`).
 3. **Closure helper:** S35.3's Produces additionally includes `state.evidence_item_closure(rows_by_id: Mapping[str, Mapping[str, Any]], evidence_id: str) -> list[tuple[str, tuple[str, ...]]]` — (item, path) pairs for non-set items reachable through nested sets, path = tuple of nested ev-ids (empty = direct), cycle-safe, unknown set refs yield nothing. This is the exact interface S68.2 consumes; it is a mechanical exposure of S35.3's DFS reachability.
-4. **Execution order:** G1 → G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1–.6; COST.1–.5 is independent and may run any time EXCEPT COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
+4. **Execution order:** G1 → G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1–.6. The cost chain is external-dependency ordered: surfaces BOOT-B.5 → COST.1–.5 → Alpha23 LOOP.3. COST.1–.3 are one atomic return-contract tranche; do not merge or cherry-pick a state where a caller still expects a `str`. COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
 5. **Removed symbols** (S35 manifest) no task may reference after their removal: `_derived_evidence_type`, `_draft_evidence_type`, `_evidence_items_resolve`, `_disposed_evidence_ids`.
 
 ---
@@ -3876,7 +3876,7 @@ Implements `docs/superpowers/specs/2026-07-15-model-call-cost-telemetry-design.m
 - No new dependencies (`genai-prices` ships with the pinned
   `pydantic-ai-slim>=2.0`; installed pydantic-ai is 2.9.1 and its `RunUsage`
   carries exactly `input_tokens`/`output_tokens`/`cache_read_tokens`/
-  `cache_write_tokens`; `ModelResponse.cost()` raises `LookupError` on
+  `cache_write_tokens`/`total_tokens`; `ModelResponse.cost()` raises `LookupError` on
   unpriced models — both verified against the repo venv). No
   `SCHEMA_VERSION` bump: this is an additive journal-event payload change,
   and no JSON schema constrains `model_call` event fields (verified — no
@@ -3924,27 +3924,169 @@ ranges; the refs below are the real, current ones):
 - New doc terms `cost_usd` / `elapsed_s` pass cspell against the repo config
   (verified via `npx cspell stdin`) — no `project-words.txt` change.
 
+### Plan-reconciliation amendment — canonical model-call result, key perimeter, and breaker handoff (2026-07-29)
+
+This approved amendment supersedes the legacy fallback block in COST.1, the
+individual-merge/known-broken-intermediate instructions in COST.1–.3, and
+every four-field live-usage fixture below. It is shared with Alpha23 LOOP.3
+and the BOOT-B.5 secret-perimeter task.
+
+1. **One ordered, atomic handoff.** The required order is BOOT-B.5 →
+   COST.1–.5 → LOOP.3. Implement COST.1–.3 as one atomic TDD tranche: write
+   the combined red tests, make the public callers accept the dict in the same
+   change, run them green, and make one combined commit. Do not merge,
+   cherry-pick, or call a COST.1-only state green—the three current callers
+   otherwise receive a dict where they need text. COST.4 follows that tranche
+   and remains serialized with S68.3; COST.5 follows COST.4. LOOP.1/.2 remain
+   independent of this chain.
+2. **Canonical result, harvested once.** For every real live call, the shared
+   result is exactly, in notation:
+
+   ```python
+   MODEL_CALL_RESULT = {
+       "text": str,
+       "usage": {
+           "input_tokens": int,
+           "output_tokens": int,
+           "cache_read_tokens": int,
+           "cache_write_tokens": int,
+           "total_tokens": int,
+       } | None,
+       "cost_usd": float | None,
+       "elapsed_s": float,
+   }
+   ```
+
+   Immediately after a successful `agent.run_sync`, COST.1 calls
+   `result.usage()` exactly once, constructs all five integer fields (including
+   the SDK's `total_tokens`), and retains that dict before checking empty
+   output or digest validity. The deterministic fixture has `usage=None`,
+   `cost_usd=None`, and `elapsed_s=0.0`. `cost_usd` is a nullable best-effort
+   estimate from the bundled price snapshot (`LookupError -> None`); it is
+   never fabricated and is not a token-breaker input. The design spec is
+   amended with this fifth, SDK-reported usage field so the journal and LOOP
+   consumers name the same contract.
+
+   The COST.1 replacement uses this one harvest immediately after the
+   `run_sync` `try` block; LOOP.3 later inserts its charge immediately after
+   the assignment, before the existing text check:
+
+   ```python
+   run_usage = result.usage()
+   usage = {
+       "input_tokens": int(run_usage.input_tokens),
+       "output_tokens": int(run_usage.output_tokens),
+       "cache_read_tokens": int(run_usage.cache_read_tokens),
+       "cache_write_tokens": int(run_usage.cache_write_tokens),
+       "total_tokens": int(run_usage.total_tokens),
+   }
+   ```
+3. **BOOT-B.5 owns secrets.** COST.1 replaces the same function B.5 edits, so
+   it must preserve B.5's complete key-env-only resolver and failure—not treat
+   B.5 as an external precondition:
+
+   ```python
+   key_env = runner.get("key_env")
+   api_key = None
+   if isinstance(key_env, str) and key_env:
+       api_key = os.environ.get(key_env)
+       if not api_key:
+           provider = str(runner.get("provider") or "runner")
+           raise RuntimeError(
+               f"provider {provider} requires {key_env} - "
+               f"set it: memoria secrets set {key_env}"
+           )
+   ```
+
+   `key_env: null` is keyless-legal. Never reintroduce
+   `MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, or implicit
+   `KILOCODE_API_KEY` fallback in either `operations.py` or `cli.py`; B.5's
+   error remains the sole missing-required-key behavior.
+4. **One durable provenance record.** COST.4 forwards the exact canonical
+   `usage` dict (five fields for real calls; null for fixtures), `cost_usd`,
+   and `elapsed_s` into the existing three `model_call` journal literals.
+   It adds no sink, no second journal event, and no altered doctor record.
+   Define this shared live-call fixture in `tests.helpers` and use it wherever
+   a shared fake or imported expected value is useful (equivalent inline
+   journal assertions may spell out the same five fields):
+
+   ```python
+   LIVE_USAGE = {
+       "input_tokens": 17,
+       "output_tokens": 5,
+       "cache_read_tokens": 2,
+       "cache_write_tokens": 1,
+       "total_tokens": 25,
+   }
+   ```
+
+   Have `patch_pydantic_ai` return that usage, expose an incrementing
+   `seen["usage_calls"]`, and make its price method retain the existing
+   `LookupError`/`Decimal` cases. COST.1 asserts one harvest; COST.2/.3
+   fixture and monkeypatch results use `usage=None` or `LIVE_USAGE`; COST.4's
+   three journal assertions include `total_tokens: 25`.
+5. **LOOP insertion point and regression proof.** LOOP.3, after this chain,
+   inserts its ledger charge immediately after COST.1 has built `usage` and
+   before `text` is read/validated. It consumes the dict, never calls the SDK
+   usage method again. COST's combined test command must include the two
+   fixture-result tests, all three operation call-site/event tests, the
+   keyless-no-fallback test, and the one-harvest assertion; stage
+   `operations.py`, `tests/helpers.py`, and `tests/test_operations.py` in the
+   one COST.1–.3 commit. COST.4 and COST.5 retain their separately listed
+   golden/doc commits.
+
+   Add `test_pydantic_ai_chat_keyless_runner_ignores_legacy_fallback_envs` to
+   COST.1: set all three retired environment names, call a `key_env=None`
+   runner through the fake, and assert `provider_kwargs == {"base_url": ...}`.
+   Include BOOT-B.5's complementary required-key refusal test in the combined
+   tranche as a non-regression. The combined tranche command is:
+
+   ```bash
+   python -m pytest tests/test_operations.py tests/test_cli_doctor_eval.py \
+       tests/test_runtime_gate_replay.py -v
+   ```
+
 ---
 
 ### Task COST.1: `_pydantic_ai_chat` returns `{text, usage, cost_usd, elapsed_s}`
 
+> **Execution override:** Follow the 2026-07-29 canonical-result amendment.
+> The fallback-chain and four-field snippets below are drafting history. COST.1
+> is developed only as part of the atomic COST.1–.3 tranche after BOOT-B.5;
+> do not commit or validate it as an independently shippable state.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:951-984` (`_pydantic_ai_chat`) and `operations.py:5-12` (stdlib import block — add `import time`)
-- Modify: `tests/helpers.py:362-393` (`patch_pydantic_ai` — fake `run_sync` result gains `usage()` and `response.cost()`)
+- Modify: `tests/helpers.py:12-15,362-393` (add `LIVE_USAGE`; fake `run_sync`
+  result gains `usage()` and `response.cost()`)
 - Test: `tests/test_operations.py`
 
 **Interfaces:**
-- Consumes: `AgentRunResult.usage() -> RunUsage` (fields `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`); `AgentRunResult.response.cost() -> genai_prices PriceCalculation` (`.total_price: Decimal`; raises `LookupError` when the model/provider is not in the local price snapshot); `time.monotonic()`.
-- Produces: `_pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> dict[str, Any]` with keys `text: str` (non-empty), `usage: dict[str, int]` (always populated on a real call), `cost_usd: float | None`, `elapsed_s: float`.
-- Produces: `patch_pydantic_ai(monkeypatch: Any, *, output: str = "", seen: dict[str, Any] | None = None, total_price: Any | None = None) -> dict[str, Any]` — fake result's `usage()` returns fixed counts 17/5/2/1; `response.cost()` raises `LookupError` when `total_price is None`, else returns an object with `.total_price`.
+- Consumes: `AgentRunResult.usage() -> RunUsage` (fields `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, `total_tokens`); `AgentRunResult.response.cost() -> genai_prices PriceCalculation` (`.total_price: Decimal`; raises `LookupError` when the model/provider is not in the local price snapshot); `time.monotonic()`.
+- Produces: the amendment's canonical `MODEL_CALL_RESULT`: `text: str` (non-empty), five-field `usage: dict[str, int]` (always populated on a real call), nullable best-effort `cost_usd`, and `elapsed_s`.
+- Produces: `tests.helpers.LIVE_USAGE: dict[str, int]` (17/5/2/1/25) and
+  `patch_pydantic_ai(monkeypatch: Any, *, output: str = "", seen: dict[str, Any] | None = None, total_price: Any | None = None) -> dict[str, Any]` — fake result's one `usage()` call returns a `SimpleNamespace` expanded from `LIVE_USAGE`; `response.cost()` raises `LookupError` when `total_price is None`, else returns an object with `.total_price`.
 
 **Steps:**
 
 - [ ] **Step 0 — PI confirmation checkpoint:** confirm with the PI that the spec's "Design decisions (made here; confirm at review)" block stands as written (extend `model_call`, plain-dict return, nullable `cost_usd`, no content capture, fixture nulls, no new dep / no `SCHEMA_VERSION` bump). No code.
 
-- [ ] **Upgrade the test fake** — replace `patch_pydantic_ai` in `tests/helpers.py:362-393` with (only `run_sync` and the signature change; existing `seen` behavior is preserved, so current callers in `test_cli_doctor_eval.py:698,743,778` and `test_runtime_gate_replay.py:351` keep passing):
+- [ ] **Upgrade the test fake** — first add this module-level fixture after
+  `WORKSPACE_SEED` in `tests/helpers.py`, then replace `patch_pydantic_ai` at
+  `:362-393` (only `run_sync` and the signature change; existing `seen`
+  behavior is preserved, so current callers in `test_cli_doctor_eval.py:698,743,778`
+  and `test_runtime_gate_replay.py:351` keep passing):
 
 ```python
+LIVE_USAGE = {
+    "input_tokens": 17,
+    "output_tokens": 5,
+    "cache_read_tokens": 2,
+    "cache_write_tokens": 1,
+    "total_tokens": 25,
+}
+
+
 def patch_pydantic_ai(
     monkeypatch: Any,
     *,
@@ -3973,12 +4115,8 @@ def patch_pydantic_ai(
             seen["model_settings"] = model_settings
 
             def usage() -> SimpleNamespace:
-                return SimpleNamespace(
-                    input_tokens=17,
-                    output_tokens=5,
-                    cache_read_tokens=2,
-                    cache_write_tokens=1,
-                )
+                seen["usage_calls"] = int(seen.get("usage_calls", 0)) + 1
+                return SimpleNamespace(**LIVE_USAGE)
 
             def cost() -> SimpleNamespace:
                 if total_price is None:
@@ -4029,12 +4167,14 @@ def test_pydantic_ai_chat_returns_text_usage_cost_and_timing(
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
     assert isinstance(result["cost_usd"], float)
     assert result["cost_usd"] == pytest.approx(0.0125)
     assert isinstance(result["elapsed_s"], float)
     assert result["elapsed_s"] >= 0.0
     assert seen["prompt"] == "prompt body"
+    assert seen["usage_calls"] == 1
 
 
 def test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage(
@@ -4050,6 +4190,7 @@ def test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage(
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
 
 
@@ -4073,14 +4214,15 @@ def _pydantic_ai_chat(
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
     key_env = runner.get("key_env")
+    api_key = None
     if isinstance(key_env, str) and key_env:
         api_key = os.environ.get(key_env)
-    else:
-        api_key = (
-            os.environ.get("MEMORIA_MODEL_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-            or os.environ.get("KILOCODE_API_KEY")
-        )
+        if not api_key:
+            provider = str(runner.get("provider") or "runner")
+            raise RuntimeError(
+                f"provider {provider} requires {key_env} - "
+                f"set it: memoria secrets set {key_env}"
+            )
     Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
     provider_kwargs = {"base_url": base_url}
     if api_key:
@@ -4101,16 +4243,17 @@ def _pydantic_ai_chat(
     except Exception as exc:
         raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
     elapsed_s = time.monotonic() - started_at
+    run_usage = result.usage()
+    usage = {
+        "input_tokens": int(run_usage.input_tokens),
+        "output_tokens": int(run_usage.output_tokens),
+        "cache_read_tokens": int(run_usage.cache_read_tokens),
+        "cache_write_tokens": int(run_usage.cache_write_tokens),
+        "total_tokens": int(run_usage.total_tokens),
+    }
     text = str(getattr(result, "output", "") or "").strip()
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
-    run_usage = result.usage()
-    usage = {
-        "input_tokens": run_usage.input_tokens,
-        "output_tokens": run_usage.output_tokens,
-        "cache_read_tokens": run_usage.cache_read_tokens,
-        "cache_write_tokens": run_usage.cache_write_tokens,
-    }
     try:
         cost_usd: float | None = float(result.response.cost().total_price)
     except LookupError:
@@ -4126,23 +4269,21 @@ def _pydantic_ai_chat(
 
 - [ ] **Guard the fake's existing consumers:**
   `python -m pytest tests/test_cli_doctor_eval.py tests/test_runtime_gate_replay.py -v`
-  Expected: all pass (`_runner_status` at `cli.py:3064` discards the return; the fake stays output-compatible). Known transient state, resolved by COST.2/COST.3 in this same branch: `_run_prompt_model`/`_run_digest_model`'s `pydantic-ai` branches now forward a dict where their callers still expect `str` — no gate-level test reaches those branches (operation tests use the `deterministic-fixture` model, which short-circuits before `_pydantic_ai_chat`; `tests/test_live_runner.py` skips without `MEMORIA_MODEL_BASE_URL`).
+  Expected: all pass (`_runner_status` at `cli.py:3064` discards the return;
+  the fake stays output-compatible). A broken intermediate is not permitted:
+  the callers change in the same atomic COST.1–.3 tranche.
 
-- [ ] **Commit:**
-
-```bash
-git add src/memoria_vault/runtime/operations.py tests/helpers.py tests/test_operations.py
-git commit -m "$(cat <<'EOF'
-feat(operations): return usage/cost/timing from _pydantic_ai_chat
-
-Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
-EOF
-)"
-```
+- [ ] **Do not commit yet.** Continue directly into COST.2 and COST.3 in the
+  same worktree. The atomic tranche's single staging/commit step is at the
+  end of COST.3; a COST.1-only commit leaves active callers expecting `str`.
 
 ---
 
 ### Task COST.2: thread the dict through `_run_prompt_model` and both prompt-path callers
+
+> **Execution override:** This task is inseparable from COST.1 and COST.3.
+> Every `usage` literal/result below carries the canonical five fields when
+> live, or `None` for the deterministic fixture.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:801-808` (`_run_prompt_model`), `operations.py:367` (`run_prompt_operation` binding), `operations.py:453` (`run_operation_model_text` binding) — line refs are pre-COST.1 numbering; after COST.1 they shift by +1 (`import time`). Anchor by code, not line.
@@ -4151,7 +4292,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `_pydantic_ai_chat(policy, runner, prompt) -> dict[str, Any]` (COST.1); `_prompt_fixture_body(policy: dict[str, Any], input_text: str) -> str` (unchanged, `operations.py:811-822`).
-- Produces: `_run_prompt_model(policy: dict[str, Any], runner: dict[str, Any], prompt: str, input_text: str) -> dict[str, Any]` — same four keys; `deterministic-fixture` branch returns `usage=None, cost_usd=None, elapsed_s=0.0`.
+- Produces: `_run_prompt_model(policy: dict[str, Any], runner: dict[str, Any], prompt: str, input_text: str) -> dict[str, Any]` — the canonical four top-level keys with five-field live usage; `deterministic-fixture` returns `usage=None, cost_usd=None, elapsed_s=0.0`.
 - Produces (unchanged contract, reasserted): `run_operation_model_text(vault, policy, runner, prompt, *, context, input_text, call_id, route, purpose) -> dict[str, Any]` still returns `{"output": str, "model_call": dict}` — the `integrity.py:1466` caller keeps working untouched.
 
 **Steps:**
@@ -4220,6 +4361,7 @@ def _run_prompt_model(
                 "output_tokens": 5,
                 "cache_read_tokens": 2,
                 "cache_write_tokens": 1,
+                "total_tokens": 25,
             },
             "cost_usd": 0.0125,
             "elapsed_s": 0.25,
@@ -4231,21 +4373,17 @@ def _run_prompt_model(
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass, including `test_run_prompt_model_fixture_branch_returns_null_telemetry` and the updated neutralization test (its `output_hash` assertion still hashes `raw_output`).
 
-- [ ] **Commit:**
-
-```bash
-git add src/memoria_vault/runtime/operations.py tests/test_operations.py
-git commit -m "$(cat <<'EOF'
-feat(operations): thread model telemetry through _run_prompt_model
-
-Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
-EOF
-)"
-```
+- [ ] **Do not commit yet.** Continue directly into COST.3. The only valid
+  commit for this return-contract change stages all COST.1–.3 files together
+  at COST.3's final step.
 
 ---
 
 ### Task COST.3: thread the dict through `_run_digest_model` and the digest caller
+
+> **Execution override:** This completes the atomic COST.1–.3 tranche. Use
+> canonical five-field live usage in every result/mocked result; do not make
+> an individual commit before the combined commit below.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:896-917` (`_run_digest_model`; pre-COST.1 numbering) and `operations.py:525` (`compile_source_digest` binding)
@@ -4254,7 +4392,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `_pydantic_ai_chat(...) -> dict[str, Any]` (COST.1); `_validate_digest_output(text: str, content: str, topics: list[str], interviews: list[dict[str, Any]]) -> str` — **still takes plain text**, unchanged (`operations.py:997-1014`); `_digest_body(...) -> str` (unchanged).
-- Produces: `_run_digest_model(policy: dict[str, Any], runner: dict[str, Any], source_fm: dict[str, Any], content: str, topics: list[str], interviews: list[dict[str, Any]]) -> dict[str, Any]` — same four keys, `text` is the **validated** digest text; fixture branch returns `usage=None, cost_usd=None, elapsed_s=0.0`.
+- Produces: `_run_digest_model(policy: dict[str, Any], runner: dict[str, Any], source_fm: dict[str, Any], content: str, topics: list[str], interviews: list[dict[str, Any]]) -> dict[str, Any]` — the canonical four top-level keys, with five-field live usage; `text` is the **validated** digest text; fixture branch returns `usage=None, cost_usd=None, elapsed_s=0.0`.
 
 **Steps:**
 
@@ -4366,12 +4504,14 @@ def _run_digest_model(
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass.
 
-- [ ] **Commit:**
+- [ ] **Commit the atomic COST.1–.3 tranche:** Stage only the three files
+  changed across the tranche, after the combined regression command from the
+  reconciliation amendment passes:
 
 ```bash
-git add src/memoria_vault/runtime/operations.py tests/test_operations.py
+git add src/memoria_vault/runtime/operations.py tests/helpers.py tests/test_operations.py
 git commit -m "$(cat <<'EOF'
-feat(operations): thread model telemetry through _run_digest_model
+feat(operations): return model telemetry across operation runners
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
@@ -4382,6 +4522,11 @@ EOF
 
 ### Task COST.4: three `model_call` event dicts gain `usage` / `cost_usd` / `elapsed_s`; refresh floor goldens
 
+> **Execution override:** The existing three journal rows remain the sole
+> durable telemetry. Their live `usage` payload is the canonical five-field
+> dict (including `total_tokens`); no extra journal or telemetry sink is
+> permitted.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py` — the three `model_call` dict literals, each anchored by its `"output_hash":` line (pre-change refs: prompt-operation `:370-386`, `run_operation_model_text` `:456-473`, digest-compile `:528-544`; after COST.1-3 each shifts by a few lines — anchor by the literal's unique `"output_hash"` expression)
 - Modify: `tests/test_operations.py` — extend `test_prompt_operation_neutralizes_model_output_before_staging` (event assertions currently at `:264-267`) and `test_compile_source_digest_traces_model_call_and_stages_hub_suggestions` (event assertions currently at `:217-222`); add one new test covering the `run_operation_model_text` call site (the `integrity.py:1466` seam) plus the no-content-capture posture
@@ -4390,7 +4535,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `result` / `digest_result` locals bound in COST.2/COST.3; `append_journal_event(vault, event, *, context) -> dict[str, Any]` (unchanged seam); `call_with_context(function, vault, *args, **kwargs)` and `iter_jsonl` (existing test helpers/imports).
-- Produces: `model_call` journal events at all three `operations.py` call sites carry `usage: dict[str, int] | None`, `cost_usd: float | None`, `elapsed_s: float` — additive keys only; every pre-existing key is unchanged.
+- Produces: `model_call` journal events at all three `operations.py` call sites carry canonical five-field `usage: dict[str, int] | None`, nullable `cost_usd`, and `elapsed_s` — additive keys only; every pre-existing key is unchanged.
 
 **Steps:**
 
@@ -4404,6 +4549,7 @@ EOF
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
     assert events[1]["cost_usd"] == pytest.approx(0.0125)
     assert events[1]["elapsed_s"] == pytest.approx(0.25)
@@ -4434,6 +4580,7 @@ def test_run_operation_model_text_records_telemetry_without_content(
                 "output_tokens": 5,
                 "cache_read_tokens": 2,
                 "cache_write_tokens": 1,
+                "total_tokens": 25,
             },
             "cost_usd": 0.0125,
             "elapsed_s": 0.25,
@@ -4461,6 +4608,7 @@ def test_run_operation_model_text_records_telemetry_without_content(
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
     assert model_call["cost_usd"] == pytest.approx(0.0125)
     assert model_call["elapsed_s"] == pytest.approx(0.25)

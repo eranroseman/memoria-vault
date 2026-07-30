@@ -9654,9 +9654,9 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 **Steps:**
 
 - [ ] Add the post-SEAM.1 live HTTP integration proof to
-  `tests/test_attention_view.py`, alongside the existing live-server tests
-  and before the Node-mock step below. U3-ENG.6 already creates `live_server`
-  and `_http_get`; extend its imports with
+  `tests/test_attention_view.py`, alongside the existing live-server tests.
+  Perform the separate Node-mock step only afterward. U3-ENG.6 already
+  creates `live_server` and `_http_get`; extend its imports with
   `from memoria_vault.runtime import state`,
   `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`,
   `from memoria_vault.runtime.vaultio import read_frontmatter`, and

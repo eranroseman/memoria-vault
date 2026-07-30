@@ -18,7 +18,8 @@ either token usage or cost anywhere in the repo today — confirmed by reading
 calls `agent.run_sync(prompt, model_settings=settings)`, reads only
 `result.output`, and returns a bare `str`. The rest of `result` — including
 `result.usage()` (a `RunUsage`: `input_tokens`, `output_tokens`,
-`cache_read_tokens`, `cache_write_tokens`; `pydantic_ai/usage.py`) and
+`cache_read_tokens`, `cache_write_tokens`, `total_tokens`;
+`pydantic_ai/usage.py`) and
 `result.response.cost()` (a `genai_types.PriceCalculation`, resolved from the
 bundled, fully local `genai-prices` package — zero network calls;
 `pydantic_ai/messages.py:2348`) — is computed by the SDK on every call and
@@ -50,10 +51,13 @@ see "Rejected alternative."
   dataclass is introduced for a 4-key return). `_run_prompt_model` and
   `_run_digest_model` change the same way, since both currently just forward
   or unwrap the string.
-- **`usage` is a plain dict of the four `RunUsage` fields actually present on
-  every call** (`input_tokens`, `output_tokens`, `cache_read_tokens`,
-  `cache_write_tokens`) — logged unconditionally, since `result.usage()` never
-  raises.
+- **`usage` is a plain dict of the four `RunUsage` component fields plus its
+  `total_tokens`** (`input_tokens`, `output_tokens`, `cache_read_tokens`,
+  `cache_write_tokens`, `total_tokens`) — logged unconditionally, since
+  `result.usage()` never raises. `total_tokens` is the SDK-reported total, not
+  a second model call or a fabricated estimate; it is included so the E1
+  token-ceiling breaker can consume the same recorded result without calling
+  the SDK again.
 - **`cost_usd` is best-effort and nullable, never fabricated.**
   `result.response.cost()` raises `LookupError` when the model/provider
   combination isn't in `genai-prices`' static snapshot
@@ -107,7 +111,7 @@ Three focused changes, each independently testable.
   (`time.monotonic()` before/after) for `elapsed_s`.
 - After `result = agent.run_sync(prompt, model_settings=settings)`:
   - `usage = result.usage()` → `{"input_tokens": ..., "output_tokens": ...,
-    "cache_read_tokens": ..., "cache_write_tokens": ...}`.
+    "cache_read_tokens": ..., "cache_write_tokens": ..., "total_tokens": ...}`.
   - `cost_usd`: `try: result.response.cost().total_price except LookupError:
     None`.
 - Return `{"text": text, "usage": usage, "cost_usd": cost_usd, "elapsed_s":
@@ -177,7 +181,8 @@ no real call happened, nothing to report.)
 
 ## Testing
 
-- `_pydantic_ai_chat` returns the `{text, usage, cost_usd, elapsed_s}` shape;
+- `_pydantic_ai_chat` returns the `{text, usage, cost_usd, elapsed_s}` shape
+  with all five usage counts, including the SDK-reported `total_tokens`;
   a mocked `result.response.cost()` raising `LookupError` yields
   `cost_usd: None` while `usage` still populates from a mocked
   `result.usage()`.
