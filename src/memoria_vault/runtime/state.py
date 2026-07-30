@@ -3460,29 +3460,6 @@ def _work_id(value: str) -> str:
     return work_id
 
 
-def _source_refs(frontmatter: dict[str, Any]) -> list[str]:
-    refs: set[str] = set()
-    _collect_source_refs(refs, frontmatter.get("work_id"))
-    _collect_source_refs(refs, frontmatter.get("evidence_set"))
-    _collect_source_refs(refs, frontmatter.get("members"))
-    _collect_source_refs(refs, frontmatter.get("links"))
-    return sorted(refs)
-
-
-def _collect_source_refs(refs: set[str], value: Any) -> None:
-    if isinstance(value, str):
-        if value.startswith("catalog/sources/"):
-            refs.add(f"catalog/sources/{_work_id(value)}")
-        return
-    if isinstance(value, list):
-        for item in value:
-            _collect_source_refs(refs, item)
-        return
-    if isinstance(value, dict):
-        for item in value.values():
-            _collect_source_refs(refs, item)
-
-
 def _csl_authors(csl: dict[str, Any]) -> list[str]:
     rows = csl.get("author")
     if not isinstance(rows, list):
