@@ -7879,7 +7879,7 @@ envelopes or fields.
   ignores any caller-supplied actor and persists `actor="pi"`; the client
   intentionally omits that non-authoritative field.
 
-**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` and U3 §4 names it "the single source"; a plugin-side copy is a second source that drifts exactly along the skew axis BOOT §6 exists to police, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
+**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` and U3 §4 names it "the single source"; a plugin-side copy is a second source that drifts exactly along the skew axis BOOT §6 exists to police, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
 
 Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); skew compares `this.manifest.version` against the handshake's `engine_version`.
 
@@ -11487,7 +11487,7 @@ Steps:
 - Modify: `tests/test_project_knowledge.py` (three new tests)
 
 **Interfaces:**
-- Consumes: `write_project_argument_canvas`, `render_project_argument_canvas`, `LINK_RELATIONS` (`src/memoria_vault/runtime/subsystems/lib/schema.py:39`).
+- Consumes: `write_project_argument_canvas`, `render_project_argument_canvas`, `LINK_RELATIONS` (`src/memoria_vault/runtime/subsystems/lib/edges.py`).
 - Produces: pinned reconcile contract for the canvas projector. Verified-existing coverage this task deliberately does **not** duplicate: hand-edit drift detection (`tests/test_projections.py:169-178`), stale-refresh-on-outline-write (`knowledge.py:1899-1925` + `tests/test_slice_outline.py`), quarantine-and-log (Task 2). What is missing and added here: delete-arm regeneration, raw-path id keying under slug collision, and projector-output enum conformance.
 
 TDD deviation, stated honestly: these are characterization pins — the behavior
