@@ -1517,7 +1517,7 @@ call site.
   server has already responded 413; (3) the `"request body too large"` body
   string is produced only by `PayloadTooLarge`, pinning the 413 to the
   `_json_body` guard rather than any generic 400.
-- [ ] Prove the test bites: temporarily comment out the auth guard at `http_transport.py:63-65` (the `if not is_authorized(...)` block in `_handle`), run `python -m pytest tests/test_http_transport.py::test_http_server_handler_enforces_bearer_auth_and_body_size -v` — expect `AssertionError` on `no_auth == (HTTPStatus.UNAUTHORIZED, ...)` (got 200). Restore, rerun, expect PASS.
+- [ ] Prove the test bites: temporarily change the auth condition at `http_transport.py:63` from `if not is_authorized(...)` to `if False:` (leaving its indented 401 response in place), run `python -m pytest tests/test_http_transport.py::test_http_server_handler_enforces_bearer_auth_and_body_size -v` — expect `AssertionError` on `no_auth == (HTTPStatus.UNAUTHORIZED, ...)` (got 200). Restore, rerun, expect PASS.
 - [ ] Write the failing test (scope-intersection: requested scope strictly inside the granted scope) after `test_http_transport_startup_read_scope_cannot_be_widened` (line 229):
 
   ```python
