@@ -2027,14 +2027,20 @@ disjoint regions, so either order is safe.
 - Consumes: coverage.py's default `# pragma: no cover` exclusion (a pragma on a `def` line excludes the whole function body).
 - Produces: no runtime behavior change; `state.py` coverage stops inflating on Windows-only code; `test_workspace_seed_links.py` sheds its dead check.
 
-- [ ] 11a — edit `state.py:115` to carry the pragma on the `def` line, wording matched to its siblings at lines 40/45:
+- [ ] 11a — edit `state.py:115` to carry the pragma on the function header,
+  wording matched to its siblings at lines 40/45. Ruff may format this long
+  signature across lines; keep the pragma on the closing header line (not a
+  function-body line), which excludes the whole function without a formatter
+  exception:
 
   ```python
-  def _open_workspace_lock_file_windows(_vault: Path, lock_path: Path):  # pragma: no cover - runs only on Windows.
+  def _open_workspace_lock_file_windows(
+      _vault: Path, lock_path: Path
+  ):  # pragma: no cover - runs only on Windows.
   ```
 
-  (E501 is deliberately not enforced in this repo — width is owned by `ruff
-  format`, which does not wrap comments.)
+  (If Ruff keeps a future signature on one line, retain the same pragma at the
+  end of that header. Do not add `# fmt: skip`.)
 - [ ] Run `python -m pytest tests/test_runtime_state.py tests/test_worker_queue.py -q` — all pass (comment-only change; the Windows lock still works, per the multiprocess lock test).
 - [ ] 11b — in `tests/test_workspace_seed_links.py` delete: line 23 (`YAML_FENCE_RE = ...`), line 24 (`DROPPED_KEYS = ...`), lines 75-79 (`def _check_template_frontmatter(...)` and body), lines 127-130 in `_collect_errors` (`tmpl_dir = SEED / "system/templates"` through the `_check_template_frontmatter(md, errors)` call), and replace the two docstring lines with `references to published docs and vault wikilink discipline (link text is the page title, and every [[note]] resolves to a real seed note).` so the module description remains grammatical and matches what it still checks. Leave the `"templates" in md.parts` skip at line 139 untouched (it guards the wikilink checks generally, not the retired check).
 - [ ] Run `python -m pytest tests/test_workspace_seed_links.py -v` — passes; then `! rg -n 'YAML_FENCE_RE|DROPPED_KEYS|_check_template_frontmatter|tmpl_dir' tests/test_workspace_seed_links.py` — no output and a successful absence check.
