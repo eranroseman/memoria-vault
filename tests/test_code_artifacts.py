@@ -73,3 +73,38 @@ def test_computed_evidence_tracks_code_run_output_hash(tmp_path: Path) -> None:
     output.write_text("43\n", encoding="utf-8")
     state.rebuild_evidence_sets_from_markers(tmp_path)
     assert state.evidence_sets(tmp_path)[0]["state"] == "evidence-incomplete"
+
+
+def test_run_artifact_rejects_unknown_artifact_and_malformed_command(
+    tmp_path: Path, monkeypatch
+) -> None:
+    try:
+        run_artifact(tmp_path, "missing")
+    except ValueError as exc:
+        assert "unknown code artifact: missing" in str(exc)
+    else:
+        raise AssertionError("run_artifact accepted an unknown artifact_id")
+
+    create_code_artifact(
+        tmp_path,
+        "project-alpha",
+        "empty-argv",
+        approved_command=[],
+    )
+    create_code_artifact(
+        tmp_path,
+        "project-alpha",
+        "blank-part",
+        approved_command=["python3", ""],
+    )
+    monkeypatch.setattr(
+        "memoria_vault.runtime.code.runner.execution_availability",
+        lambda vault: Availability("unsupported", "test sandbox unavailable"),
+    )
+    for artifact_id in ("empty-argv", "blank-part"):
+        try:
+            run_artifact(tmp_path, artifact_id)
+        except ValueError as exc:
+            assert "approved_command must be a non-empty argv list" in str(exc)
+        else:
+            raise AssertionError(f"run_artifact executed malformed command {artifact_id!r}")
