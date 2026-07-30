@@ -208,6 +208,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     _common(import_cmd)
     import_cmd.add_argument("--format", choices=("bibtex", "csl"), required=True)
     import_cmd.add_argument("--file", required=True)
+    import_cmd.add_argument("--enrich", action="store_true")
     import_cmd.set_defaults(handler=_cmd_work_import)
 
     enrich = work_sub.add_parser("enrich")
@@ -978,8 +979,20 @@ def _cmd_work_import(args: argparse.Namespace) -> int:
 
             csl_item = _read_csl_item(text)
             payload = csl_capture_payload(csl_item, raw_text=text)
+        try:
+            already_admitted = (
+                state.catalog_source(_workspace(args), str(payload["work_id"])) is not None
+            )
+        except ValueError:
+            # Preserve the legacy single-entry error surface for an invalid work ID;
+            # the capture operation below remains its authoritative validator.
+            already_admitted = False
         output = _enqueue_and_run(args, "capture-source", payload)
-        if enrichment := _queue_import_enrichment(args, payload, output):
+        if (
+            args.enrich
+            and not already_admitted
+            and (enrichment := _queue_import_enrichment(args, payload, output))
+        ):
             output["enrichment_job"] = enrichment
         return _emit(output, args)
     return _emit(_bulk_work_import(args, entries), args)
@@ -1016,11 +1029,18 @@ def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str,
         result = output.get("result") if isinstance(output.get("result"), dict) else {}
         if output["ok"]:
             admitted.append(str(result.get("work_id") or work_id))
-            if enrichment := _queue_import_enrichment(args, payload, output):
+            if args.enrich and (enrichment := _queue_import_enrichment(args, payload, output)):
                 enrichment_jobs.append(str(enrichment["job_id"]))
         else:
             error = str(result.get("error") or result.get("status") or "capture failed")
             failed.append({"ref": entry_ref(args.format, entry_text, index), "error": error})
+    index_refresh_s = 0.0
+    if admitted:
+        from memoria_vault.runtime.search_index import rebuild_checked_search_index_explicit
+
+        refresh_started = time.monotonic()
+        rebuild_checked_search_index_explicit(workspace, actor=args.actor, machine="memoria-cli")
+        index_refresh_s = time.monotonic() - refresh_started
     return {
         "ok": bool(admitted or skipped),
         "run_id": run_id,
@@ -1030,6 +1050,7 @@ def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str,
         "skipped": skipped,
         "failed": failed,
         "enrichment_jobs": enrichment_jobs,
+        "index_refresh_s": index_refresh_s,
     }
 
 

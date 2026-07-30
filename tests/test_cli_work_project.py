@@ -43,6 +43,7 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
             "--json",
             "--idempotency-key",
             "import-bibtex",
+            "--enrich",
         ]
     )
     output = json.loads(capsys.readouterr().out)
@@ -1453,7 +1454,8 @@ def test_cli_work_import_bulk_admits_every_entry_with_run_scoped_keys(
     assert out["failed"] == []
     run_id = out["run_id"]
     assert len(run_id) == 32 and set(run_id) <= set("0123456789abcdef")
-    assert len(out["enrichment_jobs"]) == 3  # shipped default; P.3 flips enrichment to opt-in
+    assert out["enrichment_jobs"] == []
+    assert out["index_refresh_s"] > 0.0
     for work_id in out["admitted"]:
         assert state.catalog_source(workspace, work_id) is not None
     with state.connect(workspace) as conn:
@@ -1463,9 +1465,13 @@ def test_cli_work_import_bulk_admits_every_entry_with_run_scoped_keys(
                 "SELECT request_id FROM operation_requests WHERE operation_id = 'capture-source'"
             )
         ]
+        enrich_count = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'enrich-source'"
+        ).fetchone()[0]
     assert len(capture_ids) == 3
     assert all(request_id.startswith(f"import-{run_id}-") for request_id in capture_ids)
     assert all("caller-key" not in request_id for request_id in capture_ids)
+    assert enrich_count == 0
 
 
 def test_cli_work_import_bulk_rerun_skips_admitted_rows_without_new_requests(
@@ -1496,6 +1502,117 @@ def test_cli_work_import_bulk_rerun_skips_admitted_rows_without_new_requests(
             "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'capture-source'"
         ).fetchone()[0]
     assert captures == 3  # resume = the pre-check: no fetch, no enqueue, no journal event
+
+
+def test_cli_work_import_default_leaves_enrichment_unqueued(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bibtex = tmp_path / "source.bib"
+    bibtex.write_text(
+        """@article{alpha2026,
+  title = {Alpha Import},
+  doi = {10.1000/alpha.2026},
+  abstract = {Keyless-first single entry.}
+}
+""",
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "import",
+            "--workspace",
+            str(workspace),
+            "--format",
+            "bibtex",
+            "--file",
+            str(bibtex),
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert "enrichment_job" not in output
+    assert "index_refresh_s" not in output
+    with state.connect(workspace) as conn:
+        pending = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'enrich-source'"
+        ).fetchone()[0]
+    assert pending == 0
+
+
+def test_cli_work_import_single_enrich_does_not_requeue_existing_doi(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bibtex = tmp_path / "source.bib"
+    bibtex.write_text(
+        """@article{alpha2026,
+  title = {Alpha Import},
+  doi = {10.1000/alpha.2026}
+}
+""",
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    first = _bulk_import(workspace, bibtex, "--enrich", "--idempotency-key", "first-import")
+    assert main(first) == 0
+    first_out = json.loads(capsys.readouterr().out)
+    assert first_out["enrichment_job"]["operation_id"] == "enrich-source"
+
+    retry = _bulk_import(workspace, bibtex, "--enrich", "--idempotency-key", "retry-import")
+    assert main(retry) == 0
+    retry_out = json.loads(capsys.readouterr().out)
+    assert "enrichment_job" not in retry_out
+    with state.connect(workspace) as conn:
+        enrich = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'enrich-source'"
+        ).fetchone()[0]
+    assert enrich == 1
+
+
+def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(THREE_ENTRY_BIB, encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib, "--enrich"))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert len(out["enrichment_jobs"]) == 3
+    assert out["index_refresh_s"] > 0.0
+    assert (workspace / ".memoria/index/search/manifest.json").is_file()
+    with state.connect(workspace) as conn:
+        enrich = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'enrich-source'"
+        ).fetchone()[0]
+    assert enrich == 3
+
+    rc = main(_bulk_import(workspace, bib, "--enrich"))
+    out2 = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out2["skipped"] == out["admitted"]
+    assert out2["enrichment_jobs"] == []
+    assert out2["index_refresh_s"] == 0.0
+    with state.connect(workspace) as conn:
+        enrich = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'enrich-source'"
+        ).fetchone()[0]
+    assert enrich == 3
 
 
 def test_cli_work_import_bulk_names_failed_entries_and_continues(
