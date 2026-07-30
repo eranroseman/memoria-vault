@@ -17,9 +17,11 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import bibtex_capture_payload, csl_capture_payload
 
 _ENTRY_TYPE_MAP: dict[str, str] = {
@@ -52,6 +54,7 @@ _REPO_HOSTS = ("github.com", "gitlab.com", "codeberg.org")
 _DATASET_DOI_PREFIXES = frozenset(
     {"10.5281", "10.5061", "10.6084", "10.7910", "10.17632", "10.3886", "10.15468", "10.24432"}
 )
+_DUPLICATE_IDENTIFIER_FIELDS = ("arxiv", "pmcid")
 
 
 def split_bibtex_entries(text: str) -> list[str]:
@@ -220,6 +223,37 @@ def entry_capture_request(
             },
         },
     )
+
+
+def detect_identifier_collisions(
+    vault: Path, work_id: str, identifiers: dict[str, Any]
+) -> list[dict[str, str]]:
+    """Return exact arXiv/PMCID matches in other catalog rows.
+
+    The admitted work ID is already normalized by the capture seam, so the
+    self-match exclusion is direct equality. This deliberately scans the full
+    catalog at beta.1's 100-work ceiling; DOI remains owned by structural
+    dedupe and its UNIQUE constraint, not a triage signal.
+    """
+    wanted = {
+        field: str(identifiers.get(field) or "").strip() for field in _DUPLICATE_IDENTIFIER_FIELDS
+    }
+    if not any(wanted.values()):
+        return []
+    collisions: list[dict[str, str]] = []
+    for row in state.catalog_sources(vault, checked_only=False):
+        if row["work_id"] == work_id:
+            continue
+        other = row["identifiers"] if isinstance(row["identifiers"], dict) else {}
+        for field, value in wanted.items():
+            if value and value == str(other.get(field) or "").strip():
+                collisions.append({"other_work_id": row["work_id"], "field": field})
+    return collisions
+
+
+def is_doi_collision_error(error: str) -> bool:
+    """Whether a worker failure is the catalog DOI-UNIQUE edge."""
+    return "catalog_sources.doi" in str(error)
 
 
 def entry_item_type(entry_fields: dict[str, Any]) -> str:

@@ -12,18 +12,24 @@ wires it into the bulk driver.
 from __future__ import annotations
 
 import json
+import sqlite3
+from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.bulk_import import (
+    detect_identifier_collisions,
     entry_capture_request,
     entry_fetch,
     entry_item_type,
     entry_type_mapped,
+    is_doi_collision_error,
     split_bibtex_entries,
     split_csl_entries,
 )
 from memoria_vault.runtime.capture import bibtex_capture_payload, csl_capture_payload
+from tests.helpers import call_with_context, copy_memoria_dirs, init_git
 
 TWO_ENTRIES = """@article{alpha2026,
   title = {Alpha Import},
@@ -404,3 +410,103 @@ def test_entry_capture_request_preserves_metadata_and_webpage_tiers() -> None:
         "title": "Fixture Work",
         "description": "Fixture description.",
     }
+
+
+BIB_DOI_ARXIV = """@article{smith2024,
+  title = {Admitted Work},
+  author = {Smith, Ada},
+  doi = {10.1234/admitted},
+  arxiv = {2411.14199},
+  year = {2024}
+}
+"""
+
+BIB_PMCID = """@article{jones2023,
+  title = {PMC Work},
+  author = {Jones, Bo},
+  doi = {10.1234/pmc-work},
+  pmcid = {PMC7399101},
+  year = {2023}
+}
+"""
+
+BIB_SAME_DOI_A = """@article{alpha2024,
+  title = {Shared DOI Entry One},
+  doi = {10.7777/Same},
+  year = {2024}
+}
+"""
+
+BIB_SAME_DOI_B = """@article{beta2024,
+  title = {Shared DOI Entry Two},
+  doi = {10.7777/same},
+  year = {2024}
+}
+"""
+
+
+def _catalog_vault(tmp_path: Path) -> Path:
+    copy_memoria_dirs(tmp_path, "schemas")
+    init_git(tmp_path, "bulk@example.invalid", "Bulk Import")
+    return tmp_path
+
+
+def _admit(vault: Path, payload: dict) -> dict:
+    from memoria_vault.runtime.capture import stage_capture_payload
+
+    return call_with_context(stage_capture_payload, vault, payload)
+
+
+def test_detect_identifier_collisions_matches_arxiv_and_pmcid_exactly(
+    tmp_path: Path,
+) -> None:
+    vault = _catalog_vault(tmp_path)
+    arxiv_work = _admit(vault, bibtex_capture_payload(BIB_DOI_ARXIV))["work_id"]
+    pmc_work = _admit(vault, bibtex_capture_payload(BIB_PMCID))["work_id"]
+
+    assert detect_identifier_collisions(vault, "citekey-2025", {"arxiv": "2411.14199"}) == [
+        {"other_work_id": arxiv_work, "field": "arxiv"}
+    ]
+    assert detect_identifier_collisions(vault, "citekey-2025", {"pmcid": "PMC7399101"}) == [
+        {"other_work_id": pmc_work, "field": "pmcid"}
+    ]
+    assert detect_identifier_collisions(vault, arxiv_work, {"arxiv": "2411.14199"}) == []
+    assert detect_identifier_collisions(vault, "other", {"arxiv": "2411.9999"}) == []
+    assert detect_identifier_collisions(vault, "other", {"doi": "10.1234/admitted"}) == []
+    assert detect_identifier_collisions(tmp_path / "nowhere", "w", {"arxiv": "1"}) == []
+
+
+def test_doi_unique_collision_raises_and_is_classified(tmp_path: Path) -> None:
+    vault = _catalog_vault(tmp_path)
+    first = csl_capture_payload(
+        {"id": "alpha-2020", "type": "article-journal", "title": "Alpha", "DOI": "10.9999/dup"},
+        raw_text="{}",
+    )
+    _admit(vault, first)
+
+    second = csl_capture_payload(
+        {"id": "beta-2021", "type": "article-journal", "title": "Beta", "DOI": "10.9999/dup"},
+        raw_text="{}",
+    )
+    with pytest.raises(sqlite3.IntegrityError) as excinfo:
+        _admit(vault, second)
+
+    assert is_doi_collision_error(str(excinfo.value))
+    assert not is_doi_collision_error("UNIQUE constraint failed: catalog_sources.work_id")
+    assert not is_doi_collision_error("capture refusal: no text")
+    assert state.catalog_source(vault, "alpha-2020") is not None
+    assert len(state.catalog_sources(vault, checked_only=False)) == 1
+
+
+def test_same_doi_entries_collapse_structurally_to_one_row(tmp_path: Path) -> None:
+    """Same DOI derives one work ID, so the driver's pre-check skips the second."""
+    vault = _catalog_vault(tmp_path)
+    first = bibtex_capture_payload(BIB_SAME_DOI_A)
+    second = bibtex_capture_payload(BIB_SAME_DOI_B)
+
+    assert first["work_id"] == second["work_id"] == "doi-10.7777/same"
+    _admit(vault, first)
+
+    assert state.catalog_source(vault, second["work_id"]) is not None
+    assert len(state.catalog_sources(vault, checked_only=False)) == 1
+    assert detect_identifier_collisions(vault, second["work_id"], second["identifiers"]) == []
