@@ -790,10 +790,15 @@ record — do not touch.
   `from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing`
   import
 - Modify: `tests/test_loudness.py` (rewrite; see steps)
+- Modify: `tests/test_sweeps_retraction.py` (remove COV.3's now-obsolete
+  best-effort-push environment cleanup and `push_card` monkeypatch from the
+  SQLite retraction-sweep test)
 - Modify: `docs/README.md:135`,
   `docs/explanation/architecture/README.md:45`,
   `docs/reference/evidence-and-integrations/integrations.md:84`,
-  `docs/reference/system/failure-modes.md:26`
+  `docs/reference/system/failure-modes.md:26`,
+  `docs/reference/commands-and-transports/system-actions-operations.md`,
+  `docs/explanation/execution/control-plane/honesty-card.md`
 - Test: `tests/test_loudness.py`
 
 **Interfaces:**
@@ -868,34 +873,50 @@ to catch them). In `src/memoria_vault/runtime/subsystems/lib/inbox.py`: delete
 the deduplicated `write_finding` branch's `push_card` call, the ordinary
 `write_finding` call, `write_work_prompt`'s `push_card` call, and the import
 alias. Anchor by symbol rather than the historical line numbers.
+In `tests/test_sweeps_retraction.py`, remove the COV.3-local Telegram env
+cleanup, the `push_card` monkeypatch, and the now-unused `loudness` import;
+the test's SQLite retraction assertions remain unchanged.
 
 - [ ] **Step 4: Run the module tests to verify green**
 
-Run: `python -m pytest tests/test_loudness.py tests/test_inbox.py -v`
-(if `tests/test_inbox.py` does not exist, run the inbox tests' actual home:
-`grep -rln "write_finding\|write_proposal" tests/ | head` and run those files)
+Run: `python -m pytest tests/test_loudness.py tests/test_inbox_cards.py tests/test_sweeps_retraction.py -v`
 Expected: PASS across the board.
 
-- [ ] **Step 5: Fix the four docs claims**
+- [ ] **Step 5: Fix the seven docs claims**
 
 - `docs/README.md:135`: replace the bullet with:
   `- **Mobile capture is not available** — no push channel ships; inbound capture from a phone is out of scope for beta.1. See [Architecture](explanation/architecture/README.md#interaction-channels).`
   (drops the "urgent push (via Telegram) ships today" claim and the dead
   closed-issue #382 reference)
-- `docs/explanation/architecture/README.md:45`: end the sentence at
-  "remain pull-only." — delete ", while alert and block prompts may push to
-  Telegram when configured".
+- `docs/explanation/architecture/README.md:27-29`: say that no notification
+  channel ships; optional adapters may present attention without becoming the
+  source of authority. At :45, end the sentence at "remain pull-only." —
+  delete ", while alert and block prompts may push to Telegram when configured".
 - `docs/reference/evidence-and-integrations/integrations.md:84`: delete the
   entire `**Telegram Bot API**` table row.
 - `docs/reference/system/failure-modes.md:26`: read the surrounding paragraph
   and delete the sentence fragment "alert/block prompts attempt a Telegram push
   only when that adapter is configured", rewording the remainder so the
   paragraph still reads (alert/block cards are pull-only inbox projections).
+- `docs/reference/commands-and-transports/system-actions-operations.md`: make
+  the Loudness-routing row describe interpreting metadata and open-blocker
+  exposure, not assigning metadata or sending/logging push attempts.
+- `docs/explanation/execution/control-plane/honesty-card.md`: describe
+  loudness as grading pull-only attention, not making attention push-worthy.
 
 - [ ] **Step 6: Repo-wide leftover sweep**
 
-Run: `grep -rni "telegram" src/ tests/ docs/ scripts/ .github/ --include="*" \
-  | grep -vE 'docs/(superpowers|design-history)/'`
+Run both:
+
+```bash
+rg -ni "telegram" src/ tests/ docs/ scripts/ .github/ --glob "*" \
+  | rg -v 'docs/(superpowers|design-history)/'
+rg -ni -e "push-worthy" -e "push attempts" \
+  -e "optional notification channels can draw attention" \
+  src/ tests/ docs/ scripts/ .github/ --glob "*" \
+  | rg -v 'docs/(superpowers|design-history)/'
+```
+
 Expected: zero runtime/published-doc hits. `docs/superpowers/` is retained
 working-plan history and `design-history/` is frozen history; neither is a
 product Telegram surface.
@@ -909,10 +930,13 @@ Expected: PASS.
 git add src/memoria_vault/runtime/subsystems/lib/loudness.py \
         src/memoria_vault/runtime/subsystems/lib/inbox.py \
         tests/test_loudness.py \
+        tests/test_sweeps_retraction.py \
         docs/README.md \
         docs/explanation/architecture/README.md \
         docs/reference/evidence-and-integrations/integrations.md \
-        docs/reference/system/failure-modes.md
+        docs/reference/system/failure-modes.md \
+        docs/reference/commands-and-transports/system-actions-operations.md \
+        docs/explanation/execution/control-plane/honesty-card.md
 git commit -m "refactor: remove Hermes-era Telegram push transport (PI ruling; loudness/blocker mechanics kept)
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
