@@ -24,7 +24,25 @@
 6. **Tension rows** store endpoints lexicographically sorted; ERP-C propagation and ERP-D counters must not assume direction.
 7. **Consequence-mark fields** (`stale: bool`, `consequence:` enum) are registered in the type yamls by NID-A's closed-validation task; ERP-C writes them, never touches yamls.
 8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5/.6 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks.
-9. **Execution order:** NID-A → NID-B → ERP-A → ERP-B → ERP-C → ERP-D → NID-C (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
+9. **Public roster activation:** ERP-A.1–.5 are one public activation boundary.
+   They may be developed and tested task-by-task, but no PR may merge after
+   A.1/.2 alone: A.3 converges every reader, A.4 makes the PI write paths
+   accept the same verbs, and A.5 updates the dependent U3 acceptance text.
+   Until that PR lands, `views.attention` may advertise only relations that
+   the HTTP `curate-note-link` request and its worker can complete. After it
+   lands, the served roster is exactly `edges.LINK_RELATIONS` (six verbs) and
+   still excludes `tension`. This prevents a dead-vocabulary window while
+   preserving `LINK_RELATIONS` as the one source of truth.
+10. **Warrant adapter and ordering:** ERP-D.5 has only ERP-A's activated
+    roster and ERP-B.2's `insert_concept_edge` as graph prerequisites; it may
+    run before ERP-C and ERP-D.1–.4/.6. It owns the backend wire
+    `payload.warrant → attributes_json.warrant`. U3-PLUG.5/.8 require that
+    task and emit `warrant`, never the legacy `reason` alias; the modal must
+    distinguish a `warrant` relation (a license-note edge) from Warrant text
+    (an annotation on the selected edge).
+11. **Execution order:** NID-A → NID-B → ERP-A.1–.5 (one public activation)
+    → ERP-B.2 → ERP-D.5 → remaining ERP-B → ERP-C → remaining ERP-D → NID-C
+    (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
 
 ## Requires PI ratification at merge (drafter rulings that extend the specs)
 
@@ -3872,11 +3890,14 @@ plus slice 4's activation migration and the §4 plan-amendment notes.
   (`state.MIGRATIONS: dict[int, tuple[int, list[str | Callable]]]`, key =
   from-version, steps applied in `_init` before `executescript(_schema_sql())`,
   which stamps the final `user_version`).
-- **Merge ERP-A.1 and ERP-A.2 in the same PR.** A.1 widens frontmatter
+- **Public activation is ERP-A.1–.5, in one PR.** A.1 widens frontmatter
   validation to six relations (via the `schema.py` re-export feeding
   `_check_links`) while the DB CHECK still rejects the three new values; A.2
-  closes that window. Neither commit may reach `main` without the other.
-  ERP-A.3/.4 execute after A.2; ERP-A.5 (docs) any time after A.2.
+  closes that first window, A.3 converges readers, A.4 makes the PI write
+  paths accept the same verbs, and A.5 updates U3's served-roster tests and
+  manual acceptance. The commits may be developed in that order and stay
+  green individually, but none may reach `main` until the whole group is
+  ready. This is the EDGES §4 same-release guard against a dead served verb.
 - Line refs verified at `main @ 9c77ba61` (pre-Plan-22). Where Plan 22 or
   NID-B will have shifted a line, the step says so and gives the content
   anchor to re-locate by.
@@ -4632,15 +4653,17 @@ relation-roster definition").
   block (after `from memoria_vault.runtime.paths import safe_filename`,
   line 27)
 - Test: `tests/test_schemas.py` (contract), `tests/test_knowledge.py`
-  (runtime), `tests/test_query_substrate.py` (contract), `tests/test_edges.py`
-  (unit) — all registered, no conftest change
+  (direct runtime), `tests/test_worker_product_jobs.py` (worker runtime),
+  `tests/test_query_substrate.py` (contract), `tests/test_edges.py` (unit) —
+  all registered, no conftest change
 
 **Interfaces:**
 - Consumes: `edges.LINK_RELATIONS` (already imported into `knowledge.py` by
   ERP-A.3); `schema.validate_frontmatter` / `schema.load_types`;
   `state.concept_edges`; `tests.helpers.ROOT`, `write_checked_concept`,
-  `copy_memoria_dirs`; the `rebuild_passage_index` wrapper at
-  `tests/test_query_substrate.py:18-19`.
+  `copy_memoria_dirs`; `enqueue_operation` / `run_next_job` and `write_note`
+  in `tests/test_worker_product_jobs.py`; the `rebuild_passage_index` wrapper
+  at `tests/test_query_substrate.py:18-19`.
 - Produces:
   - `curate_note_link` accepts exactly `edges.LINK_RELATIONS`; error message
     `f"note link_type must be one of {', '.join(sorted(LINK_RELATIONS))}"`
@@ -4648,6 +4671,11 @@ relation-roster definition").
     here; the relate control's served roster — `summary.link_relations` in
     the surfaces plan — serves these same six via `LINK_RELATIONS`).
   - `memoria link --rel` choices == `tuple(sorted(edges.LINK_RELATIONS))`.
+  - Direct and worker acceptance both parameterize over
+    `sorted(edges.LINK_RELATIONS)`, assert each matching `links.<relation>`
+    write, and separately reject `tension`. This is the executable half of
+    the public-roster activation guard: a reader may not advertise a verb
+    unless both the direct PI path and queued worker path complete it.
   - Repo guard test: no `.py` file under `src/memoria_vault` except
     `lib/edges.py` contains a quoted `"supports", "contradicts"` roster
     literal.
@@ -4681,10 +4709,16 @@ relation-roster definition").
   ```
 
   At the end of `tests/test_knowledge.py` (mirrors
-  `test_curate_note_link_records_typed_link_on_checked_note`, line 395):
+  `test_curate_note_link_records_typed_link_on_checked_note`, line 395), add
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS` to
+  the imports. Keep that existing one-case event/commit regression, then add
+  this all-served direct-path proof plus the separate negative case:
 
   ```python
-  def test_curate_note_link_accepts_rebuttal_and_rejects_tension(tmp_path: Path) -> None:
+  @pytest.mark.parametrize("relation", sorted(LINK_RELATIONS))
+  def test_curate_note_link_accepts_each_served_relation(
+      tmp_path: Path, relation: str
+  ) -> None:
       vault = workspace(tmp_path)
       _md(
           vault / "notes/source.md",
@@ -4696,15 +4730,73 @@ relation-roster definition").
       )
 
       result = curate_note_link(
-          vault, "source", "rebuttal", "target", actor="pi", machine="curator"
+          vault, "source", relation, "target", actor="pi", machine="curator"
       )
 
-      assert result["link_type"] == "rebuttal"
+      assert result["link_type"] == relation
       source_fm = read_frontmatter(vault / "notes/source.md")
-      assert source_fm["links"] == {"rebuttal": ["notes/target.md"]}
+      assert source_fm["links"] == {relation: ["notes/target.md"]}
 
-      with pytest.raises(ValueError, match="link_type must be one of"):
+
+  def test_curate_note_link_rejects_tension(tmp_path: Path) -> None:
+      vault = workspace(tmp_path)
+      _md(vault / "notes/source.md", "type: note\ncheck_status: checked\ntitle: Source\nstatus: accepted\n")
+      _md(vault / "notes/target.md", "type: note\ncheck_status: checked\ntitle: Target\nstatus: accepted\n")
+      with pytest.raises(ValueError, match="link_type must be"):
           curate_note_link(vault, "source", "tension", "target", actor="pi", machine="curator")
+  ```
+
+  At the end of `tests/test_worker_product_jobs.py`, import
+  `LINK_RELATIONS` from `runtime.subsystems.lib.edges` and add the matching
+  queued-worker proof. Keep a fresh disposable vault per parameter value so
+  the expected frontmatter is one relation at a time:
+
+  ```python
+  @pytest.mark.parametrize("relation", sorted(LINK_RELATIONS))
+  def test_worker_runs_each_served_curate_note_link(
+      tmp_path: Path, relation: str
+  ) -> None:
+      vault = workspace(tmp_path)
+      source = write_note(vault, "source", "checked", "Source body.")
+      target = write_note(vault, "target", "checked", "Target body.")
+      queued = enqueue_operation(
+          vault,
+          "curate-note-link",
+          payload={
+              "source_note_path": source.relative_to(vault).as_posix(),
+              "link_type": relation,
+              "target_path": target.relative_to(vault).as_posix(),
+          },
+          idempotency_key=f"served-link-{relation}",
+          actor="pi",
+      )
+      done = run_next_job(vault, machine="test-machine")
+
+      assert queued["kind"] == "operation"
+      assert done is not None and done["status"] == "done"
+      assert done["link_type"] == relation
+      assert read_frontmatter(source)["links"] == {relation: ["notes/target.md"]}
+
+
+  def test_worker_rejects_tension_curate_note_link(tmp_path: Path) -> None:
+      vault = workspace(tmp_path)
+      source = write_note(vault, "source", "checked", "Source body.")
+      target = write_note(vault, "target", "checked", "Target body.")
+      enqueue_operation(
+          vault,
+          "curate-note-link",
+          payload={
+              "source_note_path": source.relative_to(vault).as_posix(),
+              "link_type": "tension",
+              "target_path": target.relative_to(vault).as_posix(),
+          },
+          idempotency_key="served-link-tension",
+          actor="pi",
+      )
+      failed = run_next_job(vault, machine="test-machine")
+
+      assert failed is not None and failed["status"] == "failed"
+      assert "link_type must be" in str(failed["error"])
   ```
 
   At the end of `tests/test_query_substrate.py` (the vim round-trip;
@@ -4764,10 +4856,12 @@ relation-roster definition").
   ```
 
 - [ ] Run tests to verify they fail:
-  `python -m pytest tests/test_schemas.py::test_note_links_accept_activated_toulmin_relations "tests/test_knowledge.py::test_curate_note_link_accepts_rebuttal_and_rejects_tension" "tests/test_query_substrate.py::test_activated_link_round_trips_to_edge_row" tests/test_edges.py::test_single_roster_definition_repo_wide -v`
+  `python -m pytest tests/test_schemas.py::test_note_links_accept_activated_toulmin_relations tests/test_knowledge.py::test_curate_note_link_accepts_each_served_relation tests/test_knowledge.py::test_curate_note_link_rejects_tension tests/test_worker_product_jobs.py::test_worker_runs_each_served_curate_note_link tests/test_worker_product_jobs.py::test_worker_rejects_tension_curate_note_link tests/test_query_substrate.py::test_activated_link_round_trips_to_edge_row tests/test_edges.py::test_single_roster_definition_repo_wide -v`
   Expected: the schemas test PASSES already (the roster widened in A.1 —
-  it pins the behavior); the knowledge test fails with
+  it pins the behavior); the direct and worker parameterized groups pass for
+  the old three verbs and fail for `warrant`, `qualifier`, and `rebuttal` with
   `ValueError: note link_type must be supports, contradicts, or extends`;
+  their `tension` cases still reject;
   the round-trip PASSES already (A.1 + A.2 + G2S1.1 — it pins §10's
   acceptance); the guard test fails listing `src/memoria_vault/cli.py` and
   `src/memoria_vault/runtime/knowledge.py`.
@@ -4793,13 +4887,13 @@ relation-roster definition").
   ```
 
 - [ ] Run tests to verify they pass, plus the touched suites:
-  `python -m pytest tests/test_edges.py tests/test_schemas.py tests/test_knowledge.py tests/test_query_substrate.py tests/test_cli.py -v`
+  `python -m pytest tests/test_edges.py tests/test_schemas.py tests/test_knowledge.py tests/test_worker_product_jobs.py tests/test_query_substrate.py tests/test_cli.py -v`
   — expect PASS.
 - [ ] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_schemas.py tests/test_knowledge.py tests/test_query_substrate.py tests/test_edges.py
+  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_schemas.py tests/test_knowledge.py tests/test_worker_product_jobs.py tests/test_query_substrate.py tests/test_edges.py
   git commit -m "feat(graph): validator, curate-note-link, and CLI accept the six link relations
 
   warrant/qualifier/rebuttal round-trip from vim to concept_edges rows;
@@ -4811,6 +4905,15 @@ relation-roster definition").
 ---
 
 ### Task ERP-A.5: plan amendments — served-verbs acceptance + `claims.base` glyph column
+
+> **Execution override:** The 2026-07-29 cross-section contracts above now
+> own the surfaces changes, including the direct `edges.LINK_RELATIONS` import,
+> all-six acceptance, and the U3 warrant wire. This task makes that owner
+> migration executable by requiring the atomic U3-ENG.1/.2/.3 slice to start
+> only after ERP-A.1–.5 and to import `LINK_RELATIONS` from `lib.edges` on its
+> first implementation. Do not reapply the stale line-specific surface
+> instructions below. This task still carries the independent Alpha23
+> `claims.base` glyph amendment, re-anchored by its quoted context.
 
 The two recorded amendments EDGES §4 and §5 direct at the surfaces and
 alpha.23 plans. Docs only; no code, no tests, no verify-gated behavior (the

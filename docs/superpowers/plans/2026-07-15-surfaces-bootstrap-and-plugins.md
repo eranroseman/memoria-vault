@@ -18,7 +18,7 @@
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
-2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, api_version, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `schema.LINK_RELATIONS`, `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG tasks written against `open_count` read `open`.
+2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, api_version, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: after graph ERP-A.1–.5 activates, `link_relations` comes directly from `edges.LINK_RELATIONS` (the temporary `schema` re-export is only the pre-activation bridge), `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), and `engine_version` from the package version. U3-PLUG tasks written against `open_count` read `open`.
 3. **View payload envelope**: `{ok: true, api_version, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
@@ -29,7 +29,11 @@
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
 12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
-13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB, U3-ENG} → SEAM.1 → U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C} (U4-C may run before U4-A; U4-A imports its provider).
+13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
+    U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
+    U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
+    wait for graph ERP-B.2 → ERP-D.5. (U4-C may run before U4-A; U4-A imports
+    its provider.)
 
 ### Plan-reconciliation amendment — canonical nested attention cards (2026-07-29)
 
@@ -276,10 +280,12 @@ are unchanged.  In a conflict, this section governs.
    parent field exists, but it contains only spans for fields that are actually
    present.
 5. **Execution order and design record.** U3-ENG.1/.2/.3 are one atomic TDD
-   slice after BOOT-B.4: write all replacement tests, run that group red,
-   implement the final producer above, run it green, and make one combined
-   commit.  Do not execute their superseded incremental red/green expectations
-   or their three separate commits.  Then land U3-ENG.4, U3-ENG.5, and
+   slice after BOOT-B.4 and graph ERP-A.1–.5: write all replacement tests,
+   run that group red, implement the final producer above, run it green, and
+   make one combined commit. U3-ENG.3 imports `LINK_RELATIONS` directly from
+   `runtime.subsystems.lib.edges`, never the temporary `schema` re-export.
+   Do not execute their superseded incremental red/green expectations or their
+   three separate commits. Then land U3-ENG.4, U3-ENG.5, and
    U3-ENG.6 before U3-PLUG.4/.6/.7.  SEAM.1 lands before any pane action test
    or V2 `resolve-evidence` endpoint.  The U3 design's expanded-card order is
    amended to `evidence → text → action row → analysis → meta`; this is a
@@ -291,6 +297,78 @@ are unchanged.  In a conflict, this section governs.
    preserve the row and add that job later. The historical concrete dict and
    test snippets below are superseded only to this extent; neither execution
    order may delete or leave a jobless registered view.
+
+### Plan-reconciliation amendment — graph roster activation and warrant wire (2026-07-29)
+
+This amendment supersedes U3-PLUG.5's legacy `reason` payload, every
+three-item relation fixture/assertion in U3-PLUG.5/.6, U3-PLUG.8's ambiguous
+Warrant help text, and U3-PLUG.11's three-verb/manual-queue-only acceptance.
+It is coordinated with graph-substrate ERP-A.1–.5 and ERP-D.5; it neither
+adds a relation-specific registry action nor changes the SEAM.1 HTTP/MCP
+actor split.
+
+1. **Atomic public roster.** `summary.link_relations` is always the exact
+   roster that the token-authenticated HTTP `operation/run` door can enqueue
+   and the worker can complete through `curate-note-link`. It remains the
+   current three verbs until the graph plan's ERP-A.1–.5 public activation PR
+   lands; then it is exactly `sorted(edges.LINK_RELATIONS)` (the six
+   `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, and
+   `rebuttal`). `tension` is never served. ERP-A.5 pins U3-ENG.3's direct `lib.edges`
+   import before the atomic U3 engine slice begins; the temporary `schema`
+   re-export is never a second final owner. The plugin continues to render
+   only the server payload—no compatibility roster and no local relation
+   literal.
+2. **Required graph and U3 proofs.** ERP-A.4's engine/worker acceptance group
+   parameterizes direct `curate_note_link`/worker execution over every served
+   relation and asserts the matching `links.<relation>` entry; it separately
+   proves that `tension` is rejected. It does not use `/operation/run`: before
+   SEAM.1 that HTTP door still assigns `actor="agent"`. U3-PLUG.5/.6, which
+   execute only after ERP-A.1–.5, use the exact sorted-six fixture, and prove
+   a `rebuttal` builder payload; U3-PLUG.6's summary mock/`linkRelations`
+   assertion uses that same six-value list. U3-PLUG.7
+   owns the post-SEAM.1 public integration: fetch the served roster, submit
+   each relation through the PI-authenticated `/operation/run` door without a
+   caller-supplied actor, run the jobs, and assert `status == "done"`; it also
+   proves `tension` is absent and rejected. No relation-specific registry
+   action is added.
+3. **Warrant text is an edge attribute.** U3-PLUG.5/.8 execute after
+   graph ERP-D.5. `buildRelateOperation` emits a nonblank text field as
+   `payload.warrant` (and omits it when blank), never `payload.reason`; its
+   Node test pins that wire. ERP-D.5's Python round trip pins
+   `attributes_json.warrant`. The modal help reads, in substance: “A
+   `warrant` relation links a license note; Warrant text annotates the
+   selected edge.” This keeps the two meanings distinct rather than claiming
+   that a request reason is promotion-ready edge data.
+4. **Manual proof keeps the token private.** Replace the old `grep` command,
+   which puts the token in a child process's argument vector and can choose
+   the wrong vault, with this in-process check. It neither prints the token
+   nor passes it to another command:
+
+   ```bash
+   python - <<'PY'
+   import json
+   import subprocess
+   from pathlib import Path
+
+   vault = Path("test-vault/u3-plug-manual")
+   handshake = json.loads(
+       subprocess.check_output(
+           ["memoria", "handshake", "--vault", str(vault), "--json"], text=True
+       )
+   )
+   token = str(handshake["token"])
+   hits = [
+       path.relative_to(vault).as_posix()
+       for path in vault.rglob("*")
+       if path.is_file() and token.encode() in path.read_bytes()
+   ]
+   assert hits == [], hits
+   PY
+   ```
+
+   The U3-PLUG.11 relation step selects `rebuttal` (a newly activated verb),
+   submits it, runs the queued job, and verifies the resulting edge—not merely
+   a queued request id.
 
 ### Task SEAM.1: Loopback operation door carries PI actor authority
 
@@ -8744,6 +8822,11 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 ### Task U3-PLUG.5: `relate.js` — relate-operation payload builder (roster from server)
 
+> **Execution override:** The 2026-07-29 graph-roster/warrant amendment
+> governs. The legacy three-item roster and `reason` snippets below are
+> drafting history: execute the six-served-roster, `payload.warrant` version
+> after graph ERP-D.5 instead.
+
 **Files:**
 - Create: `packages/memoria-obsidian/relate.js`
 - Create: `packages/memoria-obsidian/scripts/test-relate.mjs`
@@ -8858,6 +8941,10 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 ---
 
 ### Task U3-PLUG.6: `main.js` core rewrite — handshake client, in-memory token, pill, poll loop
+
+> **Execution override:** The 2026-07-29 graph-roster/warrant amendment
+> governs the summary fixture and `linkRelations` assertion: use all six
+> served verbs after ERP-A.1–.5, never the historical fixed triple below.
 
 The big wiring task: replaces the hardcoded `serverUrl` + SecretStorage token with the handshake spawn, adds the Engine command setting, the six-state pill with click behaviors, the 401 recovery ladder, and the 30 s/2 m poll loop.
 
@@ -9533,22 +9620,137 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.7: Attention pane ItemView — queue rows, expand-in-place, j/k/Enter, actions
 
+> **Execution override:** The 2026-07-29 graph-roster/warrant amendment makes
+> this the post-SEAM.1 live HTTP integration slice: it proves every served
+> relation can be queued through the PI HTTP door and completed, while
+> `tension` remains absent/rejected. Keep that Python integration separate
+> from the Node mock; neither test supplies an `actor` field.
+
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (requires; `onload` — `registerView` + `open-attention` command; new `enqueueNamedOperation` method; new `AttentionView` class + `VIEW_TYPE_ATTENTION` constant appended before `MemoriaSettingTab`)
 - Modify: `packages/memoria-obsidian/styles.css` (pane styles, theme vars only)
 - Modify: `packages/memoria-obsidian/scripts/test.mjs` (view-registration + enqueue-toast assertions)
 - Modify: `tests/test_memoria_obsidian_package.py` (command roster line 70–82: add `"open-attention"`)
+- Modify: `tests/test_attention_view.py` (post-SEAM.1 live HTTP served-roster
+  contract; reuses U3-ENG.6's authenticated `live_server` and `_http_get`)
 - Modify (parity): seed copies of `main.js`/`styles.css` + golden regen (same commands as U3-PLUG.6)
 
 **Interfaces:**
 - Consumes: `renderBlock`/`renderView`/`sortCards`/`moveSelection`/`materialize` (U3-PLUG.4), `formatAsOf`/`skewBanner` (U3-PLUG.3), `authedJson`/`postOperation` (U3-PLUG.6); `GET /v1/views/attention` full view payload.
+- Consumes (integration proof): U3-ENG.6's real bearer-authenticated loopback
+  fixture, graph's `edges.LINK_RELATIONS`, and SEAM.1's server-owned `pi`
+  authority for `POST /operation/run`.
 - Produces:
   - `VIEW_TYPE_ATTENTION = "memoria-attention"` and `class AttentionView extends ItemView` with `getViewType()`, `getDisplayText() -> "Memoria Attention"`, `refresh() -> Promise<void>`, `render()`, `onKey(event)`, `onClick(event)`.
   - `plugin.enqueueNamedOperation(operationId: string, payload: object) -> Promise<object|null>` — posts via `postOperation(operationId, payload, "")`, toasts `` Memoria queued <operationId>: <job.job_id> ``, records the `operation.queued` empirical event, Notices the error message on failure. **The relate modal (U3-PLUG.8) and every card action button call this.**
   - Command id `"open-attention"`.
   - `poll()` gains one line: refresh any open attention leaves after a successful summary fetch.
+  - `test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension`:
+    the only public-path proof that the roster returned to the plugin can be
+    submitted without a client `actor`, completed by the worker, and persisted
+    as the PI. It also proves `tension` is never served and is rejected if
+    submitted anyway.
 
 **Steps:**
+
+- [ ] Add the post-SEAM.1 live HTTP integration proof to
+  `tests/test_attention_view.py`, alongside the existing live-server tests
+  and before the Node-mock step below. U3-ENG.6 already creates `live_server`
+  and `_http_get`; extend its imports with
+  `from memoria_vault.runtime import state`,
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`,
+  `from memoria_vault.runtime.vaultio import read_frontmatter`, and
+  extend its existing `from tests.helpers import init_cli_workspace` import
+  to also import `write_checked_note`. Add this POST companion (it accepts no
+  `actor` argument and therefore cannot put one into the request body):
+
+  ```python
+  def _http_post(url: str, body: dict, token: str) -> tuple[int, dict]:
+      request = urllib.request.Request(
+          url,
+          data=json.dumps(body).encode("utf-8"),
+          headers={
+              "Authorization": f"Bearer {token}",
+              "Content-Type": "application/json",
+          },
+          method="POST",
+      )
+      try:
+          with urllib.request.urlopen(request, timeout=10) as response:
+              return response.status, json.loads(response.read().decode("utf-8"))
+      except urllib.error.HTTPError as error:
+          return error.code, json.loads(error.read().decode("utf-8"))
+  ```
+
+  Then append this test. It deliberately derives the loop from the HTTP
+  summary, rather than importing a second client-side roster; the one direct
+  `LINK_RELATIONS` assertion verifies that the server is the graph owner.
+
+  ```python
+  def test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension(
+      workspace: Path, live_server: str
+  ) -> None:
+      write_checked_note(workspace, "notes/source.md", "Source")
+      write_checked_note(workspace, "notes/target.md", "Target")
+      summary_code, summary = _http_get(
+          f"{live_server}/v1/views/attention?summary=true", token="view-token"
+      )
+
+      assert summary_code == HTTPStatus.OK
+      assert summary["link_relations"] == sorted(LINK_RELATIONS)
+      assert "tension" not in summary["link_relations"]
+      for relation in summary["link_relations"]:
+          body = {
+              "operation_id": "curate-note-link",
+              "payload": {
+                  "source_note_path": "notes/source.md",
+                  "link_type": relation,
+                  "target_path": "notes/target.md",
+              },
+              "idempotency_key": f"live-served-link-{relation}",
+          }
+          assert "actor" not in body
+          code, response = _http_post(
+              f"{live_server}/operation/run", body, token="view-token"
+          )
+
+          assert code == HTTPStatus.OK
+          assert response["ok"] is True
+          assert response["result"]["status"] == "done"
+          request = state.request_row(workspace, response["job"]["job_id"])
+          assert request is not None and request["actor"] == "pi"
+          assert read_frontmatter(workspace / "notes/source.md")["links"][relation] == [
+              "notes/target.md"
+          ]
+
+      tension_code, tension = _http_post(
+          f"{live_server}/operation/run",
+          {
+              "operation_id": "curate-note-link",
+              "payload": {
+                  "source_note_path": "notes/source.md",
+                  "link_type": "tension",
+                  "target_path": "notes/target.md",
+              },
+              "idempotency_key": "live-served-link-tension",
+          },
+          token="view-token",
+      )
+
+      assert tension_code == HTTPStatus.OK
+      assert tension["ok"] is False
+      assert tension["result"]["status"] == "failed"
+  ```
+
+  Run this specific Python proof after graph ERP-A.1–.5 and SEAM.1, before
+  treating the pane as complete:
+
+  ```bash
+  python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v
+  ```
+
+  Expected: PASS. This is a prereq integration contract, not a Node-mock
+  replacement: it must stay green while the pane code below is developed.
 
 - [ ] Write the failing test — append to the `try` block of `packages/memoria-obsidian/scripts/test.mjs` (before `finally`):
   ```js
@@ -9864,15 +10066,20 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
   ```
   7. In `tests/test_memoria_obsidian_package.py::test_memoria_obsidian_registers_minimal_proof_commands`, add `"open-attention",` to the command tuple.
-- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
+- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
 - [ ] Sync seed + regenerate goldens (same three commands as U3-PLUG.6's sync step; only `main.js` and `styles.css` changed this time), re-run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 - [ ] Commit:
-  `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
+  `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py tests/test_attention_view.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
   `git commit -m "feat(obsidian): attention pane ItemView — rows, expand-in-place, j/k/Enter, enqueue actions` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
 
 ---
 
 ### Task U3-PLUG.8: Relate modal — single form, fuzzy pickers, queue edge
+
+> **Execution override:** Execute this after graph ERP-D.5 and follow the
+> 2026-07-29 graph-roster/warrant amendment. Its legacy Warrant copy and
+> `reason` payload path below are drafting history; distinguish the relation
+> from edge-annotation text and emit `payload.warrant`.
 
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (require `relate.js`; `relate` command in `onload`; `RelateModal` + `NotePathSuggest` classes appended after `AttentionView`; a `Relate…` button in `AttentionView.render` header)
@@ -10113,6 +10320,11 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 ---
 
 ### Task U3-PLUG.11: Manual click-through check (what automation cannot reach)
+
+> **Execution override:** Use the 2026-07-29 graph-roster/warrant amendment's
+> private in-process token check and its newly activated-relation completion
+> proof. The historical `grep` command and fixed-three-verb wording below are
+> not executable instructions.
 
 **Files:** none (checklist executed against a disposable vault under `test-vault/`; results reported in the PR description, not committed as a file).
 
