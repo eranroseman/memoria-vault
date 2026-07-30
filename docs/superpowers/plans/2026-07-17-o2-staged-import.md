@@ -1031,7 +1031,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 This section implements spec §4 (per-type adapter matrix: the normalization dict + heuristics onto the **shipped** `item_type` vocabulary, and the fetch-synthesis rule over the O1 resolve layer) and spec §5 (duplicates: identifier-exact detection, the `doi UNIQUE` failure classifier, the same-DOI structural skip) — implementation slices 3–4 of `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md`.
 
-Everything lands in a new `src/memoria_vault/runtime/bulk_import.py` as pure seams the driver-loop section wires into the entry loop; **no `cli.py` or `capture.py` change happens here** (single-entry parse/admission stays pinned, per slice 1). The normalization point is a decided contract: the driver calls the unchanged shipped builders (`bibtex_capture_payload` capture.py:295-329 / `csl_capture_payload` capture.py:332-364), then stamps `payload["item_type"] = entry_item_type(...)` — necessary because the shipped CSL builder passes the raw CSL type straight through (`capture.py:358`, e.g. `article-journal`), which is not the shipped catalog vocabulary. Shipped `_item_type` (capture.py:843-854) is **not duplicated as logic and not called from product code**: it silently maps every unknown type to `article`, which is exactly the behavior the §4 flag must not inherit. Instead the bulk map is one explicit dict (the spec's "the mapping ships as code; this table is its documentation"), and a parity test pins its BibTeX rows to `_item_type` so the two can never drift.
+This section extends P.1's existing `src/memoria_vault/runtime/bulk_import.py` with pure seams; **no `cli.py` or `capture.py` change happens here** (single-entry parse/admission stays pinned, per slice 1). I.1 is the only task allowed to wire the adapter seams into the entry loop. The normalization point is a decided contract: it stamps `payload["item_type"] = entry_item_type(...)` after the unchanged shipped builders (`bibtex_capture_payload` capture.py:295-329 / `csl_capture_payload` capture.py:332-364), because the shipped CSL builder passes the raw CSL type straight through (`capture.py:358`, e.g. `article-journal`), which is not the shipped catalog vocabulary. Shipped `_item_type` (capture.py:843-854) is **not duplicated as logic and not called from product code**: it silently maps every unknown type to `article`, which is exactly the behavior the §4 flag must not inherit. Instead the bulk map is one explicit dict (the spec's "the mapping ships as code; this table is its documentation"), and a parity test pins its BibTeX rows to `_item_type` so the two can never drift.
 
 Cross-plan preconditions honored here: the plan-level I1 gate is carried by the plan header (this section emits no telemetry and does not consume `record_telemetry_event`); Task A.2 consumes O1's `resolve_fetch(row, *, opener)` (`runtime/seed_install.py`, O1 plan Task M.2 — merged but possibly unexecuted), so A.2 opens with a grep-first dependency check and lands O1 M.2 first if the symbol is absent.
 
@@ -1041,55 +1041,76 @@ Line references verified at `51395f15`; re-anchor by symbol if drifted.
 
 **Files:**
 
-- Create `src/memoria_vault/runtime/bulk_import.py`
-- Create `tests/test_bulk_import.py`
-- Modify `tests/conftest.py` — `TEST_LEVELS` dict at :18 (register the new file; A.2/A.3 extend the registered file with no further conftest change)
+- Modify `src/memoria_vault/runtime/bulk_import.py`
+- Modify `tests/test_bulk_import.py`
 
 **Interfaces:**
 
 - Consumes: shipped `_item_type(entry_type: str) -> str` (capture.py:843-854, parity-pinned by test only — never called from `bulk_import.py`); `csl_capture_payload` raw-type passthrough (capture.py:358, demonstrated by test); the shipped vocabulary `article/book/webpage/software/dataset/report` (schema.sql:105 default `'article'`, no CHECK — the reserved CHECK reshape is substrate work, not O2).
 - Produces: `entry_item_type(entry_fields: dict[str, Any]) -> str` and `entry_type_mapped(entry_fields: dict[str, Any]) -> bool` (False ⇒ the §4 "unknown → reference-only as `article` + worklist mapping row" flag; the driver section consumes both), plus module constant `_ENTRY_TYPE_MAP`. `entry_fields` is one flat dict serving both formats: for BibTeX the driver passes `{"type": entry["entry_type"], **entry["fields"]}` (field keys are lowercased by `_parse_bibtex_fields`, capture.py:793); for CSL it passes the raw item (keys `type`/`URL`/`DOI`).
 
+> **Execution amendment (2026-07-30): extend the landed P.1 seam.**
+> P.1 created and registered `runtime/bulk_import.py` and
+> `tests/test_bulk_import.py` (P.2 extended them); A.1 appends its constants/functions and seven
+> normalization tests to those existing files, without a `conftest.py` edit.
+> Its RED proof is therefore an `ImportError` for missing `entry_item_type`, not
+> a module `ModuleNotFoundError`; its GREEN target is 16 tests in that file.
+> Preserve the P.1 splitter explanation in the module docstring and extend it
+> with the normalization rationale rather than replacing it. In addition to the
+> BibTeX lowercase heuristics, pin CSL's raw uppercase `URL`/`DOI` keys so the
+> promised shared flat-entry interface cannot silently drift toward one format.
+> A schemeless repository host path (for example `github.com/org/repo`) also
+> counts as a repo-host URL: parse it as a network location only when it has no
+> scheme, while retaining exact-host/subdomain matching so
+> `github.com.evil/...` remains an ordinary webpage.
+> The historical Step 1 and Step 3 code blocks below supply the adapter
+> additions only: retain the existing splitter imports, tests, helpers, and
+> docstring instead of replacing either P.1-created file wholesale.
+
 Decisions made here (spec gaps resolved inline, recorded in the module docstring):
 - `@misc` heuristic precedence: **repo-host URL → `software`** first, then **DataCite DOI prefix → `dataset`**, then **any URL → `webpage`**, else unmappable (`article` + flagged). Rationale: Zenodo software deposits carry DataCite DOIs *and* repo URLs; the URL is the stronger signal.
 - The DataCite prefix heuristic is a curated frozenset of eight common data-repository prefixes (Zenodo, Dryad, figshare, Harvard Dataverse, Mendeley Data, ICPSR, GBIF, UCI ML) — offline and keyless, extension is a one-line diff. The spec names the heuristic without naming prefixes.
 - BibTeX `@conference` (alias of `@inproceedings`) maps to `article`, mirroring `_csl_type`'s `inproceedings|conference` handling (capture.py:981); it is absent from the spec table but shipped-consistent.
 
-- [ ] **Step 0: Order-tolerance check** — `grep -n "def entry_item_type" src/memoria_vault/runtime/bulk_import.py 2>/dev/null`. If the module already exists (another O2 section landed first), append the constants/functions from Step 3 into it instead of creating the file, and skip the conftest edit if `test_bulk_import.py` is already registered. At `51395f15` neither exists.
+- [ ] **Step 0: Order-tolerance check** — `grep -n "def entry_item_type" src/memoria_vault/runtime/bulk_import.py 2>/dev/null`. P.1 already created this module and registered `test_bulk_import.py`, so append the constants/functions and tests; do not edit `conftest.py`.
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_bulk_import.py`:
+- [ ] **Step 1: Write the failing tests** — append to the existing
+  `tests/test_bulk_import.py` and extend its existing imports:
 
 ```python
-"""Contract tests for the bulk-import adapter layer (O2 spec sections 4-5).
+# Extend the existing grouped import; retain its splitter helpers and tests.
+from memoria_vault.runtime.bulk_import import (
+    entry_item_type,
+    entry_type_mapped,
+    split_bibtex_entries,
+    split_csl_entries,
+)
 
-Everything here is offline: no network, no default openers, tmp_path vaults
-only (later tasks). The section-4 table is exercised as code assertions.
-"""
-
-from __future__ import annotations
-
-from memoria_vault.runtime.bulk_import import entry_item_type, entry_type_mapped
+# Append the following seven adapter contract tests.
 
 
 def test_entry_item_type_maps_bibtex_and_csl_types_onto_shipped_vocabulary() -> None:
-    # BibTeX rows of the spec section-4 table.
-    assert entry_item_type({"type": "article"}) == "article"
-    assert entry_item_type({"type": "inproceedings"}) == "article"
-    assert entry_item_type({"type": "incollection"}) == "article"
-    assert entry_item_type({"type": "book"}) == "book"
-    assert entry_item_type({"type": "techreport"}) == "report"
-    assert entry_item_type({"type": "phdthesis"}) == "report"
-    assert entry_item_type({"type": "online", "url": "https://example.test/post"}) == "webpage"
-    # CSL rows of the table.
-    assert entry_item_type({"type": "article-journal"}) == "article"
-    assert entry_item_type({"type": "paper-conference"}) == "article"
-    assert entry_item_type({"type": "chapter"}) == "article"
-    assert entry_item_type({"type": "thesis"}) == "report"
-    assert entry_item_type({"type": "post-weblog"}) == "webpage"
-    assert entry_item_type({"type": "webpage"}) == "webpage"
-    assert entry_item_type({"type": "software"}) == "software"
-    assert entry_item_type({"type": "dataset"}) == "dataset"
-    assert entry_item_type({"type": "report"}) == "report"
+    cases = (
+        ({"type": "article"}, "article"),
+        ({"type": "inproceedings"}, "article"),
+        ({"type": "incollection"}, "article"),
+        ({"type": "book"}, "book"),
+        ({"type": "techreport"}, "report"),
+        ({"type": "phdthesis"}, "report"),
+        ({"type": "online", "url": "https://example.test/post"}, "webpage"),
+        ({"type": "article-journal"}, "article"),
+        ({"type": "paper-conference"}, "article"),
+        ({"type": "chapter"}, "article"),
+        ({"type": "thesis"}, "report"),
+        ({"type": "post-weblog"}, "webpage"),
+        ({"type": "webpage"}, "webpage"),
+        ({"type": "software"}, "software"),
+        ({"type": "dataset"}, "dataset"),
+        ({"type": "report"}, "report"),
+    )
+    for fields, expected in cases:
+        assert entry_item_type(fields) == expected
+        assert entry_type_mapped(fields) is True
 
 
 def test_entry_item_type_agrees_with_shipped_item_type_for_bibtex_aliases() -> None:
@@ -1143,18 +1164,33 @@ def test_misc_repo_host_url_maps_to_software_and_wins_over_dataset_doi() -> None
     assert entry_item_type({"type": "misc", "url": "https://gitlab.com/o/r"}) == "software"
     assert entry_item_type({"type": "misc", "url": "https://codeberg.org/o/r"}) == "software"
     assert entry_item_type({"type": "misc", "url": "https://gist.github.com/o/1"}) == "software"
+    csl_fields = {"type": "misc", "URL": "https://github.com/o/r"}
+    assert entry_item_type(csl_fields) == "software"
+    assert entry_type_mapped(csl_fields) is True
+    assert entry_item_type({"type": "misc", "url": "github.com/o/r"}) == "software"
+    assert entry_item_type({"type": "misc", "url": "github.com.evil/o/r"}) == "webpage"
+    assert entry_item_type({"type": "misc", "url": "github.com:thing"}) == "webpage"
 
 
 def test_misc_datacite_doi_prefix_maps_to_dataset() -> None:
-    fields = {"type": "misc", "doi": "10.5061/dryad.abc123"}
-    assert entry_item_type(fields) == "dataset"
-    assert entry_type_mapped(fields) is True
+    for prefix in (
+        "10.5281", "10.5061", "10.6084", "10.7910", "10.17632", "10.3886", "10.15468", "10.24432"
+    ):
+        fields = {"type": "misc", "doi": f"{prefix}/fixture"}
+        assert entry_item_type(fields) == "dataset", prefix
+        assert entry_type_mapped(fields) is True, prefix
+    csl_fields = {"type": "misc", "DOI": "10.5061/dryad.abc123"}
+    assert entry_item_type(csl_fields) == "dataset"
+    assert entry_type_mapped(csl_fields) is True
 
 
 def test_misc_with_plain_url_maps_to_webpage() -> None:
     fields = {"type": "misc", "url": "https://example.org/page"}
     assert entry_item_type(fields) == "webpage"
     assert entry_type_mapped(fields) is True
+    csl_fields = {"type": "misc", "URL": "https://example.org/page"}
+    assert entry_item_type(csl_fields) == "webpage"
+    assert entry_type_mapped(csl_fields) is True
 
 
 def test_unknown_types_fall_back_to_article_and_are_flagged() -> None:
@@ -1169,39 +1205,19 @@ def test_unknown_types_fall_back_to_article_and_are_flagged() -> None:
     assert entry_type_mapped({"type": "article"}) is True
 ```
 
-- [ ] **Step 2: Register the file and watch the tests fail** — in `tests/conftest.py`, add to `TEST_LEVELS` (alphabetical slot, before `test_bundle_roots.py`):
+- [ ] **Step 2: Watch the extended tests fail** — `test_bulk_import.py` is
+  already registered as `contract` by P.1, so do not edit `tests/conftest.py`.
+  Run `python -m pytest tests/test_bulk_import.py -v` → collection error:
+  `ImportError: cannot import name 'entry_item_type'`.
+
+- [ ] **Step 3: Minimal implementation** — append to
+  `src/memoria_vault/runtime/bulk_import.py`, preserving the P.1/P.2 helpers
+  and extending their module docstring:
 
 ```python
-    "test_bulk_import.py": "contract",
-```
-
-(exact edit: replace the line `    "test_bundle_roots.py": "contract",` with the two lines `    "test_bulk_import.py": "contract",` and `    "test_bundle_roots.py": "contract",`.)
-
-Run `python -m pytest tests/test_bulk_import.py -v` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.runtime.bulk_import'`.
-
-- [ ] **Step 3: Minimal implementation** — create `src/memoria_vault/runtime/bulk_import.py`:
-
-```python
-"""Bulk-import adapter layer: normalization, fetch synthesis, duplicates.
-
-Implements sections 4-5 of the O2 staged-import design
-(docs/superpowers/specs/2026-07-17-o2-staged-import-design.md). The
-section-4 table is documentation for _ENTRY_TYPE_MAP below -- the mapping
-ships here as code. The driver stamps entry_item_type over the unchanged
-shipped builders' payloads (csl_capture_payload passes raw CSL types
-through; capture.py's _item_type maps unknowns to article silently, so it
-is parity-pinned by test but never called from here).
-
-Decided heuristic order for @misc: repo-host URL -> software, then
-DataCite DOI prefix -> dataset, then any URL -> webpage (a Zenodo software
-deposit carries a DataCite DOI *and* a repo URL; the URL is the stronger
-signal). The DataCite prefixes are a curated offline list, not a registry
-lookup.
-"""
-
-from __future__ import annotations
-
-from typing import Any
+# Retain P.1's module docstring/imports/helpers. Add this import beside its
+# existing stdlib imports, extend its docstring with the decided precedence,
+# then append the following constants/functions after entry_ref.
 from urllib.parse import urlparse
 
 #: One dict over the union of BibTeX entry types and CSL item types, onto
@@ -1283,25 +1299,25 @@ def _entry_url(entry_fields: dict[str, Any]) -> str:
     return str(entry_fields.get("url") or entry_fields.get("URL") or "").strip()
 
 
-def _entry_doi(entry_fields: dict[str, Any]) -> str:
-    return str(entry_fields.get("doi") or entry_fields.get("DOI") or "").strip()
-
-
 def _doi_prefix(entry_fields: dict[str, Any]) -> str:
-    return _entry_doi(entry_fields).partition("/")[0]
+    doi = str(entry_fields.get("doi") or entry_fields.get("DOI") or "").strip()
+    return doi.partition("/")[0]
 
 
 def _is_repo_host(url: str) -> bool:
-    host = (urlparse(url).hostname or "").lower()
+    parsed = urlparse(url)
+    if not parsed.hostname and not parsed.scheme and not url.startswith("//"):
+        parsed = urlparse(f"//{url}")
+    host = (parsed.hostname or "").lower()
     return any(host == repo or host.endswith(f".{repo}") for repo in _REPO_HOSTS)
 ```
 
-- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 7 passed.
+- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 16 passed.
 
 - [ ] **Step 5: Commit** —
 
 ```
-git add src/memoria_vault/runtime/bulk_import.py tests/test_bulk_import.py tests/conftest.py
+git add src/memoria_vault/runtime/bulk_import.py tests/test_bulk_import.py
 git commit -m "feat(bulk-import): normalization dict + heuristics onto shipped item_type vocabulary
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
