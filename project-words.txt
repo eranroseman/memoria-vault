@@ -271,6 +271,7 @@ shorttitle
 sigstore
 sitewide
 slsa
+sociologica
 sociotechnical
 srivastava
 ssot

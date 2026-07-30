@@ -121,7 +121,9 @@ def build_entry_payload(fmt: str, entry_text: str) -> dict[str, Any]:
     item = json.loads(entry_text)
     if not isinstance(item, dict):
         raise ValueError("CSL entry must be a JSON object")
-    return csl_capture_payload(item, raw_text=entry_text)
+    payload = csl_capture_payload(item, raw_text=entry_text)
+    payload["identifiers"] = _normalized_entry_identifiers(item, payload["identifiers"])
+    return payload
 
 
 def entry_ref(fmt: str, entry_text: str, index: int) -> str:
@@ -137,6 +139,87 @@ def entry_ref(fmt: str, entry_text: str, index: int) -> str:
         if isinstance(item, dict) and str(item.get("id") or "").strip():
             return str(item["id"])
     return f"entry-{index}"
+
+
+def entry_fetch(entry_fields: dict[str, Any], identifiers: dict[str, Any]) -> dict[str, str] | None:
+    """Synthesize only a fetch descriptor the policy-bound resolver supports."""
+    identifiers = _normalized_entry_identifiers(entry_fields, identifiers)
+    pmcid = str(identifiers.get("pmcid") or "").strip()
+    if pmcid:
+        if not pmcid.upper().startswith("PMC"):
+            pmcid = f"PMC{pmcid}"
+        return {
+            "method": "pmc-oa",
+            "url": f"https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id={pmcid}",
+        }
+    arxiv = str(identifiers.get("arxiv") or "").strip()
+    if arxiv.lower().startswith("arxiv:"):
+        arxiv = arxiv[len("arxiv:") :].strip()
+    if arxiv:
+        return {"method": "arxiv-pdf", "url": f"https://export.arxiv.org/pdf/{arxiv}"}
+    url = _entry_url(entry_fields)
+    if url.lower().endswith(".pdf"):
+        return {"method": "pdf-url", "url": url}
+    return None
+
+
+def _normalized_entry_identifiers(
+    entry_fields: dict[str, Any], identifiers: dict[str, Any]
+) -> dict[str, Any]:
+    """Preserve PMCID/arXiv identifiers from either BibTeX or CSL field casing."""
+    normalized = dict(identifiers)
+    supplied = {str(key).casefold(): value for key, value in identifiers.items()}
+    fields = {str(key).casefold(): value for key, value in entry_fields.items()}
+    for name in ("pmcid", "arxiv"):
+        value = supplied.get(name) or fields.get(name)
+        if text := str(value or "").strip():
+            normalized[name] = text
+    return normalized
+
+
+def entry_capture_request(
+    payload: dict[str, Any],
+    fetch: dict[str, str] | None,
+    *,
+    mapped: bool = True,
+) -> tuple[str, dict[str, Any]]:
+    """Build one admission request without fetching or authorizing a URL."""
+    item_type = str(payload.get("item_type") or "article")
+    resource = str(payload.get("resource") or "").strip()
+    if mapped and item_type == "webpage" and resource:
+        return (
+            "capture-url-source",
+            {
+                "url": resource,
+                "title": str(payload.get("title") or ""),
+                "description": str(payload.get("description") or ""),
+            },
+        )
+    if not mapped or not isinstance(fetch, dict):
+        return "capture-source", payload
+    method = str(fetch.get("method") or "").strip()
+    url = str(fetch.get("url") or "").strip()
+    eligible = item_type == "article" or (item_type == "report" and method == "pdf-url")
+    if not eligible or method not in {"pmc-oa", "pdf-url", "arxiv-pdf"} or not url:
+        return "capture-source", payload
+    work_id = str(payload.get("work_id") or "").strip()
+    return (
+        "capture-remote-pdf-source",
+        {
+            "fetch": {"method": method, "url": url},
+            "capture": {
+                "work_id": work_id,
+                "title": str(payload.get("title") or work_id),
+                "description": str(payload.get("description") or ""),
+                "resource": resource or url,
+                "item_type": item_type,
+                "identifiers": payload.get("identifiers"),
+                "csl_json": payload.get("csl_json"),
+                "citekey": str(payload.get("citekey") or ""),
+                "provider_coverage": str(payload.get("provider_coverage") or "partial"),
+            },
+        },
+    )
 
 
 def entry_item_type(entry_fields: dict[str, Any]) -> str:

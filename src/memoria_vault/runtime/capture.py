@@ -24,6 +24,9 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
 WORK_ASPECT_ORDER = ("context", "key_idea", "method", "outcome", "limitation", "assumption")
+# Bound retained parser output from untrusted PDFs before it can exhaust a worker.
+MAX_PDF_PAGE_COUNT = 1_000
+MAX_PDF_EXTRACTED_TEXT_BYTES = 8 * 1024 * 1024
 _ASPECT_HEADING_ALIASES = {
     "assumption": "assumption",
     "assumptions": "assumption",
@@ -702,12 +705,19 @@ def _extract_pdf_pages(raw_bytes: bytes) -> list[dict[str, Any]]:
         raise RuntimeError("PDF capture requires PyMuPDF from the vault MCP requirements") from exc
 
     pages = []
+    extracted_text_bytes = 0
     with fitz.open(stream=raw_bytes, filetype="pdf") as doc:
         for page_number, page in enumerate(doc, start=1):
+            if page_number > MAX_PDF_PAGE_COUNT:
+                raise ValueError(f"PDF exceeds extraction page limit ({MAX_PDF_PAGE_COUNT} pages)")
+            raw_text = page.get_text("text")
+            extracted_text_bytes += len(raw_text.encode("utf-8"))
+            if extracted_text_bytes > MAX_PDF_EXTRACTED_TEXT_BYTES:
+                raise ValueError(
+                    f"PDF exceeds extracted-text limit ({MAX_PDF_EXTRACTED_TEXT_BYTES} bytes)"
+                )
             text = "\n".join(
-                line
-                for line in (" ".join(row.split()) for row in page.get_text("text").splitlines())
-                if line
+                line for line in (" ".join(row.split()) for row in raw_text.splitlines()) if line
             )
             pages.append(
                 {
@@ -732,12 +742,20 @@ def _pdf_content_text(pages: list[dict[str, Any]]) -> str:
 
 
 def _validate_pdf_text_coherence(pages: list[dict[str, Any]]) -> None:
-    text = "\n".join(str(page.get("text") or "") for page in pages)
-    visible = [char for char in text if not char.isspace()]
-    if not visible:
+    visible_count = 0
+    replacement_count = 0
+    alnum_count = 0
+    for page in pages:
+        for char in str(page.get("text") or ""):
+            if char.isspace():
+                continue
+            visible_count += 1
+            replacement_count += char == "\ufffd"
+            alnum_count += char.isalnum()
+    if not visible_count:
         raise ValueError("PDF parser produced no text")
-    replacement_ratio = text.count("\ufffd") / len(visible)
-    alnum_ratio = sum(1 for char in visible if char.isalnum()) / len(visible)
+    replacement_ratio = replacement_count / visible_count
+    alnum_ratio = alnum_count / visible_count
     if replacement_ratio > 0.02:
         raise ValueError("PDF parser output failed coherence check: replacement characters")
     if alnum_ratio < 0.3:

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import capture, state
 from memoria_vault.runtime.capture import (
     capture_source as _capture_source,
 )
@@ -225,6 +227,54 @@ def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None
     events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_pdf_source"
     assert events[-1]["workflow"] == "capture_pdf_source"
+
+
+def test_extract_pdf_pages_rejects_excessive_page_count(monkeypatch) -> None:
+    class Page:
+        def get_text(self, kind: str) -> str:
+            assert kind == "text"
+            return "A bounded parser reproduction page."
+
+    class Document:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args) -> None:
+            return None
+
+        def __iter__(self):
+            return iter([Page() for _ in range(1_001)])
+
+    fitz = ModuleType("fitz")
+    fitz.open = lambda **_kwargs: Document()  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "fitz", fitz)
+
+    with pytest.raises(ValueError, match="PDF exceeds extraction page limit"):
+        capture._extract_pdf_pages(b"%PDF-1.4")
+
+
+def test_extract_pdf_pages_rejects_text_over_byte_limit(monkeypatch) -> None:
+    class Page:
+        def get_text(self, kind: str) -> str:
+            assert kind == "text"
+            return "é" * (4 * 1024 * 1024 + 1)
+
+    class Document:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args) -> None:
+            return None
+
+        def __iter__(self):
+            return iter([Page()])
+
+    fitz = ModuleType("fitz")
+    fitz.open = lambda **_kwargs: Document()  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "fitz", fitz)
+
+    with pytest.raises(ValueError, match="PDF exceeds extracted-text limit"):
+        capture._extract_pdf_pages(b"%PDF-1.4")
 
 
 def test_capture_pdf_source_rejects_incoherent_parser_text(tmp_path: Path, monkeypatch) -> None:

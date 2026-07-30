@@ -16,6 +16,8 @@ import json
 import pytest
 
 from memoria_vault.runtime.bulk_import import (
+    entry_capture_request,
+    entry_fetch,
     entry_item_type,
     entry_type_mapped,
     split_bibtex_entries,
@@ -266,3 +268,139 @@ def test_unknown_types_fall_back_to_article_and_are_flagged() -> None:
     ):
         assert entry_item_type(fields) == "article", fields
         assert entry_type_mapped(fields) is False, fields
+
+
+OA_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6099118"
+ARXIV_URL = "https://export.arxiv.org/pdf/2411.14199v1"
+DIRECT_PDF_URL = "https://aclanthology.org/2024.findings-acl.123.pdf"
+
+
+def _adapter_payload(item_type: str = "article", **overrides: object) -> dict:
+    payload = {
+        "work_id": "w-1",
+        "title": "Fixture Work",
+        "description": "Fixture description.",
+        "resource": "",
+        "item_type": item_type,
+        "identifiers": {},
+        "csl_json": {"id": "w-1"},
+        "provider_coverage": "partial",
+        "citekey": "w1",
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_entry_fetch_synthesizes_only_resolver_supported_methods() -> None:
+    assert entry_fetch({}, {"pmcid": "PMC6099118"}) == {"method": "pmc-oa", "url": OA_URL}
+    assert entry_fetch({}, {"pmcid": "6099118"}) == {"method": "pmc-oa", "url": OA_URL}
+    assert entry_fetch({}, {"arxiv": "arXiv:2411.14199v1"}) == {
+        "method": "arxiv-pdf",
+        "url": ARXIV_URL,
+    }
+    assert entry_fetch({"url": "https://example.test/paper.PDF"}, {}) == {
+        "method": "pdf-url",
+        "url": "https://example.test/paper.PDF",
+    }
+    assert entry_fetch({"url": "https://doi.org/10.1234/x"}, {"doi": "10.1234/x"}) is None
+
+
+def test_csl_remote_identifiers_survive_payload_normalization_and_fetch_synthesis() -> None:
+    from memoria_vault.runtime.bulk_import import build_entry_payload
+
+    pmc_item = {
+        "id": "pmc-csl",
+        "type": "article-journal",
+        "title": "PMC CSL",
+        "PMCID": "6099118",
+    }
+    pmc_payload = build_entry_payload("csl", json.dumps(pmc_item))
+    assert pmc_payload["identifiers"] == {"pmcid": "6099118"}
+    assert entry_fetch(pmc_item, pmc_payload["identifiers"]) == {"method": "pmc-oa", "url": OA_URL}
+
+    arxiv_item = {
+        "id": "arxiv-csl",
+        "type": "article-journal",
+        "title": "arXiv CSL",
+        "arXiv": "arXiv:2411.14199v1",
+    }
+    arxiv_payload = build_entry_payload("csl", json.dumps(arxiv_item))
+    assert arxiv_payload["identifiers"] == {"arxiv": "arXiv:2411.14199v1"}
+    assert entry_fetch(arxiv_item, arxiv_payload["identifiers"]) == {
+        "method": "arxiv-pdf",
+        "url": ARXIV_URL,
+    }
+
+
+def test_entry_capture_request_routes_eligible_pdfs_without_fetching() -> None:
+    payload = _adapter_payload(identifiers={"pmcid": "PMC6099118"})
+    fetch = entry_fetch({}, payload["identifiers"])
+
+    operation_id, request = entry_capture_request(payload, fetch)
+
+    assert operation_id == "capture-remote-pdf-source"
+    assert request == {
+        "fetch": {"method": "pmc-oa", "url": OA_URL},
+        "capture": {
+            "work_id": "w-1",
+            "title": "Fixture Work",
+            "description": "Fixture description.",
+            "resource": OA_URL,
+            "item_type": "article",
+            "identifiers": {"pmcid": "PMC6099118"},
+            "csl_json": {"id": "w-1"},
+            "citekey": "w1",
+            "provider_coverage": "partial",
+        },
+    }
+    assert "raw_pdf_base64" not in str(request)
+
+    arxiv_payload = _adapter_payload(identifiers={"arxiv": "2411.14199v1"})
+    arxiv_operation, arxiv_request = entry_capture_request(
+        arxiv_payload, entry_fetch({}, arxiv_payload["identifiers"])
+    )
+    assert arxiv_operation == "capture-remote-pdf-source"
+    assert arxiv_request["fetch"] == {"method": "arxiv-pdf", "url": ARXIV_URL}
+
+    direct_payload = _adapter_payload(resource=DIRECT_PDF_URL)
+    direct_operation, direct_request = entry_capture_request(
+        direct_payload, entry_fetch({"url": DIRECT_PDF_URL}, {})
+    )
+    assert direct_operation == "capture-remote-pdf-source"
+    assert direct_request["fetch"] == entry_fetch({"url": DIRECT_PDF_URL}, {})
+
+
+def test_entry_capture_request_preserves_metadata_and_webpage_tiers() -> None:
+    pdf_fetch = {"method": "pdf-url", "url": DIRECT_PDF_URL}
+    for item_type in ("book", "software", "dataset"):
+        payload = _adapter_payload(item_type)
+        operation_id, request = entry_capture_request(payload, pdf_fetch)
+        assert operation_id == "capture-source"
+        assert request is payload
+
+    unmapped = _adapter_payload(identifiers={"pmcid": "PMC6099118"})
+    operation_id, request = entry_capture_request(
+        unmapped, entry_fetch({}, unmapped["identifiers"]), mapped=False
+    )
+    assert operation_id == "capture-source"
+    assert request is unmapped
+
+    report = _adapter_payload("report", resource=DIRECT_PDF_URL)
+    operation_id, request = entry_capture_request(report, pdf_fetch)
+    assert operation_id == "capture-remote-pdf-source"
+    assert request["fetch"] == pdf_fetch
+    arxiv_report = _adapter_payload("report", identifiers={"arxiv": "2411.14199v1"})
+    operation_id, request = entry_capture_request(
+        arxiv_report, entry_fetch({}, arxiv_report["identifiers"])
+    )
+    assert operation_id == "capture-source"
+    assert request is arxiv_report
+
+    webpage = _adapter_payload("webpage", resource="https://example.test/post")
+    operation_id, request = entry_capture_request(webpage, None)
+    assert operation_id == "capture-url-source"
+    assert request == {
+        "url": "https://example.test/post",
+        "title": "Fixture Work",
+        "description": "Fixture description.",
+    }

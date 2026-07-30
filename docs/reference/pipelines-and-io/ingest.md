@@ -19,8 +19,9 @@ source payloads: it records a capture run, writes raw and extracted text blobs,
 writes source metadata into SQLite catalog state, and records derived
 aspects/edges there. Portable BibTeX/CSL imports use the same unchecked SQLite
 staging path. The PDF adapter `stage_pdf_source()` uses the optional PyMuPDF
-parser when it is installed to extract page text. URL snapshots use
-`stage_url_source()` with stdlib HTML text extraction.
+parser when it is installed to extract page text, rejecting inputs above 1,000
+pages or 8 MiB of cumulative UTF-8 extracted text before staging. URL snapshots
+use `stage_url_source()` with stdlib HTML text extraction.
 
 ## Pipeline contract
 
@@ -34,7 +35,8 @@ parser when it is installed to extract page text. URL snapshots use
 | BibTeX import | `memoria work import --format bibtex` / worker `capture-source` | Parses each BibTeX entry into unchecked catalog metadata and a raw `.bib` blob; `--enrich` also queues `enrich-source` for each newly admitted DOI-bearing entry. |
 | CSL import | `memoria work import --format csl` / worker `capture-source` | Parses each CSL-JSON item into unchecked catalog metadata and a raw `.csl.json` blob; `--enrich` also queues `enrich-source` for each newly admitted DOI-bearing item. |
 | URL snapshot | `stage_url_source()` / worker `capture-url-source` | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes an unchecked catalog row plus source-content blobs. |
-| PDF import | `stage_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed text behind a basic text-coherence guard and writes an unchecked catalog row plus source-content blobs. |
+| PDF import | `stage_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed text behind text-coherence, 1,000-page, and 8 MiB extracted-text guards before writing an unchecked catalog row plus source-content blobs. |
+| Policy-bound remote PDF capture | internal import-admission request / PI worker `capture-remote-pdf-source` | Accepts a PMCID, arXiv, or direct-PDF descriptor but no PDF bytes; the PI-only worker authorizes and resolves it before passing bytes to `stage_pdf_source()`. This is an internal route, not a new CLI command. |
 | Metadata merge | `capture_source()` / `enrich_source()` | Recapturing or enriching the same stable `work_id` merges non-empty identifiers, CSL-JSON fields, metadata status, and link lists instead of dropping previously captured source metadata. |
 | Metadata-derived entities | `capture_source()` / `enrich_source()` | Records deterministic person, venue, organization, and source graph rows from CSL/OpenAlex metadata; exact duplicate checks read these rows. |
 | Metadata check | `check_source_metadata()` / worker `check-source-metadata` | Flags missing catalog basics, conflicting DOI metadata, duplicate source IDs, deterministic duplicate Work candidates, and duplicate person/entity identifiers for PI review. |
@@ -48,6 +50,11 @@ parser when it is installed to extract page text. URL snapshots use
 
 - DOI enrichment fetches provider-discovered open-access text only when the
   operation manifest allows that URL.
+- `capture-remote-pdf-source` has a separate finite policy: PMC OA record,
+  PMC PDF, PMC package, Frontiers article, ACL Anthology, Sociologica article,
+  and arXiv PDF prefixes only. A direct-PDF host outside those seven prefixes
+  fails its worker job before an opener runs; it is never silently downgraded
+  into generic metadata capture.
 - Portable imports can carry ISBN metadata, but the standalone runtime has no
   `work add --isbn` enrichment route.
 - Source/entity Markdown is never created during import; checked catalog state

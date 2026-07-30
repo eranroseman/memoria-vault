@@ -15,8 +15,8 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 Every request carries one validated actor. The worker reserves
 `acknowledge-attention`, `resolve-attention`, `record-copi-interview`,
 `curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`,
-`frame-paper`, `promote-draft-passage`, and `cascade-rollback` for the `pi`
-actor. It reserves
+`frame-paper`, `promote-draft-passage`, `cascade-rollback`, and
+`capture-remote-pdf-source` for the `pi` actor. It reserves
 `trace-integrity-scan` and `observe-pi-edits` for the `integrity` actor.
 
 An idempotency key binds the normalized request/job kind and complete request
@@ -87,7 +87,8 @@ retrieval, export, or egress policy.
 | Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses each CSL-JSON item into unchecked catalog metadata and a raw `.csl.json` blob; `--enrich` also queues a DOI enrichment request for each newly admitted item when a DOI is present. |
 | Update Work | worker operation `update-work` | Applies PI-owned Work metadata, standing, and classification changes to the SQLite catalog row, then records the journal event through the worker request queue. |
 | Capture URL source | worker operation `capture-url-source` + runtime helper (`stage_url_source`) | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes an unchecked catalog row plus source-content blobs. |
-| Capture PDF source | worker operation `capture-pdf-source` + runtime helper (`stage_pdf_source`) | Uses the optional PyMuPDF parser to extract page text from raw PDF bytes and writes an unchecked catalog row plus source-content blobs. |
+| Capture PDF source | worker operation `capture-pdf-source` + runtime helper (`stage_pdf_source`) | Uses the optional PyMuPDF parser to extract page text from raw PDF bytes, rejecting more than 1,000 pages or 8 MiB of extracted UTF-8 text before it writes an unchecked catalog row plus source-content blobs. |
+| Capture remote PDF source | PI-only worker operation `capture-remote-pdf-source` + `resolve_fetch` / `stage_pdf_source` | Validates an imported fetch descriptor and metadata separately, authorizes every resolver URL against the seven-prefix PMC/Frontiers/ACL/Sociologica/arXiv policy, then stages the resolved PDF. It accepts no caller-supplied PDF bytes and is not a new CLI command. |
 | Regenerate bibliography | runtime capture helper (`write_references_bib`) / worker operation `regenerate-references-bib` | Rebuilds `bibliography.bib` from checked SQLite catalog rows and can commit the projection plus journal event through the worker. |
 | Capture trace | trusted writer + journal | Records `run`, `derived`, and `check-fired` events for the catalog Work row; raw blobs stay gitignored and are referenced by path + hash. |
 | Extract typed edge candidates | trusted writer materialization (`commit_writer_changes`) | Parses explicit argument-class body links such as `[[supports::notes/x.md]]` into unchecked `edge-candidate` attention prompts in the same commit, neutralizing copied title/target prose; bare `[[wikilink]]` body links do not create `supports`, `contradicts`, or `extends` edges. |
