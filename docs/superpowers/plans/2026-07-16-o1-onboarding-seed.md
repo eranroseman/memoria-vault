@@ -449,33 +449,40 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 >    or unsupported-method
 >    rows refuse before the opener. Catch an authorizer `PermissionError` and
 >    turn it into a URL-naming `ValueError`; likewise normalize redirect,
->    opener/read, XML, and archive transport failures to `ValueError` without
->    swallowing programmer errors. The call-time `_default_opener` must use a
+>    opener/read (including an incomplete HTTP response), XML, and archive
+>    transport failures to `ValueError` without swallowing programmer errors.
+>    The call-time `_default_opener` must use a
 >    no-redirect handler (a 3xx becomes that same URL-naming refusal), so an
 >    authorized origin cannot silently send the request to an unauthorized or
 >    HTTP target.
 > 3. **Bound untrusted bytes.** Define explicit module constants
 >    `MAX_FETCH_BYTES = 32 * 1024 * 1024`, `MAX_TAR_MEMBERS = 128`,
 >    `MAX_TAR_TOTAL_BYTES = 32 * 1024 * 1024`, and
->    `MAX_PDF_MEMBER_BYTES = 32 * 1024 * 1024`. Read every response with a
+>    `MAX_PDF_MEMBER_BYTES = 32 * 1024 * 1024`, and
+>    `MAX_PMC_XML_ELEMENTS = 1024`. Read every response with a
 >    `MAX_FETCH_BYTES + 1` limit and reject overflow without trusting a
->    `Content-Length`. For a TGZ, iterate the archive as a stream (never
->    `getmembers()`), reject the 129th member, cumulatively sum each declared
->    regular-member size before extraction and reject a total above
->    `MAX_TAR_TOTAL_BYTES`, reject a member whose declared size exceeds
->    `MAX_PDF_MEMBER_BYTES`, and read each candidate with a
+>    `Content-Length`. For a TGZ, bound the decompressed stream *before*
+>    `tarfile` reads PAX/global-PAX/GNU metadata, while allowing the fixed tar
+>    headers and padding needed for at most `MAX_TAR_MEMBERS` members. Then
+>    iterate the archive as a stream (never `getmembers()`), reject the 129th
+>    member, cumulatively sum each declared regular-member size before
+>    extraction and reject a total above `MAX_TAR_TOTAL_BYTES`, reject a member
+>    whose declared size exceeds `MAX_PDF_MEMBER_BYTES`, and read each candidate with a
 >    `MAX_PDF_MEMBER_BYTES + 1` limit. Scan all permitted members before
 >    accepting it, then reject anything other than exactly one regular `.pdf`
 >    member. Never extract to disk; normalize tar/decompression/read errors to
 >    `ValueError` naming the package URL.
 > 4. **Safe PMC XML.** Decode the record as strict UTF-8 before inspection or
->    parsing; a non-UTF-8 declaration/payload is a URL-naming `ValueError`.
->    Then reject text containing `<!DOCTYPE` or `<!ENTITY` (case-insensitive)
->    before `ElementTree.fromstring`; catch `ElementTree.ParseError` and turn
->    malformed XML into the same error shape. Do not retain the S314 waiver:
->    stdlib ElementTree expands internal entities, so the former fixed-endpoint
->    rationale was false. This UTF-8 boundary prevents UTF-16 entity markup
->    from bypassing the raw-token guard.
+>    parsing, and reject any XML declaration encoding other than UTF-8; a
+>    non-UTF-8 declaration or payload is a URL-naming `ValueError`. Then reject
+>    text containing `<!DOCTYPE` or `<!ENTITY` (case-insensitive) before using
+>    a bounded `xml.parsers.expat` event parser. Count start elements and refuse
+>    the 1,025th; retain only the first `pdf` and `tgz` href rather than a DOM
+>    or eager link collection. Catch `expat.ExpatError` and turn malformed XML
+>    into the same error shape. Do not retain an S314 waiver or use stdlib
+>    ElementTree: its internal-entity behavior makes the former fixed-endpoint
+>    rationale false. This UTF-8 boundary prevents UTF-16 entity markup from
+>    bypassing the raw-token guard.
 >    Prefer a `format="pdf"` link if both `pdf` and `tgz` are present; otherwise
 >    use the sole TGZ route.
 > 5. **RED contract.** Keep the existing direct-PDF, arXiv, PMC-PDF, PMC-TGZ,
@@ -488,11 +495,13 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 >    encoded separators refuse before both authorizer and poisoned opener; the
 >    default opener is resolved at call time; the authorizer sees both PMC URLs
 >    and a denial prevents the corresponding request; a disallowed PMC link,
->    redirect, malformed/DTD XML (including a UTF-16 DTD payload), transport
->    failure, malformed TGZ, oversized response/member, two individually valid
->    members exceeding a monkeypatched small aggregate cap, a 129th archive
->    member, and ambiguous multi-PDF archive each raise a URL-naming
->    `ValueError`. No test opens the network.
+>    redirect, malformed/DTD XML (including a UTF-16 DTD payload), an ASCII
+>    payload declaring ISO-8859-1, an element count over a monkeypatched small
+>    cap, incomplete-response and other transport failures, malformed TGZ,
+>    oversized response/member, overlarge PAX/global-PAX/GNU metadata before
+>    archive parsing, two individually valid members exceeding a monkeypatched
+>    small aggregate cap, a 129th archive member, and ambiguous multi-PDF
+>    archive each raise a URL-naming `ValueError`. No test opens the network.
 > 6. **M.3 consumer rule.** Extend the future engine seam to
 >    `seed_install(..., opener=None, authorize_url: Callable[[str], None],
 >    context)` and make its worker branch pass
@@ -552,7 +561,7 @@ It extracts page text via `_extract_pdf_pages` (capture.py:698-720, optional PyM
 
 **Interfaces:**
 
-- Consumes: `urllib.request.urlopen` (default opener only; never called in tests — bandit S310 is globally ignored for fixed-base URLs, pyproject.toml:122); stdlib `tarfile`, `io`, `xml.etree.ElementTree`.
+- Consumes: `urllib.request.build_opener` with `HTTPRedirectHandler` (default opener only; never called in tests), stdlib `gzip`, `tarfile`, `io`, and `xml.parsers.expat`.
 - Produces: `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None, authorize_url: Callable[[str], None]) -> bytes` — `opener(url)` must return a context-manager response exposing `.read(limit: int | None = None) -> bytes`; `None` resolves the module-level no-redirect `_default_opener` at call time so tests and M.3's CLI test can monkeypatch it. Every request first validates and authorizes its HTTPS URL; PMC handling prefers a `format="pdf"` link, otherwise consumes the single `format="tgz"` package PDF; XML, byte, and archive limits are binding as stated in the execution amendment.
 
 - [ ] **Step 1: Write the failing tests** — create `tests/test_seed_install.py`:
