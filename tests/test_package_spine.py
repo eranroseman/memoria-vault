@@ -52,7 +52,7 @@ def test_stack_dependencies_stay_small_and_no_orm():
     assert dependencies.isdisjoint({"click", "typer"})
     assert dependencies.isdisjoint({"alembic", "django", "peewee", "sqlalchemy"})
     assert "mcp" not in dependencies
-    assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=1.27"]
+    assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=1.27,<2"]
 
 
 def test_runtime_sqlite_schema_is_packaged_resource():
