@@ -16,6 +16,10 @@ workspace in Obsidian and enable the local adapter.
 - Memoria installed with the standalone CLI runtime.
 - Obsidian installed, if you choose to use it as an editor.
 
+> **Warning:** Do not install the `obsidian-linter` community plugin in a
+> Memoria vault. It can rewrite Memoria-owned frontmatter; excluding folders is
+> insufficient protection.
+
 ## Steps
 
 1. Install Obsidian if it is not already installed.

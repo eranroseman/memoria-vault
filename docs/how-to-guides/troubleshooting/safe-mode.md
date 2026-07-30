@@ -21,7 +21,7 @@ memoria work import --workspace <workspace> --format bibtex --file sources.bib
 ```
 
 If enrichment providers are unavailable, keep the work unchecked and rerun
-`memoria work enrich <id>` when provider inputs are available.
+`memoria work enrich --workspace <workspace> <id>` when provider inputs are available.
 
 **2. Review and triage from the terminal.**
 

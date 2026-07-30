@@ -75,7 +75,7 @@ anchor cannot resolve. Either hash finding blocks draft export.
 Only the PI can record a disposition:
 
 ```bash
-memoria project resolve-evidence <project> --evidence-id ev-1234abcd --decision accept
+memoria project resolve-evidence --workspace <workspace> <project> --evidence-id ev-1234abcd --decision accept
 ```
 
 The disposition is journal provenance; it does not edit the marker or assert

@@ -9,7 +9,9 @@ nav_order: 2
 
 The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) create the workspace, install the `memoria` package into the vault-local venv, initialize the vault from the packaged workspace seed, and wire local integrity hooks. The standalone baseline does not install external search tooling, external agent runtimes, the Obsidian app, or live Zotero integration; the package seed does include Memoria's default Obsidian plugin/settings.
 
-This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../../../reference/system/installer.md).
+This page explains *why* the installer is shaped the way it is. The concrete
+reference covers the supported entry points, flags, install flow, scheduler
+boundary, and user-supplied values in [Installer (bootstrap)](../../../reference/system/installer.md).
 
 ## Why a bootstrap
 
@@ -21,7 +23,7 @@ hooks, and first-check commands from separate guides before Memoria can run.
 
 The distribution mechanism is the packaged workspace seed plus the installed Memoria package ([Distribution model](distribution-model.md)). The installer adds the flow:
 create a workspace, initialize it from the package seed, and wire the local runtime.
-Ordered steps and the component checklist are owned by [Installer (bootstrap)](../../../reference/system/installer.md).
+Ordered steps are owned by [Installer (bootstrap)](../../../reference/system/installer.md).
 
 One installer-specific sequencing choice worth calling out: Zotero stays outside
 the installer. It is an optional import/export workflow, not core provisioning,
@@ -58,7 +60,7 @@ path with one mental model.
 
 ## Related
 
-- **Reference:** [Installer (bootstrap)](../../../reference/system/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
+- **Reference:** [Installer (bootstrap)](../../../reference/system/installer.md) — supported entry points, flags, install flow, scheduler boundary, and user-supplied values.
 - **Decisions:** [alpha.15 standalone engine checkpoint](https://github.com/eranroseman/memoria-vault/blob/main/design-history/15-alpha.15.md) (standalone CLI + engine; absorbs the former repo-as-install-unit decision).
 - **Design:** [Distribution model](distribution-model.md).
 - **How-to:** [Quickstart](../../../how-to-guides/setup/quickstart.md), [Set up the vault](../../../how-to-guides/setup/set-up-the-vault.md).

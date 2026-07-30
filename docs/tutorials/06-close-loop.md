@@ -55,7 +55,7 @@ memoria workspace backup --workspace . ../memoria-backup
 `.memoria/memoria.sqlite`, `.memoria/blobs/`, and `.memoria/journal/` are
 gitignored, so the catalog rows, source blobs, and event journal never reach
 the commit in the next step. `workspace backup` is what makes that state
-durable, and `memoria workspace restore <dir>` (add `--force` to overwrite a
+durable, and `memoria workspace restore --workspace . <dir>` (add `--force` to overwrite a
 live workspace) is how you bring it back. `doctor bundle` from Tutorial 01
 fails this same check when blobs exist with no valid backup.
 

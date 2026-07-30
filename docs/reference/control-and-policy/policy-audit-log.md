@@ -25,7 +25,7 @@ Every decision is appended to **`system/logs/audit.jsonl`** (append-only JSONL �
 | `action` | string | One of the eight actions above (`read` / `write` / `append` / `move` / `delete` / `mkdir` / `auto_fix` / `report`). |
 | `path` | string | The workspace-relative path targeted. |
 | `request_id` | string | The request that triggered the action. |
-| `decision` | enum | Exactly one of `allow` · `allow_with_log` · `deny` · `dry_run`. |
+| `decision` | string | A policy-decision row has exactly one of `allow` · `allow_with_log` · `deny` · `dry_run`; a completion row serializes the distinct `write_complete` marker. |
 | `policy_rule` | string | Which actor-policy rule matched. |
 | `reason` | string | Optional prose from the request. |
 | `before_hash` / `after_hash` | SHA-256 | The reversibility pair (see below). |
@@ -52,12 +52,11 @@ A representative decision entry:
 
 Auditing uses **per-write SHA-256 hash pairing, not a cross-entry chain**: each
 mutating write produces a `before_hash` on the decision entry, and a *separate*
-`write_complete` record carries the paired `after_hash` once the write lands.
-`write_complete` is a **record kind, not a value of the `decision` enum** — the
-four `decision` values are exactly `allow`, `allow_with_log`, `deny`, and
-`dry_run`. The two records are matched by `request_id` + `path`; the pairing pins
-one write's before/after state and nothing more — it does not hash-link
-successive entries.
+`write_complete` completion marker, serialized in `decision`, carries the
+paired `after_hash` once the write lands. It is distinct from the four
+policy-decision values: `allow`, `allow_with_log`, `deny`, and `dry_run`. The
+two records are matched by `request_id` + `path`; the pairing pins one write's
+before/after state and nothing more — it does not hash-link successive entries.
 
 **SHA-256 rules:** the runtime computes hashes; format `"sha256:<64-hex>"`; a
 freshly-created file's `before_hash` is the empty-string SHA-256, never null; a

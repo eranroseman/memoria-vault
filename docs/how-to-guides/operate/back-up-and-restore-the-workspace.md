@@ -8,9 +8,11 @@ nav_order: 6
 # Back up and restore the workspace
 
 `.memoria/memoria.sqlite`, `.memoria/blobs/`, and `.memoria/journal/` are
-gitignored. They hold the catalog, evidence bindings, source blobs, and the
-authoritative event log — none of it reaches a `git commit`. Backup and
-restore are the durability mechanism for everything Git does not carry.
+gitignored. SQLite's `event_log` is the authoritative journal; the
+`.memoria/journal/` JSONL files are derived, per-machine exports. Together with
+the catalog, evidence bindings, and source blobs, this state does not reach a
+`git commit`. Backup and restore are the durability mechanism for everything
+Git does not carry.
 
 ## When it runs without you
 
@@ -65,6 +67,8 @@ memoria workspace restore --workspace . /path/to/backup-target --force
 
 A backup older than the committed journal head is refused; check out the Git
 revision whose committed head matches the backup first.
+Restore rebuilds the derived `.memoria/journal/` JSONL exports from SQLite's
+authoritative `event_log`.
 
 **4. Recover an interrupted backup or restore.**
 

@@ -8,8 +8,9 @@ grand_parent: Reference
 # Telemetry & logs
 
 Every signal Memoria records about its own operation, with log inventory and
-shared conventions. Audit and analytics logs live under `system/logs/`; the
-diagnostic plane lives outside the workspace under the OS state directory.
+shared conventions. Audit logs live under `system/logs/`. Analytics evidence is
+split between `system/logs/` and `system/metrics/`; the diagnostic plane lives
+outside the workspace under the OS state directory.
 Rationale: [the vault-eval-benchmark-first publication path](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
 [measurement and verification harnesses](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
 [the content-light diagnostic plane](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).

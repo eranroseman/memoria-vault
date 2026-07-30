@@ -76,7 +76,10 @@ mutations until resolved.
 
 None of this is possible if review lives in comments, tags, or conversation. "The human acted on this" must be recorded state, not a convention.
 
-The request/attention projection carries exactly this: awaiting action, acted, or archived. These are states in a state machine, not annotations, and they are separate from `check_status`.
+The request/attention projection carries exactly this: `open`, `resolved`, or
+`deferred`. `apply` and `reject` produce `resolved`; `defer` produces
+`deferred`. These states are not annotations, and they are separate from
+`check_status`.
 
 ---
 
