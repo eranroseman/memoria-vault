@@ -21,16 +21,18 @@
    item_count, routing_type, reviewable, disposition, project_path, age_days`,
    plus present-only disposition/cure/analysis inputs. Its view projection has
    exactly one nested card per evidence row, as specified in the reconciliation
-   amendment below. The CLI consumes the queue engine-direct (no HTTP — keep-test);
-   the view consumes the same assembler via
+   amendment below. The CLI consumes the shared
+   `engine_api.evidence_review_queue(...)` collector engine-direct (no HTTP —
+   keep-test); the view consumes that collector through
    `engine_api.read_evidence_review_view(...)`.
 2. **Age facet naming:** `min_age_days` everywhere — B's param, C's flag `--min-age-days`, the endpoint's query param. (C's drafted `--max-age-days` is superseded.)
 3. **Disposition emission:** V2R-A's `emit_explicit_disposition_event(...)` is the one helper for the keep-test path (the context-bound `emit_disposition_event` requires a running request the CLI lacks). C's contract line naming `operations.py:146` is superseded by A's actual Produces.
 4. **The reject flip is owned by V2R-A.1** (only accept clears; latest-event-wins; written against `_disposed_evidence_digests` with the ids-form variant). B's queue applies the same accept-only rule independently in its pure logic (consistent by contract, tested in both). D.5's xfail ordering note reads "pre-V2R-A", not pre-V2R-B.
 5. **`resolve-evidence` worker operation** (V2R-D.1, resolving the declared SPEC GAP) is a thin wrapper over A's seam — one implementation, PI-protected, floor-listed as refused; the pane's four buttons enqueue it via SEAM.1's `actor="pi"` door; the CLI never uses it.
 6. **View envelope:** B follows the surfaces plan's nested-card contract:
-   `{ok, view: {version, kind, blocks}}`, with one top-level evidence card per
-   row. U3-ENG's flat form is superseded, so no fallback swap is permitted.
+   `{ok, api_version, view: {version, kind, blocks}}`, with one top-level
+   evidence card per row. U3-ENG's flat form is superseded, so no fallback swap
+   is permitted.
 7. **Telemetry rides `empirical_event.v1`** (C's schema decision): `workflow="evidence-review"`, `view.opened` + client `disposition.recorded` with `duration_s`; skip and reopen are journal-derived metrics, never synthesized events.
 8. **Execution order:** U3-ENG/U3-PLUG.4/SEAM.1 → V2R-A → V2R-D.1 →
    V2R-B.1–.5 → V2R-C → V2R-D.2/.3, followed by V2R-D's retained local
@@ -193,6 +195,112 @@ because it remains below as drafting history.
    U3-ENG/U3-PLUG.4/SEAM.1, then V2R-A, V2R-D.1, V2R-B.1–.5, V2R-C, and
    V2R-D.2/.3.  V2R-D.4–.7 retain their documented local dependencies.
 
+## Plan-reconciliation amendment — one collector, raw queue, and CLI projection (2026-07-29)
+
+This amendment supersedes only the conflicting V2R-B.2/B.4 and V2R-C.1–.3
+snippets below: in particular every reference to an undefined queue API,
+`max_age_days`/`--max-age-days`, `routing`, `latest_decision`, nested raw
+`analysis`, preview-shaped raw `items`, or an evidence-only assumption for an
+SRD-gap queue entry.  The retained snippets are drafting history, not an
+alternative implementation.  It preserves the engine-direct CLI keep-test;
+the CLI must not request the HTTP view or reconstruct rows from its cards.
+
+1. **One collector, two projections.** V2R-B.4 factors workspace discovery,
+   pure assembly, whole-scope facets, filtering, batching, and shown-row
+   preview resolution into one private collector.  It exposes the following
+   engine-direct API for V2R-C, and `read_evidence_review_view` calls the same
+   collector before projecting its returned rows through
+   `evidence_review_blocks`:
+
+   ```python
+   engine_api.evidence_review_queue(
+       workspace: Path,
+       *,
+       routing_type: str = "",
+       project: str = "",
+       min_age_days: int = 0,
+       batch: int = 10,
+       read_scope: list[str] | None = None,
+   ) -> dict[str, Any]
+   ```
+
+   Its result is `{ok: True, rows, total, batch, facet_totals}`.  `rows` is
+   the filtered, batched raw queue; `total` is the filtered pre-batch row
+   count; `facet_totals` describes the unfiltered, scope-visible queue; and
+   `batch <= 0` means unbounded, which supports C.2's direct id lookup.
+   `read_evidence_review_view` rejects a non-positive `batch` before it calls
+   the collector, adds `shown`/`batch` to a copy of `facet_totals`, and returns
+   the binding `{ok, api_version, view, facets}` envelope.  This reserves
+   unbounded batching for the engine-direct queue; B.5 adds a `?batch=0` → 400
+   HTTP test.  Neither public projection reassembles drafts or flattens cards.
+   B.4's current `max(1, int(batch))` instruction is superseded for the shared
+   collector.
+
+2. **Raw queue is canonical.** B.2 constructs `items = [str(item) ...]` once
+   and emits `item_count=len(items)` for every evidence-set row.  A row with
+   `blocked_by` also emits `cure=PERMANENT_BLOCK_CURE`; it is otherwise
+   present-only.  The resulting discriminated union is either an evidence-set
+   row with the binding fields (`routing_type`, `disposition`, `project_path`,
+   raw `items`, and collector-attached `item_previews`) or
+   `{"kind": "srd-gap", "card_block": <normalized U3 card>}`. B.2 passes
+   through nonempty `argument_for`, `argument_against`, and `certainty` inputs
+   on an evidence-set row. B.3 consumes the canonical `row["item_count"]` and
+   present `row["cure"]` rather than recomputing either fact while projecting
+   a card. It exports `routing_reason(row, previews)` (rename the drafted
+   private helper; keep a private alias only if useful) and
+   `analysis_fields(row, previews) -> dict[str, str]`. The latter returns
+   paired nonempty arguments, the deterministic `tipped_by`, and nonempty
+   certainty only for a reviewable row with holds; otherwise it returns `{}`.
+   Both the card projection and CLI use that one helper, so neither copies a
+   routing/tipping derivation or leaks cure analysis.
+
+3. **C has presentation-only projections.** C.1's summary selects exactly
+   `evidence_id`, `claim_text`, `item_count`, `routing_type`,
+   `routing_reason(row, item_previews)`, `reviewable`, present-only `cure`,
+   `project=row["project_path"]`, `age_days`, `disposition`, and present-only
+   `warrant`; it never emits `items` or analysis. C.2's detail adds
+   `items=item_previews` and, only with `--show-analysis`, adds an output-only
+   `analysis=analysis_fields(row, item_previews)` when that shared helper is
+   nonempty; otherwise that key is absent. These are CLI projections, never second queue
+   assemblers.  All C text, tests, and human output use `routing_type` and
+   `disposition`, never the superseded `routing` and `latest_decision` names.
+   C.2 renders projected `items`, not raw item-reference strings.
+
+4. **SRD entries remain visible and safe.** C.1 renders an unfiltered
+   `srd-gap` variant as a distinct, read-only summary using its normalized
+   card's title/ref; it has no evidence action.  C.2 lookup selects only
+   `row.get("kind") == "evidence-set"`, so an SRD id is not mistaken for
+   evidence.  C.3 relies on V2R-A's existing evidence-record validation rather
+   than adding a second queue lookup.  Filtering preserves B.2's rule: SRD
+   cards appear only with no evidence filter.  Do not silently drop them to
+   make old evidence-only indexing pass.
+
+5. **Replacement tests and failure semantics.** Add direct B.4 coverage for
+   the shared API's `batch=0`, raw-versus-preview fields, `item_count`/cure,
+   and an unfiltered SRD variant.  Replace C.1's max-age test/flag with
+   `--min-age-days`, assert filtered `total` versus whole-scope
+   `facet_totals`, and add a default-list SRD fixture. C.2 must prove the
+   evidence-first projected detail, cure-row non-leakage, and folded parent
+   analysis. Both telemetry
+   helpers retain the failed operation's error/result.  C.2 adds a mocked
+   `view.opened`-recording failure test and returns an `_emit` failure instead
+   of a successful detail result.  C.3 retains its seam tests and adds the
+   analogous `disposition.recorded` failure test: after a successful decision
+   seam but failed `empirical-event-record`, `_cmd_review_action` emits
+   `{ok: False, error, event, telemetry}` through `_emit` (exit 1), using the
+   helper error or `"disposition succeeded but client telemetry was not
+   recorded"`; neither command reports success for a missing required client
+   event.
+
+6. **Execution order.** B.2 supplies raw facts, B.3 supplies the public
+   routing helper, and B.4 supplies the shared collector before C starts.
+   C remains HTTP-free, but B.4's U3 dependencies make the binding order at
+   the top of this plan mandatory; its former claim of no U3 ordering
+   dependency is superseded. If U1 J.1 has landed when B.5 registers
+   `views.evidence_review`, that row includes `job: "review"` and the pinned
+   job mapping changes with it; otherwise U1's re-anchored registry amendment
+   preserves the row and supplies that job when J.1 lands.
+
 ---
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1
 
@@ -208,7 +316,7 @@ re-render belongs to the view/queue sections).
 
 1. **U3-ENG / U3-PLUG** (`docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md`)
    produce the view-spec.v1 machinery this spec's §1 consumes: `GET
-   /v1/views/attention`, the `{ok, api_version, spec: "view-spec.v1", blocks}`
+   /v1/views/attention`, the `{ok, api_version, view: {version, kind, blocks}}`
    envelope, and `VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row",
    "evidence-list")` exported from `engine/api.py`. **V2R-A has no dependency
    on U3-ENG** — nothing here touches views. But the fields this section

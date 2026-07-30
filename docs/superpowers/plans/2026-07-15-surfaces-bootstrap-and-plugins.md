@@ -284,6 +284,13 @@ are unchanged.  In a conflict, this section governs.
    or V2 `resolve-evidence` endpoint.  The U3 design's expanded-card order is
    amended to `evidence → text → action row → analysis → meta`; this is a
    deliberate V2 prerequisite, not a renderer-local exception.
+6. **U1 job-field order tolerance.** If U1 J.1 has landed when U3-ENG.4
+   registers `views.attention`, its action dict includes `job: "review"` and
+   the pinned U1 job mapping is updated in the same change. If it has not,
+   execute U3-ENG.4's drafted dict unchanged and let U1's re-anchored J.1
+   preserve the row and add that job later. The historical concrete dict and
+   test snippets below are superseded only to this extent; neither execution
+   order may delete or leave a jobless registered view.
 
 ### Task SEAM.1: Loopback operation door carries PI actor authority
 
