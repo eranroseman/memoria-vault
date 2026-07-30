@@ -971,57 +971,99 @@ entry from the contract, or the hardened gate fails on the real repo.
 **Interfaces:** none.
 
 - [x] Confirmed by the PI on 2026-07-29: the spec's "Design decisions (made here; confirm at review)" plus two execution-time additions:
-  1. Scope is exactly the ten items (2–10 test-only, 1 CI-config) plus cleanups 11a/11b; the out-of-scope list above stands as ruled-acceptable and is not re-litigated.
-  2. Item 1 (CI `mcp` extra) goes first and stands alone; the chosen mechanism is the `verify.yml` install step, not `requirements-dev.txt` (reason stated in COV.1).
+  1. Scope is exactly the ten items (2–10 test-only, 1 CI/packaging-config)
+     plus cleanups 11a/11b; the out-of-scope list above stands as
+     ruled-acceptable and is not re-litigated.
+  2. Item 1 (CI `mcp` extra) goes first and stands alone; the chosen CI
+     installation mechanism is the `verify.yml` step, never a
+     `requirements-dev.txt` pin. The COV.1 compatibility amendment additionally
+     bounds the already-declared optional extra in `pyproject.toml`
+     and pins that metadata in `test_package_spine.py`.
   3. Items 2–10 are mutually independent; any order, any PR split — except COV.3's ordering after Task 21.1 (post-21.1 `write_finding` signature).
-  4. No production behavior changes anywhere **except**: (a) the COV.7 missing-search-root hard failure, which the spec itself names as a design hardening, and (b) the newly discovered removal of the stale `.agents` search root from `scripts/checks/removed_surfaces.json` that the hardening forces (evidence: the root does not exist today and the gate still reports clean). 11a/11b remain a pragma and a dead-code deletion.
+  4. No production behavior changes anywhere **except**: (a) COV.1's
+     packaging-only v1 compatibility bound for the already-declared optional
+     extra, (b) the COV.7 missing-search-root hard failure, which the spec
+     itself names as a design hardening, and (c) the newly discovered removal
+     of the stale `.agents` search root from
+     `scripts/checks/removed_surfaces.json` that the hardening forces
+     (evidence: the root does not exist today and the gate still reports
+     clean). 11a/11b remain a pragma and a dead-code deletion.
   5. The `code/runner.py` bwrap-sandbox path stays deferred until the runtime primitive is wired to a live operation.
 
 **Completion record (2026-07-29).** The approval covers the bounded COV.1–COV.11
-scope, the CI-only `mcp` extra, the stated COV.3 ordering, the two COV.7
-behavior changes, and the deferred bwrap path. No code was required by this
-checkpoint.
+scope, the CI `mcp` extra, the stated COV.3 ordering, the two COV.7 behavior
+changes, and the deferred bwrap path. No code was required by this checkpoint.
+
+**Plan-reconciliation authorization (2026-07-29).** During execution, the PI
+separately authorized COV.1's packaging-only v1 compatibility bound and its
+existing package-spine contract pin; it does not authorize a
+`requirements-dev.txt` pin or a runtime adaptation to MCP 2.
 
 ---
 
-### Task COV.1: CI installs the `mcp` optional extra (CI-config, not TDD)
+### Task COV.1: CI installs the v1-compatible `mcp` optional extra (config + packaging contract)
+
+> **Plan-reconciliation amendment — MCP v1 API compatibility (2026-07-29):**
+> A clean `mcp>=1.27` install now resolves MCP 2.0, which lacks this repo's
+> `mcp.server.fastmcp.FastMCP` API. The MCP SDK's v1 packaging guidance
+> prescribes `mcp>=1.27,<2` for packages that depend on the v1 API. This task
+> therefore additionally edits `pyproject.toml` and its existing exact
+> package-spine assertion. It still does not add a requirement to
+> `requirements-dev.txt`, and CI still installs `-e ".[mcp]"`.
+> In a disposable venv prove `mcp<2`, the `FastMCP` import succeeds, and all
+> 13 transport tests pass with zero skips. This amendment supersedes the
+> one-file, lower-bound-only scope below.
 
 **Files:**
 - Modify: `/home/eranr/memoria-vault/.github/workflows/verify.yml` (install step, lines 41-44)
-- Read-only context: `/home/eranr/memoria-vault/pyproject.toml:18-19` (`[project.optional-dependencies] mcp = ["mcp>=1.27"]`), `/home/eranr/memoria-vault/requirements-dev.txt` (header scopes it to contributor tooling), `/home/eranr/memoria-vault/tests/test_mcp_transport.py` (8 of 13 tests open with `pytest.importorskip("mcp")`)
-- Test: `tests/test_mcp_transport.py` (already written; no new test code)
+- Modify: `/home/eranr/memoria-vault/pyproject.toml:18-19` (`mcp = ["mcp>=1.27,<2"]`)
+- Modify: `/home/eranr/memoria-vault/tests/test_package_spine.py`
+  (`test_stack_dependencies_stay_small_and_no_orm` exact optional-extra pin)
+- Read-only context: `/home/eranr/memoria-vault/requirements-dev.txt` (header
+  scopes it to contributor tooling), `/home/eranr/memoria-vault/tests/test_mcp_transport.py`
+  (8 of 13 tests open with `pytest.importorskip("mcp")`)
 
 **Interfaces:**
-- Consumes: `verify.yml` "Install runtime + dev tooling" step: `python -m pip install --quiet -r requirements-dev.txt` / `python -m pip install --quiet -e .`
-- Produces: CI installs `-e ".[mcp]"`; the 8 previously-skipped tests in `tests/test_mcp_transport.py` run in the required `verify` check.
+- Consumes: `verify.yml` "Install runtime + dev tooling" step: `python -m pip install --quiet -r requirements-dev.txt` / `python -m pip install --quiet -e .`; the v1-only imports in `runtime/mcp_transport.py` and its tests.
+- Produces: `mcp = ["mcp>=1.27,<2"]` as the single source of truth; CI installs `-e ".[mcp]"`; all 13 MCP transport tests run and pass in the required `verify` check.
 
 **Decision (per the spec's own two options): change `verify.yml`, not `requirements-dev.txt`.**
 Reason: `requirements-dev.txt`'s own header says "Runtime package dependencies
-live in pyproject.toml", and `mcp` is a declared runtime optional extra whose
-version constraint (`mcp>=1.27`) is already owned by `pyproject.toml`. Adding a
-second pin in requirements-dev would create a drift-prone duplicate; installing
-the extra keeps a single source of truth. Known trade-off, acceptable: the pip
-cache key (`cache-dependency-path: requirements-dev.txt`) will not track the
-extra, so `mcp` installs uncached — it is a small offline pure-pip wheel with no
-live service or secret behind it.
+live in pyproject.toml", and the v1 compatibility constraint is owned by that
+declared runtime optional extra. Adding a second pin in requirements-dev would
+create a drift-prone duplicate; installing the extra keeps a single source of
+truth. The `<2` upper bound is a compatibility contract for the imported v1
+API, not a contributor-tooling pin. Known trade-off, acceptable: the pip cache
+key (`cache-dependency-path: requirements-dev.txt`) will not track the extra,
+so `mcp` installs uncached — it is a small offline pure-pip wheel with no live
+service or secret behind it.
 
-- [ ] Record the red state only in a clean environment without the optional
-  extra: run `python -m pytest tests/test_mcp_transport.py -v -rs` and confirm
-  5 passed, 8 skipped with reason `could not import 'mcp'`. If local `mcp` is
-  already installed, record that informational preflight and proceed rather
-  than treating the missing red state as a failure.
-- [ ] Edit `.github/workflows/verify.yml` line 44: change `python -m pip install --quiet -e .` to `python -m pip install --quiet -e ".[mcp]"`.
-- [ ] Prove it locally exactly as CI will see it: run `python -m pip install -e ".[mcp]"`, then `python -m pytest tests/test_mcp_transport.py -v -rs` — expect 13 passed, 0 skipped.
+- [ ] In a fresh disposable venv, install the current lower-bound extra and
+  record the reproduced failure: it resolves MCP 2.x and
+  `from mcp.server.fastmcp import FastMCP` fails. This is the red proof for the
+  compatibility bound; do not adapt the transport to a prerelease v2 API.
+- [ ] Update the existing exact assertion in
+  `tests/test_package_spine.py::test_stack_dependencies_stay_small_and_no_orm`
+  first to expect `["mcp>=1.27,<2"]`; run that test and confirm it is red
+  against the current metadata.
+- [ ] Update `pyproject.toml` to `mcp = ["mcp>=1.27,<2"]`; do not edit
+  `requirements-dev.txt`. Run the package-spine test green.
+- [ ] Edit `.github/workflows/verify.yml` line 44: change `python -m pip install --quiet -e .` to `python -m pip install --quiet -e ".[mcp]"` (retain the already-landed workflow change if this task resumes after it).
+- [ ] Prove it locally exactly as CI will see it in a fresh disposable venv:
+  install `-r requirements-dev.txt`, then `-e ".[mcp]"`; assert the installed
+  MCP version is `<2`, import `FastMCP`, and run
+  `python -m pytest tests/test_mcp_transport.py -v -rs` — expect 13 passed,
+  zero skipped.
 - [ ] Run `python scripts/verify` to confirm the full gate stays green with the extra installed.
 - [ ] Commit:
   ```
-  git add .github/workflows/verify.yml
+  git add .github/workflows/verify.yml pyproject.toml tests/test_package_spine.py
   git commit -m "ci: install the mcp extra so mcp transport tests run in verify
 
-  mcp>=1.27 is a declared optional runtime extra in pyproject.toml;
-  installing -e \".[mcp]\" (not a requirements-dev pin) keeps the version
-  constraint single-sourced. Unskips the 8 gated tests in
-  tests/test_mcp_transport.py in the required CI gate.
+  mcp>=1.27,<2 is the declared optional runtime extra in pyproject.toml;
+  installing -e \".[mcp]\" (not a requirements-dev pin) keeps the v1 API
+  compatibility constraint single-sourced. Unskips the MCP transport tests in
+  the required CI gate.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
