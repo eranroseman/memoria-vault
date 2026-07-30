@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Correctness gate: `python scripts/verify`; PR + `verify`/`gitleaks`; squash merge; explicit-path staging; disposable vaults only.
-- Cross-plan execution order: **V2R-A and V2R-C run after Plan 22's S35.4 if it has landed (grep-first steps handle either state); V2R-B.4–.5 and all of V2R-D run after the surfaces plan's U3-ENG/U3-PLUG/SEAM.1.** All line refs at `a525a81a` — re-anchor by symbol after other plans land.
+- Cross-plan execution order: the binding partial order is in the 2026-07-29 execution amendment below. Plan 22 S35.4 is a hard gate only where its digest form is named; earlier A/B/C tasks retain their documented ids-form tolerance. All line refs at `a525a81a` — re-anchor by symbol after other plans land.
 - Golden serialization: V2R-D.3 (plugin seed) and V2R-D.1 (floor entry) regenerate goldens — sequential with any other golden-touching task, cross-plan included.
 
 ## Cross-section contracts (BINDING — manifest seam resolutions)
@@ -34,9 +34,8 @@
    evidence card per row. U3-ENG's flat form is superseded, so no fallback swap
    is permitted.
 7. **Telemetry rides `empirical_event.v1`** (C's schema decision): `workflow="evidence-review"`, `view.opened` + client `disposition.recorded` with `duration_s`; skip and reopen are journal-derived metrics, never synthesized events.
-8. **Execution order:** U3-ENG/U3-PLUG.4/SEAM.1 → V2R-A → V2R-D.1 →
-   V2R-B.1–.5 → V2R-C → V2R-D.2/.3, followed by V2R-D's retained local
-   dependencies.
+8. **Execution order:** the 2026-07-29 execution amendment is binding; no
+   earlier total ordering is executable where it contradicts that partial order.
 
 ## Plan-reconciliation amendment — one nested evidence card per row (2026-07-29)
 
@@ -300,6 +299,112 @@ the CLI must not request the HTTP view or reconstruct rows from its cards.
    `views.evidence_review`, that row includes `job: "review"` and the pinned
    job mapping changes with it; otherwise U1's re-anchored registry amendment
    preserves the row and supplies that job when J.1 lands.
+
+## Plan-reconciliation amendment — nested collector execution order (2026-07-29)
+
+This amendment supersedes every contrary order, flat-envelope fallback, raw-row
+shape, and pane-regrouping instruction below. It preserves the canonical **one
+nested card per evidence row** contract: the CLI consumes raw queue rows, while
+only the HTTP view projects them through `evidence_review_blocks`.
+
+1. **Binding partial order.** Execute only these dependencies (unlisted local
+   tasks retain their stated dependencies):
+
+   ```text
+   V2R-A → V2R-B.1–.3
+   U3-ENG → V2R-B.4 → V2R-C
+   U3-ENG → SEAM.1 → V2R-D.1
+   {V2R-B.3, V2R-D.1, U3-ENG} → V2R-B.5
+   U3-ENG → SEAM.1 → U3-PLUG.4 → V2R-D.2
+   {V2R-B.5, V2R-D.1, V2R-D.2, U3-PLUG.4} → V2R-D.3
+   ```
+
+   B.1–.3 are pure queue/projection work and require only the already-binding
+   nested-card grammar. B.4 consumes U3-ENG; B.5 additionally consumes its
+   route and live-server test pattern. Neither B task depends on U3-PLUG. C
+   is HTTP-free and has no U3-PLUG/pane dependency; its U3-ENG dependency is
+   indirect through B.4. C.1/.2 follow B.4, and C.3–.5 additionally follow
+   V2R-A. V2R-C.5 alone blocks on S35.4's digest seam.
+
+2. **One raw collector, two projections.** B.4 implements exactly one private
+   `_collect_evidence_review_queue(...)` that discovers drafts/SRD cards,
+   assembles, facets, filters, batches, and attaches previews, returning
+   `{rows, total, batch, facet_totals}`. The public engine-direct façade returns
+   `{"ok": True, **collector_result}` and never cards; the view alone calls
+   `evidence_review_blocks(result["rows"])` then returns
+   `_read_payload(view=_view("evidence-review", ...), facets=...)`. Do not
+   call the public façade from the view, reassemble drafts, flatten card
+   children, or offer a flat-envelope compatibility branch. A flat U3 producer
+   is an unmet prerequisite, not a reason to swap contracts.
+
+   Direct queue callers may use `batch=0` for an unbounded lookup. The HTTP
+   view requires `batch > 0`; `min_age_days` is non-negative (`0` succeeds,
+   `< 0` fails) and uses a dedicated non-negative query parser rather than the
+   positive-only `batch` parser. Add direct and real-HTTP tests for all three
+   boundaries.
+
+3. **Raw-row discipline.** B.3 consumes `row["item_count"]`,
+   `routing_reason(row, previews)`, and `analysis_fields(row, previews)`;
+   it does not recompute item counts, copy routing/tipping logic, or make a
+   flat analysis block. C consumes only
+   `engine_api.evidence_review_queue(...)`: never the HTTP view, view cards,
+   flattened children, or a second assembler. Its projections use
+   `routing_type`, `disposition`, `routing_reason(...)`, and
+   `analysis_fields(...)`. C.2 selects only `row.get("kind") ==
+   "evidence-set"`; C.1 renders an SRD gap as a read-only title/ref summary.
+
+4. **Disposition ownership and D proofs.** V2R-A owns every disposition write
+   and `emit_explicit_disposition_event`; B only reads events. D.1's happy
+   path composes and verifies a minimal checked project/note through the normal
+   helpers, then uses the emitted evidence id—never an invented empty
+   `state.replace_evidence_sets` row. D.3 selects only top-level evidence
+   cards:
+
+   ```js
+   const isEvidenceCard = (block) => block && block.kind === "card" &&
+     (block.review_kind === "evidence-set" || block.kind_line === "evidence-review");
+   this.cards = blocks.filter(isEvidenceCard);
+   this.extras = blocks.filter((block) => !isEvidenceCard(block));
+   ```
+
+   It leaves SRD cards whole in `extras`; `renderBlock(card)` renders each
+   nested child once, in declared order, and D.2 collapses only parent-owned
+   analysis after those semantic children.
+
+5. **Completed producer edges.** The authoritative partial order replaces the
+   abbreviated graph above:
+
+   ```text
+   V2R-A → V2R-B.1 → V2R-B.2 → V2R-B.3
+   {V2R-B.3, U3-ENG} → V2R-B.4
+   {V2R-B.4, V2R-D.1, U3-ENG} → V2R-B.5
+   U3-ENG → SEAM.1 → U3-PLUG.4 → V2R-D.2
+   {V2R-B.5, V2R-D.1, V2R-D.2, U3-PLUG.7} → V2R-D.3
+   ```
+
+   U3-PLUG.7 is deliberate: D.3 consumes `authedJson`,
+   `enqueueNamedOperation`, the ItemView pattern, and the Node harness from
+   U3-PLUG.6/.7.  U3-PLUG.4 alone remains sufficient only for D.2.
+
+6. **Telemetry plane after I1 T.3.** `empirical_event.v1` client facts live in
+   `telemetry_events` with `event_type = "empirical_event.v1"`; their JSON
+   fields are in `payload_json`.  Therefore C.2/C.3 client-event assertions,
+   C.4/C.5 `review_telemetry_summary`, and its no-event-on-invalid-show proof
+   query `telemetry_events`, never `state.read_event_log(...,
+   ["empirical-event"])` or `event_log`.  The server-side `resolved` and
+   `disposition.v1` facts remain journal-side and are still read from
+   `event_log`.  C.4 combines these two planes explicitly; it does not label
+   all metrics “journal facts.”  I1 T.1/T.2/T.3 are a hard precondition for
+   all C telemetry implementation/tests.
+
+7. **U1 transport and CLI parity.** V2R-B.5 uses U1 M.3's final refusal text
+   in exact tests: `"unauthorized: missing or invalid bearer token"` and
+   `"method not allowed: POST /v1/views/evidence-review"`.  Apply the same
+   replacements whether the U1 transport task or B.5 lands first.  V2R-C.1
+   requires U1 M.4: every newly added `memoria review` parser command is added
+   to `CLI_ONLY_COMMANDS` in the same task unless it has a registry row.  The
+   M.4 `72 parser / 59 exemption` count is its landing snapshot, not a forever
+   cap; C.1 updates the parity fixture with the review-command additions.
 
 ---
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1

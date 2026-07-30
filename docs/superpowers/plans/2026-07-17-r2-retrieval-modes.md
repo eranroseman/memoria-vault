@@ -18,12 +18,111 @@
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
-1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (prefers `state.active_project_slices` via getattr; `links:` closure fallback).
+1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked path-projected edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (distinct-neighbor orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (adapts graph `propagation.active_project_slices(vault)` by project path; `links:` closure fallback).
 2. **Pipeline staging** (P produces; E consumes): `retrieval_pipeline.PipelineStages` (`add_filter` unique-suffixing repeats, `rows() -> [{stage, count}]` ordered), `excluded_strata(*, unchecked=0, stale=0, gated=0)` (zeros always present), `RERANK_MODE = "off"` rendered in every trace.
 3. **Explore** (E produces): `explore.explore_topic(vault, topic, *, project="", depth=1, versus="") -> dict` — kind groups `{claims, questions, tensions, works, hubs}`, per-entry edges + `grounds_count` (complete evidence-set rows via `block_ref`), `SEED_K = 5`, stage order `universe → [project-slice] → ranked → seed → neighborhood → returned`, per-side payloads + intersection + crossing tensions under `--versus`, `honest_empty` string on zero-return; CLI `memoria explore` with the pinned `test_cli_command_surface_is_exact` edit, both-direction help disambiguation vs `memoria project explore`, and the U1 registry row (grep-first both-branch).
 4. **Span refs + fixtures** (F produces): `span_refs.resolve_span_ref(vault, ref) -> {work_id, anchor, path} | None` (passages `(work_id, anchor)` match; file-scan interim fallback); `tests/retrieval_fixtures.py` loader (`load_retrieval_fixtures(*, spike_mode=False)` refusing unfrozen rows in spike mode), `shape1_bm25_cases` (gold span refs → doc paths for `evaluate_bm25` — doc-level hit@k stated), `score_present_at_depth(payload, gold_ids) -> bool`, `FIXTURES_DIR = tests/fixtures/retrieval/`, the seeded `cases.yaml` (registered, unfrozen, over O1 seed-corpus work ids).
-5. **Execution order:** G → P → E → F (F.1's contract tests touch only shipped ask surfaces and may run any time after P).
+5. **Execution order:** graph endpoint/path activation → G → P → E → F; P.2 rebases on LOOP.1's checked-search refresh seam, and F.2 precedes LOOP.13's Shape-2 protocol.
 6. **TEST_LEVELS:** `test_graph_sql.py`, `test_explore.py`, `test_retrieval_fixtures.py` — `"contract"`; P extends registered files (exact registrations named in-section).
+
+---
+
+## Plan-reconciliation amendment — identity-safe graph traversal and shared retrieval stages (2026-07-29)
+
+This amendment supersedes R2 snippets that assume concept-edge ids are paths,
+call a nonexistent state slice API, duplicate P's pipeline behavior, replace the
+final `ask` handler, or score Shape 2 without its declared depth.
+
+1. **Graph-owned endpoint projection is a prerequisite.** After graph NID-B's
+   v16 identity re-key, raw `source_concept_id` values may be ULIDs and
+   `target_concept_id` may be null while `target_path` remains durable. Before
+   G starts, graph ERP-A.6 must expose the public checked-edge path projection
+   `lib.edges.concept_edge_path_pairs(vault, *, checked_only=True)`
+   returning `{source_path, target_path, relation_type}`. It resolves identity
+   ids through the concept mirror, retains a pending edge's `target_path`, and
+   never treats an id as a filesystem path. G.1/G.2/E.1 use that projection;
+   their fixtures seed the required concept mirror rows and prove both a ULID
+   source and a pending target. `degree_centrality` counts `DISTINCT` projected
+   neighbors, with a parallel-relation test.
+2. **Project-slice adapter.** Graph ERP-C owns
+   `propagation.active_project_slices(vault) -> dict[str, set[str]]`, keyed by
+   project-relative path. R2's `project_slice` selects `mapping[project]`,
+   converts the set into deterministic path ids, and records
+   `source="active-project-slices"`; it never calls
+   `state.active_project_slices(vault, project)`. If the graph seam is absent,
+   use only the existing links closure and exclude dangling targets before they
+   enter the returned slice. Add real mapping-shape and dangling-link tests.
+3. **P is the sole pipeline authority.** E imports and uses P's
+   `PipelineStages`, `excluded_strata`, `rerank`, `honest_empty`, and
+   `build_trace`; it does not recreate counts, strata, traces, or empty text.
+   Because Shape 2 expands after its seed, P.1 adds a named explore-stage model
+   that permits `universe → [project-slice] → ranked → seed → neighborhood →
+   returned`, explicitly labeling the expansion rather than forcing it through
+   a monotonic filter API. All stage counts reject negative integers. E passes
+   its seed ranking through the off-by-default rerank seam and exposes the
+   resulting shared trace.
+4. **Parser and compatibility order.** P.3 lands the final `ask --trace`
+   parser/handler first. E.2 inserts the `explore` parser and handler beside
+   that final form; it never replaces `_cmd_ask`. E's focused regression runs
+   `memoria ask --trace` as well as `memoria explore`. F.1 is P-dependent and
+   asserts the shared `honest_empty` shape instead of a legacy `unknowns`
+   string. P.2 opens with a LOOP.1 grep/rebase check and uses its incremental
+   checked-search refresh when available, anchoring edits by symbol.
+5. **Grounding and fixture depth.** `resolve_span_ref` is a safe-grounding
+   resolver: it returns a passage/file fallback only when the associated source
+   is checked; quarantined/unchecked sources resolve to `None`, with a test.
+   F.2 adds an evaluator that reads each Shape-2 fixture's declared
+   `present@N`, invokes Explore at exactly `N`, and rejects a payload whose
+   recorded depth differs. `score_present_at_depth` accepts/validates that
+   depth (or is wrapped by this evaluator); include a depth-1 versus depth-2
+   negative test. LOOP.13 then consumes the frozen fixture's topic, depth, and
+   metric through `memoria explore`, not `memoria ask`.
+
+6. **Task-level replacement instructions.** The historical G.1/G.2/E.1/P.1/F.2
+   bodies below are superseded where they conflict with this amendment; an
+   executor must not combine their raw-ID or local-pipeline snippets with the
+   following final contracts.
+
+   - **G.1:** `neighborhood` and `degree_centrality` build adjacency solely from
+     `edges.concept_edge_path_pairs`.  Inputs and returned `ids` are normalized
+     paths; a ULID is never accepted as a path.  The replacement fixture creates
+     concept-mirror rows for a ULID source, a resolved target, and a checked
+     pending target, then asserts path traversal, `DISTINCT` neighbor counting
+     across parallel relations, and exclusion of unchecked rows.
+   - **G.2:** import `propagation`, not `state`.  If callable,
+     `propagation.active_project_slices(vault)` is selected by project-relative
+     path and yields sorted path ids.  Until ERP-C.6 lands, its only fallback is
+     the links closure; it filters missing/pending filesystem targets before
+     return.  Delete the `state.active_project_slices` test monkeypatch and all
+     `getattr(state, ...)` implementation code.
+   - **P.1:** validate every count at insertion (`type(count) is int and
+     count >= 0`; reject bools and negatives).  Add
+     `add_expansion(name, count)`, legal only after `add_ranked` and before
+     `add_returned`, with unique-suffixed names like filters.  Explore records
+     `seed` then `neighborhood` through that method, so its only legal trace is
+     `universe → [project-slice] → ranked → seed → neighborhood → returned`.
+     `PipelineStages.rows()` remains the sole ordered-count source.
+   - **E.1/E.2:** compose `PipelineStages`, `excluded_strata`, `rerank`,
+     `honest_empty`, and `build_trace` from P; delete the local
+     `pipeline_counts`, `_excluded_strata`, trace, and empty-message builders.
+     Its `_edges_by_concept` and `_tension_pairs` consume the ERP-A.6 projection,
+     and its final CLI parser is inserted beside P.3's final `_cmd_ask`, never
+     overwriting it.  Focused tests exercise both `memoria ask --trace` and
+     `memoria explore --trace`.
+
+7. **F.3 — freeze the executable Shape-2 fixture contract.** Add a task after
+   E and F.2, before LOOP.13/O2 W.4.  It loads the registered rows outside
+   spike mode, parses each Shape-2 `present@N`, calls
+   `explore.explore_topic(vault, row["query"], depth=N)`, requires
+   `payload["depth"] == N`, and applies `score_present_at_depth` to that exact
+   payload.  A depth-1 result for a `present@2` fixture is an explicit failure,
+   not a passing membership check.  Only after all registered cases pass does it
+   change their fixture rows to `frozen: true` with the committed `frozen_on`
+   date, add a loader test showing `load_retrieval_fixtures(spike_mode=True)`
+   succeeds, and commit the frozen artifact.  The task records the fixture id,
+   topic, depth, and metric in its test/receipt.  F is therefore ordered
+   `F.1 → F.2 → F.3`, and the old claim that F is independent of E is
+   superseded.  LOOP.13 and O2 W.4 require F.3, not merely F.2.
 
 ---
 # G — graph_sql primitives (spec §2 · slice 1)
@@ -3378,3 +3477,93 @@ Expected: `verify: OK` (ruff/ruff-format cover the two new Python files; yamllin
 git add tests/retrieval_fixtures.py tests/fixtures/retrieval/cases.yaml tests/test_retrieval_fixtures.py tests/conftest.py
 git commit -m "R2 F.2: retrieval-fixture preregistration form, loader, and baseline wiring (spec section 7)" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+---
+
+### Task F.3: Evaluate and freeze the registered retrieval fixtures
+
+**Preconditions:** F.1, F.2, E.1/E.2, O1's seeded corpus, graph ERP-A.6, and
+the Shape-2 `explore_topic` implementation are merged.  This is the explicit
+producer of the frozen-fixture contract consumed by O2 W.4 and LOOP.13; F.2's
+unfrozen preregistration is intentionally insufficient.
+
+**Files:**
+
+- Modify: `tests/retrieval_fixtures.py`
+- Modify: `tests/test_retrieval_fixtures.py`
+- Modify: `tests/fixtures/retrieval/cases.yaml`
+
+**Interfaces:**
+
+- Consumes: `load_retrieval_fixtures`, `shape1_bm25_cases`,
+  `score_present_at_depth`, `evaluate_bm25`, and
+  `explore.explore_topic(vault, topic, *, depth)`.
+- Produces: a frozen fixture file: every registered row has `frozen: true`
+  and the same committed ISO `frozen_on` date; the spike-mode loader succeeds.
+  The evaluation receipt records, per fixture, `id`, `shape`, query/topic,
+  metric, and (for Shape 2) declared/result depth.
+
+**Steps:**
+
+- [ ] Extend `tests/retrieval_fixtures.py` with small test-only helpers that
+  parse `hit@K`/`recall@K` and `present@N` from the validated metric strings;
+  reject an unsupported metric rather than guessing a threshold.  Do not add a
+  production evaluation abstraction merely to freeze static fixtures.
+- [ ] Write the failing test in `tests/test_retrieval_fixtures.py`.  Build a
+  disposable seeded retrieval vault with F.2's fulltext helper and the
+  identity-safe graph seam; the fixture has the registered two Shape-1 works
+  and the two Shape-2 work IDs connected by the necessary checked path edges.
+  Load the **unfrozen** rows outside spike mode and:
+
+  1. evaluate each Shape-1 row separately through `shape1_bm25_cases` and
+     `evaluate_bm25`, asserting its declared hit/recall threshold;
+  2. parse each Shape-2 `present@N`, call
+     `explore_topic(vault, row["query"], depth=N)`, assert
+     `payload["depth"] == N`, and then assert
+     `score_present_at_depth(payload, row["gold"])`;
+  3. add a negative fixture/test proving a payload at depth 1 cannot satisfy a
+     case declared `present@2`, even if its membership happens to look right;
+  4. assert `load_retrieval_fixtures(spike_mode=True)` fails before the freeze.
+
+  The test output names the fixture id, topic/query, metric, and actual depth
+  on failure; a failing evaluation is a finding and blocks freezing.
+- [ ] Run the focused test red:
+
+  ```bash
+  python -m pytest tests/test_retrieval_fixtures.py -q
+  ```
+
+  Expected: the spike-mode assertion fails because F.2 registered all rows as
+  unfrozen (or an evaluation failure names the fixture that must be corrected
+  before freezing).
+- [ ] Once every registered Shape-1 and Shape-2 evaluation is green, update
+  **only** the already-registered `cases.yaml` rows: set `frozen: true` and add
+  one `frozen_on: YYYY-MM-DD` date.  Do not change a query, gold ID, metric, or
+  registration date in this task; any such correction requires a separate
+  preregistration decision before the freeze.
+- [ ] Replace the pre-freeze spike-refusal assertion with the post-freeze
+  assertion:
+
+  ```python
+  frozen = load_retrieval_fixtures(spike_mode=True)
+  assert all(row["frozen"] for row in frozen)
+  assert {row["frozen_on"] for row in frozen} == {"<committed freeze date>"}
+  ```
+
+  Keep the malformed-row validation that proves an unfrozen synthetic row is
+  still refused in spike mode; the loader rule is not relaxed merely because
+  the shipped fixture is now frozen.
+- [ ] Run the focused contracts and gate:
+
+  ```bash
+  python -m pytest tests/test_retrieval_fixtures.py tests/test_explore.py -q
+  python scripts/verify
+  ```
+
+- [ ] Commit:
+
+  ```bash
+  git add tests/retrieval_fixtures.py tests/test_retrieval_fixtures.py \
+      tests/fixtures/retrieval/cases.yaml
+  git commit -m "test(retrieval): evaluate and freeze registered Shape-1/2 fixtures (R2 F.3)"
+  ```

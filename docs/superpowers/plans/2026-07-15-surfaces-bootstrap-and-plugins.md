@@ -298,6 +298,35 @@ are unchanged.  In a conflict, this section governs.
    test snippets below are superseded only to this extent; neither execution
    order may delete or leave a jobless registered view.
 
+### Plan-reconciliation amendment — U1 transport, scope-walk, and CLI-parity handoffs (2026-07-29)
+
+This amendment governs the U1-owned contracts that surface tasks consume.  It
+does not move ownership of HTTP dispatch or CLI parity into this plan; it makes
+each consumer update the contracts atomically when it lands after U1.
+
+1. **Named HTTP refusals.** Once U1 M.3 lands, every BOOT/U3 HTTP assertion
+   below uses `{"ok": False, "error": "unauthorized: missing or invalid bearer
+   token"}` for a tokenless protected route and
+   `{"ok": False, "error": "method not allowed: <METHOD> <PATH>"}` for a
+   wrong method.  In particular U3 attention uses
+   `method not allowed: POST /v1/views/attention`; lifecycle tests use their
+   actual `/v1/status` or `/v1/shutdown` path.  If a surface task lands first,
+   U1 M.3's refusal-shape sweep updates its expectations in the same PR.  Bare
+   `"unauthorized"` and `"method not allowed"` are superseded test values,
+   not compatibility forms.
+2. **Attention scope proof.** `views.attention` is a registry-owned
+   optional-scope HTTP route.  The task registering it also adds its
+   route-specific entry and seeded fixture to U1 M.3's registry-driven
+   `PROBES`, proving a void scope removes/refuses its attention marker while
+   the unscoped leg is real.  It must not change M.3's coverage assertion to a
+   fixed count.  V2 applies the same rule to `views.evidence_review`.
+3. **Parser parity.** If BOOT-A.8, BOOT-C.3, or BOOT-D.7 lands after U1 M.4,
+   its `memoria handshake`, `memoria upgrade`, or `memoria onboard` parser
+   change also adds that command to U1's `CLI_ONLY_COMMANDS` (unless the task
+   deliberately registers a full surface row).  If it lands first, M.4's
+   initial complement includes it.  Updating `tests/test_cli.py` alone is
+   insufficient in either order.
+
 ### Plan-reconciliation amendment — graph roster activation and warrant wire (2026-07-29)
 
 This amendment supersedes U3-PLUG.5's legacy `reason` payload, every

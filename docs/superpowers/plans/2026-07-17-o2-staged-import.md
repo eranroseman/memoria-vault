@@ -10,7 +10,12 @@
 
 ## Global Constraints
 
-- **Sequencing precondition (spec §1, verbatim): implementation may not begin until the I1 full-wiring plan is implemented and merged** — instrumentation precedes all ingestion; the seeded-error battery must be green before any real-vault import; schema-before-corpus stands.
+- **Sequencing precondition (scoped):** I1 full wiring and the seeded-error
+  battery must be implemented and green before **any real-vault ingestion or
+  final import artifact**.  Disposable-vault P/A/W.1/W.2 parser, adapter, and
+  seam work may proceed beforehand; it neither imports into a real vault nor
+  emits a run worklist/telemetry artifact.  Instrumentation still precedes all
+  real ingestion; schema-before-corpus stands.
 - Correctness gate: `python scripts/verify`; PR + `verify`/`gitleaks`; squash merge; explicit-path staging; disposable vaults only.
 - Bulk admission is catalog-only, zero digests, fully keyless; the enrichment default flip (`--enrich`, off) is the one deliberate behavior change and is asserted as such.
 - 1000-scale anything is beta.2 (spec §8); nothing here may assume corpus sizes beyond the 100-work stage.
@@ -19,22 +24,57 @@
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **`runtime/bulk_import.py` module seams:** P.1's `split_bibtex_entries(text) -> list[str]` / `split_csl_entries(text) -> list[str]`; P.2's `build_entry_payload(fmt, entry_text) -> dict` (section A's interception point) and `entry_ref(fmt, entry_text, index) -> str` (citekey / CSL id / `entry-<index>` — the worklist item-ref vocabulary).
-2. **The driver result** (P.2/P.3 produce; W consumes): `{ok, run_id (uuid4 hex), format, entries_total, admitted: [work_id…], skipped: [work_id…], failed: [{ref, error}…], duplicates: […], index_refresh_s, enrichment…}` — `admitted`/`skipped` use the **catalog's** work_id vocabulary (SPEC GAP P-1); zero-rows-PRESENT is the failure exit; run-scoped keys `import-<run_id>-<work_id>`.
+2. **Driver ownership:** P.2/P.3 produce only the baseline capture summary `{ok, run_id (uuid4 hex), format, entries_total, admitted: [work_id…], skipped: [work_id…], failed: [{ref, error}…], enrichment_jobs, index_refresh_s}`. The new I.1 integration task owns adapter application, duplicate/unmapped judgment rows, and the call into the W seams; `admitted`/`skipped` use the **catalog's** work_id vocabulary (SPEC GAP P-1), zero-rows-PRESENT is the failure exit, and keys remain `import-<run_id>-<work_id>`.
 3. **Adapter seams** (A produces): `_ENTRY_TYPE_MAP`, `entry_item_type(entry_fields) -> str` (shipped vocabulary `article/book/webpage/software/dataset/report`), `entry_type_mapped(entry_fields) -> bool`, `entry_fetch(entry_fields, identifiers) -> {method,url} | None` (PMCID→`pmc-oa`, arXiv→`arxiv-pdf`, `.pdf` URL→`pdf-url`, else None), `entry_capture_request(payload, fetch, *, mapped, opener)`, `detect_identifier_collisions(vault, work_id, identifiers) -> [{other_work_id, field}]`, `is_doi_collision_error(error) -> bool`.
 4. **Worklist seams** (W produces): `emit_worklist(…, raised_by="worklists", loudness="notice")` passthrough (defaults = shipped behavior); `emit_import_worklist(vault, *, run_id, rows, entries_total, admitted) -> dict | None` (None on zero judgment rows — no worklist, no card); worklist id `import-<run_id>`; rows ranked duplicates → retraction → failed → unmapped.
-5. **Telemetry** (W produces): `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event` (typed ints, `format ∈ {bibtex, csl}`) in `engine/empirical_events.py`; dispatch branch in I1's `record_telemetry_event`; exactly one row per run.
-6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener)` is consumed by section A only (grep-first; if absent, land O1 M.2 first). I1's `runtime/telemetry.py` + seeded `decision-rules.yaml` are consumed by W.2/W.3 (grep-first; W.3 **blocks** with a stop-note if the I1 seed is absent). Section P consumes neither.
-7. **Execution order:** P.1 → P.2 → P.3 → A.1 → A.2 → A.3 → W.1 → W.2 → W.3 → W.4. The worker `capture-bibtex-source` auto-enrichment (a different surface) is **not** flipped (SPEC GAP P-5).
+5. **Telemetry** (W produces): `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event` (typed ints, `format ∈ {bibtex, csl}`) in `engine/empirical_events.py`; dispatch branch in I1's `record_telemetry_event`; the chosen I.1 finalizer emits exactly one row per run.
+6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener)` is consumed by section A and I.1 (grep-first; if absent, land O1 M.2 first). I1's `runtime/telemetry.py` + seeded `decision-rules.yaml` are consumed by W.2/W.3 and then I.1 (grep-first; W.3 **blocks** with a stop-note if the I1 seed is absent). Section P consumes neither.
+7. **Execution order:** P.1 → P.2 → P.3 → A.1 → A.2 → A.3 → W.1 → W.2 → I.1 → W.3 → W.4. I.1 is blocked on issue #1517's finalization decision; its insertion prevents P.2/P.3 from silently claiming to own later seams. The worker `capture-bibtex-source` auto-enrichment (a different surface) is **not** flipped (SPEC GAP P-5).
 8. **TEST_LEVELS:** `test_bulk_import.py: "contract"` (new, registered once in P.1; A and W extend it and other already-registered files with no further conftest change).
+
+---
+
+## Plan-reconciliation amendment — adapter/artifact integration and enrichment finality (2026-07-29)
+
+This amendment supersedes every earlier claim that P.2/P.3 itself calls
+`emit_import_worklist(...)` or `record_telemetry_event(...)`. P is deliberately a
+metadata-only baseline; A and W are deliberately independently testable seams. I.1
+is the only place allowed to compose them into the command driver.
+
+1. **I.1's non-negotiable immediate wiring:** for every entry it derives the
+   documented flat `entry_fields` shape (BibTeX: `{"type": entry_type,
+   **fields}`; CSL: the parsed CSL object), stamps `payload["item_type"]`, calls
+   `entry_fetch` and `entry_capture_request`, and preserves P's run-scoped
+   idempotency/pre-check rules. It collects unmapped, identifier-collision, DOI
+   collision, and failure rows using A.1–.3's exact helpers.  It records or
+   returns that collection only as **provisional run state**; it does not call
+   `emit_import_worklist` or telemetry itself before the #1517-selected
+   terminal finalizer can include delayed retraction rows.
+2. **Final-artifact invariant:** the component chosen by the finalization
+   decision calls `emit_import_worklist` at most once and
+   `record_telemetry_event(..., "import-run.v1", ...)` exactly once for a given
+   `run_id`; both calls occur only after the documented index-refresh boundary.
+   A zero-judgment run yields no worklist/card, never a fabricated empty artifact.
+3. **Blocked retraction boundary:** I.1 must not be implemented while
+   [#1517](https://github.com/eranroseman/memoria-vault/issues/1517) is open.
+   `--enrich` currently queues child jobs, but the required retraction facts arise
+   only when those jobs execute later. The issue must choose the durable finalizer,
+   synchronous enrichment, or an explicit requirement change; it also owns the
+   `run_id`, idempotency, failure/timeout, and delayed-enrichment test contract.
+4. **Acceptance retrieval is frozen and modal-correct.** W.4 requires R2 F.3,
+   not just LOOP.13 prose.  It reads the frozen Shape-2 fixture's id, topic,
+   `present@N` depth, and metric, records all four values, and invokes
+   `memoria explore "<topic>" --depth N --json`; only Shape 1 uses
+   `memoria ask`.  A stale `ask`-for-Shape-2 snippet below is superseded.
 
 ---
 # P — Multi-entry parsing + the driver loop
 
 Implements O2 spec §2 — entry iteration over the **unchanged** shipped builders, one worker request per entry under run-scoped idempotency keys `import-<run_id>-<work_id>`, resume via the `state.catalog_source` pre-check, per-row honesty with the zero-rows-PRESENT failure rule, the enrichment default flip behind `--enrich` (the one deliberate behavior change), and the explicit timed post-loop index refresh — slices 1–2 of spec §11. Spec §5's **structural same-DOI dedupe** lands here for free because it *is* the §2 skip path (same DOI ⇒ same `_bibtex_default_work_id` ⇒ pre-check hit ⇒ `skipped`), and P.2 pins it. Spec of record: `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md` (§2, §5 first bullet, §10's single-entry-unchanged and flip-asserted criteria). All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
 
-**Cross-plan order (binding).** The plan header's I1 precondition (2026-07-16-i1-full-wiring.md implemented + merged) governs the whole plan; section P itself consumes **no** I1 seam — it emits no telemetry. The `import-run.v1` emission (spec §6) belongs to this plan's telemetry section, which consumes P's run-summary dict (interface below) and I1's `record_telemetry_event(vault, event_type, payload) -> str` (`src/memoria_vault/runtime/telemetry.py`, I1 T.2) with that section's own grep-first tolerance. O1's `resolve_fetch(row, *, opener)` layer (`runtime/seed_install.py`, O1 M.2) is consumed by the adapter section (slice 3), **not** by P — P admits every entry through the shipped metadata-only capture path, so P has no O1 blocker. Grep-first anyway: `grep -rn "def resolve_fetch\|def record_telemetry_event" src/memoria_vault/` before starting — neither hit changes any P task; both absent is fine for P.
+**Cross-plan order (binding).** The I1 precondition applies to W.2/W.3 and the final artifact writer, **not** to section P: P consumes no I1 seam and emits no telemetry. The `import-run.v1` emission belongs to I.1's decision-selected finalizer, which consumes P's run summary and I1's `record_telemetry_event(vault, event_type, payload) -> str` (`src/memoria_vault/runtime/telemetry.py`, I1 T.2). O1's `resolve_fetch(row, *, opener)` layer (`runtime/seed_install.py`, O1 M.2) is consumed by the adapter section and I.1, **not** by P — P admits every entry through the shipped metadata-only capture path, so P has no O1 blocker. Grep-first anyway: `grep -rn "def resolve_fetch\|def record_telemetry_event" src/memoria_vault/` before starting; neither hit changes any P task.
 
-**What P deliberately does not do** (owned by later sections): item_type normalization + fetch synthesis (slice 3 consumes `build_entry_payload` as its interception point); cross-identifier duplicate flagging and the `doi UNIQUE` failure handler (slice 4 — `schema.sql:101` never fires in P because same-DOI entries are skipped before enqueue); worklist + quiet card minting (slice 5 consumes `entry_ref` and the `failed` rows; `emit_worklist` at `worklists.py:63-70` is untouched here); `import-run.v1` (slice 6 consumes the summary and its `index_refresh_s`).
+**What P deliberately does not do** (owned by later sections): item_type normalization + fetch synthesis (slice 3 consumes `build_entry_payload` as its interception point); cross-identifier duplicate flagging and the `doi UNIQUE` failure handler (slice 4 — `schema.sql:101` never fires in P because same-DOI entries are skipped before enqueue); worklist + quiet card minting, and `import-run.v1` emission (I.1 consumes `entry_ref`, P's summary, and the W seams after the adapter work lands). P must not gain a direct W call merely because old W prose named it as the stitch point.
 
 **Execution order:** P.1 → P.2 → P.3. Tests: `tmp_path` vaults only; no network anywhere in P (BibTeX/CSL `capture-source` payloads perform no fetch — offline by construction; the injectable-opener rule bites in the adapter section).
 
@@ -1743,7 +1783,7 @@ This section lands the bulk-admission artifacts (spec §3: the `emit_worklist` r
 
 **Cross-plan preconditions (binding, from the plan header):** implementation may not begin until the I1 plan (`docs/superpowers/plans/2026-07-16-i1-full-wiring.md`) is implemented and merged. W.2 consumes I1 T.2's `runtime/telemetry.py` and W.3 consumes I1 H.3's seeded `decision-rules.yaml` + `tests/test_decision_rules.py` — both tasks open with a grep-first check and a stop-note. The O1 resolve layer (`runtime/seed_install.py resolve_fetch(row, *, opener)`, O1 plan M.2) is consumed by this plan's driver/adapter sections, not by Section W. All shipped line refs below are verified at `51395f15`; re-anchor by symbol if drifted.
 
-**Driver stitches (for the plan assembler):** the slice-2 driver task calls `emit_import_worklist(...)` at most once per run (W.1's seam — zero judgment rows ⇒ it returns `None`, no worklist, no card) and calls `record_telemetry_event(vault, "import-run.v1", row)` exactly once per run, after the timed post-loop index refresh (W.2's seam). The acceptance criterion's *nonzero* `index_refresh_s` is a driver-section assertion; W.2's validator honestly allows `>= 0`.
+**Driver stitches (for the plan assembler):** I.1, not the slice-2 P driver, composes W.1 and W.2 after A.1–.3. It calls `emit_import_worklist(...)` at most once per run (zero judgment rows ⇒ `None`, no worklist, no card) and the chosen finalizer calls `record_telemetry_event(vault, "import-run.v1", row)` exactly once per run, after the documented index-refresh boundary. I.1 is blocked pending #1517; W.2's validator honestly allows `index_refresh_s >= 0`.
 
 No new test files in this section: `tests/test_worklists.py` (`tests/conftest.py:120`, `contract`) and `tests/test_empirical_events.py` (`tests/conftest.py:42`, `contract`) are shipped-registered; `tests/test_telemetry_events.py` and `tests/test_decision_rules.py` are created and registered by the I1 plan (T.2, H.3). No `TEST_LEVELS` change here.
 
@@ -1988,7 +2028,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: I1 T.2's `record_telemetry_event(vault: Path, event_type: str, payload: dict[str, Any]) -> str` and its `_validated` dispatch (`runtime/telemetry.py`); I1 T.1's `telemetry_events` table (columns `event_id, ts, event_type, session_id, surface, payload_json`); shipped private helpers `_missing` (`empirical_events.py:187`), `_string_field` (`:198`), `_reject_pathlike` (`:236`); `state.connect` bootstraps the schema on a bare `tmp_path` vault (`state.py:472-481`), so tests need no init and no network.
-- Produces: `empirical_events.IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"`; `empirical_events.validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]` — its own `IMPORT_RUN_REQUIRED_FIELDS` (the `edge-write.v1` pattern, graph plan ERP-D.6: a separate validator so integer fields are legal — `validate_empirical_event`'s `ALLOWED_FIELDS`/string coercion cannot carry counts); the `_validated` branch making `record_telemetry_event(vault, "import-run.v1", row)` a working call. Row shape (spec §6): `{run_id, format, entries_total, admitted, skipped, failed, duplicates_flagged, retraction_flags, duration_s, index_refresh_s}` — `run_id` an opaque string, `format ∈ {bibtex, csl}`, the six counts non-negative `int`s (bool rejected), the two timings non-negative numerics. One row per run, emitted by the driver after the timed post-loop index refresh (driver stitch, slice-2 task).
+- Produces: `empirical_events.IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"`; `empirical_events.validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]` — its own `IMPORT_RUN_REQUIRED_FIELDS` (the `edge-write.v1` pattern, graph plan ERP-D.6: a separate validator so integer fields are legal — `validate_empirical_event`'s `ALLOWED_FIELDS`/string coercion cannot carry counts); the `_validated` branch making `record_telemetry_event(vault, "import-run.v1", row)` a working call. Row shape (spec §6): `{run_id, format, entries_total, admitted, skipped, failed, duplicates_flagged, retraction_flags, duration_s, index_refresh_s}` — `run_id` an opaque string, `format ∈ {bibtex, csl}`, the six counts non-negative `int`s (bool rejected), the two timings non-negative numerics. One row per run is emitted by I.1's decision-selected finalizer, never speculatively by P.2/P.3.
 
 - [ ] **Step 1: Grep-first (order tolerance).** Run `grep -n "_validated\|edge-write.v1" src/memoria_vault/runtime/telemetry.py`. If the file is absent, the plan header's precondition is unmet — **STOP: land and merge the I1 plan (2026-07-16-i1-full-wiring.md, T.1/T.2) first.** If present but the `edge-write.v1` branch is absent (graph-plan ordering), insert the new branch in the same position relative to the native-fields fallback; anchor by symbol, not line.
 
@@ -2182,7 +2222,54 @@ git commit -m "feat(telemetry): import-run.v1 typed validator + dispatch, one an
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+### Task I.1 (blocked): compose the adapter and artifact seams into the bulk driver
+
+**Status:** do not start while [#1517](https://github.com/eranroseman/memoria-vault/issues/1517) is open. This task exists to make the omitted handoff explicit; its finalizer subsection is intentionally deferred to that issue's selected lifecycle rather than inventing synchronous enrichment or a second artifact writer.
+
+**Files (once unblocked):**
+
+- Modify `src/memoria_vault/cli.py` — `_bulk_work_import` (re-anchor by symbol)
+- Modify `tests/test_cli_work_project.py` — real bulk CLI integration coverage
+- Modify `tests/test_bulk_import.py` only for any pure entry-field helper required to prevent duplicated BibTeX/CSL extraction
+- Extend the W.1/W.2 test files only for the chosen finalizer's exactly-once proof
+
+**Immediate composition contract (must survive any #1517 decision):**
+
+1. Build each payload through P.2's `build_entry_payload`, derive the A.1
+   `entry_fields` shape from the original entry, set `payload["item_type"] =
+   entry_item_type(entry_fields)`, and retain `mapped =
+   entry_type_mapped(entry_fields)` for the unmapped judgment row.
+2. Feed `entry_fetch(entry_fields, payload["identifiers"])` and `mapped` into
+   `entry_capture_request`; enqueue/run the returned operation with P.2's
+   existing run-scoped idempotency key. A fetch refusal becomes the named failed
+   row and does not stop later entries.
+3. After an admitted row, call `detect_identifier_collisions` with the returned
+   catalog work id and the payload identifiers. A DOI-UNIQUE failure is both a
+   named failure and a duplicate judgment row through `is_doi_collision_error`.
+   Same-DOI pre-check skips remain non-judgment rows.
+4. Normalize every judgment row into W.1's documented vocabulary and retain it
+   under the authoritative `run_id`.  The #1517-selected terminal finalizer —
+   not the immediate adapter loop — calls `emit_import_worklist` once after it
+   has incorporated the delayed retraction outcome. Do not emit per-entry cards
+   or call W seams from the pure A module.
+5. The #1517 decision specifies how enrichment child completion contributes
+   retraction rows and when the single telemetry call occurs. It must preserve
+   one authoritative `run_id`, no duplicate artifacts on retries, and a
+   terminal-path test for failed/late enrichment.
+
+**Required red/green proof once unblocked:** a multi-entry CLI test must exercise
+one mapped admission, one unmapped admission, one cross-identifier duplicate, one
+DOI-UNIQUE failure, and a malformed/fetch-failed row; it asserts one ranked
+worklist, one `import-run.v1` row, no per-entry cards, correct integer counts, and
+the chosen delayed-enrichment retraction behavior. Keep the test fully offline with
+the injectable opener/provider replay seam. Run the focused tests, then
+`python scripts/verify` before committing.
+
 ### Task W.3: `staged-import` decision-rule registry entry (spec §7; slice 7)
+
+**Precondition:** I.1 has landed with #1517's selected finalization contract. The
+registry must not advertise an `import-run`/worklist behavior the driver cannot yet
+produce.
 
 **Files:**
 - Modify: `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml` (append one entry after the seeded file's final row, `id: canvas-authoring`), `tests/test_decision_rules.py` (extend; created and registered `contract` by I1 H.3)

@@ -4,7 +4,7 @@
 
 **Goal:** Implement the O1 spec — the license-floored seed-corpus manifest and `memoria seed install`, derived steering with the thin watch/mute override, `onboarding-step` telemetry for the ≤30-minute bar, the diary template, and the tutorial/doc restructure onto the doc-arc wizard.
 
-**Architecture:** A shipped manifest (eight verified CC BY/CC0 sources) feeds a per-method fetch/resolve layer into the existing PDF capture seam through a new PI-only `seed-install` operation; steering inverts from an authored file to a derived token union (`runtime/steering.py`) with `steering.md` reseeded as a two-section override; five `onboarding-step` emit points ride I1's telemetry substrate through one guarded helper; the tutorial arc restructures so project framing precedes capture. Spec of record: `docs/superpowers/specs/2026-07-16-o1-onboarding-seed-design.md` (main @ `07bedc74`).
+**Architecture:** A shipped manifest (eight verified CC BY/CC0 sources) feeds a per-method fetch/resolve layer into the existing PDF capture seam through a new PI-only `seed-install` operation; steering inverts from an authored file to a derived token union (`runtime/steering.py`) with `steering.md` reseeded as a two-section override; five `onboarding-step` emit points ride I1's telemetry substrate through one required, non-gating helper; the tutorial arc restructures so project framing precedes capture. Spec of record: `docs/superpowers/specs/2026-07-16-o1-onboarding-seed-design.md` (main @ `07bedc74`).
 
 **Tech Stack:** Python 3 / SQLite / pytest; plain-markdown docs; no new dependencies (PyYAML already shipped).
 
@@ -22,9 +22,9 @@
 1. **Manifest** (M.1 produces): `src/memoria_vault/product/seed_corpus/manifest.yaml`, rows `{id, title, identifier, license, license_evidence, fetch{method,url}, role, repo?}`; `load_seed_manifest() -> list[dict]` / `parse_seed_manifest(text) -> list[dict]` in `memoria_vault.product.seed_corpus`; the eight pinned work_ids: `chen-2018-undesirable-difficulty, moreira-2019-retrieval-practice, settles-2016-spaced-repetition, morrison-2020-offloading, ose-askvik-2020-handwriting, schmidt-2018-luhmann-card-index, mirzababaei-2021-toulmin-agent, asai-2024-openscholar`.
 2. **Seed install** (M.3 produces): engine `seed_install(vault, rows=None, *, opener=None, context) -> {admitted, skipped, failed, notices, telemetry}` (ValueError iff admitted+skipped both empty); worker operation id `seed-install` (PI-only); CLI `memoria seed install --workspace <path>` — the exact backticked path the D-section docs cite (doc-claims gate: M.3 merges before D).
 3. **Steering module** (S produces): `memoria_vault.runtime.steering` — `relevance_tokens`, `steering_overrides(vault) -> (watch, mute)`, `effective_steering_tokens(vault) -> set[str]`, `effective_steering_provenance(vault) -> [{token, sources}]`; source labels `project:<rel> | hub:<rel> | question:<rel> | watch`; the reseeded two-section `steering.md` (`## Watch for` / `## Muted`).
-4. **Onboarding-step helper** (T produces, M.3 consumes via guarded import): `memoria_vault.runtime.onboarding_steps` — `emit_onboarding_step(vault, step) -> str | None` (never raises into callers), `emit_onboarding_step_once`, `has_onboarding_step`, `emit_first_answer_if_seed_grounded(vault, answer, *, manifest_loader=None)`; `ONBOARDING_STEPS = {init-done, onboard-done, project-framed, seed-installed, first-answer}`; `NATIVE_EVENT_FIELDS['onboarding-step'] = {'step'}` added to the I1-owned table.
-5. **Cross-plan order tolerance:** I1's `runtime/telemetry.py` + v19 table are a **hard block for T.1 only** (grep-first stop-note); every other telemetry touch is a guarded no-op recorded as `skipped-helper-not-landed`. The surfaces plan's BOOT-D owns `memoria onboard` — T's onboard-done and D.4's `Start here.md` repoint carry both-branch steps (edit if landed, amend the surfaces plan text if not).
-6. **Execution order:** M.1 → M.2 → M.3 → {S.1 → S.2 → S.3} → {T.1 → T.2 → T.3} → D.1 → D.2 → D.3 → D.4. S is independent of M/T; D runs last (docs cite CLI surfaces the code tasks create). T.1 blocks on the I1 plan's slices 1–2 being merged.
+4. **Onboarding-step helper** (T produces, M.3 consumes): `memoria_vault.runtime.onboarding_steps` — `emit_onboarding_step(vault, step) -> str | None` (never raises into callers), `emit_onboarding_step_once`, `has_onboarding_step`, `emit_first_answer_if_seed_grounded(vault, answer, *, manifest_loader=None)`; `ONBOARDING_STEPS = {init-done, onboard-done, project-framed, seed-installed, first-answer}`; `NATIVE_EVENT_FIELDS['onboarding-step'] = {'step'}` added to the I1-owned table.
+5. **Cross-plan order tolerance:** I1's `runtime/telemetry.py` + v19 table are a **hard block for T.1 and M.3** (grep-first stop-note). Once T.1 has landed, each emitter is non-gating (an insertion failure returns `None` and the command proceeds), but a first seed installation must not silently omit `seed-installed`. The surfaces plan's BOOT-D owns `memoria onboard` — T's onboard-done and D.4's `Start here.md` repoint carry both-branch steps (edit if landed, amend the surfaces plan text if not).
+6. **Execution order:** M.1 → M.2 → T.1 (after I1 T.1–T.2) → M.3 → T.2 → T.3 → D.1 → D.2 → D.3 → D.4. S.1 → S.2 → S.3 is independent and may run after M.1; D runs last (docs cite CLI surfaces the code tasks create). This ordering guarantees the first successful seed install emits `seed-installed`, rather than requiring a retry after telemetry appears.
 7. **TEST_LEVELS registrations** (`tests/conftest.py:18`): `test_seed_manifest.py: "contract"`, `test_seed_install.py: "contract"`, `test_steering_tokens.py: "contract"`, `test_onboarding_steps.py: "contract"`; extended files (`test_knowledge.py`, `test_cli.py`, `test_capture.py`, seed/floor tests) are already registered.
 
 ---
@@ -32,7 +32,7 @@
 
 Implements spec §1 (licensing decision, license floor, fetch rule, impl-start check) and §2 (the eight-source corpus, the manifest artifact, the per-method fetch/resolve layer, idempotency and per-row honesty, the frame-first notice) — slices 1–2 of §9. Spec: `docs/superpowers/specs/2026-07-16-o1-onboarding-seed-design.md`. The §1 dated Y-statement ledger entry and the #902 re-deferral comment shipped with the spec PR — not re-planned here.
 
-**Cross-plan order tolerance (binding).** Section T of this plan owns `emit_onboarding_step(vault: Path, step: str) -> None` (the `onboarding-step` native telemetry type, built on I1's `record_telemetry_event(vault, event_type, payload) -> str` in `src/memoria_vault/runtime/telemetry.py` — see `docs/superpowers/plans/2026-07-16-i1-full-wiring.md` interface 1). Section M never imports `record_telemetry_event` directly; M.3's emit is a guarded import of section T's emit_onboarding_step (module memoria_vault.runtime.onboarding_steps) that no-ops with a recorded gap when the helper has not landed. Grep-first rule: before writing M.3's emit wrapper, run `grep -rn "def emit_onboarding_step" src/memoria_vault/` — re-anchor the import module if T placed the helper elsewhere; if the grep is empty, keep the guarded import exactly as written. The surfaces plan's `memoria onboard` (BOOT-D) is not consumed by M at all — the onboard-done emit point belongs to section T.
+**Cross-plan ordering (binding).** Section T of this plan owns `emit_onboarding_step(vault: Path, step: str) -> None` (the `onboarding-step` native telemetry type, built on I1's `record_telemetry_event(vault, event_type, payload) -> str` in `src/memoria_vault/runtime/telemetry.py` — see `docs/superpowers/plans/2026-07-16-i1-full-wiring.md` interface 1). Section M never imports `record_telemetry_event` directly. M.3 runs only after T.1 and imports T's helper from `memoria_vault.runtime.onboarding_steps`; grep first to re-anchor a moved module, but an empty grep is a stop condition, not permission to ship a first-install no-op. The helper itself remains an observer: a failed telemetry insertion never rolls back seed admission. The surfaces plan's `memoria onboard` (BOOT-D) is not consumed by M at all — the onboard-done emit point belongs to section T.
 
 **Why a new worker operation, not a bare engine call.** All vault writes go through `enqueue_operation → run_request → _run_operation_job` (worker.py:303-315), which loads a packaged capability manifest per operation id (`load_operation_policy`, operations.py:103-108). Three shipped gates force the co-changes M.3 makes: `test_worker_operations_are_cataloged_and_policy_shaped` (tests/test_capabilities.py:61-79) requires worker-dispatch ids ≡ manifest catalog ids both ways; `test_every_operation_has_a_floor_entry` (tests/test_floor_coverage.py:37-42) requires an `OPERATION_REGISTRY` entry in tests/floor_lib.py; `test_cli_command_surface_is_exact` (tests/test_cli.py:73-146) pins the exact CLI command set. `seed-install` is registered PI-only in `PROTECTED_OPERATION_ACTORS` (worker.py:53-66) — onboarding is a PI action, agent surfaces cannot trigger network fetches, and the offline floor sweep (which enqueues as `actor="agent"`, tests/test_floor_sweep_operations.py:73-78) refuses deterministically with no network, the same shape as `curate-note-link` (tests/floor_lib.py:481-489).
 
@@ -42,7 +42,7 @@ Implements spec §1 (licensing decision, license floor, fetch rule, impl-start c
 2. **License-evidence URLs.** §2 requires `license_evidence` per row but pins only row 8's ("the abs page"). Resolution: each source's canonical publisher landing page (the page carrying the CC statement), DOI-derived; row 8 uses the spec-pinned `https://arxiv.org/abs/2411.14199v1`. The §1 impl-start check re-verifies against exactly these URLs.
 3. **Elided titles.** The spec table abridges rows 4, 5, and 7 with "…". Resolution: the manifest ships the full published titles; the implementer confirms them on the evidence-URL visit that the impl-start check already requires (M.1 commit step). Tests pin ids/licenses/methods/URLs/repos — not title prose — so a title correction never breaks a gate.
 4. **"Archived" detection for the frame-first notice.** The task sketch says `archived != True`; the repo convention for concept files is `lifecycle: archived` (`_is_current_frontmatter`, knowledge.py:3056-3057; spec §4.1 says "non-archived `type: project`"). Resolution: a project is active iff frontmatter `type == "project"` and `lifecycle not in {"retracted", "archived"}`, walked with `iter_markdown` (vaultio.py:217-226) over `projects/` (covers both `projects/<slug>.md` and `projects/<slug>/project.md`, knowledge.py:3074-3079).
-5. **Section T helper's module home.** The signature is fixed (`emit_onboarding_step(vault, step)`) but its module is T's to choose. Resolution: guarded import from `memoria_vault.runtime.onboarding_steps` (section T's module), with the grep-first re-anchor rule above; absence is a recorded no-op (`"telemetry": "skipped-helper-not-landed"` in the result payload), never a crash.
+5. **Section T helper's module home.** The signature is fixed (`emit_onboarding_step(vault, step)`) but its module is T's to choose. Resolution: import from `memoria_vault.runtime.onboarding_steps` after the T.1/M.3 ordering precondition, with the grep-first re-anchor rule above. Absence blocks M.3; a runtime telemetry-insertion failure remains the helper's non-gating `None` result, never a rollback of a completed install.
 
 ---
 
@@ -772,9 +772,14 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task M.3: `memoria seed install` — engine function, worker operation, CLI
 
+> **Execution override — first-install telemetry (2026-07-29):** Execute M.3
+> only after T.1 has landed on I1's telemetry substrate. The legacy guarded-
+> import/no-op snippets below are superseded: a successful first install must
+> record `seed-installed`; no retry is required to create that event.
+
 **Files:**
 
-- Modify `src/memoria_vault/runtime/seed_install.py` (add `seed_install` + row-metadata helpers + the guarded telemetry emit; module created in M.2)
+- Modify `src/memoria_vault/runtime/seed_install.py` (add `seed_install` + row-metadata helpers + the required, non-gating telemetry emit; module created in M.2)
 - Create `src/memoria_vault/product/capabilities/operations/seed-install.md` (capability manifest; shape mirrors `capture-pdf-source.md:1-30`; `runner` is auto-defaulted by `_manifest_frontmatter`, runtime/capabilities.py:157-163)
 - Modify `src/memoria_vault/runtime/worker.py` — `PROTECTED_OPERATION_ACTORS` (:53-66, add pi-only entry) and the operation dispatch (insert branch after the `capture-pdf-source` branch at :1041-1042)
 - Modify `src/memoria_vault/cli.py` — register `_seed_commands(sub)` after `_work_commands(sub)` (:133); new `_seed_commands` + `_cmd_seed_install`
@@ -784,10 +789,10 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 
-- Consumes: `stage_pdf_source(...)` (exact signature in M.2's header; runtime/capture.py:461-476); `state.catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None` (runtime/state.py:1603-1612); `load_seed_manifest() -> list[dict[str, Any]]` (M.1); `resolve_fetch(row, *, opener=None) -> bytes` (M.2); `iter_markdown(vault, skip_dirs=None) -> Iterator[Path]` (runtime/vaultio.py:217-226) and `read_frontmatter(path) -> dict[str, Any]` (runtime/vaultio.py:66-67); `validate_operation_context(vault, context)` / `OperationContext` (runtime/trusted_writer.py, as used at capture.py:94); `engine_api.run_operation(...)` via `cli._enqueue_and_run(args, operation_id, payload)` (cli.py:2087-2098); `_csl_json` shape (cli.py:2544-2550, mirrored); **section T seam (order-tolerant):** `emit_onboarding_step(vault: Path, step: str) -> None` — guarded import from `memoria_vault.runtime.onboarding_steps`; run `grep -rn "def emit_onboarding_step" src/memoria_vault/` first and re-anchor if T placed it elsewhere; empty grep ⇒ the guard no-ops with the recorded gap.
-- Produces: `seed_install(vault: Path, rows: list[dict[str, Any]] | None = None, *, opener: Callable[[str], Any] | None = None, context: OperationContext) -> dict[str, Any]` returning `{"admitted": list[str], "skipped": list[str], "failed": list[dict[str, str]] (each {"id", "error"}), "notices": list[str], "telemetry": "emitted" | "skipped-helper-not-landed"}` — raises `ValueError` (⇒ failed job ⇒ CLI exit 1) iff `admitted + skipped` is empty; worker operation id `"seed-install"` (PI-only, payload `{}`); CLI `memoria seed install --workspace <path> [--json|--quiet] [--actor pi|agent]` — the tutorial section (chapter 02 rewiring) and LOOP.13's amended time-to-first-answer block cite this exact CLI path, so this task must merge before any docs task backticks it (doc-claims gate sequencing).
+- Consumes: `stage_pdf_source(...)` (exact signature in M.2's header; runtime/capture.py:461-476); `state.catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None` (runtime/state.py:1603-1612); `load_seed_manifest() -> list[dict[str, Any]]` (M.1); `resolve_fetch(row, *, opener=None) -> bytes` (M.2); `iter_markdown(vault, skip_dirs=None) -> Iterator[Path]` (runtime/vaultio.py:217-226) and `read_frontmatter(path) -> dict[str, Any]` (runtime/vaultio.py:66-67); `validate_operation_context(vault, context)` / `OperationContext` (runtime/trusted_writer.py, as used at capture.py:94); `engine_api.run_operation(...)` via `cli._enqueue_and_run(args, operation_id, payload)` (cli.py:2087-2098); `_csl_json` shape (cli.py:2544-2550, mirrored); **section T seam (required):** `emit_onboarding_step(vault: Path, step: str) -> str | None` from `memoria_vault.runtime.onboarding_steps`; run `grep -rn "def emit_onboarding_step" src/memoria_vault/` first and re-anchor if T placed it elsewhere; empty grep ⇒ STOP and land T.1 first.
+- Produces: `seed_install(vault: Path, rows: list[dict[str, Any]] | None = None, *, opener: Callable[[str], Any] | None = None, context: OperationContext) -> dict[str, Any]` returning `{"admitted": list[str], "skipped": list[str], "failed": list[dict[str, str]] (each {"id", "error"}), "notices": list[str], "telemetry": {"status": "emitted", "event_id": str} | {"status": "unavailable"}}` — raises `ValueError` (⇒ failed job ⇒ CLI exit 1) iff `admitted + skipped` is empty; worker operation id `"seed-install"` (PI-only, payload `{}`); CLI `memoria seed install --workspace <path> [--json|--quiet] [--actor pi|agent]` — the tutorial section (chapter 02 rewiring) and LOOP.13's amended time-to-first-answer block cite this exact CLI path, so this task must merge before any docs task backticks it (doc-claims gate sequencing).
 
-- [ ] **Step 1: Grep-first order-tolerance check** — run `grep -rn "def emit_onboarding_step" src/memoria_vault/`. If it hits, note the module and use it in the guarded import below; if empty (section T not landed), keep `memoria_vault.runtime.onboarding_steps` as written (section T's declared home).
+- [ ] **Step 1: Grep-first hard precondition** — run `grep -rn "def emit_onboarding_step" src/memoria_vault/`. If it hits, note the module and use it below. If empty, STOP: land I1 T.1–T.2 and this plan's T.1 before M.3; do not implement a guarded missing-helper path.
 
 - [ ] **Step 2: Write the failing tests** — extend `tests/test_seed_install.py`. Replace the import block with:
 
@@ -937,36 +942,28 @@ def test_frame_first_notice_tracks_active_projects(tmp_path, monkeypatch) -> Non
     assert final["notices"] == []
 
 
-def test_seed_installed_step_emits_when_the_section_t_helper_exists(
+def test_seed_installed_step_emits_on_first_install(
     tmp_path, monkeypatch
 ) -> None:
     vault = _workspace(tmp_path)
     _patch_pdf_pages(monkeypatch)
     calls: list[tuple[Path, str]] = []
     fake = types.ModuleType("memoria_vault.runtime.onboarding_steps")
-    fake.emit_onboarding_step = lambda vault, step: calls.append((Path(vault), step))
+    def emit(vault: Path, step: str) -> str:
+        calls.append((Path(vault), step))
+        return "event-seed-installed"
+
+    fake.emit_onboarding_step = emit
     monkeypatch.setitem(sys.modules, "memoria_vault.runtime.onboarding_steps", fake)
     row = _pdf_url_row()
 
     result = _seed_install(vault, rows=[row], opener=_opener({row["fetch"]["url"]: PDF_BYTES}))
 
-    assert result["telemetry"] == "emitted"
+    assert result["telemetry"] == {
+        "status": "emitted",
+        "event_id": "event-seed-installed",
+    }
     assert calls == [(vault, "seed-installed")]
-
-
-def test_seed_installed_step_noops_when_the_helper_is_absent(tmp_path, monkeypatch) -> None:
-    vault = _workspace(tmp_path)
-    _patch_pdf_pages(monkeypatch)
-    # None in sys.modules makes the import raise ImportError deterministically,
-    # even after section T lands - this pins the order-tolerance guard forever.
-    monkeypatch.setitem(sys.modules, "memoria_vault.runtime.onboarding_steps", None)
-    row = _pdf_url_row()
-
-    result = _seed_install(vault, rows=[row], opener=_opener({row["fetch"]["url"]: PDF_BYTES}))
-
-    assert result["telemetry"] == "skipped-helper-not-landed"
-
-
 def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypatch) -> None:
     from memoria_vault.cli import main
     from memoria_vault.product.seed_corpus import load_seed_manifest
@@ -995,6 +992,14 @@ def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypat
     all_ids = sorted(row["id"] for row in load_seed_manifest())
     assert sorted(payload["result"]["admitted"]) == all_ids
     assert any("frame your" in notice for notice in payload["result"]["notices"])
+    with state.connect(workspace) as conn:
+        rows = conn.execute(
+            "SELECT event_type, payload_json FROM telemetry_events "
+            "WHERE event_type = 'onboarding-step'"
+        ).fetchall()
+    assert [(row["event_type"], json.loads(row["payload_json"])) for row in rows] == [
+        ("onboarding-step", {"step": "seed-installed"})
+    ]
 
     # Acceptance-criteria idempotence: the re-run admits nothing new, exits
     # clean, and performs zero fetches (a fetch would raise loudly).
@@ -1144,14 +1149,14 @@ def _has_active_project(vault: Path) -> bool:
     return False
 
 
-def _emit_seed_installed(vault: Path) -> str:
-    """Order-tolerant onboarding-step emit; section T owns the helper."""
-    try:
-        from memoria_vault.runtime.onboarding_steps import emit_onboarding_step
-    except ImportError:
-        return "skipped-helper-not-landed"
-    emit_onboarding_step(vault, "seed-installed")
-    return "emitted"
+def _emit_seed_installed(vault: Path) -> dict[str, str]:
+    """Record the required first-install observer; section T owns the helper."""
+    from memoria_vault.runtime.onboarding_steps import emit_onboarding_step
+
+    event_id = emit_onboarding_step(vault, "seed-installed")
+    if event_id is None:
+        return {"status": "unavailable"}
+    return {"status": "emitted", "event_id": event_id}
 ```
 
 **(b)** Create `src/memoria_vault/product/capabilities/operations/seed-install.md`:
@@ -1252,10 +1257,9 @@ git add src/memoria_vault/runtime/seed_install.py src/memoria_vault/cli.py src/m
 git commit -m "feat(seed): memoria seed install - engine, worker operation, CLI
 
 Per-row work_id pre-check (skip on hit: no fetch/journal/commit), per-row
-failure honesty, zero-rows-present failure exit, frame-first notice, and an
-order-tolerant seed-installed onboarding-step emit (section T owns the
-helper; guarded import no-ops with a recorded gap until it lands). PI-only
-worker operation with capability manifest and floor-registry entry.
+failure honesty, zero-rows-present failure exit, frame-first notice, and a
+required seed-installed onboarding-step emit after T.1. PI-only worker
+operation with capability manifest and floor-registry entry.
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
@@ -2697,10 +2701,12 @@ If BOOT-D.7 already landed, `_cmd_init` ends with the `payload`/`--onboard` tail
       activates and enforces this once `_cmd_onboard` exists.
     ```
 
-(d) **`seed-installed`, grep-first with both branches.** Run `grep -rn "seed" src/memoria_vault/cli.py | grep -i install` and `grep -rn "emit_onboarding_step" src/memoria_vault/`.
-  - **If section M's `memoria seed install` handler exists and already emits** `seed-installed` (M.3's declared consumption of this section's `emit_onboarding_step(vault, step) -> str | None`): verify the call sits on the success exit (spec §2: the non-failure exit fires whenever ≥1 manifest row is present — newly admitted or already admitted, so an idempotent re-run still counts as installed) and move on — no change.
-  - **If the handler exists without the emit:** add `onboarding_steps.emit_onboarding_step(workspace, "seed-installed")` on that success exit, immediately before the handler's final `_emit(...)`, and extend M's own test file with a row-count assertion shaped exactly like `test_cli_new_project_emits_project_framed_only_once` above (swap the step string; no once-guard — re-runs of an idempotent install may re-emit, and readers take the first row).
-  - **If absent (M not landed):** no change — the composite plan's cross-section contract binds M.3 to call this seam; nothing here can wire a command that does not exist.
+(d) **`seed-installed`, required M.3 seam.** Verify M.3's first successful
+`memoria seed install` emits `seed-installed` through T.1's helper and that
+M.3's CLI end-to-end test reads one corresponding `onboarding-step` row from
+`telemetry_events`. The event belongs on the non-failure exit (newly admitted
+or already admitted). If M.3 lacks the emit, return to M.3 and repair it; do
+not add a later backfill or accept a first-install no-op.
 
 - [ ] **Step 4: Run to verify pass**
 

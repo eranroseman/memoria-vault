@@ -1064,6 +1064,32 @@ Repo facts honored: gate is `python scripts/verify`; new test files register in
 `tests/conftest.py` `TEST_LEVELS`; stage explicit paths only (shared git
 index); TDD; commits end with the Co-Authored-By trailer.
 
+### Plan-reconciliation amendment — executable partial order (2026-07-29)
+
+The historical total chain `LOOP.4 → O1 → O2 → R2 → V2 → U1 → U2 → U3` is
+superseded.  It is impossible because I1 H.2 consumes U1/U3 seams and V2
+B.4/D.1 consume U3, while U2 itself consumes U1/V2/I1.  Execute the following
+task-level DAG instead; a package design gate does not imply that every task in
+that package must finish before an independent producer can start.
+
+```
+I1 T.1/T.2 (+ required telemetry A/D) → O1 T.1 → O1 M.3
+O1 M.2 → O2 A
+O2 {P, A, W.1}; I1 T.1/T.2 → O2 W.2
+{O2 P, O2 A, O2 W.1, O2 W.2} → #1517 finalization decision → O2 I.1
+{O2 I.1, I1 H.3} → O2 W.3; {O2 W.3, R2 F.3} → O2 W.4
+graph NID-B + ERP-A.6 → R2 G → R2 P → R2 E
+{O1 M.3, R2 F.1, R2 E} → R2 F.2 → R2 F.3 → LOOP.13
+U1 J/M → BOOT/U3-ENG/SEAM → {I1 H.2, V2 B.4/D.1}
+{V2 B.5, U2 T.3} → U2's post-seam cockpit integration
+{O1 M.3, O2 W.4, R2 F.3} → LOOP.13
+```
+
+U3's own prerequisites remain binding (graph activation before U3-ENG; SEAM
+before pane actions), and U2 remains after its declared U1/V2/I1 seams.  This
+amendment changes ordering only; it does not authorize real-vault ingestion
+before I1 instrumentation and the seeded-error battery are green.
+
 ---
 
 ### Task LOOP.1: R1 — mtime-gated incremental passage refresh (stop the O(vault) read + concept_edges wipe)
@@ -2521,6 +2547,13 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 
 ### Task LOOP.13: Acceptance — instrumented 10→100 staged import runs end-to-end; time-to-first-answer is measured
 
+**2026-07-29 retrieval amendment (binding):** LOOP.13 runs only after R2 F.3
+has frozen the retrieval fixtures. Shape 1 remains `memoria ask`; Shape 2 is
+`memoria explore`, invoked with the fixture's topic and declared depth. This
+supersedes every earlier Shape-2 `memoria ask` command or fallback wording below:
+the acceptance record stores the fixture id, topic, depth, metric, and the two
+separate command latencies.
+
 The closing gate for this section, executing empirical plan Phase 0's exit
 checks plus Phase 1's first two stages with today's real CLI commands
 (verified against `cli.py`: `memoria init` :74, `memoria work add` :195,
@@ -2545,12 +2578,12 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
 
 **Interfaces:**
 - Consumes: merged implementations of LOOP.4 (I1 wiring) and LOOP.6 (O2
-  import); LOOP.5's seed-corpus list + licensing record; empirical plan
-  Phases 0-1 metric list and the ≤30-min / ≤60-min bars; LOOP.7's Shape-1/
-  Shape-2 query definitions (fall back to the two literal queries below if
-  LOOP.7 has not merged).
+  import); LOOP.5's seed-corpus list + licensing record; R2 F.3's frozen
+  fixture loader; empirical plan Phases 0-1 metric list and the ≤30-min /
+  ≤60-min bars; LOOP.7/R2's Shape-1 and Shape-2 command contracts.
 - Produces: the acceptance-run record with: time-to-first-answer seconds;
-  per-stage import wall-clock, ask latency, attention items per 100 works,
+  per-stage import wall-clock, separate Shape-1 ask and Shape-2 explore
+  latencies, attention items per 100 works,
   triage minutes; disposition-event count > 0; a stop-reason for any stage
   that broke the session ("that observation IS the finding").
 
@@ -2600,13 +2633,14 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
     [ -s "$F" ] && memoria work import --workspace "$VAULT" --format bibtex --file "$F" --json --idempotency-key "stage1-$F"
   done
   END=$(date +%s); echo "stage1_import_s=$((END-START))" | tee -a staged-import-metrics.txt
-  time memoria ask --workspace "$VAULT" --question "targeted lookup: <a Shape-1 query from the LOOP.7 spec>" --json
-  time memoria ask --workspace "$VAULT" --question "topic surfacing: <a Shape-2 query from the LOOP.7 spec>" --json
+  time memoria ask --workspace "$VAULT" --question "targeted lookup: <the frozen Shape-1 query>" --json
+  # Read the frozen Shape-2 fixture's topic/depth/metric first; do not invent a query.
+  time memoria explore --workspace "$VAULT" "<fixture topic>" --depth <fixture depth> --json
   memoria attention list --workspace "$VAULT" --json | tee stage1-attention.json
   memoria attention worklist --workspace "$VAULT" --json | tee stage1-worklist.json
   ```
 
-  Record: import wall-clock, both ask latencies (>200 ms interactive triggers
+  Record: import wall-clock, Shape-1 ask and Shape-2 explore latencies (>200 ms interactive triggers
   the substrate re-comparison early — query-mechanism-analysis §5), attention
   items minted, journal/DB growth (`du -sh "$VAULT/.memoria"`).
 
@@ -2652,6 +2686,6 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
 
 - [ ] Acceptance: both stages ran (or carry a recorded stop-reason);
   time-to-first-answer is a recorded number; disposition-event count ≥ 1 was
-  verified **before** stage 2; ask latencies per stage are recorded against
-  the 200 ms early-trigger threshold; nothing was executed against
+  verified **before** stage 2; Shape-1 ask and Shape-2 explore latencies are
+  separately recorded against the 200 ms early-trigger threshold; nothing was executed against
   `test-vault/` or a pre-existing personal vault.

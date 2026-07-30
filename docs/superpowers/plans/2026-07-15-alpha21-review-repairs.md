@@ -26,6 +26,12 @@ Repo rule honored throughout: the git index is shared per checkout — every
 commit stages explicit paths, never `git add -A`. The correctness gate is
 `python scripts/verify`.
 
+**Execution-order amendment (2026-07-29).** Run 21.1 before COV.3 and 21.5.
+COV.3 exercises the post-21.1 finding-writer signature; 21.5 then removes all
+three now-current `push_card` call sites, including 21.1's deduplicated branch.
+Do not run 21.1 and 21.5 concurrently or treat their historical two-call
+instructions as exhaustive.
+
 ---
 
 ### Task 21.1: Route CS3 scan findings to the durable inbox surface and human scan output
@@ -665,6 +671,11 @@ import pytest
 from memoria_vault.runtime import vaultio
 
 
+pytestmark = pytest.mark.skipif(
+    os.name == "nt", reason="POSIX directory-fsync failures are intentionally tolerated on Windows"
+)
+
+
 def _fail_directory_fsync(real_fsync):
     """Deterministic injection: fail fsync only for directory fds.
 
@@ -718,7 +729,7 @@ def test_fsync_dir_raises_when_directory_cannot_be_opened(
         vaultio._fsync_dir(tmp_path)
 ```
 
-- [ ] Run them and verify they fail: `python -m pytest tests/test_vaultio.py -v` — expected failure: all three fail with `Failed: DID NOT RAISE <class 'OSError'>` (the current `_fsync_dir` swallows both the open error and the fsync error).
+- [ ] Run them and verify they fail on POSIX: `python -m pytest tests/test_vaultio.py -v` — expected failure: all three fail with `Failed: DID NOT RAISE <class 'OSError'>` (the current `_fsync_dir` swallows both the open error and the fsync error). On Windows the module-level skip is the required mirror of backup's tolerated directory-fsync behavior.
 - [ ] Write the implementation. In `src/memoria_vault/runtime/vaultio.py`, replace `_fsync_dir` (lines 204-214) with the exact semantics of `backup._fsync_directory`:
 
 ```python
@@ -738,7 +749,7 @@ def _fsync_dir(path: Path) -> None:
         os.close(fd)
 ```
 
-- [ ] Run them and verify they pass: `python -m pytest tests/test_vaultio.py -v`.
+- [ ] Run them and verify they pass on POSIX: `python -m pytest tests/test_vaultio.py -v`; on Windows, confirm the three tests skip with the stated portability reason.
 - [ ] Run the write-path consumers for fallout (every durable write now inherits the raise): `python -m pytest tests/test_backup_restore.py tests/test_trusted_writer.py tests/test_journal_trust.py tests/test_inbox_cards.py -q`.
 - [ ] Run the gate: `python scripts/verify`.
 - [ ] Commit:
@@ -772,10 +783,12 @@ record — do not touch.
   `push_card` at :78 through its end, and the `PUSH_LOG_RELPATH` constant;
   keep `is_open_blocker`, `open_blockers`, `blocker_message`; drop imports that
   become unused — check `json`/`urllib`/`os` usage after the cut)
-- Modify: `src/memoria_vault/runtime/subsystems/lib/inbox.py:170` and
-  `:185-187` (delete the two `loudness_routing.push_card(...)` calls; cards
-  keep their `loudness` frontmatter) and `:15` (delete the now-unused
-  `from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing`)
+- Modify: `src/memoria_vault/runtime/subsystems/lib/inbox.py` (delete every
+  `loudness_routing.push_card(...)` call: 21.1's deduplicated `write_finding`
+  branch, the ordinary `write_finding` path, and `write_work_prompt`; cards
+  keep their `loudness` frontmatter) and delete the now-unused
+  `from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing`
+  import
 - Modify: `tests/test_loudness.py` (rewrite; see steps)
 - Modify: `docs/README.md:135`,
   `docs/explanation/architecture/README.md:45`,
@@ -784,9 +797,9 @@ record — do not touch.
 - Test: `tests/test_loudness.py`
 
 **Interfaces:**
-- Consumes: nothing from other tasks. Ordering vs 21.1: both edit files in the
-  inbox/loudness family; either order works, but do not run concurrently in
-  separate worktrees (same-file merge risk with `inbox.py`).
+- Consumes: the completed 21.1 `write_finding` dedupe branch and COV.3's
+  post-21.1 coverage update. Required order: `21.1 → COV.3 → 21.5`; the tasks
+  share `inbox.py` and 21.5 must remove all three resulting push call sites.
 - Produces: `loudness.py` public surface shrinks to
   `is_open_blocker(frontmatter: dict[str, Any]) -> bool`,
   `open_blockers(vault: Path) -> list[dict[str, str]]`,
@@ -852,8 +865,9 @@ In `src/memoria_vault/runtime/subsystems/lib/loudness.py`: delete the three
 `_append_push_log`, and `push_card` (whole function). Remove imports that are
 now unused (run `python -m ruff check src/memoria_vault/runtime/subsystems/lib/loudness.py`
 to catch them). In `src/memoria_vault/runtime/subsystems/lib/inbox.py`: delete
-line 170 (`loudness_routing.push_card(vault, path, {...})`), lines 185-187 (the
-second `push_card` call), and the `:15` import alias.
+the deduplicated `write_finding` branch's `push_card` call, the ordinary
+`write_finding` call, `write_work_prompt`'s `push_card` call, and the import
+alias. Anchor by symbol rather than the historical line numbers.
 
 - [ ] **Step 4: Run the module tests to verify green**
 
@@ -880,8 +894,11 @@ Expected: PASS across the board.
 
 - [ ] **Step 6: Repo-wide leftover sweep**
 
-Run: `grep -rni "telegram" src/ tests/ docs/ scripts/ .github/ --include="*" | grep -v design-history`
-Expected: zero hits. (`design-history/` keeps its mentions — frozen record.)
+Run: `grep -rni "telegram" src/ tests/ docs/ scripts/ .github/ --include="*" \
+  | grep -vE 'docs/(superpowers|design-history)/'`
+Expected: zero runtime/published-doc hits. `docs/superpowers/` is retained
+working-plan history and `design-history/` is frozen history; neither is a
+product Telegram surface.
 
 - [ ] **Step 7: Full gate + commit**
 
@@ -948,17 +965,22 @@ entry from the contract, or the hardened gate fails on the real repo.
 
 ---
 
-### Task COV.0: PI confirm-at-review checkpoint (no code)
+### Task COV.0: PI confirm-at-review checkpoint (no code) — approved
 
 **Files:** none (review gate only).
 **Interfaces:** none.
 
-- [ ] Confirm with the PI, at plan review, the spec's "Design decisions (made here; confirm at review)" plus two execution-time additions:
+- [x] Confirmed by the PI on 2026-07-29: the spec's "Design decisions (made here; confirm at review)" plus two execution-time additions:
   1. Scope is exactly the ten items (2–10 test-only, 1 CI-config) plus cleanups 11a/11b; the out-of-scope list above stands as ruled-acceptable and is not re-litigated.
   2. Item 1 (CI `mcp` extra) goes first and stands alone; the chosen mechanism is the `verify.yml` install step, not `requirements-dev.txt` (reason stated in COV.1).
   3. Items 2–10 are mutually independent; any order, any PR split — except COV.3's ordering after Task 21.1 (post-21.1 `write_finding` signature).
   4. No production behavior changes anywhere **except**: (a) the COV.7 missing-search-root hard failure, which the spec itself names as a design hardening, and (b) the newly discovered removal of the stale `.agents` search root from `scripts/checks/removed_surfaces.json` that the hardening forces (evidence: the root does not exist today and the gate still reports clean). 11a/11b remain a pragma and a dead-code deletion.
   5. The `code/runner.py` bwrap-sandbox path stays deferred until the runtime primitive is wired to a live operation.
+
+**Completion record (2026-07-29).** The approval covers the bounded COV.1–COV.11
+scope, the CI-only `mcp` extra, the stated COV.3 ordering, the two COV.7
+behavior changes, and the deferred bwrap path. No code was required by this
+checkpoint.
 
 ---
 
@@ -966,7 +988,7 @@ entry from the contract, or the hardened gate fails on the real repo.
 
 **Files:**
 - Modify: `/home/eranr/memoria-vault/.github/workflows/verify.yml` (install step, lines 41-44)
-- Read-only context: `/home/eranr/memoria-vault/pyproject.toml:18-19` (`[project.optional-dependencies] mcp = ["mcp>=1.27"]`), `/home/eranr/memoria-vault/requirements-dev.txt` (header scopes it to contributor tooling), `/home/eranr/memoria-vault/tests/test_mcp_transport.py` (8 of 11 tests open with `pytest.importorskip("mcp")`)
+- Read-only context: `/home/eranr/memoria-vault/pyproject.toml:18-19` (`[project.optional-dependencies] mcp = ["mcp>=1.27"]`), `/home/eranr/memoria-vault/requirements-dev.txt` (header scopes it to contributor tooling), `/home/eranr/memoria-vault/tests/test_mcp_transport.py` (8 of 13 tests open with `pytest.importorskip("mcp")`)
 - Test: `tests/test_mcp_transport.py` (already written; no new test code)
 
 **Interfaces:**
@@ -983,9 +1005,13 @@ cache key (`cache-dependency-path: requirements-dev.txt`) will not track the
 extra, so `mcp` installs uncached — it is a small offline pure-pip wheel with no
 live service or secret behind it.
 
-- [ ] Record the red state: run `python -m pytest tests/test_mcp_transport.py -v -rs` and confirm 3 passed, 8 skipped with reason `could not import 'mcp'` (every test from `test_mcp_app_requires_non_root_read_scope` at line 89 onward).
+- [ ] Record the red state only in a clean environment without the optional
+  extra: run `python -m pytest tests/test_mcp_transport.py -v -rs` and confirm
+  5 passed, 8 skipped with reason `could not import 'mcp'`. If local `mcp` is
+  already installed, record that informational preflight and proceed rather
+  than treating the missing red state as a failure.
 - [ ] Edit `.github/workflows/verify.yml` line 44: change `python -m pip install --quiet -e .` to `python -m pip install --quiet -e ".[mcp]"`.
-- [ ] Prove it locally exactly as CI will see it: run `python -m pip install -e ".[mcp]"`, then `python -m pytest tests/test_mcp_transport.py -v -rs` — expect 11 passed, 0 skipped.
+- [ ] Prove it locally exactly as CI will see it: run `python -m pip install -e ".[mcp]"`, then `python -m pytest tests/test_mcp_transport.py -v -rs` — expect 13 passed, 0 skipped.
 - [ ] Run `python scripts/verify` to confirm the full gate stays green with the extra installed.
 - [ ] Commit:
   ```
@@ -1196,14 +1222,6 @@ call site.
           w.writeheader()
           w.writerows(RW_ROWS)
       monkeypatch.setenv("MEMORIA_RW_CSV", str(rw_csv))
-      for var in (
-          "MEMORIA_TELEGRAM_BOT_TOKEN",
-          "TELEGRAM_BOT_TOKEN",
-          "MEMORIA_TELEGRAM_CHAT_ID",
-          "TELEGRAM_CHAT_ID",
-      ):
-          monkeypatch.delenv(var, raising=False)
-
       _m._RW_INDEX = None
       try:
           result = sweep(vault, offline=True)
@@ -1227,9 +1245,9 @@ call site.
   the assertions are card-content-based, not filename-based; (2) `RW_ROWS`
   (file lines 13-26) already carries `10.1/Retracted` as a real Retraction, and
   `10.1/Clean` is absent from the CSV so the second source counts as checked
-  but not retracted; (3) the Telegram env vars are cleared because an `alert`
-  card is push-loudness and a developer's real token would otherwise trigger a
-  live push; (4) `_RW_INDEX` reset mirrors the file's existing cache hygiene.
+  but not retracted; (3) no credential environment setup is needed because
+  inbox cards are pull-only after 21.5; (4) `_RW_INDEX` reset mirrors the
+  file's existing cache hygiene.
 - [ ] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
 - [ ] Write the failing test (one-time offline no-CSV warning) below it:
 

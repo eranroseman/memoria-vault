@@ -22,6 +22,37 @@
 4. **Execution order:** G1 → G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1–.6. The cost chain is external-dependency ordered: surfaces BOOT-B.5 → COST.1–.5 → Alpha23 LOOP.3. COST.1–.3 are one atomic return-contract tranche; do not merge or cherry-pick a state where a caller still expects a `str`. COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
 5. **Removed symbols** (S35 manifest) no task may reference after their removal: `_derived_evidence_type`, `_draft_evidence_type`, `_evidence_items_resolve`, `_disposed_evidence_ids`.
 
+### Plan-reconciliation amendment — serialized 12→15 migration chain (2026-07-29)
+
+This amendment replaces the incompatible G2S1.2/G2S1.3/S12.2 file lists,
+interfaces, migration snippets, legacy fixture versions, and version-pin text
+below.  The G1 contract is the only migration runner: never assign a SQL string
+to `MIGRATIONS`, never key it by the target version, and never let two tasks
+claim the same transition.
+
+| Task | Exact registry entry | `SCHEMA_VERSION` / fresh `PRAGMA` | Legacy fixture starts at |
+| --- | --- | --- | --- |
+| G2S1.2 | `MIGRATIONS[12] = (13, [ALTER edge_id, ALTER attributes_json, CREATE idx_concept_edges_edge_id])` | `13` | `12` |
+| G2S1.3 | `MIGRATIONS[13] = (14, [CREATE idx_concept_edges_target, CREATE idx_work_graph_edges_target])` | `14` | `13` |
+| S12.2 | `MIGRATIONS[14] = (15, [CREATE/COPY/DROP/RENAME code_artifacts rebuild])` | `15` | `14` |
+
+Each list contains individual SQL statements accepted by G1's `conn.execute`
+runner and is wrapped in that runner's one explicit transaction; no statement
+contains its own `PRAGMA user_version`.  The migration test for each task
+asserts it reaches precisely its listed target and preserves its preexisting
+row/index behavior.  Add one chain test starting from a v12 legacy database
+with an old edge and an old `purpose='warrant'` artifact, then assert sequential
+upgrade to v15 preserves both edge additions/indexes and rewrites the purpose
+to `grounds`.
+
+The G2S1.2 table remains the pre-v16 edge shape.  It must not preemptively add
+`target_path`, nullable targets, or v16 foreign keys; graph NID-B/ERP-A own
+those later migrations.  Rename every version-pinned test and prose reference
+in the same task that advances the version (including
+`test_schema_version`, `test_schema_v10`, and `test_query_substrate`) so a
+fresh schema and each legacy path agree.  This amendment is an exact execution
+replacement, not a “reconcile at implementation time” instruction.
+
 ---
 ## G1 · Migration machinery
 
