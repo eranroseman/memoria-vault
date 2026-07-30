@@ -33,7 +33,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
-from memoria_vault.runtime.steering import relevance_tokens
+from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
@@ -1136,7 +1136,7 @@ def _write_gap_discovery_candidates(
     from memoria_vault.runtime.enrichment import _write_discovery_candidate
 
     captured = _captured_work_ids(vault)
-    steering_tokens = _steering_tokens(vault)
+    steering_tokens = effective_steering_tokens(vault)
     relevance_by_path: dict[str, dict[str, Any]] = {}
     new_paths = []
     for work_id in sorted(edges_by_source):
@@ -1185,13 +1185,6 @@ def _write_gap_discovery_candidates(
         if related:
             gap["discovery_candidate_paths"] = related
     return new_paths, commit
-
-
-def _steering_tokens(vault: Path) -> set[str]:
-    path = vault / "steering.md"
-    if not path.is_file():
-        return set()
-    return relevance_tokens(path.read_text(encoding="utf-8"))
 
 
 def _discovery_relevance(
