@@ -10,7 +10,6 @@ import pytest
 
 from memoria_vault.runtime import vaultio
 
-
 pytestmark = pytest.mark.skipif(
     os.name == "nt", reason="POSIX directory-fsync failures are intentionally tolerated on Windows"
 )
