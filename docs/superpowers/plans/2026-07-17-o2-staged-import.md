@@ -772,6 +772,12 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Modify `src/memoria_vault/cli.py` — import parser block (cli.py:207-211), `_cmd_work_import` / `_bulk_work_import` (as landed by P.2; re-anchor by symbol)
 - Modify `tests/test_cli_work_project.py` — the auto-enrichment sweep (`:14-70` shipped test; P.2's transitional assert) + new default/flag tests
 - Modify `docs/reference/commands-and-transports/system-actions-operations.md` — line 87, the `memoria work import --format csl` row's behavior claim
+- Modify `docs/reference/pipelines-and-io/ingest.md` — the BibTeX and CSL
+  import rows: both describe the CLI's `capture-source` route, multi-entry
+  admission, and opt-in enrichment.
+- Modify `docs/reference/evidence-and-integrations/integrations.md` — the
+  Zotero + Better BibTeX row: replace automatic enrichment with the
+  `--enrich` / newly-admitted DOI rule.
 
 **Interfaces:**
 
@@ -779,6 +785,31 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Produces: `memoria work import --enrich` (`store_true`, default **off** — the one deliberate behavior change, single-entry and bulk alike); `index_refresh_s: float` in the bulk run summary (`0.0` when nothing was admitted — GAP 4), which the telemetry section maps to `import-run.index_refresh_s` (spec §6).
 - **LOOP.1 order tolerance (grep-first):** before writing the refresh call, run `grep -rn "stale_checked_search_documents\|refresh_stale" src/memoria_vault/runtime/`. If LOOP.1's incremental checked-search refresh has landed, call that seam inside the same timing envelope instead; if absent (only `indexing.refresh_stale_passages` hits, which is the passage layer, not the checked search index), keep the whole-index `rebuild_checked_search_index_explicit` — honestly the whole-index rebuild time, per spec §2.
 - The command-surface pin (`test_cli_command_surface_is_exact`, tests/test_cli.py:73-146) pins commands, not flags — `--enrich` needs no surface-test change; the doc-claims gate checks CLI *paths*, so the new flag and the P.3 doc edit keep it green (spec §10's "no new CLI surface beyond the existing `work import` flags plus `--enrich`").
+
+> **Execution amendment (2026-07-30): complete the public import-doc handoff.**
+> The P.3 file list originally omitted
+> `docs/reference/pipelines-and-io/ingest.md`, whose BibTeX and CSL rows still
+> describe a one-entry, auto-enriching import and name the CLI's BibTeX path as
+> `capture-bibtex-source`. Update both rows to say that `work import` admits
+> each supplied entry through `capture-source` into unchecked catalog metadata
+> and its raw blob; `--enrich` queues a DOI enrichment request only for each
+> newly admitted DOI-bearing entry. Leave
+> `system-actions-operations.md`'s separate `capture-bibtex-source` worker row
+> unchanged: it documents that distinct worker surface, not the CLI route.
+> Update `docs/reference/evidence-and-integrations/integrations.md`'s
+> bibliographic-input row too, so no published reference still promises
+> automatic import enrichment.
+
+> **Execution amendment (2026-07-30): do not requeue a single-entry retry.**
+> This supersedes the simple single-entry gate in Step 4(b). After building the
+> existing single payload, precheck `state.catalog_source(_workspace(args),
+> str(payload["work_id"]))`; a `ValueError` means "not already admitted" so the
+> following `capture-source` call remains the authoritative validator and keeps
+> its legacy invalid-ID error surface. Always run that existing capture call,
+> but require both `args.enrich` and no pre-existing catalog row before calling
+> `_queue_import_enrichment`. Pin two `--enrich` imports of the same entry under
+> different idempotency keys: the retry has no `enrichment_job` and the database
+> still has exactly one `enrich-source` request.
 
 - [ ] **Step 1: Write the failing tests** — append to `tests/test_cli_work_project.py`:
 
@@ -965,8 +996,18 @@ def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
 # old
 | Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses one CSL-JSON item into unchecked catalog metadata, a raw `.csl.json` blob, and a DOI enrichment request when a DOI is present. |
 # new
-| Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses each CSL-JSON item into unchecked catalog metadata and a raw `.csl.json` blob; `--enrich` also queues a DOI enrichment request when a DOI is present. |
+| Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses each CSL-JSON item into unchecked catalog metadata and a raw `.csl.json` blob; `--enrich` also queues a DOI enrichment request for each newly admitted item when a DOI is present. |
 ```
+
+  In `docs/reference/pipelines-and-io/ingest.md`, update both `work import`
+  rows under **Pipeline contract** to use the same CLI-owned `capture-source`
+  route and opt-in, newly-admitted DOI wording. Do not change its row for the
+  distinct worker operation `capture-bibtex-source` because that surface keeps
+  its own auto-enrichment behavior.
+
+  In `docs/reference/evidence-and-integrations/integrations.md`, replace the
+  Zotero + Better BibTeX row's automatic-enrichment claim with the same
+  `work import --enrich` / newly-admitted DOI rule.
 
 - [ ] **Step 5: Run to pass, then the full gate** — `python -m pytest tests/test_cli_work_project.py tests/test_bulk_import.py -q` → all pass. Then `python scripts/verify` → green (lint, product gates, tests, offline smoke, syntax; the doc-claims gate stays green — `memoria work import` is a real CLI path and no new command was added).
 
@@ -974,7 +1015,9 @@ def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_cli_work_project.py \
-  docs/reference/commands-and-transports/system-actions-operations.md
+  docs/reference/commands-and-transports/system-actions-operations.md \
+  docs/reference/pipelines-and-io/ingest.md \
+  docs/reference/evidence-and-integrations/integrations.md
 git commit -m "feat(import): flip enrichment to opt-in --enrich; timed post-loop index refresh (O2 P.3)
 
 The one deliberate O2 behavior change: work import no longer auto-queues
