@@ -33,16 +33,23 @@ One `ItemView` ("Memoria Attention"). The engine serves
 exactly five block types: `card`, `text`, `badge`, `action-row`,
 `evidence-list`. The plugin renders blocks from the catalog and composes
 nothing; an unknown block type renders as a labeled fallback box (fail
-visible, never silent). Cards carry the honesty-card fields — action,
-argument-for, argument-against, what-tipped-it, coarse certainty (≤3
-levels), **no verdict line** — with evidence pointers as vault links, and
-loudness **rendered, never invented** (the payload's value verbatim).
+visible, never silent). Cards carry normalized display fields — kind line,
+argument-for, argument-against, tipped-by, coarse certainty (≤3 levels), and
+**no verdict line** — with evidence pointers as vault links and loudness
+**rendered, never invented** (the payload's value verbatim). Writer-only
+`action` and `what_tipped_it` never become public card keys: body/routing
+text is a nested `text` child and `what_tipped_it` maps to `tipped_by`.
 
 Every action button is an enqueue of a named existing operation via the
 loopback server's operation endpoint: `resolve-attention`
-(resolved/deferred), `acknowledge-attention`, `curate-note-candidate` for
-proposal cards, `curate-note-link` for the relate control (§4). The plugin
-is enqueue-only; results surface on the next poll. The operation and views
+(resolved/deferred), `acknowledge-attention`, and `curate-note-link` for the
+relate control (§4). Generic proposal cards do **not** enqueue
+`curate-note-candidate`: that operation requires a checked candidate note's
+path and an accept/reject status, neither of which an attention proposal
+carries. A future proposal-to-note contract may add that distinct affordance.
+Attention cards offer Resolve (apply), Acknowledge, and Defer; Defer uses
+`resolve-attention` with `outcome: "defer"`. The plugin is enqueue-only;
+results surface on the next poll. The operation and views
 endpoints are U1-baseline-bound (bootstrap header): they hold until the U1
 gate honors or supersedes them.
 
@@ -67,9 +74,11 @@ hairline, quiet → none.
   factors and per-row `rank_factors` disclosure when I1 lands).
 - One row expands in place at a time to the full card: kind line
   (10px uppercase, loudness-colored) → title (13px/600) → **evidence block
-  first** (inset, one step darker than the card surface) → compact
-  for/against line → `tipped by: <factor>` + certainty chip → action row →
-  meta line (`raised by <producer> · timestamp`).
+  first** (inset, one step darker than the card surface) → plain body/routing
+  text → action row → compact for/against line → `tipped by: <factor>` +
+  certainty chip → meta line (`raised by <producer> · timestamp`). This order
+  is the evidence-review pane's nested-card prerequisite: semantic children
+  render in producer order before machine analysis.
 - Keyboard: j/k move, Enter expands/collapses, keyboard-reachable action
   verbs. Actions are **named text verbs** (dispositions are
   provenance-bearing acts), primary verb styled with the accent tint;

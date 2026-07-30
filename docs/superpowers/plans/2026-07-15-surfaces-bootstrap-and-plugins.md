@@ -18,8 +18,8 @@
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
-2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `schema.LINK_RELATIONS`, `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG tasks written against `open_count` read `open`.
-3. **View payload envelope**: `{ok: true, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
+2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, api_version, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `schema.LINK_RELATIONS`, `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG tasks written against `open_count` read `open`.
+3. **View payload envelope**: `{ok: true, api_version, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
 6. **BOOT-C ↔ U4-A interface**: bundle seeding iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`; `memoria doctor --json --quick` emits `{engine_version: str, skew: {status: "in-sync"|"vault-newer"|"engine-newer"}, credentials: [{name, class, status, effect}]}` — BOOT-C.5 implements exactly this shape; U4-A's hook consumes it defensively.
@@ -31,30 +31,326 @@
 12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
 13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB, U3-ENG} → SEAM.1 → U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C} (U4-C may run before U4-A; U4-A imports its provider).
 
+### Plan-reconciliation amendment — canonical nested attention cards (2026-07-29)
+
+This amendment supersedes the conflicting flat-view snippets in U3-ENG.1–.6,
+the weak duplicate U3-PLUG.4 test/body, and every U3-PLUG.6/.7 request or
+assertion that still names `actor: "agent"` or `summary.open_count`; it also
+supersedes U3-CANVAS's obsolete HTTP-actor note.  The completed BOOT receipts
+are unchanged.  In a conflict, this section governs.
+
+1. **One non-summary envelope.** `read_attention_view(..., summary=False)`
+   returns exactly `_read_payload(view=_view("attention", cards))`.  Therefore
+   the response has top-level `ok`, `api_version`, and `view`, with no top-level
+   `spec` or `blocks`; the current producer emits top-level cards only, while
+   transport preserves future top-level blocks unchanged.  The
+   `summary=True` response remains the documented flat poll payload (`open`,
+   `by_loudness`, `as_of`, `engine_version`, `link_relations`, and
+   `missing_required_credentials`) and has no `view`.  Replace every U3-ENG
+   test/snippet that reads `payload["spec"]` or `payload["blocks"]` with the
+   following assertions, including HTTP tests and the additive-future-block
+   test:
+
+   ```python
+   payload = api.read_attention_view(workspace)
+
+   assert payload["ok"] is True
+   assert payload["api_version"] == api.READ_API_VERSION
+   assert payload["view"]["version"] == api.VIEW_SPEC_VERSION
+   assert payload["view"]["kind"] == "attention"
+   assert "spec" not in payload
+   assert "blocks" not in payload
+   cards = payload["view"]["blocks"]
+   ```
+
+   The future-block test copies `payload["view"]`, appends its future block to
+   the copied `blocks`, and returns `{**payload, "view": amended_view}`.  It
+   must never recreate the superseded flat envelope.
+2. **Attention-card grammar.** There is exactly one top-level `card` per open
+   attention item.  Its keys are `id`, `kind`, `ref`, `title`, `kind_line`,
+   `loudness`, `age_s`, `age_label`, `blocks`, plus present-only
+   `argument_for`, `argument_against`, `tipped_by`, `certainty`, `raised_by`,
+   and `raised_at`.  `kind_line` is the verbatim attention kind;
+   `what_tipped_it` maps to `tipped_by`; a nonempty `created` maps to
+   `raised_at`; and `age_s` is `age_days * 86_400` when `age_days` is valid,
+   else `0`.  `age_label` is `f"{age_days}d"` when valid, else `""`.  The
+   public card no longer exposes the incompatible writer-only names
+   `attention_kind`, `what_tipped_it`, `created`, `age_days`, `evidence`, or
+   `body_data`.
+
+   Every card's `blocks` is exactly, in this order,
+   `evidence-list`, `text`, `action-row`.  Evidence has id
+   `<card-id>-evidence` and has `items=[]` without a target, otherwise one
+   `{"label": target, "ref": target}` item.  Text has id `<card-id>-body` and
+   carries the exact untrusted body text as a plain string; `viewspec.js`
+   materializes it as text rather than markup.  The action row has id
+   `<card-id>-actions`.  U3-ENG.1/.2 replace their flat producer bodies with
+   the following.  U3-ENG.3 additionally imports `__version__`,
+   `credential_report`, and `LINK_RELATIONS`; its summary test monkeypatches
+   `api.credential_report` with both required and non-required rows, then
+   asserts the required-and-unset names, sorted `LINK_RELATIONS`, and
+   `__version__` exactly:
+
+   ```python
+   def read_attention_view(
+       workspace: Path, *, summary: bool = False, read_scope: list[str] | None = None
+   ) -> dict[str, Any]:
+       cards = [
+           card
+           for card in _attention_cards(Path(workspace))
+           if card["status"] == "open" and _attention_in_scope(card, read_scope)
+       ]
+       if summary:
+           by_loudness: dict[str, int] = {}
+           for card in cards:
+               loudness = str(card["loudness"] or "")
+               by_loudness[loudness] = by_loudness.get(loudness, 0) + 1
+           missing_required_credentials = sorted(
+               str(row.get("name") or "")
+               for row in credential_report(Path(workspace))
+               if row.get("class") == "required-for-operation"
+               and row.get("status") == "unset"
+               and str(row.get("name") or "")
+           )
+           return _read_payload(
+               open=len(cards),
+               by_loudness=by_loudness,
+               as_of=now_iso(),
+               engine_version=__version__,
+               link_relations=sorted(LINK_RELATIONS),
+               missing_required_credentials=missing_required_credentials,
+           )
+       cards.sort(key=_attention_view_sort_key)
+       return _read_payload(
+           view=_view("attention", [_attention_view_card_block(card) for card in cards])
+       )
+
+
+   def _attention_view_card_block(card: dict[str, Any]) -> dict[str, Any]:
+       card_id = safe_filename(card["path"])
+       created = _attention_created(card)
+       age_days = _attention_age_days(created)
+       target = str(card["target"] or "")
+       frontmatter = card["frontmatter"]
+       block: dict[str, Any] = {
+           "id": card_id,
+           "kind": "card",
+           "ref": card["path"],
+           "title": str(card["title"]),
+           "kind_line": str(card["kind"]),
+           "loudness": str(card["loudness"]),
+           "age_s": age_days * 86_400 if age_days is not None else 0,
+           "age_label": f"{age_days}d" if age_days is not None else "",
+           "blocks": [
+               {
+                   "id": f"{card_id}-evidence",
+                   "kind": "evidence-list",
+                   "items": [{"label": target, "ref": target}] if target else [],
+               },
+               {
+                   "id": f"{card_id}-body",
+                   "kind": "text",
+                   "text": str(card["body_data"]["text"]),
+               },
+               _attention_view_action_row(card),
+           ],
+       }
+       for source, destination in (
+           ("argument_for", "argument_for"),
+           ("argument_against", "argument_against"),
+           ("what_tipped_it", "tipped_by"),
+           ("certainty", "certainty"),
+           ("raised_by", "raised_by"),
+       ):
+           value = frontmatter.get(source)
+           if isinstance(value, str) and value.strip():
+               block[destination] = value
+       if created:
+           block["raised_at"] = created
+       return block
+
+
+   def _attention_view_action_row(card: dict[str, Any]) -> dict[str, Any]:
+       card_id = safe_filename(card["path"])
+       target_id = str(card["path"])
+       return {
+           "id": f"{card_id}-actions",
+           "kind": "action-row",
+           "actions": [
+               {
+                   "label": "Resolve",
+                   "operation_id": "resolve-attention",
+                   "payload": {"target_id": target_id},
+                   "primary": True,
+               },
+               {
+                   "label": "Acknowledge",
+                   "operation_id": "acknowledge-attention",
+                   "payload": {"target_id": target_id},
+               },
+               {
+                   "label": "Defer",
+                   "operation_id": "resolve-attention",
+                   "payload": {"target_id": target_id, "outcome": "defer"},
+               },
+           ],
+       }
+   ```
+
+   The atomic U3-ENG test group must pin the complete nested action authority
+   (including the absence of Curate), rather than merely testing that an
+   `action-row` exists. Add this replacement test to
+   `tests/test_attention_view.py` before implementing the producer:
+
+   ```python
+   def test_attention_view_nests_exact_supported_actions(workspace: Path) -> None:
+       written = inbox.write_proposal(
+           workspace,
+           "candidate",
+           "Capture Smith 2024",
+           "Capture it into the catalog",
+           "Cited twice in the hub",
+           "Might be out of scope",
+           "hub cross-reference",
+           "likely",
+           "capture-sweep",
+       )
+       ref = written.relative_to(workspace).as_posix()
+
+       payload = api.read_attention_view(workspace)
+       card = next(card for card in payload["view"]["blocks"] if card["ref"] == ref)
+
+       assert [child["kind"] for child in card["blocks"]] == [
+           "evidence-list",
+           "text",
+           "action-row",
+       ]
+       assert card["blocks"][2]["actions"] == [
+           {
+               "label": "Resolve",
+               "operation_id": "resolve-attention",
+               "payload": {"target_id": ref},
+               "primary": True,
+           },
+           {
+               "label": "Acknowledge",
+               "operation_id": "acknowledge-attention",
+               "payload": {"target_id": ref},
+           },
+           {
+               "label": "Defer",
+               "operation_id": "resolve-attention",
+               "payload": {"target_id": ref, "outcome": "defer"},
+           },
+       ]
+   ```
+
+   The generic proposal-card `Curate` button is removed.  The existing
+   `curate-note-candidate` operation requires a checked candidate note's
+   `note_path` and an `accepted|rejected` `status`; `write_proposal` provides
+   neither, so emitting it would knowingly enqueue an invalid operation.  A
+   later proposal-to-note design may add a distinct source contract and button;
+   this plan must not fabricate either payload.
+3. **Plugin and actor agreement.** The cross-section card contract at
+   U3-PLUG.4 and all its tests use the grammar above, including a nested `text`
+   child.  `sortCards` continues to use `age_s`; queue rows display the
+   producer-supplied `age_label`.  U3-PLUG.6 reads `summary.open`, never
+   `summary.open_count`.  The plugin omits an `actor` field entirely: the
+   HTTP door alone assigns `pi` after token authentication, and MCP remains
+   `agent`.  U3-PLUG.7's
+   direct enqueue fixture uses `{"target_id": "inbox/x.md"}`, never the stale
+   `attention_path`/`resolution` payload.
+4. **Renderer test is an exact contract.** The U3-PLUG.4 replacement test
+   must use nonempty evidence and real Resolve/Defer action payloads, both arguments,
+   tipped/certainty data, and metadata.  It asserts the complete class sequence
+   `kind, title, evidence, text, action-row, arguments, tipped, meta`, the
+   evidence `data-ref`, action label/id/serialized payload, and all analysis
+   text.  A separate generic renderer test includes two same-kind semantic
+   children with distinct ids so a duplicate or omission fails; the canonical
+   attention-card fixture still has exactly one each of evidence, text, and
+   action row.  The cure test asserts the full sequence
+   `kind, title, evidence, text` and absence of action, analysis, toggle, and
+   metadata.  `renderCard` maps every supplied semantic child once in input
+   order, then appends only present analysis/meta fields; it never partitions
+   child kinds.  An argument/tipping group may exist when either corresponding
+   parent field exists, but it contains only spans for fields that are actually
+   present.
+5. **Execution order and design record.** U3-ENG.1/.2/.3 are one atomic TDD
+   slice after BOOT-B.4: write all replacement tests, run that group red,
+   implement the final producer above, run it green, and make one combined
+   commit.  Do not execute their superseded incremental red/green expectations
+   or their three separate commits.  Then land U3-ENG.4, U3-ENG.5, and
+   U3-ENG.6 before U3-PLUG.4/.6/.7.  SEAM.1 lands before any pane action test
+   or V2 `resolve-evidence` endpoint.  The U3 design's expanded-card order is
+   amended to `evidence → text → action row → analysis → meta`; this is a
+   deliberate V2 prerequisite, not a renderer-local exception.
+
 ### Task SEAM.1: Loopback operation door carries PI actor authority
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/http_transport.py:216` (the enqueue call's `actor="agent"`)
-- Test: existing HTTP-transport operation tests (locate exactly: `grep -n 'actor' tests/test_http_transport.py`)
+- Modify: `tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope`
+  and replace `test_http_transport_operation_run_cannot_claim_pi_authority`
 
 **Interfaces:**
 - Consumes: bootstrap spec §4 (token trust model), U3 spec §2/§4 (pane enqueues pi-protected ops).
 - Produces: HTTP `POST /operation/run` enqueues with `actor="pi"`; MCP stdio door unchanged (`mcp_transport.py:118` stays `agent`).
 
-- [ ] **Step 1: Write the failing test** — add to `tests/test_http_transport.py` (mirror the nearest enqueue test's fixture):
+- [ ] **Step 1: Write the failing tests.** In
+  `test_http_transport_operation_run_uses_request_envelope`, leave its caller-supplied
+  `"actor": "agent"` in the body and change its persisted-actor assertion to
+  `assert row["actor"] == "pi"`. This proves the HTTP door, not the caller body,
+  assigns authority. Then replace the obsolete
+  `test_http_transport_operation_run_cannot_claim_pi_authority` with:
 
 ```python
-def test_http_operation_enqueue_carries_pi_actor(tmp_path):
-    # arrange per the file's existing enqueue-test fixture, then:
-    request_row = state.operation_request(vault, request_id)
-    assert request_row["actor"] == "pi"
+def test_http_transport_operation_run_uses_pi_authority_without_caller_actor(
+    workspace: Path,
+) -> None:
+    _write_attention(workspace, "http-pi-resolve")
+
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "resolve-attention",
+            "payload": {
+                "target_id": "inbox/http-pi-resolve.md",
+                "outcome": "apply",
+                "routing_class": "ask",
+                "reason": "authenticated pane disposition",
+            },
+            "idempotency_key": "http-pi-resolve",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert response["ok"] is True
+    assert response["result"]["status"] == "done"
+    request = state.request_row(workspace, "http-pi-resolve")
+    assert request is not None
+    assert request["actor"] == "pi"
+    assert "attention_status: resolved" in (
+        workspace / "inbox/http-pi-resolve.md"
+    ).read_text(encoding="utf-8")
 ```
 
-Adapt the arrange block from the file's existing operation-enqueue test verbatim (read it first); the assertion above is the contract.
+  Do not retain the old failure assertion: it describes the deliberately removed
+  caller-controlled-authority model. `state.request_row`, not the nonexistent
+  `state.operation_request`, is the repository helper for the persisted envelope.
 
-- [ ] **Step 2: Run it** — `python -m pytest tests/test_http_transport.py::test_http_operation_enqueue_carries_pi_actor -v` — Expected: FAIL (`actor == "agent"`).
-- [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven, user-held per-boot token (bootstrap spec §4; plan contract 5).`
-- [ ] **Step 4: Sweep existing assertions** — `grep -n '"agent"' tests/test_http_transport.py` and update any assertion pinning the old actor; re-run the file: `python -m pytest tests/test_http_transport.py -v` — Expected: PASS.
+- [ ] **Step 2: Run them** —
+  `python -m pytest tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope tests/test_http_transport.py::test_http_transport_operation_run_uses_pi_authority_without_caller_actor -v`
+  — Expected: both fail before the transport change (the first persists `agent`; the
+  second is refused as lacking PI authority).
+- [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to
+  `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven,
+  user-held per-boot token (bootstrap spec §4; plan contract 5).`
+- [ ] **Step 4: Run the file** — `python -m pytest tests/test_http_transport.py -v`.
+  Expected: pass. The explicit caller `actor` fields in unrelated HTTP fixtures may
+  remain as ignored-input coverage; only expectations of their persisted authority
+  change to `pi`.
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -6427,98 +6723,64 @@ semantics (`docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md`).
 
 ## Payload contract (what other sections consume)
 
-`GET /v1/views/attention` — authenticated (transport-wide bearer check,
-`src/memoria_vault/runtime/http_transport.py:63`), optional `read_scope`/`scope` query
-(same narrowing as every other read route). Response:
+This reconciled contract replaces the old flat envelope, interleaved action rows,
+and generic Curate action below. `GET /v1/views/attention` is authenticated
+(transport-wide bearer check) and accepts the ordinary optional `read_scope`/`scope`
+query. Its response is:
 
 ```json
 {
   "ok": true,
   "api_version": "engine-read-api.v1",
-  "spec": "view-spec.v1",
-  "blocks": [ <card>, <action-row>, <card>, <action-row>, ... ]
+  "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [<card>, ...]}
 }
 ```
 
-`spec` is the view-contract version field (forward-compat anchor). Only **open** cards
-appear (`attention_status: open`); each card block is immediately followed by its
-action-row block. Block order: loudness rank (`block` 0 < `alert` 1 < `notice` 2 <
-`quiet` 3 < unknown/absent 4 — `block` first is subsumed by rank 0), then `created`
-ascending (oldest first; missing `created` sorts last), then `path`.
+Only open attention items appear. The current producer emits one top-level card per
+item, sorted by loudness rank (`block`, `alert`, `notice`, `quiet`, then unknown),
+oldest first within a rank, then path. A card has `id`, `kind="card"`, `ref`,
+`title`, verbatim `kind_line` and `loudness`, `age_s`, `age_label`, and
+`blocks`; it adds only nonempty `argument_for`, `argument_against`, `tipped_by`,
+`certainty`, `raised_by`, and `raised_at`. It never exposes writer-only
+`attention_kind`, `what_tipped_it`, `created`, `age_days`, `evidence`, or
+`body_data`.
 
-**card block** (always-present keys):
+Each attention card has exactly these children, in this order:
 
-| key | value |
-| --- | --- |
-| `id` | `safe_filename(card path)`, e.g. `inbox_flag-broken-citation.md` |
-| `kind` | `"card"` |
-| `ref` | vault-relative card path, e.g. `inbox/flag-broken-citation.md` |
-| `attention_kind` | `candidate\|gap\|flag\|alert\|work-prompt` (verbatim frontmatter) |
-| `status` | `"open"` (this view filters to open) |
-| `title` | frontmatter title or file stem |
-| `loudness` | frontmatter value **verbatim**, may be `""` — rendered, never invented |
-| `created` | ISO date string or `""` |
-| `age_days` | integer days since `created`, or `null` when `created` absent/unparseable |
-| `check_status` | frontmatter `check_status` or `"unchecked"` |
-| `evidence` | list of vault-relative links — **currently at most the frontmatter `target`**; `[]` when absent |
-| `body_data` | `{"kind": "untrusted_text", "text": <body>}` |
+1. `evidence-list` `<id>-evidence`, with zero items or one
+   `{"label": target, "ref": target}`;
+2. `text` `<id>-body`, carrying the untrusted body as plain text;
+3. `action-row` `<id>-actions`, with Resolve (primary,
+   `{"target_id": ref}`), Acknowledge (`{"target_id": ref}`), and Defer
+   (`{"target_id": ref, "outcome": "defer"}`). Resolve and Defer use
+   `resolve-attention`; Acknowledge uses `acknowledge-attention`.
 
-**Present-only honesty fields** (flat, verbatim frontmatter strings; a key is *omitted*
-when the writer never persisted it — verified against
-`src/memoria_vault/runtime/subsystems/lib/inbox.py`):
+The generic proposal-card Curate action is intentionally absent: its worker operation
+requires a checked candidate-note path and an accepted/rejected status which an
+attention proposal does not contain.
 
-- proposals (`write_proposal`, kinds `candidate`/`gap`): `action`, `argument_for`,
-  `argument_against`, `what_tipped_it`, `certainty`
-- findings (`write_finding`, kinds `flag`/`alert`): `finding`, `agent_recommendation` —
-  these cards **have no** `argument_for`/`argument_against`; the block simply lacks
-  those keys. The `evidence:` body section `write_finding` emits is *body prose*, not a
-  frontmatter field — it travels inside `body_data`, never as a structured field.
-- work prompts (`write_work_prompt`): `action`, `what_happened`
-- all writers: `raised_by`
+`GET /v1/views/attention?summary=true` is the authenticated poll response, with no
+`view`: `{ok, api_version, open, by_loudness, as_of, engine_version,
+link_relations, missing_required_credentials}`. `by_loudness` omits zero-count
+levels; `as_of` comes from `now_iso()`; `engine_version` is the package version;
+`link_relations` is `sorted(LINK_RELATIONS)`; and
+`missing_required_credentials` is the sorted names from `credential_report(workspace)`
+whose class is `required-for-operation` and status is `unset`.
 
-**action-row block**:
+`VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row", "evidence-list")` remains
+the renderer's catalog. The HTTP transport imposes no whitelist: a future top-level
+block is preserved inside `view.blocks`, and an unknown renderer kind fails visibly.
 
-```json
-{
-  "id": "<card block id>-actions",
-  "kind": "action-row",
-  "ref": "<card path>",
-  "actions": [
-    {"label": "Resolve", "operation_id": "resolve-attention"},
-    {"label": "Acknowledge", "operation_id": "acknowledge-attention"},
-    {"label": "Curate", "operation_id": "curate-note-candidate"}   // proposals only (candidate|gap)
-  ]
-}
-```
-
-All three operation ids exist in the capability catalog
-(`src/memoria_vault/product/capabilities/operations/*.md`); a test pins that.
-
-`GET /v1/views/attention?summary=true` — the pane's 30 s poll (authenticated, so it
-resets the server idle timer per bootstrap §3 / BOOT-A; nothing in this section
-implements timers — the endpoint simply rides the same authenticated `_handle` path
-BOOT-A keys on):
-
-```json
-{"ok": true, "api_version": "engine-read-api.v1",
- "open": 3, "by_loudness": {"block": 1, "alert": 1, "notice": 1},
- "as_of": "2026-07-15T14:02:00Z"}
-```
-
-`by_loudness` keys are the verbatim loudness values of open (scope-visible) cards —
-zero-count levels are omitted; `as_of` is `runtime.time.now_iso()`.
-
-Block catalog: `VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row",
-"evidence-list")` exported from `engine/api.py`. `text`/`badge`/`evidence-list` are
-reserved catalog members this view does not yet emit. The HTTP transport imposes **no**
-block-kind whitelist — additive block types flow through unchanged (pinned by test).
-
-No journal events are written by any task here (reads only) — **no floor golden
-regeneration needed**.
+No task here writes journal events, so no floor-golden regeneration is needed.
 
 ---
 
 ### Task U3-ENG.1: `read_attention_view` — sorted card blocks with present-only honesty fields
+
+> **Execution override:** U3-ENG.1/.2/.3 are the one atomic implementation
+> task specified by the 2026-07-29 reconciliation amendment. Their old
+> incremental red stages, flat assertions, and separate commits below are
+> drafting history, not executable instructions.
 
 **Files:**
 - Create: `tests/test_attention_view.py`
@@ -6980,14 +7242,20 @@ regeneration needed**.
 - Consumes: `now_iso() -> str` (`src/memoria_vault/runtime/time.py:17`).
 - Produces: final signature `read_attention_view(workspace: Path, *, summary: bool =
   False, read_scope: list[str] | None = None) -> dict[str, Any]`; summary payload
-  `{"ok", "api_version", "open": int, "by_loudness": dict[str, int], "as_of": str}`.
+  `{"ok", "api_version", "open": int, "by_loudness": dict[str, int], "as_of": str,
+  "engine_version": str, "link_relations": list[str],
+  "missing_required_credentials": list[str]}`.
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_attention_view.py`:
+- [ ] Write the failing test — add `from memoria_vault import __version__`
+  and `from memoria_vault.runtime.subsystems.lib.schema import LINK_RELATIONS`
+  to `tests/test_attention_view.py`, then append:
 
   ```python
-  def test_attention_view_summary_returns_cheap_counts(workspace: Path) -> None:
+  def test_attention_view_summary_returns_cheap_counts(
+      workspace: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
       _write_view_card(workspace, "blocker", loudness="block", created="2026-07-01")
       _write_view_card(workspace, "alerting", loudness="alert", created="2026-07-01")
       _write_view_card(workspace, "noticed", loudness="notice", created="2026-07-01")
@@ -6995,22 +7263,37 @@ regeneration needed**.
           workspace, "closed", loudness="alert", created="2026-07-01", status="resolved"
       )
 
+      monkeypatch.setattr(
+          api,
+          "credential_report",
+          lambda _workspace: [
+              {"name": "MODEL_KEY", "class": "required-for-operation", "status": "unset"},
+              {"name": "SET_KEY", "class": "required-for-operation", "status": "set"},
+              {"name": "OPTIONAL_KEY", "class": "enhancing", "status": "unset"},
+          ],
+      )
       payload = api.read_attention_view(workspace, summary=True)
 
       assert payload["ok"] is True
       assert payload["api_version"] == api.READ_API_VERSION
       assert payload["open"] == 3
       assert payload["by_loudness"] == {"block": 1, "alert": 1, "notice": 1}
-      assert "blocks" not in payload
+      assert "view" not in payload
       assert datetime.datetime.fromisoformat(payload["as_of"].replace("Z", "+00:00"))
+      assert payload["engine_version"] == __version__
+      assert payload["link_relations"] == sorted(LINK_RELATIONS)
+      assert payload["missing_required_credentials"] == ["MODEL_KEY"]
   ```
 
 - [ ] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_summary_returns_cheap_counts -v`
   Expected: `TypeError: read_attention_view() got an unexpected keyword argument 'summary'`.
 
-- [ ] Write the minimal implementation. Add the import (alphabetical within the
-  `memoria_vault.runtime` group, after the `read_barrier` import at line 17):
+- [ ] Write the minimal implementation. Alongside the existing U3 imports, add
+  `from memoria_vault import __version__`,
+  `from memoria_vault.runtime.secrets import credential_report`, and
+  `from memoria_vault.runtime.subsystems.lib.schema import LINK_RELATIONS`;
+  add the time import:
 
   ```python
   from memoria_vault.runtime.time import now_iso
@@ -7032,13 +7315,25 @@ regeneration needed**.
           for card in cards:
               key = str(card["loudness"] or "")
               by_loudness[key] = by_loudness.get(key, 0) + 1
-          return _read_payload(open=len(cards), by_loudness=by_loudness, as_of=now_iso())
+          missing_required_credentials = sorted(
+              str(row.get("name") or "")
+              for row in credential_report(Path(workspace))
+              if row.get("class") == "required-for-operation"
+              and row.get("status") == "unset"
+              and str(row.get("name") or "")
+          )
+          return _read_payload(
+              open=len(cards),
+              by_loudness=by_loudness,
+              as_of=now_iso(),
+              engine_version=__version__,
+              link_relations=sorted(LINK_RELATIONS),
+              missing_required_credentials=missing_required_credentials,
+          )
       cards.sort(key=_attention_view_sort_key)
-      blocks: list[dict[str, Any]] = []
-      for card in cards:
-          blocks.append(_attention_view_card_block(card))
-          blocks.append(_attention_view_action_row(card))
-      return _read_payload(spec=VIEW_SPEC_VERSION, blocks=blocks)
+      return _read_payload(
+          view=_view("attention", [_attention_view_card_block(card) for card in cards])
+      )
   ```
 
 - [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
@@ -7098,13 +7393,18 @@ regeneration needed**.
       )
 
       assert full_status == HTTPStatus.OK
-      assert full["spec"] == "view-spec.v1"
-      assert [block["kind"] for block in full["blocks"]] == ["card", "action-row"]
+      assert full["view"]["version"] == "view-spec.v1"
+      assert [block["kind"] for block in full["view"]["blocks"]] == ["card"]
+      assert [child["kind"] for child in full["view"]["blocks"][0]["blocks"]] == [
+          "evidence-list",
+          "text",
+          "action-row",
+      ]
       assert summary_status == HTTPStatus.OK
       assert summary["open"] == 1
       assert summary["by_loudness"] == {"notice": 1}
       assert scoped_status == HTTPStatus.OK
-      assert scoped["blocks"] == []
+      assert scoped["view"]["blocks"] == []
 
 
   def test_http_dispatch_rejects_wrong_method_for_attention_view(workspace: Path) -> None:
@@ -7223,7 +7523,18 @@ regeneration needed**.
       payload = api.read_attention_view(workspace)
 
       assert api.VIEW_BLOCK_KINDS == ("card", "text", "badge", "action-row", "evidence-list")
-      assert {block["kind"] for block in payload["blocks"]} <= set(api.VIEW_BLOCK_KINDS)
+      def descendants(blocks: list[dict[str, object]]) -> list[dict[str, object]]:
+          found: list[dict[str, object]] = []
+          for block in blocks:
+              found.append(block)
+              children = block.get("blocks")
+              if isinstance(children, list):
+                  found.extend(descendants(children))
+          return found
+
+      assert {
+          str(block["kind"]) for block in descendants(payload["view"]["blocks"])
+      } <= set(api.VIEW_BLOCK_KINDS)
 
 
   def test_http_dispatch_passes_additive_unknown_blocks_through(
@@ -7233,9 +7544,13 @@ regeneration needed**.
 
       def future_view(*args: object, **kwargs: object) -> dict[str, object]:
           payload = real(*args, **kwargs)
+          view = dict(payload["view"])
           return {
               **payload,
-              "blocks": [*payload["blocks"], {"id": "future", "kind": "sparkline"}],
+              "view": {
+                  **view,
+                  "blocks": [*view["blocks"], {"id": "future", "kind": "sparkline"}],
+              },
           }
 
       monkeypatch.setattr(
@@ -7246,8 +7561,8 @@ regeneration needed**.
       response, status = _dispatch(workspace, "GET", "/v1/views/attention", dict)
 
       assert status == HTTPStatus.OK
-      assert response["spec"] == "view-spec.v1"
-      assert response["blocks"][-1] == {"id": "future", "kind": "sparkline"}
+      assert response["view"]["version"] == "view-spec.v1"
+      assert response["view"]["blocks"][-1] == {"id": "future", "kind": "sparkline"}
   ```
 
 - [ ] Run to verify failure:
@@ -7350,13 +7665,22 @@ regeneration needed**.
       assert view_code == HTTPStatus.OK
       assert view["ok"] is True
       assert view["api_version"] == "engine-read-api.v1"
-      assert view["spec"] == "view-spec.v1"
-      assert [block["kind"] for block in view["blocks"]] == ["card", "action-row"]
-      assert view["blocks"][0]["argument_for"] == "for"
+      assert view["view"]["version"] == "view-spec.v1"
+      assert [block["kind"] for block in view["view"]["blocks"]] == ["card"]
+      card = view["view"]["blocks"][0]
+      assert [child["kind"] for child in card["blocks"]] == [
+          "evidence-list",
+          "text",
+          "action-row",
+      ]
+      assert card["argument_for"] == "for"
       assert summary_code == HTTPStatus.OK
       assert summary["open"] == 1
       assert summary["by_loudness"] == {"notice": 1}
       assert summary["as_of"]
+      assert summary["engine_version"] == __version__
+      assert summary["link_relations"] == sorted(LINK_RELATIONS)
+      assert "missing_required_credentials" in summary
   ```
 
 - [ ] Run to verify the tests exercise real sockets and fail only if the route were
@@ -7384,9 +7708,13 @@ regeneration needed**.
 > `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md` §2–5,
 > `docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md` §2–4.
 
-**SPEC GAP:** the operation endpoint's path under the new `/v1` scheme is not pinned by BOOT/U3 (today's server exposes `POST /operation/run`, `src/memoria_vault/runtime/http_transport.py:204`); this section codes against a single constant `OPERATION_PATH = "/operation/run"` in `main.js` — the assembler must reconcile with the server section if it moves the route.
+**Resolved cross-section contract:** the operation endpoint remains `POST /operation/run` (not a
+`/v1` route); this section uses the single `OPERATION_PATH = "/operation/run"` constant in
+`main.js`.
 
-**SPEC GAP:** U3/BOOT name the summary and view payloads but not their field names; this section defines the exact client contract (see "Cross-section payload contract" below) — the server section must produce these fields verbatim or the assembler reconciles the two sections.
+**Resolved cross-section contract:** the summary and view field names below are binding for
+both U3-ENG and U3-PLUG. The plugin consumes them verbatim; it does not infer alternate
+envelopes or fields.
 
 **SPEC GAP:** U3 §3 says plugin settings are "One field: Engine command", but the shipped plugin also carries the empirical-recorder settings (`enabled`, `defaultProjectId`, `retentionDays`, `showPrivacyPreview`) guarded by existing contract tests. This section removes only `serverUrl` and the token field (the two the spec explicitly replaces with handshake) and keeps the recorder settings; escalate if the PI meant to delete the recorder.
 
@@ -7401,12 +7729,18 @@ regeneration needed**.
 
 - `memoria handshake --vault <path> --spawn --json` prints exactly one JSON object to stdout carrying at least `{"port": int, "token": str, "boot_id": str, "engine_version": str, "pid": int}` (the BOOT §1 runtime.json fields; extra keys ignored). On failure, its stderr names `<state>/serve.log` — the plugin surfaces that stderr verbatim in the server-down remediation because BOOT §4 forbids the plugin from locating the state file itself.
 - `GET /v1/status` — unauthenticated liveness probe, 200 when alive.
-- `GET /v1/views/attention?summary=true` (Bearer auth) → `{"ok": true, "open_count": int, "missing_required_credentials": [str], "link_relations": [str], "engine_version": str}`.
-- `GET /v1/views/attention` (Bearer auth) → `{"ok": true, "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [Block]}}` where `Block.kind ∈ {card, text, badge, action-row, evidence-list}`:
-  - `card`: `{kind, id, ref, title, loudness, kind_line, certainty, argument_for, argument_against, tipped_by, raised_by, raised_at, age_label, age_s, blocks: [Block]}` (children carry the card's `evidence-list` and `action-row`).
+- `GET /v1/views/attention?summary=true` (Bearer auth) →
+  `{"ok": true, "api_version": str, "open": int, "by_loudness": object, "as_of": str,
+  "missing_required_credentials": [str], "link_relations": [str],
+  "engine_version": str}`.
+- `GET /v1/views/attention` (Bearer auth) → `{"ok": true, "api_version": str, "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [Block]}}` where `Block.kind ∈ {card, text, badge, action-row, evidence-list}`:
+  - `card`: `{kind, id, ref, title, loudness, kind_line, certainty, argument_for, argument_against, tipped_by, raised_by, raised_at, age_label, age_s, blocks: [Block]}`; current attention cards carry exactly nested `evidence-list`, `text`, then `action-row`.
   - `text`: `{kind, id, text}` · `badge`: `{kind, id, label, loudness}` · `evidence-list`: `{kind, id, items: [{label, ref}]}` · `action-row`: `{kind, id, actions: [{label, operation_id, payload, primary?}]}`.
   - Any other `kind` (including today's `"table"` from `engine/api.py:719`) renders as a labeled fallback box — fail visible, never silent.
-- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key", "actor": "agent"}` → `{"ok": bool, "job": {"job_id": str, …}, "result": …}` (today's `engine/api.py:440-444` shape; the toast names `job.job_id`).
+- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key"}` →
+  `{"ok": bool, "job": {"job_id": str, …}, "result": …}`. The HTTP door
+  ignores any caller-supplied actor and persists `actor="pi"`; the client
+  intentionally omits that non-authoritative field.
 
 **Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` and U3 §4 names it "the single source"; a plugin-side copy is a second source that drifts exactly along the skew axis BOOT §6 exists to police, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
 
@@ -7910,8 +8244,10 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   - `VIEW_SPEC_VERSION = "view-spec.v1"`, `KNOWN_BLOCK_KINDS`, `LOUDNESS_RANK = {block:0, alert:1, notice:2, quiet:3}`.
 - Loudness is **rendered verbatim** (class `memoria-loudness-<value>` from the payload string; missing loudness gets no loudness class) — never invented.
 
-> **Binding amendment — ordered nested cards (V2 prerequisite):** Before V2R-B.3
-> or V2R-D.2 can execute, this task's `renderCard` must render every supplied
+> **Superseded draft — do not implement:** The 2026-07-29 plan-reconciliation
+> amendment above replaces this earlier, weaker nested-card test/body. It is kept
+> only as drafting history. Before V2R-B.3 or V2R-D.2 can execute, `renderCard`
+> must render every supplied
 > `card.blocks` child exactly once and in declared order. It must append analysis
 > only after those semantic children, and only when the corresponding parent fields
 > are present. This replaces the older `renderCard` partitioning/reordering body and
@@ -7968,26 +8304,33 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 >
 > ```js
 > function renderCard(block) {
->   const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
 >   const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
 >   const analysis = [];
->   if (hasOwn("argument_for") || hasOwn("argument_against")) {
->     analysis.push(node("div", "memoria-card-arguments", "", [
->       node("span", "memoria-card-for", String(block.argument_for || "")),
->       node("span", "memoria-card-against", String(block.argument_against || "")),
->     ]));
+>   const arguments = [];
+>   if (block.argument_for) {
+>     arguments.push(node("span", "memoria-card-for", String(block.argument_for)));
 >   }
->   if (hasOwn("tipped_by") || hasOwn("certainty")) {
->     analysis.push(node("div", "memoria-card-tipped", "", [
->       node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
->       node("span", "memoria-certainty-chip", String(block.certainty || "")),
->     ]));
+>   if (block.argument_against) {
+>     arguments.push(node("span", "memoria-card-against", String(block.argument_against)));
+>   }
+>   if (arguments.length) {
+>     analysis.push(node("div", "memoria-card-arguments", "", arguments));
+>   }
+>   const tipping = [];
+>   if (block.tipped_by) {
+>     tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+>   }
+>   if (block.certainty) {
+>     tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));
+>   }
+>   if (tipping.length) {
+>     analysis.push(node("div", "memoria-card-tipped", "", tipping));
 >   }
 >   const raisedBy = String(block.raised_by || "");
 >   const raisedAt = String(block.raised_at || "");
->   const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
->   return node("div", `memoria-card${loudnessClass(block)}`, "", [
->     node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+>   const meta = raisedBy || raisedAt ? "raised by " + raisedBy + " · " + raisedAt : "";
+>   return node("div", "memoria-card" + loudnessClass(block), "", [
+>     node("div", "memoria-card-kind" + loudnessClass(block), String(block.kind_line || "")),
 >     node("div", "memoria-card-title", String(block.title || "")),
 >     ...semanticChildren,
 >     ...analysis,
@@ -8043,21 +8386,54 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     const tree = renderBlock({
       kind: "card", id: "ev1", ref: "projects/alpha/draft.md#^blk-1234",
       title: "Claim", kind_line: "evidence-review",
-      argument_for: "ground", tipped_by: "implicit derivation", certainty: "possible",
+      argument_for: "ground", argument_against: "counter-ground",
+      tipped_by: "implicit derivation", certainty: "possible",
+      raised_by: "review-sweep", raised_at: "2026-07-29T12:00:00Z",
       blocks: [
-        { kind: "evidence-list", id: "e1", items: [] },
+        { kind: "evidence-list", id: "e1", items: [{ label: "Source", ref: "notes/source.md" }] },
         { kind: "text", id: "r1", text: "Routing: implicit" },
-        { kind: "action-row", id: "a1", actions: [] },
+        {
+          kind: "action-row", id: "a1",
+          actions: [{
+            label: "Resolve", operation_id: "resolve-attention",
+            payload: { target_id: "inbox/claim.md" }, primary: true,
+          }, {
+            label: "Defer", operation_id: "resolve-attention",
+            payload: { target_id: "inbox/claim.md", outcome: "defer" },
+          }],
+        },
       ],
     });
     const classes = tree.children.map((child) => child.cls);
-    const evidenceAt = classes.indexOf("memoria-evidence");
-    const textAt = classes.indexOf("memoria-block-text");
-    const actionsAt = classes.indexOf("memoria-action-row");
-    const argumentsAt = classes.indexOf("memoria-card-arguments");
-    const tippedAt = classes.indexOf("memoria-card-tipped");
-    assert.ok(evidenceAt < textAt && textAt < actionsAt && actionsAt < argumentsAt);
-    assert.ok(argumentsAt < tippedAt);
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+      "memoria-action-row",
+      "memoria-card-arguments",
+      "memoria-card-tipped",
+      "memoria-card-meta",
+    ]);
+    assert.equal(tree.children[2].children[0].attrs["data-ref"], "notes/source.md");
+    const [resolve, defer] = tree.children[4].children;
+    assert.equal(resolve.text, "Resolve");
+    assert.equal(resolve.attrs["data-operation-id"], "resolve-attention");
+    assert.deepEqual(JSON.parse(resolve.attrs["data-payload"]), { target_id: "inbox/claim.md" });
+    assert.equal(defer.text, "Defer");
+    assert.equal(defer.attrs["data-operation-id"], "resolve-attention");
+    assert.deepEqual(JSON.parse(defer.attrs["data-payload"]), {
+      target_id: "inbox/claim.md", outcome: "defer",
+    });
+    assert.deepEqual(
+      tree.children[5].children.map((child) => child.cls),
+      ["memoria-card-for", "memoria-card-against"],
+    );
+    assert.deepEqual(
+      tree.children[6].children.map((child) => child.text),
+      ["tipped by: implicit derivation", "possible"],
+    );
+    assert.equal(tree.children[7].text, "raised by review-sweep · 2026-07-29T12:00:00Z");
   });
 
   test("cure card does not create absent analysis or action trees", () => {
@@ -8070,15 +8446,59 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       ],
     });
     const classes = tree.children.map((child) => child.cls);
-    assert.deepEqual(
-      classes.filter((cls) => ["memoria-evidence", "memoria-block-text"].includes(cls)),
-      ["memoria-evidence", "memoria-block-text"],
-    );
-    assert.ok(!classes.includes("memoria-card-arguments"));
-    assert.ok(!classes.includes("memoria-card-tipped"));
-    assert.ok(!classes.includes("memoria-action-row"));
-    assert.ok(!classes.includes("memoria-analysis-toggle"));
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+    ]);
   });
+
+  test("card maps repeated semantic children once in their supplied order", () => {
+    const tree = renderBlock({
+      kind: "card", id: "repeat", title: "Repeat", kind_line: "test",
+      blocks: [
+        { kind: "text", id: "first", text: "First" },
+        { kind: "text", id: "second", text: "Second" },
+      ],
+    });
+    assert.deepEqual(
+      tree.children.map((child) => child.cls),
+      ["memoria-card-kind", "memoria-card-title", "memoria-block-text", "memoria-block-text"],
+    );
+    assert.deepEqual(tree.children.slice(2).map((child) => child.text), ["First", "Second"]);
+  });
+
+  test("one-sided analysis renders only its present field", () => {
+    const tree = renderBlock({
+      kind: "card", id: "one-sided", title: "One", kind_line: "test",
+      argument_for: "supported", certainty: "likely", blocks: [],
+    });
+    assert.deepEqual(
+      tree.children[2].children.map((child) => child.cls),
+      ["memoria-card-for"],
+    );
+    assert.deepEqual(
+      tree.children[3].children.map((child) => child.cls),
+      ["memoria-certainty-chip"],
+    );
+  });
+
+  test("one-sided metadata has no empty provenance slot or separator", () => {
+    const raisedBy = renderBlock({
+      kind: "card", id: "raised-by", title: "By", kind_line: "test",
+      raised_by: "review-sweep", blocks: [],
+    });
+    const raisedAt = renderBlock({
+      kind: "card", id: "raised-at", title: "At", kind_line: "test",
+      raised_at: "2026-07-29T12:00:00Z", blocks: [],
+    });
+    assert.equal(raisedBy.children[2].cls, "memoria-card-meta");
+    assert.equal(raisedBy.children[2].text, "raised by review-sweep");
+    assert.equal(raisedAt.children[2].cls, "memoria-card-meta");
+    assert.equal(raisedAt.children[2].text, "2026-07-29T12:00:00Z");
+  });
+
   test("loudness is rendered verbatim and missing loudness gets no loudness class", () => {
     const odd = renderBlock({ kind: "badge", id: "b1", label: "x", loudness: "shout" });
     assert.equal(odd.cls, "memoria-badge memoria-loudness-shout");
@@ -8203,26 +8623,36 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   }
 
   function renderCard(block) {
-    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
     const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
     const analysis = [];
-    if (hasOwn("argument_for") || hasOwn("argument_against")) {
-      analysis.push(node("div", "memoria-card-arguments", "", [
-        node("span", "memoria-card-for", String(block.argument_for || "")),
-        node("span", "memoria-card-against", String(block.argument_against || "")),
-      ]));
+    const arguments = [];
+    if (block.argument_for) {
+      arguments.push(node("span", "memoria-card-for", String(block.argument_for)));
     }
-    if (hasOwn("tipped_by") || hasOwn("certainty")) {
-      analysis.push(node("div", "memoria-card-tipped", "", [
-        node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
-        node("span", "memoria-certainty-chip", String(block.certainty || "")),
-      ]));
+    if (block.argument_against) {
+      arguments.push(node("span", "memoria-card-against", String(block.argument_against)));
+    }
+    if (arguments.length) {
+      analysis.push(node("div", "memoria-card-arguments", "", arguments));
+    }
+    const tipping = [];
+    if (block.tipped_by) {
+      tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+    }
+    if (block.certainty) {
+      tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));
+    }
+    if (tipping.length) {
+      analysis.push(node("div", "memoria-card-tipped", "", tipping));
     }
     const raisedBy = String(block.raised_by || "");
     const raisedAt = String(block.raised_at || "");
-    const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
-    return node("div", `memoria-card${loudnessClass(block)}`, "", [
-      node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+    const meta = [
+      raisedBy ? "raised by " + raisedBy : "",
+      raisedAt,
+    ].filter(Boolean).join(" · ");
+    return node("div", "memoria-card" + loudnessClass(block), "", [
+      node("div", "memoria-card-kind" + loudnessClass(block), String(block.kind_line || "")),
       node("div", "memoria-card-title", String(block.title || "")),
       ...semanticChildren,
       ...analysis,
@@ -8444,7 +8874,7 @@ The big wiring task: replaces the hardcoded `serverUrl` + SecretStorage token wi
   - Settings: `DEFAULT_SETTINGS.engineCommand = "memoria"`; `serverUrl` and `hasToken` **removed**.
   - Constants: `STATUS_PATH = "/v1/status"`, `ATTENTION_VIEW_PATH = "/v1/views/attention"`, `OPERATION_PATH = "/operation/run"` (see SPEC GAP), `EMPTY_ENGINE`.
 
-Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --vault <vaultPath> — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --vault <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
+Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --workspace <vaultPath> — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --workspace <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
 
 **Steps:**
 
@@ -8464,13 +8894,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
             workspace: {
               getActiveFile: () => null,
               getLeavesOfType: () => [],
+              on: () => ({}),
             },
           };
           this.manifest = { version: "0.1.0-alpha.20" };
+          this.persistedData = {};
         }
 
         async loadData() {
-          return {};
+          return this.persistedData;
         }
 
         async saveData() {}
@@ -8506,6 +8938,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
         registerDomEvent() {}
 
+        registerEvent() {}
+
         register() {}
       }
       class Base {
@@ -8525,7 +8959,10 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
             status: 200,
             json: {
               ok: true,
-              open_count: 2,
+              api_version: "engine-read-api.v1",
+              open: 2,
+              by_loudness: { notice: 2 },
+              as_of: "2026-07-29T12:00:00Z",
               missing_required_credentials: [],
               link_relations: ["supports", "contradicts", "extends"],
               engine_version: "0.1.0-alpha.20",
@@ -8568,7 +9005,26 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     await plugin.saveSettings();
     assert.ok(!JSON.stringify(saved).includes("sandbox-token"), "token must never be persisted");
     assert.ok(!("serverUrl" in plugin.settings));
+    assert.ok(!("hasToken" in plugin.settings));
     assert.equal(plugin.settings.engineCommand, "memoria");
+
+    // Persisted connection settings are actively removed on upgrade, not merely
+    // absent from a fresh install.
+    const migrated = new PluginClass();
+    migrated.persistedData = {
+      serverUrl: "http://legacy.invalid:8765",
+      hasToken: true,
+      defaultProjectId: "legacy-project",
+    };
+    await migrated.onload();
+    const migratedSaved = [];
+    migrated.saveData = async (data) => migratedSaved.push(data);
+    await migrated.saveSettings();
+    assert.equal(migrated.settings.defaultProjectId, "legacy-project");
+    assert.ok(!("serverUrl" in migrated.settings));
+    assert.ok(!("hasToken" in migrated.settings));
+    assert.ok(!("serverUrl" in migratedSaved[0]));
+    assert.ok(!("hasToken" in migratedSaved[0]));
 
     // 2) Authenticated requests use the handshake coordinates + Bearer token.
     const summary = await plugin.authedJson("/v1/views/attention?summary=true");
@@ -8584,7 +9040,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       operation_id: "demo-operation",
       payload: { ok: true },
       idempotency_key: "demo-key",
-      actor: "agent",
     });
 
     // 3) Poll updates pill inputs from the summary payload.
@@ -8663,7 +9118,19 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   const OPERATION_PATH = "/operation/run";
   ```
   (This deletes the stale "Generated by scripts/build.mjs" comment and the `TOKEN_KEY` constant.)
-- [ ] Part 2 — `onload` additions. Immediately after `this.statusBar = this.addStatusBarItem();` (was line 22) insert:
+- [ ] Part 2 — migrate saved connection settings, then initialize lifecycle state.
+  Replace the first line of `onload()` with the following before any settings are
+  read. This removes the obsolete values from an upgraded vault's next
+  `data.json` write while preserving every supported setting:
+
+  ```js
+    const persistedSettings = (await this.loadData()) || {};
+    delete persistedSettings.serverUrl;
+    delete persistedSettings.hasToken;
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, persistedSettings);
+  ```
+
+  Immediately after `this.statusBar = this.addStatusBarItem();` (was line 22) insert:
   ```js
     this.engine = Object.assign({}, EMPTY_ENGINE);
     this.connectionStatus = "stale";
@@ -8827,14 +9294,13 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
         operation_id: operationId,
         payload,
         idempotency_key: idempotencyKey,
-        actor: "agent",
       });
     }
 
     async poll() {
       try {
         const summary = await this.authedJson(`${ATTENTION_VIEW_PATH}?summary=true`);
-        this.openCount = Number(summary.open_count || 0);
+        this.openCount = Number(summary.open || 0);
         this.lastPollAt = Date.now();
         this.missingCredential = String((summary.missing_required_credentials || [])[0] || "");
         this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
@@ -8918,7 +9384,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       if (this.pillState === "server-down") {
         new Notice(
           `Memoria server down after 3 spawn attempts. ${this.lastHandshakeError} — ` +
-            `Start it manually: memoria serve --vault ${this.vaultPath()} — then click to retry.`,
+            `Start it manually: memoria serve --workspace ${this.vaultPath()} — then click to retry.`,
           10000,
         );
         retry();
@@ -8926,7 +9392,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       }
       if (this.pillState === "token-invalid") {
         new Notice(
-          `Memoria token invalid — restart the server: memoria serve --stop --vault ${this.vaultPath()}, ` +
+          `Memoria token invalid — restart the server: memoria serve --stop --workspace ${this.vaultPath()}, ` +
             "then click to reconnect.",
           10000,
         );
@@ -8953,7 +9419,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       }
     }
   ```
-  Then replace every remaining `this.updateStatus(...)` call in the class (in `recordEvent`, `queueEvent` path, `startSession`, `stopSession`, `flushQueuedEvents`, `deleteQueuedEvents`) with `this.renderPill();` and delete the text arguments.
+  Then complete the removed-API migration: replace `this.getJson(...)` in
+  `showAttention()` and `showActiveConcept()` with `this.authedJson(...)`; replace
+  every `this.updateStatus(...)` call in the class — including `recordEvent`, its
+  queue/failure path, `startSession`, `stopSession`, `flushQueuedEvents`,
+  `deleteQueuedEvents`, and the Enable collection setting callback — with
+  `this.renderPill()` and delete its text arguments. Before leaving this task,
+  `rg -n '(this|this\.plugin)\.(getJson|updateStatus)\(' packages/memoria-obsidian/main.js`
+  must print nothing: U3-CANVAS.5 consumes `authedJson`/`renderPill` too, so no
+  compatibility alias may mask a dangling legacy call.
 - [ ] Part 6 — settings tab: replace the "Server URL" setting (lines 370–377) and the whole "Bearer token" setting (lines 378–393) with:
   ```js
       new Setting(containerEl)
@@ -9013,9 +9487,14 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       assert "requestUrl" in source
       assert "handshake" in source
       assert "fetch(" not in source
-      assert "serverUrl" not in source
+      assert "settings.serverUrl" not in source
+      assert "settings.hasToken" not in source
+      assert "delete persistedSettings.serverUrl" in source
+      assert "delete persistedSettings.hasToken" in source
       assert "secretStorage" not in source
       assert "setSecret" not in source
+      assert ".getJson(" not in source
+      assert ".updateStatus(" not in source
       assert "empirical-event-record" in source
       assert "empirical-event:" in source
       assert "empirical_event.record" not in source
@@ -9073,13 +9552,19 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     assert.equal(view.getDisplayText(), "Memoria Attention");
     assert.ok(plugin.commands.includes("open-attention"));
     const result = await plugin.enqueueNamedOperation("resolve-attention", {
-      attention_path: "inbox/x.md",
-      resolution: "resolved",
+      target_id: "inbox/x.md",
     });
-    assert.equal(JSON.parse(requests.at(-1).body).operation_id, "resolve-attention");
+    const operationBodies = requests
+      .filter((request) => request.url.endsWith("/operation/run"))
+      .map((request) => JSON.parse(request.body));
+    assert.deepEqual(
+      operationBodies.slice(-2).map((body) => body.operation_id),
+      ["resolve-attention", "empirical-event-record"],
+    );
+    assert.deepEqual(operationBodies.at(-2).payload, { target_id: "inbox/x.md" });
     assert.ok(result);
   ```
-  Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name).
+  Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name). The fixture deliberately leaves collection enabled: `enqueueNamedOperation` must issue the named operation **and** its `empirical-event-record` telemetry, so the assertion filters and verifies both rather than assuming the named operation is the final request.
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `attention view registered` assertion failure.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Add to the requires block: `const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");` and the constant `const VIEW_TYPE_ATTENTION = "memoria-attention";` (replace the string literal `"memoria-attention"` inside `activateAttentionView` with the constant).
@@ -9632,12 +10117,12 @@ The Obsidian runtime itself (real spawn, real SecretStorage-free token flow, rea
 - [ ] Settings → Memoria. **Expect:** an "Engine command" text field (value `memoria`); **no** Server URL field, **no** token field.
 - [ ] `grep -r "$(python -c 'import json,glob,os; p=sorted(glob.glob(os.path.expanduser("~/.local/state/memoria/vaults/*/runtime.json")))[-1]; print(json.load(open(p))["token"])')" test-vault/u3-plug-manual` — **Expect:** zero hits (token never lands inside the vault tree, including `.obsidian/plugins/memoria-obsidian/data.json`).
 - [ ] Click the pill. **Expect:** the Attention pane opens on the right: `ATTENTION` header, `N open · as of HH:MM`, rows with loudness dots, ellipsized titles, right-aligned ages; any `block` cards pinned on top.
-- [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block **above** the for/against line, `tipped by:` + certainty chip, named text action verbs (primary tinted with the theme accent), meta line. Press `Enter` again — collapses. Only one row expands at a time.
+- [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block, plain body text, named text action verbs (Resolve primary), then for/against, `tipped by:` + certainty chip, and meta line. Press `Enter` again — collapses. Only one row expands at a time.
 - [ ] Click an evidence link. **Expect:** the vault note opens. Click an action verb (e.g. `Resolve`). **Expect:** toast `Memoria queued resolve-attention: <request id>`; the card leaves the queue on the next poll (≤30 s with the window focused).
 - [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the three server verbs as a segmented control; Queue edge with an empty To shows `relate: To note is required`; a complete submit toasts `Memoria queued curate-note-link: <request id>` and `memoria journal` (or the request log) shows the queued request.
-- [ ] Kill the server (`memoria serve --stop --vault test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
+- [ ] Kill the server (`memoria serve --stop --workspace test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
 - [ ] Rename the engine binary away (`pipx` venv or PATH shadow), reload Obsidian. **Expect:** gray `Memoria · engine missing`; click shows the install remediation naming the tried command; the vault stays fully readable/editable. Restore the binary, click — recovers.
-- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --vault …`; no infinite silent retry.
+- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --workspace …`; no infinite silent retry.
 - [ ] Edit `manifest.json` version in the *installed* plugin copy to `0.1.0-alpha.19`, reload. **Expect:** the plugin-older skew banner at the top of the pane, wording per spec; set it above the engine version — the vault-newer banner. Restore afterward.
 - [ ] Switch Obsidian between a light and a dark community theme. **Expect:** pill dot, loudness accents, evidence inset, chips, and the segmented control all follow the theme (no fixed colors anywhere).
 - [ ] Leave the window unfocused >2 min with the server up. **Expect:** requests slow to the 2-minute cadence (watch `serve.log`); refocusing snaps a poll immediately.
@@ -9654,16 +10139,17 @@ Implements U3 spec §6 (Canvas surface) and §7 (id-filenames boundary, filename
 rule only) from `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md`.
 Repo: `/home/eranr/memoria-vault`, main @ 80e62bbd.
 
-**DEPENDENCY NOTE (cross-section, not invented here):** plugin enqueues over
-HTTP arrive with `actor="agent"` (`src/memoria_vault/runtime/http_transport.py:216`),
-and `curate-note-link` is a `pi`-protected operation
+**DEPENDENCY NOTE (cross-section, not invented here):** authenticated plugin
+enqueues arrive through HTTP with `actor="pi"` (SEAM.1 at
+`src/memoria_vault/runtime/http_transport.py:216`), and `curate-note-link`
+is a `pi`-protected operation
 (`src/memoria_vault/runtime/worker.py:58`, enforced at `worker.py:1093-1098`).
 The graduate command (Task U3-CANVAS.5) enqueues `curate-note-link` exactly as
 the U3 §4 relate control does; PI-actor authority for plugin enqueues is owned
 by the bootstrap/pane sections (BOOT spec token/handshake work). U3-CANVAS does
-not change actor policy — until that section lands, graduated edges queue and
-are then refused by the worker with "requires PI actor authority" (same today
-for the relate control). No engine code in this section depends on it.
+not change actor policy; it depends on SEAM.1 so graduated edges use the same
+PI-authorized door as the relate control. No engine code in this section depends
+on a client-supplied actor field.
 
 **Floor-golden regeneration required:** Tasks 1, 3, and 5 change bytes that the
 floor goldens hash (`projects/package-gate/argument.canvas` content, a new
@@ -10508,7 +10994,7 @@ Steps:
 
 **Interfaces:**
 - Consumes: operation id `fork-project-canvas` (Task 3 payload contract); `GET /project/canvas/forks?project_path=...` (Task 4 payload: `payload.canvas_forks.forks[]` rows with `path`/`added`/`diff_count`/`unresolved`/`error`); operation id `curate-note-link` with payload `{source_note_path, link_type, target_path, reason}` — verified against the worker dispatch at `src/memoria_vault/runtime/worker.py:471-498` and the manifest `src/memoria_vault/product/capabilities/operations/curate-note-link.md`.
-- Produces: Obsidian commands `memoria-obsidian:fork-canvas` ("Memoria: Fork canvas to scratch") and `memoria-obsidian:graduate-scratch-edges` ("Memoria: Graduate scratch canvas edges"); status-bar fork badge (`Memoria fork: N edge(s) diverged` / `Memoria fork: in sync` / `Memoria fork: unreadable`) on `active-leaf-change` when the active file matches `projects/<p>/scratch-*.canvas`; per-edge idempotency key `graduate:<scratch-path>:<source>:<type>:<target>` (safe re-runs coalesce).
+- Produces: Obsidian commands `memoria-obsidian:fork-canvas` ("Memoria: Fork canvas to scratch") and `memoria-obsidian:graduate-scratch-edges` ("Memoria: Graduate scratch canvas edges"); status-bar fork badge (`Memoria fork: N edge(s) diverged` / `Memoria fork: in sync` / `Memoria fork: unreadable`) on `active-leaf-change` when the active file matches `projects/<p>/scratch-*.canvas`. The badge lives in `this.forkBadge` and is appended by the existing `renderPill()` method; it never revives deleted `getJson`/`updateStatus` APIs. Per-edge idempotency key `graduate:<scratch-path>:<source>:<type>:<target>` makes safe re-runs coalesce.
 - Plugin never writes files: fork and graduation are pure enqueues; the badge is a read.
 
 Steps:
@@ -10525,6 +11011,10 @@ Steps:
       assert "graduate:" in source
       assert "Memoria: Fork canvas to scratch" in source
       assert "Memoria: Graduate scratch canvas edges" in source
+      assert "this.authedJson(" in source
+      assert ".getJson(" not in source
+      assert ".updateStatus(" not in source
+      assert "this.forkBadge" in source
       # thin renderer: no plugin-side file writes for canvas work
       assert "vault.create" not in source
       assert "vault.modify" not in source
@@ -10535,6 +11025,7 @@ Steps:
   - In `onload()` after the `delete-events` command (line 73), add:
 
     ```javascript
+        this.forkBadge = "";
         this.addCommand({
           id: "fork-canvas",
           name: "Memoria: Fork canvas to scratch",
@@ -10545,10 +11036,31 @@ Steps:
           name: "Memoria: Graduate scratch canvas edges",
           callback: () => this.graduateScratchEdges(),
         });
-        this.registerEvent(
-          this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
-        );
+        if (this.app.workspace.on && this.registerEvent) {
+          this.registerEvent(
+            this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
+          );
+        }
     ```
+
+    U3-PLUG.6's shared Node `Plugin` mock must include both
+    `workspace.on: () => ({})` and `registerEvent() {}` (already required by its
+    revised fixture) so this onload path is exercised by the ordinary
+    `node --test scripts/` run rather than only by the static test.
+
+  - Extend U3-PLUG.6's `renderPill()` after its normal pill-text span with:
+
+    ```javascript
+        if (this.forkBadge) {
+          this.statusBar.createEl("span", {
+            cls: "memoria-pill-text",
+            text: ` · ${this.forkBadge}`,
+          });
+        }
+    ```
+
+    Thus the canvas badge is a second rendered status value, not a replacement for
+    the connection pill or a call to the removed `updateStatus` method.
 
   - After `stopSession()` (line 219), add the methods:
 
@@ -10569,7 +11081,7 @@ Steps:
           return;
         }
         new ForkNameModal(this.app, async (name) => {
-          await this.queueOperation("fork-project-canvas", {
+          await this.enqueueNamedOperation("fork-project-canvas", {
             project_path: `projects/${active.match[1]}/project.md`,
             name: name || "scratch",
           });
@@ -10582,7 +11094,7 @@ Steps:
           return null;
         }
         const projectPath = `projects/${active.match[1]}/project.md`;
-        const payload = await this.getJson(
+        const payload = await this.authedJson(
           `/project/canvas/forks?project_path=${encodeURIComponent(projectPath)}`,
         );
         const forks = (payload.canvas_forks && payload.canvas_forks.forks) || [];
@@ -10593,21 +11105,18 @@ Steps:
         try {
           const fork = await this.forkStatusForActiveScratch();
           if (!fork) {
-            this.updateStatus();
-            return;
-          }
-          if (fork.error) {
-            this.updateStatus("Memoria fork: unreadable");
-            return;
-          }
-          this.updateStatus(
-            fork.diff_count
+            this.forkBadge = "";
+          } else if (fork.error) {
+            this.forkBadge = "Memoria fork: unreadable";
+          } else {
+            this.forkBadge = fork.diff_count
               ? `Memoria fork: ${fork.diff_count} edge(s) diverged`
-              : "Memoria fork: in sync",
-          );
+              : "Memoria fork: in sync";
+          }
         } catch {
-          this.updateStatus();
+          this.forkBadge = "";
         }
+        this.renderPill();
       }
 
       async graduateScratchEdges() {
@@ -10670,11 +11179,11 @@ Steps:
 - [ ] Mirror to the seed: `cp packages/memoria-obsidian/main.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js`
 - [ ] Run tests to verify they pass: `python -m pytest tests/test_memoria_obsidian_package.py -v` — includes the seed-parity test and the Node schema harness (`node scripts/test.mjs`, untouched).
 - [ ] Regenerate floor goldens (seeded plugin hash changed in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`; review `git diff tests/fixtures/floor/goldens` — only the `.obsidian/plugins/memoria-obsidian/main.js` hash line changes per golden; re-run without the env var — green.
-- [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria serve` running and the plugin token configured:
+- [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria` available through the plugin's Engine command. Handshake discovers any running server and keeps its per-boot token in memory; no plugin token is configured:
   1. Open `projects/<p>/argument.canvas` — the banner text node renders top-left, reads "read-only, regenerated", and names the fork command.
   2. Run "Memoria: Fork canvas to scratch" → after the worker runs the queued request, `scratch-<name>.canvas` appears, opens editable, no banner node.
   3. Hand-draw one labeled `supports` edge in the scratch canvas; refocus the scratch file → status bar shows `Memoria fork: 1 edge(s) diverged`.
-  4. Run "Memoria: Graduate scratch canvas edges" → Notice reports 1 queued / 0 skipped (worker-side acceptance depends on the PI-actor dependency named at the top of this section — record the observed request status either way).
+  4. Run "Memoria: Graduate scratch canvas edges" → Notice reports 1 queued / 0 skipped; through the already-landed SEAM.1 HTTP door, the worker accepts the PI-authorized request and the relation appears after it runs.
   5. Confirm the plugin wrote no vault file at any step (`git status` in the vault shows only worker commits).
 - [ ] Run the gate: `python scripts/verify` — green.
 - [ ] Commit:
@@ -11764,8 +12273,10 @@ All line refs verified against the working tree at plan time. Governing spec:
   `raised_by: generate-questions`, `certainty: unsure`, plus two
   machine-readable extra frontmatter keys: `taxonomy_role` (one of
   `grounds-seeking | warrant-challenging | rebuttal-probing |
-  qualifier-testing`) and `target` (the resolvable reference). U3 rendering
-  can key off `attention_kind`/`taxonomy_role`/`target`/`raised_by`.
+  qualifier-testing`) and `target` (the resolvable reference). U3's public
+  card renders this as `kind_line: "gap"`, an evidence-link child, and
+  `raised_by`; `taxonomy_role` remains source metadata rather than an
+  invented public card field.
 - **Model output contract:** a JSON array of objects
   `{"question": str, "role": str, "target": str}`. A non-JSON / non-list
   payload fails the run loudly with `ValueError` (honest failure, no partial
