@@ -2927,7 +2927,9 @@ def test_no_grounding_output_is_the_honest_empty_refusal(tmp_path: Path) -> None
     refusal = answer_query(vault, "zzz-absent-topic")
 
     assert refusal["sources"] == []
-    assert refusal["unknowns"] == ["No checked current sources matched: zzz-absent-topic"]
+    assert refusal["unknowns"] == [
+        "0 of 1 candidates matched; 0 unchecked documents were not searched"
+    ]
     assert set(refusal) <= ALLOWED_ANSWER_KEYS
     assert PROSE_KEYS.isdisjoint(refusal)
     # Section P's section-4 fields ride through when the denominator
