@@ -10,6 +10,10 @@ final chunk so the bulk driver can name the failure instead of dropping it.
 from __future__ import annotations
 
 import json
+import re
+from typing import Any
+
+from memoria_vault.runtime.capture import bibtex_capture_payload, csl_capture_payload
 
 
 def split_bibtex_entries(text: str) -> list[str]:
@@ -67,3 +71,31 @@ def split_csl_entries(text: str) -> list[str]:
             items.append(json.dumps(item, ensure_ascii=False, sort_keys=True))
         return items
     raise ValueError("CSL import expects a JSON object or array of objects")
+
+
+_CITEKEY = re.compile(r"@\s*[^({\s][^({]*[{(]\s*([^,\s{}()]+)")
+
+
+def build_entry_payload(fmt: str, entry_text: str) -> dict[str, Any]:
+    """Build one capture-source payload from one split entry chunk."""
+    if fmt == "bibtex":
+        return bibtex_capture_payload(entry_text)
+    item = json.loads(entry_text)
+    if not isinstance(item, dict):
+        raise ValueError("CSL entry must be a JSON object")
+    return csl_capture_payload(item, raw_text=entry_text)
+
+
+def entry_ref(fmt: str, entry_text: str, index: int) -> str:
+    """Name a failed entry: citekey / CSL id when recoverable, else the index."""
+    if fmt == "bibtex":
+        if match := _CITEKEY.match(entry_text.strip()):
+            return match.group(1)
+    else:
+        try:
+            item = json.loads(entry_text)
+        except ValueError:
+            item = None
+        if isinstance(item, dict) and str(item.get("id") or "").strip():
+            return str(item["id"])
+    return f"entry-{index}"

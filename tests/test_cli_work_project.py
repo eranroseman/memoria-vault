@@ -1391,3 +1391,357 @@ def _doi_provider_payloads() -> dict[str, object]:
             "best_oa_location": {"url_for_pdf": "https://example.test/alpha.pdf"},
         },
     }
+
+
+THREE_ENTRY_BIB = """@article{alpha2026,
+  title = {Alpha Import},
+  doi = {10.1000/alpha.2026},
+  abstract = {First fixture entry.}
+}
+
+@article{beta2026,
+  title = {Beta Import},
+  doi = {10.1000/beta.2026},
+  abstract = {Second fixture entry.}
+}
+
+@article{gamma2026,
+  title = {Gamma Import},
+  doi = {10.1000/gamma.2026},
+  abstract = {Third fixture entry.}
+}
+"""
+
+
+def _bulk_import(workspace: Path, source: Path, *extra: str) -> list[str]:
+    return [
+        "work",
+        "import",
+        "--workspace",
+        str(workspace),
+        "--format",
+        "bibtex",
+        "--file",
+        str(source),
+        "--json",
+        *extra,
+    ]
+
+
+def test_cli_work_import_bulk_admits_every_entry_with_run_scoped_keys(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(THREE_ENTRY_BIB, encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib, "--idempotency-key", "caller-key"))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["entries_total"] == 3
+    assert out["ok"] is True
+    assert out["format"] == "bibtex"
+    assert out["admitted"] == [
+        "doi-10.1000_alpha.2026",
+        "doi-10.1000_beta.2026",
+        "doi-10.1000_gamma.2026",
+    ]
+    assert out["skipped"] == []
+    assert out["failed"] == []
+    run_id = out["run_id"]
+    assert len(run_id) == 32 and set(run_id) <= set("0123456789abcdef")
+    assert len(out["enrichment_jobs"]) == 3  # shipped default; P.3 flips enrichment to opt-in
+    for work_id in out["admitted"]:
+        assert state.catalog_source(workspace, work_id) is not None
+    with state.connect(workspace) as conn:
+        capture_ids = [
+            row[0]
+            for row in conn.execute(
+                "SELECT request_id FROM operation_requests WHERE operation_id = 'capture-source'"
+            )
+        ]
+    assert len(capture_ids) == 3
+    assert all(request_id.startswith(f"import-{run_id}-") for request_id in capture_ids)
+    assert all("caller-key" not in request_id for request_id in capture_ids)
+
+
+def test_cli_work_import_bulk_rerun_skips_admitted_rows_without_new_requests(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(THREE_ENTRY_BIB, encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    main(_bulk_import(workspace, bib))
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["entries_total"] == 3
+    assert out["ok"] is True
+    assert out["admitted"] == []
+    assert out["skipped"] == [
+        "doi-10.1000_alpha.2026",
+        "doi-10.1000_beta.2026",
+        "doi-10.1000_gamma.2026",
+    ]
+    assert out["failed"] == []
+    with state.connect(workspace) as conn:
+        captures = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'capture-source'"
+        ).fetchone()[0]
+    assert captures == 3  # resume = the pre-check: no fetch, no enqueue, no journal event
+
+
+def test_cli_work_import_bulk_names_failed_entries_and_continues(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(
+        """@article{alpha2026,
+  title = {Alpha Import},
+  doi = {10.1000/alpha.2026}
+}
+
+@article{broken2026,
+  title {Missing Equals}
+}
+
+@article{gamma2026,
+  title = {Gamma Import},
+  doi = {10.1000/gamma.2026}
+}
+""",
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["entries_total"] == 3
+    assert out["ok"] is True
+    assert out["admitted"] == ["doi-10.1000_alpha.2026", "doi-10.1000_gamma.2026"]
+    assert len(out["failed"]) == 1
+    assert out["failed"][0]["ref"] == "broken2026"
+    assert "missing =" in out["failed"][0]["error"]
+
+
+def test_cli_work_import_bulk_reports_precheck_errors_and_continues(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(
+        """@article{alpha2026,
+  title = {Alpha Import},
+  doi = {10.1000/alpha.2026}
+}
+
+@article{../bad,
+  title = {Invalid Work ID}
+}
+
+@article{gamma2026,
+  title = {Gamma Import},
+  doi = {10.1000/gamma.2026}
+}
+""",
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["admitted"] == ["doi-10.1000_alpha.2026", "doi-10.1000_gamma.2026"]
+    assert out["skipped"] == []
+    assert out["failed"] == [{"ref": "../bad", "error": "path escapes vault root: '../bad'"}]
+
+
+def test_cli_work_import_bulk_fails_only_when_zero_rows_are_present(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(
+        """@article{brokenone2026,
+  title {Missing Equals One}
+}
+
+@article{brokentwo2026,
+  title {Missing Equals Two}
+}
+""",
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert out["ok"] is False
+    assert out["admitted"] == [] and out["skipped"] == []
+    assert [row["ref"] for row in out["failed"]] == ["brokenone2026", "brokentwo2026"]
+
+
+def test_cli_work_import_bulk_same_doi_pair_collapses_to_one_row(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Spec section 5: same DOI => same work_id => structural dedupe through the
+    # section 2 skip path. Reported skipped, never a judgment row.
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text(
+        """@article{alpha2026,
+  title = {Alpha Import},
+  doi = {10.1000/alpha.2026}
+}
+
+@article{alphadup2026,
+  title = {Alpha Import, Second Citekey},
+  doi = {10.1000/alpha.2026}
+}
+""",
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["entries_total"] == 2
+    assert out["admitted"] == ["doi-10.1000_alpha.2026"]
+    assert out["skipped"] == ["doi-10.1000_alpha.2026"]
+    assert out["failed"] == []
+
+
+def test_cli_work_import_bulk_csl_array_admits_each_item(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    csl = tmp_path / "sources.csl.json"
+    csl.write_text(
+        json.dumps(
+            [
+                {"id": "alpha-csl", "type": "article-journal", "title": "Alpha CSL"},
+                {"id": "beta-csl", "type": "book", "title": "Beta CSL"},
+            ]
+        ),
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "import",
+            "--workspace",
+            str(workspace),
+            "--format",
+            "csl",
+            "--file",
+            str(csl),
+            "--json",
+        ]
+    )
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["entries_total"] == 2
+    assert out["ok"] is True
+    assert out["admitted"] == ["alpha-csl", "beta-csl"]
+
+
+@pytest.mark.parametrize(
+    ("text", "error"),
+    [
+        ("42", "CSL import expects a JSON object or one-item array"),
+        ("[42]", "CSL import expects one item"),
+    ],
+)
+def test_cli_work_import_invalid_csl_keeps_legacy_single_entry_error(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], text: str, error: str
+) -> None:
+    workspace = tmp_path / "workspace"
+    csl = tmp_path / "invalid.csl.json"
+    csl.write_text(text, encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "import",
+            "--workspace",
+            str(workspace),
+            "--format",
+            "csl",
+            "--file",
+            str(csl),
+            "--json",
+        ]
+    )
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert out["error"] == error
+
+
+@pytest.mark.parametrize(
+    ("fmt", "contents", "filename"),
+    [("bibtex", "", "empty.bib"), ("csl", "[]", "empty.csl.json")],
+)
+def test_cli_work_import_bulk_empty_input_reports_zero_rows(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    fmt: str,
+    contents: str,
+    filename: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    source = tmp_path / filename
+    source.write_text(contents, encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "import",
+            "--workspace",
+            str(workspace),
+            "--format",
+            fmt,
+            "--file",
+            str(source),
+            "--json",
+        ]
+    )
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert out["ok"] is False
+    assert out["entries_total"] == 0
+    assert out["admitted"] == []
+    assert out["skipped"] == []
+    with state.connect(workspace) as conn:
+        captures = conn.execute(
+            "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'capture-source'"
+        ).fetchone()[0]
+    assert captures == 0

@@ -949,21 +949,88 @@ def _cmd_work_export(args: argparse.Namespace) -> int:
 
 
 def _cmd_work_import(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.bulk_import import split_bibtex_entries, split_csl_entries
+
     path = Path(args.file)
     text = path.read_text(encoding="utf-8")
     if args.format == "bibtex":
-        from memoria_vault.runtime.capture import bibtex_capture_payload
+        entries = split_bibtex_entries(text)
+    else:
+        try:
+            csl_data = json.loads(text)
+        except ValueError:
+            entries = [text]
+        else:
+            if isinstance(csl_data, list) and (
+                not csl_data
+                or (len(csl_data) > 1 and all(isinstance(item, dict) for item in csl_data))
+            ):
+                entries = split_csl_entries(text)
+            else:
+                entries = [text]
+    if len(entries) == 1:
+        if args.format == "bibtex":
+            from memoria_vault.runtime.capture import bibtex_capture_payload
 
-        payload = bibtex_capture_payload(text)
-    elif args.format == "csl":
-        from memoria_vault.runtime.capture import csl_capture_payload
+            payload = bibtex_capture_payload(text)
+        else:
+            from memoria_vault.runtime.capture import csl_capture_payload
 
-        csl_item = _read_csl_item(text)
-        payload = csl_capture_payload(csl_item, raw_text=text)
-    output = _enqueue_and_run(args, "capture-source", payload)
-    if enrichment := _queue_import_enrichment(args, payload, output):
-        output["enrichment_job"] = enrichment
-    return _emit(output, args)
+            csl_item = _read_csl_item(text)
+            payload = csl_capture_payload(csl_item, raw_text=text)
+        output = _enqueue_and_run(args, "capture-source", payload)
+        if enrichment := _queue_import_enrichment(args, payload, output):
+            output["enrichment_job"] = enrichment
+        return _emit(output, args)
+    return _emit(_bulk_work_import(args, entries), args)
+
+
+def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str, Any]:
+    from memoria_vault.runtime.bulk_import import build_entry_payload, entry_ref
+
+    workspace = _workspace(args)
+    run_id = uuid.uuid4().hex
+    admitted: list[str] = []
+    skipped: list[str] = []
+    failed: list[dict[str, str]] = []
+    enrichment_jobs: list[str] = []
+    for index, entry_text in enumerate(entries, start=1):
+        try:
+            payload = build_entry_payload(args.format, entry_text)
+            work_id = str(payload["work_id"])
+            if (existing := state.catalog_source(workspace, work_id)) is not None:
+                skipped.append(str(existing["work_id"]))
+                continue
+            output = engine_api.run_operation(
+                workspace,
+                "capture-source",
+                payload,
+                idempotency_key=f"import-{run_id}-{work_id}",
+                schedule_id=args.schedule_id,
+                actor=args.actor,
+                command="capture-source",
+            )
+        except ValueError as exc:
+            failed.append({"ref": entry_ref(args.format, entry_text, index), "error": str(exc)})
+            continue
+        result = output.get("result") if isinstance(output.get("result"), dict) else {}
+        if output["ok"]:
+            admitted.append(str(result.get("work_id") or work_id))
+            if enrichment := _queue_import_enrichment(args, payload, output):
+                enrichment_jobs.append(str(enrichment["job_id"]))
+        else:
+            error = str(result.get("error") or result.get("status") or "capture failed")
+            failed.append({"ref": entry_ref(args.format, entry_text, index), "error": error})
+    return {
+        "ok": bool(admitted or skipped),
+        "run_id": run_id,
+        "format": args.format,
+        "entries_total": len(entries),
+        "admitted": admitted,
+        "skipped": skipped,
+        "failed": failed,
+        "enrichment_jobs": enrichment_jobs,
+    }
 
 
 def _cmd_work_enrich(args: argparse.Namespace) -> int:

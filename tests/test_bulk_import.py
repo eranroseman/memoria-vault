@@ -107,3 +107,31 @@ def test_split_csl_entries_rejects_non_object_members_and_scalars() -> None:
         split_csl_entries('[{"id": "ok", "title": "OK"}, "not-an-object"]')
     with pytest.raises(ValueError, match="object or array"):
         split_csl_entries("42")
+
+
+def test_build_entry_payload_dispatches_per_format() -> None:
+    from memoria_vault.runtime.bulk_import import build_entry_payload
+
+    chunks = split_bibtex_entries(TWO_ENTRIES)
+    assert build_entry_payload("bibtex", chunks[1])["citekey"] == "beta2026"
+
+    csl_chunk = json.dumps({"id": "solo-csl", "type": "article-journal", "title": "Solo"})
+    payload = build_entry_payload("csl", csl_chunk)
+    assert payload["work_id"] == "solo-csl"
+    assert payload["raw_text"] == csl_chunk + "\n"
+
+
+def test_entry_ref_names_citekey_csl_id_or_entry_index() -> None:
+    from memoria_vault.runtime.bulk_import import entry_ref
+
+    assert entry_ref("bibtex", "@article{broken2026,\n  title = {Unclosed\n", 4) == "broken2026"
+    assert entry_ref("bibtex", "@article-type{hyphenated2026,\n  title = {Hyphenated}\n}", 4) == (
+        "hyphenated2026"
+    )
+    assert entry_ref("bibtex", "@custom:type{recoverable-key,\n  title = {Custom}\n}", 4) == (
+        "recoverable-key"
+    )
+    assert entry_ref("bibtex", "@ {not-a-citekey,\n  title = {Invalid}\n}", 4) == "entry-4"
+    assert entry_ref("bibtex", "@ not an entry at all", 4) == "entry-4"
+    assert entry_ref("csl", '{"id": "beta-csl", "title": ""}', 2) == "beta-csl"
+    assert entry_ref("csl", "not json", 2) == "entry-2"
