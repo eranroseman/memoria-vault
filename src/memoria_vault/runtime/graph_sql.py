@@ -66,12 +66,16 @@ def neighborhood(
         return {"ids": [], "counts": {"seeds": 0, "neighbors": 0, "returned": 0}}
     relations_json = json.dumps(sorted(chosen))
     seeds_json = json.dumps(seed_ids)
+    # Mixed key spaces: `source_concept_id` is identity space while `target_path`
+    # is path space. They coincide only while file Concepts key by path. NID-B.2
+    # gives file Concepts ULIDs and breaks that; ERP-A.6 owns the identity-safe
+    # path projection that this walk must read instead.
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
             WITH RECURSIVE
             eligible_edges(origin_id, target_id) AS (
-                SELECT edge.source_concept_id, edge.target_concept_id
+                SELECT edge.source_concept_id, edge.target_path
                 FROM concept_edges AS edge
                 LEFT JOIN concept_status AS source_status
                   ON source_status.concept_id = edge.source_path
@@ -189,14 +193,17 @@ def degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]:
     wanted = list(dict.fromkeys(normalize_path(str(value)) for value in ids if str(value).strip()))
     if not wanted:
         return {}
+    # Mixed key spaces: one endpoint is `source_concept_id` (identity space), the
+    # other `target_path` (path space). Correct only while file Concepts key by
+    # path; NID-B.2's ULIDs break it and ERP-A.6 owns the projection that fixes it.
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
             SELECT concept_id, COUNT(DISTINCT neighbor) AS degree FROM (
-                SELECT source_concept_id AS concept_id, target_concept_id AS neighbor
+                SELECT source_concept_id AS concept_id, target_path AS neighbor
                 FROM concept_edges WHERE check_status = 'checked'
                 UNION
-                SELECT target_concept_id AS concept_id, source_concept_id AS neighbor
+                SELECT target_path AS concept_id, source_concept_id AS neighbor
                 FROM concept_edges WHERE check_status = 'checked'
             )
             WHERE concept_id IN (SELECT value FROM json_each(?))

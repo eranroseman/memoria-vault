@@ -14,6 +14,14 @@ SHIPPED_RELATIONS = {"supports", "contradicts", "extends", "tension"}
 
 
 def _seed_concept_edges(vault: Path) -> None:
+    # v16 edges are FK-backed, so every endpoint needs its Concept parent first.
+    state.rebuild_file_concept_mirror(
+        vault,
+        [
+            {"concept_id": f"notes/{name}.md", "concept_type": "note"}
+            for name in ("a", "b", "c", "d", "x", "y")
+        ],
+    )
     state.replace_concept_edges(
         vault,
         [
@@ -42,14 +50,23 @@ def _seed_concept_edges(vault: Path) -> None:
     with state.connect(vault) as conn:
         conn.executemany(
             "INSERT INTO concept_edges("
-            " source_concept_id, relation_type, target_concept_id,"
+            " source_concept_id, relation_type, target_concept_id, target_path,"
             " check_status, source_path, updated_at)"
-            " VALUES (?, ?, ?, ?, ?, ?)",
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
             [
-                ("notes/c.md", "tension", "notes/d.md", "checked", "", "2026-07-17T00:00:00Z"),
+                (
+                    "notes/c.md",
+                    "tension",
+                    "notes/d.md",
+                    "notes/d.md",
+                    "checked",
+                    "",
+                    "2026-07-17T00:00:00Z",
+                ),
                 (
                     "notes/a.md",
                     "contradicts",
+                    "notes/b.md",
                     "notes/b.md",
                     "checked",
                     "",
@@ -58,6 +75,7 @@ def _seed_concept_edges(vault: Path) -> None:
                 (
                     "notes/a.md",
                     "supports",
+                    "notes/y.md",
                     "notes/y.md",
                     "quarantined",
                     "",

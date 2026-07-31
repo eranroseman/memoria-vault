@@ -1010,7 +1010,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
 
 **Steps:**
 
-- [ ] Write the failing v16 contract tests in `tests/test_schema_v16_identity.py`.
+- [x] Write the failing v16 contract tests in `tests/test_schema_v16_identity.py`.
   Build a v15 fixture containing `concepts`, `concept_verdicts`, `concept_flags`,
   `concept_edges`, `derivations`, `passages`, and `catalog_sources`. Include:
   a catalog work with `concept_path='notes/alpha.md'`; both
@@ -1050,13 +1050,23 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   post-Plan-22, pre-B.4 `rebuild_passage_index` row with only
   `target_concept_id` (no `target_path`) persists and resolves under v16.
 
-- [ ] Run the new tests and confirm they fail before the v16 implementation:
+  > **Sub-clause (b), fresh-install reading (2026-07-31 review repair):** the
+  > amendment retires *migrations*, not fresh-install correctness. The binding
+  > half — an identity collision raises a descriptive `RuntimeError` instead of
+  > being silently accepted (cross-section contract 10) — is implemented in
+  > `ensure_concept_parent_conn` and covered by
+  > `test_catalog_upsert_refuses_to_hijack_a_file_concept`,
+  > `test_mirror_rebuild_refuses_to_hijack_a_catalog_work`, and
+  > `test_two_identities_claiming_one_path_raise_a_descriptive_error`. Only the
+  > "leaves the DB at user version 15" half is retired, there being no v15.
+
+- [x] Run the new tests and confirm they fail before the v16 implementation:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py -v
   ```
 
-- [ ] Define one normalizer in `state.py` and use it before every v15→v16 mapping or
+- [x] Define one normalizer in `state.py` and use it before every v15→v16 mapping or
   lookup. The migration and runtime resolver must share these semantics:
 
   ```python
@@ -1107,7 +1117,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   `path`, `work_id`, or `passage_id`). End with `PRAGMA foreign_key_check` and raise
   if it is nonempty; let the normal schema pass recreate indexes, triggers, and view.
 
-- [ ] Make the v16 runtime seams safe before NID-B.2. `upsert_catalog_record` first
+- [x] Make the v16 runtime seams safe before NID-B.2. `upsert_catalog_record` first
   calls `ensure_concept_parent_conn(conn, stable_work_id, concept_type="work",
   store="db", path=f"catalog/sources/{stable_work_id}")`, then writes the catalog
   child and its verdict by that bare id. It retains the public `concept_path`
@@ -1125,7 +1135,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   Read-only `concept_check_status` resolves but does not mint. Catalog bare, rendered,
   and `./` forms resolve to the same bare parent.
 
-- [ ] Replace `replace_concept_edges(vault, rows, *, paths=None)` under this exact
+- [x] Replace `replace_concept_edges(vault, rows, *, paths=None)` under this exact
   contract:
 
   ```python
@@ -1159,7 +1169,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   target_path)`, preserve `attributes_json`, and never clear a previously resolved
   target/edge id on a partial pass.
 
-- [ ] Run the focused migration/runtime suites, then the one correctness gate:
+- [x] Run the focused migration/runtime suites, then the one correctness gate:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_query_substrate.py tests/test_runtime_state.py -v
@@ -1168,7 +1178,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
 
   Expected: all focused tests pass; `verify: OK`.
 
-- [ ] Commit the atomic safety floor:
+- [x] Commit the atomic safety floor:
 
   ```bash
   git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py \
@@ -1942,6 +1952,25 @@ green; the id-space emission itself is NID-B.2/NID-B.4.
 ---
 
 ### Task NID-B.2: write file Concept identities from frontmatter ULIDs
+
+> **Binding amendment from NID-B.1's review (2026-07-31) — implement before the rest of
+> B.2.** B.1's `ensure_concept_parent_conn` collision guard conflates *identity collision*
+> with *attribute update*. It refuses `ensure_concept_parent_conn(conn, <same ULID>,
+> path="notes/new.md")` over a resident at `notes/old.md` — same identity, the requested
+> path owned by nobody — which is a **rename**, not a collision. It likewise refuses an
+> in-place `concept_type` change at an unchanged path, and one such row rolls back the
+> entire `rebuild_file_concept_mirror` batch.
+>
+> Neither is reachable under B.1: `_validate_concept` (`trusted_writer.py:1203-1205`) ties
+> every document type to its folder home, so `concept_type` is a function of the path; and
+> file Concepts key by path, so id and path move together and a rename mints a new id.
+> **B.2 destroys both properties** — decoupling id from path is its entire job — so B.2
+> hits this on its first re-key. Add a "same resolved id, requested path unowned → update"
+> allowance to the guard before anything else in this task.
+>
+> Related (Minor): `set_concept_flag` on an unmirrored ref fails with a bare
+> `sqlite3.IntegrityError: FOREIGN KEY constraint failed`. Route it through the same
+> descriptive-error wording while you are in there.
 
 B.2 consumes B.1's safe v16 floor. It does not alter schema DDL, version pins,
 catalog-parent setup, mirror-pruning/tombstone rules, catalog status/verdict

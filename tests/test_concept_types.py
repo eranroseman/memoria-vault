@@ -58,11 +58,11 @@ def test_catalog_record_mirror_uses_work_concept_type(tmp_path: Path) -> None:
 
     with state.connect(tmp_path) as conn:
         row = conn.execute(
-            "SELECT concept_id, concept_type, store FROM concepts WHERE concept_id = ?",
-            ("catalog/sources/alpha-work",),
+            "SELECT concept_id, concept_type, store, path FROM concepts WHERE concept_id = ?",
+            ("alpha-work",),
         ).fetchone()
 
-    assert tuple(row) == ("catalog/sources/alpha-work", "work", "db")
+    assert tuple(row) == ("alpha-work", "work", "db", "catalog/sources/alpha-work")
 
 
 def test_work_graph_edges_rename_source_relation_to_published_in(tmp_path: Path) -> None:
@@ -107,3 +107,26 @@ def test_deleted_markdown_types_are_not_loaded_or_publicly_accepted() -> None:
     assert "source-note" not in api.CONCEPT_TYPES
     assert "work" not in UNIVERSAL_CONCEPT_TYPES
     assert "source-note" not in UNIVERSAL_CONCEPT_TYPES
+
+
+def test_state_registry_mapping_agrees_with_the_schema_seam() -> None:
+    """state's cached superset must never drift from schema.concept_type_for.
+
+    `state._registry_concept_type` maps document types *and* registry members over
+    one cached table because the v16 parent-ensure seam is on a hot path. That is a
+    second source of truth, so pin it: over the document-type domain it returns
+    exactly what the named `schema.concept_type_for` seam returns, and its extra
+    domain is precisely the registry members themselves.
+    """
+    document_types = schema.load_types()
+    registry = schema.load_concept_types()
+
+    assert document_types
+    for type_name in document_types:
+        assert state._registry_concept_type(type_name) == schema.concept_type_for(type_name)
+    for member in registry:
+        assert state._registry_concept_type(member) == member
+
+    assert set(state._concept_type_map()) == set(document_types) | set(registry)
+    with pytest.raises(ValueError):
+        state._registry_concept_type("gizmo")

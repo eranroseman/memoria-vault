@@ -227,10 +227,14 @@ def _entry_order(entry: dict[str, Any]) -> tuple[float, str, str]:
 
 def _edges_by_concept(vault: Path, ids: set[str]) -> dict[str, list[dict[str, str]]]:
     """Return only safe, displayed edges, treated as undirected for presentation."""
+    # Mixed key spaces: `source_concept_id` is identity space, `target_path` is
+    # path space, and both are matched against one `ids` set. Correct only while
+    # file Concepts key by path; NID-B.2's ULIDs break the coincidence and ERP-A.6
+    # owns the identity-safe path projection this should read.
     touching: dict[str, set[tuple[str, str]]] = {concept_id: set() for concept_id in ids}
     for edge in state.concept_edges(vault):
         source = str(edge["source_concept_id"])
-        target = str(edge["target_concept_id"])
+        target = str(edge["target_path"])
         if source not in ids or target not in ids:
             continue
         relation = str(edge["relation_type"])
@@ -251,13 +255,16 @@ def _tension_pairs(
     titles: dict[str, str],
 ) -> list[dict[str, Any]]:
     """Return deduplicated tension pairs whose endpoints are both safe ids."""
+    # Mixed key spaces: `source_concept_id` is identity space, `target_path` is
+    # path space, and both are matched against `safe_ids`. Correct only while file
+    # Concepts key by path; ERP-A.6 owns the projection that survives NID-B.2.
     safe_ids = left_ids | right_ids
     pairs: dict[tuple[str, str], dict[str, Any]] = {}
     for edge in state.concept_edges(vault):
         if str(edge["relation_type"]) != "tension":
             continue
         source = str(edge["source_concept_id"])
-        target = str(edge["target_concept_id"])
+        target = str(edge["target_path"])
         if source not in safe_ids or target not in safe_ids:
             continue
         crosses = (source in left_ids and target in right_ids) or (

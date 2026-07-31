@@ -111,6 +111,7 @@ TEST_LEVELS = {
     "test_sample_vault.py": "package",
     "test_schema_doc_drift.py": "static",
     "test_schema_v10.py": "unit",
+    "test_schema_v16_identity.py": "contract",
     "test_schema_version.py": "contract",
     "test_schemas.py": "contract",
     "test_search_index.py": "contract",

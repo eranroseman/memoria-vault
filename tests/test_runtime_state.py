@@ -330,7 +330,9 @@ def test_rebuild_concept_mirror_from_files_does_not_trust_frontmatter_status(
     state.set_concept_verdict(vault, "notes/forged.md", "checked")
     rebuilt = rebuild_concept_mirror_from_files(vault)
 
-    assert rebuilt["deleted"] >= 1
+    # v16 prunes only absent, verdictless file rows: a present verdict-bearing
+    # Concept survives the rebuild instead of being wiped and re-inserted.
+    assert rebuilt["deleted"] == 0
     assert rebuilt["inserted"] >= 1
     with state.connect(vault) as conn:
         row = conn.execute(

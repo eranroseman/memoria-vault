@@ -333,13 +333,15 @@ def _set_catalog_check_status(vault: Path, work_id: str, check_status: str) -> N
             "UPDATE catalog_sources SET check_status = ? WHERE work_id = ?",
             (check_status, work_id),
         )
+        # v16 keys a catalog Concept by its bare work_id; the rendered
+        # `catalog/sources/<work_id>` form is the parent's path, not its identity.
         conn.execute(
             """
             INSERT INTO concept_verdicts(concept_id, check_status)
             VALUES (?, ?)
             ON CONFLICT(concept_id) DO UPDATE SET check_status = excluded.check_status
             """,
-            (f"catalog/sources/{work_id}", check_status),
+            (state.resolve_concept_id(conn, work_id), check_status),
         )
 
 

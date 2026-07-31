@@ -45,11 +45,11 @@ def test_foreign_key_breakage_is_detected(tmp_path: Path) -> None:
     with contextlib.closing(sqlite3.connect(db)) as conn:
         conn.execute("PRAGMA foreign_keys=OFF")
         # Orphan a child row: point a materialized-payload mirror at a
-        # nonexistent output (the schema's only FK-bearing table with real
-        # seed data — schema.sql defines the FK on
-        # materialization_payloads.output_id -> outputs.output_id;
-        # concept_edges/concept_edges-like tables use plain TEXT columns
-        # with no declared FK, so foreign_key_check never inspects them).
+        # nonexistent output (schema.sql defines the FK on
+        # materialization_payloads.output_id -> outputs.output_id). Since v16
+        # the Concept graph is FK-backed too, so the runtime cannot produce an
+        # orphan there — breaking it needs this deliberate foreign_keys=OFF
+        # write, which is exactly what the invariant battery must catch.
         conn.execute(
             "UPDATE materialization_payloads SET output_id='floor-missing' "
             "WHERE rowid = (SELECT rowid FROM materialization_payloads LIMIT 1)"
