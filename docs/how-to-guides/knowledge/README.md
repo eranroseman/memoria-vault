@@ -18,4 +18,5 @@ observed/backfilled.
 | [Link checked notes](link-checked-notes.md) | Add typed `supports` / `contradicts` / `extends` relations between checked notes |
 | [Build a hub](build-a-hub.md) | Curate a checked hub under `hubs/` |
 | [Query the vault](query-the-vault.md) | Use the Co-PI for read-only synthesis grounded in your notes |
+| [Explore a topic neighborhood](explore-a-topic-neighborhood.md) | Surface checked claims, questions, tensions, Works, and hubs around a topic |
 | [Manage vocabulary](manage-vocabulary.md) | Add terms, rename safely, prune the active list |

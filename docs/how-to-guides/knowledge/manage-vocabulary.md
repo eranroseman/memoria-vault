@@ -2,7 +2,7 @@
 title: Manage vocabulary
 parent: Knowledge
 grand_parent: How-to guides
-nav_order: 4
+nav_order: 5
 ---
 
 # Manage vocabulary

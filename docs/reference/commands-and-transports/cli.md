@@ -9,7 +9,7 @@ grand_parent: Reference
 
 `memoria` is the standalone product surface. It operates on a workspace through
 `--workspace <path>` and does not require optional adapters.
-This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
+This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 
 ## Core
 
@@ -23,10 +23,16 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria doctor` | Report local runtime checks and backup health. It exits nonzero when blob files lack configured coverage or a current valid local-backup stamp. |
 | `memoria doctor bundle [--redacted]` | Emit a diagnostic bundle and propagate the same failing backup-health status; `--redacted` marks the bundle as redacted for sharing. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
+| `memoria secrets set <NAME>` | Store one named user-scope secret without echoing its value. |
+| `memoria secrets list` | Report credential status and provenance without printing secret values. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
-| `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |
-| `memoria serve --http [--read-scope <path>]` | Run the token-authenticated [local HTTP transport](local-http-transport.md) over `engine/api`, optionally capped to one or more read scopes. |
+| `memoria explore <topic> [--versus <topic>] [--project <project>] [--depth 1\|2]` | [Surface a checked topic neighborhood](../../how-to-guides/knowledge/explore-a-topic-neighborhood.md). This is distinct from `memoria project explore`, which lists exploration-channel candidates. |
+| `memoria serve --watch` | Run the polling file-watch loop over the same scan engine. |
+| `memoria serve --http [--read-scope <path>]` | Run the [local HTTP transport](local-http-transport.md) over `engine/api`, optionally capped to one or more read scopes. That reference defines its loopback, authentication, rendezvous, and on-demand lifecycle contract. |
+| `memoria serve --stop` | Stop the live local HTTP server for this workspace after validating its runtime coordinates. |
+| `memoria handshake --vault <path> [--spawn]` | Return live local HTTP coordinates for a vault; `--spawn` starts an on-demand ephemeral server when none is live. |
 | `memoria mcp --workspace <path> --read-scope <path>` | Run the optional [FastMCP stdio transport](mcp-transport.md) with a required engine read scope. |
+| `memoria help` | Show registered surfaces grouped by the five workspace jobs. |
 | `memoria eval select-models [--operation <id>] [--mode test\|live]` | Run the seeded-error bar against manifest-declared runner pins and report the selected passing runner. |
 
 ## Work
@@ -91,6 +97,9 @@ This roster mirrors the live argparse tree:
 - `memoria eval seeded-error-verdict`
 - `memoria eval select-models`
 - `memoria export`
+- `memoria explore`
+- `memoria handshake`
+- `memoria help`
 - `memoria init`
 - `memoria journal show`
 - `memoria journal tail`
@@ -122,6 +131,8 @@ This roster mirrors the live argparse tree:
 - `memoria request resume`
 - `memoria request retry`
 - `memoria request show`
+- `memoria secrets list`
+- `memoria secrets set`
 - `memoria serve`
 - `memoria show`
 - `memoria status`
