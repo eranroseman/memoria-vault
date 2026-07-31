@@ -165,7 +165,13 @@ For contributors editing these docs. Generic Diátaxis craft is a separate,
 invoke-only skill; the rules below are the Memoria-specific ones.
 
 - **Routing:** tutorials teach, how-to guides direct, reference informs,
-  explanation discusses. Mixed-purpose pages are wrong — split them.
+  explanation discusses. Mixed-purpose content pages are wrong — split them.
+- **Portals:** the docs landing page and section `README.md` indexes are routing
+  portals. Their mixed link menus are intentional and exempt from the
+  single-quadrant rule.
+- **Onboarding exception:** [Quickstart](how-to-guides/setup/quickstart.md) is
+  Tutorial 00, listed in Setup so new users can install a vault before the
+  numbered tutorials. It intentionally does not assume prior Memoria knowledge.
 - **Links:** inside `docs/`, use relative links following the target's Pages
   route. Link unpublished targets (root files, `design-history/`) by GitHub blob
   URL. Never relative-link into `src/` (those 404 on the site) — cite a source

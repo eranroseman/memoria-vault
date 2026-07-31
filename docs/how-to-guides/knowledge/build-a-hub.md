@@ -27,17 +27,9 @@ Use the CLI:
 memoria new hub receptivity-timing --workspace .
 ```
 
-Or create a Markdown file in `hubs/` with the same shape (`description` is optional):
-
-```yaml
-type: hub
-id: <ULID>
-title: <topic title>
-description: <one-sentence topic shape>
-tags: []
-links: {}
-tag: <topic-tag>
-```
+The CLI writes the initial hub frontmatter. For its field contract, use the
+authoritative [Frontmatter fields](../../reference/data-model/frontmatter.md)
+reference rather than a copied field list in this guide.
 
 **2. Name it after the topic.**
 
@@ -73,7 +65,7 @@ not overwrite curated hub judgment.
 
 ## Verify
 
-- The hub validates: `type: hub`, a stable ULID `id`, `tag: <topic-tag>`, `tags: []`, and `links: {}`
+- The hub meets the authoritative [frontmatter contract](../../reference/data-model/frontmatter.md)
 - Every intended member has the hub tag and is checked in the DB/read API
 - The member notes link back (open the backlinks panel on the hub)
 - Link the hub from a parent hub when that improves navigation. Its title,
