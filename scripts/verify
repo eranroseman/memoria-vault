@@ -14,6 +14,10 @@ JSON/PowerShell syntax checks — and narrows pytest to the `static` marker
 (schema, docs-refs, design-history, spell). CI sets this only for PRs whose
 whole diff is documentation; local runs and the post-merge `main` run always
 execute the full roster.
+
+Local temp vaults run on tmpfs (see `_tmpfs_tmpdir`): the suite is fsync-bound,
+not CPU-bound, so this is the difference between a two-minute and a nine-minute
+local gate. CI deliberately keeps the real filesystem.
 """
 
 from __future__ import annotations
@@ -29,6 +33,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # CI sets this to "1" only for provably docs-only PRs (see the module docstring).
 DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
+
+# Room for pytest's per-test vaults. A full run peaks near 0.8 GB and pytest
+# retains the last three basetemp trees, so 4 GB leaves comfortable headroom.
+TMPFS_MIN_FREE_BYTES = 4 * 1024**3
 
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
 # this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
@@ -114,6 +122,33 @@ def _gates_for_run(docs_only: bool) -> list[list[str]]:
     return reduced
 
 
+def _tmpfs_tmpdir(candidate: Path = Path("/dev/shm")) -> str | None:
+    """Where pytest should put its temp vaults, or None to leave TMPDIR alone.
+
+    Every vault write in the suite is a real `git commit` plus a
+    `PRAGMA synchronous = FULL` sqlite write, so the tests are fsync-bound. On
+    WSL2 (ext4 on a VHDX) the fsyncs cost more wall time than all the actual
+    work: the same run is ~706s of CPU either way, but 443s wall on disk against
+    89s on tmpfs. Moving the temp vaults to tmpfs changes no assertion — the
+    same 2756 tests run with the same results — it only stops paying the host
+    for durability that a disposable per-test vault never needed.
+
+    CI keeps the real filesystem on purpose. It is the authoritative gate, and
+    it is the one place the durability these fsyncs provide should be exercised
+    for real. An explicit TMPDIR always wins, so this can be overridden.
+    """
+    if os.environ.get("CI") or "TMPDIR" in os.environ:
+        return None
+    # /dev/shm is tmpfs on every Linux distro and absent elsewhere, so its
+    # writability is the whole platform check.
+    if not os.access(candidate, os.W_OK):
+        return None
+    stats = os.statvfs(candidate)
+    if stats.f_bavail * stats.f_frsize < TMPFS_MIN_FREE_BYTES:
+        return None
+    return str(candidate)
+
+
 def run(command: list[str]) -> int:
     print(f"== {' '.join(command)}")
     return subprocess.run(command, cwd=ROOT, check=False).returncode
@@ -158,6 +193,11 @@ def check_powershell() -> int:
 def main() -> int:
     if DOCS_ONLY:
         print("== verify: docs-only scope — lint, product gates, and static tests only")
+    tmpdir = _tmpfs_tmpdir()
+    if tmpdir:
+        # Inherited by every gate below, so pytest's tmp_path lands on tmpfs.
+        os.environ["TMPDIR"] = tmpdir
+        print(f"== verify: temp vaults on {tmpdir} (tmpfs)")
     for command in _gates_for_run(DOCS_ONLY):
         if run(command) != 0:
             print("verify: FAILED", file=sys.stderr)
