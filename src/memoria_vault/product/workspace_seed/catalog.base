@@ -1,0 +1,32 @@
+# Ring 1 seeded view — catalog (view preference: PI-owned after init).
+# Design gives only the view names. The live catalog is SQLite-backed and no
+# People/Venue concept type exists yet; these views are named placeholders
+# scoped to the per-source digests home.
+filters:
+  and:
+    - file.inFolder("digests")
+    - 'type == "digest"'
+
+views:
+  - type: table
+    name: "Papers"
+    order:
+      - title
+      - work_id
+      - file.mtime
+  - type: table
+    name: "People"
+    order:
+      - title
+      - work_id
+  - type: table
+    name: "Venues"
+    order:
+      - title
+      - work_id
+  - type: table
+    name: "Needs-enrichment"
+    order:
+      - title
+      - work_id
+      - file.mtime

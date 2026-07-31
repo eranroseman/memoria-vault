@@ -3,6 +3,7 @@
 import shutil
 from pathlib import Path
 
+import pytest
 import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
@@ -78,6 +79,86 @@ def _m0_schema_reset_fixture(root: Path) -> Path:
 def test_concept_types_load():
     types = schema.load_types()
     assert set(types) == SCHEMA_TYPES
+
+
+def test_concept_type_registry_is_seeded_and_every_doc_type_names_a_member():
+    registry = schema.load_concept_types()
+    assert set(registry) == {
+        "work",
+        "digest",
+        "note",
+        "hub",
+        "project",
+        "capability",
+        "operation",
+        "skill",
+        "adapter",
+        "workflow",
+    }
+    assert all(str(role).strip() for role in registry.values())
+    for name, type_schema in schema.load_types().items():
+        assert type_schema.get("concept_type") in registry, name
+
+
+def test_load_types_rejects_doc_type_outside_registry(tmp_path):
+    shutil.copytree(schema.SCHEMAS_DIR, tmp_path / "schemas")
+    rogue = tmp_path / "schemas/types/note.yaml"
+    data = yaml.safe_load(rogue.read_text(encoding="utf-8"))
+    data["concept_type"] = "gizmo"
+    rogue.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"not in concept-types\.yaml"):
+        schema.load_types(tmp_path / "schemas")
+
+
+def test_schemas_dir_without_registry_fails_closed(tmp_path):
+    schemas_dir = tmp_path / "schemas"
+    shutil.copytree(schema.SCHEMAS_DIR, schemas_dir)
+    (schemas_dir / "concept-types.yaml").unlink()
+    with pytest.raises(ValueError, match=r"missing required concept-types\.yaml"):
+        schema.load_concept_types(schemas_dir)
+    with pytest.raises(ValueError, match=r"missing required concept-types\.yaml"):
+        schema.load_types(schemas_dir)
+
+
+@pytest.mark.parametrize("concept_type", [None, ""])
+def test_load_types_requires_explicit_concept_type(tmp_path, concept_type):
+    schemas_dir = tmp_path / "schemas"
+    shutil.copytree(schema.SCHEMAS_DIR, schemas_dir)
+    type_file = schemas_dir / "types/note.yaml"
+    data = yaml.safe_load(type_file.read_text(encoding="utf-8"))
+    if concept_type is None:
+        data.pop("concept_type")
+    else:
+        data["concept_type"] = concept_type
+    type_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+    with pytest.raises(
+        ValueError, match=r"note\.yaml: concept_type .* is not in concept-types\.yaml"
+    ):
+        schema.load_types(schemas_dir)
+
+
+def test_concept_type_for_resolves_each_document_type():
+    assert {
+        name: schema.concept_type_for(name)
+        for name in {
+            "code-artifact",
+            "digest",
+            "fulltext",
+            "hub",
+            "note",
+            "project",
+        }
+    } == {
+        "code-artifact": "project",
+        "digest": "digest",
+        "fulltext": "work",
+        "hub": "hub",
+        "note": "note",
+        "project": "project",
+    }
+    with pytest.raises(ValueError, match=r"unknown document type"):
+        schema.concept_type_for("gizmo")
 
 
 def test_type_schemas_do_not_ship_dead_gated_keys():
@@ -157,7 +238,7 @@ def test_validate_frontmatter_round_trip():
     assert any("id" in e for e in schema.validate_frontmatter(dict(good, id=123), digest))
 
 
-def test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration():
+def test_schema_rejects_undeclared_fields_while_x_hatch_passes():
     note = schema.load_types()["note"]
     good = {
         "id": "01KBN6V6KX0000000000000001",
@@ -165,10 +246,13 @@ def test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration()
         "title": "T",
         "tags": [],
         "links": {},
-        "x": {"local": "ok"},
+        "x": {"local": "ok", "nested": {"deep": 1}},
     }
     assert schema.validate_frontmatter(good, note) == []
-    assert schema.validate_frontmatter(dict(good, surprise=True), note) == []
+    errors = schema.validate_frontmatter(dict(good, surprise=True), note)
+    assert any("surprise: unknown field" in error for error in errors)
+    retired = schema.validate_frontmatter(dict(good, citations=[]), note)
+    assert [error for error in retired if "citations" in error] == ["citations: field is retired"]
 
 
 def test_note_links_are_typed_maps():
@@ -264,3 +348,36 @@ def test_schema_has_no_gated_prefixes_while_review_gate_keeps_fallback():
 
     assert schema.load_folders().get("gated_prefixes", []) == []
     assert REVIEW_GATED_PREFIXES == ("notes/", "hubs/")
+
+
+def test_schema_module_carries_no_dead_validation_machinery():
+    assert not hasattr(schema, "UNIVERSAL_LIFECYCLE")
+    source = Path(schema.__file__).read_text(encoding="utf-8")
+    assert "required_any" not in source
+    assert "promotion_gate" not in source
+    assert "promoted_at" not in source
+
+
+def test_consequence_mark_fields_registered_on_kb_doc_types():
+    types = schema.load_types()
+    enum = ["grounds-lost", "warrant-lost", "qualifier-regression", "rebuttal-strengthened"]
+    for name in ("note", "hub", "project", "digest"):
+        type_schema = types[name]
+        optional = type_schema.get("optional") or {}
+        assert optional.get("stale") == "bool", name
+        assert optional.get("consequence") == "enum:consequence", name
+        assert type_schema.get("enums", {}).get("consequence") == enum, name
+    marked = {
+        "id": "01KBN6V6KX0000000000000001",
+        "type": "note",
+        "title": "T",
+        "tags": [],
+        "links": {},
+        "stale": True,
+        "consequence": "grounds-lost",
+    }
+    assert schema.validate_frontmatter(marked, types["note"]) == []
+    bad = schema.validate_frontmatter(dict(marked, consequence="vibes"), types["note"])
+    assert any("not in enum consequence" in error for error in bad)
+    bad_stale = schema.validate_frontmatter(dict(marked, stale="yes"), types["note"])
+    assert any("stale: expected bool" in error for error in bad_stale)

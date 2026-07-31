@@ -6,10 +6,17 @@ from typing import Any
 
 SURFACE_CONTRACT_VERSION = "surface-contract.v1"
 ENGINE_READ_API_VERSION = "engine-read-api.v1"
+SURFACE_JOBS: tuple[str, ...] = ("read", "knowledge", "project", "review", "upkeep")
 
 SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
+    # status-paths-action (U1 spec §3): MAPPED here, not reserved — this
+    # row's payload already carries the workspace-paths disclosure
+    # (workspace root + relative state-db path; engine/api.py read_status).
+    # Enforced by tests/test_surface_contract.py::
+    # test_surface_contract_status_paths_maps_to_status_read.
     {
         "id": "status.read",
+        "job": "read",
         "summary": "Read engine status.",
         "engine": "read_status",
         "kind": "read",
@@ -22,6 +29,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "operations.list",
+        "job": "read",
         "summary": "List packaged operations.",
         "engine": "read_operations",
         "kind": "read",
@@ -34,6 +42,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "surface.openapi",
+        "job": "read",
         "summary": "Read the local HTTP OpenAPI schema.",
         "engine": "read_surface_schema",
         "kind": "read",
@@ -49,6 +58,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "surface.schema",
+        "job": "read",
         "summary": "Print the shared surface contract schema.",
         "engine": "read_surface_schema",
         "kind": "read",
@@ -59,6 +69,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "requests.list",
+        "job": "review",
         "summary": "List operation requests.",
         "engine": "read_requests",
         "kind": "read",
@@ -71,6 +82,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "requests.get",
+        "job": "review",
         "summary": "Read one operation request.",
         "engine": "read_request",
         "kind": "read",
@@ -87,6 +99,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "attention.list",
+        "job": "review",
         "summary": "List attention items.",
         "engine": "read_attention",
         "kind": "read",
@@ -103,6 +116,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "attention.get",
+        "job": "review",
         "summary": "Read one attention item.",
         "engine": "read_attention_card",
         "kind": "read",
@@ -115,6 +129,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "concepts.list",
+        "job": "read",
         "summary": "List scoped Concept summaries.",
         "engine": "read_concepts",
         "kind": "read",
@@ -127,6 +142,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "concepts.get",
+        "job": "read",
         "summary": "Read one Concept.",
         "engine": "read_concept",
         "kind": "read",
@@ -139,6 +155,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "work.get",
+        "job": "read",
         "summary": "Read one Work catalog record.",
         "engine": "read_work",
         "kind": "read",
@@ -154,6 +171,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "journal.list",
+        "job": "read",
         "summary": "List journal events.",
         "engine": "read_journal",
         "kind": "read",
@@ -173,6 +191,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "journal.get",
+        "job": "read",
         "summary": "Read one journal event.",
         "engine": "read_journal_event",
         "kind": "read",
@@ -185,6 +204,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "exploration.list",
+        "job": "read",
         "summary": "Read recent exploration channel events.",
         "engine": "read_exploration",
         "kind": "read",
@@ -195,7 +215,28 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
+        "id": "explore.read",
+        "job": "read",
+        "summary": (
+            "Surface a checked topic neighborhood. Distinct from memoria project explore, "
+            "which lists exploration-channel candidates."
+        ),
+        "engine": "read_explore",
+        "kind": "read",
+        "scope": "workspace",
+        "params": {
+            "topic": {"type": "string", "required": True},
+            "versus": {"type": "string", "default": ""},
+            "project": {"type": "string", "default": ""},
+            "depth": {"type": "integer", "default": 1},
+            "trace": {"type": "boolean", "default": False},
+        },
+        "cli": {"commands": ["memoria explore"]},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
         "id": "project.slice.read",
+        "job": "project",
         "summary": "Read a project slice.",
         "engine": "read_slice",
         "kind": "read",
@@ -207,6 +248,7 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
     },
     {
         "id": "project.draft.read",
+        "job": "project",
         "summary": "Read a project draft.",
         "engine": "read_draft",
         "kind": "read",
@@ -217,7 +259,24 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
+        # context-read-set-action / situated-context-read (U1 spec §3):
+        # RESERVED — declared in the registry with no transports. U2 owns
+        # the conditional engine binding and transports; U4 consumes the
+        # eventual context bundle. The parity fabric skips reserved rows (see
+        # tests/test_floor_coverage.py and tests/test_floor_sweep_reads.py).
+        "id": "context.read",
+        "job": "read",
+        "summary": "Read the situated context bundle for the active session.",
+        "engine": None,
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {},
+        "reserved": "U2",
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
         "id": "operation.run",
+        "job": "upkeep",
         "summary": "Run one packaged operation.",
         "engine": "run_operation",
         "kind": "write",

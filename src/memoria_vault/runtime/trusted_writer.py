@@ -18,6 +18,7 @@ import yaml
 from memoria_vault.runtime import state
 from memoria_vault.runtime.content_security import (
     markdown_code_span,
+    neutralize_untrusted_markdown,
     neutralize_untrusted_markdown_fragment,
 )
 from memoria_vault.runtime.jsonl import append_jsonl
@@ -25,10 +26,9 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
+from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
-    RETIRED_FRONTMATTER_FIELDS,
     apply_universal_concept_frontmatter,
     frontmatter_doc,
     iter_markdown,
@@ -198,6 +198,18 @@ def append_journal_event(
 ) -> dict[str, Any]:
     """Append one request event with provenance owned by its operation context."""
     request = validate_operation_context(vault, context)
+    row = _prepare_context_journal_event(event, context=context, request=request)
+    _append_decorated_event(Path(vault), row, machine=context.machine)
+    return row
+
+
+def _prepare_context_journal_event(
+    event: Mapping[str, Any],
+    *,
+    context: OperationContext,
+    request: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Decorate one already-validated request event for authoritative storage."""
     row = _decorate_context_event(event, context)
     envelope = request.get("request_envelope")
     provenance = envelope.get("provenance") if isinstance(envelope, Mapping) else None
@@ -208,7 +220,89 @@ def append_journal_event(
         raise ValueError("journal event request_provenance conflicts with request envelope")
     row["request_provenance"] = request_provenance
     row.setdefault("timestamp", now_iso())
-    _append_decorated_event(Path(vault), row, machine=context.machine)
+    return row
+
+
+def rebuild_evidence_sets_and_journal_mints(
+    vault: Path,
+    *,
+    run_id: str,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Atomically rebuild active evidence sets and journal first-time bindings."""
+    vault = Path(vault)
+    request = validate_operation_context(vault, context)
+    events: list[dict[str, Any]] = []
+    with state.workspace_lock(vault):
+        if _has_unterminated_journal_export_tail(vault):
+            reconcile_journal_export(vault)
+        marker_rows, duplicate_ids = state._evidence_marker_rows(vault, run_id=run_id)
+        with state.connect(vault) as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            rebuild = state._replace_evidence_sets_conn(conn, marker_rows)
+            if duplicate_ids:
+                rebuild["duplicate_ids"] = duplicate_ids
+            for minted in rebuild.get("minted", []):
+                event = _prepare_context_journal_event(
+                    {
+                        "event": "evidence-minted",
+                        "evidence_id": minted["evidence_id"],
+                        "block_ref": minted["block_ref"],
+                        "block_text_sha256": minted["block_text_sha256"],
+                    },
+                    context=context,
+                    request=request,
+                )
+                state._insert_journal_row_conn(conn, event, machine=context.machine)
+                events.append(event)
+        if events:
+            state.write_journal_head_anchor(vault)
+            append_jsonl(_journal_path(vault, context.machine), events)
+    return rebuild
+
+
+def append_explicit_event_batch(
+    vault: Path,
+    events: Iterable[Mapping[str, Any]],
+    *,
+    actor: str,
+    machine: str,
+) -> list[dict[str, Any]]:
+    """Append explicit-provenance events as one authoritative journal batch."""
+    if not isinstance(actor, str) or actor not in state.ACTORS:
+        raise ValueError(f"journal actor must be one of {sorted(state.ACTORS)}")
+    if not isinstance(machine, str) or not machine.strip():
+        raise ValueError("journal machine must be a nonblank string")
+    machine_name = safe_filename(machine)
+    rows = [
+        _prepare_explicit_journal_event(event, actor=actor, machine_name=machine_name)
+        for event in events
+    ]
+    if not rows:
+        return []
+    vault = Path(vault)
+    with state.workspace_lock(vault):
+        if _has_unterminated_journal_export_tail(vault):
+            reconcile_journal_export(vault)
+        with state.connect(vault) as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            for row in rows:
+                state._insert_journal_row_conn(conn, row, machine=machine_name)
+        state.write_journal_head_anchor(vault)
+        append_jsonl(_journal_path(vault, machine_name), rows)
+    return rows
+
+
+def _prepare_explicit_journal_event(
+    event: Mapping[str, Any], *, actor: str, machine_name: str
+) -> dict[str, Any]:
+    """Decorate one explicit-provenance event before batch persistence."""
+    row = dict(event)
+    for key, expected in (("actor", actor), ("machine", machine_name)):
+        if key in row and row[key] != expected:
+            raise ValueError(f"journal event {key} conflicts with explicit provenance")
+        row[key] = expected
+    row.setdefault("timestamp", now_iso())
     return row
 
 
@@ -219,19 +313,8 @@ def append_explicit_journal_event(
     actor: str,
     machine: str,
 ) -> dict[str, Any]:
-    """Append an event created outside an operation envelope."""
-    if not isinstance(actor, str) or actor not in state.ACTORS:
-        raise ValueError(f"journal actor must be one of {sorted(state.ACTORS)}")
-    if not isinstance(machine, str) or not machine.strip():
-        raise ValueError("journal machine must be a nonblank string")
-    machine_name = safe_filename(machine)
-    row = dict(event)
-    for key, expected in (("actor", actor), ("machine", machine_name)):
-        if key in row and row[key] != expected:
-            raise ValueError(f"journal event {key} conflicts with explicit provenance")
-        row[key] = expected
-    row.setdefault("timestamp", now_iso())
-    _append_decorated_event(Path(vault), row, machine=machine_name)
+    """Append one event created outside an operation envelope."""
+    (row,) = append_explicit_event_batch(vault, [event], actor=actor, machine=machine)
     return row
 
 
@@ -500,6 +583,55 @@ def _restriction_key_removed_finding(target: str, key: str) -> dict[str, str]:
     }
 
 
+def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
+    """Land one CS3 scan finding on the durable Inbox attention surface."""
+    subject = str(finding["subject_id"])
+    if finding["kind"] == "restriction-key-removed":
+        key = str(finding["key"])
+        title = f"Restriction key removed: {subject}"
+        detail = (
+            f"Restriction key {markdown_code_span(key)} was removed from "
+            f"{markdown_code_span(subject)} outside the trusted writer; until "
+            "reviewed the file can re-enter Ask and pass the export gate."
+        )
+        prefix = "cs3-restriction-key-removed-"
+        key_slug = re.sub(r"[^a-z0-9]+", "-", key.lower()).strip("-")
+        subject_slug = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")
+        subject_fingerprint = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
+        subject_limit = 60 - len(prefix) - len(subject_fingerprint) - len(key_slug) - 2
+        slug = (
+            f"{prefix}{subject_slug[:subject_limit].rstrip('-')}-{subject_fingerprint}-{key_slug}"
+        )
+    else:
+        current = str(finding["current_human_sha256"])
+        title = f"Foreign edit: {subject}"
+        detail = (
+            f"{markdown_code_span(subject)} changed outside the trusted writer: "
+            f"expected {markdown_code_span(str(finding['prior_human_sha256']))}, "
+            f"found {markdown_code_span(current)}."
+        )
+        prefix = "cs3-foreign-edit-"
+        current_slug = current.removeprefix("sha256:")[:12]
+        subject_slug = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")
+        subject_fingerprint = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
+        subject_limit = 60 - len(prefix) - len(current_slug) - len(subject_fingerprint) - 2
+        slug = (
+            f"{prefix}{current_slug}-"
+            f"{subject_slug[:subject_limit].rstrip('-')}-{subject_fingerprint}"
+        )
+    write_finding(
+        vault,
+        "flag",
+        title,
+        detail,
+        raised_by="workspace-scan",
+        agent_recommendation="issues-found",
+        target=subject,
+        loudness="alert",
+        dedupe_slug=slug,
+    )
+
+
 def _observe_pi_edits_from_status(
     vault: Path,
     *,
@@ -602,6 +734,8 @@ def _observe_pi_edits_from_status(
                 human_sha256=current_hash,
                 restriction_keys=restriction_keys,
             )
+    for finding in findings:
+        _route_finding_to_inbox(vault, finding)
     return {"paths": targets, "observed": observed, "findings": findings, "commit": commit}
 
 
@@ -637,8 +771,10 @@ def mark_checked(
     check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
     schemas_dir: Path | None = None,
+    frontmatter: dict[str, Any] | None = None,
+    body: str | None = None,
 ) -> dict[str, Any]:
-    """Mark an existing live Concept checked after the worker's checks pass."""
+    """Mark a live Concept checked, optionally validating and writing replacement content atomically."""
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
@@ -646,17 +782,16 @@ def mark_checked(
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
     output_path = vault / target
-    frontmatter, body = split_frontmatter(output_path.read_text(encoding="utf-8"))
+    current_frontmatter, current_body = split_frontmatter(output_path.read_text(encoding="utf-8"))
     return _write_checked(
         vault,
         target,
         output_path,
-        frontmatter,
-        body,
+        current_frontmatter if frontmatter is None else frontmatter,
+        current_body if body is None else body,
         promotion_checks,
         context,
         contract,
-        allow_retired_input=True,
     )
 
 
@@ -677,6 +812,8 @@ def stage_concept(
     _bundle_for_target(contract, target)
 
     frontmatter, body = split_frontmatter(content)
+    if context.actor != "pi":
+        body = neutralize_untrusted_markdown(body)
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
@@ -725,6 +862,8 @@ def promote_checked(
     if not staged_path.is_file():
         raise FileNotFoundError(staged_path)
     frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
+    if context.actor != "pi":
+        body = neutralize_untrusted_markdown(body)
     output_path = vault / target
     event = _write_checked(
         vault,
@@ -747,14 +886,52 @@ def materialize_unchecked(
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
+    contract = _load_contract(vault, None)
+    _bundle_for_target(contract, target)
     staged_path = _staged_path(vault, target)
     if not staged_path.is_file():
         raise FileNotFoundError(staged_path)
     frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
+    _validate_concept(contract, target, frontmatter)
+    output = state.output_record(vault, target)
+    if output is None:
+        raise ValueError(f"missing staged output record: {target}")
+    if output["concept_type"] != frontmatter["type"]:
+        raise ValueError(f"staged concept type does not match its output record: {target}")
+    if output["check_status"] != "unchecked":
+        raise ValueError(f"staged output is not unchecked: {target}")
+    if context.actor != "pi":
+        body = neutralize_untrusted_markdown(body)
     output_path = vault / target
+    payload_text = frontmatter_doc(frontmatter, body)
+    output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
+    if output["output_sha256"] != output_sha256:
+        event = append_journal_event(
+            vault,
+            {
+                "event": EVENT_DERIVED,
+                "timestamp": now_iso(),
+                "output_id": target,
+                "staging_id": _rel(vault, staged_path),
+                "output_sha256": output_sha256,
+                "inputs": _latest_derived_inputs(vault, target),
+            },
+            context=context,
+        )
+        state.record_file_output(
+            vault,
+            output_id=target,
+            concept_type=str(frontmatter["type"]),
+            check_status="unchecked",
+            output_sha256=event["output_sha256"],
+            staging_id=event["staging_id"],
+            payload_text=payload_text,
+            context=context,
+            inputs=event["inputs"],
+        )
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     staged_path.unlink()
-    return {"output_id": target, "output_sha256": sha256_file(output_path)}
+    return {"output_id": target, "output_sha256": output_sha256}
 
 
 def quarantine_untraced(
@@ -1044,13 +1221,8 @@ def _write_checked(
     checks: Iterable[str],
     context: OperationContext,
     contract: dict[str, Any],
-    *,
-    allow_retired_input: bool = False,
 ) -> dict[str, Any]:
     promotion_checks = normalize_promotion_checks(checks)
-    if allow_retired_input:
-        for field in RETIRED_FRONTMATTER_FIELDS:
-            frontmatter.pop(field, None)
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
     output_sha256 = sha256_bytes(payload_text.encode("utf-8"))

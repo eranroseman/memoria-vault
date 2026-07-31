@@ -38,7 +38,7 @@ vault where everything is "sort of processed" and nothing is reliably citable.
 
 Agents read broadly but write through controlled request, staging, and trusted
 writer paths. Worker-owned checks can mark material as checked when declared
-warrants pass, but that is not PI approval. The PI owns meaning, curation,
+grounds pass, but that is not PI approval. The PI owns meaning, curation,
 accept/reject dispositions, and direct edits. A vault where agents write freely
 is a vault where the human doesn't know what they actually believe.
 
@@ -78,7 +78,7 @@ only when it calls the same request lifecycle, checks, and write boundary.
 
 **11. Grounding, not truth.**
 
-Memoria never reads a claim and asks whether it is true; it asks how the claim is grounded in evidence. No single node is judged true or false — the system asserts only how a change affects knowledge-graph integrity. "Checked" means required checks and warrants passed, never a truth verdict; dispositions record judgment events, they do not adjudicate content.
+Memoria never reads a claim and asks whether it is true; it asks how the claim is grounded in evidence. No single node is judged true or false — the system asserts only how a change affects knowledge-graph integrity. "Checked" means required checks and grounds passed, never a truth verdict; dispositions record judgment events, they do not adjudicate content.
 
 > **Planned — G4 (alpha.22/B1) and V1 (beta.1):** The complete Toulmin
 > warrant graph and its checking model are planned across these milestones. Today,

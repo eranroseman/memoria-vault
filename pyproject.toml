@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.27"]
+mcp = ["mcp>=1.27,<2"]
 vector = ["sqlite-vec>=0.1.6"]
 
 [project.scripts]
@@ -29,6 +29,7 @@ include = ["memoria_vault*"]
 [tool.setuptools.package-data]
 memoria_vault = ["runtime/*.sql"]
 "memoria_vault.product.capabilities.operations" = ["*.md"]
+"memoria_vault.product.seed_corpus" = ["*.yaml"]
 "memoria_vault.product.workspace_seed" = [
   ".githooks/*",
   ".memoria/config/*",
@@ -40,6 +41,12 @@ memoria_vault = ["runtime/*.sql"]
   ".obsidian/plugins/memoria-obsidian/*.js",
   ".obsidian/plugins/memoria-obsidian/*.json",
   ".obsidian/plugins/memoria-obsidian/*.css",
+  ".claude/*.json",
+  ".claude/hooks/*.py",
+  ".codex/*.json",
+  ".mcp.json",
+  "CLAUDE.md",
+  "*.base",
   ".gitignore",
   "steering.md",
   "system/*.md",

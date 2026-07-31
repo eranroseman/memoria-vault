@@ -7,12 +7,18 @@ grand_parent: Reference
 
 # Evidence sets
 
-Evidence sets are the draft-time warrant contract for composed project prose.
-The durable source is the inline marker on a draft claim:
+Evidence sets are the draft-time grounds contract for composed project
+prose. The durable source is the inline marker on a draft claim. The marker
+carries the mint-once id and the ordered `items=` list — nothing else:
 
 ```text
-%%ev: ev-1234abcd type=single-span state=complete review=false items=source-alpha#^p0001%%
+%%ev: ev-1234abcd items=source-alpha#^p0001|source-alpha#^p0002%%
 ```
+
+`type`, `state`, and `review_required` are always derived from the items
+and never serialized: a stored copy of a derived value can only be
+redundant or wrong. Human-readable status lives in the verify report,
+never in the marker.
 
 Only a plain, top-level Markdown paragraph claim can establish a new binding.
 Markers and block anchors inside Markdown code, headings, HTML comments or
@@ -33,20 +39,42 @@ literal-code delimiters do not taint unrelated visible prose, but controls
 inside code are never direct evidence. These rules avoid giving a hidden
 renderer construct an evidence binding that only visible prose may establish.
 
-The marker owns the ordered `items=` list. SQLite table `evidence_sets` is
-derived active state rebuilt from those markers. A separate `evidence_bindings`
-ledger records the first observed appearance of each evidence ID: its anchored
-claim hash when resolvable, or `null` when it is not. The ledger survives marker
-removal, so a reappearing ID always retains its original binding.
+## Items and derived fields
 
 | Field | Meaning |
 | --- | --- |
 | `id` | Mint-once `ev-<8hex>` identifier. |
-| `items` | `work_id#^pNNNN` source-span refs, nested `ev-<8hex>` ids, or `code-warrant:<run_id>:<artifact_id>:<sha256>` refs. |
-| `type` | Derived as `single-span`, `multi-span`, `multi-hop`, `implicit`, or `computed`. |
-| `state` | `complete` only when every item resolves. |
-| `review_required` | `true` for implicit or multi-hop evidence, independent of `state`. |
+| `items` | Ordered `\|`-separated list: `work_id#^pNNNN` source-span refs, nested `ev-<8hex>` set refs, or `code-grounds:<run_id>:<artifact_id>:sha256:<64hex>` refs. Empty or omitted means no items. An item matching no grammar fails the record closed at parse. |
+| `type` | Derived from the record's own items (see the table below), never asserted. |
+| `state` | `complete` only when every item resolves; `implicit` is always `evidence-incomplete`. |
+| `review_required` | `true` exactly when the type is `implicit` or `multi-hop`. |
 | `block_text_sha256` | The mint-once SHA-256 binding copied from the immutable `evidence_bindings` ledger; nullable only to represent an unbound, fail-closed row. |
+
+Type derivation is first-match over the record's own items:
+
+| Items shape | Type | Routed |
+| --- | --- | --- |
+| No items | `implicit` | PI review |
+| Any nested set ref, spans naming two or more distinct works, or a code ref mixed with any non-code item | `multi-hop` | PI review |
+| Code refs only | `computed` | Machine |
+| Spans in one work, exactly one | `single-span` | Machine |
+| Spans in one work, two or more | `multi-span` | Machine |
+
+A span resolves through the work's extracted content anchor. A code ref
+resolves only while the recorded run exists, succeeded, and the pinned
+output hash still matches; verification never executes code. A nested set
+ref resolves only if the referenced set exists and is itself `complete` —
+completeness is transitive, and every member of a reference cycle is
+`evidence-incomplete`, fail-closed. Running code grounds the output
+provenance; it does not make the research claim true.
+
+## The mint-once ledger and the journal
+
+SQLite table `evidence_sets` is derived active state rebuilt from those markers. A separate
+`evidence_bindings` ledger records the first observed appearance of each
+evidence ID: its anchored claim hash when resolvable, or `null` when it is
+not. The ledger survives marker removal, so a reappearing ID always retains
+its original binding.
 
 The hash covers the Markdown paragraph or block containing the matching
 `^blk-<8hex>` anchor. Before hashing, Memoria removes that anchor and its
@@ -55,32 +83,68 @@ ID records that hash, or `null` if the block cannot resolve. Later rebuilds,
 including removal and reappearance of the marker, never refresh that value.
 Changing the claim therefore cannot silently bless the edit with a new binding.
 
-The ledger establishes only this identity-to-text binding. Markers remain the
-source for active evidence items; making SQLite authoritative for all evidence
-truth is deferred and unshipped.
+At first binding, Memoria also appends an `evidence-minted` journal event
+carrying the evidence ID, block reference, and claim hash. The bindings
+ledger is rebuildable by replaying those authoritative event-log entries in
+an intact or restored workspace. Exporting/importing a journal into a
+folder copy that excludes `.memoria` is outside this reference's scope.
 
 Source-span refs use stable `work_id`, never citekeys. Citekeys are rendered
 only during export.
 
-`computed` is derived when a marker contains a `code-warrant` item. It is
-`complete` only while the referenced code run succeeded and the current output
-hash still matches the marker. Running code warrants the output provenance; it
-does not make the research claim true.
+## Verification findings
 
-Draft verification reports `evidence-incomplete` and `review-required` markers.
-It also reports `evidence-text-drift` when current claim text differs from the
-stored binding, and `evidence-text-unbound` when the stored binding or current
-anchor cannot resolve. Either hash finding blocks draft export.
+Findings fall in three classes; the class, not the finding, defines what a
+PI disposition may do. A draft exports only when no permanent block attaches
+and every hold is cleared by a matching disposition. Advisories never
+refuse export.
+
+Permanent blocks — no disposition clears them; the cure is editing the
+draft or the grounds:
+
+| Finding | Severity | Trigger |
+| --- | --- | --- |
+| `evidence-text-drift` | high | Claim block hash differs from the stored mint-once binding. |
+| `evidence-text-unbound` | high | Stored binding missing, or the anchored block cannot resolve. |
+| `evidence-id-duplicate` | high | One ID bound by more than one occurrence. |
+| `evidence-source-stale` | high | Any work in the record's item closure has catalog standing `retracted` or `superseded`. Carries `work_id` and `path` — empty path is a direct item, non-empty is inherited through nested sets. |
+| `no-evidence-set` | high | The draft contains zero evidence sets. |
+
+PI-clearable holds — block until a disposition for this exact record:
+
+| Finding | Severity | Trigger |
+| --- | --- | --- |
+| `evidence-incomplete` | high | Any item fails to resolve, or the set is `implicit`. |
+| `review-required` | medium | The derived type is `implicit` or `multi-hop`. |
+
+Advisories — surfaced, never blocking:
+
+| Finding | Severity | Trigger |
+| --- | --- | --- |
+| `evidence-source-archived` | medium | Any closure work has standing `archived`. |
+
+Catalog standing is joined live at verify time, never cached into the
+record: a source retracted years after a claim was written still blocks.
+An unset standing is `current` by design — standing is PI-curated catalog
+state, and the PI is the standing authority. `evidence-source-stale` is not
+PI-disposable: if the claim is about the retraction itself, re-ground it on
+the retraction notice cataloged as its own work.
+
+## Dispositions
 
 Only the PI can record a disposition:
 
 ```bash
-memoria project resolve-evidence <project> --evidence-id ev-1234abcd --decision accept
+memoria project resolve-evidence --workspace <workspace> <project> --evidence-id ev-1234abcd --decision accept
 ```
 
 The disposition is journal provenance; it does not edit the marker or assert
-that the claim is true. It can clear evidence-completeness review, but it cannot
-clear text drift or an unbound claim.
+that the claim is true. It is bound to content: the event records a digest
+of the record's ordered items, and verification honors the disposition only
+while the current items match. Editing the items voids the disposition (the
+journal keeps it; it is simply inert) and the record re-routes to review.
+A disposition can clear `evidence-incomplete` and `review-required`; it can
+never clear a permanent block.
 
 ## Related
 

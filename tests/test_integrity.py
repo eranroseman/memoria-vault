@@ -454,10 +454,11 @@ def test_quote_anchor_support_reads_db_work_id_content(tmp_path: Path) -> None:
     assert not (vault / "catalog/sources/db-anchor/source.md").exists()
 
 
-def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
+def test_contradiction_links_read_only_canonical_contradicts_links(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     target = "digests/bad-contradiction.md"
     control = "digests/good-contradiction.md"
+    legacy = "digests/legacy-contradiction.md"
     good_target = "digests/other.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / control).parent.mkdir(parents=True, exist_ok=True)
@@ -480,8 +481,9 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         "title: Bad contradiction\n"
         "description: Missing contradiction target.\n"
         "work_id: catalog/sources/source-alpha\n"
-        "contradictions:\n"
-        "  - digests/missing.md\n"
+        "links:\n"
+        "  contradicts:\n"
+        "    - digests/missing.md\n"
         "---\n"
         "# Bad contradiction\n",
         encoding="utf-8",
@@ -493,10 +495,28 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         "title: Good contradiction\n"
         "description: Resolving contradiction target.\n"
         "work_id: catalog/sources/source-alpha\n"
-        "contradictions:\n"
-        "  - digests/other.md\n"
+        "links:\n"
+        "  contradicts:\n"
+        "    - '[[digests/other|Other]]'\n"
+        "    - '[[digests/other.md#Evidence|Other]]'\n"
+        "    - digests/other\n"
         "---\n"
         "# Good contradiction\n",
+        encoding="utf-8",
+    )
+    # This legacy root field is deliberately retained as a negative reader contract.
+    (vault / legacy).write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Legacy contradiction\n"
+        "description: Legacy root field must not be read.\n"
+        "work_id: catalog/sources/source-alpha\n"
+        "links: {}\n"
+        "contradictions:\n"
+        "  - digests/legacy-missing.md\n"
+        "---\n"
+        "# Legacy contradiction\n",
         encoding="utf-8",
     )
 
@@ -508,6 +528,9 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     assert finding["target_id"] == target
     assert finding["reason"] == "unresolved contradiction target: digests/missing.md"
     assert finding["route"] == "ask"
+
+    generic = check_link_targets(vault, shadow=False, machine="integrity-machine")
+    assert generic["findings"] == []
 
 
 def test_contradiction_tier1_gate_beats_lexical_overlap_baseline() -> None:
@@ -530,7 +553,7 @@ def test_link_targets_flag_missing_targets(tmp_path: Path) -> None:
         "check_status: checked\n"
         "title: Bad link\n"
         "links:\n"
-        "  supports:\n"
+        "  contradicts:\n"
         "    - notes/missing.md\n"
         "    - notes/other.md\n"
         "    - https://example.test/outside\n"

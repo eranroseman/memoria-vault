@@ -25,7 +25,12 @@ from memoria_vault.runtime.vaultio import retired_frontmatter_field_errors
 def check_paths(vault: Path, paths: list[str]) -> list[str]:
     """Return error strings for staged documents that fail their schema."""
     schemas_dir = vault / ".memoria/schemas"
-    types = schema.load_types(schemas_dir if schemas_dir.is_dir() else None)
+    if not schemas_dir.is_dir():
+        return [f".memoria/schemas: missing required schema directory: {schemas_dir}"]
+    try:
+        types = schema.load_types(schemas_dir)
+    except Exception as exc:  # noqa: BLE001 -- malformed vault schemas must block commits
+        return [f".memoria/schemas: {exc}"]
     errors: list[str] = []
     for raw in paths:
         p = (vault / raw) if not Path(raw).is_absolute() else Path(raw)

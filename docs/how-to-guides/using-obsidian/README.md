@@ -14,7 +14,9 @@ operation API, or write-policy boundary.
 ## Open the workspace
 
 1. Open the vault root folder in Obsidian.
-2. Open `steering.md` when you need the project direction.
+2. Run `memoria steering show` when you need program direction. It is derived
+   from active projects, hubs, and unresolved question notes; `steering.md`
+   holds only the watch/mute override.
 3. Use `inbox/`, `digests/`, `fulltexts/`, `notes/`, `hubs/`, and `projects/`
    as the main reading areas.
 

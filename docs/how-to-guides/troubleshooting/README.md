@@ -16,8 +16,8 @@ Start from the symptom you're seeing. Each guide takes one failure mode from sym
 | A request won't advance (`pending` / `running` / `failed`)        | [Fix a stuck request](fix-stuck-card.md)                         |
 | YAML parse error; a note is missing from filtered views           | [Fix broken frontmatter](fix-broken-frontmatter.md)              |
 | An agent's write didn't land — denied, or never reached the gate  | [Diagnose a denied or blocked write](diagnose-a-denied-write.md) |
-| Enrichment is empty after ingest; classification never applied    | [Fix empty enrichment after ingest](fix-empty-enrichment.md)    |
-| A filtered query returns nothing though the notes are valid       | [Fix missing query results](fix-missing-query-results.md)        |
+| Provider/full-text enrichment is empty after ingest               | [Fix empty enrichment after ingest](fix-empty-enrichment.md)    |
+| An optional editor field filter returns nothing though notes are valid | [Fix missing query results](fix-missing-query-results.md)   |
 
 ## When several failures appear at once
 

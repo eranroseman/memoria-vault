@@ -21,7 +21,9 @@ from tests.floor_lib import (
 )
 
 ACTIONS_BY_ID = actions_by_id()
-READ_ACTIONS = sorted(a for a, d in ACTIONS_BY_ID.items() if d["kind"] == "read")
+READ_ACTIONS = sorted(
+    a for a, d in ACTIONS_BY_ID.items() if d["kind"] == "read" and not d.get("reserved")
+)
 TRANSPORTS = ("cli", "http", "mcp")
 
 

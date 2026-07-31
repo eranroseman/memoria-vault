@@ -9,6 +9,7 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import render_references_bib
 from memoria_vault.runtime.enrichment import (
+    _credential_notices,
     _optional_providers,
     _provider_endpoint,
     _write_attention_flag,
@@ -1075,3 +1076,128 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
         "inbox/flag-enrichment-source-alpha-source-retraction.md",
         state.JOURNAL_HEAD_REL,
     }
+
+
+def test_credential_notices_name_keyless_and_gated_providers(monkeypatch) -> None:
+    config = load_provider_config(WORKSPACE_SEED)
+    for name in ("OPENALEX_API_KEY", "SEMANTIC_SCHOLAR_API_KEY", "NCBI_EMAIL"):
+        monkeypatch.delenv(name, raising=False)
+
+    notices = _credential_notices(config, "doi", ["crossref", "openalex", "unpaywall"], {})
+
+    assert notices == [
+        "crossref: keyless mode - NCBI_EMAIL unset; set it: memoria secrets set NCBI_EMAIL",
+        "openalex: keyless mode - NCBI_EMAIL unset; set it: memoria secrets set NCBI_EMAIL",
+        "openalex: keyless mode - OPENALEX_API_KEY unset; "
+        "set it: memoria secrets set OPENALEX_API_KEY",
+        "unpaywall: keyless mode - NCBI_EMAIL unset; set it: memoria secrets set NCBI_EMAIL",
+        "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
+        "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY",
+    ]
+
+
+def test_credential_notices_silent_when_keys_present_or_fixture_served(
+    monkeypatch,
+) -> None:
+    config = load_provider_config(WORKSPACE_SEED)
+    monkeypatch.setenv("OPENALEX_API_KEY", "key")
+    monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", "key")
+    monkeypatch.setenv("NCBI_EMAIL", "pi@example.test")
+
+    assert _credential_notices(config, "doi", ["crossref", "openalex", "unpaywall"], {}) == []
+
+    monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+    fixtures = {"crossref": {}, "openalex": {}, "unpaywall": {}}
+    assert _credential_notices(config, "doi", ["crossref", "openalex", "unpaywall"], fixtures) == []
+
+
+def test_enrich_source_output_states_keyless_degradation(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    enqueue_operation(
+        vault,
+        "capture-source",
+        payload=doi_payload(),
+        idempotency_key="capture-alpha",
+        actor="pi",
+    )
+    run_next_job(vault, machine="test-machine")
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
+        idempotency_key="enrich-alpha",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done["enrichment_status"] == "enriched"
+    # Required providers were fixture-served (no live keyless call), so the only
+    # honest degradation is the gated-off semanticscholar adapter (the autouse
+    # fixture clears SEMANTIC_SCHOLAR_API_KEY).
+    assert done["credential_notices"] == [
+        "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
+        "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY"
+    ]
+
+
+def test_credential_notices_skip_malformed_environment_names(monkeypatch) -> None:
+    malformed = "NOT_AN_ENV_NAME; raw config"
+    config = {
+        "branches": {"doi": {"optional": ["gated"]}},
+        "providers": {
+            "live": {
+                "query_params": {
+                    "valid": "VALID_QUERY",
+                    "duplicate": "VALID_QUERY",
+                    "malformed": malformed,
+                },
+                "header_env": {
+                    "X-Valid": "VALID_HEADER",
+                    "X-Duplicate": "VALID_HEADER",
+                    "X-Malformed": malformed,
+                },
+            },
+            "gated": {
+                "default_on_when_keyed": [malformed, "VALID_GATE", 3],
+            },
+        },
+    }
+    for name in ("VALID_QUERY", "VALID_HEADER", "VALID_GATE"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv(malformed, "must-not-activate")
+
+    assert _optional_providers(config, "doi", {}) == []
+
+    notices = _credential_notices(config, "doi", ["live"], {})
+
+    assert notices == [
+        "live: keyless mode - VALID_HEADER unset; set it: memoria secrets set VALID_HEADER",
+        "live: keyless mode - VALID_QUERY unset; set it: memoria secrets set VALID_QUERY",
+        "gated: adapter off - VALID_GATE unset; set it: memoria secrets set VALID_GATE",
+    ]
+    assert malformed not in "\n".join(notices)
+
+
+def test_credential_notices_deduplicate_duplicate_branch_providers(monkeypatch) -> None:
+    config = load_provider_config(WORKSPACE_SEED)
+    config["branches"]["doi"]["optional"] = ["semanticscholar", "semanticscholar"]
+    for name in ("OPENALEX_API_KEY", "SEMANTIC_SCHOLAR_API_KEY", "NCBI_EMAIL"):
+        monkeypatch.delenv(name, raising=False)
+
+    notices = _credential_notices(
+        config,
+        "doi",
+        ["crossref", "crossref", "openalex", "unpaywall", "unpaywall"],
+        {},
+    )
+
+    assert notices == [
+        "crossref: keyless mode - NCBI_EMAIL unset; set it: memoria secrets set NCBI_EMAIL",
+        "openalex: keyless mode - NCBI_EMAIL unset; set it: memoria secrets set NCBI_EMAIL",
+        "openalex: keyless mode - OPENALEX_API_KEY unset; "
+        "set it: memoria secrets set OPENALEX_API_KEY",
+        "unpaywall: keyless mode - NCBI_EMAIL unset; set it: memoria secrets set NCBI_EMAIL",
+        "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
+        "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY",
+    ]

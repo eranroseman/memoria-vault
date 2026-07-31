@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 from datetime import date
 from pathlib import Path
@@ -35,6 +36,7 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 PROVIDER_CONFIG = ".memoria/config/providers.yaml"
+_ENV_NAME_RE = re.compile(r"[A-Z][A-Z0-9_]*")
 
 
 def load_provider_config(vault: Path) -> dict[str, Any]:
@@ -126,6 +128,9 @@ def enrich_source(
     fixture_payloads = provider_payloads if isinstance(provider_payloads, dict) else {}
     required = _required_providers(config, "doi")
     optional = _optional_providers(config, "doi", fixture_payloads)
+    credential_notices = _credential_notices(
+        config, "doi", [*required, *optional], fixture_payloads
+    )
     state.start_enrichment_run(
         vault,
         run_id=run_id,
@@ -318,6 +323,7 @@ def enrich_source(
         "discovery_candidate_paths": candidate_paths,
         "text_status": text_status,
         "optional_provider_failures": optional_missing,
+        "credential_notices": credential_notices,
         "commit": commit,
     }
 
@@ -389,12 +395,65 @@ def _optional_providers(
 
 def _provider_default_on(config: dict[str, Any], provider: str) -> bool:
     spec = _provider_spec(config, provider)
-    gate = spec.get("default_on_when_keyed")
-    if isinstance(gate, str):
-        return bool(os.environ.get(gate))
-    if isinstance(gate, list):
-        return any(isinstance(name, str) and os.environ.get(name) for name in gate)
-    return False
+    return any(os.environ.get(name) for name in _valid_env_names(spec.get("default_on_when_keyed")))
+
+
+def _credential_notices(
+    config: dict[str, Any],
+    branch: str,
+    fetched: list[str],
+    fixture_payloads: dict[str, Any],
+) -> list[str]:
+    """Spec 4b class-2 honesty: name every keyless degradation in the run output."""
+    notices: list[str] = []
+    seen_providers: set[str] = set()
+    for provider in fetched:
+        if provider in seen_providers:
+            continue
+        seen_providers.add(provider)
+        if provider in fixture_payloads:
+            continue
+        spec = _provider_spec(config, provider)
+        for env_name in _spec_env_names(spec):
+            if not os.environ.get(env_name):
+                notices.append(
+                    f"{provider}: keyless mode - {env_name} unset; "
+                    f"set it: memoria secrets set {env_name}"
+                )
+    branches = config.get("branches") if isinstance(config.get("branches"), dict) else {}
+    branch_spec = branches.get(branch) if isinstance(branches.get(branch), dict) else {}
+    declared = branch_spec.get("optional")
+    for provider in declared if isinstance(declared, list) else []:
+        if not isinstance(provider, str):
+            continue
+        if provider in seen_providers:
+            continue
+        seen_providers.add(provider)
+        if provider in fixture_payloads:
+            continue
+        gate_names = _valid_env_names(_provider_spec(config, provider).get("default_on_when_keyed"))
+        for env_name in gate_names:
+            if not os.environ.get(env_name):
+                notices.append(
+                    f"{provider}: adapter off - {env_name} unset; "
+                    f"set it: memoria secrets set {env_name}"
+                )
+    return notices
+
+
+def _spec_env_names(spec: dict[str, Any]) -> list[str]:
+    params = spec.get("query_params") if isinstance(spec.get("query_params"), dict) else {}
+    headers = spec.get("header_env") if isinstance(spec.get("header_env"), dict) else {}
+    return sorted(_valid_env_names([*params.values(), *headers.values()]))
+
+
+def _valid_env_names(value: Any) -> list[str]:
+    values = [value] if isinstance(value, str) else value if isinstance(value, list) else []
+    names: list[str] = []
+    for name in values:
+        if isinstance(name, str) and _ENV_NAME_RE.fullmatch(name) and name not in names:
+            names.append(name)
+    return names
 
 
 def _write_attention_flag(

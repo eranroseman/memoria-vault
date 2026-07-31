@@ -70,7 +70,11 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
     content = (vault / "projects/project-alpha/draft.md").read_text(encoding="utf-8")
     assert "## Support" in content
     assert "Source note: `notes/support.md`" in content
-    assert re.search(r"\^blk-[0-9a-f]{8} %%ev: ev-[0-9a-f]{8} ", content)
+    assert re.search(
+        r"\^blk-[0-9a-f]{8} %%ev: ev-[0-9a-f]{8} items=source-alpha#\^p0001%%",
+        content,
+    )
+    assert re.search(r"\^blk-[0-9a-f]{8} %%ev: ev-[0-9a-f]{8} items=%%", content)
 
     rows = {row["id"]: row for row in state.evidence_sets(vault)}
     complete = [row for row in rows.values() if row["items"] == ["source-alpha#^p0001"]]
@@ -88,6 +92,14 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
     readback = read_project_draft(vault, "project-alpha")
     assert len(readback["evidence_markers"]) == 2
     assert len(readback["evidence_sets"]) == 2
+    assert all(set(marker) == {"id", "items"} for marker in readback["evidence_markers"])
+    assert all(isinstance(marker["items"], list) for marker in readback["evidence_markers"])
+    assert {tuple(marker["items"]) for marker in readback["evidence_markers"]} == {
+        (),
+        ("source-alpha#^p0001",),
+    }
+    assert {marker["id"] for marker in readback["evidence_markers"]} == set(rows)
+    assert {row["id"]: row for row in readback["evidence_sets"]} == rows
 
 
 def test_compose_project_draft_requires_outline_members(tmp_path: Path) -> None:

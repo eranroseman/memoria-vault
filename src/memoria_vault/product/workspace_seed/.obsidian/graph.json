@@ -1,0 +1,14 @@
+{
+  "colorGroups": [
+    { "query": "path:notes/", "color": { "a": 1, "rgb": 5431378 } },
+    { "query": "path:hubs/", "color": { "a": 1, "rgb": 11621088 } },
+    { "query": "path:projects/", "color": { "a": 1, "rgb": 16744448 } },
+    { "query": "path:digests/", "color": { "a": 1, "rgb": 5419488 } },
+    { "query": "path:fulltexts/", "color": { "a": 1, "rgb": 8421504 } },
+    { "query": "path:inbox/", "color": { "a": 1, "rgb": 16711680 } }
+  ],
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true
+}

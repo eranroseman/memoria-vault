@@ -1,0 +1,14 @@
+# The single source of the DB Concept-type roster (concepts.concept_type CHECK).
+# Read at runtime by the schema loader; tests/test_concept_type_registry.py holds
+# registry == CHECK parity. Each types/<type>.yaml names one member (concept_type:).
+concept_types:
+  work: Catalog work record — the db-store row for one catalogued source.
+  digest: Per-work machine digest Concept (file-store, digests/).
+  note: Atomic claim/question/definition/work note (file-store, notes/).
+  hub: Topic hub carrying human salience (file-store, hubs/).
+  project: Output-driving project Concept (file-store, projects/).
+  capability: Registered capability (db-store registry row).
+  operation: Registered operation (db-store registry row).
+  skill: Registered skill (db-store registry row).
+  adapter: Registered external adapter (db-store registry row).
+  workflow: Registered workflow (db-store registry row).

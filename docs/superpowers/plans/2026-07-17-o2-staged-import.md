@@ -2,39 +2,102 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the O2 spec — multi-entry BibTeX/CSL import as a client-side loop over the shipped `capture-source` operation, with tiered adapters on the shipped item_type vocabulary, structural same-DOI dedupe plus cross-identifier duplicate flagging, one quiet run-scoped worklist per run, `import-run.v1` telemetry, and the pre-registered staged-import stop rule.
+**Goal:** Implement the O2 spec — multi-entry BibTeX/CSL import as a client-side loop over the selected capture operation (`capture-source` for baseline metadata rows, `capture-url-source` for mapped webpages, and the policy-bound `capture-remote-pdf-source` worker for eligible remote-PDF rows), with tiered adapters on the shipped item_type vocabulary, structural same-DOI dedupe plus cross-identifier duplicate flagging, one quiet run-scoped worklist per run, `import-run.v1` telemetry, and the pre-registered staged-import stop rule.
 
-**Architecture:** A new `runtime/bulk_import.py` owns entry splitting, payload building, adapter normalization, fetch synthesis, and collision detection; the CLI driver loops the existing operation per entry under run-scoped idempotency keys with catalog pre-check resume; the worklists seam gains raised_by/loudness passthrough; instrumentation rides the I1 telemetry plane. Spec of record: `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md` (main @ `51395f15`).
+**Architecture:** A new `runtime/bulk_import.py` owns entry splitting, payload building, adapter normalization, fetch synthesis, and collision detection; its pure router selects `capture-source`, `capture-url-source`, or the policy-bound `capture-remote-pdf-source` worker request, and the CLI driver loops that selected operation per entry under run-scoped idempotency keys with catalog pre-check resume. The worklists seam gains raised_by/loudness passthrough; instrumentation rides the I1 telemetry plane. Spec of record: `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md` (main @ `51395f15`).
 
 **Tech Stack:** Python 3 / SQLite / pytest; no new dependencies; no network in tests (injectable openers).
 
 ## Global Constraints
 
-- **Sequencing precondition (spec §1, verbatim): implementation may not begin until the I1 full-wiring plan is implemented and merged** — instrumentation precedes all ingestion; the seeded-error battery must be green before any real-vault import; schema-before-corpus stands.
+- **Sequencing precondition (per-task, binding):** P.1–P.3, A.1–A.3, and W.1
+  are I1-independent and may land first using disposable vaults; A.2 still
+  stops until O1 M.2's policy-bound resolver exists. W.2 stops until external
+  I1 T.1+T.2 are implemented and merged; W.3 stops until external I1 H.3 is
+  implemented and merged; O2's I.1 driver stitch stops until external I1 is
+  merged **and** #1517 records its finalization choice. No real-vault ingestion
+  is permitted before external I1 is fully merged, and no O2 driver/run
+  telemetry may emit before that #1517-gated finalizer. W.2's isolated
+  disposable-vault validator/dispatch test is permitted only after I1 T.1+T.2;
+  it does not authorize runtime O2 telemetry.
 - Correctness gate: `python scripts/verify`; PR + `verify`/`gitleaks`; squash merge; explicit-path staging; disposable vaults only.
 - Bulk admission is catalog-only, zero digests, fully keyless; the enrichment default flip (`--enrich`, off) is the one deliberate behavior change and is asserted as such.
 - 1000-scale anything is beta.2 (spec §8); nothing here may assume corpus sizes beyond the 100-work stage.
 - All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
 
+## Execution status — 2026-07-31
+
+- [x] **P.1 complete:** `d21b18fe` is an ancestor of `main`; it adds the
+  multi-entry BibTeX/CSL splitters and their contract registration.
+- [x] **P.2 complete:** `2a4d6bc1` is an ancestor of `main`; it adds the
+  bulk driver loop and the declared payload/ref seams with CLI coverage.
+- [x] **P.3 complete:** `b030ec84` is an ancestor of `main`; it makes
+  enrichment opt-in and adds the post-loop index-refresh behavior, tests, and
+  accompanying reference corrections.
+- [x] **A.1 complete:** `2b89062b` is an ancestor of `main`; it adds the
+  item-type normalization seam and its focused contract coverage.
+- [x] **A.2 complete under its execution amendment:** `8c1d0d41` is an
+  ancestor of `main`; it lands the policy-bound remote-PDF route and its
+  declared worker, capability, floor, test, and reference changes.
+- [x] **A.3 complete:** `143a3d45` is an ancestor of `main`; it adds exact
+  cross-identifier collision detection and the DOI-UNIQUE classifier.
+- [x] **W.1 complete:** `0dc8ec59` is an ancestor of `main`; it adds the
+  raised-by/loudness passthrough and run-scoped quiet import worklist.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **`runtime/bulk_import.py` module seams:** P.1's `split_bibtex_entries(text) -> list[str]` / `split_csl_entries(text) -> list[str]`; P.2's `build_entry_payload(fmt, entry_text) -> dict` (section A's interception point) and `entry_ref(fmt, entry_text, index) -> str` (citekey / CSL id / `entry-<index>` — the worklist item-ref vocabulary).
-2. **The driver result** (P.2/P.3 produce; W consumes): `{ok, run_id (uuid4 hex), format, entries_total, admitted: [work_id…], skipped: [work_id…], failed: [{ref, error}…], duplicates: […], index_refresh_s, enrichment…}` — `admitted`/`skipped` use the **catalog's** work_id vocabulary (SPEC GAP P-1); zero-rows-PRESENT is the failure exit; run-scoped keys `import-<run_id>-<work_id>`.
-3. **Adapter seams** (A produces): `_ENTRY_TYPE_MAP`, `entry_item_type(entry_fields) -> str` (shipped vocabulary `article/book/webpage/software/dataset/report`), `entry_type_mapped(entry_fields) -> bool`, `entry_fetch(entry_fields, identifiers) -> {method,url} | None` (PMCID→`pmc-oa`, arXiv→`arxiv-pdf`, `.pdf` URL→`pdf-url`, else None), `entry_capture_request(payload, fetch, *, mapped, opener)`, `detect_identifier_collisions(vault, work_id, identifiers) -> [{other_work_id, field}]`, `is_doi_collision_error(error) -> bool`.
+2. **Driver ownership:** P.2/P.3 produce only the baseline capture summary `{ok, run_id (uuid4 hex), format, entries_total, admitted: [work_id…], skipped: [work_id…], failed: [{ref, error}…], enrichment_jobs, index_refresh_s}`. The new I.1 integration task owns adapter application, duplicate/unmapped judgment rows, and the call into the W seams; `admitted`/`skipped` use the **catalog's** work_id vocabulary (SPEC GAP P-1), zero-rows-PRESENT is the failure exit, and keys remain `import-<run_id>-<work_id>`.
+3. **Adapter seams** (A produces): `_ENTRY_TYPE_MAP`, `entry_item_type(entry_fields) -> str` (shipped vocabulary `article/book/webpage/software/dataset/report`), `entry_type_mapped(entry_fields) -> bool`, `entry_fetch(entry_fields, identifiers) -> {method,url} | None` (PMCID→`pmc-oa`, arXiv→`arxiv-pdf`, `.pdf` URL→`pdf-url`, else None), `entry_capture_request(payload, fetch, *, mapped)`, `capture-remote-pdf-source` (PI-only worker operation; the sole O2 caller of O1's policy-bound resolver), `detect_identifier_collisions(vault, work_id, identifiers) -> [{other_work_id, field}]`, `is_doi_collision_error(error) -> bool`.
 4. **Worklist seams** (W produces): `emit_worklist(…, raised_by="worklists", loudness="notice")` passthrough (defaults = shipped behavior); `emit_import_worklist(vault, *, run_id, rows, entries_total, admitted) -> dict | None` (None on zero judgment rows — no worklist, no card); worklist id `import-<run_id>`; rows ranked duplicates → retraction → failed → unmapped.
-5. **Telemetry** (W produces): `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event` (typed ints, `format ∈ {bibtex, csl}`) in `engine/empirical_events.py`; dispatch branch in I1's `record_telemetry_event`; exactly one row per run.
-6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener)` is consumed by section A only (grep-first; if absent, land O1 M.2 first). I1's `runtime/telemetry.py` + seeded `decision-rules.yaml` are consumed by W.2/W.3 (grep-first; W.3 **blocks** with a stop-note if the I1 seed is absent). Section P consumes neither.
-7. **Execution order:** P.1 → P.2 → P.3 → A.1 → A.2 → A.3 → W.1 → W.2 → W.3 → W.4. The worker `capture-bibtex-source` auto-enrichment (a different surface) is **not** flipped (SPEC GAP P-5).
+5. **Telemetry** (W produces): `IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"` + `validate_import_run_event` (typed ints, `format ∈ {bibtex, csl}`) in `engine/empirical_events.py`; dispatch branch in I1's `record_telemetry_event`; the chosen I.1 finalizer emits exactly one row per run.
+6. **Cross-plan order tolerance:** O1 M.2's `resolve_fetch(row, *, opener, authorize_url)` is consumed only inside A.2's policy-bearing `capture-remote-pdf-source` worker operation (grep-first; if absent, land O1 M.2 first). W.1 consumes no external I1 seam and is disposable-vault-safe. W.2 consumes external I1 T.1+T.2's `runtime/telemetry.py`; W.3 consumes external I1 H.3's seeded `decision-rules.yaml`; both stop at their named absent seam. O2's I.1 calls the pure `entry_capture_request` and never fetches in the CLI process; it waits for external I1 and #1517's finalization choice. Section P consumes neither.
+7. **Execution order (partial, binding):** P.1 → P.2 → P.3 → A.1 → A.2 → A.3 → W.1 may land pre-I1. After external I1 T.1+T.2, W.2 may land; after external I1 H.3, W.3 may land. O2's I.1 driver stitch waits for external I1 full wiring and issue #1517's finalization decision; W.4 waits for W.1–W.3 and I.1. This preserves the seam order without falsely serializing independent work. The worker `capture-bibtex-source` auto-enrichment (a different surface) is **not** flipped (SPEC GAP P-5).
 8. **TEST_LEVELS:** `test_bulk_import.py: "contract"` (new, registered once in P.1; A and W extend it and other already-registered files with no further conftest change).
+
+---
+
+## Plan-reconciliation amendment — adapter/artifact integration and enrichment finality (2026-07-29)
+
+This amendment supersedes every earlier claim that P.2/P.3 itself calls
+`emit_import_worklist(...)` or `record_telemetry_event(...)`. P is deliberately a
+metadata-only baseline; A and W are deliberately independently testable seams. I.1
+is the only place allowed to compose them into the command driver.
+
+1. **I.1's non-negotiable immediate wiring:** for every entry it derives the
+   documented flat `entry_fields` shape (BibTeX: `{"type": entry_type,
+   **fields}`; CSL: the parsed CSL object), stamps `payload["item_type"]`, calls
+   `entry_fetch` and `entry_capture_request`, and preserves P's run-scoped
+   idempotency/pre-check rules. It collects unmapped, identifier-collision, DOI
+   collision, and failure rows using A.1–.3's exact helpers.  It records or
+   returns that collection only as **provisional run state**; it does not call
+   `emit_import_worklist` or telemetry itself before the #1517-selected
+   terminal finalizer can include delayed retraction rows.
+2. **Final-artifact invariant:** the component chosen by the finalization
+   decision calls `emit_import_worklist` at most once and
+   `record_telemetry_event(..., "import-run.v1", ...)` exactly once for a given
+   `run_id`; both calls occur only after the documented index-refresh boundary.
+   A zero-judgment run yields no worklist/card, never a fabricated empty artifact.
+3. **Blocked retraction boundary:** I.1 must not be implemented while
+   [#1517](https://github.com/eranroseman/memoria-vault/issues/1517) is open.
+   `--enrich` currently queues child jobs, but the required retraction facts arise
+   only when those jobs execute later. The issue must choose the durable finalizer,
+   synchronous enrichment, or an explicit requirement change; it also owns the
+   `run_id`, idempotency, failure/timeout, and delayed-enrichment test contract.
+4. **Acceptance retrieval is frozen and modal-correct.** W.4 requires R2 F.3,
+   not just LOOP.13 prose.  It reads the frozen Shape-2 fixture's id, topic,
+   `present@N` depth, and metric, records all four values, and invokes
+   `memoria explore "<topic>" --depth N --json`; only Shape 1 uses
+   `memoria ask`.  A stale `ask`-for-Shape-2 snippet below is superseded.
 
 ---
 # P — Multi-entry parsing + the driver loop
 
 Implements O2 spec §2 — entry iteration over the **unchanged** shipped builders, one worker request per entry under run-scoped idempotency keys `import-<run_id>-<work_id>`, resume via the `state.catalog_source` pre-check, per-row honesty with the zero-rows-PRESENT failure rule, the enrichment default flip behind `--enrich` (the one deliberate behavior change), and the explicit timed post-loop index refresh — slices 1–2 of spec §11. Spec §5's **structural same-DOI dedupe** lands here for free because it *is* the §2 skip path (same DOI ⇒ same `_bibtex_default_work_id` ⇒ pre-check hit ⇒ `skipped`), and P.2 pins it. Spec of record: `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md` (§2, §5 first bullet, §10's single-entry-unchanged and flip-asserted criteria). All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
 
-**Cross-plan order (binding).** The plan header's I1 precondition (2026-07-16-i1-full-wiring.md implemented + merged) governs the whole plan; section P itself consumes **no** I1 seam — it emits no telemetry. The `import-run.v1` emission (spec §6) belongs to this plan's telemetry section, which consumes P's run-summary dict (interface below) and I1's `record_telemetry_event(vault, event_type, payload) -> str` (`src/memoria_vault/runtime/telemetry.py`, I1 T.2) with that section's own grep-first tolerance. O1's `resolve_fetch(row, *, opener)` layer (`runtime/seed_install.py`, O1 M.2) is consumed by the adapter section (slice 3), **not** by P — P admits every entry through the shipped metadata-only capture path, so P has no O1 blocker. Grep-first anyway: `grep -rn "def resolve_fetch\|def record_telemetry_event" src/memoria_vault/` before starting — neither hit changes any P task; both absent is fine for P.
+**Cross-plan order (binding).** P.1–P.3, A.1–A.3, and W.1 are the complete I1-independent set: before external I1, each is disposable-vault-only and emits no telemetry. W.2 waits for external I1 T.1+T.2, W.3 waits for external I1 H.3, and the final artifact writer waits for O2 I.1 plus #1517's selected finalizer. The `import-run.v1` emission belongs to I.1's decision-selected finalizer, which consumes P's run summary and I1's `record_telemetry_event(vault, event_type, payload) -> str` (`src/memoria_vault/runtime/telemetry.py`, I1 T.2). O1's policy-bound `resolve_fetch(row, *, opener, authorize_url)` layer (`runtime/seed_install.py`, O1 M.2) is consumed only by A.2's PI-only remote-PDF worker; I.1 builds and enqueues that worker request but never invokes the resolver. P admits every entry through the shipped metadata-only capture path, so P has no O1 blocker. Grep-first anyway: `grep -rn "def resolve_fetch\|def record_telemetry_event" src/memoria_vault/` before starting; neither hit changes any P task.
 
-**What P deliberately does not do** (owned by later sections): item_type normalization + fetch synthesis (slice 3 consumes `build_entry_payload` as its interception point); cross-identifier duplicate flagging and the `doi UNIQUE` failure handler (slice 4 — `schema.sql:101` never fires in P because same-DOI entries are skipped before enqueue); worklist + quiet card minting (slice 5 consumes `entry_ref` and the `failed` rows; `emit_worklist` at `worklists.py:63-70` is untouched here); `import-run.v1` (slice 6 consumes the summary and its `index_refresh_s`).
+**What P deliberately does not do** (owned by later sections): item_type normalization + fetch synthesis (slice 3 consumes `build_entry_payload` as its interception point); cross-identifier duplicate flagging and the `doi UNIQUE` failure handler (slice 4 — `schema.sql:101` never fires in P because same-DOI entries are skipped before enqueue); worklist + quiet card minting, and `import-run.v1` emission (I.1 consumes `entry_ref`, P's summary, and the W seams after the adapter work lands). P must not gain a direct W call merely because old W prose named it as the stitch point.
 
 **Execution order:** P.1 → P.2 → P.3. Tests: `tmp_path` vaults only; no network anywhere in P (BibTeX/CSL `capture-source` payloads perform no fetch — offline by construction; the injectable-opener rule bites in the adapter section).
 
@@ -276,6 +339,11 @@ splitter seam; the shipped builders stay untouched.
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor d21b18fe main`
+> succeeded. `d21b18fe` creates `runtime/bulk_import.py` and
+> `tests/test_bulk_import.py`, and adds the declared `tests/conftest.py`
+> contract registration for P.1.
+
 ---
 
 ### Task P.2: The bulk driver loop in `_cmd_work_import`
@@ -291,6 +359,36 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 - Consumes: `state.catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None` (runtime/state.py:1603 — the O1 resume-pre-check pattern; it sanitizes `source_ref` internally, so raw payload work_ids match); `engine_api.run_operation(workspace, operation_id, payload, *, actor, idempotency_key=None, schedule_id=None, command="") -> {ok, job, result}` (engine/api.py:414-444); `_queue_import_enrichment(args, payload, output) -> dict | None` (cli.py:2101-2127, DOI-gated at :2109 — unchanged in this task: bulk keeps the shipped auto-enqueue default until P.3 flips it); `enqueue_operation`'s request-id derivation `job_id = safe_filename(idempotency_key)` (worker.py:123-141, paths.py:15-17) — makes bulk request ids greppable as `import-<run_id>-%`.
 - Produces: `build_entry_payload(fmt: str, entry_text: str) -> dict[str, Any]` and `entry_ref(fmt: str, entry_text: str, index: int) -> str` in `runtime/bulk_import.py` (the adapter section's normalization interception point and the worklist section's failed-row item-ref rule, respectively); `_bulk_work_import(args, entries) -> dict` returning `{ok, run_id, format, entries_total, admitted, skipped, failed:[{ref,error}], enrichment_jobs}` (P.3 adds `index_refresh_s`); run-scoped idempotency keys `import-<run_id>-<work_id>` with `run_id = uuid.uuid4().hex`.
+
+> **Execution amendment (2026-07-31): clean-slate import contract.** There are
+> no installed vaults to preserve, so every parsed input count — zero, one, or
+> many — takes `_bulk_work_import`; delete the single-entry branch and
+> `_read_csl_item`. This supersedes the compatibility amendment above and all
+> single-entry-preservation instructions in this task.
+>
+> 1. **Classify CSL only to make rows.** A JSON object becomes `[text]`; an
+>    array whose items are all objects (including `[]` and a one-item array)
+>    uses `split_csl_entries(text)`; malformed JSON, scalars, and arrays with a
+>    non-object become `[text]`. In every case the resulting list goes to the
+>    bulk driver. Invalid content is therefore one named failed row instead of
+>    a separate CLI error surface; `[]` remains the deliberate zero-row result.
+> 2. **Keep validation and failure rows local.** The per-entry `try` covers
+>    payload building, `work_id` extraction, `state.catalog_source(...)`, and
+>    `engine_api.run_operation(...)`. A `ValueError` from any seam appends
+>    `{ref: entry_ref(...), error: str(exc)}` and continues; a root-escaping
+>    Work ID is a named failed row rather than a run abort. Worker-result
+>    failures use the same `entry_ref(...)`, not a payload title/work-id
+>    fallback.
+> 3. **Mirror the shipped BibTeX parser for recoverable refs.** `_CITEKEY`
+>    accepts any nonempty entry-type text before its first `{` or `(`, as the
+>    shipped parser does (for example `@article-type{...}` and
+>    `@custom:type{...}`); a missing type still falls back to `entry-<index>`.
+> 4. **Additional pins.** One-entry BibTeX and CSL imports report the normal
+>    bulk summary and use `enrichment_jobs`; invalid CSL values report one
+>    `entry-1` failed row. Empty BibTeX and `[]` CSL return `ok: false`,
+>    `entries_total: 0`, and no capture requests. A caller-supplied
+>    `--idempotency-key` is ignored for every count in favor of
+>    `import-<run_id>-...` request IDs.
 
 - [ ] **Step 1: Write the failing contract tests** — append to `tests/test_bulk_import.py`:
 
@@ -692,6 +790,10 @@ byte-identical.
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 2a4d6bc1 main`
+> succeeded. `2a4d6bc1` changes the P.2-declared CLI driver and bulk-import
+> seams, with the corresponding bulk-import and work-project test coverage.
+
 ---
 
 ### Task P.3: The enrichment default flip (`--enrich`) + the timed post-loop index refresh
@@ -701,6 +803,12 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Modify `src/memoria_vault/cli.py` — import parser block (cli.py:207-211), `_cmd_work_import` / `_bulk_work_import` (as landed by P.2; re-anchor by symbol)
 - Modify `tests/test_cli_work_project.py` — the auto-enrichment sweep (`:14-70` shipped test; P.2's transitional assert) + new default/flag tests
 - Modify `docs/reference/commands-and-transports/system-actions-operations.md` — line 87, the `memoria work import --format csl` row's behavior claim
+- Modify `docs/reference/pipelines-and-io/ingest.md` — the BibTeX and CSL
+  import rows: both describe the CLI's `capture-source` route, multi-entry
+  admission, and opt-in enrichment.
+- Modify `docs/reference/evidence-and-integrations/integrations.md` — the
+  Zotero + Better BibTeX row: replace automatic enrichment with the
+  `--enrich` / newly-admitted DOI rule.
 
 **Interfaces:**
 
@@ -708,6 +816,28 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Produces: `memoria work import --enrich` (`store_true`, default **off** — the one deliberate behavior change, single-entry and bulk alike); `index_refresh_s: float` in the bulk run summary (`0.0` when nothing was admitted — GAP 4), which the telemetry section maps to `import-run.index_refresh_s` (spec §6).
 - **LOOP.1 order tolerance (grep-first):** before writing the refresh call, run `grep -rn "stale_checked_search_documents\|refresh_stale" src/memoria_vault/runtime/`. If LOOP.1's incremental checked-search refresh has landed, call that seam inside the same timing envelope instead; if absent (only `indexing.refresh_stale_passages` hits, which is the passage layer, not the checked search index), keep the whole-index `rebuild_checked_search_index_explicit` — honestly the whole-index rebuild time, per spec §2.
 - The command-surface pin (`test_cli_command_surface_is_exact`, tests/test_cli.py:73-146) pins commands, not flags — `--enrich` needs no surface-test change; the doc-claims gate checks CLI *paths*, so the new flag and the P.3 doc edit keep it green (spec §10's "no new CLI surface beyond the existing `work import` flags plus `--enrich`").
+
+> **Execution amendment (2026-07-30): complete the public import-doc handoff.**
+> The P.3 file list originally omitted
+> `docs/reference/pipelines-and-io/ingest.md`, whose BibTeX and CSL rows still
+> describe a one-entry, auto-enriching import and name the CLI's BibTeX path as
+> `capture-bibtex-source`. Update both rows to say that `work import` admits
+> each supplied entry through `capture-source` into unchecked catalog metadata
+> and its raw blob; `--enrich` queues a DOI enrichment request only for each
+> newly admitted DOI-bearing entry. Leave
+> `system-actions-operations.md`'s separate `capture-bibtex-source` worker row
+> unchanged: it documents that distinct worker surface, not the CLI route.
+> Update `docs/reference/evidence-and-integrations/integrations.md`'s
+> bibliographic-input row too, so no published reference still promises
+> automatic import enrichment.
+
+> **Execution amendment (2026-07-31): one retry rule for every import.** The
+> bulk driver alone prechecks `state.catalog_source(...)`, mints the run-scoped
+> request key, and queues `--enrich` only for newly admitted DOI-bearing rows.
+> A one-entry retry is consequently a normal bulk skip: it has
+> `enrichment_jobs: []` and leaves exactly one `enrich-source` request in the
+> database. There is no single-entry precheck, idempotency behavior, or error
+> surface to preserve.
 
 - [ ] **Step 1: Write the failing tests** — append to `tests/test_cli_work_project.py`:
 
@@ -894,8 +1024,18 @@ def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
 # old
 | Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses one CSL-JSON item into unchecked catalog metadata, a raw `.csl.json` blob, and a DOI enrichment request when a DOI is present. |
 # new
-| Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses each CSL-JSON item into unchecked catalog metadata and a raw `.csl.json` blob; `--enrich` also queues a DOI enrichment request when a DOI is present. |
+| Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses each CSL-JSON item into unchecked catalog metadata and a raw `.csl.json` blob; `--enrich` also queues a DOI enrichment request for each newly admitted item when a DOI is present. |
 ```
+
+  In `docs/reference/pipelines-and-io/ingest.md`, update both `work import`
+  rows under **Pipeline contract** to use the same CLI-owned `capture-source`
+  route and opt-in, newly-admitted DOI wording. Do not change its row for the
+  distinct worker operation `capture-bibtex-source` because that surface keeps
+  its own auto-enrichment behavior.
+
+  In `docs/reference/evidence-and-integrations/integrations.md`, replace the
+  Zotero + Better BibTeX row's automatic-enrichment claim with the same
+  `work import --enrich` / newly-admitted DOI rule.
 
 - [ ] **Step 5: Run to pass, then the full gate** — `python -m pytest tests/test_cli_work_project.py tests/test_bulk_import.py -q` → all pass. Then `python scripts/verify` → green (lint, product gates, tests, offline smoke, syntax; the doc-claims gate stays green — `memoria work import` is a real CLI path and no new command was added).
 
@@ -903,7 +1043,9 @@ def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_cli_work_project.py \
-  docs/reference/commands-and-transports/system-actions-operations.md
+  docs/reference/commands-and-transports/system-actions-operations.md \
+  docs/reference/pipelines-and-io/ingest.md \
+  docs/reference/evidence-and-integrations/integrations.md
 git commit -m "feat(import): flip enrichment to opt-in --enrich; timed post-loop index refresh (O2 P.3)
 
 The one deliberate O2 behavior change: work import no longer auto-queues
@@ -913,13 +1055,18 @@ whole-index refresh into index_refresh_s (LOOP.1 order tolerance noted).
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor b030ec84 main`
+> succeeded. `b030ec84` changes the P.3 CLI and work-project coverage and the
+> three declared reference pages for opt-in enrichment and index refresh.
+
 # A — Adapter normalization + duplicates
 
 This section implements spec §4 (per-type adapter matrix: the normalization dict + heuristics onto the **shipped** `item_type` vocabulary, and the fetch-synthesis rule over the O1 resolve layer) and spec §5 (duplicates: identifier-exact detection, the `doi UNIQUE` failure classifier, the same-DOI structural skip) — implementation slices 3–4 of `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md`.
 
-Everything lands in a new `src/memoria_vault/runtime/bulk_import.py` as pure seams the driver-loop section wires into the entry loop; **no `cli.py` or `capture.py` change happens here** (single-entry parse/admission stays pinned, per slice 1). The normalization point is a decided contract: the driver calls the unchanged shipped builders (`bibtex_capture_payload` capture.py:295-329 / `csl_capture_payload` capture.py:332-364), then stamps `payload["item_type"] = entry_item_type(...)` — necessary because the shipped CSL builder passes the raw CSL type straight through (`capture.py:358`, e.g. `article-journal`), which is not the shipped catalog vocabulary. Shipped `_item_type` (capture.py:843-854) is **not duplicated as logic and not called from product code**: it silently maps every unknown type to `article`, which is exactly the behavior the §4 flag must not inherit. Instead the bulk map is one explicit dict (the spec's "the mapping ships as code; this table is its documentation"), and a parity test pins its BibTeX rows to `_item_type` so the two can never drift.
+This section extends P.1's existing `src/memoria_vault/runtime/bulk_import.py` with pure seams; **no `cli.py` or `capture.py` change happens here** (single-entry parse/admission stays pinned, per slice 1). A.2 additionally creates one policy-bearing worker operation for remote PDF bytes; it reuses `stage_pdf_source` unchanged. I.1 is the only task allowed to wire the adapter seams into the entry loop. The normalization point is a decided contract: it stamps `payload["item_type"] = entry_item_type(...)` after the unchanged shipped builders (`bibtex_capture_payload` capture.py:295-329 / `csl_capture_payload` capture.py:332-364), because the shipped CSL builder passes the raw CSL type straight through (`capture.py:358`, e.g. `article-journal`), which is not the shipped catalog vocabulary. Shipped `_item_type` (capture.py:843-854) is **not duplicated as logic and not called from product code**: it silently maps every unknown type to `article`, which is exactly the behavior the §4 flag must not inherit. Instead the bulk map is one explicit dict (the spec's "the mapping ships as code; this table is its documentation"), and a parity test pins its BibTeX rows to `_item_type` so the two can never drift.
 
-Cross-plan preconditions honored here: the plan-level I1 gate is carried by the plan header (this section emits no telemetry and does not consume `record_telemetry_event`); Task A.2 consumes O1's `resolve_fetch(row, *, opener)` (`runtime/seed_install.py`, O1 plan Task M.2 — merged but possibly unexecuted), so A.2 opens with a grep-first dependency check and lands O1 M.2 first if the symbol is absent.
+Cross-plan preconditions honored here: A.1–A.3 are I1-independent, disposable-vault-only pre-I1 work; this section emits no telemetry and must not be used for real-vault ingestion before external I1 is merged. Task A.2 alone consumes O1's `resolve_fetch(row, *, opener, authorize_url)` inside its policy-bearing worker operation (`runtime/seed_install.py`, O1 plan Task M.2 — merged but possibly unexecuted), so A.2 opens with a grep-first dependency check and lands O1 M.2 first if the symbol is absent. The CLI-side adapter stays a pure request builder.
 
 Line references verified at `51395f15`; re-anchor by symbol if drifted.
 
@@ -927,55 +1074,76 @@ Line references verified at `51395f15`; re-anchor by symbol if drifted.
 
 **Files:**
 
-- Create `src/memoria_vault/runtime/bulk_import.py`
-- Create `tests/test_bulk_import.py`
-- Modify `tests/conftest.py` — `TEST_LEVELS` dict at :18 (register the new file; A.2/A.3 extend the registered file with no further conftest change)
+- Modify `src/memoria_vault/runtime/bulk_import.py`
+- Modify `tests/test_bulk_import.py`
 
 **Interfaces:**
 
 - Consumes: shipped `_item_type(entry_type: str) -> str` (capture.py:843-854, parity-pinned by test only — never called from `bulk_import.py`); `csl_capture_payload` raw-type passthrough (capture.py:358, demonstrated by test); the shipped vocabulary `article/book/webpage/software/dataset/report` (schema.sql:105 default `'article'`, no CHECK — the reserved CHECK reshape is substrate work, not O2).
 - Produces: `entry_item_type(entry_fields: dict[str, Any]) -> str` and `entry_type_mapped(entry_fields: dict[str, Any]) -> bool` (False ⇒ the §4 "unknown → reference-only as `article` + worklist mapping row" flag; the driver section consumes both), plus module constant `_ENTRY_TYPE_MAP`. `entry_fields` is one flat dict serving both formats: for BibTeX the driver passes `{"type": entry["entry_type"], **entry["fields"]}` (field keys are lowercased by `_parse_bibtex_fields`, capture.py:793); for CSL it passes the raw item (keys `type`/`URL`/`DOI`).
 
+> **Execution amendment (2026-07-30): extend the landed P.1 seam.**
+> P.1 created and registered `runtime/bulk_import.py` and
+> `tests/test_bulk_import.py` (P.2 extended them); A.1 appends its constants/functions and seven
+> normalization tests to those existing files, without a `conftest.py` edit.
+> Its RED proof is therefore an `ImportError` for missing `entry_item_type`, not
+> a module `ModuleNotFoundError`; its GREEN target is 16 tests in that file.
+> Preserve the P.1 splitter explanation in the module docstring and extend it
+> with the normalization rationale rather than replacing it. In addition to the
+> BibTeX lowercase heuristics, pin CSL's raw uppercase `URL`/`DOI` keys so the
+> promised shared flat-entry interface cannot silently drift toward one format.
+> A schemeless repository host path (for example `github.com/org/repo`) also
+> counts as a repo-host URL: parse it as a network location only when it has no
+> scheme, while retaining exact-host/subdomain matching so
+> `github.com.evil/...` remains an ordinary webpage.
+> The historical Step 1 and Step 3 code blocks below supply the adapter
+> additions only: retain the existing splitter imports, tests, helpers, and
+> docstring instead of replacing either P.1-created file wholesale.
+
 Decisions made here (spec gaps resolved inline, recorded in the module docstring):
 - `@misc` heuristic precedence: **repo-host URL → `software`** first, then **DataCite DOI prefix → `dataset`**, then **any URL → `webpage`**, else unmappable (`article` + flagged). Rationale: Zenodo software deposits carry DataCite DOIs *and* repo URLs; the URL is the stronger signal.
 - The DataCite prefix heuristic is a curated frozenset of eight common data-repository prefixes (Zenodo, Dryad, figshare, Harvard Dataverse, Mendeley Data, ICPSR, GBIF, UCI ML) — offline and keyless, extension is a one-line diff. The spec names the heuristic without naming prefixes.
 - BibTeX `@conference` (alias of `@inproceedings`) maps to `article`, mirroring `_csl_type`'s `inproceedings|conference` handling (capture.py:981); it is absent from the spec table but shipped-consistent.
 
-- [ ] **Step 0: Order-tolerance check** — `grep -n "def entry_item_type" src/memoria_vault/runtime/bulk_import.py 2>/dev/null`. If the module already exists (another O2 section landed first), append the constants/functions from Step 3 into it instead of creating the file, and skip the conftest edit if `test_bulk_import.py` is already registered. At `51395f15` neither exists.
+- [ ] **Step 0: Order-tolerance check** — `grep -n "def entry_item_type" src/memoria_vault/runtime/bulk_import.py 2>/dev/null`. P.1 already created this module and registered `test_bulk_import.py`, so append the constants/functions and tests; do not edit `conftest.py`.
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_bulk_import.py`:
+- [ ] **Step 1: Write the failing tests** — append to the existing
+  `tests/test_bulk_import.py` and extend its existing imports:
 
 ```python
-"""Contract tests for the bulk-import adapter layer (O2 spec sections 4-5).
+# Extend the existing grouped import; retain its splitter helpers and tests.
+from memoria_vault.runtime.bulk_import import (
+    entry_item_type,
+    entry_type_mapped,
+    split_bibtex_entries,
+    split_csl_entries,
+)
 
-Everything here is offline: no network, no default openers, tmp_path vaults
-only (later tasks). The section-4 table is exercised as code assertions.
-"""
-
-from __future__ import annotations
-
-from memoria_vault.runtime.bulk_import import entry_item_type, entry_type_mapped
+# Append the following seven adapter contract tests.
 
 
 def test_entry_item_type_maps_bibtex_and_csl_types_onto_shipped_vocabulary() -> None:
-    # BibTeX rows of the spec section-4 table.
-    assert entry_item_type({"type": "article"}) == "article"
-    assert entry_item_type({"type": "inproceedings"}) == "article"
-    assert entry_item_type({"type": "incollection"}) == "article"
-    assert entry_item_type({"type": "book"}) == "book"
-    assert entry_item_type({"type": "techreport"}) == "report"
-    assert entry_item_type({"type": "phdthesis"}) == "report"
-    assert entry_item_type({"type": "online", "url": "https://example.test/post"}) == "webpage"
-    # CSL rows of the table.
-    assert entry_item_type({"type": "article-journal"}) == "article"
-    assert entry_item_type({"type": "paper-conference"}) == "article"
-    assert entry_item_type({"type": "chapter"}) == "article"
-    assert entry_item_type({"type": "thesis"}) == "report"
-    assert entry_item_type({"type": "post-weblog"}) == "webpage"
-    assert entry_item_type({"type": "webpage"}) == "webpage"
-    assert entry_item_type({"type": "software"}) == "software"
-    assert entry_item_type({"type": "dataset"}) == "dataset"
-    assert entry_item_type({"type": "report"}) == "report"
+    cases = (
+        ({"type": "article"}, "article"),
+        ({"type": "inproceedings"}, "article"),
+        ({"type": "incollection"}, "article"),
+        ({"type": "book"}, "book"),
+        ({"type": "techreport"}, "report"),
+        ({"type": "phdthesis"}, "report"),
+        ({"type": "online", "url": "https://example.test/post"}, "webpage"),
+        ({"type": "article-journal"}, "article"),
+        ({"type": "paper-conference"}, "article"),
+        ({"type": "chapter"}, "article"),
+        ({"type": "thesis"}, "report"),
+        ({"type": "post-weblog"}, "webpage"),
+        ({"type": "webpage"}, "webpage"),
+        ({"type": "software"}, "software"),
+        ({"type": "dataset"}, "dataset"),
+        ({"type": "report"}, "report"),
+    )
+    for fields, expected in cases:
+        assert entry_item_type(fields) == expected
+        assert entry_type_mapped(fields) is True
 
 
 def test_entry_item_type_agrees_with_shipped_item_type_for_bibtex_aliases() -> None:
@@ -1029,18 +1197,33 @@ def test_misc_repo_host_url_maps_to_software_and_wins_over_dataset_doi() -> None
     assert entry_item_type({"type": "misc", "url": "https://gitlab.com/o/r"}) == "software"
     assert entry_item_type({"type": "misc", "url": "https://codeberg.org/o/r"}) == "software"
     assert entry_item_type({"type": "misc", "url": "https://gist.github.com/o/1"}) == "software"
+    csl_fields = {"type": "misc", "URL": "https://github.com/o/r"}
+    assert entry_item_type(csl_fields) == "software"
+    assert entry_type_mapped(csl_fields) is True
+    assert entry_item_type({"type": "misc", "url": "github.com/o/r"}) == "software"
+    assert entry_item_type({"type": "misc", "url": "github.com.evil/o/r"}) == "webpage"
+    assert entry_item_type({"type": "misc", "url": "github.com:thing"}) == "webpage"
 
 
 def test_misc_datacite_doi_prefix_maps_to_dataset() -> None:
-    fields = {"type": "misc", "doi": "10.5061/dryad.abc123"}
-    assert entry_item_type(fields) == "dataset"
-    assert entry_type_mapped(fields) is True
+    for prefix in (
+        "10.5281", "10.5061", "10.6084", "10.7910", "10.17632", "10.3886", "10.15468", "10.24432"
+    ):
+        fields = {"type": "misc", "doi": f"{prefix}/fixture"}
+        assert entry_item_type(fields) == "dataset", prefix
+        assert entry_type_mapped(fields) is True, prefix
+    csl_fields = {"type": "misc", "DOI": "10.5061/dryad.abc123"}
+    assert entry_item_type(csl_fields) == "dataset"
+    assert entry_type_mapped(csl_fields) is True
 
 
 def test_misc_with_plain_url_maps_to_webpage() -> None:
     fields = {"type": "misc", "url": "https://example.org/page"}
     assert entry_item_type(fields) == "webpage"
     assert entry_type_mapped(fields) is True
+    csl_fields = {"type": "misc", "URL": "https://example.org/page"}
+    assert entry_item_type(csl_fields) == "webpage"
+    assert entry_type_mapped(csl_fields) is True
 
 
 def test_unknown_types_fall_back_to_article_and_are_flagged() -> None:
@@ -1055,39 +1238,19 @@ def test_unknown_types_fall_back_to_article_and_are_flagged() -> None:
     assert entry_type_mapped({"type": "article"}) is True
 ```
 
-- [ ] **Step 2: Register the file and watch the tests fail** — in `tests/conftest.py`, add to `TEST_LEVELS` (alphabetical slot, before `test_bundle_roots.py`):
+- [ ] **Step 2: Watch the extended tests fail** — `test_bulk_import.py` is
+  already registered as `contract` by P.1, so do not edit `tests/conftest.py`.
+  Run `python -m pytest tests/test_bulk_import.py -v` → collection error:
+  `ImportError: cannot import name 'entry_item_type'`.
+
+- [ ] **Step 3: Minimal implementation** — append to
+  `src/memoria_vault/runtime/bulk_import.py`, preserving the P.1/P.2 helpers
+  and extending their module docstring:
 
 ```python
-    "test_bulk_import.py": "contract",
-```
-
-(exact edit: replace the line `    "test_bundle_roots.py": "contract",` with the two lines `    "test_bulk_import.py": "contract",` and `    "test_bundle_roots.py": "contract",`.)
-
-Run `python -m pytest tests/test_bulk_import.py -v` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.runtime.bulk_import'`.
-
-- [ ] **Step 3: Minimal implementation** — create `src/memoria_vault/runtime/bulk_import.py`:
-
-```python
-"""Bulk-import adapter layer: normalization, fetch synthesis, duplicates.
-
-Implements sections 4-5 of the O2 staged-import design
-(docs/superpowers/specs/2026-07-17-o2-staged-import-design.md). The
-section-4 table is documentation for _ENTRY_TYPE_MAP below -- the mapping
-ships here as code. The driver stamps entry_item_type over the unchanged
-shipped builders' payloads (csl_capture_payload passes raw CSL types
-through; capture.py's _item_type maps unknowns to article silently, so it
-is parity-pinned by test but never called from here).
-
-Decided heuristic order for @misc: repo-host URL -> software, then
-DataCite DOI prefix -> dataset, then any URL -> webpage (a Zenodo software
-deposit carries a DataCite DOI *and* a repo URL; the URL is the stronger
-signal). The DataCite prefixes are a curated offline list, not a registry
-lookup.
-"""
-
-from __future__ import annotations
-
-from typing import Any
+# Retain P.1's module docstring/imports/helpers. Add this import beside its
+# existing stdlib imports, extend its docstring with the decided precedence,
+# then append the following constants/functions after entry_ref.
 from urllib.parse import urlparse
 
 #: One dict over the union of BibTeX entry types and CSL item types, onto
@@ -1169,43 +1332,218 @@ def _entry_url(entry_fields: dict[str, Any]) -> str:
     return str(entry_fields.get("url") or entry_fields.get("URL") or "").strip()
 
 
-def _entry_doi(entry_fields: dict[str, Any]) -> str:
-    return str(entry_fields.get("doi") or entry_fields.get("DOI") or "").strip()
-
-
 def _doi_prefix(entry_fields: dict[str, Any]) -> str:
-    return _entry_doi(entry_fields).partition("/")[0]
+    doi = str(entry_fields.get("doi") or entry_fields.get("DOI") or "").strip()
+    return doi.partition("/")[0]
 
 
 def _is_repo_host(url: str) -> bool:
-    host = (urlparse(url).hostname or "").lower()
+    parsed = urlparse(url)
+    if not parsed.hostname and not parsed.scheme and not url.startswith("//"):
+        parsed = urlparse(f"//{url}")
+    host = (parsed.hostname or "").lower()
     return any(host == repo or host.endswith(f".{repo}") for repo in _REPO_HOSTS)
 ```
 
-- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 7 passed.
+- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 16 passed.
 
 - [ ] **Step 5: Commit** —
 
 ```
-git add src/memoria_vault/runtime/bulk_import.py tests/test_bulk_import.py tests/conftest.py
+git add src/memoria_vault/runtime/bulk_import.py tests/test_bulk_import.py
 git commit -m "feat(bulk-import): normalization dict + heuristics onto shipped item_type vocabulary
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 2b89062b main`
+> succeeded. `2b89062b` changes only A.1's declared `runtime/bulk_import.py`
+> normalization seam and `tests/test_bulk_import.py` coverage.
+
+> **Execution amendment — policy-bearing remote-PDF route (2026-07-30).**
+> This replaces A.2's Files block and Steps 1–5 in their entirety; do **not**
+> execute the historical blocks below. It also replaces A.2's CLI-side
+> `resolve_fetch` call, its `opener` parameter, its `capture-pdf-source` byte
+> payload, and the "no `capture.py`/worker change" claim in the A-section
+> preamble. Imported fetch descriptors are untrusted input; a pure adapter
+> cannot authorize or execute them.
+>
+> 1. **Preflight and ownership.** Grep for O1's final
+>    `resolve_fetch(... authorize_url ...)` interface. If it is absent, stop
+>    and land the amended O1 M.2 first. Do not add an allow-all callback or a
+>    direct CLI fetch. `entry_capture_request(payload, fetch, *, mapped=True)`
+>    remains pure: it imports no fetch module, accepts no opener, and for an
+>    allowed article/report fetch returns `("capture-remote-pdf-source",
+>    request)` with `request["fetch"]` and a separate `request["capture"]`
+>    object containing the existing work/title/description/resource/item-type/
+>    identifier/CSL/citekey fields. It must not contain `raw_pdf_base64`.
+> 2. **New worker operation.** Create the packaged
+>    `capture-remote-pdf-source` operation, a `worker.py` dispatch helper, and
+>    its floor-registry entry. It is `PROTECTED_OPERATION_ACTORS` **PI-only**:
+>    metadata supplied by an imported file cannot cause an agent-actor network
+>    request. Its capability manifest declares source-content/journal paths and
+>    exactly the same finite HTTPS policy as O1 M.3:
+>
+>    ```yaml
+>    allowed_network:
+>    - https://www.ncbi.nlm.nih.gov/pmc/utils/oa/
+>    - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/
+>    - https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/
+>    - https://www.frontiersin.org/articles/
+>    - https://aclanthology.org/
+>    - https://sociologica.unibo.it/article/download/
+>    - https://export.arxiv.org/pdf/
+>    ```
+>
+>    The helper validates the nested request fields, calls
+>    `resolve_fetch({"id": work_id, "title": title, "fetch": fetch},
+>    authorize_url=lambda url: require_allowed_network(policy, url))`, then
+>    supplies the resulting bytes to `stage_pdf_source` with the same metadata
+>    contract as `capture-pdf-source`. The resolver's validation, no-redirect,
+>    XML, and byte/archive limits therefore apply before any catalog write.
+>    An arbitrary imported `.pdf` host is a named per-row policy failure, never
+>    a silent metadata downgrade or payload-controlled allowance; a PI-managed
+>    allowlist design is separate future work.
+> 3. **RED tests.** Replace the old base64/opener assertions with pure-request
+>    assertions for article PMC/arXiv/direct-PDF and direct-PDF report routes;
+>    all metadata/reference-only tiers still return `capture-source`, and
+>    webpage remains the existing `capture-url-source` request. Add focused
+>    worker tests that inject canned resolver bytes, prove the resolver receives
+>    the operation-policy authorizer, prove a host outside the seven prefixes
+>    refuses before its opener, and prove an `agent` floor/job is refused before
+>    the helper. Pin the exact seven-prefix policy in `test_capabilities.py`,
+>    update the stale operation-count comments in `floor_lib.py` and
+>    `test_floor_coverage.py`, and use no live network.
+> 4. **I.1 handoff.** I.1 continues to call the pure request builder and
+>    enqueue its returned operation under P's run-scoped key. It may not resolve
+>    bytes itself; a remote-PDF failure is the worker job's per-row failure for
+>    the existing run summary. Its offline CLI test monkeypatches
+>    `seed_install._default_opener`, never injects an opener through the CLI.
+>    Update the ingest and operation-roster docs at
+>    `docs/reference/pipelines-and-io/ingest.md`,
+>    `docs/reference/commands-and-transports/system-actions.md`,
+>    `docs/reference/commands-and-transports/system-actions-operations.md`, and
+>    `docs/reference/commands-and-transports/operations.md`. Re-run M.2's
+>    resolver suite, A.2's adapter and worker tests, `git diff --check`, the
+>    scoped security-diff review, and the full verify gate before explicitly
+>    staging the listed files.
+>
+> **Replacement steps — use these instead of A.2 Steps 0–5 below.** The legacy
+> code fences remain only for historical context; they must not be copied or
+> executed.
+>
+> **Execution clarification — cross-format identifiers (2026-07-30).**
+> `csl_capture_payload()` carries DOI/ISBN by default, so A.2's pure
+> `build_entry_payload()` adapter must also preserve nonempty case-insensitive
+> `PMCID`/`arXiv` fields as canonical `pmcid`/`arxiv` identifiers. `entry_fetch`
+> recognizes the same raw-field fallback. This keeps I.1's existing
+> `entry_fetch(entry_fields, payload["identifiers"])` handoff complete for both
+> formats and preserves identifiers for A.3 collision checks; it does not grant
+> the adapter any fetch or authorization authority.
+>
+> **Execution clarification — bounded PDF extraction (2026-07-30).**
+> The shared `stage_pdf_source()` seam must reject a PDF before catalog staging
+> when it exceeds 1,000 pages or 8 MiB of cumulative UTF-8 extracted text.
+> This prevents an allowed remote PDF from causing unbounded retained parser
+> output; it applies equally to the existing local-PDF path. Add
+> `src/memoria_vault/runtime/capture.py` and `tests/test_capture.py` to the
+> explicit Step 5 staging list below. The cap is a resource guard, not an
+> authorization substitute or a native-parser sandbox.
+>
+> 1. **Preflight + RED.** Run `test -f
+>    src/memoria_vault/runtime/seed_install.py` and `rg -n
+>    "def resolve_fetch|authorize_url" src/memoria_vault/runtime/seed_install.py`;
+>    either failure is a stop condition. Replace the legacy adapter tests with
+>    pure-router assertions: PMCID/arXiv/direct-PDF article routes and a
+>    direct-PDF report route return `capture-remote-pdf-source` with exact
+>    nested `{"fetch": {"method", "url"}, "capture": {...}}` data, no
+>    `raw_pdf_base64`, and no `opener` argument or import. Preserve the existing
+>    metadata/reference-only and webpage assertions. Add worker tests using a
+>    monkeypatched M.2 default opener: an allowed fixture PDF is staged through
+>    the existing capture seam; an outside-seven-prefix URL is refused before
+>    that opener; an `agent` actor/floor entry is refused before the helper.
+>    Pin the exact capability policy in `tests/test_capabilities.py`.
+> 2. **Run RED.** Run
+>    `python -m pytest tests/test_bulk_import.py tests/test_worker_capture_jobs.py
+>    tests/test_capabilities.py tests/test_floor_coverage.py -v`. Expect missing
+>    remote-operation/dispatch/roster coverage or the obsolete direct-fetch
+>    expectations to fail; do not use live network.
+> 3. **Implement the policy boundary.** Keep `entry_fetch`'s synthesis rules,
+>    but remove `base64`, `Callable`, `safe_filename`, every `opener` parameter,
+>    and the `resolve_fetch` import from `bulk_import.py`. Its eligible route is
+>    exactly:
+>
+>    ```python
+>    return (
+>        "capture-remote-pdf-source",
+>        {
+>            "fetch": {"method": str(fetch["method"]), "url": str(fetch["url"])},
+>            "capture": {
+>                "work_id": work_id,
+>                "title": str(payload.get("title") or work_id),
+>                "description": str(payload.get("description") or ""),
+>                "resource": resource or str(fetch["url"]),
+>                "item_type": item_type,
+>                "identifiers": payload.get("identifiers"),
+>                "csl_json": payload.get("csl_json"),
+>                "citekey": str(payload.get("citekey") or ""),
+>                "provider_coverage": str(payload.get("provider_coverage") or "partial"),
+>            },
+>        },
+>    )
+>    ```
+>
+>    In `worker.py`, validate both nested objects, require `work_id`, `title`,
+>    and `description`, and require object-shaped `identifiers`/`csl_json` when
+>    present; obtain bytes solely from `resolve_fetch` and never validate or
+>    read `raw_pdf_base64`. Add a PI-only
+>    `_run_capture_remote_pdf_source_operation(vault, payload, policy, context)`
+>    that calls M.2 with `authorize_url=lambda url:
+>    require_allowed_network(policy, url)`, then calls `stage_pdf_source` and
+>    returns `_source_result`, deriving `raw_filename` there as
+>    `f"{safe_filename(work_id)}.pdf"` and forwarding `provider_coverage`.
+>    Add the dispatch branch, the operation manifest with the seven prefixes in
+>    the preceding amendment, and the deterministic agent-refused floor entry.
+>    Leave `capture-pdf-source` and the broad HTML `capture-url-source`
+>    unchanged.
+> 4. **Docs + GREEN.** Describe this internal, policy-bound remote-PDF route
+>    and its seven-prefix limit in the four listed reference pages; it is not a
+>    new CLI command. Update the operation-count comments. Re-run the focused
+>    suites plus `python -m pytest tests/test_seed_install.py -v` until green.
+> 5. **Verify + commit.** Run `git diff --check`, the scoped security-diff
+>    review, and `python scripts/verify`; then stage and commit explicitly:
+>
+>    ```bash
+>    git add -- src/memoria_vault/runtime/bulk_import.py src/memoria_vault/runtime/capture.py src/memoria_vault/runtime/worker.py src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md tests/test_bulk_import.py tests/test_capture.py tests/test_worker_capture_jobs.py tests/test_capabilities.py tests/fixtures/floor/goldens/regenerate-capability-index.json tests/floor_lib.py tests/test_floor_coverage.py docs/reference/pipelines-and-io/ingest.md docs/reference/commands-and-transports/system-actions.md docs/reference/commands-and-transports/system-actions-operations.md docs/reference/commands-and-transports/operations.md project-words.txt
+>    git commit -m "feat(bulk-import): route imported PDFs through a policy-bound worker"
+>    ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 8c1d0d41 main`
+> succeeded. `8c1d0d41` implements this adopted policy-bearing remote-PDF
+> replacement, including the worker/capability/floor changes and focused test
+> coverage named above. The historical A.2 blocks below remain documentary.
 
 ### Task A.2: Fetch synthesis + admission-tier routing (`entry_fetch`, `entry_capture_request`)
 
 **Files:**
 
 - Modify `src/memoria_vault/runtime/bulk_import.py`
+- Modify `src/memoria_vault/runtime/worker.py` (PI gate, policy-bearing remote-PDF dispatch)
+- Create `src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md`
 - Modify `tests/test_bulk_import.py`
+- Modify `tests/test_worker_capture_jobs.py`, `tests/test_capabilities.py`, `tests/floor_lib.py`, and `tests/test_floor_coverage.py`
+- Modify `docs/reference/pipelines-and-io/ingest.md`, `docs/reference/commands-and-transports/system-actions.md`, `docs/reference/commands-and-transports/system-actions-operations.md`, and `docs/reference/commands-and-transports/operations.md`
 
 **Interfaces:**
 
-- Consumes: **O1's** `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None) -> bytes` (`src/memoria_vault/runtime/seed_install.py`, O1 plan Task M.2 — the row's `fetch` dict is `{method, url}` with methods `{pmc-oa, pdf-url, arxiv-pdf}`; the opener returns a context-manager response exposing `.read()`; non-PDF payloads and OA-service errors raise `ValueError`). The shipped worker payload contracts this routing emits into: `capture-pdf-source` (worker.py:1276-1314 → `stage_pdf_source` capture.py:461-494), `capture-url-source` (worker.py:1249-1273 → `_store_url_source` capture.py:420-458, `item_type="webpage"` at :447), `capture-source` passthrough (worker.py:1131-1169 → `stage_capture_payload` capture.py:367-395). `safe_filename` (runtime/paths.py:15).
-- Produces: `entry_fetch(entry_fields: dict[str, Any], identifiers: dict[str, Any]) -> dict[str, str] | None` (the §4 fetch-synthesis rule: PMCID → `pmc-oa` `oa.fcgi` URL; arXiv id → `arxiv-pdf` `export.arxiv.org/pdf/<id>`; entry URL ending `.pdf` → `pdf-url`; **bare DOI → None = metadata-only** — no DOI→PMCID conversion exists in beta.1) and `entry_capture_request(payload: dict[str, Any], fetch: dict[str, str] | None, *, mapped: bool = True, opener: Callable[[str], Any] | None = None) -> tuple[str, dict[str, Any]]` (the tier router: returns the `(operation_id, request_payload)` pair the driver enqueues). Decided seam contract: **a fetch failure raises** (the `ValueError` from `resolve_fetch` propagates); the driver's per-row try/except names the row failed (spec §2 "capture refusal") and iteration continues — no silent downgrade to metadata-only.
+- Consumes: **O1's** policy-bound `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None, authorize_url: Callable[[str], None]) -> bytes` (`src/memoria_vault/runtime/seed_install.py`, O1 plan Task M.2 — the row's `fetch` dict is `{method, url}` with methods `{pmc-oa, pdf-url, arxiv-pdf}`; malformed/non-PDF/OA-service bytes raise `ValueError`). Only A.2's new worker operation calls it, using `require_allowed_network(policy, url)` as the authorizer. The routing emits into `capture-remote-pdf-source` (new policy-bearing worker path), the existing `capture-url-source` (webpage), or `capture-source` (passthrough). `safe_filename` remains part of the remote-PDF worker's raw-filename contract.
+- Produces: `entry_fetch(entry_fields: dict[str, Any], identifiers: dict[str, Any]) -> dict[str, str] | None` (the §4 fetch-synthesis rule: PMCID → `pmc-oa` `oa.fcgi` URL; arXiv id → `arxiv-pdf` `export.arxiv.org/pdf/<id>`; entry URL ending `.pdf` → `pdf-url`; **bare DOI → None = metadata-only** — no DOI→PMCID conversion exists in beta.1) and pure `entry_capture_request(payload: dict[str, Any], fetch: dict[str, str] | None, *, mapped: bool = True) -> tuple[str, dict[str, Any]]` (the tier router: returns the `(operation_id, request_payload)` pair the driver enqueues, without fetching). A remote fetch failure is the worker job's per-row failure and iteration continues — no silent downgrade to metadata-only.
 
 Tier policy encoded (spec §4 table): `article` may use any synthesized fetch; `report` only a `pdf-url` fetch (text "via a direct PDF URL when present"); `webpage` with a resource routes to the shipped `capture-url-source` path (which re-derives the same work_id — `_url_work_id`, capture.py:1019-1023, is also `_bibtex_default_work_id`'s URL branch at capture.py:671-672, so the §2 catalog pre-check converges; the shipped path does not carry citekey/csl metadata, accepted as shipped); `book` stays metadata-only (shipped behavior, unchanged); `software`/`dataset` are reference-only; unmapped rows (`mapped=False`) are reference-only regardless of identifiers.
+
+> **Historical A.2 blocks — do not execute.** The remaining Step 0–5 prose and
+> code fences were retained only to preserve the pre-amendment design record.
+> The replacement Steps 1–5 above are the sole executable instructions.
 
 - [ ] **Step 0: O1 dependency check (grep-first)** — `grep -n "def resolve_fetch" src/memoria_vault/runtime/seed_install.py 2>/dev/null`. **If the file or symbol is absent** (O1 plan merged but unexecuted — true at `51395f15`), land O1 plan Task M.2 first (`docs/superpowers/plans/2026-07-16-o1-onboarding-seed.md` — it creates `resolve_fetch` plus `tests/test_seed_install.py`), then return here.
 
@@ -1737,13 +2075,17 @@ git commit -m "feat(bulk-import): exact-identifier duplicate detection + doi-UNI
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 143a3d45 main`
+> succeeded. `143a3d45` changes A.3's declared `runtime/bulk_import.py` and
+> `tests/test_bulk_import.py` seams for exact-identifier collision handling.
+
 # Section W — Bulk artifacts, telemetry, registry, protocol (spec §3, §6, §7, §8; slices 5–8)
 
 This section lands the bulk-admission artifacts (spec §3: the `emit_worklist` raised_by/loudness seam co-change and the one run-scoped quiet worklist per run), the `import-run.v1` instrumentation row (spec §6), the `staged-import` decision-rule registry entry (spec §7), and the Phase 1 staged-run protocol block (spec §6 protocol-level rows, §7 stop rule, §8 beta.2 ceiling — nothing here assumes corpus sizes beyond the 100-work stage).
 
-**Cross-plan preconditions (binding, from the plan header):** implementation may not begin until the I1 plan (`docs/superpowers/plans/2026-07-16-i1-full-wiring.md`) is implemented and merged. W.2 consumes I1 T.2's `runtime/telemetry.py` and W.3 consumes I1 H.3's seeded `decision-rules.yaml` + `tests/test_decision_rules.py` — both tasks open with a grep-first check and a stop-note. The O1 resolve layer (`runtime/seed_install.py resolve_fetch(row, *, opener)`, O1 plan M.2) is consumed by this plan's driver/adapter sections, not by Section W. All shipped line refs below are verified at `51395f15`; re-anchor by symbol if drifted.
+**Cross-plan preconditions (per-task, binding):** W.1 is independent of external I1 and may be implemented and tested on disposable vaults before I1; it must not be wired to a real import or emit telemetry. W.2 consumes external I1 T.1+T.2's `runtime/telemetry.py` and stops until both are implemented and merged. W.3 consumes external I1 H.3's seeded `decision-rules.yaml` + `tests/test_decision_rules.py` and stops until H.3 is implemented and merged. O2's I.1 driver stitch waits for external I1 plus #1517's finalization choice. The O1 policy-bound resolver (`runtime/seed_install.py resolve_fetch(row, *, opener, authorize_url)`, O1 M.2) is consumed only inside A.2's PI-only worker; I.1 builds/enqueues the request and Section W consumes neither seam. All shipped line refs below are verified at `51395f15`; re-anchor by symbol if drifted.
 
-**Driver stitches (for the plan assembler):** the slice-2 driver task calls `emit_import_worklist(...)` at most once per run (W.1's seam — zero judgment rows ⇒ it returns `None`, no worklist, no card) and calls `record_telemetry_event(vault, "import-run.v1", row)` exactly once per run, after the timed post-loop index refresh (W.2's seam). The acceptance criterion's *nonzero* `index_refresh_s` is a driver-section assertion; W.2's validator honestly allows `>= 0`.
+**Driver stitches (for the plan assembler):** I.1, not the slice-2 P driver, composes W.1 and W.2 after A.1–.3. It calls `emit_import_worklist(...)` at most once per run (zero judgment rows ⇒ `None`, no worklist, no card) and the chosen finalizer calls `record_telemetry_event(vault, "import-run.v1", row)` exactly once per run, after the documented index-refresh boundary. I.1 is blocked pending external I1 and #1517; W.2's validator honestly allows `index_refresh_s >= 0`.
 
 No new test files in this section: `tests/test_worklists.py` (`tests/conftest.py:120`, `contract`) and `tests/test_empirical_events.py` (`tests/conftest.py:42`, `contract`) are shipped-registered; `tests/test_telemetry_events.py` and `tests/test_decision_rules.py` are created and registered by the I1 plan (T.2, H.3). No `TEST_LEVELS` change here.
 
@@ -1980,6 +2322,10 @@ git commit -m "feat(worklists): raised_by/loudness passthrough + run-scoped quie
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 0dc8ec59 main`
+> succeeded. `0dc8ec59` changes W.1's declared worklist seam and
+> `tests/test_worklists.py` coverage for the quiet, run-scoped import worklist.
+
 ### Task W.2: `import-run.v1` — typed validator + telemetry dispatch (spec §6; slice 6)
 
 **Files:**
@@ -1988,7 +2334,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: I1 T.2's `record_telemetry_event(vault: Path, event_type: str, payload: dict[str, Any]) -> str` and its `_validated` dispatch (`runtime/telemetry.py`); I1 T.1's `telemetry_events` table (columns `event_id, ts, event_type, session_id, surface, payload_json`); shipped private helpers `_missing` (`empirical_events.py:187`), `_string_field` (`:198`), `_reject_pathlike` (`:236`); `state.connect` bootstraps the schema on a bare `tmp_path` vault (`state.py:472-481`), so tests need no init and no network.
-- Produces: `empirical_events.IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"`; `empirical_events.validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]` — its own `IMPORT_RUN_REQUIRED_FIELDS` (the `edge-write.v1` pattern, graph plan ERP-D.6: a separate validator so integer fields are legal — `validate_empirical_event`'s `ALLOWED_FIELDS`/string coercion cannot carry counts); the `_validated` branch making `record_telemetry_event(vault, "import-run.v1", row)` a working call. Row shape (spec §6): `{run_id, format, entries_total, admitted, skipped, failed, duplicates_flagged, retraction_flags, duration_s, index_refresh_s}` — `run_id` an opaque string, `format ∈ {bibtex, csl}`, the six counts non-negative `int`s (bool rejected), the two timings non-negative numerics. One row per run, emitted by the driver after the timed post-loop index refresh (driver stitch, slice-2 task).
+- Produces: `empirical_events.IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"`; `empirical_events.validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]` — its own `IMPORT_RUN_REQUIRED_FIELDS` (the `edge-write.v1` pattern, graph plan ERP-D.6: a separate validator so integer fields are legal — `validate_empirical_event`'s `ALLOWED_FIELDS`/string coercion cannot carry counts); the `_validated` branch making `record_telemetry_event(vault, "import-run.v1", row)` a working call. Row shape (spec §6): `{run_id, format, entries_total, admitted, skipped, failed, duplicates_flagged, retraction_flags, duration_s, index_refresh_s}` — `run_id` an opaque string, `format ∈ {bibtex, csl}`, the six counts non-negative `int`s (bool rejected), the two timings non-negative numerics. One row per run is emitted by I.1's decision-selected finalizer, never speculatively by P.2/P.3.
 
 - [ ] **Step 1: Grep-first (order tolerance).** Run `grep -n "_validated\|edge-write.v1" src/memoria_vault/runtime/telemetry.py`. If the file is absent, the plan header's precondition is unmet — **STOP: land and merge the I1 plan (2026-07-16-i1-full-wiring.md, T.1/T.2) first.** If present but the `edge-write.v1` branch is absent (graph-plan ordering), insert the new branch in the same position relative to the native-fields fallback; anchor by symbol, not line.
 
@@ -2182,7 +2528,60 @@ git commit -m "feat(telemetry): import-run.v1 typed validator + dispatch, one an
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+### Task I.1 (blocked): compose the adapter and artifact seams into the bulk driver
+
+**Status:** do not start until the external I1 full-wiring plan
+(`docs/superpowers/plans/2026-07-16-i1-full-wiring.md`) is implemented and
+merged, and [#1517](https://github.com/eranroseman/memoria-vault/issues/1517)
+records its finalization choice. This task exists to make the omitted handoff
+explicit; its finalizer subsection is intentionally deferred to that issue's
+selected lifecycle rather than inventing synchronous enrichment or a second
+artifact writer.
+
+**Files (once unblocked):**
+
+- Modify `src/memoria_vault/cli.py` — `_bulk_work_import` (re-anchor by symbol)
+- Modify `tests/test_cli_work_project.py` — real bulk CLI integration coverage
+- Modify `tests/test_bulk_import.py` only for any pure entry-field helper required to prevent duplicated BibTeX/CSL extraction
+- Extend the W.1/W.2 test files only for the chosen finalizer's exactly-once proof
+
+**Immediate composition contract (must survive any #1517 decision):**
+
+1. Build each payload through P.2's `build_entry_payload`, derive the A.1
+   `entry_fields` shape from the original entry, set `payload["item_type"] =
+   entry_item_type(entry_fields)`, and retain `mapped =
+   entry_type_mapped(entry_fields)` for the unmapped judgment row.
+2. Feed `entry_fetch(entry_fields, payload["identifiers"])` and `mapped` into
+   `entry_capture_request`; enqueue/run the returned operation with P.2's
+   existing run-scoped idempotency key. A fetch refusal becomes the named failed
+   row and does not stop later entries.
+3. After an admitted row, call `detect_identifier_collisions` with the returned
+   catalog work id and the payload identifiers. A DOI-UNIQUE failure is both a
+   named failure and a duplicate judgment row through `is_doi_collision_error`.
+   Same-DOI pre-check skips remain non-judgment rows.
+4. Normalize every judgment row into W.1's documented vocabulary and retain it
+   under the authoritative `run_id`.  The #1517-selected terminal finalizer —
+   not the immediate adapter loop — calls `emit_import_worklist` once after it
+   has incorporated the delayed retraction outcome. Do not emit per-entry cards
+   or call W seams from the pure A module.
+5. The #1517 decision specifies how enrichment child completion contributes
+   retraction rows and when the single telemetry call occurs. It must preserve
+   one authoritative `run_id`, no duplicate artifacts on retries, and a
+   terminal-path test for failed/late enrichment.
+
+**Required red/green proof once unblocked:** a multi-entry CLI test must exercise
+one mapped admission, one unmapped admission, one cross-identifier duplicate, one
+DOI-UNIQUE failure, and a malformed/fetch-failed row; it asserts one ranked
+worklist, one `import-run.v1` row, no per-entry cards, correct integer counts, and
+the chosen delayed-enrichment retraction behavior. Keep the test fully offline with
+the injectable opener/provider replay seam. Run the focused tests, then
+`python scripts/verify` before committing.
+
 ### Task W.3: `staged-import` decision-rule registry entry (spec §7; slice 7)
+
+**Precondition:** external I1 H.3 has landed with its seeded registry and tests.
+This registry-only task may land before O2's I.1 and #1517's selected
+finalization contract; it creates neither real-vault ingestion nor telemetry.
 
 **Files:**
 - Modify: `src/memoria_vault/product/workspace_seed/.memoria/config/decision-rules.yaml` (append one entry after the seeded file's final row, `id: canvas-authoring`), `tests/test_decision_rules.py` (extend; created and registered `contract` by I1 H.3)

@@ -15,46 +15,560 @@
 - The plugin never writes vault files and contains zero hardcoded colors; every action is an operation enqueue.
 - All line refs verified against main @ `80e62bbd`; re-anchor by quoted context as earlier tasks shift lines.
 
+## Execution status — 2026-07-17
+
+- **BOOT-A.1 complete:** `c0b4c9cf` implements the per-vault state directory
+  and canonical SHA-256 key. Focused tests (11), full verification, an
+  explicit runtime-policy scan, and independent review passed.
+- **BOOT-A.2 complete:** `d4bce192` plus `c8e7625c` implement atomic 0600
+  runtime state and portable PID liveness. Focused tests (20), full
+  verification, a clean security scan, and re-review passed.
+- **BOOT-A.3 complete:** `46b9e522` plus `0e7e7757` implement exclusive
+  locking and stale-entry cleanup, including symlink/junction refusal.
+  Focused tests (33), full verification, a clean security scan, and re-review
+  passed.
+- **BOOT-A.4 complete:** `ab98d890` adds the lifecycle endpoints and
+  Host/Origin validation. Focused lifecycle tests (11), full verification,
+  a clean security scan, and review passed.
+- **BOOT-A.5 complete:** `2a52a3d3` plus `4e52c108` add idle-exit and port
+  walking with atomic shutdown reservation. Focused tests (66), full
+  verification, a clean security scan, and re-review passed.
+- **BOOT-A.6 complete:** `40f41a7c` plus `dfe6b1eb` and plan amendment
+  `c197508b` wire `memoria serve` and harden lifecycle requests against
+  proxies, redirects, stale boot identities, and oversized responses. Focused
+  tests (117), full and docs-only verification, and the security scan passed.
+- **BOOT-A.7 complete:** `4142a774` plus `7cfb6230` and plan amendment
+  `eaf7004c` implement handshake spawn/discovery and trusted child imports.
+  Focused tests (26), full verification, a clean scan, and re-review passed.
+- **BOOT-A.8 complete:** `de473f3d` plus plan amendment `e12f26e2` implements
+  the `memoria handshake` CLI contract. Focused coverage (4), full
+  verification, a clean security scan, and re-review passed.
+- **BOOT-B.1 complete:** `93bfe71c` adds the user-scope secrets loader, test-suite
+  XDG isolation, and 11 focused tests. It rejects relative XDG locations,
+  nonregular/corrupt/world-readable files, and NUL-bearing values before an
+  environment merge; descriptor-first mode checks prevent a path re-open race.
+- Verification: `python scripts/verify` passed (**2,381 passed, 9 skipped**).
+  The sealed credential-handling security diff scan found no reportable issue:
+  `/tmp/codex-security-scans/memoria-vault/93bfe71c_20260717T172145Z/report.md`.
+- **BOOT-B.2 complete:** `8658d60f` loads the already-reviewed user-scope
+  secrets file at the sole CLI entry seam before parser construction and handler
+  dispatch, preserving process-environment precedence and printing one
+  value-free `memoria: ` warning when the loader refuses an unsafe file.
+  `tests/test_cli_secrets.py` passed (**3 passed**); the full gate passed
+  (**2,459 passed, 11 skipped, 1 existing warning**); the sealed diff scan found
+  no reportable issue:
+  `/tmp/codex-security-scans/memoria-vault/8658d60f_20260718T021648Z/report.md`.
+- **BOOT-B.3 complete:** `f46cdaf0` adds `memoria secrets set <NAME>` and a
+  descriptor-anchored 0600 secret-file upsert. It validates names before a TTY
+  prompt, keeps invalid-name errors non-reflective, rejects direct redirects and
+  nonregular targets, stages before writing, and atomically replaces only after a
+  complete write. The focused suite passed (**35 passed**), `python scripts/verify`
+  completed, and the sealed final-snapshot security scan found no reportable issue:
+  `/tmp/codex-security-scans/memoria-vault/4114cd0b_bootb3_20260729T201022Z/report.md`.
+
+## Execution status — 2026-07-31
+
+- [x] **BOOT-C.1 complete:** `3b0a1454` is an ancestor of `main`; its diff
+  adds the declared agent-bundle seed templates plus their test, package, and
+  test-level wiring.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
-2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `schema.LINK_RELATIONS`, `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG tasks written against `open_count` read `open`.
-3. **View payload envelope**: `{ok: true, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
+2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, api_version, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: after graph ERP-A.1–.5 activates, `link_relations` comes directly from `edges.LINK_RELATIONS`, `missing_required_credentials` comes from BOOT-B's `credential_report` (required-class, unset), and `engine_version` comes from the package version. U3-PLUG tasks written against `open_count` read `open`.
+3. **View payload envelope**: `{ok: true, api_version, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
-6. **BOOT-C ↔ U4-A interface**: bundle seeding iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`; `memoria doctor --json --quick` emits `{engine_version: str, skew: {status: "in-sync"|"vault-newer"|"engine-newer"}, credentials: [{name, class, status, effect}]}` — BOOT-C.5 implements exactly this shape; U4-A's hook consumes it defensively.
+6. **BOOT-C ↔ U4-A interface**: fresh `memoria init` iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`. `memoria doctor --json --quick` may emit the current engine version and credential rows, but it emits no bundle-version or skew result. U4-A's hook consumes credential rows defensively.
 7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces).
-8. **Plugin settings**: `serverUrl` + token settings are removed; the empirical-recorder settings (`enabled`, `defaultProjectId`, `retentionDays`, `showPrivacyPreview`) are KEPT (the spec's "one field" governs connection settings only).
+8. **Plugin settings**: fresh settings omit `serverUrl` and token settings;
+   the empirical-recorder settings (`enabled`, `defaultProjectId`,
+   `retentionDays`, `showPrivacyPreview`) remain. This plan does not migrate
+   persisted settings from a prior plugin installation.
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
 12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
-13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB, U3-ENG} → SEAM.1 → U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C} (U4-C may run before U4-A; U4-A imports its provider).
+13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
+    U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
+    U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
+    wait for graph ERP-B.2 → ERP-D.5. (U4-C may run before U4-A; U4-A imports
+    its provider.)
+
+### Plan-reconciliation amendment — canonical nested attention cards (2026-07-29)
+
+This amendment supersedes the conflicting flat-view snippets in U3-ENG.1–.6,
+the weak duplicate U3-PLUG.4 test/body, and every U3-PLUG.6/.7 request or
+assertion that still names `actor: "agent"` or `summary.open_count`; it also
+supersedes U3-CANVAS's obsolete HTTP-actor note.  The completed BOOT receipts
+are unchanged.  In a conflict, this section governs.
+
+1. **One non-summary envelope.** `read_attention_view(..., summary=False)`
+   returns exactly `_read_payload(view=_view("attention", cards))`.  Therefore
+   the response has top-level `ok`, `api_version`, and `view`, with no top-level
+   `spec` or `blocks`; the current producer emits top-level cards only, while
+   transport preserves future top-level blocks unchanged.  The
+   `summary=True` response remains the documented flat poll payload (`open`,
+   `by_loudness`, `as_of`, `engine_version`, `link_relations`, and
+   `missing_required_credentials`) and has no `view`.  Replace every U3-ENG
+   test/snippet that reads `payload["spec"]` or `payload["blocks"]` with the
+   following assertions, including HTTP tests and the additive-future-block
+   test:
+
+   ```python
+   payload = api.read_attention_view(workspace)
+
+   assert payload["ok"] is True
+   assert payload["api_version"] == api.READ_API_VERSION
+   assert payload["view"]["version"] == api.VIEW_SPEC_VERSION
+   assert payload["view"]["kind"] == "attention"
+   assert "spec" not in payload
+   assert "blocks" not in payload
+   cards = payload["view"]["blocks"]
+   ```
+
+   The future-block test copies `payload["view"]`, appends its future block to
+   the copied `blocks`, and returns `{**payload, "view": amended_view}`.  It
+   must never recreate the superseded flat envelope.
+2. **Attention-card grammar.** There is exactly one top-level `card` per open
+   attention item.  Its keys are `id`, `kind`, `ref`, `title`, `kind_line`,
+   `loudness`, `age_s`, `age_label`, `blocks`, plus present-only
+   `argument_for`, `argument_against`, `tipped_by`, `certainty`, `raised_by`,
+   and `raised_at`.  `kind_line` is the verbatim attention kind;
+   `what_tipped_it` maps to `tipped_by`; a nonempty `created` maps to
+   `raised_at`; and `age_s` is `age_days * 86_400` when `age_days` is valid,
+   else `0`.  `age_label` is `f"{age_days}d"` when valid, else `""`.  The
+   public card no longer exposes the incompatible writer-only names
+   `attention_kind`, `what_tipped_it`, `created`, `age_days`, `evidence`, or
+   `body_data`.
+
+   Every card's `blocks` is exactly, in this order,
+   `evidence-list`, `text`, `action-row`.  Evidence has id
+   `<card-id>-evidence` and has `items=[]` without a target, otherwise one
+   `{"label": target, "ref": target}` item.  Text has id `<card-id>-body` and
+   carries the exact untrusted body text as a plain string; `viewspec.js`
+   materializes it as text rather than markup.  The action row has id
+   `<card-id>-actions`.  U3-ENG.1/.2 replace their flat producer bodies with
+   the following.  U3-ENG.3 additionally imports `__version__`,
+   `credential_report`, and `LINK_RELATIONS`; its summary test monkeypatches
+   `api.credential_report` with both required and non-required rows, then
+   asserts the required-and-unset names, sorted `LINK_RELATIONS`, and
+   `__version__` exactly:
+
+   ```python
+   def read_attention_view(
+       workspace: Path, *, summary: bool = False, read_scope: list[str] | None = None
+   ) -> dict[str, Any]:
+       cards = [
+           card
+           for card in _attention_cards(Path(workspace))
+           if card["status"] == "open" and _attention_in_scope(card, read_scope)
+       ]
+       if summary:
+           by_loudness: dict[str, int] = {}
+           for card in cards:
+               loudness = str(card["loudness"] or "")
+               by_loudness[loudness] = by_loudness.get(loudness, 0) + 1
+           missing_required_credentials = sorted(
+               str(row.get("name") or "")
+               for row in credential_report(Path(workspace))
+               if row.get("class") == "required-for-operation"
+               and row.get("status") == "unset"
+               and str(row.get("name") or "")
+           )
+           return _read_payload(
+               open=len(cards),
+               by_loudness=by_loudness,
+               as_of=now_iso(),
+               engine_version=__version__,
+               link_relations=sorted(LINK_RELATIONS),
+               missing_required_credentials=missing_required_credentials,
+           )
+       cards.sort(key=_attention_view_sort_key)
+       return _read_payload(
+           view=_view("attention", [_attention_view_card_block(card) for card in cards])
+       )
+
+
+   def _attention_view_card_block(card: dict[str, Any]) -> dict[str, Any]:
+       card_id = safe_filename(card["path"])
+       created = _attention_created(card)
+       age_days = _attention_age_days(created)
+       target = str(card["target"] or "")
+       frontmatter = card["frontmatter"]
+       block: dict[str, Any] = {
+           "id": card_id,
+           "kind": "card",
+           "ref": card["path"],
+           "title": str(card["title"]),
+           "kind_line": str(card["kind"]),
+           "loudness": str(card["loudness"]),
+           "age_s": age_days * 86_400 if age_days is not None else 0,
+           "age_label": f"{age_days}d" if age_days is not None else "",
+           "blocks": [
+               {
+                   "id": f"{card_id}-evidence",
+                   "kind": "evidence-list",
+                   "items": [{"label": target, "ref": target}] if target else [],
+               },
+               {
+                   "id": f"{card_id}-body",
+                   "kind": "text",
+                   "text": str(card["body_data"]["text"]),
+               },
+               _attention_view_action_row(card),
+           ],
+       }
+       for source, destination in (
+           ("argument_for", "argument_for"),
+           ("argument_against", "argument_against"),
+           ("what_tipped_it", "tipped_by"),
+           ("certainty", "certainty"),
+           ("raised_by", "raised_by"),
+       ):
+           value = frontmatter.get(source)
+           if isinstance(value, str) and value.strip():
+               block[destination] = value
+       if created:
+           block["raised_at"] = created
+       return block
+
+
+   def _attention_view_action_row(card: dict[str, Any]) -> dict[str, Any]:
+       card_id = safe_filename(card["path"])
+       target_id = str(card["path"])
+       return {
+           "id": f"{card_id}-actions",
+           "kind": "action-row",
+           "actions": [
+               {
+                   "label": "Resolve",
+                   "operation_id": "resolve-attention",
+                   "payload": {"target_id": target_id},
+                   "primary": True,
+               },
+               {
+                   "label": "Acknowledge",
+                   "operation_id": "acknowledge-attention",
+                   "payload": {"target_id": target_id},
+               },
+               {
+                   "label": "Defer",
+                   "operation_id": "resolve-attention",
+                   "payload": {"target_id": target_id, "outcome": "defer"},
+               },
+           ],
+       }
+   ```
+
+   The atomic U3-ENG test group must pin the complete nested action authority
+   (including the absence of Curate), rather than merely testing that an
+   `action-row` exists. Add this replacement test to
+   `tests/test_attention_view.py` before implementing the producer:
+
+   ```python
+   def test_attention_view_nests_exact_supported_actions(workspace: Path) -> None:
+       written = inbox.write_proposal(
+           workspace,
+           "candidate",
+           "Capture Smith 2024",
+           "Capture it into the catalog",
+           "Cited twice in the hub",
+           "Might be out of scope",
+           "hub cross-reference",
+           "likely",
+           "capture-sweep",
+       )
+       ref = written.relative_to(workspace).as_posix()
+
+       payload = api.read_attention_view(workspace)
+       card = next(card for card in payload["view"]["blocks"] if card["ref"] == ref)
+
+       assert [child["kind"] for child in card["blocks"]] == [
+           "evidence-list",
+           "text",
+           "action-row",
+       ]
+       assert card["blocks"][2]["actions"] == [
+           {
+               "label": "Resolve",
+               "operation_id": "resolve-attention",
+               "payload": {"target_id": ref},
+               "primary": True,
+           },
+           {
+               "label": "Acknowledge",
+               "operation_id": "acknowledge-attention",
+               "payload": {"target_id": ref},
+           },
+           {
+               "label": "Defer",
+               "operation_id": "resolve-attention",
+               "payload": {"target_id": ref, "outcome": "defer"},
+           },
+       ]
+   ```
+
+   The generic proposal-card `Curate` button is removed.  The existing
+   `curate-note-candidate` operation requires a checked candidate note's
+   `note_path` and an `accepted|rejected` `status`; `write_proposal` provides
+   neither, so emitting it would knowingly enqueue an invalid operation.  A
+   later proposal-to-note design may add a distinct source contract and button;
+   this plan must not fabricate either payload.
+3. **Plugin and actor agreement.** The cross-section card contract at
+   U3-PLUG.4 and all its tests use the grammar above, including a nested `text`
+   child.  `sortCards` continues to use `age_s`; queue rows display the
+   producer-supplied `age_label`.  U3-PLUG.6 reads `summary.open`, never
+   `summary.open_count`.  The plugin omits an `actor` field entirely: the
+   HTTP door alone assigns `pi` after token authentication, and MCP remains
+   `agent`.  U3-PLUG.7's
+   direct enqueue fixture uses `{"target_id": "inbox/x.md"}`, never the stale
+   `attention_path`/`resolution` payload.
+4. **Renderer test is an exact contract.** The U3-PLUG.4 replacement test
+   must use nonempty evidence and real Resolve/Defer action payloads, both arguments,
+   tipped/certainty data, and metadata.  It asserts the complete class sequence
+   `kind, title, evidence, text, action-row, arguments, tipped, meta`, the
+   evidence `data-ref`, action label/id/serialized payload, and all analysis
+   text.  A separate generic renderer test includes two same-kind semantic
+   children with distinct ids so a duplicate or omission fails; the canonical
+   attention-card fixture still has exactly one each of evidence, text, and
+   action row.  The cure test asserts the full sequence
+   `kind, title, evidence, text` and absence of action, analysis, toggle, and
+   metadata.  `renderCard` maps every supplied semantic child once in input
+   order, then appends only present analysis/meta fields; it never partitions
+   child kinds.  An argument/tipping group may exist when either corresponding
+   parent field exists, but it contains only spans for fields that are actually
+   present.
+5. **Execution order and design record.** U3-ENG.1/.2/.3 are one atomic TDD
+   slice after BOOT-B.4 and graph ERP-A.1–.5: write all replacement tests,
+   run that group red, implement the final producer above, run it green, and
+   make one combined commit. U3-ENG.3 imports `LINK_RELATIONS` directly from
+   `runtime.subsystems.lib.edges`, never the temporary `schema` re-export.
+   Do not execute their superseded incremental red/green expectations or their
+   three separate commits. Then land U3-ENG.4, U3-ENG.5, and
+   U3-ENG.6 before U3-PLUG.4/.6/.7.  SEAM.1 lands before any pane action test
+   or V2 `resolve-evidence` endpoint.  The U3 design's expanded-card order is
+   amended to `evidence → text → action row → analysis → meta`; this is a
+   deliberate V2 prerequisite, not a renderer-local exception.
+6. **U1 job-field order tolerance.** If U1 J.1 has landed when U3-ENG.4
+   registers `views.attention`, its action dict includes `job: "review"` and
+   the pinned U1 job mapping is updated in the same change. If it has not,
+   execute U3-ENG.4's drafted dict unchanged and let U1's re-anchored J.1
+   preserve the row and add that job later. The historical concrete dict and
+   test snippets below are superseded only to this extent; neither execution
+   order may delete or leave a jobless registered view.
+
+### Plan-reconciliation amendment — U1 transport, scope-walk, and CLI-parity handoffs (2026-07-29)
+
+This amendment governs the U1-owned contracts that surface tasks consume.  It
+does not move ownership of HTTP dispatch or CLI parity into this plan; it makes
+each consumer update the contracts atomically when it lands after U1.
+
+1. **Named HTTP refusals.** Once U1 M.3 lands, every BOOT/U3 HTTP assertion
+   below uses `{"ok": False, "error": "unauthorized: missing or invalid bearer
+   token"}` for a tokenless protected route and
+   `{"ok": False, "error": "method not allowed: <METHOD> <PATH>"}` for a
+   wrong method.  In particular U3 attention uses
+   `method not allowed: POST /v1/views/attention`; lifecycle tests use their
+   actual `/v1/status` or `/v1/shutdown` path.  If a surface task lands first,
+   U1 M.3's refusal-shape sweep updates its expectations in the same PR.  Bare
+   `"unauthorized"` and `"method not allowed"` are superseded test values,
+   not compatibility forms.
+2. **Attention scope proof.** `views.attention` is a registry-owned
+   optional-scope HTTP route.  The task registering it also adds its
+   route-specific entry and seeded fixture to U1 M.3's registry-driven
+   `PROBES`, proving a void scope removes/refuses its attention marker while
+   the unscoped leg is real.  It must not change M.3's coverage assertion to a
+   fixed count.  V2 applies the same rule to `views.evidence_review`.
+3. **Parser parity.** If BOOT-A.8 or BOOT-D.7 lands after U1 M.4, its
+   `memoria handshake` or `memoria onboard` parser
+   change also adds that command to U1's `CLI_ONLY_COMMANDS` (unless the task
+   deliberately registers a full surface row).  If it lands first, M.4's
+   initial complement includes it.  Updating `tests/test_cli.py` alone is
+   insufficient in either order.
+
+### Plan-reconciliation amendment — graph roster activation and warrant wire (2026-07-29)
+
+This amendment supersedes U3-PLUG.5's legacy `reason` payload, every
+three-item relation fixture/assertion in U3-PLUG.5/.6, U3-PLUG.8's ambiguous
+Warrant help text, and U3-PLUG.11's three-verb/manual-queue-only acceptance.
+It is coordinated with graph-substrate ERP-A.1–.5 and ERP-D.5; it neither
+adds a relation-specific registry action nor changes the SEAM.1 HTTP/MCP
+actor split.
+
+1. **Atomic public roster.** `summary.link_relations` is always the exact
+   roster that the token-authenticated HTTP `operation/run` door can enqueue
+   and the worker can complete through `curate-note-link`. It remains the
+   current three verbs until the graph plan's ERP-A.1–.5 public activation PR
+   lands; then it is exactly `sorted(edges.LINK_RELATIONS)` (the six
+   `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, and
+   `rebuttal`). `tension` is never served. ERP-A.5 pins U3-ENG.3's direct `lib.edges`
+   import before the atomic U3 engine slice begins; the temporary `schema`
+   re-export is never a second final owner. The plugin continues to render
+   only the server payload—no compatibility roster and no local relation
+   literal.
+2. **Required graph and U3 proofs.** ERP-A.4's engine/worker acceptance group
+   parameterizes direct `curate_note_link`/worker execution over every served
+   relation and asserts the matching `links.<relation>` entry; it separately
+   proves that `tension` is rejected. It does not use `/operation/run`: before
+   SEAM.1 that HTTP door still assigns `actor="agent"`. U3-PLUG.5/.6, which
+   execute only after ERP-A.1–.5, use the exact sorted-six fixture, and prove
+   a `rebuttal` builder payload; U3-PLUG.6's summary mock/`linkRelations`
+   assertion uses that same six-value list. U3-PLUG.7
+   owns the post-SEAM.1 public integration: fetch the served roster, submit
+   each relation through the PI-authenticated `/operation/run` door without a
+   caller-supplied actor, run the jobs, and assert `status == "done"`; it also
+   proves `tension` is absent and rejected. No relation-specific registry
+   action is added.
+3. **Warrant text is an edge attribute.** U3-PLUG.5/.8 execute after
+   graph ERP-D.5. `buildRelateOperation` emits a nonblank text field as
+   `payload.warrant` (and omits it when blank), never `payload.reason`; its
+   Node test pins that wire. ERP-D.5's Python round trip pins
+   `attributes_json.warrant`. The modal help reads, in substance: “A
+   `warrant` relation links a license note; Warrant text annotates the
+   selected edge.” This keeps the two meanings distinct rather than claiming
+   that a request reason is promotion-ready edge data.
+4. **Manual proof keeps the token private.** Replace the old `grep` command,
+   which puts the token in a child process's argument vector and can choose
+   the wrong vault, with this in-process check. It neither prints the token
+   nor passes it to another command:
+
+   ```bash
+   python - <<'PY'
+   import json
+   import subprocess
+   from pathlib import Path
+
+   vault = Path("test-vault/u3-plug-manual")
+   handshake = json.loads(
+       subprocess.check_output(
+           ["memoria", "handshake", "--vault", str(vault), "--json"], text=True
+       )
+   )
+   token = str(handshake["token"])
+   hits = [
+       path.relative_to(vault).as_posix()
+       for path in vault.rglob("*")
+       if path.is_file() and token.encode() in path.read_bytes()
+   ]
+   assert hits == [], hits
+   PY
+   ```
+
+   The U3-PLUG.11 relation step selects `rebuttal` (a newly activated verb),
+   submits it, runs the queued job, and verifies the resulting edge—not merely
+   a queued request id.
+
+### Plan-reconciliation amendment — nested envelopes, cards, and authority verification (2026-07-29)
+
+This amendment supersedes only the conflicting U3-ENG flat-view snippets and
+the narrow U3-PLUG.4/SEAM.1 checks below. The completed BOOT receipts and all
+other task bodies remain unchanged.
+
+1. **Nested view envelope:** every non-summary attention response is exactly
+   `_read_payload(view=_view("attention", blocks))`. `_read_payload` supplies
+   `ok` and `api_version`; the response has no top-level `spec` or `blocks`.
+   `summary=True` remains the documented summary payload and has no `view`.
+   Replace every U3-ENG test/snippet that reads `payload["spec"]` or
+   `payload["blocks"]` with the following shape before executing U3-ENG:
+
+   ```python
+   payload = api.read_attention_view(workspace)
+
+   assert payload["ok"] is True
+   assert payload["api_version"] == api.READ_API_VERSION
+   assert payload["view"]["version"] == api.VIEW_SPEC_VERSION
+   assert payload["view"]["kind"] == "attention"
+   assert "spec" not in payload
+   assert "blocks" not in payload
+   blocks = payload["view"]["blocks"]
+   ```
+
+   The HTTP tests make the same nested assertions. A future-block test copies
+   `payload["view"]`, appends to its `blocks`, and returns
+   `{**payload, "view": amended_view}`. V2R-B uses this base envelope plus
+   its top-level `facets`; it never restores the flat shape.
+2. **Ordered-card test is an exact contract:** the binding replacement at
+   U3-PLUG.4 replaces the duplicate stale test body below. Retain `texts()`
+   because the new test uses it. The test must assert the whole class sequence,
+   payload/link attributes, paired V2 arguments, tipped/certainty text, and
+   metadata, not merely relative first indexes. Its cure case asserts the
+   complete child sequence so duplication and empty analysis/meta trees fail.
+3. **SEAM.1 is an authority change:** before its red test, run
+   `git rev-parse HEAD` and record the resulting literal 40-character SHA as
+   `SEAM1_BASE` in the task report. After the focused HTTP suite, run
+   `python scripts/verify`. After its commit, run `codex-security:security-diff-scan`
+   for the range `<the-recorded-40-character-SHA>..HEAD` (substitute the recorded
+   SHA itself; do not use a shell variable or symbolic placeholder). Commit or amend
+   every scan fix, then rerun the full gate and scan the same literal base-to-HEAD
+   range before the task is complete.
 
 ### Task SEAM.1: Loopback operation door carries PI actor authority
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/http_transport.py:216` (the enqueue call's `actor="agent"`)
-- Test: existing HTTP-transport operation tests (locate exactly: `grep -n 'actor' tests/test_http_transport.py`)
+- Modify: `tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope`
+  and replace `test_http_transport_operation_run_cannot_claim_pi_authority`
 
 **Interfaces:**
 - Consumes: bootstrap spec §4 (token trust model), U3 spec §2/§4 (pane enqueues pi-protected ops).
 - Produces: HTTP `POST /operation/run` enqueues with `actor="pi"`; MCP stdio door unchanged (`mcp_transport.py:118` stays `agent`).
 
-- [ ] **Step 1: Write the failing test** — add to `tests/test_http_transport.py` (mirror the nearest enqueue test's fixture):
+- [ ] **Step 1: Write the failing tests.** In
+  `test_http_transport_operation_run_uses_request_envelope`, leave its caller-supplied
+  `"actor": "agent"` in the body and change its persisted-actor assertion to
+  `assert row["actor"] == "pi"`. This proves the HTTP door, not the caller body,
+  assigns authority. Then replace the obsolete
+  `test_http_transport_operation_run_cannot_claim_pi_authority` with:
 
 ```python
-def test_http_operation_enqueue_carries_pi_actor(tmp_path):
-    # arrange per the file's existing enqueue-test fixture, then:
-    request_row = state.operation_request(vault, request_id)
-    assert request_row["actor"] == "pi"
+def test_http_transport_operation_run_uses_pi_authority_without_caller_actor(
+    workspace: Path,
+) -> None:
+    _write_attention(workspace, "http-pi-resolve")
+
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "resolve-attention",
+            "payload": {
+                "target_id": "inbox/http-pi-resolve.md",
+                "outcome": "apply",
+                "routing_class": "ask",
+                "reason": "authenticated pane disposition",
+            },
+            "idempotency_key": "http-pi-resolve",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert response["ok"] is True
+    assert response["result"]["status"] == "done"
+    request = state.request_row(workspace, "http-pi-resolve")
+    assert request is not None
+    assert request["actor"] == "pi"
+    assert "attention_status: resolved" in (
+        workspace / "inbox/http-pi-resolve.md"
+    ).read_text(encoding="utf-8")
 ```
 
-Adapt the arrange block from the file's existing operation-enqueue test verbatim (read it first); the assertion above is the contract.
+  Do not retain the old failure assertion: it describes the deliberately removed
+  caller-controlled-authority model. `state.request_row`, not the nonexistent
+  `state.operation_request`, is the repository helper for the persisted envelope.
 
-- [ ] **Step 2: Run it** — `python -m pytest tests/test_http_transport.py::test_http_operation_enqueue_carries_pi_actor -v` — Expected: FAIL (`actor == "agent"`).
-- [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven, user-held per-boot token (bootstrap spec §4; plan contract 5).`
-- [ ] **Step 4: Sweep existing assertions** — `grep -n '"agent"' tests/test_http_transport.py` and update any assertion pinning the old actor; re-run the file: `python -m pytest tests/test_http_transport.py -v` — Expected: PASS.
+- [ ] **Step 2: Run them** —
+  `python -m pytest tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope tests/test_http_transport.py::test_http_transport_operation_run_uses_pi_authority_without_caller_actor -v`
+  — Expected: both fail before the transport change (the first persists `agent`; the
+  second is refused as lacking PI authority).
+- [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to
+  `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven,
+  user-held per-boot token (bootstrap spec §4; plan contract 5).`
+- [ ] **Step 4: Run the file** — `python -m pytest tests/test_http_transport.py -v`.
+  Expected: pass. The explicit caller `actor` fields in unrelated HTTP fixtures may
+  remain as ignored-input coverage; only expectations of their persisted authority
+  change to `pi`.
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -63,6 +577,14 @@ git commit -m "feat(http): loopback operation door carries PI actor authority
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+- [ ] **Step 7: Scan the authority diff.** Before Step 1, run
+  `git rev-parse HEAD` and record its literal 40-character output as `SEAM1_BASE`
+  in the task report. After the commit, use `codex-security:security-diff-scan`
+  for `<the-recorded-40-character-SHA>..HEAD`, substituting that value directly
+  (not a shell variable or symbolic placeholder). Commit or amend every scan fix;
+  then rerun `python scripts/verify` and the same literal diff scan. This task is
+  not complete until both are clean.
 
 ---
 # BOOT-A: Server rendezvous + lifecycle
@@ -81,7 +603,7 @@ Assumptions other sections must honor (all defensible defaults; no hard spec gap
 6. Handshake spawns the server as `[sys.executable, "-m", "memoria_vault.cli", "serve", …]` (the engine's own interpreter), not a PATH lookup of `memoria` — robust for pipx/uv installs and tests alike.
 7. Host/Origin rejection returns HTTP 403 with `{"ok": false, "error": "forbidden host"|"forbidden origin"}`.
 8. `boot_id` is `str(uuid.uuid4())`.
-9. Allowed Host values are exactly `127.0.0.1:<port>` and `localhost:<port>` (spec §4 verbatim); a server started with `--host ::1` is therefore unreachable past the Host check — accepted, spec is strict.
+9. Accepted HTTP bind hosts are exactly `127.0.0.1` and `localhost`; their Host values are exactly `127.0.0.1:<port>` and `localhost:<port>` (spec §4 verbatim). Reject `--host ::1` until a separate IPv6 coordinate, Host-validation, and shutdown design exists.
 10. A new **autouse** conftest fixture points `XDG_STATE_HOME` at a per-test temp dir so no test ever writes the developer's real `~/.local/state` (mirrors the existing `diagnostics.py:48` XDG convention).
 11. `vault_id` in `runtime.json` is read from `.memoria/vault.json` key `"vault_id"` when that file exists, else `""` — the section that seeds `vault.json` must keep that key name.
 
@@ -320,10 +842,15 @@ def _case_insensitive_filesystem(path: Path) -> bool:
   - `rendezvous.RUNTIME_SCHEMA = "memoria-runtime.v1"`
   - `rendezvous.RUNTIME_FIELDS = ("schema", "vault_path", "vault_id", "port", "pid", "boot_id", "token", "engine_version", "started_at")`
   - `rendezvous.runtime_path(state_dir: Path) -> Path`
-  - `rendezvous.write_runtime(state_dir: Path, record: dict[str, Any]) -> Path` — injects `schema`, validates all fields present, atomic tmp+`os.replace`, mode 0600; raises `ValueError` on missing fields
+  - `rendezvous.write_runtime(state_dir: Path, record: dict[str, Any]) -> Path` — injects `schema`, validates all fields present, atomically replaces from a unique private temp file, mode 0600; raises `ValueError` on missing fields
   - `rendezvous.read_runtime(state_dir: Path) -> dict[str, Any] | None` — `None` on missing/corrupt/wrong-schema/missing-field/non-int port or pid
   - `rendezvous.clear_runtime(state_dir: Path) -> None` — idempotent unlink
   - `rendezvous.pid_alive(pid: int) -> bool`
+
+> **Adopted post-review amendment (2026-07-16):** A fixed staging name plus a
+> single `os.write` is not an atomic publication contract: an existing staging
+> file can be reused and a short write can be published. Use a unique,
+> owner-only `tempfile.mkstemp` file, write until the full body is accepted, clean it on every failure, then `os.replace`. Retain tests for legacy regular/symlinked fixed-temp paths (they must not affect publication), forced short writes, cleanup after a failed write, missing fields, and JSON booleans. On Windows, `os.kill(pid, 0)` invokes `TerminateProcess`; `pid_alive` must instead use a non-destructive `OpenProcess`/`GetExitCodeProcess` query, with a platform-route test proving it never calls `os.kill`.
 
 **Steps:**
 
@@ -358,7 +885,8 @@ def test_runtime_roundtrip_is_atomic_and_private(tmp_path: Path) -> None:
     written = rendezvous.write_runtime(state_dir, _runtime_record(vault))
 
     assert written == state_dir / "runtime.json"
-    assert stat.S_IMODE(written.stat().st_mode) == 0o600
+    if os.name == "posix":
+        assert stat.S_IMODE(written.stat().st_mode) == 0o600
     assert not list(state_dir.glob("*.tmp"))
     record = rendezvous.read_runtime(state_dir)
     assert record is not None
@@ -421,11 +949,22 @@ def test_pid_alive_detects_live_and_dead_processes() -> None:
     assert rendezvous.pid_alive(-1) is False
 ```
 
+  Extend this block with the adopted-publication regressions: a pre-existing
+  legacy fixed temp file and a symlink at that legacy name remain untouched;
+  a monkeypatched short `os.write` is retried until the whole body is present;
+  a write failure leaves no `*.tmp`; and `read_runtime` rejects boolean
+  `port` and `pid` values.  Add a platform-route test that forces the Windows
+  branch, proves `_windows_pid_alive` is used, and fails if `os.kill` is
+  reached.  Keep the full `OpenProcess`/`GetExitCodeProcess` fake focused on
+  process-query outcomes rather than calling a real Windows API in tests.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "runtime or pid_alive" -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'write_runtime'` (and siblings).
 
-- [ ] Write the minimal implementation. In `rendezvous.py`, add `import json` and `from typing import Any` to the imports, then append:
+- [ ] Write the minimal implementation. In `rendezvous.py`, add `import ctypes`,
+  `import json`, `import tempfile`, and `from typing import Any` to the imports,
+  then append:
 
 ```python
 RUNTIME_SCHEMA = "memoria-runtime.v1"
@@ -452,15 +991,26 @@ def write_runtime(state_dir: Path, record: dict[str, Any]) -> Path:
     missing = [field for field in RUNTIME_FIELDS if field not in entry]
     if missing:
         raise ValueError(f"runtime record missing fields: {', '.join(missing)}")
-    target = runtime_path(state_dir)
-    temp = target.with_suffix(".json.tmp")
     body = json.dumps(entry, ensure_ascii=False, sort_keys=True).encode("utf-8")
-    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    target = runtime_path(state_dir)
+    fd, temporary = tempfile.mkstemp(prefix="runtime.", suffix=".tmp", dir=state_dir)
+    temp = Path(temporary)
     try:
-        os.write(fd, body)
-    finally:
-        os.close(fd)
-    os.replace(temp, target)
+        try:
+            if os.name == "posix":
+                os.fchmod(fd, 0o600)
+            remaining = memoryview(body)
+            while remaining:
+                written = os.write(fd, remaining)
+                if written <= 0:
+                    raise OSError("failed to write runtime record")
+                remaining = remaining[written:]
+        finally:
+            os.close(fd)
+        os.replace(temp, target)
+    except BaseException:
+        temp.unlink(missing_ok=True)
+        raise
     return target
 
 
@@ -474,7 +1024,7 @@ def read_runtime(state_dir: Path) -> dict[str, Any] | None:
         return None
     if any(field not in data for field in RUNTIME_FIELDS):
         return None
-    if not isinstance(data.get("port"), int) or not isinstance(data.get("pid"), int):
+    if type(data.get("port")) is not int or type(data.get("pid")) is not int:
         return None
     return data
 
@@ -483,9 +1033,15 @@ def clear_runtime(state_dir: Path) -> None:
     runtime_path(state_dir).unlink(missing_ok=True)
 
 
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
 def pid_alive(pid: int) -> bool:
     if pid <= 0:
         return False
+    if _is_windows():
+        return _windows_pid_alive(pid)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -495,6 +1051,36 @@ def pid_alive(pid: int) -> bool:
     except OSError:
         return False
     return True
+
+
+def _windows_pid_alive(pid: int) -> bool:
+    """Query Windows process state without sending it a signal."""
+    from ctypes import wintypes
+
+    process_query_limited_information = 0x1000
+    error_access_denied = 5
+    still_active = 259
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    open_process = kernel32.OpenProcess
+    open_process.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    open_process.restype = wintypes.HANDLE
+    get_exit_code = kernel32.GetExitCodeProcess
+    get_exit_code.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    get_exit_code.restype = wintypes.BOOL
+    close_handle = kernel32.CloseHandle
+    close_handle.argtypes = [wintypes.HANDLE]
+    close_handle.restype = wintypes.BOOL
+
+    handle = open_process(process_query_limited_information, False, pid)
+    if not handle:
+        return ctypes.get_last_error() == error_access_denied
+    try:
+        exit_code = wintypes.DWORD()
+        if not get_exit_code(handle, ctypes.byref(exit_code)):
+            return True
+        return exit_code.value == still_active
+    finally:
+        close_handle(handle)
 ```
 
 - [ ] Run tests to verify they pass:
@@ -518,8 +1104,21 @@ def pid_alive(pid: int) -> bool:
 
 **Interfaces:**
 - Produces:
-  - `rendezvous.serve_lock(state_dir: Path)` — `@contextmanager`, yields `bool` (`True` = this holder owns the exclusive non-blocking `flock` on `<state>/serve.lock`; `False` = someone else holds it). On platforms without `fcntl` it yields `True` (same best-effort posture as `state.py:426`).
-  - `rendezvous.gc_stale_entries(root: Path | None = None) -> list[str]` — deletes `runtime.json` under `<root or state_root()>/<key>/` whose pid is dead; returns removed key names.
+  - `rendezvous.serve_lock(state_dir: Path)` — `@contextmanager`, yields `bool` (`True` = this holder owns the exclusive non-blocking server-lifetime admission lock on a private `<state>/serve.lock`; `False` = someone else holds it). It uses `flock` when available and `msvcrt.locking` on Windows; a platform with neither backend fails closed rather than permitting an unlocked server.
+  - `rendezvous.gc_stale_entries(root: Path | None = None) -> list[str]` — deletes `runtime.json` under real child directories of `<root or state_root()>/<key>/` whose pid is dead; returns removed key names; ignores symlinked entries.
+
+> **Adopted post-review repair (2026-07-16):** These helpers reject/ignore
+> direct state/root, `serve.lock`, and child symlink or junction redirections.
+> On POSIX, `serve_lock` opens the direct state directory with
+> `O_DIRECTORY | O_NOFOLLOW`, then opens a regular `serve.lock` relative to
+> that descriptor with `O_NOFOLLOW` and restores mode `0600`; GC skips direct
+> redirected roots and children. The private per-user state-directory contract
+> deliberately excludes arbitrary ancestor redirects and concurrent same-user
+> path replacement; it does not claim hostile-path traversal safety. The
+> `msvcrt` backend locks a one-byte range without first writing it—Windows
+> permits a locked range beyond EOF—so contention yields `False` rather than a
+> pre-lock write error. Tests cover POSIX links, mocked junctions, `msvcrt`,
+> and the fail-closed no-backend path.
 
 **Steps:**
 
@@ -563,29 +1162,91 @@ def test_gc_stale_entries_tolerates_missing_root(tmp_path: Path) -> None:
     assert rendezvous.gc_stale_entries(tmp_path / "nowhere") == []
 ```
 
+  Add the amendment coverage alongside those baseline tests: a no-backend
+  `serve_lock` yields `False`; mocked `msvcrt` locks one byte beyond EOF without
+  an `os.write`; POSIX symlinked `serve.lock` and state-dir cases raise without
+  touching their targets; mocked junction state-dir cases do the same; and GC
+  leaves redirected roots and children intact.  Keep the POSIX-only cases
+  guarded by the platform/no-follow capability.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "serve_lock or gc_stale" -v`
   Expected: `AttributeError: … has no attribute 'serve_lock'`.
 
-- [ ] Write the minimal implementation. In `rendezvous.py`, add imports `from collections.abc import Iterator` and `from contextlib import contextmanager`, plus the guarded fcntl import after the stdlib imports:
+- [ ] Write the minimal implementation. In `rendezvous.py`, add imports `import stat`,
+  `from collections.abc import Iterator`, and `from contextlib import contextmanager`,
+  plus the guarded fcntl import after the stdlib imports:
 
 ```python
 try:
     import fcntl
 except ImportError:  # pragma: no cover - non-POSIX fallback
     fcntl = None  # type: ignore[assignment]
+
+try:
+    import msvcrt
+except ImportError:  # pragma: no cover - POSIX test environment
+    msvcrt = None  # type: ignore[assignment]
 ```
 
   then append:
 
 ```python
+_REDIRECT_ERROR = "rendezvous state path must not redirect through a symlink or junction"
+
+
+def _path_redirects(path: Path) -> bool:
+    return path.is_symlink() or path.is_junction()
+
+
+def _open_serve_lock_file(state_dir: Path) -> int:
+    """Open a regular serve lock without following direct reparse points."""
+    state_dir = Path(state_dir)
+    lock_path = state_dir / "serve.lock"
+    if _path_redirects(state_dir) or _path_redirects(lock_path):
+        raise ValueError(_REDIRECT_ERROR)
+
+    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+    if os.name == "posix" and hasattr(os, "O_NOFOLLOW"):
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        state_fd = os.open(state_dir, directory_flags)
+        try:
+            fd = os.open("serve.lock", flags, 0o600, dir_fd=state_fd)
+        finally:
+            os.close(state_fd)
+    else:
+        fd = os.open(lock_path, flags, 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ValueError("rendezvous serve lock must be a regular file")
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
 @contextmanager
 def serve_lock(state_dir: Path) -> Iterator[bool]:
-    """Yield True when this holder owns the exclusive spawn lock."""
-    fd = os.open(Path(state_dir) / "serve.lock", os.O_RDWR | os.O_CREAT, 0o600)
+    """Yield True when this holder owns the exclusive server-admission lock."""
+    fd = _open_serve_lock_file(state_dir)
     try:
+        if os.name == "posix":
+            os.fchmod(fd, 0o600)
         if fcntl is None:
-            yield True
+            if msvcrt is not None:
+                os.lseek(fd, 0, os.SEEK_SET)
+                try:
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                except OSError:
+                    yield False
+                    return
+                try:
+                    yield True
+                finally:
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                return
+            yield False
             return
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -602,11 +1263,13 @@ def serve_lock(state_dir: Path) -> Iterator[bool]:
 
 def gc_stale_entries(root: Path | None = None) -> list[str]:
     """Delete rendezvous entries whose recorded pid is dead; return removed keys."""
-    base = root if root is not None else state_root()
+    base = Path(root) if root is not None else state_root()
     removed: list[str] = []
-    if not base.is_dir():
+    if _path_redirects(base) or not base.is_dir():
         return removed
-    for entry_dir in sorted(path for path in base.iterdir() if path.is_dir()):
+    for entry_dir in sorted(
+        path for path in base.iterdir() if not _path_redirects(path) and path.is_dir()
+    ):
         record = read_runtime(entry_dir)
         if record is None:
             continue
@@ -616,7 +1279,7 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
     return removed
 ```
 
-  (`flock` locks belong to the open file description, so a second `os.open` in the same process conflicts — the nested-context test is a real exclusivity test.)
+  (`flock` locks belong to the open file description, so a second `os.open` in the same process conflicts — the nested-context test is a real exclusivity test. Windows permits an `msvcrt` lock beyond EOF, so do not write a byte just to establish the range.)
 
 - [ ] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
@@ -649,9 +1312,25 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
   - HTTP endpoint `POST /v1/shutdown` — authenticated, replies `{"ok": true, "stopping": true}` then stops `serve_forever`
   - Request-handling order (binding for all sections): Host check (403) → Origin check (403) → `/v1/status` → bearer auth (401) → idle-timer touch → `/v1/shutdown` → existing dispatch
 
+> **Adopted preflight amendment (2026-07-16):** This handler is a local
+> security boundary, so duplicate security headers are invalid rather than
+> silently first-wins: obtain `hosts = self.headers.get_all("Host") or []` and
+> reject unless `len(hosts) == 1 and host_allowed(hosts[0], port)`; obtain
+> `origins = self.headers.get_all("Origin") or []` and reject when there is
+> more than one or its sole value fails `origin_allowed`. This preserves the
+> stated Host-before-Origin order. The new tests must send raw duplicate Host
+> and Origin requests, reject an empty/missing Host, prove a valid Bearer on
+> `/v1/status` still leaves `last_authenticated` unchanged, and prove valid
+> credentials paired with rejected Host or Origin do not touch it. Set the
+> server timer to a sentinel before each no-touch assertion rather than relying
+> on monotonic-clock resolution. Use `evil.example:{port}` (not a mismatched
+> `:80`) for the DNS-rebinding test. `from memoria_vault.cli import main` is
+> unused in A.4 and is deferred to A.6. This amends the test and handler
+> pseudocode below wherever they conflict.
+
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_rendezvous.py`, add imports `import contextlib`, `import http.client`, `import threading`, `from collections.abc import Iterator`, `from memoria_vault.cli import main`, `from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed`, `from tests.helpers import init_cli_workspace`; then append:
+- [ ] Write the failing tests. In `tests/test_rendezvous.py`, add imports `import contextlib`, `import http.client`, `import threading`, `from collections.abc import Iterator`, `from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed`, `from tests.helpers import init_cli_workspace`; then append:
 
 ```python
 @pytest.fixture
@@ -706,7 +1385,8 @@ def _request(
 
 def test_v1_status_is_unauthenticated_and_never_resets_idle_timer(workspace: Path) -> None:
     with _running_server(workspace, boot_id="boot-status") as (server, port, _thread):
-        before = server.last_authenticated
+        sentinel = -123.0
+        server.last_authenticated = sentinel
         status, payload = _request(port, "GET", "/v1/status")
 
         assert status == 200
@@ -715,7 +1395,7 @@ def test_v1_status_is_unauthenticated_and_never_resets_idle_timer(workspace: Pat
             "engine_version": __version__,
             "ok": True,
         }
-        assert server.last_authenticated == before
+        assert server.last_authenticated == sentinel
 
 
 def test_authenticated_request_resets_idle_timer_and_unauthorized_does_not(
@@ -737,7 +1417,7 @@ def test_authenticated_request_resets_idle_timer_and_unauthorized_does_not(
 
 def test_host_header_validation_rejects_dns_rebinding(workspace: Path) -> None:
     with _running_server(workspace) as (_server, port, _thread):
-        forged, payload = _request(port, "GET", "/v1/status", host="evil.example:80")
+        forged, payload = _request(port, "GET", "/v1/status", host=f"evil.example:{port}")
         assert forged == 403
         assert payload == {"ok": False, "error": "forbidden host"}
         localhost_ok, _payload = _request(port, "GET", "/v1/status", host=f"localhost:{port}")
@@ -786,6 +1466,13 @@ def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
         server.server_close()
 ```
 
+  Add a `_raw_request` helper that sends literal HTTP headers, then cover an
+  empty/missing Host plus duplicate Host and Origin requests.  Each must be
+  rejected in Host-before-Origin order and leave a sentinel
+  `last_authenticated` unchanged even with a valid bearer.  Also set that
+  sentinel before a bearer-authenticated `/v1/status` request to prove the
+  public lifecycle read never counts as authenticated activity.
+
   (`json` is already imported from A.2; keep the import list alphabetized to satisfy ruff.)
 
 - [ ] Run tests to verify they fail:
@@ -831,10 +1518,12 @@ def origin_allowed(origin: str | None) -> bool:
 ```python
         def _handle(self, method: str) -> None:
             port = int(self.server.server_address[1])
-            if not host_allowed(self.headers.get("Host"), port):
+            hosts = self.headers.get_all("Host") or []
+            if len(hosts) != 1 or not host_allowed(hosts[0], port):
                 self._write({"ok": False, "error": "forbidden host"}, HTTPStatus.FORBIDDEN)
                 return
-            if not origin_allowed(self.headers.get("Origin")):
+            origins = self.headers.get_all("Origin") or []
+            if len(origins) > 1 or (origins and not origin_allowed(origins[0])):
                 self._write({"ok": False, "error": "forbidden origin"}, HTTPStatus.FORBIDDEN)
                 return
             path = urlparse(self.path).path.rstrip("/") or "/"
@@ -892,13 +1581,35 @@ def origin_allowed(origin: str | None) -> bool:
 ### Task BOOT-A.5: Idle-exit monitor + port-walk binder
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/http_transport.py` (append after `make_http_server`)
+- Modify: `src/memoria_vault/runtime/http_transport.py` (`MemoriaHTTPServer`, the
+  authenticated tail of `Handler._handle`, and helpers after `make_http_server`)
 - Modify: `tests/test_rendezvous.py`
 
 **Interfaces:**
 - Produces:
-  - `http_transport.start_idle_monitor(server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0) -> threading.Thread` — daemon thread; calls `server.shutdown()` once `time.monotonic() - server.last_authenticated >= idle_exit_seconds`
+  - `MemoriaHTTPServer.authenticated_request() -> ContextManager[bool]`,
+    `reserve_idle_shutdown(idle_exit_seconds: float) -> bool`, and a
+    `serve_forever_started` event — the lock owns authenticated admission,
+    in-flight count, timer updates, and one-way shutdown reservation
+  - `http_transport.start_idle_monitor(server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0) -> threading.Thread` — daemon thread; validates finite positive durations, waits for `serve_forever`, then reserves and calls `server.shutdown()` only once idle with no admitted request in flight
   - `http_transport.bind_http_server(workspace: Path, *, host: str, candidate_ports: list[int], token: str, read_scope: list[str] | None = None, boot_id: str = "") -> MemoriaHTTPServer` — first free candidate wins; re-raises the last `OSError` when all fail
+
+> **Adopted lifecycle amendment (2026-07-16):** `daemon_threads=True` means an
+> idle monitor must not stop the server while an authenticated handler is in
+> flight. Add lock-protected authenticated in-flight accounting to
+> `MemoriaHTTPServer`; make the handler enter it after auth and leave it only
+> after shutdown/dispatch work completes. The monitor may call `shutdown()`
+> only after the server's `serve_forever`-started event is set, the timer is
+> expired, and the in-flight count is zero. Reserve that shutdown atomically
+> under the same lock before calling it; requests that authenticate after the
+> reservation receive 503 and must not dispatch. Require both monitor durations
+> to be finite positive floats. Tests must cover a blocked authenticated
+> dispatch surviving its idle deadline then stopping after release, a
+> reservation/admission interleaving, and a monitor that starts before
+> `serve_forever`. Cleanup is always shutdown → join → close.
+> For binding, add a mocked candidate-order/last-error test as well as the
+> socket test; do not use port `0` as the only fallback proof, and do not add
+> `allow_reuse_address` without a cross-platform exclusivity decision.
 
 **Steps:**
 
@@ -909,9 +1620,10 @@ def test_idle_monitor_exits_despite_unauthenticated_probes(workspace: Path) -> N
     server = _make_server(workspace, token="test-token", boot_id="boot-idle")
     port = int(server.server_address[1])
     serve_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    monitor: threading.Thread | None = None
     serve_thread.start()
     try:
-        start_idle_monitor(server, idle_exit_seconds=0.8, poll_interval=0.05)
+        monitor = start_idle_monitor(server, idle_exit_seconds=0.8, poll_interval=0.05)
         deadline = time.monotonic() + 0.6
         while time.monotonic() < deadline:
             status, _payload = _request(port, "GET", "/v1/status")
@@ -920,6 +1632,10 @@ def test_idle_monitor_exits_despite_unauthenticated_probes(workspace: Path) -> N
         serve_thread.join(timeout=10)
         assert not serve_thread.is_alive()
     finally:
+        server.shutdown()
+        serve_thread.join(timeout=5)
+        if monitor is not None:
+            monitor.join(timeout=5)
         server.server_close()
 
 
@@ -927,9 +1643,10 @@ def test_idle_monitor_extends_on_authenticated_requests(workspace: Path) -> None
     server = _make_server(workspace, token="test-token", boot_id="boot-live")
     port = int(server.server_address[1])
     serve_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    monitor: threading.Thread | None = None
     serve_thread.start()
     try:
-        start_idle_monitor(server, idle_exit_seconds=1.2, poll_interval=0.05)
+        monitor = start_idle_monitor(server, idle_exit_seconds=1.2, poll_interval=0.05)
         for _ in range(3):
             time.sleep(0.4)
             status, _payload = _request(port, "GET", "/status", token="test-token")
@@ -938,6 +1655,10 @@ def test_idle_monitor_extends_on_authenticated_requests(workspace: Path) -> None
         serve_thread.join(timeout=10)
         assert not serve_thread.is_alive()
     finally:
+        server.shutdown()
+        serve_thread.join(timeout=5)
+        if monitor is not None:
+            monitor.join(timeout=5)
         server.server_close()
 
 
@@ -968,27 +1689,142 @@ def test_bind_http_server_walks_past_occupied_ports(workspace: Path) -> None:
         blocker.server_close()
 ```
 
+  Add the lifecycle-regression tests required by the amendment: invalid finite
+  durations fail before a thread starts; a monitor started before
+  `serve_forever` cannot call `shutdown`; a blocked authenticated dispatch
+  outlives its idle deadline and only then permits shutdown; a reservation
+  interleaved with a new bearer request returns 503 and never dispatches; and
+  a mock binder proves candidate order and re-raises the final `OSError`.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "idle_monitor or bind_http_server" -v`
   Expected: `ImportError: cannot import name 'bind_http_server' from 'memoria_vault.runtime.http_transport'`.
 
-- [ ] Write the minimal implementation. Append to `http_transport.py` (after `make_http_server`):
+- [ ] Write the minimal implementation. Add `import math`,
+  `from collections.abc import Iterator`, and `from contextlib import contextmanager`.
+  Replace A.4's `MemoriaHTTPServer` with:
 
 ```python
+class MemoriaHTTPServer(ThreadingHTTPServer):
+    """Loopback server carrying boot identity and idle-exit bookkeeping."""
+
+    daemon_threads = True
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.boot_id = ""
+        self.last_authenticated = time.monotonic()
+        self._authenticated_lock = threading.Lock()
+        self._authenticated_in_flight = 0
+        self._idle_shutdown_reserved = False
+        self.serve_forever_started = threading.Event()
+
+    def record_authenticated_activity(self) -> None:
+        """Mark an authenticated request without changing the in-flight count."""
+        with self._authenticated_lock:
+            self.last_authenticated = time.monotonic()
+
+    @contextmanager
+    def authenticated_request(self) -> Iterator[bool]:
+        """Count all work after a request has passed bearer authentication."""
+        with self._authenticated_lock:
+            admitted = not self._idle_shutdown_reserved
+            if admitted:
+                self._authenticated_in_flight += 1
+                self.last_authenticated = time.monotonic()
+        try:
+            yield admitted
+        finally:
+            if admitted:
+                with self._authenticated_lock:
+                    self._authenticated_in_flight -= 1
+
+    def reserve_idle_shutdown(self, idle_exit_seconds: float) -> bool:
+        """Atomically prevent later authenticated work when the server is idle."""
+        with self._authenticated_lock:
+            if (
+                self._idle_shutdown_reserved
+                or self._authenticated_in_flight != 0
+                or time.monotonic() - self.last_authenticated < idle_exit_seconds
+            ):
+                return False
+            self._idle_shutdown_reserved = True
+            return True
+
+    def service_actions(self) -> None:
+        """Signal only after the stdlib serve loop has safely started."""
+        self.serve_forever_started.set()
+        super().service_actions()
+```
+
+  In A.4's handler, replace the authenticated tail — from the successful
+  bearer check through its dispatch — with this scoped admission (A.6 adds the
+  boot-ID check inside the shutdown branch):
+
+```python
+            if not is_authorized(self.headers.get("Authorization"), token):
+                self._write({"ok": False, "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
+                return
+            with self.server.authenticated_request() as admitted:
+                if not admitted:
+                    self._write(
+                        {"ok": False, "error": "server stopping"},
+                        HTTPStatus.SERVICE_UNAVAILABLE,
+                    )
+                    return
+                if path == "/v1/shutdown":
+                    if method != "POST":
+                        self._write(
+                            {"ok": False, "error": "method not allowed"},
+                            HTTPStatus.METHOD_NOT_ALLOWED,
+                        )
+                        return
+                    self._write({"ok": True, "stopping": True})
+                    threading.Thread(target=self.server.shutdown, daemon=True).start()
+                    return
+                try:
+                    payload, status = _dispatch(
+                        workspace,
+                        method,
+                        self.path,
+                        self._json_body,
+                        read_scope=startup_read_scope,
+                    )
+                except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns JSON errors.
+                    payload, status = {"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST
+                self._write(payload, status)
+```
+
+  Then append the helpers after `make_http_server`:
+
+```python
+def _finite_positive_duration(value: object, name: str) -> float:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int | float)
+        or not math.isfinite(value)
+        or value <= 0
+    ):
+        raise ValueError(f"{name} must be a finite positive duration")
+    return float(value)
+
+
 def start_idle_monitor(
     server: MemoriaHTTPServer, idle_exit_seconds: float, poll_interval: float = 1.0
 ) -> threading.Thread:
-    """Shut the server down once no authenticated request lands within the window."""
+    """Stop a ready server once its authenticated idle window expires."""
+    idle_exit_seconds = _finite_positive_duration(idle_exit_seconds, "idle_exit_seconds")
+    poll_interval = _finite_positive_duration(poll_interval, "poll_interval")
 
-    def _watch() -> None:
+    def watch() -> None:
+        server.serve_forever_started.wait()
         while True:
-            idle_for = time.monotonic() - server.last_authenticated
-            if idle_for >= idle_exit_seconds:
+            if server.reserve_idle_shutdown(idle_exit_seconds):
                 server.shutdown()
                 return
-            time.sleep(min(poll_interval, idle_exit_seconds - idle_for))
+            time.sleep(poll_interval)
 
-    thread = threading.Thread(target=_watch, daemon=True, name="memoria-idle-exit")
+    thread = threading.Thread(target=watch, daemon=True, name="memoria-idle-exit")
     thread.start()
     return thread
 
@@ -1002,7 +1838,7 @@ def bind_http_server(
     read_scope: list[str] | None = None,
     boot_id: str = "",
 ) -> MemoriaHTTPServer:
-    """Bind the first free candidate port; re-raise the last OSError when all fail."""
+    """Bind the first free candidate port, retaining the final bind error."""
     last_error: OSError | None = None
     for candidate in candidate_ports:
         try:
@@ -1016,7 +1852,9 @@ def bind_http_server(
             )
         except OSError as exc:
             last_error = exc
-    raise last_error if last_error is not None else OSError("no candidate ports given")
+    if last_error is None:
+        raise OSError("no candidate ports given")
+    raise last_error
 ```
 
 - [ ] Run tests to verify they pass:
@@ -1036,19 +1874,60 @@ def bind_http_server(
 
 **Files:**
 - Modify: `src/memoria_vault/cli.py` (serve parser lines 109–118; `_cmd_serve` lines 715–742; `_cmd_serve_http` lines 745–785; imports lines 1–35)
-- Modify: `src/memoria_vault/runtime/rendezvous.py` (add `post_shutdown`)
+- Modify: `src/memoria_vault/runtime/rendezvous.py` (add `probe_boot_id`, non-destructive `live_coordinates`, `post_shutdown`, and fail-closed no-lock-backend behavior)
+- Modify: `src/memoria_vault/runtime/http_transport.py` (bind `/v1/shutdown` to one
+  non-duplicate `X-Memoria-Boot-Id` after its bearer check)
 - Modify: `tests/test_rendezvous.py`
 - Modify: `tests/test_http_transport.py` (payload assertions lines 54–60)
 
 **Interfaces:**
-- Consumes: `rendezvous.vault_state_dir/write_runtime/read_runtime/clear_runtime/pid_alive` (A.1–A.2), `http_transport.bind_http_server/start_idle_monitor` (A.5), `runtime.time.now_iso`.
+- Consumes: `rendezvous.vault_state_dir/write_runtime/read_runtime/clear_runtime/pid_alive/serve_lock` (A.1–A.3), `http_transport.bind_http_server/start_idle_monitor` (A.5), `runtime.time.now_iso`.
 - Produces:
   - CLI flags on `memoria serve`: `--on-demand` (idle-exit enabled, implies `--http`), `--ephemeral` (bind port 0, implies `--http`), `--idle-exit <seconds>` (float, default `900.0`), `--stop` (POST `/v1/shutdown` at the vault's recorded coordinates)
   - `serve --http` JSON payload now includes `"port": <int>` and `"boot_id": <str>` alongside existing `ok/url/token/token_source`
   - `runtime.json` written immediately after bind, deleted on every clean exit path (`--once`, serve_forever return, KeyboardInterrupt)
   - `cli._serve_port_candidates(port: int) -> list[int]` — `[8765..8785]` when port is the default 8765, else `[port]`
   - `cli._vault_id(workspace: Path) -> str` — `.memoria/vault.json` `vault_id` or `""`
-  - `rendezvous.post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None` — authenticated POST to `/v1/shutdown`; `None` on failure
+  - `rendezvous.post_shutdown(port: int, token: str, boot_id: str, timeout: float = 2.0) -> dict[str, Any] | None` — direct authenticated POST to `/v1/shutdown`, carrying `X-Memoria-Boot-Id`; it bypasses ambient proxies, rejects redirects, bounds its response body, and returns `None` on failure
+  - `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` and `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — shared direct-serve/handshake liveness check; dead PID is stale, PID-live probe mismatch is retained for the admission-lock owner
+
+> **Adopted startup-race amendment (2026-07-16):** `serve.lock` is the
+> listener's server-lifetime admission lock, not a parent spawn mutex. Every
+> `serve --http` path acquires it before binding and retains it through runtime
+> removal and `server_close`; a busy invocation neither binds nor
+> writes/clears `runtime.json`. After acquiring it, recheck live coordinates;
+> only that owner may replace a PID-live record whose status probe is not yet
+> ready: retain it through bind and atomically supersede it only on successful
+> runtime publication. Move `probe_boot_id` and this non-destructive
+> `live_coordinates` check forward from A.7: dead PID entries may be cleared,
+> but PID-live/probe-mismatch entries survive because they can be newborn
+> servers between publication and `serve_forever`. Validate `--idle-exit` with
+> `math.isfinite(value) and value > 0`. Any failure after a successful bind,
+> including `write_runtime`, closes the listener before releasing the lock.
+> Add busy-lock, lock-lifetime, live-recheck, ambiguous-newborn, and
+> runtime-publication-failure tests. `--stop` must not delete a PID-live entry
+> merely because its POST races a newborn server. Before its authenticated POST,
+> `--stop` compares the direct status probe's boot ID with the record and retains
+> a mismatch without sending the bearer; the shutdown handler repeats that boot
+> ID check so a listener change between probe and POST cannot stop the wrong
+> server. Cover direct lifecycle clients with ambient-proxy, redirect, and
+> oversized-response regressions; cover both the client-side boot mismatch
+> (no bearer POST) and the handler's 409 stale-server response.
+
+> **Adopted A.6 preflight amendment (2026-07-16):** Replace the copied HTTP
+> body rather than layering on it. The no-backend `serve_lock` branch yields
+> `False`, so no direct server starts unlocked. Before any state or bind side
+> effect, reject non-finite and nonpositive `--idle-exit`, and reject `::1`
+> instead of advertising incomplete IPv6 support. While holding the admission
+> lock, distinguish no record/dead PID from a retained PID-live probe mismatch
+> with an explicit record read; only then may the owner attempt a replacement.
+> Bind failure and runtime-write failure leave that prior record intact; after
+> bind, nested cleanup closes the listener even if runtime removal fails. A
+> runtime-write failure leaves no success payload and releases the lock. A successful
+> stop requires `{"ok": true, "stopping": true}`; a failed POST retains the
+> PID-live record. Update existing HTTP CLI tests to patch `bind_http_server`,
+> not `make_http_server`, and add busy-lock/no-side-effect, lock-lifetime,
+> bind/write-failure, finite-input, routing, and newborn-stop-race coverage.
 
 **Steps:**
 
@@ -1193,6 +2072,17 @@ def test_serve_stop_reports_when_nothing_runs(
     assert output == {"ok": False, "error": "no memoria server is running for this vault"}
 ```
 
+  Add the adopted-race coverage before implementation: patch
+  `bind_http_server` (not `make_http_server`) and prove invalid finite input
+  and `--host ::1` reach neither state creation nor bind; a busy lock has no
+  bind/write/clear side effect; a matching live record prevents replacement;
+  a PID-live probe-mismatch record remains until successful replacement; bind
+  and runtime-write failures preserve that prior record and release the lock;
+  cleanup closes the listener even if runtime removal fails; the admission lock
+  spans runtime cleanup and `server_close`; unsuccessful stop replies retain a
+  PID-live record; and a boot mismatch sends no bearer POST.  Exercise direct
+  lifecycle requests with a proxy, redirect, and oversized-body regression.
+
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "serve_" -v`
   Expected: `SystemExit: 2` from argparse (`unrecognized arguments: --ephemeral` / `--stop` / `--idle-exit`), and `ImportError` for `_serve_port_candidates`.
@@ -1200,28 +2090,85 @@ def test_serve_stop_reports_when_nothing_runs(
 
 - [ ] Write the implementation.
 
-  In `rendezvous.py` add `import urllib.request` to the imports and append:
+  In `rendezvous.py` add `import urllib.error` and `import urllib.request` to
+  the imports and append:
 
 ```python
-def post_shutdown(port: int, token: str, timeout: float = 2.0) -> dict[str, Any] | None:
-    """POST /v1/shutdown with the bearer token; None when the server cannot be reached."""
+MAX_LIFECYCLE_RESPONSE_BYTES = 64 * 1024
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Fail lifecycle requests rather than following a redirected endpoint."""
+
+    def http_error_302(self, request, response, status, message, headers):
+        response.close()
+        raise urllib.error.HTTPError(request.full_url, status, message, headers, response)
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
+
+
+def _open_lifecycle_request(request: urllib.request.Request, *, timeout: float) -> Any:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+    return opener.open(request, timeout=timeout)
+
+
+def _read_lifecycle_json(response: Any) -> dict[str, Any] | None:
+    body = response.read(MAX_LIFECYCLE_RESPONSE_BYTES + 1)
+    if len(body) > MAX_LIFECYCLE_RESPONSE_BYTES:
+        return None
+    data = json.loads(body.decode("utf-8"))
+    return data if isinstance(data, dict) else None
+
+
+def post_shutdown(
+    port: int, token: str, boot_id: str, timeout: float = 2.0
+) -> dict[str, Any] | None:
+    """POST the boot-bound shutdown request, returning None when unreachable."""
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}/v1/shutdown",
         method="POST",
-        headers={"Authorization": f"Bearer {token}"},
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Memoria-Boot-Id": boot_id,
+        },
         data=b"",
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (OSError, ValueError):
+        with _open_lifecycle_request(request, timeout=timeout) as response:
+            return _read_lifecycle_json(response)
+    except (OSError, ValueError, urllib.error.HTTPError):
         return None
-    return data if isinstance(data, dict) else None
+
+
+def probe_boot_id(port: int, timeout: float = 1.0) -> str | None:
+    """Return the unauthenticated status endpoint's non-empty boot ID."""
+    request = urllib.request.Request(f"http://127.0.0.1:{port}/v1/status", method="GET")
+    try:
+        with _open_lifecycle_request(request, timeout=timeout) as response:
+            data = _read_lifecycle_json(response)
+    except (OSError, ValueError, urllib.error.HTTPError):
+        return None
+    boot_id = data.get("boot_id") if isinstance(data, dict) else None
+    return boot_id if isinstance(boot_id, str) and boot_id else None
+
+
+def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None:
+    """Return a matching live entry, removing only records with dead PIDs."""
+    record = read_runtime(state_dir)
+    if record is None:
+        return None
+    if not pid_alive(int(record["pid"])):
+        clear_runtime(state_dir)
+        return None
+    if probe_boot_id(int(record["port"]), timeout=probe_timeout) != record["boot_id"]:
+        return None
+    return record
 ```
 
   In `src/memoria_vault/cli.py`:
 
-  1. Add to the import block (after line 27, `from memoria_vault.runtime.paths import safe_filename`):
+  1. Add `import math` and, after line 27's
+     `from memoria_vault.runtime.paths import safe_filename`, add:
 
 ```python
 from memoria_vault.runtime.time import now_iso
@@ -1279,73 +2226,100 @@ def _cmd_serve_http(args: argparse.Namespace) -> int:
     from memoria_vault.runtime import rendezvous
     from memoria_vault.runtime.http_transport import bind_http_server, start_idle_monitor
 
-    if args.host not in {"127.0.0.1", "localhost", "::1"}:
-        return _fail("serve --http only binds loopback hosts", json_output=args.json)
-    if args.idle_exit <= 0:
+    if not math.isfinite(args.idle_exit) or args.idle_exit <= 0:
         return _fail("serve --idle-exit must be positive", json_output=args.json)
+    if args.host not in {"127.0.0.1", "localhost"}:
+        return _fail("serve --http only binds loopback hosts", json_output=args.json)
     workspace = _workspace(args)
     env_token = os.environ.get("MEMORIA_HTTP_TOKEN")
     token = env_token or secrets.token_urlsafe(32)
     boot_id = str(uuid.uuid4())
     candidates = [0] if args.ephemeral else _serve_port_candidates(args.port)
-    try:
-        server = bind_http_server(
-            workspace,
-            host=args.host,
-            candidate_ports=candidates,
-            token=token,
-            read_scope=args.read_scope,
-            boot_id=boot_id,
-        )
-    except ValueError as exc:
-        return _fail(str(exc), json_output=args.json)
-    except OSError as exc:
-        return _fail(f"serve --http could not bind a port: {exc}", json_output=args.json)
-    port = int(server.server_address[1])
     state_dir = rendezvous.vault_state_dir(workspace)
-    rendezvous.write_runtime(
-        state_dir,
-        {
-            "vault_path": str(workspace),
-            "vault_id": _vault_id(workspace),
-            "port": port,
-            "pid": os.getpid(),
-            "boot_id": boot_id,
-            "token": token,
-            "engine_version": __version__,
-            "started_at": now_iso(),
-        },
-    )
-    payload = {
-        "ok": True,
-        "url": f"http://{args.host}:{port}",
-        "port": port,
-        "boot_id": boot_id,
-        "token": None if env_token else token,
-        "token_source": "env" if env_token else "generated",
-    }
-    if args.json:
-        print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
-    elif not args.quiet:
-        print(f"Memoria HTTP serving {payload['url']}", flush=True)
-        if env_token:
-            print("Token loaded from MEMORIA_HTTP_TOKEN.", flush=True)
-        else:
-            print(f"Token: {token}", flush=True)
-    if args.once:
-        rendezvous.clear_runtime(state_dir)
-        server.server_close()
-        return 0
-    if args.on_demand:
-        start_idle_monitor(server, args.idle_exit)
-    try:
-        server.serve_forever()
-        return 0
-    except KeyboardInterrupt:
-        return 0
-    finally:
-        rendezvous.clear_runtime(state_dir)
-        server.server_close()
+
+    with rendezvous.serve_lock(state_dir) as acquired:
+        if not acquired:
+            return _fail(
+                "serve could not acquire the exclusive admission lock", json_output=args.json
+            )
+
+        live = rendezvous.live_coordinates(state_dir)
+        if live is not None:
+            return _fail(
+                "a memoria server is already running for this vault", json_output=args.json
+            )
+
+        server: Any | None = None
+        runtime_published = False
+        try:
+            try:
+                server = bind_http_server(
+                    workspace,
+                    host=args.host,
+                    candidate_ports=candidates,
+                    token=token,
+                    read_scope=args.read_scope,
+                    boot_id=boot_id,
+                )
+            except ValueError as exc:
+                return _fail(str(exc), json_output=args.json)
+            except OSError as exc:
+                return _fail(f"serve --http could not bind a port: {exc}", json_output=args.json)
+
+            port = int(server.server_address[1])
+            try:
+                rendezvous.write_runtime(
+                    state_dir,
+                    {
+                        "vault_path": str(workspace),
+                        "vault_id": _vault_id(workspace),
+                        "port": port,
+                        "pid": os.getpid(),
+                        "boot_id": boot_id,
+                        "token": token,
+                        "engine_version": __version__,
+                        "started_at": now_iso(),
+                    },
+                )
+                runtime_published = True
+            except (OSError, ValueError) as exc:
+                return _fail(
+                    f"serve --http could not publish runtime: {exc}", json_output=args.json
+                )
+
+            payload = {
+                "ok": True,
+                "url": f"http://{args.host}:{port}",
+                "port": port,
+                "boot_id": boot_id,
+                "token": None if env_token else token,
+                "token_source": "env" if env_token else "generated",
+            }
+            if args.once:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    try:
+                        server.server_close()
+                    finally:
+                        server = None
+                return _emit(payload, args)
+            if args.on_demand:
+                start_idle_monitor(server, args.idle_exit)
+            _emit(payload, args)
+            try:
+                server.serve_forever()
+                return 0
+            except KeyboardInterrupt:
+                return 0
+        finally:
+            if server is not None:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    server.server_close()
 
 
 def _cmd_serve_stop(args: argparse.Namespace) -> int:
@@ -1354,14 +2328,37 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     state_dir = rendezvous.vault_state_dir(workspace)
     record = rendezvous.read_runtime(state_dir)
-    if record is None or not rendezvous.pid_alive(int(record["pid"])):
+    if record is None:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    if not rendezvous.pid_alive(int(record["pid"])):
         rendezvous.clear_runtime(state_dir)
         return _fail("no memoria server is running for this vault", json_output=args.json)
-    response = rendezvous.post_shutdown(int(record["port"]), str(record["token"]))
-    if response is None:
+    port = int(record["port"])
+    boot_id = str(record["boot_id"])
+    if rendezvous.probe_boot_id(port) != boot_id:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    response = rendezvous.post_shutdown(port, str(record["token"]), boot_id)
+    if not (
+        isinstance(response, dict)
+        and response.get("ok") is True
+        and response.get("stopping") is True
+    ):
         return _fail("no memoria server is running for this vault", json_output=args.json)
     return _emit({"ok": True, "stopped": True, "port": int(record["port"])}, args)
 ```
+
+  5. Bind shutdown to the boot record.  In A.5's admitted `/v1/shutdown`
+     branch, after the method check and before writing success, insert:
+
+```python
+                    boot_ids = self.headers.get_all("X-Memoria-Boot-Id") or []
+                    if len(boot_ids) != 1 or boot_ids[0] != self.server.boot_id:
+                        self._write({"ok": False, "error": "stale server"}, HTTPStatus.CONFLICT)
+                        return
+```
+
+  Its tests must reject both a missing/mismatched and duplicate boot ID with
+  409, while the client-side status mismatch proves no bearer POST occurs.
 
 - [ ] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py tests/test_http_transport.py -v` — all pass.
@@ -1383,13 +2380,51 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
 - Modify: `tests/test_rendezvous.py`
 
 **Interfaces:**
-- Consumes: `serve_lock`, `read_runtime`, `clear_runtime`, `pid_alive`, `gc_stale_entries`, the `/v1/status` endpoint (A.4).
+- Consumes: `read_runtime`, `clear_runtime`, `pid_alive`, `gc_stale_entries`, the `/v1/status` endpoint (A.4), and A.6's `probe_boot_id`/`live_coordinates` helpers.
 - Produces:
   - `rendezvous.HandshakeError(RuntimeError)`
-  - `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` — unauthenticated `GET /v1/status`, returns `boot_id` or `None`
-  - `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — full stale check (record valid AND pid alive AND probed boot_id matches); **deletes** the entry when stale
-  - `rendezvous.handshake(vault_path: Path, *, spawn: bool = False, timeout: float = 5.0, spawn_command: list[str] | None = None) -> dict[str, Any]` — returns exactly `{"port": int, "token": str, "engine_version": str, "boot_id": str}`; raises `HandshakeError` (message contains `--spawn` when reporting no-server, and the `serve.log` path on spawn timeout)
-  - Default spawn command: `[sys.executable, "-m", "memoria_vault.cli", "serve", "--workspace", str(vault), "--http", "--on-demand", "--ephemeral", "--quiet"]`, detached (`start_new_session=True`), stdout+stderr appended to `<state>/serve.log`
+  - A.6 provides `rendezvous.probe_boot_id(port: int, timeout: float = 1.0) -> str | None` — unauthenticated `GET /v1/status`, returns `boot_id` or `None`
+  - `rendezvous.live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None` — returns only a valid, PID-live, boot-ID-matching entry; clears dead-PID entries but retains a PID-live/probe-mismatch entry for its lock owner to resolve
+  - `rendezvous.handshake(vault_path: Path, *, spawn: bool = False, timeout: float = 5.0, spawn_command: list[str] | None = None) -> dict[str, Any]` — returns exactly `{"port": int, "token": str, "engine_version": str, "boot_id": str, "pid": int}`; raises `HandshakeError` (message contains `--spawn` when reporting no-server, and the `serve.log` path on spawn timeout)
+  - Default spawn command: `[sys.executable, "-m", "memoria_vault.cli", "serve", "--workspace", str(vault), "--http", "--on-demand", "--ephemeral", "--quiet"]`, detached with platform-appropriate process-group flags, stdout+stderr appended to `<state>/serve.log`; its child cwd is the trusted package root and its environment omits `PYTHONPATH` and `PYTHONHOME`
+
+> **Adopted handoff amendment (2026-07-16):** Handshake never holds or
+> inherits `serve.lock`: after a miss, it launches a detached child and waits
+> for a live record. Concurrent handshakes may create short-lived losing
+> children, but the A.6 child-owned admission lock permits only one listener
+> and runtime publication; every waiting parent returns the winner's
+> coordinates. `_wait_for_live` is non-destructive for PID-live/probe-mismatch
+> records. Add newborn-record, concurrent-spawn, and direct-serve-race tests.
+> For cross-platform detachment, use `start_new_session=True` only on POSIX;
+> use the narrow Windows new-process-group flag otherwise, with no lock-handle
+> inheritance. Make process-group assertions POSIX-only.
+
+> **Adopted A.7 preflight amendment (2026-07-16):** A.6 exclusively owns
+> `probe_boot_id` and `live_coordinates`; remove their duplicate A.7
+> definitions. Validate a finite positive timeout before any spawn side effect.
+> `_wait_for_live` calls A.6's liveness helper and accepts only a returned
+> positive, PID-live, boot-ID-matching record: a matching status response must
+> never make a zero, negative, dead, or malformed PID live. It remains
+> non-destructive for a PID-live/probe-mismatch newborn and caps every
+> probe/sleep by a strictly positive remaining deadline. Normalize log-open and
+> `Popen` failures into `HandshakeError` naming `serve.log`; use
+> `start_new_session=True` only on POSIX, `CREATE_NEW_PROCESS_GROUP` only on
+> Windows, and `close_fds=True` on both. Replace the parent-lock/manual-runtime
+> test with actual concurrent `spawn=True` handshakes plus a direct-serve race,
+> guaranteeing spawned-child cleanup. A live engine-version mismatch is not
+> stale in this slice: return its coordinates and let the skew UI report it
+> until an explicit authenticated stop→wait→spawn upgrade handoff is designed.
+
+> **Adopted A.7 spawn-import amendment (2026-07-16):** `python -m` resolves
+> modules relative to its current directory. Spawn the fixed command from the
+> trusted package root (`Path(__file__).resolve().parents[2]`), not the caller's
+> or vault's working directory, and remove `PYTHONPATH` and `PYTHONHOME` from
+> the inherited child environment. Keep `XDG_STATE_HOME` and ordinary runtime
+> configuration intact so parent and child share the keyed rendezvous directory.
+> Extend the mocked-Popen test to assert the trusted cwd and stripped overrides,
+> and add a real shadow-package regression: a `memoria_vault/cli.py` in an
+> untrusted caller cwd must not execute while the actual server publishes and is
+> cleanly stopped.
 
 **Steps:**
 
@@ -1421,10 +2456,11 @@ def test_handshake_returns_live_coordinates_without_spawning(workspace: Path) ->
         "token": "live-token",
         "engine_version": __version__,
         "boot_id": "boot-live",
+        "pid": os.getpid(),
     }
 
 
-def test_handshake_treats_boot_id_mismatch_as_stale(workspace: Path) -> None:
+def test_handshake_retains_pid_live_boot_id_mismatch_for_lock_owner(workspace: Path) -> None:
     _require_loopback()
     state_dir = rendezvous.vault_state_dir(workspace)
     with _running_server(workspace, token="t", boot_id="boot-new") as (_server, port, _thread):
@@ -1435,7 +2471,35 @@ def test_handshake_treats_boot_id_mismatch_as_stale(workspace: Path) -> None:
         with pytest.raises(rendezvous.HandshakeError):
             rendezvous.handshake(workspace, spawn=False)
 
-    assert rendezvous.read_runtime(state_dir) is None  # stale entry deleted
+    record = rendezvous.read_runtime(state_dir)
+    assert record is not None  # A6 admission owner resolves an unready PID-live entry.
+    assert record["boot_id"] == "boot-old"
+
+
+@pytest.mark.parametrize("pid", [0, -1])
+def test_wait_for_live_rejects_nonpositive_pid_despite_matching_status(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, pid: int
+) -> None:
+    state_dir = rendezvous.vault_state_dir(workspace)
+    matching = _runtime_record(workspace, port=8765, boot_id="matching-boot")
+    matching["pid"] = pid
+    # Defend the A.7 consumer even if a future A.6 regression returns a record
+    # whose status probe matches but whose PID cannot identify a live server.
+    monkeypatch.setattr(rendezvous, "live_coordinates", lambda *_args, **_kwargs: matching)
+
+    assert rendezvous._wait_for_live(state_dir, timeout=0.01) is None
+
+
+def test_wait_for_live_rejects_a_dead_pid_despite_matching_status(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    state_dir = rendezvous.vault_state_dir(workspace)
+    matching = _runtime_record(workspace, port=8765, boot_id="matching-boot")
+    matching["pid"] = 4242
+    monkeypatch.setattr(rendezvous, "live_coordinates", lambda *_args, **_kwargs: matching)
+    monkeypatch.setattr(rendezvous, "pid_alive", lambda _pid: False)
+
+    assert rendezvous._wait_for_live(state_dir, timeout=0.01) is None
 
 
 def test_handshake_spawn_timeout_names_the_log_path(workspace: Path) -> None:
@@ -1448,76 +2512,109 @@ def test_handshake_spawn_timeout_names_the_log_path(workspace: Path) -> None:
         )
 
 
-def test_handshake_race_loser_returns_winner_coordinates(workspace: Path) -> None:
+@pytest.mark.parametrize("timeout", [0.0, -1.0, float("inf"), float("nan")])
+def test_handshake_rejects_invalid_timeout_before_spawning(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, timeout: float
+) -> None:
+    monkeypatch.setattr(
+        rendezvous,
+        "_spawn_server",
+        lambda *_args, **_kwargs: pytest.fail("invalid timeout must not spawn"),
+    )
+    with pytest.raises(rendezvous.HandshakeError, match="finite positive"):
+        rendezvous.handshake(workspace, spawn=True, timeout=timeout)
+
+
+@pytest.mark.parametrize("failure", ["log-open", "popen"])
+def test_handshake_spawn_failures_name_the_log_path(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    # Patch the log opener and Popen independently; both normalize OSError.
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise OSError("permission denied")
+
+    if failure == "log-open":
+        monkeypatch.setattr(Path, "open", fail)
+    else:
+        monkeypatch.setattr(rendezvous.subprocess, "Popen", fail)
+    with pytest.raises(rendezvous.HandshakeError, match="serve.log"):
+        rendezvous.handshake(workspace, spawn=True)
+
+
+def test_concurrent_spawn_handshakes_converge_on_one_listener(workspace: Path) -> None:
     _require_loopback()
     state_dir = rendezvous.vault_state_dir(workspace)
-    results: dict[str, object] = {}
+    barrier = threading.Barrier(2)
+    results: list[dict[str, Any]] = []
+    errors: list[Exception] = []
 
-    def losing_handshake() -> None:
+    def call_handshake() -> None:
         try:
-            results.update(rendezvous.handshake(workspace, spawn=True, timeout=8.0))
-        except Exception as exc:  # noqa: BLE001 -- surfaced via assertion below.
-            results["error"] = str(exc)
+            barrier.wait(timeout=5)
+            results.append(rendezvous.handshake(workspace, spawn=True, timeout=8.0))
+        except Exception as exc:  # noqa: BLE001 -- asserted below.
+            errors.append(exc)
 
-    with rendezvous.serve_lock(state_dir) as acquired:
-        assert acquired
-        thread = threading.Thread(target=losing_handshake, daemon=True)
+    threads = [threading.Thread(target=call_handshake) for _ in range(2)]
+    for thread in threads:
         thread.start()
-        time.sleep(0.2)
-        with _running_server(workspace, token="winner-token", boot_id="winner-boot") as (
-            _server,
-            port,
-            _serve_thread,
-        ):
-            rendezvous.write_runtime(
-                state_dir,
-                _runtime_record(
-                    workspace, port=port, boot_id="winner-boot", token="winner-token"
-                ),
+    try:
+        for thread in threads:
+            thread.join(timeout=12)
+        assert not errors
+        assert len(results) == 2
+        assert results[0] == results[1]
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None
+        assert results[0]["pid"] == record["pid"]
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
             )
-            thread.join(timeout=10)
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
 
-    assert "error" not in results
-    assert results["token"] == "winner-token"
-    assert results["port"] == port
-    assert results["boot_id"] == "winner-boot"
+
+def test_handshake_converges_with_a_direct_serve_race(workspace: Path) -> None:
+    _require_loopback()
+    state_dir = rendezvous.vault_state_dir(workspace)
+    direct = threading.Thread(
+        target=main,
+        args=(["serve", "--workspace", str(workspace), "--ephemeral", "--on-demand", "--quiet"],),
+    )
+    direct.start()
+    try:
+        coordinates = rendezvous.handshake(workspace, spawn=True, timeout=8.0)
+        record = rendezvous.read_runtime(state_dir)
+        assert record is not None
+        assert coordinates["boot_id"] == record["boot_id"]
+        assert coordinates["pid"] == record["pid"]
+    finally:
+        record = rendezvous.read_runtime(state_dir)
+        if record is not None:
+            rendezvous.post_shutdown(
+                int(record["port"]), str(record["token"]), str(record["boot_id"])
+            )
+        assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
+        direct.join(timeout=10)
+        assert not direct.is_alive()
 ```
+
+  Extend the liveness proof with malformed PID values (`True`, a numeric
+  string, and a missing value): only a real positive `int` that remains
+  PID-live may be returned.
 
 - [ ] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k handshake -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'HandshakeError'`.
 
-- [ ] Write the minimal implementation. In `rendezvous.py` add `import subprocess` and `import time` to the imports, then append:
+- [ ] Write the minimal implementation. In `rendezvous.py` add `import math`,
+  `import subprocess`, and `import time` to the imports, then append:
 
 ```python
 class HandshakeError(RuntimeError):
     """Raised when no live server can be reached or spawned."""
-
-
-def probe_boot_id(port: int, timeout: float = 1.0) -> str | None:
-    """Read boot_id from the unauthenticated /v1/status liveness probe."""
-    try:
-        with urllib.request.urlopen(
-            f"http://127.0.0.1:{port}/v1/status", timeout=timeout
-        ) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (OSError, ValueError):
-        return None
-    return str(data.get("boot_id") or "") if isinstance(data, dict) else None
-
-
-def live_coordinates(state_dir: Path, *, probe_timeout: float = 1.0) -> dict[str, Any] | None:
-    """Return the entry when its pid is alive AND /v1/status echoes its boot_id; else GC it."""
-    record = read_runtime(state_dir)
-    if record is None:
-        return None
-    if not pid_alive(int(record["pid"])):
-        clear_runtime(state_dir)
-        return None
-    if probe_boot_id(int(record["port"]), timeout=probe_timeout) != record["boot_id"]:
-        clear_runtime(state_dir)
-        return None
-    return record
 
 
 def handshake(
@@ -1527,7 +2624,14 @@ def handshake(
     timeout: float = 5.0,
     spawn_command: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Connect-else-spawn-else-report; returns {port, token, engine_version, boot_id}."""
+    """Connect-else-spawn-else-report; returns port, token, version, boot ID, and pid."""
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or not math.isfinite(timeout)
+        or timeout <= 0
+    ):
+        raise HandshakeError("handshake timeout must be finite positive seconds")
     vault = Path(vault_path).expanduser().resolve()
     state_dir = vault_state_dir(vault)
     gc_stale_entries()
@@ -1543,6 +2647,7 @@ def handshake(
         "token": str(record["token"]),
         "engine_version": str(record["engine_version"]),
         "boot_id": str(record["boot_id"]),
+        "pid": int(record["pid"]),
     }
 
 
@@ -1553,13 +2658,8 @@ def _spawn_and_wait(
     timeout: float,
     spawn_command: list[str] | None,
 ) -> dict[str, Any]:
-    with serve_lock(state_dir) as acquired:
-        if acquired:
-            record = live_coordinates(state_dir)
-            if record is not None:
-                return record
-            _spawn_server(vault, state_dir, spawn_command)
-        record = _wait_for_live(state_dir, timeout=timeout)
+    _spawn_server(vault, state_dir, spawn_command)
+    record = _wait_for_live(state_dir, timeout=timeout)
     if record is None:
         raise HandshakeError(
             f"server did not publish rendezvous within {timeout:.0f}s;"
@@ -1581,29 +2681,59 @@ def _spawn_server(vault: Path, state_dir: Path, spawn_command: list[str] | None)
         "--ephemeral",
         "--quiet",
     ]
-    with (Path(state_dir) / "serve.log").open("ab") as log_file:
-        subprocess.Popen(
-            command,
-            stdin=subprocess.DEVNULL,
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            start_new_session=True,
-        )
+    log_path = Path(state_dir) / "serve.log"
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    popen_kwargs: dict[str, Any] = {
+        "stdin": subprocess.DEVNULL,
+        "stderr": subprocess.STDOUT,
+        "close_fds": True,
+        "cwd": str(Path(__file__).resolve().parents[2]),
+        "env": environment,
+    }
+    if os.name == "posix":
+        popen_kwargs["start_new_session"] = True
+    elif os.name == "nt":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    try:
+        if _path_redirects(state_dir) or _path_redirects(log_path):
+            raise ValueError(_REDIRECT_ERROR)
+        with log_path.open("ab") as log_file:
+            subprocess.Popen(command, stdout=log_file, **popen_kwargs)
+    except (OSError, ValueError) as exc:
+        raise HandshakeError(f"could not spawn memoria server; see {log_path}: {exc}") from exc
 
 
 def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or not math.isfinite(timeout)
+        or timeout <= 0
+    ):
+        return None
     deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        record = read_runtime(state_dir)
-        if record is not None and probe_boot_id(int(record["port"]), timeout=0.5) == record[
-            "boot_id"
-        ]:
-            return record
-        time.sleep(0.1)
-    return None
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        record = live_coordinates(state_dir, probe_timeout=min(0.5, remaining))
+        if record is not None:
+            pid = record.get("pid")
+            if type(pid) is int and pid > 0 and pid_alive(pid):
+                return record
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        time.sleep(min(0.1, remaining))
 ```
 
-  (Deliberate: `_wait_for_live` never deletes the entry — a freshly bound server writes `runtime.json` a few milliseconds before `serve_forever` starts answering, and clearing in that window would GC a healthy newborn. Only the up-front `live_coordinates` check treats mismatches as stale, per spec §3.)
+  (Deliberate: `_wait_for_live` delegates to A.6's liveness helper. It may clear
+  a dead-PID entry, but it never deletes a PID-live/probe-mismatch entry: a
+  freshly bound server writes `runtime.json` a few milliseconds before
+  `serve_forever` starts answering, and clearing in that window would GC a
+  healthy newborn.)
 
 - [ ] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
@@ -1629,8 +2759,38 @@ def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
 - Consumes: `rendezvous.handshake`, `rendezvous.HandshakeError`, `rendezvous.post_shutdown`, `rendezvous.probe_boot_id`.
 - Produces:
   - CLI verb `memoria handshake --vault <path> [--spawn] [--json] [--quiet]`
-  - stdout on success (`--json`): exactly `{"boot_id": …, "engine_version": …, "ok": true, "port": …, "token": …}` (sorted keys); exit 0
+  - stdout on success (`--json`): exactly `{"boot_id": …, "engine_version": …, "ok": true, "pid": …, "port": …, "token": …}` (sorted keys); exit 0
   - on failure: `{"ok": false, "error": …}` via `_fail`, exit 2 (error text contains `--spawn` when no server runs and spawn was not requested)
+
+> **Adopted handshake-contract amendment (2026-07-16):** Include the positive
+> runtime PID in the CLI payload and end-to-end assertion; the U3 consumer and
+> cross-section contract already require it. The detached-process assertion is
+> POSIX-only, matching the platform-conditional spawning rule in A.7.
+
+> **Adopted A.8 diagnostics amendment (2026-07-16):** With `--json`, preserve
+> the machine-readable failure object on stdout *and* print the same diagnostic
+> to stderr so the plugin can surface the `serve.log` remediation. Test both
+> channels. Immediately after parsing successful stdout, the spawned-server
+> test captures its owned child PID and arms cleanup before any assertion. It
+> asserts that the PID is positive, matches `runtime.json`, and differs from
+> the calling process; process-group and `os.waitpid` assertions are POSIX-only.
+> Its `finally` block stops the owned runtime, waits for process exit, reaps the
+> child where possible, then waits for runtime removal.
+
+> **Adopted A.8 import-isolation test amendment (2026-07-16):** The child now
+> starts from the trusted source/package root and deliberately strips
+> `PYTHONPATH` and `PYTHONHOME` (A.7's spawn-import repair). Do not restore a
+> source-path environment injection in this end-to-end test; the detached child
+> must prove it starts successfully through its trusted cwd alone.
+
+> **Adopted A.8 review-repair amendment (2026-07-16):** Treat every normal
+> handler exception — validation, path-resolution, and rendezvous failures — as
+> a handshake diagnostic: with `--json`, mirror its exact text to stderr and
+> retain the same JSON error object on stdout. Route those paths through one
+> helper. The cleanup test owns only coordinates captured from successful stdout;
+> it may stop a current runtime only when its PID and boot ID still match, never
+> by adopting a mutable replacement record. A lost shutdown response must not
+> bypass reap and runtime-removal cleanup.
 
 **Steps:**
 
@@ -1648,39 +2808,88 @@ def test_handshake_cli_reports_when_no_server(
     assert "--spawn" in output["error"]
 
 
+def test_handshake_cli_json_failure_keeps_json_and_writes_stderr(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise rendezvous.HandshakeError("server did not publish; see /state/serve.log")
+
+    monkeypatch.setattr(
+        rendezvous,
+        "handshake",
+        fail,
+    )
+
+    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "server did not publish; see /state/serve.log"}
+    assert captured.err == f"{output['error']}\n"
+
+
+def test_handshake_cli_json_unexpected_failure_keeps_json_and_writes_stderr(
+    workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise OSError("state directory is unavailable")
+
+    monkeypatch.setattr(rendezvous, "handshake", fail)
+
+    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "state directory is unavailable"}
+    assert captured.err == f"{output['error']}\n"
+
+
 def test_handshake_cli_rejects_missing_vault(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     rc = main(["handshake", "--vault", str(tmp_path / "missing"), "--json"])
-    output = json.loads(capsys.readouterr().out)
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
 
     assert rc == 2
     assert "not a directory" in output["error"]
+    assert captured.err == f"{output['error']}\n"
 
 
 def test_handshake_cli_spawns_detached_server_and_reuses_it(
     workspace: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _require_loopback()
-    src_dir = Path(rendezvous.__file__).resolve().parents[2]
-    monkeypatch.setenv(
-        "PYTHONPATH", f"{src_dir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}"
-    )
 
-    rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 0
-    assert set(output) == {"ok", "port", "token", "engine_version", "boot_id"}
-    assert output["ok"] is True
-    assert output["engine_version"] == __version__
     state_dir = rendezvous.vault_state_dir(workspace)
+    output: dict[str, object] = {}
+    owned_port = 0
+    owned_token = ""
+    owned_boot_id = ""
+    child_pid = 0
     try:
+        rc = main(["handshake", "--vault", str(workspace), "--spawn", "--json"])
+        output = json.loads(capsys.readouterr().out)
+        child_pid = int(output.get("pid", 0))  # arm cleanup before assertions
+        owned_port = int(output.get("port", 0))
+        owned_token = str(output.get("token", ""))
+        owned_boot_id = str(output.get("boot_id", ""))
+
+        assert rc == 0
+        assert set(output) == {"ok", "port", "token", "engine_version", "boot_id", "pid"}
+        assert output["ok"] is True
+        assert output["engine_version"] == __version__
+        assert output["pid"] > 0
         assert rendezvous.probe_boot_id(output["port"], timeout=2.0) == output["boot_id"]
         assert (state_dir / "serve.log").exists()
         record = rendezvous.read_runtime(state_dir)
         assert record is not None
-        assert os.getpgid(int(record["pid"])) != os.getpgid(0)  # detached session
+        assert output["pid"] == record["pid"]
+        assert output["pid"] != os.getpid()
+        if os.name == "posix":
+            assert os.getpgid(int(record["pid"])) != os.getpgid(0)  # detached session
 
         rc_again = main(["handshake", "--vault", str(workspace), "--json"])
         second = json.loads(capsys.readouterr().out)
@@ -1698,9 +2907,36 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
             if output["token"] in text:
                 token_hits.append(path)
         assert token_hits == []  # zero secrets in the vault tree
+
+        original_post_shutdown = rendezvous.post_shutdown
+
+        def stop_but_lose_response(*args: object, **kwargs: object) -> None:
+            original_post_shutdown(*args, **kwargs)
+
+        monkeypatch.setattr(rendezvous, "post_shutdown", stop_but_lose_response)
     finally:
-        stopped = rendezvous.post_shutdown(output["port"], output["token"])
-        assert stopped == {"ok": True, "stopping": True}
+        record = rendezvous.read_runtime(state_dir)
+        if (
+            record is not None
+            and child_pid > 0
+            and int(record["pid"]) == child_pid
+            and str(record["boot_id"]) == owned_boot_id
+        ):
+            rendezvous.post_shutdown(owned_port, owned_token, owned_boot_id)
+        if child_pid > 0:
+            if os.name == "posix":
+                deadline = time.monotonic() + 10
+                while True:
+                    try:
+                        reaped, _status = os.waitpid(child_pid, os.WNOHANG)
+                    except ChildProcessError:  # pragma: no cover - harness already reaped it.
+                        break
+                    if reaped == child_pid:
+                        break
+                    assert time.monotonic() < deadline, "spawned server did not exit"
+                    time.sleep(0.05)
+            else:
+                assert _wait_until(lambda: not rendezvous.pid_alive(child_pid))
         assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
 ```
 
@@ -1721,19 +2957,25 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
     handshake.set_defaults(handler=_cmd_handshake)
 ```
 
-  Handler, placed after `_cmd_serve_stop`:
+  Failure helper and handler, placed after `_cmd_serve_stop`:
 
 ```python
+def _handshake_fail(args: argparse.Namespace, message: str) -> int:
+    if args.json:
+        print(message, file=sys.stderr, flush=True)
+    return _fail(message, json_output=args.json)
+
+
 def _cmd_handshake(args: argparse.Namespace) -> int:
     from memoria_vault.runtime import rendezvous
 
-    vault = Path(args.vault).expanduser().resolve()
-    if not vault.is_dir():
-        return _fail(f"vault path is not a directory: {vault}", json_output=args.json)
     try:
+        vault = Path(args.vault).expanduser().resolve()
+        if not vault.is_dir():
+            return _handshake_fail(args, f"vault path is not a directory: {vault}")
         coordinates = rendezvous.handshake(vault, spawn=args.spawn)
-    except rendezvous.HandshakeError as exc:
-        return _fail(str(exc), json_output=args.json)
+    except Exception as exc:  # preserve the handshake JSON/stderr contract
+        return _handshake_fail(args, str(exc))
     return _emit({"ok": True, **coordinates}, args)
 ```
 
@@ -1783,7 +3025,10 @@ Spec: `docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md` §4b, sli
   `test_cli_doctor_eval.py`) are `"contract"`.
 - The surface-contract gate (`tests/test_surface_contract.py:91-96`) asserts contract
   commands are a **subset** of parser commands, so adding the `secrets` subcommand needs
-  no surface-contract change.
+  no surface-contract change. The separate exact parser-roster pin
+  (`tests/test_cli.py::test_cli_command_surface_is_exact`) must still be extended in
+  BOOT-B.3 for `memoria secrets set` and in BOOT-B.4 for
+  `memoria secrets list`.
 
 **Decisions this plan makes where the spec is mechanism-silent** (assumptions, not gaps —
 each is the standard reading; assembler may veto):
@@ -2079,13 +3324,13 @@ each is the standard reading; assembler may veto):
 
 **Steps:**
 
-- [ ] Register the new test file in `tests/conftest.py` `TEST_LEVELS`:
+- [x] Register the new test file in `tests/conftest.py` `TEST_LEVELS`:
 
   ```python
       "test_cli_secrets.py": "contract",
   ```
 
-- [ ] Write the failing test — create `tests/test_cli_secrets.py`:
+- [x] Write the failing test — create `tests/test_cli_secrets.py`:
 
   ```python
   """CLI contract tests for the secrets seam and `memoria secrets` verbs (spec 4b)."""
@@ -2161,7 +3406,7 @@ each is the standard reading; assembler may veto):
       assert "MEMORIA_TEST_SENTINEL_KEY" not in os.environ
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
 
   ```
   python -m pytest tests/test_cli_secrets.py -v
@@ -2172,7 +3417,7 @@ each is the standard reading; assembler may veto):
   'MEMORIA_TEST_SENTINEL_KEY'` and `AssertionError` on the empty stderr respectively);
   the env-wins test passes trivially.
 
-- [ ] Write minimal implementation — in `src/memoria_vault/cli.py`, replace `main()`
+- [x] Write minimal implementation — in `src/memoria_vault/cli.py`, replace `main()`
   (lines 55-64):
 
   ```python
@@ -2194,7 +3439,7 @@ each is the standard reading; assembler may veto):
 
   (The local import keeps the stdlib `secrets` module import at `cli.py:9` unshadowed.)
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_secrets.py -v
@@ -2202,7 +3447,7 @@ each is the standard reading; assembler may veto):
 
   Expected: 3 passed.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/cli.py tests/test_cli_secrets.py tests/conftest.py
@@ -2219,7 +3464,7 @@ each is the standard reading; assembler may veto):
 - Modify: `src/memoria_vault/runtime/secrets.py` (add `write_secret`)
 - Modify: `src/memoria_vault/cli.py` (parser wiring after the `ask` block ending line 107;
   new handler next to `_cmd_ask` at line 705)
-- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`
+- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`, `tests/test_cli.py`
 
 **Interfaces:**
 - Consumes: `secrets_path()`, `_parse_env_text` (module-internal).
@@ -2227,12 +3472,32 @@ each is the standard reading; assembler may veto):
   - `write_secret(name: str, value: str, path: Path | None = None) -> Path` — validates
     `name` against `[A-Z][A-Z0-9_]*`, rejects empty/multi-line values, upserts
     `NAME=value`, always leaves the file 0600 and its parent dir 0700.
+  - `validate_secret_name(name: str) -> None` — shared non-reflective validation
+    used before the CLI can render a TTY prompt.
   - CLI verb `memoria secrets set <NAME>` (JSON output
     `{"ok": true, "name": ..., "path": ...}` — never the value).
 
+> **Adopted security-review amendment (2026-07-29):** `write_secret` is a secret
+> write perimeter, not a convenience `O_TRUNC` update. It must never follow a
+> direct `memoria/` parent or `secrets.env` symlink/junction, and it must refuse
+> every non-regular existing target. On POSIX, anchor the direct parent with
+> `O_DIRECTORY | O_NOFOLLOW`, read any existing target through a relative
+> `O_RDONLY | O_NOFOLLOW | O_NONBLOCK` descriptor plus `fstat`, write a unique
+> same-directory 0600 staging file with a full `os.write` loop, and atomically
+> replace the target only after the complete body is closed. Every failure must
+> retain the previous complete target and remove only that staging file. Do not
+> use `O_TRUNC`; do not chmod an existing public file after writing secret bytes.
+> Fallback platforms must reject direct symlink/junction/non-regular paths before
+> writing. Errors are value-free. Same-user concurrent replacement is explicitly
+> outside this task's contract (matching the existing rendezvous writer). This
+> amendment hardens the B.3 writer only; B.1 reader no-follow hardening remains a
+> separately tracked follow-up rather than scope-creep here.
+> Validate `NAME` before `getpass` or any other terminal rendering, and keep an
+> invalid-name error generic rather than reflecting raw terminal control text.
+
 **Steps:**
 
-- [ ] Write the failing unit tests — append to `tests/test_secrets.py` (extend the
+- [x] Write the failing unit tests — append to `tests/test_secrets.py` (extend the
   import from `memoria_vault.runtime.secrets` with `write_secret`):
 
   ```python
@@ -2280,7 +3545,103 @@ each is the standard reading; assembler may veto):
           write_secret("GOOD_NAME", "   ")
   ```
 
-- [ ] Write the failing CLI test — append to `tests/test_cli_secrets.py` (add
+  Also add `from memoria_vault.runtime import secrets as secrets_module` and the
+  following write-perimeter coverage (use the same POSIX `O_NOFOLLOW` skip guard
+  as `tests/test_rendezvous.py` for the link tests):
+
+  ```python
+  @pytest.mark.skipif(
+      os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+      reason="POSIX no-follow semantics unavailable",
+  )
+  def test_write_secret_refuses_symlink_target_without_touching_outside(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      target = secrets_path()
+      target.parent.mkdir(parents=True)
+      outside = tmp_path / "outside.env"
+      outside.write_text("OUTSIDE=unchanged\n", encoding="utf-8")
+      target.symlink_to(outside)
+
+      with pytest.raises(ValueError, match="must not redirect"):
+          write_secret("OPENALEX_API_KEY", "new-value")
+
+      assert outside.read_text(encoding="utf-8") == "OUTSIDE=unchanged\n"
+      assert target.is_symlink()
+
+
+  @pytest.mark.skipif(
+      os.name != "posix" or not hasattr(os, "O_NOFOLLOW"),
+      reason="POSIX no-follow semantics unavailable",
+  )
+  def test_write_secret_refuses_symlinked_memoria_parent(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      target = secrets_path()
+      target.parent.parent.mkdir(parents=True)
+      outside = tmp_path / "outside"
+      outside.mkdir()
+      target.parent.symlink_to(outside, target_is_directory=True)
+
+      with pytest.raises(ValueError, match="must not redirect"):
+          write_secret("OPENALEX_API_KEY", "new-value")
+
+      assert not (outside / "secrets.env").exists()
+
+
+  def test_write_secret_refuses_nonregular_target(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      target = secrets_path()
+      target.parent.mkdir(parents=True)
+      target.mkdir()
+
+      with pytest.raises(ValueError, match="regular file"):
+          write_secret("OPENALEX_API_KEY", "new-value")
+
+
+  def test_write_secret_short_write_is_complete_and_failure_keeps_prior_file(
+      tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      path = seed_secrets_file(
+          tmp_path, monkeypatch, "OPENALEX_API_KEY=old-value\n", mode=0o644
+      )
+      real_write = os.write
+      calls = 0
+
+      def short_write(fd: int, body: bytes | memoryview) -> int:
+          nonlocal calls
+          calls += 1
+          return real_write(fd, body[:1])
+
+      monkeypatch.setattr(secrets_module.os, "write", short_write)
+      write_secret("OPENALEX_API_KEY", "new-value")
+      assert calls > 1
+      assert path.read_text(encoding="utf-8") == "OPENALEX_API_KEY=new-value\n"
+
+      def failed_write(_fd: int, _body: bytes | memoryview) -> int:
+          raise OSError("disk full")
+
+      monkeypatch.setattr(secrets_module.os, "write", failed_write)
+      with pytest.raises(OSError, match="disk full"):
+          write_secret("OPENALEX_API_KEY", "later-value")
+      assert path.read_text(encoding="utf-8") == "OPENALEX_API_KEY=new-value\n"
+      assert not list(path.parent.glob(".secrets.*.tmp"))
+  ```
+
+  Extend the value-validation test to reject `\0` and every embedded line break
+  recognized by `str.splitlines()` (including `\r`, `\n`, and Unicode separators).
+  Add a POSIX FIFO case when `os.mkfifo` is available; it must return the same
+  regular-file refusal without blocking. Finally, spy on the POSIX replace seam
+  and assert the staging descriptor is 0600 *before* replacement, so an existing
+  0644 file never receives secret bytes in place. Extend the CLI tests to assert
+  the submitted value appears in neither stdout nor stderr on both successful and
+  rejected invocations.
+
+- [x] Write the failing CLI test — append to `tests/test_cli_secrets.py` (add
   `import io` and `import sys` to the imports):
 
   ```python
@@ -2319,39 +3680,72 @@ each is the standard reading; assembler may veto):
       assert "secret name must match" in payload["error"]
   ```
 
-- [ ] Run tests to verify they fail:
+  In `tests/test_cli.py::test_cli_command_surface_is_exact`, add
+  `"memoria secrets set"` to the expected set. The roster intentionally lists
+  runnable commands only, so it excludes the required-subcommand parent
+  `memoria secrets`. This keeps the exact parser-roster pin current and gives
+  the new executable surface an additional red direction.
+
+- [x] Run tests to verify they fail:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: unit tests fail with `ImportError: cannot import name 'write_secret'`; CLI
   tests fail with argparse `SystemExit: 2` (unknown command `secrets`) surfacing as an
-  error.
+  error; and the parser-roster pin fails because the expected `memoria secrets set`
+  command is absent.
 
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/secrets.py` append:
+- [x] Write minimal implementation. Add small helpers in
+  `src/memoria_vault/runtime/secrets.py` for the anchored parent, no-follow
+  existing-file read, unique temporary creation, full writes, and shared
+  non-reflective name validation; then implement `write_secret` through them. The
+  following is the required control flow (not an `O_TRUNC` recipe):
 
   ```python
   def write_secret(name: str, value: str, path: Path | None = None) -> Path:
-      if not _NAME_RE.fullmatch(name):
-          raise ValueError(f"secret name must match [A-Z][A-Z0-9_]*: {name}")
+      validate_secret_name(name)
       cleaned = value.strip()
       if not cleaned:
           raise ValueError("secret value must be non-empty")
-      if "\n" in cleaned:
-          raise ValueError("secret value must be a single line")
+      if "\0" in value or len(value.splitlines()) != 1:
+          raise ValueError("secret value must be a single line without control breaks")
       target = path or secrets_path()
-      target.parent.mkdir(parents=True, exist_ok=True)
-      os.chmod(target.parent, 0o700)
-      values = _parse_env_text(target.read_text(encoding="utf-8")) if target.is_file() else {}
-      values[name] = cleaned
-      body = "".join(f"{key}={values[key]}\n" for key in sorted(values))
-      fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-      with os.fdopen(fd, "w", encoding="utf-8") as handle:
-          handle.write(body)
-      os.chmod(target, 0o600)
+      # `_open_secret_parent` creates only the direct parent when absent, rejects
+      # a direct symlink/junction, anchors it with O_DIRECTORY|O_NOFOLLOW on
+      # POSIX, and makes that opened directory 0700 before reading secrets.
+      with _open_secret_parent(target.parent) as parent_fd:
+          values = _read_secret_values(parent_fd, target.name)
+          values[name] = cleaned
+          body = "".join(f"{key}={values[key]}\n" for key in sorted(values)).encode()
+          temp_name, temp_fd = _create_private_secret_temp(parent_fd, target.name)
+          try:
+              _write_all(temp_fd, body)
+              os.fsync(temp_fd)
+              os.close(temp_fd)
+              temp_fd = None
+              _replace_secret_atomically(parent_fd, temp_name, target.name)
+          except BaseException:
+              if temp_fd is not None:
+                  os.close(temp_fd)
+              _unlink_temp_only(parent_fd, temp_name)
+              raise
       return target
   ```
+
+  `_read_secret_values` must open the existing name relative to the anchored
+  parent with `O_NOFOLLOW | O_NONBLOCK`, require `fstat` regular, and return `{}`
+  only for absence; it never calls `Path.is_file()` or `Path.read_text()` on the
+  target. `_create_private_secret_temp` creates a unique `.<target>.*.tmp` in the
+  same anchored directory with `O_CREAT | O_EXCL | O_NOFOLLOW` and mode 0600;
+  `_write_all` retries short writes; `_replace_secret_atomically` uses the same
+  parent descriptor for `os.replace` on POSIX. Direct redirect or nonregular
+  errors must be `ValueError`s that name the path class but never the value. The
+  Windows/fallback branch must preserve the same direct redirect/nonregular
+  refusals and the complete-old-or-complete-new replacement invariant as far as
+  its platform APIs permit.
 
   In `src/memoria_vault/cli.py`, add the parser wiring immediately after the `ask` block
   (after line 107, before `serve = sub.add_parser("serve")`):
@@ -2369,8 +3763,9 @@ each is the standard reading; assembler may veto):
 
   ```python
   def _cmd_secrets_set(args: argparse.Namespace) -> int:
-      from memoria_vault.runtime.secrets import write_secret
+      from memoria_vault.runtime.secrets import validate_secret_name, write_secret
 
+      validate_secret_name(args.name)
       if sys.stdin.isatty():
           import getpass
 
@@ -2381,18 +3776,20 @@ each is the standard reading; assembler may veto):
       return _emit({"ok": True, "name": args.name, "path": str(path)}, args)
   ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: all pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
-  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py tests/test_secrets.py tests/test_cli_secrets.py
+  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py \
+    tests/test_secrets.py tests/test_cli_secrets.py tests/test_cli.py
   git commit -m "feat(secrets): memoria secrets set - 0600 upsert, value via stdin only
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -2403,11 +3800,14 @@ each is the standard reading; assembler may veto):
 ### Task BOOT-B.4: Credentials registry + `memoria secrets list` (names, set/unset, source — never values)
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/secrets.py` (add `CREDENTIAL_REGISTRY`,
-  `credential_report`)
+- Modify: `src/memoria_vault/runtime/secrets.py` (harden `read_secrets_file`;
+  add `CREDENTIAL_REGISTRY`, `credential_report`)
+- Modify: `src/memoria_vault/runtime/operations.py` (validate runner
+  `key_env` identifiers and normalize malformed provider YAML)
 - Modify: `src/memoria_vault/cli.py` (extend the `secrets` subparser from BOOT-B.3; new
   handler `_cmd_secrets_list` next to `_cmd_secrets_set`)
-- Modify: `tests/test_secrets.py`, `tests/test_cli_secrets.py`
+- Modify: `tests/test_secrets.py`, `tests/test_operations.py`,
+  `tests/test_cli_secrets.py`, `tests/test_cli.py`
 
 **Interfaces:**
 - Consumes: `load_runner_provider_config(vault) -> dict[str, dict[str, Any]]`
@@ -2416,15 +3816,80 @@ each is the standard reading; assembler may veto):
   - `CREDENTIAL_REGISTRY: tuple[dict[str, str], ...]` — static class-2/identity rows
     (`OPENALEX_API_KEY`, `SEMANTIC_SCHOLAR_API_KEY`, `PUBMED_API_KEY`, `GITHUB_TOKEN`,
     `NCBI_EMAIL`).
-  - `credential_report(workspace: Path | None = None) -> list[dict[str, str]]` — rows
+  - `credential_report(workspace: Path | None = None, *,
+    loaded_from_file: Collection[str] | None = None) -> list[dict[str, str]]` — rows
     `{"name", "class", "status", "source", "effect_when_unset"}` with
     `class in {"required-for-operation", "enhancing", "identity"}`,
     `status in {"set", "unset"}`, `source in {"env", "file", ""}`. Required rows are
-    derived from the workspace's `providers.yaml` `runner_providers.*.key_env` and win
-    dedup over static rows. **BOOT-B.7 (doctor) and other sections consume this exact
-    shape.**
+    derived only from the supported `local`/ `gateway` entries in an explicitly
+    supplied workspace's `providers.yaml` and win dedup over static rows. When
+    `loaded_from_file` is supplied, it is the names-only `load_secrets()["loaded"]`
+    snapshot for this invocation and the report must not reread the file. **BOOT-B.7
+    (doctor) and other sections consume this exact shape and snapshot.**
   - CLI verb `memoria secrets list` (JSON: `{"ok": true, "path": ..., "credentials":
-    [rows]}` — never values).
+    [rows]}`, plus a value-free `warning` only when the startup loader refused the
+    file — never values).
+
+> **Adopted BOOT-B.4 security and provenance amendment (2026-07-29):** This
+> amendment supersedes the conflicting source-classification, reader, provider,
+> workspace-default, CLI, and test snippets in this task. Keep the static registry
+> entries, effect strings, and exact parser-roster requirement below.
+>
+> 1. **Harden the reader before using it for status.** BOOT-B.3 deliberately
+>    constrained descriptor no-follow work to its writer; B.4 is its tracked reader
+>    follow-up. On POSIX, `read_secrets_file` must open the existing direct
+>    `memoria/` parent with `O_DIRECTORY | O_NOFOLLOW`, then open
+>    `secrets.env` relative to that descriptor with
+>    `O_RDONLY | O_NOFOLLOW | O_NONBLOCK`, and require a regular `fstat` target
+>    before parsing. Do not create or chmod anything on this read path and do not reuse
+>    the writer helper that does. On fallback platforms, reject a direct parent or
+>    target symlink/junction and every nonregular target before opening it. An absent
+>    parent/target remains quiet; a refusal returns no values and a value-free warning
+>    naming only the configured path/reason. Retain nonblocking FIFO behavior.
+>
+> 2. **Make provider-derived names safe at their source.** In
+>    `load_runner_provider_config`, normalize `yaml.YAMLError` and malformed
+>    UTF-8 to stable, value-free `ValueError` messages. Require every non-null
+>    `key_env` to match the same canonical grammar
+>    `[A-Z][A-Z0-9_]*`; the error names the provider field but never reflects its
+>    supplied value. `_runner_key_names` catches unusable/missing provider config
+>    and defensively admits only a matching string—never `str()`-coerces arbitrary
+>    configuration. The informational registry then falls back to static rows, rather
+>    than crashing or rendering pasted credentials/control text.
+>
+> 3. **Preserve actual precedence with a names-only startup snapshot.** A present
+>    process-environment key wins even when its value is empty. In direct-library
+>    mode (`loaded_from_file is None`), inspect the safe file only after checking
+>    whether the name is present in `os.environ`. In CLI snapshot mode, do not read
+>    the file: a name in `loaded_from_file` is sourced from `file`; any other name
+>    present in `os.environ` is sourced from `env`; an absent name has source
+>    `""`. In all cases, `status` is `set` iff the winning value is nonempty.
+>    Thus equal file/env values report `set/env`, and an explicitly empty
+>    environment value masking a nonempty file reports `unset/env`. Never infer
+>    provenance by comparing secret values.
+>
+> 4. **Carry the snapshot through handlers.** Immediately after `parse_args`,
+>    `main()` attaches private namespace values for
+>    `frozenset(secrets_report["loaded"])`, `secrets_report["warning"]`, and
+>    `secrets_report["path"]`. The list handler passes the first to
+>    `credential_report`, uses the path snapshot, and conditionally includes the
+>    warning in its JSON payload; it continues to print the existing one-line
+>    value-free stderr warning. With no explicit `--workspace`, `secrets list`
+>    passes `None` rather than granting the ambient current directory authority to
+>    contribute dynamic rows. BOOT-B.7 passes the same loader snapshot and conditional
+>    warning to doctor.
+>
+> 5. **Prove the seam with red tests before code.** Add reader tests for a symlinked
+>    target and direct parent (no outside value is loaded) and a FIFO/nonregular
+>    target (no blocking). Add registry/list tests for file-only startup loading,
+>    equal inherited file/env values (`env`), an explicit empty inherited env
+>    masking a file (`unset/env`), and a file changed after `load_secrets()`
+>    (`credential_report(..., loaded_from_file=...)` remains file-provenanced
+>    without rereading it). Clean direct `load_secrets()` mutations from
+>    `os.environ` in `finally`. Add malformed-YAML and invalid/control-character
+>    `key_env` cases that return only static rows and never emit the sentinel.
+>    Add a world-readable/refused-file CLI test that proves its value-free warning is
+>    visible in the JSON payload and that neither stdout nor stderr contains a secret.
 
 **Steps:**
 
@@ -2469,7 +3934,7 @@ each is the standard reading; assembler may veto):
       assert "KILOCODE_API_KEY" not in rows
 
 
-  def test_credential_report_marks_env_and_file_sources(
+  def test_credential_report_marks_env_source_when_env_wins(
       tmp_path: Path, monkeypatch: pytest.MonkeyPatch
   ) -> None:
       seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=file-key\n")
@@ -2480,7 +3945,7 @@ each is the standard reading; assembler may veto):
       rows = {row["name"]: row for row in credential_report(None)}
 
       assert rows["OPENALEX_API_KEY"]["status"] == "set"
-      assert rows["OPENALEX_API_KEY"]["source"] == "file"
+      assert rows["OPENALEX_API_KEY"]["source"] == "env"
       assert rows["SEMANTIC_SCHOLAR_API_KEY"]["source"] == "env"
 
 
@@ -2527,13 +3992,13 @@ each is the standard reading; assembler may veto):
       seed_secrets_file(tmp_path, monkeypatch, "OPENALEX_API_KEY=super-secret\n")
       for name in (
           "KILOCODE_API_KEY",
+          "OPENALEX_API_KEY",
           "SEMANTIC_SCHOLAR_API_KEY",
           "PUBMED_API_KEY",
           "GITHUB_TOKEN",
           "NCBI_EMAIL",
       ):
           monkeypatch.delenv(name, raising=False)
-      monkeypatch.setenv("OPENALEX_API_KEY", "super-secret")
 
       rc = main(["secrets", "list", "--json"])
 
@@ -2548,16 +4013,24 @@ each is the standard reading; assembler may veto):
       assert payload["path"] == str(tmp_path / "config" / "memoria" / "secrets.env")
   ```
 
+  Extend `tests/test_cli.py::test_cli_command_surface_is_exact` once more with
+  `"memoria secrets list"`; its red proves the exact parser roster cannot drift
+  while B.4 adds the new subcommand.
+
 - [ ] Run tests to verify they fail:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_operations.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: `ImportError: cannot import name 'credential_report'`; the CLI test fails on
-  argparse (`invalid choice: 'list'`).
+  argparse (`invalid choice: 'list'`); and the parser-roster pin fails because
+  `memoria secrets list` is absent.
 
-- [ ] Write minimal implementation. Append to `src/memoria_vault/runtime/secrets.py`:
+- [ ] Write minimal implementation. In `src/memoria_vault/runtime/secrets.py`, extend the
+  `collections.abc` import with `Collection` and `Mapping`, harden the reader and provider
+  loader as the adopted amendment requires, then append:
 
   ```python
   CREDENTIAL_REGISTRY: tuple[dict[str, str], ...] = (
@@ -2589,11 +4062,22 @@ each is the standard reading; assembler may veto):
   )
 
 
-  def credential_report(workspace: Path | None = None) -> list[dict[str, str]]:
-      file_values, _warning = read_secrets_file()
+  def credential_report(
+      workspace: Path | None = None,
+      *,
+      loaded_from_file: Collection[str] | None = None,
+  ) -> list[dict[str, str]]:
+      required_names = _runner_key_names(workspace)
+      seen = set(required_names)
+      static_entries = [entry for entry in CREDENTIAL_REGISTRY if entry["name"] not in seen]
+      names = [*required_names, *(entry["name"] for entry in static_entries)]
+      file_values = (
+          read_secrets_file()[0]
+          if loaded_from_file is None and any(name not in os.environ for name in names)
+          else {}
+      )
       rows: list[dict[str, str]] = []
-      seen: set[str] = set()
-      for name in _runner_key_names(workspace):
+      for name in required_names:
           rows.append(
               _credential_row(
                   name,
@@ -2601,15 +4085,17 @@ each is the standard reading; assembler may veto):
                   "live-model calls refuse before the network; "
                   f"set it: memoria secrets set {name}",
                   file_values,
+                  loaded_from_file,
               )
           )
-          seen.add(name)
-      for entry in CREDENTIAL_REGISTRY:
-          if entry["name"] in seen:
-              continue
+      for entry in static_entries:
           rows.append(
               _credential_row(
-                  entry["name"], entry["class"], entry["effect_when_unset"], file_values
+                  entry["name"],
+                  entry["class"],
+                  entry["effect_when_unset"],
+                  file_values,
+                  loaded_from_file,
               )
           )
       return rows
@@ -2624,37 +4110,48 @@ each is the standard reading; assembler may veto):
           providers = load_runner_provider_config(workspace)
       except (OSError, ValueError):
           return []
-      return sorted(
-          {
-              str(spec["key_env"])
-              for spec in providers.values()
-              if isinstance(spec.get("key_env"), str) and spec["key_env"]
-          }
-      )
+      names: set[str] = set()
+      for spec in providers.values():
+          key_env = spec.get("key_env")
+          if isinstance(key_env, str) and _NAME_RE.fullmatch(key_env):
+              names.add(key_env)
+      return sorted(names)
 
 
   def _credential_row(
-      name: str, cred_class: str, effect: str, file_values: dict[str, str]
+      name: str,
+      cred_class: str,
+      effect: str,
+      file_values: Mapping[str, str],
+      loaded_from_file: Collection[str] | None,
   ) -> dict[str, str]:
-      env_value = os.environ.get(name) or ""
-      file_value = file_values.get(name) or ""
-      if env_value:
-          status = "set"
-          source = "file" if env_value == file_value else "env"
-      elif file_value:
-          status, source = "set", "file"
+      if loaded_from_file is not None and name in loaded_from_file:
+          value, source = os.environ.get(name, ""), "file"
+      elif name in os.environ:
+          value, source = os.environ[name], "env"
+      elif loaded_from_file is None and name in file_values:
+          value, source = file_values[name], "file"
       else:
-          status, source = "unset", ""
+          value, source = "", ""
       return {
           "name": name,
           "class": cred_class,
-          "status": status,
+          "status": "set" if value else "unset",
           "source": source,
           "effect_when_unset": effect,
       }
   ```
 
-  In `src/memoria_vault/cli.py`, extend the `secrets` subparser block from BOOT-B.3:
+  In `src/memoria_vault/cli.py`, immediately after `args = parser.parse_args(argv)` in
+  `main()`, attach the value-free startup snapshot before dispatch:
+
+  ```python
+      args._secrets_loaded_from_file = frozenset(secrets_report["loaded"])
+      args._secrets_warning = secrets_report["warning"]
+      args._secrets_path = secrets_report["path"]
+  ```
+
+  Then extend the `secrets` subparser block from BOOT-B.3:
 
   ```python
       secrets_list = secrets_sub.add_parser("list")
@@ -2668,21 +4165,25 @@ each is the standard reading; assembler may veto):
   def _cmd_secrets_list(args: argparse.Namespace) -> int:
       from memoria_vault.runtime.secrets import credential_report, secrets_path
 
-      workspace = Path(args.workspace).resolve() if args.workspace else Path.cwd()
-      return _emit(
-          {
-              "ok": True,
-              "path": str(secrets_path()),
-              "credentials": credential_report(workspace),
-          },
-          args,
-      )
+      workspace = Path(args.workspace).resolve() if args.workspace else None
+      payload = {
+          "ok": True,
+          "path": getattr(args, "_secrets_path", str(secrets_path())),
+          "credentials": credential_report(
+              workspace,
+              loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+          ),
+      }
+      if warning := getattr(args, "_secrets_warning", ""):
+          payload["warning"] = warning
+      return _emit(payload, args)
   ```
 
 - [ ] Run tests to verify they pass:
 
   ```
-  python -m pytest tests/test_secrets.py tests/test_cli_secrets.py -v
+  python -m pytest tests/test_secrets.py tests/test_operations.py tests/test_cli_secrets.py \
+    tests/test_cli.py::test_cli_command_surface_is_exact -v
   ```
 
   Expected: all pass.
@@ -2690,197 +4191,263 @@ each is the standard reading; assembler may veto):
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/cli.py tests/test_secrets.py tests/test_cli_secrets.py
+  git add src/memoria_vault/runtime/secrets.py src/memoria_vault/runtime/operations.py \
+    src/memoria_vault/cli.py tests/test_secrets.py tests/test_operations.py \
+    tests/test_cli_secrets.py tests/test_cli.py
   git commit -m "feat(secrets): credentials registry + memoria secrets list (names/status/source only)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+> **Execution receipt (2026-07-29):** BOOT-B.4 completed in `ee4c6c12`.
+> The planned RED suite first failed because `credential_report` did not exist;
+> the focused green suite passed (83 tests), and independent implementation
+> review approved the result. The sealed credential-boundary security diff scan
+> `ee4c6c12_20260729T205911Z` found no reportable finding. Full elevated
+> `python scripts/verify` passed: 2,529 passed, 11 skipped, 1 warning; the e2e
+> smoke test and all repository gates were green. The adopted amendment governs
+> any conflicting unchecked snippets above.
 
 ---
 
 ### Task BOOT-B.5: Fail-closed class-1 — remove the silent fallback chain
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/operations.py` (`_pydantic_ai_chat`, lines 951-966;
-  the fallback chain is lines 957-962)
-- Modify: `src/memoria_vault/cli.py` (`_runner_status`, fallback copy at lines 3039-3044)
-- Modify: `tests/test_operations.py` (existing test
-  `test_compile_source_digest_can_use_pydantic_ai_runner` at lines 535-589; two new tests)
+- Modify: `src/memoria_vault/runtime/operations.py` (new shared credential resolver and
+  `_pydantic_ai_chat`)
+- Modify: `src/memoria_vault/cli.py` (`_runner_status` uses the same resolver before
+  loading or constructing an adapter)
+- Modify: `tests/test_operations.py` (existing local-runner proof plus gateway refusal,
+  explicit-key, and invalid-direct-runner coverage)
+- Modify: `tests/test_cli_doctor_eval.py` (keyless placeholder assertions; gateway doctor
+  refusal and explicit-key success)
+- Modify: `tests/test_token_ceiling.py` (keyless direct-chat placeholder regression proof)
+- Modify: `tests/helpers.py` (`patch_pydantic_ai` preserves its last-construction
+  `provider_kwargs` seam and records every provider construction in order)
 
 **Interfaces:**
 - Consumes: runner dict from `resolve_operation_runner` (`operations.py:239-251`), which
   carries `"provider"` and `"key_env"`.
-- Produces: `_pydantic_ai_chat` raises
-  `RuntimeError(f"provider {provider} requires {key_env} - set it: memoria secrets set {key_env}")`
-  **before** `_load_pydantic_ai_openai()` and before any network use, whenever `key_env`
-  is a non-empty string that resolves to nothing in `os.environ`. `key_env: null`
-  (local provider) stays keyless-legal: no key is sent and no fallback is consulted.
-  `MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and implicit `KILOCODE_API_KEY` lose all
-  meaning engine-wide. **Other sections must not reintroduce these names.**
+- Produces: `_KEYLESS_PROVIDER_API_KEY = "api-key-not-set"` and
+  `_resolve_runner_api_key(runner: Mapping[str, Any]) -> str` in `operations.py`.
+  `key_env is None` returns that inert, nonsecret placeholder; a validated nonempty
+  `key_env` returns only its nonempty `os.environ` value or raises exactly
+  `RuntimeError(f"provider {provider} requires {key_env} - set it: memoria secrets set {key_env}")`.
+  The resolver must reject any direct malformed runner `key_env` with a generic,
+  value-free `ValueError`; only `None` is keyless. B.4 validates configuration at its
+  source, but the resolver remains defensive because direct callers are a separate seam.
+- `_pydantic_ai_chat` and `_runner_status` both call this one resolver **before**
+  `_load_pydantic_ai_openai()` or constructing an adapter, then always pass its returned
+  value as `OpenAIProvider(api_key=...)`. This blocks Pydantic AI's own implicit
+  `OPENAI_API_KEY` lookup (its `OpenAIProvider` otherwise performs that lookup whenever
+  `api_key` is omitted or `None`). A missing/empty gateway credential therefore leaves
+  doctor with `runner_dependency`, `runner_agent_constructed`, and (when requested)
+  `runner_live_dispatch` all false and reports the exact refusal.
+- `key_env: null` remains local/keyless-legal in the product sense: no configured
+  credential or fallback is selected. The OpenAI-compatible SDK still requires a
+  nonempty API-key argument and will send the inert placeholder as an Authorization value;
+  strict header omission would require a custom transport and is deliberately outside this
+  task. `MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and implicit `KILOCODE_API_KEY` lose
+  all engine credential-resolution meaning. **Other sections must not reintroduce these
+  names.**
+- An SDK construction, dispatch, or result-access failure is value-free at this boundary:
+  neither `_pydantic_ai_chat` nor doctor may surface arbitrary loader, provider, model,
+  agent, dispatch, usage, or result-output exception text, because it can contain the
+  configured credential. After the resolver's exact safe errors, the wrapper reports the
+  fixed `pydantic-ai model request failed` error and suppresses the exception context.
+- A grammar-valid `key_env` is treated as a PI-owned workspace configuration name, never
+  as a credential value. The supported provider/configuration seam is B.4's source
+  validation; this task adds direct-call defense but does not broaden that authority
+  boundary.
+- Test seam: `patch_pydantic_ai` retains the existing `seen["provider_kwargs"]` last-value
+  behavior and additionally appends each `FakeProvider` kwargs dict to
+  `seen["provider_kwargs_list"]`. This is needed because live doctor deliberately
+  constructs once for diagnostics and again for dispatch; a last-value-only fake cannot
+  prove both constructions used the configured credential.
 
 **Steps:**
 
-- [ ] Write the failing tests — in `tests/test_operations.py`, first update the existing
-  test `test_compile_source_digest_can_use_pydantic_ai_runner` (lines 535-589): delete
-  the line `monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "test-key")` (line 554) and
-  change the assertion
+- [ ] Write the failing operation tests in `tests/test_operations.py`.
+  Update `test_compile_source_digest_can_use_pydantic_ai_runner` to set all three old
+  names (`MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, and `KILOCODE_API_KEY`) to distinct
+  sentinels, then assert the local provider receives exactly
+  `{"base_url": "http://model.test/v1", "api_key": "api-key-not-set"}`. This proves an
+  exported `OPENAI_API_KEY` cannot win underneath the removed Memoria fallback.
+
+  Append a gateway-missing test that configures the gateway runner, sets
+  `KILOCODE_API_KEY` to `""`, sets both historical fallback names to sentinels, and
+  patches Pydantic AI. It must raise the exact gateway refusal, leave the patched loader
+  and provider constructor untouched (`seen == {}`), and never contain a sentinel in any
+  captured error. Install a loader spy (or a loader which fails if invoked) and assert it
+  has zero calls; `patch_pydantic_ai` alone cannot prove loader ordering.
+
+  Append an explicit-gateway-key test with the same legacy sentinels and
+  `KILOCODE_API_KEY="gateway-key"`; it must complete and pass exactly that configured
+  value, not either sentinel, in `provider_kwargs`. Finally parameterize direct malformed
+  runner tests over an empty string, a pasted sentinel/control string, and a non-string
+  `key_env`; each gets the generic value-free resolver `ValueError` and cannot reflect the
+  supplied value. Include a malformed provider with a missing key and assert its refusal
+  names literal `runner`, not the supplied provider text.
+
+- [ ] In `tests/test_cli_doctor_eval.py`, update the three existing local doctor assertions
+  (construction, default base URL, and live dispatch) so their provider kwargs include
+  `"api_key": "api-key-not-set"`. First extend `tests/helpers.py`'s `FakeProvider` to:
 
   ```python
-      assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1", "api_key": "test-key"}
+  seen["provider_kwargs"] = kwargs
+  seen.setdefault("provider_kwargs_list", []).append(kwargs)
   ```
 
-  to
+  Then add these two red tests:
 
   ```python
-      assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1"}
-  ```
-
-  Then append two new tests:
-
-  ```python
-  def test_pydantic_ai_runner_refuses_unresolvable_key_env_before_network(
-      tmp_path: Path, monkeypatch
+  def test_cli_doctor_gateway_refuses_missing_key_before_adapter_construction(
+      tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
   ) -> None:
-      vault = workspace(tmp_path)
-      write_runner_provider_config(vault)
-      patch_compile_policy(
-          monkeypatch,
-          allowed_network=["https://gateway.test/v1"],
-          provider="gateway",
-          model="memoria-test-model",
-      )
-      capture_source(
-          vault,
-          "source-alpha",
-          "Alpha Source",
-          "A fixture source.",
-          "Alpha content about framing, methods, outcomes, gaps, and impact.",
-          machine="capture-machine",
-      )
-      seen = patch_pydantic_ai(monkeypatch, output="unused")
-      for name in ("KILOCODE_API_KEY", "MEMORIA_MODEL_API_KEY", "OPENAI_API_KEY"):
-          monkeypatch.delenv(name, raising=False)
-
-      with pytest.raises(
-          RuntimeError,
-          match=(
-              "provider gateway requires KILOCODE_API_KEY - "
-              "set it: memoria secrets set KILOCODE_API_KEY"
-          ),
-      ):
-          compile_source_digest(
-              vault,
-              "source-alpha",
-              ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
-              machine="op-machine",
-          )
-
-      assert "provider_kwargs" not in seen
-
-
-  def test_pydantic_ai_runner_uses_explicit_key_env(tmp_path: Path, monkeypatch) -> None:
-      vault = workspace(tmp_path)
-      write_runner_provider_config(vault)
-      patch_compile_policy(
-          monkeypatch,
-          allowed_network=["https://gateway.test/v1"],
-          provider="gateway",
-          model="memoria-test-model",
-      )
-      capture_source(
-          vault,
-          "source-alpha",
-          "Alpha Source",
-          "A fixture source.",
-          "Alpha content about framing, methods, outcomes, gaps, and impact.",
-          machine="capture-machine",
-      )
-      monkeypatch.setenv("KILOCODE_API_KEY", "gateway-key")
-      seen = patch_pydantic_ai(
-          monkeypatch,
-          output=(
-              "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
-              "## Hub suggestions\n\n- Framing\n"
-          ),
-      )
-
-      compile_source_digest(
-          vault,
-          "source-alpha",
-          ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
-          machine="op-machine",
-      )
-
-      assert seen["provider_kwargs"] == {
-          "base_url": "https://gateway.test/v1",
-          "api_key": "gateway-key",
+      workspace = tmp_path / "workspace"
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      write_runner_provider_config(workspace)
+      sentinels = {
+          "MEMORIA_MODEL_API_KEY": "legacy-model-secret",
+          "OPENAI_API_KEY": "legacy-openai-secret",
+          "KILOCODE_API_KEY": "",
       }
+      for name, value in sentinels.items():
+          monkeypatch.setenv(name, value)
+      seen = patch_pydantic_ai(monkeypatch)
+
+      rc = main([
+          "doctor", "--workspace", str(workspace), "--check", "runner",
+          "--provider", "gateway", "--live", "--json",
+      ])
+      captured = capsys.readouterr()
+      payload = json.loads(captured.out)
+
+      assert rc == 1
+      assert payload["ok"] is False
+      assert payload["error"] == (
+          "provider gateway requires KILOCODE_API_KEY - "
+          "set it: memoria secrets set KILOCODE_API_KEY"
+      )
+      assert payload["checks"]["runner_dependency"] is False
+      assert payload["checks"]["runner_agent_constructed"] is False
+      assert payload["checks"]["runner_live_dispatch"] is False
+      assert seen == {}
+      assert "legacy-model-secret" not in captured.out + captured.err
+      assert "legacy-openai-secret" not in captured.out + captured.err
   ```
 
-- [ ] Run tests to verify the new behavior fails:
+  In that missing-key doctor test, replace the helper's loader with a `loader_calls` spy
+  (or failing loader) and assert `loader_calls == []` in addition to `seen == {}`.
+
+  The second invokes the same gateway doctor path with `KILOCODE_API_KEY="gateway-key"`
+  and both legacy sentinels set. It succeeds, including `--live`, and asserts
+  `seen["provider_kwargs_list"] == [expected, expected]`, where `expected` is exactly
+  `{"base_url": "https://gateway.test/v1", "api_key": "gateway-key"}`. This proves
+  both construction and live-dispatch adapter paths use only the configured key.
+
+- [ ] In `tests/test_token_ceiling.py`, add one keyless direct-chat proof that sets all
+  legacy names to distinct sentinels, calls the existing `RUNNER` (`key_env: None`), and
+  asserts the patched provider receives the exact inert placeholder. This closes a direct
+  internal caller that does not pass through doctor or compile-source-digest.
+
+  Parameterize direct-chat fakes so loader, provider, model, Agent, dispatch, and result
+  output access each fail with a configured-key sentinel in their exception text. Assert
+  each exposes only the fixed `pydantic-ai model request failed` error with no cause and
+  `__suppress_context__ is True`. A `doctor --provider gateway --live --json` run must
+  likewise omit that sentinel from stdout and stderr while marking the live dispatch false.
+
+- [ ] Run the red subset:
 
   ```
-  python -m pytest tests/test_operations.py::test_pydantic_ai_runner_refuses_unresolvable_key_env_before_network tests/test_operations.py::test_pydantic_ai_runner_uses_explicit_key_env tests/test_operations.py::test_compile_source_digest_can_use_pydantic_ai_runner -v
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
+    tests/test_operations.py tests/test_cli_doctor_eval.py tests/test_token_ceiling.py -q
   ```
 
-  Expected: the refusal test fails with `DID NOT RAISE` (the current code silently falls
-  back to keyless); the explicit-key test passes; the updated existing test may fail if
-  the developer's shell exports any fallback key — the implementation makes it
-  deterministic.
+  Expected before implementation: local assertions fail because the current code omits
+  `api_key` and Pydantic AI can consume `OPENAI_API_KEY`; the missing gateway doctor and
+  operation cases construct via one of the old fallback values instead of refusing.
 
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/operations.py`,
-  replace lines 954-962 (`key_env = ...` through the fallback chain) with:
+- [ ] Write minimal implementation. In `operations.py`, import `Mapping` alongside
+  `Iterable`, add the inert constant and resolver next to `_KEY_ENV_RE`, and preserve
+  source-safe diagnostics:
 
   ```python
+  _KEYLESS_PROVIDER_API_KEY = "api-key-not-set"
+
+
+  def _resolve_runner_api_key(runner: Mapping[str, Any]) -> str:
       key_env = runner.get("key_env")
-      api_key = None
-      if isinstance(key_env, str) and key_env:
-          api_key = os.environ.get(key_env)
-          if not api_key:
-              provider = str(runner.get("provider") or "runner")
-              raise RuntimeError(
-                  f"provider {provider} requires {key_env} - "
-                  f"set it: memoria secrets set {key_env}"
-              )
+      if key_env is None:
+          return _KEYLESS_PROVIDER_API_KEY
+      if not isinstance(key_env, str) or not _KEY_ENV_RE.fullmatch(key_env):
+          raise ValueError("runner key_env must match [A-Z][A-Z0-9_]*")
+      api_key = os.environ.get(key_env)
+      if api_key:
+          return api_key
+      raw_provider = runner.get("provider")
+      provider = (
+          raw_provider
+          if isinstance(raw_provider, str) and raw_provider in RUNNER_PROVIDER_NAMES
+          else "runner"
+      )
+      raise RuntimeError(
+          f"provider {provider} requires {key_env} - "
+          f"set it: memoria secrets set {key_env}"
+      )
   ```
 
-  (Fail-closed refusal happens before `_load_pydantic_ai_openai()` on the next line —
-  strictly before any network dependency.)
+  In `_pydantic_ai_chat`, call the resolver after policy/network validation but before
+  `_load_pydantic_ai_openai()`, delete the old three-name chain, and always construct
+  `provider_kwargs = {"base_url": base_url, "api_key": api_key}`. Never omit the
+  `api_key` argument. After resolving the key, wrap the loader, provider/model/agent
+  construction, dispatch, token-usage access, and result-output extraction in one
+  value-free exception boundary: catch an SDK exception with `from None` and raise only
+  `RuntimeError("pydantic-ai model request failed")`; never concatenate its text. Keep the
+  separate empty-output product error outside that boundary. In doctor, preserve the
+  resolver's exact safe refusal, but reduce every SDK construction, dispatch, or result
+  access exception to that same fixed error.
 
-  In `src/memoria_vault/cli.py` `_runner_status`, delete lines 3039-3044:
+  In `cli.py` `_runner_status`, import `_resolve_runner_api_key`, build the one runner
+  dict before its `try`, and call the resolver as the first action inside the `try`, before
+  `_load_pydantic_ai_openai()` or `Agent(...)`. Use the returned value in the first
+  provider construction and reuse that same runner dict for the optional live
+  `_pydantic_ai_chat` call. Delete the duplicated fallback chain completely. The existing
+  broad `except` then turns a missing gateway key into doctor data without constructing an
+  adapter or attempting a network call.
 
-  ```python
-      if not api_key:
-          api_key = (
-              os.environ.get("MEMORIA_MODEL_API_KEY")
-              or os.environ.get("OPENAI_API_KEY")
-              or os.environ.get("KILOCODE_API_KEY")
-          )
+- [ ] Run the full affected suite:
+
+  ```
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest \
+    tests/test_operations.py tests/test_cli_doctor_eval.py tests/test_token_ceiling.py \
+    tests/test_live_runner.py -q
   ```
 
-  leaving line 3038's `api_key = os.environ.get(key_env) if isinstance(key_env, str) and
-  key_env else None` as the only resolution. (`doctor --check runner --live` with an
-  unresolvable `key_env` now reports the refusal message in its `error` field via the
-  existing `except Exception` at line 3082.)
-
-- [ ] Run the full affected files to verify nothing else regressed:
-
-  ```
-  python -m pytest tests/test_operations.py tests/test_cli_doctor_eval.py tests/test_live_runner.py -v
-  ```
-
-  Expected: all pass (`test_cli_doctor_eval.py:738-740` deletes the fallback names
-  defensively, which stays valid; `local` provider paths are `key_env: null` and remain
-  keyless-legal).
+  Expected: all non-optional tests pass. `test_live_runner.py` remains opt-in; for a local
+  OpenAI-compatible server it now uses the SDK-required inert placeholder rather than any
+  ambient provider key.
 
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/operations.py src/memoria_vault/cli.py tests/test_operations.py
-  git commit -m "feat(secrets): fail-closed class-1 model keys - remove silent env fallback chain
-
-  Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+  git add src/memoria_vault/runtime/operations.py src/memoria_vault/cli.py \
+    tests/helpers.py tests/test_operations.py tests/test_cli_doctor_eval.py \
+    tests/test_token_ceiling.py
+  git commit -m "feat(secrets): fail closed model credentials without provider env fallback"
   ```
+
+> **Execution receipt (2026-07-29):** BOOT-B.5 completed in `e10615e5` after
+> the adopted plan amendment `f043a0cc`. The affected runner suite passed (89
+> passed, 1 skipped); Ruff lint/format and diff checks were clean. Independent
+> implementation review approved after direct tests pinned loader, provider,
+> model, Agent, dispatch, and result-output secrecy, including suppressed
+> exception context. Sealed credential-boundary security diff scan
+> `6cc3c84c_20260729T214553Z` found no reportable finding. Full elevated
+> `python scripts/verify` passed: 2,546 passed, 11 skipped, 1 warning; e2e
+> smoke and all repository gates were green. The adopted amendment governs any
+> conflicting unchecked snippets above.
 
 ---
 
@@ -2903,7 +4470,12 @@ each is the standard reading; assembler may veto):
     `query_params`/`header_env` env names are unset, and `"<provider>: adapter off -
     <ENV> unset; set it: memoria secrets set <ENV>"` for branch-declared optional
     providers gated off by `default_on_when_keyed`. Fixture-served providers are
-    excluded (no live call happened — nothing degraded).
+    excluded (no live call happened — nothing degraded). Only strings matching
+    `[A-Z][A-Z0-9_]*` are admitted as `<ENV>`; malformed configuration values are
+    silently skipped rather than reflected. Duplicate provider names or repeated env
+    mappings yield one notice, preserving first branch-list order. The same admission
+    rule applies to `default_on_when_keyed`, so malformed gate values cannot activate
+    an optional adapter.
   - `enrich_source` success payload gains `"credential_notices": list[str]`.
   - No journal event changes → **no floor golden regeneration**.
 
@@ -2981,20 +4553,99 @@ each is the standard reading; assembler may veto):
           "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
           "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY"
       ]
+
+
+  def test_credential_notices_skip_malformed_environment_names(monkeypatch) -> None:
+      malformed = "NOT_AN_ENV_NAME; raw config"
+      config = {
+          "branches": {"doi": {"optional": ["gated"]}},
+          "providers": {
+              "live": {
+                  "query_params": {
+                      "valid": "VALID_QUERY",
+                      "duplicate": "VALID_QUERY",
+                      "malformed": malformed,
+                  },
+                  "header_env": {
+                      "X-Valid": "VALID_HEADER",
+                      "X-Duplicate": "VALID_HEADER",
+                      "X-Malformed": malformed,
+                  },
+              },
+              "gated": {
+                  "default_on_when_keyed": [malformed, "VALID_GATE", 3],
+              },
+          },
+      }
+      for name in ("VALID_QUERY", "VALID_HEADER", "VALID_GATE"):
+          monkeypatch.delenv(name, raising=False)
+      monkeypatch.setenv(malformed, "must-not-activate")
+
+      assert _optional_providers(config, "doi", {}) == []
+      notices = _credential_notices(config, "doi", ["live"], {})
+
+      assert notices == [
+          "live: keyless mode - VALID_HEADER unset; "
+          "set it: memoria secrets set VALID_HEADER",
+          "live: keyless mode - VALID_QUERY unset; "
+          "set it: memoria secrets set VALID_QUERY",
+          "gated: adapter off - VALID_GATE unset; "
+          "set it: memoria secrets set VALID_GATE",
+      ]
+      assert malformed not in "\n".join(notices)
+
+
+  def test_credential_notices_deduplicate_duplicate_branch_providers(monkeypatch) -> None:
+      config = load_provider_config(WORKSPACE_SEED)
+      config["branches"]["doi"]["optional"] = ["semanticscholar", "semanticscholar"]
+      for name in ("OPENALEX_API_KEY", "SEMANTIC_SCHOLAR_API_KEY", "NCBI_EMAIL"):
+          monkeypatch.delenv(name, raising=False)
+
+      notices = _credential_notices(
+          config,
+          "doi",
+          ["crossref", "crossref", "openalex", "unpaywall", "unpaywall"],
+          {},
+      )
+
+      assert notices == [
+          "crossref: keyless mode - NCBI_EMAIL unset; "
+          "set it: memoria secrets set NCBI_EMAIL",
+          "openalex: keyless mode - NCBI_EMAIL unset; "
+          "set it: memoria secrets set NCBI_EMAIL",
+          "openalex: keyless mode - OPENALEX_API_KEY unset; "
+          "set it: memoria secrets set OPENALEX_API_KEY",
+          "unpaywall: keyless mode - NCBI_EMAIL unset; "
+          "set it: memoria secrets set NCBI_EMAIL",
+          "semanticscholar: adapter off - SEMANTIC_SCHOLAR_API_KEY unset; "
+          "set it: memoria secrets set SEMANTIC_SCHOLAR_API_KEY",
+      ]
   ```
 
 - [ ] Run tests to verify they fail:
 
   ```
-  python -m pytest tests/test_source_enrichment.py::test_credential_notices_name_keyless_and_gated_providers tests/test_source_enrichment.py::test_credential_notices_silent_when_keys_present_or_fixture_served tests/test_source_enrichment.py::test_enrich_source_output_states_keyless_degradation -v
+  python -m pytest tests/test_source_enrichment.py::test_credential_notices_name_keyless_and_gated_providers tests/test_source_enrichment.py::test_credential_notices_silent_when_keys_present_or_fixture_served tests/test_source_enrichment.py::test_enrich_source_output_states_keyless_degradation tests/test_source_enrichment.py::test_credential_notices_skip_malformed_environment_names tests/test_source_enrichment.py::test_credential_notices_deduplicate_duplicate_branch_providers -v
   ```
 
   Expected: `ImportError: cannot import name '_credential_notices'`.
 
 - [ ] Write minimal implementation. In `src/memoria_vault/runtime/enrichment.py`, add
-  after `_provider_default_on` (after line 397):
+  `import re` beside `import os`, add the regex at module scope, replace
+  `_provider_default_on`, and add the helpers after it:
 
   ```python
+  _ENV_NAME_RE = re.compile(r"[A-Z][A-Z0-9_]*")
+
+
+  def _provider_default_on(config: dict[str, Any], provider: str) -> bool:
+      spec = _provider_spec(config, provider)
+      return any(
+          os.environ.get(name)
+          for name in _valid_env_names(spec.get("default_on_when_keyed"))
+      )
+
+
   def _credential_notices(
       config: dict[str, Any],
       branch: str,
@@ -3003,7 +4654,11 @@ each is the standard reading; assembler may veto):
   ) -> list[str]:
       """Spec 4b class-2 honesty: name every keyless degradation in the run output."""
       notices: list[str] = []
+      seen_providers: set[str] = set()
       for provider in fetched:
+          if provider in seen_providers:
+              continue
+          seen_providers.add(provider)
           if provider in fixture_payloads:
               continue
           spec = _provider_spec(config, provider)
@@ -3019,12 +4674,16 @@ each is the standard reading; assembler may veto):
       for provider in declared if isinstance(declared, list) else []:
           if not isinstance(provider, str):
               continue
-          if provider in fetched or provider in fixture_payloads:
+          if provider in seen_providers:
               continue
-          gate = _provider_spec(config, provider).get("default_on_when_keyed")
-          gate_names = [gate] if isinstance(gate, str) else gate if isinstance(gate, list) else []
+          seen_providers.add(provider)
+          if provider in fixture_payloads:
+              continue
+          gate_names = _valid_env_names(
+              _provider_spec(config, provider).get("default_on_when_keyed")
+          )
           for env_name in gate_names:
-              if isinstance(env_name, str) and not os.environ.get(env_name):
+              if not os.environ.get(env_name):
                   notices.append(
                       f"{provider}: adapter off - {env_name} unset; "
                       f"set it: memoria secrets set {env_name}"
@@ -3035,9 +4694,16 @@ each is the standard reading; assembler may veto):
   def _spec_env_names(spec: dict[str, Any]) -> list[str]:
       params = spec.get("query_params") if isinstance(spec.get("query_params"), dict) else {}
       headers = spec.get("header_env") if isinstance(spec.get("header_env"), dict) else {}
-      return sorted(
-          {str(name) for name in [*params.values(), *headers.values()] if name}
-      )
+      return sorted(_valid_env_names([*params.values(), *headers.values()]))
+
+
+  def _valid_env_names(value: Any) -> list[str]:
+      values = [value] if isinstance(value, str) else value if isinstance(value, list) else []
+      names: list[str] = []
+      for name in values:
+          if isinstance(name, str) and _ENV_NAME_RE.fullmatch(name) and name not in names:
+              names.append(name)
+      return names
   ```
 
   In `enrich_source`, add after the `optional = _optional_providers(...)` line (line 128):
@@ -3068,38 +4734,58 @@ each is the standard reading; assembler may veto):
 
   ```
   git add src/memoria_vault/runtime/enrichment.py tests/test_source_enrichment.py
-  git commit -m "feat(secrets): class-2 keyless degradation notices in enrich-source output
-
-  Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+  git commit -m "feat(enrichment): report keyless credential degradation"
   ```
+
+> **Execution receipt (2026-07-29):** BOOT-B.6 completed in `2f71d36c` after
+> the adopted plan amendment `f871c880`. The focused credential-boundary suite
+> passed (5 tests), the full enrichment module passed (24 tests), and Ruff
+> lint/format plus diff checks were clean. Independent plan and implementation
+> review approved the canonical-name filter, fixture suppression, stable
+> de-duplication, and fail-closed optional-gate behavior. Sealed security diff
+> scan `6ab2f99e_20260729T222257Z` found no reportable finding. Full elevated
+> `python scripts/verify` passed: 2,551 passed, 11 skipped, 1 warning; e2e smoke
+> and all repository gates were green. The non-elevated gate's sole failure was
+> sandbox denial of its local HTTP test socket; that exact test and the elevated
+> full gate passed. No journal event changed, so no floor golden was regenerated.
+> The adopted amendment governs any conflicting unchecked snippets above.
 
 ---
 
 ### Task BOOT-B.7: Doctor credential report rows + full gate
 
 **Files:**
-- Modify: `src/memoria_vault/cli.py` (`_cmd_doctor` default emit block, lines 653-663)
+- Modify: `src/memoria_vault/cli.py` (one doctor-payload helper; `_cmd_doctor`,
+  `_cmd_doctor_bundle`, and `_cmd_doctor_self_test` normal report emits)
 - Modify: `tests/test_cli_doctor_eval.py`
 
 **Interfaces:**
-- Consumes: `credential_report(workspace)` from BOOT-B.4.
-- Produces: `memoria doctor --json` (default check set) payload gains
+- Consumes: `credential_report(workspace, loaded_from_file=...)` from BOOT-B.4,
+  using the names-only loader snapshot attached by `main()`.
+- Produces: every normal `memoria doctor … --json` report — default, `--check search`,
+  `--check runner`, `bundle`, and `self-test` — gains
   `"credentials": [{"name", "class", "status", "source", "effect_when_unset"}, ...]`.
-  Credential rows are informational — they never flip doctor `ok` (keyless modes are
-  first-class; CI/offline stay green). BOOT-D/doctor-consuming sections read this key.
+  This applies even when a completed diagnostic report has `ok: false`; credential rows
+  are informational and never change that value (keyless modes are first-class; CI/offline
+  stay green). If startup refused the secrets file, every such report preserves the same
+  value-free top-level `warning` as `secrets list`. BOOT-D/doctor-consuming sections read
+  this key.
+- Preserves: parser/usage and maintenance failures emitted through `_fail` retain the
+  existing `{"ok": false, "error": ...}` shape without credential diagnostics; this is an
+  intentional error-boundary compatibility rule, not an accidental early return.
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_cli_doctor_eval.py`:
+- [x] Write the failing test — append to `tests/test_cli_doctor_eval.py`:
 
   ```python
   def test_cli_doctor_reports_credential_registry_rows(
       tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
   ) -> None:
       workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
       assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
       capsys.readouterr()
-      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
       for name in (
           "KILOCODE_API_KEY",
           "OPENALEX_API_KEY",
@@ -3130,37 +4816,181 @@ each is the standard reading; assembler may veto):
       assert rows["NCBI_EMAIL"]["class"] == "identity"
       # Unset credentials are informational: doctor stays ok.
       assert report["ok"] is True
+
+
+  def test_cli_doctor_reports_refused_secrets_warning_without_secret(
+      tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+      secret_file.parent.mkdir(parents=True)
+      secret_file.write_text("OPENALEX_API_KEY=private-secret\\n", encoding="utf-8")
+      secret_file.chmod(0o644)
+
+      rc = main(["doctor", "--workspace", str(workspace), "--json"])
+
+      captured = capsys.readouterr()
+      report = json.loads(captured.out)
+      assert rc == 0
+      assert "world-readable" in report["warning"]
+      assert "world-readable" in captured.err
+      assert "private-secret" not in captured.out
+      assert "private-secret" not in captured.err
   ```
 
-- [ ] Run test to verify it fails:
+  ```python
+  @pytest.mark.parametrize(
+      ("command", "expected_rc"),
+      [
+          (["doctor"], 0),
+          (["doctor", "--check", "search"], 1),
+          (["doctor", "--check", "runner", "--provider", "local"], 0),
+          (["doctor", "bundle"], 0),
+          (["doctor", "self-test"], 0),
+      ],
+  )
+  def test_cli_doctor_report_modes_include_credential_rows(
+      tmp_path: Path,
+      capsys: pytest.CaptureFixture[str],
+      monkeypatch: pytest.MonkeyPatch,
+      command: list[str],
+      expected_rc: int,
+  ) -> None:
+      workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      for name in (
+          "KILOCODE_API_KEY",
+          "OPENALEX_API_KEY",
+          "SEMANTIC_SCHOLAR_API_KEY",
+          "PUBMED_API_KEY",
+          "GITHUB_TOKEN",
+          "NCBI_EMAIL",
+      ):
+          monkeypatch.delenv(name, raising=False)
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+      secret_file.parent.mkdir(parents=True, exist_ok=True)
+      secret_file.write_text("OPENALEX_API_KEY=private-secret\\n", encoding="utf-8")
+      secret_file.chmod(0o644)
+      monkeypatch.setattr(
+          cli_module,
+          "_runner_status",
+          lambda *_args, **_kwargs: {
+              "checks": {
+                  "runner_dependency": True,
+                  "runner_base_url": True,
+                  "runner_agent_constructed": True,
+              },
+              "provider": "local",
+              "base_url": "http://127.0.0.1:11434/v1",
+              "model": "doctor",
+              "error": None,
+          },
+      )
+
+      rc = main([*command, "--workspace", str(workspace), "--json"])
+      captured = capsys.readouterr()
+      report = json.loads(captured.out)
+
+      assert rc == expected_rc
+      assert report["credentials"]
+      assert "world-readable" in report["warning"]
+      assert "world-readable" in captured.err
+      assert "private-secret" not in captured.out + captured.err
+      assert all(
+          {"name", "class", "status", "source", "effect_when_unset"} <= row.keys()
+          for row in report["credentials"]
+      )
+
+
+  def test_cli_doctor_passes_startup_secret_snapshot_to_credential_report(
+      tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+      from memoria_vault.runtime import secrets as secrets_module
+
+      workspace = tmp_path / "workspace"
+      monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+      monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+      assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+      capsys.readouterr()
+      secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+      secret_file.parent.mkdir(parents=True)
+      secret_file.write_text("OPENALEX_API_KEY=file-secret\\n", encoding="utf-8")
+      secret_file.chmod(0o600)
+      seen: list[tuple[Path | None, object]] = []
+      real_report = secrets_module.credential_report
+
+      def report_spy(
+          report_workspace: Path | None, *, loaded_from_file: object = None
+      ) -> list[dict[str, str]]:
+          seen.append((report_workspace, loaded_from_file))
+          return real_report(report_workspace, loaded_from_file=loaded_from_file)
+
+      monkeypatch.setattr(secrets_module, "credential_report", report_spy)
+      assert main(["doctor", "--workspace", str(workspace), "--json"]) == 0
+      captured = capsys.readouterr()
+      report = json.loads(captured.out)
+
+      assert seen == [(workspace, frozenset({"OPENALEX_API_KEY"}))]
+      assert {row["name"]: row for row in report["credentials"]}["OPENALEX_API_KEY"][
+          "source"
+      ] == "file"
+      assert "file-secret" not in captured.out + captured.err
+  ```
+
+  Tighten the existing `test_cli_doctor_live_requires_runner_check` to assert the
+  whole legacy error mapping, rather than only selected fields:
+
+  ```python
+      assert output == {
+          "ok": False,
+          "error": "doctor --live is only valid with --check runner",
+      }
+  ```
+
+- [x] Run test to verify it fails:
 
   ```
-  python -m pytest tests/test_cli_doctor_eval.py::test_cli_doctor_reports_credential_registry_rows -v
+  python -m pytest tests/test_cli_doctor_eval.py::test_cli_doctor_reports_credential_registry_rows tests/test_cli_doctor_eval.py::test_cli_doctor_reports_refused_secrets_warning_without_secret tests/test_cli_doctor_eval.py::test_cli_doctor_report_modes_include_credential_rows tests/test_cli_doctor_eval.py::test_cli_doctor_passes_startup_secret_snapshot_to_credential_report tests/test_cli_doctor_eval.py::test_cli_doctor_live_requires_runner_check -v
   ```
 
   Expected: `KeyError: 'credentials'`.
 
-- [ ] Write minimal implementation — in `src/memoria_vault/cli.py` `_cmd_doctor`,
-  replace the final emit block (lines 653-663):
+- [x] Write minimal implementation — add one private payload helper immediately before
+  `_cmd_doctor`, then route all five normal report paths through it. Do not apply it to
+  `_fail` paths:
 
   ```python
+  def _doctor_payload(
+      payload: dict[str, Any], args: argparse.Namespace, workspace: Path
+  ) -> dict[str, Any]:
       from memoria_vault.runtime.secrets import credential_report
 
-      backup = _backup_report(workspace)
-      return _emit(
-          {
-              "ok": all(checks.values()) and backup["ok"],
-              "workspace": str(workspace),
-              "checks": checks,
-              "backup": backup,
-              "credentials": credential_report(workspace),
-              "repaired": repaired,
-          },
-          args,
+      payload["credentials"] = credential_report(
+          workspace,
+          loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
       )
+      if warning := getattr(args, "_secrets_warning", ""):
+          payload["warning"] = warning
+      return payload
   ```
 
-- [ ] Run test to verify it passes:
+  Each ordinary mapping emits as:
+
+  ```python
+  return _emit(_doctor_payload(payload, args, workspace), args)
+  ```
+
+  Apply that emit form to the `search`, `runner`, and default branches of
+  `_cmd_doctor`, plus `_cmd_doctor_bundle` and `_cmd_doctor_self_test`. Its sole
+  effect is the two additive diagnostic keys: keep each branch's existing `ok`
+  calculation and every existing branch-specific field unchanged.
+
+- [x] Run test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_doctor_eval.py -v
@@ -3168,7 +4998,7 @@ each is the standard reading; assembler may veto):
 
   Expected: all pass (no existing doctor test asserts the payload by full equality).
 
-- [ ] Run the one gate:
+- [x] Run the one gate:
 
   ```
   python scripts/verify
@@ -3178,7 +5008,7 @@ each is the standard reading; assembler may veto):
   doc-claims gate flags the new `secrets` verb, the flagged doc line names the exact
   claim to align — fix the doc line, not the gate.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/cli.py tests/test_cli_doctor_eval.py
@@ -3186,11 +5016,26 @@ each is the standard reading; assembler may veto):
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
-# Section BOOT-C: agent-bundle seeding, `.memoria/vault.json` manifest, `memoria upgrade`, skew detection
+> **Execution receipt (2026-07-29):** BOOT-B.7 completed in `9b1f4da9` after
+> the adopted plan amendments `b68d527a` and `2d339918`. The initial RED suite
+> produced the expected missing credentials/warning/snapshot failures; the focused
+> green suite passed (9 tests), the full doctor/eval module passed (47 tests), and
+> Ruff lint/format plus diff checks were clean. Independent plan and implementation
+> reviews approved the shared helper, all five normal doctor report modes, warning
+> redaction, startup-snapshot propagation, and unchanged `_fail` JSON compatibility.
+> Sealed security diff scan `2d339918_20260729T230645Z` found no reportable finding.
+> Full elevated `python scripts/verify` passed: 2,559 passed, 11 skipped, 1 warning;
+> e2e smoke and all repository gates were green. No journal event changed, so no floor
+> golden was regenerated. The adopted amendment governs any conflicting unchecked
+> snippets above.
 
-Implements bootstrap spec §5 (perimeter layers 1–2 + Codex mirror), §6 (upgrade
-and skew), §9.3–9.4, honoring the §1 table ownership split: perimeter + wiring
-files are owned here; U4-owned method files (`.claude/skills/memoria-copi/`,
+---
+
+# Section BOOT-C: fresh agent-bundle seeding and current-hash manifest
+
+Implements bootstrap spec §5's fresh-install perimeter layers and current-hash
+manifest, honoring the §1 table ownership split: perimeter + wiring files are
+owned here; U4-owned method files (`.claude/skills/memoria-copi/`,
 `.claude/hooks/session_status.py`) are *seeded by the same verbs* — the U4
 section appends their rel paths to `BUNDLE_FILES["agent"]` (Produces below) and
 adds the template files; no other seam is needed.
@@ -3210,31 +5055,66 @@ real Codex hook schema is known.
 
 Seeding mechanism decision (one line, per instructions): bundle files are
 **static templates in `product/workspace_seed/`** (matches the existing seed
-pattern — no per-vault substitution is needed in any of them), written by a
-dedicated bundle writer (`runtime/bundles.py`), **not** via `SEED_TREES` /
-`SEED_FILES`, so upgrade/backup owns exactly these paths and Plan 23 R1NG.3's
-seed-class seams (`_copy_seed_tree` / `_copy_seed_file` / `SEED_CLASSES`) stay
-untouched by this section.
+pattern — no per-vault substitution is needed in any of them), written during
+fresh `memoria init` by a dedicated bundle writer (`runtime/bundles.py`),
+**not** via `SEED_TREES` / `SEED_FILES`; Plan 23 R1NG.3's seed-class seams
+(`_copy_seed_tree` / `_copy_seed_file` / `SEED_CLASSES`) stay untouched by
+this section.
 
 Constraints other sections must honor:
 
-- Bundle files are engine-owned regenerate-always artifacts. They must never be
-  added to Plan 23's `SEED_CLASSES` (view-preference class) — hand-edits to
-  them are detected by hash and backed up, not preserved.
+- Bundle files are engine-owned fresh-init artifacts. They must never be added
+  to Plan 23's `SEED_CLASSES` (view-preference class). The manifest records
+  their initial hashes; this plan provides no recovery, backup, or upgrade path
+  for later edits.
 - `AGENTS.md` is **not** in any bundle: it is a tracked projection (Plan 23
   R1NG.4) with its own drift check (`check_tracked_projections`).
-- All bundles are stamped with the same `__version__` at write time; skew
-  helpers assume that.
 - `.obsidian` view-preference files (`app.json`, `graph.json`, …) are not
   hash-tracked; only `.obsidian/plugins/memoria-obsidian/*` is (the "obsidian"
   bundle).
 - No journal events are added or changed by this section — no floor-golden
   regeneration is expected (`tests/floor_lib.py` hashes journal output only).
-- Doctor's default report gains a `bundles` key and its `ok` is now also gated
-  on `bundles["ok"]`; a vault with a `.memoria/` dir but no
-  `.memoria/vault.json` reports `ok: false` (loud, per spec §5 "absence is
-  loud"). Test fixtures must build vaults via `memoria init` (the supported
-  construction path), never by hand-creating `.memoria/`.
+
+### Clean-slate amendment — bootstrap and plugin lifecycle (2026-07-30, BINDING)
+
+There are no existing Memoria installations. This release supports one path:
+fresh initialization. This amendment supersedes every conflicting BOOT-C,
+U3-PLUG, and U4 instruction below. In a conflict, this amendment governs.
+Do not implement an obsolete block merely because it remains as drafting
+history.
+
+1. **Active BOOT-C order.** Execute BOOT-C.1, then BOOT-C.2. BOOT-C.3,
+   BOOT-C.4, and BOOT-C.5 are removed. Their historical snippets, tests, and
+   commit messages are non-executable.
+2. **Fresh-init writer and manifest.** `memoria init` alone writes the selected
+   static bundles and `.memoria/vault.json`; `--no-obsidian` writes the agent
+   bundle alone. The manifest retains its fresh vault identity and current file
+   hashes only:
+
+   ```json
+   {"schema": 1, "vault_id": "<hex>", "bundles": {"agent": {"files": {"<rel>": "sha256:<hex>"}}}}
+   ```
+
+   Tests prove that every seeded file matches its current recorded hash. Do not
+   stamp bundle or schema versions, preserve a prior manifest, repair a missing
+   manifest, or invoke the writer from `doctor --repair`.
+3. **No lifecycle compatibility surface.** Do not add a `memoria upgrade`
+   parser, handler, recovery path, backup directory, backup gitignore entry,
+   version comparator, skew warning, or version advice. `doctor` neither
+   reports nor gates its result on bundles or manifest state.
+4. **No plugin-settings migration.** The fresh plugin defaults omit
+   `serverUrl` and `hasToken`, and current code never reads either key. Load
+   and save the current settings normally; do not delete, reinterpret, test,
+   or rewrite settings from a prior plugin installation. `pill.js` exports no
+   version comparator or skew banner, and the attention pane renders no
+   version-skew UI.
+5. **U4 handoff.** `copi_bundle_files()` participates in fresh initialization
+   only. It carries current content hashes, not `COPI_BUNDLE_VERSION`; the
+   SessionStart hook consumes credential status without skew constants or
+   upgrade advice.
+
+The deletion prevents a permanent maintenance surface for installations that
+do not exist, while preserving the fresh vault's perimeter and hash evidence.
 
 Baseline verified at main `80e62bbd` (line refs below read from the actual
 files, not from specs).
@@ -3265,7 +5145,7 @@ files, not from specs).
 - [ ] Create `tests/test_agent_bundle.py` with the failing content tests:
 
 ```python
-"""Agent-bundle seeding, vault.json manifest, upgrade, and skew detection."""
+"""Agent-bundle seed-template content checks."""
 
 from __future__ import annotations
 
@@ -3551,31 +5431,42 @@ EOF
 )"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 3b0a1454 main`
+> succeeded. `3b0a1454` adds the BOOT-C.1 `.claude`, `.codex`, MCP, and
+> `CLAUDE.md` seed-template files, along with the declared agent-bundle,
+> installer-skeleton, package-spine, and test-level wiring. BOOT-C.2 is not
+> included in this receipt.
+
 ---
 
-### Task BOOT-C.2: `runtime/bundles.py` + `.memoria/vault.json` written by init
+### Task BOOT-C.2: fresh-init bundle writer + current-hash manifest
+
+> **Binding execution text:** the historical detail below is superseded in full
+> by the clean-slate amendment. Write static agent and Obsidian bundles only
+> from `memoria init`, then write the current-hash manifest. Test a normal init
+> and `--no-obsidian` init; assert every recorded hash matches the file just
+> seeded. Do not wire bundle writing into repair or doctor, preserve a manifest,
+> or add version metadata. Run the focused bundle tests and `python scripts/verify`
+> before committing this one fresh-init slice.
 
 **Files:**
 - Create: `src/memoria_vault/runtime/bundles.py`
-- Modify: `src/memoria_vault/cli.py:2270-2272` (`_repair_workspace`), `src/memoria_vault/cli.py:2275-2295` (`_repair_write_targets`), `src/memoria_vault/cli.py:2346-2362` (`_initialize_workspace_files`)
+- Modify: `src/memoria_vault/cli.py` (`_initialize_workspace_files` only)
 - Modify: `tests/test_agent_bundle.py` (append)
 
 **Interfaces:**
-- Consumes: `memoria_vault.__version__: str`; `memoria_vault.runtime.state.SCHEMA_VERSION: int` (state.py:53); `memoria_vault.runtime.policy.audit.sha256_bytes(data: bytes) -> str` / `sha256_file(path: Path) -> str` (both return `"sha256:<64-hex>"`, audit.py:17-26); `memoria_vault.runtime.vaultio.write_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None` (vaultio.py:170); `importlib.resources.files`.
+- Consumes: `memoria_vault.runtime.policy.audit.sha256_bytes(data: bytes) -> str` / `sha256_file(path: Path) -> str` (both return `"sha256:<64-hex>"`, audit.py:17-26); `memoria_vault.runtime.vaultio.write_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None` (vaultio.py:170); `importlib.resources.files`.
 - Produces (module `memoria_vault.runtime.bundles`):
   - `MANIFEST_REL: str = ".memoria/vault.json"`
   - `MANIFEST_SCHEMA: int = 1`
-  - `BACKUP_ROOT_REL: str = ".memoria/backup"`
   - `BUNDLE_FILES: dict[str, tuple[str, ...]]` — bundle name → seeded rel paths; keys `"agent"` and `"obsidian"`. **U4 appends its method-file rel paths to `"agent"` here.**
   - `seed_bytes(rel: str) -> bytes`
-  - `read_manifest(workspace: Path) -> dict[str, Any] | None`
-  - `write_manifest(workspace: Path, manifest: dict[str, Any]) -> None`
-  - `seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None, vault_id: str | None = None) -> dict[str, Any]` — writes every file of the named bundles (default: all) from the seed package, writes the manifest, returns it; preserves an existing manifest's `vault_id`, minting `uuid4().hex` only when none exists.
-  - `bundle_write_targets() -> list[str]` — every bundle rel path + parent dirs + `MANIFEST_REL` (for repair-preflight validation).
-  - Manifest shape (contract for U3/U4/doctor): `{"schema": 1, "vault_id": "<hex>", "schema_version": <state.SCHEMA_VERSION>, "bundles": {<name>: {"version": "<engine __version__>", "files": {<rel>: "sha256:<hex>"}}}}`.
-- Behavior contract: `memoria init` (and `doctor --repair`, which reuses `_initialize_workspace_files`) writes all bundle files + manifest; `--no-obsidian` seeds only the `"agent"` bundle. `doctor --repair` regenerates bundles without backup (matching its existing overwrite semantics for runtime seeds); only `memoria upgrade` (BOOT-C.3) backs up.
+  - `read_manifest(workspace: Path) -> dict[str, Any] | None` and `write_manifest(workspace: Path, manifest: dict[str, Any]) -> None`
+  - `seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None) -> dict[str, Any]` — writes the named current templates and a newly minted vault id.
+  - Manifest shape: `{"schema": 1, "vault_id": "<hex>", "bundles": {<name>: {"files": {<rel>: "sha256:<hex>"}}}}`.
+- Behavior contract: fresh `memoria init` writes all bundle files + manifest; `--no-obsidian` seeds only the `"agent"` bundle. Nothing regenerates or recovers an existing bundle.
 
-**Steps:**
+**Historical steps — do not execute:**
 
 - [ ] Append to `tests/test_agent_bundle.py` (add these imports to the top of
       the file: `from pathlib import Path`, `import pytest`,
@@ -3833,7 +5724,11 @@ EOF
 
 ---
 
-### Task BOOT-C.3: `memoria upgrade` — regenerate bundles, back up hand-edits, rewrite manifest
+### Task BOOT-C.3: Removed — no bundle upgrade, backup, or recovery path
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any file,
+> test, parser, handler, gitignore, or commit instruction in this historical
+> block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `upgrade_bundles`)
@@ -4018,7 +5913,10 @@ EOF
 
 ---
 
-### Task BOOT-C.4: Skew detection — one-line warning on every CLI command
+### Task BOOT-C.4: Removed — no engine/vault skew detection
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
+> version, warning, CLI, test, or commit instruction in this historical block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append version-skew helpers)
@@ -4221,7 +6119,11 @@ EOF
 
 ---
 
-### Task BOOT-C.5: Doctor full bundle-integrity + skew report
+### Task BOOT-C.5: Removed — doctor does not enforce bundles or manifests
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
+> doctor payload, integrity enforcement, version, test, or commit instruction
+> in this historical block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `verify_bundles`)
@@ -6427,98 +8329,64 @@ semantics (`docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md`).
 
 ## Payload contract (what other sections consume)
 
-`GET /v1/views/attention` — authenticated (transport-wide bearer check,
-`src/memoria_vault/runtime/http_transport.py:63`), optional `read_scope`/`scope` query
-(same narrowing as every other read route). Response:
+This reconciled contract replaces the old flat envelope, interleaved action rows,
+and generic Curate action below. `GET /v1/views/attention` is authenticated
+(transport-wide bearer check) and accepts the ordinary optional `read_scope`/`scope`
+query. Its response is:
 
 ```json
 {
   "ok": true,
   "api_version": "engine-read-api.v1",
-  "spec": "view-spec.v1",
-  "blocks": [ <card>, <action-row>, <card>, <action-row>, ... ]
+  "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [<card>, ...]}
 }
 ```
 
-`spec` is the view-contract version field (forward-compat anchor). Only **open** cards
-appear (`attention_status: open`); each card block is immediately followed by its
-action-row block. Block order: loudness rank (`block` 0 < `alert` 1 < `notice` 2 <
-`quiet` 3 < unknown/absent 4 — `block` first is subsumed by rank 0), then `created`
-ascending (oldest first; missing `created` sorts last), then `path`.
+Only open attention items appear. The current producer emits one top-level card per
+item, sorted by loudness rank (`block`, `alert`, `notice`, `quiet`, then unknown),
+oldest first within a rank, then path. A card has `id`, `kind="card"`, `ref`,
+`title`, verbatim `kind_line` and `loudness`, `age_s`, `age_label`, and
+`blocks`; it adds only nonempty `argument_for`, `argument_against`, `tipped_by`,
+`certainty`, `raised_by`, and `raised_at`. It never exposes writer-only
+`attention_kind`, `what_tipped_it`, `created`, `age_days`, `evidence`, or
+`body_data`.
 
-**card block** (always-present keys):
+Each attention card has exactly these children, in this order:
 
-| key | value |
-| --- | --- |
-| `id` | `safe_filename(card path)`, e.g. `inbox_flag-broken-citation.md` |
-| `kind` | `"card"` |
-| `ref` | vault-relative card path, e.g. `inbox/flag-broken-citation.md` |
-| `attention_kind` | `candidate\|gap\|flag\|alert\|work-prompt` (verbatim frontmatter) |
-| `status` | `"open"` (this view filters to open) |
-| `title` | frontmatter title or file stem |
-| `loudness` | frontmatter value **verbatim**, may be `""` — rendered, never invented |
-| `created` | ISO date string or `""` |
-| `age_days` | integer days since `created`, or `null` when `created` absent/unparseable |
-| `check_status` | frontmatter `check_status` or `"unchecked"` |
-| `evidence` | list of vault-relative links — **currently at most the frontmatter `target`**; `[]` when absent |
-| `body_data` | `{"kind": "untrusted_text", "text": <body>}` |
+1. `evidence-list` `<id>-evidence`, with zero items or one
+   `{"label": target, "ref": target}`;
+2. `text` `<id>-body`, carrying the untrusted body as plain text;
+3. `action-row` `<id>-actions`, with Resolve (primary,
+   `{"target_id": ref}`), Acknowledge (`{"target_id": ref}`), and Defer
+   (`{"target_id": ref, "outcome": "defer"}`). Resolve and Defer use
+   `resolve-attention`; Acknowledge uses `acknowledge-attention`.
 
-**Present-only honesty fields** (flat, verbatim frontmatter strings; a key is *omitted*
-when the writer never persisted it — verified against
-`src/memoria_vault/runtime/subsystems/lib/inbox.py`):
+The generic proposal-card Curate action is intentionally absent: its worker operation
+requires a checked candidate-note path and an accepted/rejected status which an
+attention proposal does not contain.
 
-- proposals (`write_proposal`, kinds `candidate`/`gap`): `action`, `argument_for`,
-  `argument_against`, `what_tipped_it`, `certainty`
-- findings (`write_finding`, kinds `flag`/`alert`): `finding`, `agent_recommendation` —
-  these cards **have no** `argument_for`/`argument_against`; the block simply lacks
-  those keys. The `evidence:` body section `write_finding` emits is *body prose*, not a
-  frontmatter field — it travels inside `body_data`, never as a structured field.
-- work prompts (`write_work_prompt`): `action`, `what_happened`
-- all writers: `raised_by`
+`GET /v1/views/attention?summary=true` is the authenticated poll response, with no
+`view`: `{ok, api_version, open, by_loudness, as_of, engine_version,
+link_relations, missing_required_credentials}`. `by_loudness` omits zero-count
+levels; `as_of` comes from `now_iso()`; `engine_version` is the package version;
+`link_relations` is `sorted(LINK_RELATIONS)`; and
+`missing_required_credentials` is the sorted names from `credential_report(workspace)`
+whose class is `required-for-operation` and status is `unset`.
 
-**action-row block**:
+`VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row", "evidence-list")` remains
+the renderer's catalog. The HTTP transport imposes no whitelist: a future top-level
+block is preserved inside `view.blocks`, and an unknown renderer kind fails visibly.
 
-```json
-{
-  "id": "<card block id>-actions",
-  "kind": "action-row",
-  "ref": "<card path>",
-  "actions": [
-    {"label": "Resolve", "operation_id": "resolve-attention"},
-    {"label": "Acknowledge", "operation_id": "acknowledge-attention"},
-    {"label": "Curate", "operation_id": "curate-note-candidate"}   // proposals only (candidate|gap)
-  ]
-}
-```
-
-All three operation ids exist in the capability catalog
-(`src/memoria_vault/product/capabilities/operations/*.md`); a test pins that.
-
-`GET /v1/views/attention?summary=true` — the pane's 30 s poll (authenticated, so it
-resets the server idle timer per bootstrap §3 / BOOT-A; nothing in this section
-implements timers — the endpoint simply rides the same authenticated `_handle` path
-BOOT-A keys on):
-
-```json
-{"ok": true, "api_version": "engine-read-api.v1",
- "open": 3, "by_loudness": {"block": 1, "alert": 1, "notice": 1},
- "as_of": "2026-07-15T14:02:00Z"}
-```
-
-`by_loudness` keys are the verbatim loudness values of open (scope-visible) cards —
-zero-count levels are omitted; `as_of` is `runtime.time.now_iso()`.
-
-Block catalog: `VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row",
-"evidence-list")` exported from `engine/api.py`. `text`/`badge`/`evidence-list` are
-reserved catalog members this view does not yet emit. The HTTP transport imposes **no**
-block-kind whitelist — additive block types flow through unchanged (pinned by test).
-
-No journal events are written by any task here (reads only) — **no floor golden
-regeneration needed**.
+No task here writes journal events, so no floor-golden regeneration is needed.
 
 ---
 
 ### Task U3-ENG.1: `read_attention_view` — sorted card blocks with present-only honesty fields
+
+> **Execution override:** U3-ENG.1/.2/.3 are the one atomic implementation
+> task specified by the 2026-07-29 reconciliation amendment. Their old
+> incremental red stages, flat assertions, and separate commits below are
+> drafting history, not executable instructions.
 
 **Files:**
 - Create: `tests/test_attention_view.py`
@@ -6980,14 +8848,20 @@ regeneration needed**.
 - Consumes: `now_iso() -> str` (`src/memoria_vault/runtime/time.py:17`).
 - Produces: final signature `read_attention_view(workspace: Path, *, summary: bool =
   False, read_scope: list[str] | None = None) -> dict[str, Any]`; summary payload
-  `{"ok", "api_version", "open": int, "by_loudness": dict[str, int], "as_of": str}`.
+  `{"ok", "api_version", "open": int, "by_loudness": dict[str, int], "as_of": str,
+  "engine_version": str, "link_relations": list[str],
+  "missing_required_credentials": list[str]}`.
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_attention_view.py`:
+- [ ] Write the failing test — add `from memoria_vault import __version__`
+  and `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`
+  to `tests/test_attention_view.py`, then append:
 
   ```python
-  def test_attention_view_summary_returns_cheap_counts(workspace: Path) -> None:
+  def test_attention_view_summary_returns_cheap_counts(
+      workspace: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
       _write_view_card(workspace, "blocker", loudness="block", created="2026-07-01")
       _write_view_card(workspace, "alerting", loudness="alert", created="2026-07-01")
       _write_view_card(workspace, "noticed", loudness="notice", created="2026-07-01")
@@ -6995,22 +8869,37 @@ regeneration needed**.
           workspace, "closed", loudness="alert", created="2026-07-01", status="resolved"
       )
 
+      monkeypatch.setattr(
+          api,
+          "credential_report",
+          lambda _workspace: [
+              {"name": "MODEL_KEY", "class": "required-for-operation", "status": "unset"},
+              {"name": "SET_KEY", "class": "required-for-operation", "status": "set"},
+              {"name": "OPTIONAL_KEY", "class": "enhancing", "status": "unset"},
+          ],
+      )
       payload = api.read_attention_view(workspace, summary=True)
 
       assert payload["ok"] is True
       assert payload["api_version"] == api.READ_API_VERSION
       assert payload["open"] == 3
       assert payload["by_loudness"] == {"block": 1, "alert": 1, "notice": 1}
-      assert "blocks" not in payload
+      assert "view" not in payload
       assert datetime.datetime.fromisoformat(payload["as_of"].replace("Z", "+00:00"))
+      assert payload["engine_version"] == __version__
+      assert payload["link_relations"] == sorted(LINK_RELATIONS)
+      assert payload["missing_required_credentials"] == ["MODEL_KEY"]
   ```
 
 - [ ] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_summary_returns_cheap_counts -v`
   Expected: `TypeError: read_attention_view() got an unexpected keyword argument 'summary'`.
 
-- [ ] Write the minimal implementation. Add the import (alphabetical within the
-  `memoria_vault.runtime` group, after the `read_barrier` import at line 17):
+- [ ] Write the minimal implementation. Alongside the existing U3 imports, add
+  `from memoria_vault import __version__`,
+  `from memoria_vault.runtime.secrets import credential_report`, and
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`;
+  add the time import:
 
   ```python
   from memoria_vault.runtime.time import now_iso
@@ -7032,13 +8921,25 @@ regeneration needed**.
           for card in cards:
               key = str(card["loudness"] or "")
               by_loudness[key] = by_loudness.get(key, 0) + 1
-          return _read_payload(open=len(cards), by_loudness=by_loudness, as_of=now_iso())
+          missing_required_credentials = sorted(
+              str(row.get("name") or "")
+              for row in credential_report(Path(workspace))
+              if row.get("class") == "required-for-operation"
+              and row.get("status") == "unset"
+              and str(row.get("name") or "")
+          )
+          return _read_payload(
+              open=len(cards),
+              by_loudness=by_loudness,
+              as_of=now_iso(),
+              engine_version=__version__,
+              link_relations=sorted(LINK_RELATIONS),
+              missing_required_credentials=missing_required_credentials,
+          )
       cards.sort(key=_attention_view_sort_key)
-      blocks: list[dict[str, Any]] = []
-      for card in cards:
-          blocks.append(_attention_view_card_block(card))
-          blocks.append(_attention_view_action_row(card))
-      return _read_payload(spec=VIEW_SPEC_VERSION, blocks=blocks)
+      return _read_payload(
+          view=_view("attention", [_attention_view_card_block(card) for card in cards])
+      )
   ```
 
 - [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
@@ -7067,11 +8968,16 @@ regeneration needed**.
 - Modify: `tests/floor_lib.py` (ARG_TABLE, after the `attention.get` entry at lines
   1187–1191)
 - Modify: `tests/test_attention_view.py`
+- Modify when U1 M.3 has landed: `tests/test_read_api_scope_walk.py` (add the
+  route-owned `views.attention` probe; its existing seeded `attention_path`
+  marker is sufficient, so do not create a second seed fixture)
 
 **Interfaces:**
 - Consumes: `HTTP_ROUTES = http_routes()` route gate
   (`http_transport.py:21,115`); `_one(query, key)` (`http_transport.py:224`);
-  read-scope plumbing `_read_scope` (`http_transport.py:255`).
+  read-scope plumbing `_read_scope` (`http_transport.py:255`); after U1 M.3,
+  the registry-derived `PROBES` scope-walk gate in
+  `tests/test_read_api_scope_walk.py`.
 - Produces: surface action id **`views.attention`** (engine `read_attention_view`,
   kind `read`, scope `optional-read-scope`, params `{"summary": {"type": "boolean",
   "default": False}}`, http `GET /v1/views/attention`, response_version
@@ -7098,13 +9004,18 @@ regeneration needed**.
       )
 
       assert full_status == HTTPStatus.OK
-      assert full["spec"] == "view-spec.v1"
-      assert [block["kind"] for block in full["blocks"]] == ["card", "action-row"]
+      assert full["view"]["version"] == "view-spec.v1"
+      assert [block["kind"] for block in full["view"]["blocks"]] == ["card"]
+      assert [child["kind"] for child in full["view"]["blocks"][0]["blocks"]] == [
+          "evidence-list",
+          "text",
+          "action-row",
+      ]
       assert summary_status == HTTPStatus.OK
       assert summary["open"] == 1
       assert summary["by_loudness"] == {"notice": 1}
       assert scoped_status == HTTPStatus.OK
-      assert scoped["blocks"] == []
+      assert scoped["view"]["blocks"] == []
 
 
   def test_http_dispatch_rejects_wrong_method_for_attention_view(workspace: Path) -> None:
@@ -7118,6 +9029,20 @@ regeneration needed**.
   `expected` set (after `"attention.get",` line 24) and `("GET",
   "/v1/views/attention"),` to the `http_routes()` set (after `("GET",
   "/attention/card"),` line 50).
+
+  If U1 M.3 has already landed, also add its required dynamic scope-walk probe
+  to `tests/test_read_api_scope_walk.py`:
+
+  ```python
+      "views.attention": ("excluded", "{attention_path}"),
+  ```
+
+  This reuses M.3's existing seeded open attention card. It proves the
+  unscoped view actually contains that card and a void scope returns an empty
+  `view.blocks`; it must not weaken the registry-derived `set(PROBES) ==
+  scoped_ids` assertion. If U3-ENG.4 lands first, make the same addition when
+  U1 M.3 is re-anchored; do not create the scope-walk file early or replace
+  its dynamic completeness assertion with a count.
 
 - [ ] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_http_dispatch_serves_attention_view tests/test_attention_view.py::test_http_dispatch_rejects_wrong_method_for_attention_view tests/test_surface_contract.py -v`
@@ -7174,6 +9099,8 @@ regeneration needed**.
   python -m pytest tests/test_attention_view.py tests/test_surface_contract.py \
       tests/test_http_transport.py tests/test_floor_coverage.py -v
   python -m pytest tests/test_floor_sweep_reads.py -k "views.attention" -v
+  # When U1 M.3 is already present:
+  python -m pytest tests/test_read_api_scope_walk.py -v
   ```
 
   Expected: all pass — including
@@ -7188,6 +9115,8 @@ regeneration needed**.
   git add src/memoria_vault/engine/surface_contract.py \
       src/memoria_vault/runtime/http_transport.py \
       tests/test_surface_contract.py tests/floor_lib.py tests/test_attention_view.py
+  # When U1 M.3 is already present, also stage its required route-owned probe:
+  git add tests/test_read_api_scope_walk.py
   git commit -m "feat(http): serve GET /v1/views/attention (full view + summary poll)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -7223,7 +9152,18 @@ regeneration needed**.
       payload = api.read_attention_view(workspace)
 
       assert api.VIEW_BLOCK_KINDS == ("card", "text", "badge", "action-row", "evidence-list")
-      assert {block["kind"] for block in payload["blocks"]} <= set(api.VIEW_BLOCK_KINDS)
+      def descendants(blocks: list[dict[str, object]]) -> list[dict[str, object]]:
+          found: list[dict[str, object]] = []
+          for block in blocks:
+              found.append(block)
+              children = block.get("blocks")
+              if isinstance(children, list):
+                  found.extend(descendants(children))
+          return found
+
+      assert {
+          str(block["kind"]) for block in descendants(payload["view"]["blocks"])
+      } <= set(api.VIEW_BLOCK_KINDS)
 
 
   def test_http_dispatch_passes_additive_unknown_blocks_through(
@@ -7233,9 +9173,13 @@ regeneration needed**.
 
       def future_view(*args: object, **kwargs: object) -> dict[str, object]:
           payload = real(*args, **kwargs)
+          view = dict(payload["view"])
           return {
               **payload,
-              "blocks": [*payload["blocks"], {"id": "future", "kind": "sparkline"}],
+              "view": {
+                  **view,
+                  "blocks": [*view["blocks"], {"id": "future", "kind": "sparkline"}],
+              },
           }
 
       monkeypatch.setattr(
@@ -7246,8 +9190,8 @@ regeneration needed**.
       response, status = _dispatch(workspace, "GET", "/v1/views/attention", dict)
 
       assert status == HTTPStatus.OK
-      assert response["spec"] == "view-spec.v1"
-      assert response["blocks"][-1] == {"id": "future", "kind": "sparkline"}
+      assert response["view"]["version"] == "view-spec.v1"
+      assert response["view"]["blocks"][-1] == {"id": "future", "kind": "sparkline"}
   ```
 
 - [ ] Run to verify failure:
@@ -7350,13 +9294,22 @@ regeneration needed**.
       assert view_code == HTTPStatus.OK
       assert view["ok"] is True
       assert view["api_version"] == "engine-read-api.v1"
-      assert view["spec"] == "view-spec.v1"
-      assert [block["kind"] for block in view["blocks"]] == ["card", "action-row"]
-      assert view["blocks"][0]["argument_for"] == "for"
+      assert view["view"]["version"] == "view-spec.v1"
+      assert [block["kind"] for block in view["view"]["blocks"]] == ["card"]
+      card = view["view"]["blocks"][0]
+      assert [child["kind"] for child in card["blocks"]] == [
+          "evidence-list",
+          "text",
+          "action-row",
+      ]
+      assert card["argument_for"] == "for"
       assert summary_code == HTTPStatus.OK
       assert summary["open"] == 1
       assert summary["by_loudness"] == {"notice": 1}
       assert summary["as_of"]
+      assert summary["engine_version"] == __version__
+      assert summary["link_relations"] == sorted(LINK_RELATIONS)
+      assert "missing_required_credentials" in summary
   ```
 
 - [ ] Run to verify the tests exercise real sockets and fail only if the route were
@@ -7384,9 +9337,13 @@ regeneration needed**.
 > `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md` §2–5,
 > `docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md` §2–4.
 
-**SPEC GAP:** the operation endpoint's path under the new `/v1` scheme is not pinned by BOOT/U3 (today's server exposes `POST /operation/run`, `src/memoria_vault/runtime/http_transport.py:204`); this section codes against a single constant `OPERATION_PATH = "/operation/run"` in `main.js` — the assembler must reconcile with the server section if it moves the route.
+**Resolved cross-section contract:** the operation endpoint remains `POST /operation/run` (not a
+`/v1` route); this section uses the single `OPERATION_PATH = "/operation/run"` constant in
+`main.js`.
 
-**SPEC GAP:** U3/BOOT name the summary and view payloads but not their field names; this section defines the exact client contract (see "Cross-section payload contract" below) — the server section must produce these fields verbatim or the assembler reconciles the two sections.
+**Resolved cross-section contract:** the summary and view field names below are binding for
+both U3-ENG and U3-PLUG. The plugin consumes them verbatim; it does not infer alternate
+envelopes or fields.
 
 **SPEC GAP:** U3 §3 says plugin settings are "One field: Engine command", but the shipped plugin also carries the empirical-recorder settings (`enabled`, `defaultProjectId`, `retentionDays`, `showPrivacyPreview`) guarded by existing contract tests. This section removes only `serverUrl` and the token field (the two the spec explicitly replaces with handshake) and keeps the recorder settings; escalate if the PI meant to delete the recorder.
 
@@ -7401,16 +9358,22 @@ regeneration needed**.
 
 - `memoria handshake --vault <path> --spawn --json` prints exactly one JSON object to stdout carrying at least `{"port": int, "token": str, "boot_id": str, "engine_version": str, "pid": int}` (the BOOT §1 runtime.json fields; extra keys ignored). On failure, its stderr names `<state>/serve.log` — the plugin surfaces that stderr verbatim in the server-down remediation because BOOT §4 forbids the plugin from locating the state file itself.
 - `GET /v1/status` — unauthenticated liveness probe, 200 when alive.
-- `GET /v1/views/attention?summary=true` (Bearer auth) → `{"ok": true, "open_count": int, "missing_required_credentials": [str], "link_relations": [str], "engine_version": str}`.
-- `GET /v1/views/attention` (Bearer auth) → `{"ok": true, "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [Block]}}` where `Block.kind ∈ {card, text, badge, action-row, evidence-list}`:
-  - `card`: `{kind, id, ref, title, loudness, kind_line, certainty, argument_for, argument_against, tipped_by, raised_by, raised_at, age_label, age_s, blocks: [Block]}` (children carry the card's `evidence-list` and `action-row`).
+- `GET /v1/views/attention?summary=true` (Bearer auth) →
+  `{"ok": true, "api_version": str, "open": int, "by_loudness": object, "as_of": str,
+  "missing_required_credentials": [str], "link_relations": [str],
+  "engine_version": str}`.
+- `GET /v1/views/attention` (Bearer auth) → `{"ok": true, "api_version": str, "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [Block]}}` where `Block.kind ∈ {card, text, badge, action-row, evidence-list}`:
+  - `card`: `{kind, id, ref, title, loudness, kind_line, certainty, argument_for, argument_against, tipped_by, raised_by, raised_at, age_label, age_s, blocks: [Block]}`; current attention cards carry exactly nested `evidence-list`, `text`, then `action-row`.
   - `text`: `{kind, id, text}` · `badge`: `{kind, id, label, loudness}` · `evidence-list`: `{kind, id, items: [{label, ref}]}` · `action-row`: `{kind, id, actions: [{label, operation_id, payload, primary?}]}`.
   - Any other `kind` (including today's `"table"` from `engine/api.py:719`) renders as a labeled fallback box — fail visible, never silent.
-- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key", "actor": "agent"}` → `{"ok": bool, "job": {"job_id": str, …}, "result": …}` (today's `engine/api.py:440-444` shape; the toast names `job.job_id`).
+- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key"}` →
+  `{"ok": bool, "job": {"job_id": str, …}, "result": …}`. The HTTP door
+  ignores any caller-supplied actor and persists `actor="pi"`; the client
+  intentionally omits that non-authoritative field.
 
-**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` and U3 §4 names it "the single source"; a plugin-side copy is a second source that drifts exactly along the skew axis BOOT §6 exists to police, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
+**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` and U3 §4 names it "the single source"; a plugin-side copy would be a second source that drifts from engine truth, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
 
-Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); skew compares `this.manifest.version` against the handshake's `engine_version`.
+Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); handshake `engine_version` remains transport metadata and drives no plugin lifecycle decision.
 
 ---
 
@@ -7461,7 +9424,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 **Interfaces:**
 - Produces (CommonJS exports of `handshake.js`):
   - `buildHandshakeArgv(engineCommand: string, vaultPath: string) -> {command: string, args: string[]}` — whitespace-splits the setting so `wsl memoria` works; args end `["handshake", "--vault", vaultPath, "--spawn", "--json"]`.
-  - `parseHandshake(stdoutText: string) -> {port: number, token: string, bootId: string, engineVersion: string, pid: number}` — throws `Error("handshake: …")` on non-JSON or missing port/token/boot_id/engine_version.
+  - `parseHandshake(stdoutText: string) -> {port: number, token: string, bootId: string, engineVersion: string, pid: number}` — throws `Error("handshake: …")` on non-JSON, or a missing/nonpositive/non-integer port or PID, or a missing token/boot_id/engine_version; no plugin action may use a PID before this validation.
   - `classifySpawnError(error) -> "engine-missing" | "spawn-failed"` — ENOENT means the engine binary is absent.
   - `createRespawnGate(now = Date.now) -> {tryAcquire(): boolean, exhausted(): boolean}` — at most `RESPAWN_LIMIT` (3) acquisitions per sliding `RESPAWN_WINDOW_MS` (3 min); injectable clock.
   - Constants: `HANDSHAKE_TIMEOUT_MS = 10000`, `RESPAWN_LIMIT = 3`, `RESPAWN_WINDOW_MS = 180000`.
@@ -7525,6 +9488,21 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       () => parseHandshake(JSON.stringify({ port: 1, token: "t", boot_id: "b" })),
       /handshake: missing engine_version/,
     );
+    for (const pid of [0, -1, 1.5]) {
+      assert.throws(
+        () =>
+          parseHandshake(
+            JSON.stringify({
+              port: 1,
+              token: "t",
+              boot_id: "b",
+              engine_version: "0.1.0-alpha.21",
+              pid,
+            }),
+          ),
+        /handshake: missing pid/,
+      );
+    }
   });
 
   test("classifySpawnError maps ENOENT to engine-missing", () => {
@@ -7598,6 +9576,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     if (!coordinates.engineVersion) {
       throw new Error("handshake: missing engine_version");
     }
+    if (!Number.isInteger(coordinates.pid) || coordinates.pid <= 0) {
+      throw new Error("handshake: missing pid");
+    }
     return coordinates;
   }
 
@@ -7646,7 +9627,11 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 ---
 
-### Task U3-PLUG.3: `pill.js` — status-pill state machine and skew banners
+### Task U3-PLUG.3: `pill.js` — status-pill state machine and poll cadence
+
+> **Clean-slate override (2026-07-30):** version comparison and skew banners
+> are removed. Do not implement the historical `compareVersions` or
+> `skewBanner` snippets below.
 
 **Files:**
 - Create: `packages/memoria-obsidian/pill.js`
@@ -7657,8 +9642,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 - Produces (CommonJS exports of `pill.js`):
   - `computePill({connection, openCount, lastPollAt, missingCredential}) -> {state, text, tone}` where `connection ∈ {"connected","stale","server-down","token-invalid","engine-missing"}`, `state ∈ PILL_STATES`, `tone ∈ {"green","amber","red","gray","accent"}`. Wordings exactly per the U3 §3 table; `stale` with `lastPollAt = 0` (never polled yet) renders `"Memoria · connecting…"`.
   - `formatAsOf(epochMs: number) -> "HH:MM"` (local time, zero-padded).
-  - `compareVersions(a: string, b: string) -> -1|0|1` (dotted numerics, then dot-split prerelease, numeric-aware, no-prerelease > prerelease).
-  - `skewBanner(pluginVersion: string, engineVersion: string) -> null | {direction: "plugin-older"|"engine-older", text: string}` — both U3 §3 banner wordings verbatim.
+  - No version-comparison or skew-banner export.
   - `PILL_STATES = ["connected","stale","server-down","token-invalid","engine-missing","key-needed"]`.
   - `computeNextPollDelay(isActive: boolean) -> number` — `30000` active, `120000` idle (U3 §5).
 
@@ -7673,11 +9657,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   const require = createRequire(import.meta.url);
   const {
     PILL_STATES,
-    compareVersions,
     computeNextPollDelay,
     computePill,
     formatAsOf,
-    skewBanner,
   } = require("../pill.js");
 
   const at = new Date(2026, 6, 15, 14, 2).getTime(); // local 14:02
@@ -7725,31 +9707,6 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(formatAsOf(new Date(2026, 0, 2, 9, 5).getTime()), "09:05");
   });
 
-  test("compareVersions handles dotted prereleases numerically", () => {
-    assert.equal(compareVersions("0.1.0-alpha.20", "0.1.0-alpha.21"), -1);
-    assert.equal(compareVersions("0.1.0-alpha.21", "0.1.0-alpha.20"), 1);
-    assert.equal(compareVersions("0.1.0-alpha.20", "0.1.0"), -1);
-    assert.equal(compareVersions("0.2.0", "0.1.9-alpha.9"), 1);
-    assert.equal(compareVersions("0.1.0", "0.1.0"), 0);
-  });
-
-  test("skew banners carry the ratified wordings in both directions", () => {
-    assert.equal(skewBanner("0.1.0-alpha.21", "0.1.0-alpha.21"), null);
-    assert.equal(skewBanner("", "0.1.0-alpha.21"), null);
-    const older = skewBanner("0.1.0-alpha.20", "0.1.0-alpha.21");
-    assert.equal(older.direction, "plugin-older");
-    assert.equal(
-      older.text,
-      "This vault's plugin (v0.1.0-alpha.20) is older than your engine (v0.1.0-alpha.21). Run `memoria upgrade`, then reload Obsidian.",
-    );
-    const newer = skewBanner("0.1.0-alpha.22", "0.1.0-alpha.21");
-    assert.equal(newer.direction, "engine-older");
-    assert.equal(
-      newer.text,
-      "This vault was seeded by a newer engine (v0.1.0-alpha.22) than installed (v0.1.0-alpha.21). Upgrade the engine: `pipx upgrade memoria`.",
-    );
-  });
-
   test("poll cadence is 30s active / 2m idle", () => {
     assert.equal(computeNextPollDelay(true), 30000);
     assert.equal(computeNextPollDelay(false), 120000);
@@ -7758,8 +9715,8 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../pill.js'`.
 - [ ] Write minimal implementation — create `packages/memoria-obsidian/pill.js`:
   ```js
-  // Pure status-pill state machine, skew banners, and poll cadence (U3 spec
-  // sections 3 and 5). No Obsidian imports; headless-testable with node.
+  // Pure status-pill state machine and poll cadence (U3 spec sections 3 and
+  // 5). No Obsidian imports; headless-testable with node.
 
   const PILL_STATES = [
     "connected",
@@ -7805,72 +9762,6 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     return { state: "connected", text: `Memoria · ${openCount} open`, tone: "green" };
   }
 
-  function compareVersions(a, b) {
-    const [coreA, preA = ""] = String(a).split("-", 2);
-    const [coreB, preB = ""] = String(b).split("-", 2);
-    const numsA = coreA.split(".").map(Number);
-    const numsB = coreB.split(".").map(Number);
-    for (let i = 0; i < Math.max(numsA.length, numsB.length); i += 1) {
-      const diff = (numsA[i] || 0) - (numsB[i] || 0);
-      if (diff) {
-        return Math.sign(diff);
-      }
-    }
-    if (preA === preB) {
-      return 0;
-    }
-    if (!preA) {
-      return 1;
-    }
-    if (!preB) {
-      return -1;
-    }
-    const partsA = preA.split(".");
-    const partsB = preB.split(".");
-    for (let i = 0; i < Math.max(partsA.length, partsB.length); i += 1) {
-      const partA = partsA[i];
-      const partB = partsB[i];
-      if (partA === undefined) {
-        return -1;
-      }
-      if (partB === undefined) {
-        return 1;
-      }
-      const numA = Number(partA);
-      const numB = Number(partB);
-      const diff =
-        Number.isFinite(numA) && Number.isFinite(numB) ? numA - numB : partA.localeCompare(partB);
-      if (diff) {
-        return Math.sign(diff);
-      }
-    }
-    return 0;
-  }
-
-  function skewBanner(pluginVersion, engineVersion) {
-    if (!pluginVersion || !engineVersion) {
-      return null;
-    }
-    const order = compareVersions(pluginVersion, engineVersion);
-    if (order === 0) {
-      return null;
-    }
-    if (order < 0) {
-      return {
-        direction: "plugin-older",
-        text:
-          `This vault's plugin (v${pluginVersion}) is older than your engine ` +
-          `(v${engineVersion}). Run \`memoria upgrade\`, then reload Obsidian.`,
-      };
-    }
-    return {
-      direction: "engine-older",
-      text:
-        `This vault was seeded by a newer engine (v${pluginVersion}) than installed ` +
-        `(v${engineVersion}). Upgrade the engine: \`pipx upgrade memoria\`.`,
-    };
-  }
-
   function computeNextPollDelay(isActive) {
     return isActive ? POLL_ACTIVE_MS : POLL_IDLE_MS;
   }
@@ -7879,17 +9770,15 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     PILL_STATES,
     POLL_ACTIVE_MS,
     POLL_IDLE_MS,
-    compareVersions,
     computeNextPollDelay,
     computePill,
     formatAsOf,
-    skewBanner,
   };
   ```
 - [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
 - [ ] Commit:
   `git add packages/memoria-obsidian/pill.js packages/memoria-obsidian/scripts/test-pill.mjs`
-  `git commit -m "feat(obsidian): pure pill state machine, skew banners, poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
+  `git commit -m "feat(obsidian): pure pill state machine and poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
 
 ---
 
@@ -7910,8 +9799,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   - `VIEW_SPEC_VERSION = "view-spec.v1"`, `KNOWN_BLOCK_KINDS`, `LOUDNESS_RANK = {block:0, alert:1, notice:2, quiet:3}`.
 - Loudness is **rendered verbatim** (class `memoria-loudness-<value>` from the payload string; missing loudness gets no loudness class) — never invented.
 
-> **Binding amendment — ordered nested cards (V2 prerequisite):** Before V2R-B.3
-> or V2R-D.2 can execute, this task's `renderCard` must render every supplied
+> **Superseded draft — do not implement:** The 2026-07-29 plan-reconciliation
 > `card.blocks` child exactly once and in declared order. It must append analysis
 > only after those semantic children, and only when the corresponding parent fields
 > are present. This replaces the older `renderCard` partitioning/reordering body and
@@ -7968,26 +9856,33 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 >
 > ```js
 > function renderCard(block) {
->   const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
 >   const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
 >   const analysis = [];
->   if (hasOwn("argument_for") || hasOwn("argument_against")) {
->     analysis.push(node("div", "memoria-card-arguments", "", [
->       node("span", "memoria-card-for", String(block.argument_for || "")),
->       node("span", "memoria-card-against", String(block.argument_against || "")),
->     ]));
+>   const arguments = [];
+>   if (block.argument_for) {
+>     arguments.push(node("span", "memoria-card-for", String(block.argument_for)));
 >   }
->   if (hasOwn("tipped_by") || hasOwn("certainty")) {
->     analysis.push(node("div", "memoria-card-tipped", "", [
->       node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
->       node("span", "memoria-certainty-chip", String(block.certainty || "")),
->     ]));
+>   if (block.argument_against) {
+>     arguments.push(node("span", "memoria-card-against", String(block.argument_against)));
+>   }
+>   if (arguments.length) {
+>     analysis.push(node("div", "memoria-card-arguments", "", arguments));
+>   }
+>   const tipping = [];
+>   if (block.tipped_by) {
+>     tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+>   }
+>   if (block.certainty) {
+>     tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));
+>   }
+>   if (tipping.length) {
+>     analysis.push(node("div", "memoria-card-tipped", "", tipping));
 >   }
 >   const raisedBy = String(block.raised_by || "");
 >   const raisedAt = String(block.raised_at || "");
->   const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
->   return node("div", `memoria-card${loudnessClass(block)}`, "", [
->     node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+>   const meta = raisedBy || raisedAt ? "raised by " + raisedBy + " · " + raisedAt : "";
+>   return node("div", "memoria-card" + loudnessClass(block), "", [
+>     node("div", "memoria-card-kind" + loudnessClass(block), String(block.kind_line || "")),
 >     node("div", "memoria-card-title", String(block.title || "")),
 >     ...semanticChildren,
 >     ...analysis,
@@ -8043,21 +9938,54 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     const tree = renderBlock({
       kind: "card", id: "ev1", ref: "projects/alpha/draft.md#^blk-1234",
       title: "Claim", kind_line: "evidence-review",
-      argument_for: "ground", tipped_by: "implicit derivation", certainty: "possible",
+      argument_for: "ground", argument_against: "counter-ground",
+      tipped_by: "implicit derivation", certainty: "possible",
+      raised_by: "review-sweep", raised_at: "2026-07-29T12:00:00Z",
       blocks: [
-        { kind: "evidence-list", id: "e1", items: [] },
+        { kind: "evidence-list", id: "e1", items: [{ label: "Source", ref: "notes/source.md" }] },
         { kind: "text", id: "r1", text: "Routing: implicit" },
-        { kind: "action-row", id: "a1", actions: [] },
+        {
+          kind: "action-row", id: "a1",
+          actions: [{
+            label: "Resolve", operation_id: "resolve-attention",
+            payload: { target_id: "inbox/claim.md" }, primary: true,
+          }, {
+            label: "Defer", operation_id: "resolve-attention",
+            payload: { target_id: "inbox/claim.md", outcome: "defer" },
+          }],
+        },
       ],
     });
     const classes = tree.children.map((child) => child.cls);
-    const evidenceAt = classes.indexOf("memoria-evidence");
-    const textAt = classes.indexOf("memoria-block-text");
-    const actionsAt = classes.indexOf("memoria-action-row");
-    const argumentsAt = classes.indexOf("memoria-card-arguments");
-    const tippedAt = classes.indexOf("memoria-card-tipped");
-    assert.ok(evidenceAt < textAt && textAt < actionsAt && actionsAt < argumentsAt);
-    assert.ok(argumentsAt < tippedAt);
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+      "memoria-action-row",
+      "memoria-card-arguments",
+      "memoria-card-tipped",
+      "memoria-card-meta",
+    ]);
+    assert.equal(tree.children[2].children[0].attrs["data-ref"], "notes/source.md");
+    const [resolve, defer] = tree.children[4].children;
+    assert.equal(resolve.text, "Resolve");
+    assert.equal(resolve.attrs["data-operation-id"], "resolve-attention");
+    assert.deepEqual(JSON.parse(resolve.attrs["data-payload"]), { target_id: "inbox/claim.md" });
+    assert.equal(defer.text, "Defer");
+    assert.equal(defer.attrs["data-operation-id"], "resolve-attention");
+    assert.deepEqual(JSON.parse(defer.attrs["data-payload"]), {
+      target_id: "inbox/claim.md", outcome: "defer",
+    });
+    assert.deepEqual(
+      tree.children[5].children.map((child) => child.cls),
+      ["memoria-card-for", "memoria-card-against"],
+    );
+    assert.deepEqual(
+      tree.children[6].children.map((child) => child.text),
+      ["tipped by: implicit derivation", "possible"],
+    );
+    assert.equal(tree.children[7].text, "raised by review-sweep · 2026-07-29T12:00:00Z");
   });
 
   test("cure card does not create absent analysis or action trees", () => {
@@ -8070,14 +9998,57 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       ],
     });
     const classes = tree.children.map((child) => child.cls);
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+    ]);
+  });
+
+  test("card maps repeated semantic children once in their supplied order", () => {
+    const tree = renderBlock({
+      kind: "card", id: "repeat", title: "Repeat", kind_line: "test",
+      blocks: [
+        { kind: "text", id: "first", text: "First" },
+        { kind: "text", id: "second", text: "Second" },
+      ],
+    });
     assert.deepEqual(
-      classes.filter((cls) => ["memoria-evidence", "memoria-block-text"].includes(cls)),
-      ["memoria-evidence", "memoria-block-text"],
+      tree.children.map((child) => child.cls),
+      ["memoria-card-kind", "memoria-card-title", "memoria-block-text", "memoria-block-text"],
     );
-    assert.ok(!classes.includes("memoria-card-arguments"));
-    assert.ok(!classes.includes("memoria-card-tipped"));
-    assert.ok(!classes.includes("memoria-action-row"));
-    assert.ok(!classes.includes("memoria-analysis-toggle"));
+    assert.deepEqual(tree.children.slice(2).map((child) => child.text), ["First", "Second"]);
+  });
+
+  test("one-sided analysis renders only its present field", () => {
+    const tree = renderBlock({
+      kind: "card", id: "one-sided", title: "One", kind_line: "test",
+      argument_for: "supported", certainty: "likely", blocks: [],
+    });
+    assert.deepEqual(
+      tree.children[2].children.map((child) => child.cls),
+      ["memoria-card-for"],
+    );
+    assert.deepEqual(
+      tree.children[3].children.map((child) => child.cls),
+      ["memoria-certainty-chip"],
+    );
+  });
+
+  test("one-sided metadata has no empty provenance slot or separator", () => {
+    const raisedBy = renderBlock({
+      kind: "card", id: "raised-by", title: "By", kind_line: "test",
+      raised_by: "review-sweep", blocks: [],
+    });
+    const raisedAt = renderBlock({
+      kind: "card", id: "raised-at", title: "At", kind_line: "test",
+      raised_at: "2026-07-29T12:00:00Z", blocks: [],
+    });
+    assert.equal(raisedBy.children[2].cls, "memoria-card-meta");
+    assert.equal(raisedBy.children[2].text, "raised by review-sweep");
+    assert.equal(raisedAt.children[2].cls, "memoria-card-meta");
+    assert.equal(raisedAt.children[2].text, "2026-07-29T12:00:00Z");
   });
   test("loudness is rendered verbatim and missing loudness gets no loudness class", () => {
     const odd = renderBlock({ kind: "badge", id: "b1", label: "x", loudness: "shout" });
@@ -8203,26 +10174,36 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   }
 
   function renderCard(block) {
-    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
     const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
     const analysis = [];
-    if (hasOwn("argument_for") || hasOwn("argument_against")) {
-      analysis.push(node("div", "memoria-card-arguments", "", [
-        node("span", "memoria-card-for", String(block.argument_for || "")),
-        node("span", "memoria-card-against", String(block.argument_against || "")),
-      ]));
+    const arguments = [];
+    if (block.argument_for) {
+      arguments.push(node("span", "memoria-card-for", String(block.argument_for)));
     }
-    if (hasOwn("tipped_by") || hasOwn("certainty")) {
-      analysis.push(node("div", "memoria-card-tipped", "", [
-        node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
-        node("span", "memoria-certainty-chip", String(block.certainty || "")),
-      ]));
+    if (block.argument_against) {
+      arguments.push(node("span", "memoria-card-against", String(block.argument_against)));
+    }
+    if (arguments.length) {
+      analysis.push(node("div", "memoria-card-arguments", "", arguments));
+    }
+    const tipping = [];
+    if (block.tipped_by) {
+      tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+    }
+    if (block.certainty) {
+      tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));
+    }
+    if (tipping.length) {
+      analysis.push(node("div", "memoria-card-tipped", "", tipping));
     }
     const raisedBy = String(block.raised_by || "");
     const raisedAt = String(block.raised_at || "");
-    const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
-    return node("div", `memoria-card${loudnessClass(block)}`, "", [
-      node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+    const meta = [
+      raisedBy ? "raised by " + raisedBy : "",
+      raisedAt,
+    ].filter(Boolean).join(" · ");
+    return node("div", "memoria-card" + loudnessClass(block), "", [
+    node("div", "memoria-card-kind" + loudnessClass(block), String(block.kind_line || "")),
       node("div", "memoria-card-title", String(block.title || "")),
       ...semanticChildren,
       ...analysis,
@@ -8307,13 +10288,20 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 ### Task U3-PLUG.5: `relate.js` — relate-operation payload builder (roster from server)
 
+> **Binding sequence:** Execute after graph ERP-D.5. The server supplies the
+> sorted six-verb roster and the builder emits the optional edge annotation as
+> `payload.warrant`, never the legacy `reason` alias.
+
 **Files:**
 - Create: `packages/memoria-obsidian/relate.js`
 - Create: `packages/memoria-obsidian/scripts/test-relate.mjs`
 
 **Interfaces:**
-- Consumes: `curate-note-link` worker payload contract (`src/memoria_vault/runtime/worker.py:471-490`): `source_note_path`, `link_type`, `target_path`, optional `reason`. The optional warrant free text maps to `reason` (the edge-hung, promotion-ready text per U3 §4).
-- Produces: `buildRelateOperation({fromPath, relation, toPath, warrant, roster}) -> {operationId: "curate-note-link", payload: {source_note_path, link_type, target_path, reason?}}` — throws `Error` naming the missing/invalid field; `relation` must be a member of the server-provided `roster` (see the roster decision at section top).
+- Consumes: graph ERP-D.5's `curate-note-link` worker payload contract
+  (`src/memoria_vault/runtime/worker.py:471-490`): `source_note_path`,
+  `link_type`, `target_path`, optional `warrant`. The optional Warrant free
+  text is an edge annotation, not a request reason.
+- Produces: `buildRelateOperation({fromPath, relation, toPath, warrant, roster}) -> {operationId: "curate-note-link", payload: {source_note_path, link_type, target_path, warrant?}}` — throws `Error` naming the missing/invalid field; `relation` must be a member of the server-provided `roster` (see the roster decision at section top).
 
 **Steps:**
 
@@ -8326,13 +10314,13 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   const require = createRequire(import.meta.url);
   const { buildRelateOperation } = require("../relate.js");
 
-  const roster = ["supports", "contradicts", "extends"];
+  const roster = ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"];
 
-  test("builds a curate-note-link enqueue with warrant mapped to reason", () => {
+  test("builds a curate-note-link enqueue with a rebuttal and warrant annotation", () => {
     assert.deepEqual(
       buildRelateOperation({
         fromPath: "notes/a.md",
-        relation: "supports",
+        relation: "rebuttal",
         toPath: "notes/b.md",
         warrant: "  B replicates A's cohort.  ",
         roster,
@@ -8341,23 +10329,23 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
         operationId: "curate-note-link",
         payload: {
           source_note_path: "notes/a.md",
-          link_type: "supports",
+          link_type: "rebuttal",
           target_path: "notes/b.md",
-          reason: "B replicates A's cohort.",
+          warrant: "B replicates A's cohort.",
         },
       },
     );
   });
 
-  test("omits reason when the warrant is blank", () => {
+  test("omits warrant when the warrant text is blank", () => {
     const operation = buildRelateOperation({
       fromPath: "notes/a.md",
-      relation: "extends",
+      relation: "warrant",
       toPath: "notes/b.md",
       warrant: "   ",
       roster,
     });
-    assert.ok(!("reason" in operation.payload));
+    assert.ok(!("warrant" in operation.payload));
   });
 
   test("rejects missing endpoints and off-roster relations", () => {
@@ -8371,7 +10359,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     );
     assert.throws(
       () => buildRelateOperation({ fromPath: "a", relation: "refutes", toPath: "b", roster }),
-      /relate: relation must be one of supports, contradicts, extends/,
+      /relate: relation must be one of contradicts, extends, qualifier, rebuttal, supports, warrant/,
     );
     assert.throws(
       () => buildRelateOperation({ fromPath: "a", relation: "supports", toPath: "b", roster: [] }),
@@ -8404,9 +10392,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       throw new Error(`relate: relation must be one of ${relations.join(", ")}`);
     }
     const payload = { source_note_path: source, link_type: relation, target_path: target };
-    const reason = String(warrant || "").trim();
-    if (reason) {
-      payload.reason = reason;
+    const warrantText = String(warrant || "").trim();
+    if (warrantText) {
+      payload.warrant = warrantText;
     }
     return { operationId: "curate-note-link", payload };
   }
@@ -8421,6 +10409,10 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 ---
 
 ### Task U3-PLUG.6: `main.js` core rewrite — handshake client, in-memory token, pill, poll loop
+
+> **Execution override:** The 2026-07-29 graph-roster/warrant amendment
+> governs the summary fixture and `linkRelations` assertion: use all six
+> served verbs after ERP-A.1–.5, never the historical fixed triple below.
 
 The big wiring task: replaces the hardcoded `serverUrl` + SecretStorage token with the handshake spawn, adds the Engine command setting, the six-state pill with click behaviors, the 401 recovery ladder, and the 30 s/2 m poll loop.
 
@@ -8444,7 +10436,7 @@ The big wiring task: replaces the hardcoded `serverUrl` + SecretStorage token wi
   - Settings: `DEFAULT_SETTINGS.engineCommand = "memoria"`; `serverUrl` and `hasToken` **removed**.
   - Constants: `STATUS_PATH = "/v1/status"`, `ATTENTION_VIEW_PATH = "/v1/views/attention"`, `OPERATION_PATH = "/operation/run"` (see SPEC GAP), `EMPTY_ENGINE`.
 
-Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --vault <vaultPath> — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --vault <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
+Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --workspace <vaultPath> — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --workspace <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
 
 **Steps:**
 
@@ -8464,13 +10456,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
             workspace: {
               getActiveFile: () => null,
               getLeavesOfType: () => [],
+              on: () => ({}),
             },
           };
           this.manifest = { version: "0.1.0-alpha.20" };
+          this.persistedData = {};
         }
 
         async loadData() {
-          return {};
+          return this.persistedData;
         }
 
         async saveData() {}
@@ -8506,6 +10500,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
         registerDomEvent() {}
 
+        registerEvent() {}
+
         register() {}
       }
       class Base {
@@ -8525,9 +10521,12 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
             status: 200,
             json: {
               ok: true,
-              open_count: 2,
+              api_version: "engine-read-api.v1",
+              open: 2,
+              by_loudness: { notice: 2 },
+              as_of: "2026-07-29T12:00:00Z",
               missing_required_credentials: [],
-              link_relations: ["supports", "contradicts", "extends"],
+              link_relations: ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"],
               engine_version: "0.1.0-alpha.20",
             },
           };
@@ -8568,6 +10567,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     await plugin.saveSettings();
     assert.ok(!JSON.stringify(saved).includes("sandbox-token"), "token must never be persisted");
     assert.ok(!("serverUrl" in plugin.settings));
+    assert.ok(!("hasToken" in plugin.settings));
     assert.equal(plugin.settings.engineCommand, "memoria");
 
     // 2) Authenticated requests use the handshake coordinates + Bearer token.
@@ -8584,13 +10584,12 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       operation_id: "demo-operation",
       payload: { ok: true },
       idempotency_key: "demo-key",
-      actor: "agent",
     });
 
     // 3) Poll updates pill inputs from the summary payload.
     await plugin.poll();
     assert.equal(plugin.openCount, 2);
-    assert.deepEqual(plugin.linkRelations, ["supports", "contradicts", "extends"]);
+    assert.deepEqual(plugin.linkRelations, ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"]);
     assert.ok(plugin.lastPollAt > 0);
     assert.equal(plugin.pillState, "connected");
     assert.ok(plugin.statusBar.children.some((child) => child.text === "Memoria · 2 open"));
@@ -8647,7 +10646,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     createRespawnGate,
     parseHandshake,
   } = require("./handshake");
-  const { computeNextPollDelay, computePill, formatAsOf, skewBanner } = require("./pill");
+  const { computeNextPollDelay, computePill, formatAsOf } = require("./pill");
 
   const DEFAULT_SETTINGS = {
     enabled: false,
@@ -8663,7 +10662,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   const OPERATION_PATH = "/operation/run";
   ```
   (This deletes the stale "Generated by scripts/build.mjs" comment and the `TOKEN_KEY` constant.)
-- [ ] Part 2 — `onload` additions. Immediately after `this.statusBar = this.addStatusBarItem();` (was line 22) insert:
+- [ ] Part 2 — load current settings, then initialize lifecycle state. Replace
+  the first line of `onload()` with:
+
+  ```js
+    const persistedSettings = (await this.loadData()) || {};
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, persistedSettings);
+  ```
+
+  Immediately after `this.statusBar = this.addStatusBarItem();` (was line 22) insert:
   ```js
     this.engine = Object.assign({}, EMPTY_ENGINE);
     this.connectionStatus = "stale";
@@ -8827,14 +10834,13 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
         operation_id: operationId,
         payload,
         idempotency_key: idempotencyKey,
-        actor: "agent",
       });
     }
 
     async poll() {
       try {
         const summary = await this.authedJson(`${ATTENTION_VIEW_PATH}?summary=true`);
-        this.openCount = Number(summary.open_count || 0);
+        this.openCount = Number(summary.open || 0);
         this.lastPollAt = Date.now();
         this.missingCredential = String((summary.missing_required_credentials || [])[0] || "");
         this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
@@ -8918,7 +10924,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       if (this.pillState === "server-down") {
         new Notice(
           `Memoria server down after 3 spawn attempts. ${this.lastHandshakeError} — ` +
-            `Start it manually: memoria serve --vault ${this.vaultPath()} — then click to retry.`,
+            `Start it manually: memoria serve --workspace ${this.vaultPath()} — then click to retry.`,
           10000,
         );
         retry();
@@ -8926,7 +10932,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       }
       if (this.pillState === "token-invalid") {
         new Notice(
-          `Memoria token invalid — restart the server: memoria serve --stop --vault ${this.vaultPath()}, ` +
+          `Memoria token invalid — restart the server: memoria serve --stop --workspace ${this.vaultPath()}, ` +
             "then click to reconnect.",
           10000,
         );
@@ -8953,7 +10959,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       }
     }
   ```
-  Then replace every remaining `this.updateStatus(...)` call in the class (in `recordEvent`, `queueEvent` path, `startSession`, `stopSession`, `flushQueuedEvents`, `deleteQueuedEvents`) with `this.renderPill();` and delete the text arguments.
+  Then complete the removed-API migration: replace `this.getJson(...)` in
+  `showAttention()` and `showActiveConcept()` with `this.authedJson(...)`; replace
+  every `this.updateStatus(...)` call in the class — including `recordEvent`, its
+  queue/failure path, `startSession`, `stopSession`, `flushQueuedEvents`,
+  `deleteQueuedEvents`, and the Enable collection setting callback — with
+  `this.renderPill()` and delete its text arguments. Before leaving this task,
+  `rg -n '(this|this\.plugin)\.(getJson|updateStatus)\(' packages/memoria-obsidian/main.js`
+  must print nothing: U3-CANVAS.5 consumes `authedJson`/`renderPill` too, so no
+  compatibility alias may mask a dangling legacy call.
 - [ ] Part 6 — settings tab: replace the "Server URL" setting (lines 370–377) and the whole "Bearer token" setting (lines 378–393) with:
   ```js
       new Setting(containerEl)
@@ -9013,9 +11027,12 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       assert "requestUrl" in source
       assert "handshake" in source
       assert "fetch(" not in source
-      assert "serverUrl" not in source
+      assert "settings.serverUrl" not in source
+      assert "settings.hasToken" not in source
       assert "secretStorage" not in source
       assert "setSecret" not in source
+      assert ".getJson(" not in source
+      assert ".updateStatus(" not in source
       assert "empirical-event-record" in source
       assert "empirical-event:" in source
       assert "empirical_event.record" not in source
@@ -9047,22 +11064,137 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.7: Attention pane ItemView — queue rows, expand-in-place, j/k/Enter, actions
 
+> **Execution override:** The 2026-07-29 graph-roster/warrant amendment makes
+> this the post-SEAM.1 live HTTP integration slice: it proves every served
+> relation can be queued through the PI HTTP door and completed, while
+> `tension` remains absent/rejected. Keep that Python integration separate
+> from the Node mock; neither test supplies an `actor` field.
+
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (requires; `onload` — `registerView` + `open-attention` command; new `enqueueNamedOperation` method; new `AttentionView` class + `VIEW_TYPE_ATTENTION` constant appended before `MemoriaSettingTab`)
 - Modify: `packages/memoria-obsidian/styles.css` (pane styles, theme vars only)
 - Modify: `packages/memoria-obsidian/scripts/test.mjs` (view-registration + enqueue-toast assertions)
 - Modify: `tests/test_memoria_obsidian_package.py` (command roster line 70–82: add `"open-attention"`)
+- Modify: `tests/test_attention_view.py` (post-SEAM.1 live HTTP served-roster
+  contract; reuses U3-ENG.6's authenticated `live_server` and `_http_get`)
 - Modify (parity): seed copies of `main.js`/`styles.css` + golden regen (same commands as U3-PLUG.6)
 
 **Interfaces:**
-- Consumes: `renderBlock`/`renderView`/`sortCards`/`moveSelection`/`materialize` (U3-PLUG.4), `formatAsOf`/`skewBanner` (U3-PLUG.3), `authedJson`/`postOperation` (U3-PLUG.6); `GET /v1/views/attention` full view payload.
+- Consumes: `renderBlock`/`renderView`/`sortCards`/`moveSelection`/`materialize` (U3-PLUG.4), `formatAsOf` (U3-PLUG.3), `authedJson`/`postOperation` (U3-PLUG.6); `GET /v1/views/attention` full view payload.
+- Consumes (integration proof): U3-ENG.6's real bearer-authenticated loopback
+  fixture, graph's `edges.LINK_RELATIONS`, and SEAM.1's server-owned `pi`
+  authority for `POST /operation/run`.
 - Produces:
   - `VIEW_TYPE_ATTENTION = "memoria-attention"` and `class AttentionView extends ItemView` with `getViewType()`, `getDisplayText() -> "Memoria Attention"`, `refresh() -> Promise<void>`, `render()`, `onKey(event)`, `onClick(event)`.
   - `plugin.enqueueNamedOperation(operationId: string, payload: object) -> Promise<object|null>` — posts via `postOperation(operationId, payload, "")`, toasts `` Memoria queued <operationId>: <job.job_id> ``, records the `operation.queued` empirical event, Notices the error message on failure. **The relate modal (U3-PLUG.8) and every card action button call this.**
   - Command id `"open-attention"`.
   - `poll()` gains one line: refresh any open attention leaves after a successful summary fetch.
+  - `test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension`:
+    the only public-path proof that the roster returned to the plugin can be
+    submitted without a client `actor`, completed by the worker, and persisted
+    as the PI. It also proves `tension` is never served and is rejected if
+    submitted anyway.
 
 **Steps:**
+
+- [ ] Add the post-SEAM.1 live HTTP integration proof to
+  `tests/test_attention_view.py`, alongside the existing live-server tests.
+  Perform the separate Node-mock step only afterward. U3-ENG.6 already
+  creates `live_server` and `_http_get`; extend its imports with
+  `from memoria_vault.runtime import state`,
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`,
+  `from memoria_vault.runtime.vaultio import read_frontmatter`, and
+  extend its existing `from tests.helpers import init_cli_workspace` import
+  to also import `write_checked_note`. Add this POST companion (it accepts no
+  `actor` argument and therefore cannot put one into the request body):
+
+  ```python
+  def _http_post(url: str, body: dict, token: str) -> tuple[int, dict]:
+      request = urllib.request.Request(
+          url,
+          data=json.dumps(body).encode("utf-8"),
+          headers={
+              "Authorization": f"Bearer {token}",
+              "Content-Type": "application/json",
+          },
+          method="POST",
+      )
+      try:
+          with urllib.request.urlopen(request, timeout=10) as response:
+              return response.status, json.loads(response.read().decode("utf-8"))
+      except urllib.error.HTTPError as error:
+          return error.code, json.loads(error.read().decode("utf-8"))
+  ```
+
+  Then append this test. It deliberately derives the loop from the HTTP
+  summary, rather than importing a second client-side roster; the one direct
+  `LINK_RELATIONS` assertion verifies that the server is the graph owner.
+
+  ```python
+  def test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension(
+      workspace: Path, live_server: str
+  ) -> None:
+      write_checked_note(workspace, "notes/source.md", "Source")
+      write_checked_note(workspace, "notes/target.md", "Target")
+      summary_code, summary = _http_get(
+          f"{live_server}/v1/views/attention?summary=true", token="view-token"
+      )
+
+      assert summary_code == HTTPStatus.OK
+      assert summary["link_relations"] == sorted(LINK_RELATIONS)
+      assert "tension" not in summary["link_relations"]
+      for relation in summary["link_relations"]:
+          body = {
+              "operation_id": "curate-note-link",
+              "payload": {
+                  "source_note_path": "notes/source.md",
+                  "link_type": relation,
+                  "target_path": "notes/target.md",
+              },
+              "idempotency_key": f"live-served-link-{relation}",
+          }
+          assert "actor" not in body
+          code, response = _http_post(
+              f"{live_server}/operation/run", body, token="view-token"
+          )
+
+          assert code == HTTPStatus.OK
+          assert response["ok"] is True
+          assert response["result"]["status"] == "done"
+          request = state.request_row(workspace, response["job"]["job_id"])
+          assert request is not None and request["actor"] == "pi"
+          assert read_frontmatter(workspace / "notes/source.md")["links"][relation] == [
+              "notes/target.md"
+          ]
+
+      tension_code, tension = _http_post(
+          f"{live_server}/operation/run",
+          {
+              "operation_id": "curate-note-link",
+              "payload": {
+                  "source_note_path": "notes/source.md",
+                  "link_type": "tension",
+                  "target_path": "notes/target.md",
+              },
+              "idempotency_key": "live-served-link-tension",
+          },
+          token="view-token",
+      )
+
+      assert tension_code == HTTPStatus.OK
+      assert tension["ok"] is False
+      assert tension["result"]["status"] == "failed"
+  ```
+
+  Run this specific Python proof after graph ERP-A.1–.5 and SEAM.1, before
+  treating the pane as complete:
+
+  ```bash
+  python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v
+  ```
+
+  Expected: PASS. This is a prereq integration contract, not a Node-mock
+  replacement: it must stay green while the pane code below is developed.
 
 - [ ] Write the failing test — append to the `try` block of `packages/memoria-obsidian/scripts/test.mjs` (before `finally`):
   ```js
@@ -9073,13 +11205,19 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     assert.equal(view.getDisplayText(), "Memoria Attention");
     assert.ok(plugin.commands.includes("open-attention"));
     const result = await plugin.enqueueNamedOperation("resolve-attention", {
-      attention_path: "inbox/x.md",
-      resolution: "resolved",
+      target_id: "inbox/x.md",
     });
-    assert.equal(JSON.parse(requests.at(-1).body).operation_id, "resolve-attention");
+    const operationBodies = requests
+      .filter((request) => request.url.endsWith("/operation/run"))
+      .map((request) => JSON.parse(request.body));
+    assert.deepEqual(
+      operationBodies.slice(-2).map((body) => body.operation_id),
+      ["resolve-attention", "empirical-event-record"],
+    );
+    assert.deepEqual(operationBodies.at(-2).payload, { target_id: "inbox/x.md" });
     assert.ok(result);
   ```
-  Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name).
+  Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name). The fixture deliberately leaves collection enabled: `enqueueNamedOperation` must issue the named operation **and** its `empirical-event-record` telemetry, so the assertion filters and verifies both rather than assuming the named operation is the final request.
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `attention view registered` assertion failure.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Add to the requires block: `const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");` and the constant `const VIEW_TYPE_ATTENTION = "memoria-attention";` (replace the string literal `"memoria-attention"` inside `activateAttentionView` with the constant).
@@ -9189,10 +11327,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
         cls: "memoria-attention-age",
         text: `${this.plugin.openCount} open · as of ${formatAsOf(this.plugin.lastPollAt)}`,
       });
-      const banner = skewBanner(this.plugin.manifest.version, this.plugin.engine.engineVersion);
-      if (banner) {
-        root.createDiv({ cls: "memoria-skew-banner", text: banner.text });
-      }
       if (!this.view || this.view.version !== "view-spec.v1") {
         for (const tree of renderView(this.view)) {
           materialize(tree, root);
@@ -9283,14 +11417,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   .memoria-attention-age,
   .memoria-row-age { font-variant-numeric: tabular-nums; color: var(--text-faint); }
-  .memoria-skew-banner {
-    margin-bottom: 6px;
-    padding: 6px 8px;
-    background-color: var(--background-secondary);
-    border-left: 2px solid var(--interactive-accent);
-    color: var(--text-muted);
-    font-size: 12px;
-  }
   .memoria-row {
     display: flex;
     gap: 8px;
@@ -9372,15 +11498,25 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
   ```
   7. In `tests/test_memoria_obsidian_package.py::test_memoria_obsidian_registers_minimal_proof_commands`, add `"open-attention",` to the command tuple.
-- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
+- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
 - [ ] Sync seed + regenerate goldens (same three commands as U3-PLUG.6's sync step; only `main.js` and `styles.css` changed this time), re-run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 - [ ] Commit:
-  `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
+  `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py tests/test_attention_view.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
   `git commit -m "feat(obsidian): attention pane ItemView — rows, expand-in-place, j/k/Enter, enqueue actions` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
 
 ---
 
 ### Task U3-PLUG.8: Relate modal — single form, fuzzy pickers, queue edge
+
+> **Binding sequence:** Execute this after graph ERP-D.5. The Warrant help
+> must say, exactly in substance: “A `warrant` relation links a license note;
+> Warrant text annotates the selected edge.” The builder emits
+> `payload.warrant`, never `payload.reason`.
+>
+> **Historical compatibility marker (2026-07-30):** do not revive any
+> persisted-settings deletion snippet from this task's older wiring drafts.
+> Fresh installs load and save current settings without interpreting or
+> rewriting `serverUrl` or `hasToken`.
 
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (require `relate.js`; `relate` command in `onload`; `RelateModal` + `NotePathSuggest` classes appended after `AttentionView`; a `Relate…` button in `AttentionView.render` header)
@@ -9398,6 +11534,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 - [ ] Write the failing test — in `packages/memoria-obsidian/scripts/test.mjs`, next to the `open-attention` assertion add:
   ```js
     assert.ok(plugin.commands.includes("relate"));
+  ```
+  In `tests/test_memoria_obsidian_package.py`, add this source-contract pin to
+  the existing plugin-source test (U3-PLUG.6 already provides
+  `_plugin_js_source()`):
+  ```python
+      assert (
+          "A `warrant` relation links a license note; Warrant text annotates "
+          "the selected edge."
+      ) in _plugin_js_source()
   ```
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected assertion failure on `relate`.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
@@ -9474,7 +11619,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       });
       new Setting(contentEl)
         .setName("Warrant (optional)")
-        .setDesc("Free text hung on the edge; promotion-ready.")
+        .setDesc("A `warrant` relation links a license note; Warrant text annotates the selected edge.")
         .addTextArea((text) => text.onChange((value) => (this.warrant = value)));
       new Setting(contentEl).addButton((button) =>
         button.setButtonText("Queue edge").setCta().onClick(async () => {
@@ -9622,6 +11767,11 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.11: Manual click-through check (what automation cannot reach)
 
+> **Binding sequence:** Use the private in-process token check and the
+> newly-activated-relation completion proof in the 2026-07-29 graph-roster/
+> warrant amendment above. Never put the per-boot token in a child process's
+> arguments.
+
 **Files:** none (checklist executed against a disposable vault under `test-vault/`; results reported in the PR description, not committed as a file).
 
 **Interfaces:** Consumes the running engine (`memoria` on PATH from this branch) and a disposable vault (`memoria init test-vault/u3-plug-manual` — never a personal vault).
@@ -9630,15 +11780,17 @@ The Obsidian runtime itself (real spawn, real SecretStorage-free token flow, rea
 
 - [ ] `memoria init test-vault/u3-plug-manual`, open the folder as a vault in desktop Obsidian, accept the trust + community-plugin prompts. **Expect:** pill appears bottom-right as `Memoria · connecting…` then `Memoria · N open` with a green dot within ~5 s (handshake spawned the server; no port/token was ever typed).
 - [ ] Settings → Memoria. **Expect:** an "Engine command" text field (value `memoria`); **no** Server URL field, **no** token field.
-- [ ] `grep -r "$(python -c 'import json,glob,os; p=sorted(glob.glob(os.path.expanduser("~/.local/state/memoria/vaults/*/runtime.json")))[-1]; print(json.load(open(p))["token"])')" test-vault/u3-plug-manual` — **Expect:** zero hits (token never lands inside the vault tree, including `.obsidian/plugins/memoria-obsidian/data.json`).
+- [ ] Run the private in-process handshake token check in the binding amendment
+  above. **Expect:** zero hits (the token never lands inside the vault tree,
+  including `.obsidian/plugins/memoria-obsidian/data.json`), and the token is
+  neither printed nor passed to a child process.
 - [ ] Click the pill. **Expect:** the Attention pane opens on the right: `ATTENTION` header, `N open · as of HH:MM`, rows with loudness dots, ellipsized titles, right-aligned ages; any `block` cards pinned on top.
-- [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block **above** the for/against line, `tipped by:` + certainty chip, named text action verbs (primary tinted with the theme accent), meta line. Press `Enter` again — collapses. Only one row expands at a time.
+- [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block, plain body text, named text action verbs (Resolve primary), then for/against, `tipped by:` + certainty chip, and meta line. Press `Enter` again — collapses. Only one row expands at a time.
 - [ ] Click an evidence link. **Expect:** the vault note opens. Click an action verb (e.g. `Resolve`). **Expect:** toast `Memoria queued resolve-attention: <request id>`; the card leaves the queue on the next poll (≤30 s with the window focused).
-- [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the three server verbs as a segmented control; Queue edge with an empty To shows `relate: To note is required`; a complete submit toasts `Memoria queued curate-note-link: <request id>` and `memoria journal` (or the request log) shows the queued request.
-- [ ] Kill the server (`memoria serve --stop --vault test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
+- [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the server-provided roster (including `rebuttal`) as a segmented control; Queue edge with an empty To shows `relate: To note is required`; submit a `rebuttal`, run its queued job, and verify the resulting edge rather than merely a queued request id.
+- [ ] Kill the server (`memoria serve --stop --workspace test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
 - [ ] Rename the engine binary away (`pipx` venv or PATH shadow), reload Obsidian. **Expect:** gray `Memoria · engine missing`; click shows the install remediation naming the tried command; the vault stays fully readable/editable. Restore the binary, click — recovers.
-- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --vault …`; no infinite silent retry.
-- [ ] Edit `manifest.json` version in the *installed* plugin copy to `0.1.0-alpha.19`, reload. **Expect:** the plugin-older skew banner at the top of the pane, wording per spec; set it above the engine version — the vault-newer banner. Restore afterward.
+- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --workspace …`; no infinite silent retry.
 - [ ] Switch Obsidian between a light and a dark community theme. **Expect:** pill dot, loudness accents, evidence inset, chips, and the segmented control all follow the theme (no fixed colors anywhere).
 - [ ] Leave the window unfocused >2 min with the server up. **Expect:** requests slow to the 2-minute cadence (watch `serve.log`); refocusing snaps a poll immediately.
 - [ ] Delete the disposable vault: `rm -rf test-vault/u3-plug-manual`.
@@ -9654,16 +11806,17 @@ Implements U3 spec §6 (Canvas surface) and §7 (id-filenames boundary, filename
 rule only) from `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md`.
 Repo: `/home/eranr/memoria-vault`, main @ 80e62bbd.
 
-**DEPENDENCY NOTE (cross-section, not invented here):** plugin enqueues over
-HTTP arrive with `actor="agent"` (`src/memoria_vault/runtime/http_transport.py:216`),
-and `curate-note-link` is a `pi`-protected operation
+**DEPENDENCY NOTE (cross-section, not invented here):** authenticated plugin
+enqueues arrive through HTTP with `actor="pi"` (SEAM.1 at
+`src/memoria_vault/runtime/http_transport.py:216`), and `curate-note-link`
+is a `pi`-protected operation
 (`src/memoria_vault/runtime/worker.py:58`, enforced at `worker.py:1093-1098`).
 The graduate command (Task U3-CANVAS.5) enqueues `curate-note-link` exactly as
 the U3 §4 relate control does; PI-actor authority for plugin enqueues is owned
 by the bootstrap/pane sections (BOOT spec token/handshake work). U3-CANVAS does
-not change actor policy — until that section lands, graduated edges queue and
-are then refused by the worker with "requires PI actor authority" (same today
-for the relate control). No engine code in this section depends on it.
+not change actor policy; it depends on SEAM.1 so graduated edges use the same
+PI-authorized door as the relate control. No engine code in this section depends
+on a client-supplied actor field.
 
 **Floor-golden regeneration required:** Tasks 1, 3, and 5 change bytes that the
 floor goldens hash (`projects/package-gate/argument.canvas` content, a new
@@ -10353,7 +12506,7 @@ Steps:
   ```
 
 - [ ] Run to verify failure: `python -m pytest tests/test_engine_api.py::test_engine_read_canvas_forks_reports_edge_diff tests/test_engine_api.py::test_engine_read_canvas_forks_respects_read_scope -v` — expected: `AttributeError: module ... has no attribute 'read_canvas_forks'`.
-- [ ] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas` (`schema_lib` already imported at line 33; `posixpath` at line 8):
+- [ ] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas`: add `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS` alongside the existing imports; `posixpath` is already imported at line 8.
 
   ```python
   def project_canvas_fork_status(vault: Path, project_path: str) -> dict[str, Any]:
@@ -10413,7 +12566,7 @@ Steps:
               continue
           edge_id = str(edge.get("id") or "")
           label = str(edge.get("label") or "").strip().lower()
-          if label not in schema_lib.LINK_RELATIONS:
+          if label not in LINK_RELATIONS:
               unresolved.append({"edge_id": edge_id, "reason": "unknown relation label"})
               continue
           source = files.get(str(edge.get("fromNode")))
@@ -10508,7 +12661,7 @@ Steps:
 
 **Interfaces:**
 - Consumes: operation id `fork-project-canvas` (Task 3 payload contract); `GET /project/canvas/forks?project_path=...` (Task 4 payload: `payload.canvas_forks.forks[]` rows with `path`/`added`/`diff_count`/`unresolved`/`error`); operation id `curate-note-link` with payload `{source_note_path, link_type, target_path, reason}` — verified against the worker dispatch at `src/memoria_vault/runtime/worker.py:471-498` and the manifest `src/memoria_vault/product/capabilities/operations/curate-note-link.md`.
-- Produces: Obsidian commands `memoria-obsidian:fork-canvas` ("Memoria: Fork canvas to scratch") and `memoria-obsidian:graduate-scratch-edges` ("Memoria: Graduate scratch canvas edges"); status-bar fork badge (`Memoria fork: N edge(s) diverged` / `Memoria fork: in sync` / `Memoria fork: unreadable`) on `active-leaf-change` when the active file matches `projects/<p>/scratch-*.canvas`; per-edge idempotency key `graduate:<scratch-path>:<source>:<type>:<target>` (safe re-runs coalesce).
+- Produces: Obsidian commands `memoria-obsidian:fork-canvas` ("Memoria: Fork canvas to scratch") and `memoria-obsidian:graduate-scratch-edges` ("Memoria: Graduate scratch canvas edges"); status-bar fork badge (`Memoria fork: N edge(s) diverged` / `Memoria fork: in sync` / `Memoria fork: unreadable`) on `active-leaf-change` when the active file matches `projects/<p>/scratch-*.canvas`. The badge lives in `this.forkBadge` and is appended by the existing `renderPill()` method; it never revives deleted `getJson`/`updateStatus` APIs. Per-edge idempotency key `graduate:<scratch-path>:<source>:<type>:<target>` makes safe re-runs coalesce.
 - Plugin never writes files: fork and graduation are pure enqueues; the badge is a read.
 
 Steps:
@@ -10525,6 +12678,10 @@ Steps:
       assert "graduate:" in source
       assert "Memoria: Fork canvas to scratch" in source
       assert "Memoria: Graduate scratch canvas edges" in source
+      assert "this.authedJson(" in source
+      assert ".getJson(" not in source
+      assert ".updateStatus(" not in source
+      assert "this.forkBadge" in source
       # thin renderer: no plugin-side file writes for canvas work
       assert "vault.create" not in source
       assert "vault.modify" not in source
@@ -10535,6 +12692,7 @@ Steps:
   - In `onload()` after the `delete-events` command (line 73), add:
 
     ```javascript
+        this.forkBadge = "";
         this.addCommand({
           id: "fork-canvas",
           name: "Memoria: Fork canvas to scratch",
@@ -10545,10 +12703,31 @@ Steps:
           name: "Memoria: Graduate scratch canvas edges",
           callback: () => this.graduateScratchEdges(),
         });
-        this.registerEvent(
-          this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
-        );
+        if (this.app.workspace.on && this.registerEvent) {
+          this.registerEvent(
+            this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
+          );
+        }
     ```
+
+    U3-PLUG.6's shared Node `Plugin` mock must include both
+    `workspace.on: () => ({})` and `registerEvent() {}` (already required by its
+    revised fixture) so this onload path is exercised by the ordinary
+    `node --test scripts/` run rather than only by the static test.
+
+  - Extend U3-PLUG.6's `renderPill()` after its normal pill-text span with:
+
+    ```javascript
+        if (this.forkBadge) {
+          this.statusBar.createEl("span", {
+            cls: "memoria-pill-text",
+            text: ` · ${this.forkBadge}`,
+          });
+        }
+    ```
+
+    Thus the canvas badge is a second rendered status value, not a replacement for
+    the connection pill or a call to the removed `updateStatus` method.
 
   - After `stopSession()` (line 219), add the methods:
 
@@ -10569,7 +12748,7 @@ Steps:
           return;
         }
         new ForkNameModal(this.app, async (name) => {
-          await this.queueOperation("fork-project-canvas", {
+          await this.enqueueNamedOperation("fork-project-canvas", {
             project_path: `projects/${active.match[1]}/project.md`,
             name: name || "scratch",
           });
@@ -10582,7 +12761,7 @@ Steps:
           return null;
         }
         const projectPath = `projects/${active.match[1]}/project.md`;
-        const payload = await this.getJson(
+        const payload = await this.authedJson(
           `/project/canvas/forks?project_path=${encodeURIComponent(projectPath)}`,
         );
         const forks = (payload.canvas_forks && payload.canvas_forks.forks) || [];
@@ -10593,21 +12772,18 @@ Steps:
         try {
           const fork = await this.forkStatusForActiveScratch();
           if (!fork) {
-            this.updateStatus();
-            return;
-          }
-          if (fork.error) {
-            this.updateStatus("Memoria fork: unreadable");
-            return;
-          }
-          this.updateStatus(
-            fork.diff_count
+            this.forkBadge = "";
+          } else if (fork.error) {
+            this.forkBadge = "Memoria fork: unreadable";
+          } else {
+            this.forkBadge = fork.diff_count
               ? `Memoria fork: ${fork.diff_count} edge(s) diverged`
-              : "Memoria fork: in sync",
-          );
+              : "Memoria fork: in sync";
+          }
         } catch {
-          this.updateStatus();
+          this.forkBadge = "";
         }
+        this.renderPill();
       }
 
       async graduateScratchEdges() {
@@ -10670,11 +12846,11 @@ Steps:
 - [ ] Mirror to the seed: `cp packages/memoria-obsidian/main.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js`
 - [ ] Run tests to verify they pass: `python -m pytest tests/test_memoria_obsidian_package.py -v` — includes the seed-parity test and the Node schema harness (`node scripts/test.mjs`, untouched).
 - [ ] Regenerate floor goldens (seeded plugin hash changed in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`; review `git diff tests/fixtures/floor/goldens` — only the `.obsidian/plugins/memoria-obsidian/main.js` hash line changes per golden; re-run without the env var — green.
-- [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria serve` running and the plugin token configured:
+- [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria` available through the plugin's Engine command. Handshake discovers any running server and keeps its per-boot token in memory; no plugin token is configured:
   1. Open `projects/<p>/argument.canvas` — the banner text node renders top-left, reads "read-only, regenerated", and names the fork command.
   2. Run "Memoria: Fork canvas to scratch" → after the worker runs the queued request, `scratch-<name>.canvas` appears, opens editable, no banner node.
   3. Hand-draw one labeled `supports` edge in the scratch canvas; refocus the scratch file → status bar shows `Memoria fork: 1 edge(s) diverged`.
-  4. Run "Memoria: Graduate scratch canvas edges" → Notice reports 1 queued / 0 skipped (worker-side acceptance depends on the PI-actor dependency named at the top of this section — record the observed request status either way).
+  4. Run "Memoria: Graduate scratch canvas edges" → Notice reports 1 queued / 0 skipped; through the already-landed SEAM.1 HTTP door, the worker accepts the PI-authorized request and the relation appears after it runs.
   5. Confirm the plugin wrote no vault file at any step (`git status` in the vault shows only worker commits).
 - [ ] Run the gate: `python scripts/verify` — green.
 - [ ] Commit:
@@ -10693,13 +12869,13 @@ Steps:
 - Modify: `tests/test_project_knowledge.py` (three new tests)
 
 **Interfaces:**
-- Consumes: `write_project_argument_canvas`, `render_project_argument_canvas`, `LINK_RELATIONS` (`src/memoria_vault/runtime/subsystems/lib/schema.py:39`).
+- Consumes: `write_project_argument_canvas`, `render_project_argument_canvas`, `LINK_RELATIONS` (`src/memoria_vault/runtime/subsystems/lib/edges.py`).
 - Produces: pinned reconcile contract for the canvas projector. Verified-existing coverage this task deliberately does **not** duplicate: hand-edit drift detection (`tests/test_projections.py:169-178`), stale-refresh-on-outline-write (`knowledge.py:1899-1925` + `tests/test_slice_outline.py`), quarantine-and-log (Task 2). What is missing and added here: delete-arm regeneration, raw-path id keying under slug collision, and projector-output enum conformance.
 
 TDD deviation, stated honestly: these are characterization pins — the behavior
 already exists (full-file regeneration gives delete-arm; ids are
 `sha256(raw path)` at knowledge.py:1746-1749; labels copy `edge["type"]`
-schema-validated against `LINK_RELATIONS`). The red step below verifies each
+validated against the edges-owned `LINK_RELATIONS`). The red step below verifies each
 test *can* fail by asserting it fails against a deliberately broken mutation,
 then restores.
 
@@ -10769,8 +12945,8 @@ Steps:
           assert node_id == "n-" + hashlib.sha256(rel.encode()).hexdigest()[:12]
 
 
-  def test_canvas_edge_labels_conform_to_schema_link_relations(tmp_path: Path) -> None:
-      from memoria_vault.runtime.subsystems.lib.schema import LINK_RELATIONS
+  def test_canvas_edge_labels_conform_to_link_relations(tmp_path: Path) -> None:
+      from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 
       _md(
           tmp_path / "projects/project-alpha/project.md",
@@ -10883,25 +13059,22 @@ Section of the composite implementation plan for U4
 (`docs/superpowers/specs/2026-07-15-u4-copi-agent-plugin-design.md` §1–2) plus
 the bootstrap-spec §1/§9-slice-3 ownership split: U4 owns the **content** of
 `.claude/skills/memoria-copi/SKILL.md` and `.claude/hooks/session_status.py`;
-the bootstrap verbs (BOOT-C, drafted in parallel) own **seeding** them into
-vaults and stamping `.memoria/vault.json`.
+fresh `memoria init` (BOOT-C, drafted in parallel) owns **seeding** them into
+new vaults and writing their current hashes to `.memoria/vault.json`.
 
 **Cross-section assumptions (assembler: reconcile with BOOT-C and Plan 23 R1NG.4):**
 
-1. **Seeding**: `memoria init`/`memoria upgrade` call a per-bundle-file seeding
-   function taking `(relpath: str, content_provider: Callable[[], str])`. This
-   section produces the enumeration `copi_bundle_files()` in exactly that
-   shape; BOOT-C consumes it and stamps `COPI_BUNDLE_VERSION` + content hashes
-   into `.memoria/vault.json`.
+1. **Seeding**: fresh `memoria init` calls a per-bundle-file seeding function
+   taking `(relpath: str, content_provider: Callable[[], str])`. This section
+   produces `copi_bundle_files()` in exactly that shape; BOOT-C consumes it
+   and records current content hashes in `.memoria/vault.json`.
 2. **Doctor JSON contract** (consumed by the hook; produced by BOOT-C):
    `memoria doctor --json --quick` prints one JSON object on stdout containing
-   at least `{"engine_version": str, "skew": {"status": "in-sync" |
-   "vault-newer" | "engine-newer"}, "credentials": [{"name": str, "class":
+   at least `{"engine_version": str, "credentials": [{"name": str, "class":
    "required-for-operation" | "enhancing" | "identity", "status": "set" |
    "unset", "effect": str}]}`. The hook is defensive: any missing key emits
-   nothing for that category; unparsable/absent output degrades to a single
-   honest line; a pre-`--quick` engine (argparse error, empty stdout) hits the
-   same degrade path. Identity-class credentials never produce a context line.
+   nothing for that category; unparsable or absent output degrades to a single
+   honest line. Identity-class credentials never produce a context line.
 3. **Hook wiring**: BOOT-C's generated `.claude/settings.json` registers the
    SessionStart hook as a `python3 .claude/hooks/session_status.py`-style
    command (stdout becomes agent context per Claude Code SessionStart
@@ -10917,6 +13090,17 @@ vaults and stamping `.memoria/vault.json`.
    (`tests/floor_lib.py:375` only asserts `check_tracked_projections` stays
    ok, which regenerated deterministic content satisfies).
 
+### Clean-slate U4-A override (2026-07-30, BINDING)
+
+The active U4-A path is fresh `memoria init` only. It seeds the two current
+method files and records their hashes with the rest of the fresh bundle.
+Do not implement `COPI_BUNDLE_VERSION`, `memoria upgrade`, an upgrade marker in
+generated content, version/skew comparison, skew hook constants, skew report
+fixtures, or upgrade advice. The historical snippets below that name any of
+those items are superseded and non-executable. The SessionStart hook may report
+engine availability and credentials; it must not infer a lifecycle state from
+past bundle metadata.
+
 Repo pattern note: the deliverable named `src/memoria_vault/product/copi_skill.py`
 is realized as the package `src/memoria_vault/product/copi_skill/` (public
 import name `memoria_vault.product.copi_skill`) so the SessionStart hook can
@@ -10931,13 +13115,17 @@ honest-empty wording from `src/memoria_vault/runtime/search_index.py:243`
 `src/memoria_vault/runtime/knowledge.py:973,979`; grounds/warrant vocabulary
 and the five grounds types from
 `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md`
-§2 and §4; engine-missing/skew/credential wordings adapted from the bootstrap
+§2 and §4; engine-missing and credential wordings adapted from the bootstrap
 spec §2, §4b, §6; the perimeter-redirect rationale from bootstrap §5's hook
 message.
 
 ---
 
 ### Task U4-A.1: `copi_skill` content module — the generated SKILL.md method text
+
+> **Clean-slate execution note (2026-07-30):** the historical
+> `COPI_BUNDLE_VERSION` instructions below are superseded. This task produces
+> current method content only; fresh initialization records its hash.
 
 **Files:**
 - Create: `src/memoria_vault/product/copi_skill/__init__.py`
@@ -10948,8 +13136,6 @@ message.
 - Consumes: nothing from the engine (pure content module; stdlib +
   `importlib.resources` only).
 - Produces:
-  - `COPI_BUNDLE_VERSION: str = "1"` (module constant; bump on any change to
-    method text or hook source — BOOT-C stamps it into `vault.json`).
   - `SKILL_RELPATH: str = ".claude/skills/memoria-copi/SKILL.md"`
   - `SESSION_STATUS_HOOK_RELPATH: str = ".claude/hooks/session_status.py"`
   - `SKILL_SECTION_TITLES: tuple[str, ...]` (the five §1 section titles, in
@@ -11073,18 +13259,12 @@ def test_condensed_method_carries_the_load_bearing_wordings() -> None:
 
 Owns the content of the two method files inside the vault-embedded agent
 bundle: `.claude/skills/memoria-copi/SKILL.md` and
-`.claude/hooks/session_status.py`. Seeding into a vault is the bootstrap
-verbs' job (`memoria init` / `memoria upgrade`), which stamp
-COPI_BUNDLE_VERSION and content hashes into `.memoria/vault.json`. The
-engine authors the method; the user's agent voices it — this module never
-grants judgment.
+`.claude/hooks/session_status.py`. Fresh `memoria init` seeds them and records
+their current content hashes in `.memoria/vault.json`. The engine authors the
+method; the user's agent voices it — this module never grants judgment.
 """
 
 from __future__ import annotations
-
-# Bump on ANY change to the method text or the hook source; the bootstrap
-# verbs stamp this into .memoria/vault.json so `memoria doctor` reports skew.
-COPI_BUNDLE_VERSION = "1"
 
 SKILL_RELPATH = ".claude/skills/memoria-copi/SKILL.md"
 SESSION_STATUS_HOOK_RELPATH = ".claude/hooks/session_status.py"
@@ -11126,7 +13306,7 @@ description: Memoria co-PI method. Use before answering any question about vault
 
 # Memoria co-PI method
 
-<!-- Generated by memoria_vault.product.copi_skill (bundle version {COPI_BUNDLE_VERSION}); regenerated by `memoria upgrade`. Never edit this file. -->
+<!-- Generated by memoria_vault.product.copi_skill. Fresh initialization writes this file. Never edit it. -->
 
 You are voicing a research co-PI over this vault. The engine authors this
 method; you own phrasing, dialogue flow, and follow-up choice. The method
@@ -11286,6 +13466,11 @@ EOF
 
 ### Task U4-A.2: `session_status.py` SessionStart hook + bundle-file enumeration
 
+> **Clean-slate execution note (2026-07-30):** the historical skew constants,
+> report fixtures, branches, and `init`/`upgrade` wording below are superseded.
+> Seed the current files at fresh initialization, and have the hook report only
+> engine availability, credential status, and the method pointer.
+
 **Files:**
 - Create: `src/memoria_vault/product/copi_skill/session_status.py`
 - Modify: `src/memoria_vault/product/copi_skill/__init__.py` (created in
@@ -11302,11 +13487,10 @@ EOF
     byte-identical to `src/memoria_vault/product/copi_skill/session_status.py`).
   - `copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]` —
     returns `((SKILL_RELPATH, render_copi_skill), (SESSION_STATUS_HOOK_RELPATH,
-    render_session_status_hook))`; BOOT-C's `init`/`upgrade` iterate this.
+    render_session_status_hook))`; BOOT-C's fresh `init` iterates this.
   - Hook module constants (importable for tests and for BOOT-C's doctor
     parity checks): `METHOD_POINTER_LINE`, `ENGINE_MISSING_LINE`,
-    `DOCTOR_UNAVAILABLE_LINE`, `SKEW_VAULT_NEWER_LINE`,
-    `SKEW_ENGINE_NEWER_LINE` (all `str`), and `main() -> int`.
+    `DOCTOR_UNAVAILABLE_LINE` (all `str`), and `main() -> int`.
 - Hook behavior contract: stdlib-only, never imports `memoria_vault`, always
   exits 0, writes UTF-8 bytes to stdout (locale-proof). Engine absent on PATH
   degrades to `ENGINE_MISSING_LINE`; doctor absent/unparsable degrades to
@@ -11331,19 +13515,16 @@ ENGINE_MISSING_GOLDEN = (
 
 DOCTOR_REPORT_JSON = (
     '{"ok": false, "engine_version": "0.1.0a21",'
-    ' "skew": {"status": "engine-newer"},'
     ' "credentials": ['
     '{"name": "KILOCODE_API_KEY", "class": "required-for-operation", "status": "unset"},'
     '{"name": "OPENALEX_API_KEY", "class": "enhancing", "status": "unset",'
-    ' "effect": "keyless polite-pool mode (lower rate limits)"},'
+    ' "effect_when_unset": "keyless polite-pool mode (lower rate limits)"},'
     '{"name": "NCBI_EMAIL", "class": "identity", "status": "unset"},'
     '{"name": "SEMANTIC_SCHOLAR_API_KEY", "class": "enhancing", "status": "set"}'
     "]}"
 )
 
 DOCTOR_GOLDEN = (
-    "Memoria: bundle skew — the engine is newer than the vault bundles; "
-    "run `memoria upgrade`.\n"
     "Memoria: credential KILOCODE_API_KEY is unset (required-for-operation) — "
     "live-model calls refuse before the network; "
     "run `memoria secrets set KILOCODE_API_KEY`.\n"
@@ -11436,7 +13617,7 @@ def test_hook_degrades_on_unusable_doctor_output(tmp_path: Path) -> None:
       `src/memoria_vault/product/copi_skill/session_status.py`:
 
 ```python
-"""Memoria SessionStart hook: inject engine, skew, and credential truth.
+"""Memoria SessionStart hook: inject engine and credential truth.
 
 Seeded into vaults as `.claude/hooks/session_status.py` by the bootstrap
 verbs; the packaged source of truth lives in
@@ -11465,16 +13646,6 @@ DOCTOR_UNAVAILABLE_LINE = (
     "Memoria: `memoria doctor` did not return usable status — "
     "run `memoria doctor` manually."
 )
-SKEW_VAULT_NEWER_LINE = (
-    "Memoria: bundle skew — the vault bundles are newer than the engine; "
-    "upgrade the engine: `pipx upgrade memoria`."
-)
-SKEW_ENGINE_NEWER_LINE = (
-    "Memoria: bundle skew — the engine is newer than the vault bundles; "
-    "run `memoria upgrade`."
-)
-
-
 def _credential_lines(credentials: object) -> list[str]:
     lines: list[str] = []
     if not isinstance(credentials, list):
@@ -11493,7 +13664,7 @@ def _credential_lines(credentials: object) -> list[str]:
                 f"run `memoria secrets set {name}`."
             )
         elif cred_class == "enhancing":
-            effect = str(cred.get("effect") or "degraded keyless mode").strip().rstrip(".")
+            effect = str(cred.get("effect_when_unset") or "degraded keyless mode").strip().rstrip(".")
             lines.append(f"Memoria: credential {name} is unset (enhancing) — {effect}.")
     return lines
 
@@ -11512,15 +13683,7 @@ def _doctor_lines() -> list[str]:
         return [DOCTOR_UNAVAILABLE_LINE]
     if not isinstance(report, dict):
         return [DOCTOR_UNAVAILABLE_LINE]
-    lines: list[str] = []
-    skew = report.get("skew")
-    status = skew.get("status") if isinstance(skew, dict) else None
-    if status == "vault-newer":
-        lines.append(SKEW_VAULT_NEWER_LINE)
-    elif status == "engine-newer":
-        lines.append(SKEW_ENGINE_NEWER_LINE)
-    lines.extend(_credential_lines(report.get("credentials")))
-    return lines
+    return _credential_lines(report.get("credentials"))
 
 
 def main() -> int:
@@ -11557,8 +13720,8 @@ def render_session_status_hook() -> str:
 def copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]:
     """Enumerate the U4-owned bundle files as (relpath, content_provider) pairs.
 
-    The bootstrap verbs (init/upgrade) seed each pair and stamp
-    COPI_BUNDLE_VERSION plus content hashes into .memoria/vault.json.
+    Fresh initialization seeds each pair and records their current hashes in
+    .memoria/vault.json.
     """
     return (
         (SKILL_RELPATH, render_copi_skill),
@@ -11581,8 +13744,8 @@ git commit -m "$(cat <<'EOF'
 feat(copi): SessionStart status hook and bundle-file enumeration
 
 Stdlib-only session_status.py runs `memoria doctor --json --quick` and
-injects engine-missing / skew / credential context lines plus the method
-pointer; engine absence and unusable doctor output degrade honestly.
+injects engine-missing and credential context lines plus the method pointer;
+engine absence and unusable doctor output degrade honestly.
 copi_bundle_files() exposes the (relpath, content_provider) pairs the
 bootstrap seeding verbs consume.
 
@@ -11671,8 +13834,8 @@ def _vault_agents_md() -> str:
 
     return _generated(
         "Memoria vault read contract",
-        "Engine-generated projection (the bibliography.bib pattern): `memoria init` "
-        "writes this file and upgrades regenerate it. Never edit it — edits are "
+        "Engine-generated projection (the bibliography.bib pattern): fresh `memoria init` "
+        "writes this file. Never edit it — edits are "
         "drift and the next regenerate-tracked-projections pass overwrites them.",
         "## How to read this vault safely\n"
         "\n"
@@ -11764,8 +13927,10 @@ All line refs verified against the working tree at plan time. Governing spec:
   `raised_by: generate-questions`, `certainty: unsure`, plus two
   machine-readable extra frontmatter keys: `taxonomy_role` (one of
   `grounds-seeking | warrant-challenging | rebuttal-probing |
-  qualifier-testing`) and `target` (the resolvable reference). U3 rendering
-  can key off `attention_kind`/`taxonomy_role`/`target`/`raised_by`.
+  qualifier-testing`) and `target` (the resolvable reference). U3's public
+  card renders this as `kind_line: "gap"`, an evidence-link child, and
+  `raised_by`; `taxonomy_role` remains source metadata rather than an
+  invented public card field.
 - **Model output contract:** a JSON array of objects
   `{"question": str, "role": str, "target": str}`. A non-JSON / non-list
   payload fails the run loudly with `ValueError` (honest failure, no partial

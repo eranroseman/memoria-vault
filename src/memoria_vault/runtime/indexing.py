@@ -9,6 +9,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib.schema import parse_links
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
@@ -39,24 +40,16 @@ def _rebuild_passage_index(vault: Path) -> dict[str, Any]:
 
 
 def refresh_stale_passages(vault: Path, *, context: OperationContext) -> dict[str, Any]:
-    """Refresh changed checked documents before a query, without a daemon."""
+    """Refresh changed checked documents before a query, without reading unchanged files."""
+    from memoria_vault.runtime.search_index import stale_checked_search_documents
+
     validate_operation_context(vault, context)
-    rows = _passage_rows(vault)
-    states = state.file_index_states(vault)
-    stale_paths = {
-        row["path"]
-        for row in rows
-        if states.get(row["path"], {}).get("source_mtime_ns") != row["source_mtime_ns"]
-        or states.get(row["path"], {}).get("source_sha256") != row["text_sha256"]
-        or states.get(row["path"], {}).get("check_status") != row["check_status"]
-    }
-    if not stale_paths:
-        return {"passages": {"inserted": 0, "paths": 0}, "concept_edges": {"inserted": 0}}
-    stale_rows = [row for row in rows if row["path"] in stale_paths]
-    return {
-        "passages": state.replace_indexed_passages(vault, stale_rows, paths=stale_paths),
-        "concept_edges": state.replace_concept_edges(vault, _concept_edges(rows)),
-    }
+    documents, removed = stale_checked_search_documents(vault, state.file_index_states(vault))
+    if not documents and not removed:
+        return {"passages": {"inserted": 0, "paths": 0}}
+    rows = [_passage_row(vault, document) for document in documents]
+    paths = {row["path"] for row in rows} | removed
+    return {"passages": state.replace_indexed_passages(vault, rows, paths=paths)}
 
 
 def hash_embedding(text: str, *, dim: int = VECTOR_DIM) -> list[float]:
@@ -123,6 +116,7 @@ def _passage_row(vault: Path, document: dict[str, Any]) -> dict[str, Any]:
         "check_status": _check_status(vault, path, work_id),
         "mode": str(frontmatter.get("mode") or ""),
         "question_status": str(frontmatter.get("question_status") or ""),
+        "links": frontmatter.get("links") if isinstance(frontmatter.get("links"), dict) else {},
         "source_mtime_ns": _source_mtime_ns(document),
         "embedding_model_id": EMBEDDING_MODEL_ID,
         "vector_dim": VECTOR_DIM,
@@ -131,9 +125,22 @@ def _passage_row(vault: Path, document: dict[str, Any]) -> dict[str, Any]:
 
 
 def _concept_edges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    # ponytail: explicit concept-edge extraction waits for curated link rows; this keeps
-    # the table rebuildable without inventing edges from prose.
-    return []
+    """Mirror each concept's links frontmatter into concept-edge rows."""
+    edges = []
+    for row in rows:
+        if row.get("origin") != "file":
+            continue
+        for relation, target in parse_links(row.get("links")):
+            edges.append(
+                {
+                    "source_concept_id": row["path"],
+                    "relation_type": relation,
+                    "target_concept_id": target if target.endswith(".md") else f"{target}.md",
+                    "check_status": row["check_status"],
+                    "source_path": row["path"],
+                }
+            )
+    return edges
 
 
 def _work_id(frontmatter: dict[str, Any], path: str) -> str:

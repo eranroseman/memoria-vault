@@ -7,6 +7,8 @@ from pathlib import Path as _Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.integrity.linter import detectors as _m
+from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+from tests.helpers import copy_memoria_dirs
 
 Path = _m.Path
 run_all = _m.run_all
@@ -24,6 +26,7 @@ def test_detectors():
 
         with tempfile.TemporaryDirectory() as td:
             v = Path(td)
+            copy_memoria_dirs(v, "schemas")
             for d in (
                 "notes/fleeting",
                 "inbox/_answers",
@@ -348,6 +351,7 @@ def test_append_findings_jsonl_touches_empty_file_for_clean_runs(tmp_path):
 
 def test_schema_check_flags_off_vocabulary_values(tmp_path):
     v = tmp_path
+    copy_memoria_dirs(v, "schemas")
     (v / "system").mkdir(parents=True)
     (v / "system/vocabulary.md").write_text(
         "# Vocabulary\n\n"
@@ -368,6 +372,41 @@ def test_schema_check_flags_off_vocabulary_values(tmp_path):
     findings = _m.frontmatter_schema_check(v)
     messages = "\n".join(f.message for f in findings)
     assert "topics: off-vocabulary" in messages
+
+
+def test_schema_check_fails_closed_without_vault_schemas(tmp_path):
+    v = tmp_path
+    (v / "notes").mkdir()
+    (v / "notes/claim.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB0\n"
+        "tags: []\nlinks: {}\ntitle: Claim\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    findings = _m.frontmatter_schema_check(v)
+
+    assert [(finding.path, finding.message) for finding in findings] == [
+        (".memoria/schemas", "missing required schema directory")
+    ]
+
+
+def test_schema_check_uses_vault_local_type_contract(tmp_path):
+    v = tmp_path
+    copy_memoria_dirs(v, "schemas")
+    (v / ".memoria/schemas/types/local-note.yaml").write_text(
+        "type: local-note\nconcept_type: note\nrequired:\n"
+        "  type: literal:local-note\n  title: str\n",
+        encoding="utf-8",
+    )
+    (v / "notes").mkdir()
+    (v / "notes/local.md").write_text(
+        "---\ntype: local-note\ntitle: Local\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    findings = _m.frontmatter_schema_check(v)
+
+    assert findings == []
 
 
 def _topic_note(v, name, topics):
@@ -405,7 +444,7 @@ def test_hub_threshold(tmp_path):
     assert _m.hub_threshold(v, threshold=3) == []
 
 
-def test_hub_threshold_ignores_retired_topics_from_untouched_catalog_work(tmp_path):
+def test_hub_threshold_includes_unrecognized_topics_from_catalog_work(tmp_path):
     state.upsert_catalog_record(
         tmp_path,
         work_id="legacy-work",
@@ -422,7 +461,8 @@ def test_hub_threshold_ignores_retired_topics_from_untouched_catalog_work(tmp_pa
     findings = _m.hub_threshold(tmp_path, threshold=1)
 
     assert [finding.message for finding in findings] == [
-        "topic 'current-area' has 1 notes (threshold 1) and no hub -- consider creating one"
+        "topic 'current-area' has 1 notes (threshold 1) and no hub -- consider creating one",
+        "topic 'legacy-only' has 1 notes (threshold 1) and no hub -- consider creating one",
     ]
 
 
@@ -453,9 +493,9 @@ def test_inbox_attention_projection_is_not_typed_or_stray(tmp_path):
 
 
 def test_skeleton_drift(tmp_path):
-    assert _m._FOLDERS is not None, "schema home must load in CI (PyYAML present)"
-    skeleton = _m._FOLDERS["skeleton"]
     v = tmp_path
+    copy_memoria_dirs(v, "schemas")
+    skeleton = schema_lib.load_folders(v / ".memoria/schemas")["skeleton"]
     for d in skeleton:
         (v / d).mkdir(parents=True, exist_ok=True)
     (v / ".git").mkdir()

@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "memoria": {
+      "command": "memoria",
+      "args": [
+        "mcp",
+        "--workspace",
+        ".",
+        "--read-scope",
+        "notes",
+        "--read-scope",
+        "hubs",
+        "--read-scope",
+        "projects",
+        "--read-scope",
+        "digests",
+        "--read-scope",
+        "fulltexts",
+        "--read-scope",
+        "inbox"
+      ]
+    }
+  }
+}

@@ -21,10 +21,11 @@ For linter findings, severity alone controls the verdict:
 | `LOW` | `PASS` when no higher-severity finding exists |
 
 Attention loudness is independent metadata assigned by operations that create
-attention prompts; there is no automatic severity-to-loudness mapping. Open
-`loudness: block` prompts affect only the optional policy-hook path, and
-alert/block prompts attempt a Telegram push only when that adapter is configured.
-The standalone CLI/worker path is not paused by loudness.
+attention prompts; there is no automatic severity-to-loudness mapping. All
+attention prompts, including alert and block cards, are pull-only Inbox
+projections. An open `loudness: block` prompt blocks review-gated writes through
+the optional policy-hook path until the PI resolves it; the standalone CLI/worker
+path is not paused by loudness.
 
 ---
 
@@ -37,12 +38,11 @@ Sorted by severity, then topic.
 | **Obsidian Linter corrupts frontmatter** | CRITICAL | The frontend Obsidian Linter plugin is installed — it can rewrite Memoria-owned frontmatter outside Memoria's controls | Uninstall it. It reorders/rewrites Memoria-owned Concept frontmatter; folder exclusion does not make it safe. `markdownlint` + the Memoria Linter cover its role. |
 | **Memoria-owned frontmatter overwritten** | CRITICAL | A frontend formatter reordered or stripped schema-owned frontmatter on save | Exclude Memoria-owned folders from any frontend formatter; let the Memoria Linter own frontmatter. |
 | DOI source stays unchecked after enrichment | HIGH | Provider config or required provider payloads are missing; required DOI providers block checked promotion when provider calls fail. | Check `<workspace>/.memoria/config/providers.yaml` and the provider replay/payload inputs, then rerun `memoria work enrich`. |
-| Filtered views returning nothing | HIGH | A Work `research_area`/`methodology` value or note `topics` value does not match the controlled vocabulary exactly — looks like "nothing to do" | Check note `topics` with the schema/linter and inspect Work metadata with `memoria work export` or the read API. Compare both with [Vocabulary](../data-model/vocabulary.md); see [Fix missing query results](../../how-to-guides/troubleshooting/fix-missing-query-results.md). |
+| Optional editor field filter returns nothing | HIGH | A third-party editor view's field filter does not match a stored value or field shape — looks like "nothing to do" | Check note `topics` with the schema/linter, inspect Work metadata with `memoria work export`, and review the optional view's own filter configuration; see [Fix missing query results](../../how-to-guides/troubleshooting/fix-missing-query-results.md). The shipped CLI/read API do not yet offer these structured filters. |
 | Search index stale — `memoria ask` misses checked notes | HIGH | Index not rebuilt after notes changed (silent) | Rebuild the index: [Rebuild the search index](../../how-to-guides/operate/rebuild-the-search-index.md). |
 | `audit.jsonl` growing without bound | LOW | Expected: the log is append-only forever, never rotated | The Linter's `audit-log-size` detector raises an advisory past 50 MB; archive a vault backup if disk pressure ever matters. |
 | Broken frontmatter YAML | MEDIUM | YAML parse error: unclosed string, list indentation error, missing closing `---` | Fix raw YAML outside Obsidian; verify with the Linter. |
 | Optional editor adapter can't connect | MEDIUM | The local HTTP server, token, read scope, or adapter configuration is stale | Use the standalone `memoria` CLI first, then repair the adapter configuration outside the core installer. |
-| Classification attention not appearing | MEDIUM | The source was added but enrichment/classification did not run or did not produce a checked result | Run `memoria work enrich <id>` and inspect the request with `memoria request show`. |
 | Schema mismatch in filtered views | MEDIUM | A hand-authored note or stale test-vault fixture does not match the current schema | Repair the specific note or reinitialize the test-vault from the current package seed, then validate with `./.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .` (on Windows, replace the interpreter path with `.\.memoria\.venv\Scripts\python.exe`). |
 | Scheduled task did not run | MEDIUM | Host scheduler is disabled, asleep, or pointing at a stale workspace path | Run the same `memoria` command manually, then repair the operator-managed scheduler entry. |
 | Same request fails after explicit retry | MEDIUM | Brittle prompt, broken input payload, or unavailable dependency | Inspect `memoria request show`. If the original arguments remain correct, fix the underlying error and retry the failed request. For changed non-scope arguments, create a successor with `request amend` and a fresh key; for a changed ID, reference, path, or target, submit a new original operation. Cancel only obsolete pending work; never retry a superseded request. |

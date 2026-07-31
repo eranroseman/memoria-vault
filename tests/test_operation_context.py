@@ -11,8 +11,9 @@ import pytest
 
 from memoria_vault.runtime import state, trusted_writer, worker
 from memoria_vault.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.knowledge import compose_project_draft
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_from_job
-from tests.helpers import init_cli_workspace
+from tests.helpers import call_with_context, init_cli_workspace, write_checked_concept
 
 
 def _operation_job(
@@ -393,6 +394,22 @@ def test_explicit_journal_metadata_conflict_changes_neither_store(
         trusted_writer.append_explicit_journal_event(
             tmp_path,
             {"event": "manual", key: value},
+            actor="pi",
+            machine="PI laptop",
+        )
+
+    assert not list((tmp_path / ".memoria/journal").glob("*.jsonl"))
+    assert _event_log_payloads(tmp_path) == []
+
+
+def test_explicit_journal_batch_validates_every_row_before_mutation(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="actor"):
+        trusted_writer.append_explicit_event_batch(
+            tmp_path,
+            [
+                {"event": "manual"},
+                {"event": "manual", "actor": "agent"},
+            ],
             actor="pi",
             machine="PI laptop",
         )
@@ -820,6 +837,7 @@ def test_request_writer_interfaces_require_only_context_provenance(
     ("function", "required"),
     [
         (trusted_writer.append_explicit_journal_event, {"actor", "machine"}),
+        (trusted_writer.append_explicit_event_batch, {"actor", "machine"}),
         (trusted_writer.commit_explicit_writer_changes, {"actor", "machine"}),
         (trusted_writer.observe_pi_edit, {"machine"}),
         (trusted_writer.observe_pi_edit_from_head, {"machine"}),
@@ -974,6 +992,7 @@ def test_attention_resolution_rejects_non_pi_before_mutation(
 PI_AUTHORITY_OPERATIONS = (
     "acknowledge-attention",
     "resolve-attention",
+    "resolve-evidence",
     "record-copi-interview",
     "curate-note-candidate",
     "curate-note-link",
@@ -1069,6 +1088,99 @@ def test_attention_resolution_accepts_pi_and_records_pi(
     assert result["status"] == "done"
     assert result["resolution"]["actor"] == "pi"
     assert result["resolution"]["request_id"] == request["job_id"]
+
+
+def _seed_composed_evidence_set(workspace: Path) -> str:
+    write_checked_concept(
+        workspace,
+        "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n",
+        "project",
+    )
+    write_checked_concept(
+        workspace,
+        "notes/review-claim.md",
+        "type: note\ncheck_status: checked\ntitle: Review claim\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+        "note",
+        body="An implicit claim requiring PI review.",
+    )
+    outline = workspace / "projects/project-alpha/outline.md"
+    outline.write_text("- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Review claim\n", encoding="utf-8")
+    composed = call_with_context(compose_project_draft, workspace, "project-alpha")
+    return str(composed["evidence_markers"][0]["id"])
+
+
+def test_resolve_evidence_operation_records_pi_disposition(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    evidence_id = _seed_composed_evidence_set(workspace)
+    request = worker.enqueue_operation(
+        workspace,
+        "resolve-evidence",
+        actor="pi",
+        idempotency_key="pi-resolve-evidence",
+        payload={
+            "evidence_id": evidence_id,
+            "decision": "accept",
+            "reason": "grounds hold",
+        },
+    )
+
+    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+
+    assert result["status"] == "done"
+    events = [
+        row
+        for row in _event_log_payloads(workspace)
+        if row.get("operation") == "resolve-evidence-review"
+    ]
+    assert len(events) == 1
+    assert events[0]["evidence_id"] == evidence_id
+    assert events[0]["decision"] == "accept"
+    assert [
+        row
+        for row in _event_log_payloads(workspace)
+        if row.get("event") == "disposition" and row.get("schema") == "disposition.v1"
+    ]
+
+
+def test_resolve_evidence_operation_requires_evidence_id(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    request = worker.enqueue_operation(
+        workspace,
+        "resolve-evidence",
+        actor="pi",
+        idempotency_key="pi-resolve-evidence-missing-id",
+        payload={"decision": "accept"},
+    )
+
+    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+
+    assert result["status"] == "failed"
+    assert "resolve-evidence requires evidence_id" in result["error"]
+
+
+def test_resolve_evidence_operation_rejects_unknown_evidence_id(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+    request = worker.enqueue_operation(
+        workspace,
+        "resolve-evidence",
+        actor="pi",
+        idempotency_key="pi-resolve-evidence-unknown-id",
+        payload={"evidence_id": "ev-0011aabb", "decision": "accept"},
+    )
+    result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+
+    assert result["status"] == "failed"
+    assert "unknown evidence id" in result["error"]
 
 
 def test_scheduled_sweep_requests_declare_integrity_actor(tmp_path: Path) -> None:

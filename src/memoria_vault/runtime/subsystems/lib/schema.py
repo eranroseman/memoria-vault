@@ -2,14 +2,14 @@
 """Loader and validator for the canonical type schemas.
 
 `.memoria/schemas/` is the single source for the vault's document-type vocabulary
-with per-type frontmatter schemas (`types/<type>.yaml`), the type→folder map
-(`folders.yaml`), and the controlled vocabulary (`system/vocabulary.md`).
+with per-type frontmatter schemas (`types/<type>.yaml`), the Concept-type roster
+(`concept-types.yaml`), the type→folder map (`folders.yaml`), and the controlled
+vocabulary (`system/vocabulary.md`).
 This module is the reader shared by the Linter, the pre-commit hook,
 `memoria init`, package-spine tests, and no-Bases seed tests, so a schema change is a
 one-file edit, never a hunt across hardcoded lists.
 
 Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.
-`required_any` lists field names of which at least one must be present.
 `required_when` maps a field to {field, equals}; `forbidden` lists retired fields.
 """
 
@@ -34,7 +34,6 @@ def _default_schemas_dir() -> Path:
 
 SCHEMAS_DIR = _default_schemas_dir()
 
-UNIVERSAL_LIFECYCLE = ["proposed", "provisional", "current", "retracted", "archived"]
 VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
 LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})
 
@@ -47,13 +46,45 @@ def _schemas_dir(schemas_dir: Path | None = None) -> Path:
     return Path(schemas_dir) if schemas_dir else SCHEMAS_DIR
 
 
+def load_concept_types(schemas_dir: Path | None = None) -> dict[str, str]:
+    """Return {concept type: one-line role} from the seeded registry.
+
+    concept-types.yaml is the single source of the DB Concept-type roster;
+    the schema.sql CHECK is held to it by the registry parity test.
+    """
+    registry_file = _schemas_dir(schemas_dir) / "concept-types.yaml"
+    if not registry_file.is_file():
+        raise ValueError(f"missing required concept-types.yaml: {registry_file}")
+    data = yaml.safe_load(registry_file.read_text(encoding="utf-8"))
+    return {str(name): str(role) for name, role in data["concept_types"].items()}
+
+
 def load_types(schemas_dir: Path | None = None) -> dict[str, dict]:
-    """Return {document type: schema dict} for every types/<type>.yaml."""
+    """Return {document type: schema dict} for every types/<type>.yaml.
+
+    Raises ValueError when a doc-type yaml names no concept-type registry
+    member in its concept_type key (the NODES §2 load-time check).
+    """
+    schema_dir = _schemas_dir(schemas_dir)
+    registry = load_concept_types(schemas_dir)
     out: dict[str, dict] = {}
-    for f in sorted((_schemas_dir(schemas_dir) / "types").glob("*.yaml")):
+    for f in sorted((schema_dir / "types").glob("*.yaml")):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        member = data.get("concept_type")
+        if member not in registry:
+            raise ValueError(
+                f"{f.name}: concept_type {member!r} is not in concept-types.yaml {sorted(registry)}"
+            )
         out[data["type"]] = data
     return out
+
+
+def concept_type_for(type_name: str, schemas_dir: Path | None = None) -> str:
+    """Return the validated registry member for one document type."""
+    type_schema = load_types(schemas_dir).get(type_name)
+    if type_schema is None:
+        raise ValueError(f"unknown document type: {type_name}")
+    return str(type_schema["concept_type"])
 
 
 def load_folders(schemas_dir: Path | None = None) -> dict:
@@ -132,6 +163,64 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
     return f"unknown kind {kind!r}"
 
 
+_LINK_TARGET_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+def _normalized_link_target(target: str) -> tuple[str, str | None]:
+    """Return one local Concept target and an invalidity reason, if any."""
+    raw = target.strip()
+    wrapped = raw.startswith("[[") or raw.endswith("]]")
+    if wrapped:
+        if not (raw.startswith("[[") and raw.endswith("]]")):
+            return "", "invalid"
+        raw = raw[2:-2]
+        if "[" in raw or "]" in raw:
+            return "", "invalid"
+        raw = raw.split("|", 1)[0].split("#", 1)[0].strip()
+    elif "[" in raw or "]" in raw:
+        return "", "invalid"
+
+    if not raw:
+        return "", "empty"
+
+    path = raw.replace("\\", "/")
+    if path.startswith(("/", "#")) or path.endswith("/") or _LINK_TARGET_URI_RE.match(raw):
+        return "", "invalid"
+    if ".." in [part for part in path.split("/") if part and part != "."]:
+        return "", "traversal"
+
+    suffix = Path(path.rsplit("/", 1)[-1]).suffix
+    if suffix and suffix != ".md":
+        return "", "invalid"
+    return raw, None
+
+
+def normalize_link_target(target: str) -> str:
+    """Normalize one valid local Concept target, or return an empty string for junk."""
+    if not isinstance(target, str):
+        return ""
+    return _normalized_link_target(target)[0]
+
+
+def parse_links(links: object) -> list[tuple[str, str]]:
+    """Return ``(relation, normalized target)`` pairs from a links frontmatter map."""
+    pairs: list[tuple[str, str]] = []
+    if not isinstance(links, dict):
+        return pairs
+    for relation, targets in links.items():
+        if (
+            not isinstance(relation, str)
+            or relation not in LINK_RELATIONS
+            or not isinstance(targets, list)
+        ):
+            continue
+        for target in targets:
+            normalized = normalize_link_target(target) if isinstance(target, str) else ""
+            if normalized:
+                pairs.append((relation, normalized))
+    return pairs
+
+
 def _check_links(value) -> str | None:
     if not isinstance(value, dict):
         return f"expected links map, got {type(value).__name__}"
@@ -145,16 +234,13 @@ def _check_links(value) -> str | None:
         for index, target in enumerate(targets):
             if not isinstance(target, str) or not target.strip():
                 return f"links.{relation}[{index}]: expected non-empty target string"
-            raw = target.strip()
-            if raw.startswith("[[") and raw.endswith("]]"):
-                raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
+            raw, reason = _normalized_link_target(target)
             if not raw:
-                return f"links.{relation}[{index}]: expected non-empty target string"
-            if "://" in raw or raw.startswith(("mailto:", "/")):
+                if reason == "traversal":
+                    return f"links.{relation}[{index}]: target must not escape the workspace"
+                if reason == "empty":
+                    return f"links.{relation}[{index}]: expected non-empty target string"
                 return f"links.{relation}[{index}]: expected local Concept target"
-            parts = [part for part in raw.replace("\\", "/").split("/") if part and part != "."]
-            if ".." in parts:
-                return f"links.{relation}[{index}]: target must not escape the workspace"
     return None
 
 
@@ -164,14 +250,21 @@ def validate_frontmatter(
     """Validate one document's frontmatter against its type schema.
 
     Returns a list of human-readable error strings (empty = valid).
-    Unknown extra fields are accepted. The schema enforces required meaning fields
-    without making hand-authored markdown brittle during alpha migrations.
+    Validation is closed: fields not declared by the type schema are rejected
+    (nest extension data under the declared `x:` map instead).
     """
     errors: list[str] = []
     enums = schema.get("enums", {})
     for field in schema.get("forbidden") or []:
         if field in fm:
             errors.append(f"{field}: field is retired")
+    known_fields = (
+        set(schema.get("required") or {})
+        | set(schema.get("optional") or {})
+        | set(schema.get("forbidden") or [])
+    )
+    for field in sorted(set(fm) - known_fields):
+        errors.append(f"{field}: unknown field; declare it in the type schema or nest under x:")
     for field, kind in (schema.get("required") or {}).items():
         if field not in fm or fm[field] in (None, ""):
             errors.append(f"missing required field: {field}")
@@ -184,9 +277,6 @@ def validate_frontmatter(
             err = _check_kind(fm[field], kind, enums)
             if err:
                 errors.append(f"{field}: {err}")
-    any_of = schema.get("required_any") or []
-    if any_of and not any(fm.get(f) not in (None, "") for f in any_of):
-        errors.append(f"at least one of {any_of} is required")
     for field, rule in (schema.get("required_when") or {}).items():
         if not isinstance(rule, dict):
             errors.append(f"required_when.{field}: expected map")
@@ -194,9 +284,6 @@ def validate_frontmatter(
         controller = str(rule.get("field") or "")
         if fm.get(controller) == rule.get("equals") and not _present(fm.get(field)):
             errors.append(f"{field}: required when {controller} is {rule.get('equals')!r}")
-    gate = schema.get("promotion_gate")
-    if gate and fm.get("lifecycle") == gate and fm.get("promoted_at") in (None, ""):
-        errors.append(f"lifecycle {gate!r} requires promoted_at promotion provenance")
     if vocabulary_terms:
         for field, vocabulary in VOCABULARY_FIELDS.get(str(schema.get("type")), {}).items():
             values = fm.get(field)

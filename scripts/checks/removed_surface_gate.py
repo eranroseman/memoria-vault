@@ -95,6 +95,7 @@ def find_violations(repo: Path = ROOT, contract_path: Path = CONTRACT) -> list[s
     for rel in contract.search_roots:
         root = repo / rel
         if not root.exists():
+            errors.append(f"missing search root: {rel}")
             continue
         for path in iter_files(repo, root, contract.allow_text_files):
             text = path.read_text(encoding="utf-8", errors="ignore")

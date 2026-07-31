@@ -87,7 +87,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     )
     assert {gap["topic"]: gap["gap_type"] for gap in initial_gaps["gaps"]}[
         "Memory Consolidation"
-    ] == "under-warranted"
+    ] == "under-grounded"
 
     bibtex = """@article{cycle2026,
       title = {Memory Consolidation in Sleep},

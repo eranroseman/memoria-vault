@@ -24,10 +24,12 @@ categorically different questions.
 
 `methodology` captures research architecture: _how_ a study was structured (RCT, observational, qualitative, systematic review, simulation, …). `research_area` captures conceptual content: _what_ the work is about. A query asking "show me all RCTs" is a `methodology` question. A query asking "everything on sensemaking" is a `research_area` question. Routing both to the same field makes both queries unreliable — one field can't simultaneously be the answer to orthogonal questions.
 
-The Linter's `schema-check` pass validates that facet values match the defined
-vocabulary in `system/vocabulary.md`. Drift remains possible when the list keeps
-near-duplicates or when a provisional term has not yet been folded into the
-controlled vocabulary.
+The Linter's `schema-check` pass enforces the defined vocabulary in
+`system/vocabulary.md` for claim-note `topics`. Work `research_area` and
+`methodology` use the same controlled-vocabulary guidance, but are PI-owned
+catalog metadata rather than schema-enforced values. Drift remains possible
+when the list keeps near-duplicates or when a provisional term has not yet been
+folded into the controlled vocabulary.
 
 ## Why vocabulary stabilization is staged
 
@@ -45,7 +47,7 @@ when they're not — is higher than the cost of living briefly with a provisiona
 term.
 
 This is also why source metadata corrections go through explicit Work updates:
-catalog terms should land only when they match the controlled vocabulary.
+the PI chooses catalog terms using the controlled vocabulary as guidance.
 Claim-bearing note `topics` are human-extended through `system/vocabulary.md` or
 the `memoria vocab` commands, and that is where the discipline below applies.
 
@@ -59,9 +61,9 @@ false gap signal. The failure is invisible until `schema-check` or a vocabulary
 audit compares the near-duplicates.
 
 This is the class of failure the Linter's `schema-check` pass is designed to
-catch for off-vocabulary values. Near-duplicate in-vocabulary terms still need
-PI review. See [Common pitfalls](common-pitfalls.md) for the concrete failure
-scenario and how it compounds over time.
+catch for off-vocabulary claim-note `topics` values. Near-duplicate terms and
+Work classifications still need PI review. See [Common pitfalls](common-pitfalls.md)
+for the concrete failure scenario and how it compounds over time.
 
 ## Related
 

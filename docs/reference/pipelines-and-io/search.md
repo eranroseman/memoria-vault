@@ -12,7 +12,9 @@ derived passage substrate owned by the Memoria runtime. BM25 remains
 the selected product answer mode. To rebuild a stale index, see
 [Rebuild the search index](../../how-to-guides/operate/rebuild-the-search-index.md);
 to query conversationally, see
-[Query the vault](../../how-to-guides/knowledge/query-the-vault.md).
+[Query the vault](../../how-to-guides/knowledge/query-the-vault.md); to inspect
+a topic neighborhood, see
+[Explore a topic neighborhood](../../how-to-guides/knowledge/explore-a-topic-neighborhood.md).
 
 Bare "manifest" on this page always means the search-index manifest
 (`.memoria/index/search/manifest.json`) — distinct from the operation,
@@ -28,8 +30,8 @@ through the `[vector]` extra and dense retrieval fails closed when it is absent.
 
 | Property | Value |
 | --- | --- |
-| Backend | deterministic BM25 in `memoria_vault.runtime.search_index`; derived `passages`, `passage_fts`, `passage_vec`, `file_index_state`, and `concept_edges` rows for candidate evaluation |
-| Product mode | `memoria workspace rebuild --search` builds the checked tree and manifest; `memoria ask` and `memoria project ask` read checked retrieval documents |
+| Backend | deterministic BM25 in `memoria_vault.runtime.search_index`; candidate evaluation uses derived `passages`, `passage_fts`, `passage_vec`, `file_index_state`, and only frontmatter-mirrored `concept_edges` triples; tensions and edge metadata are DB-owned |
+| Product mode | `memoria workspace rebuild --search` builds the checked tree and manifest; `memoria ask`, `memoria project ask`, and `memoria explore` read checked retrieval documents |
 | Access | read-only retrieval; search never writes Concepts, catalog rows, or journal rows |
 | Required gate | `memoria doctor --check search` reports checked-tree and manifest state |
 
@@ -47,6 +49,7 @@ but it does not ship a clustering adapter or heavyweight topic-modeling stack.
 | First-order graph neighborhoods | `memoria_vault.runtime.search_index` builds checked search input documents from Concepts, acquired text, and SQLite graph rows. |
 | Project gap analysis | `memoria project gaps <project-path>` / worker operation `analyze-gaps` with optional `project_path`. |
 | Argument graph inspection | `memoria project trace` and `render-project-argument-canvas`. |
+| Checked topic surfacing | `memoria explore <topic>` ranks checked displayable documents, then expands their graph neighborhood one or two hops. |
 | Retrieval ranking | BM25-selected search over checked retrieval documents, with the derived passage substrate in `memoria_vault.runtime.indexing` and `memoria_vault.runtime.retrieval`. |
 
 NetworkX community detection, BERTopic topic modeling, and generated cluster
@@ -72,6 +75,7 @@ terms.
 | --- | --- |
 | `memoria ask` | Grounded checked retrieval behind a user question. |
 | `memoria project ask` | The same checked retrieval contract with project context. |
+| `memoria explore` | A read-only checked topic neighborhood, optionally compared with another topic or limited to a checked project slice. |
 | `memoria project gaps <project-path>` | Gap discovery over checked Work text, graph neighborhoods, SQLite source/topic evidence, checked project terms, checked linked thesis terms, project argument health, and paper-readiness fields. |
 | Prompt and integrity operations | Candidate evidence pulls without writing through search. |
 
@@ -83,6 +87,7 @@ terms.
 | `memoria workspace rebuild --workspace <path> --search` | Rebuilds the checked tree and BM25 manifest. |
 | `memoria ask --workspace <path> --question "..."` | Queries checked retrieval documents through the Ask/Query contract. |
 | `memoria project ask --workspace <path> <project-id> --question "..."` | Queries the same checked retrieval surface with project context. |
+| `memoria explore --workspace <path> <topic> [--versus <topic>] [--project <project>] [--depth 1\|2]` | Surfaces a checked topic neighborhood from BM25 seeds and graph links. It is not `memoria project explore`, which lists exploration-channel candidates. |
 
 ## Limits
 

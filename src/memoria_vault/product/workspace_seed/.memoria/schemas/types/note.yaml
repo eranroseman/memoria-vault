@@ -1,10 +1,12 @@
 type: note
 category: notes
+concept_type: note
 enums:
   mode: [claim, question, definition, work]
   question_status: [open, resolved]
   certainty: [reported, contested, unknown, hypothesized]
   item_type: [paper, dataset, repository, web-page, report]
+  consequence: [grounds-lost, warrant-lost, qualifier-regression, rebuttal-strengthened]
 required:
   type: literal:note
   id: ulid
@@ -15,6 +17,7 @@ optional:
   aliases: list
   annotation_ref: map
   archived: bool
+  consequence: enum:consequence
   claim_text: str
   description: str
   extraction_confidence: str
@@ -29,6 +32,7 @@ optional:
   qualifier: str
   certainty: enum:certainty
   superseded: bool
+  stale: bool
   reading: str
   anchors: list
   todo: list

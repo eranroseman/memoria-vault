@@ -1,6 +1,5 @@
 {
   "search_roots": [
-    ".agents",
     ".github",
     ".pre-commit-config.yaml",
     "AGENTS.md",

@@ -9,25 +9,30 @@ grand_parent: Reference
 
 `memoria` is the standalone product surface. It operates on a workspace through
 `--workspace <path>` and does not require optional adapters.
-This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
+This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 
 ## Core
 
 | Command | Purpose |
 | --- | --- |
-| `memoria init [--no-obsidian]` | Create/scaffold a workspace. By default it seeds Memoria's Obsidian plugin and core settings; `--no-obsidian` skips `.obsidian/`. |
+| `memoria init [--no-obsidian]` | Create/scaffold a workspace. By default it seeds Memoria's Obsidian plugin, core settings, and Base views; `--no-obsidian` skips `.obsidian/` and root `.base` view settings. Before writing, init rejects planned paths that traverse a symlink or junction, plus Git-file and common-directory indirection. |
 | `memoria status` | Show workspace state. |
 | `memoria surface schema --json` | Print the shared surface-contract action registry used by CLI/HTTP/MCP drift checks. |
 | `memoria doctor --check search` | Check local search index state. |
-| `memoria doctor --check runner [--provider local\|gateway] [--repair]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. `--repair` reseeds workspace scaffold files (overwriting existing ones) before reporting. |
+| `memoria doctor --check runner [--provider local\|gateway] [--repair]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. `--repair` restores runtime scaffold files and missing view preferences, while preserving existing PI-owned view preferences, before reporting. |
 | `memoria doctor` | Report local runtime checks and backup health. It exits nonzero when blob files lack configured coverage or a current valid local-backup stamp. |
 | `memoria doctor bundle [--redacted]` | Emit a diagnostic bundle and propagate the same failing backup-health status; `--redacted` marks the bundle as redacted for sharing. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
+| `memoria secrets set <NAME>` | Store one named user-scope secret without echoing its value. |
+| `memoria secrets list` | Report credential status and provenance without printing secret values. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
-| `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |
-| `memoria serve --http [--read-scope <path>]` | Run the token-authenticated [local HTTP transport](local-http-transport.md) over `engine/api`, optionally capped to one or more read scopes. |
-| `memoria migrate --from-alpha15 <path>` | Import an alpha.15 vault into the current root layout. |
+| `memoria explore <topic> [--versus <topic>] [--project <project>] [--depth 1\|2]` | [Surface a checked topic neighborhood](../../how-to-guides/knowledge/explore-a-topic-neighborhood.md). This is distinct from `memoria project explore`, which lists exploration-channel candidates. |
+| `memoria serve --watch` | Run the polling file-watch loop over the same scan engine. |
+| `memoria serve --http [--read-scope <path>]` | Run the [local HTTP transport](local-http-transport.md) over `engine/api`, optionally capped to one or more read scopes. That reference defines its loopback, authentication, rendezvous, and on-demand lifecycle contract. |
+| `memoria serve --stop` | Stop the live local HTTP server for this workspace after validating its runtime coordinates. |
+| `memoria handshake --vault <path> [--spawn]` | Return live local HTTP coordinates for a vault; `--spawn` starts an on-demand ephemeral server when none is live. |
 | `memoria mcp --workspace <path> --read-scope <path>` | Run the optional [FastMCP stdio transport](mcp-transport.md) with a required engine read scope. |
+| `memoria help` | Show registered surfaces grouped by the five workspace jobs. |
 | `memoria eval select-models [--operation <id>] [--mode test\|live]` | Run the seeded-error bar against manifest-declared runner pins and report the selected passing runner. |
 
 ## Work
@@ -63,7 +68,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria check` | Mark a Concept checked as the PI, or run integrity-owned workspace checks when no target is given. |
 | `memoria show/list [--type note\|work\|hub\|project]/export` | Inspect and export Concepts; `--type` filters to exactly one type per invocation — `list --type work` enumerates only catalog Works, never merged with note/hub/project Concepts. |
 | `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
-| `memoria steering show/edit` | Read steering; editing is PI-only. |
+| `memoria steering show/edit` | Show effective steering—derived from active projects, hubs, and unresolved question notes—with per-token provenance; edit the PI-owned `steering.md` watch/mute override. |
 | `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
 | `memoria journal tail/show/verify` | Inspect journal entries or verify the authoritative hash chain, live-tip anchor, committed anchor prefix, and JSONL export subset. |
 
@@ -92,6 +97,9 @@ This roster mirrors the live argparse tree:
 - `memoria eval seeded-error-verdict`
 - `memoria eval select-models`
 - `memoria export`
+- `memoria explore`
+- `memoria handshake`
+- `memoria help`
 - `memoria init`
 - `memoria journal show`
 - `memoria journal tail`
@@ -99,7 +107,6 @@ This roster mirrors the live argparse tree:
 - `memoria link`
 - `memoria list`
 - `memoria mcp`
-- `memoria migrate`
 - `memoria new hub`
 - `memoria new note`
 - `memoria new project`
@@ -124,6 +131,8 @@ This roster mirrors the live argparse tree:
 - `memoria request resume`
 - `memoria request retry`
 - `memoria request show`
+- `memoria secrets list`
+- `memoria secrets set`
 - `memoria serve`
 - `memoria show`
 - `memoria status`

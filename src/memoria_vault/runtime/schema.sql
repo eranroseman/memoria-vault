@@ -184,6 +184,8 @@ CREATE TABLE IF NOT EXISTS work_graph_edges (
     discovered_at TEXT NOT NULL,
     PRIMARY KEY (work_id, relation_type, target_id)
 );
+CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target
+    ON work_graph_edges(target_id);
 CREATE TABLE IF NOT EXISTS work_aspects (
     work_id TEXT NOT NULL,
     aspect_type TEXT NOT NULL CHECK (
@@ -238,16 +240,22 @@ CREATE TABLE IF NOT EXISTS file_index_state (
     indexed_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS concept_edges (
+    edge_id TEXT NOT NULL DEFAULT '',
     source_concept_id TEXT NOT NULL,
     relation_type TEXT NOT NULL CHECK (
         relation_type IN ('supports', 'contradicts', 'extends', 'tension')
     ),
     target_concept_id TEXT NOT NULL,
+    attributes_json TEXT NOT NULL DEFAULT '{}',
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
     source_path TEXT NOT NULL DEFAULT '',
     updated_at TEXT NOT NULL,
     PRIMARY KEY (source_concept_id, relation_type, target_concept_id)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
+    ON concept_edges(edge_id) WHERE edge_id != '';
+CREATE INDEX IF NOT EXISTS idx_concept_edges_target
+    ON concept_edges(target_concept_id);
 CREATE TRIGGER IF NOT EXISTS concept_verdicts_passage_cascade_insert
 AFTER INSERT ON concept_verdicts
 BEGIN
@@ -265,6 +273,26 @@ BEGIN
     WHERE concept_id = NEW.concept_id
        OR path = NEW.concept_id
        OR ('catalog/sources/' || work_id) = NEW.concept_id;
+END;
+CREATE TRIGGER IF NOT EXISTS concept_verdicts_edge_demotion_insert
+AFTER INSERT ON concept_verdicts
+WHEN NEW.check_status IN ('unchecked', 'quarantined')
+BEGIN
+    UPDATE concept_edges
+    SET check_status = NEW.check_status
+    WHERE source_path = NEW.concept_id
+      AND source_path != ''
+      AND relation_type != 'tension';
+END;
+CREATE TRIGGER IF NOT EXISTS concept_verdicts_edge_demotion_update
+AFTER UPDATE OF check_status ON concept_verdicts
+WHEN NEW.check_status IN ('unchecked', 'quarantined')
+BEGIN
+    UPDATE concept_edges
+    SET check_status = NEW.check_status
+    WHERE source_path = NEW.concept_id
+      AND source_path != ''
+      AND relation_type != 'tension';
 END;
 CREATE TRIGGER IF NOT EXISTS catalog_sources_passage_cascade_update
 AFTER UPDATE OF check_status ON catalog_sources
@@ -298,7 +326,7 @@ CREATE TABLE IF NOT EXISTS code_artifacts (
     record_path TEXT NOT NULL UNIQUE,
     source_dir TEXT NOT NULL,
     output_dir TEXT NOT NULL,
-    purpose TEXT NOT NULL CHECK (purpose IN ('warrant', 'deliverable', 'both')),
+    purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both')),
     approved_command_json TEXT NOT NULL DEFAULT '[]',
     declared_inputs_json TEXT NOT NULL DEFAULT '[]',
     declared_outputs_json TEXT NOT NULL DEFAULT '[]',
@@ -375,4 +403,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 12;
+PRAGMA user_version = 15;

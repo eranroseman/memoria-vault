@@ -444,7 +444,8 @@ def _fill(template, manifest: dict):
 # each entry, including two corrections vs the original brief
 # (curate-note-link, enrich-source).
 #
-# Complete as of Task 7b-2: all 52 cataloged operation ids are registered
+# Every cataloged operation id has a floor entry; cross-worktree rendezvous may
+# add independently owned operations before this branch merges.
 # (7 seeded in Task 6, 22 in Task 7b-1, the final 23 in Task 7b-2) — see
 # test_floor_coverage.py's test_every_operation_has_a_floor_entry.
 OPERATION_REGISTRY: dict[str, dict] = {
@@ -616,6 +617,24 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "PDF capture requires PyMuPDF",
     },
+    # O2 A.2 adds a policy-bound remote-PDF operation. The floor sweep runs as
+    # actor=agent, so this PI-only operation refuses before resolver, policy,
+    # or network work can run.
+    "capture-remote-pdf-source": {
+        "payload": {
+            "fetch": {
+                "method": "pdf-url",
+                "url": "https://www.frontiersin.org/articles/floor.pdf",
+            },
+            "capture": {
+                "work_id": "floor-sweep-remote-pdf",
+                "title": "Floor sweep remote PDF source",
+                "description": "A remote PDF captured by the floor sweep.",
+            },
+        },
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
     # worker.py:1156-1194 (`_run_capture_source_operation`) requires
     # work_id/title/description/content_text; dispatches to
     # capture.py:stage_capture_payload -> stage_catalog_source, which has no
@@ -781,15 +800,16 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "done",
         "creates": [".memoria/eval/last-run.md"],
     },
-    # worker.py:723-747 pops project_path (required) plus optional
-    # format/output_path/ready_only/draft. With the defaults (markdown,
-    # ready_only=False, no output_path), knowledge.py:write_project_export
-    # renders and returns the export content inline rather than writing a
-    # file (output_path is only written when the payload supplies one) —
-    # confirmed live: "done", output_path "" and a populated `content`
-    # field; no file to assert via `creates`.
+    # worker.py:705-729 pops project_path (required) plus optional
+    # format/output_path/allow_unready/draft. The non-draft readiness gate is
+    # enforced by default (V1 non-draft-export-gate); the floor project has
+    # no paper plan, so the sweep passes allow_unready=True to exercise the
+    # explicit opt-out and keep the render path observable. With markdown and
+    # no output_path, knowledge.py:write_project_export returns the export
+    # content inline rather than writing a file — no file to assert via
+    # `creates`.
     "export-project": {
-        "payload": {"project_path": "{project}"},
+        "payload": {"project_path": "{project}", "allow_unready": True},
         "expect": "done",
     },
     # worker.py:936-952, same run_prompt_operation path as analyze-claims
@@ -838,7 +858,7 @@ OPERATION_REGISTRY: dict[str, dict] = {
     },
     # See integrity-citation-survival-check above for the shared dispatch
     # path. check_contradiction_links (runtime/integrity.py:633) flags
-    # checked digests/works with stale `contradictions` targets; none exist
+    # checked digests with stale `links.contradicts` targets; none exist
     # in the seed. Confirmed live: "done".
     "integrity-contradiction-check": {
         "payload": {},
@@ -1017,13 +1037,18 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # worker.py:1095-1114 pops an optional `paths` list (omitted here to
     # regenerate every tracked projection), dispatching to
     # projections.py:write_tracked_projections. Confirmed live: "done",
-    # outputs ["index.md", "bibliography.bib",
+    # outputs ["index.md", "bibliography.bib", "AGENTS.md",
     # "projects/package-gate/argument.canvas"] (the seed's one project's
     # existing canvas).
     "regenerate-tracked-projections": {
         "payload": {},
         "expect": "done",
-        "creates": ["index.md", "bibliography.bib", "projects/package-gate/argument.canvas"],
+        "creates": [
+            "index.md",
+            "bibliography.bib",
+            "AGENTS.md",
+            "projects/package-gate/argument.canvas",
+        ],
     },
     # worker.py:55, shares acknowledge-attention's branch (worker.py:831-849,
     # `operation_id in {"acknowledge-attention", "resolve-attention"}`).
@@ -1032,6 +1057,14 @@ OPERATION_REGISTRY: dict[str, dict] = {
     # (Task 7b-1) — confirmed live.
     "resolve-attention": {
         "payload": {"target_id": "{attention_path}"},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
+    # worker.py resolve-evidence branch delegates to
+    # knowledge.py:resolve_evidence_review. PROTECTED_OPERATION_ACTORS is
+    # "pi"-only — same actor-check-fires-first shape as resolve-attention.
+    "resolve-evidence": {
+        "payload": {"evidence_id": "ev-00000000", "decision": "accept"},
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
@@ -1195,6 +1228,11 @@ ARG_TABLE: dict[str, dict] = {
         "cli": None,
         "http": ("GET", "/exploration"),
         "mcp": ("exploration", {}),
+    },
+    "explore.read": {
+        "cli": ["explore", "floor"],
+        "http": None,
+        "mcp": None,
     },
     # event_id=3 is the seed's create-concept event for note_claim — the
     # first journal event carrying a real output_id/path (event 1-2 are the

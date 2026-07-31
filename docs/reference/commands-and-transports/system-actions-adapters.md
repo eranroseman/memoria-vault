@@ -14,7 +14,7 @@ authority. For the guarded operation ID list, see [System actions](system-action
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Vault read / gated write | optional editor or BYO-agent adapter | Reads may inspect workspace files; writes must call the runtime policy hook and then enter the same checked request/journal boundary as CLI work. |
+| Vault read / gated write | optional editor or BYO-agent adapter | Reads may inspect workspace files. Allowed adapter writes pass through the runtime policy hook, with paired before/after audit records. Worker request and journal mutations use a separate CLI/engine path. |
 | Literature discovery | provider-backed runtime operations | Uses configured provider allowlists and replay fixtures for tests; no live Zotero or required external agent server is authoritative. |
 
 Two commands that are sometimes mistaken for adapter surfaces are plain core

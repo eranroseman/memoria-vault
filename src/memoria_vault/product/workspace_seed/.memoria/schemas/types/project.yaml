@@ -1,5 +1,8 @@
 type: project
 category: projects
+concept_type: project
+enums:
+  consequence: [grounds-lost, warrant-lost, qualifier-regression, rebuttal-strengthened]
 required:
   type: literal:project
   id: ulid
@@ -9,10 +12,12 @@ required:
 optional:
   aliases: list
   archived: bool
+  consequence: enum:consequence
   description: str
   thesis: str
   outcome_frame: map
   paper_plan: map
   question: str
+  stale: bool
   todo: list
   x: map

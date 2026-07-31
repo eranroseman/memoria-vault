@@ -21,6 +21,16 @@ def test_plugin_scope_doctor_allows_memoria_obsidian_package(tmp_path):
     assert doctor.check(root) == []
 
 
+def test_plugin_scope_doctor_allows_ring1_view_preference_files(tmp_path):
+    root = tmp_path / "repo"
+    obsidian = root / "src/memoria_vault/product/workspace_seed/.obsidian"
+    obsidian.mkdir(parents=True)
+    (obsidian / "graph.json").write_text("{}", encoding="utf-8")
+    (obsidian / "types.json").write_text("{}", encoding="utf-8")
+
+    assert doctor.check(root) == []
+
+
 def test_plugin_scope_doctor_flags_removed_payloads(tmp_path):
     root = tmp_path / "repo"
     (root / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra").mkdir(parents=True)

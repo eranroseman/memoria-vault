@@ -39,6 +39,7 @@ _HTML_BLOCK_OPEN_RE = re.compile(
     """
 )
 _ATX_HEADING_PREFIX_RE = re.compile(r"#{1,6}(?:[ \t]+|$)")
+_ATX_HEADING_RE = re.compile(r"^ {0,3}#{1,6}(?:[ \t]+|$)")
 _LIST_PREFIX_RE = re.compile(r"(?:[-+*]|\d{1,9}[.)])[ \t]+")
 _THEMATIC_OR_SETEXT_RE = re.compile(r"^[ \t]{0,3}(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|[-=]+[ \t]*)$")
 _IMAGE_EMBED_RE = re.compile(r"!\[\[([^\]\n]*)\]\]")
@@ -54,6 +55,11 @@ _EXTERNAL_URL_RE = re.compile(
     re.IGNORECASE,
 )
 _TRAILING_URL_PUNCTUATION = ".,;:!?"
+
+
+def contains_external_url(value: str) -> bool:
+    """Return whether *value* contains a URL neutralized in Markdown output."""
+    return _EXTERNAL_URL_RE.search(value) is not None
 
 
 def _markdown_physical_lines(text: str) -> list[str]:
@@ -185,7 +191,47 @@ def _has_valid_tilde_fence_info(line: str, opening: re.Match[str]) -> bool:
 
 def _tilde_fence_can_start_block(plain_lines: list[str]) -> bool:
     """Return whether a tilde fence is at a Markdown block boundary."""
-    return not plain_lines or not plain_lines[-1].strip()
+    if not plain_lines:
+        return True
+    previous = plain_lines[-1].rstrip("\r\n")
+    return bool(
+        not previous.strip()
+        or _ATX_HEADING_RE.match(previous)
+        or _THEMATIC_OR_SETEXT_RE.fullmatch(previous)
+    )
+
+
+def classify_fenced_code_opening(
+    line: str, plain_lines: list[str]
+) -> tuple[re.Match[str] | None, bool]:
+    """Classify a fence opener using the renderer's accepted-fence grammar.
+
+    The second result is true when an ambiguous tilde opener must render as
+    literal prose rather than start a code block.
+    """
+    opening = _FENCE_OPEN_RE.match(line)
+    if opening is None:
+        return None, False
+    tilde_fence = opening.group("fence")[0] == "~"
+    tilde_fence_has_attributes = "{" in line[opening.end() :]
+    tilde_fence_at_block_boundary = _tilde_fence_can_start_block(plain_lines)
+    if not _is_fenced_code_opening(line, opening):
+        return None, False
+    if tilde_fence and not _has_valid_tilde_fence_info(line, opening):
+        return opening, True
+    if tilde_fence and not tilde_fence_at_block_boundary:
+        return (opening, True) if tilde_fence_has_attributes else (None, False)
+    return opening, False
+
+
+def fenced_code_closes(line: str, character: str, length: int) -> bool:
+    """Return whether *line* closes a fence accepted by the shared classifier."""
+    return bool(
+        re.match(
+            rf"^ {{0,3}}{re.escape(character)}{{{length},}}[ \t]*(?:\r?\n)?$",
+            line,
+        )
+    )
 
 
 def _markdown_block_line_context(line: str) -> tuple[str, bool]:
@@ -344,10 +390,19 @@ def _literalize_fence_opening(line: str, opening: re.Match[str]) -> str:
     return f"{line[: opening.start('fence')]}{entity * len(opening['fence'])}{line[opening.end('fence') :]}"
 
 
+def _literalize_untrusted_fence_opening(line: str, opening: re.Match[str]) -> str:
+    """Make an unsupported header prose after stripping active fence attributes."""
+    return _literalize_fence_opening(_neutralize_fence_opening(line, opening), opening)
+
+
 def _neutralize_nested_fence_opening(line: str) -> str:
     """Make attribute-bearing nested fence openers literal."""
     opening = _NESTED_FENCE_OPEN_RE.match(line)
     if opening is None or "{" not in opening["info"]:
+        return line
+    if re.fullmatch(r" {1,3}", opening["prefix"]):
+        # These are still top-level fences under CommonMark. Leave them for the
+        # shared classifier so a literalized opener can pair with its bare closer.
         return line
     return _literalize_fence_opening(line, opening)
 
@@ -357,6 +412,46 @@ def _neutralize_nested_fence_attributes(body: str) -> str:
     return "".join(
         _neutralize_nested_fence_opening(line) for line in _markdown_physical_lines(body)
     )
+
+
+def has_unterminated_fenced_code_block(body: str) -> bool:
+    """Return whether *body* leaves a CommonMark fenced-code block open."""
+    body = _neutralize_nested_fence_attributes(body)
+    plain_lines: list[str] = []
+    fence_character: str | None = None
+    fence_length = 0
+    literal_tilde_fence_length = 0
+    for line in _markdown_physical_lines(body):
+        if fence_character is not None:
+            if fenced_code_closes(line, fence_character, fence_length):
+                fence_character = None
+                fence_length = 0
+            continue
+        if literal_tilde_fence_length:
+            if fenced_code_closes(line, "~", literal_tilde_fence_length):
+                closer = _FENCE_OPEN_RE.match(line)
+                if closer is not None:
+                    plain_lines.append(_literalize_fence_opening(line, closer))
+                else:  # Defensive: fenced_code_closes() normally guarantees this match.
+                    plain_lines.append(line)
+                literal_tilde_fence_length = 0
+            else:
+                plain_lines.append(line)
+            continue
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
+        if literalize and opening is not None:
+            plain_lines.append(_literalize_untrusted_fence_opening(line, opening))
+            if opening.group("fence").startswith("~"):
+                literal_tilde_fence_length = len(opening.group("fence"))
+            continue
+        if opening is not None:
+            plain_lines.clear()
+            fence = opening.group("fence")
+            fence_character = fence[0]
+            fence_length = len(fence)
+            continue
+        plain_lines.append(line)
+    return fence_character is not None
 
 
 def neutralize_untrusted_markdown(body: str) -> str:
@@ -373,44 +468,37 @@ def neutralize_untrusted_markdown(body: str) -> str:
     fence_character: str | None = None
     fence_length = 0
     fence_lines: list[str] = []
+    literal_tilde_fence_length = 0
 
     for line in _markdown_physical_lines(body):
         if fence_character is not None:
             fence_lines.append(line)
-            closing = re.match(
-                rf"^ {{0,3}}{re.escape(fence_character)}"
-                rf"{{{fence_length},}}[ \t]*(?:\r?\n)?$",
-                line,
-            )
-            if closing:
+            if fenced_code_closes(line, fence_character, fence_length):
                 output.extend(fence_lines)
                 fence_character = None
                 fence_length = 0
                 fence_lines.clear()
             continue
 
-        opening = _FENCE_OPEN_RE.match(line)
-        tilde_fence = bool(opening and opening.group("fence")[0] == "~")
-        tilde_fence_has_attributes = bool(opening and "{" in line[opening.end() :])
-        if (
-            opening
-            and tilde_fence
-            and tilde_fence_has_attributes
-            and not _tilde_fence_can_start_block(plain_lines)
-        ):
-            plain_lines.append(_literalize_fence_opening(line, opening))
+        if literal_tilde_fence_length:
+            if fenced_code_closes(line, "~", literal_tilde_fence_length):
+                closer = _FENCE_OPEN_RE.match(line)
+                if closer is not None:
+                    plain_lines.append(_literalize_fence_opening(line, closer))
+                else:  # Defensive: fenced_code_closes() normally guarantees this match.
+                    plain_lines.append(line)
+                literal_tilde_fence_length = 0
+            else:
+                plain_lines.append(line)
             continue
-        if (
-            opening
-            and _is_fenced_code_opening(line, opening)
-            and (
-                not tilde_fence
-                or (
-                    _tilde_fence_can_start_block(plain_lines)
-                    and (tilde_fence_has_attributes or _has_valid_tilde_fence_info(line, opening))
-                )
-            )
-        ):
+
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
+        if literalize and opening is not None:
+            plain_lines.append(_literalize_untrusted_fence_opening(line, opening))
+            if opening.group("fence").startswith("~"):
+                literal_tilde_fence_length = len(opening.group("fence"))
+            continue
+        if opening is not None:
             output.append(_neutralize_inline_text("".join(plain_lines)))
             plain_lines.clear()
             fence = opening.group("fence")

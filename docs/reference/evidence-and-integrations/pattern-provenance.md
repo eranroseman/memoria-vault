@@ -53,25 +53,28 @@ used as framing, or rejected. The design argument is
 
 ## Ignore
 
-| Refused pattern | Example sources | Reason |
-| --- | --- | --- |
-| Full autonomous scientist mode | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), Sibyl, AI-Researcher, Auto-Research | Runs end-to-end without Memoria's structural gate. |
-| Tree search over synthesis | [AIDE ML](bibliography.md#aideml), AI Scientist v2 | Requires a fixed scalar metric; synthesis quality is not scalar. |
-| Autonomous keep/revert | Karpathy Autoresearch | The three safe-loop preconditions fail for knowledge work. |
-| Co-trained generator + reviewer | [CycleResearcher](bibliography.md#weng2025cycleresearcher) | The reviewer's learned preferences become the objective. |
-| Tournament/evolution loop | [AI co-scientist](bibliography.md#gottweis2025aicoscientist) | Sound memory architecture, refused autonomy posture. |
-| Preferences internalized into weights | [NanoResearch](bibliography.md#xu2026nanoresearch) | Preferences stop being inspectable, auditable, or revertible. |
-| Confidence-routed gate bypass | AutoResearchClaw SmartPause | Turns a structural gate into a probabilistic one. |
-| Harness without a gate | [Sibyl-AutoResearch](bibliography.md#wang2026sibyl) | Harness rhetoric does not imply human control. |
-| Conversation as durable substrate | [AutoGen](bibliography.md#wu2023autogen) | Conversation is ephemeral; the vault is memory. |
-| Generalist sandboxed dev worker | [OpenHands](bibliography.md#wang2025openhands) | Permission model is too coarse for per-zone, per-profile policy. |
+The design reasons for these refusals are in [Why these patterns are
+refused](../../explanation/rationale/evidence/why-pattern-provenance.md#why-these-patterns-are-refused).
+
+| Refused pattern | Example sources |
+| --- | --- |
+| Full autonomous scientist mode | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), Sibyl, AI-Researcher, Auto-Research |
+| Tree search over synthesis | [AIDE ML](bibliography.md#aideml), AI Scientist v2 |
+| Autonomous keep/revert | Karpathy Autoresearch |
+| Co-trained generator + reviewer | [CycleResearcher](bibliography.md#weng2025cycleresearcher) |
+| Tournament/evolution loop | [AI co-scientist](bibliography.md#gottweis2025aicoscientist) |
+| Preferences internalized into weights | [NanoResearch](bibliography.md#xu2026nanoresearch) |
+| Confidence-routed gate bypass | AutoResearchClaw SmartPause |
+| Harness without a gate | [Sibyl-AutoResearch](bibliography.md#wang2026sibyl) |
+| Conversation as durable substrate | [AutoGen](bibliography.md#wu2023autogen) |
+| Generalist sandboxed dev worker | [OpenHands](bibliography.md#wang2025openhands) |
 
 ## Cross-cutting findings
 
 | Finding | Sources | Design effect |
 | --- | --- | --- |
 | Generator-verifier, sample-and-rank | [Cobbe et al. 2021](bibliography.md#cobbe2021verifiers), [Perez et al. 2022](bibliography.md#perez2022modelwritten) | Formalizes "engines write, agents judge" at claim grain. |
-| Evidence-grounded verification | [FEVER](bibliography.md#thorne2018fever) | Build supports/contradicts on entailment plus recorded warrant, not embedding cosine. |
+| Evidence-grounded verification | [FEVER](bibliography.md#thorne2018fever) | Build supports/contradicts on entailment plus recorded grounds, not embedding cosine. |
 | Temporal coverage | [TEMPO](bibliography.md#abdallah2026tempo) | Treat supersession and evidence date as load-bearing retrieval dimensions. |
 | HCI lineage of the gate | [Horvitz](bibliography.md#horvitz1999mixedinitiative), [Find-Fix-Verify](bibliography.md#bernstein2010soylent), [Amershi](bibliography.md#amershi2019guidelines), [Ackerman](bibliography.md#ackerman2000cscw) | Keeps the PI as adjudicator; separates generation from verification. |
 | Indirect-prompt-injection hardening | [Greshake et al.](bibliography.md#greshake2023injection), [AgentDojo](bibliography.md#debenedetti2024agentdojo) | Confirms least-privilege tool allowlists, runtime write policy, read scopes, and sealed untrusted-data prompt blocks. |

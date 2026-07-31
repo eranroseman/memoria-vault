@@ -2,9 +2,8 @@
 
 `plugin_provenance_doctor` guards which files the shipped workspace seed
 carries; this guards their *content* links, which nothing else covers: seed
-references to published docs, the vault note templates' fenced frontmatter, and
-vault wikilink discipline (link text is the page title, and every [[note]]
-resolves to a real seed note).
+references to published docs and vault wikilink discipline (link text is the
+page title, and every [[note]] resolves to a real seed note).
 """
 
 from __future__ import annotations
@@ -20,8 +19,6 @@ LINK_TEXT_RE = re.compile(r"(?<!\!)\[([^\]]*)\]\(([^)]+)\)")
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
-YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
-DROPPED_KEYS = ("mode", "audience", "tags")
 SCRATCH_DIRS = {"tmp"}
 
 
@@ -72,13 +69,6 @@ def _check_seed_docs_refs(errors: list[str]) -> None:
             errors.append(f"{path}: uses a github blob URL for docs/ — use the Pages URL instead")
 
 
-def _check_template_frontmatter(md: Path, errors: list[str]) -> None:
-    for block in YAML_FENCE_RE.findall(_read(md)):
-        for key in DROPPED_KEYS:
-            if re.search(rf"^\s*{key}\s*:", block, re.MULTILINE):
-                errors.append(f"{md}: template frontmatter carries disallowed key '{key}:'")
-
-
 def _check_link_text(md: Path, errors: list[str]) -> None:
     text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", _read(md)))
     for label, target in LINK_TEXT_RE.findall(text):
@@ -124,11 +114,6 @@ def _collect_errors() -> list[str]:
     errors: list[str] = []
     _check_seed_docs_refs(errors)
 
-    tmpl_dir = SEED / "system/templates"
-    if tmpl_dir.is_dir():
-        for md in sorted(tmpl_dir.glob("*.md")):
-            _check_template_frontmatter(md, errors)
-
     if SEED.is_dir():
         vault_stems = {
             p.stem.lower()
@@ -147,3 +132,24 @@ def _collect_errors() -> list[str]:
 def test_workspace_seed_links_are_clean() -> None:
     errors = _collect_errors()
     assert errors == [], "\n".join(errors)
+
+
+def test_wikilink_detectors_flag_bare_and_broken_links(tmp_path: Path) -> None:
+    md = tmp_path / "note.md"
+    md.write_text(
+        "A [[Missing Note]] here.\n"
+        "An [[absent-note|Absent Note]] there.\n"
+        "A [[real-note|Real Note]] link that resolves.\n",
+        encoding="utf-8",
+    )
+
+    alias_errors: list[str] = []
+    _check_wikilink_aliases(md, alias_errors)
+    broken_errors: list[str] = []
+    _check_broken_wikilinks(md, broken_errors, {"real-note"})
+
+    assert alias_errors == [f"{md}: bare wikilink [[Missing Note]] — alias it with the page title"]
+    assert broken_errors == [
+        f"{md}: wikilink [[Missing Note]] resolves to no vault note",
+        f"{md}: wikilink [[absent-note|Absent Note]] resolves to no vault note",
+    ]

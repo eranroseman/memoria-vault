@@ -9,6 +9,7 @@ from memoria_vault.runtime.search_index import (
     _bm25,
     _tokens,
     checked_concepts,
+    checked_search_universe,
     evaluate_bm25,
 )
 from memoria_vault.runtime.search_index import (
@@ -132,7 +133,6 @@ def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path
         encoding="utf-8",
     )
 
-    assert checked_concepts(vault) == []
     assert answer_query(vault, "tampered alpha")["sources"] == []
     assert state.concept_check_status(vault, rel) == "checked"
     with state.connect(vault) as conn:
@@ -148,6 +148,53 @@ def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path
     assert row["status"] == "pending"
     assert row["schedule_id"] == "read-guard"
     assert json.loads(row["args_json"])["target_path"] == rel
+    assert checked_concepts(vault) == []
+
+
+def test_checked_search_universe_passively_excludes_gated_files(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    good = note(vault, "good", "checked", "safe retrieval content")
+    tampered = note(vault, "tampered", "checked", "original retrieval content")
+    quarantined = note(vault, "quarantined", "quarantined", "QUARANTINED CANARY")
+    tampered.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: tampered\n---\nTAMPERED CANARY\n",
+        encoding="utf-8",
+    )
+
+    with state.connect(vault) as conn:
+        before = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+
+    universe = checked_search_universe(vault, enqueue_scan=False)
+
+    assert [document["path"] for document in universe["documents"]] == [
+        good.relative_to(vault).as_posix()
+    ]
+    assert universe["excluded_strata"] == {"unchecked": 0, "stale": 0, "gated": 2}
+    serialized = json.dumps(universe, default=str, sort_keys=True)
+    assert tampered.relative_to(vault).as_posix() not in serialized
+    assert quarantined.relative_to(vault).as_posix() not in serialized
+    assert "TAMPERED CANARY" not in serialized
+    assert "QUARANTINED CANARY" not in serialized
+    with state.connect(vault) as conn:
+        after = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    assert after == before
+
+
+def test_read_barrier_can_passively_refuse_missing_checked_record(tmp_path: Path) -> None:
+    from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+
+    vault = workspace(tmp_path)
+    path = note(vault, "missing-record", "checked", "safe retrieval content")
+    rel = path.relative_to(vault).as_posix()
+    with state.connect(vault) as conn:
+        conn.execute("DELETE FROM outputs WHERE output_id = ?", (rel,))
+        before = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+
+    assert is_consumable_checked_file(vault, rel, enqueue_scan=False) is False
+
+    with state.connect(vault) as conn:
+        after = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    assert after == before
 
 
 def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
@@ -297,7 +344,7 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
         "checked",
         "checked",
         "alpha beta",
-        "contradictions:\n  - notes/tension.md\n",
+        "links:\n  contradicts:\n    - notes/tension.md\n",
     )
     stale = note(vault, "superseded", "checked", "alpha stale")
     candidate = note(vault, "candidate", "checked", "alpha candidate")
@@ -348,7 +395,75 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
 
     missing = answer_query(vault, "absent")
     assert missing["sources"] == []
-    assert missing["unknowns"] == ["No checked current sources matched: absent"]
+    assert missing["unknowns"] == [
+        "0 of 2 candidates matched; 0 unchecked documents were not searched"
+    ]
+    assert missing["pipeline_counts"] == [
+        {"stage": "universe", "count": 2},
+        {"stage": "ranked", "count": 0},
+        {"stage": "returned", "count": 0},
+    ]
+    assert missing["excluded_strata"] == {"unchecked": 0, "stale": 1, "gated": 0}
+
+
+def test_zero_hit_answer_query_is_honest_about_denominators(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha beta")
+    note(vault, "pending", "unchecked", "poison alpha")
+
+    answer = answer_query(vault, "absentterm")
+
+    assert answer["sources"] == []
+    assert answer["unknowns"] == [
+        "0 of 1 candidates matched; 1 unchecked documents were not searched"
+    ]
+    assert answer["pipeline_counts"] == [
+        {"stage": "universe", "count": 1},
+        {"stage": "ranked", "count": 0},
+        {"stage": "returned", "count": 0},
+    ]
+    assert answer["excluded_strata"] == {"unchecked": 1, "stale": 0, "gated": 0}
+
+
+def test_gated_document_rides_through_as_stratum_count_without_text(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "visible", "checked", "alpha beta")
+    gated = note(vault, "gated", "checked", "alpha zzgatedsecret")
+    gated.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: gated\n---\ntampered zzgatedsecret\n",
+        encoding="utf-8",
+    )
+    note(vault, "quarantined", "quarantined", "alpha zzquarantinesecret")
+
+    answer = answer_query(vault, "alpha")
+
+    assert [source["path"] for source in answer["sources"]] == ["notes/visible.md"]
+    assert answer["pipeline_counts"] == [
+        {"stage": "universe", "count": 1},
+        {"stage": "ranked", "count": 1},
+        {"stage": "returned", "count": 1},
+    ]
+    assert answer["excluded_strata"] == {"unchecked": 0, "stale": 0, "gated": 2}
+    payload = json.dumps(answer)
+    assert "zzgatedsecret" not in payload
+    assert "zzquarantinesecret" not in payload
+    assert "notes/gated.md" not in payload
+    assert "notes/quarantined.md" not in payload
+
+
+def test_answer_query_trace_reports_counts_scores_and_rerank_off(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha beta")
+
+    traced = answer_query(vault, "alpha", trace=True)
+
+    assert traced["trace"]["rerank"] == "off"
+    assert traced["trace"]["pipeline_counts"] == traced["pipeline_counts"]
+    assert traced["trace"]["scores"] == [
+        {"path": source["path"], "score": source["score"]} for source in traced["sources"]
+    ]
+    assert "fusion_inputs" not in traced["trace"]
+    assert "trace" not in answer_query(vault, "alpha")
 
 
 def test_answer_query_carries_project_context(tmp_path: Path) -> None:

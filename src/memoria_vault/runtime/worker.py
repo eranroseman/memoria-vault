@@ -53,6 +53,7 @@ INTEGRITY_FINDING_OPERATIONS = {
 PROTECTED_OPERATION_ACTORS = {
     "acknowledge-attention": "pi",
     "resolve-attention": "pi",
+    "resolve-evidence": "pi",
     "record-copi-interview": "pi",
     "curate-note-candidate": "pi",
     "curate-note-link": "pi",
@@ -61,6 +62,7 @@ PROTECTED_OPERATION_ACTORS = {
     "frame-paper": "pi",
     "promote-draft-passage": "pi",
     "cascade-rollback": "pi",
+    "capture-remote-pdf-source": "pi",
     "trace-integrity-scan": "integrity",
     "observe-pi-edits": "integrity",
 }
@@ -714,7 +716,7 @@ def _run_operation_job(
             context=context,
             export_format=str(payload.get("format") or "markdown"),
             output_path=str(payload.get("output_path") or ""),
-            ready_only=bool(payload.get("ready_only")),
+            allow_unready=_payload_bool(payload, "allow_unready", False),
             draft=bool(payload.get("draft")),
         )
         return {
@@ -753,6 +755,7 @@ def _run_operation_job(
             k=k,
             include_stale=bool(payload.get("include_stale", False)),
             project_id=str(payload.get("project_id") or ""),
+            trace=_payload_bool(payload, "trace", False),
         )
     if operation_id == "run-seeded-error-verdict":
         from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict
@@ -829,6 +832,22 @@ def _run_operation_job(
             reason=str(payload.get("reason") or operation_id),
         )
         return {"commit": result["commit"], "resolution": result["event"]}
+    if operation_id == "resolve-evidence":
+        from memoria_vault.runtime.knowledge import resolve_evidence_review
+
+        evidence_id = str(payload.get("evidence_id") or "").strip()
+        if not evidence_id:
+            raise ValueError("resolve-evidence requires evidence_id")
+        event = resolve_evidence_review(
+            vault,
+            evidence_id,
+            actor=context.actor,
+            machine=context.machine,
+            decision=str(payload.get("decision") or ""),
+            reason=str(payload.get("reason") or ""),
+            warrant=str(payload.get("warrant") or "").strip(),
+        )
+        return {"commit": "", "resolution": event}
     if operation_id == "observe-pi-edits":
         from memoria_vault.runtime.projections import (
             changed_tracked_projection_paths,
@@ -942,7 +961,6 @@ def _run_operation_job(
             csl_json["URL"] = str(payload.get("resource") or "")
 
         memoria = dict(csl_json["memoria"]) if isinstance(csl_json.get("memoria"), dict) else {}
-        memoria.pop("topics", None)
         if standing := str(payload.get("standing") or "").strip():
             if standing not in {"current", "archived", "retracted", "superseded"}:
                 raise ValueError(f"update-work standing is invalid: {standing}")
@@ -1040,6 +1058,8 @@ def _run_operation_job(
         return _run_capture_url_source_operation(vault, payload, policy, context)
     if operation_id == "capture-pdf-source":
         return _run_capture_pdf_source_operation(vault, payload, context)
+    if operation_id == "capture-remote-pdf-source":
+        return _run_capture_remote_pdf_source_operation(vault, payload, policy, context)
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
 
@@ -1310,6 +1330,66 @@ def _run_capture_pdf_source_operation(
         csl_json=csl_json,
         provider_coverage=str(payload.get("provider_coverage") or "partial"),
         citekey=str(payload.get("citekey") or ""),
+    )
+    return _source_result(result)
+
+
+def _run_capture_remote_pdf_source_operation(
+    vault: Path,
+    payload: dict[str, Any],
+    policy: dict[str, Any],
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Fetch an authorized remote PDF and stage it through the local-PDF seam."""
+    from memoria_vault.runtime.capture import stage_pdf_source
+    from memoria_vault.runtime.operations import require_allowed_network
+    from memoria_vault.runtime.seed_install import resolve_fetch
+
+    fetch = payload.get("fetch")
+    capture = payload.get("capture")
+    if not isinstance(fetch, dict):
+        raise ValueError("capture-remote-pdf-source fetch must be an object")
+    if not isinstance(capture, dict):
+        raise ValueError("capture-remote-pdf-source capture must be an object")
+    method = str(fetch.get("method") or "").strip()
+    url = str(fetch.get("url") or "").strip()
+    work_id = str(capture.get("work_id") or "").strip()
+    title = str(capture.get("title") or "").strip()
+    description = str(capture.get("description") or "").strip()
+    if not method:
+        raise ValueError("capture-remote-pdf-source fetch requires method")
+    if not url:
+        raise ValueError("capture-remote-pdf-source fetch requires url")
+    if not work_id:
+        raise ValueError("capture-remote-pdf-source requires work_id")
+    if not title:
+        raise ValueError("capture-remote-pdf-source requires title")
+    if not description:
+        raise ValueError("capture-remote-pdf-source requires description")
+    identifiers = capture.get("identifiers")
+    csl_json = capture.get("csl_json")
+    if identifiers is not None and not isinstance(identifiers, dict):
+        raise ValueError("capture-remote-pdf-source identifiers must be an object")
+    if csl_json is not None and not isinstance(csl_json, dict):
+        raise ValueError("capture-remote-pdf-source csl_json must be an object")
+    raw_pdf = resolve_fetch(
+        {"id": work_id, "title": title, "fetch": {"method": method, "url": url}},
+        authorize_url=lambda target: require_allowed_network(policy, target),
+    )
+    result = stage_pdf_source(
+        vault,
+        work_id,
+        title,
+        description,
+        raw_pdf,
+        context=context,
+        raw_filename=f"{safe_filename(work_id)}.pdf",
+        resource=str(capture.get("resource") or url),
+        item_type=str(capture.get("item_type") or "article"),
+        identifiers=identifiers,
+        csl_json=csl_json,
+        provider_coverage=str(capture.get("provider_coverage") or "partial"),
+        citekey=str(capture.get("citekey") or ""),
     )
     return _source_result(result)
 

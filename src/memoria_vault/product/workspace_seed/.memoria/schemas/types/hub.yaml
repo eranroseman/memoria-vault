@@ -1,5 +1,8 @@
 type: hub
 category: hubs
+concept_type: hub
+enums:
+  consequence: [grounds-lost, warrant-lost, qualifier-regression, rebuttal-strengthened]
 required:
   type: literal:hub
   id: ulid
@@ -10,8 +13,10 @@ required:
 optional:
   aliases: list
   archived: bool
+  consequence: enum:consequence
   description: str
   salience: str
+  stale: bool
   todo: list
   x: map
 forbidden: [citations]

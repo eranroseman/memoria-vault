@@ -20,8 +20,9 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 ## The ones you steer and read
 
-**Program memory** (your standing steering — `steering` discovery priorities +
-`screening-protocol` review mode), **project memory** (one sub-project's
+**Program memory** (effective steering derived from active projects, hubs, and
+unresolved question notes, plus the `steering.md` watch/mute override),
+**project memory** (one sub-project's
 cross-operation working state — open questions, decisions, framing), and
 **audit memory** (the tamper-evident record of every gated write, append-only
 forever per [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
@@ -49,9 +50,10 @@ engine-space, re-derivable trust; **derived** values (counts, health,
 saturation) are computed on read or projected one-way, never stored as if
 authored. Files may never self-assert judgment (no verdict fields in
 frontmatter), and any "both places" data must be a declared one-direction
-projection — `bibliography.bib` from the catalog, `concept_edges` from
-frontmatter links **(planned: G2, alpha.22/B1)** — so drift is detectable and
-one side is always authority.
+projection — `bibliography.bib` from the catalog and Concept-frontmatter
+triples into `concept_edges` — so drift is detectable and one side is always
+authority. Tensions and edge metadata (`edge_id`, `attributes_json`) are
+database-owned; they never mirror frontmatter.
 
 ### Provenance actors
 

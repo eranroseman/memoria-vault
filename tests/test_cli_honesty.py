@@ -102,6 +102,76 @@ def test_non_json_success_hides_opaque_details_and_points_to_json(capsys):
     assert capsys.readouterr().out == ""
 
 
+def test_ask_zero_hit_renders_honest_empty_on_text_and_json_fronts(tmp_path, capsys):
+    import json as jsonlib
+    import re
+
+    from memoria_vault.cli import main
+    from tests.helpers import init_cli_workspace
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    args = ["ask", "--question", "zz-absent-canary", "--workspace", str(workspace)]
+    assert main([*args, "--json"]) == 0
+    answer = jsonlib.loads(capsys.readouterr().out)["result"]
+    assert answer["sources"] == []
+    sentence = answer["unknowns"][0]
+    assert re.fullmatch(
+        r"0 of \d+ candidates matched; \d+ unchecked documents were not searched",
+        sentence,
+    )
+    assert [row["stage"] for row in answer["pipeline_counts"]] == [
+        "universe",
+        "ranked",
+        "returned",
+    ]
+    assert sorted(answer["excluded_strata"]) == ["gated", "stale", "unchecked"]
+
+    assert main(args) == 0
+    assert sentence in capsys.readouterr().out
+
+    project_args = [
+        "project",
+        "ask",
+        "--workspace",
+        str(workspace),
+        "missing-project",
+        "--question",
+        "zz-absent-canary",
+    ]
+    assert main(project_args) == 0
+    assert sentence in capsys.readouterr().out
+
+
+def test_ask_trace_flag_threads_through_worker_and_prints_stage_lines(tmp_path, capsys):
+    import json as jsonlib
+
+    from memoria_vault.cli import main
+    from tests.helpers import init_cli_workspace
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    args = ["ask", "--question", "zz-trace-canary", "--workspace", str(workspace)]
+
+    assert main([*args, "--trace", "--json"]) == 0
+    trace = jsonlib.loads(capsys.readouterr().out)["result"]["trace"]
+    assert trace["rerank"] == "off"
+    assert [row["stage"] for row in trace["pipeline_counts"]] == [
+        "universe",
+        "ranked",
+        "returned",
+    ]
+    assert "fusion_inputs" not in trace
+
+    assert main([*args, "--trace"]) == 0
+    out = capsys.readouterr().out
+    assert "rerank: off" in out
+    for line in ("universe: ", "ranked: ", "returned: "):
+        assert line in out
+
+    assert main([*args, "--json"]) == 0
+    assert "trace" not in jsonlib.loads(capsys.readouterr().out)["result"]
+
+
 def test_list_type_work_returns_catalog_rows(tmp_path, capsys):
     from memoria_vault.engine import api as engine_api
     from tests.helpers import init_cli_workspace

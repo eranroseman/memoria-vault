@@ -1,0 +1,20 @@
+# Ring 1 seeded view — source digests (view preference: PI-owned after init).
+# Design gives only the view names; no filters were specified.
+filters:
+  and:
+    - file.inFolder("digests")
+    - 'type == "digest"'
+
+views:
+  - type: table
+    name: "Reading pipeline"
+    order:
+      - title
+      - work_id
+      - file.mtime
+  - type: table
+    name: "Discuss queue"
+    order:
+      - title
+      - work_id
+      - file.mtime

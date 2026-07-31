@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.content_security import contains_external_url
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
@@ -24,6 +25,10 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
 WORK_ASPECT_ORDER = ("context", "key_idea", "method", "outcome", "limitation", "assumption")
+_BIBLIOGRAPHY_CITEKEY_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9_]|[.:+/-][A-Za-z0-9_])*$")
+# Bound retained parser output from untrusted PDFs before it can exhaust a worker.
+MAX_PDF_PAGE_COUNT = 1_000
+MAX_PDF_EXTRACTED_TEXT_BYTES = 8 * 1024 * 1024
 _ASPECT_HEADING_ALIASES = {
     "assumption": "assumption",
     "assumptions": "assumption",
@@ -557,15 +562,40 @@ def parse_bibtex_entry(text: str) -> dict[str, Any]:
 
 def render_references_bib(vault: Path) -> str:
     """Render checked SQLite catalog Works as the generated bibliography.bib projection."""
-    entries = []
-    sources = state.catalog_sources(vault)
-    for frontmatter in sources:
-        csl_json = (
-            frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
-        )
-        if frontmatter.get("citekey") or csl_json.get("id"):
-            entries.append(_render_source_bibtex(frontmatter))
+    entries = [
+        _render_source_bibtex(frontmatter, citekey)
+        for frontmatter, citekey in _bibliography_projection_sources(state.catalog_sources(vault))
+    ]
     return ("\n\n".join(entries) + "\n") if entries else ""
+
+
+def bibliography_citekeys(vault: Path) -> dict[str, str]:
+    """Return the unique, export-safe citekeys in the bibliography projection."""
+    return {
+        str(source.get("work_id") or ""): citekey
+        for source, citekey in _bibliography_projection_sources(state.catalog_sources(vault))
+    }
+
+
+def _bibliography_projection_sources(
+    sources: list[dict[str, Any]],
+) -> list[tuple[dict[str, Any], str]]:
+    selected = [
+        (source, citekey) for source in sources if (citekey := _bibliography_citekey(source))
+    ]
+    counts: dict[str, int] = {}
+    for _source, citekey in selected:
+        counts[citekey] = counts.get(citekey, 0) + 1
+    return [(source, citekey) for source, citekey in selected if counts[citekey] == 1]
+
+
+def _bibliography_citekey(source: dict[str, Any]) -> str:
+    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+    explicit = str(source.get("citekey") or "").strip()
+    citekey = explicit or str(csl.get("id") or "").strip()
+    if not _BIBLIOGRAPHY_CITEKEY_RE.fullmatch(citekey) or contains_external_url(citekey):
+        return ""
+    return citekey
 
 
 def write_references_bib(
@@ -702,12 +732,19 @@ def _extract_pdf_pages(raw_bytes: bytes) -> list[dict[str, Any]]:
         raise RuntimeError("PDF capture requires PyMuPDF from the vault MCP requirements") from exc
 
     pages = []
+    extracted_text_bytes = 0
     with fitz.open(stream=raw_bytes, filetype="pdf") as doc:
         for page_number, page in enumerate(doc, start=1):
+            if page_number > MAX_PDF_PAGE_COUNT:
+                raise ValueError(f"PDF exceeds extraction page limit ({MAX_PDF_PAGE_COUNT} pages)")
+            raw_text = page.get_text("text")
+            extracted_text_bytes += len(raw_text.encode("utf-8"))
+            if extracted_text_bytes > MAX_PDF_EXTRACTED_TEXT_BYTES:
+                raise ValueError(
+                    f"PDF exceeds extracted-text limit ({MAX_PDF_EXTRACTED_TEXT_BYTES} bytes)"
+                )
             text = "\n".join(
-                line
-                for line in (" ".join(row.split()) for row in page.get_text("text").splitlines())
-                if line
+                line for line in (" ".join(row.split()) for row in raw_text.splitlines()) if line
             )
             pages.append(
                 {
@@ -732,12 +769,20 @@ def _pdf_content_text(pages: list[dict[str, Any]]) -> str:
 
 
 def _validate_pdf_text_coherence(pages: list[dict[str, Any]]) -> None:
-    text = "\n".join(str(page.get("text") or "") for page in pages)
-    visible = [char for char in text if not char.isspace()]
-    if not visible:
+    visible_count = 0
+    replacement_count = 0
+    alnum_count = 0
+    for page in pages:
+        for char in str(page.get("text") or ""):
+            if char.isspace():
+                continue
+            visible_count += 1
+            replacement_count += char == "\ufffd"
+            alnum_count += char.isalnum()
+    if not visible_count:
         raise ValueError("PDF parser produced no text")
-    replacement_ratio = text.count("\ufffd") / len(visible)
-    alnum_ratio = sum(1 for char in visible if char.isalnum()) / len(visible)
+    replacement_ratio = replacement_count / visible_count
+    alnum_ratio = alnum_count / visible_count
     if replacement_ratio > 0.02:
         raise ValueError("PDF parser output failed coherence check: replacement characters")
     if alnum_ratio < 0.3:
@@ -755,7 +800,15 @@ def _matching_container(text: str, open_index: int) -> int:
     opener = text[open_index]
     closer = "}" if opener == "{" else ")"
     depth = 0
+    backslash_run = 0
     for index, char in enumerate(text[open_index:], start=open_index):
+        if char == "\\":
+            backslash_run += 1
+            continue
+        escaped = bool(backslash_run % 2)
+        backslash_run = 0
+        if escaped:
+            continue
         if char == opener:
             depth += 1
         elif char == closer:
@@ -778,8 +831,16 @@ def _split_citekey(body: str) -> tuple[str, str]:
 def _top_level_comma(text: str) -> int:
     depth = 0
     quote = False
+    backslash_run = 0
     for index, char in enumerate(text):
-        if char == '"' and (index == 0 or text[index - 1] != "\\"):
+        if char == "\\":
+            backslash_run += 1
+            continue
+        escaped = bool(backslash_run % 2)
+        backslash_run = 0
+        if escaped:
+            continue
+        if char == '"':
             quote = not quote
         elif not quote and char in "{(":
             depth += 1
@@ -822,8 +883,16 @@ def _read_bibtex_value(text: str, index: int) -> tuple[str, int]:
         return text[index + 1 : close], close + 1
     if text[index] == '"':
         end = index + 1
+        backslash_run = 0
         while end < len(text):
-            if text[end] == '"' and text[end - 1] != "\\":
+            character = text[end]
+            if character == "\\":
+                backslash_run += 1
+                end += 1
+                continue
+            escaped = bool(backslash_run % 2)
+            backslash_run = 0
+            if character == '"' and not escaped:
                 return text[index + 1 : end], end + 1
             end += 1
         raise ValueError("BibTeX quoted value is unclosed")
@@ -836,8 +905,20 @@ def _read_bibtex_value(text: str, index: int) -> tuple[str, int]:
 def _clean_bibtex_value(value: str) -> str:
     cleaned = value.replace("\n", " ").replace("\r", " ")
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    cleaned = cleaned.replace("\\&", "&").replace("\\_", "_")
-    return cleaned.replace("{", "").replace("}", "")
+    result: list[str] = []
+    index = 0
+    while index < len(cleaned):
+        character = cleaned[index]
+        if character == "\\" and index + 1 < len(cleaned):
+            escaped = cleaned[index + 1]
+            if escaped in "&_{}":
+                result.append(escaped)
+                index += 2
+                continue
+        if character not in "{}":
+            result.append(character)
+        index += 1
+    return "".join(result)
 
 
 def _item_type(entry_type: str) -> str:
@@ -1053,24 +1134,35 @@ class _TextHTMLParser(HTMLParser):
             self.parts.append(text)
 
 
-def _render_source_bibtex(frontmatter: dict[str, Any]) -> str:
+def _render_source_bibtex(frontmatter: dict[str, Any], citekey: str) -> str:
     csl = frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
-    citekey = str(frontmatter.get("citekey") or csl.get("id"))
     fields = {
         "title": str(csl.get("title") or frontmatter.get("title") or citekey),
-        "author": _render_csl_authors(csl.get("author")),
+        "author": _render_bibtex_authors(csl.get("author")),
         "year": _render_csl_year(csl.get("issued")),
         "journal": str(csl.get("container-title") or ""),
         "doi": str((frontmatter.get("identifiers") or {}).get("doi") or csl.get("DOI") or ""),
         "url": str(csl.get("URL") or frontmatter.get("resource") or ""),
         "abstract": str(csl.get("abstract") or ""),
     }
-    rows = [(key, value) for key, value in fields.items() if value]
+    rows: list[tuple[str, str]] = []
+    for key, value in fields.items():
+        if not value:
+            continue
+        if key == "author":
+            escaped = value
+        elif key in {"doi", "url"}:
+            escaped = _bibtex_identifier_escape(value)
+        else:
+            escaped = _bibtex_escape(value)
+        if escaped is not None:
+            rows.append((key, escaped))
     rendered = [f"@{_bibtex_type(frontmatter, csl)}{{{citekey},"]
-    rendered.extend(
-        f"  {key} = {{{_bibtex_escape(value)}}}{',' if index < len(rows) - 1 else ''}"
-        for index, (key, value) in enumerate(rows)
-    )
+    for index, (key, escaped) in enumerate(rows):
+        value = (
+            f"{{{{{escaped}}}}}" if key in {"title", "journal", "abstract"} else f"{{{escaped}}}"
+        )
+        rendered.append(f"  {key} = {value}{',' if index < len(rows) - 1 else ''}")
     rendered.append("}")
     return "\n".join(rendered)
 
@@ -1093,7 +1185,8 @@ def _bibtex_type(frontmatter: dict[str, Any], csl: dict[str, Any]) -> str:
     return "article"
 
 
-def _render_csl_authors(authors: Any) -> str:
+def _render_bibtex_authors(authors: Any) -> str:
+    """Render CSL names so BibTeX preserves literal organizations and groups."""
     if not isinstance(authors, list):
         return ""
     rendered = []
@@ -1101,11 +1194,13 @@ def _render_csl_authors(authors: Any) -> str:
         if not isinstance(author, dict):
             continue
         if author.get("literal"):
-            rendered.append(str(author["literal"]))
+            rendered.append(f"{{{_bibtex_escape(str(author['literal']))}}}")
         elif author.get("family") and author.get("given"):
-            rendered.append(f"{author['family']}, {author['given']}")
+            rendered.append(
+                f"{_bibtex_escape(str(author['family']))}, {_bibtex_escape(str(author['given']))}"
+            )
         elif author.get("family"):
-            rendered.append(str(author["family"]))
+            rendered.append(_bibtex_escape(str(author["family"])))
     return " and ".join(rendered)
 
 
@@ -1119,4 +1214,21 @@ def _render_csl_year(issued: Any) -> str:
 
 
 def _bibtex_escape(value: str) -> str:
-    return " ".join(value.replace("{", "").replace("}", "").split())
+    """Serialize display text for Pandoc's BibTeX parser."""
+    escapes = {
+        "\\": r"\textbackslash{}",
+        "{": r"\{",
+        "}": r"\}",
+        "#": r"\#",
+        "%": r"\%",
+        "$": r"\$",
+        "~": r"\textasciitilde{}",
+    }
+    return " ".join("".join(escapes.get(character, character) for character in value).split())
+
+
+def _bibtex_identifier_escape(value: str) -> str | None:
+    """Serialize opaque DOI and URL fields without TeX-escaping punctuation."""
+    normalized = " ".join(value.replace("{", "").replace("}", "").split())
+    trailing_backslashes = len(normalized) - len(normalized.rstrip("\\"))
+    return normalized if trailing_backslashes % 2 == 0 else None

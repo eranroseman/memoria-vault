@@ -13,6 +13,19 @@ There is no release automation and no formal tagged release yet; installs run
 from current `main`. The earlier `v0.1.0`–`v0.3.2` tags were artifacts of the
 removed release-please setup, not real releases, and have been deleted.
 
+### Changed
+
+- Renamed computed-evidence `code-warrant` references to `code-grounds`.
+  Retired `code-warrant:` markers are rejected without an alias or upgrade path.
+- The current fresh schema uses `code_artifacts.purpose = grounds`; Memoria does
+  not rewrite an existing database or preserve a legacy `warrant` compatibility path.
+- Renamed the `analyze-gaps` gap kind `under-warranted` to `under-grounded`
+  (breaking for scripts that branch on `gap_type`; no compatibility alias).
+- Marker grammar v2: `%%ev: ev-<8hex> items=a|b%%`. The `type=`, `state=`,
+  and `review=` fields are removed from markers and rejected as unknown
+  (fail-closed); type, state, and review-required are always re-derived from
+  `items=`, the sole authoritative field.
+
 ## [0.1.0a21] - 2026-07-14
 
 Alpha.21 is a source-install checkpoint, not a formal tag or GitHub Release.

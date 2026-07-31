@@ -1,0 +1,147 @@
+"""Agent-bundle seeding, vault.json manifest, upgrade, and skew detection."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+from memoria_vault import cli
+from tests.helpers import WORKSPACE_SEED
+
+PERIMETER_MESSAGE = (
+    "Memoria write perimeter: vault notes are engine-mediated — a direct edit "
+    "would be recorded as the human's work by the provenance layer. "
+    "Use the MCP tool `operation_run` or the `memoria` CLI."
+)
+PROTECTED_PATTERNS = (
+    "**/*.md",
+    ".claude/**",
+    ".codex/**",
+    ".mcp.json",
+    ".memoria/**",
+    ".obsidian/**",
+)
+AGENT_BUNDLE_FILES = (
+    ".claude/hooks/write_perimeter.py",
+    ".claude/settings.json",
+    ".codex/hooks.json",
+    ".mcp.json",
+    "CLAUDE.md",
+)
+
+
+def test_seed_claude_settings_deny_rules_cover_every_protected_path():
+    settings = json.loads((WORKSPACE_SEED / ".claude/settings.json").read_text("utf-8"))
+    expected = {
+        f"{tool}({pattern})"
+        for tool in ("Edit", "Write", "NotebookEdit")
+        for pattern in PROTECTED_PATTERNS
+    }
+    assert set(settings["permissions"]["deny"]) == expected
+    assert len(settings["permissions"]["deny"]) == 18
+
+
+def test_seed_claude_settings_registers_the_perimeter_hook():
+    settings = json.loads((WORKSPACE_SEED / ".claude/settings.json").read_text("utf-8"))
+    entries = settings["hooks"]["PreToolUse"]
+    assert len(entries) == 1
+    assert entries[0]["matcher"] == "Edit|Write|NotebookEdit"
+    assert entries[0]["hooks"] == [
+        {
+            "type": "command",
+            "command": 'python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/write_perimeter.py"',
+        }
+    ]
+
+
+def test_write_perimeter_hook_denies_unconditionally_with_exit_2():
+    hook = WORKSPACE_SEED / ".claude/hooks/write_perimeter.py"
+    result = subprocess.run(
+        [sys.executable, "-B", str(hook)],
+        input='{"tool_name": "Write", "tool_input": {"file_path": "notes/x.md"}}',
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert PERIMETER_MESSAGE in result.stderr
+    assert result.stdout == ""
+
+
+def test_seed_tree_skips_python_bytecode_caches(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed = tmp_path / "seed"
+    hook = seed / ".claude/hooks/write_perimeter.py"
+    hook.parent.mkdir(parents=True)
+    hook.write_text("# hook\n", encoding="utf-8")
+    artifacts = (
+        seed / ".claude/__pycache__/ignored.cpython-312.pyc",
+        seed / ".claude/hooks/__pycache__/write_perimeter.cpython-312.pyc",
+        seed / ".claude/hooks/stray.pyc",
+    )
+    for artifact in artifacts:
+        artifact.parent.mkdir(exist_ok=True)
+        artifact.write_bytes(b"compiled bytecode")
+
+    def fake_seed_resource(source_rel: str) -> Path:
+        return seed.joinpath(*source_rel.split("/"))
+
+    monkeypatch.setattr(cli, "_seed_resource", fake_seed_resource)
+    monkeypatch.setattr(cli, "SEED_TREES", ((".claude", ".claude"),))
+    monkeypatch.setattr(cli, "SEED_FILES", ())
+
+    delivered = tmp_path / "workspace/.claude"
+    cli._copy_seed_tree(".claude", delivered, overwrite=False, target_rel=".claude")
+    manifest_targets = cli._seed_tree_file_targets(".claude", ".claude")
+    preflight_targets = cli._seed_tree_write_targets(".claude", ".claude")
+    repair_targets = cli._repair_seed_write_targets(tmp_path / "repair")
+    repair_preflight_targets = cli._repair_write_targets(
+        tmp_path / "preflight", include_obsidian=False
+    )
+
+    assert (delivered / "hooks/write_perimeter.py").read_text(encoding="utf-8") == "# hook\n"
+    assert not (delivered / "__pycache__").exists()
+    assert not (delivered / "hooks/__pycache__").exists()
+    assert not (delivered / "hooks/stray.pyc").exists()
+    for targets in (manifest_targets, preflight_targets, repair_targets, repair_preflight_targets):
+        assert ".claude/hooks/write_perimeter.py" in targets
+        assert ".claude/hooks/stray.pyc" not in targets
+    assert all("__pycache__" not in Path(target).parts for target in manifest_targets)
+    assert all("__pycache__" not in Path(target).parts for target in preflight_targets)
+    assert all("__pycache__" not in Path(target).parts for target in repair_targets)
+    assert all("__pycache__" not in Path(target).parts for target in repair_preflight_targets)
+
+
+def test_write_perimeter_hook_is_stdlib_only():
+    source = (WORKSPACE_SEED / ".claude/hooks/write_perimeter.py").read_text("utf-8")
+    for forbidden in ("memoria_vault", "import requests", "import yaml"):
+        assert forbidden not in source
+
+
+def test_seed_mcp_json_wires_memoria_mcp_stdio():
+    config = json.loads((WORKSPACE_SEED / ".mcp.json").read_text("utf-8"))
+    server = config["mcpServers"]["memoria"]
+    assert server["command"] == "memoria"
+    assert server["args"][:3] == ["mcp", "--workspace", "."]
+    scopes = [
+        server["args"][index + 1]
+        for index, arg in enumerate(server["args"])
+        if arg == "--read-scope"
+    ]
+    assert scopes == ["notes", "hubs", "projects", "digests", "fulltexts", "inbox"]
+
+
+def test_seed_claude_md_is_an_agents_md_loader():
+    assert (WORKSPACE_SEED / "CLAUDE.md").read_text("utf-8") == "@AGENTS.md\n"
+
+
+def test_seed_codex_hooks_mirror_the_deny_rules():
+    mirror = json.loads((WORKSPACE_SEED / ".codex/hooks.json").read_text("utf-8"))
+    assert mirror["schema"] == 1
+    assert mirror["deny"]["tools"] == ["edit", "write"]
+    assert mirror["deny"]["paths"] == list(PROTECTED_PATTERNS)

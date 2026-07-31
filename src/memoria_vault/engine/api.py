@@ -9,6 +9,7 @@ from typing import Any
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
+from memoria_vault.runtime.explore import explore_topic
 from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
 from memoria_vault.runtime.knowledge import read_project_draft as _read_project_draft
 from memoria_vault.runtime.knowledge import read_project_slice as _read_project_slice
@@ -94,6 +95,27 @@ def read_exploration(
     return _read_payload(exploration=exploration)
 
 
+def read_explore(
+    workspace: Path,
+    topic: str,
+    *,
+    versus: str = "",
+    project: str = "",
+    depth: int = 1,
+    trace: bool = False,
+) -> dict[str, Any]:
+    return _read_payload(
+        explore=explore_topic(
+            Path(workspace),
+            topic,
+            versus=versus,
+            project=project,
+            depth=depth,
+            trace=trace,
+        )
+    )
+
+
 def read_requests(
     workspace: Path, *, status: str = "", read_scope: list[str] | None = None
 ) -> dict[str, Any]:
@@ -153,10 +175,10 @@ def read_attention(
 
 
 def read_attention_card(
-    workspace: Path, attention_path: str, *, read_scope: list[str] | None = None
+    workspace: Path, path: str, *, read_scope: list[str] | None = None
 ) -> dict[str, Any]:
-    rel, path = _workspace_file(Path(workspace), attention_path)
-    card = _attention_card(path, Path(workspace))
+    rel, card_path = _workspace_file(Path(workspace), path)
+    card = _attention_card(card_path, Path(workspace))
     if card is None:
         raise FileNotFoundError(f"attention projection not found: {rel}")
     if not _attention_in_scope(card, read_scope):

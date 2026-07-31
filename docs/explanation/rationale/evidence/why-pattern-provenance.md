@@ -39,6 +39,28 @@ That distinction is the design line. Memoria borrows mechanics that make work
 traceable and strips loops that would let the system decide what becomes
 canonical.
 
+## Why these patterns are refused
+
+The source examples below preserve the context for each refusal. A useful
+mechanic in one of these systems does not make its operating posture compatible
+with Memoria's review gate.
+
+| Refused pattern | Representative sources | Why it is refused |
+| --- | --- | --- |
+| Full autonomous scientist mode | [AI Scientist v2](../../../reference/evidence-and-integrations/bibliography.md#yamada2025aiscientistv2), Sibyl, AI-Researcher, Auto-Research | Runs end-to-end without Memoria's structural gate. |
+| Tree search over synthesis | [AIDE ML](../../../reference/evidence-and-integrations/bibliography.md#aideml), AI Scientist v2 | Requires a fixed scalar metric; synthesis quality is not scalar. |
+| Autonomous keep/revert | Karpathy Autoresearch | The three safe-loop preconditions fail for knowledge work. |
+| Co-trained generator + reviewer | [CycleResearcher](../../../reference/evidence-and-integrations/bibliography.md#weng2025cycleresearcher) | The reviewer's learned preferences become the objective. |
+| Tournament/evolution loop | [AI co-scientist](../../../reference/evidence-and-integrations/bibliography.md#gottweis2025aicoscientist) | Sound memory architecture, refused autonomy posture. |
+| Preferences internalized into weights | [NanoResearch](../../../reference/evidence-and-integrations/bibliography.md#xu2026nanoresearch) | Preferences stop being inspectable, auditable, or revertible. |
+| Confidence-routed gate bypass | AutoResearchClaw SmartPause | Turns a structural gate into a probabilistic one. |
+| Harness without a gate | [Sibyl-AutoResearch](../../../reference/evidence-and-integrations/bibliography.md#wang2026sibyl) | Harness rhetoric does not imply human control. |
+| Conversation as durable substrate | [AutoGen](../../../reference/evidence-and-integrations/bibliography.md#wu2023autogen) | Conversation is ephemeral; the vault is memory. |
+| Generalist sandboxed dev worker | [OpenHands](../../../reference/evidence-and-integrations/bibliography.md#wang2025openhands) | Permission model is too coarse for per-zone, per-profile policy. |
+
+For the factual roster of borrowed, adapted, referenced, and refused patterns,
+see the [Pattern provenance table](../../../reference/evidence-and-integrations/pattern-provenance.md).
+
 ## Net effect
 
 The design shift versus a generic "agent-assisted knowledge base" is from

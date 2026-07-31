@@ -123,3 +123,73 @@ def test_emit_report_reads_items_or_rows(tmp_path):
     result = worklists.emit_report(tmp_path, report)
     assert result["worklist"] == "coverage"
     assert len(result["items"]) == 1
+
+
+def test_emit_worklist_passes_raised_by_and_loudness_through(tmp_path):
+    worklists.emit_worklist(
+        tmp_path,
+        "Bulk import batch",
+        [{"title": "One", "item_ref": "doi-10.1234/x"}],
+        raised_by="import",
+        loudness="quiet",
+    )
+
+    [prompt] = list((tmp_path / "inbox").glob("work-prompt-*.md"))
+    frontmatter = _frontmatter(prompt)
+    assert frontmatter["raised_by"] == "import"
+    assert frontmatter["loudness"] == "quiet"
+
+
+def test_emit_import_worklist_ranks_duplicates_first_with_honest_denominators(tmp_path):
+    result = worklists.emit_import_worklist(
+        tmp_path,
+        run_id="20260717-a1b2",
+        rows=[
+            {"title": "Unmappable entry type", "item_ref": "misc-1", "group": "unmapped"},
+            {"title": "Malformed entry", "citekey": "broken2024", "group": "failed"},
+            {
+                "title": "Enrichment-surfaced retraction",
+                "item_ref": "doi-10.1234/z",
+                "group": "retraction",
+            },
+            {
+                "title": "Cross-identifier duplicate",
+                "item_ref": "doi-10.1234/y",
+                "group": "duplicate",
+                "reason": "arXiv id matches admitted work doi-10.1234/q",
+            },
+            {"title": "Parse error at entry 7", "item_ref": "entry-7", "group": "failed"},
+        ],
+        entries_total=10,
+        admitted=6,
+    )
+
+    assert result is not None
+    assert result["worklist"] == "import-20260717-a1b2"
+    by_rank = {}
+    for path in result["items"]:
+        frontmatter = _frontmatter(path)
+        by_rank[frontmatter["rank"]] = (frontmatter["group"], frontmatter["item_ref"])
+    assert by_rank == {
+        1: ("duplicate", "doi-10.1234/y"),
+        2: ("retraction", "doi-10.1234/z"),
+        3: ("failed", "broken2024"),
+        4: ("failed", "entry-7"),
+        5: ("unmapped", "misc-1"),
+    }
+    [prompt] = list((tmp_path / "inbox").glob("work-prompt-*.md"))
+    frontmatter = _frontmatter(prompt)
+    assert frontmatter["raised_by"] == "import"
+    assert frontmatter["loudness"] == "quiet"
+    for denominator in ("10 entries", "6 admitted", "5 need judgment"):
+        assert denominator in frontmatter["title"]
+
+
+def test_emit_import_worklist_empty_judgment_set_mints_nothing(tmp_path):
+    result = worklists.emit_import_worklist(
+        tmp_path, run_id="20260717-c3d4", rows=[], entries_total=4, admitted=4
+    )
+
+    assert result is None
+    assert not (tmp_path / "system" / "worklists").exists()
+    assert not (tmp_path / "inbox").exists()

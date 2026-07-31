@@ -14,7 +14,7 @@ separate dispositions. The gate is not an advisory suggestion, a setting, or a
 prompt instruction.
 
 Promotion makes content consumable by checked-only readers: structural checks
-passed and the required warrants resolve. It is not a claim that the PI approved
+passed and the required grounds resolve. It is not a claim that the PI approved
 the content as true. The rule is **propose, not dispose**. Agents and operations
 can stage proposals; the PI decides how attention items are handled.
 
@@ -62,7 +62,7 @@ write around the engine are denied or audited by policy.
 The practical difference: prompt discipline has a mean time to failure.
 Structural enforcement does not consult context, reason about exceptions, or
 degrade with session length. The engine materializes checked knowledge only when
-required checks and warrants exist as recorded state. PI approval remains
+required checks and grounds exist as recorded state. PI approval remains
 separate attention/curation state, not the meaning of `check_status = checked`.
 
 ---
@@ -76,7 +76,10 @@ mutations until resolved.
 
 None of this is possible if review lives in comments, tags, or conversation. "The human acted on this" must be recorded state, not a convention.
 
-The request/attention projection carries exactly this: awaiting action, acted, or archived. These are states in a state machine, not annotations, and they are separate from `check_status`.
+The request/attention projection carries exactly this: `open`, `resolved`, or
+`deferred`. `apply` and `reject` produce `resolved`; `defer` produces
+`deferred`. These states are not annotations, and they are separate from
+`check_status`.
 
 ---
 

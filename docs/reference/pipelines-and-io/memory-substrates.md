@@ -16,7 +16,7 @@ provider, scope, lifespan, backing store, and contents.
 
 | Substrate | Provider | Scope | Lifespan | Backing store | What it holds |
 | --- | --- | --- | --- | --- | --- |
-| **Program memory** | Memoria — vault files | Whole research program | Persistent | Vault root (`steering.md`) | Standing steering: discovery priorities, review mode. The PI's main lever over what the system pursues. |
+| **Program memory** | Memoria — derived vault signal | Whole research program | Persistent | Active projects, hubs, and unresolved question notes; vault-root `steering.md` override | Effective steering with per-token provenance. Framing or archiving projects, curating hubs or questions, and the watch/mute override change what discovery pursues. |
 | **Project memory** | Memoria — vault files | One project, across operations | Project-bound; archives with the project | `projects/<project>/project.md` | Open questions, decisions, framing for one project. |
 | **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, pattern provenance, request projections, and metrics. |
 | **Request memory** (payload) | Memoria — SQLite | One operation request | Request-bound | `.memoria/memoria.sqlite` | Input refs, output intents, precondition hashes, status, error, and provenance. |
@@ -29,7 +29,7 @@ provider, scope, lifespan, backing store, and contents.
 
 | Rule | Details |
 | --- | --- |
-| Program memory is the PI's steering | The PI authors `steering.md`; every operation can read it; it never archives. |
+| Program memory is the PI's steering | Derived from active projects, hubs, and unresolved question notes. The PI authors only `steering.md`'s watch/mute bullet override. |
 | Project memory is the per-project channel | Anything that must survive across operations within one project. Archives with the project. |
 | Audit memory is append-only | The policy gate writes an entry at every decision; operations append to SQLite's authoritative `event_log`, which emits per-machine JSONL synchronization exports, and record model-call evidence. |
 | Request memory is per-request, not global | When work resumes, the request row and journal provide the durable handoff. |
@@ -42,11 +42,11 @@ provider, scope, lifespan, backing store, and contents.
 
 | State type | Correct substrate | Wrong substrate (common mistake) |
 | --- | --- | --- |
-| What you want the system to pursue | Program memory (`steering.md`) | local tool config (that's config, not recall) |
+| What you want the system to pursue | Program memory (active projects, hubs, and unresolved question notes; `steering.md` watch/mute override) | local tool config (that's config, not recall) |
 | One project's open questions / decisions | Project memory (`projects/<project>/project.md`) | Request memory (too narrow; ends with one operation) |
 | Current task goal and context | Request memory (payload) | Working memory (not durable) |
 | Stable facts about the environment | Checked workspace configuration or steering Concepts | Working memory (not persistent) |
-| The PI's preferences and style | Program memory (`steering.md`) or checked preference notes | Adapter chat/session history |
+| The PI's preferences and style | Checked preference notes | Adapter chat/session history |
 | Cross-session retrieval | search + SQLite over checked workspace state | Adapter memory (not authoritative) |
 | Audit trail of all decisions | Audit memory (`system/logs/audit.jsonl`) | Working memory (wrong granularity) |
 | Durable synthesized knowledge | Checked Concepts under `notes/`, `hubs/`, `projects/`, `digests/`, and `fulltexts/` | Any of the above |

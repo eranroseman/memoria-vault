@@ -1254,7 +1254,9 @@ def test_cli_wires_maintenance_and_pi_commands(
         == 0
     )
     imported = json.loads(capsys.readouterr().out)
-    assert imported["result"]["work_id"] == "portable-work"
+    assert imported["entries_total"] == 1
+    assert imported["admitted"] == ["portable-work"]
+    assert imported["failed"] == []
 
     assert (
         main(
@@ -1887,3 +1889,116 @@ def test_cli_workspace_rebuild_writes_checked_search_index(
     assert rc == 0
     assert doctor["ok"] is True
     assert doctor["search_document_count"] == 1
+
+
+def test_workspace_scan_prints_and_persists_cs3_findings(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    note = workspace / "notes/witness.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(
+        "---\n"
+        "type: note\n"
+        "id: 01KBN6V6KX0000000000000001\n"
+        "title: Witness note\n"
+        "tags: []\n"
+        "links: {}\n"
+        "---\n"
+        "Witness body.\n",
+        encoding="utf-8",
+    )
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
+    capsys.readouterr()  # first scan observes + baselines the note
+
+    text = note.read_text(encoding="utf-8")
+    note.write_text(text + "\nForeign out-of-band edit.\n", encoding="utf-8")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace)]) == 0
+    out = capsys.readouterr().out
+    assert "finding: foreign-edit notes/witness.md" in out
+    cards = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*.md"))
+    assert len(cards) == 1
+    assert {read_frontmatter(card)["target"] for card in cards} == {"notes/witness.md"}
+
+    assert main(["workspace", "scan", "--workspace", str(workspace)]) == 0
+    capsys.readouterr()
+    rescanned = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*.md"))
+    assert rescanned == cards  # rescan is idempotent on the durable surface
+
+
+def test_steering_and_vocabulary_writes_survive_a_failed_replace(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    steering = workspace / "steering.md"
+    vocabulary = workspace / "system/vocabulary.md"
+    steering_before = steering.read_text(encoding="utf-8")
+    vocabulary_before = vocabulary.read_text(encoding="utf-8")
+
+    import os
+
+    def broken_replace(src, dst, *args, **kwargs):
+        raise OSError("injected replace failure")
+
+    monkeypatch.setattr(os, "replace", broken_replace)
+
+    assert (
+        main(
+            [
+                "steering",
+                "edit",
+                "--workspace",
+                str(workspace),
+                "--body",
+                "Steering with [link](https://example.org).",
+                "--json",
+            ]
+        )
+        == 2
+    )
+    steering_error = json.loads(capsys.readouterr().out)
+    assert "injected replace failure" in steering_error["error"]
+    assert steering.read_text(encoding="utf-8") == steering_before
+
+    assert (
+        main(
+            [
+                "vocab",
+                "add",
+                "--workspace",
+                str(workspace),
+                "research_area",
+                "alpha-topic",
+                "--json",
+            ]
+        )
+        == 2
+    )
+    vocabulary_error = json.loads(capsys.readouterr().out)
+    assert "injected replace failure" in vocabulary_error["error"]
+    assert vocabulary.read_text(encoding="utf-8") == vocabulary_before
+
+    monkeypatch.undo()
+    assert (
+        main(
+            [
+                "steering",
+                "edit",
+                "--workspace",
+                str(workspace),
+                "--body",
+                "Steering with [link](https://example.org).",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+    assert steering.read_text(encoding="utf-8") == (
+        "Steering with [link](https://example.org).\n"
+    )  # PI steering content lands byte-exact, never neutralized

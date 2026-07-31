@@ -23,6 +23,7 @@ CLI, [local HTTP transport](local-http-transport.md), and
 | `read_request(workspace, request_id, read_scope=None)` | Reads one request detail payload. |
 | `read_attention(...)` / `read_attention_card(...)` | Reads Inbox attention projections plus table/card view specs. |
 | `read_concepts(...)` / `read_concept(...)` | Reads Concept summaries or one verdict-tagged Concept body. |
+| `read_explore(workspace, topic, *, versus="", project="", depth=1, trace=False)` | Reads a checked topic neighborhood without queuing a request or writing. It is distinct from `read_exploration`, which lists exploration-channel events. |
 | `read_work(workspace, work_id, read_scope=None)` | Reads one catalog Work record. |
 | `read_journal(...)` / `read_journal_event(...)` | Reads journal rows with operation, request, path, decision, date, and scope filters. |
 | `run_operation(workspace, operation_id, payload, ...)` | Queues and runs one request-envelope operation. |

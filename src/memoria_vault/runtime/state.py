@@ -15,17 +15,21 @@ import subprocess
 import threading
 import time
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from memoria_vault.runtime.content_security import (
+    classify_fenced_code_opening,
+    fenced_code_closes,
+)
 from memoria_vault.runtime.evidence import (
     EvidenceMarker,
     evidence_ref_kind,
-    parse_code_warrant_ref,
+    parse_code_grounds_ref,
     parse_evidence_marker,
     parse_source_span_ref,
 )
@@ -50,7 +54,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 15
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -65,6 +69,27 @@ _DIRECT_EVIDENCE_MARKER_RE = re.compile(
 )
 _RAW_EVIDENCE_MARKER_RE = re.compile(r"%%ev:\s*.*?%%")
 _FENCED_DIV_RE = re.compile(r"^[ \t]{0,3}(?P<fence>:{3,})(?P<suffix>[^\r\n]*)$")
+_QUOTED_FENCE_OPEN_RE = re.compile(
+    r"^ {0,3}(?P<quote>(?:>[ \t]*)+)(?P<fence>`{3,}|~{3,})(?P<info>[^\r\n]*)(?:\r?\n)?$"
+)
+_QUOTED_LINE_RE = re.compile(r"^ {0,3}(?P<quote>(?:>[ \t]*)+)(?P<content>[^\r\n]*)(?:\r?\n)?$")
+_LIST_FENCE_OPEN_RE = re.compile(
+    r"^(?P<indent>[ \t]*)(?P<marker>(?:[-+*]|\d{1,9}[.)]))(?P<spacing>[ \t]+)"
+    r"(?P<fence>`{3,}|~{3,})(?P<info>[^\r\n]*)(?:\r?\n)?$"
+)
+_COMPOUND_LIST_QUOTE_FENCE_OPEN_RE = re.compile(
+    r"^(?P<indent> *)(?P<marker>(?:[-+*]|\d{1,9}[.)]))(?P<spacing> +)"
+    r"(?P<quote>> +)(?P<fence>`{3,}|~{3,})(?P<info>[^\r\n]*)(?:\r?\n)?$"
+)
+_LIST_ITEM_LINE_RE = re.compile(r"^[ \t]*(?:[-+*]|\d{1,9}[.)])[ \t]+")
+_ATX_HEADING_LINE_RE = re.compile(r"^[ ]{0,3}#{1,6}(?:[ \t]+|$)")
+_THEMATIC_BREAK_LINE_RE = re.compile(
+    r"^[ \t]{0,3}(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|(?:-[ \t]*){3,})(?:\r?\n)?$"
+)
+_SAFE_VISIBILITY_FENCE_INFO_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9+._-]*$")
+_CITATION_TABLE_CONTAINER_PREFIX_RE = re.compile(
+    r"^[ \t]*(?:(?:>[ \t]*)+|(?:[-+*]|\d{1,9}[.)])[ \t]+)"
+)
 _MARKDOWN_CONTAINER_RE = re.compile(
     r"^[ ]{0,3}(?:>[ \t]*|(?:[-+*~:]|\d+[.)]|"
     r"\((?:\d+|[IVXLCDMivxlcdm]+|@[^\s)]*|[A-Za-z#])\)|"
@@ -112,7 +137,9 @@ class _WindowsLockFile:
             self._directory_handles.clear()
 
 
-def _open_workspace_lock_file_windows(_vault: Path, lock_path: Path):
+def _open_workspace_lock_file_windows(
+    _vault: Path, lock_path: Path
+):  # pragma: no cover - runs only on Windows.
     """Open a lock without resolving Windows symlinks or junctions.
 
     The vault root is opened with ``FILE_FLAG_OPEN_REPARSE_POINT``. Every later
@@ -792,26 +819,33 @@ def _append_journal_row(vault: Path, event: dict[str, Any], *, machine: str) -> 
 
 
 def _insert_journal_row(vault: Path, row: dict[str, Any], *, machine: str) -> None:
+    with connect(vault) as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        _insert_journal_row_conn(conn, row, machine=machine)
+
+
+def _insert_journal_row_conn(
+    conn: sqlite3.Connection, row: dict[str, Any], *, machine: str
+) -> None:
+    """Insert one authoritative journal row using the caller's transaction."""
     timestamp = str(row.get("timestamp") or now_iso())
     event_type = str(row.get("event") or row.get("type") or "event")
     payload = _json(row)
-    with connect(vault) as conn:
-        conn.execute("BEGIN IMMEDIATE")
-        last = conn.execute(
-            "SELECT event_id, row_hash FROM event_log ORDER BY event_id DESC LIMIT 1"
-        ).fetchone()
-        prev_hash = "GENESIS" if last is None else str(last["row_hash"])
-        event_id = 1 if last is None else int(last["event_id"]) + 1
-        row_hash = _journal_hash(event_id, timestamp, event_type, machine, payload, prev_hash)
-        conn.execute(
-            """
-            INSERT INTO event_log(
-                event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (event_id, timestamp, event_type, machine, payload, prev_hash, row_hash),
+    last = conn.execute(
+        "SELECT event_id, row_hash FROM event_log ORDER BY event_id DESC LIMIT 1"
+    ).fetchone()
+    prev_hash = "GENESIS" if last is None else str(last["row_hash"])
+    event_id = 1 if last is None else int(last["event_id"]) + 1
+    row_hash = _journal_hash(event_id, timestamp, event_type, machine, payload, prev_hash)
+    conn.execute(
+        """
+        INSERT INTO event_log(
+            event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
         )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (event_id, timestamp, event_type, machine, payload, prev_hash, row_hash),
+    )
 
 
 def journal_head(vault: Path) -> str:
@@ -1070,6 +1104,14 @@ def concept_check_status(vault: Path, concept_id: str) -> str:
             (target,),
         ).fetchone()
     return "unchecked" if row is None else str(row["check_status"])
+
+
+def concept_check_statuses(vault: Path) -> dict[str, str]:
+    if not db_path(vault).is_file():
+        return {}
+    with connect(vault) as conn:
+        rows = conn.execute("SELECT concept_id, check_status FROM concept_status").fetchall()
+    return {str(row["concept_id"]): str(row["check_status"]) for row in rows}
 
 
 def output_record(vault: Path, output_id: str) -> dict[str, Any] | None:
@@ -2023,33 +2065,109 @@ def file_index_states(vault: Path) -> dict[str, dict[str, Any]]:
     return {str(row["path"]): dict(row) for row in rows}
 
 
-def replace_concept_edges(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
-    rows = list(rows)
+def replace_concept_edges(
+    vault: Path,
+    rows: Iterable[dict[str, Any]],
+    *,
+    paths: Iterable[str] | None = None,
+) -> dict[str, int]:
+    """Reconcile the links mirror without changing PI-owned tension rows."""
+    target_paths = (
+        {normalize_path(str(path)) for path in paths if normalize_path(str(path))}
+        if paths is not None
+        else None
+    )
+    if target_paths == set():
+        return {"deleted": 0, "inserted": 0}
+
+    mirror_rows = []
+    for value in rows:
+        row = dict(value)
+        source = normalize_path(str(row["source_concept_id"]))
+        relation = _concept_edge_relation(str(row["relation_type"]))
+        target = normalize_path(str(row["target_concept_id"]))
+        if relation == "tension":
+            continue
+        source_path = normalize_path(str(row.get("source_path") or ""))
+        if target_paths is not None and source_path not in target_paths:
+            continue
+        row["source_concept_id"] = source
+        row["relation_type"] = relation
+        row["target_concept_id"] = target
+        mirror_rows.append(row)
+
     with connect(vault) as conn:
-        deleted = conn.execute("DELETE FROM concept_edges").rowcount
-        for row in rows:
+        keep = {
+            (
+                normalize_path(str(row["source_concept_id"])),
+                str(row["relation_type"]),
+                normalize_path(str(row["target_concept_id"])),
+            )
+            for row in mirror_rows
+        }
+        existing = conn.execute(
+            """
+            SELECT source_concept_id, relation_type, target_concept_id, source_path
+            FROM concept_edges
+            WHERE relation_type != 'tension'
+            """
+        ).fetchall()
+        deleted = 0
+        for stale in existing:
+            key = (
+                str(stale["source_concept_id"]),
+                str(stale["relation_type"]),
+                str(stale["target_concept_id"]),
+            )
+            if key in keep:
+                continue
+            if target_paths is not None and str(stale["source_path"]) not in target_paths:
+                continue
+            conn.execute(
+                """
+                DELETE FROM concept_edges
+                WHERE source_concept_id = ? AND relation_type = ? AND target_concept_id = ?
+                """,
+                key,
+            )
+            deleted += 1
+        for row in mirror_rows:
             conn.execute(
                 """
                 INSERT INTO concept_edges(
+                    edge_id,
                     source_concept_id,
                     relation_type,
                     target_concept_id,
+                    attributes_json,
                     check_status,
                     source_path,
                     updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source_concept_id, relation_type, target_concept_id)
+                DO UPDATE SET
+                    edge_id = excluded.edge_id,
+                    check_status = excluded.check_status,
+                    source_path = excluded.source_path,
+                    updated_at = excluded.updated_at
                 """,
                 (
-                    normalize_path(str(row["source_concept_id"])),
-                    _concept_edge_relation(str(row["relation_type"])),
-                    normalize_path(str(row["target_concept_id"])),
+                    concept_edge_id(
+                        str(row["source_concept_id"]),
+                        str(row["relation_type"]),
+                        str(row["target_concept_id"]),
+                    ),
+                    str(row["source_concept_id"]),
+                    str(row["relation_type"]),
+                    str(row["target_concept_id"]),
+                    str(row.get("attributes_json") or "{}"),
                     _check_status(str(row.get("check_status") or "unchecked")),
                     normalize_path(str(row.get("source_path") or "")),
                     now_iso(),
                 ),
             )
-    return {"deleted": int(deleted), "inserted": len(rows)}
+    return {"deleted": int(deleted), "inserted": len(mirror_rows)}
 
 
 def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:
@@ -2059,7 +2177,8 @@ def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, A
         if checked_only:
             rows = conn.execute(
                 """
-                SELECT source_concept_id, relation_type, target_concept_id, check_status, source_path
+                SELECT edge_id, source_concept_id, relation_type, target_concept_id,
+                       attributes_json, check_status, source_path
                 FROM concept_edges
                 WHERE check_status = 'checked'
                 ORDER BY source_concept_id, relation_type, target_concept_id
@@ -2068,7 +2187,8 @@ def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, A
         else:
             rows = conn.execute(
                 """
-                SELECT source_concept_id, relation_type, target_concept_id, check_status, source_path
+                SELECT edge_id, source_concept_id, relation_type, target_concept_id,
+                       attributes_json, check_status, source_path
                 FROM concept_edges
                 ORDER BY source_concept_id, relation_type, target_concept_id
                 """
@@ -2274,62 +2394,82 @@ def code_run(vault: Path, run_id: str) -> dict[str, Any] | None:
     return None if row is None else _code_run_row(row)
 
 
-def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
+def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     rows = list(rows)
     with connect(vault) as conn:
-        for row in rows:
-            if not bool(row.get("bind", True)):
-                continue
-            conn.execute(
-                """
-                INSERT INTO evidence_bindings(id, block_text_sha256)
-                VALUES (?, ?)
-                ON CONFLICT(id) DO NOTHING
-                """,
-                (str(row["id"]), row.get("block_text_sha256")),
+        return _replace_evidence_sets_conn(conn, rows)
+
+
+def _replace_evidence_sets_conn(
+    conn: sqlite3.Connection, rows: Iterable[dict[str, Any]]
+) -> dict[str, Any]:
+    """Replace active evidence sets using an existing transaction."""
+    rows = list(rows)
+    minted: list[dict[str, Any]] = []
+    for row in rows:
+        if not bool(row.get("bind", True)):
+            continue
+        cursor = conn.execute(
+            """
+            INSERT INTO evidence_bindings(id, block_text_sha256)
+            VALUES (?, ?)
+            ON CONFLICT(id) DO NOTHING
+            """,
+            (str(row["id"]), row.get("block_text_sha256")),
+        )
+        if cursor.rowcount:
+            minted.append(
+                {
+                    "evidence_id": str(row["id"]),
+                    "block_ref": normalize_path(str(row["block_ref"])),
+                    "block_text_sha256": row.get("block_text_sha256"),
+                }
             )
-        existing_bindings = {
-            row["id"]: row["block_text_sha256"]
-            for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_bindings")
-        }
-        deleted = conn.execute("DELETE FROM evidence_sets").rowcount
-        for row in rows:
-            evidence_id = str(row["id"])
-            items = [str(item) for item in row.get("items", [])]
-            bind = bool(row.get("bind", True))
-            block_text_sha256 = (
-                existing_bindings[evidence_id]
-                if bind and evidence_id in existing_bindings
-                else row.get("block_text_sha256")
-                if bind
-                else None
+    existing_bindings = {
+        row["id"]: row["block_text_sha256"]
+        for row in conn.execute("SELECT id, block_text_sha256 FROM evidence_bindings")
+    }
+    deleted = conn.execute("DELETE FROM evidence_sets").rowcount
+    for row in rows:
+        evidence_id = str(row["id"])
+        items = [str(item) for item in row.get("items", [])]
+        bind = bool(row.get("bind", True))
+        block_text_sha256 = (
+            existing_bindings[evidence_id]
+            if bind and evidence_id in existing_bindings
+            else row.get("block_text_sha256")
+            if bind
+            else None
+        )
+        conn.execute(
+            """
+            INSERT INTO evidence_sets(
+                id,
+                block_ref,
+                items_json,
+                type,
+                state,
+                review_required,
+                run_id,
+                block_text_sha256
             )
-            conn.execute(
-                """
-                INSERT INTO evidence_sets(
-                    id,
-                    block_ref,
-                    items_json,
-                    type,
-                    state,
-                    review_required,
-                    run_id,
-                    block_text_sha256
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    evidence_id,
-                    normalize_path(str(row["block_ref"])),
-                    _json(items),
-                    str(row["type"]),
-                    str(row["state"]),
-                    1 if bool(row.get("review_required")) else 0,
-                    str(row.get("run_id") or ""),
-                    block_text_sha256,
-                ),
-            )
-    return {"deleted": int(deleted), "inserted": len(rows)}
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                evidence_id,
+                normalize_path(str(row["block_ref"])),
+                _json(items),
+                str(row["type"]),
+                str(row["state"]),
+                1 if bool(row.get("review_required")) else 0,
+                str(row.get("run_id") or ""),
+                block_text_sha256,
+            ),
+        )
+    result: dict[str, Any] = {"deleted": int(deleted), "inserted": len(rows)}
+    if minted:
+        result["minted"] = minted
+    return result
 
 
 def evidence_sets(vault: Path) -> list[dict[str, Any]]:
@@ -2354,6 +2494,78 @@ def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict
     if duplicate_ids:
         result["duplicate_ids"] = duplicate_ids
     return result
+
+
+def rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]:
+    """Replay verified first-time evidence mints into the immutable bindings ledger."""
+    vault = Path(vault)
+    with workspace_lock(vault):
+        verification = verify_journal_chain(vault)
+        if not verification["ok"]:
+            raise ValueError(
+                "cannot rebuild evidence bindings: journal chain is invalid: "
+                f"{verification['error']}"
+            )
+        mints = [
+            _evidence_mint_event_binding(event)
+            for event in read_event_log(vault, event_types=("evidence-minted",))
+        ]
+        replayed = 0
+        inserted = 0
+        with connect(vault) as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            for evidence_id, block_text_sha256 in mints:
+                replayed += 1
+                cursor = conn.execute(
+                    """
+                    INSERT INTO evidence_bindings(id, block_text_sha256)
+                    VALUES (?, ?)
+                    ON CONFLICT(id) DO NOTHING
+                    """,
+                    (evidence_id, block_text_sha256),
+                )
+                inserted += cursor.rowcount
+    return {"replayed": replayed, "inserted": inserted}
+
+
+def _evidence_mint_event_binding(event: Mapping[str, Any]) -> tuple[str, str | None]:
+    """Validate the canonical payload used to restore one immutable binding."""
+    evidence_id = event.get("evidence_id")
+    block_ref = event.get("block_ref")
+    block_text_sha256 = event.get("block_text_sha256")
+    actor = event.get("actor")
+    valid_provenance = (
+        isinstance(actor, str)
+        and actor in ACTORS
+        and isinstance(event.get("request_provenance"), dict)
+        and all(
+            isinstance(event.get(field), str) and event[field].strip()
+            for field in ("run_id", "request_id", "operation", "machine", "timestamp")
+        )
+    )
+    if (
+        event.get("event") != "evidence-minted"
+        or not isinstance(evidence_id, str)
+        or re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id) is None
+        or not isinstance(block_ref, str)
+        or not valid_provenance
+        or (
+            block_text_sha256 is not None
+            and (
+                not isinstance(block_text_sha256, str)
+                or re.fullmatch(r"sha256:[0-9a-f]{64}", block_text_sha256) is None
+            )
+        )
+    ):
+        raise ValueError("invalid evidence-minted journal event")
+    try:
+        rel, separator, _anchor = block_ref.partition("#^")
+        canonical_block_ref = _evidence_block_ref(rel, evidence_id)
+    except ValueError as exc:
+        raise ValueError("invalid evidence-minted journal event") from exc
+    if not separator or not rel.strip() or block_ref != canonical_block_ref:
+        raise ValueError("invalid evidence-minted journal event")
+    return evidence_id, block_text_sha256
 
 
 def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
@@ -2446,18 +2658,10 @@ def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str,
 
 def _source_row(row: sqlite3.Row) -> dict[str, Any]:
     csl_json = json.loads(row["csl_json"] or "{}")
-    memoria = csl_json.get("memoria") if isinstance(csl_json, dict) else None
-    if isinstance(memoria, dict) and "topics" in memoria:
-        csl_json = dict(csl_json)
-        memoria = dict(memoria)
-        memoria.pop("topics")
-        if memoria:
-            csl_json["memoria"] = memoria
-        else:
-            csl_json.pop("memoria", None)
     return {
         "work_id": row["work_id"],
         "concept_path": row["concept_path"],
+        "doi": row["doi"],
         "title": row["title"],
         "description": row["description"],
         "resource": row["resource"],
@@ -2559,16 +2763,18 @@ def _evidence_marker_rows(
         prior_block_ref = None if direct else prior_block_refs.get(evidence_id)
         selected.append((rel, marker, bind, prior_block_ref))
 
-    marker_ids = {marker.evidence_id for _rel, marker, _bind, _prior in selected}
+    items_by_id = {
+        marker.evidence_id: tuple(marker.items) for _rel, marker, _bind, _prior in selected
+    }
     source_spans = _source_span_pages(vault)
+    states = _evidence_set_states(vault, items_by_id, source_spans=source_spans)
     rows = []
     for rel, marker, bind, prior_block_ref in selected:
         row = _derived_evidence_row(
             vault,
             rel,
             marker,
-            marker_ids=marker_ids,
-            source_spans=source_spans,
+            state_value=states[marker.evidence_id],
             run_id=run_id,
         )
         if prior_block_ref is not None:
@@ -2605,71 +2811,113 @@ def _derived_evidence_row(
     rel: str,
     marker: EvidenceMarker,
     *,
-    marker_ids: set[str],
-    source_spans: dict[str, set[str]],
+    state_value: str,
     run_id: str,
 ) -> dict[str, Any]:
     items = list(marker.items)
-    evidence_type = _derived_evidence_type(items)
+    evidence_type = derive_evidence_type(items)
     block_ref = _evidence_block_ref(rel, marker.evidence_id)
     return {
         "id": marker.evidence_id,
         "block_ref": block_ref,
         "items": items,
         "type": evidence_type,
-        "state": "complete"
-        if _evidence_items_resolve(vault, items, marker_ids=marker_ids, source_spans=source_spans)
-        else "evidence-incomplete",
+        "state": state_value,
         "review_required": evidence_type in {"implicit", "multi-hop"},
         "run_id": run_id,
         "block_text_sha256": _block_text_sha256(vault, block_ref),
     }
 
 
-def _derived_evidence_type(items: list[str]) -> str:
+def derive_evidence_type(items: list[str]) -> str:
+    """Derive the grounds type from a record's own items (spec §4, rules R1-R4)."""
     if not items:
         return "implicit"
-    if any(evidence_ref_kind(item) == "code-warrant" for item in items):
-        return "computed"
-    if any(evidence_ref_kind(item) == "evidence-set" for item in items):
+    kinds = [evidence_ref_kind(item) for item in items]
+    span_works = {
+        parse_source_span_ref(item).work_id
+        for item, kind in zip(items, kinds, strict=True)
+        if kind == "source-span"
+    }
+    has_code = "code-grounds" in kinds
+    if "evidence-set" in kinds or len(span_works) >= 2 or (has_code and span_works):
         return "multi-hop"
+    if has_code:
+        return "computed"
     return "single-span" if len(items) == 1 else "multi-span"
 
 
-def _evidence_items_resolve(
+def _evidence_set_states(
     vault: Path,
-    items: list[str],
+    items_by_id: dict[str, tuple[str, ...]],
     *,
-    marker_ids: set[str],
     source_spans: dict[str, set[str]],
-) -> bool:
-    if not items:
-        return False
-    for item in items:
-        kind = evidence_ref_kind(item)
-        if kind == "code-warrant":
-            if not _code_warrant_resolves(vault, item):
-                return False
-            continue
-        if kind == "evidence-set":
-            if item not in marker_ids:
-                return False
-            continue
-        source = parse_source_span_ref(item)
-        if source.page not in source_spans.get(source.work_id, set()):
-            return False
-    return True
+) -> dict[str, str]:
+    """Resolve completeness bottom-up over nested sets; cycles fail closed."""
+    states: dict[str, str] = {}
+
+    def visit(evidence_id: str, visiting: frozenset[str]) -> str:
+        known = states.get(evidence_id)
+        if known is not None:
+            return known
+        if evidence_id in visiting:
+            return "evidence-incomplete"
+
+        items = items_by_id.get(evidence_id) or ()
+        complete = bool(items)
+        visiting = visiting | {evidence_id}
+        for item in items:
+            kind = evidence_ref_kind(item)
+            if kind == "code-grounds":
+                resolved = _code_grounds_resolves(vault, item)
+            elif kind == "evidence-set":
+                resolved = item in items_by_id and visit(item, visiting) == "complete"
+            else:
+                source = parse_source_span_ref(item)
+                resolved = source.page in source_spans.get(source.work_id, set())
+            if not resolved:
+                complete = False
+                break
+
+        states[evidence_id] = "complete" if complete else "evidence-incomplete"
+        return states[evidence_id]
+
+    for evidence_id in sorted(items_by_id):
+        visit(evidence_id, frozenset())
+    return states
 
 
-def _code_warrant_resolves(vault: Path, item: str) -> bool:
-    from memoria_vault.runtime.code.runs import code_warrant_complete
+def evidence_item_closure(
+    rows_by_id: Mapping[str, Mapping[str, Any]], evidence_id: str
+) -> list[tuple[str, tuple[str, ...]]]:
+    """Return non-set evidence leaves with their nested evidence-set paths."""
+    leaves: list[tuple[str, tuple[str, ...]]] = []
 
-    warrant = parse_code_warrant_ref(item)
-    return code_warrant_complete(
+    def visit(current_id: str, path: tuple[str, ...], visiting: frozenset[str]) -> None:
+        row = rows_by_id.get(current_id)
+        if row is None:
+            return
+        for item in row.get("items", ()):
+            if evidence_ref_kind(item) != "evidence-set":
+                leaves.append((item, path))
+                continue
+            if item in visiting or item not in rows_by_id:
+                continue
+            visit(item, (*path, item), visiting | {item})
+
+    visit(evidence_id, (), frozenset({evidence_id}))
+    return leaves
+
+
+def _code_grounds_resolves(vault: Path, item: str) -> bool:
+    from memoria_vault.runtime.code.runs import code_grounds_complete
+
+    grounds = parse_code_grounds_ref(item)
+    return code_grounds_complete(
         vault,
-        run_id=warrant.run_id,
-        artifact_id=warrant.artifact_id,
-        output_sha256=warrant.output_sha256,
+        run_id=grounds.run_id,
+        artifact_id=grounds.artifact_id,
+        output_sha256=grounds.output_sha256,
     )
 
 
@@ -2965,8 +3213,8 @@ def _mask_markdown_headings(text: str) -> str:
     lines = _markdown_lines(text)
     for index, line in enumerate(lines):
         body = line.rstrip("\r\n")
-        if re.match(r"^[ ]{0,3}#{1,6}(?:[ \t]+|$)", body):
-            lines[index] = _mask_markdown_code(line)
+        if heading := re.match(r"^[ ]{0,3}#{1,6}(?:[ \t]+|$)", body):
+            lines[index] = line[: heading.end()] + _mask_markdown_code(line[heading.end() :])
         if index and re.match(r"^[ ]{0,3}(?:=+|-+)[ \t]*$", body):
             if not _is_markdown_blank_line(lines[index - 1]):
                 lines[index - 1] = _mask_markdown_code(lines[index - 1])
@@ -3182,6 +3430,26 @@ def _has_pandoc_table_syntax(text: str) -> bool:
     return len(re.findall(r"(?m)^[ \t]*-+[ \t]*$", text)) >= 2
 
 
+def _table_container_text(text: str) -> str:
+    """Flatten quote/list prefixes before fail-closed table visibility checks."""
+    lines: list[str] = []
+    for line in _markdown_lines(text):
+        while match := _CITATION_TABLE_CONTAINER_PREFIX_RE.match(line):
+            line = line[match.end() :]
+        lines.append(line)
+    return "".join(lines)
+
+
+def _has_ambiguous_pandoc_table_syntax(text: str) -> bool:
+    """Return whether table grammar can change Markdown visibility in a container."""
+    return _has_pandoc_table_syntax(text) or _has_pandoc_table_syntax(_table_container_text(text))
+
+
+def markdown_citation_visibility_is_ambiguous(text: str) -> bool:
+    """Return whether table grammar can change visible raw citation boundaries."""
+    return _has_ambiguous_pandoc_table_syntax(text)
+
+
 def _backtick_run_end(text: str, start: int) -> int:
     end = start
     while end < len(text) and text[end] == "`":
@@ -3198,8 +3466,40 @@ def _preceding_backslash_count(text: str, index: int) -> int:
     return count
 
 
-def _mask_inline_code_spans(text: str) -> str:
-    """Mask inline-code delimiter runs using an indexed linear scan."""
+def _inline_code_interior_lines(content: str) -> list[str]:
+    """Return complete physical lines strictly between inline-code delimiters."""
+    if "\n" not in content:
+        return []
+    lines = _markdown_lines(content)[1:]
+    return lines if content.endswith("\n") else lines[:-1]
+
+
+def _inline_code_span_is_definite(content: str, *, opener_line: str, closer_line: str) -> bool:
+    """Return whether a multiline backtick pair avoids known block boundaries."""
+    if re.search(r"\r(?!\n)", content):
+        return False
+    if _QUOTED_LINE_RE.match(opener_line) or _LIST_ITEM_LINE_RE.match(opener_line):
+        return False
+    if _QUOTED_LINE_RE.match(closer_line) or _LIST_ITEM_LINE_RE.match(closer_line):
+        return False
+    return not any(
+        _is_markdown_blank_line(line)
+        or re.fullmatch(r"[ \t]*-+[ \t]*(?:\r?\n)?", line)
+        or re.match(r"^[ \t]{0,3}[:~][ \t]+", line)
+        or _QUOTED_LINE_RE.match(line)
+        or _LIST_ITEM_LINE_RE.match(line)
+        or _has_ambiguous_pandoc_table_syntax(line)
+        for line in _inline_code_interior_lines(content)
+    )
+
+
+def _mask_inline_code_spans(text: str, *, conservative: bool = False) -> str:
+    """Mask inline-code delimiter runs using an indexed linear scan.
+
+    Visibility checks can require a stricter multiline interpretation: masking a
+    span that Pandoc parses as blocks would hide a live citation from the export
+    gate.
+    """
     runs: list[tuple[int, int]] = []
     index = 0
     while index < len(text):
@@ -3247,12 +3547,573 @@ def _mask_inline_code_spans(text: str) -> str:
         delimiter_length, closer_start = choice
         span_start = opener_end - delimiter_length
         closer_end = closer_start + delimiter_length
+        opener_line_start = text.rfind("\n", 0, span_start) + 1
+        closer_line_end = text.find("\n", closer_start)
+        closer_line_end = len(text) if closer_line_end == -1 else closer_line_end
+        if conservative and not _inline_code_span_is_definite(
+            text[opener_end:closer_start],
+            opener_line=text[opener_line_start:opener_end],
+            closer_line=text[closer_start:closer_line_end],
+        ):
+            index = runs_by_start[closer_start][1]
+            continue
         masked.append(text[copied_until:span_start])
         masked.append(_mask_markdown_code(text[span_start:closer_end]))
         copied_until = closer_end
         index = closer_end
     masked.append(text[copied_until:])
     return "".join(masked)
+
+
+def _container_fence_opening(
+    fence: str, info: str, plain_lines: list[str]
+) -> tuple[str, int] | None:
+    """Return one accepted nested fence's delimiter, if its header is trustworthy."""
+    if (
+        fence.startswith("`")
+        and info.strip()
+        and not _SAFE_VISIBILITY_FENCE_INFO_RE.fullmatch(info.strip())
+    ):
+        return None
+    opening, literalize = classify_fenced_code_opening(f"{fence}{info}", plain_lines)
+    if opening is None:
+        return None
+    if literalize:
+        info = info.strip()
+        boundary_opening, boundary_literalize = classify_fenced_code_opening(fence, plain_lines)
+        if (
+            fence.startswith("~")
+            and re.fullmatch(r"[^\s`{}]+", info)
+            and boundary_opening is not None
+            and not boundary_literalize
+        ):
+            return fence[0], len(fence)
+        return None
+    fence = opening.group("fence")
+    return fence[0], len(fence)
+
+
+def _quoted_fence_closes(line: str, character: str, length: int, quote_depth: int) -> bool:
+    """Return whether a blockquote fence closes on this physical line."""
+    if fenced_code_closes(line, character, length):
+        return True
+    match = re.match(r"^ {0,3}(?P<quote>(?:>[ \t]*)+)(?P<content>[^\r\n]*)(?:\r?\n)?$", line)
+    return bool(
+        match
+        and match["quote"].count(">") <= quote_depth
+        and fenced_code_closes(match["content"], character, length)
+    )
+
+
+def _quoted_fence_contains(line: str) -> bool:
+    """Return whether a physical line remains inside a blockquote container."""
+    return _QUOTED_LINE_RE.match(line) is not None
+
+
+def _list_fence_closes(line: str, character: str, length: int, indentation: int) -> bool:
+    """Return whether a list-contained fence closes on this physical line."""
+    if fenced_code_closes(line, character, length):
+        return True
+    prefix = line[:indentation]
+    return bool(
+        len(prefix) == indentation
+        and all(prefix_character in " \t" for prefix_character in prefix)
+        and fenced_code_closes(line[indentation:], character, length)
+    )
+
+
+def _list_fence_contains(line: str, indentation: int) -> bool:
+    """Return whether a physical line remains an indented list continuation."""
+    prefix = line[:indentation]
+    return len(prefix) == indentation and all(
+        prefix_character in " \t" for prefix_character in prefix
+    )
+
+
+def _quote_list_fence_opening(
+    line: str, quote_context: list[str]
+) -> tuple[str, int, str, int] | None:
+    """Return a narrow quote-to-list fence only when its outer context is safe."""
+    quote = _QUOTED_LINE_RE.match(line)
+    if quote is None or quote["quote"].count(">") != 1:
+        return None
+    quote_prefix = line[: quote.start("content")]
+    if "\t" in quote_prefix:
+        return None
+    list_item = _LIST_FENCE_OPEN_RE.match(quote["content"])
+    if (
+        list_item is None
+        or list_item["indent"]
+        or "\t" in list_item["spacing"]
+        or (fence := _container_fence_opening(list_item["fence"], list_item["info"], quote_context))
+        is None
+    ):
+        return None
+    return *fence, quote_prefix, list_item.start("fence")
+
+
+def _list_quote_fence_opening(
+    line: str, list_context: list[str]
+) -> tuple[str, int, str, int] | None:
+    """Return a narrow list-to-quote fence only when its outer context is safe."""
+    match = _COMPOUND_LIST_QUOTE_FENCE_OPEN_RE.match(line)
+    if (
+        match is None
+        or (fence := _container_fence_opening(match["fence"], match["info"], list_context)) is None
+    ):
+        return None
+    return *fence, match["quote"], match.start("quote")
+
+
+def _quote_list_fence_inner_line(line: str, quote_prefix: str, indentation: int) -> str | None:
+    """Return the virtual list-content line under an exact outer quote prefix."""
+    if not line.startswith(quote_prefix):
+        return None
+    inner = line[len(quote_prefix) :]
+    prefix = inner[:indentation]
+    if len(prefix) != indentation or prefix != " " * indentation:
+        return None
+    return inner[indentation:]
+
+
+def _quote_list_fence_closes(
+    line: str, character: str, length: int, quote_prefix: str, indentation: int
+) -> bool:
+    """Return whether a strict quote-to-list fence closes on this line."""
+    if fenced_code_closes(line, character, length):
+        return True
+    if not line.startswith(quote_prefix):
+        return False
+    after_quote = line[len(quote_prefix) :]
+    if fenced_code_closes(after_quote, character, length):
+        return True
+    inner = _quote_list_fence_inner_line(line, quote_prefix, indentation)
+    return inner is not None and fenced_code_closes(inner, character, length)
+
+
+def _list_quote_fence_inner_line(line: str, quote_prefix: str, indentation: int) -> str | None:
+    """Return the virtual quote-content line under an exact list continuation."""
+    prefix = line[:indentation]
+    if len(prefix) != indentation or prefix != " " * indentation:
+        return None
+    inner = line[indentation:]
+    if not inner.startswith(quote_prefix):
+        return None
+    return inner[len(quote_prefix) :]
+
+
+def _list_quote_fence_closes(
+    line: str, character: str, length: int, quote_prefix: str, indentation: int
+) -> bool:
+    """Return whether a strict list-to-quote fence closes on this line."""
+    if fenced_code_closes(line, character, length):
+        return True
+    inner = _list_quote_fence_inner_line(line, quote_prefix, indentation)
+    return inner is not None and fenced_code_closes(inner, character, length)
+
+
+def _quote_fence_context(
+    quote_depth: int,
+    quote_block_boundaries: dict[int, bool],
+    plain_block_boundary: bool,
+) -> list[str]:
+    """Return a fail-closed context for a quote-contained fence opener."""
+    if quote_depth in quote_block_boundaries:
+        return [] if quote_block_boundaries[quote_depth] else ["prose"]
+    if not quote_block_boundaries:
+        return [] if plain_block_boundary else ["prose"]
+    return (
+        []
+        if all(quote_block_boundaries.get(depth, False) for depth in range(1, quote_depth))
+        else ["prose"]
+    )
+
+
+def _remember_container_plain_line(
+    line: str,
+    quote_block_boundaries: dict[int, bool],
+    list_item_active: bool,
+    plain_block_boundary: bool,
+) -> tuple[bool, bool]:
+    """Retain the immediate context needed to classify a later container fence."""
+    starts_at_block_boundary = plain_block_boundary
+    quote = _QUOTED_LINE_RE.match(line)
+    plain_heading = quote is None and starts_at_block_boundary and _ATX_HEADING_LINE_RE.match(line)
+    list_item = (
+        quote is None and _LIST_ITEM_LINE_RE.match(line) and not _THEMATIC_BREAK_LINE_RE.match(line)
+    )
+    if _is_markdown_blank_line(line):
+        list_item_active = False
+    elif list_item:
+        list_item_active = list_item_active or starts_at_block_boundary
+    if _is_markdown_blank_line(line):
+        plain_block_boundary = True
+    elif plain_heading or (list_item and list_item_active):
+        plain_block_boundary = True
+    else:
+        plain_block_boundary = False
+    if quote is None:
+        quote_block_boundaries.clear()
+        return list_item_active, plain_block_boundary
+    quote_depth = quote["quote"].count(">")
+    quote_ancestors_at_boundary = bool(quote_block_boundaries) or starts_at_block_boundary
+    quote_ancestors_at_boundary &= all(
+        quote_block_boundaries.get(depth, True) for depth in range(1, quote_depth)
+    )
+    quote_starts_at_boundary = quote_ancestors_at_boundary and quote_block_boundaries.get(
+        quote_depth, starts_at_block_boundary if not quote_block_boundaries else True
+    )
+    for depth in range(1, quote_depth):
+        quote_block_boundaries[depth] = False
+    for depth in list(quote_block_boundaries):
+        if depth > quote_depth:
+            del quote_block_boundaries[depth]
+    quote_content = quote["content"]
+    quote_boundary = quote_ancestors_at_boundary and (
+        _is_markdown_blank_line(quote_content)
+        or bool(_THEMATIC_BREAK_LINE_RE.match(quote_content))
+        or bool(quote_starts_at_boundary and _ATX_HEADING_LINE_RE.match(quote_content))
+    )
+    quote_block_boundaries[quote_depth] = quote_boundary
+    return list_item_active, plain_block_boundary
+
+
+def _mask_container_fenced_code_literals(text: str) -> str:
+    """Mask only paired blockquote/list fences without hiding later prose."""
+    lines: list[str] = []
+    pending: list[str] = []
+    quote_block_boundaries: dict[int, bool] = {}
+    kind = ""
+    fence_character = ""
+    fence_length = 0
+    quote_depth = 0
+    list_indentation = 0
+    compound_prefix = ""
+    compound_indentation = 0
+    list_item_active = False
+    plain_block_boundary = True
+    table_rule_pending = False
+    for line in _markdown_lines(text):
+        if kind:
+            if kind == "quote":
+                closes = _quoted_fence_closes(line, fence_character, fence_length, quote_depth)
+            elif kind == "list":
+                list_prefix = line[:list_indentation]
+                closes = "\t" not in list_prefix and _list_fence_closes(
+                    line, fence_character, fence_length, list_indentation
+                )
+            elif kind == "quote-list":
+                closes = _quote_list_fence_closes(
+                    line,
+                    fence_character,
+                    fence_length,
+                    compound_prefix,
+                    compound_indentation,
+                )
+            else:
+                closes = _list_quote_fence_closes(
+                    line,
+                    fence_character,
+                    fence_length,
+                    compound_prefix,
+                    compound_indentation,
+                )
+            if closes:
+                pending.append(line)
+                lines.extend(_mask_markdown_code(pending_line) for pending_line in pending)
+                pending.clear()
+                quote_block_boundaries.clear()
+                plain_block_boundary = True
+                table_rule_pending = False
+                kind = ""
+                fence_character = ""
+                fence_length = 0
+                quote_depth = 0
+                list_indentation = 0
+                compound_prefix = ""
+                compound_indentation = 0
+                continue
+            if kind == "quote":
+                contains = _quoted_fence_contains(line)
+            elif kind == "list":
+                list_prefix = line[:list_indentation]
+                contains = "\t" not in list_prefix and _list_fence_contains(line, list_indentation)
+            elif kind == "quote-list":
+                contains = (
+                    _quote_list_fence_inner_line(line, compound_prefix, compound_indentation)
+                    is not None
+                )
+            else:
+                contains = (
+                    _list_quote_fence_inner_line(line, compound_prefix, compound_indentation)
+                    is not None
+                )
+            if contains:
+                pending.append(line)
+                continue
+            lines.extend(pending)
+            for pending_line in pending:
+                list_item_active, plain_block_boundary = _remember_container_plain_line(
+                    pending_line,
+                    quote_block_boundaries,
+                    list_item_active,
+                    plain_block_boundary,
+                )
+                table_rule_pending = not _is_markdown_blank_line(pending_line) and (
+                    table_rule_pending or _has_ambiguous_pandoc_table_syntax(pending_line)
+                )
+            pending.clear()
+            kind = ""
+            fence_character = ""
+            fence_length = 0
+            quote_depth = 0
+            list_indentation = 0
+            compound_prefix = ""
+            compound_indentation = 0
+
+        quote = _QUOTED_FENCE_OPEN_RE.match(line)
+        quote_context = (
+            ["prose"]
+            if list_item_active
+            else _quote_fence_context(
+                quote["quote"].count(">"), quote_block_boundaries, plain_block_boundary
+            )
+            if quote
+            else []
+        )
+        if (
+            not table_rule_pending
+            and quote
+            and (fence := _container_fence_opening(quote["fence"], quote["info"], quote_context))
+        ):
+            kind = "quote"
+            fence_character, fence_length = fence
+            quote_depth = quote["quote"].count(">")
+            quote_block_boundaries.clear()
+            list_item_active = False
+            plain_block_boundary = True
+            table_rule_pending = False
+            pending.append(line)
+            continue
+
+        list_item = _LIST_FENCE_OPEN_RE.match(line)
+        list_context = [] if list_item_active or plain_block_boundary else ["prose"]
+        if (
+            not table_rule_pending
+            and list_item
+            and "\t" not in list_item["indent"] + list_item["spacing"]
+            and (
+                fence := _container_fence_opening(
+                    list_item["fence"], list_item["info"], list_context
+                )
+            )
+        ):
+            kind = "list"
+            fence_character, fence_length = fence
+            list_indentation = list_item.start("fence")
+            quote_block_boundaries.clear()
+            list_item_active = True
+            plain_block_boundary = True
+            table_rule_pending = False
+            pending.append(line)
+            continue
+
+        compound_quote_context = (
+            ["prose"]
+            if list_item_active
+            else _quote_fence_context(1, quote_block_boundaries, plain_block_boundary)
+        )
+        if not table_rule_pending and (
+            compound := _quote_list_fence_opening(line, compound_quote_context)
+        ):
+            kind = "quote-list"
+            fence_character, fence_length, compound_prefix, compound_indentation = compound
+            quote_block_boundaries.clear()
+            list_item_active = False
+            plain_block_boundary = True
+            table_rule_pending = False
+            pending.append(line)
+            continue
+
+        compound_list_context = [] if list_item_active or plain_block_boundary else ["prose"]
+        if not table_rule_pending and (
+            compound := _list_quote_fence_opening(line, compound_list_context)
+        ):
+            kind = "list-quote"
+            fence_character, fence_length, compound_prefix, compound_indentation = compound
+            quote_block_boundaries.clear()
+            list_item_active = True
+            plain_block_boundary = True
+            table_rule_pending = False
+            pending.append(line)
+            continue
+
+        lines.append(line)
+        list_item_active, plain_block_boundary = _remember_container_plain_line(
+            line,
+            quote_block_boundaries,
+            list_item_active,
+            plain_block_boundary,
+        )
+        table_rule_pending = not _is_markdown_blank_line(line) and (
+            table_rule_pending or _has_ambiguous_pandoc_table_syntax(line)
+        )
+    lines.extend(pending)
+    return "".join(lines)
+
+
+def _mask_top_level_code_literals(text: str) -> str:
+    """Mask top-level fenced code while preserving the shared fence semantics."""
+    lines: list[str] = []
+    plain_lines: list[str] = []
+    fence_char = ""
+    fence_length = 0
+    literal_tilde_fence_length = 0
+    for line in _markdown_lines(text):
+        if fence_char:
+            lines.append(_mask_markdown_code(line))
+            if fenced_code_closes(line, fence_char, fence_length):
+                fence_char = ""
+                fence_length = 0
+            continue
+
+        if literal_tilde_fence_length:
+            if fenced_code_closes(line, "~", literal_tilde_fence_length):
+                literal_tilde_fence_length = 0
+            plain_lines.append(line)
+            lines.append(_mask_markdown_code(line) if re.match(r"^(?: {4}|\t)", line) else line)
+            continue
+
+        opening, literalize = classify_fenced_code_opening(line, plain_lines)
+        if opening is not None and not literalize:
+            fence = opening.group("fence")
+            fence_char = fence[0]
+            fence_length = len(fence)
+            lines.append(_mask_markdown_code(line))
+            plain_lines.clear()
+            continue
+
+        if literalize and opening is not None:
+            if opening.group("fence").startswith("~"):
+                literal_tilde_fence_length = len(opening.group("fence"))
+        plain_lines.append(line)
+        lines.append(_mask_markdown_code(line) if re.match(r"^(?: {4}|\t)", line) else line)
+
+    return "".join(lines)
+
+
+def _visibility_fenced_code_opening(
+    line: str, at_block_boundary: bool
+) -> tuple[re.Match[str] | None, bool]:
+    """Classify only fence headers whose visible-code semantics are definite."""
+    opening, literalize = classify_fenced_code_opening(line, [] if at_block_boundary else ["prose"])
+    if opening is None or literalize:
+        return opening, literalize
+    info = line[opening.end() :].rstrip("\r\n").strip(" \t")
+    if info and not _SAFE_VISIBILITY_FENCE_INFO_RE.fullmatch(info):
+        return None, False
+    return opening, False
+
+
+def _mask_visibility_top_level_code_literals(text: str) -> str:
+    """Mask only definite top-level code without recreating Pandoc's containers."""
+    lines: list[str] = []
+    pending_fence: list[str] = []
+    fence_char = ""
+    fence_length = 0
+    literal_tilde_fence_length = 0
+    indented_code = False
+    at_block_boundary = True
+    seen_nonblank = False
+    table_rule_pending = False
+    for line in _markdown_lines(text):
+        if fence_char:
+            pending_fence.append(line)
+            if fenced_code_closes(line, fence_char, fence_length):
+                lines.extend(_mask_markdown_code(pending_line) for pending_line in pending_fence)
+                pending_fence.clear()
+                fence_char = ""
+                fence_length = 0
+                at_block_boundary = True
+                seen_nonblank = True
+                table_rule_pending = False
+            continue
+
+        if indented_code:
+            if re.match(r"^(?: {4}|\t)", line):
+                lines.append(_mask_markdown_code(line))
+                continue
+            if _is_markdown_blank_line(line):
+                lines.append(line)
+                continue
+            indented_code = False
+            at_block_boundary = True
+            seen_nonblank = True
+
+        if literal_tilde_fence_length:
+            if fenced_code_closes(line, "~", literal_tilde_fence_length):
+                literal_tilde_fence_length = 0
+            lines.append(line)
+            if _is_markdown_blank_line(line):
+                at_block_boundary = True
+            else:
+                at_block_boundary = False
+                seen_nonblank = True
+            table_rule_pending = not _is_markdown_blank_line(line) and (
+                table_rule_pending or _has_ambiguous_pandoc_table_syntax(line)
+            )
+            continue
+
+        if re.match(r"^(?: {4}|\t)", line) and not seen_nonblank:
+            lines.append(_mask_markdown_code(line))
+            indented_code = True
+            continue
+
+        opening, literalize = _visibility_fenced_code_opening(line, at_block_boundary)
+        if not table_rule_pending and opening is not None and not literalize:
+            fence = opening.group("fence")
+            fence_char = fence[0]
+            fence_length = len(fence)
+            pending_fence.append(line)
+            continue
+
+        if literalize and opening is not None and opening.group("fence").startswith("~"):
+            literal_tilde_fence_length = len(opening.group("fence"))
+        lines.append(line)
+        if _is_markdown_blank_line(line):
+            at_block_boundary = True
+        else:
+            at_block_boundary = bool(at_block_boundary and _ATX_HEADING_LINE_RE.match(line))
+            seen_nonblank = True
+        table_rule_pending = not _is_markdown_blank_line(line) and (
+            table_rule_pending or _has_ambiguous_pandoc_table_syntax(line)
+        )
+
+    lines.extend(pending_fence)
+    return "".join(lines)
+
+
+def markdown_code_literals_masked(text: str) -> str:
+    """Mask Markdown code literals while preserving source offsets and visible prose.
+
+    This deliberately leaves headings and other rendered Markdown intact for
+    callers that need to inspect direct Markdown controls.
+    """
+    fenced = _mask_top_level_code_literals(text)
+    fenced = _mask_container_fenced_code_literals(fenced)
+    return _mask_inline_code_spans(fenced)
+
+
+def markdown_visible_code_literals_masked(text: str) -> str:
+    """Mask only definite code literals before checking rendered Markdown syntax.
+
+    Unlike :func:`markdown_code_literals_masked`, this does not treat every
+    four-space or tab-prefixed physical line as code: indented code cannot
+    interrupt a paragraph, so doing so could hide a visible Pandoc citation.
+    """
+    fenced = _mask_visibility_top_level_code_literals(text)
+    fenced = _mask_container_fenced_code_literals(fenced)
+    return _mask_inline_code_spans(fenced, conservative=True)
 
 
 def _markdown_control_text(text: str) -> str:
@@ -3269,7 +4130,7 @@ def _markdown_control_text(text: str) -> str:
         or _has_footnote_definition(text)
         or _has_mmd_title_field(text)
         or _has_abbreviation_syntax(text)
-        or _has_pandoc_table_syntax(yaml_for_table)
+        or _has_ambiguous_pandoc_table_syntax(yaml_for_table)
     ):
         return _mask_markdown_code(text)
     nonbinding = _mask_html_comments(text)
@@ -3282,36 +4143,7 @@ def _markdown_control_text(text: str) -> str:
     nonbinding = _mask_multiline_bracket_constructs(nonbinding)
     nonbinding = _mask_multiline_parenthesized_constructs(nonbinding)
     nonbinding = _mask_fenced_divs(nonbinding)
-    lines: list[str] = []
-    fence_char = ""
-    fence_length = 0
-    for line in _markdown_lines(nonbinding):
-        body = line.rstrip("\r\n")
-        if fence_char:
-            lines.append(_mask_markdown_code(line))
-            closing = re.match(r"^[ \t]{0,3}([`~]+)[ \t]*$", body)
-            if (
-                closing
-                and closing.group(1)[0] == fence_char
-                and len(closing.group(1)) >= fence_length
-            ):
-                fence_char = ""
-                fence_length = 0
-            continue
-
-        opening = re.match(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})", body)
-        if opening:
-            fence = opening.group("fence")
-            fence_char = fence[0]
-            fence_length = len(fence)
-            lines.append(_mask_markdown_code(line))
-        elif re.match(r"^(?: {4}|\t)", line):
-            lines.append(_mask_markdown_code(line))
-        else:
-            lines.append(line)
-
-    fenced = "".join(lines)
-    return _mask_inline_code_spans(fenced)
+    return markdown_code_literals_masked(nonbinding)
 
 
 def _direct_evidence_marker_matches(text: str) -> list[tuple[re.Match[str], EvidenceMarker]]:
@@ -3330,10 +4162,7 @@ def _evidence_marker_occurrences_from_markdown(
     text: str,
 ) -> list[tuple[EvidenceMarker, bool]]:
     """Return raw evidence markers and whether each is a direct visible occurrence."""
-    control_text = _markdown_control_text(text)
-    direct_spans = {
-        match.span("marker") for match, _marker in _direct_evidence_marker_matches(control_text)
-    }
+    direct_spans = {span for span, _marker in direct_evidence_marker_spans_from_markdown(text)}
     occurrences: list[tuple[EvidenceMarker, bool]] = []
     for match in _RAW_EVIDENCE_MARKER_RE.finditer(text):
         try:
@@ -3344,10 +4173,20 @@ def _evidence_marker_occurrences_from_markdown(
     return occurrences
 
 
+def direct_evidence_marker_spans_from_markdown(
+    text: str,
+) -> list[tuple[tuple[int, int], EvidenceMarker]]:
+    """Return source spans and markers that appear on direct, visible claim lines."""
+    control_text = _markdown_control_text(text)
+    return [
+        (match.span("marker"), marker)
+        for match, marker in _direct_evidence_marker_matches(control_text)
+    ]
+
+
 def evidence_markers_from_markdown(text: str) -> list[EvidenceMarker]:
     """Return markers that appear on direct, visible Markdown claim lines."""
-    control_text = _markdown_control_text(text)
-    return [marker for _match, marker in _direct_evidence_marker_matches(control_text)]
+    return [marker for _span, marker in direct_evidence_marker_spans_from_markdown(text)]
 
 
 def _upsert_concept_mirror_conn(
@@ -3424,9 +4263,15 @@ def _concept_edge_relation(value: str) -> str:
     return relation
 
 
+def concept_edge_id(source_concept_id: str, relation_type: str, target_concept_id: str) -> str:
+    """Return the deterministic id for a normalized concept-edge triple."""
+    key = f"{source_concept_id}\0{relation_type}\0{target_concept_id}"
+    return hashlib.sha256(key.encode()).hexdigest()[:24]
+
+
 def _code_purpose(value: str) -> str:
     purpose = value.strip().lower()
-    if purpose not in {"warrant", "deliverable", "both"}:
+    if purpose not in {"grounds", "deliverable", "both"}:
         raise ValueError(f"invalid code artifact purpose: {value!r}")
     return purpose
 
@@ -3456,29 +4301,6 @@ def _work_id(value: str) -> str:
     if not work_id:
         raise ValueError("work_id is required")
     return work_id
-
-
-def _source_refs(frontmatter: dict[str, Any]) -> list[str]:
-    refs: set[str] = set()
-    _collect_source_refs(refs, frontmatter.get("work_id"))
-    _collect_source_refs(refs, frontmatter.get("evidence_set"))
-    _collect_source_refs(refs, frontmatter.get("members"))
-    _collect_source_refs(refs, frontmatter.get("links"))
-    return sorted(refs)
-
-
-def _collect_source_refs(refs: set[str], value: Any) -> None:
-    if isinstance(value, str):
-        if value.startswith("catalog/sources/"):
-            refs.add(f"catalog/sources/{_work_id(value)}")
-        return
-    if isinstance(value, list):
-        for item in value:
-            _collect_source_refs(refs, item)
-        return
-    if isinstance(value, dict):
-        for item in value.values():
-            _collect_source_refs(refs, item)
 
 
 def _csl_authors(csl: dict[str, Any]) -> list[str]:

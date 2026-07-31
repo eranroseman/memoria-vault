@@ -17,7 +17,7 @@ def create_code_artifact(
     artifact_id: str,
     *,
     title: str = "",
-    purpose: str = "warrant",
+    purpose: str = "grounds",
     approved_command: list[str],
     declared_inputs: list[str] | None = None,
     declared_outputs: list[str] | None = None,

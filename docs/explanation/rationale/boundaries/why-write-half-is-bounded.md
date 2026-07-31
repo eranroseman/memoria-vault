@@ -53,7 +53,7 @@ proposal; checked knowledge still passes through the normal write boundary.
 source-backed citations. If verification finds missing or review-required
 evidence, the export refuses with reasons.
 
-**Code output masquerading as analysis.** Computed warrants can prove that an
+**Code output masquerading as analysis.** Computed grounds can prove that an
 output came from a recorded run, but they do not make the research claim true.
 Code execution stays behind its own fail-closed gate.
 

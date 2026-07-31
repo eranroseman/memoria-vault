@@ -13,7 +13,7 @@ from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import _cli_command_surface
-from tests.helpers import ROOT, _assert_request_columns, git
+from tests.helpers import ROOT, WORKSPACE_SEED, _assert_request_columns, git, write_checked_concept
 
 
 def _parser_for_command(parser: argparse.ArgumentParser, command: str) -> argparse.ArgumentParser:
@@ -48,12 +48,71 @@ def _subparser_help(parser: argparse.ArgumentParser, command: str) -> str:
     return str(choice.help or "")
 
 
+def _job_console_blocks(out: str) -> dict[str, list[str]]:
+    blocks: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in out.splitlines():
+        if line.endswith(":") and not line.startswith(" "):
+            current = line[:-1]
+            blocks[current] = []
+        elif current is not None and line.strip():
+            blocks[current].append(line.strip())
+    return blocks
+
+
 def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         main(["--help"])
 
     assert exc.value.code == 0
     assert "memoria" in capsys.readouterr().out
+
+
+def test_cli_help_renders_exactly_five_job_groups_in_order(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    rc = main(["help"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert _parser_dests("memoria help") == set()
+    headings = [
+        line[:-1] for line in out.splitlines() if line.endswith(":") and not line.startswith(" ")
+    ]
+    assert headings == ["read", "knowledge", "project", "review", "upkeep"]
+
+
+def test_cli_help_groups_carry_correct_membership(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = main(["help"])
+    blocks = _job_console_blocks(capsys.readouterr().out)
+
+    assert rc == 0
+    assert set(blocks) == {"read", "knowledge", "project", "review", "upkeep"}
+
+    def has(job: str, left: str) -> bool:
+        return any(line.startswith(left + "  ") for line in blocks[job])
+
+    assert has("read", "memoria status")
+    assert has("read", "memoria operation list")
+    assert has("read", "memoria surface schema")
+    assert has("read", "surface.openapi (http)")
+    assert has("read", "memoria list")
+    assert has("read", "memoria show")
+    assert has("read", "work.get (http, mcp)")
+    assert has("read", "memoria journal tail")
+    assert has("read", "memoria journal show")
+    assert has("read", "exploration.list (http, mcp)")
+    assert has("read", "memoria explore")
+    assert blocks["knowledge"] == ["(no registered surfaces yet)"]
+    assert has("project", "project.slice.read (http, mcp)")
+    assert has("project", "project.draft.read (http, mcp)")
+    assert has("review", "memoria request list")
+    assert has("review", "memoria request show")
+    assert has("review", "memoria attention list")
+    assert has("review", "memoria attention worklist")
+    assert has("review", "memoria attention show")
+    assert has("read", "context.read (reserved)")
+    assert has("upkeep", "memoria operation run")
 
 
 def test_cli_version_uses_source_package_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -79,9 +138,13 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria doctor bundle",
         "memoria doctor self-test",
         "memoria ask",
+        "memoria secrets set",
+        "memoria secrets list",
+        "memoria explore",
+        "memoria handshake",
         "memoria serve",
-        "memoria migrate",
         "memoria mcp",
+        "memoria help",
         "memoria new hub",
         "memoria new note",
         "memoria new project",
@@ -181,6 +244,111 @@ def test_cli_shared_surface_help_uses_registry_summaries() -> None:
         for command in cli.get("commands") or []:
             command_parser = _parser_for_command(parser, str(command))
             assert command_parser.description == actions[str(action["id"])]["summary"]
+
+
+def test_cli_explore_help_and_read_envelope_are_pure(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    parser = _build_parser()
+    explore_parser = _parser_for_command(parser, "memoria explore")
+    project_parser = _parser_for_command(parser, "memoria project explore")
+    assert "memoria project explore" in str(explore_parser.description)
+    assert "memoria explore" in str(project_parser.description)
+    assert _parser_dests("memoria explore") >= {"topic", "versus", "project", "depth", "trace"}
+
+    with state.connect(workspace) as conn:
+        before = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    rc = main(["explore", "absent", "--workspace", str(workspace), "--json", "--trace"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["api_version"] == "engine-read-api.v1"
+    assert output["explore"]["trace"]["rerank"] == "off"
+    with state.connect(workspace) as conn:
+        after = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    assert after == before
+
+
+def test_cli_explore_text_reports_empty_sides_and_requested_traces(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    assert main(["explore", "absent", "--workspace", str(workspace), "--json"]) == 0
+    empty = json.loads(capsys.readouterr().out)["explore"]["honest_empty"]
+
+    assert main(["explore", "absent", "--workspace", str(workspace), "--trace"]) == 0
+    text = capsys.readouterr().out
+    assert text.splitlines()[0] == empty
+    assert "universe:" in text
+    assert "rerank: off" in text
+
+    assert (
+        main(
+            [
+                "explore",
+                "absent",
+                "--versus",
+                "also-absent",
+                "--workspace",
+                str(workspace),
+                "--trace",
+            ]
+        )
+        == 0
+    )
+    versus_text = capsys.readouterr().out
+    assert f"a: {empty}" in versus_text
+    assert "b: 0 of " in versus_text
+    assert "a: universe:" in versus_text
+    assert "b: rerank: off" in versus_text
+
+    write_checked_concept(
+        workspace,
+        "notes/known.md",
+        "type: note\ntitle: Known topic\nmode: claim\n",
+        body="Known topic evidence.",
+    )
+    assert (
+        main(
+            [
+                "explore",
+                "known",
+                "--versus",
+                "absent",
+                "--workspace",
+                str(workspace),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    mixed_empty = json.loads(capsys.readouterr().out)["explore"]["b"]["honest_empty"]
+
+    assert (
+        main(
+            [
+                "explore",
+                "known",
+                "--versus",
+                "absent",
+                "--workspace",
+                str(workspace),
+                "--trace",
+            ]
+        )
+        == 0
+    )
+    mixed_text = capsys.readouterr().out
+    assert mixed_text.splitlines()[0] == "completed; details available with --json"
+    assert f"b: {mixed_empty}" in mixed_text
+    assert "a: universe:" in mixed_text
+    assert "b: rerank: off" in mixed_text
 
 
 def test_cli_parent_help_exposes_shared_surface_summaries() -> None:
@@ -338,6 +506,62 @@ def test_memoria_new_defaults_include_description_key(
     assert frontmatter["description"] == ""
 
 
+def test_steering_show_renders_effective_steering_provenance(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "new",
+                "project",
+                "Retrieval Practice",
+                "--workspace",
+                str(workspace),
+                "--json",
+                "--idempotency-key",
+                "steering-show-project",
+            ]
+        )
+        == 0
+    )
+    created = json.loads(capsys.readouterr().out)
+    assert (
+        main(
+            [
+                "steering",
+                "edit",
+                "--workspace",
+                str(workspace),
+                "--body",
+                "---\ntype: system\ntitle: Steering\n---\n\n"
+                "## Watch for\n\n- interleaving\n\n## Muted\n\n- practice\n",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+
+    assert main(["steering", "show", "--workspace", str(workspace), "--json"]) == 0
+    shown = json.loads(capsys.readouterr().out)
+
+    assert shown["ok"] is True
+    assert shown["path"] == "steering.md"
+    assert shown["muted"] == ["practice"]
+    by_token = {row["token"]: row["sources"] for row in shown["tokens"]}
+    assert by_token["retrieval"] == [f"project:{created['path']}"]
+    assert by_token["interleaving"] == ["watch"]
+    assert "practice" not in by_token
+
+    assert main(["steering", "show", "--workspace", str(workspace)]) == 0
+    readable = capsys.readouterr().out
+    assert "interleaving" in readable
+    assert "muted: practice" in readable
+
+
 def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -361,16 +585,61 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     assert core_plugins["backlink"] is True
     assert core_plugins["canvas"] is True
     assert core_plugins["bases"] is True
-    assert core_plugins["properties"] is False
+    assert core_plugins["graph"] is True
+    assert core_plugins["properties"] is True
     assert core_plugins["daily-notes"] is False
     assert core_plugins["templates"] is False
     assert app["propertiesInDocument"] == "source"
     assert app["alwaysUpdateLinks"] is True
     assert community_plugins == ["memoria-obsidian"]
     assert manifest["id"] == "memoria-obsidian"
+    graph = json.loads((workspace / ".obsidian/graph.json").read_text("utf-8"))
+    types = json.loads((workspace / ".obsidian/types.json").read_text("utf-8"))
+    assert {group["query"] for group in graph["colorGroups"]} == {
+        "path:notes/",
+        "path:hubs/",
+        "path:projects/",
+        "path:digests/",
+        "path:fulltexts/",
+        "path:inbox/",
+    }
+    assert types["types"]["stale"] == "checkbox"
+    assert types["types"]["consequence"] == "text"
+    assert types["types"]["superseded"] == "checkbox"
+    assert types["types"]["loudness"] == "text"
+    assert types["types"]["target"] == "text"
+    assert types["types"]["thesis"] == "text"
+    assert types["types"]["question"] == "text"
     assert (workspace / ".obsidian/plugins/memoria-obsidian/main.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/schema.js").is_file()
     assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()
+
+
+def test_cli_init_seeds_exact_boot_c1_agent_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    expected = {
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
+        "CLAUDE.md",
+    }
+    delivered = {
+        path.relative_to(workspace).as_posix()
+        for directory in (workspace / ".claude", workspace / ".codex")
+        for path in directory.rglob("*")
+        if path.is_file()
+    } | {rel for rel in (".mcp.json", "CLAUDE.md") if (workspace / rel).is_file()}
+
+    assert delivered == expected
+    for rel in expected:
+        assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes()
 
 
 def test_cli_init_no_obsidian_skips_obsidian_seed(
@@ -384,15 +653,178 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
 
     assert rc == 0
     assert not (workspace / ".obsidian").exists()
+    assert not any(
+        (workspace / base).exists()
+        for base in ("catalog.base", "claims.base", "inbox.base", "projects.base", "sources.base")
+    )
     assert (workspace / ".memoria/schemas/folders.yaml").is_file()
     assert (workspace / "steering.md").is_file()
+    for rel in (
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
+        "CLAUDE.md",
+    ):
+        assert (workspace / rel).is_file()
 
     rc = main(["init", "--workspace", str(dry_workspace), "--dry-run", "--no-obsidian", "--json"])
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 0
     assert ".obsidian" not in output["package"]["seed_trees"]
+    assert not set(output["package"]["seed_files"]) & {
+        "catalog.base",
+        "claims.base",
+        "inbox.base",
+        "projects.base",
+        "sources.base",
+    }
+    assert {".claude", ".codex"} <= set(output["package"]["seed_trees"])
+    assert {".mcp.json", "CLAUDE.md"} <= set(output["package"]["seed_files"])
     assert not dry_workspace.exists()
+
+
+def test_cli_init_no_obsidian_skips_untouched_view_symlinks(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    outside_obsidian = tmp_path / "outside-obsidian"
+    outside_base = tmp_path / "outside-inbox.base"
+    workspace.mkdir()
+    outside_obsidian.mkdir()
+    outside_base.write_text("PI-owned\n", encoding="utf-8")
+    (workspace / ".obsidian").symlink_to(outside_obsidian, target_is_directory=True)
+    (workspace / "inbox.base").symlink_to(outside_base)
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--no-obsidian", "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert (workspace / ".obsidian").is_symlink()
+    assert (workspace / "inbox.base").is_symlink()
+    assert outside_base.read_text(encoding="utf-8") == "PI-owned\n"
+    assert not any(outside_obsidian.iterdir())
+
+
+def test_cli_init_rejects_dangling_seed_symlink(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    outside = tmp_path / "outside-catalog.base"
+    workspace.mkdir()
+    (workspace / "catalog.base").symlink_to(outside)
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {
+        "ok": False,
+        "error": "workspace write target must not redirect through a symlink or junction: "
+        "catalog.base",
+    }
+    assert not outside.exists()
+    assert not (workspace / ".memoria").exists()
+
+
+def test_cli_init_rejects_dynamic_canvas_symlink(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    outside = tmp_path / "outside-argument.canvas"
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_checked_concept(
+        workspace,
+        "projects/dynamic/project.md",
+        "type: project\ncheck_status: checked\ntitle: Dynamic project\n",
+        "project",
+    )
+    canvas = workspace / "projects/dynamic/argument.canvas"
+    canvas.write_text("{}\n", encoding="utf-8")
+    git(workspace, "add", "projects/dynamic/project.md", "projects/dynamic/argument.canvas")
+    git(workspace, "commit", "-m", "track dynamic canvas")
+    canvas.unlink()
+    canvas.symlink_to(outside)
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {
+        "ok": False,
+        "error": "workspace write target must not redirect through a symlink or junction: "
+        "projects/dynamic/argument.canvas",
+    }
+    assert not outside.exists()
+
+
+def test_cli_init_rejects_gitfile_indirection(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    external = tmp_path / "external"
+    workspace.mkdir()
+    external.mkdir()
+    git(external, "init", "-q")
+    external_config = external / ".git/config"
+    before = external_config.read_text(encoding="utf-8")
+    (workspace / ".git").write_text(f"gitdir: {external / '.git'}\n", encoding="utf-8")
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {"ok": False, "error": "workspace Git metadata must be a directory"}
+    assert external_config.read_text(encoding="utf-8") == before
+    assert not (workspace / ".memoria").exists()
+
+
+def test_cli_init_rejects_git_common_directory_indirection(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    external = tmp_path / "external"
+    git_metadata = workspace / ".git"
+    external.mkdir()
+    git(external, "init", "-q")
+    external_config = external / ".git/config"
+    before = external_config.read_text(encoding="utf-8")
+    git_metadata.mkdir(parents=True)
+    (git_metadata / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    (git_metadata / "commondir").write_text(f"{external / '.git'}\n", encoding="utf-8")
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output == {
+        "ok": False,
+        "error": "workspace Git common-directory indirection is not supported",
+    }
+    assert external_config.read_text(encoding="utf-8") == before
+    assert not (workspace / ".memoria").exists()
+
+
+def test_cli_init_does_not_run_workspace_fsmonitor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    marker = tmp_path / "fsmonitor-ran"
+    script = tmp_path / "fsmonitor"
+    workspace.mkdir()
+    script.write_text(f"#!/bin/sh\ntouch {marker}\n", encoding="utf-8")
+    script.chmod(0o700)
+    git(workspace, "init", "-q")
+    git(workspace, "config", "core.fsmonitor", str(script))
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    assert rc == 0
+    assert not marker.exists()
 
 
 def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
@@ -411,7 +843,18 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert output["db"] == {"path": ".memoria/memoria.sqlite", "exists": False}
     assert "capabilities" not in output["skeleton"]["directories"]
     assert ".memoria/index/search" in output["skeleton"]["missing"]
-    assert output["package"]["seed_files"] == [".gitignore", "steering.md", "system/vocabulary.md"]
+    assert output["package"]["seed_files"] == [
+        ".gitignore",
+        "steering.md",
+        "system/vocabulary.md",
+        "catalog.base",
+        "claims.base",
+        "inbox.base",
+        "projects.base",
+        "sources.base",
+        ".mcp.json",
+        "CLAUDE.md",
+    ]
     assert "capabilities" not in output["package"]["seed_trees"]
     assert {
         "index.md",
@@ -501,62 +944,3 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
         "command": "capture-source",
         "surface": "memoria-cli",
     }
-
-
-def test_cli_migrate_from_alpha15_imports_current_root_contract(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    old = tmp_path / "old"
-    old_note = old / "knowledge/notes/claim.md"
-    old_hub = old / "knowledge/hubs/topic.md"
-    old_project = old / "knowledge/projects/review.md"
-    old_work = old / "knowledge/works/source-alpha.md"
-    old_work.parent.mkdir(parents=True, exist_ok=True)
-    old_note.parent.mkdir(parents=True, exist_ok=True)
-    old_hub.parent.mkdir(parents=True, exist_ok=True)
-    old_project.parent.mkdir(parents=True, exist_ok=True)
-    old_work.write_text(
-        "---\n"
-        "type: work\n"
-        "id: 01KBN6V6KX0000000000000001\n"
-        "title: Alpha Source\n"
-        "tags: [memory]\n"
-        "links: {}\n"
-        "work_id: source-alpha\n"
-        "---\n"
-        "Digest body.\n",
-        encoding="utf-8",
-    )
-    old_note.write_text("---\ntype: note\ntitle: Claim\n---\nClaim body.\n", encoding="utf-8")
-    old_hub.write_text("---\ntype: hub\ntitle: Topic\n---\nTopic body.\n", encoding="utf-8")
-    old_project.write_text(
-        "---\ntype: project\ntitle: Review\n---\nProject body.\n", encoding="utf-8"
-    )
-    (old / "references.bib").write_text("@article{alpha,title={Alpha}}\n", encoding="utf-8")
-
-    workspace = tmp_path / "new"
-    rc = main(
-        [
-            "migrate",
-            "--workspace",
-            str(workspace),
-            "--from-alpha15",
-            str(old),
-            "--json",
-        ]
-    )
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 0
-    assert output["imported_count"] == 5
-    assert (workspace / "notes/claim.md").is_file()
-    assert (workspace / "hubs/topic.md").is_file()
-    assert (workspace / "projects/review/project.md").is_file()
-    assert (workspace / "bibliography.bib").read_text(encoding="utf-8") == (
-        "@article{alpha,title={Alpha}}\n"
-    )
-    digest = read_frontmatter(workspace / "digests/source-alpha.md")
-    assert digest["type"] == "digest"
-    assert digest["work_id"] == "source-alpha"
-    assert not (workspace / "works/source-alpha/record.md").exists()
-    assert "Digest body." in (workspace / "digests/source-alpha.md").read_text(encoding="utf-8")

@@ -115,9 +115,55 @@ classes), line 106 (Surface program — three rings, Ring 1).
 
 Honesty notes in force: H1, H2, H3, H4, H5, H6, H10, H11.
 
+**Reconciliation amendment (2026-07-17):** Root-level `.base` files are
+Obsidian view settings even though they are not inside `.obsidian/`. Therefore
+`memoria init --no-obsidian` must filter them from both initialization and the
+dry-run `package.seed_files` report. Add `_active_seed_files` beside
+`_active_seed_trees`; its no-Obsidian branch excludes `.base` targets. The
+default `doctor --repair` path remains unchanged and restores the complete
+seeded configuration. The init write-target preflight must use that same
+filtered inventory: a pre-existing `.obsidian` or root-`.base` link that
+`--no-obsidian` will not touch must not block initialization.
+
+**Security reconciliation amendment (2026-07-17):** Before normal `init`
+creates any directory or copies any seed, it must apply the existing
+link-aware `runtime_backup.validate_workspace_write_targets` control to the
+complete planned write set (`_repair_write_targets(workspace)`). This closes
+the dangling-root-`.base` escape introduced by the new vault-root targets:
+`Path.exists()` reports a dangling symlink as missing, while `write_bytes()`
+would follow it outside the selected vault. The set must derive generated
+projection paths from the same `_tracked_projection_paths` resolver used by
+the writer, including Git-tracked and filesystem-discovered
+`projects/*/argument.canvas` targets; a static projection list is incomplete.
+Before resolving those paths, reject a redirected `.git`, a Git-file, and a
+`.git/commondir` indirection, so init never reads or writes an external Git
+directory. Projection-path Git discovery must also use a sanitized runner that
+strips inherited Git configuration and disables repository hooks and
+`core.fsmonitor`; a workspace must not execute a configured helper merely to
+enumerate projections. Keep dry-run read-only. Add CLI regressions for a dangling
+`catalog.base`, a Git-tracked dangling argument canvas, a Git-file, and a
+common-directory file; prove the external targets/configuration and
+`.memoria/` are untouched. Also prove `doctor --repair` rejects a dynamic
+argument-canvas redirect through the shared target inventory and that neither
+init nor repair runs a workspace fsmonitor command.
+
+> **Recorded amendment (EDGES §5, graph-edges plan ERP-A.5):** `claims.base`
+> additionally carries a glyph formula column rendering the typed-consequence
+> mark — the two optional frontmatter fields `stale: bool` and `consequence:`
+> (enum: `grounds-lost`, `warrant-lost`, `qualifier-regression`,
+> `rebuttal-strengthened`) written by the consequence engine — so consequence
+> labels are visible in any editor Bases reaches. Formula, mirroring
+> `inbox.base`'s `loudness_glyph` style:
+> `consequence_glyph: 'if(stale, "⚠ " + consequence, "")'`, added to the
+> `formulas:` block and as `formula.consequence_glyph` in the "By maturity"
+> view's `order:` list. If R1NG.1 executes before the consequence fields
+> exist, seed the column anyway (it renders blank until the fields appear);
+> if R1NG.1 already executed, apply this as a follow-up edit to the seeded
+> `claims.base` and its `test_claims_base_matches_the_design` assertions.
+
 **Steps:**
 
-- [ ] Replace `tests/test_bases.py` entirely with the failing contract test:
+- [x] Replace `tests/test_bases.py` entirely with the failing contract test:
 
 ```python
 """Ring 1 seeded Obsidian Base views (2026-07-12-surface-design-notes.md)."""
@@ -189,13 +235,13 @@ def test_catalog_sources_projects_bases_carry_the_designed_view_names():
     ]
 ```
 
-- [ ] Run it and verify it fails on the missing seed files:
+- [x] Run it and verify it fails on the missing seed files:
       `python -m pytest tests/test_bases.py -v`
       — expected: `test_package_seed_ships_exactly_the_ring1_base_views` fails
       with `assert [] == ['catalog.base', ...]`; the loader tests error with
       `FileNotFoundError`.
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/inbox.base` (H1, H2, H3):
+- [x] Write `src/memoria_vault/product/workspace_seed/inbox.base` (H1, H2, H3):
 
 ```yaml
 # Ring 1 seeded view — attention inbox (view preference: PI-owned after init).
@@ -270,7 +316,7 @@ views:
       - target
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/claims.base` (H1, H4, H5, H10):
+- [x] Write `src/memoria_vault/product/workspace_seed/claims.base` (H1, H4, H5, H10):
 
 ```yaml
 # Ring 1 seeded view — claims and open questions (view preference: PI-owned after init).
@@ -325,7 +371,7 @@ views:
       - certainty
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/sources.base` (H1, H6 —
+- [x] Write `src/memoria_vault/product/workspace_seed/sources.base` (H1, H6 —
       design gives only the view names "reading pipeline, discuss queue"):
 
 ```yaml
@@ -351,7 +397,7 @@ views:
       - file.mtime
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/catalog.base` (H1, H6 —
+- [x] Write `src/memoria_vault/product/workspace_seed/catalog.base` (H1, H6 —
       design gives only "Papers / People / Venues / Needs-enrichment"; the
       catalog is SQLite-backed, so these are named placeholders over the
       digests type home):
@@ -391,7 +437,7 @@ views:
       - file.mtime
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/projects.base` (H1, H6 —
+- [x] Write `src/memoria_vault/product/workspace_seed/projects.base` (H1, H6 —
       design gives only "Active / Saturation / Gaps"; *Active* uses the
       schema's `archived` flag):
 
@@ -425,7 +471,7 @@ views:
       - question
 ```
 
-- [ ] In `src/memoria_vault/cli.py:47-51`, extend `SEED_FILES`:
+- [x] In `src/memoria_vault/cli.py:47-51`, extend `SEED_FILES`:
 
 ```python
 SEED_FILES = (
@@ -440,7 +486,7 @@ SEED_FILES = (
 )
 ```
 
-- [ ] In `pyproject.toml`, inside the
+- [x] In `pyproject.toml`, inside the
       `"memoria_vault.product.workspace_seed" = [` list (lines 32-46), add one
       entry so wheels ship the views:
 
@@ -448,7 +494,7 @@ SEED_FILES = (
   "*.base",
 ```
 
-- [ ] In `tests/test_installer_skeleton.py:31-54`
+- [x] In `tests/test_installer_skeleton.py:31-54`
       (`test_package_seed_is_runtime_minimum`), add to `expected_files`:
 
 ```python
@@ -459,7 +505,7 @@ SEED_FILES = (
         "sources.base",
 ```
 
-- [ ] In `tests/test_cli.py:414`, replace the dry-run assertion:
+- [x] In `tests/test_cli.py:414`, replace the dry-run assertion:
 
 ```python
     assert output["package"]["seed_files"] == [
@@ -474,12 +520,12 @@ SEED_FILES = (
     ]
 ```
 
-- [ ] Run the touched suites and verify they pass:
+- [x] Run the touched suites and verify they pass:
       `python -m pytest tests/test_bases.py tests/test_installer_skeleton.py tests/test_cli.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
+- [x] Run the full gate: `python scripts/verify` — expected: pass.
 
-- [ ] Commit (explicit paths only — shared index):
+- [x] Commit (explicit paths only — shared index):
 
 ```bash
 git add src/memoria_vault/product/workspace_seed/inbox.base src/memoria_vault/product/workspace_seed/claims.base src/memoria_vault/product/workspace_seed/sources.base src/memoria_vault/product/workspace_seed/catalog.base src/memoria_vault/product/workspace_seed/projects.base src/memoria_vault/cli.py pyproject.toml tests/test_bases.py tests/test_installer_skeleton.py tests/test_cli.py
@@ -503,8 +549,50 @@ EOF
 - Create: `src/memoria_vault/product/workspace_seed/.obsidian/graph.json`
 - Create: `src/memoria_vault/product/workspace_seed/.obsidian/types.json`
 - Modify: `src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json:14,20` (`"graph"`, `"properties"`)
+- Modify: `scripts/checks/plugin_provenance_doctor.py:27-35` (closed seed allowlist: admit the two static Ring 1 view-preference JSON files, and nothing executable)
 - Modify: `tests/test_cli.py:341-374` (`test_cli_init_seeds_obsidian_defaults_and_memoria_plugin`, incl. line 364)
 - Modify: `tests/test_installer_skeleton.py:45-51` (expected `.obsidian` files)
+- Modify: `tests/test_package_spine.py:84-111` (installed-package resource assertions for both JSON files)
+- Modify: `tests/test_plugin_provenance.py` (a focused temporary-root contract for the two newly admitted files)
+- Modify: exactly these 35 `tests/fixtures/floor/goldens/*.json` files, regenerated through the supported floor mechanism:
+
+  ```text
+  analyze-claims.json
+  analyze-gaps.json
+  analyze-project-argument.json
+  answer-query.json
+  capture-bibtex-source.json
+  capture-source.json
+  check-falsifiability.json
+  check-source-metadata.json
+  compare-and-contrast.json
+  compile-source-digest.json
+  create-concept.json
+  empirical-event-record.json
+  eval-run.json
+  export-project.json
+  extract-claim-stubs.json
+  integrity-citation-survival-check.json
+  integrity-claim-quote-check.json
+  integrity-contradiction-check.json
+  integrity-evidence-check.json
+  integrity-link-target-check.json
+  integrity-prompt-injection-check.json
+  integrity-provenance-checkpoint.json
+  integrity-quote-anchor-check.json
+  rebuild-checked-search-index.json
+  red-team-argument.json
+  regenerate-capability-index.json
+  regenerate-indexes.json
+  regenerate-references-bib.json
+  regenerate-tracked-projections.json
+  render-project-argument-canvas.json
+  run-seeded-error-verdict.json
+  summarize-for-recall.json
+  surface-tensions.json
+  verify-project-draft.json
+  write-project-slice.json
+  ```
 - Test: `tests/test_cli.py` (existing `contract` registration)
 
 **Interfaces:**
@@ -515,9 +603,31 @@ Honesty note in force: H7 — the design names the files and plugins only; file
 content is completion (types.json derived from seeded type schemas; graph.json
 color groups per type home).
 
+**Preflight amendment (2026-07-16):** `.obsidian` has a deliberately closed
+provenance allowlist, so the two new static configurations must be explicitly
+listed there. The existing `.obsidian/*.json` package-data glob and `.obsidian`
+seed tree already include them; no CLI or packaging registration changes are
+needed. Adding seed files changes every operation-floor vault digest that
+currently records `core-plugins.json`: regenerate exactly the 35 files listed
+above with the supported mechanism, then review each diff. In every such file,
+the only expected changes are the `core-plugins.json` hash replacement and new
+`graph.json` / `types.json` hashes; all other digest entries, database counts,
+and journal kinds must remain unchanged.
+
+**Reconciliation amendment (2026-07-17):** `types.json` must expose every
+frontmatter property consumed by Ring 1's seeded views. In particular, the
+seeded type schemas define `stale: bool` and `consequence: enum:consequence`
+for claims-visible concepts, and the EDGES §5 `claims.base` glyph reads both.
+Seed `stale` as an Obsidian `checkbox` and `consequence` as `text`, and pin
+both in the init contract. When R1NG.1 and R1NG.2 are first integrated together,
+the one authoritative fixture update also adds the five `.base` digest entries;
+that combined delta is expected in addition to the three `.obsidian` changes.
+The inbox and projects views additionally consume `target`, `thesis`, and
+`question`; seed all three as `text` and pin them in the same init contract.
+
 **Steps:**
 
-- [ ] Extend `test_cli_init_seeds_obsidian_defaults_and_memoria_plugin`
+- [x] Extend `test_cli_init_seeds_obsidian_defaults_and_memoria_plugin`
       (tests/test_cli.py:341-374). Change line 364 and add assertions after
       the existing `manifest` load:
 
@@ -540,17 +650,30 @@ color groups per type home).
         "path:fulltexts/",
         "path:inbox/",
     }
+    assert types["types"]["stale"] == "checkbox"
+    assert types["types"]["consequence"] == "text"
     assert types["types"]["superseded"] == "checkbox"
     assert types["types"]["loudness"] == "text"
+    assert types["types"]["target"] == "text"
+    assert types["types"]["thesis"] == "text"
+    assert types["types"]["question"] == "text"
 ```
 
-- [ ] Run and verify it fails:
+- [x] Add the matching package/provenance contracts before writing the seed
+      files: assert both paths are present in
+      `test_workspace_seed_is_packaged_runtime_minimum`, and add a
+      temporary-root `test_plugin_provenance` case that writes only
+      `.obsidian/graph.json` and `.obsidian/types.json` and expects
+      `doctor.check(root) == []`. The latter must fail until the closed
+      allowlist is updated.
+
+- [x] Run and verify it fails:
       `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin -v`
       — expected: `FileNotFoundError: ... .obsidian/graph.json` (and, once the
       files exist but plugins are unflipped, `assert False is True` on
       `core_plugins["graph"]`).
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/.obsidian/graph.json`:
+- [x] Write `src/memoria_vault/product/workspace_seed/.obsidian/graph.json`:
 
 ```json
 {
@@ -569,7 +692,7 @@ color groups per type home).
 }
 ```
 
-- [ ] Write `src/memoria_vault/product/workspace_seed/.obsidian/types.json`
+- [x] Write `src/memoria_vault/product/workspace_seed/.obsidian/types.json`
       (property → Obsidian property type, derived from
       `.memoria/schemas/types/*.yaml` and the attention projection frontmatter):
 
@@ -581,12 +704,17 @@ color groups per type home).
     "attention_status": "text",
     "certainty": "text",
     "claim_text": "text",
+    "consequence": "text",
     "id": "text",
     "loudness": "text",
     "mode": "text",
     "projection": "text",
+    "question": "text",
     "question_status": "text",
+    "stale": "checkbox",
     "superseded": "checkbox",
+    "target": "text",
+    "thesis": "text",
     "title": "text",
     "type": "text",
     "work_id": "text"
@@ -594,11 +722,11 @@ color groups per type home).
 }
 ```
 
-- [ ] In `src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json`,
+- [x] In `src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json`,
       flip line 14 `"graph": false,` → `"graph": true,` and line 20
       `"properties": false,` → `"properties": true,`.
 
-- [ ] In `tests/test_installer_skeleton.py` `expected_files` (added-to in
+- [x] In `tests/test_installer_skeleton.py` `expected_files` (added-to in
       R1NG.1), add:
 
 ```python
@@ -606,15 +734,31 @@ color groups per type home).
         ".obsidian/types.json",
 ```
 
-- [ ] Run and verify pass:
-      `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin tests/test_installer_skeleton.py -v`
+- [x] In `scripts/checks/plugin_provenance_doctor.py`, add exactly
+      `Path("graph.json")` and `Path("types.json")` to
+      `ALLOWED_SEED_OBSIDIAN_FILES`. Do not broaden the rule or admit plugin
+      payloads.
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
-
-- [ ] Commit:
+- [x] Regenerate the 35 preflight-listed floor goldens only through the
+      supported update path:
 
 ```bash
-git add src/memoria_vault/product/workspace_seed/.obsidian/graph.json src/memoria_vault/product/workspace_seed/.obsidian/types.json src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json tests/test_cli.py tests/test_installer_skeleton.py
+MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q
+```
+
+      Inspect the resulting fixture diff before continuing: each listed file
+      must have only the three expected `.obsidian` digest changes described
+      above; no other golden may be touched.
+
+- [x] Run and verify pass:
+      `python -m pytest tests/test_cli.py::test_cli_init_seeds_obsidian_defaults_and_memoria_plugin tests/test_installer_skeleton.py tests/test_package_spine.py tests/test_plugin_provenance.py -v`
+
+- [x] Run the full gate: `python scripts/verify` — expected: pass.
+
+- [x] Commit:
+
+```bash
+git add -- docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md scripts/checks/plugin_provenance_doctor.py src/memoria_vault/product/workspace_seed/.obsidian/graph.json src/memoria_vault/product/workspace_seed/.obsidian/types.json src/memoria_vault/product/workspace_seed/.obsidian/core-plugins.json tests/test_cli.py tests/test_installer_skeleton.py tests/test_package_spine.py tests/test_plugin_provenance.py <the-35-explicit-floor-golden-paths-listed-above>
 git commit -m "$(cat <<'EOF'
 feat(surface): seed graph.json + types.json, enable graph/properties core plugins
 
@@ -647,13 +791,27 @@ EOF
   - Changed private signatures: `_copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None`, `_copy_seed_file(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None`.
 - Behavior contract other sections may rely on: `doctor --repair` (and any future upgrade caller of `_initialize_workspace_files(overwrite=True)`) reseeds a *deleted* view preference but never overwrites an *existing* one; data projections are exclusively `runtime.projections.TRACKED_PROJECTION_PATHS` + argument canvases and are regenerated always.
 
+> **Adopted preflight amendment (2026-07-16):** In addition to proving each
+> manifest entry is seeded, the contract test asserts the manifest is exactly the
+> nine PI-owned paths listed in the implementation snippet below. A broad
+> "only seeded paths" check would permit silently classifying another seed as a
+> view preference and changing its repair ownership.
+
 Honesty notes in force: H8 (no `memoria upgrade` command exists — the class
 split lands on the `doctor --repair` path, the only upgrade/reconcile path in
 the codebase), H9 (steering.md / vocabulary.md classified PI-owned).
 
+**Review repair amendment (2026-07-17):** `doctor --repair --json` must report
+the seed-file paths it actually writes, not the static top-level seed roster.
+Runtime seed leaves are rewritten and reported; missing view-preference leaves
+are restored and reported; existing PI-owned view preferences are neither
+written nor reported. Pin both preservation and missing-preference reporting in
+the lifecycle contract, and describe the preservation exception in the CLI
+reference.
+
 **Steps:**
 
-- [ ] Create `tests/test_seed_lifecycle.py` with the failing tests:
+- [x] Create `tests/test_seed_lifecycle.py` with the failing tests:
 
 ```python
 """Seeded-config two-class lifecycle: view preferences survive repair; data projections regenerate."""
@@ -748,21 +906,21 @@ def test_regenerate_overwrites_data_projections(
     assert (workspace / "bibliography.bib").read_text(encoding="utf-8") != "PI edit\n"
 ```
 
-- [ ] Register the file in `tests/conftest.py` `TEST_LEVELS` (insert before the
+- [x] Register the file in `tests/conftest.py` `TEST_LEVELS` (insert before the
       `"test_seeded_errors.py": "runtime",` line):
 
 ```python
     "test_seed_lifecycle.py": "contract",
 ```
 
-- [ ] Run and verify the right failures:
+- [x] Run and verify the right failures:
       `python -m pytest tests/test_seed_lifecycle.py -v`
       — expected: `ImportError: cannot import name 'SEED_CLASSES'` (manifest
       tests) — and after the constant exists but before the copy-helper change,
       `test_repair_leaves_pi_modified_view_preferences` fails with the seeded
       content clobbering `pi_base`.
 
-- [ ] In `src/memoria_vault/cli.py`, insert the manifest directly after the
+- [x] In `src/memoria_vault/cli.py`, insert the manifest directly after the
       `SEED_FILES` tuple (after current line 51, as extended by R1NG.1):
 
 ```python
@@ -789,7 +947,7 @@ VIEW_PREFERENCE_PATHS = frozenset(
 )
 ```
 
-- [ ] Replace `_seed_workspace` (cli.py:2263-2267) to thread the target rel:
+- [x] Replace `_seed_workspace` (cli.py:2263-2267) to thread the target rel:
 
 ```python
 def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
@@ -803,7 +961,7 @@ def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool 
         )
 ```
 
-- [ ] Replace `_copy_seed_tree` and `_copy_seed_file` (cli.py:2450-2470) and
+- [x] Replace `_copy_seed_tree` and `_copy_seed_file` (cli.py:2450-2470) and
       add the predicate:
 
 ```python
@@ -842,16 +1000,16 @@ def _seed_write_allowed(target_rel: str, target: Path, *, overwrite: bool) -> bo
     return overwrite and target_rel not in VIEW_PREFERENCE_PATHS
 ```
 
-- [ ] Run and verify pass: `python -m pytest tests/test_seed_lifecycle.py -v`
+- [x] Run and verify pass: `python -m pytest tests/test_seed_lifecycle.py -v`
 
-- [ ] Run the neighbors that exercise repair and init to prove no regression:
+- [x] Run the neighbors that exercise repair and init to prove no regression:
       `python -m pytest tests/test_cli_doctor_eval.py tests/test_cli.py tests/test_installer_skeleton.py -v`
       — expected: pass (`test_cli_doctor_repair_restores_runtime_seed_files`
       still passes because `providers.yaml` is unclassified → runtime seed).
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
+- [x] Run the full gate: `python scripts/verify` — expected: pass.
 
-- [ ] Commit:
+- [x] Commit:
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_seed_lifecycle.py tests/conftest.py
@@ -874,9 +1032,14 @@ EOF
 **Files:**
 - Modify: `src/memoria_vault/runtime/projections.py:22-28` (`TRACKED_PROJECTION_PATHS`; add `_DELEGATED_PROJECTION_PATHS`)
 - Modify: `src/memoria_vault/runtime/projections.py:39-53` (`render_tracked_projection` branch)
-- Modify: `src/memoria_vault/runtime/projections.py:172-174` (delegated-writer skip in `_write_tracked_projections`)
+- Modify: `src/memoria_vault/runtime/projections.py:64-75` (redirect-aware drift check)
+- Modify: `src/memoria_vault/runtime/projections.py:163-176` (preflight and delegated-writer skip in `_write_tracked_projections`)
+- Modify: `src/memoria_vault/runtime/projections.py:361-379` (standalone index-writer preflight)
 - Modify: `src/memoria_vault/runtime/projections.py:391-417` (add `_vault_agents_md` next to `_workspace_index`)
-- Modify: `tests/test_projections.py:106-113` (extend the init test) and append the drift test
+- Modify: `src/memoria_vault/product/capabilities/operations/regenerate-tracked-projections.md` (declare `AGENTS.md` output)
+- Modify: `tests/floor_lib.py` and its generated goldens (operation output contract)
+- Modify: `tests/test_projections.py` (init, drift, redirect, manifest, and worker-write tests)
+- Modify: `docs/reference/commands-and-transports/{operations,system-actions-operations}.md` (published lifecycle contract)
 - Test: `tests/test_projections.py` (existing `contract` registration)
 
 **Interfaces:**
@@ -886,7 +1049,7 @@ EOF
   - `_DELEGATED_PROJECTION_PATHS: tuple[str, ...] = ("index.md", "bibliography.bib")` (private: paths written by dedicated writers, skipped by the generic render loop).
   - `render_tracked_projection(vault: Path, "AGENTS.md") -> str` now supported.
   - `_vault_agents_md() -> str` (private, static content — deterministic drift check).
-- Behavior other sections may rely on: `memoria init` writes vault-root `AGENTS.md`; `doctor --repair` and the `regenerate-tracked-projections` operation regenerate it; `check_tracked_projections` reports PI edits as `{"path": "AGENTS.md", "status": "stale"}`; the file carries `type: system` frontmatter and the standard generated-file comment marker.
+- Behavior other sections may rely on: `memoria init` writes vault-root `AGENTS.md`; `doctor --repair` and the `regenerate-tracked-projections` operation regenerate it; `check_tracked_projections` reports PI edits as `{"path": "AGENTS.md", "status": "stale"}` and symlink/junction redirects as `{"path": "AGENTS.md", "status": "redirected"}`; regeneration rejects redirects before writing; the file carries `type: system` frontmatter and the standard generated-file comment marker.
 
 Load-bearing code fact (found by reading, not the design doc): the write loop
 at projections.py:172-174 skips every `rel in TRACKED_PROJECTION_PATHS`
@@ -894,9 +1057,26 @@ because `index.md`/`bibliography.bib` have dedicated writers — naively adding
 `AGENTS.md` to the constant would mean it is never written. The skip set must
 become `_DELEGATED_PROJECTION_PATHS`.
 
+**Fixture reconciliation amendment (2026-07-17):** because `memoria init`
+now writes a generated root `AGENTS.md`, regenerate the same 35 operation-floor
+goldens through the supported update path and add it to the floor operation's
+expected outputs. Each golden gains only the `AGENTS.md` digest, except
+`regenerate-tracked-projections.json`, whose journal digest also changes because
+the operation's recorded output list gains `AGENTS.md`, and
+`regenerate-capability-index.json`, whose capability-index digest changes because
+the operation manifest declares the new write.
+
+**Security and contract repair amendment (2026-07-17):** preflight every
+computed projection path with `validate_workspace_write_targets` before either
+delegated writer runs, and preflight the independently exposed workspace-index
+writer, so a symlink or junction cannot redirect a worker-owned write. Make
+`check_tracked_projections` report such paths as `redirected`, add `AGENTS.md`
+to the packaged operation manifest, and update the two public reference rows
+that enumerate regeneration outputs.
+
 **Steps:**
 
-- [ ] Append the failing test to `tests/test_projections.py` (imports at the
+- [x] Append the failing test to `tests/test_projections.py` (imports at the
       top of the file already provide `TRACKED_PROJECTION_PATHS`,
       `check_tracked_projections`, the `write_tracked_projections` wrapper,
       and the `workspace` fixture helper):
@@ -922,7 +1102,7 @@ def test_vault_agents_md_is_a_regenerated_read_contract(tmp_path: Path) -> None:
     assert (vault / "AGENTS.md").read_text(encoding="utf-8") == generated
 ```
 
-- [ ] Extend `test_initialized_workspace_indexes_are_current`
+- [x] Extend `test_initialized_workspace_indexes_are_current`
       (tests/test_projections.py:106-113) with one assertion after the
       existing two, so init coverage is explicit:
 
@@ -930,12 +1110,12 @@ def test_vault_agents_md_is_a_regenerated_read_contract(tmp_path: Path) -> None:
     assert (vault / "AGENTS.md").is_file()
 ```
 
-- [ ] Run and verify failure:
+- [x] Run and verify failure:
       `python -m pytest tests/test_projections.py::test_vault_agents_md_is_a_regenerated_read_contract tests/test_projections.py::test_initialized_workspace_indexes_are_current -v`
       — expected: `assert 'AGENTS.md' in ('index.md', 'bibliography.bib')`
       fails, and the init test fails on the missing file.
 
-- [ ] In `src/memoria_vault/runtime/projections.py:22-28`, replace the
+- [x] In `src/memoria_vault/runtime/projections.py:22-28`, replace the
       constants block:
 
 ```python
@@ -952,7 +1132,7 @@ TRACKED_PROJECTION_PATHS = (
 TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
 ```
 
-- [ ] In `render_tracked_projection` (projections.py:39-53), add the branch
+- [x] In `render_tracked_projection` (projections.py:39-53), add the branch
       after the `bibliography.bib` branch:
 
 ```python
@@ -960,7 +1140,7 @@ TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
         return _vault_agents_md()
 ```
 
-- [ ] In `_write_tracked_projections`, change the skip at lines 172-174 from
+- [x] In `_write_tracked_projections`, change the skip at lines 172-174 from
       `if rel in TRACKED_PROJECTION_PATHS:` to:
 
 ```python
@@ -968,7 +1148,7 @@ TRACKED_PROJECTION_GLOBS = ("projects/*/argument.canvas",)
             continue
 ```
 
-- [ ] Add the renderer next to `_workspace_index` (after projections.py:404),
+- [x] Add the renderer next to `_workspace_index` (after projections.py:404),
       static content only so the drift check is deterministic:
 
 ```python
@@ -994,24 +1174,74 @@ def _vault_agents_md() -> str:
     )
 ```
 
-- [ ] Run and verify pass: `python -m pytest tests/test_projections.py -v`
+- [x] Apply the security and contract repair amendment: preflight every
+      projection write target, including the standalone index writer; report
+      redirects in drift checks; declare the output in the operation manifest;
+      and cover worker refusal plus matching-content redirect detection.
+
+- [x] Run and verify pass: `python -m pytest tests/test_projections.py -v`
       — the pre-existing equality assertions
       (`result["paths"] == list(TRACKED_PROJECTION_PATHS)`, committed set
       `== {*TRACKED_PROJECTION_PATHS, state.JOURNAL_HEAD_REL}`) pick up
       `AGENTS.md` through the constant and must pass unchanged; if any fails,
       stop and fix the implementation, not the assertion.
 
-- [ ] Confirm the seed-purity guard still holds (AGENTS.md is generated, never
+- [x] Confirm the seed-purity guard still holds (AGENTS.md is generated, never
       seeded — `tests/test_installer_skeleton.py:59-79` forbids it in the
       seed) and run the surfaces that enumerate projection paths:
       `python -m pytest tests/test_installer_skeleton.py tests/test_cli.py tests/test_seed_lifecycle.py tests/test_cli_doctor_eval.py -v`
 
-- [ ] Run the full gate: `python scripts/verify` — expected: pass.
+- [x] Run the full gate: `python scripts/verify` — passed: 2,449 tests, 11
+      skipped; lint, product gates, offline smoke, syntax, and shell checks
+      all green.
 
-- [ ] Commit:
+- [x] Commit: `4eb6b49a` (`feat(projections): add vault AGENTS.md generated
+      read-contract projection`).
 
 ```bash
-git add src/memoria_vault/runtime/projections.py tests/test_projections.py
+git add -- \
+  docs/reference/commands-and-transports/operations.md \
+  docs/reference/commands-and-transports/system-actions-operations.md \
+  docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md \
+  src/memoria_vault/product/capabilities/operations/regenerate-tracked-projections.md \
+  src/memoria_vault/runtime/projections.py \
+  tests/floor_lib.py \
+  tests/test_projections.py \
+  tests/fixtures/floor/goldens/analyze-claims.json \
+  tests/fixtures/floor/goldens/analyze-gaps.json \
+  tests/fixtures/floor/goldens/analyze-project-argument.json \
+  tests/fixtures/floor/goldens/answer-query.json \
+  tests/fixtures/floor/goldens/capture-bibtex-source.json \
+  tests/fixtures/floor/goldens/capture-source.json \
+  tests/fixtures/floor/goldens/check-falsifiability.json \
+  tests/fixtures/floor/goldens/check-source-metadata.json \
+  tests/fixtures/floor/goldens/compare-and-contrast.json \
+  tests/fixtures/floor/goldens/compile-source-digest.json \
+  tests/fixtures/floor/goldens/create-concept.json \
+  tests/fixtures/floor/goldens/empirical-event-record.json \
+  tests/fixtures/floor/goldens/eval-run.json \
+  tests/fixtures/floor/goldens/export-project.json \
+  tests/fixtures/floor/goldens/extract-claim-stubs.json \
+  tests/fixtures/floor/goldens/integrity-citation-survival-check.json \
+  tests/fixtures/floor/goldens/integrity-claim-quote-check.json \
+  tests/fixtures/floor/goldens/integrity-contradiction-check.json \
+  tests/fixtures/floor/goldens/integrity-evidence-check.json \
+  tests/fixtures/floor/goldens/integrity-link-target-check.json \
+  tests/fixtures/floor/goldens/integrity-prompt-injection-check.json \
+  tests/fixtures/floor/goldens/integrity-provenance-checkpoint.json \
+  tests/fixtures/floor/goldens/integrity-quote-anchor-check.json \
+  tests/fixtures/floor/goldens/rebuild-checked-search-index.json \
+  tests/fixtures/floor/goldens/red-team-argument.json \
+  tests/fixtures/floor/goldens/regenerate-capability-index.json \
+  tests/fixtures/floor/goldens/regenerate-indexes.json \
+  tests/fixtures/floor/goldens/regenerate-references-bib.json \
+  tests/fixtures/floor/goldens/regenerate-tracked-projections.json \
+  tests/fixtures/floor/goldens/render-project-argument-canvas.json \
+  tests/fixtures/floor/goldens/run-seeded-error-verdict.json \
+  tests/fixtures/floor/goldens/summarize-for-recall.json \
+  tests/fixtures/floor/goldens/surface-tensions.json \
+  tests/fixtures/floor/goldens/verify-project-draft.json \
+  tests/fixtures/floor/goldens/write-project-slice.json
 git commit -m "$(cat <<'EOF'
 feat(projections): vault AGENTS.md generated read-contract projection
 
@@ -1051,7 +1281,9 @@ inputs, a named output spec path, and a follow-up `superpowers:writing-plans`
 step. The section closes with the acceptance task (LOOP.13).
 
 **Task order** (encodes the empirical plan's constraints):
-LOOP.1–LOOP.3 (determined code, no ordering constraint among them) →
+LOOP.1 and LOOP.2 may run independently. LOOP.3 has a binding external
+dependency chain: surfaces BOOT-B.5 → Alpha22 COST.1–.5 → LOOP.3; COST.1–.3
+are atomic, so LOOP.3 never consumes an intermediate string-return seam. Then
 LOOP.4 (I1 design gate — highest sequencing priority, before any ingestion) →
 LOOP.5 (O1 — licensing decision inside it precedes seed-corpus selection) →
 LOOP.6 (O2 — explicitly **after** LOOP.4's I1 wiring is implemented) →
@@ -1061,6 +1293,32 @@ LOOP.10 (U2) → LOOP.11 (U3) → LOOP.12 (U4) → LOOP.13 (acceptance).
 Repo facts honored: gate is `python scripts/verify`; new test files register in
 `tests/conftest.py` `TEST_LEVELS`; stage explicit paths only (shared git
 index); TDD; commits end with the Co-Authored-By trailer.
+
+### Plan-reconciliation amendment — executable partial order (2026-07-29)
+
+The historical total chain `LOOP.4 → O1 → O2 → R2 → V2 → U1 → U2 → U3` is
+superseded.  It is impossible because I1 H.2 consumes U1/U3 seams and V2
+B.4/D.1 consume U3, while U2 itself consumes U1/V2/I1.  Execute the following
+task-level DAG instead; a package design gate does not imply that every task in
+that package must finish before an independent producer can start.
+
+```
+I1 T.1/T.2 (+ required telemetry A/D) → O1 T.1 → O1 M.3
+O1 M.2 → O2 A
+O2 {P, A, W.1}; I1 T.1/T.2 → O2 W.2
+{O2 P, O2 A, O2 W.1, O2 W.2} → #1517 finalization decision → O2 I.1
+{O2 I.1, I1 H.3} → O2 W.3; {O2 W.3, R2 F.3} → O2 W.4
+graph NID-B + ERP-A.6 → R2 G → R2 P → R2 E
+{O1 M.3, R2 F.1, R2 E} → R2 F.2 → R2 F.3 → LOOP.13
+U1 J/M → BOOT/U3-ENG/SEAM → {I1 H.2, V2 B.4/D.1}
+{V2 B.5, U2 T.3} → U2's post-seam cockpit integration
+{O1 M.3, O2 W.4, R2 F.3} → LOOP.13
+```
+
+U3's own prerequisites remain binding (graph activation before U3-ENG; SEAM
+before pane actions), and U2 remains after its declared U1/V2/I1 seams.  This
+amendment changes ordering only; it does not authorize real-vault ingestion
+before I1 instrumentation and the seeded-error battery are green.
 
 ---
 
@@ -1101,6 +1359,39 @@ Two documented boundaries (do not widen this task):
   (the same-transaction cascade `state.py:3388-3403` already keeps `check_status`
   accurate in the window between verdict write and refresh).
 
+**R2 re-verification reconciliation amendment (2026-07-17):** a direct file
+edit invalidates its checked output hash, so it must take the barrier-refused
+removal path rather than be reindexed. The allowed changed-file reindex test
+must model a completed re-verification by calling the existing test helper
+`mark_file_status` after it changes `alpha.md`; the pre-existing
+`test_passage_index_refreshes_stale_file_and_cascades_status` must do the same.
+The third CANARY regression continues to model the direct, unverified edit and
+must prove it is removed without a `safe_read`.
+
+**Searchability consistency amendment (2026-07-17):** a changed, reverified
+file-backed document that now fails `_is_searchable_frontmatter` must be
+removed when it was previously indexed, matching `checked_concepts` and the
+full rebuild. Replace the stale-scan's `known is None` searchability guard with
+an unconditional guard that adds `known` paths to `removed` before continuing.
+Add a fourth regression that changes an indexed checked note to
+`lifecycle: archived`, refreshes its output record with `mark_file_status`,
+then proves its passages and file-index state are removed. Include it in the
+RED/GREEN focused command.
+
+**Checked-graph provenance amendment (2026-07-18):** “the refresh path never
+touches `concept_edges`” forbids graph reconciliation from
+`refresh_stale_passages`; it does not exempt the verdict transition that
+revokes a source's authority. A non-`checked` concept verdict must centrally
+demote mirror-owned, non-`tension` edge rows whose `source_path` is that
+concept. Re-checking a concept must not revive historical edges; a full rebuild
+is the sole re-admission path. `graph_sql.neighborhood` must additionally
+require the current `concept_status` for mirror-owned edges, so a database
+created during the vulnerable interval cannot bridge through a revoked source.
+Add a regression with A–B–C where B owns both links: after B is demoted and an
+incremental refresh runs, B's passage and both eligible graph paths are absent,
+while a PI-owned `tension` row remains untouched. The focused RED/GREEN command
+must cover this regression and the graph-SQL suite.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/indexing.py:41-59` (replace
   `refresh_stale_passages`)
@@ -1115,7 +1406,7 @@ Two documented boundaries (do not widen this task):
 - Consumes: `state.file_index_states(vault: Path) -> dict[str, dict[str, Any]]`
   (`state.py:2012-2023`); `state.replace_indexed_passages(vault, rows, *,
   paths: Iterable[str] | None = None) -> dict[str, int]` (`state.py:1874`);
-  `is_consumable_checked_file(vault: Path, relpath: str) -> bool`
+  `is_consumable_checked_file(vault: Path, relpath: str, *, enqueue_scan: bool = True) -> bool`
   (`read_barrier.py:14`).
 - Produces:
   - `search_index.stale_checked_search_documents(vault: Path, states: dict[str, dict[str, Any]]) -> tuple[list[dict[str, Any]], set[str]]`
@@ -1131,7 +1422,7 @@ Two documented boundaries (do not widen this task):
 
 **Steps:**
 
-- [ ] Write the failing tests. Add the import of `safe_read` to
+- [x] Write the failing tests. Add the import of `safe_read` to
   `tests/test_query_substrate.py` (after line 9,
   `from memoria_vault.runtime.policy.audit import sha256_file`):
 
@@ -1139,7 +1430,7 @@ Two documented boundaries (do not widen this task):
   from memoria_vault.runtime.vaultio import safe_read
   ```
 
-  Append both tests at the end of the file:
+  Append the first two tests at the end of the file:
 
   ```python
   def test_refresh_reindexes_only_changed_files_and_keeps_concept_edges(
@@ -1192,6 +1483,7 @@ Two documented boundaries (do not widen this task):
           path.read_text(encoding="utf-8").replace("first version", "second version"),
           encoding="utf-8",
       )
+      mark_file_status(vault, "notes/alpha.md")
       refreshed = call_with_context(indexing.refresh_stale_passages, vault)
 
       assert refreshed["passages"] == {"inserted": 1, "paths": 1}
@@ -1229,19 +1521,32 @@ Two documented boundaries (do not widen this task):
       assert "notes/beta.md" not in state.file_index_states(vault)
   ```
 
-- [ ] Run the tests to verify they fail:
+- [x] Add a third failing regression test,
+  `test_refresh_removes_barrier_refused_changed_checked_file_without_read`, to
+  `tests/test_query_substrate.py`. Seed and rebuild one checked note, overwrite
+  it with a `CANARY` body and advance its mtime beyond the stored index state,
+  then monkeypatch `memoria_vault.runtime.search_index.safe_read` to fail if it
+  is invoked. `refresh_stale_passages` must not invoke that patched reader; it
+  must remove the path from `indexed_passages` and `file_index_states`, and an
+  FTS lookup for the CANARY must return no row. This regression establishes the
+  R2 barrier-before-read rule for incremental refresh, rather than merely
+  asserting its final database state.
+
+- [x] Run the tests to verify they fail:
 
   ```
-  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" -v
+  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" "tests/test_query_substrate.py::test_refresh_removes_barrier_refused_changed_checked_file_without_read" -v
   ```
 
   Expected: the first test fails at `assert reads == []` (current code reads
   every checked file on every refresh — the list contains `alpha.md`/`beta.md`
   twice each) and would also fail the `concept_edges` assertion (wiped to `[]`);
   the second fails because the deleted file's rows linger in
-  `passages`/`file_index_state`.
+  `passages`/`file_index_state`; the third proves the old refresh path reaches
+  `safe_read` for a changed, barrier-refused checked file, which the canary
+  monkeypatch rejects.
 
-- [ ] Write the bulk-status helper. In
+- [x] Write the bulk-status helper. In
   `src/memoria_vault/runtime/state.py`, insert after `concept_check_status`
   (after line 1072):
 
@@ -1256,9 +1561,17 @@ Two documented boundaries (do not widen this task):
       return {str(row["concept_id"]): str(row["check_status"]) for row in rows}
   ```
 
-- [ ] Write the stale-scan. In `src/memoria_vault/runtime/search_index.py`,
+- [x] Write the stale-scan. In `src/memoria_vault/runtime/search_index.py`,
   add `import hashlib` to the stdlib import block (line 5, before `import
   json`), then insert after `checked_concepts` (after line 150):
+
+  > **Binding R2 read-barrier amendment:** for every changed/new file-backed
+  > path whose current DB status is `checked`, call
+  > `is_consumable_checked_file(vault, rel)` with its default
+  > `enqueue_scan=True` *before* `safe_read` or `_frontmatter_with_flags`. On
+  > refusal, add a known path to `removed` and continue. Only a passing barrier
+  > may reach `safe_read`. Preserve the existing mtime/status fast path (no
+  > O(vault) rehash) and the generated Work-document path unchanged.
 
   ```python
   def stale_checked_search_documents(
@@ -1294,12 +1607,15 @@ Two documented boundaries (do not widen this task):
                   if known is not None:
                       removed.add(rel)
                   continue
+              if not is_consumable_checked_file(vault, rel):
+                  if known is not None:
+                      removed.add(rel)
+                  continue
               text = safe_read(path)
               frontmatter = _frontmatter_with_flags(vault, rel, text)
-              if known is None and not (
-                  is_consumable_checked_file(vault, rel)
-                  and _is_searchable_frontmatter(frontmatter)
-              ):
+              if not _is_searchable_frontmatter(frontmatter):
+                  if known is not None:
+                      removed.add(rel)
                   continue
               stale.append(
                   {"path": rel, "text": text, "frontmatter": frontmatter, "source": path}
@@ -1318,14 +1634,14 @@ Two documented boundaries (do not widen this task):
       return sorted(stale, key=lambda row: str(row["path"])), removed
   ```
 
-  Semantics note (mirrors today's behavior on purpose): a *previously indexed*
-  file that is still `checked` is re-read unconditionally when its mtime or
-  verdict changed — even if `is_consumable_checked_file` now returns `False`
-  (a PI-edited checked file) — exactly like `_previously_indexed_documents`
-  does on the rebuild path (`indexing.py:80-98`); a *new* file must pass the
-  consumable + searchable admission that `checked_search_documents` applies.
+  Semantics note: a *previously indexed* file that remains `checked` but fails
+  `is_consumable_checked_file` is never opened by refresh; its prior passages
+  and index state are removed. A new file must likewise pass consumable +
+  searchable admission before it can enter the index. This preserves the R2
+  barrier-before-read invariant while retaining mtime/status gating for
+  unchanged files.
 
-- [ ] Replace `refresh_stale_passages` in
+- [x] Replace `refresh_stale_passages` in
   `src/memoria_vault/runtime/indexing.py` (lines 41-59) with:
 
   ```python
@@ -1348,21 +1664,21 @@ Two documented boundaries (do not widen this task):
   `search_index` imports `indexing` at module top, so the reverse import must
   stay lazy.)
 
-- [ ] Run the new tests to verify they pass:
+- [x] Run the new tests to verify they pass:
 
   ```
-  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" -v
+  python -m pytest "tests/test_query_substrate.py::test_refresh_reindexes_only_changed_files_and_keeps_concept_edges" "tests/test_query_substrate.py::test_refresh_drops_passages_for_removed_files" "tests/test_query_substrate.py::test_refresh_removes_barrier_refused_changed_checked_file_without_read" -v
   ```
 
-- [ ] Run the neighboring suites that exercise the refresh path end to end:
+- [x] Run the neighboring suites that exercise the refresh path end to end:
 
   ```
   python -m pytest tests/test_query_substrate.py tests/test_search_index.py tests/test_retrieval_substrate.py -v
   ```
 
-- [ ] Run the full gate: `python scripts/verify`
+- [x] Run the full gate: `python scripts/verify`
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/indexing.py src/memoria_vault/runtime/search_index.py src/memoria_vault/runtime/state.py tests/test_query_substrate.py
@@ -1398,9 +1714,15 @@ readiness block in the result so the caller sees what is missing.
 - Modify: `src/memoria_vault/runtime/worker.py:717` (payload key)
 - Modify: `src/memoria_vault/cli.py:347` (flag) and `:1184` (payload)
 - Modify: `tests/test_project_knowledge.py:428-474` (gate test)
-- Modify: `tests/test_content_security.py` (12 call sites + 1 wrapper)
+- Modify: `tests/test_content_security.py` (10 non-draft call sites + 1 wrapper;
+  leave its 2 `draft=True` calls on the independent draft gate)
 - Modify: `tests/test_cli_work_project.py` (two non-draft export invocations,
   arg lists at ~lines 476-486 and ~656-668)
+- Modify: `tests/test_draft_verification.py` and
+  `tests/test_runtime_gate_replay.py` (existing intentional unready regular
+  exports; one draft-gate regression)
+- Modify: `tests/test_worker_product_jobs.py` (untyped operation-payload
+  opt-out must remain default-deny)
 - Modify: `tests/floor_lib.py:784-794` (export-project sweep entry)
 - Modify: `docs/how-to-guides/project/export-a-draft.md:37-49`,
   `docs/reference/pipelines-and-io/export.md:23-25,51-52`
@@ -1420,9 +1742,42 @@ readiness block in the result so the caller sees what is missing.
 - Consumes: `project_export_readiness(vault, project_path, *, context) ->
   dict[str, Any]` (`knowledge.py:2609`, unchanged).
 
+**Preflight reconciliation amendment (2026-07-17):** the new default
+non-draft gate runs before renderer, output-target, and Pandoc checks. Add
+`allow_unready=True` to the four existing non-ready tests at
+`tests/test_project_knowledge.py:274,314,367,488` so they still exercise their
+intended renderer/output/Pandoc behavior rather than failing at readiness.
+In `docs/reference/pipelines-and-io/export.md`, change only the **Memoria
+project export** route-table cell to `[--allow-not-ready]`; remove the stale
+bracketed readiness flag from the **Memoria draft export** cell because the
+draft route retains its independent, always-on evidence gate and ignores this
+non-draft opt-out.
+
+**Review reconciliation amendment (2026-07-29):** the content-security search
+counted twelve `call_with_context` exports, but two are `draft=True`; repoint
+only the ten non-draft calls to `_write_export_unready` so the security suite
+continues to exercise the independent draft gate without an irrelevant opt-out.
+`test_regular_export_with_existing_draft_uses_export_context_for_readiness` and
+the runtime gate replay deliberately export unready regular projects, so pass
+`allow_unready=True` and `--allow-not-ready` respectively. Strengthen the
+existing unclean-draft refusal by passing `allow_unready=True, draft=True`:
+the draft evidence gate must still refuse. The how-to prerequisite must call
+normal non-draft export readiness-required, not "readiness-gated," and reserve
+the flag for review packets. Generic operation payloads have no typed schema;
+the pre-1.0 removal intentionally ignores a legacy `ready_only` key and thus
+fails closed. Finish with an active-surface search proving the legacy parameter
+and flag are absent from `src`, `tests`, and published export docs.
+
+**Security review amendment (2026-07-29):** `export-project` also accepts
+generic operation payloads. Do not coerce `allow_unready` with Python's
+`bool(...)`: JSON `"false"` is truthy and would bypass the new safety gate.
+Use the worker's existing `_payload_bool(payload, "allow_unready", False)`
+parser, which accepts canonical boolean strings and rejects invalid values.
+Pin both cases at the operation boundary in `tests/test_worker_product_jobs.py`.
+
 **Steps:**
 
-- [ ] Write the failing test. In `tests/test_project_knowledge.py`, replace the
+- [x] Write the failing test. In `tests/test_project_knowledge.py`, replace the
   test at lines 428-474
   (`test_ready_only_export_requires_paper_plan_and_checked_support`) with:
 
@@ -1480,7 +1835,7 @@ readiness block in the result so the caller sees what is missing.
       assert "## Paper Plan" in result["content"]
   ```
 
-- [ ] Run it to verify it fails:
+- [x] Run it to verify it fails:
 
   ```
   python -m pytest "tests/test_project_knowledge.py::test_non_draft_export_gate_enforced_by_default" -v
@@ -1490,7 +1845,7 @@ readiness block in the result so the caller sees what is missing.
   gate defaults off (and the later `allow_unready=True` call raises
   `TypeError: write_project_export() got an unexpected keyword argument`).
 
-- [ ] Implement the gate. In `src/memoria_vault/runtime/knowledge.py` line
+- [x] Implement the gate. In `src/memoria_vault/runtime/knowledge.py` line
   2527 change `ready_only: bool = False,` to `allow_unready: bool = False,`,
   and replace lines 2540-2543 with:
 
@@ -1501,23 +1856,28 @@ readiness block in the result so the caller sees what is missing.
               raise ValueError(f"project is not export-ready: {missing}")
   ```
 
-- [ ] Wire the worker. In `src/memoria_vault/runtime/worker.py` line 717
+- [x] Wire the worker. In `src/memoria_vault/runtime/worker.py` line 717
   change `ready_only=bool(payload.get("ready_only")),` to
-  `allow_unready=bool(payload.get("allow_unready")),`.
+  `allow_unready=_payload_bool(payload, "allow_unready", False),`.
 
-- [ ] Wire the CLI. In `src/memoria_vault/cli.py` line 347 change
+- [x] Pin the generic operation-payload boundary. In
+  `tests/test_worker_product_jobs.py`, prove `allow_unready: "false"` stays
+  readiness-gated and an unparseable string is rejected rather than treated as
+  a truthy opt-out.
+
+- [x] Wire the CLI. In `src/memoria_vault/cli.py` line 347 change
   `export.add_argument("--ready-only", action="store_true")` to
   `export.add_argument("--allow-not-ready", dest="allow_unready", action="store_true")`,
   and line 1184 change `"ready_only": args.ready_only,` to
   `"allow_unready": args.allow_unready,`.
 
-- [ ] Run the new test to verify it passes:
+- [x] Run the new test to verify it passes:
 
   ```
   python -m pytest "tests/test_project_knowledge.py::test_non_draft_export_gate_enforced_by_default" -v
   ```
 
-- [ ] Update the content-security call sites (their minimal projects carry no
+- [x] Update the content-security call sites (their minimal projects carry no
   paper plan, so the enforced default would refuse them; they test
   neutralization, not readiness). In `tests/test_content_security.py`, add one
   wrapper after the import block (after line 40, following the untyped-wrapper
@@ -1529,21 +1889,25 @@ readiness block in the result so the caller sees what is missing.
       return _write_project_export(vault, *args, **kwargs)
   ```
 
-  then repoint the 12 call sites (verified: exactly 12 lines match, all inside
-  `call_with_context(` calls; the import at line 26 has no leading spaces and
-  does not match):
+  then repoint the ten non-draft calls. The two remaining matching calls have
+  `draft=True` and stay on `_write_project_export` to retain draft-gate
+  coverage.
 
-  ```
-  sed -i 's/^        _write_project_export,$/        _write_export_unready,/' tests/test_content_security.py
-  ```
-
-- [ ] Update the two CLI-loop tests in `tests/test_cli_work_project.py` whose
+- [x] Update the two CLI-loop tests in `tests/test_cli_work_project.py` whose
   projects are not export-ready: in the `run_json("project", "export", ...)`
   call (~line 476) and the `main(["project", "export", ...])` arg list
   (~line 657), add the flag `"--allow-not-ready",` immediately after the
   `"project-alpha",` argument.
 
-- [ ] Update the floor sweep. In `tests/floor_lib.py` replace lines 784-794
+- [x] Update the adjacent intentional-unready paths. Add `allow_unready=True`
+  to `tests/test_draft_verification.py::test_regular_export_with_existing_draft_uses_export_context_for_readiness`,
+  add `--allow-not-ready` to
+  `tests/test_runtime_gate_replay.py::test_runtime_gate_replays_user_facing_commands`,
+  and make `test_unclean_draft_refuses_export_with_evidence_reason` pass
+  `allow_unready=True, draft=True` so it pins that the draft evidence gate is
+  unaffected.
+
+- [x] Update the floor sweep. In `tests/floor_lib.py` replace lines 784-794
   (comment + entry) with:
 
   ```python
@@ -1561,7 +1925,7 @@ readiness block in the result so the caller sees what is missing.
       },
   ```
 
-- [ ] Update the docs. In `docs/how-to-guides/project/export-a-draft.md`
+- [x] Update the docs. In `docs/how-to-guides/project/export-a-draft.md`
   remove the `--ready-only` line from the example command (line 44) and
   replace the sentence starting "Omit `--ready-only` for a review packet…"
   (line 48-49) with: "The export refuses by default until the paper plan and
@@ -1571,22 +1935,33 @@ readiness block in the result so the caller sees what is missing.
   project has required paper framing and checked support." (lines 22-25) with:
   "The export fails closed unless the project has required paper framing and
   checked support; add `--allow-not-ready` to export a review packet anyway."
-  and change both `[--ready-only]` cells in the Export routes table (lines
-  51-52) to `[--allow-not-ready]`.
+  and change the non-draft **Memoria project export** route-table cell (line
+  51) to `[--allow-not-ready]`; remove the stale bracketed readiness flag from
+  the separate draft-route cell (line 52).
 
-- [ ] Run the affected suites:
-
-  ```
-  python -m pytest tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py -v
-  ```
-
-- [ ] Run the full gate (includes the floor suites that consume
-  `floor_lib.py`): `python scripts/verify`
-
-- [ ] Commit:
+- [x] Confirm the old interface is absent from active code, tests, and
+  published export docs:
 
   ```
-  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py tests/floor_lib.py docs/how-to-guides/project/export-a-draft.md docs/reference/pipelines-and-io/export.md
+  rg -n 'ready_only|--ready-only' src tests docs/how-to-guides docs/reference
+  ```
+
+  Expected: no matches. Historical planning and design records remain unchanged.
+
+- [x] Run the affected suites:
+
+  ```
+  python -m pytest tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py tests/test_draft_verification.py tests/test_runtime_gate_replay.py tests/test_worker_product_jobs.py -v
+  ```
+
+- [x] Run the full gate (includes the floor suites that consume
+  `floor_lib.py`): `python scripts/verify` — passed: 2,472 tests, 11 skipped;
+  lint, product gates, offline smoke, syntax, and shell checks all green.
+
+- [x] Commit:
+
+  ```
+  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_project_knowledge.py tests/test_content_security.py tests/test_cli_work_project.py tests/test_draft_verification.py tests/test_runtime_gate_replay.py tests/test_worker_product_jobs.py tests/floor_lib.py docs/how-to-guides/project/export-a-draft.md docs/reference/pipelines-and-io/export.md docs/superpowers/plans/2026-07-15-alpha23-usable-loop.md
   git commit -m "fix(export): enforce the non-draft export readiness gate by default
 
   V1 non-draft-export-gate: unready non-draft exports refuse unless
@@ -1598,6 +1973,91 @@ readiness block in the result so the caller sees what is missing.
 ---
 
 ### Task LOOP.3: E1 — token-ceiling circuit breaker at the single live-dispatch seam
+
+> **Execution override — canonical model-call handoff (2026-07-29):** Execute
+> this task only after surfaces BOOT-B.5 and Alpha22 COST.1–.5. The raw
+> `result.usage()` calls, string-return assertions, unchanged-fake wording,
+> and independent-order claim below are drafting history. LOOP.3 consumes the
+> canonical COST result, never the raw SDK result, and changes no secret
+> resolution or durable telemetry policy.
+
+The shared result is:
+
+```python
+MODEL_CALL_RESULT = {
+    "text": str,
+    "usage": {
+        "input_tokens": int,
+        "output_tokens": int,
+        "cache_read_tokens": int,
+        "cache_write_tokens": int,
+        "total_tokens": int,
+    } | None,
+    "cost_usd": float | None,
+    "elapsed_s": float,
+}
+```
+
+**Binding implementation and proof requirements:**
+
+1. Keep `_require_token_budget(...)` immediately before dispatch. COST.1 has
+   already called the SDK's `result.usage()` exactly once and built `usage`
+   immediately after successful `run_sync`; insert the one ledger charge
+   directly after that handoff and before `text` is read or empty/digest output
+   is rejected. Thus a successful but invalid/empty returned response consumes
+   budget; a `run_sync` exception does not. LOOP must never call
+   `result.usage()` a second time.
+2. Replace the old raw-result recorder with a canonical-data helper, for
+   example (the private name may stay `_record_token_usage`):
+
+   ```python
+   def _record_token_usage(usage: dict[str, Any] | None, settings: dict[str, Any]) -> None:
+       total = usage.get("total_tokens") if isinstance(usage, dict) else None
+       if isinstance(total, int) and not isinstance(total, bool) and total >= 0:
+           charge = total
+       else:
+           fallback = settings.get("max_tokens")
+           charge = (
+               fallback
+               if isinstance(fallback, int)
+               and not isinstance(fallback, bool)
+               and fallback > 0
+               else 0
+           )
+       _TOKEN_LEDGER["total_tokens"] += charge
+   ```
+
+   A valid zero is charged as zero; `max_tokens` is a fallback only for
+   absent/malformed usage. `cost_usd` is nullable telemetry, never a breaker
+   input. The shared five-field `usage` dict is forwarded once to COST.4's
+   existing `model_call` journal rows; this task adds no sink or journal row.
+3. Update every direct assertion to `result["text"]` and import COST's
+   `tests.helpers.LIVE_USAGE` total (`25`), not the stale `max_tokens=64`
+   fallback. Add
+   focused tests for: reported total preferred over max-tokens; absent and
+   malformed usage falling back; valid zero not falling back; an empty response
+   charging before its `RuntimeError`; a `run_sync` exception leaving the
+   ledger unchanged; exactly one SDK `usage()` harvest; and deterministic-
+   fixture execution never entering the live breaker.
+4. Add `tests/test_cli_doctor_eval.py` to this task's Files and a live-doctor
+   proof: reset `_TOKEN_LEDGER`, set a ceiling equal to the fake total, run one
+   `doctor --check runner --live` diagnostic dispatch (it succeeds and spends
+   the budget), then run it again. The second report has
+   `runner_live_dispatch: false` and the explicit `model token ceiling
+   reached` diagnostic. Assert no `model_call` journal row exists in the
+   disposable workspace for either diagnostic. Doctor is a live resource
+   consumer, not durable model-call provenance.
+5. Run and stage the amended contract tests together:
+
+   ```bash
+   python -m pytest tests/test_token_ceiling.py tests/test_cli_doctor_eval.py \
+       tests/test_operations.py tests/test_runtime_gate_replay.py -v
+   ```
+
+   Stage `src/memoria_vault/runtime/operations.py`, `tests/test_token_ceiling.py`,
+   `tests/test_cli_doctor_eval.py`, and `tests/conftest.py` in the LOOP.3
+   commit. Do not stage Alpha22 files here; COST's atomic tranche and journal
+   changes have already landed.
 
 Consolidation E1 unit delivered here: the deterministic slice of
 `cost-discipline` (token ceiling + circuit breaker). **Seam verification (files
@@ -1614,22 +2074,51 @@ design gates' "pre-registered decision rules" plumbing — they are *not* built
 here.
 
 Mechanism: a process-wide cumulative token ledger. Each completed call charges
-the model-reported `result.usage().total_tokens` (pydantic-ai 2.9.1, verified:
-`RunUsage.total_tokens` exists and `AgentRunResult.usage` is callable), falling
-back to the call's `max_tokens` setting when the runner reports no usage (the
-test fake). When `MEMORIA_MODEL_TOKEN_CEILING` is set and spent ≥ ceiling, the
+the canonical COST `usage["total_tokens"]` already harvested from the SDK
+exactly once (pydantic-ai 2.9.1's `RunUsage.total_tokens`); it falls back to
+the call's `max_tokens` setting only when that canonical field is absent or
+malformed, never when a valid value is zero. When `MEMORIA_MODEL_TOKEN_CEILING` is set and spent ≥ ceiling, the
 **next** dispatch refuses before any network call (classic breaker: the
 in-flight call completes and is charged; the circuit opens for subsequent
 calls). Unset/empty ceiling = breaker off (default), preserving current
 behavior; turning it on is one env var in the researcher's live profile.
 
+**Review and test-isolation amendment (2026-07-29):** The original
+100-token scenario proves only an overspent breaker, not the stated
+`spent >= ceiling` boundary. Add a 64-token exact-boundary case: one fallback
+charge succeeds and the next call refuses. Both blocked-call tests must prove
+the fake runner did not run (the last observed prompt and constructed-model
+count remain unchanged); malformed ceiling input must likewise construct no
+agent. Parameterize disabled behavior for both an unset and an empty value.
+Because this is a process-wide setting that a researcher may intentionally set
+in a live profile, extend the autouse test-state fixture to clear
+`MEMORIA_MODEL_TOKEN_CEILING`; otherwise unrelated mocked-runner tests could
+be order-dependent. The token-ceiling tests explicitly set their own values.
+
+**Security review amendment (2026-07-29):** Treat the post-dispatch
+`result.usage()` observation as malformed unless it yields a positive plain
+`int`. Python `bool` is an `int` subclass, so `True` must not undercharge the
+ledger as one token; an accessor that raises after a completed call must not
+skip charging altogether. Wrap observation in `try`/`except Exception`, then
+fall back to the selected `max_tokens` value for both cases. Add red/green
+regressions for `total_tokens=True` and a raising `usage()` accessor.
+
+**Lint reconciliation amendment (2026-07-29):** Ruff/Bandit S105 classifies
+the public `TOKEN_CEILING_ENV` *name* as a hardcoded password because it
+contains “TOKEN.” Keep the required public interface and add the repository's
+narrow, explained `# noqa: S105` suppression on that one constant; it is an
+environment-variable identifier, not a credential.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:57` (constants, after
   `RUNNER_PROVIDER_NAMES`) and `:951-984` (`_pydantic_ai_chat` plus two new
   helpers inserted directly above it)
-- Modify: `tests/conftest.py:18-120` (`TEST_LEVELS` registration)
+- Modify: `tests/conftest.py:18-120` (`TEST_LEVELS` registration and
+  live-profile ceiling isolation)
 - Create: `tests/test_token_ceiling.py`
-- Test: `tests/test_token_ceiling.py`
+- Modify: `tests/test_cli_doctor_eval.py` (live diagnostic spends the same
+  breaker budget but creates no durable `model_call` event)
+- Test: `tests/test_token_ceiling.py`, `tests/test_cli_doctor_eval.py`
 
 **Interfaces:**
 - Produces:
@@ -1642,13 +2131,60 @@ behavior; turning it on is one env var in the researcher's live profile.
     `"model token ceiling reached"` raised by `_pydantic_ai_chat` before
     dispatch. (Internal helpers `_token_ceiling() -> int`,
     `_require_token_budget(operation_id: str) -> None`,
-    `_record_token_usage(result: Any, settings: dict[str, Any]) -> None` are
+    `_record_token_usage(usage: dict[str, Any] | None, settings: dict[str, Any]) -> None` are
     private.)
-- Consumes: `_load_pydantic_ai_openai()` (`operations.py:987`) unchanged;
-  `tests.helpers.patch_pydantic_ai` (`tests/helpers.py:362`) unchanged — its
-  fake result has no `usage` attribute, exercising the fallback.
+- Consumes: Alpha22's canonical `MODEL_CALL_RESULT`; `_load_pydantic_ai_openai()`
+  unchanged; COST's upgraded `tests.helpers.patch_pydantic_ai` fake and
+  `tests.helpers.LIVE_USAGE`, which expose one `usage()` harvest and canonical
+  total. A malformed or absent *canonical* usage dict exercises the fallback
+  without calling the SDK.
 
 **Steps:**
+
+> **Executable replacement (2026-07-29):** The canonical requirements above
+> replace every raw-SDK/string-return sample in the archived draft below. Do
+> not copy or execute that draft. In particular, LOOP.3 must never call
+> `result.usage()` or pass a raw SDK result to `_record_token_usage`.
+
+- [ ] **Write the canonical failing tests.** Create
+  `tests/test_token_ceiling.py` with the existing `POLICY`/keyless `RUNNER`, a
+  ledger reset helper, and `LIVE_USAGE, patch_pydantic_ai` imported from
+  `tests.helpers`. Assert `result["text"]`, and use
+  `LIVE_USAGE["total_tokens"] == 25` rather
+  than `max_tokens=64`, for the ceiling-trip and unset-ceiling paths. Add
+  focused tests that call the canonical-data helper directly for reported
+  total (preferred), absent/malformed total (fall back), valid zero (charge
+  zero), and boolean values (malformed; never silently treated as integers).
+  Make the fake's empty output raise while the ledger has already charged 25
+  and `seen["usage_calls"] == 1`. Exercise a deterministic-fixture operation
+  under a ceiling and assert that it neither dispatches nor changes the
+  ledger. Separately monkeypatch an agent whose `run_sync` raises; assert the
+  wrapped `pydantic-ai model request failed` error, zero ledger change, and no
+  `usage()` harvest.
+
+- [ ] **Add the runner and doctor regressions.** Register
+  `test_token_ceiling.py` as `unit`. In `tests/test_cli_doctor_eval.py`, reset
+  the ledger and set the ceiling to 25; the first `doctor --check runner
+  --live` dispatch succeeds and spends 25, while the second reports
+  `runner_live_dispatch: false` and `model token ceiling reached`. Assert
+  neither diagnostic creates a `model_call` JSONL row in the disposable
+  workspace.
+
+- [ ] **Implement at the canonical seam.** Add the constant, ledger,
+  `_token_ceiling`, and `_require_token_budget` helpers as scoped below.
+  Preserve COST.1's one `run_usage` harvest. Put
+  `_require_token_budget(...)` immediately before dispatch; immediately after
+  COST.1 creates `usage`, call `_record_token_usage(usage, settings)` before
+  inspecting `text`. Use the canonical-data helper above, including its
+  boolean rejection. Do not add a journal sink or alter BOOT-B.5 key handling.
+
+- [ ] **Verify and commit the replacement.** First run
+  `python -m pytest tests/test_token_ceiling.py -v` red, then green; run the
+  combined contract command in the binding requirements, `python scripts/verify`,
+  and commit exactly the four files listed there.
+
+<details>
+<summary>Superseded legacy draft — retained only as review history; do not execute or copy these steps</summary>
 
 - [ ] Write the failing tests. Create `tests/test_token_ceiling.py`:
 
@@ -1749,7 +2285,7 @@ behavior; turning it on is one env var in the researcher's live profile.
           operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")
   ```
 
-- [ ] Register the test level. In `tests/conftest.py`, add to `TEST_LEVELS`
+- [x] Register the test level. In `tests/conftest.py`, add to `TEST_LEVELS`
   alphabetically between `"test_testing_levels.py": "static",` (line 110) and
   `"test_trusted_writer.py": "runtime",` (line 111) — matching the `unit`
   level of its deterministic neighbors (`test_loudness.py`,
@@ -1759,20 +2295,20 @@ behavior; turning it on is one env var in the researcher's live profile.
       "test_token_ceiling.py": "unit",
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_token_ceiling.py -v
   ```
 
-  Expected: `AttributeError: module 'memoria_vault.runtime.operations' has no
-  attribute 'TOKEN_CEILING_ENV'` (collection-time failure in every test).
+  Expected: the first access to `operations._TOKEN_LEDGER` raises
+  `AttributeError`, because the token-ledger contract is not implemented yet.
 
-- [ ] Implement. In `src/memoria_vault/runtime/operations.py`, add after
+- [x] Implement. In `src/memoria_vault/runtime/operations.py`, add after
   `RUNNER_PROVIDER_NAMES = ("local", "gateway")` (line 57):
 
   ```python
-  TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"
+  TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"  # noqa: S105 -- public environment name.
   _TOKEN_LEDGER = {"total_tokens": 0}
   ```
 
@@ -1801,9 +2337,12 @@ behavior; turning it on is one env var in the researcher's live profile.
 
 
   def _record_token_usage(result: Any, settings: dict[str, Any]) -> None:
-      usage = getattr(result, "usage", None)
-      total = getattr(usage(), "total_tokens", None) if callable(usage) else None
-      if not isinstance(total, int) or total <= 0:
+      try:
+          usage = getattr(result, "usage", None)
+          total = getattr(usage(), "total_tokens", None) if callable(usage) else None
+      except Exception:  # noqa: BLE001 -- completed calls must still be charged.
+          total = None
+      if type(total) is not int or total <= 0:
           total = int(settings.get("max_tokens") or 0)
       _TOKEN_LEDGER["total_tokens"] += total
   ```
@@ -1822,25 +2361,27 @@ behavior; turning it on is one env var in the researcher's live profile.
       _record_token_usage(result, settings)
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```
   python -m pytest tests/test_token_ceiling.py -v
   ```
 
-- [ ] Confirm existing runner behavior is untouched (fixture and doctor
+- [x] Confirm existing runner behavior is untouched (fixture and doctor
   paths):
 
   ```
   python -m pytest tests/test_runtime_gate_replay.py tests/test_cli_doctor_eval.py tests/test_operations.py -v
   ```
 
-- [ ] Run the full gate: `python scripts/verify`
+- [x] Run the full gate: `python scripts/verify` — passed: 2,480 tests, 11
+  skipped; lint, product gates, offline smoke, syntax, and shell checks all
+  green.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
-  git add src/memoria_vault/runtime/operations.py tests/test_token_ceiling.py tests/conftest.py
+  git add src/memoria_vault/runtime/operations.py tests/test_token_ceiling.py tests/test_cli_doctor_eval.py tests/conftest.py
   git commit -m "feat(runtime): process-wide token-ceiling circuit breaker for live model dispatch
 
   E1 cost-discipline slice: MEMORIA_MODEL_TOKEN_CEILING caps cumulative
@@ -1850,6 +2391,8 @@ behavior; turning it on is one env var in the researcher's live profile.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+</details>
 
 ---
 
@@ -2383,6 +2926,13 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 
 ### Task LOOP.13: Acceptance — instrumented 10→100 staged import runs end-to-end; time-to-first-answer is measured
 
+**2026-07-29 retrieval amendment (binding):** LOOP.13 runs only after R2 F.3
+has frozen the retrieval fixtures. Shape 1 remains `memoria ask`; Shape 2 is
+`memoria explore`, invoked with the fixture's topic and declared depth. This
+supersedes every earlier Shape-2 `memoria ask` command or fallback wording below:
+the acceptance record stores the fixture id, topic, depth, metric, and the two
+separate command latencies.
+
 The closing gate for this section, executing empirical plan Phase 0's exit
 checks plus Phase 1's first two stages with today's real CLI commands
 (verified against `cli.py`: `memoria init` :74, `memoria work add` :195,
@@ -2407,12 +2957,12 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
 
 **Interfaces:**
 - Consumes: merged implementations of LOOP.4 (I1 wiring) and LOOP.6 (O2
-  import); LOOP.5's seed-corpus list + licensing record; empirical plan
-  Phases 0-1 metric list and the ≤30-min / ≤60-min bars; LOOP.7's Shape-1/
-  Shape-2 query definitions (fall back to the two literal queries below if
-  LOOP.7 has not merged).
+  import); LOOP.5's seed-corpus list + licensing record; R2 F.3's frozen
+  fixture loader; empirical plan Phases 0-1 metric list and the ≤30-min /
+  ≤60-min bars; LOOP.7/R2's Shape-1 and Shape-2 command contracts.
 - Produces: the acceptance-run record with: time-to-first-answer seconds;
-  per-stage import wall-clock, ask latency, attention items per 100 works,
+  per-stage import wall-clock, separate Shape-1 ask and Shape-2 explore
+  latencies, attention items per 100 works,
   triage minutes; disposition-event count > 0; a stop-reason for any stage
   that broke the session ("that observation IS the finding").
 
@@ -2462,13 +3012,14 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
     [ -s "$F" ] && memoria work import --workspace "$VAULT" --format bibtex --file "$F" --json --idempotency-key "stage1-$F"
   done
   END=$(date +%s); echo "stage1_import_s=$((END-START))" | tee -a staged-import-metrics.txt
-  time memoria ask --workspace "$VAULT" --question "targeted lookup: <a Shape-1 query from the LOOP.7 spec>" --json
-  time memoria ask --workspace "$VAULT" --question "topic surfacing: <a Shape-2 query from the LOOP.7 spec>" --json
+  time memoria ask --workspace "$VAULT" --question "targeted lookup: <the frozen Shape-1 query>" --json
+  # Read the frozen Shape-2 fixture's topic/depth/metric first; do not invent a query.
+  time memoria explore --workspace "$VAULT" "<fixture topic>" --depth <fixture depth> --json
   memoria attention list --workspace "$VAULT" --json | tee stage1-attention.json
   memoria attention worklist --workspace "$VAULT" --json | tee stage1-worklist.json
   ```
 
-  Record: import wall-clock, both ask latencies (>200 ms interactive triggers
+  Record: import wall-clock, Shape-1 ask and Shape-2 explore latencies (>200 ms interactive triggers
   the substrate re-comparison early — query-mechanism-analysis §5), attention
   items minted, journal/DB growth (`du -sh "$VAULT/.memoria"`).
 
@@ -2514,6 +3065,6 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
 
 - [ ] Acceptance: both stages ran (or carry a recorded stop-reason);
   time-to-first-answer is a recorded number; disposition-event count ≥ 1 was
-  verified **before** stage 2; ask latencies per stage are recorded against
-  the 200 ms early-trigger threshold; nothing was executed against
+  verified **before** stage 2; Shape-1 ask and Shape-2 explore latencies are
+  separately recorded against the 200 ms early-trigger threshold; nothing was executed against
   `test-vault/` or a pre-existing personal vault.

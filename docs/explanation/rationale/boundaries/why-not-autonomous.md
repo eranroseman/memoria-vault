@@ -70,7 +70,13 @@ Code is the one domain where the three preconditions could hold:
 
 So a bounded code-experiment loop could be admissible in principle.
 
-**But no autonomy exception exists anywhere in the current system** ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and [the code-output lane decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
+**The current exception is narrow, not autonomous.** The isolated,
+PI-approved, fail-closed code-artifact runner can execute its approved artifact
+under its own constraints. It is not an Engineer posture or an external-agent
+execution authority, and it does not create a keep/revert or experimentation
+loop. The Engineer posture still scaffolds the code handoff, records
+provenance, and points at an external agent the PI reviews. No Engineer or
+external-agent operation carries an autonomous keep/revert loop.
 
 The synthesis gate remains structurally untouched. The request envelope,
 trusted-writer checks, read barrier, and optional adapter policy hook block
@@ -104,11 +110,12 @@ human-set strategy and per-batch review, L4 self-directed within a domain, and
 L5 fully self-directed.
 
 Memoria is L3. Operations execute multi-step work unattended within request and
-manifest ceilings. The human sets the strategy (`steering.md`,
-`screening-protocol.md`) and the review gate blocks unchecked or unwarranted
-promotion from entering checked readers. L4 requires autonomous keep/revert on
-synthesis; L5 requires self-directed agenda-setting. Both fail the
-preconditions test for knowledge work.
+manifest ceilings. The human sets the strategy by framing projects, curating
+hubs and open questions, and maintaining the `steering.md` watch/mute override;
+the review gate blocks unchecked or unwarranted promotion from entering checked
+readers. L4 requires autonomous keep/revert on synthesis; L5 requires
+self-directed agenda-setting. Both fail the preconditions test for knowledge
+work.
 
 ---
 

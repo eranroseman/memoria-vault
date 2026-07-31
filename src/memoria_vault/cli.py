@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import math
 import os
 import secrets
 import shutil
@@ -22,9 +23,10 @@ import yaml
 
 from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
-from memoria_vault.engine.surface_contract import actions_by_id
+from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.worker import (
     PROTECTED_OPERATION_ACTORS,
     _workspace_lock,
@@ -48,13 +50,62 @@ SEED_FILES = (
     (".gitignore", ".gitignore"),
     ("steering.md", "steering.md"),
     ("system/vocabulary.md", "system/vocabulary.md"),
+    ("catalog.base", "catalog.base"),
+    ("claims.base", "claims.base"),
+    ("inbox.base", "inbox.base"),
+    ("projects.base", "projects.base"),
+    ("sources.base", "sources.base"),
+)
+# The agent bundle is a first-install bootstrap, not a repair-managed runtime
+# seed. A later doctor repair must never recreate or overwrite PI-owned agent
+# configuration and perimeter policy.
+AGENT_BUNDLE_SEED_TREES = (
+    (".claude", ".claude"),
+    (".codex", ".codex"),
+)
+AGENT_BUNDLE_SEED_FILES = (
+    (".mcp.json", ".mcp.json"),
+    ("CLAUDE.md", "CLAUDE.md"),
+)
+# Seeded-config lifecycle — two classes (consolidation 2026-07-12, line 105).
+# View preferences are seeded once and PI-owned afterwards: repair/upgrade must
+# not clobber an existing copy (it does reseed a deleted one). Data projections
+# are never seeded — they are regenerated always via
+# runtime.projections.TRACKED_PROJECTION_PATHS (+ argument canvases). Every
+# seeded path absent from this manifest is a runtime seed and is repair-restored.
+SEED_CLASS_VIEW_PREFERENCE: str = "view-preference"
+SEED_CLASSES: dict[str, str] = {
+    "catalog.base": SEED_CLASS_VIEW_PREFERENCE,
+    "claims.base": SEED_CLASS_VIEW_PREFERENCE,
+    "inbox.base": SEED_CLASS_VIEW_PREFERENCE,
+    "projects.base": SEED_CLASS_VIEW_PREFERENCE,
+    "sources.base": SEED_CLASS_VIEW_PREFERENCE,
+    ".obsidian/graph.json": SEED_CLASS_VIEW_PREFERENCE,
+    ".obsidian/types.json": SEED_CLASS_VIEW_PREFERENCE,
+    "steering.md": SEED_CLASS_VIEW_PREFERENCE,
+    "system/vocabulary.md": SEED_CLASS_VIEW_PREFERENCE,
+}
+VIEW_PREFERENCE_PATHS: frozenset[str] = frozenset(
+    rel for rel, cls in SEED_CLASSES.items() if cls == SEED_CLASS_VIEW_PREFERENCE
 )
 SURFACE_ACTION = actions_by_id()
+PROJECT_EXPLORE_HELP = (
+    "List exploration-channel candidates. Distinct from memoria explore <topic>, "
+    "which surfaces a checked topic neighborhood."
+)
 
 
 def main(argv: list[str] | None = None) -> int:
+    from memoria_vault.runtime.secrets import load_secrets
+
+    secrets_report = load_secrets()
+    if secrets_report["warning"]:
+        print(f"memoria: {secrets_report['warning']}", file=sys.stderr)
     parser = _build_parser()
     args = parser.parse_args(argv)
+    args._secrets_loaded_from_file = frozenset(secrets_report["loaded"])
+    args._secrets_warning = secrets_report["warning"]
+    args._secrets_path = secrets_report["path"]
     try:
         return args.handler(args)
     except BrokenPipeError:
@@ -104,7 +155,27 @@ def _build_parser() -> argparse.ArgumentParser:
     ask = sub.add_parser("ask")
     _common(ask)
     ask.add_argument("--question", required=True)
+    ask.add_argument("--trace", action="store_true")
     ask.set_defaults(handler=_cmd_ask)
+
+    secrets_cmd = sub.add_parser("secrets")
+    secrets_sub = secrets_cmd.add_subparsers(dest="secrets_command", required=True)
+    secrets_set = secrets_sub.add_parser("set")
+    _common(secrets_set, workspace_required=False)
+    secrets_set.add_argument("name")
+    secrets_set.set_defaults(handler=_cmd_secrets_set)
+    secrets_list = secrets_sub.add_parser("list")
+    _common(secrets_list, workspace_required=False)
+    secrets_list.set_defaults(handler=_cmd_secrets_list)
+
+    explore = sub.add_parser("explore", **_surface_help("explore.read"))
+    _common(explore)
+    explore.add_argument("topic")
+    explore.add_argument("--versus", default="")
+    explore.add_argument("--project", default="")
+    explore.add_argument("--depth", type=int, default=1)
+    explore.add_argument("--trace", action="store_true")
+    explore.set_defaults(handler=_cmd_explore)
 
     serve = sub.add_parser("serve")
     _common(serve)
@@ -115,18 +186,31 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--read-scope", action="append", default=[])
     serve.add_argument("--once", action="store_true")
     serve.add_argument("--poll-interval", type=float, default=1.0)
+    serve.add_argument("--on-demand", action="store_true")
+    serve.add_argument("--ephemeral", action="store_true")
+    serve.add_argument("--idle-exit", type=float, default=900.0)
+    serve.add_argument("--stop", action="store_true")
     serve.set_defaults(handler=_cmd_serve)
 
-    migrate = sub.add_parser("migrate")
-    _common(migrate)
-    migrate.add_argument("--from-alpha15", required=True)
-    migrate.set_defaults(handler=_cmd_migrate)
+    handshake = sub.add_parser("handshake")
+    handshake.add_argument("--vault", required=True)
+    handshake.add_argument("--spawn", action="store_true")
+    handshake.add_argument("--json", action="store_true")
+    handshake.add_argument("--quiet", action="store_true")
+    handshake.set_defaults(handler=_cmd_handshake)
 
     mcp = sub.add_parser("mcp")
     mcp.add_argument("--workspace", required=True)
     mcp.add_argument("--read-scope", action="append", default=[])
     mcp.add_argument("--actor", default="agent")
     mcp.set_defaults(handler=_cmd_mcp)
+
+    help_cmd = sub.add_parser(
+        "help",
+        help="Show Memoria surfaces grouped by the five workspace jobs.",
+        description="Show Memoria surfaces grouped by the five workspace jobs.",
+    )
+    help_cmd.set_defaults(handler=_cmd_help)
 
     _surface_commands(sub)
     _new_commands(sub)
@@ -208,6 +292,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     _common(import_cmd)
     import_cmd.add_argument("--format", choices=("bibtex", "csl"), required=True)
     import_cmd.add_argument("--file", required=True)
+    import_cmd.add_argument("--enrich", action="store_true")
     import_cmd.set_defaults(handler=_cmd_work_import)
 
     enrich = work_sub.add_parser("enrich")
@@ -329,8 +414,11 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     _common(resolve_evidence)
     resolve_evidence.add_argument("project_path")
     resolve_evidence.add_argument("--evidence-id", required=True)
-    resolve_evidence.add_argument("--decision", choices=("accept", "reject"), required=True)
+    resolve_evidence.add_argument(
+        "--decision", choices=("accept", "reject", "edit", "defer"), required=True
+    )
     resolve_evidence.add_argument("--reason", default="")
+    resolve_evidence.add_argument("--warrant", default="")
     resolve_evidence.set_defaults(handler=_cmd_project_resolve_evidence)
     promote = project_sub.add_parser("promote")
     _common(promote)
@@ -344,10 +432,14 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     export.add_argument("project_path")
     export.add_argument("--format", choices=("markdown", "docx", "pdf", "odt"), default="markdown")
     export.add_argument("--output")
-    export.add_argument("--ready-only", action="store_true")
+    export.add_argument("--allow-not-ready", dest="allow_unready", action="store_true")
     export.add_argument("--draft", action="store_true")
     export.set_defaults(handler=_cmd_project_export)
-    explore = project_sub.add_parser("explore")
+    explore = project_sub.add_parser(
+        "explore",
+        help=PROJECT_EXPLORE_HELP,
+        description=PROJECT_EXPLORE_HELP,
+    )
     _common(explore)
     explore.add_argument("--limit", type=int, default=10)
     explore.set_defaults(handler=_cmd_project_explore)
@@ -575,6 +667,46 @@ def _surface_summary(action_id: str) -> str:
     return str(SURFACE_ACTION[action_id]["summary"])
 
 
+def _render_job_console() -> str:
+    """U1 §3 cli-console: the CLI organized by the surface contract.
+
+    One heading per SURFACE_JOBS entry, in order; one line per registered
+    CLI command; rows without a CLI binding render as `<id> (<transports>)`
+    and reserved rows as `<id> (reserved)` so the console discloses the
+    whole contract, not just the CLI slice of it.
+    """
+    lines = ["Memoria console — surfaces by workspace job", ""]
+    for job in SURFACE_JOBS:
+        lines.append(f"{job}:")
+        entries: list[tuple[str, str]] = []
+        for action in SURFACE_ACTIONS:
+            if action.get("job") != job:
+                continue
+            summary = str(action["summary"])
+            cli = action.get("cli")
+            commands: list[str] = []
+            if isinstance(cli, dict):
+                commands = [str(command) for command in cli.get("commands") or []]
+            if commands:
+                entries.extend((command, summary) for command in commands)
+            else:
+                transports = [t for t in ("http", "mcp") if isinstance(action.get(t), dict)]
+                suffix = ", ".join(transports) if transports else "reserved"
+                entries.append((f"{action['id']} ({suffix})", summary))
+        if entries:
+            width = max(len(left) for left, _ in entries)
+            lines.extend(f"  {left.ljust(width)}  {summary}" for left, summary in entries)
+        else:
+            lines.append("  (no registered surfaces yet)")
+        lines.append("")
+    return "\n".join(lines).rstrip("\n") + "\n"
+
+
+def _cmd_help(args: argparse.Namespace) -> int:
+    sys.stdout.write(_render_job_console())
+    return 0
+
+
 def _cmd_init(args: argparse.Namespace) -> int:
     workspace = Path(args.workspace or ".").resolve()
     created = _workspace_plan(workspace)
@@ -585,7 +717,19 @@ def _cmd_init(args: argparse.Namespace) -> int:
         )
     if not args.yes and workspace.exists() and any(workspace.iterdir()):
         return _fail("init on a non-empty workspace requires --yes", json_output=args.json)
-    _initialize_workspace_files(workspace, include_obsidian=include_obsidian)
+    from memoria_vault.runtime import backup as runtime_backup
+
+    runtime_backup.validate_workspace_write_targets(workspace, [".git"])
+    _validate_workspace_git_metadata(workspace)
+    runtime_backup.validate_workspace_write_targets(
+        workspace,
+        _repair_write_targets(
+            workspace, include_obsidian=include_obsidian, include_agent_bundle=True
+        ),
+    )
+    _initialize_workspace_files(
+        workspace, include_obsidian=include_obsidian, include_agent_bundle=True
+    )
     return _emit({"ok": True, "workspace": str(workspace), "created": created}, args)
 
 
@@ -608,6 +752,20 @@ def _cmd_surface_schema(args: argparse.Namespace) -> int:
     return 0
 
 
+def _doctor_payload(
+    payload: dict[str, Any], args: argparse.Namespace, workspace: Path
+) -> dict[str, Any]:
+    from memoria_vault.runtime.secrets import credential_report
+
+    payload["credentials"] = credential_report(
+        workspace,
+        loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+    )
+    if warning := getattr(args, "_secrets_warning", ""):
+        payload["warning"] = warning
+    return payload
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     workspace = Path(args.workspace).resolve() if args.workspace else Path.cwd()
     repaired: list[str] = []
@@ -620,47 +778,41 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     if args.check == "search":
         status = _search_status(workspace)
         checks.update(status["checks"])
-        return _emit(
-            {
-                "ok": all(checks.values()),
-                "workspace": str(workspace),
-                "checks": checks,
-                "search_engine": status["engine"],
-                "search_manifest": status["manifest"],
-                "search_document_count": status["document_count"],
-                "repaired": repaired,
-            },
-            args,
-        )
+        payload = {
+            "ok": all(checks.values()),
+            "workspace": str(workspace),
+            "checks": checks,
+            "search_engine": status["engine"],
+            "search_manifest": status["manifest"],
+            "search_document_count": status["document_count"],
+            "repaired": repaired,
+        }
+        return _emit(_doctor_payload(payload, args, workspace), args)
     if args.live and args.check != "runner":
         return _fail("doctor --live is only valid with --check runner", json_output=args.json)
     if args.check == "runner":
         status = _runner_status(workspace, args.provider, live=args.live)
         checks.update(status["checks"])
-        return _emit(
-            {
-                "ok": all(checks.values()),
-                "workspace": str(workspace),
-                "checks": checks,
-                "provider": status["provider"],
-                "base_url": status["base_url"],
-                "model": status["model"],
-                "error": status["error"],
-                "repaired": repaired,
-            },
-            args,
-        )
-    backup = _backup_report(workspace)
-    return _emit(
-        {
-            "ok": all(checks.values()) and backup["ok"],
+        payload = {
+            "ok": all(checks.values()),
             "workspace": str(workspace),
             "checks": checks,
-            "backup": backup,
+            "provider": status["provider"],
+            "base_url": status["base_url"],
+            "model": status["model"],
+            "error": status["error"],
             "repaired": repaired,
-        },
-        args,
-    )
+        }
+        return _emit(_doctor_payload(payload, args, workspace), args)
+    backup = _backup_report(workspace)
+    payload = {
+        "ok": all(checks.values()) and backup["ok"],
+        "workspace": str(workspace),
+        "checks": checks,
+        "backup": backup,
+        "repaired": repaired,
+    }
+    return _emit(_doctor_payload(payload, args, workspace), args)
 
 
 def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
@@ -682,38 +834,158 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
                 )
             ]
         journal_head = state.journal_head(workspace)
-    return _emit(
-        {
-            "ok": all(doctor.values()) and backup["ok"],
-            "workspace": str(workspace),
-            "doctor": doctor,
-            "backup": backup,
-            "feedback": {"production_enabled": feedback_production_enabled(workspace)},
-            "requests": requests,
-            "journal_head": journal_head,
-        },
-        args,
-    )
+    payload = {
+        "ok": all(doctor.values()) and backup["ok"],
+        "workspace": str(workspace),
+        "doctor": doctor,
+        "backup": backup,
+        "feedback": {"production_enabled": feedback_production_enabled(workspace)},
+        "requests": requests,
+        "journal_head": journal_head,
+    }
+    return _emit(_doctor_payload(payload, args, workspace), args)
 
 
 def _cmd_doctor_self_test(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     checks = _doctor_checks(workspace)
     checks["operation_catalog"] = bool(engine_api.read_operations(workspace)["operations"])
-    return _emit({"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}, args)
+    payload = {"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}
+    return _emit(_doctor_payload(payload, args, workspace), args)
 
 
 def _cmd_ask(args: argparse.Namespace) -> int:
-    result = _enqueue_and_run(
-        args,
-        "answer-query",
-        {"query": args.question, "k": 5},
+    payload: dict[str, Any] = {"query": args.question, "k": 5}
+    if args.trace:
+        payload["trace"] = True
+    result = _enqueue_and_run(args, "answer-query", payload)
+    return _emit_ask_result(result, args, print_trace=args.trace)
+
+
+def _cmd_secrets_set(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.secrets import validate_secret_name, write_secret
+
+    validate_secret_name(args.name)
+    if sys.stdin.isatty():
+        import getpass
+
+        value = getpass.getpass(f"{args.name}: ")
+    else:
+        value = sys.stdin.readline().rstrip("\n")
+    path = write_secret(args.name, value)
+    return _emit({"ok": True, "name": args.name, "path": str(path)}, args)
+
+
+def _cmd_secrets_list(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.secrets import credential_report, secrets_path
+
+    workspace = Path(args.workspace).resolve() if args.workspace else None
+    payload: dict[str, Any] = {
+        "ok": True,
+        "path": getattr(args, "_secrets_path", str(secrets_path())),
+        "credentials": credential_report(
+            workspace,
+            loaded_from_file=getattr(args, "_secrets_loaded_from_file", None),
+        ),
+    }
+    if warning := getattr(args, "_secrets_warning", ""):
+        payload["warning"] = warning
+    return _emit(payload, args)
+
+
+def _cmd_explore(args: argparse.Namespace) -> int:
+    result = engine_api.read_explore(
+        _workspace(args),
+        args.topic,
+        versus=args.versus,
+        project=args.project,
+        depth=args.depth,
+        trace=args.trace,
     )
-    return _emit(result, args)
+    return _emit_explore_result(result, args, print_trace=args.trace)
+
+
+def _emit_ask_result(
+    result: dict[str, Any], args: argparse.Namespace, *, print_trace: bool = False
+) -> int:
+    raw = result.get("result")
+    answer: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    text_front = bool(result.get("ok")) and not args.json and not args.quiet
+    if text_front and not answer.get("sources") and answer.get("unknowns"):
+        print(str(answer["unknowns"][0]))
+        if print_trace:
+            _print_ask_trace(answer)
+        return 0
+    code = _emit(result, args)
+    if text_front and print_trace:
+        _print_ask_trace(answer)
+    return code
+
+
+def _print_ask_trace(answer: dict[str, Any]) -> None:
+    trace = answer.get("trace")
+    if not isinstance(trace, dict):
+        return
+    for row in trace.get("pipeline_counts") or []:
+        print(f"{row['stage']}: {row['count']}")
+    print(f"rerank: {trace.get('rerank', 'off')}")
+
+
+def _emit_explore_result(
+    result: dict[str, Any], args: argparse.Namespace, *, print_trace: bool = False
+) -> int:
+    payload = result.get("explore")
+    explore = payload if isinstance(payload, dict) else {}
+    text_front = bool(result.get("ok")) and not args.json and not args.quiet
+    if not text_front:
+        return _emit(result, args)
+    if "a" in explore and "b" in explore:
+        sides = {
+            side: value
+            for side, value in explore.items()
+            if side in {"a", "b"} and isinstance(value, dict)
+        }
+        nonempty = any(not side.get("honest_empty") for side in sides.values())
+        code = _emit(result, args) if nonempty else 0
+        for name in ("a", "b"):
+            empty = str(sides.get(name, {}).get("honest_empty") or "")
+            if empty:
+                print(f"{name}: {empty}")
+        if print_trace:
+            traces = explore.get("trace")
+            for name in ("a", "b"):
+                _print_explore_trace(
+                    traces.get(name) if isinstance(traces, dict) else None,
+                    prefix=f"{name}: ",
+                )
+        return code
+    empty = str(explore.get("honest_empty") or "")
+    if empty:
+        print(empty)
+        if print_trace:
+            _print_explore_trace(explore.get("trace"))
+        return 0
+    code = _emit(result, args)
+    if print_trace:
+        _print_explore_trace(explore.get("trace"))
+    return code
+
+
+def _print_explore_trace(trace: object, *, prefix: str = "") -> None:
+    if not isinstance(trace, dict):
+        return
+    for row in trace.get("pipeline_counts") or []:
+        if isinstance(row, dict):
+            print(f"{prefix}{row['stage']}: {row['count']}")
+    print(f"{prefix}rerank: {trace.get('rerank', 'off')}")
 
 
 def _cmd_serve(args: argparse.Namespace) -> int:
-    if args.http:
+    if args.stop:
+        if args.watch:
+            return _fail("serve accepts one transport at a time", json_output=args.json)
+        return _cmd_serve_stop(args)
+    if args.http or args.on_demand or args.ephemeral:
         if args.watch:
             return _fail("serve accepts one transport at a time", json_output=args.json)
         return _cmd_serve_http(args)
@@ -742,47 +1014,168 @@ def _cmd_serve(args: argparse.Namespace) -> int:
         return 0
 
 
-def _cmd_serve_http(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.http_transport import make_http_server
+SERVE_PORT_DEFAULT = 8765
+SERVE_PORT_WALK_END = 8785
 
-    if args.host not in {"127.0.0.1", "localhost", "::1"}:
+
+def _serve_port_candidates(port: int) -> list[int]:
+    """Return the conventional local-port walk or one explicit port."""
+    if port == SERVE_PORT_DEFAULT:
+        return list(range(SERVE_PORT_DEFAULT, SERVE_PORT_WALK_END + 1))
+    return [port]
+
+
+def _vault_id(workspace: Path) -> str:
+    """Read the seeded vault ID when it is available."""
+    try:
+        data = json.loads((workspace / ".memoria/vault.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    return str(data.get("vault_id") or "") if isinstance(data, dict) else ""
+
+
+def _cmd_serve_http(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import rendezvous
+    from memoria_vault.runtime.http_transport import bind_http_server, start_idle_monitor
+
+    if not math.isfinite(args.idle_exit) or args.idle_exit <= 0:
+        return _fail("serve --idle-exit must be positive", json_output=args.json)
+    if args.host not in {"127.0.0.1", "localhost"}:
         return _fail("serve --http only binds loopback hosts", json_output=args.json)
+    workspace = _workspace(args)
     env_token = os.environ.get("MEMORIA_HTTP_TOKEN")
     token = env_token or secrets.token_urlsafe(32)
-    try:
-        server = make_http_server(
-            _workspace(args),
-            host=args.host,
-            port=args.port,
-            token=token,
-            read_scope=args.read_scope,
-        )
-    except ValueError as exc:
-        return _fail(str(exc), json_output=args.json)
-    port = int(server.server_address[1])
-    payload = {
-        "ok": True,
-        "url": f"http://{args.host}:{port}",
-        "token": None if env_token else token,
-        "token_source": "env" if env_token else "generated",
-    }
+    boot_id = str(uuid.uuid4())
+    candidates = [0] if args.ephemeral else _serve_port_candidates(args.port)
+    state_dir = rendezvous.vault_state_dir(workspace)
+
+    with rendezvous.serve_lock(state_dir) as acquired:
+        if not acquired:
+            return _fail(
+                "serve could not acquire the exclusive admission lock", json_output=args.json
+            )
+
+        live = rendezvous.live_coordinates(state_dir)
+        if live is not None:
+            return _fail(
+                "a memoria server is already running for this vault", json_output=args.json
+            )
+
+        server: Any | None = None
+        runtime_published = False
+        try:
+            try:
+                server = bind_http_server(
+                    workspace,
+                    host=args.host,
+                    candidate_ports=candidates,
+                    token=token,
+                    read_scope=args.read_scope,
+                    boot_id=boot_id,
+                )
+            except ValueError as exc:
+                return _fail(str(exc), json_output=args.json)
+            except OSError as exc:
+                return _fail(f"serve --http could not bind a port: {exc}", json_output=args.json)
+
+            port = int(server.server_address[1])
+            try:
+                rendezvous.write_runtime(
+                    state_dir,
+                    {
+                        "vault_path": str(workspace),
+                        "vault_id": _vault_id(workspace),
+                        "port": port,
+                        "pid": os.getpid(),
+                        "boot_id": boot_id,
+                        "token": token,
+                        "engine_version": __version__,
+                        "started_at": now_iso(),
+                    },
+                )
+                runtime_published = True
+            except (OSError, ValueError) as exc:
+                return _fail(
+                    f"serve --http could not publish runtime: {exc}", json_output=args.json
+                )
+
+            payload = {
+                "ok": True,
+                "url": f"http://{args.host}:{port}",
+                "port": port,
+                "boot_id": boot_id,
+                "token": None if env_token else token,
+                "token_source": "env" if env_token else "generated",
+            }
+            if args.once:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    try:
+                        server.server_close()
+                    finally:
+                        server = None
+                return _emit(payload, args)
+            if args.on_demand:
+                start_idle_monitor(server, args.idle_exit)
+            _emit(payload, args)
+            try:
+                server.serve_forever()
+                return 0
+            except KeyboardInterrupt:
+                return 0
+        finally:
+            if server is not None:
+                try:
+                    if runtime_published:
+                        rendezvous.clear_runtime(state_dir)
+                finally:
+                    server.server_close()
+
+
+def _cmd_serve_stop(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import rendezvous
+
+    workspace = _workspace(args)
+    state_dir = rendezvous.vault_state_dir(workspace)
+    record = rendezvous.read_runtime(state_dir)
+    if record is None:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    if not rendezvous.pid_alive(int(record["pid"])):
+        rendezvous.clear_runtime(state_dir)
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    port = int(record["port"])
+    boot_id = str(record["boot_id"])
+    if rendezvous.probe_boot_id(port) != boot_id:
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    response = rendezvous.post_shutdown(port, str(record["token"]), boot_id)
+    if not (
+        isinstance(response, dict)
+        and response.get("ok") is True
+        and response.get("stopping") is True
+    ):
+        return _fail("no memoria server is running for this vault", json_output=args.json)
+    return _emit({"ok": True, "stopped": True, "port": int(record["port"])}, args)
+
+
+def _handshake_fail(args: argparse.Namespace, message: str) -> int:
     if args.json:
-        print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
-    elif not args.quiet:
-        print(f"Memoria HTTP serving {payload['url']}", flush=True)
-        if env_token:
-            print("Token loaded from MEMORIA_HTTP_TOKEN.", flush=True)
-        else:
-            print(f"Token: {token}", flush=True)
-    if args.once:
-        server.server_close()
-        return 0
+        print(message, file=sys.stderr, flush=True)
+    return _fail(message, json_output=args.json)
+
+
+def _cmd_handshake(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import rendezvous
+
     try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        return 0
-    finally:
-        server.server_close()
+        vault = Path(args.vault).expanduser().resolve()
+        if not vault.is_dir():
+            return _handshake_fail(args, f"vault path is not a directory: {vault}")
+        coordinates = rendezvous.handshake(vault, spawn=args.spawn)
+    except Exception as exc:  # noqa: BLE001 -- preserve the handshake JSON/stderr contract.
+        return _handshake_fail(args, str(exc))
+    return _emit({"ok": True, **coordinates}, args)
 
 
 def _cmd_mcp(args: argparse.Namespace) -> int:
@@ -792,19 +1185,6 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
         return _fail("mcp requires at least one --read-scope", json_output=False)
     run_mcp_server(_workspace(args), read_scope=args.read_scope, agent_identity=args.actor)
     return 0
-
-
-def _cmd_migrate(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    source = Path(args.from_alpha15).expanduser().resolve()
-    if not source.is_dir():
-        return _fail(f"alpha.15 workspace not found: {source}", json_output=args.json)
-    if workspace == source:
-        return _fail("migrate requires a separate target workspace", json_output=args.json)
-    if not (workspace / ".memoria/schemas/folders.yaml").is_file():
-        _initialize_workspace_files(workspace)
-    result = _import_alpha15_workspace(source, workspace)
-    return _emit({"ok": True, "workspace": str(workspace), **result}, args)
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:
@@ -949,21 +1329,79 @@ def _cmd_work_export(args: argparse.Namespace) -> int:
 
 
 def _cmd_work_import(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.bulk_import import split_bibtex_entries, split_csl_entries
+
     path = Path(args.file)
     text = path.read_text(encoding="utf-8")
     if args.format == "bibtex":
-        from memoria_vault.runtime.capture import bibtex_capture_payload
+        entries = split_bibtex_entries(text)
+    else:
+        try:
+            csl_data = json.loads(text)
+        except ValueError:
+            entries = [text]
+        else:
+            if isinstance(csl_data, list) and all(isinstance(item, dict) for item in csl_data):
+                entries = split_csl_entries(text)
+            else:
+                entries = [text]
+    return _emit(_bulk_work_import(args, entries), args)
 
-        payload = bibtex_capture_payload(text)
-    elif args.format == "csl":
-        from memoria_vault.runtime.capture import csl_capture_payload
 
-        csl_item = _read_csl_item(text)
-        payload = csl_capture_payload(csl_item, raw_text=text)
-    output = _enqueue_and_run(args, "capture-source", payload)
-    if enrichment := _queue_import_enrichment(args, payload, output):
-        output["enrichment_job"] = enrichment
-    return _emit(output, args)
+def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str, Any]:
+    from memoria_vault.runtime.bulk_import import build_entry_payload, entry_ref
+
+    workspace = _workspace(args)
+    run_id = uuid.uuid4().hex
+    admitted: list[str] = []
+    skipped: list[str] = []
+    failed: list[dict[str, str]] = []
+    enrichment_jobs: list[str] = []
+    for index, entry_text in enumerate(entries, start=1):
+        try:
+            payload = build_entry_payload(args.format, entry_text)
+            work_id = str(payload["work_id"])
+            if (existing := state.catalog_source(workspace, work_id)) is not None:
+                skipped.append(str(existing["work_id"]))
+                continue
+            output = engine_api.run_operation(
+                workspace,
+                "capture-source",
+                payload,
+                idempotency_key=f"import-{run_id}-{work_id}",
+                schedule_id=args.schedule_id,
+                actor=args.actor,
+                command="capture-source",
+            )
+        except ValueError as exc:
+            failed.append({"ref": entry_ref(args.format, entry_text, index), "error": str(exc)})
+            continue
+        result = output.get("result") if isinstance(output.get("result"), dict) else {}
+        if output["ok"]:
+            admitted.append(str(result.get("work_id") or work_id))
+            if args.enrich and (enrichment := _queue_import_enrichment(args, payload, output)):
+                enrichment_jobs.append(str(enrichment["job_id"]))
+        else:
+            error = str(result.get("error") or result.get("status") or "capture failed")
+            failed.append({"ref": entry_ref(args.format, entry_text, index), "error": error})
+    index_refresh_s = 0.0
+    if admitted:
+        from memoria_vault.runtime.search_index import rebuild_checked_search_index_explicit
+
+        refresh_started = time.monotonic()
+        rebuild_checked_search_index_explicit(workspace, actor=args.actor, machine="memoria-cli")
+        index_refresh_s = time.monotonic() - refresh_started
+    return {
+        "ok": bool(admitted or skipped),
+        "run_id": run_id,
+        "format": args.format,
+        "entries_total": len(entries),
+        "admitted": admitted,
+        "skipped": skipped,
+        "failed": failed,
+        "enrichment_jobs": enrichment_jobs,
+        "index_refresh_s": index_refresh_s,
+    }
 
 
 def _cmd_work_enrich(args: argparse.Namespace) -> int:
@@ -1008,7 +1446,7 @@ def _cmd_work_update(args: argparse.Namespace) -> int:
 
 
 def _cmd_project_ask(args: argparse.Namespace) -> int:
-    return _emit(
+    return _emit_ask_result(
         _enqueue_and_run(
             args,
             "answer-query",
@@ -1141,6 +1579,7 @@ def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
         args.evidence_id,
         decision=args.decision,
         reason=args.reason,
+        warrant=args.warrant,
         actor=args.actor,
         machine="memoria-cli",
     )
@@ -1181,7 +1620,7 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
             "project_path": args.project_path,
             "format": args.format,
             "output_path": args.output or "",
-            "ready_only": args.ready_only,
+            "allow_unready": args.allow_unready,
             "draft": args.draft,
         },
     )
@@ -1795,7 +2234,22 @@ def _scoped_operation_args(base_args: argparse.Namespace, operation_id: str) -> 
 
 
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
-    return _emit(_workspace_scan_payload(args), args)
+    payload = _workspace_scan_payload(args)
+    _print_scan_findings(payload, args)
+    return _emit(payload, args)
+
+
+def _print_scan_findings(payload: dict[str, Any], args: argparse.Namespace) -> None:
+    if args.json or args.quiet:
+        return
+    result = payload.get("result")
+    findings = result.get("findings") if isinstance(result, dict) else None
+    for finding in findings or []:
+        kind = str(finding.get("kind") or "finding")
+        subject = str(finding.get("subject_id") or "")
+        key = str(finding.get("key") or "")
+        suffix = f" (key: {key})" if key else ""
+        print(f"finding: {kind} {subject}{suffix}")
 
 
 def _workspace_scan_payload(
@@ -1999,12 +2453,28 @@ def _cmd_eval_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_steering_show(args: argparse.Namespace) -> int:
-    path = _workspace(args) / "steering.md"
-    if not path.is_file():
-        return _fail("steering.md not found", json_output=args.json)
-    return _emit(
-        {"ok": True, "path": "steering.md", "body": path.read_text(encoding="utf-8")}, args
+    from memoria_vault.runtime.steering import (
+        effective_steering_provenance,
+        steering_overrides,
     )
+
+    workspace = _workspace(args)
+    if not (workspace / "steering.md").is_file():
+        return _fail("steering.md not found", json_output=args.json)
+    tokens = effective_steering_provenance(workspace)
+    _watch, mute = steering_overrides(workspace)
+    payload = {"ok": True, "path": "steering.md", "tokens": tokens, "muted": sorted(mute)}
+    if not args.json and not args.quiet:
+        if tokens:
+            width = max(len(str(row["token"])) for row in tokens)
+            for row in tokens:
+                print(f"{row['token']!s:<{width}}  {', '.join(row['sources'])}")
+        else:
+            print("no effective steering tokens - frame a project or add Watch for bullets")
+        if payload["muted"]:
+            print(f"muted: {', '.join(payload['muted'])}")
+        return 0
+    return _emit(payload, args)
 
 
 def _cmd_steering_edit(args: argparse.Namespace) -> int:
@@ -2012,12 +2482,13 @@ def _cmd_steering_edit(args: argparse.Namespace) -> int:
         append_explicit_journal_event,
         commit_explicit_writer_changes,
     )
+    from memoria_vault.runtime.vaultio import write_text_durable
 
     _require_pi_actor(args, "steering edit")
     workspace = _workspace(args)
     body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
     path = workspace / "steering.md"
-    path.write_text(body if body.endswith("\n") else f"{body}\n", encoding="utf-8")
+    write_text_durable(path, body if body.endswith("\n") else f"{body}\n")
     event = append_explicit_journal_event(
         workspace,
         {"event": "steering_updated", "operation": "steering-edit", "output_id": "steering.md"},
@@ -2201,10 +2672,22 @@ def _workspace_plan(workspace: Path) -> list[str]:
     return list(schema.load_folders()["skeleton"])
 
 
-def _active_seed_trees(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]:
+def _active_seed_trees(
+    *, include_obsidian: bool, include_agent_bundle: bool = False
+) -> tuple[tuple[str, str], ...]:
+    trees = SEED_TREES + (AGENT_BUNDLE_SEED_TREES if include_agent_bundle else ())
     if include_obsidian:
-        return SEED_TREES
-    return tuple(pair for pair in SEED_TREES if pair[1] != ".obsidian")
+        return trees
+    return tuple(pair for pair in trees if pair[1] != ".obsidian")
+
+
+def _active_seed_files(
+    *, include_obsidian: bool, include_agent_bundle: bool = False
+) -> tuple[tuple[str, str], ...]:
+    seed_files = SEED_FILES + (AGENT_BUNDLE_SEED_FILES if include_agent_bundle else ())
+    if include_obsidian:
+        return seed_files
+    return tuple(pair for pair in seed_files if not pair[1].endswith(".base"))
 
 
 def _init_dry_run_report(
@@ -2212,8 +2695,18 @@ def _init_dry_run_report(
 ) -> dict[str, Any]:
     from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
 
-    seed_trees = [target for _, target in _active_seed_trees(include_obsidian=include_obsidian)]
-    seed_files = [target for _, target in SEED_FILES]
+    seed_trees = [
+        target
+        for _, target in _active_seed_trees(
+            include_obsidian=include_obsidian, include_agent_bundle=True
+        )
+    ]
+    seed_files = [
+        target
+        for _, target in _active_seed_files(
+            include_obsidian=include_obsidian, include_agent_bundle=True
+        )
+    ]
     search = {
         "engine": "bm25",
         "checked_root": ".memoria/index/search/checked",
@@ -2260,25 +2753,52 @@ def _init_dry_run_report(
     }
 
 
-def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
-    for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
-        _copy_seed_tree(source_rel, workspace / target_rel, overwrite=overwrite)
-    for source_rel, target_rel in SEED_FILES:
-        _copy_seed_file(source_rel, workspace / target_rel, overwrite=overwrite)
+def _seed_workspace(
+    workspace: Path,
+    *,
+    overwrite: bool,
+    include_obsidian: bool = True,
+    include_agent_bundle: bool = False,
+) -> None:
+    for source_rel, target_rel in _active_seed_trees(
+        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+    ):
+        _copy_seed_tree(
+            source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
+        )
+    for source_rel, target_rel in _active_seed_files(
+        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+    ):
+        _copy_seed_file(
+            source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
+        )
 
 
 def _repair_workspace(workspace: Path) -> list[str]:
+    repaired = _repair_seed_write_targets(workspace)
     _initialize_workspace_files(workspace, overwrite=True, commit_created_repository=False)
-    return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
+    return repaired
 
 
-def _repair_write_targets(workspace: Path) -> list[str]:
-    from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
+def _repair_write_targets(
+    workspace: Path,
+    *,
+    include_obsidian: bool = True,
+    include_agent_bundle: bool = False,
+) -> list[str]:
+    from memoria_vault.runtime.projections import _tracked_projection_paths
 
     targets = set(_workspace_plan(workspace))
-    for source_rel, target_rel in SEED_TREES:
+    for source_rel, target_rel in _active_seed_trees(
+        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+    ):
         targets.update(_seed_tree_write_targets(source_rel, target_rel))
-    targets.update(target for _source, target in SEED_FILES)
+    targets.update(
+        target
+        for _source, target in _active_seed_files(
+            include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+        )
+    )
     targets.update(
         {
             state.DB_REL,
@@ -2288,11 +2808,42 @@ def _repair_write_targets(workspace: Path) -> list[str]:
             state.JOURNAL_HEAD_REL,
             ".memoria/overrides.jsonl",
             "system/manifest.jsonl",
-            *TRACKED_PROJECTION_PATHS,
         }
     )
+    targets.update(_tracked_projection_paths(workspace))
     targets.update(_existing_tree_targets(workspace, ".git"))
     return sorted(targets)
+
+
+def _repair_seed_write_targets(workspace: Path) -> list[str]:
+    targets: list[str] = []
+    for source_rel, target_rel in SEED_TREES:
+        targets.extend(_seed_tree_file_targets(source_rel, target_rel))
+    targets.extend(target for _source, target in SEED_FILES)
+    return sorted(
+        target
+        for target in targets
+        if target not in VIEW_PREFERENCE_PATHS or not (workspace / target).exists()
+    )
+
+
+def _seed_tree_child_is_cache(name: str) -> bool:
+    return name == "__pycache__" or name.endswith(".pyc")
+
+
+def _seed_tree_file_targets(source_rel: str, target_rel: str) -> list[str]:
+    source = _seed_resource(source_rel)
+    if source.is_file():
+        return [target_rel]
+    if not source.is_dir():
+        return []
+    targets: list[str] = []
+    for child in source.iterdir():
+        if _seed_tree_child_is_cache(child.name):
+            continue
+        child_target = (Path(target_rel) / child.name).as_posix()
+        targets.extend(_seed_tree_file_targets(f"{source_rel}/{child.name}", child_target))
+    return targets
 
 
 def _seed_tree_write_targets(source_rel: str, target_rel: str) -> list[str]:
@@ -2301,6 +2852,8 @@ def _seed_tree_write_targets(source_rel: str, target_rel: str) -> list[str]:
     if not source.is_dir():
         return targets
     for child in source.iterdir():
+        if _seed_tree_child_is_cache(child.name):
+            continue
         child_target = (Path(target_rel) / child.name).as_posix()
         targets.append(child_target)
         if child.is_dir():
@@ -2321,6 +2874,14 @@ def _existing_tree_targets(workspace: Path, root_rel: str) -> list[str]:
     return targets
 
 
+def _validate_workspace_git_metadata(workspace: Path) -> None:
+    git_path = workspace / ".git"
+    if os.path.lexists(git_path) and not git_path.is_dir():
+        raise ValueError("workspace Git metadata must be a directory")
+    if os.path.lexists(git_path / "commondir"):
+        raise ValueError("workspace Git common-directory indirection is not supported")
+
+
 @contextmanager
 def _doctor_maintenance(workspace: Path, *, repair: bool = False):
     from memoria_vault.runtime import backup as runtime_backup
@@ -2328,14 +2889,11 @@ def _doctor_maintenance(workspace: Path, *, repair: bool = False):
     def preflight() -> None:
         runtime_backup.validate_maintenance_preconditions(workspace)
         if repair:
+            runtime_backup.validate_workspace_write_targets(workspace, [".git"])
+            _validate_workspace_git_metadata(workspace)
             runtime_backup.validate_workspace_write_targets(
                 workspace, _repair_write_targets(workspace)
             )
-            git_path = workspace / ".git"
-            if os.path.lexists(git_path) and not git_path.is_dir():
-                raise ValueError("workspace Git metadata must be a directory")
-            if os.path.lexists(git_path / "commondir"):
-                raise ValueError("workspace Git common-directory indirection is not supported")
 
     preflight()
     with _workspace_lock(workspace):
@@ -2348,12 +2906,18 @@ def _initialize_workspace_files(
     *,
     overwrite: bool = False,
     include_obsidian: bool = True,
+    include_agent_bundle: bool = False,
     commit_created_repository: bool = True,
 ) -> None:
     workspace.mkdir(parents=True, exist_ok=True)
     for rel in _workspace_plan(workspace):
         (workspace / rel).mkdir(parents=True, exist_ok=True)
-    _seed_workspace(workspace, overwrite=overwrite, include_obsidian=include_obsidian)
+    _seed_workspace(
+        workspace,
+        overwrite=overwrite,
+        include_obsidian=include_obsidian,
+        include_agent_bundle=include_agent_bundle,
+    )
     state.connect(workspace).close()
     _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections_explicit
@@ -2362,92 +2926,7 @@ def _initialize_workspace_files(
     _ensure_git(workspace, commit_created_repository=commit_created_repository)
 
 
-def _import_alpha15_workspace(source: Path, workspace: Path) -> dict[str, Any]:
-    copied: list[str] = []
-    copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/notes", "notes"))
-    copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/hubs", "hubs"))
-    copied.extend(_copy_alpha15_projects(source, workspace))
-    copied.extend(_copy_alpha15_works(source, workspace))
-    bibliography = source / "references.bib"
-    if bibliography.is_file():
-        target = workspace / "bibliography.bib"
-        if target.exists() and target.read_text(encoding="utf-8").strip():
-            raise FileExistsError(target)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(bibliography, target)
-        copied.append("bibliography.bib")
-    return {"imported": sorted(copied), "imported_count": len(copied)}
-
-
-def _copy_alpha15_tree(source: Path, workspace: Path, old_root: str, new_root: str) -> list[str]:
-    root = source / old_root
-    if not root.is_dir():
-        return []
-    copied: list[str] = []
-    for path in sorted(root.rglob("*.md")):
-        rel = path.relative_to(root).as_posix()
-        target = workspace / new_root / rel
-        _copy_no_overwrite(path, target)
-        copied.append(target.relative_to(workspace).as_posix())
-    return copied
-
-
-def _copy_alpha15_projects(source: Path, workspace: Path) -> list[str]:
-    root = source / "knowledge/projects"
-    if not root.is_dir():
-        return []
-    copied: list[str] = []
-    for path in sorted(root.rglob("*.md")):
-        rel = path.relative_to(root)
-        if len(rel.parts) == 1:
-            target = workspace / "projects" / path.stem / "project.md"
-        else:
-            target = workspace / "projects" / rel
-        _copy_no_overwrite(path, target)
-        copied.append(target.relative_to(workspace).as_posix())
-    return copied
-
-
-def _copy_alpha15_works(source: Path, workspace: Path) -> list[str]:
-    from memoria_vault.runtime.paths import safe_filename
-    from memoria_vault.runtime.vaultio import split_frontmatter
-
-    root = source / "knowledge/works"
-    if not root.is_dir():
-        return []
-    copied: list[str] = []
-    for path in sorted(root.glob("*.md")):
-        frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
-        work_id = safe_filename(str(frontmatter.get("work_id") or path.stem)).strip("._-")
-        if not work_id:
-            work_id = path.stem
-        digest_path = workspace / "digests" / f"{work_id}.md"
-        digest = dict(frontmatter)
-        digest.update({"type": "digest", "id": work_id, "work_id": work_id})
-        digest.setdefault("title", str(frontmatter.get("title") or path.stem))
-        digest.setdefault("tags", [])
-        digest.setdefault("links", {})
-        _write_no_overwrite(digest_path, digest, body)
-        copied.append(digest_path.relative_to(workspace).as_posix())
-    return copied
-
-
-def _copy_no_overwrite(source: Path, target: Path) -> None:
-    if target.exists():
-        raise FileExistsError(target)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, target)
-
-
-def _write_no_overwrite(target: Path, frontmatter: dict[str, Any], body: str) -> None:
-    from memoria_vault.runtime.vaultio import write_frontmatter_doc
-
-    if target.exists():
-        raise FileExistsError(target)
-    write_frontmatter_doc(target, frontmatter, body, create_parent=True)
-
-
-def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
+def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:
     source = _seed_resource(source_rel)
     if not source.is_dir():
         return
@@ -2455,19 +2934,33 @@ def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
         return
     target.mkdir(parents=True, exist_ok=True)
     for child in source.iterdir():
+        if _seed_tree_child_is_cache(child.name):
+            continue
         child_target = target / child.name
+        child_rel = f"{target_rel}/{child.name}"
         if child.is_dir():
-            _copy_seed_tree(f"{source_rel}/{child.name}", child_target, overwrite=overwrite)
-        elif overwrite or not child_target.exists():
+            _copy_seed_tree(
+                f"{source_rel}/{child.name}",
+                child_target,
+                overwrite=overwrite,
+                target_rel=child_rel,
+            )
+        elif _seed_write_allowed(child_rel, child_target, overwrite=overwrite):
             child_target.parent.mkdir(parents=True, exist_ok=True)
             child_target.write_bytes(child.read_bytes())
 
 
-def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None:
+def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:
     source = _seed_resource(source_rel)
-    if source.is_file() and (overwrite or not target.exists()):
+    if source.is_file() and _seed_write_allowed(target_rel, target, overwrite=overwrite):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(source.read_bytes())
+
+
+def _seed_write_allowed(target_rel: str, target: Path, *, overwrite: bool) -> bool:
+    if not target.exists():
+        return True
+    return overwrite and target_rel not in VIEW_PREFERENCE_PATHS
 
 
 def _seed_resource(source_rel: str):
@@ -2864,6 +3357,7 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         append_explicit_journal_event,
         commit_explicit_writer_changes,
     )
+    from memoria_vault.runtime.vaultio import write_text_durable
 
     _require_pi_actor(args, f"vocabulary {mode}")
     if args.field not in {"research_area", "methodology"}:
@@ -2888,7 +3382,7 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         text = _vocabulary_merge(text, args.field, args.old, args.new)
         event_name = "vocabulary_merged"
         payload = {"field": args.field, "old": args.old, "new": args.new}
-    path.write_text(text, encoding="utf-8")
+    write_text_durable(path, text)
     event = append_explicit_journal_event(
         workspace,
         {"event": event_name, "operation": f"vocabulary-{mode}", **payload},
@@ -2986,17 +3480,6 @@ def _next_heading(lines: list[str], start: int) -> int:
     return len(lines)
 
 
-def _read_csl_item(text: str) -> dict[str, Any]:
-    data = json.loads(text)
-    if isinstance(data, list):
-        if len(data) != 1 or not isinstance(data[0], dict):
-            raise ValueError("CSL import expects one item")
-        return data[0]
-    if isinstance(data, dict):
-        return data
-    raise ValueError("CSL import expects a JSON object or one-item array")
-
-
 def _search_status(workspace: Path) -> dict[str, Any]:
     from memoria_vault.runtime.search_index import SEARCH_INPUT_ROOT, SEARCH_MANIFEST
 
@@ -3025,6 +3508,7 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
     from memoria_vault.runtime.operations import (
         _load_pydantic_ai_openai,
         _pydantic_ai_chat,
+        _resolve_runner_api_key,
         load_runner_provider_config,
     )
 
@@ -3035,14 +3519,16 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
     provider_spec = providers[provider_name]
     base_url = str(provider_spec["url"])
     key_env = provider_spec.get("key_env")
-    api_key = os.environ.get(key_env) if isinstance(key_env, str) and key_env else None
-    if not api_key:
-        api_key = (
-            os.environ.get("MEMORIA_MODEL_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-            or os.environ.get("KILOCODE_API_KEY")
-        )
     model_name = os.environ.get("MEMORIA_MODEL") or os.environ.get("OPENAI_MODEL") or "doctor"
+    runner = {
+        "mode": "live" if live else "test",
+        "runner": "pydantic-ai",
+        "provider": provider_name,
+        "model": model_name,
+        "base_url": base_url,
+        "key_env": key_env,
+        "params": {"temperature": 0},
+    }
     checks = {
         "runner_dependency": False,
         "runner_base_url": bool(base_url),
@@ -3052,34 +3538,30 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
         checks["runner_live_dispatch"] = False
     error = ""
     try:
-        Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
-        checks["runner_dependency"] = True
-        provider_kwargs = {"base_url": base_url}
-        if api_key:
-            provider_kwargs["api_key"] = api_key
-        model = OpenAIChatModel(model_name, provider=OpenAIProvider(**provider_kwargs))
-        Agent(model)
-        checks["runner_agent_constructed"] = True
-        if live:
-            _pydantic_ai_chat(
-                {
-                    "operation_id": "doctor-runner-live",
-                    "allowed_network": [base_url],
-                },
-                {
-                    "mode": "live" if live else "test",
-                    "runner": "pydantic-ai",
-                    "provider": provider_name,
-                    "model": model_name,
-                    "base_url": base_url,
-                    "key_env": key_env,
-                    "params": {"temperature": 0},
-                },
-                "Reply with a short confirmation that the Memoria runner is reachable.",
-            )
-            checks["runner_live_dispatch"] = True
-    except Exception as exc:  # noqa: BLE001 -- doctor reports adapter failures as data.
+        api_key = _resolve_runner_api_key(runner)
+    except (RuntimeError, ValueError) as exc:
+        # The resolver's only failures are value-free, actionable credential messages.
         error = str(exc)
+    else:
+        try:
+            Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+            checks["runner_dependency"] = True
+            provider_kwargs = {"base_url": base_url, "api_key": api_key}
+            model = OpenAIChatModel(model_name, provider=OpenAIProvider(**provider_kwargs))
+            Agent(model)
+            checks["runner_agent_constructed"] = True
+            if live:
+                _pydantic_ai_chat(
+                    {
+                        "operation_id": "doctor-runner-live",
+                        "allowed_network": [base_url],
+                    },
+                    runner,
+                    "Reply with a short confirmation that the Memoria runner is reachable.",
+                )
+                checks["runner_live_dispatch"] = True
+        except Exception:  # noqa: BLE001 -- adapter failures must not reflect credentials.
+            error = "pydantic-ai model request failed"
     return {
         "checks": checks,
         "provider": provider_name,

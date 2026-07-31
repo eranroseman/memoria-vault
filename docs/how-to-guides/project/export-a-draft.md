@@ -18,7 +18,8 @@ outside the project export flow.
   `.docx`, `.pdf`, `.odt`, or direct manuscript routes
 - A checked project Concept under `projects/`; author it as Markdown,
   then run `memoria workspace scan --workspace <vault>`
-- For readiness-gated exports, a paper frame recorded and checked
+- For normal non-draft export, a paper frame recorded and checked; use
+  `--allow-not-ready` only for a review packet before then
 - For composed drafts, `projects/<project>/outline.md` and `draft.md` created
   with `memoria project slice`, `compose`, and `verify`
 - `bibliography.bib` current (generated from checked SQLite catalog rows)
@@ -40,13 +41,13 @@ memoria project export \
   --workspace /path/to/workspace \
   project-alpha \
   --format markdown \
-  --output projects/project-alpha/exports/project-alpha.md \
-  --ready-only
+  --output projects/project-alpha/exports/project-alpha.md
 ```
 
 For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
-`--output`; Memoria fails clearly if Pandoc is not installed. Omit
-`--ready-only` for a review packet before the paper plan is complete. Add
+`--output`; Memoria fails clearly if Pandoc is not installed. The export refuses
+by default until the paper plan and checked support are complete; pass
+`--allow-not-ready` for a review packet before then. Add
 `--draft` to export the composed `draft.md`; Memoria refuses drafts with
 evidence-incomplete, review-required, evidence-text-drift, or
 evidence-text-unbound findings. Repair drift or an unbound claim, then run

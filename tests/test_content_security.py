@@ -8,7 +8,10 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
-from memoria_vault.runtime.content_security import neutralize_untrusted_markdown
+from memoria_vault.runtime.content_security import (
+    has_unterminated_fenced_code_block,
+    neutralize_untrusted_markdown,
+)
 from memoria_vault.runtime.knowledge import (
     _outline_text,
 )
@@ -38,6 +41,11 @@ from tests.helpers import (
     operation_context,
     write_checked_concept,
 )
+
+
+def _write_export_unready(vault, *args, **kwargs):
+    kwargs.setdefault("allow_unready", True)
+    return _write_project_export(vault, *args, **kwargs)
 
 
 def test_image_embeds_cannot_render() -> None:
@@ -112,7 +120,7 @@ def test_generic_pandoc_attributes_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -169,7 +177,7 @@ def test_fence_attributes_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -427,7 +435,7 @@ def test_raw_format_fences_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -479,7 +487,7 @@ def test_noncode_fence_candidates_are_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -502,6 +510,64 @@ def test_closed_valid_tilde_fence_with_regular_attributes_has_plain_text_header(
     assert neutralize_untrusted_markdown(source) == (
         '~~~text\n<iframe src="https://example.invalid/literal"></iframe>\n~~~\n'
     )
+
+
+@pytest.mark.parametrize(
+    "boundary",
+    ["# Context\n", "Context\n---\n", "Prior prose\n***\n"],
+)
+def test_unterminated_plain_tilde_fence_after_markdown_block_boundary_is_detected(
+    boundary: str,
+) -> None:
+    source = boundary + "~~~text\nliteral code\n"
+
+    assert has_unterminated_fenced_code_block(source) is True
+
+
+def test_plain_tilde_fence_after_paragraph_prose_is_not_code() -> None:
+    source = "Prior prose\n~~~text\nliteral prose\n"
+
+    assert has_unterminated_fenced_code_block(source) is False
+
+
+@pytest.mark.parametrize(
+    "opening",
+    [
+        '~~~foo="bar"',
+        "~~~foo:bar",
+        "~~~foo{bar}",
+        "~~~ {notvalid}",
+    ],
+)
+def test_unsupported_tilde_fence_headers_are_literalized_as_a_pair(opening: str) -> None:
+    source = f"{opening}\n\n~~~\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered.splitlines()[0].startswith("&#126;" * 3)
+    assert rendered.splitlines()[-1] == "&#126;" * 3
+    assert has_unterminated_fenced_code_block(source) is False
+    assert neutralize_untrusted_markdown(rendered) == rendered
+
+
+def test_literalized_tilde_opener_does_not_turn_its_bare_closer_into_an_opener() -> None:
+    source = '~~~foo="bar"\n\n~~~\n'
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered == '&#126;&#126;&#126;foo="bar"\n\n&#126;&#126;&#126;\n'
+    assert has_unterminated_fenced_code_block(source) is False
+
+
+@pytest.mark.parametrize("indent", [" ", "  ", "   "])
+def test_literalized_indented_tilde_opener_pairs_its_bare_closer(indent: str) -> None:
+    source = f"{indent}~~~foo{{bar}}\n\n{indent}~~~\n"
+
+    rendered = neutralize_untrusted_markdown(source)
+
+    assert rendered.splitlines()[0].lstrip().startswith("&#126;" * 3)
+    assert rendered.splitlines()[-1].lstrip() == "&#126;" * 3
+    assert has_unterminated_fenced_code_block(source) is False
 
 
 @pytest.mark.parametrize(
@@ -543,7 +609,7 @@ def test_raw_format_inline_code_is_inert_through_export_boundaries(
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -589,7 +655,7 @@ def test_delayed_raw_inline_closers_with_literal_backslashes_are_inert_through_e
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -697,7 +763,7 @@ def test_multiline_pseudo_code_spans_with_html_block_openers_are_inert_through_e
     )
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -810,7 +876,7 @@ def test_partial_backtick_runs_cannot_borrow_argument_snapshot_code_spans(
 
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -877,7 +943,7 @@ def test_argument_export_neutralizes_interpolated_fragments_before_code_spans(
 
     rendered = _render_project_export_markdown(tmp_path, "argument")
     written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -912,7 +978,7 @@ def test_escaped_backtick_delimiters_are_inert_through_export_boundaries(
     )
     argument_rendered = _render_project_export_markdown(tmp_path, "argument")
     argument_written = call_with_context(
-        _write_project_export,
+        _write_export_unready,
         tmp_path,
         "argument",
         machine="argument-export-machine",
@@ -921,6 +987,7 @@ def test_escaped_backtick_delimiters_are_inert_through_export_boundaries(
     state.upsert_catalog_record(
         tmp_path,
         work_id="source-escaped",
+        citekey="source-escaped",
         title="Escaped Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-escaped.md",
@@ -995,6 +1062,7 @@ def test_work_title_canary_is_inert_at_apply_and_export(tmp_path: Path) -> None:
         payload,
         "Canary source description.",
         "Canary source content about framing, methods, outcomes, gaps, and impact. ^p0001",
+        citekey="work-canary",
         machine="capture-machine",
     )
     digest = call_with_context(
@@ -1042,18 +1110,35 @@ def test_work_title_canary_is_inert_at_apply_and_export(tmp_path: Path) -> None:
         draft=True,
         machine="export-machine",
     )
+    exported_prose, _, references = exported["content"].partition("## References")
+    assert "```bibtex\n" in references
+    assert payload in references
 
     applied = [
         (vault / digest["digest_path"]).read_text(encoding="utf-8"),
         (vault / note_rel).read_text(encoding="utf-8"),
         (vault / "projects/canary/draft.md").read_text(encoding="utf-8"),
+        exported_prose,
     ]
-    for content in [*applied, exported["content"]]:
+    for content in applied:
         assert "![work]" not in content
         assert "<script>" not in content
         assert "](http://beacon.example" not in content
         assert "`http://beacon.example/work.png`" in content
         assert "`http://beacon.example/bare`" in content
+
+    pandoc = shutil.which("pandoc")
+    if pandoc is not None:
+        rendered = subprocess.run(
+            [pandoc, "-f", "commonmark", "-t", "html"],
+            input=exported["content"],
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert "<img" not in rendered
+        assert "<script>" not in rendered
+        assert 'href="http://beacon.example/work.png"' not in rendered
 
 
 def test_observe_sweep_flags_removed_superseded_restriction(tmp_path: Path) -> None:

@@ -47,7 +47,7 @@ Concrete examples:
   field provenance, and graph edges -> checked catalog row or attention.
 - **Digest/report generation**: DB-verdict-passing input refs -> runner output ->
   deterministic section and source-grounding checks before materialization.
-- **Draft verification**: evidence markers, source-span refs, and code-warrant
+- **Draft verification**: evidence markers, source-span refs, and code-grounds
   refs -> concrete findings or export readiness.
 
 ## Why this classification exists in the design

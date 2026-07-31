@@ -24,10 +24,9 @@ disposes attention and curation decisions. A fourth, invisible role (the
 engine's own background tasks — validation, indexing) runs behind them all.
 Every surface goes through the same queue; none is a second authority.
 
-**Planned beta.1 — U1.** Five jobs organize the work regardless of surface:
-Read, Knowledge, Project, Review, and Upkeep. ("Jobs" here is the beta.1
-work-category taxonomy, unrelated to the engine's own background tasks
-above.)
+**Shipped — U1.** `memoria help` presents five jobs regardless of surface:
+Read, Knowledge, Project, Review, and Upkeep. ("Jobs" here is the
+work-category taxonomy, unrelated to the engine's own background tasks above.)
 
 **Planned beta.1 — U2.** Deep work (compose, canvas, drafting) stays separate
 from task work (inbox, review queues, maintenance) — the compose surface never

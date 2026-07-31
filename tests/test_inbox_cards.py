@@ -152,6 +152,30 @@ def test_work_prompt_dedupe_slug_is_idempotent(tmp_path):
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 1
 
 
+def test_finding_dedupe_slug_is_idempotent(tmp_path):
+    a = inbox.write_finding(
+        tmp_path,
+        "flag",
+        "Foreign edit: notes/w.md",
+        "changed outside the trusted writer",
+        "workspace-scan",
+        target="notes/w.md",
+        dedupe_slug="cs3-foreign-edit-abc123-notes/w.md",
+    )
+    b = inbox.write_finding(
+        tmp_path,
+        "flag",
+        "Foreign edit: notes/w.md",
+        "changed outside the trusted writer",
+        "workspace-scan",
+        target="notes/w.md",
+        dedupe_slug="cs3-foreign-edit-abc123-notes/w.md",
+    )
+    assert a is not None and a.name == "flag-cs3-foreign-edit-abc123-notes-w-md.md"
+    assert b is None  # second emit for the same card id writes nothing
+    assert len(list((tmp_path / "inbox").glob("*.md"))) == 1
+
+
 def test_invalid_enums_rejected(tmp_path):
     with pytest.raises(ValueError):
         inbox.write_proposal(

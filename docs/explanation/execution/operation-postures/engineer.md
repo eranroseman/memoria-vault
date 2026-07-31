@@ -24,7 +24,9 @@ handoff, but the external coding agent does the coding
 - The Engineer posture does **not** grant Memoria terminal, file, or code
   execution authority ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 - The external coding agent is an opaque peer, not a subprocess Memoria drives.
-- The autonomous code-experiment loop remains deferred.
+- The isolated, PI-approved, fail-closed code-artifact runner is not the
+  Engineer posture and does not authorize an Engineer or external agent to run
+  an autonomous execution or experimentation loop.
 
 ---
 

@@ -134,6 +134,73 @@ def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
             assert tools[mcp["tool"]].description == action["summary"]
 
 
+def _normalized_row_params(params: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    normalized: dict[str, dict[str, Any]] = {}
+    for name, spec in params.items():
+        entry: dict[str, Any] = {"type": str(spec["type"])}
+        if spec.get("required"):
+            entry["required"] = True
+        else:
+            entry["default"] = spec.get("default")
+        normalized[name] = entry
+    return normalized
+
+
+def _normalized_tool_schema(schema: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    required = set(schema.get("required") or [])
+    normalized: dict[str, dict[str, Any]] = {}
+    for name, prop in (schema.get("properties") or {}).items():
+        entry: dict[str, Any] = {"type": prop.get("type")}
+        if name in required:
+            entry["required"] = True
+        else:
+            entry["default"] = prop.get("default")
+        normalized[name] = entry
+    return normalized
+
+
+def test_mcp_read_tool_schemas_match_registry_params(workspace: Path) -> None:
+    """U1 §1/§4: each served read tool's input schema == its row's params.
+
+    The row `params` field is the single source both projections consume
+    (openapi via http_transport.openapi_schema, MCP via generation).
+    """
+    pytest.importorskip("mcp")
+
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
+    tools = {tool.name: tool for tool in app._tool_manager.list_tools()}
+
+    for action in actions_by_id().values():
+        mcp_binding = action.get("mcp")
+        if not isinstance(mcp_binding, dict) or action["kind"] != "read":
+            continue
+        served = _normalized_tool_schema(tools[mcp_binding["tool"]].parameters)
+        assert served == _normalized_row_params(action["params"]), (
+            f"{action['id']}: served schema for tool {mcp_binding['tool']!r} "
+            "drifts from its registry row's params"
+        )
+
+
+def test_mcp_tools_bind_read_engine_dispatch_class(workspace: Path) -> None:
+    """U1 §6(i): every tool except operation_run binds a read engine function."""
+    pytest.importorskip("mcp")
+
+    app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
+    rows_by_tool = {
+        action["mcp"]["tool"]: action
+        for action in actions_by_id().values()
+        if isinstance(action.get("mcp"), dict)
+    }
+
+    for tool in app._tool_manager.list_tools():
+        row = rows_by_tool[tool.name]
+        if tool.name == "operation_run":
+            assert row["kind"] == "write"
+            continue
+        assert row["kind"] == "read"
+        assert str(row["engine"]).startswith("read_")
+
+
 def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> None:
     pytest.importorskip("mcp")
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")

@@ -8,9 +8,10 @@ grand_parent: Reference
 # Local HTTP transport
 
 The local HTTP transport is the REST-like adapter surface for editor plugins and
-debug scripts. It is a token-authenticated loopback skin over
-`memoria_vault.engine.api`; it is not a remote service, OAuth API, or alternate
-state owner.
+debug scripts. It is a loopback transport over `memoria_vault.engine.api` with
+bearer-authenticated operational endpoints and a small unauthenticated
+lifecycle probe; it is not a remote service, OAuth API, or alternate state
+owner.
 
 ## Start
 
@@ -18,18 +19,31 @@ state owner.
 memoria serve --workspace <path> --http --host 127.0.0.1 --port 8765
 ```
 
-`--host` must be `127.0.0.1`, `localhost`, or `::1`. `--read-scope <path>` may
-be repeated to set the maximum readable workspace scope for the server. If
-`MEMORIA_HTTP_TOKEN` is set, the server uses it and does not print the token. If
-it is unset, the CLI generates one token for that server run and prints it. Use
-`--json` when an adapter needs to parse the selected URL and token source.
+`--host` accepts only `127.0.0.1` or `localhost`; IPv6 loopback (`::1`) is not
+an accepted bind target. `--read-scope <path>` may be repeated to set the
+maximum readable workspace scope for the server. If `MEMORIA_HTTP_TOKEN` is
+set, the server uses it and does not print the token. If it is unset, the CLI
+generates one token for that server run and prints it. Use `--json` when an
+adapter needs to parse the selected URL and token source.
 
-`--once` prints the startup payload and closes the server; it is for smoke tests,
-not serving traffic.
+The default port choice, `8765`, tries the local range through `8785`; a
+non-default `--port` tries only that port. `--ephemeral` asks the OS for a free
+port instead.
 
-## Authentication
+`--once` binds and publishes startup coordinates, then clears them and closes
+the server before printing its payload. It is for smoke tests, not serving
+traffic.
 
-Every request must include:
+## Loopback and authentication
+
+Every request must carry exactly one `Host` header naming the actual port as
+`127.0.0.1:<port>` or `localhost:<port>`. An `Origin` header may be absent or
+be exactly `app://obsidian.md`; another origin, or repeated `Origin` headers,
+is forbidden.
+
+`GET /v1/status` is the sole endpoint without bearer authentication. Every
+other endpoint, including the engine `GET /status` route and lifecycle shutdown,
+must include:
 
 ```http
 Authorization: Bearer <token>
@@ -38,12 +52,29 @@ Authorization: Bearer <token>
 There is no TLS, cookie auth, browser session, OAuth flow, or remote bind mode.
 The intended caller is a local trusted adapter attached to one workspace.
 
+## Lifecycle and rendezvous
+
+Each live server publishes an owner-only runtime record outside the vault in a
+private, per-vault local-state directory. It carries the selected port, token,
+PID, boot ID, engine version, and start time. Adapters should use
+`memoria handshake --vault <path>` rather than read that record directly:
+handshake accepts a record only when its PID is live and its boot ID matches the
+server's lifecycle probe. `memoria handshake --vault <path> --spawn` starts a
+detached `serve --http --on-demand --ephemeral` server when no live one exists.
+
+`memoria serve --http --on-demand` exits after a period with no successful
+bearer-authenticated requests; `--idle-exit` defaults to 900 seconds. The
+unauthenticated status probe does not reset that timer. `memoria serve --stop`
+uses the recorded token and boot ID to request shutdown, so stale coordinates
+are rejected rather than stopping a replacement server.
+
 ## Endpoints
 
 Only `GET` and `POST` are implemented.
 
-| Method | Path | Parameters or body | Engine call |
+| Method | Path | Parameters or body | Engine call or action |
 | --- | --- | --- | --- |
+| `GET` | `/v1/status` | none; no bearer token | Lifecycle probe returning `ok`, `boot_id`, and `engine_version`. |
 | `GET` | `/status` | none | `read_status(workspace)` |
 | `GET` | `/operations` | none | `read_operations(workspace)` |
 | `GET` | `/openapi.json` | none | OpenAPI 3.1 document generated from the surface contract |
@@ -60,6 +91,7 @@ Only `GET` and `POST` are implemented.
 | `GET` | `/project/draft` | `project_path`, `read_scope` or `scope` | `read_draft(...)` |
 | `GET` | `/exploration` | `limit`, `read_scope` or `scope` | `read_exploration(...)` |
 | `POST` | `/operation/run` | JSON object; see below | `run_operation(...)` |
+| `POST` | `/v1/shutdown` | bearer token plus exactly one matching `X-Memoria-Boot-Id` header | Stop this boot instance and return `{"ok": true, "stopping": true}`. |
 
 `GET /openapi.json` is generated from the surface contract registry; it is the
 machine-readable route and parameter mirror.
@@ -123,19 +155,21 @@ different envelope is rejected with `400`.
 ## Responses
 
 Responses are JSON with `Content-Type: application/json; charset=utf-8`. Engine
-read payloads include `ok: true` and `api_version: engine-read-api.v1`. The
-exception is `GET /openapi.json`: its response also carries `ok: true` but has
-no `api_version` key, since it returns a raw OpenAPI 3.1 document rather than
-an engine-read envelope.
+read payloads include `ok: true` and `api_version: engine-read-api.v1`.
+`GET /openapi.json` and `GET /v1/status` are exceptions: the former returns a
+raw OpenAPI 3.1 document, and the latter returns its small lifecycle document,
+so neither carries `api_version`.
 
 Current status behavior is intentionally small:
 
 | Case | HTTP status | Body |
 | --- | --- | --- |
-| Missing or wrong bearer token | `401` | `{"ok": false, "error": "unauthorized"}` |
+| Missing or wrong `Host`, or forbidden `Origin` | `403` | `{"ok": false, "error": "forbidden host"}` or `{"ok": false, "error": "forbidden origin"}` |
+| Missing or wrong bearer token on an endpoint other than `GET /v1/status` | `401` | `{"ok": false, "error": "unauthorized"}` |
 | Bad JSON, non-object body, missing or invalid parameter, root/traversing scope | `400` | `{"ok": false, "error": "..."}` |
 | Unknown route or engine not-found | `404` | `{"ok": false, "error": "..."}` |
 | Known route with unsupported method | `405` | `{"ok": false, "error": "method not allowed"}` |
+| Missing or stale boot ID on `POST /v1/shutdown` | `409` | `{"ok": false, "error": "stale server"}` |
 | Body over `MAX_BODY_BYTES` | `413` | `{"ok": false, "error": "request body too large"}` |
 | Operation ran but worker failed it | `200` | `{"ok": false, "job": ..., "result": ...}` |
 
@@ -146,6 +180,8 @@ No CORS, `OPTIONS`, SSE, or WebSocket behavior is implemented.
 - The transport never opens SQLite or workspace files directly.
 - It does not call the optional adapter policy hook; operation writes enter the
   engine request envelope instead.
+- The lifecycle routes do not call the engine API. Their narrow purpose is to
+  validate a rendezvous record or stop its exact server boot.
 - Threaded HTTP requests are safe for local use because worker mutation is
   serialized by the workspace worker lock.
 - Browser-like clients may need adapter-side request APIs rather than `fetch`,

@@ -23,7 +23,8 @@ def _write_fixture(root: Path, *, enum_values: str = "claim, question") -> tuple
         "  type: literal:note\n"
         "  title: str\n"
         "optional:\n"
-        "  mode: enum:mode\n",
+        "  mode: enum:mode\n"
+        "forbidden: [citekey]\n",
         encoding="utf-8",
     )
     (docs / "document-types.md").write_text(
@@ -74,6 +75,61 @@ def test_schema_doc_lint_fails_on_seeded_type_roster_mismatch(tmp_path: Path) ->
     assert any("document types" in error for error in errors)
 
 
+def test_schema_doc_lint_fails_on_seeded_category_mismatch(tmp_path: Path) -> None:
+    schemas, docs = _write_fixture(tmp_path)
+    (docs / "frontmatter.md").write_text(
+        "```yaml\ntype: note\ncategory: cards\n```\n",
+        encoding="utf-8",
+    )
+
+    errors = check_schema_docs(schemas, docs)
+
+    assert any("note.category: documented 'cards' != live 'notes'" in error for error in errors)
+
+
+def test_schema_doc_lint_fails_on_required_when_rule_not_live(tmp_path: Path) -> None:
+    schemas, docs = _write_fixture(tmp_path)
+    (docs / "frontmatter.md").write_text(
+        "```yaml\ntype: note\nrequired_when:\n  citekey: mode == claim\n```\n",
+        encoding="utf-8",
+    )
+
+    errors = check_schema_docs(schemas, docs)
+
+    assert any(
+        "note.required_when.citekey: documented rule is not live" in error for error in errors
+    )
+
+
+def test_schema_doc_lint_fails_on_seeded_forbidden_list_subset_mismatch(tmp_path: Path) -> None:
+    schemas, docs = _write_fixture(tmp_path)
+    (docs / "frontmatter.md").write_text(
+        "```yaml\ntype: note\nforbidden: [citekey, url]\n```\n",
+        encoding="utf-8",
+    )
+
+    errors = check_schema_docs(schemas, docs)
+
+    assert any(
+        "note.forbidden: documented ['url'] not in live ['citekey']" in error for error in errors
+    )
+
+
+def test_schema_doc_lint_fails_on_seeded_list_subset_mismatch(tmp_path: Path) -> None:
+    schemas, docs = _write_fixture(tmp_path)
+    (docs / "frontmatter.md").write_text(
+        "```yaml\ntype: note\nrequired_any: [citekey, url]\n```\n",
+        encoding="utf-8",
+    )
+
+    errors = check_schema_docs(schemas, docs)
+
+    assert any(
+        "note.required_any: documented ['citekey', 'url'] not in live []" in error
+        for error in errors
+    )
+
+
 def test_frontmatter_reference_documents_ulids_and_type_specific_id_kinds() -> None:
     text = (ROOT / "docs/reference/data-model/frontmatter.md").read_text(encoding="utf-8")
     id_row = next(line for line in text.splitlines() if line.startswith("| `id` |"))
@@ -81,3 +137,9 @@ def test_frontmatter_reference_documents_ulids_and_type_specific_id_kinds() -> N
     assert "| `ulid` | a valid ULID string |" in text
     assert "`ulid` for `note`, `hub`, and `project`" in id_row
     assert "`str` for `code-artifact`, `digest`, and `fulltext`" in id_row
+
+
+def test_frontmatter_reference_does_not_advertise_required_any() -> None:
+    text = (ROOT / "docs/reference/data-model/frontmatter.md").read_text(encoding="utf-8")
+
+    assert "required_any" not in text

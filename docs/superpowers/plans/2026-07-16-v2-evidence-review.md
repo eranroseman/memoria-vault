@@ -11,21 +11,504 @@
 ## Global Constraints
 
 - Correctness gate: `python scripts/verify`; PR + `verify`/`gitleaks`; squash merge; explicit-path staging; disposable vaults only.
-- Cross-plan execution order: **V2R-A and V2R-C run after Plan 22's S35.4 if it has landed (grep-first steps handle either state); V2R-B.4–.5 and all of V2R-D run after the surfaces plan's U3-ENG/U3-PLUG/SEAM.1.** All line refs at `a525a81a` — re-anchor by symbol after other plans land.
+- Cross-plan execution order: the binding partial order is in the 2026-07-29 execution amendment below. Plan 22 S35.4 is a hard gate only where its digest form is named; earlier A/B/C tasks retain their documented ids-form tolerance. All line refs at `a525a81a` — re-anchor by symbol after other plans land.
 - Golden serialization: V2R-D.3 (plugin seed) and V2R-D.1 (floor entry) regenerate goldens — sequential with any other golden-touching task, cross-plan included.
 
 ## Cross-section contracts (BINDING — manifest seam resolutions)
 
-1. **The queue row shape** (V2R-B produces, C and D consume): rows carry `evidence_id, claim_text, items, item_count, routing, routing_reason, reviewable, cure, project, age_days, latest_decision, warrant, analysis`. B's `evidence_review.assemble_evidence_review_queue(...)` (pure) is the single assembler; the CLI consumes it engine-direct (no HTTP — keep-test), the view via `engine_api.read_evidence_review_view(...)`.
+1. **The queue/card shape** (V2R-B produces, C and D consume): the pure
+   assembler produces queue rows with `evidence_id, claim_text, items,
+   item_count, routing_type, reviewable, disposition, project_path, age_days`,
+   plus present-only disposition/cure/analysis inputs. Its view projection has
+   exactly one nested card per evidence row, as specified in the reconciliation
+   amendment below. The CLI consumes the shared
+   `engine_api.evidence_review_queue(...)` collector engine-direct (no HTTP —
+   keep-test); the view consumes that collector through
+   `engine_api.read_evidence_review_view(...)`.
 2. **Age facet naming:** `min_age_days` everywhere — B's param, C's flag `--min-age-days`, the endpoint's query param. (C's drafted `--max-age-days` is superseded.)
-3. **Disposition emission:** V2R-A's `emit_explicit_disposition_event(...)` is the one helper for the keep-test path (the context-bound `emit_disposition_event` requires a running request the CLI lacks). C's contract line naming `operations.py:146` is superseded by A's actual Produces.
+3. **Disposition emission:** V2R-A's `build_disposition_event(...)` is the
+   shared validated payload builder. The keep-test seam batches that payload
+   atomically with its resolved row; `emit_explicit_disposition_event(...)` is
+   the standalone explicit-provenance convenience. C's contract line naming
+   `operations.py:146` is superseded by A's actual Produces.
 4. **The reject flip is owned by V2R-A.1** (only accept clears; latest-event-wins; written against `_disposed_evidence_digests` with the ids-form variant). B's queue applies the same accept-only rule independently in its pure logic (consistent by contract, tested in both). D.5's xfail ordering note reads "pre-V2R-A", not pre-V2R-B.
 5. **`resolve-evidence` worker operation** (V2R-D.1, resolving the declared SPEC GAP) is a thin wrapper over A's seam — one implementation, PI-protected, floor-listed as refused; the pane's four buttons enqueue it via SEAM.1's `actor="pi"` door; the CLI never uses it.
-6. **View envelope:** B follows the surfaces plan's binding contract 3 (`{ok, view: {version, kind, blocks}}`); if U3-ENG shipped the flat form, B's noted one-line swap applies at execution.
+6. **View envelope:** B follows the surfaces plan's nested-card contract:
+   `{ok, api_version, view: {version, kind, blocks}}`, with one top-level
+   evidence card per row. U3-ENG's flat form is superseded, so no fallback swap
+   is permitted.
 7. **Telemetry rides `empirical_event.v1`** (C's schema decision): `workflow="evidence-review"`, `view.opened` + client `disposition.recorded` with `duration_s`; skip and reopen are journal-derived metrics, never synthesized events.
-8. **Execution order:** V2R-A → V2R-B.1–.3 → V2R-C → V2R-B.4–.5 → V2R-D.
+8. **Execution order:** the 2026-07-29 execution amendment is binding; no
+   earlier total ordering is executable where it contradicts that partial order.
+
+## Plan-reconciliation amendment — one nested evidence card per row (2026-07-29)
+
+This amendment supersedes every V2R-B.3–.5 and V2R-D.2/.3 snippet that emits,
+expects, or partitions flat sibling `card`, `evidence-list`, `text`,
+`action-row`, or analysis-card blocks.  The U3 plan's canonical nested-card
+amendment is a prerequisite.  Do not execute a superseded flat snippet merely
+because it remains below as drafting history.
+
+1. **Payload and row grammar.** Each evidence-set queue row becomes exactly
+   one top-level `card`; it is never four sibling blocks.  The parent retains
+   `id=evidence_id`, `ref=block_ref`, `evidence_id`, `project`,
+   `routing_type`, `reviewable`, `disposition`, `item_count`, `age_days`,
+   `body_data`, and present-only `disposition_reason`/`warrant`/`blocked_by`/
+   `cure`.  It additionally has `title=claim_text`,
+   `kind_line="evidence-review"`, `age_s=age_days * 86_400` when age is known
+   (else `0`), and `age_label=f"{age_days}d"` when known (else `""`).  Its
+   semantic `blocks` are in fixed order:
+
+   - a required `evidence-list`, id `<ev>-grounds`, with resolved previews;
+   - a required routing `text`, id `<ev>-routing`;
+   - for reviewable rows only, one `action-row`, id `<ev>-actions`, containing
+     Accept, Reject, Edit, and Defer in that display order.
+
+   The four action dicts are exactly
+   `{"label": <Label>, "operation_id": "resolve-evidence", "payload":
+   {"evidence_id": evidence_id, "decision": <decision>}}`.  No action has
+   `primary`: V2 design §2 explicitly forbids a pre-selected action.  Read-only
+   cure cards have only evidence-list and text children, no action row, and no
+   analysis fields.  The cure fixture deliberately carries holds plus nonempty
+   argument/certainty inputs and asserts that none leak to the parent. Trailing
+   SRD-gap cards remain whole top-level cards after evidence cards; they are
+   already normalized U3 cards and identify as `kind_line: "srd-gap"`, never
+   by the writer-only `attention_kind` field.
+2. **Parent-owned analysis.** Delete the `<ev>-analysis` nested/top-level
+   `card`, its `collapsed` key, and the incompatible `what_tipped_it` name.
+   For a row with `holds`, place paired nonempty `argument_for` and
+   `argument_against` directly on the parent; omit both if either is absent.
+   Place the nonempty deterministic routing factor at parent `tipped_by`, and
+   the nonempty certainty at parent `certainty`.  U3-PLUG.4 then appends the
+   analysis tree after every semantic child; V2R-D.2 moves those tree nodes
+   into its collapsed disclosure without reordering evidence, routing text, or
+   actions.
+3. **Replace V2R-B.3 implementation.** Replace `evidence_review_blocks`,
+   `_row_blocks`, and `_analysis_block` with the following shape; retain the
+   existing preview, routing-reason, and tipping-factor helpers verbatim:
+
+   ```python
+   def evidence_review_blocks(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
+       """Queue entries -> one nested view-spec card per evidence row."""
+       blocks: list[dict[str, Any]] = []
+       srd_blocks: list[dict[str, Any]] = []
+       for row in rows:
+           if row.get("kind") == "srd-gap":
+               srd_blocks.append(dict(row["card_block"]))
+               continue
+           blocks.append(_row_card(row))
+       return blocks + srd_blocks
+
+
+   def _row_card(row: Mapping[str, Any]) -> dict[str, Any]:
+       evidence_id = str(row["evidence_id"])
+       previews = list(row.get("item_previews") or [])
+       age_days = row.get("age_days")
+       card: dict[str, Any] = {
+           "id": evidence_id,
+           "kind": "card",
+           "ref": str(row["block_ref"]),
+           "title": str(row["claim_text"]),
+           "kind_line": "evidence-review",
+           "review_kind": "evidence-set",
+           "evidence_id": evidence_id,
+           "project": str(row["project_path"]),
+           "routing_type": str(row["routing_type"]),
+           "reviewable": bool(row["reviewable"]),
+           "disposition": str(row["disposition"]),
+           "item_count": len(row["items"]),
+           "age_days": age_days,
+           "age_s": int(age_days) * 86_400 if age_days is not None else 0,
+           "age_label": f"{age_days}d" if age_days is not None else "",
+           "body_data": {"kind": "untrusted_text", "text": str(row["claim_text"])},
+       }
+       if row.get("blocked_by"):
+           card["blocked_by"] = [dict(finding) for finding in row["blocked_by"]]
+           card["cure"] = PERMANENT_BLOCK_CURE
+       for field in ("disposition_reason", "warrant"):
+           value = str(row.get(field) or "").strip()
+           if value:
+               card[field] = value
+       children: list[dict[str, Any]] = [
+           {
+               "id": f"{evidence_id}-grounds",
+               "kind": "evidence-list",
+               "ref": str(row["block_ref"]),
+               "items": previews,
+           },
+           {
+               "id": f"{evidence_id}-routing",
+               "kind": "text",
+               "text": _routing_reason(row, previews),
+           },
+       ]
+       if card["reviewable"]:
+           children.append(
+               {
+                   "id": f"{evidence_id}-actions",
+                   "kind": "action-row",
+                   "actions": [
+                       {"label": "Accept", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "accept"}},
+                       {"label": "Reject", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "reject"}},
+                       {"label": "Edit", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "edit"}},
+                       {"label": "Defer", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "defer"}},
+                   ],
+               }
+           )
+       if card["reviewable"] and row.get("holds"):
+           arguments = {
+               field: str(row.get(field) or "").strip()
+               for field in ("argument_for", "argument_against")
+           }
+           if all(arguments.values()):
+               card.update(arguments)
+           tipped_by = _tipping_factor(row, previews)
+           if tipped_by:
+               card["tipped_by"] = tipped_by
+           certainty = str(row.get("certainty") or "").strip()
+           if certainty:
+               card["certainty"] = certainty
+       card["blocks"] = children
+       return card
+   ```
+
+4. **Replacement tests and collector boundaries.** V2R-B.3 tests assert one
+   card per evidence row, exact nested child kinds/ids, exact four action
+   payloads, no `primary`, parent-owned analysis, and the cure's two-child/no-
+   analysis shape.  They no longer assert a flat block list, a `<ev>-analysis`
+   id, `collapsed`, `what_tipped_it`, or absence of action rows.  V2R-B.4/.5
+   inspect each evidence card's `blocks`; their facet `shown`/`total` counts
+   remain rows, never child blocks.  The HTTP test asserts the serialized
+   nested action payload.  `read_evidence_review_view` otherwise stays a
+   single collector path: it calls `evidence_review_blocks(shown)`, so it does
+   not add a second assembler or flatten nested cards.
+5. **Pane transforms and query spelling.** V2R-D.2's fixture includes
+   `evidence-list → text → action-row`; its transformed exact class sequence
+   is `kind, title, evidence, text, action-row, analysis-toggle, analysis`.
+   Its cure fixture is exactly `kind, title, evidence, text`, with no toggle.
+   V2R-D.3 treats only top-level cards as rows and never partitions a card's
+   children as extras.  Its `viewPath()` query key is `routing_type`, not
+   `routing`, and its row age is the canonical `age_label` above.  Its plugin
+   harness uses one nested reviewable card, expands it, verifies the action
+   `data-operation-id` and serialized payload, clicks it, and verifies the
+   resulting `/operation/run` body.
+6. **Required ordering.** V2R-A supplies the four decisions and disposition
+   semantics.  V2R-D.1 supplies the PI-protected `resolve-evidence` worker
+   operation before any endpoint publishes its action row.  Safe order is
+   U3-ENG/U3-PLUG.4/SEAM.1, then V2R-A, V2R-D.1, V2R-B.1–.5, V2R-C, and
+   V2R-D.2/.3.  V2R-D.4–.7 retain their documented local dependencies.
+
+## Plan-reconciliation amendment — one collector, raw queue, and CLI projection (2026-07-29)
+
+This amendment supersedes only the conflicting V2R-B.2/B.4 and V2R-C.1–.3
+snippets below: in particular every reference to an undefined queue API,
+`max_age_days`/`--max-age-days`, `routing`, `latest_decision`, nested raw
+`analysis`, preview-shaped raw `items`, or an evidence-only assumption for an
+SRD-gap queue entry.  The retained snippets are drafting history, not an
+alternative implementation.  It preserves the engine-direct CLI keep-test;
+the CLI must not request the HTTP view or reconstruct rows from its cards.
+
+1. **One collector, two projections.** V2R-B.4 factors workspace discovery,
+   pure assembly, whole-scope facets, filtering, batching, and shown-row
+   preview resolution into one private collector.  It exposes the following
+   engine-direct API for V2R-C, and `read_evidence_review_view` calls the same
+   collector before projecting its returned rows through
+   `evidence_review_blocks`:
+
+   ```python
+   engine_api.evidence_review_queue(
+       workspace: Path,
+       *,
+       routing_type: str = "",
+       project: str = "",
+       min_age_days: int = 0,
+       batch: int = 10,
+       read_scope: list[str] | None = None,
+   ) -> dict[str, Any]
+   ```
+
+   Its result is `{ok: True, rows, total, batch, facet_totals}`.  `rows` is
+   the filtered, batched raw queue; `total` is the filtered pre-batch row
+   count; `facet_totals` describes the unfiltered, scope-visible queue; and
+   `batch <= 0` means unbounded, which supports C.2's direct id lookup.
+   `read_evidence_review_view` rejects a non-positive `batch` before it calls
+   the collector, adds `shown`/`batch` to a copy of `facet_totals`, and returns
+   the binding `{ok, api_version, view, facets}` envelope.  This reserves
+   unbounded batching for the engine-direct queue; B.5 adds a `?batch=0` → 400
+   HTTP test.  Neither public projection reassembles drafts or flattens cards.
+   B.4's current `max(1, int(batch))` instruction is superseded for the shared
+   collector.
+
+2. **Raw queue is canonical.** B.2 constructs `items = [str(item) ...]` once
+   and emits `item_count=len(items)` for every evidence-set row.  A row with
+   `blocked_by` also emits `cure=PERMANENT_BLOCK_CURE`; it is otherwise
+   present-only.  The resulting discriminated union is either an evidence-set
+   row with the binding fields (`routing_type`, `disposition`, `project_path`,
+   raw `items`, and collector-attached `item_previews`) or
+   `{"kind": "srd-gap", "card_block": <normalized U3 card>}`. B.2 passes
+   through nonempty `argument_for`, `argument_against`, and `certainty` inputs
+   on an evidence-set row. B.3 consumes the canonical `row["item_count"]` and
+   present `row["cure"]` rather than recomputing either fact while projecting
+   a card. It exports `routing_reason(row, previews)` (rename the drafted
+   private helper; keep a private alias only if useful) and
+   `analysis_fields(row, previews) -> dict[str, str]`. The latter returns
+   paired nonempty arguments, the deterministic `tipped_by`, and nonempty
+   certainty only for a reviewable row with holds; otherwise it returns `{}`.
+   Both the card projection and CLI use that one helper, so neither copies a
+   routing/tipping derivation or leaks cure analysis.
+
+3. **C has presentation-only projections.** C.1's summary selects exactly
+   `evidence_id`, `claim_text`, `item_count`, `routing_type`,
+   `routing_reason(row, item_previews)`, `reviewable`, present-only `cure`,
+   `project=row["project_path"]`, `age_days`, `disposition`, and present-only
+   `warrant`; it never emits `items` or analysis. C.2's detail adds
+   `items=item_previews` and, only with `--show-analysis`, adds an output-only
+   `analysis=analysis_fields(row, item_previews)` when that shared helper is
+   nonempty; otherwise that key is absent. These are CLI projections, never second queue
+   assemblers.  All C text, tests, and human output use `routing_type` and
+   `disposition`, never the superseded `routing` and `latest_decision` names.
+   C.2 renders projected `items`, not raw item-reference strings.
+
+4. **SRD entries remain visible and safe.** C.1 renders an unfiltered
+   `srd-gap` variant as a distinct, read-only summary using its normalized
+   card's title/ref; it has no evidence action.  C.2 lookup selects only
+   `row.get("kind") == "evidence-set"`, so an SRD id is not mistaken for
+   evidence.  C.3 relies on V2R-A's existing evidence-record validation rather
+   than adding a second queue lookup.  Filtering preserves B.2's rule: SRD
+   cards appear only with no evidence filter.  Do not silently drop them to
+   make old evidence-only indexing pass.
+
+5. **Replacement tests and failure semantics.** Add direct B.4 coverage for
+   the shared API's `batch=0`, raw-versus-preview fields, `item_count`/cure,
+   and an unfiltered SRD variant.  Replace C.1's max-age test/flag with
+   `--min-age-days`, assert filtered `total` versus whole-scope
+   `facet_totals`, and add a default-list SRD fixture. C.2 must prove the
+   evidence-first projected detail, cure-row non-leakage, and folded parent
+   analysis. Both telemetry
+   helpers retain the failed operation's error/result.  C.2 adds a mocked
+   `view.opened`-recording failure test and returns an `_emit` failure instead
+   of a successful detail result.  C.3 retains its seam tests and adds the
+   analogous `disposition.recorded` failure test: after a successful decision
+   seam but failed `empirical-event-record`, `_cmd_review_action` emits
+   `{ok: False, error, event, telemetry}` through `_emit` (exit 1), using the
+   helper error or `"disposition succeeded but client telemetry was not
+   recorded"`; neither command reports success for a missing required client
+   event.
+
+6. **Execution order.** B.2 supplies raw facts, B.3 supplies the public
+   routing helper, and B.4 supplies the shared collector before C starts.
+   C remains HTTP-free, but B.4's U3 dependencies make the binding order at
+   the top of this plan mandatory; its former claim of no U3 ordering
+   dependency is superseded. If U1 J.1 has landed when B.5 registers
+   `views.evidence_review`, that row includes `job: "review"` and the pinned
+   job mapping changes with it; otherwise U1's re-anchored registry amendment
+   preserves the row and supplies that job when J.1 lands.
+
+## Plan-reconciliation amendment — nested collector execution order (2026-07-29)
+
+This amendment supersedes every contrary order, flat-envelope fallback, raw-row
+shape, and pane-regrouping instruction below. It preserves the canonical **one
+nested card per evidence row** contract: the CLI consumes raw queue rows, while
+only the HTTP view projects them through `evidence_review_blocks`.
+
+1. **Binding partial order.** Execute only these dependencies (unlisted local
+   tasks retain their stated dependencies):
+
+   ```text
+   V2R-A → V2R-B.1–.3
+   U3-ENG → V2R-B.4 → V2R-C
+   U3-ENG → SEAM.1 → V2R-D.1
+   {V2R-B.3, V2R-D.1, U3-ENG} → V2R-B.5
+   U3-ENG → SEAM.1 → U3-PLUG.4 → V2R-D.2
+   {V2R-B.5, V2R-D.1, V2R-D.2, U3-PLUG.4} → V2R-D.3
+   ```
+
+   B.1–.3 are pure queue/projection work and require only the already-binding
+   nested-card grammar. B.4 consumes U3-ENG; B.5 additionally consumes its
+   route and live-server test pattern. Neither B task depends on U3-PLUG. C
+   is HTTP-free and has no U3-PLUG/pane dependency; its U3-ENG dependency is
+   indirect through B.4. C.1/.2 follow B.4, and C.3–.5 additionally follow
+   V2R-A. V2R-C.5 alone blocks on S35.4's digest seam.
+
+2. **One raw collector, two projections.** B.4 implements exactly one private
+   `_collect_evidence_review_queue(...)` that discovers drafts/SRD cards,
+   assembles, facets, filters, batches, and attaches previews, returning
+   `{rows, total, batch, facet_totals}`. The public engine-direct façade returns
+   `{"ok": True, **collector_result}` and never cards; the view alone calls
+   `evidence_review_blocks(result["rows"])` then returns
+   `_read_payload(view=_view("evidence-review", ...), facets=...)`. Do not
+   call the public façade from the view, reassemble drafts, flatten card
+   children, or offer a flat-envelope compatibility branch. A flat U3 producer
+   is an unmet prerequisite, not a reason to swap contracts.
+
+   Direct queue callers may use `batch=0` for an unbounded lookup. The HTTP
+   view requires `batch > 0`; `min_age_days` is non-negative (`0` succeeds,
+   `< 0` fails) and uses a dedicated non-negative query parser rather than the
+   positive-only `batch` parser. Add direct and real-HTTP tests for all three
+   boundaries.
+
+3. **Raw-row discipline.** B.3 consumes `row["item_count"]`,
+   `routing_reason(row, previews)`, and `analysis_fields(row, previews)`;
+   it does not recompute item counts, copy routing/tipping logic, or make a
+   flat analysis block. C consumes only
+   `engine_api.evidence_review_queue(...)`: never the HTTP view, view cards,
+   flattened children, or a second assembler. Its projections use
+   `routing_type`, `disposition`, `routing_reason(...)`, and
+   `analysis_fields(...)`. C.2 selects only `row.get("kind") ==
+   "evidence-set"`; C.1 renders an SRD gap as a read-only title/ref summary.
+
+4. **Disposition ownership and D proofs.** V2R-A owns every disposition write
+   and `emit_explicit_disposition_event`; B only reads events. D.1's happy
+   path composes and verifies a minimal checked project/note through the normal
+   helpers, then uses the emitted evidence id—never an invented empty
+   `state.replace_evidence_sets` row. D.3 selects only top-level evidence
+   cards:
+
+   ```js
+   const isEvidenceCard = (block) => block && block.kind === "card" &&
+     (block.review_kind === "evidence-set" || block.kind_line === "evidence-review");
+   this.cards = blocks.filter(isEvidenceCard);
+   this.extras = blocks.filter((block) => !isEvidenceCard(block));
+   ```
+
+   It leaves SRD cards whole in `extras`; `renderBlock(card)` renders each
+   nested child once, in declared order, and D.2 collapses only parent-owned
+   analysis after those semantic children.
+
+5. **Completed producer edges.** The authoritative partial order replaces the
+   abbreviated graph above:
+
+   ```text
+   V2R-A → V2R-B.1 → V2R-B.2 → V2R-B.3
+   {V2R-B.3, U3-ENG} → V2R-B.4
+   {V2R-B.4, V2R-D.1, U3-ENG} → V2R-B.5
+   U3-ENG → SEAM.1 → U3-PLUG.4 → V2R-D.2
+   {V2R-B.5, V2R-D.1, V2R-D.2, U3-PLUG.7} → V2R-D.3
+   ```
+
+   U3-PLUG.7 is deliberate: D.3 consumes `authedJson`,
+   `enqueueNamedOperation`, the ItemView pattern, and the Node harness from
+   U3-PLUG.6/.7.  U3-PLUG.4 alone remains sufficient only for D.2.
+
+6. **Telemetry plane after I1 T.3.** `empirical_event.v1` client facts live in
+   `telemetry_events` with `event_type = "empirical_event.v1"`; their JSON
+   fields are in `payload_json`.  Therefore C.2/C.3 client-event assertions,
+   C.4/C.5 `review_telemetry_summary`, and its no-event-on-invalid-show proof
+   query `telemetry_events`, never `state.read_event_log(...,
+   ["empirical-event"])` or `event_log`.  The server-side `resolved` and
+   `disposition.v1` facts remain journal-side and are still read from
+   `event_log`.  C.4 combines these two planes explicitly; it does not label
+   all metrics “journal facts.”  I1 T.1/T.2/T.3 are a hard precondition for
+   all C telemetry implementation/tests.
+
+7. **U1 transport and CLI parity.** V2R-B.5 uses U1 M.3's final refusal text
+   in exact tests: `"unauthorized: missing or invalid bearer token"` and
+   `"method not allowed: POST /v1/views/evidence-review"`.  Apply the same
+   replacements whether the U1 transport task or B.5 lands first.  V2R-C.1
+   requires U1 M.4: every newly added `memoria review` parser command is added
+   to `CLI_ONLY_COMMANDS` in the same task unless it has a registry row.  The
+   M.4 `72 parser / 59 exemption` count is its landing snapshot, not a forever
+   cap; C.1 updates the parity fixture with the review-command additions.
 
 ---
+
+## Plan-reconciliation amendment (BINDING — replaces superseded B/C/D snippets)
+
+This section replaces every conflicting flat-block, second-collector, old-marker,
+and B-owned-disposition code/test snippet in V2R-B.3–B.5, V2R-C, and V2R-D. Do not
+execute a superseded snippet merely because it remains below as drafting history.
+
+1. **Exact execution graph:** V2R-A runs first and independently. V2R-D.1 follows
+   A and supplies the worker wrapper. V2R-B.1–.5 require U3-ENG and D.1; V2R-C.1–.5
+   follow B. D.2–D.3 require U3-PLUG, SEAM.1, B, and D.1. D.4–D.6 follow their local
+   evidence/export dependencies and do not wait for the pane; D.7 runs after the
+   surfaces it claims exist. Serialize every potential golden writer, including D.1,
+   D.3, D.4, and any floor/journal change.
+2. **One collector and DTO:** B.4 first adds and tests
+   `engine_api.read_evidence_review_queue(workspace, *, routing_type="", project="",
+   min_age_days=0, batch=10, read_scope=None)`. It calls the pure assembler exactly
+   once, excludes SRD-gap rows, attaches item previews, and projects internal rows to
+   the CLI DTO: `project_path → project`, `routing_type → routing`, disposition data
+   → `latest_decision`, raw item refs → preview dictionaries, plus `item_count`,
+   `routing_reason`, `reviewable`, `cure`, `age_days`, `warrant`, and `analysis`.
+   The direct reader accepts `batch=0` for all rows and rejects negative batch. The
+   view calls this collector; it must not assemble a second queue.
+3. **Nested view cards, replacing B.3/B.4/B.5 flat-block bodies:** B.3 emits one U3
+   `card` per evidence row with `title`, `kind_line`, `ref`, `age_label`,
+   `evidence_id`, and nested `evidence-list`/routing text/analysis children. The
+   deterministic routing field is `tipped_by`, not `what_tipped_it`. Reviewable cards
+   include exactly one nested `action-row` with accept/reject/edit/defer
+   `resolve-evidence` actions; permanent cure cards omit analysis and actions. Update
+   the B.3/B.4/B.5 tests to assert that nested shape and remove their assertions of
+   flat block sequences or absent action rows. View-only SRD-gap cards append after
+   these cards and never enter the CLI DTO.
+4. **One seam owner:** V2R-A.1–A.4 own the four decisions, warrant semantics,
+   reject flip, and atomic disposition emission. B reads the resulting events;
+   C calls `resolve_evidence_review` directly; D.1 is only its PI-protected
+   worker wrapper.
+   Replace every remaining “V2R-B owns the flip”, “V2R-C owns the flip”,
+   `emit_disposition_event`, `V2R-E`, and pre-V2R-B ordering reference with that
+   ownership model.
+5. **Shared facet and format rules:** project accepts canonical
+   `projects/<name>/project.md`, `projects/<name>`, or bare `<name>` and normalizes
+   to the canonical project path. `min_age_days` is a nonnegative integer; zero means
+   no age filter and negatives raise at pure, CLI, and HTTP boundaries. The HTTP view
+   requires a positive batch (default 10); only the direct collector accepts zero.
+   Every post-Plan-22 fixture uses v2 `%%ev: <id> items=...%%` grammar. Every view
+   response is `{ok, api_version, view, facets}`; flat envelopes have no fallback.
+6. **D-specific replacements:** D.1's success test first composes/seeds a real
+   evidence-set record and retains a separate missing-id failure test. Only the pane
+   fetches `GET /v1/views/evidence-review` and enqueues `resolve-evidence`; the CLI
+   calls `read_evidence_review_queue` engine-direct and then A's seam. Pane facets use
+   `routing_type`, `project`, and `min_age_days` — never `routing`/`age`.
+7. **Scope precedes collection and denominators:** `read_scope=None` means the whole
+   workspace. For a supplied scope list, use the existing `_scope_allows` semantics
+   after normalizing paths: exclude an evidence draft unless its `draft_path` is in
+   scope **before** pure assembly, faceting, filtering, preview attachment, or
+   batching. Independently exclude an SRD attention card unless
+   `_attention_in_scope(card, read_scope)` is true, before counting or rendering it.
+   Scope therefore defines the queue universe; routing/project/age filters then apply
+   only to the scoped evidence queue. Direct and view tests must each prove an
+   out-of-scope evidence draft disappears, and the HTTP test must prove `scope=`
+   narrows both evidence and SRD rows.
+8. **Facet merge is explicit:** the view starts with the collector's scoped,
+   pre-filter evidence denominators `routing_type`, `project`, and `total`, and
+   retains the requested positive `batch`. It adds
+   `kind = {"evidence-set": evidence_total, "srd-gap": srd_total}`, then replaces
+   `total = evidence_total + srd_total` and sets
+   `shown = shown_evidence + rendered_srd`. `srd_total` and `rendered_srd` are the
+   scope-visible SRD count only on an unfiltered view; either is zero when any
+   routing/project/age filter is active. Never drop the evidence facet denominators
+   while constructing the view envelope.
+9. **U3 nested-card renderer is a prerequisite, not a presentation detail:** before
+   B.3/D.2, U3-PLUG.4 must preserve `card.blocks` input order and emit analysis tree
+   nodes only for present analysis fields. Thus a V2 reviewable card renders its
+   semantic children exactly `evidence-list → routing text → action-row`, with a
+   collapsed analysis disclosure only afterward; a cure card renders
+   `evidence-list → routing text` and no analysis/toggle. The U3 plan's cross-plan
+   repair owns that renderer change and its tests; D.2 consumes it rather than
+   reordering children again.
+10. **Analysis projection is explicit:** a projected evidence DTO's `analysis` is a
+    mapping or `None`, and `tipped_by` is its only tipped-analysis key. B.4 produces
+    `analysis["tipped_by"]` directly and its DTO test asserts that
+    `what_tipped_it` is absent everywhere in the DTO. B.3 never reads analysis fields
+    from the DTO's top level; in
+    `evidence_review_card`, it uses `analysis = row.get("analysis")` and treats any
+    non-mapping as `{}`, then projects the permitted fields onto the parent card.
+    Copy `argument_for` and `argument_against` only when both are non-empty strings;
+    copy non-empty `tipped_by` and `certainty` individually. The reviewable-card
+    test supplies all four fields under `analysis` and asserts them on the parent
+    card; a one-sided argument mapping asserts that neither argument field reaches
+    the card. Cure-card tests assert that no analysis field reaches the card. This
+    preserves the spec's paired-or-absent argument rule and gives U3-PLUG.4/D.2
+    actual parent analysis nodes to render.
+11. **Boundary gates:** after V2R-B.5's route/floor coverage and after V2R-D.3's
+    pane/golden coverage, run `python scripts/verify` before the respective commit.
+    SEAM.1's required full gate and security diff scan are owned by the surfaces
+    plan amendment; D.2/D.3 do not proceed until that authority change is clean.
+
+---
+
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1
 
 Section of the V2 evidence-review implementation plan. Repo:
@@ -40,14 +523,14 @@ re-render belongs to the view/queue sections).
 
 1. **U3-ENG / U3-PLUG** (`docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md`)
    produce the view-spec.v1 machinery this spec's §1 consumes: `GET
-   /v1/views/attention`, the `{ok, api_version, spec: "view-spec.v1", blocks}`
+   /v1/views/attention`, the `{ok, api_version, view: {version, kind, blocks}}`
    envelope, and `VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row",
    "evidence-list")` exported from `engine/api.py`. **V2R-A has no dependency
    on U3-ENG** — nothing here touches views. But the fields this section
    journals (`warrant`, `suppressed_until`, `edit_target`) are the inputs the
    evidence-review queue/view sections read, and those sections *do* consume
    U3-ENG's envelope and block catalog. Execution order: V2R-A may run before
-   or after U3-ENG; the queue/view sections must run after **both**.
+   or after U3-ENG; D.1, the queue, and the CLI run after **both**.
 2. **Plan 22 S35.4** (`docs/superpowers/plans/2026-07-15-alpha22-substrate-trust.md`,
    Task S35.4) replaces `_disposed_evidence_ids(vault) -> set[str]` with
    `_disposed_evidence_digests(vault) -> dict[str, str]` (`items_sha256`-bound
@@ -95,10 +578,11 @@ re-render belongs to the view/queue sections).
   never suppress findings.
 - Every disposition additionally lands one `disposition.v1` journal event
   (`event_type = "disposition"`) with `item_type="evidence-set"`,
-  `item_id=<ev-id>`, `decision` mapped 1:1 — emitted through
-  `emit_explicit_disposition_event(vault: Path, *, decision: str, item_type:
-  str, item_id: str, actor: str, machine: str) -> dict[str, Any]`
-  (new, `runtime/operations.py`).
+  `item_id=<ev-id>`, `decision` mapped 1:1. `build_disposition_event(...)`
+  validates its payload; the seam persists it atomically with the resolved row
+  through `append_explicit_event_batch(...)`. The standalone
+  `emit_explicit_disposition_event(...)` remains available for independent
+  explicit-provenance events.
 - CLI: `memoria project resolve-evidence --decision
   {accept,reject,edit,defer} [--warrant TEXT]`.
 
@@ -149,7 +633,7 @@ latest disposition per id wins, and only `accept` clears.
 
 **Steps:**
 
-- [ ] Determine the S35.4 state — run:
+- [x] Determine the S35.4 state — run:
 
   ```
   grep -n "_disposed_evidence_digests\|_disposed_evidence_ids" src/memoria_vault/runtime/knowledge.py
@@ -160,7 +644,7 @@ latest disposition per id wins, and only `accept` clears.
   main steps but use the ids-form implementation given at the end of this
   task, and expect no `items_sha256` in journaled events until S35.4 lands.
 
-- [ ] Write the failing tests. In `tests/test_draft_verification.py`, append
+- [x] Write the failing tests. In `tests/test_draft_verification.py`, append
   after `_compose_source_backed_draft` (end of file):
 
   ```python
@@ -215,7 +699,24 @@ latest disposition per id wins, and only `accept` clears.
   `review_required=True` — `state.py:_derived_evidence_row` — so the surviving
   hold finding is `evidence-incomplete`.)
 
-- [ ] Run the tests to verify they fail against shipped behavior — this is the
+- [x] Reconcile the inherited S35.4 regression
+  `test_latest_digest_bound_reject_disposition_wins`: rename it to
+  `test_latest_digest_bound_reject_disposition_reblocks_export`, retain its
+  differing-items-digest setup, and assert that the late reject removes the id from
+  `_disposed_evidence_digests` and keeps verification unready. Its old assertion
+  that a digest-bound reject clears the gate encodes the superseded S35.4 contract;
+  the later restore-to-empty assertion remains unready because the latest event is
+  still reject.
+- [x] Add `test_accept_after_reject_clears_export_hold` alongside the two red
+  regressions, pinning the opposite latest-event transition: a later bound accept
+  reopens the normal accept-only clearance.
+- [x] Add `test_latest_legacy_digestless_disposition_voids_prior_accept`: after a
+  valid bound accept clears the gate, append a later legacy
+  `resolve-evidence-review` accept without `items_sha256` and assert the id is
+  absent from `_disposed_evidence_digests` and verification is unready. This pins
+  the required all-events-before-filtering, fail-closed ordering.
+
+- [x] Run the tests to verify they fail against shipped behavior — this is the
   proof that reject currently unblocks:
 
   ```
@@ -226,7 +727,7 @@ latest disposition per id wins, and only `accept` clears.
   `assert True is False` (the rejected id is suppressed and the draft reads
   export-ready).
 
-- [ ] Write the minimal implementation. **Digests form** — replace the body of
+- [x] Write the minimal implementation. **Digests form** — replace the body of
   `_disposed_evidence_digests` in `src/memoria_vault/runtime/knowledge.py`
   (locate by name) with:
 
@@ -297,7 +798,7 @@ latest disposition per id wins, and only `accept` clears.
   unchanged. When S35.4 later executes, its replacement must preserve this
   task's accept-only + latest-wins semantics (the two new tests pin it).
 
-- [ ] Run the tests to verify they pass, and that the existing disposition
+- [x] Run the tests to verify they pass, and that the existing disposition
   tests still hold (accept still clears; drift still overrides):
 
   ```
@@ -308,7 +809,7 @@ latest disposition per id wins, and only `accept` clears.
   `test_evidence_review_disposition_clears_draft_gate` and
   `test_draft_text_drift_overrides_pi_disposition_and_refuses_export`.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
@@ -357,7 +858,7 @@ this task only records them honestly.
 
 **Steps:**
 
-- [ ] Write the failing seam tests. In `tests/test_draft_verification.py`,
+- [x] Write the failing seam tests. In `tests/test_draft_verification.py`,
   extend the imports: after `from pathlib import Path` (`:4`) add
 
   ```python
@@ -417,7 +918,17 @@ this task only records them honestly.
           resolve_evidence_review(vault, evidence_id, decision="override", reason="nope")
   ```
 
-- [ ] Run the tests to verify they fail:
+- [x] Review amendment — add `test_defer_disposition_uses_utc_day_at_offset_boundary`:
+  monkeypatch `knowledge.now_iso` to `2026-07-17T23:30:00-02:00`, then assert
+  the deferred event preserves that timestamp and computes
+  `2026-07-19T00:00:00Z`. This proves UTC conversion occurs before taking the
+  calendar date rather than accidentally using the source offset's local day.
+- [x] Review amendment — parametrically prove `defer` and `edit` after a prior
+  bound `accept` remove the id from `_disposed_evidence_digests` and make the
+  draft unready. This pins A.1's latest-event, accept-only clearance contract
+  for both new non-accept decisions.
+
+- [x] Run the tests to verify they fail:
 
   ```
   python -m pytest tests/test_draft_verification.py -v -k "defer_disposition or edit_disposition or unknown_decision"
@@ -428,7 +939,7 @@ this task only records them honestly.
   test FAILS because the shipped message does not match
   `accept, reject, edit, or defer`.
 
-- [ ] Write the minimal seam implementation in
+- [x] Write the minimal seam implementation in
   `src/memoria_vault/runtime/knowledge.py`:
 
   (a) Change line 14 from `from datetime import date` to:
@@ -514,7 +1025,7 @@ this task only records them honestly.
       return f"{next_day.isoformat()}T00:00:00Z"
   ```
 
-- [ ] Run the seam tests to verify they pass:
+- [x] Run the seam tests to verify they pass:
 
   ```
   python -m pytest tests/test_draft_verification.py -v
@@ -523,7 +1034,7 @@ this task only records them honestly.
   Expected: all pass (defer/edit journal their payloads and neither clears the
   hold — Task V2R-A.1's accept-only lookup already guarantees the latter).
 
-- [ ] Write the failing CLI test. In `tests/test_cli_work_project.py`, append
+- [x] Write the failing CLI test. In `tests/test_cli_work_project.py`, append
   after `test_cli_project_resolve_evidence_verifies_current_draft_before_disposition`
   (ends `:945`):
 
@@ -602,7 +1113,7 @@ this task only records them honestly.
       assert edited["event"]["edit_target"]["draft_path"] == "projects/project-alpha/draft.md"
   ```
 
-- [ ] Run the CLI test to verify it fails:
+- [x] Run the CLI test to verify it fails:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_supports_defer_and_edit -v
@@ -611,7 +1122,7 @@ this task only records them honestly.
   Expected: ERROR with `SystemExit: 2` — argparse rejects
   `invalid choice: 'defer'`.
 
-- [ ] Write the minimal CLI implementation. In `src/memoria_vault/cli.py:332`
+- [x] Write the minimal CLI implementation. In `src/memoria_vault/cli.py:332`
   change:
 
   ```python
@@ -629,7 +1140,7 @@ this task only records them honestly.
   (`_cmd_project_resolve_evidence` passes `decision` through unchanged — no
   handler edit.)
 
-- [ ] Run the CLI test to verify it passes:
+- [x] Run the CLI test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_supports_defer_and_edit -v
@@ -637,7 +1148,7 @@ this task only records them honestly.
 
   Expected: PASSED.
 
-- [ ] Update the two behavior sentences in docs. In
+- [x] Update the two behavior sentences in docs. In
   `docs/how-to-guides/project/compose-a-draft.md` replace:
 
   ```
@@ -669,7 +1180,7 @@ this task only records them honestly.
   not silently rewrite the draft or remove its durable evidence marker.
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_draft_verification.py tests/test_cli_work_project.py docs/how-to-guides/project/compose-a-draft.md docs/tutorials/05-verify-evidence.md
@@ -705,7 +1216,7 @@ edge — both out of scope here).
 
 **Steps:**
 
-- [ ] Write the failing seam tests — append to `tests/test_draft_verification.py`:
+- [x] Write the failing seam tests — append to `tests/test_draft_verification.py`:
 
   ```python
   def test_accept_disposition_journals_optional_warrant(tmp_path: Path) -> None:
@@ -741,7 +1252,7 @@ edge — both out of scope here).
           )
   ```
 
-- [ ] Run the tests to verify they fail:
+- [x] Run the tests to verify they fail:
 
   ```
   python -m pytest tests/test_draft_verification.py -v -k "optional_warrant or warrant_refused"
@@ -750,7 +1261,7 @@ edge — both out of scope here).
   Expected: both ERROR with
   `TypeError: resolve_evidence_review() got an unexpected keyword argument 'warrant'`.
 
-- [ ] Write the minimal seam implementation in
+- [x] Write the minimal seam implementation in
   `src/memoria_vault/runtime/knowledge.py`:
 
   (a) Add `warrant: str = ""` to the signature after `reason: str = ""`.
@@ -770,7 +1281,7 @@ edge — both out of scope here).
           event["warrant"] = warrant
   ```
 
-- [ ] Run the seam tests to verify they pass:
+- [x] Run the seam tests to verify they pass:
 
   ```
   python -m pytest tests/test_draft_verification.py -v
@@ -778,7 +1289,7 @@ edge — both out of scope here).
 
   Expected: all pass.
 
-- [ ] Write the failing CLI test — append to `tests/test_cli_work_project.py`:
+- [x] Write the failing CLI test — append to `tests/test_cli_work_project.py`:
 
   ```python
   def test_cli_project_resolve_evidence_accept_carries_warrant(
@@ -837,7 +1348,7 @@ edge — both out of scope here).
       assert accepted["event"]["warrant"] == "Spans jointly entail the claim."
   ```
 
-- [ ] Run the CLI test to verify it fails:
+- [x] Run the CLI test to verify it fails:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_accept_carries_warrant -v
@@ -846,7 +1357,7 @@ edge — both out of scope here).
   Expected: ERROR with `SystemExit: 2` — argparse:
   `unrecognized arguments: --warrant`.
 
-- [ ] Write the minimal CLI implementation in `src/memoria_vault/cli.py`:
+- [x] Write the minimal CLI implementation in `src/memoria_vault/cli.py`:
 
   (a) After `resolve_evidence.add_argument("--reason", default="")` (`:333`) add:
 
@@ -861,7 +1372,7 @@ edge — both out of scope here).
           warrant=args.warrant,
   ```
 
-- [ ] Run the CLI test to verify it passes:
+- [x] Run the CLI test to verify it passes:
 
   ```
   python -m pytest tests/test_cli_work_project.py::test_cli_project_resolve_evidence_accept_carries_warrant -v
@@ -869,7 +1380,7 @@ edge — both out of scope here).
 
   Expected: PASSED.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_draft_verification.py tests/test_cli_work_project.py
@@ -895,31 +1406,49 @@ constant, and event shape. The closed `DECISIONS` enum
 validator is unchanged, exactly as the spec states.
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/operations.py` — extend the
-  `trusted_writer` import block (`:25-34`) with
-  `append_explicit_journal_event`; add `emit_explicit_disposition_event`
-  immediately after `emit_disposition_event` (`:146-164`).
-- Modify: `src/memoria_vault/runtime/knowledge.py` — extend the existing
-  module-level `from memoria_vault.runtime.operations import (...)` block
-  (`:25-29`; no cycle — operations does not import knowledge); call site at
-  the tail of `resolve_evidence_review`.
-- Modify: `tests/test_draft_verification.py` (imports `:1-25`; one new test).
+- Modify: `src/memoria_vault/runtime/trusted_writer.py` — add
+  `append_explicit_event_batch`, with the existing singular API delegating
+  to it.
+- Modify: `src/memoria_vault/runtime/operations.py` — add the pure
+  `build_disposition_event` payload builder and
+  `emit_explicit_disposition_event`; keep the existing context-bound emitter
+  delegating to the same builder.
+- Modify: `src/memoria_vault/runtime/knowledge.py` — batch the resolved row
+  with the disposition row using one timestamp (operations does not import
+  knowledge, so no cycle).
+- Modify: `tests/test_draft_verification.py`, `tests/test_journal_trust.py`,
+  `tests/test_operation_context.py`, `tests/test_operations.py`.
 
 **Interfaces:**
 - Consumes: `validate_disposition_event(payload) -> dict[str, Any]` and
   `DISPOSITION_EVENT_SCHEMA = "disposition.v1"`
   (`engine/empirical_events.py:13,148`);
-  `append_explicit_journal_event(vault, event, *, actor, machine)`
-  (`trusted_writer.py:215-236`).
+  `state._insert_journal_row_conn` and `append_jsonl` through the
+  explicit-provenance writer.
 - Produces: `emit_explicit_disposition_event(vault: Path, *, decision: str,
   item_type: str, item_id: str, actor: str, machine: str) -> dict[str, Any]`
-  (`runtime/operations.py`, public); `resolve_evidence_review` emits one
-  `disposition.v1` event (journal `event_type = "disposition"`) per action in
-  addition to its `resolve-evidence-review` event, and returns the latter.
+  and `append_explicit_event_batch(vault: Path, events:
+  Iterable[Mapping[str, Any]], *, actor: str, machine: str) -> list[dict[str,
+  Any]]`; `resolve_evidence_review` persists exactly one resolved row and one
+  `disposition.v1` row per action in one batch, then returns the resolved row.
+
+> **Adopted review amendment (2026-07-17):** The resolved row and its required
+> `disposition.v1` companion are one logical action, so they must not be
+> independently committed. Add an explicit-provenance batch append helper in
+> `trusted_writer` that validates/decorates every row before a single
+> workspace-lock / SQLite transaction, inserts all rows through
+> `state._insert_journal_row_conn`, writes one head anchor, then exports the
+> complete batch to JSONL. Keep `append_explicit_journal_event` as the
+> single-row delegation. Build and validate the disposition payload before the
+> batch; a failure on the second database insert rolls back both rows. Give the
+> resolved row and disposition row one shared `timestamp`, and derive defer's
+> `suppressed_until` from that same timestamp. A post-commit JSONL failure may
+> leave the paired authoritative DB rows for normal reconciliation, matching
+> the existing DB-first export contract.
 
 **Steps:**
 
-- [ ] Write the failing test. In `tests/test_draft_verification.py`, add
+- [x] Write the failing test. In `tests/test_draft_verification.py`, add
   `import json` after `from datetime import timedelta`, then append:
 
   ```python
@@ -951,7 +1480,7 @@ validator is unchanged, exactly as the spec states.
       assert {payload["item_id"] for payload in payloads} == {evidence_id}
   ```
 
-- [ ] Run the test to verify it fails:
+- [x] Run the test to verify it fails:
 
   ```
   python -m pytest tests/test_draft_verification.py::test_every_disposition_emits_disposition_v1_event -v
@@ -960,65 +1489,40 @@ validator is unchanged, exactly as the spec states.
   Expected: FAILS at the first assert with `[] == ['defer', 'edit', 'reject',
   'accept']` — no `disposition` events exist.
 
-- [ ] Write the minimal implementation.
+- [x] Review amendment — write failing batch tests. Add a second-insert fault
+  to prove both rows roll back, a JSONL-export fault to prove both
+  authoritative rows and the anchor survive for reconciliation, a one-export
+  assertion, a later-row provenance conflict asserting no mutation, and a
+  shared-timestamp assertion that fails if `knowledge.now_iso` is called twice
+  for one disposition action.
 
-  (a) In `src/memoria_vault/runtime/operations.py`, add
-  `append_explicit_journal_event,` to the `from
-  memoria_vault.runtime.trusted_writer import (...)` block (alphabetical,
-  before `append_journal_event`), then insert after `emit_disposition_event`:
+- [x] Run the amended tests to verify they fail before the batch API exists.
 
-  ```python
-  def emit_explicit_disposition_event(
-      vault: Path,
-      *,
-      decision: str,
-      item_type: str,
-      item_id: str,
-      actor: str,
-      machine: str,
-  ) -> dict[str, Any]:
-      """Append one disposition.v1 event created outside an operation envelope."""
-      from memoria_vault.engine.empirical_events import (
-          DISPOSITION_EVENT_SCHEMA,
-          validate_disposition_event,
-      )
+- [x] Write the minimal implementation.
 
-      event = validate_disposition_event(
-          {"decision": decision, "item_type": item_type, "item_id": item_id}
-      )
-      journal_event = {"event": "disposition", "schema": DISPOSITION_EVENT_SCHEMA, **event}
-      return append_explicit_journal_event(vault, journal_event, actor=actor, machine=machine)
-  ```
+  (a) In `trusted_writer.py`, make
+  `append_explicit_event_batch(vault, events, *, actor, machine)` validate
+  actor/machine, normalize the machine once, and decorate **all** rows before
+  acquiring the lock. Under one `state.workspace_lock`, reconcile an existing
+  export tail, open one `state.connect` transaction with `BEGIN IMMEDIATE`,
+  loop `state._insert_journal_row_conn`, then—only after the transaction has
+  committed—write the anchor and call `append_jsonl` once with the complete
+  row list. Let `append_explicit_journal_event` delegate to this API with a
+  singleton list.
 
-  (b) In `src/memoria_vault/runtime/knowledge.py`, add
-  `emit_explicit_disposition_event,` to the module-level `from
-  memoria_vault.runtime.operations import (...)` block (`:25-29`,
-  alphabetical), and replace `resolve_evidence_review`'s tail
+  (b) In `operations.py`, factor the schema validation into
+  `build_disposition_event(decision, item_type, item_id)`, returning
+  `{event: "disposition", schema: "disposition.v1", ...}`. Both the
+  context-bound and explicit single-event emitters delegate to that builder.
 
-  ```python
-      return append_explicit_journal_event(Path(vault), event, actor=actor, machine=machine)
-  ```
+  (c) In `knowledge.py`, call `now_iso()` once after record lookup, attach
+  that timestamp to the resolved event and its validated disposition payload,
+  derive defer's `suppressed_until` from it, and persist `[resolved,
+  disposition]` through the batch API. Return the first row. The clearance
+  reader still filters on `payload.operation = 'resolve-evidence-review'`, so
+  the companion event never pollutes hold-clearing.
 
-  with:
-
-  ```python
-      row = append_explicit_journal_event(Path(vault), event, actor=actor, machine=machine)
-      emit_explicit_disposition_event(
-          Path(vault),
-          decision=decision,
-          item_type="evidence-set",
-          item_id=evidence_id,
-          actor=actor,
-          machine=machine,
-      )
-      return row
-  ```
-
-  (The `_disposed_evidence_digests` query filters on
-  `payload.operation = 'resolve-evidence-review'`, so the additional
-  `disposition` events never pollute hold-clearing.)
-
-- [ ] Run the full seam and CLI suites to verify everything passes:
+- [x] Run the full seam and CLI suites to verify everything passes:
 
   ```
   python -m pytest tests/test_draft_verification.py tests/test_cli_work_project.py -v
@@ -1026,7 +1530,7 @@ validator is unchanged, exactly as the spec states.
 
   Expected: all pass.
 
-- [ ] Run the repo gate:
+- [x] Run the repo gate:
 
   ```
   python scripts/verify
@@ -1035,11 +1539,11 @@ validator is unchanged, exactly as the spec states.
   Expected: green. If a floor golden reports drift here, see the golden note
   below before touching anything.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
-  git add src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
-  git commit -m "feat(evidence): every resolve-evidence action emits disposition.v1" -m "Adds emit_explicit_disposition_event (explicit-provenance twin of the resolve-attention seam's helper - same validator, schema, and event shape; the context-bound writer requires a bound running request the keep-test CLI path does not have). item_type=evidence-set, item_id=ev-id, decision mapped 1:1; DECISIONS already holds all four, validator unchanged." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+  git add src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/runtime/operations.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py tests/test_journal_trust.py tests/test_operation_context.py tests/test_operations.py docs/superpowers/plans/2026-07-16-v2-evidence-review.md
+  git commit -m "feat(evidence): atomically journal evidence dispositions" -m "Each resolve-evidence action now persists its resolved row and disposition.v1 companion in one explicit-provenance batch with a shared timestamp. The batch validates every row before its transaction, rolls back together on an insert failure, and preserves paired authoritative rows for JSONL reconciliation after an export failure."
   ```
 
 ---
@@ -1071,10 +1575,9 @@ shift lines). Governing spec: §1 (queue union), §2 (honesty-card row schema), 
 `docs/superpowers/specs/2026-07-16-v2-evidence-review-design.md`. This section is
 **slice 1** of spec §9: queue assembly, the row payload, and the faceted endpoint.
 It emits **no** journal events and changes **no** seam behavior — dispositions are
-*read*, never written, here (slice 2 / V2R-C owns `defer`/`edit`/the reject flip and
-`disposition.v1` emission via `emit_disposition_event`,
-`src/memoria_vault/runtime/operations.py:146`, already exercised at the
-resolve-attention seam, `src/memoria_vault/runtime/integrity.py:1165-1167`).
+*read*, never written, here. V2R-A.1–A.4 own the four-decision seam, reject flip,
+warrant behavior, and atomic disposition batching; B only applies the same
+accept-only clearing rule in its pure read model.
 
 ## Execution-order dependencies (cross-plan facts)
 
@@ -1087,7 +1590,8 @@ resolve-attention seam, `src/memoria_vault/runtime/integrity.py:1165-1167`).
   real-HTTP-server auth test pattern (U3-ENG.6). Do not start V2R-B until U3-ENG is
   merged.
 - **View payload envelope** (surfaces plan, binding cross-section contract 3):
-  `{ok: true, view: {version: "view-spec.v1", kind: <kind>, blocks: [...]}}`. This
+  `{ok: true, api_version: "engine-read-api.v1", view: {version: "view-spec.v1",
+  kind: <kind>, blocks: [...]}, facets: {...}}`. This
   section adds `kind: "evidence-review"` on that machinery, wrapping via the shipped
   `_view(kind, blocks)` helper (`src/memoria_vault/engine/api.py:715-716`).
 - **Soft: Plan 22 S35.4** (`docs/superpowers/plans/2026-07-15-alpha22-substrate-trust.md:2498`)
@@ -1100,7 +1604,7 @@ resolve-attention seam, `src/memoria_vault/runtime/integrity.py:1165-1167`).
 - **Soft: Plan 22 S68.3** (`evidence-minted` journal events,
   `2026-07-15-alpha22-substrate-trust.md:3229`) supplies row age. Before S68.3
   lands, `age_days` is honestly `null` — no fabricated timestamps.
-- **Independent of slice 2 (V2R-C, the reject flip):** the queue derives holds from
+- **Independent of V2R-A's reject flip:** the queue derives holds from
   stored evidence rows (`state`/`review_required`), not from `verify_project_draft`'s
   disposition-suppressed findings list, so rejected rows stay queued (rendered
   rejected) whether or not the verify-side flip has landed.
@@ -1111,7 +1615,7 @@ implemented as a `min_age_days` filter over first `evidence-minted` timestamps
 age 0 by the filter; no per-age-bucket denominator is emitted.
 
 SPEC GAP: spec §2 fields 4–6 have no producer (spec §7 bans model judgment in routing
-and rendering) — the analysis block always carries the deterministic `what_tipped_it`
+and rendering) — the analysis block always carries the deterministic `tipped_by`
 routing factor; `argument_for`/`argument_against` (both-or-neither enforced
 structurally) and coarse `certainty` are present-only pass-throughs with no writer in
 this plan.
@@ -1123,10 +1627,9 @@ draft text; `evidence-id-duplicate`, the planned `evidence-source-stale`,
 `no-evidence-set`, and structural/number findings surface only through verify, whose
 export-gate role is unchanged.
 
-SPEC GAP: the surfaces plan's binding contract 3 (`{ok, view:{...}}`) contradicts the
-U3-ENG task text's flat `{ok, spec, blocks}` payload — this section follows the
-binding contract; if executed U3-ENG shipped the flat shape, swap the single
-`_read_payload(view=_view(...))` call in Task V2R-B.4 to match the shipped envelope.
+SPEC GAP resolved: the surfaces plan's binding contract 3 is authoritative. Flat
+`{ok, spec, blocks}` payloads are superseded; repair U3 before B rather than adding a
+fallback here.
 
 **Goldens:** every task here is a read or a hash-preserving refactor; no journal
 event is written or reshaped → **no floor-golden regeneration** (floor goldens hash
@@ -1134,77 +1637,38 @@ journal output only, `tests/floor_lib.py`).
 
 ## Payload contract (what later sections — pane front, CLI front — consume)
 
-`GET /v1/views/evidence-review` — authenticated (transport-wide bearer check,
-`src/memoria_vault/runtime/http_transport.py:63`), optional `read_scope`/`scope`
-narrowing, facet query params `routing_type` (`implicit|multi-hop|incomplete`),
-`project`, `min_age_days` (positive int), `batch` (positive int, default 10).
-Response:
+`GET /v1/views/evidence-review` is authenticated, accepts optional
+`read_scope`/`scope` plus `routing_type` (`implicit|multi-hop|incomplete`),
+`project`, `min_age_days`, and `batch`, and returns
+`{ok, api_version, view: {version: "view-spec.v1", kind: "evidence-review",
+blocks}, facets}`. Facet denominators cover the whole scope-visible queue before
+filtering/batching; `shown` counts post-filter, post-batch **rows**, never child
+blocks. Deferred rows are outside both blocks and denominators until the next UTC day;
+rejected rows remain visible.
 
-```json
-{
-  "ok": true,
-  "api_version": "engine-read-api.v1",
-  "view": {
-    "version": "view-spec.v1",
-    "kind": "evidence-review",
-    "blocks": [ <card>, <evidence-list>, <text>, <card collapsed>, ...,
-                <srd-gap card>... ]
-  },
-  "facets": {
-    "routing_type": {"implicit": 1, "multi-hop": 1, "incomplete": 1},
-    "project": {"projects/project-alpha/project.md": 3},
-    "kind": {"evidence-set": 3, "srd-gap": 0},
-    "total": 3,
-    "shown": 3,
-    "batch": 10
-  }
-}
-```
+Each evidence-set row is exactly one top-level `card`:
 
-Facet counts are computed over the **whole scope-visible queue before filtering and
-batching** (spec §6's honest denominators; `shown` is the post-filter, post-batch
-block-row count). Deferred rows are outside both the blocks and the denominators
-until the next UTC day; rejected rows are inside both.
+- Parent: `id=evidence_id`, `ref=block_ref`, `title=claim_text`,
+  `kind_line="evidence-review"`, `review_kind="evidence-set"`,
+  `evidence_id`, `project`, `routing_type`, `reviewable`, `disposition`,
+  `item_count`, `age_days`, `age_s`, `age_label`, `body_data`, and
+  present-only `disposition_reason`, `warrant`, `blocked_by`, `cure`.
+- Semantic children: `<ev>-grounds` `evidence-list`, then `<ev>-routing`
+  `text`; a reviewable card appends exactly one `<ev>-actions` `action-row`
+  containing Accept, Reject, Edit, and Defer in that order. Every action is
+  `resolve-evidence` with `{evidence_id, decision}`, and none is primary.
+- Analysis is parent-owned and present only for reviewable holds: paired
+  `argument_for`/`argument_against`, `tipped_by`, and `certainty`.
+  The U3 renderer appends it after all semantic children; V2R-D.2 moves it into
+  the collapsed disclosure. There is no `<ev>-analysis` card, `collapsed`
+  key, `what_tipped_it` field, or verdict line.
 
-**Per reviewable evidence row, exactly four blocks in fixed order** (spec §2 fields
-1–3 = evidence, before fields 4–6 = analysis; structural, spec §3):
-
-1. `card` — `id` = evidence id (`ev-<8hex>`), `ref` = block_ref, `review_kind:
-   "evidence-set"`, `evidence_id`, `project`, `routing_type`, `reviewable: true`,
-   `disposition: "open"|"rejected"`, `item_count`, `age_days` (int or null),
-   `body_data: {kind: "untrusted_text", text: <claim block text verbatim>}` (field
-   1). Present-only: `disposition_reason`, `warrant` (rides the latest disposition
-   event when slice 5 records it).
-2. `evidence-list` — `id` = `<ev>-grounds`, `items`: resolved previews (field 2):
-   source-span `{ref, kind: "source-span", work_id, anchor, resolves,
-   excerpt?}`; nested set `{ref, kind: "evidence-set", resolves, expansion?:
-   {evidence_type, state, item_count}}` (one level, with state); code grounds
-   `{ref, kind: "code-warrant", run_id, artifact_id, output_sha256, resolves,
-   state}`.
-3. `text` — `id` = `<ev>-routing`, `text` = the derivation rule verbatim
-   (`implicit`, `multi-hop`, or `evidence-incomplete: <failing item> does not
-   resolve`) (field 3).
-4. `card` — `id` = `<ev>-analysis`, **`collapsed: true`** (spec §3
-   independence-first), `what_tipped_it` (field 5, deterministic routing factor);
-   present-only and both-or-neither `argument_for`/`argument_against` (field 4);
-   present-only `certainty` (field 6). **No `verdict` key exists on any block and no
-   `action-row` blocks are emitted by this slice** (field 7; actions arrive with the
-   fronts after the slice-2 seam).
-
-**Read-only cure rows** (permanent blocks `evidence-text-drift` /
-`evidence-text-unbound`): three blocks — `card` (`reviewable: false`, `blocked_by:
-[{kind, reason}]`, `cure`), `evidence-list`, `text` (the block reason verbatim) — and
-**no analysis block**.
-
-**srd-gap rows** (spec §1 union member 2, C1-gated): open attention cards with
-`attention_kind: "srd-gap"` render as single trailing `card` blocks via U3-ENG's
-`_attention_view_card_block`; the `facets.kind["srd-gap"]` key is always present
-(reserved, 0 until C1 mints cards). srd-gap cards appear only on the unfiltered view
-(they carry no routing type/project/evidence age).
-
-All block kinds used (`card`, `evidence-list`, `text`) are members of U3-ENG.5's
-closed `VIEW_BLOCK_KINDS` catalog — zero new block kinds (spec §1, "the same
-five-block catalog U3 ships").
+A permanent read-only cure card has only grounds and routing children and no
+analysis, even when its input row also contains holds. Trailing SRD-gap cards are
+already-normalized U3 cards with `kind_line: "srd-gap"`; raw
+`attention_kind` never crosses this public boundary. They remain whole top-level
+cards after evidence rows and appear only on an unfiltered view. All emitted kinds
+remain in U3's five-kind catalog.
 
 ---
 
@@ -1259,7 +1723,7 @@ the extractor out; the hash wrapper delegates — bindings and goldens unchanged
   BLOCK_REF = "projects/project-alpha/draft.md#^blk-11111111"
   CONTENT = (
       "An implicit synthesis claim. ^blk-11111111 "
-      "%%ev: ev-11111111 type=implicit state=evidence-incomplete review=true items=%%\n"
+      "%%ev: ev-11111111 items=%%\n"
   )
   TODAY = datetime.date(2026, 7, 16)
 
@@ -1330,7 +1794,235 @@ the extractor out; the hash wrapper delegates — bindings and goldens unchanged
 
 ---
 
-### Task V2R-B.2: pure queue assembly over rows + disposition events
+## V2R-B executable replacement tasks
+
+The following four task bodies are the executable V2R-B plan. They replace the
+historical B.2–B.5 drafts below, which remain only to preserve the reasoning trail.
+Do not mix an interface, fixture, or assertion from a historical body into these
+tasks. All marker fixtures below and in their tests use post-Plan-22 grammar:
+`%%ev: <id> items=...%%`; all code references use `code-grounds:` plus
+`parse_code_grounds_ref` / `code_grounds_complete`.
+
+### Task V2R-B.2: pure evidence-set queue, facets, and filters
+
+Create `runtime/evidence_review.py` with an evidence-set-only pure assembler:
+
+```python
+assemble_evidence_review_queue(
+    drafts, dispositions, *, minted_at=None, today
+) -> list[dict[str, Any]]
+queue_facets(queue) -> dict[str, Any]
+filter_queue(queue, *, routing_type="", project="", min_age_days=0) -> list[dict[str, Any]]
+```
+
+`assemble_evidence_review_queue` has no `srd_cards` parameter and never emits an
+SRD row. It retains the A-owned latest-event/accept-only disposition rule, evidence
+age from the first `evidence-minted` timestamp, current permanent-block behavior,
+and all v2 grounds resolution. Its imports and helper names must use
+`parse_code_grounds_ref`, `code_grounds_complete`, `code-grounds:`, and
+`state._derived_evidence_row`; the retired warrant forms are forbidden.
+
+`queue_facets` reports only evidence-set denominators:
+`{"routing_type": ..., "project": ..., "total": <evidence count>}`. It has no
+`kind` facet. `filter_queue` accepts only `implicit`, `multi-hop`, or `incomplete`;
+requires `min_age_days >= 0` (zero means no filter; an unknown age counts as zero);
+and applies all active facets conjunctively. Its project helper accepts bare
+`<name>`, `projects/<name>`, and `projects/<name>/project.md`, normalizes each to
+`projects/<name>/project.md`, and rejects every other spelling.
+
+Tests in `test_evidence_review_queue.py` must cover: the existing disposition,
+drift, age, and facet cases; all three accepted project spellings; an invalid project
+path; and negative age rejection. Delete the old SRD union/facet test—the view alone
+owns SRD cards.
+
+**Executable TDD slice:**
+
+- [ ] **Files:** create `src/memoria_vault/runtime/evidence_review.py`; create or
+  modify `tests/test_evidence_review_queue.py`.
+- [ ] **Red:** add
+  `test_queue_is_evidence_set_only_and_uses_v2_grounds`,
+  `test_queue_facets_are_evidence_denominators_only`,
+  `test_filter_queue_normalizes_the_three_project_spellings`, and
+  `test_filter_queue_rejects_invalid_project_and_negative_age`; run
+  `python -m pytest tests/test_evidence_review_queue.py -q` and confirm the
+  missing module/behavior fails before implementation.
+- [ ] **Green:** implement the pure assembler, facet calculation, canonical project
+  helper, and conjunctive filter without importing `engine.api`, HTTP transport, or
+  SRD helpers. Re-run the focused command, then
+  `python -m pytest tests/test_evidence_review_queue.py tests/test_evidence_sets.py -q`.
+- [ ] **Commit:** stage only the two files and commit
+  `feat(evidence): assemble evidence-review queue and evidence facets`.
+
+### Task V2R-B.3: nested evidence-review cards and grounds previews
+
+Replace the old flat-block renderer with:
+
+```python
+evidence_review_card(row: Mapping[str, Any]) -> dict[str, Any]
+```
+
+It consumes one projected evidence DTO row whose `items` are preview dictionaries
+and returns exactly one top-level U3 `card`. The parent has `id=evidence_id`, `ref`,
+`title=claim_text`, `kind_line=routing`, deterministic `age_label`, `evidence_id`,
+`project`, `reviewable`, and present-only `latest_decision`, `warrant`, `cure`, and
+`blocked_by`. Its child blocks, in order, are:
+
+1. `{"kind": "evidence-list", "id": f"{id}-grounds", "items": previews}`;
+   every preview has a `label`, defaulting to its excerpt or ref.
+2. `{"kind": "text", "id": f"{id}-routing", "text": routing_reason}`.
+3. Only for reviewable rows, `{"kind": "action-row", "id": f"{id}-actions",
+   "ref": ref, "actions": [...]}` containing Accept (primary), Reject, Edit, and
+   Defer. Each action uses `operation_id="resolve-evidence"` and payload
+   `{"evidence_id": id, "decision": <decision>}`.
+
+For reviewable rows, copy present-only analysis fields `argument_for`,
+`argument_against`, `tipped_by`, and `certainty` onto the parent card. Permanent cure
+cards omit all four analysis fields and the action row. Never produce a flat child
+analysis card, `verdict`, `what_tipped_it`, or an SRD card.
+
+The replacement tests assert one card; child kinds
+`["evidence-list", "text", "action-row"]`; exact payloads for all four actions;
+and, for a cure row, `["evidence-list", "text"]` plus no action/analysis fields.
+Delete every assertion of flat sequences such as
+`["card", "evidence-list", "text", "card"]`.
+
+**Executable TDD slice:**
+
+- [ ] **Files:** modify `src/memoria_vault/runtime/evidence_review.py` and
+  `tests/test_evidence_review_queue.py`.
+- [ ] **Red:** add
+  `test_evidence_review_card_has_ordered_nested_semantic_children` and
+  `test_evidence_review_cure_card_omits_actions_and_analysis`; run
+  `python -m pytest tests/test_evidence_review_queue.py -q` and confirm the
+  old flat shape fails the assertions.
+- [ ] **Green:** implement `evidence_review_card` from the DTO only. Assert exact
+  action payloads and child order; do not add a second collector or renderer-side
+  routing decision. Re-run the focused command.
+- [ ] **Commit:** stage only those two files and commit
+  `feat(evidence): render nested evidence-review cards`.
+
+### Task V2R-B.4: one direct collector plus one view projection
+
+Define and test these helpers in `engine/api.py` before wiring HTTP:
+
+```python
+read_evidence_review_queue(workspace, *, routing_type="", project="",
+                           min_age_days=0, batch=10, read_scope=None) -> dict[str, Any]
+read_evidence_review_view(workspace, *, routing_type="", project="",
+                          min_age_days=0, batch=10, read_scope=None) -> dict[str, Any]
+```
+
+`read_evidence_review_queue` is the sole engine-direct collector. It reads drafts,
+calls the pure assembler exactly once, facets before filters, filters using B.2,
+attaches ground previews, then maps each evidence row through
+`_evidence_review_cli_row`. That mapper performs: `block_ref → ref`,
+`project_path → project`, `routing_type → routing`, latest disposition →
+`latest_decision`, raw items → labeled previews, plus `item_count`,
+`routing_reason`, `reviewable`, `cure`, `age_days`, `warrant`, and `analysis`.
+It returns evidence rows only with `{ok, rows, total, facet_totals, batch}`;
+`batch=0` means all rows only here, and negative batch or age raises.
+
+Scope is applied before any queue work. Normalize `read_scope`, then build
+`scoped_drafts = [draft for draft in drafts if _scope_allows(draft["draft_path"], read_scope)]`
+and pass only `scoped_drafts` to the pure assembler. An out-of-scope draft must
+therefore be absent from assembly, evidence denominators, filters, previews, and
+batches—not merely hidden after rendering.
+
+`read_evidence_review_view` requires `batch > 0`, calls that collector once, maps
+each DTO row through `evidence_review_card`, and must not call the pure assembler.
+It obtains SRD attention cards only after the evidence mapping and filters every
+candidate with `_attention_in_scope(card, read_scope)` before either counting or
+rendering it. Append only scope-visible SRD cards after evidence cards when **no**
+routing/project/min-age filter is active; append none when any filter is active.
+Batch caps evidence rows only. Its view facets begin as a copy of the collector's
+scoped, pre-filter evidence denominators—retaining `routing_type`, `project`, and
+the requested positive `batch`—then merge SRD counts exactly as follows:
+
+```python
+evidence_total = facets["total"]
+kind = {"evidence-set": evidence_total, "srd-gap": srd_total}
+total = evidence_total + srd_total
+shown = shown_evidence + rendered_srd
+```
+
+`srd_total` and `rendered_srd` are scope-visible SRD counts on an unfiltered view,
+and both are zero whenever a routing/project/age filter is active. The merge replaces
+only `total` and adds `kind`/`shown`; it must not drop the evidence denominator maps.
+
+Tests cover direct `batch=0`, view positive batch, one assembler call, no SRD in CLI,
+correct merged `routing_type`/`project`/`kind`/`total`/`shown` facets, and no SRD on
+filtered views. Add a direct-scope test that proves an out-of-scope draft is never
+passed to the assembler and excluded from its facet denominators, plus a view-scope
+test proving both evidence and SRD cards are scoped before counts and rendering. Test
+the nested cards rather than a flat block list.
+
+**Executable TDD slice:**
+
+- [ ] **Files:** modify `src/memoria_vault/engine/api.py`; create or modify
+  `tests/test_evidence_review_view.py`; register its test level in
+  `tests/conftest.py` if the repository's existing test registration requires it.
+- [ ] **Red:** add
+  `test_read_evidence_review_queue_scopes_before_assembly_and_facets`,
+  `test_read_evidence_review_view_scopes_evidence_and_srd_before_counts`, and
+  `test_evidence_review_view_merges_all_evidence_facets`; run
+  `python -m pytest tests/test_evidence_review_view.py -q` and observe the direct
+  collector/view failures.
+- [ ] **Green:** add exactly one collector and one view projection, with the scope
+  filter before assembly and the literal facet merge above. Re-run
+  `python -m pytest tests/test_evidence_review_queue.py tests/test_evidence_review_view.py -q`.
+- [ ] **Commit:** stage `engine/api.py`, the view test, and only any required
+  `conftest.py` registration; commit
+  `feat(engine): collect and project scoped evidence-review views`.
+
+### Task V2R-B.5: HTTP registration and nonnegative age parsing
+
+Register only `GET /v1/views/evidence-review` and its floor contract. Preserve
+positive-only `_int_query` for `batch`; add a local parser for age:
+
+```python
+def _nonnegative_int_query(query: dict[str, list[str]], key: str, default: int) -> int:
+    value = _one(query, key).strip()
+    if not value:
+        return default
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{key} must be an integer") from exc
+    if parsed < 0:
+        raise ValueError(f"{key} must be nonnegative")
+    return parsed
+```
+
+The route passes `min_age_days=_nonnegative_int_query(query, "min_age_days", 0)` and
+`batch=_int_query(query, "batch", 10)`. Tests prove explicit `min_age_days=0` returns
+200, `min_age_days=-1` returns 400, and `batch=0` returns 400. HTTP response tests
+select evidence parent cards and assert their nested child kinds/actions; never assert
+the retired flat sequence. Add an authenticated `?scope=` regression with one
+out-of-scope evidence draft and one out-of-scope SRD card: neither may reach the
+response, and scoped `routing_type`, `project`, `kind`, `total`, and `shown` facets
+must reflect only the in-scope queue universe.
+
+**Executable TDD slice:**
+
+- [ ] **Files:** modify `src/memoria_vault/engine/surface_contract.py` and
+  `src/memoria_vault/runtime/http_transport.py`; modify
+  `tests/test_surface_contract.py`, `tests/test_http_transport.py`, and
+  `tests/floor_lib.py`; modify `tests/test_evidence_review_view.py` for the
+  end-to-end response assertion.
+- [ ] **Red:** add `test_nonnegative_int_query_accepts_zero_and_rejects_negative`,
+  `test_evidence_review_route_rejects_zero_batch`, and
+  `test_evidence_review_http_scope_excludes_evidence_and_srd`; run the focused
+  surface/transport/view tests and confirm the parser or route behavior fails first.
+- [ ] **Green:** register only the GET view contract and route, parse
+  `min_age_days` with the local nonnegative helper, pass `read_scope` unchanged to
+  the view, and update the floor route registry without adding a writer surface.
+  Re-run `python -m pytest tests/test_surface_contract.py tests/test_http_transport.py tests/test_evidence_review_view.py -q`.
+- [ ] **Commit:** stage only the listed source/test/floor files and commit
+  `feat(http): serve scoped evidence-review view`.
+
+---
+
+### Historical draft — V2R-B.2: pure queue assembly over rows + disposition events
 
 The queue function is pure (spec §1's union, one rule per test): PI-clearable holds
 without a hold-clearing disposition; **only a digest-matching accept clears**
@@ -1534,7 +2226,7 @@ srd-gap cards union in behind a reserved facet.
 
 
   def test_queue_appends_srd_gap_cards_and_reserves_facet() -> None:
-      card = {"id": "inbox_srd-gap.md", "kind": "card", "attention_kind": "srd-gap"}
+      card = {"id": "inbox_srd-gap.md", "kind": "card", "kind_line": "srd-gap", "blocks": []}
 
       queue = _queue(srd_cards=[card])
       facets = evidence_review.queue_facets(queue)
@@ -1872,7 +2564,12 @@ srd-gap cards union in behind a reserved facet.
 
 ---
 
-### Task V2R-B.3: honesty-card row blocks and grounds-item previews
+### Historical draft — V2R-B.3: honesty-card row blocks and grounds-item previews
+
+> **Execution override:** The 2026-07-29 reconciliation amendment replaces the
+> flat row/analysis-card tests and implementation below. Follow its one-card
+> nested grammar and replacement tests; retained flat snippets are drafting
+> history only.
 
 Spec §2's seven fields as view-spec.v1 blocks, present-only, evidence blocks (1–3)
 strictly before the analysis block (4–6), analysis collapsed by default (spec §3),
@@ -1985,12 +2682,12 @@ no verdict and no pre-selected action (field 7).
 
 
   def test_srd_gap_card_renders_after_evidence_rows() -> None:
-      card = {"id": "inbox_srd-gap.md", "kind": "card", "attention_kind": "srd-gap"}
+      card = {"id": "inbox_srd-gap.md", "kind": "card", "kind_line": "srd-gap", "blocks": []}
 
       blocks = evidence_review.evidence_review_blocks(_queue(srd_cards=[card]))
 
       assert blocks[-1] == card
-      assert blocks[-1]["attention_kind"] == "srd-gap"
+      assert blocks[-1]["kind_line"] == "srd-gap"
 
 
   def test_item_previews_resolve_span_nested_and_code(tmp_path) -> None:
@@ -2252,7 +2949,11 @@ no verdict and no pre-selected action (field 7).
 
 ---
 
-### Task V2R-B.4: `read_evidence_review_view` — the engine collector
+### Historical draft — V2R-B.4: `read_evidence_review_queue` + `read_evidence_review_view` — shared engine collector
+
+> **Execution override:** Inspect only top-level cards and their nested
+> `blocks` under the reconciliation amendment; do not restore flat sibling
+> blocks or a second assembler from the historical snippets below.
 
 Wires the pure machinery to a workspace: enumerate checked projects, read drafts
 (read-only — no rebuild, no context), load dispositions and minted timestamps, union
@@ -2278,11 +2979,22 @@ only, and wrap in the binding view envelope.
   (`src/memoria_vault/runtime/trusted_writer.py:215`, tests only);
   `compose_project_draft` / `verify_project_draft` via `tests/helpers.py`
   `call_with_context` (helpers.py:71), `write_checked_concept` (helpers.py:283).
+- Produces: **`engine_api.read_evidence_review_queue(workspace: Path, *,
+  routing_type: str = "", project: str = "", min_age_days: int = 0, batch: int = 10,
+  read_scope: list[str] | None = None) -> dict[str, Any]`** — the single engine-direct
+  collector/projection for CLI rows, returning evidence-set rows only. For this direct
+  reader only, `batch=0` means all rows; the HTTP view remains positive-only.
 - Produces: **`engine_api.read_evidence_review_view(workspace: Path, *,
   routing_type: str = "", project: str = "", min_age_days: int = 0, batch: int = 10,
   read_scope: list[str] | None = None) -> dict[str, Any]`** returning the payload
   contract above (`{ok, api_version, view: {version, kind: "evidence-review",
-  blocks}, facets}`).
+  blocks}, facets}`) from the same collector plus view-only SRD-gap cards.
+
+> **Implementation constraint:** define and test `read_evidence_review_queue` before
+> the view. It returns the DTO C names (`routing`, `routing_reason`, `item_count`,
+> `latest_decision`, `cure`, and `analysis`) and the view reuses it instead of invoking
+> `assemble_evidence_review_queue` independently. This removes the former two-reader
+> drift and keeps SRD-gap union out of CLI rows.
 
 **Steps:**
 
@@ -2581,7 +3293,7 @@ only, and wrap in the binding view envelope.
 
       last = payload["view"]["blocks"][-1]
       assert last["kind"] == "card"
-      assert last["attention_kind"] == "srd-gap"
+      assert last["kind_line"] == "srd-gap"
       assert payload["facets"]["kind"] == {"evidence-set": 1, "srd-gap": 1}
 
 
@@ -2601,6 +3313,15 @@ only, and wrap in the binding view envelope.
 
 - [ ] Write the minimal implementation in `src/memoria_vault/engine/api.py`.
 
+  **Amended implementation order:** first implement and test
+  `read_evidence_review_queue` as the evidence-set-only collector/projection. It
+  applies `routing_type`, `project`, and `min_age_days`, returns all rows for direct
+  `batch=0`, attaches previews, and produces C's DTO fields. Then make
+  `read_evidence_review_view` call it with the HTTP-positive batch semantics, convert
+  each row to the nested U3 card described above, and append the view-only SRD-gap
+  cards. The old standalone `assemble_evidence_review_queue` body below is a historic
+  sketch and must not create a second collector.
+
   Add to the imports (after `from memoria_vault.runtime import state`, line 10;
   `import datetime` already exists via U3-ENG.1):
 
@@ -2612,6 +3333,49 @@ only, and wrap in the binding view envelope.
   at api.py:155-164) add:
 
   ```python
+  def read_evidence_review_queue(
+      workspace: Path,
+      *,
+      routing_type: str = "",
+      project: str = "",
+      min_age_days: int = 0,
+      batch: int = 10,
+      read_scope: list[str] | None = None,
+  ) -> dict[str, Any]:
+      """Return the engine-direct, evidence-set-only DTO used by the CLI."""
+      if min_age_days < 0 or batch < 0:
+          raise ValueError("min_age_days and batch must be nonnegative")
+      workspace = Path(workspace)
+      drafts = [
+          draft for draft in _evidence_review_drafts(workspace)
+          if _scope_allows(draft["draft_path"], read_scope)
+      ]
+      queue = evidence_review.assemble_evidence_review_queue(
+          drafts,
+          evidence_review.evidence_dispositions(workspace),
+          minted_at=evidence_review.evidence_minted_at(workspace),
+          today=datetime.datetime.now(datetime.timezone.utc).date(),
+      )
+      facets = evidence_review.queue_facets(queue)
+      selected = evidence_review.filter_queue(
+          queue,
+          routing_type=routing_type,
+          project=_canonical_project_filter(workspace, project),
+          min_age_days=min_age_days,
+      )
+      evidence_rows = [row for row in selected if row.get("kind") == "evidence-set"]
+      shown = evidence_rows if batch == 0 else evidence_rows[:batch]
+      _attach_item_previews(workspace, shown)
+      rows = [_evidence_review_cli_row(row) for row in shown]
+      return {
+          "ok": True,
+          "rows": rows,
+          "total": len(evidence_rows),
+          "facet_totals": facets,
+          "batch": batch,
+      }
+
+
   def read_evidence_review_view(
       workspace: Path,
       *,
@@ -2621,38 +3385,25 @@ only, and wrap in the binding view envelope.
       batch: int = 10,
       read_scope: list[str] | None = None,
   ) -> dict[str, Any]:
-      workspace = Path(workspace)
-      drafts = [
-          draft
-          for draft in _evidence_review_drafts(workspace)
-          if _scope_allows(draft["draft_path"], read_scope)
-      ]
-      srd_cards = [
-          _attention_view_card_block(card)
-          for card in _attention_cards(workspace)
-          if card["kind"] == "srd-gap"
-          and card["status"] == "open"
-          and _attention_in_scope(card, read_scope)
-      ]
-      queue = evidence_review.assemble_evidence_review_queue(
-          drafts,
-          evidence_review.evidence_dispositions(workspace),
-          minted_at=evidence_review.evidence_minted_at(workspace),
-          srd_cards=srd_cards,
-          today=datetime.datetime.now(datetime.timezone.utc).date(),
+      """Wrap the shared DTO in the nested view-spec.v1 card contract."""
+      if batch <= 0:
+          raise ValueError("batch must be positive for the HTTP view")
+      collected = read_evidence_review_queue(
+          workspace,
+          routing_type=routing_type,
+          project=project,
+          min_age_days=min_age_days,
+          batch=batch,
+          read_scope=read_scope,
       )
-      facets = evidence_review.queue_facets(queue)
-      selected = evidence_review.filter_queue(
-          queue, routing_type=routing_type, project=project, min_age_days=min_age_days
-      )
-      batch = max(1, int(batch))
-      shown = selected[:batch]
-      _attach_item_previews(workspace, shown)
-      facets.update({"shown": len(shown), "batch": batch})
-      return _read_payload(
-          view=_view("evidence-review", evidence_review.evidence_review_blocks(shown)),
-          facets=facets,
-      )
+      srd_cards = _evidence_review_srd_gap_cards(Path(workspace), read_scope)
+      blocks = [
+          _evidence_review_nested_card(row)
+          for row in collected["rows"]
+      ] + srd_cards
+      facets = dict(collected["facet_totals"])
+      facets.update({"shown": len(blocks), "batch": batch})
+      return _read_payload(view=_view("evidence-review", blocks), facets=facets)
   ```
 
   After `_attention_in_scope` (api.py:709-712; below the U3-ENG.1 helper block) add:
@@ -2708,7 +3459,7 @@ only, and wrap in the binding view envelope.
 
 ---
 
-### Task V2R-B.5: register `GET /v1/views/evidence-review` and prove it through the real HTTP server
+### Historical draft — V2R-B.5: register `GET /v1/views/evidence-review` and prove it through the real HTTP server
 
 Mirrors U3-ENG.4's registration (surface action → `_read` branch → floor ARG_TABLE)
 and U3-ENG.6's real-server auth proof.
@@ -2943,19 +3694,19 @@ journal by `review_telemetry_summary`, never synthesized as fake point-in-time e
 
 ## Cross-section interface contract (MUST reconcile at plan assembly)
 
-V2R-C consumes these exact signatures. **Execution order: V2R-A → V2R-B → V2R-C**
-(and Plan 22 S35.4 before V2R-A — see the grep gate in V2R-C.5).
+V2R-C consumes these exact signatures. **Execution order: V2R-A → (after U3-ENG and
+the S35.4 grep decision) V2R-D.1 → V2R-B → V2R-C.**
 
 1. **From V2R-B (slice 1), consumed directly — engine call, no HTTP (spec §8 keep-test):**
 
    ```python
-   engine_api.evidence_review_queue(
+   engine_api.read_evidence_review_queue(
        workspace: Path,
        *,
        routing_type: str = "",      # "" | "implicit" | "multi-hop" | "incomplete"
        project: str = "",           # project rel-path filter, e.g. "projects/project-alpha"
-       max_age_days: int | None = None,
-       batch: int = 10,             # batch <= 0 returns all rows
+       min_age_days: int = 0,
+       batch: int = 10,             # only internal batch=0 returns all rows
    ) -> dict[str, Any]
    ```
 
@@ -2979,9 +3730,9 @@ V2R-C consumes these exact signatures. **Execution order: V2R-A → V2R-B → V2
    `evidence_id`, `decision`, `reason`, `items_sha256` (S35.4), `warrant` (accept only;
    raises `ValueError` when warrant text rides a non-accept decision), raises
    `ValueError("unknown evidence id: …")` for ids with no evidence-set record (S35.4),
-   and emits one `disposition.v1` event per action via `emit_disposition_event`
-   (`runtime/operations.py:146` — the resolve-attention helper, reused for this seam)
-   with `item_type="evidence-set"`, `item_id=ev-<8hex>`.
+   and atomically batches one `disposition.v1` companion per action, built by
+   `build_disposition_event`, with `item_type="evidence-set"`,
+   `item_id=ev-<8hex>`.
 
 3. **From Plan 22 S35.4** (`docs/superpowers/plans/2026-07-15-alpha22-substrate-trust.md`):
    `_disposed_evidence_ids` (`knowledge.py:3241-3251` on main) is REPLACED by
@@ -2989,11 +3740,12 @@ V2R-C consumes these exact signatures. **Execution order: V2R-A → V2R-B → V2
    `_evidence_items_sha256(items: Iterable[str]) -> str`. V2R-C.5 (accept-voided reopens)
    is written against the **digests** form and gates on a grep (step 1 there).
 
-4. **U3 view machinery is NOT consumed.** `GET /v1/views/evidence-review`,
+4. **U3 view machinery is not called by the CLI.** `GET /v1/views/evidence-review`,
    `VIEW_BLOCK_KINDS`, and the pane are U3-ENG/U3-PLUG products
    (`docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md:6421-7226`) plus
    V2R-B's endpoint slice; the CLI front reads the queue rows directly, which is exactly
-   the spec §8 keep-test ("no server, direct engine calls"). No ordering dependency on U3.
+   the spec §8 keep-test ("no server, direct engine calls"). It still waits for U3-ENG
+   because B's shared collector is deliberately one U3-aligned implementation.
 
 ## Produces (what later sections may consume)
 
@@ -3032,21 +3784,43 @@ exercise. The only pinned-surface change is the exact CLI-command set
 - Modify: `tests/test_cli.py` (exact command-surface set, lines 73–146)
 
 **Interfaces:**
-- Consumes: `engine_api.evidence_review_queue(workspace, *, routing_type="", project="",
-  max_age_days=None, batch=10) -> dict[str, Any]` (V2R-B, contract item 1);
+- Consumes: `engine_api.read_evidence_review_queue(workspace, *, routing_type="", project="",
+  min_age_days=0, batch=10) -> dict[str, Any]` (V2R-B, contract item 1);
   `_common(parser)` (`cli.py:560`), `_workspace(args) -> Path` (`cli.py:2130`),
   `_emit(payload, args) -> int` (`cli.py:3092`); test fixtures
   `write_checked_concept`/`call_with_context`/`init_git` (`tests/helpers.py:283,71`,
   import pattern per `tests/test_empirical_events.py:18-23`) and
   `knowledge.compose_project_draft` (`runtime/knowledge.py:1965`).
 - Produces: `memoria review list --workspace W [--type implicit|multi-hop|incomplete]
-  [--project P] [--max-age-days N] [--batch N] [--json|--quiet]`; handler
+  [--project P] [--min-age-days N] [--batch N] [--json|--quiet]`; handler
   `_cmd_review_list(args) -> int`; helpers `_review_summary_row(row) -> dict`,
   `_truncate(text, width=60) -> str`. JSON payload:
   `{"ok": True, "rows": [<summary rows>], "total": int, "batch": int, "facet_totals": {...}}`
   where summary rows carry ONLY `evidence_id, claim_text, item_count, routing,
   routing_reason, reviewable, cure, project, age_days, latest_decision, warrant` —
   `analysis` is stripped (spec §3: "analysis never appears in list rows").
+
+**Executable parser correction:** CLI boundaries are stricter than the direct collector:
+`--min-age-days` is nonnegative and `--batch` is positive. Add
+
+```python
+def _nonnegative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be nonnegative")
+    return parsed
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be positive")
+    return parsed
+```
+
+and test that `--min-age-days -1`, `--batch 0`, and `--batch -1` are rejected.
+`batch=0` remains internal-only for `_review_queue_row`, never a user-facing CLI
+or HTTP contract.
 
 **Steps:**
 
@@ -3206,8 +3980,8 @@ exercise. The only pinned-surface change is the exact CLI-command set
           "--type", choices=("implicit", "multi-hop", "incomplete"), default=""
       )
       list_cmd.add_argument("--project", default="")
-      list_cmd.add_argument("--max-age-days", type=int, default=None)
-      list_cmd.add_argument("--batch", type=int, default=10)
+      list_cmd.add_argument("--min-age-days", type=_nonnegative_int, default=0)
+      list_cmd.add_argument("--batch", type=_positive_int, default=10)
       list_cmd.set_defaults(handler=_cmd_review_list)
   ```
 
@@ -3240,11 +4014,11 @@ exercise. The only pinned-surface change is the exact CLI-command set
 
 
   def _cmd_review_list(args: argparse.Namespace) -> int:
-      queue = engine_api.evidence_review_queue(
+      queue = engine_api.read_evidence_review_queue(
           _workspace(args),
           routing_type=args.type,
           project=args.project,
-          max_age_days=args.max_age_days,
+          min_age_days=args.min_age_days,
           batch=args.batch,
       )
       rows = [_review_summary_row(row) for row in queue["rows"]]
@@ -3306,7 +4080,7 @@ exercise. The only pinned-surface change is the exact CLI-command set
 - Modify: `tests/test_cli_review.py` (append), `tests/test_cli.py` (surface set)
 
 **Interfaces:**
-- Consumes: `engine_api.evidence_review_queue(..., batch=0)` (all rows, contract item 1);
+- Consumes: `engine_api.read_evidence_review_queue(..., batch=0)` (all rows, contract item 1);
   `engine_api.run_operation(workspace, operation_id, payload, *, actor, idempotency_key=…,
   command=…) -> dict` (`engine/api.py:414-426`) driving the `empirical-event-record`
   operation (`runtime/worker.py:340-355` — requires
@@ -3443,7 +4217,7 @@ exercise. The only pinned-surface change is the exact CLI-command set
 
   ```python
   def _review_queue_row(workspace: Path, evidence_id: str) -> dict[str, Any] | None:
-      queue = engine_api.evidence_review_queue(workspace, batch=0)
+      queue = engine_api.read_evidence_review_queue(workspace, batch=0)
       return next(
           (row for row in queue["rows"] if row["evidence_id"] == evidence_id), None
       )
@@ -4435,16 +5209,17 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
      goldens regenerated with `MEMORIA_FLOOR_UPDATE_GOLDENS=1`).
    - SEAM.1 Produces: HTTP `POST /operation/run` enqueues with `actor="pi"` — the
      pane's only mutation door carries PI authority.
-2. **After V2R-A (slice 1)** — this section consumes `GET /v1/views/evidence-review`:
+2. **After U3-ENG/U3-PLUG.4/SEAM.1 and V2R-A** — this section consumes
+   `GET /v1/views/evidence-review`:
    envelope `{ok: true, view: {version: "view-spec.v1", kind: "evidence-review",
    blocks: [...]}}` (cross-section payload contract #3 of the surfaces plan); card
-   blocks (`kind: "card"`, `kind_line` = routing, honesty fields `argument_for`/
+   blocks (`kind: "card"`, `kind_line: "evidence-review"`, honesty fields `argument_for`/
    `argument_against`/`tipped_by`/`certainty` present-only, `ref` = draft-block
-   deep link) with child `evidence-list` and, on reviewable rows only, an
+   deep link) with nested `evidence-list` then routing `text` and, on reviewable rows only, an
    `action-row` whose four actions carry `operation_id: "resolve-evidence"` and
-   payloads `{evidence_id, decision}`; facet query params `routing`/`project`/`age`;
+   payloads `{evidence_id, decision}`; facet query params `routing_type`/`project`/`min_age_days`;
    read-only cure rows carry no `action-row`.
-3. **After V2R-B (slice 2)** — the extended seam
+3. **After V2R-A (before V2R-B)** — the extended seam
    `resolve_evidence_review(vault, evidence_id, *, actor, machine, decision, reason="", warrant="")`
    with the four decisions (`accept`/`reject`/`edit`/`defer`), the **reject flip**
    (only `accept` clears holds), and per-action `disposition.v1` emission (via V2R-A's
@@ -4452,10 +5227,8 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
    dependency's earlier `operations.py:146` reuse line; the context-bound
    `emit_disposition_event` stays the worker-path helper, per
    `runtime/integrity.py:1165-1167`).
-   Task V2R-D.1 is written order-tolerantly against the **shipped** signature
-   (`knowledge.py:2268-2297`, accept/reject only) and passes `warrant` through only
-   when present, so it runs before or after V2R-B; V2R-D.5's reject test requires
-   V2R-B.
+   Task V2R-D.1 runs after V2R-A's four-decision seam and seeds a real evidence
+   row in its happy-path test; it passes `warrant` through only when present.
 
 ## SPEC GAPs (decisions made here, one line each)
 
@@ -4465,15 +5238,15 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
   engine/CLI-only (`cli.py:1120`, `knowledge.py:2268`) — so pane action buttons
   would have nothing to enqueue; V2R-D.1 adds the small operation manifest +
   worker branch + PI-actor protection, mirroring `resolve-attention` exactly.
-- SPEC GAP: the exact evidence-review card field mapping is owned by V2R-A
-  (slice 1); this section writes against the shapes in dependency #2 above —
+- SPEC GAP: the exact evidence-review card field mapping is owned by V2R-B.3/B.4;
+  this section writes against the shapes in dependency #2 above —
   reconcile at plan assembly.
-- SPEC GAP: the pane surfaces only the `routing` facet control; `project`/`age`
+- SPEC GAP: the pane surfaces only the `routing_type` facet control; `project`/`min_age_days`
   ride the shared query params and are exercised by the CLI front (slice 4,
   V2R-C) — full facet UI is deferred to the U2 cockpit.
-- SPEC GAP: warrant capture on Accept is slice 5's affordance (V2R-E); the pane's
-  Accept here enqueues without `warrant`; V2R-D.1's worker branch already passes
-  `warrant` through when a later payload carries it.
+- SPEC GAP: warrant capture on Accept is V2R-A.3's affordance; the pane's Accept
+  here enqueues without `warrant`, while V2R-D.1's worker branch passes it through
+  whenever a later payload carries it.
 - SPEC GAP (resolved here): shipped draft export **silently drops** citations for
   DOI-bearing works (`state.compact_citation` prefers `doi` over `citekey`,
   `state.py:2397-2402`) and never inlines the references fence (only the
@@ -4511,9 +5284,8 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Interfaces:**
 - Consumes: `resolve_evidence_review(vault, evidence_id, *, actor, machine,
-  decision, reason="") -> dict` (`src/memoria_vault/runtime/knowledge.py:2268`;
-  gains `warrant=""` and two decisions in V2R-B — this branch is tolerant of both
-  states); actor gate `PROTECTED_OPERATION_ACTORS.get(context.operation_id)`
+  decision, reason="", warrant="") -> dict` from V2R-A; actor gate
+  `PROTECTED_OPERATION_ACTORS.get(context.operation_id)`
   (`worker.py:1094`); runner-policy defaults injected by `_manifest_frontmatter`
   (`runtime/capabilities.py:157-163`, so the manifest needs no `runner` key —
   same shape as `resolve-attention.md`).
@@ -4524,24 +5296,53 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Steps:**
 
-- [ ] Write the failing tests — in `tests/test_operation_context.py`, add
+- [x] Write the failing tests — in `tests/test_operation_context.py`, add
   `"resolve-evidence",` to the `PI_AUTHORITY_OPERATIONS` tuple (after
   `"resolve-attention",` at line 976), and append after
-  `test_attention_resolution_accepts_pi_and_records_pi` (ends line 1071):
+  `test_attention_resolution_accepts_pi_and_records_pi` (ends line 1071).
+  Extend that test module's imports with:
 
   ```python
+  from memoria_vault.runtime.knowledge import compose_project_draft
+  from tests.helpers import call_with_context, init_cli_workspace, write_checked_concept
+
+
+  def _seed_composed_evidence_set(workspace: Path) -> str:
+      write_checked_concept(
+          workspace,
+          "projects/project-alpha/project.md",
+          "type: project\ncheck_status: checked\ntitle: Alpha project\n",
+          "project",
+      )
+      write_checked_concept(
+          workspace,
+          "notes/review-claim.md",
+          "type: note\ncheck_status: checked\ntitle: Review claim\n"
+          "id: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+          "note",
+          body="An implicit claim requiring PI review.",
+      )
+      outline = workspace / "projects/project-alpha/outline.md"
+      outline.write_text(
+          "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Review claim\n", encoding="utf-8"
+      )
+      composed = call_with_context(compose_project_draft, workspace, "project-alpha")
+      return str(composed["evidence_markers"][0]["id"])
+
+
   def test_resolve_evidence_operation_records_pi_disposition(
       tmp_path: Path,
       capsys: pytest.CaptureFixture[str],
   ) -> None:
       workspace = init_cli_workspace(tmp_path, capsys)
+      evidence_id = _seed_composed_evidence_set(workspace)
       request = worker.enqueue_operation(
           workspace,
           "resolve-evidence",
           actor="pi",
           idempotency_key="pi-resolve-evidence",
           payload={
-              "evidence_id": "ev-0011aabb",
+              "evidence_id": evidence_id,
               "decision": "accept",
               "reason": "grounds hold",
           },
@@ -4556,8 +5357,12 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
           if row.get("operation") == "resolve-evidence-review"
       ]
       assert len(events) == 1
-      assert events[0]["evidence_id"] == "ev-0011aabb"
+      assert events[0]["evidence_id"] == evidence_id
       assert events[0]["decision"] == "accept"
+      assert [
+          row for row in _event_log_payloads(workspace)
+          if row.get("event") == "disposition" and row.get("schema") == "disposition.v1"
+      ]
 
 
   def test_resolve_evidence_operation_requires_evidence_id(
@@ -4577,9 +5382,26 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
       assert result["status"] == "failed"
       assert "resolve-evidence requires evidence_id" in result["error"]
+
+
+  def test_resolve_evidence_operation_rejects_unknown_evidence_id(
+      tmp_path: Path,
+      capsys: pytest.CaptureFixture[str],
+  ) -> None:
+      workspace = init_cli_workspace(tmp_path, capsys)
+      request = worker.enqueue_operation(
+          workspace,
+          "resolve-evidence",
+          actor="pi",
+          idempotency_key="pi-resolve-evidence-unknown-id",
+          payload={"evidence_id": "ev-0011aabb", "decision": "accept"},
+      )
+      result = worker.run_request(workspace, request["job_id"], machine="PI laptop")
+      assert result["status"] == "failed"
+      assert "unknown evidence id" in result["error"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_operation_context.py -k "resolve_evidence or (protected_operation_rejects and resolve-evidence)" -v`
   Expected: the two new tests fail (`FileNotFoundError:
   product/capabilities/operations/resolve-evidence.md` surfaces as a failed job,
@@ -4587,7 +5409,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   `test_protected_operation_rejects_wrong_actor_before_payload_validation[resolve-evidence-*]`
   params fail the same way.
 
-- [ ] Write the minimal implementation.
+- [x] Write the minimal implementation.
 
   Create `src/memoria_vault/product/capabilities/operations/resolve-evidence.md`:
 
@@ -4640,18 +5462,15 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
           evidence_id = str(payload.get("evidence_id") or "").strip()
           if not evidence_id:
               raise ValueError("resolve-evidence requires evidence_id")
-          kwargs: dict[str, Any] = {
-              "actor": context.actor,
-              "machine": context.machine,
-              "decision": str(payload.get("decision") or ""),
-              "reason": str(payload.get("reason") or ""),
-          }
-          # Present only post-V2R-B (slice 5 sends it); omitting keeps this
-          # branch valid against the shipped two-decision seam signature.
-          warrant = str(payload.get("warrant") or "").strip()
-          if warrant:
-              kwargs["warrant"] = warrant
-          event = resolve_evidence_review(vault, evidence_id, **kwargs)
+          event = resolve_evidence_review(
+              vault,
+              evidence_id,
+              actor=context.actor,
+              machine=context.machine,
+              decision=str(payload.get("decision") or ""),
+              reason=str(payload.get("reason") or ""),
+              warrant=str(payload.get("warrant") or "").strip(),
+          )
           return {"commit": "", "resolution": event}
   ```
 
@@ -4669,7 +5488,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
       },
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```bash
   python -m pytest tests/test_operation_context.py -v
@@ -4685,7 +5504,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   then `git diff tests/fixtures/floor/goldens/` — only
   `regenerate-capability-index.json` (and no other golden) may change.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/product/capabilities/operations/resolve-evidence.md \
@@ -4710,9 +5529,9 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 **Interfaces:**
 - Consumes: the card `Tree` anatomy `renderBlock` produces (U3-PLUG.4): children
   with classes `memoria-card-kind`, `memoria-card-title`, `memoria-evidence`,
-  `memoria-card-arguments`, `memoria-card-tipped`, `memoria-action-row`,
-  `memoria-card-meta`; honesty fields are **present-only**, so cure rows without
-  `argument_for`/`argument_against` have no analysis children.
+    `memoria-card-arguments`, `memoria-card-tipped`, `memoria-action-row`,
+    `memoria-card-meta`; honesty fields are **present-only**, so cure rows without
+    `argument_for`/`argument_against` have no analysis children.
 - Produces (CommonJS export of `viewspec.js`):
   - `collapseAnalysis(tree, open) -> Tree` — pure; moves the
     `memoria-card-arguments` and `memoria-card-tipped` children (spec §2 fields
@@ -4722,7 +5541,10 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
     `open` is falsy the container class is `"memoria-analysis is-collapsed"`;
     returns the input tree unchanged when the card has no analysis children
     (read-only cure rows get no toggle). Evidence order is untouched — blocks
-    1–3 still precede the disclosure (spec §3, structural not stylistic).
+    1–3 still precede the disclosure (spec §3, structural not stylistic). In
+    particular, the V2 sequence is `memoria-evidence`, then
+    `memoria-block-text`, then `memoria-action-row`, then the toggle and analysis.
+    A cure card has evidence/text only: no action row, analysis nodes, or toggle.
 
 **Steps:**
 
@@ -4731,7 +5553,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   to the destructured require at the top):
 
   ```js
-  test("collapseAnalysis hides machine analysis by default; evidence stays first", () => {
+  test("collapseAnalysis preserves ordered semantic children before disclosure", () => {
     const card = renderBlock({
       kind: "card",
       id: "ev1",
@@ -4744,11 +5566,12 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
       tipped_by: "implicit derivation",
       blocks: [
         { kind: "evidence-list", id: "e1", items: [{ label: "span", ref: "notes/a.md" }] },
+        { kind: "text", id: "r1", text: "Routing: implicit" },
         {
           kind: "action-row",
           id: "a1",
           actions: [
-            { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" }, primary: true },
+            { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" } },
             { label: "Reject", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "reject" } },
             { label: "Edit", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "edit" } },
             { label: "Defer", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "defer" } },
@@ -4761,11 +5584,17 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
     const classes = collapsed.children.map((child) => child.cls);
     assert.ok(!classes.includes("memoria-card-arguments"), "analysis moved out of the card body");
     assert.ok(!classes.includes("memoria-card-tipped"), "tipped/certainty moved too");
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+      "memoria-action-row",
+      "memoria-analysis-toggle",
+      "memoria-analysis is-collapsed",
+    ]);
     const toggleAt = classes.indexOf("memoria-analysis-toggle");
     const analysisAt = classes.indexOf("memoria-analysis is-collapsed");
-    assert.ok(toggleAt !== -1, "disclosure toggle rendered");
-    assert.equal(analysisAt, toggleAt + 1);
-    assert.ok(classes.indexOf("memoria-evidence") < toggleAt, "evidence precedes the disclosure");
     assert.equal(collapsed.children[toggleAt].text, "Show analysis (machine)");
     assert.equal(collapsed.children[toggleAt].attrs["data-toggle-analysis"], "1");
     const inner = collapsed.children[analysisAt].children.map((child) => child.cls);
@@ -4777,15 +5606,22 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
     assert.equal(open.children[openClasses.indexOf("memoria-analysis-toggle")].text, "Hide analysis");
   });
 
-  test("collapseAnalysis is a no-op for cards without analysis (read-only cure rows)", () => {
+  test("collapseAnalysis is a no-op for cure cards without analysis", () => {
     const card = renderBlock({
       kind: "card",
       id: "cure1",
       ref: "projects/project-alpha/draft.md#^blk-c3d4",
       title: "evidence-text-drift — repair the marker, then re-verify",
       kind_line: "evidence-text-drift",
-      blocks: [],
+      blocks: [
+        { kind: "evidence-list", id: "cure-grounds", items: [] },
+        { kind: "text", id: "cure-routing", text: "Repair the marker." },
+      ],
     });
+    assert.deepEqual(
+      card.children.map((child) => child.cls),
+      ["memoria-card-kind", "memoria-card-title", "memoria-evidence", "memoria-block-text"],
+    );
     assert.equal(collapseAnalysis(card, false), card);
   });
   ```
@@ -4875,7 +5711,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 - Consumes: `renderBlock`/`renderView`/`moveSelection`/`materialize`/
   `collapseAnalysis` (viewspec.js; V2R-D.2), `formatAsOf` (U3-PLUG.3),
   `authedJson`/`enqueueNamedOperation` (U3-PLUG.6/7); `GET
-  /v1/views/evidence-review` (V2R-A; dependency #2 above); worker operation
+  /v1/views/evidence-review` (V2R-B; dependency #2 above); worker operation
   `resolve-evidence` (V2R-D.1).
 - Produces:
   - `VIEW_TYPE_EVIDENCE_REVIEW = "memoria-evidence-review"`,
@@ -4889,7 +5725,8 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
     re-collapses on every expand — independence-first by construction); the four
     action buttons enqueue `resolve-evidence` via `enqueueNamedOperation`; the
     Edit action additionally deep-links the draft block (`openLinkText` on the
-    card `ref`); a routing-facet cycle button re-fetches with `?routing=<facet>`.
+    card `ref`); a routing-facet cycle button re-fetches with
+    `?routing_type=<facet>`.
   - Command id `"open-evidence-review"`; `poll()` refreshes open evidence-review
     leaves alongside attention leaves.
 
@@ -5002,7 +5839,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
     viewPath() {
       return this.facetRouting
-        ? `${EVIDENCE_REVIEW_VIEW_PATH}?routing=${encodeURIComponent(this.facetRouting)}`
+        ? `${EVIDENCE_REVIEW_VIEW_PATH}?routing_type=${encodeURIComponent(this.facetRouting)}`
         : EVIDENCE_REVIEW_VIEW_PATH;
     }
 
@@ -5240,7 +6077,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Steps:**
 
-- [ ] Write the failing tests — create `tests/test_export_acceptance.py`:
+- [x] Write the failing tests — create `tests/test_export_acceptance.py`:
 
   ```python
   """Export-target acceptance: markdown + bibliography.bib (V2 spec section 5)."""
@@ -5368,14 +6205,14 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
           write_project_export(vault, "project-alpha", draft=True)
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_export_acceptance.py -v`
   Expected: the resolution test fails at `"exported artifact carries no inlined
   bibtex fence"`; the refusal test fails with `DID NOT RAISE` (the citation is
   silently dropped today). Register the file first (TEST_LEVELS edit above) or
   `tests/test_testing_levels.py` fails the whole run.
 
-- [ ] Write the minimal implementation — in `src/memoria_vault/runtime/knowledge.py`:
+- [x] Write the minimal implementation — in `src/memoria_vault/runtime/knowledge.py`:
 
   1. Insert after `_append_project_export_references` (line 2700):
 
@@ -5465,7 +6302,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   them (`[@source-alpha]` before and after — the explicit citekey equals the
   old work_id fallback), and the sources now genuinely appear in the fence.
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```bash
   python -m pytest tests/test_export_acceptance.py tests/test_draft_verification.py \
@@ -5479,7 +6316,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   review `git diff tests/fixtures/floor/goldens/export-project.json`, include it
   in the commit.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/knowledge.py tests/test_export_acceptance.py \
@@ -5489,11 +6326,22 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
+**Execution record (2026-07-17):** Completed in `e76c8632`
+(`fix(export): harden draft markdown projection`). Review-approved hardening
+expanded the original seam change into a shared conservative Markdown-visibility
+guard, container/table and malformed-fence handling, raw-citation refusal, and
+linear escaped-delimiter BibTeX parsing. Focused export acceptance passed
+224 tests; the related regression suite passed 758 tests (1 skipped); and
+`python scripts/verify` passed (2,358 tests, 9 skipped). The mandatory
+diff-scoped security scan for `c2244663..e76c8632` is sealed at
+`/tmp/codex-security-scans/memoria-vault/e76c8632_20260717T153758Z/report.md`
+with no findings.
+
 ---
 
 ### Task V2R-D.5: Refusal-honesty acceptance — blocked exports name findings; reject stays blocking
 
-Requires V2R-B (reject flip) for the second test; the first passes against
+Requires V2R-A (reject flip) for the second test; the first passes against
 shipped refusal plumbing and pins it as acceptance.
 
 **Files:**
@@ -5504,20 +6352,20 @@ shipped refusal plumbing and pins it as acceptance.
   (`ValueError(f"project draft is not export-ready: {reasons}")`,
   `knowledge.py:2590-2592`) built from `_verification_finding_labels`
   (`knowledge.py:3232-3238`, `kind:evidence_id` labels);
-  `resolve_evidence_review` (V2R-B's four-decision form; `reject` leaves the
+  `resolve_evidence_review` (V2R-A's four-decision form; `reject` leaves the
   hold); `compose_project_draft`'s returned `evidence_markers[0]["id"]`.
 - Produces: nothing new — acceptance pins for spec §5/§8.
 
 **Steps:**
 
-- [ ] Grep the disposition-selector state (records, does not change, which form
+- [x] Grep the disposition-selector state (records, does not change, which form
   is shipped — the tests below are behavior-level and selector-agnostic):
   `grep -n "_disposed_evidence_digests\|_disposed_evidence_ids" src/memoria_vault/runtime/knowledge.py`
   Expected post-Plan-22-S35.4: only `_disposed_evidence_digests(vault) ->
-  dict[str, str]`. If the ids form is still shipped, V2R-B (which owns the flip)
+  dict[str, str]`. If the ids form is still shipped, V2R-A (which owns the flip)
   decides which selector it edits; these tests are unaffected either way.
 
-- [ ] Write the tests — append to `tests/test_export_acceptance.py`:
+- [x] Write the tests — append to `tests/test_export_acceptance.py`:
 
   ```python
   def _implicit_draft(vault: Path) -> str:
@@ -5554,8 +6402,8 @@ shipped refusal plumbing and pins it as acceptance.
       """Spec section 4: only accept clears holds — a reject must keep refusing.
 
       Behavior-level on purpose: passes against both the S35.4 digests
-      selector and the pre-S35.4 ids selector once V2R-B lands the flip;
-      fails against shipped pre-V2R-B semantics (reject clears the hold).
+      selector and the pre-S35.4 ids selector once V2R-A lands the flip;
+      fails against shipped pre-V2R-A semantics (reject clears the hold).
       """
       vault = tmp_path
       evidence_id = _implicit_draft(vault)
@@ -5569,18 +6417,18 @@ shipped refusal plumbing and pins it as acceptance.
           write_project_export(vault, "project-alpha", draft=True)
   ```
 
-- [ ] Run to verify the expected split:
+- [x] Run to verify the expected split:
   `python -m pytest tests/test_export_acceptance.py::test_blocked_export_names_its_findings tests/test_export_acceptance.py::test_rejected_disposition_leaves_export_blocked -v`
   Expected: the first **passes immediately** (a deliberate acceptance pin of
   shipped refusal naming — keep it); the second **fails against shipped
   behavior** (reject currently clears the hold and the export succeeds) and
-  passes once V2R-B's flip is merged. If executing before V2R-B, mark it
-  `@pytest.mark.xfail(strict=True, reason="V2R-B reject flip not yet merged")`
-  and remove the mark in the same PR that merges V2R-B.
+  passes once V2R-A's flip is merged. If executing before V2R-A, mark it
+  `@pytest.mark.xfail(strict=True, reason="V2R-A reject flip not yet merged")`
+  and remove the mark in the same PR that merges V2R-A.
 
-- [ ] Run the file green (post-V2R-B): `python -m pytest tests/test_export_acceptance.py -v`
+- [x] Run the file green (post-V2R-A): `python -m pytest tests/test_export_acceptance.py -v`
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add tests/test_export_acceptance.py
@@ -5588,6 +6436,11 @@ shipped refusal plumbing and pins it as acceptance.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Execution record (2026-07-17):** The shipped selector is
+`_disposed_evidence_digests`; `568281a3` added both refusal-honesty pins.
+The focused acceptance checks passed (2 passed), the full export acceptance
+file passed (226 passed), and independent review found no issues.
 
 ---
 
@@ -5615,7 +6468,7 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
 
 **Steps:**
 
-- [ ] Write the test — append to `tests/test_export_acceptance.py`:
+- [x] Write the test — append to `tests/test_export_acceptance.py`:
 
   ```python
   def test_bibliography_projection_round_trips_through_structural_bibtex_parse(
@@ -5661,7 +6514,7 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
       assert alpha.get("year") == "2020"
   ```
 
-- [ ] Run: `python -m pytest tests/test_export_acceptance.py::test_bibliography_projection_round_trips_through_structural_bibtex_parse -v`
+- [x] Run: `python -m pytest tests/test_export_acceptance.py::test_bibliography_projection_round_trips_through_structural_bibtex_parse -v`
   Expected: **passes immediately** — a deliberate acceptance pin (like
   U3-ENG.5's forward-compat pin): it freezes the structural properties Zotero
   import depends on, so a future renderer change that emits duplicate keys,
@@ -5669,7 +6522,7 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
   assertion fails, that is a real projection bug — stop and fix
   `_render_source_bibtex` (`capture.py:1056`) before proceeding.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add tests/test_export_acceptance.py
@@ -5677,6 +6530,10 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Execution record (2026-07-17):** `b1c00117` adds the structural
+`bibliography.bib` round-trip pin. Its focused test passed, and the combined
+export acceptance file passed (227 passed); independent review found no issues.
 
 ---
 
@@ -5745,9 +6602,11 @@ The live Zotero import stays a manual acceptance step, named in V2R-D.7's docs.
 
   The evidence-set review surface routes the grounds contract's PI-clearable
   holds to one queue with two fronts: the Obsidian evidence-review pane
-  (command: `Memoria: Open evidence review`) and the CLI review cockpit. Both
-  read the same `view-spec.v1` payload from `GET /v1/views/evidence-review` and
-  drive the same seam through the PI-only worker operation `resolve-evidence`.
+  (command: `Memoria: Open evidence review`) and the CLI review cockpit. The pane
+  reads the nested `view-spec.v1` payload from `GET /v1/views/evidence-review` and
+  enqueues the PI-only `resolve-evidence` worker operation. The CLI reads the same
+  queue through `read_evidence_review_queue` (engine-direct, no HTTP) and calls
+  `resolve_evidence_review` directly through its PI-gated command seam.
 
   ## Queue
 

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Land the schema/graph substrate (G1 migrations, G2 live concept edges, S1 hygiene), the full #1293 evidence-set/grounds contract (spec §12 slices 1–8), and model-call cost telemetry — everything that must precede a real corpus.
+**Goal:** Land the fresh-install schema/graph substrate (G2 live concept edges, S1 hygiene), the full #1293 evidence-set/grounds contract (spec §12 slices 1–8), and model-call cost telemetry — everything that must precede a real corpus.
 
-**Architecture:** G1 adds the minimal numbered-migration mechanism every later schema change rides; G2S1 brings the dead `concept_edges` join point to life and reshapes it promotion-ready; S12/S35/S68 implement the merged contract spec `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md` (rename sweep, marker grammar v2, unified R1–R4 derivation, transitive completeness with fail-closed cycles, disposition content-binding, staleness findings, journal mint events, docs); COST implements `docs/superpowers/specs/2026-07-15-model-call-cost-telemetry-design.md`.
+**Architecture:** G2S1 brings the dead `concept_edges` join point to life in the current fresh schema; S12/S35/S68 implement the merged contract spec `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md` (rename sweep, marker grammar v2, unified R1–R4 derivation, transitive completeness with fail-closed cycles, disposition content-binding, staleness findings, journal mint events, docs); COST implements `docs/superpowers/specs/2026-07-15-model-call-cost-telemetry-design.md`.
 
 **Tech Stack:** Python 3 / SQLite / pytest; `pydantic-ai-slim>=2.0` (already pinned; `genai-prices` transitive — no new dependencies).
 
@@ -16,14 +16,88 @@
 
 ## Cross-section contracts (BINDING — resolve seam assumptions)
 
-1. **`MIGRATIONS` shape is G1's definition** (G1.1 Produces): `state.MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]]` — key = from_version, value = `(from_version + 1, ordered steps)`; applied sequentially in `_init` BEFORE `executescript(_schema_sql())`, each step list in one explicit `BEGIN`/`COMMIT` (no `with conn:`), `user_version` bumped per step; unregistered version (incl. future) raises. G2S1.2/.3 and S12.2 adapt their migration entries to THIS shape (their sections assumed variants; the mechanics are otherwise unchanged).
-2. **Schema-version allocation (serialized):** G1 ships `MIGRATIONS` empty, `SCHEMA_VERSION` stays 12 → G2S1.2 takes 12→13 (edge_id/attributes) → G2S1.3 takes 13→14 (reverse indexes) → S12.2 takes **14→15** (purpose enum; renumber its written 13→14 accordingly, body unchanged) — G3/ULID work starts at 16. Each schema-touching task updates, in the same commit: its `MIGRATIONS` entry, the `schema.sql` DDL + trailing `PRAGMA user_version`, `SCHEMA_VERSION` in state.py, and the version-pinned tests (`tests/test_schema_version.py:14-17`, `tests/test_schema_v10.py:39-41`, `tests/test_query_substrate.py:31`).
+1. **Fresh-install schema contract:** `state._init` creates only a version-0 database from the current `schema.sql`. It has no upgrade or downgrade path: every existing nonzero `PRAGMA user_version` other than the installed `SCHEMA_VERSION` fails closed before schema mutation. There is no `MIGRATIONS` registry, migration helper, legacy fixture, or compatibility transformation.
+2. **Current-schema allocation:** G2S1.2 adds the edge fields/index directly to the fresh schema; G2S1.3 adds the reverse indexes directly; S12.2 supplies the `grounds` enum directly. Each schema task updates the current `schema.sql`, its trailing `PRAGMA user_version`, `SCHEMA_VERSION`, and fresh-schema assertions in the same commit. A version bump declares incompatibility of an existing database; it does not authorize an upgrade path.
 3. **Closure helper:** S35.3's Produces additionally includes `state.evidence_item_closure(rows_by_id: Mapping[str, Mapping[str, Any]], evidence_id: str) -> list[tuple[str, tuple[str, ...]]]` — (item, path) pairs for non-set items reachable through nested sets, path = tuple of nested ev-ids (empty = direct), cycle-safe, unknown set refs yield nothing. This is the exact interface S68.2 consumes; it is a mechanical exposure of S35.3's DFS reachability.
-4. **Execution order:** G1 → G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1–.6; COST.1–.5 is independent and may run any time EXCEPT COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
+4. **Execution order:** G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1 → S68.2 → {S68.3 → S68.4 → S68.6; S68.5}. S68.5 is a docs-only type-name/pointer repair and may land after S68.2; it does not depend on the recovery behavior introduced by S68.3/S68.4. The cost chain is externally ordered: surfaces BOOT-B.5 → COST.1–.5 → Alpha23 LOOP.3. COST.1–.3 are one atomic return-contract tranche; do not merge or cherry-pick a state where a caller still expects a `str`. COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially and stage only intentional generated drift). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
 5. **Removed symbols** (S35 manifest) no task may reference after their removal: `_derived_evidence_type`, `_draft_evidence_type`, `_evidence_items_resolve`, `_disposed_evidence_ids`.
 
+### Plan-reconciliation amendment — fresh-install schema only (2026-07-30)
+
+There are no existing Memoria installations to upgrade. This amendment replaces
+all executable G1, G2S1.2, G2S1.3, and S12.2 migration/backfill/legacy-fixture
+instructions below. The retained historical checklists explain prior decisions
+only and must not be replayed.
+
+| Task | Fresh-install deliverable |
+| --- | --- |
+| G2S1.2 | Current `concept_edges` DDL includes `edge_id`, `attributes_json`, and `idx_concept_edges_edge_id`; current writers/readers use those fields. |
+| G2S1.3 | Current DDL includes `idx_concept_edges_target` and `idx_work_graph_edges_target`. |
+| S12.2 | Current `code_artifacts.purpose` CHECK/default/validation use `grounds`; no old row is rewritten. |
+
+Use only fresh disposable vaults in schema tests. Delete the numbered migration
+runner and all version-to-version fixtures; preserve the fail-closed rejection
+test for any existing nonzero version other than `SCHEMA_VERSION`. Graph work
+owns its later current-schema DDL directly; no task may add a compatibility
+branch for a prior schema shape.
+
 ---
-## G1 · Migration machinery
+
+## Reconciliation ledger — existing Alpha22 execution
+
+`codex/alpha22-s68-doc-pointer` contains a reviewed source-complete prefix of
+this plan through `0c1c37e`. This checklist remains the design record. On this
+worktree, reconcile each source-complete task by cherry-picking its exact
+commit(s) in dependency order, resolving conflicts against the binding contracts
+above, and rerunning the task’s verification; do not replay its red/green
+implementation steps. “Source-complete” does not mean integrated: mark a task
+integrated only once its commit(s) are present on this branch and verification has
+rerun. Do not cherry-pick the branch’s older Alpha21/COV history as part of Plan
+22, and do not merge that branch wholesale.
+
+| Task | Source-complete commit(s) |
+| --- | --- |
+| G1.1 | `153fcb55` |
+| G1.2 | `189bbb35` |
+| G1.3 | `8e4afdd1`, `61d935c4` |
+| G2S1.1 | `8f9c0a87`, repair `20a6b16c` |
+| G2S1.2 | `bcbc725a`, repair `7783d9cd` |
+| G2S1.3 | `9a36a003` |
+| G2S1.4 | `cf8c668b` |
+| G2S1.5 | `9c77ba61` (two-spec design record; supersedes the historical single-file deliverable below) |
+| S12.1 | `8ece209c` |
+| S12.2 | `f0f653be` |
+| S12.3 | `cc4b24bb`, `5bfedc1f` |
+| S12.4 | `b9d16a14` |
+| S12.5 | `444a24e4` |
+| S12.6 | `2ec76331`, cleanup `c164d071` |
+| S12.7 | `7d11ffac` |
+| S35.1 | `a518a793` |
+| S35.2 | `315a7c4f` |
+| S35.3 | `4b69f9c5` |
+| S35.4 | `a25f709f`, repair `1c85f90f` |
+| S68.1 | `84f81f10` |
+| S68.2 | `f034ca7a` |
+| S68.3 | `921169f0` (with contract amendment `858ae29d`; formatting `60164d49`) |
+| S68.4 | `ebf1aa75`, repair `6f5d29e8`, hardening `9d43a79d` |
+| S68.5 | `0c1c37e` (also contains the execution-order amendment above) |
+| S68.6 | `d93dc1b4` |
+
+Pending: COST.1–.5. After `8ece209c`,
+cherry-pick ancillary cleanup `e8e9a154` solely to remove its accidentally tracked
+session report; it is cleanup, not S12.1 implementation. The source-complete
+task bodies below are historical TDD/review records: their stale line anchors,
+old migration shapes, and retired names must not be reintroduced. The binding
+contracts and this ledger take precedence when reconciling them.
+
+---
+## G1 · Retired migration machinery
+
+> **Do not execute this section.** The fresh-install amendment above removes
+> `MIGRATIONS`, numbered upgrades, migration transactions, and legacy-version
+> tests. The material retained below is an historical record only; the runtime
+> accepts a newly initialized database or the exact current schema version and
+> rejects every other nonzero version without mutating it.
 
 Consolidation spec §2 G1: minimal ALTER path so `state._init` stops hard-failing on any
 on-disk `user_version` it can upgrade, plus the numbered migrations rule. Today
@@ -452,24 +526,16 @@ plus one process gate for everything in G2–G5/S1 that has no ratified mechanic
   partially or fully shipped by the alpha ponytail passes. The G2S1.5 brainstorm must
   reconcile the ledger instead of inventing work.
 
-## Consumed from G1 (this plan's G1 section — assumption other sections must honor)
+## Fresh-schema assumptions other sections must honor
 
-- `state.MIGRATIONS: dict[int, str]` — target `user_version` → SQL script. `_init`
-  applies `MIGRATIONS[v]` via `conn.executescript` for each `v` in
-  `range(current + 1, SCHEMA_VERSION + 1)` when `0 < current < SCHEMA_VERSION`, then
-  runs `conn.executescript(_schema_sql())` (whose trailing
-  `PRAGMA user_version = <SCHEMA_VERSION>` stamps the final version). Migration
-  scripts therefore do **not** contain their own `user_version` pragma. If G1's landed
-  shape differs (scripts self-stamp, different dict name), adapt the two MIGRATIONS
-  entries below mechanically — the ALTER/CREATE INDEX statements are the contract.
-- **G2S1 claims schema versions 13 and 14.** G1 leaves `SCHEMA_VERSION` at 12 with an
-  empty ladder. Any other package adding a migration must take 15+.
-- Ordering: G2S1.2 and G2S1.3 depend on G1's machinery being merged. G2S1.1, G2S1.4,
-  and G2S1.5 have no dependency on G1 and can land first.
-
-Version-pinned tests that G2S1.2/G2S1.3 must bump (all three verified current):
-tests/test_schema_version.py:14-17, tests/test_schema_v10.py:39-41,
-tests/test_query_substrate.py:31.
+- The current `schema.sql`, `SCHEMA_VERSION`, and its trailing `PRAGMA user_version`
+  are one fresh-install contract. No task imports, defines, or relies on a migration
+  registry or a private migration helper.
+- G2S1.2, G2S1.3, and S12.2 update their current DDL and fresh-schema tests directly.
+  An existing database at any other nonzero version fails closed; it is not a test
+  fixture and must not be transformed.
+- G2S1.1, G2S1.4, and G2S1.5 retain their normal dependency order but have no schema
+  compatibility dependency.
 
 ---
 
@@ -747,7 +813,14 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
 
 ---
 
-### Task G2S1.2: concept_edges-reshape — edge_id + attributes_json (migration 13)
+### Task G2S1.2: concept_edges-reshape — edge_id + attributes_json (fresh-schema DDL)
+
+> **Fresh-install correction — source-complete in `bcbc725a` + `7783d9cd`:**
+> put both columns and the partial unique index directly in the current schema;
+> `replace_concept_edges` derives its id from the canonical triple and preserves
+> `attributes_json` on conflict. Do not backfill, migrate, or open a legacy fixture.
+> The detailed checklist below is retained historical TDD provenance, not an
+> executable alternate design.
 
 Promotion-ready edges per the warrant-ontology-brief interim ruling (Option B): a
 warrant reference can hang on an edge, so later node reification stays cheap.
@@ -759,7 +832,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 - Modify: `src/memoria_vault/runtime/schema.sql:240-250` (concept_edges CREATE gains
   two columns + unique partial index) and `:378` (`PRAGMA user_version = 12` → `13`)
 - Modify: `src/memoria_vault/runtime/state.py:53` (`SCHEMA_VERSION = 12` → `13`);
-  G1's `MIGRATIONS` dict (add key 13); `replace_concept_edges` insert (as landed by
+  G1's `MIGRATIONS` dict (add key 12); `replace_concept_edges` insert (as landed by
   G2S1.1); `concept_edges` SELECTs (state.py:2055-2076 pre-G2S1.1 numbering); new
   `concept_edge_id` helper next to `_concept_edge_relation` (state.py:3420)
 - Modify: `tests/test_schema_version.py:14-17`, `tests/test_schema_v10.py:39-41`,
@@ -767,15 +840,18 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 - Test: `tests/test_query_substrate.py`
 
 **Interfaces:**
-- Consumes: `state.MIGRATIONS: dict[int, str]` (G1 section — shape assumption in the
-  package header); `hashlib` (already imported, state.py:8); `state.DB_REL`.
+- Consumes: the canonical `state.MIGRATIONS: dict[int, tuple[int, list[str |
+  Callable[[sqlite3.Connection], None]]]]` contract; `hashlib` (already imported,
+  state.py:8); `state.DB_REL`.
 - Produces:
   - `state.concept_edge_id(source_concept_id: str, relation_type: str,
     target_concept_id: str) -> str` — deterministic 24-hex-char id,
     `sha256(f"{source}\0{relation}\0{target}")[:24]`, stable across reindex.
-  - `MIGRATIONS[13]` — SQL adding `concept_edges.edge_id` (TEXT, unique-indexed where
-    nonblank — "PRIMARY-KEY-ish"; SQLite cannot ALTER in a real PK) and
-    `concept_edges.attributes_json` (TEXT, default `'{}'`).
+  - `MIGRATIONS[12] = (13, [...])` — ordered SQL/callable steps adding
+    `concept_edges.edge_id` (TEXT, unique-indexed where nonblank —
+    "PRIMARY-KEY-ish"; SQLite cannot ALTER in a real PK),
+    `concept_edges.attributes_json` (TEXT, default `'{}'`), and the legacy-ID
+    backfill before the index is created.
   - `state.concept_edges` rows now include `edge_id` and `attributes_json` keys
     (consumed by G4 warrant work and any R2 graph-primitive task).
 
@@ -844,15 +920,21 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
   add to G1's `MIGRATIONS`:
 
   ```python
-  MIGRATIONS[13] = """
-  ALTER TABLE concept_edges ADD COLUMN edge_id TEXT NOT NULL DEFAULT '';
-  ALTER TABLE concept_edges ADD COLUMN attributes_json TEXT NOT NULL DEFAULT '{}';
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
-      ON concept_edges(edge_id) WHERE edge_id != '';
-  """
+  MIGRATIONS[12] = (
+      13,
+      [
+          "ALTER TABLE concept_edges ADD COLUMN edge_id TEXT NOT NULL DEFAULT ''",
+          "ALTER TABLE concept_edges ADD COLUMN attributes_json TEXT NOT NULL DEFAULT '{}'",
+          _backfill_concept_edge_ids,
+          """
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
+          ON concept_edges(edge_id) WHERE edge_id != ''
+          """,
+      ],
+  )
   ```
 
-  (written as a literal `13: """...\n"""` entry inside the dict, matching G1's style);
+  (written as a canonical 12→13 registry entry; no migration entry self-stamps);
   add next to `_concept_edge_relation` (below state.py:3424):
 
   ```python
@@ -890,7 +972,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
                       updated_at = excluded.updated_at
                   """,
                   (
-                      str(row.get("edge_id") or concept_edge_id(source, relation, target)),
+                      concept_edge_id(source, relation, target),
                       source,
                       relation,
                       target,
@@ -924,7 +1006,12 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 
 ---
 
-### Task G2S1.3: reverse-traversal-indexes (migration 14)
+### Task G2S1.3: reverse-traversal indexes (fresh-schema DDL)
+
+> **Fresh-install correction — source-complete in `9a36a003`:** place
+> `idx_concept_edges_target` and `idx_work_graph_edges_target` in the current schema.
+> Do not register a transition or test an upgrade. The detailed checklist below is
+> historical and must not replace the fresh-install contract.
 
 The two indexes the consolidation names, on the verified real columns:
 `concept_edges(target_concept_id)` and `work_graph_edges(target_id)` — reverse
@@ -936,7 +1023,7 @@ Depends on: G2S1.2 (takes version 14 after 13).
   the concept_edges block landed by G2S1.2 and after the work_graph_edges block,
   lines 171-186; trailing pragma → 14)
 - Modify: `src/memoria_vault/runtime/state.py` (`SCHEMA_VERSION` 13 → 14; add
-  `MIGRATIONS[14]`)
+  `MIGRATIONS[13]`)
 - Modify: `tests/test_schema_version.py` (pin 13 → 14),
   `tests/test_query_substrate.py:31` (pin 13 → 14)
 - Test: `tests/test_query_substrate.py`
@@ -985,12 +1072,13 @@ Depends on: G2S1.2 (takes version 14 after 13).
 - [ ] In `src/memoria_vault/runtime/state.py`: `SCHEMA_VERSION = 14`; add
 
   ```python
-  MIGRATIONS[14] = """
-  CREATE INDEX IF NOT EXISTS idx_concept_edges_target
-      ON concept_edges(target_concept_id);
-  CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target
-      ON work_graph_edges(target_id);
-  """
+  MIGRATIONS[13] = (
+      14,
+      [
+          "CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON concept_edges(target_concept_id)",
+          "CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target ON work_graph_edges(target_id)",
+      ],
+  )
   ```
 
 - [ ] Bump the two version pins: tests/test_schema_version.py (13 → 14, rename the
@@ -1081,81 +1169,18 @@ own definition; no test exercises any of them. Independent of G1/G2 tasks.
 
 ---
 
-### Task G2S1.5: graph-substrate design gate (process task — no code)
+### Task G2S1.5: graph-substrate design gate — completed
 
-Everything in G2–G5/S1 not mechanically specified today goes through the repo's
-mandated design gate before any implementation task exists. Deliverable is a spec,
-produced by the superpowers brainstorming skill — not code, not a placeholder.
+Completed in `9c77ba61` after the required design sessions. The original intended
+single file was deliberately split into the two audited decision records:
 
-**Files:**
-- Create: `docs/superpowers/specs/2026-07-15-graph-substrate-design.md` (output of
-  the brainstorm; `docs/superpowers/` is tracked, not published)
-- Test: none — acceptance is the spec's existence and coverage checklist below.
+- `docs/superpowers/specs/2026-07-15-graph-nodes-identity-design.md`
+- `docs/superpowers/specs/2026-07-15-graph-edges-roles-propagation-design.md`
 
-**Interfaces:**
-- Consumes (named inputs, all read into the session before brainstorming):
-  - `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md` §2, packages G2–G5
-    and S1 (lines 140-147) plus §6 item 2 (warrant ontology RESOLVED: Option B) and
-    the §"Schema-before-corpus" ruling (line 354).
-  - `docs/superpowers/specs/data-structure-analysis.md` — at minimum the
-    `concept_edges` section (~line 2795), the work_graph_edges/entity-resolution
-    sections (~lines 1700-1880, 2699-2790), and Part-2 G0/G3/G4 findings
-    (~lines 995, 1143-1160, 1164-1176).
-  - `docs/superpowers/specs/warrant-ontology-brief.md` — the interim ruling
-    ("What is already decided") and the pre-registered evidence gate.
-  - This plan's already-shipped ledger (header above) — reconcile before proposing.
-- Produces: the spec file, with a decision record (chosen option + rejected
-  alternatives + migration/version claim) per agenda item. Follow-up implementation
-  tasks are cut from the spec in a later plan, never from this one.
-
-**Steps:**
-
-- [ ] Confirm G2S1.1-.4 are merged (the brainstorm designs on top of the landed
-  substrate): `git log --oneline -10` shows the four commits above.
-- [ ] Invoke the brainstorming skill with the agenda and inputs inline:
-  `Skill(skill="superpowers:brainstorming", args="Graph-substrate design for beta.1 consolidation G2-G5/S1. Inputs: docs/superpowers/specs/2026-07-12-beta.1-consolidation.md §2 G2-G5+S1, docs/superpowers/specs/data-structure-analysis.md, docs/superpowers/specs/warrant-ontology-brief.md interim ruling (Option B, do not relitigate). Output: docs/superpowers/specs/2026-07-15-graph-substrate-design.md")`
-- [ ] Drive the session through this fixed agenda, one decision record each:
-  1. **single-edge-module (G2, full consolidation)** — one owner for the relation
-     roster + all edge parsing; today's substrates to reconcile: schema.py
-     `LINK_RELATIONS`/`_check_links`/`parse_links`, state.py
-     `_concept_edge_relation` roster (state.py:3420), schema.sql `relation_type`
-     CHECK constraints (concept_edges + work_graph_edges), enrichment.py
-     work_graph_edges relation writes (enrichment.py:975).
-  2. **catalog-sources-bridge (G2)** — how claim→work edges resolve across the
-     concept-id / work-id id-space boundary.
-  3. **tension-edge-primitive / tension-relation-write-path (G2)** — the
-     `surface_tensions` PI-confirmation write path onto the (now persistent)
-     `tension` rows; edge existence is the confirmation signal.
-  4. **links-mirror semantics beyond fill (G2)** — dangling-target policy,
-     unchecked-source visibility, `.md` id-space normalization ratified or revised.
-  5. **mode-collapse 6→4 (S1)** — note.yaml already ships the 4-mode enum; audit
-     remaining 6-mode substrates (search/index/CLI) and either record as shipped or
-     spec the residue.
-  6. **concept-type-roster 15→10 (S1)** — roster is already 6 type files; reconcile
-     the consolidation's 15→10 against reality and record the delta.
-  7. **ULID keys + rename map (G3)** — ULID internal / path OKF-facing, rename
-     tracking, real FKs; `work-id-rename`, `source→published_in`,
-     `journal_events→event_log`, `source_type→item_type`; claims schema versions 15+.
-  8. **six-role argument graph (G4)** — roles via typed relations, earn-each-type;
-     within the warrant-brief interim ruling only (node reification stays deferred
-     to the beta.2 evidence gate — do not relitigate).
-  9. **typed propagation / blast-radius (G5)** — derive-and-propagate on write,
-     typed consequences, origin-blind epistemics (integrity.py:915-925/999-1003).
-- [ ] Write the spec to `docs/superpowers/specs/2026-07-15-graph-substrate-design.md`
-  with one `## Decision:` section per agenda item, each carrying: inputs cited,
-  options with pros/cons, the recommendation, and what it consumes from the landed
-  G2S1 substrate (`parse_links`, `concept_edge_id`, edge-row contract, versions
-  13-14).
-- [ ] Acceptance check: all nine agenda items have a decision record; no code was
-  written; already-shipped items are marked as such, not re-specified.
-- [ ] Commit:
-
-  ```
-  git add docs/superpowers/specs/2026-07-15-graph-substrate-design.md
-  git commit -m "docs(specs): graph-substrate design record for G2-G5/S1 (beta.1 consolidation)
-
-  Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
-  ```
+Together they cover the fixed nine-item agenda, record the landed G2S1.1–.4
+substrate they consume, reconcile already-shipped S1 work, and defer implementation
+tasks to later plans. No code was written in this gate. The former single-file
+deliverable and unchecked steps are superseded; do not recreate them.
 # PLAN 22 — #1293 slices 1–2 (package S12)
 
 Governing spec: `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md`
@@ -1298,19 +1323,27 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
     tests/test_evidence_markers.py tests/test_code_artifacts.py CHANGELOG.md
   ```
 
-### Task S12.2: code-artifact `purpose` enum `warrant` → `grounds` + numbered DB migration (manifest §1.1; AFTER G1)
+### Task S12.2: code-artifact `purpose` enum `warrant` → `grounds` (fresh-schema DDL)
+
+> **Fresh-install correction — source-complete in `f0f653be`:** the current schema,
+> record default, and validation admit `grounds` directly. Do not rebuild/copy tables,
+> rewrite old values, or create a legacy-schema test. The old detail below is historical
+> only and must not be replayed.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/code/records.py:20` (`purpose: str = "warrant"` default)
 - Modify: `src/memoria_vault/runtime/schema.sql:301` (CHECK constraint), `:378` (`PRAGMA user_version`)
 - Modify: `src/memoria_vault/runtime/state.py:53` (`SCHEMA_VERSION`), `:3429` (`_code_purpose` validation set), plus the `MIGRATIONS` dict G1 added (location fixed by G1; adjacent to `SCHEMA_VERSION`)
-- Modify: `tests/test_schema_version.py` (version-pin test G1 adjusted; today `:14-17` asserts 12)
+- Modify: `tests/test_schema_version.py` and `tests/test_query_substrate.py` (v14 legacy table fixtures and version-pinned tests)
 - Modify: `CHANGELOG.md` (Unreleased → Changed)
-- Test: `tests/test_schema_version.py` (registered `contract` in `tests/conftest.py:100`), `tests/test_code_artifacts.py` (registered `runtime` in `tests/conftest.py:30`)
+- Test: `tests/test_schema_version.py` (registered `contract` in `tests/conftest.py:100`), `tests/test_code_artifacts.py` (registered `runtime` in `tests/conftest.py:30`), and `tests/test_query_substrate.py`
 
 **Interfaces:**
-- Consumes: **G1's migration mechanism — assumed exact shape:** `MIGRATIONS: dict[int, tuple[int, list[str]]]` in `state.py`, mapping `from_version -> (to_version, steps)`, where `steps` is an ordered list of SQL statements the G1 runner executes inside one transaction with `PRAGMA foreign_keys = OFF`, setting `PRAGMA user_version = to_version` on success and chain-walking until `SCHEMA_VERSION`. Also assumed: G1 lands at `SCHEMA_VERSION == 13`. If either differs when this task executes, keep the migration body identical and renumber `13 -> N`, `14 -> N + 1`, reconciling with G1's actual runner contract before writing code.
-- Produces: `purpose` enum value `"grounds"` (frontmatter default, SQLite CHECK, validation set); `MIGRATIONS[13] = (14, [...])` rebuilding `code_artifacts` with the new CHECK and rewriting `'warrant'` rows to `'grounds'`; `SCHEMA_VERSION = 14`
+- Consumes: the canonical G1 registry; G2S1.3 at v14; normal foreign-key enforcement.
+- Produces: `purpose` enum value `"grounds"` (frontmatter default, SQLite CHECK,
+  validation set); `MIGRATIONS[14] = (15, [...])` rebuilding both `code_artifacts`
+  and FK-owning `code_runs` while rewriting `'warrant'` rows to `'grounds'`; and
+  `SCHEMA_VERSION = 15`.
 
 **Steps:**
 
@@ -1396,16 +1429,18 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
       purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both')),
   ```
 
-  and `:378`: `PRAGMA user_version = 14;`
-- [ ] Edit `src/memoria_vault/runtime/state.py:53`: `SCHEMA_VERSION = 14`, and `:3429`: `if purpose not in {"grounds", "deliverable", "both"}:`
-- [ ] Add the migration entry to G1's `MIGRATIONS` dict in `state.py` (SQLite cannot ALTER a CHECK and the old CHECK rejects `UPDATE ... SET purpose='grounds'`, so this is the standard create-copy-drop-rename rebuild; the G1 runner's `foreign_keys = OFF` keeps `code_runs`' `REFERENCES code_artifacts ON DELETE CASCADE` from firing on the DROP):
+  and `:378`: `PRAGMA user_version = 15;`
+- [ ] Edit `src/memoria_vault/runtime/state.py:53`: `SCHEMA_VERSION = 15`, and `:3429`: `if purpose not in {"grounds", "deliverable", "both"}:`
+- [ ] Add the migration entry to G1's `MIGRATIONS` dict in `state.py` (SQLite cannot
+  ALTER a CHECK and the old CHECK rejects `UPDATE ... SET purpose='grounds'`; rebuild
+  and copy the parent and FK-owning child tables under normal foreign-key enforcement):
 
   ```python
-      13: (
-          14,
+      14: (
+          15,
           [
               """
-              CREATE TABLE code_artifacts_v14 (
+              CREATE TABLE code_artifacts_v15 (
                   artifact_id TEXT PRIMARY KEY,
                   project_path TEXT NOT NULL,
                   record_path TEXT NOT NULL UNIQUE,
@@ -1422,34 +1457,72 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
               )
               """,
               """
-              INSERT INTO code_artifacts_v14
+              INSERT INTO code_artifacts_v15
               SELECT artifact_id, project_path, record_path, source_dir, output_dir,
                      CASE WHEN purpose = 'warrant' THEN 'grounds' ELSE purpose END,
                      approved_command_json, declared_inputs_json, declared_outputs_json,
                      dependency_notes, status, created_at, updated_at
               FROM code_artifacts
               """,
+              """
+              CREATE TABLE code_runs_v15 (
+                  run_id TEXT PRIMARY KEY,
+                  artifact_id TEXT NOT NULL REFERENCES code_artifacts_v15(artifact_id) ON DELETE CASCADE,
+                  command_json TEXT NOT NULL,
+                  cwd TEXT NOT NULL,
+                  sanitized_env_json TEXT NOT NULL DEFAULT '[]',
+                  input_hashes_json TEXT NOT NULL DEFAULT '{}',
+                  output_hashes_json TEXT NOT NULL DEFAULT '{}',
+                  stdout_sha256 TEXT NOT NULL DEFAULT '',
+                  stderr_sha256 TEXT NOT NULL DEFAULT '',
+                  stdout_path TEXT NOT NULL DEFAULT '',
+                  stderr_path TEXT NOT NULL DEFAULT '',
+                  exit_status INTEGER,
+                  timeout_result TEXT NOT NULL DEFAULT '',
+                  sandbox_backend TEXT NOT NULL DEFAULT '',
+                  sandbox_profile_hash TEXT NOT NULL DEFAULT '',
+                  state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
+                  started_at TEXT NOT NULL,
+                  ended_at TEXT
+              )
+              """,
+              """
+              INSERT INTO code_runs_v15(
+                  run_id, artifact_id, command_json, cwd, sanitized_env_json,
+                  input_hashes_json, output_hashes_json, stdout_sha256, stderr_sha256,
+                  stdout_path, stderr_path, exit_status, timeout_result, sandbox_backend,
+                  sandbox_profile_hash, state, started_at, ended_at
+              )
+              SELECT run_id, artifact_id, command_json, cwd, sanitized_env_json,
+                     input_hashes_json, output_hashes_json, stdout_sha256, stderr_sha256,
+                     stdout_path, stderr_path, exit_status, timeout_result, sandbox_backend,
+                     sandbox_profile_hash, state, started_at, ended_at
+              FROM code_runs
+              """,
+              "DROP TABLE code_runs",
               "DROP TABLE code_artifacts",
-              "ALTER TABLE code_artifacts_v14 RENAME TO code_artifacts",
+              "ALTER TABLE code_artifacts_v15 RENAME TO code_artifacts",
+              "ALTER TABLE code_runs_v15 RENAME TO code_runs",
           ],
       ),
   ```
 
 - [ ] Edit `src/memoria_vault/runtime/code/records.py:20`: `purpose: str = "grounds",`
-- [ ] Update the version-pin test in `tests/test_schema_version.py` to the new landing version: rename `test_schema_lands_at_user_version_13` to `test_schema_lands_at_user_version_14` and change both literals in its body from `13` to `14` (today, pre-G1, that test is `test_schema_lands_at_user_version_12` at lines 14–17 asserting `12`; G1 will have moved it to 13 — align whatever literal G1 left to 14).
+- [ ] Update the version-pin test in `tests/test_schema_version.py` to landing version
+  15 and verify the v14 fixtures preserve both tables and pass `foreign_key_check`.
 - [ ] Run to verify both pass: `python -m pytest tests/test_schema_version.py tests/test_code_artifacts.py -v`
 - [ ] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
 
   ```markdown
   - Renamed the code-artifact `purpose` enum value `warrant` to `grounds`
-    (frontmatter default, SQLite CHECK, validation set); DB migration 13→14
-    rewrites existing rows.
+    (frontmatter default, SQLite CHECK, validation set); DB migration 14→15
+    preserves runs while rewriting existing rows.
   ```
 
 - [ ] Commit:
 
   ```bash
-  git commit -m "feat(state): rename code-artifact purpose 'warrant' to 'grounds' with 13->14 migration (#1293)
+  git commit -m "feat(state): rename code-artifact purpose 'warrant' to 'grounds' with 14->15 migration (#1293)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" \
     src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py \
@@ -1933,6 +2006,11 @@ conftest change is needed anywhere in this package.
 
 ### Task S35.1: Unified grounds-type derivation R1–R4 in state.py (spec §4)
 
+> **Reconciliation correction — source-complete in `a518a793`:** the canonical
+> ref-kind literal is `code-grounds`, supplied by S12.1; no `code-warrant` spelling
+> or `_code_warrant_resolves` symbol may return during reconciliation. The historic
+> snippets below predate that rename and are not executable instructions.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py:2629-2636` (replace `_derived_evidence_type`
   with public `derive_evidence_type`) and `src/memoria_vault/runtime/state.py:2613`
@@ -2129,26 +2207,24 @@ conftest change is needed anywhere in this package.
 
 ---
 
-### Task S35.2: Compose delegates to `derive_evidence_type`; delete `_draft_evidence_type`; fix the wrong marker fixture
+### Task S35.2: Retire `_draft_evidence_type` after items-only v2 serialization
+
+> **Reconciliation correction — source-complete in `315a7c4f`, after S12.6
+> `2ec76331`:** compose already constructs `EvidenceMarker(evidence_id=evidence_id,
+> items=tuple(items))`; it must not call `state.derive_evidence_type`. State's
+> `_derived_evidence_row` owns derivation. This task deletes only the six-line
+> `_draft_evidence_type` helper, confirms no reference survives, then runs the affected
+> suites and full gate. The old compose-delegation and marker-fixture checklist below is
+> historical only.
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/knowledge.py:2012` (call site in
-  `compose_project_draft`) and `src/memoria_vault/runtime/knowledge.py:3216-3219`
-  (delete `_draft_evidence_type`)
-- Modify: `tests/test_evidence_markers.py:18-33`
-  (`test_evidence_marker_round_trips_canonical_form` declares `multi-span` for a
-  span+set item mix — under R2 that shape is `multi-hop`)
-- Test: existing suites `tests/test_draft_verification.py`, `tests/test_draft_compose.py`,
-  `tests/test_evidence_markers.py` (this is a deletion/refactor task; behavior for every
-  input compose can produce — zero items or spans of a single work, since the retired
-  `evidence_set:` frontmatter field is `forbidden` in the note schema — is identical, and
-  the R1–R4 rules themselves gained their tests in S35.1)
+- Modify: `src/memoria_vault/runtime/knowledge.py` (delete `_draft_evidence_type` only).
+- Test: affected draft/evidence suites and the full gate.
 
 **Interfaces:**
-- Consumes: `state.derive_evidence_type(items: list[str]) -> str` (from S35.1;
-  `knowledge.py` already has `from memoria_vault.runtime import state` at line 20).
+- Consumes: the items-only v2 `EvidenceMarker` construction supplied by S12.6.
 - Produces: none new. `_draft_evidence_type` ceases to exist — no other section may
-  reference it.
+  reference it; `_derived_evidence_row` remains the sole type-derivation owner.
 
 **Steps:**
 
@@ -2245,6 +2321,10 @@ conftest change is needed anywhere in this package.
 
 ### Task S35.3: Transitive nested-set completeness with fail-closed cycles (spec §5)
 
+> **Reconciliation correction — source-complete in `4b69f9c5`:** use
+> `_code_grounds_resolves` and publish the binding `evidence_item_closure` helper
+> described above. The following old-name snippets are historical only.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py:2562-2578` (rebuild wiring in
   `_evidence_marker_rows`), `src/memoria_vault/runtime/state.py:2603-2626`
@@ -2255,9 +2335,9 @@ conftest change is needed anywhere in this package.
 - Test: `tests/test_evidence_sets.py` (append after the S35.1 tests)
 
 **Interfaces:**
-- Consumes: `_code_warrant_resolves(vault: Path, item: str) -> bool` (state.py:2664,
-  kept as-is), `_source_span_pages(vault: Path) -> dict[str, set[str]]` (state.py:2676),
-  `evidence_ref_kind`, `parse_source_span_ref`.
+- Consumes: `_code_grounds_resolves(vault: Path, item: str) -> bool`,
+  `_source_span_pages(vault: Path) -> dict[str, set[str]]`, `evidence_ref_kind`, and
+  `parse_source_span_ref`.
 - Produces:
   - **`_evidence_set_states(vault: Path, items_by_id: dict[str, tuple[str, ...]], *, source_spans: dict[str, set[str]]) -> dict[str, str]`**
     (private to state.py) — maps every marker id to `"complete"` /
@@ -2268,6 +2348,10 @@ conftest change is needed anywhere in this package.
   - **Changed private signature:** `_derived_evidence_row(vault: Path, rel: str, marker: EvidenceMarker, *, state_value: str, run_id: str) -> dict[str, Any]`
     (drops `marker_ids` and `source_spans` — state is now computed by the caller).
   - `_evidence_items_resolve` ceases to exist — no other section may reference it.
+  - `evidence_item_closure(rows_by_id: Mapping[str, Mapping[str, Any]],
+    evidence_id: str) -> list[tuple[str, tuple[str, ...]]]` — cycle-safe non-set item
+    closure with empty direct path and unknown nested refs omitted; S68.2 consumes this
+    exact public state helper.
 
 **Steps:**
 
@@ -2873,6 +2957,12 @@ names it: `no-evidence-set`, severity high, permanent block.
 
 ### Task S68.2: Live catalog-standing findings — `evidence-source-stale` (blocking) and `evidence-source-archived` (advisory)
 
+> **Reconciliation correction — source-complete in `f034ca7a`:** anchor after
+> `_disposed_evidence_digests` by its “Map evidence dispositions…” docstring, never
+> after the removed ids helper. Preserve the draft-only lookup for duplicate checks,
+> separately build `rows_by_id` from all `state.evidence_sets(vault)`, and pass it to
+> the standing helper. The old anchor/checklist below is historical only.
+
 Spec §6: any work in a record's item closure with standing
 `retracted`/`superseded` raises `evidence-source-stale` (high, permanent
 block, **not** PI-disposable, carries `{work_id, path}`); standing `archived`
@@ -2905,7 +2995,8 @@ predicate, so this task introduces an honest blocking/advisory split.
   - `_catalog_source_standing(source: dict[str, Any]) -> str` (knowledge.py,
     module-private) — returns the PI-curated standing string; unset/blank
     maps to `"current"` by contract.
-  - `_evidence_source_standing_findings(vault: Path, draft_rows: list[dict[str, Any]]) -> list[dict[str, Any]]`
+  - `_evidence_source_standing_findings(vault: Path, draft_rows: list[dict[str, Any]], *,
+    rows_by_id: dict[str, dict[str, Any]]) -> list[dict[str, Any]]`
     (knowledge.py, module-private) — finding dicts
     `{"kind", "severity", "evidence_id", "block_ref", "work_id", "path"}`
     with `path: list[str]` (empty = direct, non-empty = the nested ev-id
@@ -3095,13 +3186,15 @@ predicate, so this task introduces an honest blocking/advisory split.
   _ADVISORY_FINDING_KINDS = frozenset({"evidence-source-archived"})
   ```
 
-  Add the helper directly after `_disposed_evidence_ids`
-  (knowledge.py:3241-3251):
+  Add the helper directly after `_disposed_evidence_digests` (anchor by its
+  “Map evidence dispositions…” docstring):
 
   ```python
   def _evidence_source_standing_findings(
       vault: Path,
       draft_rows: list[dict[str, Any]],
+      *,
+      rows_by_id: dict[str, dict[str, Any]],
   ) -> list[dict[str, Any]]:
       """Live-standing findings for every work in each record's item closure."""
       from memoria_vault.runtime.evidence import evidence_ref_kind, parse_source_span_ref
@@ -3110,7 +3203,6 @@ predicate, so this task introduces an honest blocking/advisory split.
           str(source["work_id"]): _catalog_source_standing(source)
           for source in state.catalog_sources(vault, checked_only=False)
       }
-      rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
       findings: list[dict[str, Any]] = []
       for row in draft_rows:
           seen: set[tuple[str, str, tuple[str, ...]]] = set()
@@ -3143,18 +3235,25 @@ predicate, so this task introduces an honest blocking/advisory split.
   ```
 
   Deliberate placement notes (record in the commit message body if useful):
-  the helper runs over `draft_rows` **outside** the per-row loop that honors
-  `_disposed_evidence_ids` — that is what makes `evidence-source-stale`
-  undisposable; and `rows_by_id` is built from all of
-  `state.evidence_sets(vault)`, not just the draft's rows, so nested refs
-  that live outside the draft file still taint.
+  the helper runs over `draft_rows` **outside** the per-row loop that compares
+  `disposed.get(row["id"])` with `_evidence_items_sha256(row["items"])`; that is
+  what makes `evidence-source-stale` undisposable. `rows_by_id` is built from all
+  `state.evidence_sets(vault)`, not just the draft's rows, so nested refs outside
+  the draft still taint.
 - [ ] Write the implementation, part 3 — wire into
   `_verify_project_draft_snapshot`. After the per-row loop and before
   `findings.extend(_draft_structural_reference_findings(...))`
-  (knowledge.py:2244), insert:
+  (knowledge.py:2244), retain the existing draft-only lookup as
+  `draft_rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}` for
+  duplicate-block references, then add the all-record lookup and wire:
 
   ```python
-      findings.extend(_evidence_source_standing_findings(vault, draft["evidence_sets"]))
+      rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
+      findings.extend(_evidence_source_standing_findings(
+          vault,
+          draft["evidence_sets"],
+          rows_by_id=rows_by_id,
+      ))
   ```
 
   Replace the truncate-then-`ok` block (knowledge.py:2246-2249, as amended
@@ -3246,29 +3345,42 @@ both of which run under a validated `OperationContext` (grep-verified: no
 other non-test caller of `rebuild_evidence_sets_from_markers` /
 `replace_evidence_sets`). Therefore: **state detects the mint** (it alone
 knows whether the insert was a first insert, via `cursor.rowcount` on the
-ON-CONFLICT insert) and reports it in its result dict; **the context-holding
-knowledge.py callers emit the journal event**, mirroring how
-compose already calls `append_journal_event(vault, {...}, context=context)`
-at knowledge.py:2047. Direct state-level rebuilds (tests only) bind without
-journaling — the same trust boundary as today; every production mint
-journals.
+ON-CONFLICT insert) and reports it in its result dict. That detection and the
+context/provenance-aware journal write must nevertheless commit together:
+otherwise a failed post-rebuild append leaves an immutable binding with no
+portable mint record, suppressing every retry.
+
+**Crash-consistency amendment (BINDING — replaces the former post-rebuild
+`knowledge._journal_minted_evidence_events` design and its implementation
+snippets below):** `trusted_writer.rebuild_evidence_sets_and_journal_mints(
+vault: Path, *, run_id: str, context: OperationContext) -> dict[str, Any]`
+is the sole production rebuild seam. It validates/decorates the context,
+holds `state.workspace_lock`, reconciles any prior JSONL tail, and derives
+marker rows before beginning the write transaction (those read-only derivation
+helpers intentionally open their own connections). It then begins one `BEGIN
+IMMEDIATE` SQLite transaction, replaces active evidence sets, detects first
+bindings, and inserts every decorated `evidence-minted` `event_log` row.
+Journal-row insertion failure rolls back the bindings *and* the active-set
+replacement. Only after commit does it write the journal-head and append JSONL,
+retaining the existing authoritative-DB then recoverable-export discipline.
+Direct state-level rebuilds remain context-free and do not journal.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py:2277-2332`
-  (`replace_evidence_sets` — collect `minted`, return it),
-  `src/memoria_vault/runtime/knowledge.py` (new `_journal_minted_evidence_events`
-  helper; call it after the rebuild at :2039-2042 in
-  `compose_project_draft` and after :2162-2165 in
-  `_verify_project_draft_snapshot`),
+  (extract connection-scoped evidence-set and journal-row primitives while
+  preserving the direct rebuild API),
+  `src/memoria_vault/runtime/trusted_writer.py` (the narrow atomic rebuild and
+  mint-journal seam), `src/memoria_vault/runtime/knowledge.py` (both production
+  call sites use that seam),
   `tests/test_evidence_sets.py:71` (exact-dict assertion on the rebuild
   result gains the `minted` key).
 - Test: `tests/test_draft_verification.py` (new test).
 
 **Interfaces:**
-- Consumes: `append_journal_event(vault, event, *, context) -> dict[str, Any]`
-  (trusted_writer.py:193; already imported in knowledge.py:38);
-  `state.read_event_log(vault, *, event_types=None) -> list[dict[str, Any]]`
-  (state.py:930, for the test).
+- Consumes: `state.workspace_lock`, `state.connect`, and the existing
+  context/provenance decoration plus JSONL reconciliation machinery in
+  `trusted_writer`; `state.read_event_log(vault, *, event_types=None) ->
+  list[dict[str, Any]]` (for tests).
 - Produces:
   - `state.replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, Any]`
     — return value gains `"minted": list[dict[str, Any]]` (each
@@ -3276,14 +3388,23 @@ journals.
     present **only when non-empty** (same convention as `duplicate_ids` at
     state.py:2354-2355). `rebuild_evidence_sets_from_markers` passes it
     through unchanged.
-  - `knowledge._journal_minted_evidence_events(vault: Path, rebuild: dict[str, Any], *, context: OperationContext) -> None`
-    (module-private emission seam).
+  - Private state primitives `_replace_evidence_sets_conn(conn, rows)` and
+    `_insert_journal_row_conn(conn, row, *, machine)` used only by the atomic
+    trusted-writer seam; the latter hashes/inserts the normal authoritative
+    `event_log` row without opening a second connection.
+  - `trusted_writer.rebuild_evidence_sets_and_journal_mints(vault: Path, *,
+    run_id: str, context: OperationContext) -> dict[str, Any]`.
   - Journal event contract: `event_type == "evidence-minted"`, payload keys
     `evidence_id`, `block_ref`, `block_text_sha256` plus the standard
     context/provenance decoration. Task S68.4 replays exactly this.
 
 **Steps:**
 
+- [ ] **Fixture amendment:** do not delete an immutable binding row—the schema's
+  `evidence_bindings_no_delete` trigger correctly refuses that. In the disposable
+  test vault, simulate the stated ledger-loss recovery by dropping the entire
+  `evidence_bindings` table; the next `state.connect` re-applies schema DDL and
+  recreates the empty table and its immutability triggers before replay.
 - [ ] Write the failing test. Append to `tests/test_draft_verification.py`:
 
   ```python
@@ -3310,6 +3431,29 @@ journals.
 - [ ] Run to verify it fails:
   `python -m pytest tests/test_draft_verification.py::test_first_binding_journals_one_evidence_minted_event -v`
   — expected failure: `events == []`.
+- [ ] Implement the atomic trusted-writer seam. Extract
+  `state._replace_evidence_sets_conn(conn, rows)` from the current direct
+  replacement path (including mint detection), and let the public direct
+  functions retain their own connection/context-free behavior. Extract
+  `state._insert_journal_row_conn(conn, row, *, machine)` from the existing
+  hash-chain insertion so it uses the caller's transaction rather than opening
+  another connection. `trusted_writer.rebuild_evidence_sets_and_journal_mints`
+  validates and decorates the context first, then under `workspace_lock`
+  reconciles a prior export tail and derives marker rows before opening one
+  connection for `BEGIN IMMEDIATE`. It calls the connection-scoped replacement,
+  inserts each mint event via the connection-scoped journal helper, and commits.
+  It writes the head and appends the collected JSONL events only after that
+  commit. Replace both knowledge production rebuild calls with this
+  trusted-writer function.
+- [ ] Add a fault-injection regression beside the integration test: monkeypatch
+  `_insert_journal_row_conn` to raise during compose; assert the failed call
+  leaves no `evidence_bindings`, no active `evidence_sets`, and no
+  `evidence-minted` event. Restore the helper, verify the already-written draft,
+  and assert exactly one binding/event. This proves failure cannot permanently
+  consume an ID without portable mint history.
+
+<!-- Historical two-phase instructions, superseded by the crash-consistency
+amendment above. They are retained only as provenance; do not implement them.
 - [ ] Write the state half. In `src/memoria_vault/runtime/state.py`, replace
   the head and tail of `replace_evidence_sets` (lines 2277-2296 and 2332).
   Head — replace:
@@ -3420,6 +3564,8 @@ journals.
       _journal_minted_evidence_events(vault, rebuild, context=context)
   ```
 
+-->
+
 - [ ] Update the exact-dict rebuild assertion at
   `tests/test_evidence_sets.py:71` (five direct markers all mint there).
   Replace:
@@ -3450,7 +3596,7 @@ journals.
 - [ ] Commit:
 
   ```bash
-  git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py tests/test_evidence_sets.py
+  git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py tests/test_evidence_sets.py
   git commit -m "feat(evidence): journal evidence-minted events at first binding (#1293 slice 7a)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -3460,9 +3606,11 @@ journals.
 
 ### Task S68.4: Rebuild the bindings ledger from the journal
 
-Spec §8: the bindings table becomes rebuildable by replaying mint events, so
-a vault whose `.memoria` SQLite state is lost (folder-copied bundle) regains
-its anti-tamper guarantees from the journal.
+Spec §8: the bindings table becomes rebuildable by replaying authoritative
+`event_log` mint events after a bindings-table loss in an otherwise intact or
+restored SQLite state. This task does **not** import journal exports into a
+folder copy that excludes `.memoria`; such portable-journal import is a later,
+explicit scope if needed.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (new function directly after
@@ -3472,17 +3620,44 @@ its anti-tamper guarantees from the journal.
 
 **Interfaces:**
 - Consumes: the `evidence-minted` journal contract from Task S68.3
-  (`event_type = "evidence-minted"`, payload keys `evidence_id`,
-  `block_text_sha256`); the `event_log` table shape
-  (state.py:806-814).
+  (`event_type = "evidence-minted"`, payload keys `evidence_id`, `block_ref`,
+  `block_text_sha256`, and the request-context provenance envelope); the
+  fail-closed `verify_journal_chain` and validated `read_event_log` paths; and
+  the `event_log` table shape (state.py:806-814).
 - Produces: `state.rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]`
-  — replays `evidence-minted` events in `event_id` order into
+  — under the workspace lock, it first verifies the complete chain and validates
+  every mint payload (ID grammar, canonical block ref, nullable SHA grammar, and
+  request-context provenance) before it opens the one SQLite replay transaction.
+  It then replays `evidence-minted` events in `event_id` order into
   `evidence_bindings` with first-event-wins (ON CONFLICT DO NOTHING);
   returns `{"replayed": <events seen>, "inserted": <rows actually written>}`.
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_draft_verification.py`:
+> **Executable review repair — this supersedes the historical source-complete
+> snippets below.** The original raw-`event_log` replay bypassed chain and payload
+> validation. The recovery must fail closed before any insert when
+> `verify_journal_chain(vault)["ok"]` is false, then obtain only
+> `read_event_log(..., event_types=("evidence-minted",))` rows and validate each
+> canonical mint payload. The validator accepts only `ev-<8 lowercase hex>` IDs,
+> a canonical `<nonempty normalized path>#^blk-<same suffix>` block ref, `null` or
+> `sha256:<64 lowercase hex>` claim hash, and the request-context fields: a known
+> string `actor`; nonblank `run_id`, `request_id`, `operation`, `machine`, and
+> `timestamp`; plus a mapping `request_provenance`. It performs all validation before `BEGIN IMMEDIATE`,
+> so a malformed later event rolls back the whole replay.
+>
+> The regression set is `test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected`,
+> `test_bindings_ledger_recovery_refuses_a_broken_journal_chain`,
+> `test_bindings_ledger_recovery_refuses_a_noncanonical_mint_event`, and
+> `test_bindings_ledger_recovery_uses_first_mint_and_restores_immutability`;
+> `test_evidence_mint_payload_validator_rejects_a_nonstring_actor` prevents malformed
+> JSON values from escaping as a Python type error.
+> The last test uses `DROP TABLE evidence_bindings` (not `DELETE`, which the
+> immutable trigger correctly forbids), confirms first-event-wins and counts, and
+> confirms the schema-created update/delete triggers still reject mutation.
+
+- [ ] Historical source-complete test sketch (superseded by the executable review
+  repair above). Append to `tests/test_draft_verification.py`:
 
   ```python
   def test_deleted_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected(
@@ -3495,7 +3670,7 @@ its anti-tamper guarantees from the journal.
       assert bound["block_text_sha256"]
 
       with state.connect(tmp_path) as conn:
-          conn.execute("DELETE FROM evidence_bindings")
+          conn.execute("DROP TABLE evidence_bindings")
 
       result = state.rebuild_evidence_bindings_from_journal(tmp_path)
 
@@ -3527,11 +3702,12 @@ its anti-tamper guarantees from the journal.
   (Without the replay, the verify rebuild would re-mint the **tampered**
   hash as a fresh first binding and the drift would be blessed — the replay
   restoring the original SHA is exactly what keeps tamper detected.)
-- [ ] Run to verify it fails:
-  `python -m pytest tests/test_draft_verification.py::test_deleted_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected -v`
+- [ ] Historical red command (superseded):
+  `python -m pytest tests/test_draft_verification.py::test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected -v`
   — expected failure: `AttributeError: module 'memoria_vault.runtime.state'
   has no attribute 'rebuild_evidence_bindings_from_journal'`.
-- [ ] Write the minimal implementation. In
+- [ ] Historical raw-SQL implementation sketch (superseded by the validated,
+  workspace-locked replay above). In
   `src/memoria_vault/runtime/state.py`, after
   `rebuild_evidence_sets_from_markers` (line 2356), add:
 
@@ -3567,8 +3743,8 @@ its anti-tamper guarantees from the journal.
       return {"replayed": replayed, "inserted": inserted}
   ```
 
-- [ ] Run to verify it passes:
-  `python -m pytest tests/test_draft_verification.py::test_deleted_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected -v`
+- [ ] Run the current focused recovery suite:
+  `python -m pytest tests/test_draft_verification.py -q`
 - [ ] Run the correctness gate: `python scripts/verify`
 - [ ] Commit:
 
@@ -3672,21 +3848,25 @@ prose, and the disposition section. Do **not** link
 `docs/superpowers/specs/` from this page — that tree is tracked but not
 published, so the link would 404 on Pages. This rewrite assumes the slice-1
 rename (`code-warrant:` → `code-grounds:`, warrant→grounds prose) has landed;
-the page below is written post-rename.
+the page below is written post-rename. It runs only after S68.3 and S68.4: this
+page promises `evidence-minted` events and a bindings ledger rebuildable from the
+journal, so it must describe their shipped mint/replay semantics rather than a
+future design.
 
 **Files:**
 - Modify: `docs/reference/control-and-policy/evidence-sets.md` (full-file
   replacement, 91 lines today).
 
 **Interfaces:**
-- Consumes: finding names/severities/classes exactly as produced by Tasks
-  S68.1/S68.2 and by S35 (`evidence-incomplete`, `review-required`,
-  disposition `items_sha256` binding).
+- Consumes: v2 marker serialization and derived fields from S12.5/S12.6/S35;
+  disposition `items_sha256` binding from S35.4; finding names/severities/classes
+  from S68.1/S68.2; and the `evidence-minted` plus journal-rebuild semantics from
+  S68.3/S68.4.
 - Produces: nothing programmatic.
 
 **Steps:**
 
-- [ ] Replace the entire file content with:
+- [x] Replace the entire file content with:
 
   ````markdown
   ---
@@ -3761,8 +3941,7 @@ the page below is written post-rename.
 
   ## The mint-once ledger and the journal
 
-  The marker owns the ordered `items=` list. SQLite table `evidence_sets` is
-  derived active state rebuilt from those markers. A separate
+  SQLite table `evidence_sets` is derived active state rebuilt from those markers. A separate
   `evidence_bindings` ledger records the first observed appearance of each
   evidence ID: its anchored claim hash when resolvable, or `null` when it is
   not. The ledger survives marker removal, so a reappearing ID always retains
@@ -3777,8 +3956,9 @@ the page below is written post-rename.
 
   At first binding, Memoria also appends an `evidence-minted` journal event
   carrying the evidence ID, block reference, and claim hash. The bindings
-  ledger is rebuildable by replaying mint events, so tamper history travels
-  with the vault rather than living only in local SQLite state.
+  ledger is rebuildable by replaying those authoritative event-log entries in
+  an intact or restored workspace. Exporting/importing a journal into a
+  folder copy that excludes `.memoria` is outside this reference's scope.
 
   Source-span refs use stable `work_id`, never citekeys. Citekeys are rendered
   only during export.
@@ -3845,10 +4025,10 @@ the page below is written post-rename.
   - The principle behind the immutable binding ledger: [Design principles](../../explanation/rationale/foundations/design-principles.md) (Provenance everywhere)
   ````
 
-- [ ] Run the gate: `python scripts/verify`
+- [x] Run the gate: `python scripts/verify`
   (docs lint and any doc-link product gates run here; fix only what the gate
   reports on this file).
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add docs/reference/control-and-policy/evidence-sets.md
@@ -3876,7 +4056,7 @@ Implements `docs/superpowers/specs/2026-07-15-model-call-cost-telemetry-design.m
 - No new dependencies (`genai-prices` ships with the pinned
   `pydantic-ai-slim>=2.0`; installed pydantic-ai is 2.9.1 and its `RunUsage`
   carries exactly `input_tokens`/`output_tokens`/`cache_read_tokens`/
-  `cache_write_tokens`; `ModelResponse.cost()` raises `LookupError` on
+  `cache_write_tokens`/`total_tokens`; `ModelResponse.cost()` raises `LookupError` on
   unpriced models — both verified against the repo venv). No
   `SCHEMA_VERSION` bump: this is an additive journal-event payload change,
   and no JSON schema constrains `model_call` event fields (verified — no
@@ -3924,27 +4104,169 @@ ranges; the refs below are the real, current ones):
 - New doc terms `cost_usd` / `elapsed_s` pass cspell against the repo config
   (verified via `npx cspell stdin`) — no `project-words.txt` change.
 
+### Plan-reconciliation amendment — canonical model-call result, key perimeter, and breaker handoff (2026-07-29)
+
+This approved amendment supersedes the legacy fallback block in COST.1, the
+individual-merge/known-broken-intermediate instructions in COST.1–.3, and
+every four-field live-usage fixture below. It is shared with Alpha23 LOOP.3
+and the BOOT-B.5 secret-perimeter task.
+
+1. **One ordered, atomic handoff.** The required order is BOOT-B.5 →
+   COST.1–.5 → LOOP.3. Implement COST.1–.3 as one atomic TDD tranche: write
+   the combined red tests, make the public callers accept the dict in the same
+   change, run them green, and make one combined commit. Do not merge,
+   cherry-pick, or call a COST.1-only state green—the three current callers
+   otherwise receive a dict where they need text. COST.4 follows that tranche
+   and remains serialized with S68.3; COST.5 follows COST.4. LOOP.1/.2 remain
+   independent of this chain.
+2. **Canonical result, harvested once.** For every real live call, the shared
+   result is exactly, in notation:
+
+   ```python
+   MODEL_CALL_RESULT = {
+       "text": str,
+       "usage": {
+           "input_tokens": int,
+           "output_tokens": int,
+           "cache_read_tokens": int,
+           "cache_write_tokens": int,
+           "total_tokens": int,
+       } | None,
+       "cost_usd": float | None,
+       "elapsed_s": float,
+   }
+   ```
+
+   Immediately after a successful `agent.run_sync`, COST.1 calls
+   `result.usage()` exactly once, constructs all five integer fields (including
+   the SDK's `total_tokens`), and retains that dict before checking empty
+   output or digest validity. The deterministic fixture has `usage=None`,
+   `cost_usd=None`, and `elapsed_s=0.0`. `cost_usd` is a nullable best-effort
+   estimate from the bundled price snapshot (`LookupError -> None`); it is
+   never fabricated and is not a token-breaker input. The design spec is
+   amended with this fifth, SDK-reported usage field so the journal and LOOP
+   consumers name the same contract.
+
+   The COST.1 replacement uses this one harvest immediately after the
+   `run_sync` `try` block; LOOP.3 later inserts its charge immediately after
+   the assignment, before the existing text check:
+
+   ```python
+   run_usage = result.usage()
+   usage = {
+       "input_tokens": int(run_usage.input_tokens),
+       "output_tokens": int(run_usage.output_tokens),
+       "cache_read_tokens": int(run_usage.cache_read_tokens),
+       "cache_write_tokens": int(run_usage.cache_write_tokens),
+       "total_tokens": int(run_usage.total_tokens),
+   }
+   ```
+3. **BOOT-B.5 owns secrets.** COST.1 replaces the same function B.5 edits, so
+   it must preserve B.5's complete key-env-only resolver and failure—not treat
+   B.5 as an external precondition:
+
+   ```python
+   key_env = runner.get("key_env")
+   api_key = None
+   if isinstance(key_env, str) and key_env:
+       api_key = os.environ.get(key_env)
+       if not api_key:
+           provider = str(runner.get("provider") or "runner")
+           raise RuntimeError(
+               f"provider {provider} requires {key_env} - "
+               f"set it: memoria secrets set {key_env}"
+           )
+   ```
+
+   `key_env: null` is keyless-legal. Never reintroduce
+   `MEMORIA_MODEL_API_KEY`, `OPENAI_API_KEY`, or implicit
+   `KILOCODE_API_KEY` fallback in either `operations.py` or `cli.py`; B.5's
+   error remains the sole missing-required-key behavior.
+4. **One durable provenance record.** COST.4 forwards the exact canonical
+   `usage` dict (five fields for real calls; null for fixtures), `cost_usd`,
+   and `elapsed_s` into the existing three `model_call` journal literals.
+   It adds no sink, no second journal event, and no altered doctor record.
+   Define this shared live-call fixture in `tests.helpers` and use it wherever
+   a shared fake or imported expected value is useful (equivalent inline
+   journal assertions may spell out the same five fields):
+
+   ```python
+   LIVE_USAGE = {
+       "input_tokens": 17,
+       "output_tokens": 5,
+       "cache_read_tokens": 2,
+       "cache_write_tokens": 1,
+       "total_tokens": 25,
+   }
+   ```
+
+   Have `patch_pydantic_ai` return that usage, expose an incrementing
+   `seen["usage_calls"]`, and make its price method retain the existing
+   `LookupError`/`Decimal` cases. COST.1 asserts one harvest; COST.2/.3
+   fixture and monkeypatch results use `usage=None` or `LIVE_USAGE`; COST.4's
+   three journal assertions include `total_tokens: 25`.
+5. **LOOP insertion point and regression proof.** LOOP.3, after this chain,
+   inserts its ledger charge immediately after COST.1 has built `usage` and
+   before `text` is read/validated. It consumes the dict, never calls the SDK
+   usage method again. COST's combined test command must include the two
+   fixture-result tests, all three operation call-site/event tests, the
+   keyless-no-fallback test, and the one-harvest assertion; stage
+   `operations.py`, `tests/helpers.py`, and `tests/test_operations.py` in the
+   one COST.1–.3 commit. COST.4 and COST.5 retain their separately listed
+   golden/doc commits.
+
+   Add `test_pydantic_ai_chat_keyless_runner_ignores_legacy_fallback_envs` to
+   COST.1: set all three retired environment names, call a `key_env=None`
+   runner through the fake, and assert `provider_kwargs == {"base_url": ...}`.
+   Include BOOT-B.5's complementary required-key refusal test in the combined
+   tranche as a non-regression. The combined tranche command is:
+
+   ```bash
+   python -m pytest tests/test_operations.py tests/test_cli_doctor_eval.py \
+       tests/test_runtime_gate_replay.py -v
+   ```
+
 ---
 
 ### Task COST.1: `_pydantic_ai_chat` returns `{text, usage, cost_usd, elapsed_s}`
 
+> **Execution override:** Follow the 2026-07-29 canonical-result amendment.
+> The fallback-chain and four-field snippets below are drafting history. COST.1
+> is developed only as part of the atomic COST.1–.3 tranche after BOOT-B.5;
+> do not commit or validate it as an independently shippable state.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:951-984` (`_pydantic_ai_chat`) and `operations.py:5-12` (stdlib import block — add `import time`)
-- Modify: `tests/helpers.py:362-393` (`patch_pydantic_ai` — fake `run_sync` result gains `usage()` and `response.cost()`)
-- Test: `tests/test_operations.py`
+- Modify: `tests/helpers.py:12-15,362-393` (add `LIVE_USAGE`; fake `run_sync` result gains `usage()` and `response.cost()`)
+- Modify: `tests/test_token_ceiling.py` (retain the charging/fallback proof while adapting direct chat assertions to the canonical telemetry dict)
+- Test: `tests/test_operations.py`, `tests/test_token_ceiling.py`
 
 **Interfaces:**
-- Consumes: `AgentRunResult.usage() -> RunUsage` (fields `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`); `AgentRunResult.response.cost() -> genai_prices PriceCalculation` (`.total_price: Decimal`; raises `LookupError` when the model/provider is not in the local price snapshot); `time.monotonic()`.
-- Produces: `_pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> dict[str, Any]` with keys `text: str` (non-empty), `usage: dict[str, int]` (always populated on a real call), `cost_usd: float | None`, `elapsed_s: float`.
-- Produces: `patch_pydantic_ai(monkeypatch: Any, *, output: str = "", seen: dict[str, Any] | None = None, total_price: Any | None = None) -> dict[str, Any]` — fake result's `usage()` returns fixed counts 17/5/2/1; `response.cost()` raises `LookupError` when `total_price is None`, else returns an object with `.total_price`.
+- Consumes: `AgentRunResult.usage() -> RunUsage` (fields `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, `total_tokens`); `AgentRunResult.response.cost() -> genai_prices PriceCalculation` (`.total_price: Decimal`; raises `LookupError` when the model/provider is not in the local price snapshot); `time.monotonic()`.
+- Produces: the amendment's canonical `MODEL_CALL_RESULT`: `text: str` (non-empty), five-field `usage: dict[str, int]` (always populated on a real call), nullable best-effort `cost_usd`, and `elapsed_s`.
+- Consumes: BOOT-B.5's `_resolve_runner_api_key(runner) -> str` and `_KEYLESS_PROVIDER_API_KEY = "api-key-not-set"`; COST.1 preserves B.5's fail-closed resolution, exact missing-key refusal, and unconditional `OpenAIProvider(api_key=...)` behavior.
+- Produces: `tests.helpers.LIVE_USAGE: dict[str, int]` (17/5/2/1/25) and `patch_pydantic_ai(monkeypatch: Any, *, output: str = "", seen: dict[str, Any] | None = None, total_price: Any | None = None) -> dict[str, Any]` — the fake's one `usage()` call returns a `SimpleNamespace` expanded from `LIVE_USAGE`; `response.cost()` raises `LookupError` when `total_price is None`, else returns an object with `.total_price`; its `FakeProvider` preserves `seen["provider_kwargs"]` and appends every construction to `seen["provider_kwargs_list"]`.
 
 **Steps:**
 
 - [ ] **Step 0 — PI confirmation checkpoint:** confirm with the PI that the spec's "Design decisions (made here; confirm at review)" block stands as written (extend `model_call`, plain-dict return, nullable `cost_usd`, no content capture, fixture nulls, no new dep / no `SCHEMA_VERSION` bump). No code.
 
-- [ ] **Upgrade the test fake** — replace `patch_pydantic_ai` in `tests/helpers.py:362-393` with (only `run_sync` and the signature change; existing `seen` behavior is preserved, so current callers in `test_cli_doctor_eval.py:698,743,778` and `test_runtime_gate_replay.py:351` keep passing):
+- [ ] **Upgrade the test fake** — first add this module-level fixture after
+  `WORKSPACE_SEED` in `tests/helpers.py`, then replace `patch_pydantic_ai` at
+  `:362-393` (only `run_sync` and the signature change; existing `seen`
+  behavior is preserved, so current callers in `test_cli_doctor_eval.py:698,743,778`
+  and `test_runtime_gate_replay.py:351` keep passing):
 
 ```python
+LIVE_USAGE = {
+    "input_tokens": 17,
+    "output_tokens": 5,
+    "cache_read_tokens": 2,
+    "cache_write_tokens": 1,
+    "total_tokens": 25,
+}
+
+
 def patch_pydantic_ai(
     monkeypatch: Any,
     *,
@@ -3957,6 +4279,7 @@ def patch_pydantic_ai(
     class FakeProvider:
         def __init__(self, **kwargs: Any) -> None:
             seen["provider_kwargs"] = kwargs
+            seen.setdefault("provider_kwargs_list", []).append(kwargs)
 
     class FakeModel:
         def __init__(self, model_name: str, *, provider: object) -> None:
@@ -3973,12 +4296,8 @@ def patch_pydantic_ai(
             seen["model_settings"] = model_settings
 
             def usage() -> SimpleNamespace:
-                return SimpleNamespace(
-                    input_tokens=17,
-                    output_tokens=5,
-                    cache_read_tokens=2,
-                    cache_write_tokens=1,
-                )
+                seen["usage_calls"] = int(seen.get("usage_calls", 0)) + 1
+                return SimpleNamespace(**LIVE_USAGE)
 
             def cost() -> SimpleNamespace:
                 if total_price is None:
@@ -4029,12 +4348,18 @@ def test_pydantic_ai_chat_returns_text_usage_cost_and_timing(
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
     assert isinstance(result["cost_usd"], float)
     assert result["cost_usd"] == pytest.approx(0.0125)
     assert isinstance(result["elapsed_s"], float)
     assert result["elapsed_s"] >= 0.0
     assert seen["prompt"] == "prompt body"
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://model.test/v1",
+        "api_key": "api-key-not-set",
+    }
+    assert seen["usage_calls"] == 1
 
 
 def test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage(
@@ -4050,6 +4375,7 @@ def test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage(
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
 
 
@@ -4059,6 +4385,14 @@ def test_pydantic_ai_chat_still_rejects_empty_output(monkeypatch: pytest.MonkeyP
     with pytest.raises(RuntimeError, match="pydantic-ai model returned no message content"):
         _pydantic_ai_chat(CHAT_POLICY, chat_runner(), "prompt body")
 ```
+
+  In `tests/test_token_ceiling.py`, retain every existing boundary and fallback scenario:
+  change the direct result assertions at the current lines 37, 40, 56, 75, 104, and 138
+  from a bare-string comparison to `result["text"]`, while keeping all ledger totals and
+  refusal assertions unchanged. The two custom `UsageAgent` cases intentionally remain
+  minimal: one reports only `total_tokens`, and the parametrized case returns a boolean or
+  raises from `usage()`. They prove telemetry extraction cannot replace or weaken
+  `_record_token_usage`'s existing safe fallback behavior.
 
 - [ ] **Run tests to verify they fail:**
   `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" -v`
@@ -4070,21 +4404,12 @@ def test_pydantic_ai_chat_still_rejects_empty_output(monkeypatch: pytest.MonkeyP
 def _pydantic_ai_chat(
     policy: dict[str, Any], runner: dict[str, Any], prompt: str
 ) -> dict[str, Any]:
+    _require_token_budget(str(policy.get("operation_id") or "<unknown>"))
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
-    key_env = runner.get("key_env")
-    if isinstance(key_env, str) and key_env:
-        api_key = os.environ.get(key_env)
-    else:
-        api_key = (
-            os.environ.get("MEMORIA_MODEL_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-            or os.environ.get("KILOCODE_API_KEY")
-        )
+    api_key = _resolve_runner_api_key(runner)
     Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
-    provider_kwargs = {"base_url": base_url}
-    if api_key:
-        provider_kwargs["api_key"] = api_key
+    provider_kwargs = {"base_url": base_url, "api_key": api_key}
     model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
     agent = Agent(model)
     params = runner.get("params") if isinstance(runner.get("params"), dict) else {}
@@ -4100,49 +4425,55 @@ def _pydantic_ai_chat(
         result = agent.run_sync(prompt, model_settings=settings)
     except Exception as exc:
         raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
+    _record_token_usage(result, settings)
     elapsed_s = time.monotonic() - started_at
+    run_usage = result.usage()
+    usage = {
+        "input_tokens": int(run_usage.input_tokens),
+        "output_tokens": int(run_usage.output_tokens),
+        "cache_read_tokens": int(run_usage.cache_read_tokens),
+        "cache_write_tokens": int(run_usage.cache_write_tokens),
+        "total_tokens": int(run_usage.total_tokens),
+    }
     text = str(getattr(result, "output", "") or "").strip()
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
-    run_usage = result.usage()
-    usage = {
-        "input_tokens": run_usage.input_tokens,
-        "output_tokens": run_usage.output_tokens,
-        "cache_read_tokens": run_usage.cache_read_tokens,
-        "cache_write_tokens": run_usage.cache_write_tokens,
-    }
     try:
         cost_usd: float | None = float(result.response.cost().total_price)
-    except LookupError:
+    except (AttributeError, LookupError):
         cost_usd = None
     return {"text": text, "usage": usage, "cost_usd": cost_usd, "elapsed_s": elapsed_s}
 ```
 
-  Notes baked into this block: the empty-output check runs on `text` before the return dict is built (spec §1); `float(...)` converts `genai-prices`' `Decimal` so the journal row stays `json.dumps`-serializable; `elapsed_s` brackets only `run_sync`.
+  Notes baked into this block: the existing ledger charge occurs immediately after a
+  completed `run_sync`, before telemetry shaping; the empty-output check runs on `text`
+  before the return dict is built (spec §1); a malformed/unavailable usage object maps to
+  zero telemetry fields without changing `_record_token_usage`'s existing total/max-token
+  fallback; `float(...)` converts `genai-prices`' `Decimal` so the journal row stays
+  `json.dumps`-serializable; `elapsed_s` brackets only `run_sync`.
 
 - [ ] **Run tests to verify they pass:**
-  `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" -v`
-  Expected: 3 passed.
+  `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" tests/test_token_ceiling.py -v`
+  Expected: all pass, including the prior exact-boundary, reported-usage, invalid-usage,
+  and max-token-fallback charging proofs.
 
 - [ ] **Guard the fake's existing consumers:**
   `python -m pytest tests/test_cli_doctor_eval.py tests/test_runtime_gate_replay.py -v`
-  Expected: all pass (`_runner_status` at `cli.py:3064` discards the return; the fake stays output-compatible). Known transient state, resolved by COST.2/COST.3 in this same branch: `_run_prompt_model`/`_run_digest_model`'s `pydantic-ai` branches now forward a dict where their callers still expect `str` — no gate-level test reaches those branches (operation tests use the `deterministic-fixture` model, which short-circuits before `_pydantic_ai_chat`; `tests/test_live_runner.py` skips without `MEMORIA_MODEL_BASE_URL`).
+  Expected: all pass (`_runner_status` at `cli.py:3064` discards the return;
+  the fake stays output-compatible). A broken intermediate is not permitted:
+  the callers change in the same atomic COST.1–.3 tranche.
 
-- [ ] **Commit:**
-
-```bash
-git add src/memoria_vault/runtime/operations.py tests/helpers.py tests/test_operations.py
-git commit -m "$(cat <<'EOF'
-feat(operations): return usage/cost/timing from _pydantic_ai_chat
-
-Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
-EOF
-)"
-```
+- [ ] **Do not commit yet.** Continue directly into COST.2 and COST.3 in the
+  same worktree. The atomic tranche's single staging/commit step is at the
+  end of COST.3; a COST.1-only commit leaves active callers expecting `str`.
 
 ---
 
 ### Task COST.2: thread the dict through `_run_prompt_model` and both prompt-path callers
+
+> **Execution override:** This task is inseparable from COST.1 and COST.3.
+> Every `usage` literal/result below carries the canonical five fields when
+> live, or `None` for the deterministic fixture.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:801-808` (`_run_prompt_model`), `operations.py:367` (`run_prompt_operation` binding), `operations.py:453` (`run_operation_model_text` binding) — line refs are pre-COST.1 numbering; after COST.1 they shift by +1 (`import time`). Anchor by code, not line.
@@ -4151,7 +4482,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `_pydantic_ai_chat(policy, runner, prompt) -> dict[str, Any]` (COST.1); `_prompt_fixture_body(policy: dict[str, Any], input_text: str) -> str` (unchanged, `operations.py:811-822`).
-- Produces: `_run_prompt_model(policy: dict[str, Any], runner: dict[str, Any], prompt: str, input_text: str) -> dict[str, Any]` — same four keys; `deterministic-fixture` branch returns `usage=None, cost_usd=None, elapsed_s=0.0`.
+- Produces: `_run_prompt_model(policy: dict[str, Any], runner: dict[str, Any], prompt: str, input_text: str) -> dict[str, Any]` — the canonical four top-level keys with five-field live usage; `deterministic-fixture` returns `usage=None, cost_usd=None, elapsed_s=0.0`.
 - Produces (unchanged contract, reasserted): `run_operation_model_text(vault, policy, runner, prompt, *, context, input_text, call_id, route, purpose) -> dict[str, Any]` still returns `{"output": str, "model_call": dict}` — the `integrity.py:1466` caller keeps working untouched.
 
 **Steps:**
@@ -4220,6 +4551,7 @@ def _run_prompt_model(
                 "output_tokens": 5,
                 "cache_read_tokens": 2,
                 "cache_write_tokens": 1,
+                "total_tokens": 25,
             },
             "cost_usd": 0.0125,
             "elapsed_s": 0.25,
@@ -4231,21 +4563,17 @@ def _run_prompt_model(
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass, including `test_run_prompt_model_fixture_branch_returns_null_telemetry` and the updated neutralization test (its `output_hash` assertion still hashes `raw_output`).
 
-- [ ] **Commit:**
-
-```bash
-git add src/memoria_vault/runtime/operations.py tests/test_operations.py
-git commit -m "$(cat <<'EOF'
-feat(operations): thread model telemetry through _run_prompt_model
-
-Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
-EOF
-)"
-```
+- [ ] **Do not commit yet.** Continue directly into COST.3. The only valid
+  commit for this return-contract change stages all COST.1–.3 files together
+  at COST.3's final step.
 
 ---
 
 ### Task COST.3: thread the dict through `_run_digest_model` and the digest caller
+
+> **Execution override:** This completes the atomic COST.1–.3 tranche. Use
+> canonical five-field live usage in every result/mocked result; do not make
+> an individual commit before the combined commit below.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:896-917` (`_run_digest_model`; pre-COST.1 numbering) and `operations.py:525` (`compile_source_digest` binding)
@@ -4254,7 +4582,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `_pydantic_ai_chat(...) -> dict[str, Any]` (COST.1); `_validate_digest_output(text: str, content: str, topics: list[str], interviews: list[dict[str, Any]]) -> str` — **still takes plain text**, unchanged (`operations.py:997-1014`); `_digest_body(...) -> str` (unchanged).
-- Produces: `_run_digest_model(policy: dict[str, Any], runner: dict[str, Any], source_fm: dict[str, Any], content: str, topics: list[str], interviews: list[dict[str, Any]]) -> dict[str, Any]` — same four keys, `text` is the **validated** digest text; fixture branch returns `usage=None, cost_usd=None, elapsed_s=0.0`.
+- Produces: `_run_digest_model(policy: dict[str, Any], runner: dict[str, Any], source_fm: dict[str, Any], content: str, topics: list[str], interviews: list[dict[str, Any]]) -> dict[str, Any]` — the canonical four top-level keys, with five-field live usage; `text` is the **validated** digest text; fixture branch returns `usage=None, cost_usd=None, elapsed_s=0.0`.
 
 **Steps:**
 
@@ -4366,12 +4694,14 @@ def _run_digest_model(
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass.
 
-- [ ] **Commit:**
+- [ ] **Commit the atomic COST.1–.3 tranche:** Stage only the three files
+  changed across the tranche, after the combined regression command from the
+  reconciliation amendment passes:
 
 ```bash
-git add src/memoria_vault/runtime/operations.py tests/test_operations.py
+git add src/memoria_vault/runtime/operations.py tests/helpers.py tests/test_operations.py
 git commit -m "$(cat <<'EOF'
-feat(operations): thread model telemetry through _run_digest_model
+feat(operations): return model telemetry across operation runners
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
@@ -4382,6 +4712,11 @@ EOF
 
 ### Task COST.4: three `model_call` event dicts gain `usage` / `cost_usd` / `elapsed_s`; refresh floor goldens
 
+> **Execution override:** The existing three journal rows remain the sole
+> durable telemetry. Their live `usage` payload is the canonical five-field
+> dict (including `total_tokens`); no extra journal or telemetry sink is
+> permitted.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py` — the three `model_call` dict literals, each anchored by its `"output_hash":` line (pre-change refs: prompt-operation `:370-386`, `run_operation_model_text` `:456-473`, digest-compile `:528-544`; after COST.1-3 each shifts by a few lines — anchor by the literal's unique `"output_hash"` expression)
 - Modify: `tests/test_operations.py` — extend `test_prompt_operation_neutralizes_model_output_before_staging` (event assertions currently at `:264-267`) and `test_compile_source_digest_traces_model_call_and_stages_hub_suggestions` (event assertions currently at `:217-222`); add one new test covering the `run_operation_model_text` call site (the `integrity.py:1466` seam) plus the no-content-capture posture
@@ -4390,7 +4725,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `result` / `digest_result` locals bound in COST.2/COST.3; `append_journal_event(vault, event, *, context) -> dict[str, Any]` (unchanged seam); `call_with_context(function, vault, *args, **kwargs)` and `iter_jsonl` (existing test helpers/imports).
-- Produces: `model_call` journal events at all three `operations.py` call sites carry `usage: dict[str, int] | None`, `cost_usd: float | None`, `elapsed_s: float` — additive keys only; every pre-existing key is unchanged.
+- Produces: `model_call` journal events at all three `operations.py` call sites carry canonical five-field `usage: dict[str, int] | None`, nullable `cost_usd`, and `elapsed_s` — additive keys only; every pre-existing key is unchanged.
 
 **Steps:**
 
@@ -4404,6 +4739,7 @@ EOF
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
     assert events[1]["cost_usd"] == pytest.approx(0.0125)
     assert events[1]["elapsed_s"] == pytest.approx(0.25)
@@ -4434,6 +4770,7 @@ def test_run_operation_model_text_records_telemetry_without_content(
                 "output_tokens": 5,
                 "cache_read_tokens": 2,
                 "cache_write_tokens": 1,
+                "total_tokens": 25,
             },
             "cost_usd": 0.0125,
             "elapsed_s": 0.25,
@@ -4461,6 +4798,7 @@ def test_run_operation_model_text_records_telemetry_without_content(
         "output_tokens": 5,
         "cache_read_tokens": 2,
         "cache_write_tokens": 1,
+        "total_tokens": 25,
     }
     assert model_call["cost_usd"] == pytest.approx(0.0125)
     assert model_call["elapsed_s"] == pytest.approx(0.25)

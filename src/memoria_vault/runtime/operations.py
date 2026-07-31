@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -24,6 +24,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
+    append_explicit_journal_event,
     append_journal_event,
     commit_writer_changes,
     materialize_unchecked,
@@ -55,6 +56,10 @@ SUPPORTED_OPERATION_RUNNERS = frozenset({"pydantic-ai"})
 PROVIDER_CONFIG = ".memoria/config/providers.yaml"
 RUNNER_MODES = frozenset({"test", "live"})
 RUNNER_PROVIDER_NAMES = ("local", "gateway")
+_KEY_ENV_RE = re.compile(r"[A-Z][A-Z0-9_]*")
+_KEYLESS_PROVIDER_API_KEY = "api-key-not-set"
+TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"  # noqa: S105 -- public environment name.
+_TOKEN_LEDGER = {"total_tokens": 0}
 
 
 def record_copi_interview_turn(
@@ -143,6 +148,24 @@ def record_empirical_event(
     }
 
 
+def build_disposition_event(
+    *,
+    decision: str,
+    item_type: str,
+    item_id: str,
+) -> dict[str, Any]:
+    """Build one validated server-side disposition journal payload."""
+    from memoria_vault.engine.empirical_events import (
+        DISPOSITION_EVENT_SCHEMA,
+        validate_disposition_event,
+    )
+
+    event = validate_disposition_event(
+        {"decision": decision, "item_type": item_type, "item_id": item_id}
+    )
+    return {"event": "disposition", "schema": DISPOSITION_EVENT_SCHEMA, **event}
+
+
 def emit_disposition_event(
     vault: Path,
     *,
@@ -152,16 +175,37 @@ def emit_disposition_event(
     context: OperationContext,
 ) -> dict[str, Any]:
     """Append one honest server-side disposition event to the journal."""
-    from memoria_vault.engine.empirical_events import (
-        DISPOSITION_EVENT_SCHEMA,
-        validate_disposition_event,
+    return append_journal_event(
+        vault,
+        build_disposition_event(
+            decision=decision,
+            item_type=item_type,
+            item_id=item_id,
+        ),
+        context=context,
     )
 
-    event = validate_disposition_event(
-        {"decision": decision, "item_type": item_type, "item_id": item_id}
+
+def emit_explicit_disposition_event(
+    vault: Path,
+    *,
+    decision: str,
+    item_type: str,
+    item_id: str,
+    actor: str,
+    machine: str,
+) -> dict[str, Any]:
+    """Append one explicit-provenance disposition event to the journal."""
+    return append_explicit_journal_event(
+        vault,
+        build_disposition_event(
+            decision=decision,
+            item_type=item_type,
+            item_id=item_id,
+        ),
+        actor=actor,
+        machine=machine,
     )
-    journal_event = {"event": "disposition", "schema": DISPOSITION_EVENT_SCHEMA, **event}
-    return append_journal_event(vault, journal_event, context=context)
 
 
 def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict[str, Any]:
@@ -264,7 +308,10 @@ def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
     path = Path(vault) / PROVIDER_CONFIG
     if not path.is_file():
         raise FileNotFoundError(path)
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise ValueError(f"{PROVIDER_CONFIG} could not be parsed") from exc
     if not isinstance(data, dict):
         raise ValueError(f"{PROVIDER_CONFIG} must be a map")
     providers = data.get("runner_providers")
@@ -284,8 +331,33 @@ def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
         key_env = spec.get("key_env")
         if key_env is not None and not isinstance(key_env, str):
             raise ValueError(f"{PROVIDER_CONFIG} runner provider {name}.key_env must be a string")
+        if isinstance(key_env, str) and not _KEY_ENV_RE.fullmatch(key_env):
+            raise ValueError(
+                f"{PROVIDER_CONFIG} runner provider {name}.key_env must match [A-Z][A-Z0-9_]*"
+            )
         resolved[name] = {"url": url, "key_env": key_env}
     return resolved
+
+
+def _resolve_runner_api_key(runner: Mapping[str, Any]) -> str:
+    """Return the configured runner credential without ambient provider fallbacks."""
+    key_env = runner.get("key_env")
+    if key_env is None:
+        return _KEYLESS_PROVIDER_API_KEY
+    if not isinstance(key_env, str) or not _KEY_ENV_RE.fullmatch(key_env):
+        raise ValueError("runner key_env must match [A-Z][A-Z0-9_]*")
+    api_key = os.environ.get(key_env)
+    if api_key:
+        return api_key
+    raw_provider = runner.get("provider")
+    provider = (
+        raw_provider
+        if isinstance(raw_provider, str) and raw_provider in RUNNER_PROVIDER_NAMES
+        else "runner"
+    )
+    raise RuntimeError(
+        f"provider {provider} requires {key_env} - set it: memoria secrets set {key_env}"
+    )
 
 
 def _validate_runner_policy(operation_id: str, runner_policy: Any) -> dict[str, dict[str, Any]]:
@@ -948,24 +1020,43 @@ def _sealed_untrusted_block(name: str, text: str) -> str:
     )
 
 
+def _token_ceiling() -> int:
+    raw = os.environ.get(TOKEN_CEILING_ENV, "").strip()
+    if not raw:
+        return 0
+    try:
+        return max(int(raw), 0)
+    except ValueError as exc:
+        raise ValueError(f"{TOKEN_CEILING_ENV} must be an integer, got {raw!r}") from exc
+
+
+def _require_token_budget(operation_id: str) -> None:
+    ceiling = _token_ceiling()
+    spent = _TOKEN_LEDGER["total_tokens"]
+    if ceiling and spent >= ceiling:
+        raise RuntimeError(
+            f"{operation_id} refused: model token ceiling reached "
+            f"({spent} of {ceiling} tokens spent this process; "
+            f"raise or unset {TOKEN_CEILING_ENV} to continue)"
+        )
+
+
+def _record_token_usage(result: Any, settings: dict[str, Any]) -> None:
+    try:
+        usage = getattr(result, "usage", None)
+        total = getattr(usage(), "total_tokens", None) if callable(usage) else None
+    except Exception:  # noqa: BLE001 -- completed calls must still be charged.
+        total = None
+    if type(total) is not int or total <= 0:
+        total = int(settings.get("max_tokens") or 0)
+    _TOKEN_LEDGER["total_tokens"] += total
+
+
 def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> str:
+    _require_token_budget(str(policy.get("operation_id") or "<unknown>"))
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
-    key_env = runner.get("key_env")
-    if isinstance(key_env, str) and key_env:
-        api_key = os.environ.get(key_env)
-    else:
-        api_key = (
-            os.environ.get("MEMORIA_MODEL_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-            or os.environ.get("KILOCODE_API_KEY")
-        )
-    Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
-    provider_kwargs = {"base_url": base_url}
-    if api_key:
-        provider_kwargs["api_key"] = api_key
-    model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
-    agent = Agent(model)
+    api_key = _resolve_runner_api_key(runner)
     params = runner.get("params") if isinstance(runner.get("params"), dict) else {}
     settings = {
         "temperature": params.get("temperature", 0),
@@ -975,10 +1066,15 @@ def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: st
         "timeout": float(params.get("timeout", os.environ.get("MEMORIA_MODEL_TIMEOUT", 90))),
     }
     try:
+        Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+        provider_kwargs = {"base_url": base_url, "api_key": api_key}
+        model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
+        agent = Agent(model)
         result = agent.run_sync(prompt, model_settings=settings)
-    except Exception as exc:
-        raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
-    text = str(getattr(result, "output", "") or "").strip()
+        _record_token_usage(result, settings)
+        text = str(getattr(result, "output", "") or "").strip()
+    except Exception:  # noqa: BLE001 -- adapter failures must not reflect credentials.
+        raise RuntimeError("pydantic-ai model request failed") from None
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
     return text

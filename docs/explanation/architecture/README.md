@@ -25,8 +25,9 @@ covered in [The vault](vault.md#actor-kinds-and-the-write-path).
 ## Interaction channels
 
 Memoria has one required PI surface: the CLI over a local workspace. Editor
-files are the durable working surface, and optional notification channels can
-draw attention to urgent items. They do not become the source of authority.
+files are the durable working surface, and all Inbox attention is pull-only; no
+notification channel ships. Optional adapters may present attention, but they do
+not become the source of authority.
 
 An optional adapter is not authoritative. Programs may wrap the CLI or watch
 files, but the request queue, operation manifests, policy gate, and journal
@@ -41,12 +42,12 @@ block loudness (see [Signal routing](#signal-routing)).
 
 Linter findings and attention prompts are separate signals. Linter findings have
 severity, which orders their output and determines the linter verdict. Operations
-that create file-backed Inbox attention assign loudness: quiet and notice prompts
-remain pull-only, while alert and block prompts may push to Telegram when configured.
-A planned Maintenance adapter may collect both sources without conflating them.
+that create file-backed Inbox attention assign loudness; every prompt, including
+quiet and notice prompts, remains pull-only. A planned Maintenance adapter may
+collect both sources without conflating them.
 
-Routine attention should not push to the phone. If it does, the prompt's loudness
-is wrong.
+All attention prompts remain pull-only. An open `loudness: block` card blocks
+review-gated writes through the optional policy-hook path until the PI resolves it.
 
 ## Documents in this section
 

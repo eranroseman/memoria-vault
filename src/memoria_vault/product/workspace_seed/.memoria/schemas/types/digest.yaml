@@ -1,5 +1,8 @@
 type: digest
 category: digests
+concept_type: digest
+enums:
+  consequence: [grounds-lost, warrant-lost, qualifier-regression, rebuttal-strengthened]
 required:
   type: literal:digest
   id: str
@@ -10,7 +13,9 @@ required:
 optional:
   anchors: list
   archived: bool
+  consequence: enum:consequence
   description: str
+  stale: bool
   todo: list
   x: map
 forbidden: [citations, evidence_set]

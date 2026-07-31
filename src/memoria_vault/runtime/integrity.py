@@ -16,6 +16,7 @@ from memoria_vault.runtime import capture, state
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
@@ -637,15 +638,18 @@ def check_contradiction_links(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") not in {"work", "digest"} or not _is_checked_concept(vault, rel):
+        if frontmatter.get("type") != "digest" or not _is_checked_concept(vault, rel):
             continue
-        contradictions = frontmatter.get("contradictions")
+        links = frontmatter.get("links")
+        contradictions = links.get("contradicts") if isinstance(links, dict) else None
         if not isinstance(contradictions, list):
             continue
         for item in contradictions:
             if not isinstance(item, str) or not item.strip():
                 continue
-            target = _concept_rel(item)
+            target = _link_ref(item)
+            if not target:
+                continue
             status = _concept_status(vault, target)
             if status["status"] == "checked":
                 continue
@@ -1702,7 +1706,15 @@ def _evidence_refs(frontmatter: dict[str, Any]) -> list[str]:
 
 def _link_refs(frontmatter: dict[str, Any]) -> list[str]:
     refs: set[str] = set()
-    _collect_link_refs(frontmatter.get("links"), refs)
+    links = frontmatter.get("links")
+    if frontmatter.get("type") == "digest" and isinstance(links, dict):
+        for relation, values in links.items():
+            # The dedicated digest checker owns this relation's finding contract.
+            if relation == "contradicts":
+                continue
+            _collect_link_refs(values, refs)
+    else:
+        _collect_link_refs(links, refs)
     return sorted(refs)
 
 
@@ -1722,11 +1734,9 @@ def _collect_link_refs(value: Any, refs: set[str]) -> None:
 
 
 def _link_ref(value: str) -> str:
-    raw = value.strip()
-    if not raw or "://" in raw or raw.startswith("mailto:"):
+    raw = schema_lib.normalize_link_target(value)
+    if not raw:
         return ""
-    if raw.startswith("[[") and raw.endswith("]]"):
-        raw = raw[2:-2].split("|", 1)[0].strip()
     rel = _concept_rel(raw)
     if rel.startswith(("notes/", "hubs/", "projects/", "digests/", "fulltexts/")) and not (
         rel.endswith(".md")

@@ -138,6 +138,42 @@ def test_sqlite_schema_rejects_legacy_user_version(tmp_path: Path) -> None:
         state.connect(tmp_path)
 
 
+def test_sqlite_schema_rejects_future_user_version(tmp_path: Path) -> None:
+    db = tmp_path / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.execute(f"PRAGMA user_version = {state.SCHEMA_VERSION + 1}")
+
+    with pytest.raises(
+        RuntimeError,
+        match=f"unsupported Memoria DB schema version: {state.SCHEMA_VERSION + 1}",
+    ):
+        state.connect(tmp_path)
+
+
+@pytest.mark.parametrize("version", [state.SCHEMA_VERSION - 1, state.SCHEMA_VERSION + 1])
+def test_sqlite_schema_rejects_noncurrent_database_without_rewriting(
+    tmp_path: Path, version: int
+) -> None:
+    db = tmp_path / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.executescript(
+            f"""
+            CREATE TABLE sentinel (value TEXT NOT NULL);
+            INSERT INTO sentinel VALUES ('keep');
+            PRAGMA user_version = {version};
+            """
+        )
+
+    with pytest.raises(RuntimeError, match=f"unsupported Memoria DB schema version: {version}"):
+        state.connect(tmp_path)
+
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == version
+        assert conn.execute("SELECT value FROM sentinel").fetchall() == [("keep",)]
+
+
 def note_text(title: str = "Alpha note") -> str:
     return f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n# {title}\n\nBody.\n"
 

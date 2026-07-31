@@ -12,7 +12,6 @@ import datetime
 import re
 from pathlib import Path
 
-from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing
 from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 PROPOSAL_TYPES = {"candidate", "gap"}
@@ -69,7 +68,7 @@ def write_proposal(
         f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
         f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n"
     )
-    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body), loudness=loudness)
+    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body))
 
 
 def write_finding(
@@ -83,8 +82,13 @@ def write_finding(
     citekey: str = "",
     loudness: str = "alert",
     evidence: str = "",
-) -> Path:
-    """Write a flag/alert card that leads with the finding."""
+    dedupe_slug: str = "",
+) -> Path | None:
+    """Write a flag/alert card that leads with the finding.
+
+    With ``dedupe_slug`` the filename is stable and an already-present card is
+    left untouched — returns None instead of a path.
+    """
     if card_type not in VERIFICATION_TYPES:
         raise ValueError(f"not a verification type: {card_type}")
     if agent_recommendation not in RECOMMENDATION:
@@ -110,7 +114,16 @@ def write_finding(
     body = f"# Finding\n\n{finding}\n"
     if evidence:
         body += f"\n# Evidence\n\n{evidence}\n"
-    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body), loudness=loudness)
+    content = frontmatter_doc(frontmatter, body)
+    if dedupe_slug:
+        inbox = vault / "inbox"
+        inbox.mkdir(parents=True, exist_ok=True)
+        path = inbox / f"{card_type}-{_slug(dedupe_slug)}.md"
+        if path.exists():
+            return None
+        write_text_durable(path, content)
+        return path
+    return _write(vault, card_type, title, content)
 
 
 def write_work_prompt(
@@ -167,12 +180,11 @@ def write_work_prompt(
         if path.exists():
             return None
         write_text_durable(path, content)
-        loudness_routing.push_card(vault, path, {"title": title, "loudness": loudness})
         return path
-    return _write(vault, "work-prompt", title, content, loudness=loudness)
+    return _write(vault, "work-prompt", title, content)
 
 
-def _write(vault: Path, card_type: str, title: str, content: str, loudness: str = "notice") -> Path:
+def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
     inbox = vault / "inbox"
     inbox.mkdir(parents=True, exist_ok=True)
     base = f"{card_type}-{_slug(title)}"
@@ -182,9 +194,6 @@ def _write(vault: Path, card_type: str, title: str, content: str, loudness: str 
         n += 1
         path = inbox / f"{base}-{n}.md"
     write_text_durable(path, content)
-    loudness_routing.push_card(
-        vault, path, {"title": title, "loudness": loudness, "type": card_type}
-    )
     return path
 
 

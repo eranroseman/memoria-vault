@@ -10,7 +10,7 @@ from memoria_vault.runtime import state
 
 _EVIDENCE_ID = "ev-11111111"
 _BLOCK_REF = "projects/project-alpha/draft.md#^blk-11111111"
-_MARKER = "%%ev: ev-11111111 type=implicit state=evidence-incomplete review=true items=%%"
+_MARKER = "%%ev: ev-11111111 items=%%"
 
 
 def test_evidence_sets_schema_has_block_text_hash_binding(tmp_path: Path) -> None:
@@ -355,6 +355,31 @@ def test_inline_tex_with_an_escaped_closer_remains_a_direct_visible_claim() -> N
     assert state._block_text_sha256_from_text(content, _BLOCK_REF) is not None
 
 
+@pytest.mark.parametrize(
+    "opening",
+    [
+        '~~~foo="bar"',
+        "~~~foo:bar",
+        "~~~foo{bar}",
+        "~~~ {notvalid}",
+    ],
+)
+def test_unsupported_tilde_fence_headers_leave_evidence_direct(opening: str) -> None:
+    content = f"{opening}\nVisible claim. ^blk-11111111 {_MARKER}\n~~~\n"
+
+    assert [marker.evidence_id for marker in state.evidence_markers_from_markdown(content)] == [
+        _EVIDENCE_ID
+    ]
+    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is not None
+
+
+def test_valid_raw_tilde_fence_keeps_evidence_nonbinding() -> None:
+    content = f"~~~ {{=html}}\nHidden claim. ^blk-11111111 {_MARKER}\n~~~\n"
+
+    assert state.evidence_markers_from_markdown(content) == []
+    assert state._block_text_sha256_from_text(content, _BLOCK_REF) is None
+
+
 def test_display_tex_math_closer_with_an_extra_backslash_cannot_mint_a_binding() -> None:
     content = f"\\[\nHidden claim. ^blk-11111111 {_MARKER}\n\\\\]\n"
 
@@ -529,8 +554,8 @@ def test_block_text_binding_requires_anchor_and_marker_on_one_line(
     [
         ("`%%ev: alpha%%`", "`%%ev: beta%%`"),
         (
-            "%%ev: ev-22222222 type=implicit state=evidence-incomplete review=true items=%%",
-            "%%ev: ev-22222222 type=implicit state=evidence-incomplete review=false items=%%",
+            "%%ev: ev-22222222 items=%%",
+            "%%ev: ev-22222222 items=ev-33333333%%",
         ),
     ],
 )

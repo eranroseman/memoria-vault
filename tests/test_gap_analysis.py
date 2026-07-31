@@ -70,8 +70,8 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     )
     for idx in range(2):
         _md(
-            tmp_path / f"notes/warrant-{idx}.md",
-            f"type: note\ncheck_status: checked\ntitle: Warrant {idx}\ntags: [warrant]\n",
+            tmp_path / f"notes/grounds-{idx}.md",
+            f"type: note\ncheck_status: checked\ntitle: Grounds {idx}\ntags: [grounds]\n",
         )
     state.upsert_catalog_record(
         tmp_path,
@@ -129,18 +129,20 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     result = analyze_gaps(tmp_path, seed_terms=["new area"], dense_threshold=2)
 
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
-    assert set(gaps) == {"sleep", "warrant", "new area"}
+    assert set(gaps) == {"sleep", "grounds", "new area"}
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["sleep"]["source_count"] == 1
     assert gaps["sleep"]["digest_count"] == 1
     assert gaps["sleep"]["note_count"] == 0
     _assert_gap_contract(gaps["sleep"], "undigested")
-    assert gaps["warrant"]["gap_type"] == "under-warranted"
-    assert gaps["warrant"]["note_count"] == 2
-    _assert_gap_contract(gaps["warrant"], "under-warranted")
+    assert gaps["grounds"]["gap_type"] == "under-grounded"
+    assert gaps["grounds"]["note_count"] == 2
+    _assert_gap_contract(gaps["grounds"], "under-grounded")
     assert gaps["new area"]["gap_type"] == "new-topic"
     _assert_gap_contract(gaps["new area"], "new-topic")
     assert result["summary"]["total"] == 3
+    assert result["summary"]["by_kind"]["under-grounded"] == 1
+    assert "under-warranted" not in result["summary"]["by_kind"]
     assert result["summary"]["by_severity"]["high"] == 2
     assert result["saturation"]["ready"] is False
     assert result["checked_topics"] == 5
@@ -220,7 +222,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     assert gaps["Graph-only Keyword"]["note_count"] == 0
 
 
-def test_analyze_gaps_ignores_retired_topics_from_untouched_catalog_work(tmp_path: Path) -> None:
+def test_analyze_gaps_includes_unrecognized_topics_from_catalog_work(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
         work_id="legacy-work",
@@ -237,7 +239,7 @@ def test_analyze_gaps_ignores_retired_topics_from_untouched_catalog_work(tmp_pat
 
     result = analyze_gaps(tmp_path, dense_threshold=1)
 
-    assert {gap["topic"] for gap in result["gaps"]} == {"current-area"}
+    assert {gap["topic"] for gap in result["gaps"]} == {"current-area", "legacy-only"}
 
 
 def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path) -> None:
@@ -391,10 +393,13 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_search
     assert state.catalog_source(vault, "https://openalex.org/W777") is None
 
 
-def test_analyze_gaps_ranks_discovery_candidates_against_steering(tmp_path: Path) -> None:
+def test_analyze_gaps_ranks_discovery_candidates_against_effective_steering(
+    tmp_path: Path,
+) -> None:
     vault = workspace(tmp_path / "vault")
-    (vault / "steering.md").write_text(
-        "Prioritize neural retrieval evaluation.\n", encoding="utf-8"
+    _md(
+        vault / "projects/neural-retrieval/project.md",
+        "type: project\ntitle: Neural Retrieval Evaluation\ntags: []\nlinks: {}\n",
     )
     state.upsert_catalog_record(
         vault,
@@ -440,6 +445,104 @@ def test_analyze_gaps_ranks_discovery_candidates_against_steering(tmp_path: Path
         "retrieval",
     ]
     assert exploration["discovery_relevance_channel"] == "exploration"
+
+
+def test_analyze_gaps_muted_terms_subtract_from_effective_steering(tmp_path: Path) -> None:
+    vault = workspace(tmp_path / "vault")
+    _md(
+        vault / "projects/srs/project.md",
+        "type: project\ntitle: Spaced Repetition Scheduling\ntags: []\nlinks: {}\n",
+    )
+    (vault / "steering.md").write_text(
+        "---\ntype: system\ntitle: Steering\n---\n\n"
+        "## Watch for\n\n## Muted\n\n- spaced repetition\n",
+        encoding="utf-8",
+    )
+    state.upsert_catalog_record(
+        vault,
+        work_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "db-alpha",
+        [
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W111",
+                "target_title": "Spaced Repetition Flashcards",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Spaced Repetition Scheduling Systems",
+                "source_provider": "openalex",
+            },
+        ],
+    )
+
+    result = analyze_gaps(vault, dense_threshold=1, machine="gap-machine")
+
+    channels = {
+        rel: read_frontmatter(vault / rel)["discovery_relevance_channel"]
+        for rel in result["discovery_candidate_paths"]
+    }
+    assert channels == {
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W999.md": "ranked",
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W111.md": "exploration",
+    }
+
+
+def test_analyze_gaps_watch_entries_rank_and_prose_stops_polluting(tmp_path: Path) -> None:
+    vault = workspace(tmp_path / "vault")
+    (vault / "steering.md").write_text(
+        "---\ntype: system\ntitle: Steering\n---\n\n"
+        "Guidance prose mentioning template placeholder terms contributes nothing.\n\n"
+        "## Watch for\n\n- neural retrieval\n\n"
+        "## Muted\n",
+        encoding="utf-8",
+    )
+    state.upsert_catalog_record(
+        vault,
+        work_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "db-alpha",
+        [
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W111",
+                "target_title": "Template Placeholder Terms",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Neural Retrieval Evaluation",
+                "source_provider": "openalex",
+            },
+        ],
+    )
+
+    result = analyze_gaps(vault, dense_threshold=1, machine="gap-machine")
+
+    channels = {
+        rel: read_frontmatter(vault / rel)["discovery_relevance_channel"]
+        for rel in result["discovery_candidate_paths"]
+    }
+    assert channels == {
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W999.md": "ranked",
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W111.md": "exploration",
+    }
 
 
 def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
@@ -567,6 +670,6 @@ def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> No
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
     assert gaps["sensemaking"]["gap_type"] == "new-topic"
     assert gaps["qualitative"]["gap_type"] == "new-topic"
-    assert gaps["patient-generated-data"]["gap_type"] == "under-warranted"
+    assert gaps["patient-generated-data"]["gap_type"] == "under-grounded"
     assert gaps["patient-generated-data"]["note_count"] == 1
-    assert gaps["care coordination"]["gap_type"] == "under-warranted"
+    assert gaps["care coordination"]["gap_type"] == "under-grounded"

@@ -13,42 +13,176 @@
 - Correctness gate: `python scripts/verify`; PR + `verify`/`gitleaks`; squash merge; explicit-path staging; disposable vaults only.
 - BM25 stays the default; the rerank stage ships as an explicit **off** no-op (R3's frozen-fixture spike owns any change — incumbent-until-beaten, verbatim posture).
 - Structural output never enters fusion; primitives emit sets + counts, never scores.
-- **Sequencing:** section G (and therefore E's expansion) executes after Plan 22 G2S1.1 fills the stubbed `concept_edges` (grep stop-note in the section header); tests are G2S1.1-independent via `state.replace_concept_edges` seeding.
+- **Sequencing:** Plan 22 G2S1.1 has landed, so section G may execute. Its tests seed mirrored edges through `state.replace_concept_edges` and the one PI-owned tension row directly through `state.connect()`.
 - All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
+
+## Execution status — 2026-07-17
+
+- **G.1 complete:** `cc3f49ca` adds the deterministic, parameterized
+  graph-SQL primitives and their 10-test contract suite. The suite covers the
+  live relation CHECK, checked/quarantined edge gating, direct PI-owned tension
+  traversal (default and filtered), distinct-neighbor degree, and
+  references-only co-citation/coupling traps.
+- **Current-state amendments adopted:** Plan 22 G2S1.1 now supplies and persists
+  concept edges; `state.replace_concept_edges` intentionally preserves
+  PI-owned tensions, so the contract fixture inserts that row directly. The
+  repository-wide renamed-identifier gate also requires the CTE alias
+  `origin_id`, rather than the historical `source_id`.
+- Verification: `python scripts/verify` passed (**2,391 passed, 9 skipped**;
+  one existing multiprocessing-fork warning).
+- **G.2 complete:** `0282a170` adds project-slice and type/status filtering
+  to `graph_sql`, including an order-tolerant graph-owned slice seam and
+  strict concept-link target normalization.
+- Verification: `python scripts/verify` passed (**2,395 passed, 9 skipped**;
+  one existing multiprocessing-fork warning).
+- **P.1 complete:** `073f8c40` adds the pure-stdlib pipeline staging module,
+  its unit contract suite, and the required test-level registration. Emitted
+  filter labels remain globally unique even when a caller supplies a
+  suffix-looking name.
+- Verification: `python scripts/verify` passed (**2,405 passed, 9 skipped**;
+  one existing multiprocessing-fork warning).
+
+## Execution status — 2026-07-31
+
+- [x] **F.1 complete:** `aeeca6e2` is an ancestor of `main`; its diff adds
+  the shared span-ref helper, grounded-synthesis contract suite, and required
+  test-level registration declared by this task.
+- [x] **F.2 complete:** `fcca90f4` is an ancestor of `main`; its diff adds
+  the retrieval-fixture form, loader, contract suite, and registration
+  declared by this task.
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
-1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (prefers `state.active_project_slices` via getattr; `links:` closure fallback).
+1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked path-projected edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (distinct-neighbor orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (adapts graph `propagation.active_project_slices(vault)` by project-relative path; before that producer exists, uses the project `links:` closure).
 2. **Pipeline staging** (P produces; E consumes): `retrieval_pipeline.PipelineStages` (`add_filter` unique-suffixing repeats, `rows() -> [{stage, count}]` ordered), `excluded_strata(*, unchecked=0, stale=0, gated=0)` (zeros always present), `RERANK_MODE = "off"` rendered in every trace.
 3. **Explore** (E produces): `explore.explore_topic(vault, topic, *, project="", depth=1, versus="") -> dict` — kind groups `{claims, questions, tensions, works, hubs}`, per-entry edges + `grounds_count` (complete evidence-set rows via `block_ref`), `SEED_K = 5`, stage order `universe → [project-slice] → ranked → seed → neighborhood → returned`, per-side payloads + intersection + crossing tensions under `--versus`, `honest_empty` string on zero-return; CLI `memoria explore` with the pinned `test_cli_command_surface_is_exact` edit, both-direction help disambiguation vs `memoria project explore`, and the U1 registry row (grep-first both-branch).
 4. **Span refs + fixtures** (F produces): `span_refs.resolve_span_ref(vault, ref) -> {work_id, anchor, path} | None` (passages `(work_id, anchor)` match; file-scan interim fallback); `tests/retrieval_fixtures.py` loader (`load_retrieval_fixtures(*, spike_mode=False)` refusing unfrozen rows in spike mode), `shape1_bm25_cases` (gold span refs → doc paths for `evaluate_bm25` — doc-level hit@k stated), `score_present_at_depth(payload, gold_ids) -> bool`, `FIXTURES_DIR = tests/fixtures/retrieval/`, the seeded `cases.yaml` (registered, unfrozen, over O1 seed-corpus work ids).
-5. **Execution order:** G → P → E → F (F.1's contract tests touch only shipped ask surfaces and may run any time after P).
+5. **Execution order:** P.1 → P.2 → P.3 → F.1 → F.2 is the no-prose/fixture path; F.3 additionally requires E.1/E.2, graph ERP-A.6, the implemented `explore_topic`, and the O1 seed corpus. Graph endpoint/path activation → G → P → E remains the structural/explore path, but F.1/F.2 do not import graph or explore. P.2 rebases on LOOP.1's checked-search refresh seam, and F.2 precedes LOOP.13's Shape-2 protocol.
 6. **TEST_LEVELS:** `test_graph_sql.py`, `test_explore.py`, `test_retrieval_fixtures.py` — `"contract"`; P extends registered files (exact registrations named in-section).
+
+---
+
+## Plan-reconciliation amendment — identity-safe graph traversal and shared retrieval stages (2026-07-29)
+
+This amendment supersedes R2 snippets that assume concept-edge ids are paths,
+call a nonexistent state slice API, duplicate P's pipeline behavior, replace the
+final `ask` handler, or score Shape 2 without its declared depth.
+
+1. **Graph-owned endpoint projection is a prerequisite.** After graph NID-B's
+   v16 identity re-key, raw `source_concept_id` values may be ULIDs and
+   `target_concept_id` may be null while `target_path` remains durable. Before
+   G starts, graph ERP-A.6 must expose the public checked-edge path projection
+   `lib.edges.concept_edge_path_pairs(vault, *, checked_only=True)`
+   returning `{source_path, target_path, relation_type}`. It resolves identity
+   ids through the concept mirror, retains a pending edge's `target_path`, and
+   never treats an id as a filesystem path. G.1/G.2/E.1 use that projection;
+   their fixtures seed the required concept mirror rows and prove both a ULID
+   source and a pending target. `degree_centrality` counts `DISTINCT` projected
+   neighbors, with a parallel-relation test.
+2. **Project-slice adapter.** Graph ERP-C owns
+   `propagation.active_project_slices(vault) -> dict[str, set[str]]`, keyed by
+   project-relative path. R2's `project_slice` selects `mapping[project]`,
+   converts the set into deterministic path ids, and records
+   `source="active-project-slices"`; it never calls
+   `state.active_project_slices(vault, project)`. If the graph seam is absent,
+   use only the existing links closure and exclude dangling targets before they
+   enter the returned slice. Add real mapping-shape and dangling-link tests.
+3. **P is the sole pipeline authority.** E imports and uses P's
+   `PipelineStages`, `excluded_strata`, `rerank`, `honest_empty`, and
+   `build_trace`; it does not recreate counts, strata, traces, or empty text.
+   Because Shape 2 expands after its seed, P.1 adds a named explore-stage model
+   that permits `universe → [project-slice] → ranked → seed → neighborhood →
+   returned`, explicitly labeling the expansion rather than forcing it through
+   a monotonic filter API. All stage counts reject negative integers. E passes
+   its seed ranking through the off-by-default rerank seam and exposes the
+   resulting shared trace.
+4. **Parser and compatibility order.** P.3 lands the final `ask --trace`
+   parser/handler first. E.2 inserts the `explore` parser and handler beside
+   that final form; it never replaces `_cmd_ask`. E's focused regression runs
+   `memoria ask --trace` as well as `memoria explore`. F.1 is P-dependent and
+   asserts the shared `honest_empty` shape instead of a legacy `unknowns`
+   string. P.2 opens with a LOOP.1 grep/rebase check and uses its incremental
+   checked-search refresh when available, anchoring edits by symbol.
+5. **Grounding and fixture depth.** `resolve_span_ref` is a safe-grounding
+   resolver: it returns a passage/file fallback only when the associated source
+   is checked; quarantined/unchecked sources resolve to `None`, with a test.
+   F.2 adds an evaluator that reads each Shape-2 fixture's declared
+   `present@N`, invokes Explore at exactly `N`, and rejects a payload whose
+   recorded depth differs. `score_present_at_depth` accepts/validates that
+   depth (or is wrapped by this evaluator); include a depth-1 versus depth-2
+   negative test. LOOP.13 then consumes the frozen fixture's topic, depth, and
+   metric through `memoria explore`, not `memoria ask`.
+
+6. **Task-level replacement instructions.** The historical G.1/G.2/E.1/P.1/F.1/F.2
+   bodies below are superseded where they conflict with this amendment; an
+   executor must not combine their raw-ID or local-pipeline snippets with the
+   following final contracts.
+
+   - **G.1:** `neighborhood` and `degree_centrality` build adjacency solely from
+     `edges.concept_edge_path_pairs`.  Inputs and returned `ids` are normalized
+     paths; a ULID is never accepted as a path.  The replacement fixture creates
+     concept-mirror rows for a ULID source, a resolved target, and a checked
+     pending target, then asserts path traversal, `DISTINCT` neighbor counting
+     across parallel relations, and exclusion of unchecked rows.
+   - **G.2:** import `propagation`, not `state`.  If callable,
+     `propagation.active_project_slices(vault)` is selected by project-relative
+     path and yields sorted path ids.  Until ERP-C.6 lands, its only fallback is
+     the links closure; it filters missing/pending filesystem targets before
+     return.  Delete the `state.active_project_slices` test monkeypatch and all
+     `getattr(state, ...)` implementation code.
+   - **P.1:** validate every count at insertion (`type(count) is int and
+     count >= 0`; reject bools and negatives).  Add
+     `add_expansion(name, count)`, legal only after `add_ranked` and before
+     `add_returned`, with unique-suffixed names like filters.  Explore records
+     `seed` then `neighborhood` through that method, so its only legal trace is
+     `universe → [project-slice] → ranked → seed → neighborhood → returned`.
+     `PipelineStages.rows()` remains the sole ordered-count source.
+   - **E.1/E.2:** compose `PipelineStages`, `excluded_strata`, `rerank`,
+     `honest_empty`, and `build_trace` from P; delete the local
+     `pipeline_counts`, `_excluded_strata`, trace, and empty-message builders.
+     Its `_edges_by_concept` and `_tension_pairs` consume the ERP-A.6 projection,
+     and its final CLI parser is inserted beside P.3's final `_cmd_ask`, never
+     overwriting it.  Focused tests exercise both `memoria ask --trace` and
+     `memoria explore --trace`.
+
+7. **F.3 — freeze the executable Shape-2 fixture contract.** Add a task after
+   E and F.2, before LOOP.13/O2 W.4.  It loads the registered rows outside
+   spike mode, parses each Shape-2 `present@N`, calls
+   `explore.explore_topic(vault, row["query"], depth=N)`, requires
+   `payload["depth"] == N`, and applies `score_present_at_depth` to that exact
+   payload.  A depth-1 result for a `present@2` fixture is an explicit failure,
+   not a passing membership check.  Only after all registered cases pass does it
+   change their fixture rows to `frozen: true` with the committed `frozen_on`
+   date, add a loader test showing `load_retrieval_fixtures(spike_mode=True)`
+   succeeds, and commit the frozen artifact.  The task records the fixture id,
+   topic, depth, and metric in its test/receipt.  F is therefore ordered
+   `F.1 → F.2 → F.3`, and the old claim that F is independent of E is
+   superseded.  LOOP.13 and O2 W.4 require F.3, not merely F.2.
 
 ---
 # G — graph_sql primitives (spec §2 · slice 1)
 
 Implements the **structural mode primitive set** of `2026-07-17-r2-retrieval-modes-design.md` §2, the first entry of the §10 slice list: one new module, `src/memoria_vault/runtime/graph_sql.py` — deterministic SQL, set-shaped returns, no model judgment. Per the PI ruling in §1, everything here is a **filter + expander, never a ranker**: no function emits a rank signal and nothing here enters fusion. Every set-building primitive returns `{"ids": [...], "counts": {...}}` so denominators are built where sets are built (§4); the primitives return **raw counts dicts** — the ordered `pipeline_counts` list `[{stage, count}, …]` is slice 2's assembly, never emitted here.
 
-**Sequencing stop-note (Plan 22 G2S1.1 — the hard dependency §2 names).** This section executes AFTER Plan 22 G2S1.1 (`2026-07-15-alpha22-substrate-trust.md`) fills the stubbed concept-edge extraction. Grep first:
+**Sequencing status (Plan 22 G2S1.1 — satisfied).** The hard dependency has
+landed: `indexing._concept_edges` now builds rows from parsed links
+(`indexing.py:135-150`) and the rebuild path persists them through
+`state.replace_concept_edges` (`indexing.py:35-39`). G.1 therefore executes
+in order. Its fixture remains extraction-independent: mirrored rows use
+`state.replace_concept_edges`; the PI-owned `tension` row is intentionally
+inserted directly because that writer preserves tensions rather than mirroring
+them.
 
-```bash
-grep -n "return \[\]" src/memoria_vault/runtime/indexing.py
-```
-
-- If `_concept_edges` still returns `[]` (indexing.py:133-136 at 51395f15): G2S1.1 has not landed, `state.concept_edges` returns no persisted rows, and `neighborhood` ranges over an empty table in every real vault — **stop; this section is out of order.**
-- If the stub is replaced: proceed. Either way the tests below stay valid — they seed rows through `state.replace_concept_edges` (state.py:2026), the G2S1.1-independent path, and never depend on extraction.
-
-**Cross-plan order tolerance (binding):** (a) the relation roster is read at runtime from the shipped `concept_edges` CHECK (four relations today, schema.sql:240-250); when the graph plan widens the CHECK to the seven-relation `EDGE_RELATIONS` roster, it flows through with **no code change here** — the parity test asserts subset, not equality. (b) `project_slice` prefers `state.active_project_slices` (ERP-C, graph plan) via `getattr` the moment it exists; until then the fallback is the project file's own `links:` closure (spec §2, Filters bullet).
+**Cross-plan order tolerance (binding):** (a) the relation roster is read at runtime from the shipped `concept_edges` CHECK (four relations today, schema.sql:240-250); when the graph plan widens the CHECK to the seven-relation `EDGE_RELATIONS` roster, it flows through with **no code change here** — the parity test asserts subset, not equality. (b) `project_slice` lazily consumes ERP-C's `propagation.active_project_slices(vault)` mapping by resolved project rel; until that module/provider exists, the fallback is the project file's own `links:` closure. Once present, a missing key is deliberately empty (the graph plan excludes inactive/archived projects).
 
 **Implementation notes verified at 51395f15:**
 - `work_graph_edges` CHECK admits `'references', 'related', 'topic', 'keyword', 'authorship', 'institution', 'published_in'` (schema.sql:171-186); `co_citation`/`coupling` operate on `references` rows only, as §2 specifies.
 - Dynamic `IN (?…)` placeholder lists are expressed as static SQL via `json_each(?)`: the repo's lint gate keeps bandit S608 enabled (pyproject `[tool.ruff.lint]` — "SQL injection stays enabled") and rejects f-string SQL; JSON1 functions are established runtime precedent (`json_extract` at knowledge.py:3245, operations.py:1076) and the venv SQLite is 3.45.1. All module code below passes `ruff check` and `ruff format --check` under the repo config (verified).
 - `neighborhood` traverses **checked edges only**, matching `state.concept_edges`' `checked_only=True` default (state.py:2055) and §4's check-gate-ride-through: an unchecked or quarantined edge never expands the candidate set (it surfaces later as a stratum count in slice 2).
-- `state.replace_concept_edges` normalizes endpoints via `normalize_path` and validates relations through `_concept_edge_relation` (state.py:3420-3424 — hardcodes the four today; the graph plan widens it together with the CHECK).
+- `state.replace_concept_edges` normalizes endpoints via `normalize_path` and validates relations through `_concept_edge_relation`; it deliberately preserves PI-owned `tension` rows, which the G.1 fixture inserts directly.
 - `concept_status` is a view over `concepts` LEFT JOIN `concept_verdicts` (schema.sql:72-79): an id absent from the concept mirror reads as `unchecked` — `filter_ids` relies on exactly that.
 
-### Task G.1 — the four order-tolerant relation primitives
+### Task G.1 — the four order-tolerant relation primitives — completed
 
 **Files:**
 - `src/memoria_vault/runtime/graph_sql.py` (new)
@@ -62,7 +196,15 @@ grep -n "return \[\]" src/memoria_vault/runtime/indexing.py
 - `coupling(vault: Path, work_id: str) -> dict[str, Any]` — `{"work_ids": list[str], "counts": {"references": int, "coupled": int}}`
 - `degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]` — orderer only, per the spec's own signature (the one non-counts return in §2)
 
-- [ ] **G.1.1 — failing test.** Create `tests/test_graph_sql.py`:
+> **Executed amendment (authoritative over the historical listing below):** seed
+> the mirrored relations through `state.replace_concept_edges`, then insert
+> the checked PI-owned `tension` row directly through `state.connect()`.
+> The executed fixture also pins quarantined-edge exclusion, default tension
+> traversal, distinct-neighbor degree under parallel relations, and
+> references-only co-citation/coupling. Use `origin_id` for the CTE alias to
+> satisfy the repository-wide renamed-identifier gate.
+
+- [x] **G.1.1 — failing test.** Create `tests/test_graph_sql.py`:
 
 ```python
 """Contract tests for the deterministic graph-SQL primitives (R2 design §2, slice 1)."""
@@ -255,7 +397,7 @@ def test_degree_centrality_returns_zero_for_isolated_ids(tmp_path: Path) -> None
     "test_graph_sql.py": "contract",
 ```
 
-- [ ] **G.1.2 — run, expect the red import failure:**
+- [x] **G.1.2 — run, expect the red import failure:**
 
 ```bash
 python -m pytest tests/test_graph_sql.py -q
@@ -267,7 +409,7 @@ python -m pytest tests/test_graph_sql.py -q
 E   ImportError: cannot import name 'graph_sql' from 'memoria_vault.runtime' (src/memoria_vault/runtime/__init__.py)
 ```
 
-- [ ] **G.1.3 — minimal implementation.** Create `src/memoria_vault/runtime/graph_sql.py`:
+- [x] **G.1.3 — minimal implementation.** Create `src/memoria_vault/runtime/graph_sql.py`:
 
 ```python
 """Deterministic graph-SQL primitives for structural retrieval (R2 design, section 2).
@@ -489,7 +631,7 @@ def degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]:
     return degrees
 ```
 
-- [ ] **G.1.4 — run to green** (the second file confirms TEST_LEVELS exact-match):
+- [x] **G.1.4 — run to green** (the second file confirms TEST_LEVELS exact-match):
 
 ```bash
 python -m pytest tests/test_graph_sql.py tests/test_testing_levels.py -q
@@ -497,7 +639,7 @@ python -m pytest tests/test_graph_sql.py tests/test_testing_levels.py -q
 
   Expected: `12 passed` (10 new + 2 level-gate tests).
 
-- [ ] **G.1.5 — commit (explicit paths, never `git add -A`):**
+- [x] **G.1.5 — commit (explicit paths, never `git add -A`):**
 
 ```bash
 git add src/memoria_vault/runtime/graph_sql.py tests/test_graph_sql.py tests/conftest.py
@@ -506,18 +648,36 @@ git commit -m "feat(retrieval): add graph-SQL structural primitives (R2 slice 1,
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
-### Task G.2 — project_slice + type/status filters composing with neighborhood
+### Task G.2 — project_slice + type/status filters composing with neighborhood — completed
 
 **Files:**
 - `src/memoria_vault/runtime/graph_sql.py` (extend)
 - `tests/test_graph_sql.py` (extend)
 
 **Interfaces:**
+
+> **Current G.2 contract (supersedes the historical `state` wording below):**
+> `project_slice` lazily loads ERP-C's
+> `propagation.active_project_slices(vault) -> dict[str, set[str]]`, resolves
+> the requested project with `_project_rel`, and selects that mapping by key.
+> Before the producer exists it uses the project `links:` closure; after it
+> exists, a missing key means an intentionally empty inactive/archived slice.
+
 - `project_slice(vault: Path, project: str) -> dict[str, Any]` — `{"ids": list[str], "counts": {"members": int}, "source": "active-project-slices" | "links-closure"}`; order-tolerant source per spec §2: `getattr(state, "active_project_slices", None)` wins the moment ERP-C lands it; fallback is the project file's `links:` closure (project path resolution mirrors `knowledge._project_rel`, knowledge.py:3074-3084; link-target semantics mirror `knowledge._link_target`, knowledge.py:3036-3047)
 - `filter_ids(vault: Path, ids: list[str], *, types: set[str] | None = None, check_status: set[str] | None = None) -> dict[str, Any]` — `{"ids": list[str], "counts": {"before": int, "after": int}}` over the `concept_status` view (schema.sql:72-79)
 - Composition is caller-side set intersection — slice 2 (pipeline assembly) owns stitching the per-stage counts into the ordered `pipeline_counts` list.
 
-- [ ] **G.2.1 — failing tests.** Append to `tests/test_graph_sql.py`:
+> **Executed amendment (authoritative over the historical listing below):**
+> `project_slice` lazily imports the actual graph-owned
+> `propagation.active_project_slices(vault)` mapping and selects it by
+> `_project_rel`; the seam test patches that private loader with
+> `monkeypatch`, never mutates `state`. A present mapping missing the project
+> key intentionally returns an empty active slice (archived/inactive policy),
+> while the links closure is only the pre-propagation fallback. The local link
+> parser now matches `knowledge._link_target`: escaping and unsupported
+> targets are ignored.
+
+- [x] **G.2.1 — failing tests.** Append to `tests/test_graph_sql.py`:
 
 ```python
 def _seed_project_files(vault: Path) -> None:
@@ -613,7 +773,7 @@ def test_primitives_compose_neighborhood_slice_filter(tmp_path: Path) -> None:
     assert final["counts"] == {"before": 2, "after": 1}
 ```
 
-- [ ] **G.2.2 — run, expect the red attribute failures:**
+- [x] **G.2.2 — run, expect the red attribute failures:**
 
 ```bash
 python -m pytest tests/test_graph_sql.py -q
@@ -626,7 +786,7 @@ E       AttributeError: module 'memoria_vault.runtime.graph_sql' has no attribut
 E       AttributeError: module 'memoria_vault.runtime.graph_sql' has no attribute 'filter_ids'
 ```
 
-- [ ] **G.2.3 — minimal implementation.** In `src/memoria_vault/runtime/graph_sql.py`, extend the import block — old:
+- [x] **G.2.3 — minimal implementation.** In `src/memoria_vault/runtime/graph_sql.py`, extend the import block — old:
 
 ```python
 from memoria_vault.runtime import state
@@ -770,7 +930,7 @@ def filter_ids(
     return {"ids": kept, "counts": {"before": len(wanted), "after": len(kept)}}
 ```
 
-- [ ] **G.2.4 — run to green:**
+- [x] **G.2.4 — run to green:**
 
 ```bash
 python -m pytest tests/test_graph_sql.py -q
@@ -778,7 +938,7 @@ python -m pytest tests/test_graph_sql.py -q
 
   Expected: `14 passed` (verified against the shipped `state`/schema at 51395f15).
 
-- [ ] **G.2.5 — section-final gate:**
+- [x] **G.2.5 — section-final gate:**
 
 ```bash
 python scripts/verify
@@ -786,7 +946,7 @@ python scripts/verify
 
   Expected: green (lint, product gates, tests, offline smoke, syntax). The module and test file as written pass `ruff check` and `ruff format --check` under the repo config — verified at both the G.1 and G.2 stage boundaries.
 
-- [ ] **G.2.6 — commit (explicit paths):**
+- [x] **G.2.6 — commit (explicit paths):**
 
 ```bash
 git add src/memoria_vault/runtime/graph_sql.py tests/test_graph_sql.py
@@ -800,13 +960,19 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
 
 **Sequencing and stop-notes.** P has **no** dependency on Plan 22 G2S1.1: nothing here touches `concept_edges` (that stop-note binds the graph_sql section only). P can start directly at `51395f15`. Section E (`memoria explore`) consumes the seams produced here (`PipelineStages`, `excluded_strata`, `rerank`, `honest_empty`, `build_trace`, and the `--trace` contract), so P merges before E's payload work. All line references below were verified at `51395f15`; if a file has drifted, re-anchor by symbol name, not line number.
 
+**Recorded E handoff amendment (binding).** `PipelineStages` deliberately
+models only `universe → [filters] → ranked → returned`. When E needs its
+post-rank structural `seed` and `neighborhood` counters, it must build the
+common rows through `PipelineStages` and insert those two counters immediately
+before the terminal `returned` row; do not widen P.1's narrow API.
+
 **Module-location decision (required by the task): new file `src/memoria_vault/runtime/retrieval_pipeline.py`, not an extension of `search_index.py`.** Evidence: `wc -l` at `51395f15` gives `search_index.py` 606 lines (owns BM25, doc assembly, project-context expansion) and `retrieval.py` 184 lines (owns substrate capability checks and the fts/vector/hybrid legs). The staging contract is consumed by two fronts — ask (`search_index.answer_query`, `search_index.py:153`) and explore (section E's new module). Housing it in `search_index.py` would force explore to import a 600+-line module (plus `yaml`, `state`, `indexing`) for pure accounting; housing it in `retrieval.py` would conflate substrate legs with the honesty contract. The new module is pure stdlib (`collections.Counter`, `typing.Any`), so no import cycle is possible: `search_index` → `retrieval_pipeline` only.
 
 **One resolved wording rule:** the honest-empty sentence is spec-verbatim plural (`"0 of 1 candidates matched; 1 unchecked documents were not searched"`) — deterministic, no smart pluralization. The trace carries no invented explanation: it is the §4 counts plus BM25 scores plus `rerank: off`, exactly (spec §6 closing line).
 
 ---
 
-### Task P.1 — Shared retrieval-pipeline module: ordered counts, strata, no-op rerank, trace builder
+### Task P.1 — Shared retrieval-pipeline module: ordered counts, strata, no-op rerank, trace builder — completed
 
 **Files:**
 - `src/memoria_vault/runtime/retrieval_pipeline.py` (new)
@@ -822,9 +988,15 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
 - `rerank(hits: list[Any]) -> list[Any]` — the explicit no-op stage.
 - `build_trace(pipeline_counts: list[dict[str, Any]], returned: list[tuple[str, float]], *, fusion_inputs: list[dict[str, Any]] | None = None) -> dict[str, Any]` — the §6 trace; `fusion_inputs` emitted only when more than one ranked leg exists.
 
+> **Executed amendments (authoritative over the historical listing below):**
+> the absent-submodule collection error is `ImportError`, not
+> `ModuleNotFoundError`. Emitted filter labels are globally unique, including
+> when callers supply a suffix-looking name, and the test suite pins duplicate
+> `returned` refusal.
+
 **Steps:**
 
-- [ ] Register the new test file in `tests/conftest.py` (level `unit` — the module is pure, no vault, no network). Edit (`old_string` → `new_string`):
+- [x] Register the new test file in `tests/conftest.py` (level `unit` — the module is pure, no vault, no network). Edit (`old_string` → `new_string`):
 
   ```python
       "test_retrieval_substrate.py": "contract",
@@ -835,7 +1007,7 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       "test_retrieval_substrate.py": "contract",
   ```
 
-- [ ] Write the failing test — full content of `tests/test_retrieval_pipeline.py` (pytest-independent try/except/else style for refusals, matching the suite's CheckHarness convention noted in `pyproject.toml`'s ruff `ignore` comments):
+- [x] Write the failing test — full content of `tests/test_retrieval_pipeline.py` (pytest-independent try/except/else style for refusals, matching the suite's CheckHarness convention noted in `pyproject.toml`'s ruff `ignore` comments):
 
   ```python
   """R2 pipeline staging: ordered counts, strata, no-op rerank, trace (spec 1/4/6)."""
@@ -979,9 +1151,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       ]
   ```
 
-- [ ] Run `python -m pytest tests/test_retrieval_pipeline.py -q` — expected failure: collection error, `ModuleNotFoundError: No module named 'memoria_vault.runtime.retrieval_pipeline'`.
+- [x] Run `python -m pytest tests/test_retrieval_pipeline.py -q` — expected failure: collection error, `ImportError: cannot import name 'retrieval_pipeline' from 'memoria_vault.runtime'`.
 
-- [ ] Minimal implementation — full content of `src/memoria_vault/runtime/retrieval_pipeline.py`:
+- [x] Minimal implementation — full content of `src/memoria_vault/runtime/retrieval_pipeline.py`:
 
   ```python
   """Shared retrieval-pipeline staging (R2 design spec sections 1, 4, 6).
@@ -1098,9 +1270,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       return trace
   ```
 
-- [ ] Run `python -m pytest tests/test_retrieval_pipeline.py tests/test_testing_levels.py -q` — expected: all pass (the second file proves the `TEST_LEVELS` registration is complete).
+- [x] Run `python -m pytest tests/test_retrieval_pipeline.py tests/test_testing_levels.py -q` — expected: all pass (the second file proves the `TEST_LEVELS` registration is complete).
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/retrieval_pipeline.py tests/test_retrieval_pipeline.py tests/conftest.py
@@ -1120,7 +1292,7 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
 
 ---
 
-### Task P.2 — Honest-empty + check-gate-ride-through on ask
+### Task P.2 — Honest-empty + check-gate-ride-through on ask — completed
 
 **Files:**
 - `src/memoria_vault/runtime/search_index.py` (universe/strata accounting; `answer_query`; `_answer_from_hits`)
@@ -1136,9 +1308,26 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
 
 **Where consumability gating lives (verified):** `read_barrier.is_consumable_checked_file` (`src/memoria_vault/runtime/read_barrier.py:14-30`), called from the checked walk at `search_index.py:145`; it refuses when the DB verdict is not `checked`, when the checked output record is missing, or when the file hash no longer matches the checked record (tamper), enqueuing an `observe-pi-edits` scan. Stratum classification (resolved spec gap, see open questions): DB verdict `quarantined` → **gated** (explicit negative gate); any other non-`checked` verdict (incl. no DB row) → **unchecked**; verdict `checked` but barrier-refused → **gated**; hard staleness (`_hard_staleness` `search_index.py:404-411`: lifecycle retracted/archived, note curation candidate/rejected) with `include_stale=False` → **stale**. Soft-stale flags (`_memoria_stale`) keep the shipped behavior: the doc stays ranked and surfaces in `staleness` rows — the strata count *excluded* documents only, matching §0's "never silently dropped".
 
+> **P.2 preflight amendments (authoritative over the historical listings
+> below):** Preserve the live canonical contradiction reader exactly:
+> `links = frontmatter.get("links")`, followed by `links["contradicts"]` when
+> it is a list. The historical replacement below shows the obsolete top-level
+> `frontmatter["contradictions"]` shape and must not be copied. The gate test
+> also asserts that both gated paths (`notes/gated.md` and
+> `notes/quarantined.md`) are absent from serialized output. The spec binds
+> honest-empty text rendering to every CLI front, so top-level `memoria ask`
+> and `memoria project ask` share one helper that emits the sentence only for
+> successful, non-JSON, non-quiet zero-source responses; their JSON payloads
+> continue through `_emit` unchanged. P.3 must retain that helper when it
+> replaces `_cmd_ask`. Finally, strata classify bundle-root Markdown by check
+> status before `SEARCHABLE_TYPES`, as the historical universe walker does:
+> an unchecked/gated bundle document counts as an excluded stratum even if its
+> type is not a ranking candidate; a checked unsupported type is intentionally
+> absent rather than misreported as excluded.
+
 **Steps — cycle A (seam):**
 
-- [ ] Failing tests. Append to `tests/test_search_index.py`:
+- [x] Failing tests. Append to `tests/test_search_index.py`:
 
   ```python
   def test_zero_hit_answer_query_is_honest_about_denominators(tmp_path: Path) -> None:
@@ -1204,9 +1393,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
 
   (That vault holds `checked` + soft-stale `superseded` in the universe = 2 candidates; the note-curation `candidate` doc is hard-stale-excluded = the `stale: 1` stratum.)
 
-- [ ] Run `python -m pytest tests/test_search_index.py -q` — expected: 3 failures — the two new tests fail (`AssertionError` on the old `"No checked current sources matched: absentterm"` unknowns; `KeyError: 'pipeline_counts'`), and the edited pinned test fails comparing the old sentence.
+- [x] Run `python -m pytest tests/test_search_index.py -q` — observed the expected 3 failures before implementation.
 
-- [ ] Minimal implementation in `src/memoria_vault/runtime/search_index.py`. Four edits, full code:
+- [x] Minimal implementation in `src/memoria_vault/runtime/search_index.py`. Four edits, full code:
 
   1. Import line (`search_index.py:16`):
   ```python
@@ -1362,11 +1551,11 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       return answer
   ```
 
-- [ ] Run `python -m pytest tests/test_search_index.py tests/test_query_substrate.py tests/test_worker_product_jobs.py -q` — expected: all pass (the additive payload keys break no worker/substrate pins; verified: only `tests/test_search_index.py:351` pinned the old literal).
+- [x] Run `python -m pytest tests/test_search_index.py tests/test_query_substrate.py tests/test_worker_product_jobs.py -q` — passed alongside the CLI and project-ask focused suites.
 
 **Steps — cycle B (CLI text front):**
 
-- [ ] Failing test. Append to `tests/test_cli_honesty.py`:
+- [x] Failing test. Append to `tests/test_cli_honesty.py`:
 
   ```python
   def test_ask_zero_hit_renders_honest_empty_on_text_and_json(tmp_path, capsys):
@@ -1398,9 +1587,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       assert sentence in capsys.readouterr().out
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py -q` — expected: 1 failure at the final assertion (the `--json` front already carries the sentence after cycle A; the text front still prints `_success_detail`'s generic summary, not the sentence).
+- [x] Run `python -m pytest tests/test_cli_honesty.py -q` — observed the expected text-front failure before implementation.
 
-- [ ] Minimal implementation — replace `_cmd_ask` (`cli.py:706-712`) in full:
+- [x] Minimal implementation — replace `_cmd_ask` (`cli.py:706-712`) in full:
 
   ```python
   def _cmd_ask(args: argparse.Namespace) -> int:
@@ -1419,9 +1608,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       return _emit(result, args)
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py tests/test_cli.py tests/test_cli_work_project.py -q` — expected: all pass (`test_cli_command_surface_is_exact` at `tests/test_cli.py:73` is command-level, untouched here).
+- [x] Run `python -m pytest tests/test_cli_honesty.py tests/test_cli.py tests/test_cli_work_project.py -q` — passed with the search, substrate, and worker focused suites.
 
-- [ ] Commit:
+- [x] Commit (`b7f8db66`):
 
   ```bash
   git add src/memoria_vault/runtime/search_index.py src/memoria_vault/cli.py tests/test_search_index.py tests/test_cli_honesty.py
@@ -1440,24 +1629,43 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
   )"
   ```
 
+**Completion record (2026-07-17).** Implemented in `b7f8db66`; the
+preflight amendments are all adopted, including canonical
+`links.contradicts`, quarantined-path non-leakage, and shared top-level/project
+ask text handling. Independent review found no issues. `python scripts/verify`
+passed: 2408 passed, 9 skipped, with the pre-existing multiprocessing fork
+warning.
+
 ---
 
-### Task P.3 — `--trace` on ask + the explore consumer contract
+### Task P.3 — `--trace` on ask + the explore consumer contract — completed
 
 **Files:**
 - `src/memoria_vault/runtime/search_index.py` (`answer_query` gains `trace: bool = False`)
 - `src/memoria_vault/runtime/worker.py` (`answer-query` dispatch, `worker.py:740-756` — thread `trace`)
 - `src/memoria_vault/cli.py` (ask parser `cli.py:104-107`; `_cmd_ask`; new `_print_ask_trace`)
-- `tests/test_search_index.py`, `tests/test_cli_honesty.py`
+- `tests/test_search_index.py`, `tests/test_cli_honesty.py`, `tests/test_worker_product_jobs.py`
 
 **Interfaces:**
 - `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="", trace=False)` — when `trace=True` the payload gains `trace = build_trace(pipeline_counts, hits)`: same ordered counts, `scores` for returned hits, `rerank: "off"`, and `fusion_inputs` only when more than one ranked leg exists (BM25 is the only leg today, so it is absent — honest by construction).
 - `answer-query` worker payload accepts optional `trace: bool` (no capability-doc change needed — `answer-query.md` declares no per-arg schema; `k`/`include_stale`/`project_id` already ride undeclared).
 - `memoria ask --trace` CLI flag; text front prints one `stage: count` line per pipeline row plus `rerank: off`.
 
+> **P.3 preflight amendment (authoritative over the worker listing below):**
+> Thread `trace` with the existing `_payload_bool(payload, "trace", False)`
+> parser, not `bool(payload.get("trace", False))`, so a string such as
+> `"false"` does not enable trace. Add a worker contract test that rejects an
+> unparseable trace value. The P.2 `_emit_ask_result` helper remains the shared
+> zero-hit path for top-level and project ask; P.3 extends only top-level
+> `memoria ask` with `--trace`.
+
+- [x] Add the worker contract in `tests/test_worker_product_jobs.py`: an
+  unparseable value is rejected, while `"false"` is accepted and does not add
+  trace output.
+
 **Steps — cycle A (seam):**
 
-- [ ] Failing test. Append to `tests/test_search_index.py`:
+- [x] Failing test. Append to `tests/test_search_index.py`:
 
   ```python
   def test_answer_query_trace_reports_counts_scores_and_rerank_off(tmp_path: Path) -> None:
@@ -1475,9 +1683,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       assert "trace" not in answer_query(vault, "alpha")
   ```
 
-- [ ] Run `python -m pytest tests/test_search_index.py -q` — expected failure: `TypeError: answer_query() got an unexpected keyword argument 'trace'`.
+- [x] Run `python -m pytest tests/test_search_index.py -q` — observed the expected unsupported-`trace` failure before implementation.
 
-- [ ] Minimal implementation — `answer_query` final form (replaces the P.2 version; only the signature line, the tail, and the return change):
+- [x] Minimal implementation — `answer_query` final form (replaces the P.2 version; only the signature line, the tail, and the return change):
 
   ```python
   def answer_query(
@@ -1522,11 +1730,11 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       return answer
   ```
 
-- [ ] Run `python -m pytest tests/test_search_index.py -q` — expected: all pass.
+- [x] Run `python -m pytest tests/test_search_index.py -q` — passed.
 
 **Steps — cycle B (CLI flag threading + text render):**
 
-- [ ] Failing test. Append to `tests/test_cli_honesty.py`:
+- [x] Failing test. Append to `tests/test_cli_honesty.py`:
 
   ```python
   def test_ask_trace_flag_threads_through_worker_and_prints_stage_lines(tmp_path, capsys):
@@ -1558,9 +1766,9 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       assert "trace" not in jsonlib.loads(capsys.readouterr().out)["result"]
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py -q` — expected failure: `SystemExit: 2` from argparse (`unrecognized arguments: --trace`).
+- [x] Run `python -m pytest tests/test_cli_honesty.py -q` — observed the expected unrecognized-flag failure before implementation.
 
-- [ ] Minimal implementation, three edits:
+- [x] Minimal implementation, three edits:
 
   1. Ask parser (`cli.py:104-107`), old → new:
   ```python
@@ -1632,14 +1840,14 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
       print(f"rerank: {trace.get('rerank', 'off')}")
   ```
 
-- [ ] Run `python -m pytest tests/test_cli_honesty.py tests/test_search_index.py tests/test_cli.py -q` — expected: all pass.
+- [x] Run `python -m pytest tests/test_cli_honesty.py tests/test_search_index.py tests/test_cli.py -q` — passed with the worker contract suite (44 focused tests).
 
-- [ ] Section-final gate: run `python scripts/verify` — expected: green (lint, product gates, tests, offline smoke, syntax).
+- [x] Section-final gate: `python scripts/verify` — passed (2412 passed, 9 skipped; pre-existing multiprocessing fork warning only).
 
-- [ ] Commit:
+- [x] Commit (`3d35c896`):
 
   ```bash
-  git add src/memoria_vault/runtime/search_index.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_search_index.py tests/test_cli_honesty.py
+  git add src/memoria_vault/runtime/search_index.py src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/test_search_index.py tests/test_cli_honesty.py tests/test_worker_product_jobs.py
   git commit -m "$(cat <<'EOF'
   feat(ask): --trace retrieval trace (R2 P.3)
 
@@ -1653,6 +1861,13 @@ This section implements spec §1 (fixed stage order: filter-before-rank, fusion 
   EOF
   )"
   ```
+
+**Completion record (2026-07-17).** Implemented in `3d35c896`; the worker
+uses `_payload_bool` so false-like values do not enable trace and malformed
+values fail, while the top-level-only flag retains P.2's shared project-ask
+honesty path. Independent review found no code issues, then caught and repaired
+the explicit staging omission for the worker contract test. Final verification:
+2412 passed, 9 skipped, with the pre-existing multiprocessing fork warning.
 
 **Seam handoff to section E (explore) — the consumer contract, binding:** `memoria explore` builds its own `PipelineStages` per side (named filter stages such as `project-slice` and `depth-expansion` via `add_filter`, unique-suffixed automatically), passes its seed ranking through `retrieval_pipeline.rerank(...)` between rank and return, attaches `stages.rows()` / `retrieval_pipeline.excluded_strata(...)` to its payload (per side under `--versus`, spec §3), renders zero-seed results via `retrieval_pipeline.honest_empty(rows, strata)`, and implements `--trace` as `retrieval_pipeline.build_trace(stages.rows(), seed_hits)` with the identical CLI flag semantics shown here. E imports only `memoria_vault.runtime.retrieval_pipeline` for this — not `search_index`.
 # E · `memoria explore` (spec §3 — slice 3)
@@ -1672,12 +1887,98 @@ Stop if missing — the shipped `concept_edges` extractor is a stub returning `[
 
 Shipped seams consumed (verified): `checked_search_documents` `search_index.py:115-131`; module-private ranking core `_bm25`/`_tokens` `search_index.py:580/:576` and `_bundle_roots` `:414` (intra-package reuse; `tests/test_search_index.py` already imports these privates — precedent); `state.concept_edges` `:2055-2076` (checked-only rows); `evidence_sets` schema `schema.sql:330-343` with `block_ref = <claim-relpath>#^blk-<id>` per `state._evidence_block_ref` `:2689-2690`; `replace_evidence_sets` `:2277-2332`; `memoria project explore` `cli.py:350-353`; pinned roster `tests/test_cli.py:73`; CLI plumbing `main`/`_fail` `cli.py:55-63/:3234`, `_common` `:560`, `_emit` `:3092`, `_workspace` `:2130`.
 
+> **E reconciliation plan (binding; supersedes conflicting historical listings
+> below).** P.1–P.3 changed the owned seams after the historical E listing was
+> written. Execute the following four reconciled tasks, then mark the
+> historical E.1–E.3 checkboxes complete as implemented through this
+> replacement. Preserve P.3's top-level Ask parser and shared
+> `_emit_ask_result`; no historical old/new snippet may overwrite it.
+>
+> **ER.0 — pure-read eligibility seam.** Change only the internal guard APIs:
+> `is_consumable_checked_file(vault, relpath, *, enqueue_scan: bool = True)`
+> and `checked_search_universe(vault, *, include_stale: bool = False,
+> enqueue_scan: bool = True)`. Their default is the exact shipped behavior;
+> only the two refusal paths conditionally call `_enqueue_scan`. Keep
+> `checked_search_documents`' public signature/default unchanged. Add a
+> passive-universe contract test with one consumable note, one tampered checked
+> note, and one quarantined note: `enqueue_scan=False` returns only the good
+> document, reports `gated == 2`, serializes neither blocked path nor canary
+> text, and leaves `operation_requests` unchanged. Retain the existing default
+> Ask/read-barrier test that proves a tampered checked document still queues
+> `observe-pi-edits`. The new flag is never a CLI, worker, or payload option.
+>
+> **ER.1 — explore engine and safety contract.** Create
+> `runtime/explore.py` with `SEED_K = 5`, `DEPTH_CAP = 2`, and
+> `explore_topic(vault, topic, *, project="", depth=1, versus="",
+> trace=False) -> dict[str, Any]`. Load
+> `checked_search_universe(vault, enqueue_scan=False)` **once** per request and
+> pass its documents/strata to both versus sides; do not import
+> `checked_search_documents`, the read barrier, `_bundle_roots`,
+> `iter_markdown`, or implement a second strata walk. Before ranking, retain
+> only displayable documents (`note` modes `claim`/`question`, `hub`, and
+> work/digest/fulltext representations) via a `PipelineStages` named
+> `displayable-kind` filter; then apply optional `project-slice` from the
+> graph-owned active mapping when it exists, otherwise from that same passive
+> universe's vetted frontmatter (never `graph_sql.project_slice`'s file
+> fallback, which would escape the vetted read set). A gated canonical project
+> yields an empty slice, never a fallback to a same-named project. Rank with
+> `_bm25`, pass the top `SEED_K` hits through `rerank`, expand with
+> `graph_sql.neighborhood`, and intersect expansion with the displayable
+> candidate ids. Build common rows through `PipelineStages`, insert `seed` and
+> `neighborhood` immediately before terminal `returned`, and attach the shared
+> strata. `honest_empty(rows, strata)` is present exactly when a side returns
+> zero groups. Direct-insert both PI-owned tension directions in the fixture —
+> `replace_concept_edges` intentionally preserves/drops mirror tensions.
+>
+> All display edges, tension pairs, intersections, crossings, and trace scores
+> must be restricted to the side's returned consumable ids; a checked edge to a
+> subsequently gated/tampered endpoint is never emitted. Test normal groups,
+> complete-evidence-set grounds count, depth 0/3 refusals, depth two, project
+> filtering, generic-note/project pre-rank exclusion, and a gated-neighbor
+> canary. Wrap the tamper-triggering engine call in `read_only_guard`; assert
+> no blocked id/text in `json.dumps(payload)`, `gated` counts it, and no
+> request/journal/index/vault mutation occurs.
+>
+> **ER.2 — real CLI-only surface.** Add current-shape (no partial U1 `job`
+> field) `explore.read` to `SURFACE_ACTIONS`: engine `read_explore`, kind
+> `read`, workspace scope, required string `topic`, optional string
+> `versus`/`project`, integer `depth=1`, boolean `trace=False`, CLI command
+> `memoria explore`, and `ENGINE_READ_API_VERSION`; it deliberately has no
+> `http` or `mcp` key. Its summary is the top-level help text and names the
+> distinction from `memoria project explore`. Add
+> `engine_api.read_explore(...)`, which returns `_read_payload(explore=
+> explore_topic(...))`; the CLI calls that adapter and constructs the parser
+> with `**_surface_help("explore.read")`. Keep a separate project-explore help
+> string for the reverse disambiguation. Add the `explore.read` CLI-only row to
+> `tests.floor_lib.ARG_TABLE`; keep HTTP/MCP entries `None`, leaving their
+> routes/tools/OpenAPI rosters unchanged. Tests pin the registry shape, engine
+> envelope, parser roster/help, generic floor coverage, and the no-route/no-tool
+> invariants.
+>
+> **ER.3 — trace, text, and acceptance.** For a single side,
+> `trace=True` attaches `build_trace(side["pipeline_counts"], seed_hits)`;
+> for `--versus`, attach `{"a": trace_a, "b": trace_b}`. Never retain the
+> historical `{"stages": ..., "rerank": "off"}` shape. In text mode, a
+> single empty result prints its honest-empty sentence and (when requested) its
+> trace. Under `--versus`, `_emit` still handles the nonempty side and prints
+> `a:`/`b:` prefixed honest-empty sentences for any empty side before its
+> requested per-side trace; JSON carries the unchanged structured payload.
+> Acceptance tests pin normal and zero versus sides, trace scores/counts,
+> groups/grounds/tensions/intersection, depth-cap CLI refusal, and the tampered
+> pure-read case. Run the targeted suites, `python scripts/verify`, then an
+> explicit `codex-security:security-diff-scan` over the read-barrier,
+> search-universe, explore, adapter/surface, and CLI diff before commit.
+
+> **Executed 2026-07-17.** ER.0–ER.3 replace and complete the historical E.1–E.3
+> implementation below. The full repository gate passed (2,425 passed, 11
+> skipped), and the required security diff scan closed with no findings.
+
 ### Task E.1 — engine: `explore_topic` (seed → expand → group → mark)
 
 **Files:** `src/memoria_vault/runtime/explore.py` (new), `tests/test_explore.py` (new), `tests/conftest.py` (register test level).
 **Interfaces:** `explore_topic(vault: Path, topic: str, *, project: str = "", depth: int = 1, versus: str = "") -> dict[str, Any]`; constants `SEED_K = 5`, `DEPTH_CAP = 2`. Consumes `graph_sql.neighborhood` / `graph_sql.project_slice` (slice-1 seams), `state.concept_edges`, `checked_search_documents`, the `evidence_sets` table.
 
-- [ ] Register the new test file (the `test_testing_levels.py` gate pins every `tests/test_*.py` into `TEST_LEVELS`). Edit `tests/conftest.py`:
+- [x] Register the new test file (the `test_testing_levels.py` gate pins every `tests/test_*.py` into `TEST_LEVELS`). Edit `tests/conftest.py`:
 
   old:
   ```python
@@ -1691,7 +1992,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
     "test_exploration_channel.py": "runtime",
   ```
 
-- [ ] Write the failing test — create `tests/test_explore.py` (tmp_path vault only, no network; fixture helpers mirror `tests/test_search_index.py`'s `note()`/`upsert_catalog_record` idiom; tension edges seeded **in both directions** so the fixture is agnostic to slice 1's traversal-direction choice):
+- [x] Write the failing test — create `tests/test_explore.py` (tmp_path vault only, no network; fixture helpers mirror `tests/test_search_index.py`'s `note()`/`upsert_catalog_record` idiom; tension edges seeded **in both directions** so the fixture is agnostic to slice 1's traversal-direction choice):
 
   ```python
   from __future__ import annotations
@@ -1920,8 +2221,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert two_hop["depth"] == 2
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `ModuleNotFoundError: No module named 'memoria_vault.runtime.explore'` at collection.
-- [ ] Minimal implementation — create `src/memoria_vault/runtime/explore.py`. The grounds mark is the real SQL over `evidence_sets` (schema `schema.sql:330-343`): `block_ref` is `<claim-relpath>#^blk-<id>` (`state._evidence_block_ref`, `state.py:2689-2690`), so the claim path is the half before `#`, and only `state = 'complete'` rows count:
+- [x] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `ModuleNotFoundError: No module named 'memoria_vault.runtime.explore'` at collection.
+- [x] Minimal implementation — create `src/memoria_vault/runtime/explore.py`. The grounds mark is the real SQL over `evidence_sets` (schema `schema.sql:330-343`): `block_ref` is `<claim-relpath>#^blk-<id>` (`state._evidence_block_ref`, `state.py:2689-2690`), so the claim path is the half before `#`, and only `state = 'complete'` rows count:
 
   ```python
   """Shape-2 topic surfacing (`memoria explore`) — a pure read, no telemetry.
@@ -2201,8 +2502,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       return strata
   ```
 
-- [ ] Run to pass: `python -m pytest tests/test_explore.py -q` — 3 passed. Also run the neighbor contract file to catch import fallout: `python -m pytest tests/test_search_index.py -q`.
-- [ ] Commit (explicit paths only — the git index is shared per checkout):
+- [x] Run to pass: `python -m pytest tests/test_explore.py -q` — 3 passed. Also run the neighbor contract file to catch import fallout: `python -m pytest tests/test_search_index.py -q`.
+- [x] Commit (explicit paths only — the git index is shared per checkout):
 
   ```bash
   git add src/memoria_vault/runtime/explore.py tests/test_explore.py tests/conftest.py
@@ -2214,7 +2515,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 **Files:** `src/memoria_vault/cli.py`, `tests/test_cli.py`.
 **Interfaces:** `memoria explore <topic> [--versus B] [--project P] [--depth N] [--trace]` (plus `_common`'s `--workspace/--json/--quiet/--idempotency-key/--schedule-id/--actor`); handler `_cmd_explore` — a pure read calling `explore_topic` directly (no `_enqueue_and_run`, mirroring `_cmd_project_explore` `cli.py:1199-1205`); `--depth` > 2 exits 2 with the cap named (`main`'s CLI boundary, `cli.py:55-63`).
 
-- [ ] **The pinned `test_cli_command_surface_is_exact` edit (named step, spec §3/§9).** Edit `tests/test_cli.py` (roster at `:73`):
+- [x] **The pinned `test_cli_command_surface_is_exact` edit (named step, spec §3/§9).** Edit `tests/test_cli.py` (roster at `:73`):
 
   old:
   ```python
@@ -2228,7 +2529,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
           "memoria serve",
   ```
 
-- [ ] **U1 surface-contract registry row (grep-first, both branches).** Run:
+- [x] **U1 surface-contract registry row (grep-first, both branches).** Run:
 
   ```bash
   ls src/memoria_vault/engine/ && grep -rln "registry" src/memoria_vault/engine/
@@ -2237,7 +2538,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
   - **If a U1 surface-contract registry module has landed** (an `engine/` module beyond the shipped `api.py`/`empirical_events.py`/`surface_contract.py` that registers CLI command rows — the U1 gate owns it): add the `memoria explore` row there following that module's established row form and its own contract test, and include that file in this task's commit.
   - **Else (the shipped state at 51395f15):** the only registry is `SURFACE_ACTIONS` in `engine/surface_contract.py`, which registers engine *read actions* — `memoria ask` itself carries no row there, and the floor-coverage gate (`tests/test_floor_coverage.py`) keys off `actions_by_id()`, so adding an action row would demand ARG_TABLE floor entries this slice does not own. Add **nothing** to `surface_contract.py`; the pinned roster edit above is the entire surface registration.
 
-- [ ] Add the two failing CLI tests — append to the end of `tests/test_cli.py` (all names used — `json`, `pytest`, `Path`, `main`, `_build_parser`, `_parser_for_command`, `_parser_dests`, `state` — are already imported at `:1-16`):
+- [x] Add the two failing CLI tests — append to the end of `tests/test_cli.py` (all names used — `json`, `pytest`, `Path`, `main`, `_build_parser`, `_parser_for_command`, `_parser_dests`, `state` — are already imported at `:1-16`):
 
   ```python
   def test_cli_explore_help_disambiguates_project_explore_both_directions() -> None:
@@ -2275,8 +2576,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert after == before
   ```
 
-- [ ] Run: `python -m pytest tests/test_cli.py -q` — expected failures: `test_cli_command_surface_is_exact` (roster mismatch: `memoria explore` missing from the parser), `KeyError: 'explore'` in both new tests.
-- [ ] Minimal implementation — three edits to `src/memoria_vault/cli.py`:
+- [x] Run: `python -m pytest tests/test_cli.py -q` — expected failures: `test_cli_command_surface_is_exact` (roster mismatch: `memoria explore` missing from the parser), `KeyError: 'explore'` in both new tests.
+- [x] Minimal implementation — three edits to `src/memoria_vault/cli.py`:
 
   1. Help constants, after the `SURFACE_ACTION` assignment (`:52`):
 
@@ -2392,8 +2693,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
          return {"stages": stages, "rerank": "off"}
      ```
 
-- [ ] Run to pass: `python -m pytest tests/test_cli.py tests/test_explore.py -q` — all passed (including the re-pinned roster).
-- [ ] Commit:
+- [x] Run to pass: `python -m pytest tests/test_cli.py tests/test_explore.py -q` — all passed (including the re-pinned roster).
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/cli.py tests/test_cli.py
@@ -2405,7 +2706,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 **Files:** `src/memoria_vault/runtime/explore.py`, `src/memoria_vault/cli.py`, `tests/test_explore.py`.
 **Interfaces:** `payload["honest_empty"]: str` on any explore side with `returned == 0` — the §4 sentence `"0 of <candidates> candidates matched; <n> unchecked documents were not searched"` (candidates = the last filter-stage count before `ranked`, i.e. the denominator the candidate set defines); the CLI text front prints that sentence instead of a bare summary. The slice-4 (honest-empty/ride-through enforcement) section consumes this field for its cross-front tests.
 
-- [ ] Extend `tests/test_explore.py` imports for the CLI-front tests:
+- [x] Extend `tests/test_explore.py` imports for the CLI-front tests:
 
   old:
   ```python
@@ -2428,7 +2729,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
   from memoria_vault.runtime import state
   ```
 
-- [ ] Write the failing honest-empty test — append to `tests/test_explore.py`:
+- [x] Write the failing honest-empty test — append to `tests/test_explore.py`:
 
   ```python
   def test_explore_honest_empty_renders_counts_on_text_and_json_fronts(
@@ -2457,8 +2758,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert output["explore"]["honest_empty"] == sentence
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`.
-- [ ] Minimal implementation — two edits. In `src/memoria_vault/runtime/explore.py` (`_explore_side`, before the return):
+- [x] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`.
+- [x] Minimal implementation — two edits. In `src/memoria_vault/runtime/explore.py` (`_explore_side`, before the return):
 
   old:
   ```python
@@ -2508,8 +2809,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       return _emit({"ok": True, "explore": payload}, args)
   ```
 
-- [ ] Run to pass: `python -m pytest tests/test_explore.py -q`.
-- [ ] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
+- [x] Run to pass: `python -m pytest tests/test_explore.py -q`.
+- [x] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
 
   ```python
   def test_cli_explore_acceptance_five_groups_versus_counts_and_depth_cap(
@@ -2580,9 +2881,9 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert "hard cap of 2" in refusal["error"]
   ```
 
-- [ ] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.
-- [ ] Section-final gate: `python scripts/verify` — green (the roster gate `test_testing_levels.py` sees `test_explore.py` registered from E.1; the doc-claims gate is unaffected — it only fails on docs citing commands that do not exist, and `memoria explore` now exists).
-- [ ] Commit:
+- [x] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.
+- [x] Section-final gate: `python scripts/verify` — green (the roster gate `test_testing_levels.py` sees `test_explore.py` registered from E.1; the doc-claims gate is unaffected — it only fails on docs citing commands that do not exist, and `memoria explore` now exists).
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/explore.py src/memoria_vault/cli.py tests/test_explore.py
@@ -2592,7 +2893,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 
 Implements spec §5 (grounded synthesis + the anchor-locator contract — **the composer itself is R1-gated new work and is not built here**; beta.1 ships the contract tests + refusal honesty) and §7 (retrieval-fixture preregistration: the form, the loader with granularity mapping and `present@depth`, freeze semantics, baseline wiring into `evaluate_bm25`) — slices 5 and 7 of §10. Spec: `docs/superpowers/specs/2026-07-17-r2-retrieval-modes-design.md`. All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
 
-**Ordering and independence.** F has **no** dependency on Plan 22 G2S1.1 or this plan's graph_sql/explore sections: nothing here reads `concept_edges`, and `score_present_at_depth` scores a payload dict, not a live explore run. F may execute at any point in the section order. The one cross-section touch is refusal honesty (F.1c), which consumes section P's §4 honest-empty fields with **both-branch tolerance**: the asserts on `pipeline_counts`/`excluded_strata` fire iff the fields are present in the payload, so F is green whether it lands before or after P (P owns the strict, unconditional assertions of those fields). Grep-first note for the implementer: before running F.1, run `grep -n "excluded_strata" src/memoria_vault/runtime/search_index.py` — a hit means P landed first and both branches of the tolerant asserts will execute; an empty grep means only the shipped-core branch runs. Either way the test code below is used exactly as written.
+**Ordering.** F.1 and F.2 have no direct graph/explore dependency: nothing in their no-prose contract, locator, or fixture loader reads `concept_edges`, and `score_present_at_depth` scores a payload dict rather than a live Explore run. They do require the final P.1–P.3 base in the **current worktree**: `runtime/retrieval_pipeline.py` must exist, `search_index.answer_query` must return mandatory `pipeline_counts` and `excluded_strata`, and its final parser form must accept `--trace`. F.3 additionally requires E.1/E.2 and the seeded O1 corpus. This replaces the obsolete pre-P/both-branch-tolerance route; an absent P base is a stop condition, not permission to run the historical snippets.
 
 **Deliberately not built here** (spec §8 + §7's last rule): the extractive composer (R1-gated), any model-synthesis path, and any `scripts/verify` wiring for the freeze check — the loader's own contract test IS the enforcement (spec §7: "enforced by the loader's own contract test, not scripts/verify wiring").
 
@@ -2619,8 +2920,50 @@ Implements spec §5 (grounded synthesis + the anchor-locator contract — **the 
 
 **Interfaces:**
 
-- Consumes: `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="") -> dict` (search_index.py:153-177) and `_answer_from_hits` (:211-249, the shipped no-prose payload); `parse_source_span_ref(ref) -> SourceSpanRef(work_id, page)` (evidence.py:44-49); the `passages` table (schema.sql:199-220) via `state.db_path`/`state.connect` (state.py:460-482); `state.catalog_source(vault, work_id)` (state.py:1603-1612); the interim file-scan rule (`_source_span_pages`, state.py:2676-2686 — the rule is mirrored, the private helper is not imported); one-row-per-doc `_passage_row` (indexing.py:101-131) + `rebuild_passage_index_explicit(vault, *, actor, machine)` (indexing.py:25-31) as the test fixture; `safe_filename` (paths.py:15-17); `tests.helpers.call_with_context`/`copy_memoria_dirs`.
+- Consumes: final-P `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="", trace: bool = False) -> dict` and `_answer_from_hits` (the shipped no-prose payload); `parse_source_span_ref(ref) -> SourceSpanRef(work_id, page)` (evidence.py:44-49); the `passages` table (schema.sql:199-220) via `state.db_path`/`state.connect` (state.py:460-482); `state.catalog_source(vault, work_id)` (state.py:1603-1612); the interim file-scan rule (`_source_span_pages`, state.py:2676-2686 — the rule is mirrored, the private helper is not imported); one-row-per-doc `_passage_row` (indexing.py:101-131) + `rebuild_passage_index_explicit(vault, *, actor, machine)` (indexing.py:25-31) as the test fixture; `safe_filename` (paths.py:15-17); `tests.helpers.call_with_context`/`copy_memoria_dirs`.
 - Produces: `resolve_span_ref(vault: Path, ref: str) -> dict[str, str] | None` (keys `work_id`, `anchor`, `path`) in `memoria_vault.runtime.span_refs` — the one resolution rule the R1-gated composer and F.2's fixture loader share; the `ALLOWED_ANSWER_KEYS` pin any future composer must widen through this contract.
+
+> **Execution amendment (2026-07-30): final-P and safe-grounding handoff.**
+> This supersedes F.1's historical optional-P assertions, permissive resolver,
+> and stale registry context below.
+>
+> 1. **Preflight and stop rule.** Before edits, run `git status --short`,
+>    `git rev-parse --show-toplevel`, `test -f
+>    src/memoria_vault/runtime/retrieval_pipeline.py`, and `rg -n
+>    "excluded_strata|trace: bool = False" src/memoria_vault/runtime/search_index.py`.
+>    All must be present in the
+>    current worktree. On this repair branch they are bootstrap-rendezvous-only,
+>    so stop until that rendezvous; do not cherry-pick prerequisites or create
+>    a second worktree.
+> 2. **Mandatory refusal shape.** Import `retrieval_pipeline`; require the
+>    exact `pipeline_counts` stages `universe`, `ranked`, `returned` and the
+>    complete zeroed `excluded_strata` shape. The honest refusal remains the
+>    single `unknowns` element, asserted as
+>    `retrieval_pipeline.honest_empty(refusal["pipeline_counts"],
+>    refusal["excluded_strata"])` — there is no `honest_empty` answer key.
+> 3. **Checked, canonical span grounding.** `resolve_span_ref` first loads
+>    `state.catalog_source(vault, work_id)` and returns `None` unless its
+>    `check_status` is exactly `"checked"`, before either passages or file
+>    fallback. Its SQL route is restricted to
+>    `path = f"fulltexts/{safe_filename(work_id)}.md"` as well as matching the
+>    work id/anchor; an arbitrary note with a spoofed `work_id` must never
+>    ground a source ref. The file fallback receives the already checked source,
+>    treats path normalization and read failures as `None`, and returns only the
+>    canonical fulltext path.
+> 4. **Additional red pins.** After indexing a checked source with `p0007` and
+>    `p0009`, flip that record in place to `unchecked` and then `quarantined`
+>    without deleting its passage row/blob; both refs resolve `None` in both
+>    states. In a separate fresh fixture, give the checked canonical source only
+>    `p0008` and a checked note declaring the same work id `p0007`, then run
+>    `indexing.rebuild_passage_index_explicit(...)` after creating **both**;
+>    resolving the source's `p0007` ref must be `None`, never the note path.
+> 5. **R1 handoff and registry.** F.1 proves no prose plus a safe locator only.
+>    When an R1 composer introduces prose, it must define sentence/ref shape and
+>    add a test that every sentence ref resolves and is passage-backed; F.1 does
+>    not invent that payload. Re-anchor `TEST_LEVELS` after the final P/G roster
+>    (`test_gate_calibration`, `test_graph_sql`, `test_grounded_synthesis`,
+>    `test_hub_handoff`), run focused tests plus `git diff --check` and the full
+>    verify gate, then stage only its three files explicitly.
 
 - [ ] **Step 1: Write the failing test** — create `tests/test_grounded_synthesis.py`:
 
@@ -2734,7 +3077,9 @@ def test_no_grounding_output_is_the_honest_empty_refusal(tmp_path: Path) -> None
     refusal = answer_query(vault, "zzz-absent-topic")
 
     assert refusal["sources"] == []
-    assert refusal["unknowns"] == ["No checked current sources matched: zzz-absent-topic"]
+    assert refusal["unknowns"] == [
+        "0 of 1 candidates matched; 0 unchecked documents were not searched"
+    ]
     assert set(refusal) <= ALLOWED_ANSWER_KEYS
     assert PROSE_KEYS.isdisjoint(refusal)
     # Section P's section-4 fields ride through when the denominator
@@ -2904,6 +3249,11 @@ Expected: all tests pass.
 git add src/memoria_vault/runtime/span_refs.py tests/test_grounded_synthesis.py tests/conftest.py
 git commit -m "R2 F.1: grounded-synthesis contract tests + shared span-ref resolution (spec section 5)" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor aeeca6e2 main`
+> succeeded. `aeeca6e2` adds `runtime/span_refs.py`,
+> `tests/test_grounded_synthesis.py`, and the corresponding `tests/conftest.py`
+> registration: the task's declared file set.
 
 ---
 
@@ -3378,3 +3728,98 @@ Expected: `verify: OK` (ruff/ruff-format cover the two new Python files; yamllin
 git add tests/retrieval_fixtures.py tests/fixtures/retrieval/cases.yaml tests/test_retrieval_fixtures.py tests/conftest.py
 git commit -m "R2 F.2: retrieval-fixture preregistration form, loader, and baseline wiring (spec section 7)" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor fcca90f4 main`
+> succeeded. `fcca90f4` adds `tests/retrieval_fixtures.py`,
+> `tests/fixtures/retrieval/cases.yaml`, `tests/test_retrieval_fixtures.py`,
+> and the task's `tests/conftest.py` registration.
+
+---
+
+### Task F.3: Evaluate and freeze the registered retrieval fixtures
+
+**Preconditions:** F.1, F.2, E.1/E.2, O1's seeded corpus, graph ERP-A.6, and
+the Shape-2 `explore_topic` implementation are merged.  This is the explicit
+producer of the frozen-fixture contract consumed by O2 W.4 and LOOP.13; F.2's
+unfrozen preregistration is intentionally insufficient.
+
+**Files:**
+
+- Modify: `tests/retrieval_fixtures.py`
+- Modify: `tests/test_retrieval_fixtures.py`
+- Modify: `tests/fixtures/retrieval/cases.yaml`
+
+**Interfaces:**
+
+- Consumes: `load_retrieval_fixtures`, `shape1_bm25_cases`,
+  `score_present_at_depth`, `evaluate_bm25`, and
+  `explore.explore_topic(vault, topic, *, depth)`.
+- Produces: a frozen fixture file: every registered row has `frozen: true`
+  and the same committed ISO `frozen_on` date; the spike-mode loader succeeds.
+  The evaluation receipt records, per fixture, `id`, `shape`, query/topic,
+  metric, and (for Shape 2) declared/result depth.
+
+**Steps:**
+
+- [ ] Extend `tests/retrieval_fixtures.py` with small test-only helpers that
+  parse `hit@K`/`recall@K` and `present@N` from the validated metric strings;
+  reject an unsupported metric rather than guessing a threshold.  Do not add a
+  production evaluation abstraction merely to freeze static fixtures.
+- [ ] Write the failing test in `tests/test_retrieval_fixtures.py`.  Build a
+  disposable seeded retrieval vault with F.2's fulltext helper and the
+  identity-safe graph seam; the fixture has the registered two Shape-1 works
+  and the two Shape-2 work IDs connected by the necessary checked path edges.
+  Load the **unfrozen** rows outside spike mode and:
+
+  1. evaluate each Shape-1 row separately through `shape1_bm25_cases` and
+     `evaluate_bm25`, asserting its declared hit/recall threshold;
+  2. parse each Shape-2 `present@N`, call
+     `explore_topic(vault, row["query"], depth=N)`, assert
+     `payload["depth"] == N`, and then assert
+     `score_present_at_depth(payload, row["gold"])`;
+  3. add a negative fixture/test proving a payload at depth 1 cannot satisfy a
+     case declared `present@2`, even if its membership happens to look right;
+  4. assert `load_retrieval_fixtures(spike_mode=True)` fails before the freeze.
+
+  The test output names the fixture id, topic/query, metric, and actual depth
+  on failure; a failing evaluation is a finding and blocks freezing.
+- [ ] Run the focused test red:
+
+  ```bash
+  python -m pytest tests/test_retrieval_fixtures.py -q
+  ```
+
+  Expected: the spike-mode assertion fails because F.2 registered all rows as
+  unfrozen (or an evaluation failure names the fixture that must be corrected
+  before freezing).
+- [ ] Once every registered Shape-1 and Shape-2 evaluation is green, update
+  **only** the already-registered `cases.yaml` rows: set `frozen: true` and add
+  one `frozen_on: YYYY-MM-DD` date.  Do not change a query, gold ID, metric, or
+  registration date in this task; any such correction requires a separate
+  preregistration decision before the freeze.
+- [ ] Replace the pre-freeze spike-refusal assertion with the post-freeze
+  assertion:
+
+  ```python
+  frozen = load_retrieval_fixtures(spike_mode=True)
+  assert all(row["frozen"] for row in frozen)
+  assert {row["frozen_on"] for row in frozen} == {"<committed freeze date>"}
+  ```
+
+  Keep the malformed-row validation that proves an unfrozen synthetic row is
+  still refused in spike mode; the loader rule is not relaxed merely because
+  the shipped fixture is now frozen.
+- [ ] Run the focused contracts and gate:
+
+  ```bash
+  python -m pytest tests/test_retrieval_fixtures.py tests/test_explore.py -q
+  python scripts/verify
+  ```
+
+- [ ] Commit:
+
+  ```bash
+  git add tests/retrieval_fixtures.py tests/test_retrieval_fixtures.py \
+      tests/fixtures/retrieval/cases.yaml
+  git commit -m "test(retrieval): evaluate and freeze registered Shape-1/2 fixtures (R2 F.3)"
+  ```

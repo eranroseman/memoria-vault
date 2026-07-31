@@ -516,6 +516,159 @@ def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
     assert output["request_envelope"]["actor"] == "agent"
 
 
+def _dispatch_recorder(calls: list, name: str):
+    def record(*args, **kwargs):
+        calls.append((name, args, kwargs))
+        return {"recorded": name}
+
+    return record
+
+
+@pytest.mark.parametrize(
+    ("argv_tail", "targets", "expected", "expect_stdout"),
+    [
+        pytest.param(
+            ["scan", "--idempotency-key", "scan-key"],
+            {
+                "enqueue_operation": "memoria_vault.runtime.worker.enqueue_operation",
+                "run_pending_jobs": "memoria_vault.runtime.worker.run_pending_jobs",
+            },
+            [
+                (
+                    "enqueue_operation",
+                    ("observe-pi-edits",),
+                    {
+                        "idempotency_key": "scan-key",
+                        "actor": "integrity",
+                        "provenance": {"surface": "worker-scan"},
+                    },
+                ),
+                ("run_pending_jobs", (), {"machine": "memoria-scheduled-checks", "limit": 1}),
+            ],
+            None,
+            id="scan",
+        ),
+        pytest.param(
+            [
+                "run-scheduled",
+                "--operation-id",
+                "answer-query",
+                "--payload",
+                '{"k": 1}',
+                "--schedule-id",
+                "sched-1",
+            ],
+            {
+                "enqueue_operation": "memoria_vault.runtime.worker.enqueue_operation",
+                "run_pending_jobs": "memoria_vault.runtime.worker.run_pending_jobs",
+            },
+            [
+                (
+                    "enqueue_operation",
+                    ("answer-query",),
+                    {
+                        "payload": {"k": 1},
+                        "idempotency_key": "answer-query-sched-1",
+                        "schedule_id": "sched-1",
+                        "actor": "operation",
+                        "provenance": {"surface": "worker-schedule"},
+                    },
+                ),
+                ("run_pending_jobs", (), {"machine": "memoria-scheduled-checks", "limit": 1}),
+            ],
+            None,
+            id="run-scheduled",
+        ),
+        pytest.param(
+            ["integrity-sweep", "--sweep-id", "sweep-7"],
+            {"run_integrity_sweep": "memoria_vault.runtime.worker.run_integrity_sweep"},
+            [
+                (
+                    "run_integrity_sweep",
+                    (),
+                    {
+                        "shadow": True,
+                        "sweep_id": "sweep-7",
+                        "machine": "memoria-scheduled-checks",
+                    },
+                ),
+            ],
+            None,
+            id="integrity-sweep",
+        ),
+        pytest.param(
+            ["integrity-sweep", "--active"],
+            {"run_integrity_sweep": "memoria_vault.runtime.worker.run_integrity_sweep"},
+            [("run_integrity_sweep", (), {"shadow": False, "sweep_id": None})],
+            None,
+            id="integrity-sweep-active",
+        ),
+        pytest.param(
+            ["observe-pi-edits"],
+            {
+                "observe_pi_edits": (
+                    "memoria_vault.runtime.trusted_writer.observe_pi_edits_explicit_from_status"
+                ),
+            },
+            [
+                (
+                    "observe_pi_edits",
+                    (),
+                    {"actor": "integrity", "machine": "memoria-scheduled-checks"},
+                ),
+            ],
+            None,
+            id="observe-pi-edits",
+        ),
+        pytest.param(
+            ["recover"],
+            {
+                "recover_pending_materializations": (
+                    "memoria_vault.runtime.state.recover_pending_materializations"
+                ),
+            },
+            [("recover_pending_materializations", (), {})],
+            {"recorded": "recover_pending_materializations"},
+            id="recover",
+        ),
+        pytest.param(
+            ["run-pending", "--limit", "3", "--machine", "custom-machine"],
+            {"run_pending_jobs": "memoria_vault.runtime.worker.run_pending_jobs"},
+            [("run_pending_jobs", (), {"machine": "custom-machine", "limit": 3})],
+            None,
+            id="run-pending",
+        ),
+    ],
+)
+def test_worker_cli_dispatches_each_subcommand_to_its_handler(
+    tmp_path: Path,
+    capsys,
+    monkeypatch: pytest.MonkeyPatch,
+    argv_tail: list[str],
+    targets: dict[str, str],
+    expected: list[tuple[str, tuple, dict]],
+    expect_stdout: dict | None,
+) -> None:
+    calls: list[tuple[str, tuple, dict]] = []
+    for name, target in targets.items():
+        monkeypatch.setattr(target, _dispatch_recorder(calls, name))
+
+    rc = worker_main([argv_tail[0], "--vault", str(tmp_path), *argv_tail[1:]])
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    if expect_stdout is not None:
+        assert json.loads(out) == expect_stdout
+    for name, arg_tail, kwargs_subset in expected:
+        matching = [call for call in calls if call[0] == name]
+        assert len(matching) == 1, f"{name} called {len(matching)} times: {calls}"
+        _, args, kwargs = matching[0]
+        assert args[0] == tmp_path
+        assert args[1:] == arg_tail
+        for key, value in kwargs_subset.items():
+            assert kwargs.get(key) == value, f"{name} kwarg {key}: {kwargs.get(key)!r}"
+
+
 def test_worker_requires_valid_operation_policy_before_dispatch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

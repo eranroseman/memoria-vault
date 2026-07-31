@@ -309,3 +309,80 @@ def test_evaluate_pre_prunes_stale_pending_stashes_but_keeps_fresh_stashes(tmp_p
 
     assert not stale.is_file()
     assert fresh.is_file()
+
+
+def test_denied_write_tool_lands_a_deny_row_in_the_audit_log(tmp_path):
+    vault = _vault_with_policy(tmp_path)
+
+    blocked = evaluate_pre(
+        {
+            "tool_name": "obsidian_patch_content",
+            "tool_input": {"filepath": "inbox/a.md"},
+            "extra": {"request_id": "REQ-DENY-1"},
+        },
+        "readonly",
+        vault,
+    )
+
+    audit_log = vault / "system" / "logs" / "audit.jsonl"
+    rows = (
+        [json.loads(line) for line in audit_log.read_text(encoding="utf-8").splitlines()]
+        if audit_log.is_file()
+        else []
+    )
+    denies = [row for row in rows if row.get("decision") == "deny"]
+
+    assert blocked.get("decision") == "block"
+    assert "tool allowlist" in blocked["reason"]
+    assert len(denies) == 1
+    assert denies[0]["actor"] == "readonly"
+    assert denies[0]["action"] == "write"
+    assert denies[0]["path"] == "inbox/a.md"
+    assert denies[0]["request_id"] == "REQ-DENY-1"
+    assert denies[0]["policy_rule"] == "tool-policy.allowlist"
+    assert "tool allowlist" in denies[0]["message"]
+
+
+def test_evaluate_post_records_completion_failure_and_still_unlinks_stash(
+    tmp_path, monkeypatch, capsys
+):
+    vault = _vault_with_policy(tmp_path / "vault")
+    diag = tmp_path / "diagnostics"
+    monkeypatch.setenv("MEMORIA_DIAGNOSTICS_DIR", str(diag))
+    monkeypatch.setenv("MEMORIA_DIAGNOSTIC_LEVEL", "warn")
+    (vault / "inbox").mkdir(parents=True, exist_ok=True)
+    from memoria_vault.runtime.policy import EMPTY_SHA256, PolicyEngine
+
+    def boom(self, *args, **kwargs):
+        raise RuntimeError("simulated completion failure")
+
+    monkeypatch.setattr(PolicyEngine, "complete_write", boom)
+    payload = {
+        "tool_name": "obsidian_put_content",
+        "tool_input": {"filepath": "inbox/round.md"},
+        "extra": {"request_id": "REQ-FAIL-1", "tool_call_id": "call-fail"},
+    }
+    stash = _pending_file(vault, _stash_key(payload))
+    stash.parent.mkdir(parents=True, exist_ok=True)
+    stash.write_text(
+        json.dumps({"before_hash": EMPTY_SHA256, "path": "inbox/round.md"}),
+        encoding="utf-8",
+    )
+    (vault / "inbox" / "round.md").write_text("answer body", encoding="utf-8")
+
+    post = evaluate_post(payload, "adapter", vault)
+
+    events = [
+        json.loads(line)
+        for log in sorted(diag.glob("diagnostics-*.jsonl"))
+        for line in log.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert post == {}
+    assert not stash.exists()
+    assert "audit completion failed" in capsys.readouterr().err
+    assert [event["code"] for event in events] == ["audit_completion_failed"]
+    assert events[0]["component"] == "adapter.policy_hook"
+    assert events[0]["level"] == "error"
+    assert set(events[0]["details"]) == {"actor", "path", "exception_type"}
+    assert not (vault / "system" / "logs" / "audit.jsonl").exists()

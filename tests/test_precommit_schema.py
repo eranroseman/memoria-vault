@@ -1,5 +1,6 @@
 """The pre-commit hook validates staged Concepts against their schema."""
 
+import shutil
 from pathlib import Path
 
 from memoria_vault.runtime.subsystems.integrity.linter import precommit_check
@@ -7,6 +8,7 @@ from tests.helpers import WORKSPACE_SEED
 
 
 def _vault(tmp_path: Path) -> Path:
+    shutil.copytree(WORKSPACE_SEED / ".memoria/schemas", tmp_path / ".memoria/schemas")
     for rel in ("notes", "system", "inbox"):
         (tmp_path / rel).mkdir(parents=True)
     return tmp_path
@@ -130,9 +132,9 @@ def test_unknown_type_blocks(tmp_path):
 def test_vault_local_schema_overrides_packaged_default(tmp_path):
     vault = _vault(tmp_path)
     schemas = vault / ".memoria/schemas/types"
-    schemas.mkdir(parents=True)
     (schemas / "local-note.yaml").write_text(
-        "type: local-note\nrequired:\n  type: literal:local-note\n  title: str\n",
+        "type: local-note\nconcept_type: note\nrequired:\n  type: literal:local-note\n"
+        "  title: str\n",
         encoding="utf-8",
     )
     (vault / "notes/local.md").write_text(
@@ -141,6 +143,36 @@ def test_vault_local_schema_overrides_packaged_default(tmp_path):
     )
 
     assert precommit_check.check_paths(vault, ["notes/local.md"]) == []
+
+
+def test_missing_vault_schema_registry_blocks_commit(tmp_path):
+    vault = _vault(tmp_path)
+    registry = vault / ".memoria/schemas/concept-types.yaml"
+    registry.unlink()
+    (vault / "notes/n.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\nlinks: {}\ntitle: T\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    errors = precommit_check.check_paths(vault, ["notes/n.md"])
+
+    assert errors == [f".memoria/schemas: missing required concept-types.yaml: {registry}"]
+
+
+def test_missing_vault_schema_directory_blocks_commit(tmp_path):
+    vault = _vault(tmp_path)
+    schemas_dir = vault / ".memoria/schemas"
+    shutil.rmtree(schemas_dir)
+    (vault / "notes/n.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\nlinks: {}\ntitle: T\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    errors = precommit_check.check_paths(vault, ["notes/n.md"])
+
+    assert errors == [f".memoria/schemas: missing required schema directory: {schemas_dir}"]
 
 
 def test_untyped_infra_and_outside_paths_exempt(tmp_path):

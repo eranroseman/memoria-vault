@@ -28,7 +28,7 @@ Where every file lives.
 ```text
 <vault>/
 ├── index.md                 generated workspace index
-├── steering.md              program memory; the PI's standing steering
+├── steering.md              watch/mute override; effective steering derives from active projects, hubs, and unresolved question notes
 ├── bibliography.bib         generated portable bibliography
 ├── notes/                   claim and question notes
 ├── hubs/                    topic hubs with human salience
@@ -86,6 +86,23 @@ are derived exports for synchronization. `memoria workspace scan` holds the
 workspace writer lock while it verifies the chain and export subset, removes an
 incomplete final JSONL fragment, and re-emits any missing export rows.
 
+### Schema versioning: fresh installs only
+
+`memoria.sqlite` carries its schema version in SQLite `PRAGMA user_version`
+(`SCHEMA_VERSION` in `memoria_vault.runtime.state`; the full schema is
+`memoria_vault/runtime/schema.sql`). Memoria has no database upgrade or
+downgrade path:
+
+- `memoria init` creates a version-0 database and applies the current
+  `schema.sql` directly.
+- A schema change updates `SCHEMA_VERSION`, the current DDL, its trailing
+  `PRAGMA user_version`, and fresh-schema assertions together. A version bump
+  declares an incompatible prior database; it does not register a migration.
+- At startup, an existing nonzero version other than the installed
+  `SCHEMA_VERSION` fails closed before the schema is applied or data is changed.
+  This includes both older and newer databases. Use a fresh disposable vault;
+  Memoria does not transform a legacy database.
+
 Backups live outside this tree. `memoria workspace backup <target>` publishes a
 manifest-bound SQLite/blob/head snapshot; `last-backup` records the target and
 blob inventory used by the failing doctor health check. See
@@ -117,7 +134,7 @@ The package seed contains only files with direct runtime readers:
 | `.obsidian/core-plugins.json` | Core plugin settings for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
 | `.obsidian/community-plugins.json` | Enables the bundled `memoria-obsidian` plugin. |
 | `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. |
-| `steering.md` | Standing program memory read and edited through the CLI and knowledge runtime. |
+| `steering.md` | Watch/mute override read by the knowledge runtime and steering CLI; effective steering derives from active projects, hubs, and unresolved question notes. |
 | `system/vocabulary.md` | Controlled vocabulary read by schema/linter and knowledge runtime. |
 
 The policy gate's stable implementation lives in the installed

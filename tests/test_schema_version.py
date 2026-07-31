@@ -1,4 +1,4 @@
-"""Schema-version and migration-policy tests."""
+"""Fresh-schema version-policy tests."""
 
 from __future__ import annotations
 
@@ -11,13 +11,13 @@ from memoria_vault.runtime import state
 from tests.helpers import ROOT
 
 
-def test_schema_lands_at_user_version_12(tmp_path: Path) -> None:
+def test_schema_lands_at_user_version_15(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
-        assert state.SCHEMA_VERSION == 12
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert state.SCHEMA_VERSION == 15
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 15
 
 
-def test_rejects_v6_without_migration(tmp_path: Path) -> None:
+def test_rejects_incompatible_schema_version(tmp_path: Path) -> None:
     db = tmp_path / state.DB_REL
     db.parent.mkdir(parents=True)
     with sqlite3.connect(db) as conn:
@@ -27,11 +27,9 @@ def test_rejects_v6_without_migration(tmp_path: Path) -> None:
         state.connect(tmp_path)
 
 
-def test_source_has_no_private_migration_helpers() -> None:
-    offenders = [
-        path.relative_to(ROOT).as_posix()
-        for path in (ROOT / "src/memoria_vault").rglob("*.py")
-        if "_migrate_" in path.read_text(encoding="utf-8")
-    ]
+def test_state_has_no_schema_migration_ladder() -> None:
+    source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
 
-    assert offenders == []
+    assert not hasattr(state, "MIGRATIONS")
+    assert "_backfill_concept_edge_ids" not in source
+    assert "migration from schema version" not in source

@@ -3,7 +3,7 @@
 Spec: docs/superpowers/specs/2026-07-13-development-pipeline-spec.md §3.4.
 
 Task 7a seeded only the read-action coverage test (ARG_TABLE). Task 7b
-(7b-1 + 7b-2) completed OPERATION_REGISTRY (all 52 cataloged operation ids),
+(7b-1 + 7b-2) completed OPERATION_REGISTRY for every cataloged operation id,
 so the operation-registry coverage tests are added here now.
 """
 
@@ -19,7 +19,10 @@ from tests.floor_lib import ARG_TABLE, OPERATION_REGISTRY
 def test_every_read_action_covers_every_declared_transport() -> None:
     problems = []
     for action_id, action in actions_by_id().items():
-        if action["kind"] != "read":
+        if action["kind"] != "read" or action.get("reserved"):
+            # Reserved rows (surface-contract, U1 spec §3) declare no
+            # transports; there is nothing to sweep until the owning
+            # unit wires them.
             continue
         entry = ARG_TABLE.get(action_id)
         if entry is None:

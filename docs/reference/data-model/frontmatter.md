@@ -11,7 +11,11 @@ The frontmatter contract for every typed document. The single source is
 `.memoria/schemas/`: per-document-type field schemas in
 `src/memoria_vault/product/workspace_seed/.memoria/schemas/types`, the
 type-to-folder map in
-`src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml`.
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/folders.yaml`, and
+the required Concept-type registry in
+`src/memoria_vault/product/workspace_seed/.memoria/schemas/concept-types.yaml`.
+Each type schema must name a registry member; a schema directory without that
+registry is invalid.
 The shared loader/validator is
 `src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit
 hook, and package-seed tests all read it.
@@ -22,8 +26,8 @@ Per-type schemas currently exist for `code-artifact`, `digest`, `fulltext`,
 ## The field-kind grammar
 
 Each type schema declares `required:` and `optional:` maps of `field: kind`,
-plus an `enums:` block and optionally `required_any:`, `required_when:`, and
-`forbidden:`. The kinds:
+plus an `enums:` block and optionally `required_when:` and `forbidden:`. The
+kinds:
 
 | Kind | Accepts |
 | --- | --- |
@@ -38,9 +42,9 @@ plus an `enums:` block and optionally `required_any:`, `required_when:`, and
 | `literal:<value>` | exactly that value; for example, `type: literal:note` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
-Unknown extra fields are accepted during the alpha migration. Schema-declared
-fields still enforce the required meaning contract, and `forbidden:` fields are
-rejected even though other unknown extras are allowed. A schema example
+Validation is closed: fields a type schema does not declare are rejected. The
+`x:` map is the escape hatch for extension data, and `forbidden:` fields are
+reported as retired rather than unknown. A schema example
 (`types/note.yaml`):
 
 ```yaml

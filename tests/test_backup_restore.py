@@ -1456,15 +1456,17 @@ def test_workspace_recover_rejects_mismatched_restore_directory_identity(
     assert stage.is_dir()
 
 
-def test_workspace_recover_rejects_unbound_v1_restore_transaction(tmp_path: Path, capsys) -> None:
+def test_workspace_recover_rejects_unbound_noncurrent_restore_transaction(
+    tmp_path: Path, capsys
+) -> None:
     vault = init_cli_workspace(tmp_path, capsys)
     _seed(vault)
-    rollback = tmp_path / f".{vault.name}.restore-rollback-legacy-v1"
-    stage = tmp_path / f".{vault.name}.restore-stage-legacy-v1"
+    rollback = tmp_path / f".{vault.name}.restore-rollback-noncurrent"
+    stage = tmp_path / f".{vault.name}.restore-stage-noncurrent"
     rollback.mkdir()
     stage.mkdir()
-    rollback_sentinel = rollback / "legacy-sentinel"
-    stage_sentinel = stage / "legacy-sentinel"
+    rollback_sentinel = rollback / "recovery-sentinel"
+    stage_sentinel = stage / "recovery-sentinel"
     rollback_sentinel.write_text("keep", encoding="utf-8")
     stage_sentinel.write_text("keep", encoding="utf-8")
     for live_rel, rollback_rel, _staged_rel in backup._restore_components():
@@ -1479,7 +1481,7 @@ def test_workspace_recover_rejects_unbound_v1_restore_transaction(tmp_path: Path
         json.dumps(
             {
                 "format": backup.RESTORE_TRANSACTION_FORMAT,
-                "version": 1,
+                "version": backup.RESTORE_TRANSACTION_VERSION - 1,
                 "vault": str(vault.resolve()),
                 "rollback": rollback.name,
                 "stage": stage.name,
@@ -1496,12 +1498,14 @@ def test_workspace_recover_rejects_unbound_v1_restore_transaction(tmp_path: Path
     assert stage_sentinel.read_text(encoding="utf-8") == "keep"
 
 
-def test_workspace_recover_rejects_unbound_v1_backup_transaction(tmp_path: Path, capsys) -> None:
+def test_workspace_recover_rejects_unbound_noncurrent_backup_transaction(
+    tmp_path: Path, capsys
+) -> None:
     vault = init_cli_workspace(tmp_path, capsys)
     _seed(vault)
-    target = tmp_path / "legacy-backup-target"
-    stage = tmp_path / ".legacy-backup-target.stage-legacy"
-    rollback = tmp_path / ".legacy-backup-target.rollback-legacy"
+    target = tmp_path / "noncurrent-backup-target"
+    stage = tmp_path / ".noncurrent-backup-target.stage-recovery"
+    rollback = tmp_path / ".noncurrent-backup-target.rollback-recovery"
     assert _create(vault, target)["ok"] is True
     original_manifest = (target / backup.MANIFEST_NAME).read_bytes()
     assert _create(vault, stage)["ok"] is True
@@ -1510,7 +1514,7 @@ def test_workspace_recover_rejects_unbound_v1_backup_transaction(tmp_path: Path,
         json.dumps(
             {
                 "format": backup.BACKUP_TRANSACTION_FORMAT,
-                "version": 1,
+                "version": backup.BACKUP_TRANSACTION_VERSION - 1,
                 "vault": str(vault.resolve()),
                 "target": str(target),
                 "rollback": rollback.name,
@@ -1529,13 +1533,13 @@ def test_workspace_recover_rejects_unbound_v1_backup_transaction(tmp_path: Path,
     assert stage.is_dir()
 
 
-def test_workspace_recover_preserves_ambiguous_legacy_v1_recovery_material(
+def test_workspace_recover_preserves_ambiguous_noncurrent_recovery_material(
     tmp_path: Path, capsys
 ) -> None:
     vault = init_cli_workspace(tmp_path, capsys)
     _seed(vault)
-    rollback = tmp_path / f".{vault.name}.restore-rollback-legacy-ambiguous"
-    stage = tmp_path / f".{vault.name}.restore-stage-legacy-ambiguous"
+    rollback = tmp_path / f".{vault.name}.restore-rollback-noncurrent-ambiguous"
+    stage = tmp_path / f".{vault.name}.restore-stage-noncurrent-ambiguous"
     rollback.mkdir()
     stage.mkdir()
     sentinel = rollback / "keep.txt"
@@ -1544,7 +1548,7 @@ def test_workspace_recover_preserves_ambiguous_legacy_v1_recovery_material(
         json.dumps(
             {
                 "format": backup.RESTORE_TRANSACTION_FORMAT,
-                "version": 1,
+                "version": backup.RESTORE_TRANSACTION_VERSION - 1,
                 "vault": str(vault.resolve()),
                 "rollback": rollback.name,
                 "stage": stage.name,
@@ -1561,11 +1565,13 @@ def test_workspace_recover_preserves_ambiguous_legacy_v1_recovery_material(
     assert stage.is_dir()
 
 
-def test_workspace_recover_does_not_mutate_before_legacy_ambiguity(tmp_path: Path, capsys) -> None:
+def test_workspace_recover_does_not_mutate_before_noncurrent_marker_rejection(
+    tmp_path: Path, capsys
+) -> None:
     vault = init_cli_workspace(tmp_path, capsys)
     _seed(vault)
-    rollback = tmp_path / f".{vault.name}.restore-rollback-legacy-partial"
-    stage = tmp_path / f".{vault.name}.restore-stage-legacy-partial"
+    rollback = tmp_path / f".{vault.name}.restore-rollback-noncurrent-partial"
+    stage = tmp_path / f".{vault.name}.restore-stage-noncurrent-partial"
     rollback.mkdir()
     stage.mkdir()
     saved_journal = rollback / "journal"
@@ -1575,7 +1581,7 @@ def test_workspace_recover_does_not_mutate_before_legacy_ambiguity(tmp_path: Pat
         json.dumps(
             {
                 "format": backup.RESTORE_TRANSACTION_FORMAT,
-                "version": 1,
+                "version": backup.RESTORE_TRANSACTION_VERSION - 1,
                 "vault": str(vault.resolve()),
                 "rollback": rollback.name,
                 "stage": stage.name,
@@ -1584,7 +1590,7 @@ def test_workspace_recover_does_not_mutate_before_legacy_ambiguity(tmp_path: Pat
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="legacy"):
+    with pytest.raises(ValueError, match=r"^restore transaction marker identity is invalid$"):
         backup.recover_interrupted_restore(vault)
 
     assert not (vault / ".memoria/journal/recovery-only.txt").exists()

@@ -11,7 +11,7 @@ import shutil
 import subprocess
 from collections import defaultdict
 from collections.abc import Iterable
-from datetime import date
+from datetime import UTC, date, timedelta
 from itertools import pairwise
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -19,10 +19,12 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.content_security import (
+    has_unterminated_fenced_code_block,
     neutralize_untrusted_markdown,
     neutralize_untrusted_markdown_fragment,
 )
 from memoria_vault.runtime.operations import (
+    build_disposition_event,
     load_operation_policy,
     required_promotion_checks,
     resolve_operation_runner,
@@ -31,15 +33,18 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
-    append_explicit_journal_event,
+    append_explicit_event_batch,
     append_journal_event,
     commit_writer_changes,
     mark_checked,
     materialize_unchecked,
     promote_checked,
+    rebuild_evidence_sets_and_journal_mints,
     stage_concept,
     validate_operation_context,
 )
@@ -57,7 +62,7 @@ from memoria_vault.runtime.vaultio import (
 GAP_KINDS = {
     "new-topic",
     "undigested",
-    "under-warranted",
+    "under-grounded",
     "citation-neighborhood",
     "full-text-missing",
     "argument-unsupported",
@@ -65,6 +70,10 @@ GAP_KINDS = {
     "argument-fragile",
     "paper-readiness",
 }
+_STALE_STANDINGS = frozenset({"retracted", "superseded"})
+_ADVISORY_FINDING_KINDS = frozenset({"evidence-source-archived"})
+_DRAFT_BLOCK_ANCHOR_RE = re.compile(r"[^\S\r\n]+\^blk-[A-Za-z0-9_-]+")
+_RAW_DRAFT_CITATION_RE = re.compile(r"@(?P<citekey>(?:[\w]|\*(?=\w))[\w:.#$%&+?<>~/\-]*)")
 _TAG_CANDIDATE_MIN_COUNT = 2
 _TAG_CANDIDATE_LIMIT = 5
 _TAG_CANDIDATE_STOPWORDS = frozenset(
@@ -82,22 +91,6 @@ _TAG_CANDIDATE_STOPWORDS = frozenset(
         "with",
     }
 )
-_DISCOVERY_RELEVANCE_STOPWORDS = _TAG_CANDIDATE_STOPWORDS | {
-    "candidate",
-    "current",
-    "paper",
-    "papers",
-    "priority",
-    "question",
-    "questions",
-    "research",
-    "source",
-    "sources",
-    "steering",
-    "system",
-    "work",
-    "works",
-}
 PAPER_PLAN_REQUIRED_FIELDS = (
     "target",
     "audience",
@@ -381,11 +374,12 @@ def curate_note_link(
     if changed:
         bucket.append(target_rel)
         frontmatter["links"] = links
-        write_frontmatter_doc(source_note, frontmatter, body)
         mark_checked(
             vault,
             source_rel,
             context=context,
+            frontmatter=frontmatter,
+            body=body,
         )
 
     event = append_journal_event(
@@ -483,11 +477,11 @@ def analyze_gaps(
             )
             impact, confidence, actionability = 2, 2, 1
         elif note_count >= dense_threshold and source_count == 0:
-            kind = "under-warranted"
+            kind = "under-grounded"
             seed = "capture or link supporting sources"
             why = (
                 f"{note_count} checked note(s) mention this topic, "
-                "but no checked sources or digests warrant it."
+                "but no checked sources or digests ground it."
             )
             impact, confidence, actionability = 2, 2, 1
         else:
@@ -762,11 +756,15 @@ def _catalog_source_terms(source: dict[str, Any]) -> list[str]:
     return sorted(set(out))
 
 
-def _is_current_catalog_source(source: dict[str, Any]) -> bool:
+def _catalog_source_standing(source: dict[str, Any]) -> str:
     csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
     memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
-    standing = str(memoria.get("standing") or "")
-    return standing not in {"archived", "retracted", "superseded"}
+    # Unset standing is current by contract: the PI curates catalog standing.
+    return str(memoria.get("standing") or "").strip() or "current"
+
+
+def _is_current_catalog_source(source: dict[str, Any]) -> bool:
+    return _catalog_source_standing(source) not in _STALE_STANDINGS | {"archived"}
 
 
 def _add_graph_topic_gap_terms(
@@ -1139,7 +1137,7 @@ def _write_gap_discovery_candidates(
     from memoria_vault.runtime.enrichment import _write_discovery_candidate
 
     captured = _captured_work_ids(vault)
-    steering_tokens = _steering_tokens(vault)
+    steering_tokens = effective_steering_tokens(vault)
     relevance_by_path: dict[str, dict[str, Any]] = {}
     new_paths = []
     for work_id in sorted(edges_by_source):
@@ -1190,13 +1188,6 @@ def _write_gap_discovery_candidates(
     return new_paths, commit
 
 
-def _steering_tokens(vault: Path) -> set[str]:
-    path = vault / "steering.md"
-    if not path.is_file():
-        return set()
-    return _relevance_tokens(path.read_text(encoding="utf-8"))
-
-
 def _discovery_relevance(
     steering_tokens: set[str],
     source: dict[str, Any],
@@ -1204,11 +1195,11 @@ def _discovery_relevance(
 ) -> dict[str, Any]:
     title_overlap = sorted(
         steering_tokens
-        & _relevance_tokens(edge.get("target_title"), edge.get("target_id"), edge.get("target_doi"))
+        & relevance_tokens(edge.get("target_title"), edge.get("target_id"), edge.get("target_doi"))
     )
     tag_tokens = set()
     for term in _catalog_source_terms(source):
-        tag_tokens.update(_relevance_tokens(term))
+        tag_tokens.update(relevance_tokens(term))
     tag_overlap = sorted(steering_tokens & tag_tokens)
     citation_overlap = 2 if str(edge.get("relation_type")) == "references" else 1
     channel = "ranked" if title_overlap or tag_overlap else "exploration"
@@ -1223,15 +1214,6 @@ def _discovery_relevance(
             "tag_overlap": tag_overlap,
             "citation_overlap": citation_overlap,
         },
-    }
-
-
-def _relevance_tokens(*values: object) -> set[str]:
-    text = " ".join(str(value) for value in values if value)
-    return {
-        token
-        for token in re.findall(r"[a-z0-9]{3,}", text.casefold())
-        if token not in _DISCOVERY_RELEVANCE_STOPWORDS and not token.isdigit()
     }
 
 
@@ -1446,10 +1428,7 @@ def _coverage_round_robin(candidates: list[dict[str, Any]], limit: int) -> list[
 def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
     rows = []
     for rel, frontmatter in _checked_concepts(vault):
-        contradictions = frontmatter.get("contradictions")
-        if not isinstance(contradictions, list):
-            continue
-        for target in contradictions:
+        for target in _link_values(frontmatter, "contradicts"):
             target_ref = str(target).strip()
             if not target_ref:
                 continue
@@ -2009,15 +1988,7 @@ def compose_project_draft(
         evidence_id = mint_evidence_id(allocated_ids)
         allocated_ids.add(evidence_id)
         items = _draft_evidence_items(vault, frontmatter)
-        evidence_type = _draft_evidence_type(items)
-        state_value = "complete" if items else "evidence-incomplete"
-        marker = EvidenceMarker(
-            evidence_id=evidence_id,
-            evidence_type=evidence_type,
-            state=state_value,
-            review_required=evidence_type in {"implicit", "multi-hop"},
-            items=tuple(items),
-        )
+        marker = EvidenceMarker(evidence_id=evidence_id, items=tuple(items))
         evidence_markers.append(marker)
         block_anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
         excerpt = neutralize_untrusted_markdown(_draft_note_excerpt(body, per_node_budget))
@@ -2036,9 +2007,10 @@ def compose_project_draft(
     draft_path = vault / draft_rel
     draft_path.parent.mkdir(parents=True, exist_ok=True)
     write_text_durable(draft_path, "\n".join(lines).rstrip() + "\n")
-    rebuild = state.rebuild_evidence_sets_from_markers(
+    rebuild = rebuild_evidence_sets_and_journal_mints(
         vault,
         run_id=context.run_id,
+        context=context,
     )
     draft = read_project_draft(vault, project_rel)
     event = None
@@ -2100,9 +2072,6 @@ def read_project_draft(vault: Path, project_path: str) -> dict[str, Any]:
         "evidence_markers": [
             {
                 "id": marker.evidence_id,
-                "type": marker.evidence_type,
-                "state": marker.state,
-                "review_required": marker.review_required,
                 "items": list(marker.items),
             }
             for marker in markers
@@ -2159,13 +2128,15 @@ def _verify_project_draft_snapshot(
             },
             None,
         )
-    rebuild = state.rebuild_evidence_sets_from_markers(
+    rebuild = rebuild_evidence_sets_and_journal_mints(
         vault,
         run_id=context.run_id,
+        context=context,
     )
     draft = read_project_draft(vault, project_rel)
     duplicate_ids = {str(evidence_id) for evidence_id in rebuild.get("duplicate_ids", [])}
-    rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}
+    draft_rows_by_id = {str(row["id"]): row for row in draft["evidence_sets"]}
+    rows_by_id = {str(row["id"]): row for row in state.evidence_sets(vault)}
     draft_occurrence_ids = {
         marker.evidence_id
         for marker, _is_direct in state._evidence_marker_occurrences_from_markdown(draft["content"])
@@ -2176,7 +2147,7 @@ def _verify_project_draft_snapshot(
             "severity": "high",
             "evidence_id": evidence_id,
             "block_ref": str(
-                rows_by_id.get(evidence_id, {}).get(
+                draft_rows_by_id.get(evidence_id, {}).get(
                     "block_ref",
                     f"{draft_rel}#^blk-{evidence_id.removeprefix('ev-')}",
                 )
@@ -2184,7 +2155,9 @@ def _verify_project_draft_snapshot(
         }
         for evidence_id in sorted(duplicate_ids & draft_occurrence_ids)
     ]
-    disposed = _disposed_evidence_ids(vault)
+    if not draft["evidence_sets"]:
+        findings.append({"kind": "no-evidence-set", "severity": "high"})
+    disposed = _disposed_evidence_digests(vault)
     for row in draft["evidence_sets"]:
         stored_block_hash = row.get("block_text_sha256")
         current_block_hash = state._block_text_sha256_from_text(
@@ -2221,7 +2194,7 @@ def _verify_project_draft_snapshot(
                     "reason": "anchored block text differs from its stored binding",
                 }
             )
-        if row["id"] in disposed:
+        if disposed.get(row["id"]) == _evidence_items_sha256(row["items"]):
             continue
         if row["state"] == "evidence-incomplete":
             findings.append(
@@ -2241,12 +2214,20 @@ def _verify_project_draft_snapshot(
                     "block_ref": row["block_ref"],
                 }
             )
+    findings.extend(
+        _evidence_source_standing_findings(
+            vault,
+            draft["evidence_sets"],
+            rows_by_id=rows_by_id,
+        )
+    )
     findings.extend(_draft_structural_reference_findings(vault, draft["content"]))
     findings.extend(_draft_number_findings(vault, project_rel, draft["content"]))
     total_findings = len(findings)
     max_findings = max(1, int(max_findings))
+    blocking = [finding for finding in findings if finding["kind"] not in _ADVISORY_FINDING_KINDS]
     findings = findings[:max_findings]
-    ok = not findings and bool(draft["evidence_sets"])
+    ok = not blocking
     return (
         {
             "project_path": project_rel,
@@ -2254,7 +2235,7 @@ def _verify_project_draft_snapshot(
             "ready": ok,
             "ok": ok,
             "status": "verified" if ok else "needs-review",
-            "missing": [] if ok else _verification_finding_labels(findings),
+            "missing": [] if ok else _verification_finding_labels(blocking[:max_findings]),
             "findings": findings,
             "evidence_sets": draft["evidence_sets"],
             "rebuild": rebuild,
@@ -2273,6 +2254,7 @@ def resolve_evidence_review(
     machine: str,
     decision: str,
     reason: str = "",
+    warrant: str = "",
 ) -> dict[str, Any]:
     """Record a PI disposition for one evidence-set review item."""
     if actor != "pi":
@@ -2281,20 +2263,50 @@ def resolve_evidence_review(
     decision = decision.strip().lower()
     if not re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id):
         raise ValueError(f"invalid evidence id: {evidence_id}")
-    if decision not in {"accept", "reject"}:
-        raise ValueError("evidence review decision must be accept or reject")
-    return append_explicit_journal_event(
+    if decision not in {"accept", "reject", "edit", "defer"}:
+        raise ValueError("evidence review decision must be accept, reject, edit, or defer")
+    warrant = warrant.strip()
+    if warrant and decision != "accept":
+        raise ValueError("warrant text rides only the accept decision")
+    record = next(
+        (row for row in state.evidence_sets(Path(vault)) if row["id"] == evidence_id),
+        None,
+    )
+    if record is None:
+        raise ValueError(f"unknown evidence id: {evidence_id}")
+    timestamp = now_iso()
+    event: dict[str, Any] = {
+        "event": "resolved",
+        "operation": "resolve-evidence-review",
+        "evidence_id": evidence_id,
+        "decision": decision,
+        "reason": reason.strip(),
+        "items_sha256": _evidence_items_sha256(record["items"]),
+        "timestamp": timestamp,
+    }
+    if warrant:
+        event["warrant"] = warrant
+    if decision == "defer":
+        event["suppressed_until"] = _defer_suppressed_until(timestamp)
+    if decision == "edit":
+        block_ref = str(record["block_ref"])
+        event["edit_target"] = {
+            "draft_path": block_ref.partition("#^")[0],
+            "block_ref": block_ref,
+        }
+    disposition = build_disposition_event(
+        decision=decision,
+        item_type="evidence-set",
+        item_id=evidence_id,
+    )
+    disposition["timestamp"] = timestamp
+    row, _disposition = append_explicit_event_batch(
         Path(vault),
-        {
-            "event": "resolved",
-            "operation": "resolve-evidence-review",
-            "evidence_id": evidence_id,
-            "decision": decision,
-            "reason": reason.strip(),
-        },
+        [event, disposition],
         actor=actor,
         machine=machine,
     )
+    return row
 
 
 def promote_draft_passage(
@@ -2524,7 +2536,7 @@ def write_project_export(
     context: OperationContext,
     export_format: str = "markdown",
     output_path: str = "",
-    ready_only: bool = False,
+    allow_unready: bool = False,
     draft: bool = False,
 ) -> dict[str, Any]:
     """Write or return a deterministic project export."""
@@ -2538,7 +2550,7 @@ def write_project_export(
         readiness = rendered["readiness"]
     else:
         readiness = project_export_readiness(vault, project_path, context=context)
-        if ready_only and not readiness["ready"]:
+        if not allow_unready and not readiness["ready"]:
             missing = ", ".join(readiness["missing"])
             raise ValueError(f"project is not export-ready: {missing}")
         rendered = render_project_export_markdown(vault, project_path)
@@ -2588,12 +2600,30 @@ def render_project_draft_export_markdown(
     vault = Path(vault)
     verification, draft = _verify_project_draft_snapshot(vault, project_path, context=context)
     if not verification["ok"]:
-        reasons = ", ".join(_verification_finding_labels(verification["findings"]))
+        reasons = ", ".join(verification["missing"])
         raise ValueError(f"project draft is not export-ready: {reasons}")
     if draft is None:
         raise RuntimeError("verified project draft snapshot is missing")
+    unresolved = _draft_unresolved_citations(vault, draft["content"])
+    if unresolved:
+        labels = ", ".join(f"unresolved-citation:{work_id}" for work_id in unresolved)
+        raise ValueError(f"project draft is not export-ready: {labels}")
     _frontmatter, body = split_frontmatter(draft["content"])
-    content = neutralize_untrusted_markdown(_render_draft_export_body(vault, body).strip() + "\n")
+    rendered_body = _render_draft_export_body(vault, body).strip()
+    if has_unterminated_fenced_code_block(rendered_body):
+        raise ValueError("project draft is not export-ready: unterminated-code-fence")
+    normalized_body = neutralize_untrusted_markdown(rendered_body + "\n\n")
+    lines = [rendered_body, ""]
+    _append_draft_export_references(lines, vault)
+    content = neutralize_untrusted_markdown("\n".join(lines).rstrip() + "\n")
+    raw_unresolved = _draft_unresolved_raw_citations(
+        content,
+        set(_draft_citekeys(vault).values()),
+        table_ambiguity_content=normalized_body,
+    )
+    if raw_unresolved:
+        labels = ", ".join(f"unresolved-citation:{citekey}" for citekey in raw_unresolved)
+        raise ValueError(f"project draft is not export-ready: {labels}")
     return {
         "project_path": draft["project_path"],
         "draft_path": draft["draft_path"],
@@ -2698,6 +2728,114 @@ def _append_project_export_references(lines: list[str], vault: Path) -> None:
     if not text:
         return
     lines.extend(["## References", "", "```bibtex", text, "```", ""])
+
+
+def _append_draft_export_references(lines: list[str], vault: Path) -> None:
+    from memoria_vault.runtime.capture import render_references_bib
+
+    text = render_references_bib(vault).strip()
+    if not text:
+        return
+    lines.extend(["## References", "", "```bibtex", text, "```", ""])
+
+
+def _draft_citekeys(vault: Path) -> dict[str, str]:
+    from memoria_vault.runtime.capture import bibliography_citekeys
+
+    return bibliography_citekeys(vault)
+
+
+def _draft_unresolved_citations(vault: Path, content: str) -> list[str]:
+    from memoria_vault.runtime.evidence import parse_source_span_ref
+
+    citekeys = _draft_citekeys(vault)
+    unresolved = set()
+    for _span, marker in state.direct_evidence_marker_spans_from_markdown(content):
+        for item in marker.items:
+            try:
+                source = parse_source_span_ref(item)
+            except ValueError:
+                continue
+            if source.work_id not in citekeys:
+                unresolved.add(source.work_id)
+    return sorted(unresolved)
+
+
+def _draft_unresolved_raw_citations(
+    content: str,
+    citekeys: set[str],
+    *,
+    table_ambiguity_content: str | None = None,
+) -> list[str]:
+    """Return visible Pandoc-style citation IDs absent from the bibliography projection.
+
+    The export does not depend on optional Pandoc at runtime. Instead it scans
+    bracket and author-in-text citation forms after normalizing the final Markdown,
+    while masking fenced and inline code literals that Pandoc cannot turn into
+    citations. The check is intentionally fail-closed for all remaining raw
+    ``@citekey`` syntax so a hand-authored citation cannot bypass the projection.
+    """
+    table_scope = content if table_ambiguity_content is None else table_ambiguity_content
+    if state.markdown_citation_visibility_is_ambiguous(table_scope) and "@" in table_scope:
+        return ["ambiguous-markdown-table"]
+    visible = state.markdown_visible_code_literals_masked(content)
+    cited = set()
+    previous_citation_end = -1
+    for match in _RAW_DRAFT_CITATION_RE.finditer(visible):
+        if not _raw_draft_citation_starts_at(
+            visible, match.start(), follows_citation=match.start() == previous_citation_end
+        ):
+            continue
+        cited.add(_raw_draft_citation_id(match["citekey"]))
+        previous_citation_end = match.end()
+    return sorted(cited - citekeys)
+
+
+def _raw_draft_citation_starts_at(text: str, at_index: int, *, follows_citation: bool) -> bool:
+    """Return whether Pandoc can treat this unescaped ``@`` as a cite start."""
+    if follows_citation:
+        return True
+    backslashes = 0
+    cursor = at_index - 1
+    while cursor >= 0 and text[cursor] == "\\":
+        backslashes += 1
+        cursor -= 1
+    if backslashes % 2:
+        return False
+    if backslashes:
+        return True
+    if cursor < 0:
+        return True
+    previous = text[cursor]
+    return previous != "." and not previous.isalnum()
+
+
+def _raw_draft_citation_id(token: str) -> str:
+    """Return the Pandoc citation-key prefix of one raw scanner token.
+
+    Pandoc admits internal punctuation only when it joins a following word
+    character, except that slash runs remain internal through their penultimate
+    slash. Parsing that grammar left-to-right avoids normalizing an unknown key
+    to a known projection citekey merely because of a suffix.
+    """
+    end = 1 if token.startswith("*") else 0
+    while end < len(token):
+        character = token[end]
+        if character == "_" or character.isalnum():
+            end += 1
+            continue
+        following = token[end + 1] if end + 1 < len(token) else ""
+        if character == "/" and following == "/":
+            end += 1
+            continue
+        if character == ":" and following == "/":
+            end += 1
+            continue
+        if following == "_" or following.isalnum():
+            end += 1
+            continue
+        break
+    return token[:end]
 
 
 def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
@@ -3213,12 +3351,6 @@ def _draft_work_id(value: str) -> str:
     return ""
 
 
-def _draft_evidence_type(items: list[str]) -> str:
-    if not items:
-        return "implicit"
-    return "single-span" if len(items) == 1 else "multi-span"
-
-
 def _draft_note_excerpt(body: str, token_budget: int) -> str:
     text = body.strip()
     if not text:
@@ -3238,17 +3370,86 @@ def _verification_finding_labels(findings: Iterable[dict[str, Any]]) -> list[str
     return labels
 
 
-def _disposed_evidence_ids(vault: Path) -> set[str]:
+def _evidence_items_sha256(items: Iterable[str]) -> str:
+    return hashlib.sha256("|".join(items).encode("utf-8")).hexdigest()
+
+
+def _defer_suppressed_until(timestamp: str) -> str:
+    """Return the next UTC midnight after a disposition timestamp."""
+    moment = parse_iso(timestamp)
+    if moment is None or moment.tzinfo is None:
+        raise ValueError(f"defer timestamp must be timezone-aware ISO-8601: {timestamp}")
+    next_day = moment.astimezone(UTC).date() + timedelta(days=1)
+    return f"{next_day.isoformat()}T00:00:00Z"
+
+
+def _disposed_evidence_digests(vault: Path) -> dict[str, str]:
+    """Map only latest accept dispositions to their bound items digest."""
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id
+            SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id,
+                   json_extract(payload_json, '$.decision') AS decision,
+                   json_extract(payload_json, '$.items_sha256') AS items_sha256
             FROM event_log
             WHERE json_extract(payload_json, '$.operation') = 'resolve-evidence-review'
-              AND json_extract(payload_json, '$.decision') IN ('accept', 'reject')
+            ORDER BY event_id
             """
         ).fetchall()
-    return {str(row["evidence_id"]) for row in rows if row["evidence_id"]}
+    latest = {
+        str(row["evidence_id"]): (str(row["decision"] or ""), row["items_sha256"])
+        for row in rows
+        if row["evidence_id"]
+    }
+    return {
+        evidence_id: str(items_sha256)
+        for evidence_id, (decision, items_sha256) in latest.items()
+        if decision == "accept" and items_sha256
+    }
+
+
+def _evidence_source_standing_findings(
+    vault: Path,
+    draft_rows: list[dict[str, Any]],
+    *,
+    rows_by_id: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Return live standing findings for source-span leaves in each item closure."""
+    from memoria_vault.runtime.evidence import evidence_ref_kind, parse_source_span_ref
+
+    standings = {
+        str(source["work_id"]): _catalog_source_standing(source)
+        for source in state.catalog_sources(vault, checked_only=False)
+    }
+    findings: list[dict[str, Any]] = []
+    for row in draft_rows:
+        seen: set[tuple[str, str, tuple[str, ...]]] = set()
+        for item, path in state.evidence_item_closure(rows_by_id, str(row["id"])):
+            if evidence_ref_kind(item) != "source-span":
+                continue
+            work_id = parse_source_span_ref(item).work_id
+            standing = standings.get(work_id, "current")
+            if standing in _STALE_STANDINGS:
+                kind, severity = "evidence-source-stale", "high"
+            elif standing == "archived":
+                kind, severity = "evidence-source-archived", "medium"
+            else:
+                continue
+            key = (kind, work_id, path)
+            if key in seen:
+                continue
+            seen.add(key)
+            findings.append(
+                {
+                    "kind": kind,
+                    "severity": severity,
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                    "work_id": work_id,
+                    "path": list(path),
+                }
+            )
+    return findings
 
 
 def _draft_structural_reference_findings(vault: Path, content: str) -> list[dict[str, Any]]:
@@ -3315,7 +3516,7 @@ def _draft_number_findings(vault: Path, project_rel: str, content: str) -> list[
                     "observed": observed,
                 }
             )
-    if re.search(r"\b(analysis-computed|analysis code|code-warrant)\b", content, re.I):
+    if re.search(r"\b(analysis-computed|analysis code|code-grounds)\b", content, re.I):
         findings.append(
             {
                 "kind": "analysis-number-evidence-incomplete",
@@ -3326,23 +3527,40 @@ def _draft_number_findings(vault: Path, project_rel: str, content: str) -> list[
 
 
 def _render_draft_export_body(vault: Path, content: str) -> str:
-    from memoria_vault.runtime.evidence import parse_evidence_marker, parse_source_span_ref
+    from memoria_vault.runtime.evidence import parse_source_span_ref
+
+    citekeys_by_work = _draft_citekeys(vault)
+    direct_markers = dict(state.direct_evidence_marker_spans_from_markdown(content))
+    direct_marker_lines = {content.count("\n", 0, span[0]) for span in direct_markers}
 
     def citation(match: re.Match[str]) -> str:
-        marker = parse_evidence_marker(match.group(0).strip())
+        marker = direct_markers.get(match.span("marker"))
+        if marker is None:
+            return match.group(0)
         citekeys = []
         for item in marker.items:
             try:
                 source = parse_source_span_ref(item)
             except ValueError:
                 continue
-            compact = state.compact_citation(vault, source.work_id)
-            if compact.get("citekey"):
-                citekeys.append(f"@{compact['citekey']}")
+            if citekey := citekeys_by_work.get(source.work_id):
+                citekeys.append(f"@{citekey}")
         return f" [{'; '.join(citekeys)}]" if citekeys else ""
 
-    text = re.sub(r"\s*%%ev:\s*.*?%%", citation, content)
-    return re.sub(r"\s+\^blk-[A-Za-z0-9_-]+", "", text)
+    text = re.sub(r"\s*(?P<marker>%%ev:\s*.*?%%)", citation, content)
+    return _strip_direct_marker_line_block_anchors(text, direct_marker_lines)
+
+
+def _strip_direct_marker_line_block_anchors(text: str, direct_marker_lines: set[int]) -> str:
+    """Remove block anchors only from already-verified direct-marker lines.
+
+    LF-only physical-line splitting matches the marker line indices and never
+    consumes non-direct anchors, which could otherwise create Markdown controls.
+    """
+    return "\n".join(
+        _DRAFT_BLOCK_ANCHOR_RE.sub("", line) if index in direct_marker_lines else line
+        for index, line in enumerate(text.split("\n"))
+    )
 
 
 def _draft_note_markdown_link(draft_rel: str, note_rel: str, title: str) -> str:

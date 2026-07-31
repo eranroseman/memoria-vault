@@ -45,6 +45,167 @@ def test_cli_doctor_reports_backup_contract(
     assert bundle["backup"]["blob_sync"]["configured"] is True
 
 
+def test_cli_doctor_reports_credential_registry_rows(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    for name in (
+        "KILOCODE_API_KEY",
+        "OPENALEX_API_KEY",
+        "SEMANTIC_SCHOLAR_API_KEY",
+        "PUBMED_API_KEY",
+        "GITHUB_TOKEN",
+        "NCBI_EMAIL",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("OPENALEX_API_KEY", "env-key")
+
+    rc = main(["doctor", "--workspace", str(workspace), "--json"])
+    report = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    rows = {row["name"]: row for row in report["credentials"]}
+    required = rows["KILOCODE_API_KEY"]
+    assert required["class"] == "required-for-operation"
+    assert required["status"] == "unset"
+    assert "memoria secrets set KILOCODE_API_KEY" in required["effect_when_unset"]
+    assert rows["OPENALEX_API_KEY"] == {
+        "name": "OPENALEX_API_KEY",
+        "class": "enhancing",
+        "status": "set",
+        "source": "env",
+        "effect_when_unset": "openalex keyless polite-pool mode (lower rate limits)",
+    }
+    assert rows["NCBI_EMAIL"]["class"] == "identity"
+    assert report["ok"] is True
+
+
+def test_cli_doctor_reports_refused_secrets_warning_without_secret(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+    secret_file.parent.mkdir(parents=True, exist_ok=True)
+    secret_file.write_text("OPENALEX_API_KEY=private-secret\n", encoding="utf-8")
+    secret_file.chmod(0o644)
+
+    rc = main(["doctor", "--workspace", str(workspace), "--json"])
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert rc == 0
+    assert "world-readable" in report["warning"]
+    assert "world-readable" in captured.err
+    assert "private-secret" not in captured.out
+    assert "private-secret" not in captured.err
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_rc"),
+    [
+        (["doctor"], 0),
+        (["doctor", "--check", "search"], 1),
+        (["doctor", "--check", "runner", "--provider", "local"], 0),
+        (["doctor", "bundle"], 0),
+        (["doctor", "self-test"], 0),
+    ],
+)
+def test_cli_doctor_report_modes_include_credential_rows(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    command: list[str],
+    expected_rc: int,
+) -> None:
+    workspace = tmp_path / "workspace"
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    for name in (
+        "KILOCODE_API_KEY",
+        "OPENALEX_API_KEY",
+        "SEMANTIC_SCHOLAR_API_KEY",
+        "PUBMED_API_KEY",
+        "GITHUB_TOKEN",
+        "NCBI_EMAIL",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+    secret_file.parent.mkdir(parents=True, exist_ok=True)
+    secret_file.write_text("OPENALEX_API_KEY=private-secret\n", encoding="utf-8")
+    secret_file.chmod(0o644)
+    monkeypatch.setattr(
+        cli_module,
+        "_runner_status",
+        lambda *_args, **_kwargs: {
+            "checks": {
+                "runner_dependency": True,
+                "runner_base_url": True,
+                "runner_agent_constructed": True,
+            },
+            "provider": "local",
+            "base_url": "http://127.0.0.1:11434/v1",
+            "model": "doctor",
+            "error": None,
+        },
+    )
+
+    rc = main([*command, "--workspace", str(workspace), "--json"])
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+
+    assert rc == expected_rc
+    assert report["credentials"]
+    assert "world-readable" in report["warning"]
+    assert "world-readable" in captured.err
+    assert "private-secret" not in captured.out + captured.err
+    assert all(
+        {"name", "class", "status", "source", "effect_when_unset"} <= row.keys()
+        for row in report["credentials"]
+    )
+
+
+def test_cli_doctor_passes_startup_secret_snapshot_to_credential_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from memoria_vault.runtime import secrets as secrets_module
+
+    workspace = tmp_path / "workspace"
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    secret_file = tmp_path / "config" / "memoria" / "secrets.env"
+    secret_file.parent.mkdir(parents=True, exist_ok=True)
+    secret_file.write_text("OPENALEX_API_KEY=file-secret\n", encoding="utf-8")
+    secret_file.chmod(0o600)
+    seen: list[tuple[Path | None, object]] = []
+    real_report = secrets_module.credential_report
+
+    def report_spy(
+        report_workspace: Path | None, *, loaded_from_file: object = None
+    ) -> list[dict[str, str]]:
+        seen.append((report_workspace, loaded_from_file))
+        return real_report(report_workspace, loaded_from_file=loaded_from_file)
+
+    monkeypatch.setattr(secrets_module, "credential_report", report_spy)
+    assert main(["doctor", "--workspace", str(workspace), "--json"]) == 0
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+
+    assert seen == [(workspace, frozenset({"OPENALEX_API_KEY"}))]
+    assert {row["name"]: row for row in report["credentials"]}["OPENALEX_API_KEY"][
+        "source"
+    ] == "file"
+    assert "file-secret" not in captured.out + captured.err
+
+
 def test_cli_doctor_repair_restores_runtime_seed_files(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -65,6 +226,47 @@ def test_cli_doctor_repair_restores_runtime_seed_files(
     assert "capabilities" not in output["repaired"]
     assert provider_config.read_text(encoding="utf-8") == seed_provider_config.read_text(
         encoding="utf-8"
+    )
+
+
+def test_cli_doctor_repair_does_not_overwrite_agent_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    sentinels = {
+        ".claude/hooks/write_perimeter.py": b"PI-owned hook\n",
+        ".claude/settings.json": b'{"PI-owned": true}\n',
+        ".codex/hooks.json": b'{"PI-owned": true}\n',
+        ".mcp.json": b'{"PI-owned": true}\n',
+        "CLAUDE.md": b"PI-owned instructions\n",
+    }
+    for rel, value in sentinels.items():
+        (workspace / rel).write_bytes(value)
+
+    assert main(["doctor", "--workspace", str(workspace), "--repair", "--json"]) == 0
+    capsys.readouterr()
+
+    assert {rel: (workspace / rel).read_bytes() for rel in sentinels} == sentinels
+
+
+def test_cli_doctor_repair_does_not_create_agent_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    shutil.rmtree(workspace / ".claude")
+    shutil.rmtree(workspace / ".codex")
+    (workspace / ".mcp.json").unlink()
+    (workspace / "CLAUDE.md").unlink()
+
+    assert main(["doctor", "--workspace", str(workspace), "--repair", "--json"]) == 0
+    capsys.readouterr()
+
+    assert not any(
+        (workspace / rel).exists() for rel in (".claude", ".codex", ".mcp.json", "CLAUDE.md")
     )
 
 
@@ -719,7 +921,10 @@ def test_cli_doctor_runner_constructs_local_pydantic_ai_agent(
     assert output["checks"]["runner_dependency"] is True
     assert output["checks"]["runner_base_url"] is True
     assert output["checks"]["runner_agent_constructed"] is True
-    assert seen["provider_kwargs"] == {"base_url": "http://127.0.0.1:11434/v1"}
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://127.0.0.1:11434/v1",
+        "api_key": "api-key-not-set",
+    }
     assert seen["model_name"] == "local-test-model"
     assert seen["model"] is not None
 
@@ -760,7 +965,10 @@ def test_cli_doctor_runner_uses_local_default_base_url(
     assert output["ok"] is True
     assert output["base_url"] == "http://127.0.0.1:11434/v1"
     assert output["checks"]["runner_base_url"] is True
-    assert seen["provider_kwargs"] == {"base_url": "http://127.0.0.1:11434/v1"}
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://127.0.0.1:11434/v1",
+        "api_key": "api-key-not-set",
+    }
     assert seen["model_name"] == "doctor"
 
 
@@ -795,11 +1003,165 @@ def test_cli_doctor_runner_live_dispatches_through_pydantic_ai(
     assert rc == 0
     assert output["ok"] is True
     assert output["checks"]["runner_live_dispatch"] is True
-    assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1"}
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://model.test/v1",
+        "api_key": "api-key-not-set",
+    }
     assert seen["model_name"] == "live-test-model"
     assert len(seen["models"]) == 2
     assert "Memoria runner is reachable" in seen["prompt"]
     assert seen["model_settings"]["temperature"] == 0
+
+
+def test_cli_doctor_gateway_refuses_missing_key_before_adapter_construction(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_runner_provider_config(workspace)
+    sentinels = {
+        "MEMORIA_MODEL_API_KEY": "legacy-model-secret",
+        "OPENAI_API_KEY": "legacy-openai-secret",
+        "KILOCODE_API_KEY": "",
+    }
+    for name, value in sentinels.items():
+        monkeypatch.setenv(name, value)
+    seen = patch_pydantic_ai(monkeypatch)
+    loader_calls: list[None] = []
+
+    def unexpected_loader() -> tuple[object, object, object]:
+        loader_calls.append(None)
+        raise AssertionError("pydantic-ai loader must not run without a configured gateway key")
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai", unexpected_loader
+    )
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "gateway",
+            "--live",
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert rc == 1
+    assert payload["ok"] is False
+    assert payload["error"] == (
+        "provider gateway requires KILOCODE_API_KEY - set it: memoria secrets set KILOCODE_API_KEY"
+    )
+    assert payload["checks"]["runner_dependency"] is False
+    assert payload["checks"]["runner_agent_constructed"] is False
+    assert payload["checks"]["runner_live_dispatch"] is False
+    assert seen == {}
+    assert loader_calls == []
+    assert "legacy-model-secret" not in captured.out + captured.err
+    assert "legacy-openai-secret" not in captured.out + captured.err
+
+
+def test_cli_doctor_gateway_uses_configured_key_for_construction_and_dispatch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_runner_provider_config(workspace)
+    monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "legacy-model-secret")
+    monkeypatch.setenv("OPENAI_API_KEY", "legacy-openai-secret")
+    monkeypatch.setenv("KILOCODE_API_KEY", "gateway-key")
+    seen = patch_pydantic_ai(monkeypatch, output="runner ok")
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "gateway",
+            "--live",
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    expected = {"base_url": "https://gateway.test/v1", "api_key": "gateway-key"}
+    assert rc == 0
+    assert payload["ok"] is True
+    assert payload["checks"]["runner_agent_constructed"] is True
+    assert payload["checks"]["runner_live_dispatch"] is True
+    assert seen["provider_kwargs_list"] == [expected, expected]
+
+
+@pytest.mark.parametrize("failure_site", ["provider", "dispatch"])
+def test_cli_doctor_gateway_sdk_failure_does_not_reflect_configured_key(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    failure_site: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    write_runner_provider_config(workspace)
+    configured_key = "gateway-key"
+    monkeypatch.setenv("KILOCODE_API_KEY", configured_key)
+
+    class FakeProvider:
+        def __init__(self, **kwargs: object) -> None:
+            if failure_site == "provider":
+                raise RuntimeError(f"provider rejected {configured_key}")
+
+    class FakeModel:
+        def __init__(self, model_name: str, *, provider: object) -> None:
+            pass
+
+    class FakeAgent:
+        def __init__(self, model: object) -> None:
+            pass
+
+        def run_sync(self, prompt: str, *, model_settings: dict[str, object]) -> object:
+            if failure_site == "dispatch":
+                raise RuntimeError(f"downstream rejected {configured_key}")
+            return object()
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "gateway",
+            "--live",
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert rc == 1
+    assert payload["error"] == "pydantic-ai model request failed"
+    assert payload["checks"]["runner_dependency"] is True
+    assert payload["checks"]["runner_agent_constructed"] is (failure_site == "dispatch")
+    assert payload["checks"]["runner_live_dispatch"] is False
+    assert configured_key not in captured.out + captured.err
 
 
 def test_cli_doctor_live_requires_runner_check(
@@ -813,5 +1175,7 @@ def test_cli_doctor_live_requires_runner_check(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 2
-    assert output["ok"] is False
-    assert output["error"] == "doctor --live is only valid with --check runner"
+    assert output == {
+        "ok": False,
+        "error": "doctor --live is only valid with --check runner",
+    }

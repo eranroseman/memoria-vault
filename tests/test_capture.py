@@ -1,17 +1,21 @@
 from __future__ import annotations
 
+import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import capture, state
 from memoria_vault.runtime.capture import (
     capture_source as _capture_source,
 )
 from memoria_vault.runtime.capture import (
     check_references_bib,
+    parse_bibtex_entry,
     render_references_bib,
 )
 from memoria_vault.runtime.capture import (
@@ -56,10 +60,52 @@ def write_references_bib(vault: Path, *args, **kwargs):
     return call_with_context(_write_references_bib, vault, *args, **kwargs)
 
 
+def test_parse_bibtex_entry_scales_linearly_for_backslash_runs() -> None:
+    bibtex = "@article{linear2026,title={" + "\\" * 8_000 + "}}"
+
+    started = time.monotonic()
+    entry = parse_bibtex_entry(bibtex)
+
+    assert entry["citekey"] == "linear2026"
+    assert time.monotonic() - started < 3
+
+
+def test_parse_bibtex_entry_preserves_odd_and_even_escape_runs() -> None:
+    odd_quote = '@article{key,title="left ' + "\\" + '" right",journal={ok}}'
+    even_quote = '@article{key,title="left ' + "\\" * 2 + '",journal={ok}}'
+    even_brace_closer = "@article{key,title={left " + "\\" * 2 + "},journal={ok}}"
+
+    assert parse_bibtex_entry(r"@article{key,title={left \} right},journal={ok}}") == {
+        "entry_type": "article",
+        "citekey": "key",
+        "fields": {"title": "left } right", "journal": "ok"},
+    }
+    assert parse_bibtex_entry(even_brace_closer)["fields"]["title"] == "left " + "\\" * 2
+    assert parse_bibtex_entry(odd_quote)["fields"]["title"] == "left " + "\\" + '" right'
+    assert parse_bibtex_entry(even_quote)["fields"]["title"] == "left " + "\\" * 2
+
+
 def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas")
     init_git(tmp_path, "capture@example.invalid", "Capture")
     return tmp_path
+
+
+def _projection_source(
+    vault: Path,
+    work_id: str,
+    *,
+    citekey: str = "",
+    csl_json: dict[str, str] | None = None,
+) -> None:
+    state.upsert_catalog_record(
+        vault,
+        work_id=work_id,
+        title=f"{work_id} source",
+        check_status="checked",
+        citekey=citekey,
+        csl_json=csl_json,
+    )
 
 
 def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
@@ -225,6 +271,54 @@ def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None
     events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_pdf_source"
     assert events[-1]["workflow"] == "capture_pdf_source"
+
+
+def test_extract_pdf_pages_rejects_excessive_page_count(monkeypatch) -> None:
+    class Page:
+        def get_text(self, kind: str) -> str:
+            assert kind == "text"
+            return "A bounded parser reproduction page."
+
+    class Document:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args) -> None:
+            return None
+
+        def __iter__(self):
+            return iter([Page() for _ in range(1_001)])
+
+    fitz = ModuleType("fitz")
+    fitz.open = lambda **_kwargs: Document()  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "fitz", fitz)
+
+    with pytest.raises(ValueError, match="PDF exceeds extraction page limit"):
+        capture._extract_pdf_pages(b"%PDF-1.4")
+
+
+def test_extract_pdf_pages_rejects_text_over_byte_limit(monkeypatch) -> None:
+    class Page:
+        def get_text(self, kind: str) -> str:
+            assert kind == "text"
+            return "é" * (4 * 1024 * 1024 + 1)
+
+    class Document:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args) -> None:
+            return None
+
+        def __iter__(self):
+            return iter([Page()])
+
+    fitz = ModuleType("fitz")
+    fitz.open = lambda **_kwargs: Document()  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "fitz", fitz)
+
+    with pytest.raises(ValueError, match="PDF exceeds extracted-text limit"):
+        capture._extract_pdf_pages(b"%PDF-1.4")
 
 
 def test_capture_pdf_source_rejects_incoherent_parser_text(tmp_path: Path, monkeypatch) -> None:
@@ -638,7 +732,7 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
     rendered = render_references_bib(vault)
 
     assert "@article{harness2026," in rendered
-    assert "title = {Harnessed Workflows for Durable Research}" in rendered
+    assert "title = {{Harnessed Workflows for Durable Research}}" in rendered
     assert "author = {Ada, River and Lin, Morgan}" in rendered
     assert "year = {2026}" in rendered
     assert "doi = {10.1000/harness.2026}" in rendered
@@ -652,6 +746,58 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
 
     (vault / "bibliography.bib").write_text("stale\n", encoding="utf-8")
     assert not check_references_bib(vault)
+
+
+@pytest.mark.parametrize(
+    "citekey",
+    ["foo,bar", "foo;bar", "foo]bar", "unsafe\n```bibtex", "unsafe`key"],
+)
+def test_references_bib_omits_unsafe_citekeys(tmp_path: Path, citekey: str) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey=citekey)
+
+    assert render_references_bib(vault) == ""
+
+
+def test_references_bib_uses_csl_id_when_explicit_citekey_is_whitespace(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(
+        vault,
+        "source-alpha",
+        citekey=" \t ",
+        csl_json={"id": "fallback2026"},
+    )
+
+    assert "@article{fallback2026," in render_references_bib(vault)
+
+
+def test_references_bib_preserves_conventional_punctuation_citekey(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey="smith:2026")
+
+    assert "@article{smith:2026," in render_references_bib(vault)
+
+
+def test_references_bib_omits_duplicate_selected_citekeys(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey="shared2026")
+    _projection_source(vault, "source-beta", citekey="shared2026")
+
+    assert render_references_bib(vault) == ""
+
+
+def test_references_bib_omits_unrelated_unsafe_key_without_corrupting_valid_entry(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    _projection_source(vault, "source-alpha", citekey="safe2026")
+    _projection_source(vault, "source-breakout", citekey="breakout\n```bibtex")
+
+    rendered = render_references_bib(vault)
+
+    assert "@article{safe2026," in rendered
+    assert "breakout\n```bibtex" not in rendered
+    assert rendered.count("@article{") == 1
 
 
 def test_work_id_survives_pi_citekey_correction(tmp_path: Path) -> None:

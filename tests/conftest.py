@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import tempfile
 
 import pytest
 
@@ -17,8 +18,10 @@ TEST_LEVEL_NAMES = frozenset({"static", "unit", "contract", "package", "runtime"
 
 TEST_LEVELS = {
     "test_operation_context.py": "runtime",
+    "test_agent_bundle.py": "contract",
     "test_bases.py": "contract",
     "test_backup_restore.py": "runtime",
+    "test_bulk_import.py": "contract",
     "test_bundle_roots.py": "contract",
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",
@@ -27,7 +30,9 @@ TEST_LEVELS = {
     "test_cli_doctor_eval.py": "contract",
     "test_cli_work_project.py": "contract",
     "test_cli_workspace_requests.py": "contract",
+    "test_cli_secrets.py": "contract",
     "test_code_artifacts.py": "runtime",
+    "test_concept_type_registry.py": "contract",
     "test_concept_types.py": "contract",
     "test_content_security.py": "runtime",
     "test_cspell_scope.py": "static",
@@ -44,8 +49,10 @@ TEST_LEVELS = {
     "test_eval_score.py": "contract",
     "test_evidence_markers.py": "unit",
     "test_evidence_sets.py": "runtime",
+    "test_explore.py": "contract",
     "test_exploration_channel.py": "runtime",
     "test_exploration_trace.py": "contract",
+    "test_export_acceptance.py": "runtime",
     "test_feedback_instrumentation.py": "contract",
     "test_floor_coverage.py": "floor",
     "test_floor_invariants.py": "floor",
@@ -57,6 +64,8 @@ TEST_LEVELS = {
     "test_gap_analysis.py": "runtime",
     "test_gap_freejoin.py": "contract",
     "test_gate_calibration.py": "unit",
+    "test_grounded_synthesis.py": "contract",
+    "test_graph_sql.py": "contract",
     "test_hub_handoff.py": "contract",
     "test_identifier_renames.py": "contract",
     "test_http_transport.py": "contract",
@@ -90,6 +99,9 @@ TEST_LEVELS = {
     "test_projections.py": "contract",
     "test_query_substrate.py": "contract",
     "test_refresh_test_vault.py": "package",
+    "test_retrieval_fixtures.py": "contract",
+    "test_rendezvous.py": "runtime",
+    "test_retrieval_pipeline.py": "unit",
     "test_retrieval_substrate.py": "contract",
     "test_runtime_gate_replay.py": "runtime",
     "test_runtime_helpers.py": "unit",
@@ -101,15 +113,22 @@ TEST_LEVELS = {
     "test_schema_version.py": "contract",
     "test_schemas.py": "contract",
     "test_search_index.py": "contract",
+    "test_seed_lifecycle.py": "contract",
+    "test_seed_manifest.py": "contract",
+    "test_seed_install.py": "contract",
     "test_seeded_errors.py": "runtime",
+    "test_secrets.py": "unit",
     "test_session_summary.py": "contract",
     "test_slice_outline.py": "runtime",
     "test_source_enrichment.py": "runtime",
+    "test_steering_tokens.py": "contract",
     "test_surface_contract.py": "contract",
     "test_sweeps_retraction.py": "contract",
     "test_test_env_harness.py": "package",
     "test_testing_levels.py": "static",
+    "test_token_ceiling.py": "unit",
     "test_trusted_writer.py": "runtime",
+    "test_vaultio.py": "unit",
     "test_verify_script.py": "static",
     "test_workspace_seed_links.py": "static",
     "test_worker_capture_jobs.py": "runtime",
@@ -125,6 +144,8 @@ def pytest_configure() -> None:
     for key in GIT_ENV_VARS:
         os.environ.pop(key, None)
     os.environ.setdefault("PRE_COMMIT_ALLOW_NO_CONFIG", "1")
+    # Secrets hermeticity: never read the developer's ~/.config/memoria/secrets.env.
+    os.environ["XDG_CONFIG_HOME"] = tempfile.mkdtemp(prefix="memoria-test-xdg-")
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -132,3 +153,12 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         level = TEST_LEVELS.get(item.path.name)
         if level:
             item.add_marker(getattr(pytest.mark, level))
+
+
+@pytest.fixture(autouse=True)
+def _isolated_memoria_state(
+    monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory
+) -> None:
+    """Keep per-vault rendezvous state out of the developer's real state dir."""
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path_factory.mktemp("memoria-state")))
+    monkeypatch.delenv("MEMORIA_MODEL_TOKEN_CEILING", raising=False)

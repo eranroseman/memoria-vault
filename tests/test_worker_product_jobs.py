@@ -537,6 +537,85 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
     assert [source["path"] for source in done["sources"]] == ["notes/checked.md"]
 
 
+def test_worker_rejects_unparseable_answer_query_trace_flag(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    queued = enqueue_operation(
+        vault,
+        "answer-query",
+        payload={"query": "alpha", "trace": "perhaps"},
+        idempotency_key="answer-query-invalid-trace",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "failed"
+    assert "trace must be a boolean" in done["error"]
+
+
+def test_worker_accepts_false_answer_query_trace_flag_without_trace(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    write_note(vault, "checked", "checked", "alpha beta")
+    queued = enqueue_operation(
+        vault,
+        "answer-query",
+        payload={"query": "alpha", "trace": "false"},
+        idempotency_key="answer-query-false-trace",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "done"
+    assert "trace" not in done
+
+
+@pytest.mark.parametrize(
+    ("allow_unready", "error"),
+    [
+        ("false", "project is not export-ready"),
+        ("perhaps", "allow_unready must be a boolean"),
+    ],
+)
+def test_worker_does_not_fail_open_for_untyped_export_readiness_opt_out(
+    tmp_path: Path, allow_unready: str, error: str
+) -> None:
+    vault = workspace(tmp_path)
+    project = vault / "projects/project-alpha/project.md"
+    project.parent.mkdir(parents=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "check_status: checked\n"
+        "title: Alpha project\n"
+        "description: Project\n"
+        "thesis: notes/thesis.md\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, "projects/project-alpha/project.md", "project")
+    write_note(vault, "thesis", "checked", "A checked thesis.")
+
+    queued = enqueue_operation(
+        vault,
+        "export-project",
+        payload={"project_path": "project-alpha", "allow_unready": allow_unready},
+        idempotency_key=f"export-project-{allow_unready}",
+        actor="operation",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "failed"
+    assert error in done["error"]
+
+
 def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     eval_dir = vault / ".memoria/eval"
@@ -961,7 +1040,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     assert git(vault, "status", "--short", "--", ".memoria/overrides.jsonl") == ""
 
 
-def test_update_work_removes_legacy_topics_from_pre_f4_catalog_row(tmp_path: Path) -> None:
+def test_update_work_preserves_unrecognized_topics_from_catalog_row(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
@@ -975,7 +1054,7 @@ def test_update_work_removes_legacy_topics_from_pre_f4_catalog_row(tmp_path: Pat
         vault,
         "update-work",
         payload={"work_id": "legacy", "methodology": ["rct"]},
-        idempotency_key="normalize-legacy-work",
+        idempotency_key="preserve-catalog-work",
         actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -983,10 +1062,12 @@ def test_update_work_removes_legacy_topics_from_pre_f4_catalog_row(tmp_path: Pat
     assert done is not None
     assert done["status"] == "done"
     assert done["work"]["csl_json"]["memoria"] == {
+        "topics": ["legacy-topic"],
         "standing": "current",
         "methodology": ["rct"],
     }
     assert state.catalog_source(vault, "legacy")["csl_json"]["memoria"] == {
+        "topics": ["legacy-topic"],
         "standing": "current",
         "methodology": ["rct"],
     }

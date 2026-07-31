@@ -1,0 +1,38 @@
+# Preregistered retrieval fixtures - R2 section 7, the R3 spike's
+# impl-start check. Rules (the spec's, enforced by
+# tests/retrieval_fixtures.py, not scripts/verify wiring):
+# - Rows freeze before the R3 spike runs (frozen: true + frozen_on date);
+#   the spike may not add, drop, or edit frozen cases; the loader refuses
+#   unfrozen rows in spike mode.
+# - Shape-1 gold are source-span refs (work_id#^pNNNN). Until R1's
+#   passage-granular rows land they are scored at DOCUMENT level: the
+#   loader maps each ref to its containing document path for
+#   evaluate_bm25, so the baseline metric is doc-level hit@k - stated
+#   here, never silently degraded.
+# - Shape-2 gold are concept ids scored as present@<depth> over the
+#   memoria explore grouped payload (depth cap 2).
+# - Gold anchors on unfrozen rows are preregistration bets over the O1
+#   seed corpus and may be corrected until freeze.
+- id: shape1-spacing-effect-lookup
+  shape: 1
+  query: "what did the spaced-repetition model find about lag effects"
+  gold: ["settles-2016-spaced-repetition#^p0007"]
+  metric: hit@5
+  registered: 2026-07-17
+  frozen: false
+- id: shape1-undesirable-difficulty-boundary
+  shape: 1
+  query: "when do desirable difficulties reverse for high element interactivity material"
+  gold: ["chen-2018-undesirable-difficulty#^p0004"]
+  metric: hit@5
+  registered: 2026-07-17
+  frozen: false
+- id: shape2-testing-effect-tension
+  shape: 2
+  query: "testing effect boundary conditions"
+  gold:
+    - catalog/sources/chen-2018-undesirable-difficulty
+    - catalog/sources/moreira-2019-retrieval-practice
+  metric: present@1
+  registered: 2026-07-17
+  frozen: false

@@ -67,6 +67,8 @@ def emit_worklist(
     source_report: str = "",
     workflow: str = "screen",
     worklist_id: str = "",
+    raised_by: str = "worklists",
+    loudness: str = "notice",
 ) -> dict[str, Any]:
     """Write a file-backed worklist and one aggregate work-prompt.
 
@@ -130,12 +132,51 @@ def emit_worklist(
             f"{len(item_paths)} items were emitted into the {slug} "
             f"batch from {source_report or 'a report'}."
         ),
-        raised_by="worklists",
+        raised_by=raised_by,
         target=target,
-        loudness="notice",
+        loudness=loudness,
         dedupe_slug=f"worklist-{slug}",
     )
     return {"worklist": slug, "items": item_paths, "prompt": prompt}
+
+
+IMPORT_GROUP_ORDER = ("duplicate", "retraction", "failed", "unmapped")
+
+
+def emit_import_worklist(
+    vault: Path,
+    *,
+    run_id: str,
+    rows: list[dict[str, Any]],
+    entries_total: int,
+    admitted: int,
+) -> dict[str, Any] | None:
+    """Mint the one run-scoped bulk-admission worklist, or nothing at all."""
+    if not rows:
+        return None
+    order = {group: position for position, group in enumerate(IMPORT_GROUP_ORDER)}
+    fallback = len(IMPORT_GROUP_ORDER)
+
+    def rank_key(pair: tuple[int, dict[str, Any]]) -> tuple[int, int]:
+        index, row = pair
+        return order.get(str(row.get("group") or ""), fallback), index
+
+    ranked = sorted(enumerate(rows), key=rank_key)
+    judged = [{**row, "rank": rank} for rank, (_, row) in enumerate(ranked, start=1)]
+    title = (
+        f"Import run {run_id}: {entries_total} entries · {admitted} admitted · "
+        f"{len(judged)} need judgment"
+    )
+    return emit_worklist(
+        vault,
+        title,
+        judged,
+        source_report=f"import run {run_id}",
+        workflow="import",
+        worklist_id=f"import-{run_id}",
+        raised_by="import",
+        loudness="quiet",
+    )
 
 
 def emit_report(
