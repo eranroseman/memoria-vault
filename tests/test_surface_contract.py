@@ -133,13 +133,83 @@ def test_surface_contract_binds_project_reads_to_http_and_mcp() -> None:
     ]
 
 
-def test_surface_contract_cli_commands_are_current_parser_commands() -> None:
-    commands = cli_commands()
+# Pure-CLI conveniences and write/maintenance commands that deliberately
+# carry no SURFACE_ACTIONS row (U1 spec §1: CLI parity is EQUALITY against
+# the pinned parser surface minus exactly this named list). A new parser
+# command fails parity until it either registers a registry row or is added
+# here deliberately. Rows arriving from merged specs (R2 ask/explore, V2
+# review, I1 dashboard, O1 onboard) move their commands out of this list.
+CLI_ONLY_COMMANDS: set[str] = {
+    "memoria init",
+    "memoria doctor",
+    "memoria doctor bundle",
+    "memoria doctor self-test",
+    "memoria ask",
+    "memoria secrets set",
+    "memoria secrets list",
+    "memoria serve",
+    "memoria handshake",
+    "memoria mcp",
+    "memoria help",
+    "memoria new hub",
+    "memoria new note",
+    "memoria new project",
+    "memoria work add",
+    "memoria work import",
+    "memoria work enrich",
+    "memoria work digest",
+    "memoria work interview",
+    "memoria work update",
+    "memoria work export",
+    "memoria link",
+    "memoria check",
+    "memoria export",
+    "memoria project ask",
+    "memoria project trace",
+    "memoria project frame-paper",
+    "memoria project gaps",
+    "memoria project slice",
+    "memoria project compose",
+    "memoria project verify",
+    "memoria project resolve-evidence",
+    "memoria project promote",
+    "memoria project explore",
+    "memoria project suggest-hubs",
+    "memoria project export",
+    "memoria request answer",
+    "memoria request amend",
+    "memoria request cancel",
+    "memoria request retry",
+    "memoria request resume",
+    "memoria attention resolve",
+    "memoria steering show",
+    "memoria steering edit",
+    "memoria vocab list",
+    "memoria vocab add",
+    "memoria vocab merge",
+    "memoria vocab rename",
+    "memoria journal verify",
+    "memoria workspace scan",
+    "memoria workspace run",
+    "memoria workspace recover",
+    "memoria workspace rollback",
+    "memoria workspace check",
+    "memoria workspace backup",
+    "memoria workspace restore",
+    "memoria workspace rebuild",
+    "memoria workspace export",
+    "memoria eval run",
+    "memoria eval seeded-error-verdict",
+    "memoria eval select-models",
+}
 
-    assert commands <= _cli_command_surface()
-    assert "memoria surface schema" in commands
-    assert "memoria explore" in commands
-    assert "memoria workspace scan" not in commands
+
+def test_surface_contract_cli_parity_is_equality_with_named_exemptions() -> None:
+    registered = cli_commands()
+
+    assert "memoria surface schema" in registered
+    assert registered.isdisjoint(CLI_ONLY_COMMANDS)
+    assert registered | CLI_ONLY_COMMANDS == _cli_command_surface()
 
 
 def test_surface_contract_job_vocabulary_is_closed() -> None:
