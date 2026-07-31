@@ -61,6 +61,13 @@ _KEY_ENV_RE = re.compile(r"[A-Z][A-Z0-9_]*")
 _KEYLESS_PROVIDER_API_KEY = "api-key-not-set"
 TOKEN_CEILING_ENV = "MEMORIA_MODEL_TOKEN_CEILING"  # noqa: S105 -- public environment name.
 _TOKEN_LEDGER = {"total_tokens": 0}
+_USAGE_FIELDS = (
+    "input_tokens",
+    "output_tokens",
+    "cache_read_tokens",
+    "cache_write_tokens",
+    "total_tokens",
+)
 
 
 def record_copi_interview_turn(
@@ -1056,15 +1063,6 @@ def _require_token_budget(operation_id: str) -> None:
         )
 
 
-_USAGE_FIELDS = (
-    "input_tokens",
-    "output_tokens",
-    "cache_read_tokens",
-    "cache_write_tokens",
-    "total_tokens",
-)
-
-
 def _record_token_usage(result: Any, settings: dict[str, Any]) -> dict[str, int]:
     """Harvest the five-field usage telemetry once, charge the token ledger, and return it.
 
@@ -1072,15 +1070,15 @@ def _record_token_usage(result: Any, settings: dict[str, Any]) -> dict[str, int]
     both the ledger charge and the canonical result's telemetry are derived from this
     one call so a completed dispatch is never charged or reported twice.
     """
+    usage: dict[str, int] = {}
     try:
         usage_fn = getattr(result, "usage", None)
         run_usage = usage_fn() if callable(usage_fn) else None
+        for field in _USAGE_FIELDS:
+            value = getattr(run_usage, field, None)
+            usage[field] = value if type(value) is int else 0
     except Exception:  # noqa: BLE001 -- completed calls must still be charged.
-        run_usage = None
-    usage: dict[str, int] = {}
-    for field in _USAGE_FIELDS:
-        value = getattr(run_usage, field, None) if run_usage is not None else None
-        usage[field] = value if type(value) is int else 0
+        usage = dict.fromkeys(_USAGE_FIELDS, 0)
     total = usage["total_tokens"]
     if total <= 0:
         total = int(settings.get("max_tokens") or 0)
@@ -1119,7 +1117,7 @@ def _pydantic_ai_chat(
         raise RuntimeError("pydantic-ai model returned no message content")
     try:
         cost_usd: float | None = float(result.response.cost().total_price)
-    except (AttributeError, LookupError):
+    except Exception:  # noqa: BLE001 -- cost is best-effort, never a breaker input.
         cost_usd = None
     return {"text": text, "usage": usage, "cost_usd": cost_usd, "elapsed_s": elapsed_s}
 

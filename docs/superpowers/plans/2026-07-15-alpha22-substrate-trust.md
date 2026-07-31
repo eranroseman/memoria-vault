@@ -4239,7 +4239,19 @@ and the BOOT-B.5 secret-perimeter task.
    COST.1: set all three retired environment names, call a `key_env=None`
    runner through the fake, and assert `provider_kwargs == {"base_url": ...}`.
    Include BOOT-B.5's complementary required-key refusal test in the combined
-   tranche as a non-regression. The combined tranche command is:
+   tranche as a non-regression.
+
+   > **Reconciliation note (COST.1 commit):** no test with the literal name
+   > `test_pydantic_ai_chat_keyless_runner_ignores_legacy_fallback_envs` was
+   > added — equivalent coverage already existed as
+   > `test_keyless_direct_chat_uses_inert_placeholder_despite_legacy_environment`
+   > (`tests/test_token_ceiling.py:95`), which sets all three retired env
+   > names, uses `key_env: None`, and asserts `provider_kwargs`. Adding a
+   > second, differently-named test covering the same behavior would have
+   > violated YAGNI, so the existing test was kept as the sole coverage; this
+   > note records that decision, which shipped undisclosed in `9ff8011f`.
+
+   The combined tranche command is:
 
    ```bash
    python -m pytest tests/test_operations.py tests/test_cli_doctor_eval.py \

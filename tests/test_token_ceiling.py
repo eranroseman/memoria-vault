@@ -39,9 +39,10 @@ def _reset_ledger(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_ceiling_trips_after_budget_is_spent(monkeypatch: pytest.MonkeyPatch) -> None:
     _reset_ledger(monkeypatch)
-    # 2 calls x 25 tokens/call = 50; the ceiling sits exactly there so the third
-    # call is the one that trips it.
-    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, "50")
+    # 2 calls x 25 tokens/call = 50, strictly over the 40-token ceiling (unlike
+    # the exact-boundary sibling test below), so the third call is the one that
+    # trips it.
+    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, "40")
     seen = patch_pydantic_ai(monkeypatch, output="fixture reply")
 
     assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt one")["text"] == "fixture reply"
@@ -111,7 +112,7 @@ def test_keyless_direct_chat_uses_inert_placeholder_despite_legacy_environment(
 
 @pytest.mark.parametrize(
     "failure_site",
-    ["loader", "provider", "model", "agent", "dispatch", "output"],
+    ["loader", "provider", "model", "agent", "dispatch", "output", "cost"],
 )
 def test_direct_chat_sdk_failure_does_not_reflect_configured_key(
     monkeypatch: pytest.MonkeyPatch,
@@ -132,12 +133,22 @@ def test_direct_chat_sdk_failure_does_not_reflect_configured_key(
             if failure_site == "model":
                 raise RuntimeError(f"model rejected {configured_key}")
 
+    class FakeResponse:
+        def cost(self) -> object:
+            # Only reached when failure_site == "cost": every other site
+            # raises before the call reaches cost extraction.
+            raise RuntimeError(f"cost rejected {configured_key}")
+
     class FakeResult:
         @property
         def output(self) -> str:
             if failure_site == "output":
                 raise RuntimeError(f"output rejected {configured_key}")
             return "fixture reply"
+
+        @property
+        def response(self) -> FakeResponse:
+            return FakeResponse()
 
     class FakeAgent:
         def __init__(self, model: object) -> None:
@@ -165,6 +176,16 @@ def test_direct_chat_sdk_failure_does_not_reflect_configured_key(
         "key_env": "KILOCODE_API_KEY",
     }
     policy = {**POLICY, "allowed_network": ["https://gateway.test/v1"]}
+
+    if failure_site == "cost":
+        # cost_usd is a nullable best-effort estimate, never a breaker input:
+        # a cost-extraction failure must not fail an otherwise-completed call,
+        # so this site degrades to cost_usd=None instead of raising.
+        result = operations._pydantic_ai_chat(policy, runner, "prompt")
+        assert result["text"] == "fixture reply"
+        assert result["cost_usd"] is None
+        assert configured_key not in str(result)
+        return
 
     with pytest.raises(RuntimeError) as exc_info:
         operations._pydantic_ai_chat(policy, runner, "prompt")
@@ -204,13 +225,24 @@ def test_reported_usage_is_preferred_over_max_tokens_fallback(
     assert operations._TOKEN_LEDGER["total_tokens"] == 7
 
 
+class _RaisingTotalTokensUsage:
+    """Mimics RunUsage(input_tokens=None): usage() itself succeeds, but
+    total_tokens is a computed property (input + output) that raises on
+    access rather than on the usage() call."""
+
+    @property
+    def total_tokens(self) -> int:
+        raise TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")
+
+
 @pytest.mark.parametrize(
     "usage",
     [
         lambda: SimpleNamespace(total_tokens=True),
         lambda: (_ for _ in ()).throw(RuntimeError("usage unavailable")),
+        lambda: _RaisingTotalTokensUsage(),
     ],
-    ids=["boolean-total", "raising-accessor"],
+    ids=["boolean-total", "raising-accessor", "raising-property-access"],
 )
 def test_invalid_reported_usage_falls_back_to_max_tokens(
     monkeypatch: pytest.MonkeyPatch, usage: Callable[[], object]
