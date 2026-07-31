@@ -8,8 +8,12 @@
     "passages": 0
   },
   "files": {
+    ".claude/hooks/write_perimeter.py": "c61509f89946",
+    ".claude/settings.json": "8b01263a6e2c",
+    ".codex/hooks.json": "85c2c09640da",
     ".githooks/pre-commit": "9243c0c6f9b7",
     ".gitignore": "758d54f27e60",
+    ".mcp.json": "55e2389701bb",
     ".memoria/blobs/source-content/demo-work/content.txt": "96617e77d973",
     ".memoria/blobs/source-content/demo-work/raw/x2024demo.bib": "bd73f75a9f23",
     ".memoria/blobs/source-content/floor-gap-work/content.txt": "791547d3383f",
@@ -43,6 +47,7 @@
     ".obsidian/plugins/memoria-obsidian/styles.css": "16fa8f03279a",
     ".obsidian/types.json": "dd538f40a871",
     "AGENTS.md": "1c9b0bdfe5c1",
+    "CLAUDE.md": "336cc4fbf19b",
     "bibliography.bib": "5a2cf6f94473",
     "catalog.base": "8c7e71589a7e",
     "claims.base": "3ef30825c27c",
