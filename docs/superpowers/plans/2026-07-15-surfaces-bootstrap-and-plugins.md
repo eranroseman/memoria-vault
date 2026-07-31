@@ -22,9 +22,16 @@
 3. **View payload envelope**: `{ok: true, api_version, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
-6. **BOOT-C ↔ U4-A interface**: bundle seeding iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`; `memoria doctor --json --quick` emits `{engine_version: str, skew: {status: "in-sync"|"vault-newer"|"engine-newer"}, credentials: [{name, class, status, effect}]}` — BOOT-C.5 implements exactly this shape; U4-A's hook consumes it defensively.
+6. **BOOT-C ↔ U4-A interface**: fresh `memoria init` iterates
+   `(relpath, content_provider)` pairs; U4-A registers via
+   `copi_bundle_files()`. `memoria doctor --json --quick` may emit the current
+   engine version and credential rows, but it emits no bundle-version or skew
+   result. U4-A's hook consumes credential rows defensively.
 7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces).
-8. **Plugin settings**: `serverUrl` + token settings are removed; the empirical-recorder settings (`enabled`, `defaultProjectId`, `retentionDays`, `showPrivacyPreview`) are KEPT (the spec's "one field" governs connection settings only).
+8. **Plugin settings**: fresh settings omit `serverUrl` and token settings;
+   the empirical-recorder settings (`enabled`, `defaultProjectId`,
+   `retentionDays`, `showPrivacyPreview`) remain. This plan does not migrate
+   persisted settings from a prior plugin installation.
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
@@ -320,8 +327,8 @@ each consumer update the contracts atomically when it lands after U1.
    `PROBES`, proving a void scope removes/refuses its attention marker while
    the unscoped leg is real.  It must not change M.3's coverage assertion to a
    fixed count.  V2 applies the same rule to `views.evidence_review`.
-3. **Parser parity.** If BOOT-A.8, BOOT-C.3, or BOOT-D.7 lands after U1 M.4,
-   its `memoria handshake`, `memoria upgrade`, or `memoria onboard` parser
+3. **Parser parity.** If BOOT-A.8 or BOOT-D.7 lands after U1 M.4, its
+   `memoria handshake` or `memoria onboard` parser
    change also adds that command to U1's `CLI_ONLY_COMMANDS` (unless the task
    deliberately registers a full surface row).  If it lands first, M.4's
    initial complement includes it.  Updating `tests/test_cli.py` alone is
@@ -3596,11 +3603,11 @@ each is the standard reading; assembler may veto):
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
-# Section BOOT-C: agent-bundle seeding, `.memoria/vault.json` manifest, `memoria upgrade`, skew detection
+# Section BOOT-C: fresh agent-bundle seeding and current-hash manifest
 
-Implements bootstrap spec §5 (perimeter layers 1–2 + Codex mirror), §6 (upgrade
-and skew), §9.3–9.4, honoring the §1 table ownership split: perimeter + wiring
-files are owned here; U4-owned method files (`.claude/skills/memoria-copi/`,
+Implements bootstrap spec §5's fresh-install perimeter layers and current-hash
+manifest, honoring the §1 table ownership split: perimeter + wiring files are
+owned here; U4-owned method files (`.claude/skills/memoria-copi/`,
 `.claude/hooks/session_status.py`) are *seeded by the same verbs* — the U4
 section appends their rel paths to `BUNDLE_FILES["agent"]` (Produces below) and
 adds the template files; no other seam is needed.
@@ -3620,31 +3627,66 @@ real Codex hook schema is known.
 
 Seeding mechanism decision (one line, per instructions): bundle files are
 **static templates in `product/workspace_seed/`** (matches the existing seed
-pattern — no per-vault substitution is needed in any of them), written by a
-dedicated bundle writer (`runtime/bundles.py`), **not** via `SEED_TREES` /
-`SEED_FILES`, so upgrade/backup owns exactly these paths and Plan 23 R1NG.3's
-seed-class seams (`_copy_seed_tree` / `_copy_seed_file` / `SEED_CLASSES`) stay
-untouched by this section.
+pattern — no per-vault substitution is needed in any of them), written during
+fresh `memoria init` by a dedicated bundle writer (`runtime/bundles.py`),
+**not** via `SEED_TREES` / `SEED_FILES`; Plan 23 R1NG.3's seed-class seams
+(`_copy_seed_tree` / `_copy_seed_file` / `SEED_CLASSES`) stay untouched by
+this section.
 
 Constraints other sections must honor:
 
-- Bundle files are engine-owned regenerate-always artifacts. They must never be
-  added to Plan 23's `SEED_CLASSES` (view-preference class) — hand-edits to
-  them are detected by hash and backed up, not preserved.
+- Bundle files are engine-owned fresh-init artifacts. They must never be added
+  to Plan 23's `SEED_CLASSES` (view-preference class). The manifest records
+  their initial hashes; this plan provides no recovery, backup, or upgrade path
+  for later edits.
 - `AGENTS.md` is **not** in any bundle: it is a tracked projection (Plan 23
   R1NG.4) with its own drift check (`check_tracked_projections`).
-- All bundles are stamped with the same `__version__` at write time; skew
-  helpers assume that.
 - `.obsidian` view-preference files (`app.json`, `graph.json`, …) are not
   hash-tracked; only `.obsidian/plugins/memoria-obsidian/*` is (the "obsidian"
   bundle).
 - No journal events are added or changed by this section — no floor-golden
   regeneration is expected (`tests/floor_lib.py` hashes journal output only).
-- Doctor's default report gains a `bundles` key and its `ok` is now also gated
-  on `bundles["ok"]`; a vault with a `.memoria/` dir but no
-  `.memoria/vault.json` reports `ok: false` (loud, per spec §5 "absence is
-  loud"). Test fixtures must build vaults via `memoria init` (the supported
-  construction path), never by hand-creating `.memoria/`.
+
+### Clean-slate amendment — bootstrap and plugin lifecycle (2026-07-30, BINDING)
+
+There are no existing Memoria installations. This release supports one path:
+fresh initialization. This amendment supersedes every conflicting BOOT-C,
+U3-PLUG, and U4 instruction below. In a conflict, this amendment governs.
+Do not implement an obsolete block merely because it remains as drafting
+history.
+
+1. **Active BOOT-C order.** Execute BOOT-C.1, then BOOT-C.2. BOOT-C.3,
+   BOOT-C.4, and BOOT-C.5 are removed. Their historical snippets, tests, and
+   commit messages are non-executable.
+2. **Fresh-init writer and manifest.** `memoria init` alone writes the selected
+   static bundles and `.memoria/vault.json`; `--no-obsidian` writes the agent
+   bundle alone. The manifest retains its fresh vault identity and current file
+   hashes only:
+
+   ```json
+   {"schema": 1, "vault_id": "<hex>", "bundles": {"agent": {"files": {"<rel>": "sha256:<hex>"}}}}
+   ```
+
+   Tests prove that every seeded file matches its current recorded hash. Do not
+   stamp bundle or schema versions, preserve a prior manifest, repair a missing
+   manifest, or invoke the writer from `doctor --repair`.
+3. **No lifecycle compatibility surface.** Do not add a `memoria upgrade`
+   parser, handler, recovery path, backup directory, backup gitignore entry,
+   version comparator, skew warning, or version advice. `doctor` neither
+   reports nor gates its result on bundles or manifest state.
+4. **No plugin-settings migration.** The fresh plugin defaults omit
+   `serverUrl` and `hasToken`, and current code never reads either key. Load
+   and save the current settings normally; do not delete, reinterpret, test,
+   or rewrite settings from a prior plugin installation. `pill.js` exports no
+   version comparator or skew banner, and the attention pane renders no
+   version-skew UI.
+5. **U4 handoff.** `copi_bundle_files()` participates in fresh initialization
+   only. It carries current content hashes, not `COPI_BUNDLE_VERSION`; the
+   SessionStart hook consumes credential status without skew constants or
+   upgrade advice.
+
+The deletion prevents a permanent maintenance surface for installations that
+do not exist, while preserving the fresh vault's perimeter and hash evidence.
 
 Baseline verified at main `80e62bbd` (line refs below read from the actual
 files, not from specs).
@@ -3675,7 +3717,7 @@ files, not from specs).
 - [ ] Create `tests/test_agent_bundle.py` with the failing content tests:
 
 ```python
-"""Agent-bundle seeding, vault.json manifest, upgrade, and skew detection."""
+"""Agent-bundle seed-template content checks."""
 
 from __future__ import annotations
 
@@ -3963,29 +4005,34 @@ EOF
 
 ---
 
-### Task BOOT-C.2: `runtime/bundles.py` + `.memoria/vault.json` written by init
+### Task BOOT-C.2: fresh-init bundle writer + current-hash manifest
+
+> **Binding execution text:** the historical detail below is superseded in full
+> by the clean-slate amendment. Write static agent and Obsidian bundles only
+> from `memoria init`, then write the current-hash manifest. Test a normal init
+> and `--no-obsidian` init; assert every recorded hash matches the file just
+> seeded. Do not wire bundle writing into repair or doctor, preserve a manifest,
+> or add version metadata. Run the focused bundle tests and `python scripts/verify`
+> before committing this one fresh-init slice.
 
 **Files:**
 - Create: `src/memoria_vault/runtime/bundles.py`
-- Modify: `src/memoria_vault/cli.py:2270-2272` (`_repair_workspace`), `src/memoria_vault/cli.py:2275-2295` (`_repair_write_targets`), `src/memoria_vault/cli.py:2346-2362` (`_initialize_workspace_files`)
+- Modify: `src/memoria_vault/cli.py` (`_initialize_workspace_files` only)
 - Modify: `tests/test_agent_bundle.py` (append)
 
 **Interfaces:**
-- Consumes: `memoria_vault.__version__: str`; `memoria_vault.runtime.state.SCHEMA_VERSION: int` (state.py:53); `memoria_vault.runtime.policy.audit.sha256_bytes(data: bytes) -> str` / `sha256_file(path: Path) -> str` (both return `"sha256:<64-hex>"`, audit.py:17-26); `memoria_vault.runtime.vaultio.write_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None` (vaultio.py:170); `importlib.resources.files`.
+- Consumes: `memoria_vault.runtime.policy.audit.sha256_bytes(data: bytes) -> str` / `sha256_file(path: Path) -> str` (both return `"sha256:<64-hex>"`, audit.py:17-26); `memoria_vault.runtime.vaultio.write_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None` (vaultio.py:170); `importlib.resources.files`.
 - Produces (module `memoria_vault.runtime.bundles`):
   - `MANIFEST_REL: str = ".memoria/vault.json"`
   - `MANIFEST_SCHEMA: int = 1`
-  - `BACKUP_ROOT_REL: str = ".memoria/backup"`
   - `BUNDLE_FILES: dict[str, tuple[str, ...]]` — bundle name → seeded rel paths; keys `"agent"` and `"obsidian"`. **U4 appends its method-file rel paths to `"agent"` here.**
   - `seed_bytes(rel: str) -> bytes`
-  - `read_manifest(workspace: Path) -> dict[str, Any] | None`
-  - `write_manifest(workspace: Path, manifest: dict[str, Any]) -> None`
-  - `seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None, vault_id: str | None = None) -> dict[str, Any]` — writes every file of the named bundles (default: all) from the seed package, writes the manifest, returns it; preserves an existing manifest's `vault_id`, minting `uuid4().hex` only when none exists.
-  - `bundle_write_targets() -> list[str]` — every bundle rel path + parent dirs + `MANIFEST_REL` (for repair-preflight validation).
-  - Manifest shape (contract for U3/U4/doctor): `{"schema": 1, "vault_id": "<hex>", "schema_version": <state.SCHEMA_VERSION>, "bundles": {<name>: {"version": "<engine __version__>", "files": {<rel>: "sha256:<hex>"}}}}`.
-- Behavior contract: `memoria init` (and `doctor --repair`, which reuses `_initialize_workspace_files`) writes all bundle files + manifest; `--no-obsidian` seeds only the `"agent"` bundle. `doctor --repair` regenerates bundles without backup (matching its existing overwrite semantics for runtime seeds); only `memoria upgrade` (BOOT-C.3) backs up.
+  - `read_manifest(workspace: Path) -> dict[str, Any] | None` and `write_manifest(workspace: Path, manifest: dict[str, Any]) -> None`
+  - `seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None) -> dict[str, Any]` — writes the named current templates and a newly minted vault id.
+  - Manifest shape: `{"schema": 1, "vault_id": "<hex>", "bundles": {<name>: {"files": {<rel>: "sha256:<hex>"}}}}`.
+- Behavior contract: fresh `memoria init` writes all bundle files + manifest; `--no-obsidian` seeds only the `"agent"` bundle. Nothing regenerates or recovers an existing bundle.
 
-**Steps:**
+**Historical steps — do not execute:**
 
 - [ ] Append to `tests/test_agent_bundle.py` (add these imports to the top of
       the file: `from pathlib import Path`, `import pytest`,
@@ -4243,7 +4290,11 @@ EOF
 
 ---
 
-### Task BOOT-C.3: `memoria upgrade` — regenerate bundles, back up hand-edits, rewrite manifest
+### Task BOOT-C.3: Removed — no bundle upgrade, backup, or recovery path
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any file,
+> test, parser, handler, gitignore, or commit instruction in this historical
+> block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `upgrade_bundles`)
@@ -4428,7 +4479,10 @@ EOF
 
 ---
 
-### Task BOOT-C.4: Skew detection — one-line warning on every CLI command
+### Task BOOT-C.4: Removed — no engine/vault skew detection
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
+> version, warning, CLI, test, or commit instruction in this historical block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append version-skew helpers)
@@ -4631,7 +4685,11 @@ EOF
 
 ---
 
-### Task BOOT-C.5: Doctor full bundle-integrity + skew report
+### Task BOOT-C.5: Removed — doctor does not enforce bundles or manifests
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
+> doctor payload, integrity enforcement, version, test, or commit instruction
+> in this historical block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `verify_bundles`)
@@ -7879,9 +7937,9 @@ envelopes or fields.
   ignores any caller-supplied actor and persists `actor="pi"`; the client
   intentionally omits that non-authoritative field.
 
-**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` and U3 §4 names it "the single source"; a plugin-side copy is a second source that drifts exactly along the skew axis BOOT §6 exists to police, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
+**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` and U3 §4 names it "the single source"; a plugin-side copy would be a second source that drifts from engine truth, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
 
-Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); skew compares `this.manifest.version` against the handshake's `engine_version`.
+Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); handshake `engine_version` remains transport metadata and drives no plugin lifecycle decision.
 
 ---
 
@@ -8117,7 +8175,11 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 ---
 
-### Task U3-PLUG.3: `pill.js` — status-pill state machine and skew banners
+### Task U3-PLUG.3: `pill.js` — status-pill state machine and poll cadence
+
+> **Clean-slate override (2026-07-30):** version comparison and skew banners
+> are removed. Do not implement the historical `compareVersions` or
+> `skewBanner` snippets below.
 
 **Files:**
 - Create: `packages/memoria-obsidian/pill.js`
@@ -8128,8 +8190,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 - Produces (CommonJS exports of `pill.js`):
   - `computePill({connection, openCount, lastPollAt, missingCredential}) -> {state, text, tone}` where `connection ∈ {"connected","stale","server-down","token-invalid","engine-missing"}`, `state ∈ PILL_STATES`, `tone ∈ {"green","amber","red","gray","accent"}`. Wordings exactly per the U3 §3 table; `stale` with `lastPollAt = 0` (never polled yet) renders `"Memoria · connecting…"`.
   - `formatAsOf(epochMs: number) -> "HH:MM"` (local time, zero-padded).
-  - `compareVersions(a: string, b: string) -> -1|0|1` (dotted numerics, then dot-split prerelease, numeric-aware, no-prerelease > prerelease).
-  - `skewBanner(pluginVersion: string, engineVersion: string) -> null | {direction: "plugin-older"|"engine-older", text: string}` — both U3 §3 banner wordings verbatim.
+  - No version-comparison or skew-banner export.
   - `PILL_STATES = ["connected","stale","server-down","token-invalid","engine-missing","key-needed"]`.
   - `computeNextPollDelay(isActive: boolean) -> number` — `30000` active, `120000` idle (U3 §5).
 
@@ -8144,11 +8205,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   const require = createRequire(import.meta.url);
   const {
     PILL_STATES,
-    compareVersions,
     computeNextPollDelay,
     computePill,
     formatAsOf,
-    skewBanner,
   } = require("../pill.js");
 
   const at = new Date(2026, 6, 15, 14, 2).getTime(); // local 14:02
@@ -8196,31 +8255,6 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(formatAsOf(new Date(2026, 0, 2, 9, 5).getTime()), "09:05");
   });
 
-  test("compareVersions handles dotted prereleases numerically", () => {
-    assert.equal(compareVersions("0.1.0-alpha.20", "0.1.0-alpha.21"), -1);
-    assert.equal(compareVersions("0.1.0-alpha.21", "0.1.0-alpha.20"), 1);
-    assert.equal(compareVersions("0.1.0-alpha.20", "0.1.0"), -1);
-    assert.equal(compareVersions("0.2.0", "0.1.9-alpha.9"), 1);
-    assert.equal(compareVersions("0.1.0", "0.1.0"), 0);
-  });
-
-  test("skew banners carry the ratified wordings in both directions", () => {
-    assert.equal(skewBanner("0.1.0-alpha.21", "0.1.0-alpha.21"), null);
-    assert.equal(skewBanner("", "0.1.0-alpha.21"), null);
-    const older = skewBanner("0.1.0-alpha.20", "0.1.0-alpha.21");
-    assert.equal(older.direction, "plugin-older");
-    assert.equal(
-      older.text,
-      "This vault's plugin (v0.1.0-alpha.20) is older than your engine (v0.1.0-alpha.21). Run `memoria upgrade`, then reload Obsidian.",
-    );
-    const newer = skewBanner("0.1.0-alpha.22", "0.1.0-alpha.21");
-    assert.equal(newer.direction, "engine-older");
-    assert.equal(
-      newer.text,
-      "This vault was seeded by a newer engine (v0.1.0-alpha.22) than installed (v0.1.0-alpha.21). Upgrade the engine: `pipx upgrade memoria`.",
-    );
-  });
-
   test("poll cadence is 30s active / 2m idle", () => {
     assert.equal(computeNextPollDelay(true), 30000);
     assert.equal(computeNextPollDelay(false), 120000);
@@ -8229,8 +8263,8 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../pill.js'`.
 - [ ] Write minimal implementation — create `packages/memoria-obsidian/pill.js`:
   ```js
-  // Pure status-pill state machine, skew banners, and poll cadence (U3 spec
-  // sections 3 and 5). No Obsidian imports; headless-testable with node.
+  // Pure status-pill state machine and poll cadence (U3 spec sections 3 and
+  // 5). No Obsidian imports; headless-testable with node.
 
   const PILL_STATES = [
     "connected",
@@ -8276,72 +8310,6 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     return { state: "connected", text: `Memoria · ${openCount} open`, tone: "green" };
   }
 
-  function compareVersions(a, b) {
-    const [coreA, preA = ""] = String(a).split("-", 2);
-    const [coreB, preB = ""] = String(b).split("-", 2);
-    const numsA = coreA.split(".").map(Number);
-    const numsB = coreB.split(".").map(Number);
-    for (let i = 0; i < Math.max(numsA.length, numsB.length); i += 1) {
-      const diff = (numsA[i] || 0) - (numsB[i] || 0);
-      if (diff) {
-        return Math.sign(diff);
-      }
-    }
-    if (preA === preB) {
-      return 0;
-    }
-    if (!preA) {
-      return 1;
-    }
-    if (!preB) {
-      return -1;
-    }
-    const partsA = preA.split(".");
-    const partsB = preB.split(".");
-    for (let i = 0; i < Math.max(partsA.length, partsB.length); i += 1) {
-      const partA = partsA[i];
-      const partB = partsB[i];
-      if (partA === undefined) {
-        return -1;
-      }
-      if (partB === undefined) {
-        return 1;
-      }
-      const numA = Number(partA);
-      const numB = Number(partB);
-      const diff =
-        Number.isFinite(numA) && Number.isFinite(numB) ? numA - numB : partA.localeCompare(partB);
-      if (diff) {
-        return Math.sign(diff);
-      }
-    }
-    return 0;
-  }
-
-  function skewBanner(pluginVersion, engineVersion) {
-    if (!pluginVersion || !engineVersion) {
-      return null;
-    }
-    const order = compareVersions(pluginVersion, engineVersion);
-    if (order === 0) {
-      return null;
-    }
-    if (order < 0) {
-      return {
-        direction: "plugin-older",
-        text:
-          `This vault's plugin (v${pluginVersion}) is older than your engine ` +
-          `(v${engineVersion}). Run \`memoria upgrade\`, then reload Obsidian.`,
-      };
-    }
-    return {
-      direction: "engine-older",
-      text:
-        `This vault was seeded by a newer engine (v${pluginVersion}) than installed ` +
-        `(v${engineVersion}). Upgrade the engine: \`pipx upgrade memoria\`.`,
-    };
-  }
-
   function computeNextPollDelay(isActive) {
     return isActive ? POLL_ACTIVE_MS : POLL_IDLE_MS;
   }
@@ -8350,17 +8318,15 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     PILL_STATES,
     POLL_ACTIVE_MS,
     POLL_IDLE_MS,
-    compareVersions,
     computeNextPollDelay,
     computePill,
     formatAsOf,
-    skewBanner,
   };
   ```
 - [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
 - [ ] Commit:
   `git add packages/memoria-obsidian/pill.js packages/memoria-obsidian/scripts/test-pill.mjs`
-  `git commit -m "feat(obsidian): pure pill state machine, skew banners, poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
+  `git commit -m "feat(obsidian): pure pill state machine and poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
 
 ---
 
@@ -9156,24 +9122,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     assert.ok(!("hasToken" in plugin.settings));
     assert.equal(plugin.settings.engineCommand, "memoria");
 
-    // Persisted connection settings are actively removed on upgrade, not merely
-    // absent from a fresh install.
-    const migrated = new PluginClass();
-    migrated.persistedData = {
-      serverUrl: "http://legacy.invalid:8765",
-      hasToken: true,
-      defaultProjectId: "legacy-project",
-    };
-    await migrated.onload();
-    const migratedSaved = [];
-    migrated.saveData = async (data) => migratedSaved.push(data);
-    await migrated.saveSettings();
-    assert.equal(migrated.settings.defaultProjectId, "legacy-project");
-    assert.ok(!("serverUrl" in migrated.settings));
-    assert.ok(!("hasToken" in migrated.settings));
-    assert.ok(!("serverUrl" in migratedSaved[0]));
-    assert.ok(!("hasToken" in migratedSaved[0]));
-
     // 2) Authenticated requests use the handshake coordinates + Bearer token.
     const summary = await plugin.authedJson("/v1/views/attention?summary=true");
     assert.equal(summary.ok, true);
@@ -9250,7 +9198,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     createRespawnGate,
     parseHandshake,
   } = require("./handshake");
-  const { computeNextPollDelay, computePill, formatAsOf, skewBanner } = require("./pill");
+  const { computeNextPollDelay, computePill, formatAsOf } = require("./pill");
 
   const DEFAULT_SETTINGS = {
     enabled: false,
@@ -9266,15 +9214,11 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   const OPERATION_PATH = "/operation/run";
   ```
   (This deletes the stale "Generated by scripts/build.mjs" comment and the `TOKEN_KEY` constant.)
-- [ ] Part 2 — migrate saved connection settings, then initialize lifecycle state.
-  Replace the first line of `onload()` with the following before any settings are
-  read. This removes the obsolete values from an upgraded vault's next
-  `data.json` write while preserving every supported setting:
+- [ ] Part 2 — load current settings, then initialize lifecycle state. Replace
+  the first line of `onload()` with:
 
   ```js
     const persistedSettings = (await this.loadData()) || {};
-    delete persistedSettings.serverUrl;
-    delete persistedSettings.hasToken;
     this.settings = Object.assign({}, DEFAULT_SETTINGS, persistedSettings);
   ```
 
@@ -9637,8 +9581,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       assert "fetch(" not in source
       assert "settings.serverUrl" not in source
       assert "settings.hasToken" not in source
-      assert "delete persistedSettings.serverUrl" in source
-      assert "delete persistedSettings.hasToken" in source
       assert "secretStorage" not in source
       assert "setSecret" not in source
       assert ".getJson(" not in source
@@ -9690,7 +9632,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 - Modify (parity): seed copies of `main.js`/`styles.css` + golden regen (same commands as U3-PLUG.6)
 
 **Interfaces:**
-- Consumes: `renderBlock`/`renderView`/`sortCards`/`moveSelection`/`materialize` (U3-PLUG.4), `formatAsOf`/`skewBanner` (U3-PLUG.3), `authedJson`/`postOperation` (U3-PLUG.6); `GET /v1/views/attention` full view payload.
+- Consumes: `renderBlock`/`renderView`/`sortCards`/`moveSelection`/`materialize` (U3-PLUG.4), `formatAsOf` (U3-PLUG.3), `authedJson`/`postOperation` (U3-PLUG.6); `GET /v1/views/attention` full view payload.
 - Consumes (integration proof): U3-ENG.6's real bearer-authenticated loopback
   fixture, graph's `edges.LINK_RELATIONS`, and SEAM.1's server-owned `pi`
   authority for `POST /operation/run`.
@@ -9937,10 +9879,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
         cls: "memoria-attention-age",
         text: `${this.plugin.openCount} open · as of ${formatAsOf(this.plugin.lastPollAt)}`,
       });
-      const banner = skewBanner(this.plugin.manifest.version, this.plugin.engine.engineVersion);
-      if (banner) {
-        root.createDiv({ cls: "memoria-skew-banner", text: banner.text });
-      }
       if (!this.view || this.view.version !== "view-spec.v1") {
         for (const tree of renderView(this.view)) {
           materialize(tree, root);
@@ -10031,14 +9969,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   .memoria-attention-age,
   .memoria-row-age { font-variant-numeric: tabular-nums; color: var(--text-faint); }
-  .memoria-skew-banner {
-    margin-bottom: 6px;
-    padding: 6px 8px;
-    background-color: var(--background-secondary);
-    border-left: 2px solid var(--interactive-accent);
-    color: var(--text-muted);
-    font-size: 12px;
-  }
   .memoria-row {
     display: flex;
     gap: 8px;
@@ -10134,6 +10064,11 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 > must say, exactly in substance: “A `warrant` relation links a license note;
 > Warrant text annotates the selected edge.” The builder emits
 > `payload.warrant`, never `payload.reason`.
+>
+> **Historical compatibility marker (2026-07-30):** do not revive any
+> persisted-settings deletion snippet from this task's older wiring drafts.
+> Fresh installs load and save current settings without interpreting or
+> rewriting `serverUrl` or `hasToken`.
 
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (require `relate.js`; `relate` command in `onload`; `RelateModal` + `NotePathSuggest` classes appended after `AttentionView`; a `Relate…` button in `AttentionView.render` header)
@@ -10408,7 +10343,6 @@ The Obsidian runtime itself (real spawn, real SecretStorage-free token flow, rea
 - [ ] Kill the server (`memoria serve --stop --workspace test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
 - [ ] Rename the engine binary away (`pipx` venv or PATH shadow), reload Obsidian. **Expect:** gray `Memoria · engine missing`; click shows the install remediation naming the tried command; the vault stays fully readable/editable. Restore the binary, click — recovers.
 - [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --workspace …`; no infinite silent retry.
-- [ ] Edit `manifest.json` version in the *installed* plugin copy to `0.1.0-alpha.19`, reload. **Expect:** the plugin-older skew banner at the top of the pane, wording per spec; set it above the engine version — the vault-newer banner. Restore afterward.
 - [ ] Switch Obsidian between a light and a dark community theme. **Expect:** pill dot, loudness accents, evidence inset, chips, and the segmented control all follow the theme (no fixed colors anywhere).
 - [ ] Leave the window unfocused >2 min with the server up. **Expect:** requests slow to the 2-minute cadence (watch `serve.log`); refocusing snaps a poll immediately.
 - [ ] Delete the disposable vault: `rm -rf test-vault/u3-plug-manual`.
@@ -11677,25 +11611,22 @@ Section of the composite implementation plan for U4
 (`docs/superpowers/specs/2026-07-15-u4-copi-agent-plugin-design.md` §1–2) plus
 the bootstrap-spec §1/§9-slice-3 ownership split: U4 owns the **content** of
 `.claude/skills/memoria-copi/SKILL.md` and `.claude/hooks/session_status.py`;
-the bootstrap verbs (BOOT-C, drafted in parallel) own **seeding** them into
-vaults and stamping `.memoria/vault.json`.
+fresh `memoria init` (BOOT-C, drafted in parallel) owns **seeding** them into
+new vaults and writing their current hashes to `.memoria/vault.json`.
 
 **Cross-section assumptions (assembler: reconcile with BOOT-C and Plan 23 R1NG.4):**
 
-1. **Seeding**: `memoria init`/`memoria upgrade` call a per-bundle-file seeding
-   function taking `(relpath: str, content_provider: Callable[[], str])`. This
-   section produces the enumeration `copi_bundle_files()` in exactly that
-   shape; BOOT-C consumes it and stamps `COPI_BUNDLE_VERSION` + content hashes
-   into `.memoria/vault.json`.
+1. **Seeding**: fresh `memoria init` calls a per-bundle-file seeding function
+   taking `(relpath: str, content_provider: Callable[[], str])`. This section
+   produces `copi_bundle_files()` in exactly that shape; BOOT-C consumes it
+   and records current content hashes in `.memoria/vault.json`.
 2. **Doctor JSON contract** (consumed by the hook; produced by BOOT-C):
    `memoria doctor --json --quick` prints one JSON object on stdout containing
-   at least `{"engine_version": str, "skew": {"status": "in-sync" |
-   "vault-newer" | "engine-newer"}, "credentials": [{"name": str, "class":
+   at least `{"engine_version": str, "credentials": [{"name": str, "class":
    "required-for-operation" | "enhancing" | "identity", "status": "set" |
    "unset", "effect": str}]}`. The hook is defensive: any missing key emits
-   nothing for that category; unparsable/absent output degrades to a single
-   honest line; a pre-`--quick` engine (argparse error, empty stdout) hits the
-   same degrade path. Identity-class credentials never produce a context line.
+   nothing for that category; unparsable or absent output degrades to a single
+   honest line. Identity-class credentials never produce a context line.
 3. **Hook wiring**: BOOT-C's generated `.claude/settings.json` registers the
    SessionStart hook as a `python3 .claude/hooks/session_status.py`-style
    command (stdout becomes agent context per Claude Code SessionStart
@@ -11711,6 +11642,17 @@ vaults and stamping `.memoria/vault.json`.
    (`tests/floor_lib.py:375` only asserts `check_tracked_projections` stays
    ok, which regenerated deterministic content satisfies).
 
+### Clean-slate U4-A override (2026-07-30, BINDING)
+
+The active U4-A path is fresh `memoria init` only. It seeds the two current
+method files and records their hashes with the rest of the fresh bundle.
+Do not implement `COPI_BUNDLE_VERSION`, `memoria upgrade`, an upgrade marker in
+generated content, version/skew comparison, skew hook constants, skew report
+fixtures, or upgrade advice. The historical snippets below that name any of
+those items are superseded and non-executable. The SessionStart hook may report
+engine availability and credentials; it must not infer a lifecycle state from
+past bundle metadata.
+
 Repo pattern note: the deliverable named `src/memoria_vault/product/copi_skill.py`
 is realized as the package `src/memoria_vault/product/copi_skill/` (public
 import name `memoria_vault.product.copi_skill`) so the SessionStart hook can
@@ -11725,13 +11667,17 @@ honest-empty wording from `src/memoria_vault/runtime/search_index.py:243`
 `src/memoria_vault/runtime/knowledge.py:973,979`; grounds/warrant vocabulary
 and the five grounds types from
 `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md`
-§2 and §4; engine-missing/skew/credential wordings adapted from the bootstrap
+§2 and §4; engine-missing and credential wordings adapted from the bootstrap
 spec §2, §4b, §6; the perimeter-redirect rationale from bootstrap §5's hook
 message.
 
 ---
 
 ### Task U4-A.1: `copi_skill` content module — the generated SKILL.md method text
+
+> **Clean-slate execution note (2026-07-30):** the historical
+> `COPI_BUNDLE_VERSION` instructions below are superseded. This task produces
+> current method content only; fresh initialization records its hash.
 
 **Files:**
 - Create: `src/memoria_vault/product/copi_skill/__init__.py`
@@ -11742,8 +11688,6 @@ message.
 - Consumes: nothing from the engine (pure content module; stdlib +
   `importlib.resources` only).
 - Produces:
-  - `COPI_BUNDLE_VERSION: str = "1"` (module constant; bump on any change to
-    method text or hook source — BOOT-C stamps it into `vault.json`).
   - `SKILL_RELPATH: str = ".claude/skills/memoria-copi/SKILL.md"`
   - `SESSION_STATUS_HOOK_RELPATH: str = ".claude/hooks/session_status.py"`
   - `SKILL_SECTION_TITLES: tuple[str, ...]` (the five §1 section titles, in
@@ -11867,18 +11811,12 @@ def test_condensed_method_carries_the_load_bearing_wordings() -> None:
 
 Owns the content of the two method files inside the vault-embedded agent
 bundle: `.claude/skills/memoria-copi/SKILL.md` and
-`.claude/hooks/session_status.py`. Seeding into a vault is the bootstrap
-verbs' job (`memoria init` / `memoria upgrade`), which stamp
-COPI_BUNDLE_VERSION and content hashes into `.memoria/vault.json`. The
-engine authors the method; the user's agent voices it — this module never
-grants judgment.
+`.claude/hooks/session_status.py`. Fresh `memoria init` seeds them and records
+their current content hashes in `.memoria/vault.json`. The engine authors the
+method; the user's agent voices it — this module never grants judgment.
 """
 
 from __future__ import annotations
-
-# Bump on ANY change to the method text or the hook source; the bootstrap
-# verbs stamp this into .memoria/vault.json so `memoria doctor` reports skew.
-COPI_BUNDLE_VERSION = "1"
 
 SKILL_RELPATH = ".claude/skills/memoria-copi/SKILL.md"
 SESSION_STATUS_HOOK_RELPATH = ".claude/hooks/session_status.py"
@@ -11920,7 +11858,7 @@ description: Memoria co-PI method. Use before answering any question about vault
 
 # Memoria co-PI method
 
-<!-- Generated by memoria_vault.product.copi_skill (bundle version {COPI_BUNDLE_VERSION}); regenerated by `memoria upgrade`. Never edit this file. -->
+<!-- Generated by memoria_vault.product.copi_skill. Fresh initialization writes this file. Never edit it. -->
 
 You are voicing a research co-PI over this vault. The engine authors this
 method; you own phrasing, dialogue flow, and follow-up choice. The method
@@ -12080,6 +12018,11 @@ EOF
 
 ### Task U4-A.2: `session_status.py` SessionStart hook + bundle-file enumeration
 
+> **Clean-slate execution note (2026-07-30):** the historical skew constants,
+> report fixtures, branches, and `init`/`upgrade` wording below are superseded.
+> Seed the current files at fresh initialization, and have the hook report only
+> engine availability, credential status, and the method pointer.
+
 **Files:**
 - Create: `src/memoria_vault/product/copi_skill/session_status.py`
 - Modify: `src/memoria_vault/product/copi_skill/__init__.py` (created in
@@ -12096,11 +12039,10 @@ EOF
     byte-identical to `src/memoria_vault/product/copi_skill/session_status.py`).
   - `copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]` —
     returns `((SKILL_RELPATH, render_copi_skill), (SESSION_STATUS_HOOK_RELPATH,
-    render_session_status_hook))`; BOOT-C's `init`/`upgrade` iterate this.
+    render_session_status_hook))`; BOOT-C's fresh `init` iterates this.
   - Hook module constants (importable for tests and for BOOT-C's doctor
     parity checks): `METHOD_POINTER_LINE`, `ENGINE_MISSING_LINE`,
-    `DOCTOR_UNAVAILABLE_LINE`, `SKEW_VAULT_NEWER_LINE`,
-    `SKEW_ENGINE_NEWER_LINE` (all `str`), and `main() -> int`.
+    `DOCTOR_UNAVAILABLE_LINE` (all `str`), and `main() -> int`.
 - Hook behavior contract: stdlib-only, never imports `memoria_vault`, always
   exits 0, writes UTF-8 bytes to stdout (locale-proof). Engine absent on PATH
   degrades to `ENGINE_MISSING_LINE`; doctor absent/unparsable degrades to
@@ -12125,7 +12067,6 @@ ENGINE_MISSING_GOLDEN = (
 
 DOCTOR_REPORT_JSON = (
     '{"ok": false, "engine_version": "0.1.0a21",'
-    ' "skew": {"status": "engine-newer"},'
     ' "credentials": ['
     '{"name": "KILOCODE_API_KEY", "class": "required-for-operation", "status": "unset"},'
     '{"name": "OPENALEX_API_KEY", "class": "enhancing", "status": "unset",'
@@ -12136,8 +12077,6 @@ DOCTOR_REPORT_JSON = (
 )
 
 DOCTOR_GOLDEN = (
-    "Memoria: bundle skew — the engine is newer than the vault bundles; "
-    "run `memoria upgrade`.\n"
     "Memoria: credential KILOCODE_API_KEY is unset (required-for-operation) — "
     "live-model calls refuse before the network; "
     "run `memoria secrets set KILOCODE_API_KEY`.\n"
@@ -12230,7 +12169,7 @@ def test_hook_degrades_on_unusable_doctor_output(tmp_path: Path) -> None:
       `src/memoria_vault/product/copi_skill/session_status.py`:
 
 ```python
-"""Memoria SessionStart hook: inject engine, skew, and credential truth.
+"""Memoria SessionStart hook: inject engine and credential truth.
 
 Seeded into vaults as `.claude/hooks/session_status.py` by the bootstrap
 verbs; the packaged source of truth lives in
@@ -12259,16 +12198,6 @@ DOCTOR_UNAVAILABLE_LINE = (
     "Memoria: `memoria doctor` did not return usable status — "
     "run `memoria doctor` manually."
 )
-SKEW_VAULT_NEWER_LINE = (
-    "Memoria: bundle skew — the vault bundles are newer than the engine; "
-    "upgrade the engine: `pipx upgrade memoria`."
-)
-SKEW_ENGINE_NEWER_LINE = (
-    "Memoria: bundle skew — the engine is newer than the vault bundles; "
-    "run `memoria upgrade`."
-)
-
-
 def _credential_lines(credentials: object) -> list[str]:
     lines: list[str] = []
     if not isinstance(credentials, list):
@@ -12306,15 +12235,7 @@ def _doctor_lines() -> list[str]:
         return [DOCTOR_UNAVAILABLE_LINE]
     if not isinstance(report, dict):
         return [DOCTOR_UNAVAILABLE_LINE]
-    lines: list[str] = []
-    skew = report.get("skew")
-    status = skew.get("status") if isinstance(skew, dict) else None
-    if status == "vault-newer":
-        lines.append(SKEW_VAULT_NEWER_LINE)
-    elif status == "engine-newer":
-        lines.append(SKEW_ENGINE_NEWER_LINE)
-    lines.extend(_credential_lines(report.get("credentials")))
-    return lines
+    return _credential_lines(report.get("credentials"))
 
 
 def main() -> int:
@@ -12351,8 +12272,8 @@ def render_session_status_hook() -> str:
 def copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]:
     """Enumerate the U4-owned bundle files as (relpath, content_provider) pairs.
 
-    The bootstrap verbs (init/upgrade) seed each pair and stamp
-    COPI_BUNDLE_VERSION plus content hashes into .memoria/vault.json.
+    Fresh initialization seeds each pair and records their current hashes in
+    .memoria/vault.json.
     """
     return (
         (SKILL_RELPATH, render_copi_skill),
@@ -12375,8 +12296,8 @@ git commit -m "$(cat <<'EOF'
 feat(copi): SessionStart status hook and bundle-file enumeration
 
 Stdlib-only session_status.py runs `memoria doctor --json --quick` and
-injects engine-missing / skew / credential context lines plus the method
-pointer; engine absence and unusable doctor output degrade honestly.
+injects engine-missing and credential context lines plus the method pointer;
+engine absence and unusable doctor output degrade honestly.
 copi_bundle_files() exposes the (relpath, content_provider) pairs the
 bootstrap seeding verbs consume.
 
@@ -12465,8 +12386,8 @@ def _vault_agents_md() -> str:
 
     return _generated(
         "Memoria vault read contract",
-        "Engine-generated projection (the bibliography.bib pattern): `memoria init` "
-        "writes this file and upgrades regenerate it. Never edit it — edits are "
+        "Engine-generated projection (the bibliography.bib pattern): fresh `memoria init` "
+        "writes this file. Never edit it — edits are "
         "drift and the next regenerate-tracked-projections pass overwrites them.",
         "## How to read this vault safely\n"
         "\n"
