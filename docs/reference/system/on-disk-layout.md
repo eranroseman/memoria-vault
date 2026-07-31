@@ -11,9 +11,10 @@ Where every file lives.
 
 - The installed Python package ships the minimal workspace seed under
   `memoria_vault.product.workspace_seed`.
-- `memoria init` copies only runtime-required seed files, then creates writable
-  runtime and content directories from `.memoria/schemas/folders.yaml`. It also
-  initializes generated control/projection files such as `index.md`,
+- `memoria init` copies runtime seeds, PI-owned preferences, and the first-init
+  agent/MCP host bundle, then creates writable runtime and content directories
+  from `.memoria/schemas/folders.yaml`. It also initializes generated
+  control/projection files such as `index.md`,
   `bibliography.bib`, `.memoria/overrides.jsonl`, `.memoria/journal-head`, and
   `system/manifest.jsonl`.
 - Product operation manifests ship inside the installed Python package, not the
