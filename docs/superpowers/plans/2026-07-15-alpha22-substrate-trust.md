@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Land the schema/graph substrate (G1 migrations, G2 live concept edges, S1 hygiene), the full #1293 evidence-set/grounds contract (spec §12 slices 1–8), and model-call cost telemetry — everything that must precede a real corpus.
+**Goal:** Land the fresh-install schema/graph substrate (G2 live concept edges, S1 hygiene), the full #1293 evidence-set/grounds contract (spec §12 slices 1–8), and model-call cost telemetry — everything that must precede a real corpus.
 
-**Architecture:** G1 adds the minimal numbered-migration mechanism every later schema change rides; G2S1 brings the dead `concept_edges` join point to life and reshapes it promotion-ready; S12/S35/S68 implement the merged contract spec `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md` (rename sweep, marker grammar v2, unified R1–R4 derivation, transitive completeness with fail-closed cycles, disposition content-binding, staleness findings, journal mint events, docs); COST implements `docs/superpowers/specs/2026-07-15-model-call-cost-telemetry-design.md`.
+**Architecture:** G2S1 brings the dead `concept_edges` join point to life in the current fresh schema; S12/S35/S68 implement the merged contract spec `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md` (rename sweep, marker grammar v2, unified R1–R4 derivation, transitive completeness with fail-closed cycles, disposition content-binding, staleness findings, journal mint events, docs); COST implements `docs/superpowers/specs/2026-07-15-model-call-cost-telemetry-design.md`.
 
 **Tech Stack:** Python 3 / SQLite / pytest; `pydantic-ai-slim>=2.0` (already pinned; `genai-prices` transitive — no new dependencies).
 
@@ -16,42 +16,30 @@
 
 ## Cross-section contracts (BINDING — resolve seam assumptions)
 
-1. **`MIGRATIONS` shape is G1's definition** (G1.1 Produces): `state.MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]]` — key = from_version, value = `(from_version + 1, ordered steps)`; applied sequentially in `_init` BEFORE `executescript(_schema_sql())`, each step list in one explicit `BEGIN`/`COMMIT` (no `with conn:`), `user_version` bumped per step; unregistered version (incl. future) raises. G2S1.2/.3 and S12.2 adapt their migration entries to THIS shape (their sections assumed variants; the mechanics are otherwise unchanged).
-2. **Schema-version allocation (serialized):** G1 ships `MIGRATIONS` empty, `SCHEMA_VERSION` stays 12 → G2S1.2 takes 12→13 (edge_id/attributes) → G2S1.3 takes 13→14 (reverse indexes) → S12.2 takes **14→15** (purpose enum; rebuild both `code_artifacts` and FK-owning `code_runs`, preserving runs under normal foreign-key enforcement) — G3/ULID work starts at 16. Each schema-touching task updates, in the same commit: its `MIGRATIONS` entry, the `schema.sql` DDL + trailing `PRAGMA user_version`, `SCHEMA_VERSION` in state.py, and the version-pinned tests (`tests/test_schema_version.py:14-17`, `tests/test_schema_v10.py:39-41`, `tests/test_query_substrate.py:31`).
+1. **Fresh-install schema contract:** `state._init` creates only a version-0 database from the current `schema.sql`. It has no upgrade or downgrade path: every existing nonzero `PRAGMA user_version` other than the installed `SCHEMA_VERSION` fails closed before schema mutation. There is no `MIGRATIONS` registry, migration helper, legacy fixture, or compatibility transformation.
+2. **Current-schema allocation:** G2S1.2 adds the edge fields/index directly to the fresh schema; G2S1.3 adds the reverse indexes directly; S12.2 supplies the `grounds` enum directly. Each schema task updates the current `schema.sql`, its trailing `PRAGMA user_version`, `SCHEMA_VERSION`, and fresh-schema assertions in the same commit. A version bump declares incompatibility of an existing database; it does not authorize an upgrade path.
 3. **Closure helper:** S35.3's Produces additionally includes `state.evidence_item_closure(rows_by_id: Mapping[str, Mapping[str, Any]], evidence_id: str) -> list[tuple[str, tuple[str, ...]]]` — (item, path) pairs for non-set items reachable through nested sets, path = tuple of nested ev-ids (empty = direct), cycle-safe, unknown set refs yield nothing. This is the exact interface S68.2 consumes; it is a mechanical exposure of S35.3's DFS reachability.
-4. **Execution order:** G1 → G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1 → S68.2 → {S68.3 → S68.4 → S68.6; S68.5}. S68.5 is a docs-only type-name/pointer repair and may land after S68.2; it does not depend on the recovery behavior introduced by S68.3/S68.4. The cost chain is externally ordered: surfaces BOOT-B.5 → COST.1–.5 → Alpha23 LOOP.3. COST.1–.3 are one atomic return-contract tranche; do not merge or cherry-pick a state where a caller still expects a `str`. COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially and stage only intentional generated drift). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
+4. **Execution order:** G2S1.1–.4 → S12.1–.7 → S35.1–.4 → S68.1 → S68.2 → {S68.3 → S68.4 → S68.6; S68.5}. S68.5 is a docs-only type-name/pointer repair and may land after S68.2; it does not depend on the recovery behavior introduced by S68.3/S68.4. The cost chain is externally ordered: surfaces BOOT-B.5 → COST.1–.5 → Alpha23 LOOP.3. COST.1–.3 are one atomic return-contract tranche; do not merge or cherry-pick a state where a caller still expects a `str`. COST.4 must not run concurrently with S68.3 (both regenerate journal-hashed floor goldens — land sequentially and stage only intentional generated drift). G2S1.5 (graph-substrate design gate) may run in parallel with anything.
 5. **Removed symbols** (S35 manifest) no task may reference after their removal: `_derived_evidence_type`, `_draft_evidence_type`, `_evidence_items_resolve`, `_disposed_evidence_ids`.
 
-### Plan-reconciliation amendment — serialized 12→15 migration chain (2026-07-29)
+### Plan-reconciliation amendment — fresh-install schema only (2026-07-30)
 
-This amendment replaces the incompatible G2S1.2/G2S1.3/S12.2 file lists,
-interfaces, migration snippets, legacy fixture versions, and version-pin text
-below.  The G1 contract is the only migration runner: never assign a SQL string
-to `MIGRATIONS`, never key it by the target version, and never let two tasks
-claim the same transition.
+There are no existing Memoria installations to upgrade. This amendment replaces
+all executable G1, G2S1.2, G2S1.3, and S12.2 migration/backfill/legacy-fixture
+instructions below. The retained historical checklists explain prior decisions
+only and must not be replayed.
 
-| Task | Exact registry entry | `SCHEMA_VERSION` / fresh `PRAGMA` | Legacy fixture starts at |
-| --- | --- | --- | --- |
-| G2S1.2 | `MIGRATIONS[12] = (13, [ALTER edge_id, ALTER attributes_json, CREATE idx_concept_edges_edge_id])` | `13` | `12` |
-| G2S1.3 | `MIGRATIONS[13] = (14, [CREATE idx_concept_edges_target, CREATE idx_work_graph_edges_target])` | `14` | `13` |
-| S12.2 | `MIGRATIONS[14] = (15, [CREATE/COPY/DROP/RENAME code_artifacts rebuild])` | `15` | `14` |
+| Task | Fresh-install deliverable |
+| --- | --- |
+| G2S1.2 | Current `concept_edges` DDL includes `edge_id`, `attributes_json`, and `idx_concept_edges_edge_id`; current writers/readers use those fields. |
+| G2S1.3 | Current DDL includes `idx_concept_edges_target` and `idx_work_graph_edges_target`. |
+| S12.2 | Current `code_artifacts.purpose` CHECK/default/validation use `grounds`; no old row is rewritten. |
 
-Each list contains individual SQL statements accepted by G1's `conn.execute`
-runner and is wrapped in that runner's one explicit transaction; no statement
-contains its own `PRAGMA user_version`.  The migration test for each task
-asserts it reaches precisely its listed target and preserves its preexisting
-row/index behavior.  Add one chain test starting from a v12 legacy database
-with an old edge and an old `purpose='warrant'` artifact, then assert sequential
-upgrade to v15 preserves both edge additions/indexes and rewrites the purpose
-to `grounds`.
-
-The G2S1.2 table remains the pre-v16 edge shape.  It must not preemptively add
-`target_path`, nullable targets, or v16 foreign keys; graph NID-B/ERP-A own
-those later migrations.  Rename every version-pinned test and prose reference
-in the same task that advances the version (including
-`test_schema_version`, `test_schema_v10`, and `test_query_substrate`) so a
-fresh schema and each legacy path agree.  This amendment is an exact execution
-replacement, not a “reconcile at implementation time” instruction.
+Use only fresh disposable vaults in schema tests. Delete the numbered migration
+runner and all version-to-version fixtures; preserve the fail-closed rejection
+test for any existing nonzero version other than `SCHEMA_VERSION`. Graph work
+owns its later current-schema DDL directly; no task may add a compatibility
+branch for a prior schema shape.
 
 ---
 
@@ -103,7 +91,13 @@ old migration shapes, and retired names must not be reintroduced. The binding
 contracts and this ledger take precedence when reconciling them.
 
 ---
-## G1 · Migration machinery
+## G1 · Retired migration machinery
+
+> **Do not execute this section.** The fresh-install amendment above removes
+> `MIGRATIONS`, numbered upgrades, migration transactions, and legacy-version
+> tests. The material retained below is an historical record only; the runtime
+> accepts a newly initialized database or the exact current schema version and
+> rejects every other nonzero version without mutating it.
 
 Consolidation spec §2 G1: minimal ALTER path so `state._init` stops hard-failing on any
 on-disk `user_version` it can upgrade, plus the numbered migrations rule. Today
@@ -532,18 +526,16 @@ plus one process gate for everything in G2–G5/S1 that has no ratified mechanic
   partially or fully shipped by the alpha ponytail passes. The G2S1.5 brainstorm must
   reconcile the ledger instead of inventing work.
 
-## Consumed from G1 (this plan's G1 section — assumption other sections must honor)
+## Fresh-schema assumptions other sections must honor
 
-- `state.MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]]`
-  — keys are source versions; values are exactly one next version plus ordered SQL or
-  callable steps. `_init` executes each list in its own explicit transaction, stamps
-  `PRAGMA user_version` after the list, and entries do not self-stamp.
-- G2S1.2 and G2S1.3 consume G1's machinery in that exact form and take 12→13 and
-  13→14 respectively; S12.2 then takes 14→15. Verify the version-pinned tests against
-  the reconciled source rather than treating the historic line references below as
-  live instructions.
-- G2S1.2 and G2S1.3 depend on G1. G2S1.1, G2S1.4, and G2S1.5 have no code dependency
-  on it, though the binding execution order remains authoritative.
+- The current `schema.sql`, `SCHEMA_VERSION`, and its trailing `PRAGMA user_version`
+  are one fresh-install contract. No task imports, defines, or relies on a migration
+  registry or a private migration helper.
+- G2S1.2, G2S1.3, and S12.2 update their current DDL and fresh-schema tests directly.
+  An existing database at any other nonzero version fails closed; it is not a test
+  fixture and must not be transformed.
+- G2S1.1, G2S1.4, and G2S1.5 retain their normal dependency order but have no schema
+  compatibility dependency.
 
 ---
 
@@ -821,17 +813,14 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
 
 ---
 
-### Task G2S1.2: concept_edges-reshape — edge_id + attributes_json (migration 12→13)
+### Task G2S1.2: concept_edges-reshape — edge_id + attributes_json (fresh-schema DDL)
 
-> **Reconciliation correction — source-complete in `bcbc725a` + `7783d9cd`:**
-> consume the canonical G1 registry and install `MIGRATIONS[12] = (13, [...])`.
-> The list adds both columns, calls `_backfill_concept_edge_ids`, then creates the
-> partial unique index; it does not self-stamp. `_backfill_concept_edge_ids`
-> normalizes each legacy triple and populates durable IDs. `replace_concept_edges`
-> always derives its ID from that triple (never trusts a caller-selected ID) and
-> preserves `attributes_json` on conflict. The v10 test is dynamic: verify it
-> against the reconciled source rather than editing a nominal version pin. The
-> checklist below is the historical TDD record, not an executable alternate design.
+> **Fresh-install correction — source-complete in `bcbc725a` + `7783d9cd`:**
+> put both columns and the partial unique index directly in the current schema;
+> `replace_concept_edges` derives its id from the canonical triple and preserves
+> `attributes_json` on conflict. Do not backfill, migrate, or open a legacy fixture.
+> The detailed checklist below is retained historical TDD provenance, not an
+> executable alternate design.
 
 Promotion-ready edges per the warrant-ontology-brief interim ruling (Option B): a
 warrant reference can hang on an edge, so later node reification stays cheap.
@@ -1017,14 +1006,12 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 
 ---
 
-### Task G2S1.3: reverse-traversal-indexes (migration 13→14)
+### Task G2S1.3: reverse-traversal indexes (fresh-schema DDL)
 
-> **Reconciliation correction — source-complete in `9a36a003`:** install
-> `MIGRATIONS[13] = (14, ["CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON
-> concept_edges(target_concept_id)", "CREATE INDEX IF NOT EXISTS
-> idx_work_graph_edges_target ON work_graph_edges(target_id)"])`. The entry does not
-> self-stamp; the detailed checklist below is historical and must not replace the
-> canonical registry shape.
+> **Fresh-install correction — source-complete in `9a36a003`:** place
+> `idx_concept_edges_target` and `idx_work_graph_edges_target` in the current schema.
+> Do not register a transition or test an upgrade. The detailed checklist below is
+> historical and must not replace the fresh-install contract.
 
 The two indexes the consolidation names, on the verified real columns:
 `concept_edges(target_concept_id)` and `work_graph_edges(target_id)` — reverse
@@ -1336,15 +1323,12 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
     tests/test_evidence_markers.py tests/test_code_artifacts.py CHANGELOG.md
   ```
 
-### Task S12.2: code-artifact `purpose` enum `warrant` → `grounds` + numbered DB migration (manifest §1.1; AFTER G1)
+### Task S12.2: code-artifact `purpose` enum `warrant` → `grounds` (fresh-schema DDL)
 
-> **Reconciliation correction — source-complete in `f0f653be`:** G2S1.3 leaves
-> schema version 14 and foreign keys stay enabled. This task installs
-> `MIGRATIONS[14] = (15, [...])`, rebuilds and copies both `code_artifacts` and its
-> FK-owning `code_runs`, then drops and renames in dependency-safe order. Its migration
-> test uses both v14 legacy tables, asserts migrated purpose and copied run data, and
-> checks `PRAGMA foreign_key_check == []`. The old v13→14/foreign-keys-off detail below
-> is historical only; reconcile the named source commit instead of replaying it.
+> **Fresh-install correction — source-complete in `f0f653be`:** the current schema,
+> record default, and validation admit `grounds` directly. Do not rebuild/copy tables,
+> rewrite old values, or create a legacy-schema test. The old detail below is historical
+> only and must not be replayed.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/code/records.py:20` (`purpose: str = "warrant"` default)

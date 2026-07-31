@@ -86,28 +86,22 @@ are derived exports for synchronization. `memoria workspace scan` holds the
 workspace writer lock while it verifies the chain and export subset, removes an
 incomplete final JSONL fragment, and re-emits any missing export rows.
 
-### Schema versioning: numbered migrations
+### Schema versioning: fresh installs only
 
 `memoria.sqlite` carries its schema version in SQLite `PRAGMA user_version`
 (`SCHEMA_VERSION` in `memoria_vault.runtime.state`; the full schema is
-`memoria_vault/runtime/schema.sql`). Schema changes follow the numbered
-migrations rule:
+`memoria_vault/runtime/schema.sql`). Memoria has no database upgrade or
+downgrade path:
 
-- Every schema change increments `SCHEMA_VERSION` by exactly one and updates
-  the trailing `PRAGMA user_version` in `schema.sql` to match.
-- The same change registers one `state.MIGRATIONS` entry keyed by its
-  `from_version`: `{from_version: (from_version + 1, [SQL statements or
-  callables])}`. Each entry is one version step; startup follows registered
-  entries sequentially.
-- Before deciding which step to run, the runtime starts `BEGIN IMMEDIATE` and
-  rereads `PRAGMA user_version`. This serializes migration writers and prevents
-  a stale opener from applying a step chosen before it acquired the write lock.
-- One registered step list and its `user_version` bump commit in that
-  transaction. If a step fails, the transaction rolls back, including the
-  version bump.
-- An existing nonzero version with no registered next step — including a
-  database written by a newer Memoria — fails closed with an error instead of
-  applying the schema. Version `0` is initialized from `schema.sql`.
+- `memoria init` creates a version-0 database and applies the current
+  `schema.sql` directly.
+- A schema change updates `SCHEMA_VERSION`, the current DDL, its trailing
+  `PRAGMA user_version`, and fresh-schema assertions together. A version bump
+  declares an incompatible prior database; it does not register a migration.
+- At startup, an existing nonzero version other than the installed
+  `SCHEMA_VERSION` fails closed before the schema is applied or data is changed.
+  This includes both older and newer databases. Use a fresh disposable vault;
+  Memoria does not transform a legacy database.
 
 Backups live outside this tree. `memoria workspace backup <target>` publishes a
 manifest-bound SQLite/blob/head snapshot; `last-backup` records the target and

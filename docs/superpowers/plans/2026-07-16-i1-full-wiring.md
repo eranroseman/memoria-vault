@@ -14,6 +14,10 @@
 - **Storage ruling (verbatim, binding):** *"if a gate or verifier reads it, it's journal; if only analytics read it, it's the telemetry table."* No task may journal an analytics-only event or move a gate-read event out of the journal.
 - Recording is unconditional; `production_enabled` gates acting. Nothing here branches on it.
 - Never fabricate client fields: server-side telemetry rows carry `session_id = NULL`; all flow metrics bucket by **UTC day**, never by session.
+- **Fresh-install schema rule:** T.1 changes the current schema directly. There is
+  no migration registry, version-to-version fixture, upgrade/downgrade path, or
+  compatibility writer. An existing database whose nonzero version differs from
+  `SCHEMA_VERSION` fails closed before mutation.
 - All line refs verified at origin/main `a4da8aa3` (post-PR-#1500); re-anchor by quoted context/symbol if drifted.
 - Spec §11 slice 10 (recorded amendments + doc honesty fixes) already shipped with the spec itself in PR #1500 — this plan covers slices 1–9.
 
@@ -27,7 +31,7 @@
 6. **`rank_factors` payload shape (A.1):** `{"loudness": str, "priority": str (verbatim), "impact": bool, "staleness": bool, "age_days": int}` on every attention card payload; sort key = `block` pin → `priority == "high"` → loudness rank (`block>alert>notice>quiet`) → impact → staleness → `age_days` descending (oldest first) as final tiebreaker. No blended score anywhere.
 7. **Dashboard** (H.1 produces): `assemble_dashboard(vault) -> dict` in `src/memoria_vault/engine/dashboard.py` with exactly seven panel keys: `attention_flow, dispositions, evidence_review, reads_staleness, edge_writes, exploration, decision_rules`. Reads the journal (`event_log`) for gate-read streams and `telemetry_events` for the rest; never writes. Forbidden keys test: no `score`/`health`/`grade` anywhere in the payload.
 8. **Decision-rule registry entry shape (H.3):** `{id, blocker, metric, window, threshold, recommendation, check: auto|manual, status: armed|fired|retired}`, seeded in `.memoria/config/decision-rules.yaml` with all fifteen empirical-plan §4 blockers + `attention-throttle`.
-9. **Execution order:** T.1 → T.2 → {T.3, T.4, D.*, A.*} → H.*. **Cross-plan:** this plan executes after Plan 22's G1 (`state.MIGRATIONS`) and the graph plan's v16–v18 — T.1 STOPS if the chain is not at 18. The graph plan's ERP-D.6 executes **after** T.1+T.2 (recorded in that task). Every task consuming a not-yet-landed seam from Plans 21/22/graph/surfaces carries a grep-first order-tolerance note — follow it.
+9. **Execution order:** T.1 → T.2 → {T.3, T.4, D.*, A.*} → H.*. **Cross-plan:** this plan executes after the current direct graph schema is at v18. T.1 updates that fresh schema to v19; it does not require or add a migration chain. The graph plan's ERP-D.6 executes **after** T.1+T.2 (recorded in that task). Every task consuming a not-yet-landed seam from Plans 21/22/graph/surfaces carries a grep-first order-tolerance note — follow it.
 10. **Golden serialization:** D-section tasks add journal events and may drift floor goldens (`tests/fixtures/floor/goldens/`). Regenerate with `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_invariants.py -q`, review `git diff --stat tests/fixtures/floor/goldens/`, commit with the task. Never run golden-touching tasks concurrently with other plans' golden tasks (Plan 21 COV.*, Plan 22 S68.3/COST.4, graph ERP-D.1/D.5, surfaces contract 10 list).
 11. **TEST_LEVELS registrations** (`tests/conftest.py:18`): new files — `test_telemetry_events.py: "contract"`, `test_telemetry_read_paths.py: "runtime"`, `test_attention_ordering.py: "contract"`, `test_attention_flow.py: "contract"`, `test_dashboard_view.py: "contract"`, `test_decision_rules.py: "contract"`. Extended files (`test_empirical_events.py`, `test_operations.py`, `test_worker_*.py`, `test_loudness.py`, `test_knowledge.py`, `test_feedback_instrumentation.py`) are already registered — no conftest change.
 
@@ -94,26 +98,25 @@ called from the CLI, engine, or HTTP.
 
 Line refs at `a4da8aa3`: `state.SCHEMA_VERSION` (`state.py:53`), `_init` (`state.py:2406-2413`), `verify_journal_chain` (`state.py:834` — reads **only** `event_log`, so the telemetry exclusion is a proven no-op, not a code change), `record_empirical_event` (`operations.py:111-143`), `now_iso` (`runtime/time.py:17`).
 
-### Task T.1: v19 migration — the `telemetry_events` table
+### Task T.1: v19 direct current DDL — the `telemetry_events` table
 
 **Files:**
-- Modify: `src/memoria_vault/runtime/state.py` (`SCHEMA_VERSION` at `:53`; the `MIGRATIONS` registry Plan 22 G1.1 adds beside it)
-- Modify: `src/memoria_vault/product/workspace_seed/.memoria/schema.sql` (or the schema file `_schema_sql()` reads — locate: `grep -n "_schema_sql" src/memoria_vault/runtime/state.py`)
-- Modify: version-pinned tests — `tests/test_schema_version.py`, `tests/test_schema_v10.py`, `tests/test_query_substrate.py` (locate the pinned integers: `grep -rn "SCHEMA_VERSION\|user_version" tests/test_schema_version.py tests/test_schema_v10.py tests/test_query_substrate.py`)
+- Modify: `src/memoria_vault/runtime/state.py` (`SCHEMA_VERSION` at `:53`; do not add a migration registry)
+- Modify: `src/memoria_vault/runtime/schema.sql` (the schema file `_schema_sql()` reads)
+- Modify: current-schema tests — `tests/test_schema_version.py` and `tests/test_query_substrate.py`; do not create a previous-version fixture.
 - Test: `tests/test_telemetry_events.py` (new; register `"test_telemetry_events.py": "contract"` in `tests/conftest.py` `TEST_LEVELS`)
 
 **Interfaces:**
-- Consumes: Plan 22 G1.1's `state.MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]]`; the binding version chain (13–15 Plan 22, 16–18 graph plan).
+- Consumes: the direct current graph schema at v18 and its fail-closed version gate.
 - Produces: the `telemetry_events` table (contract 2) at `PRAGMA user_version = 19`; `SCHEMA_VERSION = 19`.
 
-- [ ] **Step 1: Precondition check (chain serialization).** Run:
+- [ ] **Step 1: Precondition check (fresh-schema handoff).** Run:
 
 ```bash
-grep -n "MIGRATIONS" src/memoria_vault/runtime/state.py | head -3
 grep -n "^SCHEMA_VERSION" src/memoria_vault/runtime/state.py
 ```
 
-Required: `MIGRATIONS` exists (Plan 22 G1 landed) and `SCHEMA_VERSION = 18` (graph plan landed). **If either fails, STOP and report** — schema versions are a serialized chain (Plan 22 contract 2); do not renumber unilaterally.
+Required: `SCHEMA_VERSION = 18` (the graph plan's direct DDL landed). **If it fails, STOP and report** — T.1 must not renumber another schema task. Confirm that no `MIGRATIONS` symbol or private migration helper remains.
 
 - [ ] **Step 2: Write the failing tests** — create `tests/test_telemetry_events.py`:
 
@@ -159,28 +162,26 @@ def test_journal_verification_ignores_telemetry_rows(tmp_path: Path) -> None:
 Run: `python -m pytest tests/test_telemetry_events.py -v`
 Expected: FAIL — `cols == set()` (no such table) on the first test.
 
-- [ ] **Step 4: Implement.** In `src/memoria_vault/runtime/state.py`: set `SCHEMA_VERSION = 19` and add the migration entry beside the existing 16→18 entries:
+- [ ] **Step 4: Implement.** In `src/memoria_vault/runtime/state.py`, set
+  `SCHEMA_VERSION = 19`. In `runtime/schema.sql`, add this table and index beside
+  the other current DDL, then set the trailing `PRAGMA user_version = 19;`:
 
-```python
-MIGRATIONS[18] = (
-    19,
-    [
-        """
-        CREATE TABLE telemetry_events (
-            event_id     TEXT PRIMARY KEY,
-            ts           TEXT NOT NULL,
-            event_type   TEXT NOT NULL,
-            session_id   TEXT,
-            surface      TEXT,
-            payload_json TEXT NOT NULL
-        )
-        """,
-        "CREATE INDEX idx_telemetry_type_ts ON telemetry_events(event_type, ts)",
-    ],
-)
-```
+  ```sql
+  CREATE TABLE IF NOT EXISTS telemetry_events (
+      event_id TEXT PRIMARY KEY,
+      ts TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      session_id TEXT,
+      surface TEXT,
+      payload_json TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_telemetry_type_ts ON telemetry_events(event_type, ts);
+  ```
 
-In the schema SQL file, add the same `CREATE TABLE` + `CREATE INDEX` DDL beside the other tables and bump the trailing `PRAGMA user_version = 18;` to `19`. Update the version-pinned tests found in Step 1's grep from `18` to `19`. Register the new test file in `tests/conftest.py` `TEST_LEVELS` (alphabetical position): `"test_telemetry_events.py": "contract",`.
+  Update fresh-schema assertions from `18` to `19` and register the new test file
+  in `tests/conftest.py` `TEST_LEVELS` (alphabetical position):
+  `"test_telemetry_events.py": "contract",`. Do not register a transition,
+  backfill rows, or create an old-version fixture.
 
 - [ ] **Step 5: Run to verify pass**
 

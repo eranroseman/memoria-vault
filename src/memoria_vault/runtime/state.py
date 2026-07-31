@@ -15,7 +15,7 @@ import subprocess
 import threading
 import time
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -55,10 +55,6 @@ if TYPE_CHECKING:
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
 SCHEMA_VERSION = 15
-# Numbered migrations: each entry upgrades an on-disk DB by exactly one version
-# step, {from_version: (from_version + 1, [SQL statement or callable(conn)])}.
-# _init refuses (fail-closed) any user_version with no registered path here.
-MIGRATIONS: dict[int, tuple[int, list[str | Callable[[sqlite3.Connection], None]]]] = {}
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -2621,33 +2617,8 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
 
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
-    while current not in {0, SCHEMA_VERSION}:
-        conn.execute("BEGIN IMMEDIATE")
-        try:
-            current = int(conn.execute("PRAGMA user_version").fetchone()[0])
-            if current not in {0, SCHEMA_VERSION}:
-                if current not in MIGRATIONS:
-                    raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
-                to_version, steps = MIGRATIONS[current]
-                if to_version != current + 1:
-                    raise RuntimeError(
-                        f"migration from schema version {current} must target {current + 1}, "
-                        f"not {to_version}"
-                    )
-                for step in steps:
-                    if callable(step):
-                        step(conn)
-                    else:
-                        conn.execute(step)
-                conn.execute(f"PRAGMA user_version = {to_version}")
-                current = to_version
-            conn.execute("COMMIT")
-        except BaseException:
-            try:
-                conn.execute("ROLLBACK")
-            except sqlite3.Error:
-                pass
-            raise
+    if current not in {0, SCHEMA_VERSION}:
+        raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])
     if applied != SCHEMA_VERSION:
@@ -4305,173 +4276,6 @@ def concept_edge_id(source_concept_id: str, relation_type: str, target_concept_i
     """Return the deterministic id for a normalized concept-edge triple."""
     key = f"{source_concept_id}\0{relation_type}\0{target_concept_id}"
     return hashlib.sha256(key.encode()).hexdigest()[:24]
-
-
-def _backfill_concept_edge_ids(conn: sqlite3.Connection) -> None:
-    for source, relation, target in conn.execute(
-        "SELECT source_concept_id, relation_type, target_concept_id FROM concept_edges"
-    ):
-        normalized_source = normalize_path(str(source))
-        normalized_relation = _concept_edge_relation(str(relation))
-        normalized_target = normalize_path(str(target))
-        conn.execute(
-            """
-            UPDATE concept_edges
-            SET edge_id = ?
-            WHERE source_concept_id = ? AND relation_type = ? AND target_concept_id = ?
-            """,
-            (
-                concept_edge_id(normalized_source, normalized_relation, normalized_target),
-                source,
-                relation,
-                target,
-            ),
-        )
-
-
-MIGRATIONS[12] = (
-    13,
-    [
-        "ALTER TABLE concept_edges ADD COLUMN edge_id TEXT NOT NULL DEFAULT ''",
-        "ALTER TABLE concept_edges ADD COLUMN attributes_json TEXT NOT NULL DEFAULT '{}'",
-        _backfill_concept_edge_ids,
-        """
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
-        ON concept_edges(edge_id) WHERE edge_id != ''
-        """,
-    ],
-)
-
-MIGRATIONS[13] = (
-    14,
-    [
-        "CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON concept_edges(target_concept_id)",
-        "CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target ON work_graph_edges(target_id)",
-    ],
-)
-
-MIGRATIONS[14] = (
-    15,
-    [
-        """
-        CREATE TABLE code_artifacts_v15 (
-            artifact_id TEXT PRIMARY KEY,
-            project_path TEXT NOT NULL,
-            record_path TEXT NOT NULL UNIQUE,
-            source_dir TEXT NOT NULL,
-            output_dir TEXT NOT NULL,
-            purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both')),
-            approved_command_json TEXT NOT NULL DEFAULT '[]',
-            declared_inputs_json TEXT NOT NULL DEFAULT '[]',
-            declared_outputs_json TEXT NOT NULL DEFAULT '[]',
-            dependency_notes TEXT NOT NULL DEFAULT '',
-            status TEXT NOT NULL CHECK (status IN ('draft', 'ready', 'failed', 'retired')),
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-        """,
-        """
-        INSERT INTO code_artifacts_v15(
-            artifact_id,
-            project_path,
-            record_path,
-            source_dir,
-            output_dir,
-            purpose,
-            approved_command_json,
-            declared_inputs_json,
-            declared_outputs_json,
-            dependency_notes,
-            status,
-            created_at,
-            updated_at
-        )
-        SELECT
-            artifact_id,
-            project_path,
-            record_path,
-            source_dir,
-            output_dir,
-            CASE purpose WHEN 'warrant' THEN 'grounds' ELSE purpose END,
-            approved_command_json,
-            declared_inputs_json,
-            declared_outputs_json,
-            dependency_notes,
-            status,
-            created_at,
-            updated_at
-        FROM code_artifacts
-        """,
-        """
-        CREATE TABLE code_runs_v15 (
-            run_id TEXT PRIMARY KEY,
-            artifact_id TEXT NOT NULL REFERENCES code_artifacts_v15(artifact_id) ON DELETE CASCADE,
-            command_json TEXT NOT NULL,
-            cwd TEXT NOT NULL,
-            sanitized_env_json TEXT NOT NULL DEFAULT '[]',
-            input_hashes_json TEXT NOT NULL DEFAULT '{}',
-            output_hashes_json TEXT NOT NULL DEFAULT '{}',
-            stdout_sha256 TEXT NOT NULL DEFAULT '',
-            stderr_sha256 TEXT NOT NULL DEFAULT '',
-            stdout_path TEXT NOT NULL DEFAULT '',
-            stderr_path TEXT NOT NULL DEFAULT '',
-            exit_status INTEGER,
-            timeout_result TEXT NOT NULL DEFAULT '',
-            sandbox_backend TEXT NOT NULL DEFAULT '',
-            sandbox_profile_hash TEXT NOT NULL DEFAULT '',
-            state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
-            started_at TEXT NOT NULL,
-            ended_at TEXT
-        )
-        """,
-        """
-        INSERT INTO code_runs_v15(
-            run_id,
-            artifact_id,
-            command_json,
-            cwd,
-            sanitized_env_json,
-            input_hashes_json,
-            output_hashes_json,
-            stdout_sha256,
-            stderr_sha256,
-            stdout_path,
-            stderr_path,
-            exit_status,
-            timeout_result,
-            sandbox_backend,
-            sandbox_profile_hash,
-            state,
-            started_at,
-            ended_at
-        )
-        SELECT
-            run_id,
-            artifact_id,
-            command_json,
-            cwd,
-            sanitized_env_json,
-            input_hashes_json,
-            output_hashes_json,
-            stdout_sha256,
-            stderr_sha256,
-            stdout_path,
-            stderr_path,
-            exit_status,
-            timeout_result,
-            sandbox_backend,
-            sandbox_profile_hash,
-            state,
-            started_at,
-            ended_at
-        FROM code_runs
-        """,
-        "DROP TABLE code_runs",
-        "DROP TABLE code_artifacts",
-        "ALTER TABLE code_artifacts_v15 RENAME TO code_artifacts",
-        "ALTER TABLE code_runs_v15 RENAME TO code_runs",
-    ],
-)
 
 
 def _code_purpose(value: str) -> str:

@@ -16,9 +16,9 @@ removed release-please setup, not real releases, and have been deleted.
 ### Changed
 
 - Renamed computed-evidence `code-warrant` references to `code-grounds`.
-  Retired `code-warrant:` markers are rejected without an alias or migration.
-- Migrated `code_artifacts.purpose` from `warrant` to `grounds` in the SQLite
-  14→15 upgrade while preserving `code_runs` history.
+  Retired `code-warrant:` markers are rejected without an alias or upgrade path.
+- The current fresh schema uses `code_artifacts.purpose = grounds`; Memoria does
+  not rewrite an existing database or preserve a legacy `warrant` compatibility path.
 - Renamed the `analyze-gaps` gap kind `under-warranted` to `under-grounded`
   (breaking for scripts that branch on `gap_type`; no compatibility alias).
 - Marker grammar v2: `%%ev: ev-<8hex> items=a|b%%`. The `type=`, `state=`,

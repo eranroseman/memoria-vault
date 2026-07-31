@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import os
 import sqlite3
 from pathlib import Path
@@ -18,45 +17,6 @@ from tests.helpers import (
     mark_file_status,
     write_checked_concept,
 )
-
-V14_CODE_TABLES_SQL = """
-CREATE TABLE code_artifacts (
-    artifact_id TEXT PRIMARY KEY,
-    project_path TEXT NOT NULL,
-    record_path TEXT NOT NULL UNIQUE,
-    source_dir TEXT NOT NULL,
-    output_dir TEXT NOT NULL,
-    purpose TEXT NOT NULL CHECK (purpose IN ('warrant', 'deliverable', 'both')),
-    approved_command_json TEXT NOT NULL DEFAULT '[]',
-    declared_inputs_json TEXT NOT NULL DEFAULT '[]',
-    declared_outputs_json TEXT NOT NULL DEFAULT '[]',
-    dependency_notes TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL CHECK (status IN ('draft', 'ready', 'failed', 'retired')),
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-);
-CREATE TABLE code_runs (
-    run_id TEXT PRIMARY KEY,
-    artifact_id TEXT NOT NULL REFERENCES code_artifacts(artifact_id) ON DELETE CASCADE,
-    command_json TEXT NOT NULL,
-    cwd TEXT NOT NULL,
-    sanitized_env_json TEXT NOT NULL DEFAULT '[]',
-    input_hashes_json TEXT NOT NULL DEFAULT '{}',
-    output_hashes_json TEXT NOT NULL DEFAULT '{}',
-    stdout_sha256 TEXT NOT NULL DEFAULT '',
-    stderr_sha256 TEXT NOT NULL DEFAULT '',
-    stdout_path TEXT NOT NULL DEFAULT '',
-    stderr_path TEXT NOT NULL DEFAULT '',
-    exit_status INTEGER,
-    timeout_result TEXT NOT NULL DEFAULT '',
-    sandbox_backend TEXT NOT NULL DEFAULT '',
-    sandbox_profile_hash TEXT NOT NULL DEFAULT '',
-    state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
-    started_at TEXT NOT NULL,
-    ended_at TEXT
-);
-"""
-
 
 def answer_query(vault: Path, *args, **kwargs):
     return call_with_context(_answer_query, vault, *args, **kwargs)
@@ -403,9 +363,7 @@ def test_replace_concept_edges_scopes_upserts_pruning_and_distinguishes_empty_sc
     assert state.concept_edges(vault) == []
 
 
-def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields(
-    tmp_path: Path,
-) -> None:
+def test_concept_edges_fresh_schema_exposes_reader_fields(tmp_path: Path) -> None:
     fresh = tmp_path / "fresh"
     with state.connect(fresh) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_edges)")}
@@ -494,138 +452,6 @@ def test_concept_edges_reshape_migrates_v12_rows_and_exposes_fresh_reader_fields
         ]
 
     assert blank_edge_ids == ["", ""]
-
-    legacy = tmp_path / "legacy"
-    db = legacy / state.DB_REL
-    db.parent.mkdir(parents=True)
-    with sqlite3.connect(db) as conn:
-        conn.execute(
-            "CREATE TABLE concept_edges ("
-            "source_concept_id TEXT NOT NULL, "
-            "relation_type TEXT NOT NULL, "
-            "target_concept_id TEXT NOT NULL, "
-            "check_status TEXT NOT NULL, "
-            "source_path TEXT NOT NULL DEFAULT '', "
-            "updated_at TEXT NOT NULL, "
-            "PRIMARY KEY (source_concept_id, relation_type, target_concept_id))"
-        )
-        conn.execute(
-            "CREATE TABLE work_graph_edges ("
-            "work_id TEXT NOT NULL, "
-            "relation_type TEXT NOT NULL, "
-            "target_id TEXT NOT NULL, "
-            "target_title TEXT NOT NULL DEFAULT '', "
-            "target_doi TEXT NOT NULL DEFAULT '', "
-            "source_provider TEXT NOT NULL DEFAULT '', "
-            "raw_json TEXT NOT NULL DEFAULT '{}', "
-            "discovered_at TEXT NOT NULL, "
-            "PRIMARY KEY (work_id, relation_type, target_id))"
-        )
-        conn.executescript(V14_CODE_TABLES_SQL)
-        conn.executemany(
-            "INSERT INTO concept_edges("
-            "source_concept_id, relation_type, target_concept_id, check_status, source_path, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            [
-                (
-                    "./notes/mirror.md",
-                    "supports",
-                    "notes/target.md",
-                    "checked",
-                    "notes/mirror.md",
-                    "2026-07-15T00:00:00Z",
-                ),
-                (
-                    "notes/tension.md",
-                    "tension",
-                    "notes/target.md",
-                    "checked",
-                    "",
-                    "2026-07-15T00:00:00Z",
-                ),
-            ],
-        )
-        conn.execute("PRAGMA user_version = 12")
-
-    with state.connect(legacy) as conn:
-        version = conn.execute("PRAGMA user_version").fetchone()[0]
-        legacy_rows = {
-            (row["source_concept_id"], row["relation_type"], row["target_concept_id"]): dict(row)
-            for row in conn.execute(
-                "SELECT source_concept_id, relation_type, target_concept_id, edge_id, attributes_json "
-                "FROM concept_edges"
-            )
-        }
-
-    assert version == state.SCHEMA_VERSION == 15
-    assert legacy_rows[("./notes/mirror.md", "supports", "notes/target.md")] == {
-        "source_concept_id": "./notes/mirror.md",
-        "relation_type": "supports",
-        "target_concept_id": "notes/target.md",
-        "edge_id": hashlib.sha256(b"notes/mirror.md\0supports\0notes/target.md").hexdigest()[:24],
-        "attributes_json": "{}",
-    }
-    assert legacy_rows[("notes/tension.md", "tension", "notes/target.md")] == {
-        "source_concept_id": "notes/tension.md",
-        "relation_type": "tension",
-        "target_concept_id": "notes/target.md",
-        "edge_id": hashlib.sha256(b"notes/tension.md\0tension\0notes/target.md").hexdigest()[:24],
-        "attributes_json": "{}",
-    }
-
-
-def test_reverse_traversal_indexes_migrate_v13_database(tmp_path: Path) -> None:
-    legacy = tmp_path / "legacy"
-    db = legacy / state.DB_REL
-    db.parent.mkdir(parents=True)
-    with sqlite3.connect(db) as conn:
-        conn.executescript(
-            """
-            CREATE TABLE concept_edges (
-                edge_id TEXT NOT NULL DEFAULT '',
-                source_concept_id TEXT NOT NULL,
-                relation_type TEXT NOT NULL,
-                target_concept_id TEXT NOT NULL,
-                attributes_json TEXT NOT NULL DEFAULT '{}',
-                check_status TEXT NOT NULL,
-                source_path TEXT NOT NULL DEFAULT '',
-                updated_at TEXT NOT NULL,
-                PRIMARY KEY (source_concept_id, relation_type, target_concept_id)
-            );
-            CREATE TABLE work_graph_edges (
-                work_id TEXT NOT NULL,
-                relation_type TEXT NOT NULL,
-                target_id TEXT NOT NULL,
-                target_title TEXT NOT NULL DEFAULT '',
-                target_doi TEXT NOT NULL DEFAULT '',
-                source_provider TEXT NOT NULL DEFAULT '',
-                raw_json TEXT NOT NULL DEFAULT '{}',
-                discovered_at TEXT NOT NULL,
-                PRIMARY KEY (work_id, relation_type, target_id)
-            );
-            PRAGMA user_version = 13;
-            """
-        )
-        conn.executescript(V14_CODE_TABLES_SQL)
-
-    assert 13 in state.MIGRATIONS
-    to_version, steps = state.MIGRATIONS[13]
-    assert to_version == 14
-    assert steps == [
-        "CREATE INDEX IF NOT EXISTS idx_concept_edges_target ON concept_edges(target_concept_id)",
-        "CREATE INDEX IF NOT EXISTS idx_work_graph_edges_target ON work_graph_edges(target_id)",
-    ]
-
-    with state.connect(legacy) as conn:
-        version = conn.execute("PRAGMA user_version").fetchone()[0]
-        names = {
-            row["name"]
-            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
-        }
-
-    assert version == state.SCHEMA_VERSION == 15
-    assert {"idx_concept_edges_target", "idx_work_graph_edges_target"}.issubset(names)
-
 
 def test_reverse_traversal_indexes_exist(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
