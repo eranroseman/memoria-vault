@@ -4918,7 +4918,7 @@ EOF
 
 **Steps:**
 
-- [ ] **Edit the doc.** In `docs/reference/commands-and-transports/prompt-operations.md`, replace lines 96-97:
+- [x] **Edit the doc.** In `docs/reference/commands-and-transports/prompt-operations.md`, replace lines 96-97:
 
 ```markdown
 `model_call` rows include resolved
@@ -4935,12 +4935,12 @@ entry in the bundled local price snapshot, and always null on the
 deterministic-fixture path), and `elapsed_s` wall-clock seconds.
 ```
 
-- [ ] **Confirm no edit to telemetry-architecture.md:** `git diff --stat docs/explanation/architecture/telemetry-architecture.md` — expected: empty output (spec §4 says no prose change there).
+- [x] **Confirm no edit to telemetry-architecture.md:** `git diff --stat docs/explanation/architecture/telemetry-architecture.md` — expected: empty output (spec §4 says no prose change there).
 
-- [ ] **Run the full gate:** `python scripts/verify`
+- [x] **Run the full gate:** `python scripts/verify`
   Expected: passes end to end (cspell accepts `cost_usd`/`elapsed_s` — verified against the repo config during planning; floor goldens were refreshed in COST.4).
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add docs/reference/commands-and-transports/prompt-operations.md
