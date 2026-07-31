@@ -1269,7 +1269,7 @@ site.
 - Consumes: `sweep(vault: Path, offline: bool = True) -> dict` (returns `{"checked": int, "retracted": int}`); `check_doi(doi: str, offline: bool = False) -> dict`; `build_rw_index(rows) -> dict[str, dict]`; and — post-Task-21.1 — `write_finding(vault, card_type, title, finding, raised_by, agent_recommendation="issues-found", target="", citekey="", loudness="alert", evidence="", dedupe_slug="") -> Path | None` (Task 21.1 of this plan changes it; COV.3 runs after 21.1).
 - Produces: tests `test_build_rw_index_severity_tie_break_keeps_retraction_over_concern`, `test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert`, `test_check_doi_offline_warns_once_when_rw_csv_is_missing`.
 
-- [ ] Extend the alias block at the top of `tests/test_sweeps_retraction.py` (after line 11, matching the existing `_m` style):
+- [x] Extend the alias block at the top of `tests/test_sweeps_retraction.py` (after line 11, matching the existing `_m` style):
 
   ```python
   check_doi = _m.check_doi
@@ -1306,7 +1306,7 @@ site.
       assert idx_reversed["10.1/twice"]["nature"] == "Retraction"
   ```
 - [x] Prove the test bites: temporarily change `retraction.py:113` from `if prev is None or (rec["retracted"] and not prev["retracted"]):` to `if prev is None:`, run `python -m pytest tests/test_sweeps_retraction.py::test_build_rw_index_severity_tie_break_keeps_retraction_over_concern -v` — expect `AssertionError` at `nature == "Retraction"` (got `'Expression of Concern'`). Restore, rerun, expect PASS.
-- [ ] Write the failing test (offline sweep writes the Inbox alert) below it:
+- [x] Write the failing test (offline sweep writes the Inbox alert) below it:
 
   ```python
   def test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert(tmp_path, monkeypatch):
@@ -1373,7 +1373,7 @@ site.
   variables and stubs `push_card` to avoid both an outbound attempt and an
   irrelevant push-log side effect; (4) `_RW_INDEX` reset mirrors the file's
   existing cache hygiene.
-- [ ] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
+- [x] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
 - [x] Write the failing test (one-time offline no-CSV warning) below it:
 
   ```python
