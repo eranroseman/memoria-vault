@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(**/*.md)",
+      "Edit(.claude/**)",
+      "Edit(.codex/**)",
+      "Edit(.mcp.json)",
+      "Edit(.memoria/**)",
+      "Edit(.obsidian/**)",
+      "NotebookEdit(**/*.md)",
+      "NotebookEdit(.claude/**)",
+      "NotebookEdit(.codex/**)",
+      "NotebookEdit(.mcp.json)",
+      "NotebookEdit(.memoria/**)",
+      "NotebookEdit(.obsidian/**)",
+      "Write(**/*.md)",
+      "Write(.claude/**)",
+      "Write(.codex/**)",
+      "Write(.mcp.json)",
+      "Write(.memoria/**)",
+      "Write(.obsidian/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/write_perimeter.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

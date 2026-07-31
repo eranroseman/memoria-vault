@@ -29,6 +29,10 @@ def test_schema_skeleton_covers_every_type_home():
 
 def test_package_seed_is_runtime_minimum():
     expected_files = {
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
         ".githooks/pre-commit",
         ".gitignore",
         ".memoria/config/feedback.yaml",
@@ -57,6 +61,7 @@ def test_package_seed_is_runtime_minimum():
         "inbox.base",
         "projects.base",
         "sources.base",
+        "CLAUDE.md",
         "steering.md",
         "system/vocabulary.md",
     }
