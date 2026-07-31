@@ -95,7 +95,5 @@ def _detect_linux(run: RunFn, data_dirs: tuple[Path, ...]) -> bool:
         return True
     entries = ("obsidian.desktop", "md.obsidian.Obsidian.desktop")
     return any(
-        (data_dir / "applications" / entry).is_file()
-        for data_dir in data_dirs
-        for entry in entries
+        (data_dir / "applications" / entry).is_file() for data_dir in data_dirs for entry in entries
     )

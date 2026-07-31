@@ -98,6 +98,4 @@ def test_detect_obsidian_dispatches_windows(tmp_path: Path) -> None:
         )
         is True
     )
-    assert (
-        onboarding.detect_obsidian("win32", env={}, home=home, run=FakeRun()) is False
-    )
+    assert onboarding.detect_obsidian("win32", env={}, home=home, run=FakeRun()) is False
