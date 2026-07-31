@@ -5,6 +5,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import onboarding
 
 
@@ -194,10 +196,24 @@ def test_offer_install_treats_hang_as_failed_not_a_crash() -> None:
     assert any(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said)
 
 
-def test_offer_install_never_runs_a_command_outside_the_allowlist() -> None:
-    # The allowlist is frozen: even if `ask` is abused to return something
-    # that looks like a command, only the literal allowlisted tuple for the
-    # resolved platform is ever passed to `run`.
+@pytest.mark.parametrize("key", sorted(onboarding.OBSIDIAN_INSTALL_ALLOWLIST))
+def test_offer_install_runs_exactly_the_allowlisted_argv_on_consent(key: str) -> None:
+    # The allowlist is frozen: on every platform, a "y" answer runs the
+    # literal allowlisted tuple for that platform — never anything derived
+    # from the answer or any other input.
+    run = FakeRun(returncode=0)
+
+    status = onboarding.offer_obsidian_install(
+        key, ask=lambda _prompt: "y", say=lambda _line: None, run=run
+    )
+
+    assert status == "installed"
+    assert run.calls == [list(onboarding.OBSIDIAN_INSTALL_ALLOWLIST[key])]
+
+
+def test_offer_install_declines_a_command_injection_shaped_answer() -> None:
+    # An injection-shaped answer is still just "not y/yes": consent is an
+    # exact-match comparison, so it declines without ever reaching `run`.
     run = FakeRun(returncode=0)
 
     status = onboarding.offer_obsidian_install(

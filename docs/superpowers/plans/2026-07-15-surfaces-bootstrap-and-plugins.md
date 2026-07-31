@@ -6709,6 +6709,18 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
   Expected: `AttributeError: module 'memoria_vault.runtime.onboarding' has no
   attribute 'OBSIDIAN_INSTALL_ALLOWLIST'` (and siblings).
 
+> **Adopted post-review amendment (2026-07-31):** `subprocess.TimeoutExpired`
+> is not an `OSError` (`TimeoutExpired` → `SubprocessError` → `Exception`), so
+> the literal snippet below — `run(list(command), check=False)` guarded only
+> by `except OSError` — does not catch it, and it passes no `timeout=` in the
+> first place, so a genuinely stalled `brew`/`winget`/`flatpak` blocks
+> `subprocess.run` forever rather than raising anything. Either way the
+> resulting hang crashes onboarding instead of returning `"failed"`, violating
+> this task's own requirement. Pass `timeout=_INSTALL_TIMEOUT_S` (300s — these
+> installs legitimately take minutes) and add
+> `except subprocess.TimeoutExpired` before `except OSError`, returning
+> `"failed"`. Found by review on 2026-07-31; this is what shipped.
+
 - [x] Write minimal implementation. In `onboarding.py`, add the constants
   right after the type aliases and the function after `_detect_linux`:
 
@@ -6723,6 +6735,11 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       "windows": ("winget", "install", "Obsidian.Obsidian"),
       "linux": ("flatpak", "install", "md.obsidian.Obsidian"),
   }
+
+  # Package-manager installs (unlike the quick `_detect_linux` version probe)
+  # can legitimately take minutes to download; this only bounds a stalled
+  # process so onboarding can never hang forever.
+  _INSTALL_TIMEOUT_S = 300
   ```
 
   ```python
@@ -6747,7 +6764,13 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
           say(f"Skipped. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
           return "declined"
       try:
-          result = run(list(command), check=False)
+          result = run(list(command), check=False, timeout=_INSTALL_TIMEOUT_S)
+      except subprocess.TimeoutExpired:
+          say(
+              f"Install command did not finish within {_INSTALL_TIMEOUT_S}s. "
+              f"Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}"
+          )
+          return "failed"
       except OSError:
           say(f"{command[0]} is not available. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
           return "manual"
