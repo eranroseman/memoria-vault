@@ -54,7 +54,7 @@ PROBES: dict[str, tuple[str, str | None]] = {
     "concepts.get": ("refused", "{note_claim}"),
     "work.get": ("refused", "{work_id}"),
     "journal.list": ("excluded", "{note_claim}"),
-    "journal.get": ("refused", "3"),
+    "journal.get": ("refused", "journal event not found: 3"),
     # exploration.list is honest-empty under a void scope; its marker-level
     # filtering is pinned by test_http_transport.py::
     # test_http_transport_exploration_respects_read_scope.
@@ -101,9 +101,7 @@ def test_scope_walk_covers_every_scope_declaring_read_row() -> None:
     assert set(PROBES) == http_scoped_ids
 
 
-@pytest.mark.parametrize(
-    "action_id", sorted(str(action["id"]) for action in SCOPED_READ_ROWS)
-)
+@pytest.mark.parametrize("action_id", sorted(str(action["id"]) for action in SCOPED_READ_ROWS))
 def test_scope_declaring_row_refuses_out_of_scope_reads(vault, action_id: str) -> None:
     v, manifest = vault
     method, path = _fill(ARG_TABLE[action_id]["http"], manifest)
@@ -130,9 +128,7 @@ def test_scope_declaring_row_refuses_out_of_scope_reads(vault, action_id: str) -
             assert scoped_payload["exploration"]["empty"] is True
 
 
-@pytest.mark.parametrize(
-    "action_id", sorted(str(action["id"]) for action in WORKSPACE_READ_ROWS)
-)
+@pytest.mark.parametrize("action_id", sorted(str(action["id"]) for action in WORKSPACE_READ_ROWS))
 def test_workspace_scope_row_is_exempt_from_read_scope(vault, action_id: str) -> None:
     v, manifest = vault
     method, path = _fill(ARG_TABLE[action_id]["http"], manifest)

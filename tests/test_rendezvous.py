@@ -698,6 +698,14 @@ def test_v1_status_with_valid_token_never_resets_idle_timer(workspace: Path) -> 
         assert server.last_authenticated == 42.0
 
 
+def test_v1_status_rejects_wrong_method(workspace: Path) -> None:
+    with _running_server(workspace) as (_server, port, _thread):
+        status, payload = _request(port, "POST", "/v1/status")
+
+        assert status == 405
+        assert payload == {"ok": False, "error": "method not allowed: POST /v1/status"}
+
+
 def test_authenticated_request_resets_idle_timer_and_unauthorized_does_not(
     workspace: Path,
 ) -> None:
@@ -857,8 +865,12 @@ def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
             "ok": False,
             "error": "unauthorized: missing or invalid bearer token",
         }
-        wrong_method, _payload = _request(port, "GET", "/v1/shutdown", token="test-token")
+        wrong_method, wrong_payload = _request(port, "GET", "/v1/shutdown", token="test-token")
         assert wrong_method == 405
+        assert wrong_payload == {
+            "ok": False,
+            "error": "method not allowed: GET /v1/shutdown",
+        }
         status, payload = _request(
             port,
             "POST",

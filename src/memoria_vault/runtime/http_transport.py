@@ -143,7 +143,7 @@ def make_http_server(
             if path == "/v1/status":
                 if method != "GET":
                     self._write(
-                        {"ok": False, "error": "method not allowed"},
+                        {"ok": False, "error": f"method not allowed: {method} {path}"},
                         HTTPStatus.METHOD_NOT_ALLOWED,
                     )
                     return
@@ -167,7 +167,7 @@ def make_http_server(
                 if path == "/v1/shutdown":
                     if method != "POST":
                         self._write(
-                            {"ok": False, "error": "method not allowed"},
+                            {"ok": False, "error": f"method not allowed: {method} {path}"},
                             HTTPStatus.METHOD_NOT_ALLOWED,
                         )
                         return
