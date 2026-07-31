@@ -64,6 +64,12 @@ def test_precommit_hooks_use_pinned_tool_environments():
     assert "yamllint==1.38.0" not in requirements
 
 
+def test_coverage_audit_tool_is_pinned_for_contributors():
+    requirements = REQUIREMENTS_DEV.read_text(encoding="utf-8").splitlines()
+
+    assert "pytest-cov==7.1.0" in requirements
+
+
 def test_runtime_package_declares_yaml_dependency():
     pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
 
