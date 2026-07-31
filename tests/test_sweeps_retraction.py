@@ -13,7 +13,6 @@ combine = _m.combine
 crossref_retraction = _m.crossref_retraction
 csv = _m.csv
 open_retractions_verdict = _m.open_retractions_verdict
-read_frontmatter = _m.read_frontmatter
 rw_lookup = _m.rw_lookup
 sweep = _m.sweep
 
