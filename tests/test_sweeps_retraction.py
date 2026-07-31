@@ -315,7 +315,9 @@ def test_sweep_does_not_read_legacy_doi_fields(tmp_path, monkeypatch):
         check_status="checked",
     )
     with state.connect(vault) as conn:
-        conn.execute("UPDATE catalog_sources SET doi = NULL WHERE work_id = ?", ("legacy-doi-work",))
+        conn.execute(
+            "UPDATE catalog_sources SET doi = NULL WHERE work_id = ?", ("legacy-doi-work",)
+        )
     rw_csv = tmp_path / "rw.csv"
     with rw_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
