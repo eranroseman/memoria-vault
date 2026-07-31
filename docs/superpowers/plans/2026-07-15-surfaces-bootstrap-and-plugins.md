@@ -6391,14 +6391,14 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 **Steps:**
 
-- [ ] Register the new test file. In `tests/conftest.py`, add to `TEST_LEVELS`
+- [x] Register the new test file. In `tests/conftest.py`, add to `TEST_LEVELS`
   (keeping rough alphabetical order, after `"test_node_tooling.py": "static",`):
 
   ```python
       "test_onboarding.py": "unit",
   ```
 
-- [ ] Write the failing test. Create `tests/test_onboarding.py`:
+- [x] Write the failing test. Create `tests/test_onboarding.py`:
 
   ```python
   """Onboarding runway unit tests: injected IO for every probe (bootstrap spec section 7)."""
@@ -6478,12 +6478,12 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       assert onboarding.detect_obsidian("plan9", env={}, home=home, run=run) is False
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_onboarding.py -v`
   Expected: collection error — `ModuleNotFoundError: No module named
   'memoria_vault.runtime.onboarding'`.
 
-- [ ] Write minimal implementation. Create
+- [x] Write minimal implementation. Create
   `src/memoria_vault/runtime/onboarding.py`:
 
   ```python
@@ -6590,10 +6590,10 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       )
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_onboarding.py -v` — all 6 tests pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/onboarding.py tests/test_onboarding.py tests/conftest.py

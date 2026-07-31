@@ -84,6 +84,7 @@ TEST_LEVELS = {
     "test_live_runner.py": "live",
     "test_loudness.py": "unit",
     "test_node_tooling.py": "static",
+    "test_onboarding.py": "unit",
     "test_operations.py": "contract",
     "test_parity_fixture.py": "contract",
     "test_package_spine.py": "package",
