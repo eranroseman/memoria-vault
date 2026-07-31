@@ -289,7 +289,18 @@ def _python() -> str:
 
 
 def _test_vault_root() -> Path:
-    return Path(os.environ.get("MEMORIA_TEST_ROOT", "~/memoria-vault/test-vault")).expanduser()
+    """Resolve the disposable vault this run may wipe.
+
+    Defaults to the *running checkout's* own `test-vault/`, not a fixed path under
+    `$HOME`: `verify` runs from git worktrees, and a hardcoded home-relative default
+    made every worktree wipe one shared directory (see `_reset_test_vault`), so
+    concurrent gates destroyed each other's vault mid-run. `MEMORIA_TEST_ROOT`
+    still overrides.
+    """
+    override = os.environ.get("MEMORIA_TEST_ROOT")
+    if override:
+        return Path(override).expanduser()
+    return Path(__file__).resolve().parents[2] / "test-vault"
 
 
 def _reset_test_vault(vault: Path) -> Path:
