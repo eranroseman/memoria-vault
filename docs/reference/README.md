@@ -25,6 +25,7 @@ every field and count.
 | [Vocabulary](data-model/vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
 | [Wikilink and link conventions](data-model/wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
 | [Glossary](data-model/glossary.md) | Term definitions, alphabetical | Manual |
+| [OKF compliance contract](data-model/okf-compliance.md) | OKF bundle conformance boundary and typed-frontmatter rule | Manual |
 
 ## Commands and transports
 
@@ -83,7 +84,8 @@ every field and count.
 | [Memoria configuration](system/configuration.md) | Configuration surfaces, source/installed ownership, redeploy triggers, and secret boundaries | Manual |
 | [On-disk layout](system/on-disk-layout.md) | Vault folder tree, `.memoria/` layout, skeleton notes, naming conventions | Manual |
 | [System artifacts](system/system-artifacts.md) | Visible `system/` files, eval fixtures, and optional view artifacts | Manual |
-| [Installer (bootstrap)](system/installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables | Manual |
+| [Installer (bootstrap)](system/installer.md) | Supported entry points, flags, install flow, scheduler boundary, and user-supplied values | Manual |
+| [Backup and recovery](system/backup-and-recovery.md) | Backup, restore, recovery, and journal-validation contract | Manual |
 | [Failure modes](system/failure-modes.md) | Failure modes by severity: symptom, cause, fix | Manual |
 
 ## Evidence and integrations

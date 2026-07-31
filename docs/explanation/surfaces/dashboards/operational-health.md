@@ -36,7 +36,7 @@ decisions and preserves the evidence needed for forensic review.
 
 It is not editable. The audit log records before/after hash pairs for gated
 writes; editing the log would defeat the tamper signal. The field schema and
-hash-pairing contract live in [Policy gate](../../../reference/control-and-policy/policy-mcp.md).
+hash-pairing contract live in [Policy audit log](../../../reference/control-and-policy/policy-audit-log.md).
 
 ## Eval trend
 
@@ -50,4 +50,4 @@ The scoring contract is in [Vault eval](../../../reference/analysis-and-surfaces
 ## Related
 
 - Availability and backing surfaces: [Dashboards](../../../reference/analysis-and-surfaces/dashboards.md)
-- Policy log schema: [Policy gate](../../../reference/control-and-policy/policy-mcp.md)
+- Policy log schema: [Policy audit log](../../../reference/control-and-policy/policy-audit-log.md)

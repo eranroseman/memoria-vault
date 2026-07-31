@@ -7,8 +7,9 @@ nav_order: 2
 
 # Run a retraction sweep
 
-Check catalog papers against retraction registries and act on any hits. The
-sweep raises attention items; it never rewrites claims for you.
+Check checked SQLite Catalog Works against retraction registries and act on any
+hits. The sweep raises Inbox alert attention items; it never rewrites claims or
+changes Work state for you.
 
 ## When it runs without you
 
@@ -33,7 +34,7 @@ Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
 python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --sweep --vault .
 ```
 
-Each hit raises one alert attention item.
+Each retracted checked Work raises one alert attention item.
 
 **3. Read the alert item.**
 
@@ -52,19 +53,14 @@ Use one of three outcomes:
 
 No claim is rewritten automatically. The judgment is always yours.
 
-**5. Update the Work standing.**
-
-Set the catalog Work standing through the CLI:
-
-```bash
-memoria work update --workspace . <work-id> --standing retracted
-```
-
-Then resolve the alert attention item:
+**5. Resolve the alert when your review is complete.**
 
 ```bash
 memoria attention resolve --workspace . <attention-path> --apply
 ```
+
+Resolving the alert records that review decision only. It does not suppress a
+later sweep: a retracted, checked Work can raise a fresh alert on the next run.
 
 **6. Check for new tensions.**
 
@@ -72,9 +68,9 @@ A retraction sometimes resolves — or creates — a contradiction. Glance at Kn
 
 ## Verify
 
-- Every alert attention item from the sweep is resolved
-- Affected catalog Works report `standing: retracted` through `memoria work export`
-- Each citing claim was softened, superseded, or caveated — and a re-run raises no new alerts
+- Every alert attention item from the sweep is resolved after review
+- Each citing claim was softened, superseded, or caveated
+- A later sweep may raise a fresh alert for the same retracted, checked Work
 
 ## Related
 

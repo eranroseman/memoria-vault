@@ -69,18 +69,389 @@
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
-2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: `link_relations` from `edges.LINK_RELATIONS` (moved from `schema.LINK_RELATIONS` by the graph-edges plan ERP-A.1; the `schema` re-export stays valid for one release), `missing_required_credentials` from BOOT-B's `credential_report` (required-class, unset), `engine_version` from the package version. U3-PLUG reads `open`.
-3. **View payload envelope**: `{ok: true, api_version: "engine-read-api.v1", view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
+2. **Summary payload** (U3-ENG produces, U3-PLUG consumes): `GET /v1/views/attention?summary=true` → `{ok, api_version, open, by_loudness, as_of, engine_version, link_relations, missing_required_credentials}`. U3-ENG adds the last three fields: after graph ERP-A.1–.5 activates, `link_relations` comes directly from `edges.LINK_RELATIONS`, `missing_required_credentials` comes from BOOT-B's `credential_report` (required-class, unset), and `engine_version` comes from the package version. U3-PLUG tasks written against `open_count` read `open`.
+3. **View payload envelope**: `{ok: true, api_version, view: {version: "view-spec.v1", kind: "attention", blocks: [...]}}` — U3-PLUG's field contract governs block shapes; U3-ENG conforms its envelope to this exact shape.
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
-6. **BOOT-C ↔ U4-A interface**: bundle seeding iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`; `memoria doctor --json --quick` emits `{engine_version: str, skew: {status: "in-sync"|"vault-newer"|"engine-newer"}, credentials: [{name, class, status, source, effect_when_unset}]}` — BOOT-C.5 implements exactly this shape; U4-A's hook consumes it defensively.
+6. **BOOT-C ↔ U4-A interface**: fresh `memoria init` iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`. `memoria doctor --json --quick` may emit the current engine version and credential rows, but it emits no bundle-version or skew result. U4-A's hook consumes credential rows defensively.
 7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces).
-8. **Plugin settings**: `serverUrl` + token settings are removed; the empirical-recorder settings (`enabled`, `defaultProjectId`, `retentionDays`, `showPrivacyPreview`) are KEPT (the spec's "one field" governs connection settings only).
+8. **Plugin settings**: fresh settings omit `serverUrl` and token settings;
+   the empirical-recorder settings (`enabled`, `defaultProjectId`,
+   `retentionDays`, `showPrivacyPreview`) remain. This plan does not migrate
+   persisted settings from a prior plugin installation.
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
 12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
-13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB, U3-ENG} → SEAM.1 → U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C} (U4-C may run before U4-A; U4-A imports its provider).
+13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
+    U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
+    U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
+    wait for graph ERP-B.2 → ERP-D.5. (U4-C may run before U4-A; U4-A imports
+    its provider.)
+
+### Plan-reconciliation amendment — canonical nested attention cards (2026-07-29)
+
+This amendment supersedes the conflicting flat-view snippets in U3-ENG.1–.6,
+the weak duplicate U3-PLUG.4 test/body, and every U3-PLUG.6/.7 request or
+assertion that still names `actor: "agent"` or `summary.open_count`; it also
+supersedes U3-CANVAS's obsolete HTTP-actor note.  The completed BOOT receipts
+are unchanged.  In a conflict, this section governs.
+
+1. **One non-summary envelope.** `read_attention_view(..., summary=False)`
+   returns exactly `_read_payload(view=_view("attention", cards))`.  Therefore
+   the response has top-level `ok`, `api_version`, and `view`, with no top-level
+   `spec` or `blocks`; the current producer emits top-level cards only, while
+   transport preserves future top-level blocks unchanged.  The
+   `summary=True` response remains the documented flat poll payload (`open`,
+   `by_loudness`, `as_of`, `engine_version`, `link_relations`, and
+   `missing_required_credentials`) and has no `view`.  Replace every U3-ENG
+   test/snippet that reads `payload["spec"]` or `payload["blocks"]` with the
+   following assertions, including HTTP tests and the additive-future-block
+   test:
+
+   ```python
+   payload = api.read_attention_view(workspace)
+
+   assert payload["ok"] is True
+   assert payload["api_version"] == api.READ_API_VERSION
+   assert payload["view"]["version"] == api.VIEW_SPEC_VERSION
+   assert payload["view"]["kind"] == "attention"
+   assert "spec" not in payload
+   assert "blocks" not in payload
+   cards = payload["view"]["blocks"]
+   ```
+
+   The future-block test copies `payload["view"]`, appends its future block to
+   the copied `blocks`, and returns `{**payload, "view": amended_view}`.  It
+   must never recreate the superseded flat envelope.
+2. **Attention-card grammar.** There is exactly one top-level `card` per open
+   attention item.  Its keys are `id`, `kind`, `ref`, `title`, `kind_line`,
+   `loudness`, `age_s`, `age_label`, `blocks`, plus present-only
+   `argument_for`, `argument_against`, `tipped_by`, `certainty`, `raised_by`,
+   and `raised_at`.  `kind_line` is the verbatim attention kind;
+   `what_tipped_it` maps to `tipped_by`; a nonempty `created` maps to
+   `raised_at`; and `age_s` is `age_days * 86_400` when `age_days` is valid,
+   else `0`.  `age_label` is `f"{age_days}d"` when valid, else `""`.  The
+   public card no longer exposes the incompatible writer-only names
+   `attention_kind`, `what_tipped_it`, `created`, `age_days`, `evidence`, or
+   `body_data`.
+
+   Every card's `blocks` is exactly, in this order,
+   `evidence-list`, `text`, `action-row`.  Evidence has id
+   `<card-id>-evidence` and has `items=[]` without a target, otherwise one
+   `{"label": target, "ref": target}` item.  Text has id `<card-id>-body` and
+   carries the exact untrusted body text as a plain string; `viewspec.js`
+   materializes it as text rather than markup.  The action row has id
+   `<card-id>-actions`.  U3-ENG.1/.2 replace their flat producer bodies with
+   the following.  U3-ENG.3 additionally imports `__version__`,
+   `credential_report`, and `LINK_RELATIONS`; its summary test monkeypatches
+   `api.credential_report` with both required and non-required rows, then
+   asserts the required-and-unset names, sorted `LINK_RELATIONS`, and
+   `__version__` exactly:
+
+   ```python
+   def read_attention_view(
+       workspace: Path, *, summary: bool = False, read_scope: list[str] | None = None
+   ) -> dict[str, Any]:
+       cards = [
+           card
+           for card in _attention_cards(Path(workspace))
+           if card["status"] == "open" and _attention_in_scope(card, read_scope)
+       ]
+       if summary:
+           by_loudness: dict[str, int] = {}
+           for card in cards:
+               loudness = str(card["loudness"] or "")
+               by_loudness[loudness] = by_loudness.get(loudness, 0) + 1
+           missing_required_credentials = sorted(
+               str(row.get("name") or "")
+               for row in credential_report(Path(workspace))
+               if row.get("class") == "required-for-operation"
+               and row.get("status") == "unset"
+               and str(row.get("name") or "")
+           )
+           return _read_payload(
+               open=len(cards),
+               by_loudness=by_loudness,
+               as_of=now_iso(),
+               engine_version=__version__,
+               link_relations=sorted(LINK_RELATIONS),
+               missing_required_credentials=missing_required_credentials,
+           )
+       cards.sort(key=_attention_view_sort_key)
+       return _read_payload(
+           view=_view("attention", [_attention_view_card_block(card) for card in cards])
+       )
+
+
+   def _attention_view_card_block(card: dict[str, Any]) -> dict[str, Any]:
+       card_id = safe_filename(card["path"])
+       created = _attention_created(card)
+       age_days = _attention_age_days(created)
+       target = str(card["target"] or "")
+       frontmatter = card["frontmatter"]
+       block: dict[str, Any] = {
+           "id": card_id,
+           "kind": "card",
+           "ref": card["path"],
+           "title": str(card["title"]),
+           "kind_line": str(card["kind"]),
+           "loudness": str(card["loudness"]),
+           "age_s": age_days * 86_400 if age_days is not None else 0,
+           "age_label": f"{age_days}d" if age_days is not None else "",
+           "blocks": [
+               {
+                   "id": f"{card_id}-evidence",
+                   "kind": "evidence-list",
+                   "items": [{"label": target, "ref": target}] if target else [],
+               },
+               {
+                   "id": f"{card_id}-body",
+                   "kind": "text",
+                   "text": str(card["body_data"]["text"]),
+               },
+               _attention_view_action_row(card),
+           ],
+       }
+       for source, destination in (
+           ("argument_for", "argument_for"),
+           ("argument_against", "argument_against"),
+           ("what_tipped_it", "tipped_by"),
+           ("certainty", "certainty"),
+           ("raised_by", "raised_by"),
+       ):
+           value = frontmatter.get(source)
+           if isinstance(value, str) and value.strip():
+               block[destination] = value
+       if created:
+           block["raised_at"] = created
+       return block
+
+
+   def _attention_view_action_row(card: dict[str, Any]) -> dict[str, Any]:
+       card_id = safe_filename(card["path"])
+       target_id = str(card["path"])
+       return {
+           "id": f"{card_id}-actions",
+           "kind": "action-row",
+           "actions": [
+               {
+                   "label": "Resolve",
+                   "operation_id": "resolve-attention",
+                   "payload": {"target_id": target_id},
+                   "primary": True,
+               },
+               {
+                   "label": "Acknowledge",
+                   "operation_id": "acknowledge-attention",
+                   "payload": {"target_id": target_id},
+               },
+               {
+                   "label": "Defer",
+                   "operation_id": "resolve-attention",
+                   "payload": {"target_id": target_id, "outcome": "defer"},
+               },
+           ],
+       }
+   ```
+
+   The atomic U3-ENG test group must pin the complete nested action authority
+   (including the absence of Curate), rather than merely testing that an
+   `action-row` exists. Add this replacement test to
+   `tests/test_attention_view.py` before implementing the producer:
+
+   ```python
+   def test_attention_view_nests_exact_supported_actions(workspace: Path) -> None:
+       written = inbox.write_proposal(
+           workspace,
+           "candidate",
+           "Capture Smith 2024",
+           "Capture it into the catalog",
+           "Cited twice in the hub",
+           "Might be out of scope",
+           "hub cross-reference",
+           "likely",
+           "capture-sweep",
+       )
+       ref = written.relative_to(workspace).as_posix()
+
+       payload = api.read_attention_view(workspace)
+       card = next(card for card in payload["view"]["blocks"] if card["ref"] == ref)
+
+       assert [child["kind"] for child in card["blocks"]] == [
+           "evidence-list",
+           "text",
+           "action-row",
+       ]
+       assert card["blocks"][2]["actions"] == [
+           {
+               "label": "Resolve",
+               "operation_id": "resolve-attention",
+               "payload": {"target_id": ref},
+               "primary": True,
+           },
+           {
+               "label": "Acknowledge",
+               "operation_id": "acknowledge-attention",
+               "payload": {"target_id": ref},
+           },
+           {
+               "label": "Defer",
+               "operation_id": "resolve-attention",
+               "payload": {"target_id": ref, "outcome": "defer"},
+           },
+       ]
+   ```
+
+   The generic proposal-card `Curate` button is removed.  The existing
+   `curate-note-candidate` operation requires a checked candidate note's
+   `note_path` and an `accepted|rejected` `status`; `write_proposal` provides
+   neither, so emitting it would knowingly enqueue an invalid operation.  A
+   later proposal-to-note design may add a distinct source contract and button;
+   this plan must not fabricate either payload.
+3. **Plugin and actor agreement.** The cross-section card contract at
+   U3-PLUG.4 and all its tests use the grammar above, including a nested `text`
+   child.  `sortCards` continues to use `age_s`; queue rows display the
+   producer-supplied `age_label`.  U3-PLUG.6 reads `summary.open`, never
+   `summary.open_count`.  The plugin omits an `actor` field entirely: the
+   HTTP door alone assigns `pi` after token authentication, and MCP remains
+   `agent`.  U3-PLUG.7's
+   direct enqueue fixture uses `{"target_id": "inbox/x.md"}`, never the stale
+   `attention_path`/`resolution` payload.
+4. **Renderer test is an exact contract.** The U3-PLUG.4 replacement test
+   must use nonempty evidence and real Resolve/Defer action payloads, both arguments,
+   tipped/certainty data, and metadata.  It asserts the complete class sequence
+   `kind, title, evidence, text, action-row, arguments, tipped, meta`, the
+   evidence `data-ref`, action label/id/serialized payload, and all analysis
+   text.  A separate generic renderer test includes two same-kind semantic
+   children with distinct ids so a duplicate or omission fails; the canonical
+   attention-card fixture still has exactly one each of evidence, text, and
+   action row.  The cure test asserts the full sequence
+   `kind, title, evidence, text` and absence of action, analysis, toggle, and
+   metadata.  `renderCard` maps every supplied semantic child once in input
+   order, then appends only present analysis/meta fields; it never partitions
+   child kinds.  An argument/tipping group may exist when either corresponding
+   parent field exists, but it contains only spans for fields that are actually
+   present.
+5. **Execution order and design record.** U3-ENG.1/.2/.3 are one atomic TDD
+   slice after BOOT-B.4 and graph ERP-A.1–.5: write all replacement tests,
+   run that group red, implement the final producer above, run it green, and
+   make one combined commit. U3-ENG.3 imports `LINK_RELATIONS` directly from
+   `runtime.subsystems.lib.edges`, never the temporary `schema` re-export.
+   Do not execute their superseded incremental red/green expectations or their
+   three separate commits. Then land U3-ENG.4, U3-ENG.5, and
+   U3-ENG.6 before U3-PLUG.4/.6/.7.  SEAM.1 lands before any pane action test
+   or V2 `resolve-evidence` endpoint.  The U3 design's expanded-card order is
+   amended to `evidence → text → action row → analysis → meta`; this is a
+   deliberate V2 prerequisite, not a renderer-local exception.
+6. **U1 job-field order tolerance.** If U1 J.1 has landed when U3-ENG.4
+   registers `views.attention`, its action dict includes `job: "review"` and
+   the pinned U1 job mapping is updated in the same change. If it has not,
+   execute U3-ENG.4's drafted dict unchanged and let U1's re-anchored J.1
+   preserve the row and add that job later. The historical concrete dict and
+   test snippets below are superseded only to this extent; neither execution
+   order may delete or leave a jobless registered view.
+
+### Plan-reconciliation amendment — U1 transport, scope-walk, and CLI-parity handoffs (2026-07-29)
+
+This amendment governs the U1-owned contracts that surface tasks consume.  It
+does not move ownership of HTTP dispatch or CLI parity into this plan; it makes
+each consumer update the contracts atomically when it lands after U1.
+
+1. **Named HTTP refusals.** Once U1 M.3 lands, every BOOT/U3 HTTP assertion
+   below uses `{"ok": False, "error": "unauthorized: missing or invalid bearer
+   token"}` for a tokenless protected route and
+   `{"ok": False, "error": "method not allowed: <METHOD> <PATH>"}` for a
+   wrong method.  In particular U3 attention uses
+   `method not allowed: POST /v1/views/attention`; lifecycle tests use their
+   actual `/v1/status` or `/v1/shutdown` path.  If a surface task lands first,
+   U1 M.3's refusal-shape sweep updates its expectations in the same PR.  Bare
+   `"unauthorized"` and `"method not allowed"` are superseded test values,
+   not compatibility forms.
+2. **Attention scope proof.** `views.attention` is a registry-owned
+   optional-scope HTTP route.  The task registering it also adds its
+   route-specific entry and seeded fixture to U1 M.3's registry-driven
+   `PROBES`, proving a void scope removes/refuses its attention marker while
+   the unscoped leg is real.  It must not change M.3's coverage assertion to a
+   fixed count.  V2 applies the same rule to `views.evidence_review`.
+3. **Parser parity.** If BOOT-A.8 or BOOT-D.7 lands after U1 M.4, its
+   `memoria handshake` or `memoria onboard` parser
+   change also adds that command to U1's `CLI_ONLY_COMMANDS` (unless the task
+   deliberately registers a full surface row).  If it lands first, M.4's
+   initial complement includes it.  Updating `tests/test_cli.py` alone is
+   insufficient in either order.
+
+### Plan-reconciliation amendment — graph roster activation and warrant wire (2026-07-29)
+
+This amendment supersedes U3-PLUG.5's legacy `reason` payload, every
+three-item relation fixture/assertion in U3-PLUG.5/.6, U3-PLUG.8's ambiguous
+Warrant help text, and U3-PLUG.11's three-verb/manual-queue-only acceptance.
+It is coordinated with graph-substrate ERP-A.1–.5 and ERP-D.5; it neither
+adds a relation-specific registry action nor changes the SEAM.1 HTTP/MCP
+actor split.
+
+1. **Atomic public roster.** `summary.link_relations` is always the exact
+   roster that the token-authenticated HTTP `operation/run` door can enqueue
+   and the worker can complete through `curate-note-link`. It remains the
+   current three verbs until the graph plan's ERP-A.1–.5 public activation PR
+   lands; then it is exactly `sorted(edges.LINK_RELATIONS)` (the six
+   `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, and
+   `rebuttal`). `tension` is never served. ERP-A.5 pins U3-ENG.3's direct `lib.edges`
+   import before the atomic U3 engine slice begins; the temporary `schema`
+   re-export is never a second final owner. The plugin continues to render
+   only the server payload—no compatibility roster and no local relation
+   literal.
+2. **Required graph and U3 proofs.** ERP-A.4's engine/worker acceptance group
+   parameterizes direct `curate_note_link`/worker execution over every served
+   relation and asserts the matching `links.<relation>` entry; it separately
+   proves that `tension` is rejected. It does not use `/operation/run`: before
+   SEAM.1 that HTTP door still assigns `actor="agent"`. U3-PLUG.5/.6, which
+   execute only after ERP-A.1–.5, use the exact sorted-six fixture, and prove
+   a `rebuttal` builder payload; U3-PLUG.6's summary mock/`linkRelations`
+   assertion uses that same six-value list. U3-PLUG.7
+   owns the post-SEAM.1 public integration: fetch the served roster, submit
+   each relation through the PI-authenticated `/operation/run` door without a
+   caller-supplied actor, run the jobs, and assert `status == "done"`; it also
+   proves `tension` is absent and rejected. No relation-specific registry
+   action is added.
+3. **Warrant text is an edge attribute.** U3-PLUG.5/.8 execute after
+   graph ERP-D.5. `buildRelateOperation` emits a nonblank text field as
+   `payload.warrant` (and omits it when blank), never `payload.reason`; its
+   Node test pins that wire. ERP-D.5's Python round trip pins
+   `attributes_json.warrant`. The modal help reads, in substance: “A
+   `warrant` relation links a license note; Warrant text annotates the
+   selected edge.” This keeps the two meanings distinct rather than claiming
+   that a request reason is promotion-ready edge data.
+4. **Manual proof keeps the token private.** Replace the old `grep` command,
+   which puts the token in a child process's argument vector and can choose
+   the wrong vault, with this in-process check. It neither prints the token
+   nor passes it to another command:
+
+   ```bash
+   python - <<'PY'
+   import json
+   import subprocess
+   from pathlib import Path
+
+   vault = Path("test-vault/u3-plug-manual")
+   handshake = json.loads(
+       subprocess.check_output(
+           ["memoria", "handshake", "--vault", str(vault), "--json"], text=True
+       )
+   )
+   token = str(handshake["token"])
+   hits = [
+       path.relative_to(vault).as_posix()
+       for path in vault.rglob("*")
+       if path.is_file() and token.encode() in path.read_bytes()
+   ]
+   assert hits == [], hits
+   PY
+   ```
+
+   The U3-PLUG.11 relation step selects `rebuttal` (a newly activated verb),
+   submits it, runs the queued job, and verifies the resulting edge—not merely
+   a queued request id.
 
 ### Plan-reconciliation amendment — nested envelopes, cards, and authority verification (2026-07-29)
 
@@ -130,29 +501,69 @@ other task bodies remain unchanged.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/http_transport.py:216` (the enqueue call's `actor="agent"`)
-- Test: existing HTTP-transport operation tests (locate exactly: `grep -n 'actor' tests/test_http_transport.py`)
+- Modify: `tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope`
+  and replace `test_http_transport_operation_run_cannot_claim_pi_authority`
 
 **Interfaces:**
 - Consumes: bootstrap spec §4 (token trust model), U3 spec §2/§4 (pane enqueues pi-protected ops).
 - Produces: HTTP `POST /operation/run` enqueues with `actor="pi"`; MCP stdio door unchanged (`mcp_transport.py:118` stays `agent`).
 
-- [ ] **Step 1: Write the failing test** — add to `tests/test_http_transport.py` (mirror the nearest enqueue test's fixture):
+- [ ] **Step 1: Write the failing tests.** In
+  `test_http_transport_operation_run_uses_request_envelope`, leave its caller-supplied
+  `"actor": "agent"` in the body and change its persisted-actor assertion to
+  `assert row["actor"] == "pi"`. This proves the HTTP door, not the caller body,
+  assigns authority. Then replace the obsolete
+  `test_http_transport_operation_run_cannot_claim_pi_authority` with:
 
 ```python
-def test_http_operation_enqueue_carries_pi_actor(tmp_path):
-    # arrange per the file's existing enqueue-test fixture, then:
-    request_row = state.operation_request(vault, request_id)
-    assert request_row["actor"] == "pi"
+def test_http_transport_operation_run_uses_pi_authority_without_caller_actor(
+    workspace: Path,
+) -> None:
+    _write_attention(workspace, "http-pi-resolve")
+
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "resolve-attention",
+            "payload": {
+                "target_id": "inbox/http-pi-resolve.md",
+                "outcome": "apply",
+                "routing_class": "ask",
+                "reason": "authenticated pane disposition",
+            },
+            "idempotency_key": "http-pi-resolve",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert response["ok"] is True
+    assert response["result"]["status"] == "done"
+    request = state.request_row(workspace, "http-pi-resolve")
+    assert request is not None
+    assert request["actor"] == "pi"
+    assert "attention_status: resolved" in (
+        workspace / "inbox/http-pi-resolve.md"
+    ).read_text(encoding="utf-8")
 ```
 
-Adapt the arrange block from the file's existing operation-enqueue test verbatim (read it first); the assertion above is the contract.
+  Do not retain the old failure assertion: it describes the deliberately removed
+  caller-controlled-authority model. `state.request_row`, not the nonexistent
+  `state.operation_request`, is the repository helper for the persisted envelope.
 
-- [ ] **Step 2: Run it** — `python -m pytest tests/test_http_transport.py::test_http_operation_enqueue_carries_pi_actor -v` — Expected: FAIL (`actor == "agent"`).
-- [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven, user-held per-boot token (bootstrap spec §4; plan contract 5).`
-- [ ] **Step 4: Sweep existing assertions** — `grep -n '"agent"' tests/test_http_transport.py` and update any assertion pinning the old actor; re-run the file: `python -m pytest tests/test_http_transport.py -v` — Expected: PASS.
-- [ ] **Step 5: Run the full gate** — `python scripts/verify` — expected: green.
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 2: Run them** —
+  `python -m pytest tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope tests/test_http_transport.py::test_http_transport_operation_run_uses_pi_authority_without_caller_actor -v`
+  — Expected: both fail before the transport change (the first persists `agent`; the
+  second is refused as lacking PI authority).
+- [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to
+  `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven,
+  user-held per-boot token (bootstrap spec §4; plan contract 5).`
+- [ ] **Step 4: Run the file** — `python -m pytest tests/test_http_transport.py -v`.
+  Expected: pass. The explicit caller `actor` fields in unrelated HTTP fixtures may
+  remain as ignored-input coverage; only expectations of their persisted authority
+  change to `pi`.
+- [ ] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/http_transport.py tests/test_http_transport.py
@@ -4599,7 +5010,6 @@ each is the standard reading; assembler may veto):
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
-
 > **Execution receipt (2026-07-29):** BOOT-B.7 completed in `9b1f4da9` after
 > the adopted plan amendments `b68d527a` and `2d339918`. The initial RED suite
 > produced the expected missing credentials/warning/snapshot failures; the focused
@@ -4615,11 +5025,11 @@ each is the standard reading; assembler may veto):
 
 ---
 
-# Section BOOT-C: agent-bundle seeding, `.memoria/vault.json` manifest, `memoria upgrade`, skew detection
+# Section BOOT-C: fresh agent-bundle seeding and current-hash manifest
 
-Implements bootstrap spec §5 (perimeter layers 1–2 + Codex mirror), §6 (upgrade
-and skew), §9.3–9.4, honoring the §1 table ownership split: perimeter + wiring
-files are owned here; U4-owned method files (`.claude/skills/memoria-copi/`,
+Implements bootstrap spec §5's fresh-install perimeter layers and current-hash
+manifest, honoring the §1 table ownership split: perimeter + wiring files are
+owned here; U4-owned method files (`.claude/skills/memoria-copi/`,
 `.claude/hooks/session_status.py`) are *seeded by the same verbs* — the U4
 section appends their rel paths to `BUNDLE_FILES["agent"]` (Produces below) and
 adds the template files; no other seam is needed.
@@ -4639,31 +5049,66 @@ real Codex hook schema is known.
 
 Seeding mechanism decision (one line, per instructions): bundle files are
 **static templates in `product/workspace_seed/`** (matches the existing seed
-pattern — no per-vault substitution is needed in any of them), written by a
-dedicated bundle writer (`runtime/bundles.py`), **not** via `SEED_TREES` /
-`SEED_FILES`, so upgrade/backup owns exactly these paths and Plan 23 R1NG.3's
-seed-class seams (`_copy_seed_tree` / `_copy_seed_file` / `SEED_CLASSES`) stay
-untouched by this section.
+pattern — no per-vault substitution is needed in any of them), written during
+fresh `memoria init` by a dedicated bundle writer (`runtime/bundles.py`),
+**not** via `SEED_TREES` / `SEED_FILES`; Plan 23 R1NG.3's seed-class seams
+(`_copy_seed_tree` / `_copy_seed_file` / `SEED_CLASSES`) stay untouched by
+this section.
 
 Constraints other sections must honor:
 
-- Bundle files are engine-owned regenerate-always artifacts. They must never be
-  added to Plan 23's `SEED_CLASSES` (view-preference class) — hand-edits to
-  them are detected by hash and backed up, not preserved.
+- Bundle files are engine-owned fresh-init artifacts. They must never be added
+  to Plan 23's `SEED_CLASSES` (view-preference class). The manifest records
+  their initial hashes; this plan provides no recovery, backup, or upgrade path
+  for later edits.
 - `AGENTS.md` is **not** in any bundle: it is a tracked projection (Plan 23
   R1NG.4) with its own drift check (`check_tracked_projections`).
-- All bundles are stamped with the same `__version__` at write time; skew
-  helpers assume that.
 - `.obsidian` view-preference files (`app.json`, `graph.json`, …) are not
   hash-tracked; only `.obsidian/plugins/memoria-obsidian/*` is (the "obsidian"
   bundle).
 - No journal events are added or changed by this section — no floor-golden
   regeneration is expected (`tests/floor_lib.py` hashes journal output only).
-- Doctor's default report gains a `bundles` key and its `ok` is now also gated
-  on `bundles["ok"]`; a vault with a `.memoria/` dir but no
-  `.memoria/vault.json` reports `ok: false` (loud, per spec §5 "absence is
-  loud"). Test fixtures must build vaults via `memoria init` (the supported
-  construction path), never by hand-creating `.memoria/`.
+
+### Clean-slate amendment — bootstrap and plugin lifecycle (2026-07-30, BINDING)
+
+There are no existing Memoria installations. This release supports one path:
+fresh initialization. This amendment supersedes every conflicting BOOT-C,
+U3-PLUG, and U4 instruction below. In a conflict, this amendment governs.
+Do not implement an obsolete block merely because it remains as drafting
+history.
+
+1. **Active BOOT-C order.** Execute BOOT-C.1, then BOOT-C.2. BOOT-C.3,
+   BOOT-C.4, and BOOT-C.5 are removed. Their historical snippets, tests, and
+   commit messages are non-executable.
+2. **Fresh-init writer and manifest.** `memoria init` alone writes the selected
+   static bundles and `.memoria/vault.json`; `--no-obsidian` writes the agent
+   bundle alone. The manifest retains its fresh vault identity and current file
+   hashes only:
+
+   ```json
+   {"schema": 1, "vault_id": "<hex>", "bundles": {"agent": {"files": {"<rel>": "sha256:<hex>"}}}}
+   ```
+
+   Tests prove that every seeded file matches its current recorded hash. Do not
+   stamp bundle or schema versions, preserve a prior manifest, repair a missing
+   manifest, or invoke the writer from `doctor --repair`.
+3. **No lifecycle compatibility surface.** Do not add a `memoria upgrade`
+   parser, handler, recovery path, backup directory, backup gitignore entry,
+   version comparator, skew warning, or version advice. `doctor` neither
+   reports nor gates its result on bundles or manifest state.
+4. **No plugin-settings migration.** The fresh plugin defaults omit
+   `serverUrl` and `hasToken`, and current code never reads either key. Load
+   and save the current settings normally; do not delete, reinterpret, test,
+   or rewrite settings from a prior plugin installation. `pill.js` exports no
+   version comparator or skew banner, and the attention pane renders no
+   version-skew UI.
+5. **U4 handoff.** `copi_bundle_files()` participates in fresh initialization
+   only. It carries current content hashes, not `COPI_BUNDLE_VERSION`; the
+   SessionStart hook consumes credential status without skew constants or
+   upgrade advice.
+
+The deletion prevents a permanent maintenance surface for installations that
+do not exist, while preserving the fresh vault's perimeter and hash evidence.
 
 Baseline verified at main `80e62bbd` (line refs below read from the actual
 files, not from specs).
@@ -4694,7 +5139,7 @@ files, not from specs).
 - [ ] Create `tests/test_agent_bundle.py` with the failing content tests:
 
 ```python
-"""Agent-bundle seeding, vault.json manifest, upgrade, and skew detection."""
+"""Agent-bundle seed-template content checks."""
 
 from __future__ import annotations
 
@@ -4982,29 +5427,34 @@ EOF
 
 ---
 
-### Task BOOT-C.2: `runtime/bundles.py` + `.memoria/vault.json` written by init
+### Task BOOT-C.2: fresh-init bundle writer + current-hash manifest
+
+> **Binding execution text:** the historical detail below is superseded in full
+> by the clean-slate amendment. Write static agent and Obsidian bundles only
+> from `memoria init`, then write the current-hash manifest. Test a normal init
+> and `--no-obsidian` init; assert every recorded hash matches the file just
+> seeded. Do not wire bundle writing into repair or doctor, preserve a manifest,
+> or add version metadata. Run the focused bundle tests and `python scripts/verify`
+> before committing this one fresh-init slice.
 
 **Files:**
 - Create: `src/memoria_vault/runtime/bundles.py`
-- Modify: `src/memoria_vault/cli.py:2270-2272` (`_repair_workspace`), `src/memoria_vault/cli.py:2275-2295` (`_repair_write_targets`), `src/memoria_vault/cli.py:2346-2362` (`_initialize_workspace_files`)
+- Modify: `src/memoria_vault/cli.py` (`_initialize_workspace_files` only)
 - Modify: `tests/test_agent_bundle.py` (append)
 
 **Interfaces:**
-- Consumes: `memoria_vault.__version__: str`; `memoria_vault.runtime.state.SCHEMA_VERSION: int` (state.py:53); `memoria_vault.runtime.policy.audit.sha256_bytes(data: bytes) -> str` / `sha256_file(path: Path) -> str` (both return `"sha256:<64-hex>"`, audit.py:17-26); `memoria_vault.runtime.vaultio.write_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None` (vaultio.py:170); `importlib.resources.files`.
+- Consumes: `memoria_vault.runtime.policy.audit.sha256_bytes(data: bytes) -> str` / `sha256_file(path: Path) -> str` (both return `"sha256:<64-hex>"`, audit.py:17-26); `memoria_vault.runtime.vaultio.write_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None` (vaultio.py:170); `importlib.resources.files`.
 - Produces (module `memoria_vault.runtime.bundles`):
   - `MANIFEST_REL: str = ".memoria/vault.json"`
   - `MANIFEST_SCHEMA: int = 1`
-  - `BACKUP_ROOT_REL: str = ".memoria/backup"`
   - `BUNDLE_FILES: dict[str, tuple[str, ...]]` — bundle name → seeded rel paths; keys `"agent"` and `"obsidian"`. **U4 appends its method-file rel paths to `"agent"` here.**
   - `seed_bytes(rel: str) -> bytes`
-  - `read_manifest(workspace: Path) -> dict[str, Any] | None`
-  - `write_manifest(workspace: Path, manifest: dict[str, Any]) -> None`
-  - `seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None, vault_id: str | None = None) -> dict[str, Any]` — writes every file of the named bundles (default: all) from the seed package, writes the manifest, returns it; preserves an existing manifest's `vault_id`, minting `uuid4().hex` only when none exists.
-  - `bundle_write_targets() -> list[str]` — every bundle rel path + parent dirs + `MANIFEST_REL` (for repair-preflight validation).
-  - Manifest shape (contract for U3/U4/doctor): `{"schema": 1, "vault_id": "<hex>", "schema_version": <state.SCHEMA_VERSION>, "bundles": {<name>: {"version": "<engine __version__>", "files": {<rel>: "sha256:<hex>"}}}}`.
-- Behavior contract: `memoria init` (and `doctor --repair`, which reuses `_initialize_workspace_files`) writes all bundle files + manifest; `--no-obsidian` seeds only the `"agent"` bundle. `doctor --repair` regenerates bundles without backup (matching its existing overwrite semantics for runtime seeds); only `memoria upgrade` (BOOT-C.3) backs up.
+  - `read_manifest(workspace: Path) -> dict[str, Any] | None` and `write_manifest(workspace: Path, manifest: dict[str, Any]) -> None`
+  - `seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None) -> dict[str, Any]` — writes the named current templates and a newly minted vault id.
+  - Manifest shape: `{"schema": 1, "vault_id": "<hex>", "bundles": {<name>: {"files": {<rel>: "sha256:<hex>"}}}}`.
+- Behavior contract: fresh `memoria init` writes all bundle files + manifest; `--no-obsidian` seeds only the `"agent"` bundle. Nothing regenerates or recovers an existing bundle.
 
-**Steps:**
+**Historical steps — do not execute:**
 
 - [ ] Append to `tests/test_agent_bundle.py` (add these imports to the top of
       the file: `from pathlib import Path`, `import pytest`,
@@ -5262,7 +5712,11 @@ EOF
 
 ---
 
-### Task BOOT-C.3: `memoria upgrade` — regenerate bundles, back up hand-edits, rewrite manifest
+### Task BOOT-C.3: Removed — no bundle upgrade, backup, or recovery path
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any file,
+> test, parser, handler, gitignore, or commit instruction in this historical
+> block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `upgrade_bundles`)
@@ -5447,7 +5901,10 @@ EOF
 
 ---
 
-### Task BOOT-C.4: Skew detection — one-line warning on every CLI command
+### Task BOOT-C.4: Removed — no engine/vault skew detection
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
+> version, warning, CLI, test, or commit instruction in this historical block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append version-skew helpers)
@@ -5650,7 +6107,11 @@ EOF
 
 ---
 
-### Task BOOT-C.5: Doctor full bundle-integrity + skew report
+### Task BOOT-C.5: Removed — doctor does not enforce bundles or manifests
+
+> **Removed by the 2026-07-30 clean-slate amendment. Do not execute any
+> doctor payload, integrity enforcement, version, test, or commit instruction
+> in this historical block.**
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/bundles.py` (append `verify_bundles`)
@@ -7856,98 +8317,64 @@ semantics (`docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md`).
 
 ## Payload contract (what other sections consume)
 
-`GET /v1/views/attention` — authenticated (transport-wide bearer check,
-`src/memoria_vault/runtime/http_transport.py:63`), optional `read_scope`/`scope` query
-(same narrowing as every other read route). Response:
+This reconciled contract replaces the old flat envelope, interleaved action rows,
+and generic Curate action below. `GET /v1/views/attention` is authenticated
+(transport-wide bearer check) and accepts the ordinary optional `read_scope`/`scope`
+query. Its response is:
 
 ```json
 {
   "ok": true,
   "api_version": "engine-read-api.v1",
-  "spec": "view-spec.v1",
-  "blocks": [ <card>, <action-row>, <card>, <action-row>, ... ]
+  "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [<card>, ...]}
 }
 ```
 
-`spec` is the view-contract version field (forward-compat anchor). Only **open** cards
-appear (`attention_status: open`); each card block is immediately followed by its
-action-row block. Block order: loudness rank (`block` 0 < `alert` 1 < `notice` 2 <
-`quiet` 3 < unknown/absent 4 — `block` first is subsumed by rank 0), then `created`
-ascending (oldest first; missing `created` sorts last), then `path`.
+Only open attention items appear. The current producer emits one top-level card per
+item, sorted by loudness rank (`block`, `alert`, `notice`, `quiet`, then unknown),
+oldest first within a rank, then path. A card has `id`, `kind="card"`, `ref`,
+`title`, verbatim `kind_line` and `loudness`, `age_s`, `age_label`, and
+`blocks`; it adds only nonempty `argument_for`, `argument_against`, `tipped_by`,
+`certainty`, `raised_by`, and `raised_at`. It never exposes writer-only
+`attention_kind`, `what_tipped_it`, `created`, `age_days`, `evidence`, or
+`body_data`.
 
-**card block** (always-present keys):
+Each attention card has exactly these children, in this order:
 
-| key | value |
-| --- | --- |
-| `id` | `safe_filename(card path)`, e.g. `inbox_flag-broken-citation.md` |
-| `kind` | `"card"` |
-| `ref` | vault-relative card path, e.g. `inbox/flag-broken-citation.md` |
-| `attention_kind` | `candidate\|gap\|flag\|alert\|work-prompt` (verbatim frontmatter) |
-| `status` | `"open"` (this view filters to open) |
-| `title` | frontmatter title or file stem |
-| `loudness` | frontmatter value **verbatim**, may be `""` — rendered, never invented |
-| `created` | ISO date string or `""` |
-| `age_days` | integer days since `created`, or `null` when `created` absent/unparseable |
-| `check_status` | frontmatter `check_status` or `"unchecked"` |
-| `evidence` | list of vault-relative links — **currently at most the frontmatter `target`**; `[]` when absent |
-| `body_data` | `{"kind": "untrusted_text", "text": <body>}` |
+1. `evidence-list` `<id>-evidence`, with zero items or one
+   `{"label": target, "ref": target}`;
+2. `text` `<id>-body`, carrying the untrusted body as plain text;
+3. `action-row` `<id>-actions`, with Resolve (primary,
+   `{"target_id": ref}`), Acknowledge (`{"target_id": ref}`), and Defer
+   (`{"target_id": ref, "outcome": "defer"}`). Resolve and Defer use
+   `resolve-attention`; Acknowledge uses `acknowledge-attention`.
 
-**Present-only honesty fields** (flat, verbatim frontmatter strings; a key is *omitted*
-when the writer never persisted it — verified against
-`src/memoria_vault/runtime/subsystems/lib/inbox.py`):
+The generic proposal-card Curate action is intentionally absent: its worker operation
+requires a checked candidate-note path and an accepted/rejected status which an
+attention proposal does not contain.
 
-- proposals (`write_proposal`, kinds `candidate`/`gap`): `action`, `argument_for`,
-  `argument_against`, `what_tipped_it`, `certainty`
-- findings (`write_finding`, kinds `flag`/`alert`): `finding`, `agent_recommendation` —
-  these cards **have no** `argument_for`/`argument_against`; the block simply lacks
-  those keys. The `evidence:` body section `write_finding` emits is *body prose*, not a
-  frontmatter field — it travels inside `body_data`, never as a structured field.
-- work prompts (`write_work_prompt`): `action`, `what_happened`
-- all writers: `raised_by`
+`GET /v1/views/attention?summary=true` is the authenticated poll response, with no
+`view`: `{ok, api_version, open, by_loudness, as_of, engine_version,
+link_relations, missing_required_credentials}`. `by_loudness` omits zero-count
+levels; `as_of` comes from `now_iso()`; `engine_version` is the package version;
+`link_relations` is `sorted(LINK_RELATIONS)`; and
+`missing_required_credentials` is the sorted names from `credential_report(workspace)`
+whose class is `required-for-operation` and status is `unset`.
 
-**action-row block**:
+`VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row", "evidence-list")` remains
+the renderer's catalog. The HTTP transport imposes no whitelist: a future top-level
+block is preserved inside `view.blocks`, and an unknown renderer kind fails visibly.
 
-```json
-{
-  "id": "<card block id>-actions",
-  "kind": "action-row",
-  "ref": "<card path>",
-  "actions": [
-    {"label": "Resolve", "operation_id": "resolve-attention"},
-    {"label": "Acknowledge", "operation_id": "acknowledge-attention"},
-    {"label": "Curate", "operation_id": "curate-note-candidate"}   // proposals only (candidate|gap)
-  ]
-}
-```
-
-All three operation ids exist in the capability catalog
-(`src/memoria_vault/product/capabilities/operations/*.md`); a test pins that.
-
-`GET /v1/views/attention?summary=true` — the pane's 30 s poll (authenticated, so it
-resets the server idle timer per bootstrap §3 / BOOT-A; nothing in this section
-implements timers — the endpoint simply rides the same authenticated `_handle` path
-BOOT-A keys on):
-
-```json
-{"ok": true, "api_version": "engine-read-api.v1",
- "open": 3, "by_loudness": {"block": 1, "alert": 1, "notice": 1},
- "as_of": "2026-07-15T14:02:00Z"}
-```
-
-`by_loudness` keys are the verbatim loudness values of open (scope-visible) cards —
-zero-count levels are omitted; `as_of` is `runtime.time.now_iso()`.
-
-Block catalog: `VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row",
-"evidence-list")` exported from `engine/api.py`. `text`/`badge`/`evidence-list` are
-reserved catalog members this view does not yet emit. The HTTP transport imposes **no**
-block-kind whitelist — additive block types flow through unchanged (pinned by test).
-
-No journal events are written by any task here (reads only) — **no floor golden
-regeneration needed**.
+No task here writes journal events, so no floor-golden regeneration is needed.
 
 ---
 
 ### Task U3-ENG.1: `read_attention_view` — sorted card blocks with present-only honesty fields
+
+> **Execution override:** U3-ENG.1/.2/.3 are the one atomic implementation
+> task specified by the 2026-07-29 reconciliation amendment. Their old
+> incremental red stages, flat assertions, and separate commits below are
+> drafting history, not executable instructions.
 
 **Files:**
 - Create: `tests/test_attention_view.py`
@@ -8409,14 +8836,20 @@ regeneration needed**.
 - Consumes: `now_iso() -> str` (`src/memoria_vault/runtime/time.py:17`).
 - Produces: final signature `read_attention_view(workspace: Path, *, summary: bool =
   False, read_scope: list[str] | None = None) -> dict[str, Any]`; summary payload
-  `{"ok", "api_version", "open": int, "by_loudness": dict[str, int], "as_of": str}`.
+  `{"ok", "api_version", "open": int, "by_loudness": dict[str, int], "as_of": str,
+  "engine_version": str, "link_relations": list[str],
+  "missing_required_credentials": list[str]}`.
 
 **Steps:**
 
-- [ ] Write the failing test — append to `tests/test_attention_view.py`:
+- [ ] Write the failing test — add `from memoria_vault import __version__`
+  and `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`
+  to `tests/test_attention_view.py`, then append:
 
   ```python
-  def test_attention_view_summary_returns_cheap_counts(workspace: Path) -> None:
+  def test_attention_view_summary_returns_cheap_counts(
+      workspace: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
       _write_view_card(workspace, "blocker", loudness="block", created="2026-07-01")
       _write_view_card(workspace, "alerting", loudness="alert", created="2026-07-01")
       _write_view_card(workspace, "noticed", loudness="notice", created="2026-07-01")
@@ -8424,22 +8857,37 @@ regeneration needed**.
           workspace, "closed", loudness="alert", created="2026-07-01", status="resolved"
       )
 
+      monkeypatch.setattr(
+          api,
+          "credential_report",
+          lambda _workspace: [
+              {"name": "MODEL_KEY", "class": "required-for-operation", "status": "unset"},
+              {"name": "SET_KEY", "class": "required-for-operation", "status": "set"},
+              {"name": "OPTIONAL_KEY", "class": "enhancing", "status": "unset"},
+          ],
+      )
       payload = api.read_attention_view(workspace, summary=True)
 
       assert payload["ok"] is True
       assert payload["api_version"] == api.READ_API_VERSION
       assert payload["open"] == 3
       assert payload["by_loudness"] == {"block": 1, "alert": 1, "notice": 1}
-      assert "blocks" not in payload
+      assert "view" not in payload
       assert datetime.datetime.fromisoformat(payload["as_of"].replace("Z", "+00:00"))
+      assert payload["engine_version"] == __version__
+      assert payload["link_relations"] == sorted(LINK_RELATIONS)
+      assert payload["missing_required_credentials"] == ["MODEL_KEY"]
   ```
 
 - [ ] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_summary_returns_cheap_counts -v`
   Expected: `TypeError: read_attention_view() got an unexpected keyword argument 'summary'`.
 
-- [ ] Write the minimal implementation. Add the import (alphabetical within the
-  `memoria_vault.runtime` group, after the `read_barrier` import at line 17):
+- [ ] Write the minimal implementation. Alongside the existing U3 imports, add
+  `from memoria_vault import __version__`,
+  `from memoria_vault.runtime.secrets import credential_report`, and
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`;
+  add the time import:
 
   ```python
   from memoria_vault.runtime.time import now_iso
@@ -8461,13 +8909,25 @@ regeneration needed**.
           for card in cards:
               key = str(card["loudness"] or "")
               by_loudness[key] = by_loudness.get(key, 0) + 1
-          return _read_payload(open=len(cards), by_loudness=by_loudness, as_of=now_iso())
+          missing_required_credentials = sorted(
+              str(row.get("name") or "")
+              for row in credential_report(Path(workspace))
+              if row.get("class") == "required-for-operation"
+              and row.get("status") == "unset"
+              and str(row.get("name") or "")
+          )
+          return _read_payload(
+              open=len(cards),
+              by_loudness=by_loudness,
+              as_of=now_iso(),
+              engine_version=__version__,
+              link_relations=sorted(LINK_RELATIONS),
+              missing_required_credentials=missing_required_credentials,
+          )
       cards.sort(key=_attention_view_sort_key)
-      blocks: list[dict[str, Any]] = []
-      for card in cards:
-          blocks.append(_attention_view_card_block(card))
-          blocks.append(_attention_view_action_row(card))
-      return _read_payload(spec=VIEW_SPEC_VERSION, blocks=blocks)
+      return _read_payload(
+          view=_view("attention", [_attention_view_card_block(card) for card in cards])
+      )
   ```
 
 - [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
@@ -8496,11 +8956,16 @@ regeneration needed**.
 - Modify: `tests/floor_lib.py` (ARG_TABLE, after the `attention.get` entry at lines
   1187–1191)
 - Modify: `tests/test_attention_view.py`
+- Modify when U1 M.3 has landed: `tests/test_read_api_scope_walk.py` (add the
+  route-owned `views.attention` probe; its existing seeded `attention_path`
+  marker is sufficient, so do not create a second seed fixture)
 
 **Interfaces:**
 - Consumes: `HTTP_ROUTES = http_routes()` route gate
   (`http_transport.py:21,115`); `_one(query, key)` (`http_transport.py:224`);
-  read-scope plumbing `_read_scope` (`http_transport.py:255`).
+  read-scope plumbing `_read_scope` (`http_transport.py:255`); after U1 M.3,
+  the registry-derived `PROBES` scope-walk gate in
+  `tests/test_read_api_scope_walk.py`.
 - Produces: surface action id **`views.attention`** (engine `read_attention_view`,
   kind `read`, scope `optional-read-scope`, params `{"summary": {"type": "boolean",
   "default": False}}`, http `GET /v1/views/attention`, response_version
@@ -8527,13 +8992,18 @@ regeneration needed**.
       )
 
       assert full_status == HTTPStatus.OK
-      assert full["spec"] == "view-spec.v1"
-      assert [block["kind"] for block in full["blocks"]] == ["card", "action-row"]
+      assert full["view"]["version"] == "view-spec.v1"
+      assert [block["kind"] for block in full["view"]["blocks"]] == ["card"]
+      assert [child["kind"] for child in full["view"]["blocks"][0]["blocks"]] == [
+          "evidence-list",
+          "text",
+          "action-row",
+      ]
       assert summary_status == HTTPStatus.OK
       assert summary["open"] == 1
       assert summary["by_loudness"] == {"notice": 1}
       assert scoped_status == HTTPStatus.OK
-      assert scoped["blocks"] == []
+      assert scoped["view"]["blocks"] == []
 
 
   def test_http_dispatch_rejects_wrong_method_for_attention_view(workspace: Path) -> None:
@@ -8547,6 +9017,20 @@ regeneration needed**.
   `expected` set (after `"attention.get",` line 24) and `("GET",
   "/v1/views/attention"),` to the `http_routes()` set (after `("GET",
   "/attention/card"),` line 50).
+
+  If U1 M.3 has already landed, also add its required dynamic scope-walk probe
+  to `tests/test_read_api_scope_walk.py`:
+
+  ```python
+      "views.attention": ("excluded", "{attention_path}"),
+  ```
+
+  This reuses M.3's existing seeded open attention card. It proves the
+  unscoped view actually contains that card and a void scope returns an empty
+  `view.blocks`; it must not weaken the registry-derived `set(PROBES) ==
+  scoped_ids` assertion. If U3-ENG.4 lands first, make the same addition when
+  U1 M.3 is re-anchored; do not create the scope-walk file early or replace
+  its dynamic completeness assertion with a count.
 
 - [ ] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_http_dispatch_serves_attention_view tests/test_attention_view.py::test_http_dispatch_rejects_wrong_method_for_attention_view tests/test_surface_contract.py -v`
@@ -8603,6 +9087,8 @@ regeneration needed**.
   python -m pytest tests/test_attention_view.py tests/test_surface_contract.py \
       tests/test_http_transport.py tests/test_floor_coverage.py -v
   python -m pytest tests/test_floor_sweep_reads.py -k "views.attention" -v
+  # When U1 M.3 is already present:
+  python -m pytest tests/test_read_api_scope_walk.py -v
   ```
 
   Expected: all pass — including
@@ -8617,6 +9103,8 @@ regeneration needed**.
   git add src/memoria_vault/engine/surface_contract.py \
       src/memoria_vault/runtime/http_transport.py \
       tests/test_surface_contract.py tests/floor_lib.py tests/test_attention_view.py
+  # When U1 M.3 is already present, also stage its required route-owned probe:
+  git add tests/test_read_api_scope_walk.py
   git commit -m "feat(http): serve GET /v1/views/attention (full view + summary poll)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -8652,7 +9140,18 @@ regeneration needed**.
       payload = api.read_attention_view(workspace)
 
       assert api.VIEW_BLOCK_KINDS == ("card", "text", "badge", "action-row", "evidence-list")
-      assert {block["kind"] for block in payload["blocks"]} <= set(api.VIEW_BLOCK_KINDS)
+      def descendants(blocks: list[dict[str, object]]) -> list[dict[str, object]]:
+          found: list[dict[str, object]] = []
+          for block in blocks:
+              found.append(block)
+              children = block.get("blocks")
+              if isinstance(children, list):
+                  found.extend(descendants(children))
+          return found
+
+      assert {
+          str(block["kind"]) for block in descendants(payload["view"]["blocks"])
+      } <= set(api.VIEW_BLOCK_KINDS)
 
 
   def test_http_dispatch_passes_additive_unknown_blocks_through(
@@ -8662,9 +9161,13 @@ regeneration needed**.
 
       def future_view(*args: object, **kwargs: object) -> dict[str, object]:
           payload = real(*args, **kwargs)
+          view = dict(payload["view"])
           return {
               **payload,
-              "blocks": [*payload["blocks"], {"id": "future", "kind": "sparkline"}],
+              "view": {
+                  **view,
+                  "blocks": [*view["blocks"], {"id": "future", "kind": "sparkline"}],
+              },
           }
 
       monkeypatch.setattr(
@@ -8675,8 +9178,8 @@ regeneration needed**.
       response, status = _dispatch(workspace, "GET", "/v1/views/attention", dict)
 
       assert status == HTTPStatus.OK
-      assert response["spec"] == "view-spec.v1"
-      assert response["blocks"][-1] == {"id": "future", "kind": "sparkline"}
+      assert response["view"]["version"] == "view-spec.v1"
+      assert response["view"]["blocks"][-1] == {"id": "future", "kind": "sparkline"}
   ```
 
 - [ ] Run to verify failure:
@@ -8779,13 +9282,22 @@ regeneration needed**.
       assert view_code == HTTPStatus.OK
       assert view["ok"] is True
       assert view["api_version"] == "engine-read-api.v1"
-      assert view["spec"] == "view-spec.v1"
-      assert [block["kind"] for block in view["blocks"]] == ["card", "action-row"]
-      assert view["blocks"][0]["argument_for"] == "for"
+      assert view["view"]["version"] == "view-spec.v1"
+      assert [block["kind"] for block in view["view"]["blocks"]] == ["card"]
+      card = view["view"]["blocks"][0]
+      assert [child["kind"] for child in card["blocks"]] == [
+          "evidence-list",
+          "text",
+          "action-row",
+      ]
+      assert card["argument_for"] == "for"
       assert summary_code == HTTPStatus.OK
       assert summary["open"] == 1
       assert summary["by_loudness"] == {"notice": 1}
       assert summary["as_of"]
+      assert summary["engine_version"] == __version__
+      assert summary["link_relations"] == sorted(LINK_RELATIONS)
+      assert "missing_required_credentials" in summary
   ```
 
 - [ ] Run to verify the tests exercise real sockets and fail only if the route were
@@ -8813,9 +9325,13 @@ regeneration needed**.
 > `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md` §2–5,
 > `docs/superpowers/specs/2026-07-15-surfaces-bootstrap-design.md` §2–4.
 
-**SPEC GAP:** the operation endpoint's path under the new `/v1` scheme is not pinned by BOOT/U3 (today's server exposes `POST /operation/run`, `src/memoria_vault/runtime/http_transport.py:204`); this section codes against a single constant `OPERATION_PATH = "/operation/run"` in `main.js` — the assembler must reconcile with the server section if it moves the route.
+**Resolved cross-section contract:** the operation endpoint remains `POST /operation/run` (not a
+`/v1` route); this section uses the single `OPERATION_PATH = "/operation/run"` constant in
+`main.js`.
 
-**SPEC GAP:** U3/BOOT name the summary and view payloads but not their field names; this section defines the exact client contract (see "Cross-section payload contract" below) — the server section must produce these fields verbatim or the assembler reconciles the two sections.
+**Resolved cross-section contract:** the summary and view field names below are binding for
+both U3-ENG and U3-PLUG. The plugin consumes them verbatim; it does not infer alternate
+envelopes or fields.
 
 **SPEC GAP:** U3 §3 says plugin settings are "One field: Engine command", but the shipped plugin also carries the empirical-recorder settings (`enabled`, `defaultProjectId`, `retentionDays`, `showPrivacyPreview`) guarded by existing contract tests. This section removes only `serverUrl` and the token field (the two the spec explicitly replaces with handshake) and keeps the recorder settings; escalate if the PI meant to delete the recorder.
 
@@ -8830,16 +9346,22 @@ regeneration needed**.
 
 - `memoria handshake --vault <path> --spawn --json` prints exactly one JSON object to stdout carrying at least `{"port": int, "token": str, "boot_id": str, "engine_version": str, "pid": int}` (the BOOT §1 runtime.json fields; extra keys ignored). On failure, its stderr names `<state>/serve.log` — the plugin surfaces that stderr verbatim in the server-down remediation because BOOT §4 forbids the plugin from locating the state file itself.
 - `GET /v1/status` — unauthenticated liveness probe, 200 when alive.
-- `GET /v1/views/attention?summary=true` (Bearer auth) → `{"ok": true, "open": int, "missing_required_credentials": [str], "link_relations": [str], "engine_version": str}`.
-- `GET /v1/views/attention` (Bearer auth) → `{"ok": true, "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [Block]}}` where `Block.kind ∈ {card, text, badge, action-row, evidence-list}`:
-  - `card`: `{kind, id, ref, title, loudness, kind_line, certainty, argument_for, argument_against, tipped_by, raised_by, raised_at, age_label, age_s, blocks: [Block]}` (children carry the card's `evidence-list` and `action-row`).
+- `GET /v1/views/attention?summary=true` (Bearer auth) →
+  `{"ok": true, "api_version": str, "open": int, "by_loudness": object, "as_of": str,
+  "missing_required_credentials": [str], "link_relations": [str],
+  "engine_version": str}`.
+- `GET /v1/views/attention` (Bearer auth) → `{"ok": true, "api_version": str, "view": {"version": "view-spec.v1", "kind": "attention", "blocks": [Block]}}` where `Block.kind ∈ {card, text, badge, action-row, evidence-list}`:
+  - `card`: `{kind, id, ref, title, loudness, kind_line, certainty, argument_for, argument_against, tipped_by, raised_by, raised_at, age_label, age_s, blocks: [Block]}`; current attention cards carry exactly nested `evidence-list`, `text`, then `action-row`.
   - `text`: `{kind, id, text}` · `badge`: `{kind, id, label, loudness}` · `evidence-list`: `{kind, id, items: [{label, ref}]}` · `action-row`: `{kind, id, actions: [{label, operation_id, payload, primary?}]}`.
   - Any other `kind` (including today's `"table"` from `engine/api.py:719`) renders as a labeled fallback box — fail visible, never silent.
-- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key", "actor": "pi"}` → `{"ok": bool, "job": {"job_id": str, …}, "result": …}` (today's `engine/api.py:440-444` shape; the toast names `job.job_id`).
+- `POST /operation/run` (Bearer auth) body `{"operation_id", "payload", "idempotency_key"}` →
+  `{"ok": bool, "job": {"job_id": str, …}, "result": …}`. The HTTP door
+  ignores any caller-supplied actor and persists `actor="pi"`; the client
+  intentionally omits that non-authoritative field.
 
-**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` (formerly `schema.py:39`; moved by the graph-edges plan ERP-A.1) and U3 §4 names it "the single source"; a plugin-side copy is a second source that drifts exactly along the skew axis BOOT §6 exists to police, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill. **Recorded amendment (EDGES §4, graph-edges plan ERP-A.5):** once `warrant`/`qualifier`/`rebuttal` activate, the served roster is six verbs; every acceptance here reads "exactly the served verbs" — never a counted three — and the control renders as a segmented control or dropdown accordingly.
+**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` and U3 §4 names it "the single source"; a plugin-side copy would be a second source that drifts from engine truth, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
 
-Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); skew compares `this.manifest.version` against the handshake's `engine_version`.
+Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); handshake `engine_version` remains transport metadata and drives no plugin lifecycle decision.
 
 ---
 
@@ -9093,7 +9615,11 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 ---
 
-### Task U3-PLUG.3: `pill.js` — status-pill state machine and skew banners
+### Task U3-PLUG.3: `pill.js` — status-pill state machine and poll cadence
+
+> **Clean-slate override (2026-07-30):** version comparison and skew banners
+> are removed. Do not implement the historical `compareVersions` or
+> `skewBanner` snippets below.
 
 **Files:**
 - Create: `packages/memoria-obsidian/pill.js`
@@ -9104,8 +9630,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 - Produces (CommonJS exports of `pill.js`):
   - `computePill({connection, openCount, lastPollAt, missingCredential}) -> {state, text, tone}` where `connection ∈ {"connected","stale","server-down","token-invalid","engine-missing"}`, `state ∈ PILL_STATES`, `tone ∈ {"green","amber","red","gray","accent"}`. Wordings exactly per the U3 §3 table; `stale` with `lastPollAt = 0` (never polled yet) renders `"Memoria · connecting…"`.
   - `formatAsOf(epochMs: number) -> "HH:MM"` (local time, zero-padded).
-  - `compareVersions(a: string, b: string) -> -1|0|1` (dotted numerics, then dot-split prerelease, numeric-aware, no-prerelease > prerelease).
-  - `skewBanner(pluginVersion: string, engineVersion: string) -> null | {direction: "plugin-older"|"engine-older", text: string}` — both U3 §3 banner wordings verbatim.
+  - No version-comparison or skew-banner export.
   - `PILL_STATES = ["connected","stale","server-down","token-invalid","engine-missing","key-needed"]`.
   - `computeNextPollDelay(isActive: boolean) -> number` — `30000` active, `120000` idle (U3 §5).
 
@@ -9120,11 +9645,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   const require = createRequire(import.meta.url);
   const {
     PILL_STATES,
-    compareVersions,
     computeNextPollDelay,
     computePill,
     formatAsOf,
-    skewBanner,
   } = require("../pill.js");
 
   const at = new Date(2026, 6, 15, 14, 2).getTime(); // local 14:02
@@ -9172,31 +9695,6 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(formatAsOf(new Date(2026, 0, 2, 9, 5).getTime()), "09:05");
   });
 
-  test("compareVersions handles dotted prereleases numerically", () => {
-    assert.equal(compareVersions("0.1.0-alpha.20", "0.1.0-alpha.21"), -1);
-    assert.equal(compareVersions("0.1.0-alpha.21", "0.1.0-alpha.20"), 1);
-    assert.equal(compareVersions("0.1.0-alpha.20", "0.1.0"), -1);
-    assert.equal(compareVersions("0.2.0", "0.1.9-alpha.9"), 1);
-    assert.equal(compareVersions("0.1.0", "0.1.0"), 0);
-  });
-
-  test("skew banners carry the ratified wordings in both directions", () => {
-    assert.equal(skewBanner("0.1.0-alpha.21", "0.1.0-alpha.21"), null);
-    assert.equal(skewBanner("", "0.1.0-alpha.21"), null);
-    const older = skewBanner("0.1.0-alpha.20", "0.1.0-alpha.21");
-    assert.equal(older.direction, "plugin-older");
-    assert.equal(
-      older.text,
-      "This vault's plugin (v0.1.0-alpha.20) is older than your engine (v0.1.0-alpha.21). Run `memoria upgrade`, then reload Obsidian.",
-    );
-    const newer = skewBanner("0.1.0-alpha.22", "0.1.0-alpha.21");
-    assert.equal(newer.direction, "engine-older");
-    assert.equal(
-      newer.text,
-      "This vault was seeded by a newer engine (v0.1.0-alpha.22) than installed (v0.1.0-alpha.21). Upgrade the engine: `pipx upgrade memoria`.",
-    );
-  });
-
   test("poll cadence is 30s active / 2m idle", () => {
     assert.equal(computeNextPollDelay(true), 30000);
     assert.equal(computeNextPollDelay(false), 120000);
@@ -9205,8 +9703,8 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../pill.js'`.
 - [ ] Write minimal implementation — create `packages/memoria-obsidian/pill.js`:
   ```js
-  // Pure status-pill state machine, skew banners, and poll cadence (U3 spec
-  // sections 3 and 5). No Obsidian imports; headless-testable with node.
+  // Pure status-pill state machine and poll cadence (U3 spec sections 3 and
+  // 5). No Obsidian imports; headless-testable with node.
 
   const PILL_STATES = [
     "connected",
@@ -9252,72 +9750,6 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     return { state: "connected", text: `Memoria · ${openCount} open`, tone: "green" };
   }
 
-  function compareVersions(a, b) {
-    const [coreA, preA = ""] = String(a).split("-", 2);
-    const [coreB, preB = ""] = String(b).split("-", 2);
-    const numsA = coreA.split(".").map(Number);
-    const numsB = coreB.split(".").map(Number);
-    for (let i = 0; i < Math.max(numsA.length, numsB.length); i += 1) {
-      const diff = (numsA[i] || 0) - (numsB[i] || 0);
-      if (diff) {
-        return Math.sign(diff);
-      }
-    }
-    if (preA === preB) {
-      return 0;
-    }
-    if (!preA) {
-      return 1;
-    }
-    if (!preB) {
-      return -1;
-    }
-    const partsA = preA.split(".");
-    const partsB = preB.split(".");
-    for (let i = 0; i < Math.max(partsA.length, partsB.length); i += 1) {
-      const partA = partsA[i];
-      const partB = partsB[i];
-      if (partA === undefined) {
-        return -1;
-      }
-      if (partB === undefined) {
-        return 1;
-      }
-      const numA = Number(partA);
-      const numB = Number(partB);
-      const diff =
-        Number.isFinite(numA) && Number.isFinite(numB) ? numA - numB : partA.localeCompare(partB);
-      if (diff) {
-        return Math.sign(diff);
-      }
-    }
-    return 0;
-  }
-
-  function skewBanner(pluginVersion, engineVersion) {
-    if (!pluginVersion || !engineVersion) {
-      return null;
-    }
-    const order = compareVersions(pluginVersion, engineVersion);
-    if (order === 0) {
-      return null;
-    }
-    if (order < 0) {
-      return {
-        direction: "plugin-older",
-        text:
-          `This vault's plugin (v${pluginVersion}) is older than your engine ` +
-          `(v${engineVersion}). Run \`memoria upgrade\`, then reload Obsidian.`,
-      };
-    }
-    return {
-      direction: "engine-older",
-      text:
-        `This vault was seeded by a newer engine (v${pluginVersion}) than installed ` +
-        `(v${engineVersion}). Upgrade the engine: \`pipx upgrade memoria\`.`,
-    };
-  }
-
   function computeNextPollDelay(isActive) {
     return isActive ? POLL_ACTIVE_MS : POLL_IDLE_MS;
   }
@@ -9326,17 +9758,15 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     PILL_STATES,
     POLL_ACTIVE_MS,
     POLL_IDLE_MS,
-    compareVersions,
     computeNextPollDelay,
     computePill,
     formatAsOf,
-    skewBanner,
   };
   ```
 - [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
 - [ ] Commit:
   `git add packages/memoria-obsidian/pill.js packages/memoria-obsidian/scripts/test-pill.mjs`
-  `git commit -m "feat(obsidian): pure pill state machine, skew banners, poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
+  `git commit -m "feat(obsidian): pure pill state machine and poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
 
 ---
 
@@ -9357,8 +9787,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   - `VIEW_SPEC_VERSION = "view-spec.v1"`, `KNOWN_BLOCK_KINDS`, `LOUDNESS_RANK = {block:0, alert:1, notice:2, quiet:3}`.
 - Loudness is **rendered verbatim** (class `memoria-loudness-<value>` from the payload string; missing loudness gets no loudness class) — never invented.
 
-> **Binding amendment — ordered nested cards (V2 prerequisite):** Before V2R-B.3
-> or V2R-D.2 can execute, this task's `renderCard` must render every supplied
+> **Superseded draft — do not implement:** The 2026-07-29 plan-reconciliation
 > `card.blocks` child exactly once and in declared order. It must append analysis
 > only after those semantic children, and only when the corresponding parent fields
 > are present. This replaces the older `renderCard` partitioning/reordering body and
@@ -9371,44 +9800,25 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 > U3 implementation:
 >
 > ```js
-> test("card renders every semantic child once before its present analysis", () => {
+> test("card preserves declared semantic child order and appends present analysis", () => {
 >   const tree = renderBlock({
 >     kind: "card", id: "ev1", ref: "projects/alpha/draft.md#^blk-1234",
->     title: "Claim", kind_line: "evidence-review", loudness: "alert",
->     argument_for: "ground", argument_against: "counterground",
->     tipped_by: "implicit derivation", certainty: "possible",
->     raised_by: "analyze-gaps", raised_at: "2026-07-29T09:00:00Z",
+>     title: "Claim", kind_line: "evidence-review",
+>     argument_for: "ground", tipped_by: "implicit derivation", certainty: "possible",
 >     blocks: [
->       { kind: "evidence-list", id: "e1", items: [{ label: "Source", ref: "notes/source.md" }] },
+>       { kind: "evidence-list", id: "e1", items: [] },
 >       { kind: "text", id: "r1", text: "Routing: implicit" },
->       { kind: "action-row", id: "a1", actions: [{
->         label: "Accept", operation_id: "resolve-evidence",
->         payload: { evidence_id: "ev1", decision: "accept" }, primary: true,
->       }] },
+>       { kind: "action-row", id: "a1", actions: [] },
 >     ],
 >   });
->   assert.equal(tree.cls, "memoria-card memoria-loudness-alert");
->   assert.equal(tree.attrs["data-ref"], "projects/alpha/draft.md#^blk-1234");
 >   const classes = tree.children.map((child) => child.cls);
->   assert.deepEqual(classes, [
->     "memoria-card-kind memoria-loudness-alert", "memoria-card-title",
->     "memoria-evidence", "memoria-block-text", "memoria-action-row",
->     "memoria-card-arguments", "memoria-card-tipped", "memoria-card-meta",
->   ]);
->   const evidence = tree.children[2];
->   assert.equal(evidence.children[0].attrs["data-ref"], "notes/source.md");
->   const button = tree.children[4].children[0];
->   assert.equal(button.cls, "memoria-action memoria-action-primary");
->   assert.equal(button.attrs["data-operation-id"], "resolve-evidence");
->   assert.deepEqual(JSON.parse(button.attrs["data-payload"]), {
->     evidence_id: "ev1", decision: "accept",
->   });
->   const flat = texts(tree);
->   assert.ok(flat.includes("ground"));
->   assert.ok(flat.includes("counterground"));
->   assert.ok(flat.includes("tipped by: implicit derivation"));
->   assert.ok(flat.includes("possible"));
->   assert.ok(flat.some((text) => text.startsWith("raised by analyze-gaps")));
+>   const evidenceAt = classes.indexOf("memoria-evidence");
+>   const textAt = classes.indexOf("memoria-block-text");
+>   const actionsAt = classes.indexOf("memoria-action-row");
+>   const argumentsAt = classes.indexOf("memoria-card-arguments");
+>   const tippedAt = classes.indexOf("memoria-card-tipped");
+>   assert.ok(evidenceAt < textAt && textAt < actionsAt && actionsAt < argumentsAt);
+>   assert.ok(argumentsAt < tippedAt);
 > });
 >
 > test("cure card does not create absent analysis or action trees", () => {
@@ -9421,39 +9831,46 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 >     ],
 >   });
 >   const classes = tree.children.map((child) => child.cls);
->   assert.deepEqual(classes, [
->     "memoria-card-kind", "memoria-card-title", "memoria-evidence", "memoria-block-text",
->   ]);
+>   assert.deepEqual(
+>     classes.filter((cls) => ["memoria-evidence", "memoria-block-text"].includes(cls)),
+>     ["memoria-evidence", "memoria-block-text"],
+>   );
 >   assert.ok(!classes.includes("memoria-card-arguments"));
 >   assert.ok(!classes.includes("memoria-card-tipped"));
 >   assert.ok(!classes.includes("memoria-action-row"));
 >   assert.ok(!classes.includes("memoria-analysis-toggle"));
->   assert.ok(!classes.includes("memoria-card-meta"));
 > });
 > ```
 >
 > ```js
 > function renderCard(block) {
->   const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
 >   const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
 >   const analysis = [];
->   if (hasOwn("argument_for") || hasOwn("argument_against")) {
->     analysis.push(node("div", "memoria-card-arguments", "", [
->       node("span", "memoria-card-for", String(block.argument_for || "")),
->       node("span", "memoria-card-against", String(block.argument_against || "")),
->     ]));
+>   const arguments = [];
+>   if (block.argument_for) {
+>     arguments.push(node("span", "memoria-card-for", String(block.argument_for)));
 >   }
->   if (hasOwn("tipped_by") || hasOwn("certainty")) {
->     analysis.push(node("div", "memoria-card-tipped", "", [
->       node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
->       node("span", "memoria-certainty-chip", String(block.certainty || "")),
->     ]));
+>   if (block.argument_against) {
+>     arguments.push(node("span", "memoria-card-against", String(block.argument_against)));
+>   }
+>   if (arguments.length) {
+>     analysis.push(node("div", "memoria-card-arguments", "", arguments));
+>   }
+>   const tipping = [];
+>   if (block.tipped_by) {
+>     tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+>   }
+>   if (block.certainty) {
+>     tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));
+>   }
+>   if (tipping.length) {
+>     analysis.push(node("div", "memoria-card-tipped", "", tipping));
 >   }
 >   const raisedBy = String(block.raised_by || "");
 >   const raisedAt = String(block.raised_at || "");
->   const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
->   return node("div", `memoria-card${loudnessClass(block)}`, "", [
->     node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+>   const meta = raisedBy || raisedAt ? "raised by " + raisedBy + " · " + raisedAt : "";
+>   return node("div", "memoria-card" + loudnessClass(block), "", [
+>     node("div", "memoria-card-kind" + loudnessClass(block), String(block.kind_line || "")),
 >     node("div", "memoria-card-title", String(block.title || "")),
 >     ...semanticChildren,
 >     ...analysis,
@@ -9509,21 +9926,54 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     const tree = renderBlock({
       kind: "card", id: "ev1", ref: "projects/alpha/draft.md#^blk-1234",
       title: "Claim", kind_line: "evidence-review",
-      argument_for: "ground", tipped_by: "implicit derivation", certainty: "possible",
+      argument_for: "ground", argument_against: "counter-ground",
+      tipped_by: "implicit derivation", certainty: "possible",
+      raised_by: "review-sweep", raised_at: "2026-07-29T12:00:00Z",
       blocks: [
-        { kind: "evidence-list", id: "e1", items: [] },
+        { kind: "evidence-list", id: "e1", items: [{ label: "Source", ref: "notes/source.md" }] },
         { kind: "text", id: "r1", text: "Routing: implicit" },
-        { kind: "action-row", id: "a1", actions: [] },
+        {
+          kind: "action-row", id: "a1",
+          actions: [{
+            label: "Resolve", operation_id: "resolve-attention",
+            payload: { target_id: "inbox/claim.md" }, primary: true,
+          }, {
+            label: "Defer", operation_id: "resolve-attention",
+            payload: { target_id: "inbox/claim.md", outcome: "defer" },
+          }],
+        },
       ],
     });
     const classes = tree.children.map((child) => child.cls);
-    const evidenceAt = classes.indexOf("memoria-evidence");
-    const textAt = classes.indexOf("memoria-block-text");
-    const actionsAt = classes.indexOf("memoria-action-row");
-    const argumentsAt = classes.indexOf("memoria-card-arguments");
-    const tippedAt = classes.indexOf("memoria-card-tipped");
-    assert.ok(evidenceAt < textAt && textAt < actionsAt && actionsAt < argumentsAt);
-    assert.ok(argumentsAt < tippedAt);
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+      "memoria-action-row",
+      "memoria-card-arguments",
+      "memoria-card-tipped",
+      "memoria-card-meta",
+    ]);
+    assert.equal(tree.children[2].children[0].attrs["data-ref"], "notes/source.md");
+    const [resolve, defer] = tree.children[4].children;
+    assert.equal(resolve.text, "Resolve");
+    assert.equal(resolve.attrs["data-operation-id"], "resolve-attention");
+    assert.deepEqual(JSON.parse(resolve.attrs["data-payload"]), { target_id: "inbox/claim.md" });
+    assert.equal(defer.text, "Defer");
+    assert.equal(defer.attrs["data-operation-id"], "resolve-attention");
+    assert.deepEqual(JSON.parse(defer.attrs["data-payload"]), {
+      target_id: "inbox/claim.md", outcome: "defer",
+    });
+    assert.deepEqual(
+      tree.children[5].children.map((child) => child.cls),
+      ["memoria-card-for", "memoria-card-against"],
+    );
+    assert.deepEqual(
+      tree.children[6].children.map((child) => child.text),
+      ["tipped by: implicit derivation", "possible"],
+    );
+    assert.equal(tree.children[7].text, "raised by review-sweep · 2026-07-29T12:00:00Z");
   });
 
   test("cure card does not create absent analysis or action trees", () => {
@@ -9536,14 +9986,57 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       ],
     });
     const classes = tree.children.map((child) => child.cls);
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+    ]);
+  });
+
+  test("card maps repeated semantic children once in their supplied order", () => {
+    const tree = renderBlock({
+      kind: "card", id: "repeat", title: "Repeat", kind_line: "test",
+      blocks: [
+        { kind: "text", id: "first", text: "First" },
+        { kind: "text", id: "second", text: "Second" },
+      ],
+    });
     assert.deepEqual(
-      classes.filter((cls) => ["memoria-evidence", "memoria-block-text"].includes(cls)),
-      ["memoria-evidence", "memoria-block-text"],
+      tree.children.map((child) => child.cls),
+      ["memoria-card-kind", "memoria-card-title", "memoria-block-text", "memoria-block-text"],
     );
-    assert.ok(!classes.includes("memoria-card-arguments"));
-    assert.ok(!classes.includes("memoria-card-tipped"));
-    assert.ok(!classes.includes("memoria-action-row"));
-    assert.ok(!classes.includes("memoria-analysis-toggle"));
+    assert.deepEqual(tree.children.slice(2).map((child) => child.text), ["First", "Second"]);
+  });
+
+  test("one-sided analysis renders only its present field", () => {
+    const tree = renderBlock({
+      kind: "card", id: "one-sided", title: "One", kind_line: "test",
+      argument_for: "supported", certainty: "likely", blocks: [],
+    });
+    assert.deepEqual(
+      tree.children[2].children.map((child) => child.cls),
+      ["memoria-card-for"],
+    );
+    assert.deepEqual(
+      tree.children[3].children.map((child) => child.cls),
+      ["memoria-certainty-chip"],
+    );
+  });
+
+  test("one-sided metadata has no empty provenance slot or separator", () => {
+    const raisedBy = renderBlock({
+      kind: "card", id: "raised-by", title: "By", kind_line: "test",
+      raised_by: "review-sweep", blocks: [],
+    });
+    const raisedAt = renderBlock({
+      kind: "card", id: "raised-at", title: "At", kind_line: "test",
+      raised_at: "2026-07-29T12:00:00Z", blocks: [],
+    });
+    assert.equal(raisedBy.children[2].cls, "memoria-card-meta");
+    assert.equal(raisedBy.children[2].text, "raised by review-sweep");
+    assert.equal(raisedAt.children[2].cls, "memoria-card-meta");
+    assert.equal(raisedAt.children[2].text, "2026-07-29T12:00:00Z");
   });
   test("loudness is rendered verbatim and missing loudness gets no loudness class", () => {
     const odd = renderBlock({ kind: "badge", id: "b1", label: "x", loudness: "shout" });
@@ -9669,26 +10162,36 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   }
 
   function renderCard(block) {
-    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(block, key);
     const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
     const analysis = [];
-    if (hasOwn("argument_for") || hasOwn("argument_against")) {
-      analysis.push(node("div", "memoria-card-arguments", "", [
-        node("span", "memoria-card-for", String(block.argument_for || "")),
-        node("span", "memoria-card-against", String(block.argument_against || "")),
-      ]));
+    const arguments = [];
+    if (block.argument_for) {
+      arguments.push(node("span", "memoria-card-for", String(block.argument_for)));
     }
-    if (hasOwn("tipped_by") || hasOwn("certainty")) {
-      analysis.push(node("div", "memoria-card-tipped", "", [
-        node("span", "memoria-card-tipped-label", block.tipped_by ? `tipped by: ${String(block.tipped_by)}` : ""),
-        node("span", "memoria-certainty-chip", String(block.certainty || "")),
-      ]));
+    if (block.argument_against) {
+      arguments.push(node("span", "memoria-card-against", String(block.argument_against)));
+    }
+    if (arguments.length) {
+      analysis.push(node("div", "memoria-card-arguments", "", arguments));
+    }
+    const tipping = [];
+    if (block.tipped_by) {
+      tipping.push(node("span", "memoria-card-tipped-label", "tipped by: " + String(block.tipped_by)));
+    }
+    if (block.certainty) {
+      tipping.push(node("span", "memoria-certainty-chip", String(block.certainty)));
+    }
+    if (tipping.length) {
+      analysis.push(node("div", "memoria-card-tipped", "", tipping));
     }
     const raisedBy = String(block.raised_by || "");
     const raisedAt = String(block.raised_at || "");
-    const meta = raisedBy || raisedAt ? `raised by ${raisedBy} · ${raisedAt}` : "";
-    return node("div", `memoria-card${loudnessClass(block)}`, "", [
-      node("div", `memoria-card-kind${loudnessClass(block)}`, String(block.kind_line || "")),
+    const meta = [
+      raisedBy ? "raised by " + raisedBy : "",
+      raisedAt,
+    ].filter(Boolean).join(" · ");
+    return node("div", "memoria-card" + loudnessClass(block), "", [
+    node("div", "memoria-card-kind" + loudnessClass(block), String(block.kind_line || "")),
       node("div", "memoria-card-title", String(block.title || "")),
       ...semanticChildren,
       ...analysis,
@@ -9773,13 +10276,20 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 ### Task U3-PLUG.5: `relate.js` — relate-operation payload builder (roster from server)
 
+> **Binding sequence:** Execute after graph ERP-D.5. The server supplies the
+> sorted six-verb roster and the builder emits the optional edge annotation as
+> `payload.warrant`, never the legacy `reason` alias.
+
 **Files:**
 - Create: `packages/memoria-obsidian/relate.js`
 - Create: `packages/memoria-obsidian/scripts/test-relate.mjs`
 
 **Interfaces:**
-- Consumes: `curate-note-link` worker payload contract (`src/memoria_vault/runtime/worker.py:471-490`): `source_note_path`, `link_type`, `target_path`, optional `reason`. The optional warrant free text maps to `reason` (the edge-hung, promotion-ready text per U3 §4).
-- Produces: `buildRelateOperation({fromPath, relation, toPath, warrant, roster}) -> {operationId: "curate-note-link", payload: {source_note_path, link_type, target_path, reason?}}` — throws `Error` naming the missing/invalid field; `relation` must be a member of the server-provided `roster` (see the roster decision at section top).
+- Consumes: graph ERP-D.5's `curate-note-link` worker payload contract
+  (`src/memoria_vault/runtime/worker.py:471-490`): `source_note_path`,
+  `link_type`, `target_path`, optional `warrant`. The optional Warrant free
+  text is an edge annotation, not a request reason.
+- Produces: `buildRelateOperation({fromPath, relation, toPath, warrant, roster}) -> {operationId: "curate-note-link", payload: {source_note_path, link_type, target_path, warrant?}}` — throws `Error` naming the missing/invalid field; `relation` must be a member of the server-provided `roster` (see the roster decision at section top).
 
 **Steps:**
 
@@ -9792,13 +10302,13 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
   const require = createRequire(import.meta.url);
   const { buildRelateOperation } = require("../relate.js");
 
-  const roster = ["supports", "contradicts", "extends"];
+  const roster = ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"];
 
-  test("builds a curate-note-link enqueue with warrant mapped to reason", () => {
+  test("builds a curate-note-link enqueue with a rebuttal and warrant annotation", () => {
     assert.deepEqual(
       buildRelateOperation({
         fromPath: "notes/a.md",
-        relation: "supports",
+        relation: "rebuttal",
         toPath: "notes/b.md",
         warrant: "  B replicates A's cohort.  ",
         roster,
@@ -9807,23 +10317,23 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
         operationId: "curate-note-link",
         payload: {
           source_note_path: "notes/a.md",
-          link_type: "supports",
+          link_type: "rebuttal",
           target_path: "notes/b.md",
-          reason: "B replicates A's cohort.",
+          warrant: "B replicates A's cohort.",
         },
       },
     );
   });
 
-  test("omits reason when the warrant is blank", () => {
+  test("omits warrant when the warrant text is blank", () => {
     const operation = buildRelateOperation({
       fromPath: "notes/a.md",
-      relation: "extends",
+      relation: "warrant",
       toPath: "notes/b.md",
       warrant: "   ",
       roster,
     });
-    assert.ok(!("reason" in operation.payload));
+    assert.ok(!("warrant" in operation.payload));
   });
 
   test("rejects missing endpoints and off-roster relations", () => {
@@ -9837,7 +10347,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     );
     assert.throws(
       () => buildRelateOperation({ fromPath: "a", relation: "refutes", toPath: "b", roster }),
-      /relate: relation must be one of supports, contradicts, extends/,
+      /relate: relation must be one of contradicts, extends, qualifier, rebuttal, supports, warrant/,
     );
     assert.throws(
       () => buildRelateOperation({ fromPath: "a", relation: "supports", toPath: "b", roster: [] }),
@@ -9870,9 +10380,9 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
       throw new Error(`relate: relation must be one of ${relations.join(", ")}`);
     }
     const payload = { source_note_path: source, link_type: relation, target_path: target };
-    const reason = String(warrant || "").trim();
-    if (reason) {
-      payload.reason = reason;
+    const warrantText = String(warrant || "").trim();
+    if (warrantText) {
+      payload.warrant = warrantText;
     }
     return { operationId: "curate-note-link", payload };
   }
@@ -9887,6 +10397,10 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 ---
 
 ### Task U3-PLUG.6: `main.js` core rewrite — handshake client, in-memory token, pill, poll loop
+
+> **Execution override:** The 2026-07-29 graph-roster/warrant amendment
+> governs the summary fixture and `linkRelations` assertion: use all six
+> served verbs after ERP-A.1–.5, never the historical fixed triple below.
 
 The big wiring task: replaces the hardcoded `serverUrl` + SecretStorage token with the handshake spawn, adds the Engine command setting, the six-state pill with click behaviors, the 401 recovery ladder, and the 30 s/2 m poll loop.
 
@@ -9910,7 +10424,7 @@ The big wiring task: replaces the hardcoded `serverUrl` + SecretStorage token wi
   - Settings: `DEFAULT_SETTINGS.engineCommand = "memoria"`; `serverUrl` and `hasToken` **removed**.
   - Constants: `STATUS_PATH = "/v1/status"`, `ATTENTION_VIEW_PATH = "/v1/views/attention"`, `OPERATION_PATH = "/operation/run"` (see SPEC GAP), `EMPTY_ENGINE`.
 
-Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --workspace <vaultPath> --http — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --workspace <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
+Pill click behaviors (wordings fixed here): **connected** → `activateAttentionView()`; **key-needed** → Notice `` Memoria: credential needed — run: memoria secrets set <NAME> `` then open the pane; **stale** → immediate `poll()`; **engine-missing** → Notice `` Engine missing — the Memoria CLI was not found (tried: `<engineCommand>`). Install it: pipx install memoria, then click to retry. This vault remains fully readable and editable without it. `` + fresh gate + retry handshake; **server-down** → Notice `` Memoria server down after 3 spawn attempts. <lastHandshakeError> — Start it manually: memoria serve --workspace <vaultPath> — then click to retry. `` + fresh gate + retry; **token-invalid** → Notice `` Memoria token invalid — restart the server: memoria serve --stop --workspace <vaultPath>, then click to reconnect. `` + wipe coordinates + fresh gate + `poll()`.
 
 **Steps:**
 
@@ -9930,13 +10444,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
             workspace: {
               getActiveFile: () => null,
               getLeavesOfType: () => [],
+              on: () => ({}),
             },
           };
           this.manifest = { version: "0.1.0-alpha.20" };
+          this.persistedData = {};
         }
 
         async loadData() {
-          return {};
+          return this.persistedData;
         }
 
         async saveData() {}
@@ -9972,6 +10488,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
         registerDomEvent() {}
 
+        registerEvent() {}
+
         register() {}
       }
       class Base {
@@ -9991,9 +10509,12 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
             status: 200,
             json: {
               ok: true,
+              api_version: "engine-read-api.v1",
               open: 2,
+              by_loudness: { notice: 2 },
+              as_of: "2026-07-29T12:00:00Z",
               missing_required_credentials: [],
-              link_relations: ["supports", "contradicts", "extends"],
+              link_relations: ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"],
               engine_version: "0.1.0-alpha.20",
             },
           };
@@ -10034,6 +10555,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     await plugin.saveSettings();
     assert.ok(!JSON.stringify(saved).includes("sandbox-token"), "token must never be persisted");
     assert.ok(!("serverUrl" in plugin.settings));
+    assert.ok(!("hasToken" in plugin.settings));
     assert.equal(plugin.settings.engineCommand, "memoria");
 
     // 2) Authenticated requests use the handshake coordinates + Bearer token.
@@ -10050,13 +10572,12 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       operation_id: "demo-operation",
       payload: { ok: true },
       idempotency_key: "demo-key",
-      actor: "pi",
     });
 
     // 3) Poll updates pill inputs from the summary payload.
     await plugin.poll();
     assert.equal(plugin.openCount, 2);
-    assert.deepEqual(plugin.linkRelations, ["supports", "contradicts", "extends"]);
+    assert.deepEqual(plugin.linkRelations, ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"]);
     assert.ok(plugin.lastPollAt > 0);
     assert.equal(plugin.pillState, "connected");
     assert.ok(plugin.statusBar.children.some((child) => child.text === "Memoria · 2 open"));
@@ -10113,7 +10634,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     createRespawnGate,
     parseHandshake,
   } = require("./handshake");
-  const { computeNextPollDelay, computePill, formatAsOf, skewBanner } = require("./pill");
+  const { computeNextPollDelay, computePill, formatAsOf } = require("./pill");
 
   const DEFAULT_SETTINGS = {
     enabled: false,
@@ -10129,7 +10650,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   const OPERATION_PATH = "/operation/run";
   ```
   (This deletes the stale "Generated by scripts/build.mjs" comment and the `TOKEN_KEY` constant.)
-- [ ] Part 2 — `onload` additions. Immediately after `this.statusBar = this.addStatusBarItem();` (was line 22) insert:
+- [ ] Part 2 — load current settings, then initialize lifecycle state. Replace
+  the first line of `onload()` with:
+
+  ```js
+    const persistedSettings = (await this.loadData()) || {};
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, persistedSettings);
+  ```
+
+  Immediately after `this.statusBar = this.addStatusBarItem();` (was line 22) insert:
   ```js
     this.engine = Object.assign({}, EMPTY_ENGINE);
     this.connectionStatus = "stale";
@@ -10293,7 +10822,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
         operation_id: operationId,
         payload,
         idempotency_key: idempotencyKey,
-        actor: "pi",
       });
     }
 
@@ -10384,7 +10912,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       if (this.pillState === "server-down") {
         new Notice(
           `Memoria server down after 3 spawn attempts. ${this.lastHandshakeError} — ` +
-            `Start it manually: memoria serve --workspace ${this.vaultPath()} --http — then click to retry.`,
+            `Start it manually: memoria serve --workspace ${this.vaultPath()} — then click to retry.`,
           10000,
         );
         retry();
@@ -10419,7 +10947,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       }
     }
   ```
-  Then replace every remaining `this.updateStatus(...)` call in the class (in `recordEvent`, `queueEvent` path, `startSession`, `stopSession`, `flushQueuedEvents`, `deleteQueuedEvents`) with `this.renderPill();` and delete the text arguments.
+  Then complete the removed-API migration: replace `this.getJson(...)` in
+  `showAttention()` and `showActiveConcept()` with `this.authedJson(...)`; replace
+  every `this.updateStatus(...)` call in the class — including `recordEvent`, its
+  queue/failure path, `startSession`, `stopSession`, `flushQueuedEvents`,
+  `deleteQueuedEvents`, and the Enable collection setting callback — with
+  `this.renderPill()` and delete its text arguments. Before leaving this task,
+  `rg -n '(this|this\.plugin)\.(getJson|updateStatus)\(' packages/memoria-obsidian/main.js`
+  must print nothing: U3-CANVAS.5 consumes `authedJson`/`renderPill` too, so no
+  compatibility alias may mask a dangling legacy call.
 - [ ] Part 6 — settings tab: replace the "Server URL" setting (lines 370–377) and the whole "Bearer token" setting (lines 378–393) with:
   ```js
       new Setting(containerEl)
@@ -10479,9 +11015,12 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       assert "requestUrl" in source
       assert "handshake" in source
       assert "fetch(" not in source
-      assert "serverUrl" not in source
+      assert "settings.serverUrl" not in source
+      assert "settings.hasToken" not in source
       assert "secretStorage" not in source
       assert "setSecret" not in source
+      assert ".getJson(" not in source
+      assert ".updateStatus(" not in source
       assert "empirical-event-record" in source
       assert "empirical-event:" in source
       assert "empirical_event.record" not in source
@@ -10513,22 +11052,137 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.7: Attention pane ItemView — queue rows, expand-in-place, j/k/Enter, actions
 
+> **Execution override:** The 2026-07-29 graph-roster/warrant amendment makes
+> this the post-SEAM.1 live HTTP integration slice: it proves every served
+> relation can be queued through the PI HTTP door and completed, while
+> `tension` remains absent/rejected. Keep that Python integration separate
+> from the Node mock; neither test supplies an `actor` field.
+
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (requires; `onload` — `registerView` + `open-attention` command; new `enqueueNamedOperation` method; new `AttentionView` class + `VIEW_TYPE_ATTENTION` constant appended before `MemoriaSettingTab`)
 - Modify: `packages/memoria-obsidian/styles.css` (pane styles, theme vars only)
 - Modify: `packages/memoria-obsidian/scripts/test.mjs` (view-registration + enqueue-toast assertions)
 - Modify: `tests/test_memoria_obsidian_package.py` (command roster line 70–82: add `"open-attention"`)
+- Modify: `tests/test_attention_view.py` (post-SEAM.1 live HTTP served-roster
+  contract; reuses U3-ENG.6's authenticated `live_server` and `_http_get`)
 - Modify (parity): seed copies of `main.js`/`styles.css` + golden regen (same commands as U3-PLUG.6)
 
 **Interfaces:**
-- Consumes: `renderBlock`/`renderView`/`sortCards`/`moveSelection`/`materialize` (U3-PLUG.4), `formatAsOf`/`skewBanner` (U3-PLUG.3), `authedJson`/`postOperation` (U3-PLUG.6); `GET /v1/views/attention` full view payload.
+- Consumes: `renderBlock`/`renderView`/`sortCards`/`moveSelection`/`materialize` (U3-PLUG.4), `formatAsOf` (U3-PLUG.3), `authedJson`/`postOperation` (U3-PLUG.6); `GET /v1/views/attention` full view payload.
+- Consumes (integration proof): U3-ENG.6's real bearer-authenticated loopback
+  fixture, graph's `edges.LINK_RELATIONS`, and SEAM.1's server-owned `pi`
+  authority for `POST /operation/run`.
 - Produces:
   - `VIEW_TYPE_ATTENTION = "memoria-attention"` and `class AttentionView extends ItemView` with `getViewType()`, `getDisplayText() -> "Memoria Attention"`, `refresh() -> Promise<void>`, `render()`, `onKey(event)`, `onClick(event)`.
   - `plugin.enqueueNamedOperation(operationId: string, payload: object) -> Promise<object|null>` — posts via `postOperation(operationId, payload, "")`, toasts `` Memoria queued <operationId>: <job.job_id> ``, records the `operation.queued` empirical event, Notices the error message on failure. **The relate modal (U3-PLUG.8) and every card action button call this.**
   - Command id `"open-attention"`.
   - `poll()` gains one line: refresh any open attention leaves after a successful summary fetch.
+  - `test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension`:
+    the only public-path proof that the roster returned to the plugin can be
+    submitted without a client `actor`, completed by the worker, and persisted
+    as the PI. It also proves `tension` is never served and is rejected if
+    submitted anyway.
 
 **Steps:**
+
+- [ ] Add the post-SEAM.1 live HTTP integration proof to
+  `tests/test_attention_view.py`, alongside the existing live-server tests.
+  Perform the separate Node-mock step only afterward. U3-ENG.6 already
+  creates `live_server` and `_http_get`; extend its imports with
+  `from memoria_vault.runtime import state`,
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`,
+  `from memoria_vault.runtime.vaultio import read_frontmatter`, and
+  extend its existing `from tests.helpers import init_cli_workspace` import
+  to also import `write_checked_note`. Add this POST companion (it accepts no
+  `actor` argument and therefore cannot put one into the request body):
+
+  ```python
+  def _http_post(url: str, body: dict, token: str) -> tuple[int, dict]:
+      request = urllib.request.Request(
+          url,
+          data=json.dumps(body).encode("utf-8"),
+          headers={
+              "Authorization": f"Bearer {token}",
+              "Content-Type": "application/json",
+          },
+          method="POST",
+      )
+      try:
+          with urllib.request.urlopen(request, timeout=10) as response:
+              return response.status, json.loads(response.read().decode("utf-8"))
+      except urllib.error.HTTPError as error:
+          return error.code, json.loads(error.read().decode("utf-8"))
+  ```
+
+  Then append this test. It deliberately derives the loop from the HTTP
+  summary, rather than importing a second client-side roster; the one direct
+  `LINK_RELATIONS` assertion verifies that the server is the graph owner.
+
+  ```python
+  def test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension(
+      workspace: Path, live_server: str
+  ) -> None:
+      write_checked_note(workspace, "notes/source.md", "Source")
+      write_checked_note(workspace, "notes/target.md", "Target")
+      summary_code, summary = _http_get(
+          f"{live_server}/v1/views/attention?summary=true", token="view-token"
+      )
+
+      assert summary_code == HTTPStatus.OK
+      assert summary["link_relations"] == sorted(LINK_RELATIONS)
+      assert "tension" not in summary["link_relations"]
+      for relation in summary["link_relations"]:
+          body = {
+              "operation_id": "curate-note-link",
+              "payload": {
+                  "source_note_path": "notes/source.md",
+                  "link_type": relation,
+                  "target_path": "notes/target.md",
+              },
+              "idempotency_key": f"live-served-link-{relation}",
+          }
+          assert "actor" not in body
+          code, response = _http_post(
+              f"{live_server}/operation/run", body, token="view-token"
+          )
+
+          assert code == HTTPStatus.OK
+          assert response["ok"] is True
+          assert response["result"]["status"] == "done"
+          request = state.request_row(workspace, response["job"]["job_id"])
+          assert request is not None and request["actor"] == "pi"
+          assert read_frontmatter(workspace / "notes/source.md")["links"][relation] == [
+              "notes/target.md"
+          ]
+
+      tension_code, tension = _http_post(
+          f"{live_server}/operation/run",
+          {
+              "operation_id": "curate-note-link",
+              "payload": {
+                  "source_note_path": "notes/source.md",
+                  "link_type": "tension",
+                  "target_path": "notes/target.md",
+              },
+              "idempotency_key": "live-served-link-tension",
+          },
+          token="view-token",
+      )
+
+      assert tension_code == HTTPStatus.OK
+      assert tension["ok"] is False
+      assert tension["result"]["status"] == "failed"
+  ```
+
+  Run this specific Python proof after graph ERP-A.1–.5 and SEAM.1, before
+  treating the pane as complete:
+
+  ```bash
+  python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v
+  ```
+
+  Expected: PASS. This is a prereq integration contract, not a Node-mock
+  replacement: it must stay green while the pane code below is developed.
 
 - [ ] Write the failing test — append to the `try` block of `packages/memoria-obsidian/scripts/test.mjs` (before `finally`):
   ```js
@@ -10539,13 +11193,19 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     assert.equal(view.getDisplayText(), "Memoria Attention");
     assert.ok(plugin.commands.includes("open-attention"));
     const result = await plugin.enqueueNamedOperation("resolve-attention", {
-      attention_path: "inbox/x.md",
-      resolution: "resolved",
+      target_id: "inbox/x.md",
     });
-    assert.equal(JSON.parse(requests.at(-1).body).operation_id, "resolve-attention");
+    const operationBodies = requests
+      .filter((request) => request.url.endsWith("/operation/run"))
+      .map((request) => JSON.parse(request.body));
+    assert.deepEqual(
+      operationBodies.slice(-2).map((body) => body.operation_id),
+      ["resolve-attention", "empirical-event-record"],
+    );
+    assert.deepEqual(operationBodies.at(-2).payload, { target_id: "inbox/x.md" });
     assert.ok(result);
   ```
-  Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name).
+  Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name). The fixture deliberately leaves collection enabled: `enqueueNamedOperation` must issue the named operation **and** its `empirical-event-record` telemetry, so the assertion filters and verifies both rather than assuming the named operation is the final request.
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `attention view registered` assertion failure.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Add to the requires block: `const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");` and the constant `const VIEW_TYPE_ATTENTION = "memoria-attention";` (replace the string literal `"memoria-attention"` inside `activateAttentionView` with the constant).
@@ -10655,10 +11315,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
         cls: "memoria-attention-age",
         text: `${this.plugin.openCount} open · as of ${formatAsOf(this.plugin.lastPollAt)}`,
       });
-      const banner = skewBanner(this.plugin.manifest.version, this.plugin.engine.engineVersion);
-      if (banner) {
-        root.createDiv({ cls: "memoria-skew-banner", text: banner.text });
-      }
       if (!this.view || this.view.version !== "view-spec.v1") {
         for (const tree of renderView(this.view)) {
           materialize(tree, root);
@@ -10749,14 +11405,6 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   .memoria-attention-age,
   .memoria-row-age { font-variant-numeric: tabular-nums; color: var(--text-faint); }
-  .memoria-skew-banner {
-    margin-bottom: 6px;
-    padding: 6px 8px;
-    background-color: var(--background-secondary);
-    border-left: 2px solid var(--interactive-accent);
-    color: var(--text-muted);
-    font-size: 12px;
-  }
   .memoria-row {
     display: flex;
     gap: 8px;
@@ -10838,15 +11486,25 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
   ```
   7. In `tests/test_memoria_obsidian_package.py::test_memoria_obsidian_registers_minimal_proof_commands`, add `"open-attention",` to the command tuple.
-- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
+- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
 - [ ] Sync seed + regenerate goldens (same three commands as U3-PLUG.6's sync step; only `main.js` and `styles.css` changed this time), re-run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 - [ ] Commit:
-  `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
+  `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py tests/test_attention_view.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
   `git commit -m "feat(obsidian): attention pane ItemView — rows, expand-in-place, j/k/Enter, enqueue actions` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
 
 ---
 
 ### Task U3-PLUG.8: Relate modal — single form, fuzzy pickers, queue edge
+
+> **Binding sequence:** Execute this after graph ERP-D.5. The Warrant help
+> must say, exactly in substance: “A `warrant` relation links a license note;
+> Warrant text annotates the selected edge.” The builder emits
+> `payload.warrant`, never `payload.reason`.
+>
+> **Historical compatibility marker (2026-07-30):** do not revive any
+> persisted-settings deletion snippet from this task's older wiring drafts.
+> Fresh installs load and save current settings without interpreting or
+> rewriting `serverUrl` or `hasToken`.
 
 **Files:**
 - Modify: `packages/memoria-obsidian/main.js` (require `relate.js`; `relate` command in `onload`; `RelateModal` + `NotePathSuggest` classes appended after `AttentionView`; a `Relate…` button in `AttentionView.render` header)
@@ -10864,6 +11522,15 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 - [ ] Write the failing test — in `packages/memoria-obsidian/scripts/test.mjs`, next to the `open-attention` assertion add:
   ```js
     assert.ok(plugin.commands.includes("relate"));
+  ```
+  In `tests/test_memoria_obsidian_package.py`, add this source-contract pin to
+  the existing plugin-source test (U3-PLUG.6 already provides
+  `_plugin_js_source()`):
+  ```python
+      assert (
+          "A `warrant` relation links a license note; Warrant text annotates "
+          "the selected edge."
+      ) in _plugin_js_source()
   ```
 - [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected assertion failure on `relate`.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
@@ -10940,7 +11607,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       });
       new Setting(contentEl)
         .setName("Warrant (optional)")
-        .setDesc("Free text hung on the edge; promotion-ready.")
+        .setDesc("A `warrant` relation links a license note; Warrant text annotates the selected edge.")
         .addTextArea((text) => text.onChange((value) => (this.warrant = value)));
       new Setting(contentEl).addButton((button) =>
         button.setButtonText("Queue edge").setCta().onClick(async () => {
@@ -11088,6 +11755,11 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.11: Manual click-through check (what automation cannot reach)
 
+> **Binding sequence:** Use the private in-process token check and the
+> newly-activated-relation completion proof in the 2026-07-29 graph-roster/
+> warrant amendment above. Never put the per-boot token in a child process's
+> arguments.
+
 **Files:** none (checklist executed against a disposable vault under `test-vault/`; results reported in the PR description, not committed as a file).
 
 **Interfaces:** Consumes the running engine (`memoria` on PATH from this branch) and a disposable vault (`memoria init test-vault/u3-plug-manual` — never a personal vault).
@@ -11096,15 +11768,17 @@ The Obsidian runtime itself (real spawn, real SecretStorage-free token flow, rea
 
 - [ ] `memoria init test-vault/u3-plug-manual`, open the folder as a vault in desktop Obsidian, accept the trust + community-plugin prompts. **Expect:** pill appears bottom-right as `Memoria · connecting…` then `Memoria · N open` with a green dot within ~5 s (handshake spawned the server; no port/token was ever typed).
 - [ ] Settings → Memoria. **Expect:** an "Engine command" text field (value `memoria`); **no** Server URL field, **no** token field.
-- [ ] `grep -r "$(python -c 'import json,glob,os; p=sorted(glob.glob(os.path.expanduser("~/.local/state/memoria/vaults/*/runtime.json")))[-1]; print(json.load(open(p))["token"])')" test-vault/u3-plug-manual` — **Expect:** zero hits (token never lands inside the vault tree, including `.obsidian/plugins/memoria-obsidian/data.json`).
+- [ ] Run the private in-process handshake token check in the binding amendment
+  above. **Expect:** zero hits (the token never lands inside the vault tree,
+  including `.obsidian/plugins/memoria-obsidian/data.json`), and the token is
+  neither printed nor passed to a child process.
 - [ ] Click the pill. **Expect:** the Attention pane opens on the right: `ATTENTION` header, `N open · as of HH:MM`, rows with loudness dots, ellipsized titles, right-aligned ages; any `block` cards pinned on top.
-- [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block **above** the for/against line, `tipped by:` + certainty chip, named text action verbs (primary tinted with the theme accent), meta line. Press `Enter` again — collapses. Only one row expands at a time.
+- [ ] Click the pane, press `j`/`k`. **Expect:** selection highlight moves and clamps at both ends. Press `Enter`. **Expect:** the row expands in place — kind line, title, inset evidence block, plain body text, named text action verbs (Resolve primary), then for/against, `tipped by:` + certainty chip, and meta line. Press `Enter` again — collapses. Only one row expands at a time.
 - [ ] Click an evidence link. **Expect:** the vault note opens. Click an action verb (e.g. `Resolve`). **Expect:** toast `Memoria queued resolve-attention: <request id>`; the card leaves the queue on the next poll (≤30 s with the window focused).
-- [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the served verbs (`summary.link_relations` — six once the graph-edges plan's roster activation lands) as a segmented control or dropdown; Queue edge with an empty To shows `relate: To note is required`; a complete submit toasts `Memoria queued curate-note-link: <request id>` and `memoria journal` (or the request log) shows the queued request.
+- [ ] Run "Memoria: Relate…" with a note open. **Expect:** From pre-filled with the active note; typing in From/To filters vault paths; Relation shows exactly the server-provided roster (including `rebuttal`) as a segmented control; Queue edge with an empty To shows `relate: To note is required`; submit a `rebuttal`, run its queued job, and verify the resulting edge rather than merely a queued request id.
 - [ ] Kill the server (`memoria serve --stop --workspace test-vault/u3-plug-manual`), unfocus/refocus. **Expect:** pill flips amber `Memoria · N open · as of HH:MM`; clicking it re-handshakes (server respawns) and it turns green.
 - [ ] Rename the engine binary away (`pipx` venv or PATH shadow), reload Obsidian. **Expect:** gray `Memoria · engine missing`; click shows the install remediation naming the tried command; the vault stays fully readable/editable. Restore the binary, click — recovers.
-- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --workspace … --http`; no infinite silent retry.
-- [ ] Edit `manifest.json` version in the *installed* plugin copy to `0.1.0-alpha.19`, reload. **Expect:** the plugin-older skew banner at the top of the pane, wording per spec; set it above the engine version — the vault-newer banner. Restore afterward.
+- [ ] Break the engine command to a script that exits 1 (Settings → Engine command → `/bin/false`), reload, click the pill 3+ times within 3 min. **Expect:** red `Memoria · server down` with a remediation naming the log path and `memoria serve --workspace …`; no infinite silent retry.
 - [ ] Switch Obsidian between a light and a dark community theme. **Expect:** pill dot, loudness accents, evidence inset, chips, and the segmented control all follow the theme (no fixed colors anywhere).
 - [ ] Leave the window unfocused >2 min with the server up. **Expect:** requests slow to the 2-minute cadence (watch `serve.log`); refocusing snaps a poll immediately.
 - [ ] Delete the disposable vault: `rm -rf test-vault/u3-plug-manual`.
@@ -11120,16 +11794,17 @@ Implements U3 spec §6 (Canvas surface) and §7 (id-filenames boundary, filename
 rule only) from `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md`.
 Repo: `/home/eranr/memoria-vault`, main @ 80e62bbd.
 
-**DEPENDENCY NOTE (cross-section, not invented here):** plugin enqueues over
-HTTP arrive with `actor="pi"` (`src/memoria_vault/runtime/http_transport.py:216`),
-and `curate-note-link` is a `pi`-protected operation
+**DEPENDENCY NOTE (cross-section, not invented here):** authenticated plugin
+enqueues arrive through HTTP with `actor="pi"` (SEAM.1 at
+`src/memoria_vault/runtime/http_transport.py:216`), and `curate-note-link`
+is a `pi`-protected operation
 (`src/memoria_vault/runtime/worker.py:58`, enforced at `worker.py:1093-1098`).
 The graduate command (Task U3-CANVAS.5) enqueues `curate-note-link` exactly as
 the U3 §4 relate control does; PI-actor authority for plugin enqueues is owned
 by the bootstrap/pane sections (BOOT spec token/handshake work). U3-CANVAS does
-not change actor policy — until that section lands, graduated edges queue and
-are then refused by the worker with "requires PI actor authority" (same today
-for the relate control). No engine code in this section depends on it.
+not change actor policy; it depends on SEAM.1 so graduated edges use the same
+PI-authorized door as the relate control. No engine code in this section depends
+on a client-supplied actor field.
 
 **Floor-golden regeneration required:** Tasks 1, 3, and 5 change bytes that the
 floor goldens hash (`projects/package-gate/argument.canvas` content, a new
@@ -11819,7 +12494,7 @@ Steps:
   ```
 
 - [ ] Run to verify failure: `python -m pytest tests/test_engine_api.py::test_engine_read_canvas_forks_reports_edge_diff tests/test_engine_api.py::test_engine_read_canvas_forks_respects_read_scope -v` — expected: `AttributeError: module ... has no attribute 'read_canvas_forks'`.
-- [ ] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas` (`schema_lib` already imported at line 33; `posixpath` at line 8):
+- [ ] Write the knowledge-layer diff in `src/memoria_vault/runtime/knowledge.py` after `fork_project_canvas`: add `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS` alongside the existing imports; `posixpath` is already imported at line 8.
 
   ```python
   def project_canvas_fork_status(vault: Path, project_path: str) -> dict[str, Any]:
@@ -11879,7 +12554,7 @@ Steps:
               continue
           edge_id = str(edge.get("id") or "")
           label = str(edge.get("label") or "").strip().lower()
-          if label not in schema_lib.LINK_RELATIONS:
+          if label not in LINK_RELATIONS:
               unresolved.append({"edge_id": edge_id, "reason": "unknown relation label"})
               continue
           source = files.get(str(edge.get("fromNode")))
@@ -11974,7 +12649,7 @@ Steps:
 
 **Interfaces:**
 - Consumes: operation id `fork-project-canvas` (Task 3 payload contract); `GET /project/canvas/forks?project_path=...` (Task 4 payload: `payload.canvas_forks.forks[]` rows with `path`/`added`/`diff_count`/`unresolved`/`error`); operation id `curate-note-link` with payload `{source_note_path, link_type, target_path, reason}` — verified against the worker dispatch at `src/memoria_vault/runtime/worker.py:471-498` and the manifest `src/memoria_vault/product/capabilities/operations/curate-note-link.md`.
-- Produces: Obsidian commands `memoria-obsidian:fork-canvas` ("Memoria: Fork canvas to scratch") and `memoria-obsidian:graduate-scratch-edges` ("Memoria: Graduate scratch canvas edges"); status-bar fork badge (`Memoria fork: N edge(s) diverged` / `Memoria fork: in sync` / `Memoria fork: unreadable`) on `active-leaf-change` when the active file matches `projects/<p>/scratch-*.canvas`; per-edge idempotency key `graduate:<scratch-path>:<source>:<type>:<target>` (safe re-runs coalesce).
+- Produces: Obsidian commands `memoria-obsidian:fork-canvas` ("Memoria: Fork canvas to scratch") and `memoria-obsidian:graduate-scratch-edges` ("Memoria: Graduate scratch canvas edges"); status-bar fork badge (`Memoria fork: N edge(s) diverged` / `Memoria fork: in sync` / `Memoria fork: unreadable`) on `active-leaf-change` when the active file matches `projects/<p>/scratch-*.canvas`. The badge lives in `this.forkBadge` and is appended by the existing `renderPill()` method; it never revives deleted `getJson`/`updateStatus` APIs. Per-edge idempotency key `graduate:<scratch-path>:<source>:<type>:<target>` makes safe re-runs coalesce.
 - Plugin never writes files: fork and graduation are pure enqueues; the badge is a read.
 
 Steps:
@@ -11991,6 +12666,10 @@ Steps:
       assert "graduate:" in source
       assert "Memoria: Fork canvas to scratch" in source
       assert "Memoria: Graduate scratch canvas edges" in source
+      assert "this.authedJson(" in source
+      assert ".getJson(" not in source
+      assert ".updateStatus(" not in source
+      assert "this.forkBadge" in source
       # thin renderer: no plugin-side file writes for canvas work
       assert "vault.create" not in source
       assert "vault.modify" not in source
@@ -12001,6 +12680,7 @@ Steps:
   - In `onload()` after the `delete-events` command (line 73), add:
 
     ```javascript
+        this.forkBadge = "";
         this.addCommand({
           id: "fork-canvas",
           name: "Memoria: Fork canvas to scratch",
@@ -12011,10 +12691,31 @@ Steps:
           name: "Memoria: Graduate scratch canvas edges",
           callback: () => this.graduateScratchEdges(),
         });
-        this.registerEvent(
-          this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
-        );
+        if (this.app.workspace.on && this.registerEvent) {
+          this.registerEvent(
+            this.app.workspace.on("active-leaf-change", () => this.updateForkBadge()),
+          );
+        }
     ```
+
+    U3-PLUG.6's shared Node `Plugin` mock must include both
+    `workspace.on: () => ({})` and `registerEvent() {}` (already required by its
+    revised fixture) so this onload path is exercised by the ordinary
+    `node --test scripts/` run rather than only by the static test.
+
+  - Extend U3-PLUG.6's `renderPill()` after its normal pill-text span with:
+
+    ```javascript
+        if (this.forkBadge) {
+          this.statusBar.createEl("span", {
+            cls: "memoria-pill-text",
+            text: ` · ${this.forkBadge}`,
+          });
+        }
+    ```
+
+    Thus the canvas badge is a second rendered status value, not a replacement for
+    the connection pill or a call to the removed `updateStatus` method.
 
   - After `stopSession()` (line 219), add the methods:
 
@@ -12035,7 +12736,7 @@ Steps:
           return;
         }
         new ForkNameModal(this.app, async (name) => {
-          await this.queueOperation("fork-project-canvas", {
+          await this.enqueueNamedOperation("fork-project-canvas", {
             project_path: `projects/${active.match[1]}/project.md`,
             name: name || "scratch",
           });
@@ -12048,7 +12749,7 @@ Steps:
           return null;
         }
         const projectPath = `projects/${active.match[1]}/project.md`;
-        const payload = await this.getJson(
+        const payload = await this.authedJson(
           `/project/canvas/forks?project_path=${encodeURIComponent(projectPath)}`,
         );
         const forks = (payload.canvas_forks && payload.canvas_forks.forks) || [];
@@ -12059,21 +12760,18 @@ Steps:
         try {
           const fork = await this.forkStatusForActiveScratch();
           if (!fork) {
-            this.updateStatus();
-            return;
-          }
-          if (fork.error) {
-            this.updateStatus("Memoria fork: unreadable");
-            return;
-          }
-          this.updateStatus(
-            fork.diff_count
+            this.forkBadge = "";
+          } else if (fork.error) {
+            this.forkBadge = "Memoria fork: unreadable";
+          } else {
+            this.forkBadge = fork.diff_count
               ? `Memoria fork: ${fork.diff_count} edge(s) diverged`
-              : "Memoria fork: in sync",
-          );
+              : "Memoria fork: in sync";
+          }
         } catch {
-          this.updateStatus();
+          this.forkBadge = "";
         }
+        this.renderPill();
       }
 
       async graduateScratchEdges() {
@@ -12136,11 +12834,11 @@ Steps:
 - [ ] Mirror to the seed: `cp packages/memoria-obsidian/main.js src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/main.js`
 - [ ] Run tests to verify they pass: `python -m pytest tests/test_memoria_obsidian_package.py -v` — includes the seed-parity test and the Node schema harness (`node scripts/test.mjs`, untouched).
 - [ ] Regenerate floor goldens (seeded plugin hash changed in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`; review `git diff tests/fixtures/floor/goldens` — only the `.obsidian/plugins/memoria-obsidian/main.js` hash line changes per golden; re-run without the env var — green.
-- [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria serve` running and the plugin token configured:
+- [ ] MANUAL CHECK (honest, no automation claimed — record outcomes in the PR description, not in test files): in a **disposable** vault under `test-vault/` (never a personal vault) with `memoria` available through the plugin's Engine command. Handshake discovers any running server and keeps its per-boot token in memory; no plugin token is configured:
   1. Open `projects/<p>/argument.canvas` — the banner text node renders top-left, reads "read-only, regenerated", and names the fork command.
   2. Run "Memoria: Fork canvas to scratch" → after the worker runs the queued request, `scratch-<name>.canvas` appears, opens editable, no banner node.
   3. Hand-draw one labeled `supports` edge in the scratch canvas; refocus the scratch file → status bar shows `Memoria fork: 1 edge(s) diverged`.
-  4. Run "Memoria: Graduate scratch canvas edges" → Notice reports 1 queued / 0 skipped (worker-side acceptance depends on the PI-actor dependency named at the top of this section — record the observed request status either way).
+  4. Run "Memoria: Graduate scratch canvas edges" → Notice reports 1 queued / 0 skipped; through the already-landed SEAM.1 HTTP door, the worker accepts the PI-authorized request and the relation appears after it runs.
   5. Confirm the plugin wrote no vault file at any step (`git status` in the vault shows only worker commits).
 - [ ] Run the gate: `python scripts/verify` — green.
 - [ ] Commit:
@@ -12159,13 +12857,13 @@ Steps:
 - Modify: `tests/test_project_knowledge.py` (three new tests)
 
 **Interfaces:**
-- Consumes: `write_project_argument_canvas`, `render_project_argument_canvas`, `LINK_RELATIONS` (`src/memoria_vault/runtime/subsystems/lib/schema.py:39`).
+- Consumes: `write_project_argument_canvas`, `render_project_argument_canvas`, `LINK_RELATIONS` (`src/memoria_vault/runtime/subsystems/lib/edges.py`).
 - Produces: pinned reconcile contract for the canvas projector. Verified-existing coverage this task deliberately does **not** duplicate: hand-edit drift detection (`tests/test_projections.py:169-178`), stale-refresh-on-outline-write (`knowledge.py:1899-1925` + `tests/test_slice_outline.py`), quarantine-and-log (Task 2). What is missing and added here: delete-arm regeneration, raw-path id keying under slug collision, and projector-output enum conformance.
 
 TDD deviation, stated honestly: these are characterization pins — the behavior
 already exists (full-file regeneration gives delete-arm; ids are
 `sha256(raw path)` at knowledge.py:1746-1749; labels copy `edge["type"]`
-schema-validated against `LINK_RELATIONS`). The red step below verifies each
+validated against the edges-owned `LINK_RELATIONS`). The red step below verifies each
 test *can* fail by asserting it fails against a deliberately broken mutation,
 then restores.
 
@@ -12235,8 +12933,8 @@ Steps:
           assert node_id == "n-" + hashlib.sha256(rel.encode()).hexdigest()[:12]
 
 
-  def test_canvas_edge_labels_conform_to_schema_link_relations(tmp_path: Path) -> None:
-      from memoria_vault.runtime.subsystems.lib.schema import LINK_RELATIONS
+  def test_canvas_edge_labels_conform_to_link_relations(tmp_path: Path) -> None:
+      from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 
       _md(
           tmp_path / "projects/project-alpha/project.md",
@@ -12349,26 +13047,22 @@ Section of the composite implementation plan for U4
 (`docs/superpowers/specs/2026-07-15-u4-copi-agent-plugin-design.md` §1–2) plus
 the bootstrap-spec §1/§9-slice-3 ownership split: U4 owns the **content** of
 `.claude/skills/memoria-copi/SKILL.md` and `.claude/hooks/session_status.py`;
-the bootstrap verbs (BOOT-C, drafted in parallel) own **seeding** them into
-vaults and stamping `.memoria/vault.json`.
+fresh `memoria init` (BOOT-C, drafted in parallel) owns **seeding** them into
+new vaults and writing their current hashes to `.memoria/vault.json`.
 
 **Cross-section assumptions (assembler: reconcile with BOOT-C and Plan 23 R1NG.4):**
 
-1. **Seeding**: `memoria init`/`memoria upgrade` call a per-bundle-file seeding
-   function taking `(relpath: str, content_provider: Callable[[], str])`. This
-   section produces the enumeration `copi_bundle_files()` in exactly that
-   shape; BOOT-C consumes it and stamps `COPI_BUNDLE_VERSION` + content hashes
-   into `.memoria/vault.json`.
+1. **Seeding**: fresh `memoria init` calls a per-bundle-file seeding function
+   taking `(relpath: str, content_provider: Callable[[], str])`. This section
+   produces `copi_bundle_files()` in exactly that shape; BOOT-C consumes it
+   and records current content hashes in `.memoria/vault.json`.
 2. **Doctor JSON contract** (consumed by the hook; produced by BOOT-C):
    `memoria doctor --json --quick` prints one JSON object on stdout containing
-   at least `{"engine_version": str, "skew": {"status": "in-sync" |
-   "vault-newer" | "engine-newer"}, "credentials": [{"name": str, "class":
+   at least `{"engine_version": str, "credentials": [{"name": str, "class":
    "required-for-operation" | "enhancing" | "identity", "status": "set" |
-   "unset", "source": "env" | "file" | "", "effect_when_unset": str}]}`. The hook
-   is defensive: any missing key emits
-   nothing for that category; unparsable/absent output degrades to a single
-   honest line; a pre-`--quick` engine (argparse error, empty stdout) hits the
-   same degrade path. Identity-class credentials never produce a context line.
+   "unset", "effect": str}]}`. The hook is defensive: any missing key emits
+   nothing for that category; unparsable or absent output degrades to a single
+   honest line. Identity-class credentials never produce a context line.
 3. **Hook wiring**: BOOT-C's generated `.claude/settings.json` registers the
    SessionStart hook as a `python3 .claude/hooks/session_status.py`-style
    command (stdout becomes agent context per Claude Code SessionStart
@@ -12384,6 +13078,17 @@ vaults and stamping `.memoria/vault.json`.
    (`tests/floor_lib.py:375` only asserts `check_tracked_projections` stays
    ok, which regenerated deterministic content satisfies).
 
+### Clean-slate U4-A override (2026-07-30, BINDING)
+
+The active U4-A path is fresh `memoria init` only. It seeds the two current
+method files and records their hashes with the rest of the fresh bundle.
+Do not implement `COPI_BUNDLE_VERSION`, `memoria upgrade`, an upgrade marker in
+generated content, version/skew comparison, skew hook constants, skew report
+fixtures, or upgrade advice. The historical snippets below that name any of
+those items are superseded and non-executable. The SessionStart hook may report
+engine availability and credentials; it must not infer a lifecycle state from
+past bundle metadata.
+
 Repo pattern note: the deliverable named `src/memoria_vault/product/copi_skill.py`
 is realized as the package `src/memoria_vault/product/copi_skill/` (public
 import name `memoria_vault.product.copi_skill`) so the SessionStart hook can
@@ -12398,13 +13103,17 @@ honest-empty wording from `src/memoria_vault/runtime/search_index.py:243`
 `src/memoria_vault/runtime/knowledge.py:973,979`; grounds/warrant vocabulary
 and the five grounds types from
 `docs/superpowers/specs/2026-07-14-evidence-set-grounds-contract-design.md`
-§2 and §4; engine-missing/skew/credential wordings adapted from the bootstrap
+§2 and §4; engine-missing and credential wordings adapted from the bootstrap
 spec §2, §4b, §6; the perimeter-redirect rationale from bootstrap §5's hook
 message.
 
 ---
 
 ### Task U4-A.1: `copi_skill` content module — the generated SKILL.md method text
+
+> **Clean-slate execution note (2026-07-30):** the historical
+> `COPI_BUNDLE_VERSION` instructions below are superseded. This task produces
+> current method content only; fresh initialization records its hash.
 
 **Files:**
 - Create: `src/memoria_vault/product/copi_skill/__init__.py`
@@ -12415,8 +13124,6 @@ message.
 - Consumes: nothing from the engine (pure content module; stdlib +
   `importlib.resources` only).
 - Produces:
-  - `COPI_BUNDLE_VERSION: str = "1"` (module constant; bump on any change to
-    method text or hook source — BOOT-C stamps it into `vault.json`).
   - `SKILL_RELPATH: str = ".claude/skills/memoria-copi/SKILL.md"`
   - `SESSION_STATUS_HOOK_RELPATH: str = ".claude/hooks/session_status.py"`
   - `SKILL_SECTION_TITLES: tuple[str, ...]` (the five §1 section titles, in
@@ -12540,18 +13247,12 @@ def test_condensed_method_carries_the_load_bearing_wordings() -> None:
 
 Owns the content of the two method files inside the vault-embedded agent
 bundle: `.claude/skills/memoria-copi/SKILL.md` and
-`.claude/hooks/session_status.py`. Seeding into a vault is the bootstrap
-verbs' job (`memoria init` / `memoria upgrade`), which stamp
-COPI_BUNDLE_VERSION and content hashes into `.memoria/vault.json`. The
-engine authors the method; the user's agent voices it — this module never
-grants judgment.
+`.claude/hooks/session_status.py`. Fresh `memoria init` seeds them and records
+their current content hashes in `.memoria/vault.json`. The engine authors the
+method; the user's agent voices it — this module never grants judgment.
 """
 
 from __future__ import annotations
-
-# Bump on ANY change to the method text or the hook source; the bootstrap
-# verbs stamp this into .memoria/vault.json so `memoria doctor` reports skew.
-COPI_BUNDLE_VERSION = "1"
 
 SKILL_RELPATH = ".claude/skills/memoria-copi/SKILL.md"
 SESSION_STATUS_HOOK_RELPATH = ".claude/hooks/session_status.py"
@@ -12593,7 +13294,7 @@ description: Memoria co-PI method. Use before answering any question about vault
 
 # Memoria co-PI method
 
-<!-- Generated by memoria_vault.product.copi_skill (bundle version {COPI_BUNDLE_VERSION}); regenerated by `memoria upgrade`. Never edit this file. -->
+<!-- Generated by memoria_vault.product.copi_skill. Fresh initialization writes this file. Never edit it. -->
 
 You are voicing a research co-PI over this vault. The engine authors this
 method; you own phrasing, dialogue flow, and follow-up choice. The method
@@ -12753,6 +13454,11 @@ EOF
 
 ### Task U4-A.2: `session_status.py` SessionStart hook + bundle-file enumeration
 
+> **Clean-slate execution note (2026-07-30):** the historical skew constants,
+> report fixtures, branches, and `init`/`upgrade` wording below are superseded.
+> Seed the current files at fresh initialization, and have the hook report only
+> engine availability, credential status, and the method pointer.
+
 **Files:**
 - Create: `src/memoria_vault/product/copi_skill/session_status.py`
 - Modify: `src/memoria_vault/product/copi_skill/__init__.py` (created in
@@ -12769,11 +13475,10 @@ EOF
     byte-identical to `src/memoria_vault/product/copi_skill/session_status.py`).
   - `copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]` —
     returns `((SKILL_RELPATH, render_copi_skill), (SESSION_STATUS_HOOK_RELPATH,
-    render_session_status_hook))`; BOOT-C's `init`/`upgrade` iterate this.
+    render_session_status_hook))`; BOOT-C's fresh `init` iterates this.
   - Hook module constants (importable for tests and for BOOT-C's doctor
     parity checks): `METHOD_POINTER_LINE`, `ENGINE_MISSING_LINE`,
-    `DOCTOR_UNAVAILABLE_LINE`, `SKEW_VAULT_NEWER_LINE`,
-    `SKEW_ENGINE_NEWER_LINE` (all `str`), and `main() -> int`.
+    `DOCTOR_UNAVAILABLE_LINE` (all `str`), and `main() -> int`.
 - Hook behavior contract: stdlib-only, never imports `memoria_vault`, always
   exits 0, writes UTF-8 bytes to stdout (locale-proof). Engine absent on PATH
   degrades to `ENGINE_MISSING_LINE`; doctor absent/unparsable degrades to
@@ -12798,7 +13503,6 @@ ENGINE_MISSING_GOLDEN = (
 
 DOCTOR_REPORT_JSON = (
     '{"ok": false, "engine_version": "0.1.0a21",'
-    ' "skew": {"status": "engine-newer"},'
     ' "credentials": ['
     '{"name": "KILOCODE_API_KEY", "class": "required-for-operation", "status": "unset"},'
     '{"name": "OPENALEX_API_KEY", "class": "enhancing", "status": "unset",'
@@ -12809,8 +13513,6 @@ DOCTOR_REPORT_JSON = (
 )
 
 DOCTOR_GOLDEN = (
-    "Memoria: bundle skew — the engine is newer than the vault bundles; "
-    "run `memoria upgrade`.\n"
     "Memoria: credential KILOCODE_API_KEY is unset (required-for-operation) — "
     "live-model calls refuse before the network; "
     "run `memoria secrets set KILOCODE_API_KEY`.\n"
@@ -12903,7 +13605,7 @@ def test_hook_degrades_on_unusable_doctor_output(tmp_path: Path) -> None:
       `src/memoria_vault/product/copi_skill/session_status.py`:
 
 ```python
-"""Memoria SessionStart hook: inject engine, skew, and credential truth.
+"""Memoria SessionStart hook: inject engine and credential truth.
 
 Seeded into vaults as `.claude/hooks/session_status.py` by the bootstrap
 verbs; the packaged source of truth lives in
@@ -12932,16 +13634,6 @@ DOCTOR_UNAVAILABLE_LINE = (
     "Memoria: `memoria doctor` did not return usable status — "
     "run `memoria doctor` manually."
 )
-SKEW_VAULT_NEWER_LINE = (
-    "Memoria: bundle skew — the vault bundles are newer than the engine; "
-    "upgrade the engine: `pipx upgrade memoria`."
-)
-SKEW_ENGINE_NEWER_LINE = (
-    "Memoria: bundle skew — the engine is newer than the vault bundles; "
-    "run `memoria upgrade`."
-)
-
-
 def _credential_lines(credentials: object) -> list[str]:
     lines: list[str] = []
     if not isinstance(credentials, list):
@@ -12979,15 +13671,7 @@ def _doctor_lines() -> list[str]:
         return [DOCTOR_UNAVAILABLE_LINE]
     if not isinstance(report, dict):
         return [DOCTOR_UNAVAILABLE_LINE]
-    lines: list[str] = []
-    skew = report.get("skew")
-    status = skew.get("status") if isinstance(skew, dict) else None
-    if status == "vault-newer":
-        lines.append(SKEW_VAULT_NEWER_LINE)
-    elif status == "engine-newer":
-        lines.append(SKEW_ENGINE_NEWER_LINE)
-    lines.extend(_credential_lines(report.get("credentials")))
-    return lines
+    return _credential_lines(report.get("credentials"))
 
 
 def main() -> int:
@@ -13024,8 +13708,8 @@ def render_session_status_hook() -> str:
 def copi_bundle_files() -> tuple[tuple[str, Callable[[], str]], ...]:
     """Enumerate the U4-owned bundle files as (relpath, content_provider) pairs.
 
-    The bootstrap verbs (init/upgrade) seed each pair and stamp
-    COPI_BUNDLE_VERSION plus content hashes into .memoria/vault.json.
+    Fresh initialization seeds each pair and records their current hashes in
+    .memoria/vault.json.
     """
     return (
         (SKILL_RELPATH, render_copi_skill),
@@ -13048,8 +13732,8 @@ git commit -m "$(cat <<'EOF'
 feat(copi): SessionStart status hook and bundle-file enumeration
 
 Stdlib-only session_status.py runs `memoria doctor --json --quick` and
-injects engine-missing / skew / credential context lines plus the method
-pointer; engine absence and unusable doctor output degrade honestly.
+injects engine-missing and credential context lines plus the method pointer;
+engine absence and unusable doctor output degrade honestly.
 copi_bundle_files() exposes the (relpath, content_provider) pairs the
 bootstrap seeding verbs consume.
 
@@ -13138,8 +13822,8 @@ def _vault_agents_md() -> str:
 
     return _generated(
         "Memoria vault read contract",
-        "Engine-generated projection (the bibliography.bib pattern): `memoria init` "
-        "writes this file and upgrades regenerate it. Never edit it — edits are "
+        "Engine-generated projection (the bibliography.bib pattern): fresh `memoria init` "
+        "writes this file. Never edit it — edits are "
         "drift and the next regenerate-tracked-projections pass overwrites them.",
         "## How to read this vault safely\n"
         "\n"
@@ -13231,8 +13915,10 @@ All line refs verified against the working tree at plan time. Governing spec:
   `raised_by: generate-questions`, `certainty: unsure`, plus two
   machine-readable extra frontmatter keys: `taxonomy_role` (one of
   `grounds-seeking | warrant-challenging | rebuttal-probing |
-  qualifier-testing`) and `target` (the resolvable reference). U3 rendering
-  can key off `attention_kind`/`taxonomy_role`/`target`/`raised_by`.
+  qualifier-testing`) and `target` (the resolvable reference). U3's public
+  card renders this as `kind_line: "gap"`, an evidence-link child, and
+  `raised_by`; `taxonomy_role` remains source metadata rather than an
+  invented public card field.
 - **Model output contract:** a JSON array of objects
   `{"question": str, "role": str, "target": str}`. A non-JSON / non-list
   payload fails the run loudly with `ValueError` (honest failure, no partial

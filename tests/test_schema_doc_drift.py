@@ -115,6 +115,21 @@ def test_schema_doc_lint_fails_on_seeded_forbidden_list_subset_mismatch(tmp_path
     )
 
 
+def test_schema_doc_lint_fails_on_seeded_list_subset_mismatch(tmp_path: Path) -> None:
+    schemas, docs = _write_fixture(tmp_path)
+    (docs / "frontmatter.md").write_text(
+        "```yaml\ntype: note\nrequired_any: [citekey, url]\n```\n",
+        encoding="utf-8",
+    )
+
+    errors = check_schema_docs(schemas, docs)
+
+    assert any(
+        "note.required_any: documented ['citekey', 'url'] not in live []" in error
+        for error in errors
+    )
+
+
 def test_frontmatter_reference_documents_ulids_and_type_specific_id_kinds() -> None:
     text = (ROOT / "docs/reference/data-model/frontmatter.md").read_text(encoding="utf-8")
     id_row = next(line for line in text.splitlines() if line.startswith("| `id` |"))

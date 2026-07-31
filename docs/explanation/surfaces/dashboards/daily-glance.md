@@ -17,9 +17,9 @@ low-noise signal.
 The navigator rail is planned for an optional dashboard adapter. Its **Now**
 band would be a compact attention signal where empty is success.
 
-Today, use `memoria attention list --workspace .` for that signal. The planned
-rail is a pointer to the few places where daily attention may be needed, not a
-task list or vault audit.
+The shipped file-backed Inbox currently provides that signal. The planned rail
+is a pointer to the few places where daily attention may be needed, not a task
+list or vault audit.
 
 ## Inbox activity and action queue
 
@@ -34,8 +34,7 @@ A planned Board dashboard may combine the maintenance/debugging reads under a
 compact Inbox Activity strip.
 
 It is read-only. Runtime request state lives in SQLite; attention lives in
-`inbox/*.md` and is projected by the read API. Both are surfaced through
-`memoria request ...` and `memoria attention ...`; there is no file-backed board
+`inbox/*.md` and is projected by the read API. There is no file-backed board
 dashboard to edit.
 
 ## Related

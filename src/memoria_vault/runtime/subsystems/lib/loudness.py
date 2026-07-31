@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Graded loudness helpers.
 
-Loudness grades pull-only Inbox attention, and open block cards gate review work
-through the optional policy-hook path until the PI resolves them.
+`loudness` is pull-only Inbox card metadata. Open block cards pause delegation
+and review-gated promotion until the PI acknowledges them by resolving the card.
 """
 
 from __future__ import annotations

@@ -1281,7 +1281,9 @@ inputs, a named output spec path, and a follow-up `superpowers:writing-plans`
 step. The section closes with the acceptance task (LOOP.13).
 
 **Task order** (encodes the empirical plan's constraints):
-LOOP.1–LOOP.3 (determined code, no ordering constraint among them) →
+LOOP.1 and LOOP.2 may run independently. LOOP.3 has a binding external
+dependency chain: surfaces BOOT-B.5 → Alpha22 COST.1–.5 → LOOP.3; COST.1–.3
+are atomic, so LOOP.3 never consumes an intermediate string-return seam. Then
 LOOP.4 (I1 design gate — highest sequencing priority, before any ingestion) →
 LOOP.5 (O1 — licensing decision inside it precedes seed-corpus selection) →
 LOOP.6 (O2 — explicitly **after** LOOP.4's I1 wiring is implemented) →
@@ -1291,6 +1293,32 @@ LOOP.10 (U2) → LOOP.11 (U3) → LOOP.12 (U4) → LOOP.13 (acceptance).
 Repo facts honored: gate is `python scripts/verify`; new test files register in
 `tests/conftest.py` `TEST_LEVELS`; stage explicit paths only (shared git
 index); TDD; commits end with the Co-Authored-By trailer.
+
+### Plan-reconciliation amendment — executable partial order (2026-07-29)
+
+The historical total chain `LOOP.4 → O1 → O2 → R2 → V2 → U1 → U2 → U3` is
+superseded.  It is impossible because I1 H.2 consumes U1/U3 seams and V2
+B.4/D.1 consume U3, while U2 itself consumes U1/V2/I1.  Execute the following
+task-level DAG instead; a package design gate does not imply that every task in
+that package must finish before an independent producer can start.
+
+```
+I1 T.1/T.2 (+ required telemetry A/D) → O1 T.1 → O1 M.3
+O1 M.2 → O2 A
+O2 {P, A, W.1}; I1 T.1/T.2 → O2 W.2
+{O2 P, O2 A, O2 W.1, O2 W.2} → #1517 finalization decision → O2 I.1
+{O2 I.1, I1 H.3} → O2 W.3; {O2 W.3, R2 F.3} → O2 W.4
+graph NID-B + ERP-A.6 → R2 G → R2 P → R2 E
+{O1 M.3, R2 F.1, R2 E} → R2 F.2 → R2 F.3 → LOOP.13
+U1 J/M → BOOT/U3-ENG/SEAM → {I1 H.2, V2 B.4/D.1}
+{V2 B.5, U2 T.3} → U2's post-seam cockpit integration
+{O1 M.3, O2 W.4, R2 F.3} → LOOP.13
+```
+
+U3's own prerequisites remain binding (graph activation before U3-ENG; SEAM
+before pane actions), and U2 remains after its declared U1/V2/I1 seams.  This
+amendment changes ordering only; it does not authorize real-vault ingestion
+before I1 instrumentation and the seeded-error battery are green.
 
 ---
 
@@ -1946,6 +1974,91 @@ Pin both cases at the operation boundary in `tests/test_worker_product_jobs.py`.
 
 ### Task LOOP.3: E1 — token-ceiling circuit breaker at the single live-dispatch seam
 
+> **Execution override — canonical model-call handoff (2026-07-29):** Execute
+> this task only after surfaces BOOT-B.5 and Alpha22 COST.1–.5. The raw
+> `result.usage()` calls, string-return assertions, unchanged-fake wording,
+> and independent-order claim below are drafting history. LOOP.3 consumes the
+> canonical COST result, never the raw SDK result, and changes no secret
+> resolution or durable telemetry policy.
+
+The shared result is:
+
+```python
+MODEL_CALL_RESULT = {
+    "text": str,
+    "usage": {
+        "input_tokens": int,
+        "output_tokens": int,
+        "cache_read_tokens": int,
+        "cache_write_tokens": int,
+        "total_tokens": int,
+    } | None,
+    "cost_usd": float | None,
+    "elapsed_s": float,
+}
+```
+
+**Binding implementation and proof requirements:**
+
+1. Keep `_require_token_budget(...)` immediately before dispatch. COST.1 has
+   already called the SDK's `result.usage()` exactly once and built `usage`
+   immediately after successful `run_sync`; insert the one ledger charge
+   directly after that handoff and before `text` is read or empty/digest output
+   is rejected. Thus a successful but invalid/empty returned response consumes
+   budget; a `run_sync` exception does not. LOOP must never call
+   `result.usage()` a second time.
+2. Replace the old raw-result recorder with a canonical-data helper, for
+   example (the private name may stay `_record_token_usage`):
+
+   ```python
+   def _record_token_usage(usage: dict[str, Any] | None, settings: dict[str, Any]) -> None:
+       total = usage.get("total_tokens") if isinstance(usage, dict) else None
+       if isinstance(total, int) and not isinstance(total, bool) and total >= 0:
+           charge = total
+       else:
+           fallback = settings.get("max_tokens")
+           charge = (
+               fallback
+               if isinstance(fallback, int)
+               and not isinstance(fallback, bool)
+               and fallback > 0
+               else 0
+           )
+       _TOKEN_LEDGER["total_tokens"] += charge
+   ```
+
+   A valid zero is charged as zero; `max_tokens` is a fallback only for
+   absent/malformed usage. `cost_usd` is nullable telemetry, never a breaker
+   input. The shared five-field `usage` dict is forwarded once to COST.4's
+   existing `model_call` journal rows; this task adds no sink or journal row.
+3. Update every direct assertion to `result["text"]` and import COST's
+   `tests.helpers.LIVE_USAGE` total (`25`), not the stale `max_tokens=64`
+   fallback. Add
+   focused tests for: reported total preferred over max-tokens; absent and
+   malformed usage falling back; valid zero not falling back; an empty response
+   charging before its `RuntimeError`; a `run_sync` exception leaving the
+   ledger unchanged; exactly one SDK `usage()` harvest; and deterministic-
+   fixture execution never entering the live breaker.
+4. Add `tests/test_cli_doctor_eval.py` to this task's Files and a live-doctor
+   proof: reset `_TOKEN_LEDGER`, set a ceiling equal to the fake total, run one
+   `doctor --check runner --live` diagnostic dispatch (it succeeds and spends
+   the budget), then run it again. The second report has
+   `runner_live_dispatch: false` and the explicit `model token ceiling
+   reached` diagnostic. Assert no `model_call` journal row exists in the
+   disposable workspace for either diagnostic. Doctor is a live resource
+   consumer, not durable model-call provenance.
+5. Run and stage the amended contract tests together:
+
+   ```bash
+   python -m pytest tests/test_token_ceiling.py tests/test_cli_doctor_eval.py \
+       tests/test_operations.py tests/test_runtime_gate_replay.py -v
+   ```
+
+   Stage `src/memoria_vault/runtime/operations.py`, `tests/test_token_ceiling.py`,
+   `tests/test_cli_doctor_eval.py`, and `tests/conftest.py` in the LOOP.3
+   commit. Do not stage Alpha22 files here; COST's atomic tranche and journal
+   changes have already landed.
+
 Consolidation E1 unit delivered here: the deterministic slice of
 `cost-discipline` (token ceiling + circuit breaker). **Seam verification (files
 read):** every live model call in the codebase funnels through
@@ -1961,10 +2074,10 @@ design gates' "pre-registered decision rules" plumbing — they are *not* built
 here.
 
 Mechanism: a process-wide cumulative token ledger. Each completed call charges
-the model-reported `result.usage().total_tokens` (pydantic-ai 2.9.1, verified:
-`RunUsage.total_tokens` exists and `AgentRunResult.usage` is callable), falling
-back to the call's `max_tokens` setting when the runner reports no usage (the
-test fake). When `MEMORIA_MODEL_TOKEN_CEILING` is set and spent ≥ ceiling, the
+the canonical COST `usage["total_tokens"]` already harvested from the SDK
+exactly once (pydantic-ai 2.9.1's `RunUsage.total_tokens`); it falls back to
+the call's `max_tokens` setting only when that canonical field is absent or
+malformed, never when a valid value is zero. When `MEMORIA_MODEL_TOKEN_CEILING` is set and spent ≥ ceiling, the
 **next** dispatch refuses before any network call (classic breaker: the
 in-flight call completes and is charged; the circuit opens for subsequent
 calls). Unset/empty ceiling = breaker off (default), preserving current
@@ -2003,7 +2116,9 @@ environment-variable identifier, not a credential.
 - Modify: `tests/conftest.py:18-120` (`TEST_LEVELS` registration and
   live-profile ceiling isolation)
 - Create: `tests/test_token_ceiling.py`
-- Test: `tests/test_token_ceiling.py`
+- Modify: `tests/test_cli_doctor_eval.py` (live diagnostic spends the same
+  breaker budget but creates no durable `model_call` event)
+- Test: `tests/test_token_ceiling.py`, `tests/test_cli_doctor_eval.py`
 
 **Interfaces:**
 - Produces:
@@ -2016,15 +2131,62 @@ environment-variable identifier, not a credential.
     `"model token ceiling reached"` raised by `_pydantic_ai_chat` before
     dispatch. (Internal helpers `_token_ceiling() -> int`,
     `_require_token_budget(operation_id: str) -> None`,
-    `_record_token_usage(result: Any, settings: dict[str, Any]) -> None` are
+    `_record_token_usage(usage: dict[str, Any] | None, settings: dict[str, Any]) -> None` are
     private.)
-- Consumes: `_load_pydantic_ai_openai()` (`operations.py:987`) unchanged;
-  `tests.helpers.patch_pydantic_ai` (`tests/helpers.py:362`) unchanged — its
-  fake result has no `usage` attribute, exercising the fallback.
+- Consumes: Alpha22's canonical `MODEL_CALL_RESULT`; `_load_pydantic_ai_openai()`
+  unchanged; COST's upgraded `tests.helpers.patch_pydantic_ai` fake and
+  `tests.helpers.LIVE_USAGE`, which expose one `usage()` harvest and canonical
+  total. A malformed or absent *canonical* usage dict exercises the fallback
+  without calling the SDK.
 
 **Steps:**
 
-- [x] Write the failing tests. Create `tests/test_token_ceiling.py`:
+> **Executable replacement (2026-07-29):** The canonical requirements above
+> replace every raw-SDK/string-return sample in the archived draft below. Do
+> not copy or execute that draft. In particular, LOOP.3 must never call
+> `result.usage()` or pass a raw SDK result to `_record_token_usage`.
+
+- [ ] **Write the canonical failing tests.** Create
+  `tests/test_token_ceiling.py` with the existing `POLICY`/keyless `RUNNER`, a
+  ledger reset helper, and `LIVE_USAGE, patch_pydantic_ai` imported from
+  `tests.helpers`. Assert `result["text"]`, and use
+  `LIVE_USAGE["total_tokens"] == 25` rather
+  than `max_tokens=64`, for the ceiling-trip and unset-ceiling paths. Add
+  focused tests that call the canonical-data helper directly for reported
+  total (preferred), absent/malformed total (fall back), valid zero (charge
+  zero), and boolean values (malformed; never silently treated as integers).
+  Make the fake's empty output raise while the ledger has already charged 25
+  and `seen["usage_calls"] == 1`. Exercise a deterministic-fixture operation
+  under a ceiling and assert that it neither dispatches nor changes the
+  ledger. Separately monkeypatch an agent whose `run_sync` raises; assert the
+  wrapped `pydantic-ai model request failed` error, zero ledger change, and no
+  `usage()` harvest.
+
+- [ ] **Add the runner and doctor regressions.** Register
+  `test_token_ceiling.py` as `unit`. In `tests/test_cli_doctor_eval.py`, reset
+  the ledger and set the ceiling to 25; the first `doctor --check runner
+  --live` dispatch succeeds and spends 25, while the second reports
+  `runner_live_dispatch: false` and `model token ceiling reached`. Assert
+  neither diagnostic creates a `model_call` JSONL row in the disposable
+  workspace.
+
+- [ ] **Implement at the canonical seam.** Add the constant, ledger,
+  `_token_ceiling`, and `_require_token_budget` helpers as scoped below.
+  Preserve COST.1's one `run_usage` harvest. Put
+  `_require_token_budget(...)` immediately before dispatch; immediately after
+  COST.1 creates `usage`, call `_record_token_usage(usage, settings)` before
+  inspecting `text`. Use the canonical-data helper above, including its
+  boolean rejection. Do not add a journal sink or alter BOOT-B.5 key handling.
+
+- [ ] **Verify and commit the replacement.** First run
+  `python -m pytest tests/test_token_ceiling.py -v` red, then green; run the
+  combined contract command in the binding requirements, `python scripts/verify`,
+  and commit exactly the four files listed there.
+
+<details>
+<summary>Superseded legacy draft — retained only as review history; do not execute or copy these steps</summary>
+
+- [ ] Write the failing tests. Create `tests/test_token_ceiling.py`:
 
   ```python
   """Token-ceiling circuit breaker for live model dispatch."""
@@ -2219,7 +2381,7 @@ environment-variable identifier, not a credential.
 - [x] Commit:
 
   ```
-  git add src/memoria_vault/runtime/operations.py tests/test_token_ceiling.py tests/conftest.py
+  git add src/memoria_vault/runtime/operations.py tests/test_token_ceiling.py tests/test_cli_doctor_eval.py tests/conftest.py
   git commit -m "feat(runtime): process-wide token-ceiling circuit breaker for live model dispatch
 
   E1 cost-discipline slice: MEMORIA_MODEL_TOKEN_CEILING caps cumulative
@@ -2229,6 +2391,8 @@ environment-variable identifier, not a credential.
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+</details>
 
 ---
 
@@ -2762,6 +2926,13 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 
 ### Task LOOP.13: Acceptance — instrumented 10→100 staged import runs end-to-end; time-to-first-answer is measured
 
+**2026-07-29 retrieval amendment (binding):** LOOP.13 runs only after R2 F.3
+has frozen the retrieval fixtures. Shape 1 remains `memoria ask`; Shape 2 is
+`memoria explore`, invoked with the fixture's topic and declared depth. This
+supersedes every earlier Shape-2 `memoria ask` command or fallback wording below:
+the acceptance record stores the fixture id, topic, depth, metric, and the two
+separate command latencies.
+
 The closing gate for this section, executing empirical plan Phase 0's exit
 checks plus Phase 1's first two stages with today's real CLI commands
 (verified against `cli.py`: `memoria init` :74, `memoria work add` :195,
@@ -2786,12 +2957,12 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
 
 **Interfaces:**
 - Consumes: merged implementations of LOOP.4 (I1 wiring) and LOOP.6 (O2
-  import); LOOP.5's seed-corpus list + licensing record; empirical plan
-  Phases 0-1 metric list and the ≤30-min / ≤60-min bars; LOOP.7's Shape-1/
-  Shape-2 query definitions (fall back to the two literal queries below if
-  LOOP.7 has not merged).
+  import); LOOP.5's seed-corpus list + licensing record; R2 F.3's frozen
+  fixture loader; empirical plan Phases 0-1 metric list and the ≤30-min /
+  ≤60-min bars; LOOP.7/R2's Shape-1 and Shape-2 command contracts.
 - Produces: the acceptance-run record with: time-to-first-answer seconds;
-  per-stage import wall-clock, ask latency, attention items per 100 works,
+  per-stage import wall-clock, separate Shape-1 ask and Shape-2 explore
+  latencies, attention items per 100 works,
   triage minutes; disposition-event count > 0; a stop-reason for any stage
   that broke the session ("that observation IS the finding").
 
@@ -2841,13 +3012,14 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
     [ -s "$F" ] && memoria work import --workspace "$VAULT" --format bibtex --file "$F" --json --idempotency-key "stage1-$F"
   done
   END=$(date +%s); echo "stage1_import_s=$((END-START))" | tee -a staged-import-metrics.txt
-  time memoria ask --workspace "$VAULT" --question "targeted lookup: <a Shape-1 query from the LOOP.7 spec>" --json
-  time memoria ask --workspace "$VAULT" --question "topic surfacing: <a Shape-2 query from the LOOP.7 spec>" --json
+  time memoria ask --workspace "$VAULT" --question "targeted lookup: <the frozen Shape-1 query>" --json
+  # Read the frozen Shape-2 fixture's topic/depth/metric first; do not invent a query.
+  time memoria explore --workspace "$VAULT" "<fixture topic>" --depth <fixture depth> --json
   memoria attention list --workspace "$VAULT" --json | tee stage1-attention.json
   memoria attention worklist --workspace "$VAULT" --json | tee stage1-worklist.json
   ```
 
-  Record: import wall-clock, both ask latencies (>200 ms interactive triggers
+  Record: import wall-clock, Shape-1 ask and Shape-2 explore latencies (>200 ms interactive triggers
   the substrate re-comparison early — query-mechanism-analysis §5), attention
   items minted, journal/DB growth (`du -sh "$VAULT/.memoria"`).
 
@@ -2893,6 +3065,6 @@ its numbers feed the Phase 3 decision review. **1000-scale is out of scope
 
 - [ ] Acceptance: both stages ran (or carry a recorded stop-reason);
   time-to-first-answer is a recorded number; disposition-event count ≥ 1 was
-  verified **before** stage 2; ask latencies per stage are recorded against
-  the 200 ms early-trigger threshold; nothing was executed against
+  verified **before** stage 2; Shape-1 ask and Shape-2 explore latencies are
+  separately recorded against the 200 ms early-trigger threshold; nothing was executed against
   `test-vault/` or a pre-existing personal vault.

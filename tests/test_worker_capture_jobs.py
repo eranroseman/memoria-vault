@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import base64
+import io
 import json
 from pathlib import Path
+
+import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.operations import load_operation_policy
@@ -118,6 +121,187 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
     assert "coherence check" in done["error"]
     assert not (vault / "catalog/sources/pdf-missing-selector").exists()
     assert not (vault / ".memoria/journal").exists()
+
+
+REMOTE_PDF_URL = "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
+
+
+def _remote_pdf_payload(url: str = REMOTE_PDF_URL) -> dict:
+    return {
+        "fetch": {"method": "pdf-url", "url": url},
+        "capture": {
+            "work_id": "remote-pdf-source",
+            "title": "Remote PDF Source",
+            "description": "A fixture remote PDF source.",
+            "resource": url,
+            "item_type": "article",
+            "identifiers": {"doi": "10.3389/feduc.2019.00005"},
+            "csl_json": {"id": "remote-pdf-source"},
+            "citekey": "remote2026",
+            "provider_coverage": "partial",
+        },
+    }
+
+
+def test_worker_runs_policy_bound_remote_pdf_capture_as_pi(tmp_path: Path, monkeypatch) -> None:
+    vault = workspace(tmp_path)
+    captured: dict[str, object] = {}
+
+    def resolve_fetch(row: dict, *, authorize_url) -> bytes:
+        captured["row"] = row
+        captured["authorize_url"] = authorize_url
+        return b"%PDF fixture\n"
+
+    monkeypatch.setattr("memoria_vault.runtime.seed_install.resolve_fetch", resolve_fetch)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.capture._extract_pdf_pages",
+        lambda _raw: [{"page": 1, "text": "A remote PDF evidence block."}],
+    )
+    enqueue_operation(
+        vault,
+        "capture-remote-pdf-source",
+        payload=_remote_pdf_payload(),
+        idempotency_key="capture-remote-pdf",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["work_id"] == "remote-pdf-source"
+    assert captured["row"] == {
+        "id": "remote-pdf-source",
+        "title": "Remote PDF Source",
+        "fetch": {"method": "pdf-url", "url": REMOTE_PDF_URL},
+    }
+    authorize_url = captured["authorize_url"]
+    assert callable(authorize_url)
+    authorize_url(REMOTE_PDF_URL)
+    with pytest.raises(PermissionError, match=r"outside\.test"):
+        authorize_url("https://outside.test/denied.pdf")
+
+
+def test_worker_stages_an_allowed_remote_pdf_through_the_default_resolver(
+    tmp_path: Path, monkeypatch
+) -> None:
+    vault = workspace(tmp_path)
+    calls: list[str] = []
+
+    def fixture_opener(url: str) -> io.BytesIO:
+        calls.append(url)
+        return io.BytesIO(b"%PDF-1.4 fixture\n")
+
+    monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", fixture_opener)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.capture._extract_pdf_pages",
+        lambda _raw: [{"page": 1, "text": "A remote PDF evidence block."}],
+    )
+    payload = _remote_pdf_payload()
+    payload["capture"]["work_id"] = "Remote PDF/Source"
+    enqueue_operation(
+        vault,
+        "capture-remote-pdf-source",
+        payload=payload,
+        idempotency_key="capture-remote-pdf-default-resolver",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["work_id"] == "Remote_PDF_Source"
+    assert calls == [REMOTE_PDF_URL]
+    assert done["raw_path"] == (
+        ".memoria/blobs/source-content/Remote_PDF_Source/raw/Remote_PDF_Source.pdf"
+    )
+    assert (vault / done["raw_path"]).read_bytes() == b"%PDF-1.4 fixture\n"
+
+
+def test_worker_remote_pdf_policy_refuses_before_default_opener(
+    tmp_path: Path, monkeypatch
+) -> None:
+    vault = workspace(tmp_path)
+    calls: list[str] = []
+
+    def forbidden_opener(url: str):
+        calls.append(url)
+        raise AssertionError("network policy should refuse before opening")
+
+    monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", forbidden_opener)
+    enqueue_operation(
+        vault,
+        "capture-remote-pdf-source",
+        payload=_remote_pdf_payload("https://outside.test/denied.pdf"),
+        idempotency_key="capture-remote-pdf-denied",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "failed"
+    assert "https://outside.test/denied.pdf" in done["error"]
+    assert calls == []
+
+
+def test_worker_refuses_remote_pdf_capture_for_agent_before_fetch(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    enqueue_operation(
+        vault,
+        "capture-remote-pdf-source",
+        payload=_remote_pdf_payload(),
+        idempotency_key="capture-remote-pdf-agent",
+        actor="agent",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "failed"
+    assert done["error"] == "capture-remote-pdf-source requires PI actor authority"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("fetch", [], "fetch must be an object"),
+        ("capture", [], "capture must be an object"),
+        ("identifiers", [], "identifiers must be an object"),
+        ("csl_json", [], "csl_json must be an object"),
+    ],
+)
+def test_worker_rejects_malformed_remote_pdf_requests_before_opening(
+    tmp_path: Path, monkeypatch, field: str, value: object, message: str
+) -> None:
+    vault = workspace(tmp_path)
+    calls: list[str] = []
+
+    def forbidden_opener(url: str):
+        calls.append(url)
+        raise AssertionError("malformed payload should fail before opening")
+
+    monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", forbidden_opener)
+    payload = _remote_pdf_payload()
+    if field in {"fetch", "capture"}:
+        payload[field] = value
+    else:
+        payload["capture"][field] = value
+    enqueue_operation(
+        vault,
+        "capture-remote-pdf-source",
+        payload=payload,
+        idempotency_key=f"capture-remote-pdf-malformed-{field}",
+        actor="pi",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "failed"
+    assert message in done["error"]
+    assert calls == []
 
 
 def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> None:

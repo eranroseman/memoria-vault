@@ -68,7 +68,7 @@ def write_proposal(
         f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
         f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n"
     )
-    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body), loudness=loudness)
+    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body))
 
 
 def write_finding(
@@ -123,7 +123,7 @@ def write_finding(
             return None
         write_text_durable(path, content)
         return path
-    return _write(vault, card_type, title, content, loudness=loudness)
+    return _write(vault, card_type, title, content)
 
 
 def write_work_prompt(
@@ -181,10 +181,10 @@ def write_work_prompt(
             return None
         write_text_durable(path, content)
         return path
-    return _write(vault, "work-prompt", title, content, loudness=loudness)
+    return _write(vault, "work-prompt", title, content)
 
 
-def _write(vault: Path, card_type: str, title: str, content: str, loudness: str = "notice") -> Path:
+def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
     inbox = vault / "inbox"
     inbox.mkdir(parents=True, exist_ok=True)
     base = f"{card_type}-{_slug(title)}"

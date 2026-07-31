@@ -15,8 +15,8 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 Every request carries one validated actor. The worker reserves
 `acknowledge-attention`, `resolve-attention`, `record-copi-interview`,
 `curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`,
-`frame-paper`, `promote-draft-passage`, and `cascade-rollback` for the `pi`
-actor. It reserves
+`frame-paper`, `promote-draft-passage`, `cascade-rollback`, and
+`capture-remote-pdf-source` for the `pi` actor. It reserves
 `trace-integrity-scan` and `observe-pi-edits` for the `integrity` actor.
 
 An idempotency key binds the normalized request/job kind and complete request
@@ -84,10 +84,11 @@ retrieval, export, or egress policy.
 | Capture source | worker operation `capture-source` + runtime helpers (`capture_source`, `stage_catalog_source`) | Records a capture run, writes catalog state plus durable source blobs, and keeps DOI/portable imports unchecked until enrichment or worker checks pass ([Ingest routing](../pipelines-and-io/ingest.md)). |
 | Enrich staged source | worker operation `enrich-source` + runtime helper (`enrich_source`) | Resolves required DOI providers, records provenance, blocks failed or contested records with attention, neutralizes provider prose in generated attention/candidate Markdown, then checks passing rows and refreshes `bibliography.bib`. |
 | Capture BibTeX source | worker operation `capture-bibtex-source` + runtime helper (`bibtex_capture_payload`) | Parses one BibTeX entry into unchecked catalog metadata, a raw `.bib` blob, and a DOI enrichment request when a DOI is present. |
-| Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses one CSL-JSON item into unchecked catalog metadata, a raw `.csl.json` blob, and a DOI enrichment request when a DOI is present. |
+| Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses each CSL-JSON item into unchecked catalog metadata and a raw `.csl.json` blob; `--enrich` also queues a DOI enrichment request for each newly admitted item when a DOI is present. |
 | Update Work | worker operation `update-work` | Applies PI-owned Work metadata, standing, and classification changes to the SQLite catalog row, then records the journal event through the worker request queue. |
 | Capture URL source | worker operation `capture-url-source` + runtime helper (`stage_url_source`) | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes an unchecked catalog row plus source-content blobs. |
-| Capture PDF source | worker operation `capture-pdf-source` + runtime helper (`stage_pdf_source`) | Uses the optional PyMuPDF parser to extract page text from raw PDF bytes and writes an unchecked catalog row plus source-content blobs. |
+| Capture PDF source | worker operation `capture-pdf-source` + runtime helper (`stage_pdf_source`) | Uses the optional PyMuPDF parser to extract page text from raw PDF bytes, rejecting more than 1,000 pages or 8 MiB of extracted UTF-8 text before it writes an unchecked catalog row plus source-content blobs. |
+| Capture remote PDF source | PI-only worker operation `capture-remote-pdf-source` + `resolve_fetch` / `stage_pdf_source` | Validates an imported fetch descriptor and metadata separately, authorizes every resolver URL against the seven-prefix PMC/Frontiers/ACL/Sociologica/arXiv policy, then stages the resolved PDF. It accepts no caller-supplied PDF bytes and is not a new CLI command. |
 | Regenerate bibliography | runtime capture helper (`write_references_bib`) / worker operation `regenerate-references-bib` | Rebuilds `bibliography.bib` from checked SQLite catalog rows and can commit the projection plus journal event through the worker. |
 | Capture trace | trusted writer + journal | Records `run`, `derived`, and `check-fired` events for the catalog Work row; raw blobs stay gitignored and are referenced by path + hash. |
 | Extract typed edge candidates | trusted writer materialization (`commit_writer_changes`) | Parses explicit argument-class body links such as `[[supports::notes/x.md]]` into unchecked `edge-candidate` attention prompts in the same commit, neutralizing copied title/target prose; bare `[[wikilink]]` body links do not create `supports`, `contradicts`, or `extends` edges. |
@@ -163,7 +164,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Eval dispatch | telemetry operation (`eval_dispatch.py`, operator-managed scheduled task or `memoria eval run`) | Fans workspace-authored gold tasks out as one idempotent local eval task per current task ([Vault eval](../analysis-and-surfaces/vault-eval.md)). |
 | Eval score | telemetry operation (`eval_score.py`, operator-managed scheduled task) | Computes recall@k / support-rate / FAMA-clean from local result blocks; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | retraction operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
-| Retraction sweep | retraction operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
+| Retraction sweep | retraction operation (`retraction.py`) | Scans the catalog's DOIs for retractions and writes an Inbox `alert` projection for each retracted Work. |
 | Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed worklist projections and one aggregate `work-prompt` attention projection; report-derived display prose is neutralized while structural row references remain unchanged. |
 
 ## Runtime policy and helper modules
@@ -176,4 +177,4 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for BM25 ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
 | Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs package-owned prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
-| Loudness and blockers | shared helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Keeps attention projections pull-only and exposes open block attention items to delegation and policy gates. |
+| Loudness routing and blockers | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Interprets loudness metadata on pull-only Inbox attention projections and exposes open block attention items to delegation and policy gates. |

@@ -67,13 +67,13 @@ def test_scans_file_type_search_roots(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
-    (tmp_path / "NOTES.md").write_text("OldSurface\n", encoding="utf-8")
+    (tmp_path / "NOTES.md").write_text("intro\nOldSurface\n", encoding="utf-8")
 
     assert gate.find_violations(tmp_path, contract) == ["NOTES.md: contains OldSurface"]
 
 
 def test_missing_search_root_is_a_hard_failure(tmp_path: Path) -> None:
     contract = tmp_path / "removed_surfaces.json"
-    write_contract(contract)
+    write_contract(contract)  # search root "docs" — deliberately not created
 
     assert gate.find_violations(tmp_path, contract) == ["missing search root: docs"]

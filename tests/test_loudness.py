@@ -1,8 +1,6 @@
-"""Graded-loudness helpers."""
+"""Graded-loudness routing helpers."""
 
 from memoria_vault.runtime.subsystems.lib import inbox, loudness
-
-LEGACY_LOG_PATH = "system/logs/loudness-push.jsonl"
 
 
 def test_alert_card_writes_no_push_log(tmp_path):
@@ -10,7 +8,7 @@ def test_alert_card_writes_no_push_log(tmp_path):
         tmp_path, "alert", "Critical drift", "system is stopped", "linter", loudness="alert"
     )
 
-    assert not (tmp_path / LEGACY_LOG_PATH).exists()
+    assert not list(tmp_path.rglob("*push*.jsonl"))
 
 
 def test_deduped_alert_finding_writes_no_push_log(tmp_path):
@@ -25,7 +23,7 @@ def test_deduped_alert_finding_writes_no_push_log(tmp_path):
     )
 
     assert card is not None
-    assert not (tmp_path / LEGACY_LOG_PATH).exists()
+    assert not list(tmp_path.rglob("*push*.jsonl"))
 
 
 def test_deduped_alert_work_prompt_writes_no_push_log(tmp_path):
@@ -40,7 +38,7 @@ def test_deduped_alert_work_prompt_writes_no_push_log(tmp_path):
         dedupe_slug="no-push-work-prompt",
     )
 
-    assert not (tmp_path / LEGACY_LOG_PATH).exists()
+    assert not list(tmp_path.rglob("*push*.jsonl"))
 
 
 def test_notice_card_writes_no_push_log(tmp_path):
@@ -57,7 +55,7 @@ def test_notice_card_writes_no_push_log(tmp_path):
         loudness="notice",
     )
 
-    assert not (tmp_path / LEGACY_LOG_PATH).exists()
+    assert not list(tmp_path.rglob("*push*.jsonl"))
 
 
 def test_open_blockers_only_reads_open_block_attention_projections(tmp_path):

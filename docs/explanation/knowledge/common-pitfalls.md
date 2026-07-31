@@ -66,18 +66,19 @@ the vault already knows.
 **What prevents it:** make every durable note earn its place through links,
 tensions, or a claim about current work.
 
-## Distilling before triaging
+## Distilling before reviewing source state
 
 **Failure:** a note cites a paper but misses the `work_id`, `topics`, typed
 links, evidence markers, or citation payloads that would connect it to current
 work.
 
-**Why it happens:** classification is where the system discovers how a Work
-touches the existing graph. Writing before reviewing that proposal bypasses the
-integration step.
+**Why it happens:** writing can begin before the source has completed the
+provider/full-text checks that make its record usable.
 
-**What prevents it:** review classification before distilling. It is automated,
-audited, and correctable; skipping it turns a claim into an isolated citation.
+**What prevents it:** confirm the source is checked before distilling, then set
+any `research_area` or `methodology` classification deliberately with
+`memoria work update`. Those classifications are PI-owned metadata, not an
+automated attention lifecycle.
 
 ## Queue accumulation
 

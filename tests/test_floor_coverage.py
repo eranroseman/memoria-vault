@@ -3,7 +3,7 @@
 Spec: docs/superpowers/specs/2026-07-13-development-pipeline-spec.md §3.4.
 
 Task 7a seeded only the read-action coverage test (ARG_TABLE). Task 7b
-(7b-1 + 7b-2) completed OPERATION_REGISTRY (all 52 cataloged operation ids),
+(7b-1 + 7b-2) completed OPERATION_REGISTRY for every cataloged operation id,
 so the operation-registry coverage tests are added here now.
 """
 

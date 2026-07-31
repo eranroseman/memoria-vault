@@ -8,13 +8,13 @@ permalink: /how-to-guides/library/
 
 # Library
 
-Work sources in: capture, discuss, review systematically, and archive
-the literature the vault is built from. Memoria routes worker source jobs
-through the standalone CLI.
+Work with sources: capture, discuss, import sources already included by an
+external review process, and archive the literature the vault is built from.
+Memoria routes worker source jobs through the standalone CLI.
 
 | Guide | What it covers |
 | --- | --- |
 | [Capture and ingest a source](capture-and-ingest.md) | Capture one DOI, URL, file, or metadata export into the catalog |
 | [Discuss a paper](discuss-a-paper.md) | A CLI-guided interview/digest pass over a checked Work |
-| [Run a systematic review](run-a-systematic-review.md) | PRISMA-style protocol → screening → ingest for defensible literature searches |
+| [Import systematic-review sources](run-a-systematic-review.md) | Import sources already included by an external review protocol |
 | [Archive a source](archive-a-source.md) | Retire a source with catalog `standing: archived` — a state, not a folder |

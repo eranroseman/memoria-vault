@@ -8,7 +8,7 @@ grand_parent: Reference
 # Export routes and formats
 
 Citation states, export routes, editor feature comparison, and deliverable
-folder targets. Task steps live in
+folder targets. Task steps, including direct Pandoc commands, live in
 [Export a draft](../../how-to-guides/project/export-a-draft.md).
 
 `memoria project export` is the checked-project export surface. By default it
@@ -81,24 +81,6 @@ self-contained. There is no separate top-level deliverables tree.
 | Presentations (slides, talks, posters) | `projects/<project>/exports/` |
 | Media (figures, infographics, web assets) | `projects/<project>/exports/` |
 | Releases (datasets, models, code, supplementary) | `projects/<project>/exports/` |
-
----
-
-## Pandoc command shape
-
-Shape for hand-authored manuscript drafts that need citation processing beyond
-the deterministic checked-project or draft export:
-
-```bash
-pandoc projects/<project>/<draft>.md \
-  --citeproc \
-  --bibliography bibliography.bib \
-  --csl .memoria/csl/apa.csl \
-  -o projects/<project>/exports/<draft>.docx
-```
-
-CSL files for direct Pandoc routes live in user-created `.memoria/csl/`; place
-your `.csl` files there before export.
 
 ---
 

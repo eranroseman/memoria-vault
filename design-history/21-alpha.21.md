@@ -136,6 +136,11 @@ changes, and the four-type knowledge model and control surfaces are untouched.
   a gate that only runs a third of the suite hides exactly this class of drift;
   finding and fixing it is the point of widening.
 
+**Correction:** The statement that CI ran the same roster was incomplete: its
+default install omitted the optional `mcp` extra, so the MCP transport tests
+were skipped. The post-checkpoint repair installs `.[mcp]` and bounds the extra
+to `mcp>=1.27,<2`, restoring all 13 transport tests to `verify`.
+
 ### 6. Deferred scope
 
 - **Beta.1 blockers** stay deferred behind their empirical or design blockers:

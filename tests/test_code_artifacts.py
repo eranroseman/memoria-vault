@@ -92,7 +92,9 @@ def test_computed_evidence_tracks_code_run_output_hash(tmp_path: Path) -> None:
     assert state.evidence_sets(tmp_path)[0]["state"] == "evidence-incomplete"
 
 
-def test_run_artifact_rejects_unknown_artifact_and_malformed_command(tmp_path: Path) -> None:
+def test_run_artifact_rejects_unknown_artifact_and_malformed_command(
+    tmp_path: Path, monkeypatch
+) -> None:
     try:
         run_artifact(tmp_path, "missing")
     except ValueError as exc:
@@ -111,6 +113,10 @@ def test_run_artifact_rejects_unknown_artifact_and_malformed_command(tmp_path: P
         "project-alpha",
         "blank-part",
         approved_command=["python3", ""],
+    )
+    monkeypatch.setattr(
+        "memoria_vault.runtime.code.runner.execution_availability",
+        lambda vault: Availability("unsupported", "test sandbox unavailable"),
     )
     for artifact_id in ("empty-argv", "blank-part"):
         try:

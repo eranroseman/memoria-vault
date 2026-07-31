@@ -117,10 +117,11 @@ sweep in any editor or adapter view.
 
 ## Notes and lifecycle
 
-**Attention projection** — a generated Inbox row (`candidate`, `gap`, `flag`,
-`alert`, `work-prompt`) carrying PI-facing work. It is not a durable Concept;
-the owning state is SQLite event-log, check, and queue data. Per-machine journal
-JSONL files are derived synchronization exports.
+**Attention projection** — a file-backed Inbox projection (`candidate`, `gap`,
+`flag`, `alert`, `work-prompt`) carrying PI-facing work. Its current state is
+in `inbox/*.md`; it is not a durable Concept. SQLite holds associated
+request/control history, and per-machine journal JSONL files are derived
+synchronization exports.
 
 **Concept** — the umbrella name for every typed document Memoria manages
 (`note`, `hub`, `project`, `digest`, `fulltext`, `code-artifact`): YAML

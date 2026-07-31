@@ -113,6 +113,103 @@ def assert_neutralized(text: str) -> None:
     assert "`https://evil.test/exfil`" in text  # external URL is a code span
 
 
+def test_stage_concept_neutralizes_machine_actor_bodies(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    stage_concept(vault, "notes/alpha.md", hostile_note_text(), machine="test-machine")
+
+    staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
+    assert_neutralized(staged)
+
+
+def test_stage_concept_preserves_pi_authored_body(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    stage_concept(vault, "notes/alpha.md", hostile_note_text(), actor="pi", machine="test-machine")
+
+    staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
+    assert "![beacon](https://evil.test/pixel.png)" in staged  # PI content not mangled
+
+
+def test_promote_checked_neutralizes_even_when_the_stager_forgot(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.write_text(hostile_note_text(), encoding="utf-8")  # bypassed neutralization
+
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert_neutralized((vault / "notes/alpha.md").read_text(encoding="utf-8"))
+
+
+def test_materialize_unchecked_keeps_tampered_staging_provenance_aligned(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.write_text(hostile_note_text(), encoding="utf-8")  # bypassed neutralization
+
+    materialized = materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
+
+    target = vault / "notes/alpha.md"
+    assert_neutralized(target.read_text(encoding="utf-8"))
+    output_sha256 = sha256_file(target)
+    assert materialized == {"output_id": "notes/alpha.md", "output_sha256": output_sha256}
+    assert state.output_record(vault, "notes/alpha.md")["output_sha256"] == output_sha256
+    with state.connect(vault) as conn:
+        payload = conn.execute(
+            """
+            SELECT expected_sha256, payload_text
+            FROM materialization_payloads
+            WHERE output_id = ?
+            """,
+            ("notes/alpha.md",),
+        ).fetchone()
+    assert tuple(payload) == (output_sha256, target.read_text(encoding="utf-8"))
+    assert rebuild_trace_state(vault)["notes/alpha.md"]["output_sha256"] == output_sha256
+    assert events(vault)[-1]["output_sha256"] == output_sha256
+    assert quarantine_untraced(vault, ["notes/alpha.md"], machine="test-machine") == []
+
+
+def test_materialize_unchecked_rejects_a_staging_file_without_a_record(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.parent.mkdir(parents=True)
+    staged_path.write_text(note_text(), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="missing staged output record"):
+        materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert not (vault / "notes/alpha.md").exists()
+    assert state.output_record(vault, "notes/alpha.md") is None
+    assert events(vault) == []
+
+
+def test_materialize_unchecked_rejects_invalid_tampered_frontmatter_before_journaling(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.write_text("---\ntitle: Missing type\n---\nBody.\n", encoding="utf-8")
+    before_events = events(vault)
+    before_output = state.output_record(vault, "notes/alpha.md")
+
+    with pytest.raises(ValueError, match="unknown Concept type"):
+        materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert not (vault / "notes/alpha.md").exists()
+    assert events(vault) == before_events
+    assert state.output_record(vault, "notes/alpha.md") == before_output
+    assert staged_path.is_file()
+
+
+def cs3_inbox_cards(vault: Path) -> list[Path]:
+    inbox = vault / "inbox"
+    return sorted(inbox.glob("flag-cs3-*.md")) if inbox.is_dir() else []
+
+
 def events(vault: Path) -> list[dict]:
     return list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
 
@@ -165,48 +262,6 @@ def test_stage_concept_preserves_mixed_author_caller_content(tmp_path: Path) -> 
 
     staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
     assert payload in staged
-
-
-def test_stage_concept_neutralizes_machine_actor_bodies(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-
-    stage_concept(vault, "notes/alpha.md", hostile_note_text(), machine="test-machine")
-
-    staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
-    assert_neutralized(staged)
-
-
-def test_stage_concept_preserves_pi_authored_body(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-
-    stage_concept(vault, "notes/alpha.md", hostile_note_text(), actor="pi", machine="test-machine")
-
-    staged = (vault / ".memoria/staging/notes/alpha.md").read_text(encoding="utf-8")
-    assert "![beacon](https://evil.test/pixel.png)" in staged  # PI content not mangled
-
-
-def test_promote_checked_neutralizes_even_when_the_stager_forgot(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
-    staged_path = vault / ".memoria/staging/notes/alpha.md"
-    staged_path.write_text(hostile_note_text(), encoding="utf-8")  # bypassed neutralization
-
-    promote_checked(vault, "notes/alpha.md", machine="test-machine")
-
-    assert_neutralized((vault / "notes/alpha.md").read_text(encoding="utf-8"))
-
-
-def test_materialize_unchecked_neutralizes_even_when_the_stager_forgot(
-    tmp_path: Path,
-) -> None:
-    vault = workspace(tmp_path)
-    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
-    staged_path = vault / ".memoria/staging/notes/alpha.md"
-    staged_path.write_text(hostile_note_text(), encoding="utf-8")  # bypassed neutralization
-
-    materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
-
-    assert_neutralized((vault / "notes/alpha.md").read_text(encoding="utf-8"))
 
 
 def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> None:
@@ -578,6 +633,155 @@ def test_observe_pi_edits_from_status_flags_out_of_band_edit_after_baseline(tmp_
     assert state.file_baseline(vault, "notes/foreign.md")["human_sha256"] == sha256_file(target)
 
 
+def test_observe_sweep_routes_findings_to_durable_inbox_cards(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes/witnessed.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Witnessed note").replace(
+        "tags: []\n", "superseded: true\ntags: []\n"
+    )
+    target.write_text(original, encoding="utf-8")
+    git(vault, "add", "--", "notes/witnessed.md")
+    git(vault, "commit", "-m", "seed witnessed note")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert cs3_inbox_cards(vault) == []
+
+    target.write_text(
+        note_text(title="Witnessed note") + "\nChanged out of band.\n", encoding="utf-8"
+    )
+    git(vault, "add", "--", "notes/witnessed.md")
+    git(vault, "commit", "-m", "foreign edit removing restriction key")
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert sorted(finding["kind"] for finding in result["findings"]) == [
+        "foreign-edit",
+        "restriction-key-removed",
+    ]
+    cards = cs3_inbox_cards(vault)
+    assert len(cards) == 2
+    for card in cards:
+        frontmatter = read_frontmatter(card)
+        assert frontmatter["projection"] == "attention"
+        assert frontmatter["attention_kind"] == "flag"
+        assert frontmatter["target"] == "notes/witnessed.md"
+        assert frontmatter["raised_by"] == "workspace-scan"
+        assert frontmatter["loudness"] == "alert"
+
+    rescan = observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted(finding["kind"] for finding in rescan["findings"]) == [
+        "foreign-edit",
+        "restriction-key-removed",
+    ]
+    assert cs3_inbox_cards(vault) == cards  # rescan mints no duplicate cards
+
+
+def test_observe_sweep_keeps_restriction_key_card_ids_distinct_for_long_subjects(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    target = vault / "notes" / f"{'long-subject-' * 8}witnessed.md"
+    target.parent.mkdir(parents=True)
+    original = note_text(title="Long witnessed note").replace(
+        "tags: []\n", "superseded: true\nlocal-only: true\ntags: []\n"
+    )
+    target.write_text(original, encoding="utf-8")
+    target_id = target.relative_to(vault).as_posix()
+    git(vault, "add", "--", target_id)
+    git(vault, "commit", "-m", "seed long witnessed note")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    target.write_text(note_text(title="Long witnessed note"), encoding="utf-8")
+    git(vault, "add", "--", target_id)
+    git(vault, "commit", "-m", "remove two long-path restriction keys")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    cards = sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md"))
+    assert len(cards) == 2
+    assert len({card.name for card in cards}) == 2  # card IDs remain distinct after slugging
+    assert any(card.name.endswith("-superseded.md") for card in cards)
+    assert any(card.name.endswith("-local-only.md") for card in cards)
+    assert {read_frontmatter(card)["target"] for card in cards} == {target_id}
+
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md")) == cards
+
+
+def test_observe_sweep_keeps_restriction_key_card_ids_distinct_for_long_same_key_subjects(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    prefix = "identical-long-subject-prefix-" * 4
+    targets = [
+        vault / "notes" / f"{prefix}one.md",
+        vault / "notes" / f"{prefix}two.md",
+    ]
+    original = note_text(title="Long restricted note").replace(
+        "tags: []\n", "superseded: true\ntags: []\n"
+    )
+    for target in targets:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(original, encoding="utf-8")
+    target_ids = {target.relative_to(vault).as_posix() for target in targets}
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "seed long restricted notes")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    for target in targets:
+        target.write_text(note_text(title="Long restricted note"), encoding="utf-8")
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "remove same long-path restriction key")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    cards = sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md"))
+    assert len(cards) == 2
+    assert len({card.name for card in cards}) == 2
+    assert {read_frontmatter(card)["target"] for card in cards} == target_ids
+
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md")) == cards
+
+
+def test_observe_sweep_keeps_foreign_edit_card_ids_distinct_for_long_same_hash_subjects(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    prefix = "identical-long-subject-prefix-" * 4
+    targets = [
+        vault / "notes" / f"{prefix}one.md",
+        vault / "notes" / f"{prefix}two.md",
+    ]
+    for target in targets:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(note_text(title="Long foreign edit"), encoding="utf-8")
+    target_ids = {target.relative_to(vault).as_posix() for target in targets}
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "seed long foreign edit notes")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    changed = note_text(title="Long foreign edit") + "\nChanged out of band.\n"
+    for target in targets:
+        target.write_text(changed, encoding="utf-8")
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "same-hash foreign edits")
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert [finding["kind"] for finding in result["findings"]] == [
+        "foreign-edit",
+        "foreign-edit",
+    ]
+    cards = sorted((vault / "inbox").glob("flag-cs3-foreign-edit-*.md"))
+    assert len(cards) == 2
+    assert len({card.name for card in cards}) == 2
+    assert {read_frontmatter(card)["target"] for card in cards} == target_ids
+
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted((vault / "inbox").glob("flag-cs3-foreign-edit-*.md")) == cards
+
+
 def test_observe_sweep_seeds_clean_bundle_file_baseline(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     init_git(vault, "writer@example.invalid", "Trusted Writer")
@@ -832,74 +1036,3 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
     assert "UU notes/shared.md" in git(device_b, "status", "--short")
     assert "<<<<<<<" in (device_b / "notes/shared.md").read_text(encoding="utf-8")
     assert (device_b / ".memoria/journal/b.jsonl").is_file()
-
-
-def cs3_inbox_cards(vault: Path) -> list[Path]:
-    inbox = vault / "inbox"
-    return sorted(inbox.glob("flag-cs3-*.md")) if inbox.is_dir() else []
-
-
-def test_observe_sweep_routes_findings_to_durable_inbox_cards(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    init_git(vault, "writer@example.invalid", "Trusted Writer")
-    target = vault / "notes/witnessed.md"
-    target.parent.mkdir(parents=True)
-    original = note_text(title="Witnessed note").replace(
-        "tags: []\n", "superseded: true\ntags: []\n"
-    )
-    target.write_text(original, encoding="utf-8")
-    git(vault, "add", "--", "notes/witnessed.md")
-    git(vault, "commit", "-m", "seed witnessed note")
-    observe_pi_edits_from_status(vault, machine="test-machine")
-    assert cs3_inbox_cards(vault) == []
-
-    target.write_text(
-        note_text(title="Witnessed note") + "\nChanged out of band.\n", encoding="utf-8"
-    )
-    git(vault, "add", "--", "notes/witnessed.md")
-    git(vault, "commit", "-m", "foreign edit removing restriction key")
-    result = observe_pi_edits_from_status(vault, machine="test-machine")
-
-    assert sorted(finding["kind"] for finding in result["findings"]) == [
-        "foreign-edit",
-        "restriction-key-removed",
-    ]
-    cards = cs3_inbox_cards(vault)
-    assert len(cards) == 2
-    for card in cards:
-        frontmatter = read_frontmatter(card)
-        assert frontmatter["projection"] == "attention"
-        assert frontmatter["attention_kind"] == "flag"
-        assert frontmatter["target"] == "notes/witnessed.md"
-        assert frontmatter["raised_by"] == "workspace-scan"
-        assert frontmatter["loudness"] == "alert"
-
-    rescan = observe_pi_edits_from_status(vault, machine="test-machine")
-    assert sorted(finding["kind"] for finding in rescan["findings"]) == [
-        "foreign-edit",
-        "restriction-key-removed",
-    ]
-    assert cs3_inbox_cards(vault) == cards  # rescan mints no duplicate cards
-
-
-def test_long_target_restriction_findings_keep_distinct_durable_cards(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    subject = f"notes/{'very-long-segment-' * 8}witness.md"
-    findings = [
-        {"kind": "restriction-key-removed", "subject_id": subject, "key": "superseded"},
-        {"kind": "restriction-key-removed", "subject_id": subject, "key": "local-only"},
-    ]
-
-    for finding in findings:
-        trusted_writer._route_finding_to_inbox(vault, finding)
-
-    cards = cs3_inbox_cards(vault)
-    assert len(cards) == 2
-    assert len({card.name for card in cards}) == 2
-    finding_text = "\n".join(str(read_frontmatter(card)["finding"]) for card in cards)
-    assert "superseded" in finding_text
-    assert "local-only" in finding_text
-
-    for finding in findings:
-        trusted_writer._route_finding_to_inbox(vault, finding)
-    assert cs3_inbox_cards(vault) == cards

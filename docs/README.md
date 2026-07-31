@@ -15,10 +15,11 @@ The standalone CLI and engine handle capture, enrichment, mapping, verification,
 and checked retrieval. The PI keeps judgment: proposed changes and dispositions
 are recorded before material enters checked knowledge.
 
-If you want a guided first experience, start with the
-[Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
-something, see [How-to guides](how-to-guides/). If you need exact values, field
-names, or configuration formats, see [Reference](reference/).
+If you want a guided first experience, install or set up a vault with the
+[Quickstart](how-to-guides/setup/quickstart.md), then begin with
+[01: System tour](tutorials/01-system-tour.md). If you need to _do_ something,
+see [How-to guides](how-to-guides/). If you need exact values, field names, or
+configuration formats, see [Reference](reference/).
 
 **Status: v0.1 alpha source install** — alpha.21 is the latest closed
 checkpoint; the formal package/tag release gate remains open. ·
@@ -82,8 +83,9 @@ PI-directed and policy-gated.
 
 ## New here?
 
-Start with [Quickstart](how-to-guides/setup/quickstart.md), then walk through
-the [Tutorials](tutorials/README.md). The tutorials use the standalone
+Install or set up a vault with [Quickstart](how-to-guides/setup/quickstart.md),
+then begin with [01: System tour](tutorials/01-system-tour.md). Continue through
+the [Tutorials](tutorials/README.md) in order. They use the standalone
 CLI/runtime path and point to task guides when you need more detail.
 
 ---
@@ -99,15 +101,16 @@ Use this path when you want the system model before doing a full workflow.
 5. [The control plane](explanation/execution/control-plane/README.md)
 6. [Design rationale](explanation/rationale/README.md)
 
-Then use [Quickstart](how-to-guides/setup/quickstart.md) and
-[Tutorials](tutorials/README.md) to learn the current workflow by doing it.
+Then use [Quickstart](how-to-guides/setup/quickstart.md) to set up a vault and
+begin [01: System tour](tutorials/01-system-tour.md) to learn the current
+workflow by doing it.
 
 ---
 
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [01: System tour](tutorials/01-system-tour.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md)
 
 **Daily work — sources**
 [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)

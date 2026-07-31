@@ -53,7 +53,7 @@ def test_stack_dependencies_stay_small_and_no_orm():
     assert dependencies.isdisjoint({"click", "typer"})
     assert dependencies.isdisjoint({"alembic", "django", "peewee", "sqlalchemy"})
     assert "mcp" not in dependencies
-    assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=1.27"]
+    assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=1.27,<2"]
 
 
 def test_runtime_sqlite_schema_is_packaged_resource():
@@ -63,6 +63,13 @@ def test_runtime_sqlite_schema_is_packaged_resource():
     assert "CREATE TABLE IF NOT EXISTS operation_requests" in schema
     assert f"PRAGMA user_version = {state.SCHEMA_VERSION}" in schema
     assert "CREATE TABLE IF NOT EXISTS" not in source
+
+
+def test_retired_citation_source_ref_helpers_are_absent():
+    source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
+
+    assert "def _source_refs(" not in source
+    assert "def _collect_source_refs(" not in source
 
 
 def test_bare_package_import_does_not_need_mcp_sdk():

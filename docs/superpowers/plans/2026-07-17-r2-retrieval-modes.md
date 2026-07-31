@@ -44,12 +44,111 @@
 
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
-1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (lazily selects the graph plan's `propagation.active_project_slices(vault)[project_rel]`; before that producer exists, uses the project `links:` closure).
+1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked path-projected edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (distinct-neighbor orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (adapts graph `propagation.active_project_slices(vault)` by project-relative path; before that producer exists, uses the project `links:` closure).
 2. **Pipeline staging** (P produces; E consumes): `retrieval_pipeline.PipelineStages` (`add_filter` unique-suffixing repeats, `rows() -> [{stage, count}]` ordered), `excluded_strata(*, unchecked=0, stale=0, gated=0)` (zeros always present), `RERANK_MODE = "off"` rendered in every trace.
 3. **Explore** (E produces): `explore.explore_topic(vault, topic, *, project="", depth=1, versus="") -> dict` — kind groups `{claims, questions, tensions, works, hubs}`, per-entry edges + `grounds_count` (complete evidence-set rows via `block_ref`), `SEED_K = 5`, stage order `universe → [project-slice] → ranked → seed → neighborhood → returned`, per-side payloads + intersection + crossing tensions under `--versus`, `honest_empty` string on zero-return; CLI `memoria explore` with the pinned `test_cli_command_surface_is_exact` edit, both-direction help disambiguation vs `memoria project explore`, and the U1 registry row (grep-first both-branch).
 4. **Span refs + fixtures** (F produces): `span_refs.resolve_span_ref(vault, ref) -> {work_id, anchor, path} | None` (passages `(work_id, anchor)` match; file-scan interim fallback); `tests/retrieval_fixtures.py` loader (`load_retrieval_fixtures(*, spike_mode=False)` refusing unfrozen rows in spike mode), `shape1_bm25_cases` (gold span refs → doc paths for `evaluate_bm25` — doc-level hit@k stated), `score_present_at_depth(payload, gold_ids) -> bool`, `FIXTURES_DIR = tests/fixtures/retrieval/`, the seeded `cases.yaml` (registered, unfrozen, over O1 seed-corpus work ids).
-5. **Execution order:** G → P → E → F (F.1's contract tests touch only shipped ask surfaces and may run any time after P).
+5. **Execution order:** P.1 → P.2 → P.3 → F.1 → F.2 is the no-prose/fixture path; F.3 additionally requires E.1/E.2, graph ERP-A.6, the implemented `explore_topic`, and the O1 seed corpus. Graph endpoint/path activation → G → P → E remains the structural/explore path, but F.1/F.2 do not import graph or explore. P.2 rebases on LOOP.1's checked-search refresh seam, and F.2 precedes LOOP.13's Shape-2 protocol.
 6. **TEST_LEVELS:** `test_graph_sql.py`, `test_explore.py`, `test_retrieval_fixtures.py` — `"contract"`; P extends registered files (exact registrations named in-section).
+
+---
+
+## Plan-reconciliation amendment — identity-safe graph traversal and shared retrieval stages (2026-07-29)
+
+This amendment supersedes R2 snippets that assume concept-edge ids are paths,
+call a nonexistent state slice API, duplicate P's pipeline behavior, replace the
+final `ask` handler, or score Shape 2 without its declared depth.
+
+1. **Graph-owned endpoint projection is a prerequisite.** After graph NID-B's
+   v16 identity re-key, raw `source_concept_id` values may be ULIDs and
+   `target_concept_id` may be null while `target_path` remains durable. Before
+   G starts, graph ERP-A.6 must expose the public checked-edge path projection
+   `lib.edges.concept_edge_path_pairs(vault, *, checked_only=True)`
+   returning `{source_path, target_path, relation_type}`. It resolves identity
+   ids through the concept mirror, retains a pending edge's `target_path`, and
+   never treats an id as a filesystem path. G.1/G.2/E.1 use that projection;
+   their fixtures seed the required concept mirror rows and prove both a ULID
+   source and a pending target. `degree_centrality` counts `DISTINCT` projected
+   neighbors, with a parallel-relation test.
+2. **Project-slice adapter.** Graph ERP-C owns
+   `propagation.active_project_slices(vault) -> dict[str, set[str]]`, keyed by
+   project-relative path. R2's `project_slice` selects `mapping[project]`,
+   converts the set into deterministic path ids, and records
+   `source="active-project-slices"`; it never calls
+   `state.active_project_slices(vault, project)`. If the graph seam is absent,
+   use only the existing links closure and exclude dangling targets before they
+   enter the returned slice. Add real mapping-shape and dangling-link tests.
+3. **P is the sole pipeline authority.** E imports and uses P's
+   `PipelineStages`, `excluded_strata`, `rerank`, `honest_empty`, and
+   `build_trace`; it does not recreate counts, strata, traces, or empty text.
+   Because Shape 2 expands after its seed, P.1 adds a named explore-stage model
+   that permits `universe → [project-slice] → ranked → seed → neighborhood →
+   returned`, explicitly labeling the expansion rather than forcing it through
+   a monotonic filter API. All stage counts reject negative integers. E passes
+   its seed ranking through the off-by-default rerank seam and exposes the
+   resulting shared trace.
+4. **Parser and compatibility order.** P.3 lands the final `ask --trace`
+   parser/handler first. E.2 inserts the `explore` parser and handler beside
+   that final form; it never replaces `_cmd_ask`. E's focused regression runs
+   `memoria ask --trace` as well as `memoria explore`. F.1 is P-dependent and
+   asserts the shared `honest_empty` shape instead of a legacy `unknowns`
+   string. P.2 opens with a LOOP.1 grep/rebase check and uses its incremental
+   checked-search refresh when available, anchoring edits by symbol.
+5. **Grounding and fixture depth.** `resolve_span_ref` is a safe-grounding
+   resolver: it returns a passage/file fallback only when the associated source
+   is checked; quarantined/unchecked sources resolve to `None`, with a test.
+   F.2 adds an evaluator that reads each Shape-2 fixture's declared
+   `present@N`, invokes Explore at exactly `N`, and rejects a payload whose
+   recorded depth differs. `score_present_at_depth` accepts/validates that
+   depth (or is wrapped by this evaluator); include a depth-1 versus depth-2
+   negative test. LOOP.13 then consumes the frozen fixture's topic, depth, and
+   metric through `memoria explore`, not `memoria ask`.
+
+6. **Task-level replacement instructions.** The historical G.1/G.2/E.1/P.1/F.1/F.2
+   bodies below are superseded where they conflict with this amendment; an
+   executor must not combine their raw-ID or local-pipeline snippets with the
+   following final contracts.
+
+   - **G.1:** `neighborhood` and `degree_centrality` build adjacency solely from
+     `edges.concept_edge_path_pairs`.  Inputs and returned `ids` are normalized
+     paths; a ULID is never accepted as a path.  The replacement fixture creates
+     concept-mirror rows for a ULID source, a resolved target, and a checked
+     pending target, then asserts path traversal, `DISTINCT` neighbor counting
+     across parallel relations, and exclusion of unchecked rows.
+   - **G.2:** import `propagation`, not `state`.  If callable,
+     `propagation.active_project_slices(vault)` is selected by project-relative
+     path and yields sorted path ids.  Until ERP-C.6 lands, its only fallback is
+     the links closure; it filters missing/pending filesystem targets before
+     return.  Delete the `state.active_project_slices` test monkeypatch and all
+     `getattr(state, ...)` implementation code.
+   - **P.1:** validate every count at insertion (`type(count) is int and
+     count >= 0`; reject bools and negatives).  Add
+     `add_expansion(name, count)`, legal only after `add_ranked` and before
+     `add_returned`, with unique-suffixed names like filters.  Explore records
+     `seed` then `neighborhood` through that method, so its only legal trace is
+     `universe → [project-slice] → ranked → seed → neighborhood → returned`.
+     `PipelineStages.rows()` remains the sole ordered-count source.
+   - **E.1/E.2:** compose `PipelineStages`, `excluded_strata`, `rerank`,
+     `honest_empty`, and `build_trace` from P; delete the local
+     `pipeline_counts`, `_excluded_strata`, trace, and empty-message builders.
+     Its `_edges_by_concept` and `_tension_pairs` consume the ERP-A.6 projection,
+     and its final CLI parser is inserted beside P.3's final `_cmd_ask`, never
+     overwriting it.  Focused tests exercise both `memoria ask --trace` and
+     `memoria explore --trace`.
+
+7. **F.3 — freeze the executable Shape-2 fixture contract.** Add a task after
+   E and F.2, before LOOP.13/O2 W.4.  It loads the registered rows outside
+   spike mode, parses each Shape-2 `present@N`, calls
+   `explore.explore_topic(vault, row["query"], depth=N)`, requires
+   `payload["depth"] == N`, and applies `score_present_at_depth` to that exact
+   payload.  A depth-1 result for a `present@2` fixture is an explicit failure,
+   not a passing membership check.  Only after all registered cases pass does it
+   change their fixture rows to `frozen: true` with the committed `frozen_on`
+   date, add a loader test showing `load_retrieval_fixtures(spike_mode=True)`
+   succeeds, and commit the frozen artifact.  The task records the fixture id,
+   topic, depth, and metric in its test/receipt.  F is therefore ordered
+   `F.1 → F.2 → F.3`, and the old claim that F is independent of E is
+   superseded.  LOOP.13 and O2 W.4 require F.3, not merely F.2.
 
 ---
 # G — graph_sql primitives (spec §2 · slice 1)
@@ -2785,7 +2884,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 
 Implements spec §5 (grounded synthesis + the anchor-locator contract — **the composer itself is R1-gated new work and is not built here**; beta.1 ships the contract tests + refusal honesty) and §7 (retrieval-fixture preregistration: the form, the loader with granularity mapping and `present@depth`, freeze semantics, baseline wiring into `evaluate_bm25`) — slices 5 and 7 of §10. Spec: `docs/superpowers/specs/2026-07-17-r2-retrieval-modes-design.md`. All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
 
-**Ordering and independence.** F has **no** dependency on Plan 22 G2S1.1 or this plan's graph_sql/explore sections: nothing here reads `concept_edges`, and `score_present_at_depth` scores a payload dict, not a live explore run. F may execute at any point in the section order. The one cross-section touch is refusal honesty (F.1c), which consumes section P's §4 honest-empty fields with **both-branch tolerance**: the asserts on `pipeline_counts`/`excluded_strata` fire iff the fields are present in the payload, so F is green whether it lands before or after P (P owns the strict, unconditional assertions of those fields). Grep-first note for the implementer: before running F.1, run `grep -n "excluded_strata" src/memoria_vault/runtime/search_index.py` — a hit means P landed first and both branches of the tolerant asserts will execute; an empty grep means only the shipped-core branch runs. Either way the test code below is used exactly as written.
+**Ordering.** F.1 and F.2 have no direct graph/explore dependency: nothing in their no-prose contract, locator, or fixture loader reads `concept_edges`, and `score_present_at_depth` scores a payload dict rather than a live Explore run. They do require the final P.1–P.3 base in the **current worktree**: `runtime/retrieval_pipeline.py` must exist, `search_index.answer_query` must return mandatory `pipeline_counts` and `excluded_strata`, and its final parser form must accept `--trace`. F.3 additionally requires E.1/E.2 and the seeded O1 corpus. This replaces the obsolete pre-P/both-branch-tolerance route; an absent P base is a stop condition, not permission to run the historical snippets.
 
 **Deliberately not built here** (spec §8 + §7's last rule): the extractive composer (R1-gated), any model-synthesis path, and any `scripts/verify` wiring for the freeze check — the loader's own contract test IS the enforcement (spec §7: "enforced by the loader's own contract test, not scripts/verify wiring").
 
@@ -2812,8 +2911,50 @@ Implements spec §5 (grounded synthesis + the anchor-locator contract — **the 
 
 **Interfaces:**
 
-- Consumes: `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="") -> dict` (search_index.py:153-177) and `_answer_from_hits` (:211-249, the shipped no-prose payload); `parse_source_span_ref(ref) -> SourceSpanRef(work_id, page)` (evidence.py:44-49); the `passages` table (schema.sql:199-220) via `state.db_path`/`state.connect` (state.py:460-482); `state.catalog_source(vault, work_id)` (state.py:1603-1612); the interim file-scan rule (`_source_span_pages`, state.py:2676-2686 — the rule is mirrored, the private helper is not imported); one-row-per-doc `_passage_row` (indexing.py:101-131) + `rebuild_passage_index_explicit(vault, *, actor, machine)` (indexing.py:25-31) as the test fixture; `safe_filename` (paths.py:15-17); `tests.helpers.call_with_context`/`copy_memoria_dirs`.
+- Consumes: final-P `answer_query(vault, query, *, context, k=5, include_stale=False, project_id="", trace: bool = False) -> dict` and `_answer_from_hits` (the shipped no-prose payload); `parse_source_span_ref(ref) -> SourceSpanRef(work_id, page)` (evidence.py:44-49); the `passages` table (schema.sql:199-220) via `state.db_path`/`state.connect` (state.py:460-482); `state.catalog_source(vault, work_id)` (state.py:1603-1612); the interim file-scan rule (`_source_span_pages`, state.py:2676-2686 — the rule is mirrored, the private helper is not imported); one-row-per-doc `_passage_row` (indexing.py:101-131) + `rebuild_passage_index_explicit(vault, *, actor, machine)` (indexing.py:25-31) as the test fixture; `safe_filename` (paths.py:15-17); `tests.helpers.call_with_context`/`copy_memoria_dirs`.
 - Produces: `resolve_span_ref(vault: Path, ref: str) -> dict[str, str] | None` (keys `work_id`, `anchor`, `path`) in `memoria_vault.runtime.span_refs` — the one resolution rule the R1-gated composer and F.2's fixture loader share; the `ALLOWED_ANSWER_KEYS` pin any future composer must widen through this contract.
+
+> **Execution amendment (2026-07-30): final-P and safe-grounding handoff.**
+> This supersedes F.1's historical optional-P assertions, permissive resolver,
+> and stale registry context below.
+>
+> 1. **Preflight and stop rule.** Before edits, run `git status --short`,
+>    `git rev-parse --show-toplevel`, `test -f
+>    src/memoria_vault/runtime/retrieval_pipeline.py`, and `rg -n
+>    "excluded_strata|trace: bool = False" src/memoria_vault/runtime/search_index.py`.
+>    All must be present in the
+>    current worktree. On this repair branch they are bootstrap-rendezvous-only,
+>    so stop until that rendezvous; do not cherry-pick prerequisites or create
+>    a second worktree.
+> 2. **Mandatory refusal shape.** Import `retrieval_pipeline`; require the
+>    exact `pipeline_counts` stages `universe`, `ranked`, `returned` and the
+>    complete zeroed `excluded_strata` shape. The honest refusal remains the
+>    single `unknowns` element, asserted as
+>    `retrieval_pipeline.honest_empty(refusal["pipeline_counts"],
+>    refusal["excluded_strata"])` — there is no `honest_empty` answer key.
+> 3. **Checked, canonical span grounding.** `resolve_span_ref` first loads
+>    `state.catalog_source(vault, work_id)` and returns `None` unless its
+>    `check_status` is exactly `"checked"`, before either passages or file
+>    fallback. Its SQL route is restricted to
+>    `path = f"fulltexts/{safe_filename(work_id)}.md"` as well as matching the
+>    work id/anchor; an arbitrary note with a spoofed `work_id` must never
+>    ground a source ref. The file fallback receives the already checked source,
+>    treats path normalization and read failures as `None`, and returns only the
+>    canonical fulltext path.
+> 4. **Additional red pins.** After indexing a checked source with `p0007` and
+>    `p0009`, flip that record in place to `unchecked` and then `quarantined`
+>    without deleting its passage row/blob; both refs resolve `None` in both
+>    states. In a separate fresh fixture, give the checked canonical source only
+>    `p0008` and a checked note declaring the same work id `p0007`, then run
+>    `indexing.rebuild_passage_index_explicit(...)` after creating **both**;
+>    resolving the source's `p0007` ref must be `None`, never the note path.
+> 5. **R1 handoff and registry.** F.1 proves no prose plus a safe locator only.
+>    When an R1 composer introduces prose, it must define sentence/ref shape and
+>    add a test that every sentence ref resolves and is passage-backed; F.1 does
+>    not invent that payload. Re-anchor `TEST_LEVELS` after the final P/G roster
+>    (`test_gate_calibration`, `test_graph_sql`, `test_grounded_synthesis`,
+>    `test_hub_handoff`), run focused tests plus `git diff --check` and the full
+>    verify gate, then stage only its three files explicitly.
 
 - [ ] **Step 1: Write the failing test** — create `tests/test_grounded_synthesis.py`:
 
@@ -3571,3 +3712,93 @@ Expected: `verify: OK` (ruff/ruff-format cover the two new Python files; yamllin
 git add tests/retrieval_fixtures.py tests/fixtures/retrieval/cases.yaml tests/test_retrieval_fixtures.py tests/conftest.py
 git commit -m "R2 F.2: retrieval-fixture preregistration form, loader, and baseline wiring (spec section 7)" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+---
+
+### Task F.3: Evaluate and freeze the registered retrieval fixtures
+
+**Preconditions:** F.1, F.2, E.1/E.2, O1's seeded corpus, graph ERP-A.6, and
+the Shape-2 `explore_topic` implementation are merged.  This is the explicit
+producer of the frozen-fixture contract consumed by O2 W.4 and LOOP.13; F.2's
+unfrozen preregistration is intentionally insufficient.
+
+**Files:**
+
+- Modify: `tests/retrieval_fixtures.py`
+- Modify: `tests/test_retrieval_fixtures.py`
+- Modify: `tests/fixtures/retrieval/cases.yaml`
+
+**Interfaces:**
+
+- Consumes: `load_retrieval_fixtures`, `shape1_bm25_cases`,
+  `score_present_at_depth`, `evaluate_bm25`, and
+  `explore.explore_topic(vault, topic, *, depth)`.
+- Produces: a frozen fixture file: every registered row has `frozen: true`
+  and the same committed ISO `frozen_on` date; the spike-mode loader succeeds.
+  The evaluation receipt records, per fixture, `id`, `shape`, query/topic,
+  metric, and (for Shape 2) declared/result depth.
+
+**Steps:**
+
+- [ ] Extend `tests/retrieval_fixtures.py` with small test-only helpers that
+  parse `hit@K`/`recall@K` and `present@N` from the validated metric strings;
+  reject an unsupported metric rather than guessing a threshold.  Do not add a
+  production evaluation abstraction merely to freeze static fixtures.
+- [ ] Write the failing test in `tests/test_retrieval_fixtures.py`.  Build a
+  disposable seeded retrieval vault with F.2's fulltext helper and the
+  identity-safe graph seam; the fixture has the registered two Shape-1 works
+  and the two Shape-2 work IDs connected by the necessary checked path edges.
+  Load the **unfrozen** rows outside spike mode and:
+
+  1. evaluate each Shape-1 row separately through `shape1_bm25_cases` and
+     `evaluate_bm25`, asserting its declared hit/recall threshold;
+  2. parse each Shape-2 `present@N`, call
+     `explore_topic(vault, row["query"], depth=N)`, assert
+     `payload["depth"] == N`, and then assert
+     `score_present_at_depth(payload, row["gold"])`;
+  3. add a negative fixture/test proving a payload at depth 1 cannot satisfy a
+     case declared `present@2`, even if its membership happens to look right;
+  4. assert `load_retrieval_fixtures(spike_mode=True)` fails before the freeze.
+
+  The test output names the fixture id, topic/query, metric, and actual depth
+  on failure; a failing evaluation is a finding and blocks freezing.
+- [ ] Run the focused test red:
+
+  ```bash
+  python -m pytest tests/test_retrieval_fixtures.py -q
+  ```
+
+  Expected: the spike-mode assertion fails because F.2 registered all rows as
+  unfrozen (or an evaluation failure names the fixture that must be corrected
+  before freezing).
+- [ ] Once every registered Shape-1 and Shape-2 evaluation is green, update
+  **only** the already-registered `cases.yaml` rows: set `frozen: true` and add
+  one `frozen_on: YYYY-MM-DD` date.  Do not change a query, gold ID, metric, or
+  registration date in this task; any such correction requires a separate
+  preregistration decision before the freeze.
+- [ ] Replace the pre-freeze spike-refusal assertion with the post-freeze
+  assertion:
+
+  ```python
+  frozen = load_retrieval_fixtures(spike_mode=True)
+  assert all(row["frozen"] for row in frozen)
+  assert {row["frozen_on"] for row in frozen} == {"<committed freeze date>"}
+  ```
+
+  Keep the malformed-row validation that proves an unfrozen synthetic row is
+  still refused in spike mode; the loader rule is not relaxed merely because
+  the shipped fixture is now frozen.
+- [ ] Run the focused contracts and gate:
+
+  ```bash
+  python -m pytest tests/test_retrieval_fixtures.py tests/test_explore.py -q
+  python scripts/verify
+  ```
+
+- [ ] Commit:
+
+  ```bash
+  git add tests/retrieval_fixtures.py tests/test_retrieval_fixtures.py \
+      tests/fixtures/retrieval/cases.yaml
+  git commit -m "test(retrieval): evaluate and freeze registered Shape-1/2 fixtures (R2 F.3)"
+  ```

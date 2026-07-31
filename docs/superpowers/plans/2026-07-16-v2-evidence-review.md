@@ -11,12 +11,20 @@
 ## Global Constraints
 
 - Correctness gate: `python scripts/verify`; PR + `verify`/`gitleaks`; squash merge; explicit-path staging; disposable vaults only.
-- Cross-plan execution order: **V2R-A may run independently after its S35.4 grep decision; V2R-D.1 follows A. V2R-B.1–.5 follow D.1 and U3-ENG; V2R-C follows B. Only V2R-D.2–.3 require U3-PLUG, SEAM.1, B, and D.1; D.4–.6 retain their local dependencies and D.7 follows its documented surfaces.** Serialize every golden-writing task with any other golden update. All line refs at `a525a81a` — re-anchor by symbol after other plans land.
-- Golden serialization: V2R-D.1 (floor entry), V2R-D.3 (plugin seed), and V2R-D.4 (export-project) can regenerate goldens — serialize each with any other golden-touching task, cross-plan included.
+- Cross-plan execution order: the binding partial order is in the 2026-07-29 execution amendment below. Plan 22 S35.4 is a hard gate only where its digest form is named; earlier A/B/C tasks retain their documented ids-form tolerance. All line refs at `a525a81a` — re-anchor by symbol after other plans land.
+- Golden serialization: V2R-D.3 (plugin seed) and V2R-D.1 (floor entry) regenerate goldens — sequential with any other golden-touching task, cross-plan included.
 
 ## Cross-section contracts (BINDING — manifest seam resolutions)
 
-1. **The queue row shape** (V2R-B produces, C and D consume): evidence-set rows carry `evidence_id, claim_text, items, item_count, routing, routing_reason, reviewable, cure, project, age_days, latest_decision, warrant, analysis`. B's `evidence_review.assemble_evidence_review_queue(...)` is the pure assembler. `engine_api.read_evidence_review_queue(...)` is the single engine-direct collector/projection for the CLI (no HTTP — keep-test); `engine_api.read_evidence_review_view(...)` consumes that same collector for the view. SRD-gap cards are view-only and never enter the CLI DTO.
+1. **The queue/card shape** (V2R-B produces, C and D consume): the pure
+   assembler produces queue rows with `evidence_id, claim_text, items,
+   item_count, routing_type, reviewable, disposition, project_path, age_days`,
+   plus present-only disposition/cure/analysis inputs. Its view projection has
+   exactly one nested card per evidence row, as specified in the reconciliation
+   amendment below. The CLI consumes the shared
+   `engine_api.evidence_review_queue(...)` collector engine-direct (no HTTP —
+   keep-test); the view consumes that collector through
+   `engine_api.read_evidence_review_view(...)`.
 2. **Age facet naming:** `min_age_days` everywhere — B's param, C's flag `--min-age-days`, the endpoint's query param. (C's drafted `--max-age-days` is superseded.)
 3. **Disposition emission:** V2R-A's `build_disposition_event(...)` is the
    shared validated payload builder. The keep-test seam batches that payload
@@ -25,9 +33,382 @@
    `operations.py:146` is superseded by A's actual Produces.
 4. **The reject flip is owned by V2R-A.1** (only accept clears; latest-event-wins; written against `_disposed_evidence_digests` with the ids-form variant). B's queue applies the same accept-only rule independently in its pure logic (consistent by contract, tested in both). D.5's xfail ordering note reads "pre-V2R-A", not pre-V2R-B.
 5. **`resolve-evidence` worker operation** (V2R-D.1, resolving the declared SPEC GAP) is a thin wrapper over A's seam — one implementation, PI-protected, floor-listed as refused; the pane's four buttons enqueue it via SEAM.1's `actor="pi"` door; the CLI never uses it.
-6. **View envelope:** B follows the surfaces plan's binding contract 3 exactly: `{ok: true, api_version: "engine-read-api.v1", view: {version: "view-spec.v1", kind, blocks}, facets}`. Flat `spec`/`blocks` payloads are superseded; repair U3 before beginning B if it does not meet this contract.
+6. **View envelope:** B follows the surfaces plan's nested-card contract:
+   `{ok, api_version, view: {version, kind, blocks}}`, with one top-level
+   evidence card per row. U3-ENG's flat form is superseded, so no fallback swap
+   is permitted.
 7. **Telemetry rides `empirical_event.v1`** (C's schema decision): `workflow="evidence-review"`, `view.opened` + client `disposition.recorded` with `duration_s`; skip and reopen are journal-derived metrics, never synthesized events.
-8. **Execution order:** V2R-A → V2R-D.1 → (after U3-ENG) V2R-B.1–.5 → V2R-C.1–.5; D.2–D.3 then require U3-PLUG and SEAM.1, while D.4–D.6 retain their local dependencies and D.7 follows its documented surfaces. Golden-writing tasks remain serialized.
+8. **Execution order:** the 2026-07-29 execution amendment is binding; no
+   earlier total ordering is executable where it contradicts that partial order.
+
+## Plan-reconciliation amendment — one nested evidence card per row (2026-07-29)
+
+This amendment supersedes every V2R-B.3–.5 and V2R-D.2/.3 snippet that emits,
+expects, or partitions flat sibling `card`, `evidence-list`, `text`,
+`action-row`, or analysis-card blocks.  The U3 plan's canonical nested-card
+amendment is a prerequisite.  Do not execute a superseded flat snippet merely
+because it remains below as drafting history.
+
+1. **Payload and row grammar.** Each evidence-set queue row becomes exactly
+   one top-level `card`; it is never four sibling blocks.  The parent retains
+   `id=evidence_id`, `ref=block_ref`, `evidence_id`, `project`,
+   `routing_type`, `reviewable`, `disposition`, `item_count`, `age_days`,
+   `body_data`, and present-only `disposition_reason`/`warrant`/`blocked_by`/
+   `cure`.  It additionally has `title=claim_text`,
+   `kind_line="evidence-review"`, `age_s=age_days * 86_400` when age is known
+   (else `0`), and `age_label=f"{age_days}d"` when known (else `""`).  Its
+   semantic `blocks` are in fixed order:
+
+   - a required `evidence-list`, id `<ev>-grounds`, with resolved previews;
+   - a required routing `text`, id `<ev>-routing`;
+   - for reviewable rows only, one `action-row`, id `<ev>-actions`, containing
+     Accept, Reject, Edit, and Defer in that display order.
+
+   The four action dicts are exactly
+   `{"label": <Label>, "operation_id": "resolve-evidence", "payload":
+   {"evidence_id": evidence_id, "decision": <decision>}}`.  No action has
+   `primary`: V2 design §2 explicitly forbids a pre-selected action.  Read-only
+   cure cards have only evidence-list and text children, no action row, and no
+   analysis fields.  The cure fixture deliberately carries holds plus nonempty
+   argument/certainty inputs and asserts that none leak to the parent. Trailing
+   SRD-gap cards remain whole top-level cards after evidence cards; they are
+   already normalized U3 cards and identify as `kind_line: "srd-gap"`, never
+   by the writer-only `attention_kind` field.
+2. **Parent-owned analysis.** Delete the `<ev>-analysis` nested/top-level
+   `card`, its `collapsed` key, and the incompatible `what_tipped_it` name.
+   For a row with `holds`, place paired nonempty `argument_for` and
+   `argument_against` directly on the parent; omit both if either is absent.
+   Place the nonempty deterministic routing factor at parent `tipped_by`, and
+   the nonempty certainty at parent `certainty`.  U3-PLUG.4 then appends the
+   analysis tree after every semantic child; V2R-D.2 moves those tree nodes
+   into its collapsed disclosure without reordering evidence, routing text, or
+   actions.
+3. **Replace V2R-B.3 implementation.** Replace `evidence_review_blocks`,
+   `_row_blocks`, and `_analysis_block` with the following shape; retain the
+   existing preview, routing-reason, and tipping-factor helpers verbatim:
+
+   ```python
+   def evidence_review_blocks(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
+       """Queue entries -> one nested view-spec card per evidence row."""
+       blocks: list[dict[str, Any]] = []
+       srd_blocks: list[dict[str, Any]] = []
+       for row in rows:
+           if row.get("kind") == "srd-gap":
+               srd_blocks.append(dict(row["card_block"]))
+               continue
+           blocks.append(_row_card(row))
+       return blocks + srd_blocks
+
+
+   def _row_card(row: Mapping[str, Any]) -> dict[str, Any]:
+       evidence_id = str(row["evidence_id"])
+       previews = list(row.get("item_previews") or [])
+       age_days = row.get("age_days")
+       card: dict[str, Any] = {
+           "id": evidence_id,
+           "kind": "card",
+           "ref": str(row["block_ref"]),
+           "title": str(row["claim_text"]),
+           "kind_line": "evidence-review",
+           "review_kind": "evidence-set",
+           "evidence_id": evidence_id,
+           "project": str(row["project_path"]),
+           "routing_type": str(row["routing_type"]),
+           "reviewable": bool(row["reviewable"]),
+           "disposition": str(row["disposition"]),
+           "item_count": len(row["items"]),
+           "age_days": age_days,
+           "age_s": int(age_days) * 86_400 if age_days is not None else 0,
+           "age_label": f"{age_days}d" if age_days is not None else "",
+           "body_data": {"kind": "untrusted_text", "text": str(row["claim_text"])},
+       }
+       if row.get("blocked_by"):
+           card["blocked_by"] = [dict(finding) for finding in row["blocked_by"]]
+           card["cure"] = PERMANENT_BLOCK_CURE
+       for field in ("disposition_reason", "warrant"):
+           value = str(row.get(field) or "").strip()
+           if value:
+               card[field] = value
+       children: list[dict[str, Any]] = [
+           {
+               "id": f"{evidence_id}-grounds",
+               "kind": "evidence-list",
+               "ref": str(row["block_ref"]),
+               "items": previews,
+           },
+           {
+               "id": f"{evidence_id}-routing",
+               "kind": "text",
+               "text": _routing_reason(row, previews),
+           },
+       ]
+       if card["reviewable"]:
+           children.append(
+               {
+                   "id": f"{evidence_id}-actions",
+                   "kind": "action-row",
+                   "actions": [
+                       {"label": "Accept", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "accept"}},
+                       {"label": "Reject", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "reject"}},
+                       {"label": "Edit", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "edit"}},
+                       {"label": "Defer", "operation_id": "resolve-evidence", "payload": {"evidence_id": evidence_id, "decision": "defer"}},
+                   ],
+               }
+           )
+       if card["reviewable"] and row.get("holds"):
+           arguments = {
+               field: str(row.get(field) or "").strip()
+               for field in ("argument_for", "argument_against")
+           }
+           if all(arguments.values()):
+               card.update(arguments)
+           tipped_by = _tipping_factor(row, previews)
+           if tipped_by:
+               card["tipped_by"] = tipped_by
+           certainty = str(row.get("certainty") or "").strip()
+           if certainty:
+               card["certainty"] = certainty
+       card["blocks"] = children
+       return card
+   ```
+
+4. **Replacement tests and collector boundaries.** V2R-B.3 tests assert one
+   card per evidence row, exact nested child kinds/ids, exact four action
+   payloads, no `primary`, parent-owned analysis, and the cure's two-child/no-
+   analysis shape.  They no longer assert a flat block list, a `<ev>-analysis`
+   id, `collapsed`, `what_tipped_it`, or absence of action rows.  V2R-B.4/.5
+   inspect each evidence card's `blocks`; their facet `shown`/`total` counts
+   remain rows, never child blocks.  The HTTP test asserts the serialized
+   nested action payload.  `read_evidence_review_view` otherwise stays a
+   single collector path: it calls `evidence_review_blocks(shown)`, so it does
+   not add a second assembler or flatten nested cards.
+5. **Pane transforms and query spelling.** V2R-D.2's fixture includes
+   `evidence-list → text → action-row`; its transformed exact class sequence
+   is `kind, title, evidence, text, action-row, analysis-toggle, analysis`.
+   Its cure fixture is exactly `kind, title, evidence, text`, with no toggle.
+   V2R-D.3 treats only top-level cards as rows and never partitions a card's
+   children as extras.  Its `viewPath()` query key is `routing_type`, not
+   `routing`, and its row age is the canonical `age_label` above.  Its plugin
+   harness uses one nested reviewable card, expands it, verifies the action
+   `data-operation-id` and serialized payload, clicks it, and verifies the
+   resulting `/operation/run` body.
+6. **Required ordering.** V2R-A supplies the four decisions and disposition
+   semantics.  V2R-D.1 supplies the PI-protected `resolve-evidence` worker
+   operation before any endpoint publishes its action row.  Safe order is
+   U3-ENG/U3-PLUG.4/SEAM.1, then V2R-A, V2R-D.1, V2R-B.1–.5, V2R-C, and
+   V2R-D.2/.3.  V2R-D.4–.7 retain their documented local dependencies.
+
+## Plan-reconciliation amendment — one collector, raw queue, and CLI projection (2026-07-29)
+
+This amendment supersedes only the conflicting V2R-B.2/B.4 and V2R-C.1–.3
+snippets below: in particular every reference to an undefined queue API,
+`max_age_days`/`--max-age-days`, `routing`, `latest_decision`, nested raw
+`analysis`, preview-shaped raw `items`, or an evidence-only assumption for an
+SRD-gap queue entry.  The retained snippets are drafting history, not an
+alternative implementation.  It preserves the engine-direct CLI keep-test;
+the CLI must not request the HTTP view or reconstruct rows from its cards.
+
+1. **One collector, two projections.** V2R-B.4 factors workspace discovery,
+   pure assembly, whole-scope facets, filtering, batching, and shown-row
+   preview resolution into one private collector.  It exposes the following
+   engine-direct API for V2R-C, and `read_evidence_review_view` calls the same
+   collector before projecting its returned rows through
+   `evidence_review_blocks`:
+
+   ```python
+   engine_api.evidence_review_queue(
+       workspace: Path,
+       *,
+       routing_type: str = "",
+       project: str = "",
+       min_age_days: int = 0,
+       batch: int = 10,
+       read_scope: list[str] | None = None,
+   ) -> dict[str, Any]
+   ```
+
+   Its result is `{ok: True, rows, total, batch, facet_totals}`.  `rows` is
+   the filtered, batched raw queue; `total` is the filtered pre-batch row
+   count; `facet_totals` describes the unfiltered, scope-visible queue; and
+   `batch <= 0` means unbounded, which supports C.2's direct id lookup.
+   `read_evidence_review_view` rejects a non-positive `batch` before it calls
+   the collector, adds `shown`/`batch` to a copy of `facet_totals`, and returns
+   the binding `{ok, api_version, view, facets}` envelope.  This reserves
+   unbounded batching for the engine-direct queue; B.5 adds a `?batch=0` → 400
+   HTTP test.  Neither public projection reassembles drafts or flattens cards.
+   B.4's current `max(1, int(batch))` instruction is superseded for the shared
+   collector.
+
+2. **Raw queue is canonical.** B.2 constructs `items = [str(item) ...]` once
+   and emits `item_count=len(items)` for every evidence-set row.  A row with
+   `blocked_by` also emits `cure=PERMANENT_BLOCK_CURE`; it is otherwise
+   present-only.  The resulting discriminated union is either an evidence-set
+   row with the binding fields (`routing_type`, `disposition`, `project_path`,
+   raw `items`, and collector-attached `item_previews`) or
+   `{"kind": "srd-gap", "card_block": <normalized U3 card>}`. B.2 passes
+   through nonempty `argument_for`, `argument_against`, and `certainty` inputs
+   on an evidence-set row. B.3 consumes the canonical `row["item_count"]` and
+   present `row["cure"]` rather than recomputing either fact while projecting
+   a card. It exports `routing_reason(row, previews)` (rename the drafted
+   private helper; keep a private alias only if useful) and
+   `analysis_fields(row, previews) -> dict[str, str]`. The latter returns
+   paired nonempty arguments, the deterministic `tipped_by`, and nonempty
+   certainty only for a reviewable row with holds; otherwise it returns `{}`.
+   Both the card projection and CLI use that one helper, so neither copies a
+   routing/tipping derivation or leaks cure analysis.
+
+3. **C has presentation-only projections.** C.1's summary selects exactly
+   `evidence_id`, `claim_text`, `item_count`, `routing_type`,
+   `routing_reason(row, item_previews)`, `reviewable`, present-only `cure`,
+   `project=row["project_path"]`, `age_days`, `disposition`, and present-only
+   `warrant`; it never emits `items` or analysis. C.2's detail adds
+   `items=item_previews` and, only with `--show-analysis`, adds an output-only
+   `analysis=analysis_fields(row, item_previews)` when that shared helper is
+   nonempty; otherwise that key is absent. These are CLI projections, never second queue
+   assemblers.  All C text, tests, and human output use `routing_type` and
+   `disposition`, never the superseded `routing` and `latest_decision` names.
+   C.2 renders projected `items`, not raw item-reference strings.
+
+4. **SRD entries remain visible and safe.** C.1 renders an unfiltered
+   `srd-gap` variant as a distinct, read-only summary using its normalized
+   card's title/ref; it has no evidence action.  C.2 lookup selects only
+   `row.get("kind") == "evidence-set"`, so an SRD id is not mistaken for
+   evidence.  C.3 relies on V2R-A's existing evidence-record validation rather
+   than adding a second queue lookup.  Filtering preserves B.2's rule: SRD
+   cards appear only with no evidence filter.  Do not silently drop them to
+   make old evidence-only indexing pass.
+
+5. **Replacement tests and failure semantics.** Add direct B.4 coverage for
+   the shared API's `batch=0`, raw-versus-preview fields, `item_count`/cure,
+   and an unfiltered SRD variant.  Replace C.1's max-age test/flag with
+   `--min-age-days`, assert filtered `total` versus whole-scope
+   `facet_totals`, and add a default-list SRD fixture. C.2 must prove the
+   evidence-first projected detail, cure-row non-leakage, and folded parent
+   analysis. Both telemetry
+   helpers retain the failed operation's error/result.  C.2 adds a mocked
+   `view.opened`-recording failure test and returns an `_emit` failure instead
+   of a successful detail result.  C.3 retains its seam tests and adds the
+   analogous `disposition.recorded` failure test: after a successful decision
+   seam but failed `empirical-event-record`, `_cmd_review_action` emits
+   `{ok: False, error, event, telemetry}` through `_emit` (exit 1), using the
+   helper error or `"disposition succeeded but client telemetry was not
+   recorded"`; neither command reports success for a missing required client
+   event.
+
+6. **Execution order.** B.2 supplies raw facts, B.3 supplies the public
+   routing helper, and B.4 supplies the shared collector before C starts.
+   C remains HTTP-free, but B.4's U3 dependencies make the binding order at
+   the top of this plan mandatory; its former claim of no U3 ordering
+   dependency is superseded. If U1 J.1 has landed when B.5 registers
+   `views.evidence_review`, that row includes `job: "review"` and the pinned
+   job mapping changes with it; otherwise U1's re-anchored registry amendment
+   preserves the row and supplies that job when J.1 lands.
+
+## Plan-reconciliation amendment — nested collector execution order (2026-07-29)
+
+This amendment supersedes every contrary order, flat-envelope fallback, raw-row
+shape, and pane-regrouping instruction below. It preserves the canonical **one
+nested card per evidence row** contract: the CLI consumes raw queue rows, while
+only the HTTP view projects them through `evidence_review_blocks`.
+
+1. **Binding partial order.** Execute only these dependencies (unlisted local
+   tasks retain their stated dependencies):
+
+   ```text
+   V2R-A → V2R-B.1–.3
+   U3-ENG → V2R-B.4 → V2R-C
+   U3-ENG → SEAM.1 → V2R-D.1
+   {V2R-B.3, V2R-D.1, U3-ENG} → V2R-B.5
+   U3-ENG → SEAM.1 → U3-PLUG.4 → V2R-D.2
+   {V2R-B.5, V2R-D.1, V2R-D.2, U3-PLUG.4} → V2R-D.3
+   ```
+
+   B.1–.3 are pure queue/projection work and require only the already-binding
+   nested-card grammar. B.4 consumes U3-ENG; B.5 additionally consumes its
+   route and live-server test pattern. Neither B task depends on U3-PLUG. C
+   is HTTP-free and has no U3-PLUG/pane dependency; its U3-ENG dependency is
+   indirect through B.4. C.1/.2 follow B.4, and C.3–.5 additionally follow
+   V2R-A. V2R-C.5 alone blocks on S35.4's digest seam.
+
+2. **One raw collector, two projections.** B.4 implements exactly one private
+   `_collect_evidence_review_queue(...)` that discovers drafts/SRD cards,
+   assembles, facets, filters, batches, and attaches previews, returning
+   `{rows, total, batch, facet_totals}`. The public engine-direct façade returns
+   `{"ok": True, **collector_result}` and never cards; the view alone calls
+   `evidence_review_blocks(result["rows"])` then returns
+   `_read_payload(view=_view("evidence-review", ...), facets=...)`. Do not
+   call the public façade from the view, reassemble drafts, flatten card
+   children, or offer a flat-envelope compatibility branch. A flat U3 producer
+   is an unmet prerequisite, not a reason to swap contracts.
+
+   Direct queue callers may use `batch=0` for an unbounded lookup. The HTTP
+   view requires `batch > 0`; `min_age_days` is non-negative (`0` succeeds,
+   `< 0` fails) and uses a dedicated non-negative query parser rather than the
+   positive-only `batch` parser. Add direct and real-HTTP tests for all three
+   boundaries.
+
+3. **Raw-row discipline.** B.3 consumes `row["item_count"]`,
+   `routing_reason(row, previews)`, and `analysis_fields(row, previews)`;
+   it does not recompute item counts, copy routing/tipping logic, or make a
+   flat analysis block. C consumes only
+   `engine_api.evidence_review_queue(...)`: never the HTTP view, view cards,
+   flattened children, or a second assembler. Its projections use
+   `routing_type`, `disposition`, `routing_reason(...)`, and
+   `analysis_fields(...)`. C.2 selects only `row.get("kind") ==
+   "evidence-set"`; C.1 renders an SRD gap as a read-only title/ref summary.
+
+4. **Disposition ownership and D proofs.** V2R-A owns every disposition write
+   and `emit_explicit_disposition_event`; B only reads events. D.1's happy
+   path composes and verifies a minimal checked project/note through the normal
+   helpers, then uses the emitted evidence id—never an invented empty
+   `state.replace_evidence_sets` row. D.3 selects only top-level evidence
+   cards:
+
+   ```js
+   const isEvidenceCard = (block) => block && block.kind === "card" &&
+     (block.review_kind === "evidence-set" || block.kind_line === "evidence-review");
+   this.cards = blocks.filter(isEvidenceCard);
+   this.extras = blocks.filter((block) => !isEvidenceCard(block));
+   ```
+
+   It leaves SRD cards whole in `extras`; `renderBlock(card)` renders each
+   nested child once, in declared order, and D.2 collapses only parent-owned
+   analysis after those semantic children.
+
+5. **Completed producer edges.** The authoritative partial order replaces the
+   abbreviated graph above:
+
+   ```text
+   V2R-A → V2R-B.1 → V2R-B.2 → V2R-B.3
+   {V2R-B.3, U3-ENG} → V2R-B.4
+   {V2R-B.4, V2R-D.1, U3-ENG} → V2R-B.5
+   U3-ENG → SEAM.1 → U3-PLUG.4 → V2R-D.2
+   {V2R-B.5, V2R-D.1, V2R-D.2, U3-PLUG.7} → V2R-D.3
+   ```
+
+   U3-PLUG.7 is deliberate: D.3 consumes `authedJson`,
+   `enqueueNamedOperation`, the ItemView pattern, and the Node harness from
+   U3-PLUG.6/.7.  U3-PLUG.4 alone remains sufficient only for D.2.
+
+6. **Telemetry plane after I1 T.3.** `empirical_event.v1` client facts live in
+   `telemetry_events` with `event_type = "empirical_event.v1"`; their JSON
+   fields are in `payload_json`.  Therefore C.2/C.3 client-event assertions,
+   C.4/C.5 `review_telemetry_summary`, and its no-event-on-invalid-show proof
+   query `telemetry_events`, never `state.read_event_log(...,
+   ["empirical-event"])` or `event_log`.  The server-side `resolved` and
+   `disposition.v1` facts remain journal-side and are still read from
+   `event_log`.  C.4 combines these two planes explicitly; it does not label
+   all metrics “journal facts.”  I1 T.1/T.2/T.3 are a hard precondition for
+   all C telemetry implementation/tests.
+
+7. **U1 transport and CLI parity.** V2R-B.5 uses U1 M.3's final refusal text
+   in exact tests: `"unauthorized: missing or invalid bearer token"` and
+   `"method not allowed: POST /v1/views/evidence-review"`.  Apply the same
+   replacements whether the U1 transport task or B.5 lands first.  V2R-C.1
+   requires U1 M.4: every newly added `memoria review` parser command is added
+   to `CLI_ONLY_COMMANDS` in the same task unless it has a registry row.  The
+   M.4 `72 parser / 59 exemption` count is its landing snapshot, not a forever
+   cap; C.1 updates the parity fixture with the review-command additions.
 
 ---
 
@@ -142,8 +523,8 @@ re-render belongs to the view/queue sections).
 
 1. **U3-ENG / U3-PLUG** (`docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md`)
    produce the view-spec.v1 machinery this spec's §1 consumes: `GET
-   /v1/views/attention`, the nested `{ok, api_version, view: {version:
-   "view-spec.v1", kind, blocks}, facets}` envelope, and `VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row",
+   /v1/views/attention`, the `{ok, api_version, view: {version, kind, blocks}}`
+   envelope, and `VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row",
    "evidence-list")` exported from `engine/api.py`. **V2R-A has no dependency
    on U3-ENG** — nothing here touches views. But the fields this section
    journals (`warrant`, `suppressed_until`, `edit_target`) are the inputs the
@@ -1256,91 +1637,38 @@ journal output only, `tests/floor_lib.py`).
 
 ## Payload contract (what later sections — pane front, CLI front — consume)
 
-`GET /v1/views/evidence-review` — authenticated (transport-wide bearer check,
-`src/memoria_vault/runtime/http_transport.py:63`), optional `read_scope`/`scope`
-narrowing, facet query params `routing_type` (`implicit|multi-hop|incomplete`),
-`project`, `min_age_days` (nonnegative int; zero means no age filter), `batch`
-(positive int, default 10).
-Response:
+`GET /v1/views/evidence-review` is authenticated, accepts optional
+`read_scope`/`scope` plus `routing_type` (`implicit|multi-hop|incomplete`),
+`project`, `min_age_days`, and `batch`, and returns
+`{ok, api_version, view: {version: "view-spec.v1", kind: "evidence-review",
+blocks}, facets}`. Facet denominators cover the whole scope-visible queue before
+filtering/batching; `shown` counts post-filter, post-batch **rows**, never child
+blocks. Deferred rows are outside both blocks and denominators until the next UTC day;
+rejected rows remain visible.
 
-```json
-{
-  "ok": true,
-  "api_version": "engine-read-api.v1",
-  "view": {
-    "version": "view-spec.v1",
-    "kind": "evidence-review",
-    "blocks": [
-      {"kind": "card", "blocks": [<evidence-list>, <text>, <action-row?>]},
-      ...,
-      <srd-gap card>...
-    ]
-  },
-  "facets": {
-    "routing_type": {"implicit": 1, "multi-hop": 1, "incomplete": 1},
-    "project": {"projects/project-alpha/project.md": 3},
-    "kind": {"evidence-set": 3, "srd-gap": 0},
-    "total": 3,
-    "shown": 3,
-    "batch": 10
-  }
-}
-```
+Each evidence-set row is exactly one top-level `card`:
 
-Facet counts are computed over the **whole scope-visible queue before filtering and
-batching** (spec §6's honest denominators; `shown` is the post-filter, post-batch
-block-row count). Deferred rows are outside both the blocks and the denominators
-until the next UTC day; rejected rows are inside both.
+- Parent: `id=evidence_id`, `ref=block_ref`, `title=claim_text`,
+  `kind_line="evidence-review"`, `review_kind="evidence-set"`,
+  `evidence_id`, `project`, `routing_type`, `reviewable`, `disposition`,
+  `item_count`, `age_days`, `age_s`, `age_label`, `body_data`, and
+  present-only `disposition_reason`, `warrant`, `blocked_by`, `cure`.
+- Semantic children: `<ev>-grounds` `evidence-list`, then `<ev>-routing`
+  `text`; a reviewable card appends exactly one `<ev>-actions` `action-row`
+  containing Accept, Reject, Edit, and Defer in that order. Every action is
+  `resolve-evidence` with `{evidence_id, decision}`, and none is primary.
+- Analysis is parent-owned and present only for reviewable holds: paired
+  `argument_for`/`argument_against`, `tipped_by`, and `certainty`.
+  The U3 renderer appends it after all semantic children; V2R-D.2 moves it into
+  the collapsed disclosure. There is no `<ev>-analysis` card, `collapsed`
+  key, `what_tipped_it` field, or verdict line.
 
-> **Binding amendment — nested U3 cards:** B.4 emits the corrected U3 nested-card
-> shape, not a flat `card, evidence-list, text, card` sequence. U3 preserves the
-> declared child order and emits analysis nodes only when their parent fields are
-> present. Each evidence card has
-> `title`, `kind_line`, `ref`, `age_label`, and nested evidence/text children; map
-> `what_tipped_it` to `tipped_by`. A reviewable row also carries one nested
-> `action-row` with the four `resolve-evidence` actions. Permanent cure cards omit
-> analysis, toggles, and actions. The flat block wording and tests immediately below
-> are superseded historical drafting notes; D consumes this nested shape.
-
-**Historic flat-block draft, superseded by the binding amendment above:** per reviewable evidence row, exactly four blocks in fixed order (spec §2 fields
-1–3 = evidence, before fields 4–6 = analysis; structural, spec §3):
-
-1. `card` — `id` = evidence id (`ev-<8hex>`), `ref` = block_ref, `review_kind:
-   "evidence-set"`, `evidence_id`, `project`, `routing_type`, `reviewable: true`,
-   `disposition: "open"|"rejected"`, `item_count`, `age_days` (int or null),
-   `body_data: {kind: "untrusted_text", text: <claim block text verbatim>}` (field
-   1). Present-only: `disposition_reason`, `warrant` (rides the latest disposition
-   event when slice 5 records it).
-2. `evidence-list` — `id` = `<ev>-grounds`, `items`: resolved previews (field 2):
-   source-span `{ref, kind: "source-span", work_id, anchor, resolves,
-   excerpt?}`; nested set `{ref, kind: "evidence-set", resolves, expansion?:
-   {evidence_type, state, item_count}}` (one level, with state); code grounds
-   `{ref, kind: "code-grounds", run_id, artifact_id, output_sha256, resolves,
-   state}`.
-3. `text` — `id` = `<ev>-routing`, `text` = the derivation rule verbatim
-   (`implicit`, `multi-hop`, or `evidence-incomplete: <failing item> does not
-   resolve`) (field 3).
-4. `card` — `id` = `<ev>-analysis`, **`collapsed: true`** (spec §3
-   independence-first), `what_tipped_it` (field 5, deterministic routing factor);
-   present-only and both-or-neither `argument_for`/`argument_against` (field 4);
-   present-only `certainty` (field 6). **No `verdict` key exists on any block and no
-   `action-row` blocks are emitted by this slice** (field 7; actions arrive with the
-   fronts after the slice-2 seam).
-
-**Read-only cure rows** (permanent blocks `evidence-text-drift` /
-`evidence-text-unbound`): three blocks — `card` (`reviewable: false`, `blocked_by:
-[{kind, reason}]`, `cure`), `evidence-list`, `text` (the block reason verbatim) — and
-**no analysis block**.
-
-**srd-gap rows** (spec §1 union member 2, C1-gated): open attention cards with
-`attention_kind: "srd-gap"` render as single trailing `card` blocks via U3-ENG's
-`_attention_view_card_block`; the `facets.kind["srd-gap"]` key is always present
-(reserved, 0 until C1 mints cards). srd-gap cards appear only on the unfiltered view
-(they carry no routing type/project/evidence age).
-
-All block kinds used (`card`, `evidence-list`, `text`) are members of U3-ENG.5's
-closed `VIEW_BLOCK_KINDS` catalog — zero new block kinds (spec §1, "the same
-five-block catalog U3 ships").
+A permanent read-only cure card has only grounds and routing children and no
+analysis, even when its input row also contains holds. Trailing SRD-gap cards are
+already-normalized U3 cards with `kind_line: "srd-gap"`; raw
+`attention_kind` never crosses this public boundary. They remain whole top-level
+cards after evidence rows and appear only on an unfiltered view. All emitted kinds
+remain in U3's five-kind catalog.
 
 ---
 
@@ -1898,7 +2226,7 @@ srd-gap cards union in behind a reserved facet.
 
 
   def test_queue_appends_srd_gap_cards_and_reserves_facet() -> None:
-      card = {"id": "inbox_srd-gap.md", "kind": "card", "attention_kind": "srd-gap"}
+      card = {"id": "inbox_srd-gap.md", "kind": "card", "kind_line": "srd-gap", "blocks": []}
 
       queue = _queue(srd_cards=[card])
       facets = evidence_review.queue_facets(queue)
@@ -2238,6 +2566,11 @@ srd-gap cards union in behind a reserved facet.
 
 ### Historical draft — V2R-B.3: honesty-card row blocks and grounds-item previews
 
+> **Execution override:** The 2026-07-29 reconciliation amendment replaces the
+> flat row/analysis-card tests and implementation below. Follow its one-card
+> nested grammar and replacement tests; retained flat snippets are drafting
+> history only.
+
 Spec §2's seven fields as view-spec.v1 blocks, present-only, evidence blocks (1–3)
 strictly before the analysis block (4–6), analysis collapsed by default (spec §3),
 no verdict and no pre-selected action (field 7).
@@ -2349,12 +2682,12 @@ no verdict and no pre-selected action (field 7).
 
 
   def test_srd_gap_card_renders_after_evidence_rows() -> None:
-      card = {"id": "inbox_srd-gap.md", "kind": "card", "attention_kind": "srd-gap"}
+      card = {"id": "inbox_srd-gap.md", "kind": "card", "kind_line": "srd-gap", "blocks": []}
 
       blocks = evidence_review.evidence_review_blocks(_queue(srd_cards=[card]))
 
       assert blocks[-1] == card
-      assert blocks[-1]["attention_kind"] == "srd-gap"
+      assert blocks[-1]["kind_line"] == "srd-gap"
 
 
   def test_item_previews_resolve_span_nested_and_code(tmp_path) -> None:
@@ -2618,11 +2951,14 @@ no verdict and no pre-selected action (field 7).
 
 ### Historical draft — V2R-B.4: `read_evidence_review_queue` + `read_evidence_review_view` — shared engine collector
 
-Wires the pure machinery to a workspace once: enumerate checked projects, read drafts
-(read-only — no rebuild, no context), load dispositions and minted timestamps, facet,
-filter, batch, and resolve previews. `read_evidence_review_queue` projects only
-evidence-set rows for the engine-direct CLI DTO; `read_evidence_review_view` consumes
-that collector, adds view-only SRD-gap cards, and wraps the nested binding envelope.
+> **Execution override:** Inspect only top-level cards and their nested
+> `blocks` under the reconciliation amendment; do not restore flat sibling
+> blocks or a second assembler from the historical snippets below.
+
+Wires the pure machinery to a workspace: enumerate checked projects, read drafts
+(read-only — no rebuild, no context), load dispositions and minted timestamps, union
+srd-gap attention cards, facet/filter/batch, resolve previews for the shown rows
+only, and wrap in the binding view envelope.
 
 **Files:**
 - Create: `tests/test_evidence_review_view.py`
@@ -2957,7 +3293,7 @@ that collector, adds view-only SRD-gap cards, and wraps the nested binding envel
 
       last = payload["view"]["blocks"][-1]
       assert last["kind"] == "card"
-      assert last["attention_kind"] == "srd-gap"
+      assert last["kind_line"] == "srd-gap"
       assert payload["facets"]["kind"] == {"evidence-set": 1, "srd-gap": 1}
 
 
@@ -4873,24 +5209,26 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
      goldens regenerated with `MEMORIA_FLOOR_UPDATE_GOLDENS=1`).
    - SEAM.1 Produces: HTTP `POST /operation/run` enqueues with `actor="pi"` — the
      pane's only mutation door carries PI authority.
-2. **After V2R-B (after V2R-D.1)** — this section consumes `GET /v1/views/evidence-review`:
-   envelope `{ok: true, api_version: "engine-read-api.v1", view: {version:
-   "view-spec.v1", kind: "evidence-review", blocks: [...]}, facets}`
-   (cross-section payload contract #3 of the surfaces plan); card
-   blocks (`kind: "card"`, `kind_line` = routing, honesty fields `argument_for`/
+2. **After U3-ENG/U3-PLUG.4/SEAM.1 and V2R-A** — this section consumes
+   `GET /v1/views/evidence-review`:
+   envelope `{ok: true, view: {version: "view-spec.v1", kind: "evidence-review",
+   blocks: [...]}}` (cross-section payload contract #3 of the surfaces plan); card
+   blocks (`kind: "card"`, `kind_line: "evidence-review"`, honesty fields `argument_for`/
    `argument_against`/`tipped_by`/`certainty` present-only, `ref` = draft-block
-   deep link) with child `evidence-list`, then routing `text`, then (only on
-   reviewable rows) an `action-row` whose four actions carry
-   `operation_id: "resolve-evidence"` and payloads `{evidence_id, decision}`.
-   Parent-card analysis follows that evidence → routing order; facet query params
-   are `routing_type`/`project`/`min_age_days`;
+   deep link) with nested `evidence-list` then routing `text` and, on reviewable rows only, an
+   `action-row` whose four actions carry `operation_id: "resolve-evidence"` and
+   payloads `{evidence_id, decision}`; facet query params `routing_type`/`project`/`min_age_days`;
    read-only cure rows carry no `action-row`.
-3. **After V2R-A** — the extended seam
+3. **After V2R-A (before V2R-B)** — the extended seam
    `resolve_evidence_review(vault, evidence_id, *, actor, machine, decision, reason="", warrant="")`
    with the four decisions (`accept`/`reject`/`edit`/`defer`), the **reject flip**
-   (only `accept` clears holds), and per-action atomic `disposition.v1`
-   emission. V2R-A owns this seam; D.1 wraps it, and D.5's reject test requires
-   V2R-A rather than V2R-B.
+   (only `accept` clears holds), and per-action `disposition.v1` emission (via V2R-A's
+   `emit_explicit_disposition_event` — plan contract 3 supersedes this
+   dependency's earlier `operations.py:146` reuse line; the context-bound
+   `emit_disposition_event` stays the worker-path helper, per
+   `runtime/integrity.py:1165-1167`).
+   Task V2R-D.1 runs after V2R-A's four-decision seam and seeds a real evidence
+   row in its happy-path test; it passes `warrant` through only when present.
 
 ## SPEC GAPs (decisions made here, one line each)
 
@@ -4946,7 +5284,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
 
 **Interfaces:**
 - Consumes: `resolve_evidence_review(vault, evidence_id, *, actor, machine,
-  decision, reason="", warrant="") -> dict` as finalized by V2R-A; actor gate
+  decision, reason="", warrant="") -> dict` from V2R-A; actor gate
   `PROTECTED_OPERATION_ACTORS.get(context.operation_id)`
   (`worker.py:1094`); runner-policy defaults injected by `_manifest_frontmatter`
   (`runtime/capabilities.py:157-163`, so the manifest needs no `runner` key —
@@ -5228,12 +5566,12 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
       tipped_by: "implicit derivation",
       blocks: [
         { kind: "evidence-list", id: "e1", items: [{ label: "span", ref: "notes/a.md" }] },
-        { kind: "text", id: "r1", text: "Routing: implicit derivation" },
+        { kind: "text", id: "r1", text: "Routing: implicit" },
         {
           kind: "action-row",
           id: "a1",
           actions: [
-            { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" }, primary: true },
+            { label: "Accept", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "accept" } },
             { label: "Reject", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "reject" } },
             { label: "Edit", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "edit" } },
             { label: "Defer", operation_id: "resolve-evidence", payload: { evidence_id: "ev-0011aabb", decision: "defer" } },
@@ -5246,17 +5584,17 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
     const classes = collapsed.children.map((child) => child.cls);
     assert.ok(!classes.includes("memoria-card-arguments"), "analysis moved out of the card body");
     assert.ok(!classes.includes("memoria-card-tipped"), "tipped/certainty moved too");
+    assert.deepEqual(classes, [
+      "memoria-card-kind",
+      "memoria-card-title",
+      "memoria-evidence",
+      "memoria-block-text",
+      "memoria-action-row",
+      "memoria-analysis-toggle",
+      "memoria-analysis is-collapsed",
+    ]);
     const toggleAt = classes.indexOf("memoria-analysis-toggle");
     const analysisAt = classes.indexOf("memoria-analysis is-collapsed");
-    const evidenceAt = classes.indexOf("memoria-evidence");
-    const routingAt = classes.indexOf("memoria-block-text");
-    const actionsAt = classes.indexOf("memoria-action-row");
-    assert.ok(toggleAt !== -1, "disclosure toggle rendered");
-    assert.equal(analysisAt, toggleAt + 1);
-    assert.ok(
-      evidenceAt < routingAt && routingAt < actionsAt && actionsAt < toggleAt,
-      "evidence, routing text, and actions retain their declared order before disclosure",
-    );
     assert.equal(collapsed.children[toggleAt].text, "Show analysis (machine)");
     assert.equal(collapsed.children[toggleAt].attrs["data-toggle-analysis"], "1");
     const inner = collapsed.children[analysisAt].children.map((child) => child.cls);
@@ -5276,15 +5614,14 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
       title: "evidence-text-drift — repair the marker, then re-verify",
       kind_line: "evidence-text-drift",
       blocks: [
-        { kind: "evidence-list", id: "e1", items: [{ label: "bound claim", ref: "notes/a.md" }] },
-        { kind: "text", id: "r1", text: "Repair the marker, then re-verify." },
+        { kind: "evidence-list", id: "cure-grounds", items: [] },
+        { kind: "text", id: "cure-routing", text: "Repair the marker." },
       ],
     });
-    const classes = card.children.map((child) => child.cls);
-    assert.ok(!classes.includes("memoria-card-arguments"));
-    assert.ok(!classes.includes("memoria-card-tipped"));
-    assert.ok(!classes.includes("memoria-action-row"));
-    assert.ok(!classes.includes("memoria-analysis-toggle"));
+    assert.deepEqual(
+      card.children.map((child) => child.cls),
+      ["memoria-card-kind", "memoria-card-title", "memoria-evidence", "memoria-block-text"],
+    );
     assert.equal(collapseAnalysis(card, false), card);
   });
   ```
@@ -5388,7 +5725,8 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
     re-collapses on every expand — independence-first by construction); the four
     action buttons enqueue `resolve-evidence` via `enqueueNamedOperation`; the
     Edit action additionally deep-links the draft block (`openLinkText` on the
-    card `ref`); a routing-facet cycle button re-fetches with `?routing_type=<facet>`.
+    card `ref`); a routing-facet cycle button re-fetches with
+    `?routing_type=<facet>`.
   - Command id `"open-evidence-review"`; `poll()` refreshes open evidence-review
     leaves alongside attention leaves.
 

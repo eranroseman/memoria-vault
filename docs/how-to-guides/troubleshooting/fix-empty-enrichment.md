@@ -7,12 +7,11 @@ nav_order: 5
 
 # Fix empty enrichment after ingest
 
-**Symptom:** a source is captured and staged, but Work metadata never fills in
-— `research_area`/`methodology` stay empty, classification attention never
-appears, and the DOI source stays unchecked.
+**Symptom:** a source is captured and staged, but provider or full-text
+enrichment does not complete and the DOI source stays unchecked.
 
-**Diagnosis:** enrichment (`enrich-source`) either didn't run or failed before
-producing a checked result. The two common causes:
+**Diagnosis:** enrichment (`enrich-source`) either did not run or failed before
+the source could be promoted as checked. The two common causes:
 
 1. A required provider key/contact email is missing or invalid, so provider
    calls fail.
@@ -50,11 +49,20 @@ instead of enriching again from scratch.
 
 ## Verify
 
-- `memoria work export --workspace . <work-id>` shows populated
-  `research_area`/`methodology`.
 - The DOI source is checked, not unchecked.
-- The classification attention item (if one existed) is gone from
-  `memoria attention list`.
+- Any provider-derived metadata or full text expected for the source is present.
+
+## Classify separately
+
+`research_area` and `methodology` are PI-owned Work classifications, not
+enrichment output. Set or revise them deliberately with `memoria work update`:
+
+```bash
+memoria work update --workspace <workspace> <work-id> --research-area <term>
+memoria work update --workspace <workspace> <work-id> --methodology <term>
+```
+
+There is no classification-attention lifecycle to wait for or clear.
 
 ## Related
 

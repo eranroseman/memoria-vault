@@ -21,8 +21,8 @@
   `86d50d4b`.
 - **NID-A.4 partially complete:** canonical `links.contradicts` readers landed in
   `f7b25575`, with canonical target normalization repaired in `4161cd48`. The remaining
-  closure flip, boundary tests, and alpha.15 importer await the explicit PI importer
-  disposition recorded below.
+  closure flip, boundary tests, and alpha.15 importer are now governed by the recorded
+  Graph-R10 disposition below.
 - The integrated Graph slice passed `python scripts/verify` (**2370 passed, 9 skipped**)
   and its sealed security diff scan reported no findings
   (`/tmp/codex-security-scans/memoria-vault/8d2c9eaf_20260717T163549Z/report.md`).
@@ -31,7 +31,7 @@
 
 1. **Edge-table shape:** NID-B's v16 redefines `concept_edges` (adds `target_path`, target nullable ON DELETE SET NULL, PK `(source_concept_id, relation_type, target_path)`). ERP-A.2's v17 CREATE/INSERT column lists extend mechanically to this shape; ERP-B/C/D SQL is written against it.
 2. **Roster ownership:** ERP-A resolves the Plan-22 handoff as MOVE — `parse_links`/`normalize_link_target` relocate to `edges.py`, `schema.py` re-exports for one release. New code imports from `lib.edges`; a repo-wide guard test forbids roster literals outside it.
-3. **Consequence-engine symbols:** ERP-D consumes ERP-C's real names — `propagation.compute_consequences(vault, target_id, *, trigger) -> dict[str, dict]` for the report card and `propagate_consequences(..., trigger="decided-wrong")` for marks. ERP-D's assumed `derive_consequences`/`claim_work_edges` names are superseded: the structural-impact rewire reads `state.concept_edges(vault)` rows plus ERP-B's `_note_edges(notes, *, works=...)`.
+3. **Consequence-engine symbols:** ERP-D consumes ERP-C's real names — `propagation.compute_consequences(vault, target_id, *, trigger) -> dict[str, dict]` for the report card and `propagate_consequences(..., trigger="decided-wrong")` for marks. ERP-D's assumed `derive_consequences`/`claim_work_edges` names are superseded: the structural-impact rewire reads the identity-safe `edges.concept_edge_path_records(vault, checked_only=False)` projection, whose `catalog/sources/*` targets are the ERP-B bridge at this boundary.
 4. **Insert hooks, no circularity:** ERP-B.2 lands `insert_concept_edge` bare; ERP-C.5 retrofits the `propagate_edge_change(..., added=True)` call; ERP-D.6 retrofits `emit_edge_write_event(..., write_path="insert-concept-edge")`. Final call order inside the function: insert → propagate → emit.
 5. **Outcome→decision dict** (`integrity.py:1169`): ERP-B adds `"confirm-tension": "accept"`, ERP-D adds `"decided-wrong": "override"` — merge, never overwrite.
 6. **Tension rows** store endpoints lexicographically sorted; ERP-C propagation and ERP-D counters must not assume direction.
@@ -50,19 +50,190 @@
     There is no current catalog-source deletion path. A future explicit delete
     operation must delete the catalog child first, never cascade a Concept deletion
     into catalog authority.
+11. **Public roster activation:** ERP-A.1–.5 are one public activation boundary.
+   They may be developed and tested task-by-task, but no PR may merge after
+   A.1/.2 alone: A.3 converges every reader, A.4 makes the PI write paths
+   accept the same verbs, and A.5 updates the dependent U3 acceptance text.
+   Until that PR lands, `views.attention` may advertise only relations that
+   the HTTP `curate-note-link` request and its worker can complete. After it
+   lands, the served roster is exactly `edges.LINK_RELATIONS` (six verbs) and
+   still excludes `tension`. This prevents a dead-vocabulary window while
+   preserving `LINK_RELATIONS` as the one source of truth.
+12. **Warrant adapter and ordering:** ERP-D.5 has only ERP-A's activated
+    roster and ERP-B.2's `insert_concept_edge` as graph prerequisites; it may
+    run before ERP-C and ERP-D.1–.4/.6. It owns the backend wire
+    `payload.warrant → attributes_json.warrant`. U3-PLUG.5/.8 require that
+    task and emit `warrant`, never the legacy `reason` alias; the modal must
+    distinguish a `warrant` relation (a license-note edge) from Warrant text
+    (an annotation on the selected edge).
+13. **Execution order:** NID-A → NID-B → ERP-A.1–.5 (one public activation)
+    → ERP-A.6 (identity-safe path projection) → ERP-B.2 → ERP-D.5 → remaining
+    ERP-B → ERP-C → remaining ERP-D → NID-C
+    (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
 
-## Requires PI ratification at merge (drafter rulings that extend the specs)
+### Plan-reconciliation amendment — v16-preserving roster migration and path projection (2026-07-29)
 
-- **R1 (NID-B):** digests/fulltexts stay **path-keyed** (paths are pure functions of `work_id`) rather than bare-`work_id`-keyed — avoids PK collision with catalog works in the shared concepts namespace. Deviation from NODES §1.1's letter, preserving its intent.
-- **R2 (NID-B):** file deletion keeps **tombstones** for verdict-carrying rows (prune only verdict-less; inbound edges revert to pending via ON DELETE SET NULL).
-- **R3 (ERP-C):** `contradicts`/`tension` hops neither mark nor traverse (no consequence type exists for them by spec).
-- **R4 (ERP-C):** new-relation edge direction = source is the license/bounding/exception note, target is the claim (mirrors `supports`).
-- **R5 (ERP-C):** standing triggers fire only on transitions into {retracted, superseded}; archived is shelving.
-- **R6 (ERP-C):** "active project's slice" = non-archived project note + thesis target + undirected edge reachability.
-- **R7 (ERP-A):** structural-impact traversal widens to all six LINK_RELATIONS at roster convergence (not deferred to the §8 rewire).
-- **R8 (ERP-B):** tension retraction verb = `state.delete_concept_edge` (no tombstone; existence-based semantics per spec); per-candidate tension prompt cards added as the minimal enabling surface.
+This amendment supersedes every ERP-A.2 copy-paste block that rebuilds the
+pre-v16 edge table and every ERP-C path-facing snippet that normalizes a raw
+`source_concept_id` or `target_concept_id`.  After NID-B, those columns are
+identity keys (a source may be a ULID and a target may be `NULL`); no consumer
+outside identity/storage work may treat either as a vault-relative path.
 
-Merging this PR ratifies R1–R8 unless individually vetoed.
+1. **ERP-A.2 preserves the complete v16 shape.** Its fresh-schema SQL, legacy
+   v16 fixture, `MIGRATIONS[16]` CREATE, and INSERT column lists are exactly:
+
+   ```sql
+   edge_id TEXT NOT NULL DEFAULT '',
+   source_concept_id TEXT NOT NULL
+       REFERENCES concepts(concept_id) ON UPDATE CASCADE ON DELETE CASCADE,
+   relation_type TEXT NOT NULL CHECK (
+       relation_type IN (
+           'supports', 'contradicts', 'extends', 'tension',
+           'warrant', 'qualifier', 'rebuttal'
+       )
+   ),
+   target_concept_id TEXT
+       REFERENCES concepts(concept_id) ON UPDATE CASCADE ON DELETE SET NULL,
+   target_path TEXT NOT NULL DEFAULT '',
+   attributes_json TEXT NOT NULL DEFAULT '{}',
+   check_status TEXT NOT NULL
+       CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
+   source_path TEXT NOT NULL DEFAULT '',
+   updated_at TEXT NOT NULL,
+   PRIMARY KEY (source_concept_id, relation_type, target_path)
+   ```
+
+   The migration copies `target_path` and preserves a pending row
+   (`target_concept_id IS NULL`, nonempty `target_path`) as-is; it recreates
+   `idx_concept_edges_edge_id` and `idx_concept_edges_target`.  Replace the
+   obsolete `target_concept_id TEXT NOT NULL` / target-id primary-key snippets,
+   including the corresponding test fixture and survivor query.  The migrated
+   v16 test seeds both a ULID source and a pending target, then asserts their
+   path/NULL form survives alongside the expanded roster.  “Adapt if v16
+   changed” is not an implementation instruction and is superseded.
+
+2. **ERP-A.6 — one graph-owned path-projection family.** Add this task after
+   the atomic ERP-A.1–.5 activation and before any R2 G, ERP-C, or path-facing
+   structural consumer.  It adds two public, identity-safe functions in
+   `runtime/subsystems/lib/edges.py`:
+
+   ```python
+   def concept_edge_path_pairs(
+       vault: Path, *, checked_only: bool = True
+   ) -> list[dict[str, str]]:
+       """Checked graph edges projected to durable vault paths."""
+
+
+   def concept_edge_path_records(
+       vault: Path, *, checked_only: bool = True
+   ) -> list[dict[str, Any]]:
+       """Projected paths plus parsed edge attributes for graph consumers."""
+   ```
+
+   `concept_edge_path_pairs` returns deterministic rows with exactly
+   `source_path`, `target_path`, and `relation_type`; it is the strict
+   three-field public endpoint API used by R2 and propagation.  Its sibling
+   `concept_edge_path_records` returns those durable paths and relation plus
+   one parsed `attributes: dict[str, Any]` field for graph-internal consumers
+   that need `warrant` or `addressed`.  A malformed or non-object
+   `attributes_json` becomes `{}`.  Neither function emits raw identity IDs or
+   `edge_id`.  The storage query joins a source identity through
+   `concepts.path`; it derives a resolved target from `target concepts.path`
+   and otherwise retains `concept_edges.target_path`.  Keep the shared query in
+   `edges` with a function-local `state` import (or in `state` with a local
+   import from `edges` after module initialization) so ERP-A.2's `state →
+   edges` roster import never creates a module-import cycle.  `checked_only=True`
+   filters on the edge's checked status; `False` is used only by graph-internal
+   consumers that deliberately include unchecked/pending topology.
+
+   Add `tests/test_edges.py` coverage that rebuilds the concept mirror with a
+   ULID-keyed source at `notes/source.md`, creates one resolved edge and one
+   checked pending target with attributes, then asserts the strict public rows
+   are paths (`notes/source.md`, resolved target path, and pending
+   `target_path`) and never contain the ULID.  Assert the record rows preserve
+   only the corresponding parsed attributes and likewise expose no identity.
+   A second test proves unchecked rows are absent by default and included only
+   with `checked_only=False`.
+
+3. **All path-facing graph consumers use that projection family.** ERP-C.1's
+   closure, ERP-C.5 trigger routing, ERP-C.6's active-project adjacency, and
+   all R2 G/E graph walks consume the strict
+   `edges.concept_edge_path_pairs`; ERP-D.3/D.4 consume
+   `concept_edge_path_records` only because their documented `warrant` and
+   `addressed` behaviors need attributes.  Raw identity values stay confined to
+   state migrations, FK mutations, and identity-keyed lookup.  The propagation
+   tests seed identity rows through `state.replace_concept_edges`, include a
+   ULID source and a pending target, and assert that an active-project
+   slice/card routing still operates on path members.  When a marked result is
+   identity-keyed, resolve it through the same graph projection/mirror before
+   comparing it with a path slice; never compare an ID directly with a path.
+
+4. **Downstream dependency.** R2 G begins only after ERP-A.6.  Its former raw
+   endpoint fixtures and the nonexistent `state.active_project_slices` seam are
+   superseded by the task-level R2 amendment below; `propagation.active_project_slices`
+   is the sole project-slice provider once ERP-C.6 lands.
+
+5. **ERP-B.2/B.4 retain v16 identity safely.** ERP-B.2's public
+   `insert_concept_edge` accepts path references at its boundary, but resolves
+   the source through `state.resolve_concept_id(conn, source_path)`, keeps a
+   normalized `target_path` as the durable target, and looks up the optional
+   `target_concept_id` through `concepts.path`.  Its insert/upsert key is
+   `(source_concept_id, relation_type, target_path)`; `edge_id` is populated
+   only if the target resolves.  It never normalizes an already-resolved ULID
+   as though it were a path.  ERP-B.4 deletes/retracts by that same triple,
+   never by `target_concept_id`.  Replace their pre-v16 SQL bodies and tests
+   with ULID-mirror fixtures proving a resolved row, a retained pending
+   `target_path`, and an idempotent delete without an FK failure.
+
+6. **ERP-D.4 consumes metadata-safe paths, not storage IDs.** Its
+   `substrate_edges` graph loop consumes
+   `edges.concept_edge_path_records(vault, checked_only=False)`, including its
+   `catalog/sources/*` bridge targets; it feeds only returned paths into
+   `_edge_key`/the note resolver and reads `record["attributes"].get("addressed",
+   True)` for the existing addressed filter.  A resolved ULID-source edge
+   appears with its current path.  A pending target is retained by the
+   projection but is skipped from the structural graph if no target note
+   exists—never rendered as a fake ULID node or allowed to crash the resolver.
+   Update D.4 fixtures to rebuild a ULID mirror, prove both resolved and pending
+   cases, and remove every direct `state.concept_edges` endpoint normalization
+   from that task.
+
+7. **ERP-D.3 compares component paths only.** Its guarded warrant-absence
+   helper consumes `concept_edge_path_records(vault, checked_only=False)`,
+   compares the path-valued `component` solely with each record's
+   `source_path`/`target_path`, and interprets warrant text only from
+   `record["attributes"]`.  Its fixtures rebuild a ULID-keyed mirror and seed
+   a resolved and a pending edge through the v16 trusted seam, proving that a
+   component-local warrant suppresses the finding while an elsewhere warrant
+   only supplies the vault-wide denominator.  The historical raw
+   `source_concept_id`/`target_concept_id` comparisons are invalid after v16.
+
+8. **ERP-D.5 tests the v16 writer boundary, not a path hash.** Its fixture
+   rebuilds ULID-keyed source and target mirror rows before `curate_note_link`.
+   It never calls `state.concept_edge_id` with paths or filters stored rows by
+   raw endpoint IDs.  Instead it asserts that the upsert result returns a
+   nonempty, stable `edge_id`, then finds one matching
+   `concept_edge_path_records` row by `source_path`, `relation_type`, and
+   `target_path` and asserts its `attributes["warrant"]`.  The second upsert
+   keeps the returned `edge_id` stable and updates that projected attribute.
+
+## PI ratification record (2026-07-30 — binding)
+
+These are recorded PI **Y** decisions, not drafter rulings awaiting a future
+merge. `Graph-` keeps this decision namespace distinct from the grounds
+contract's unrelated R1–R4 labels. The R1–R8 wording below is the plan's
+verbatim ruling text.
+
+- **Graph-R1 — Y (2026-07-30; NID-B):** digests/fulltexts stay **path-keyed** (paths are pure functions of `work_id`) rather than bare-`work_id`-keyed — avoids PK collision with catalog works in the shared concepts namespace. Deviation from NODES §1.1's letter, preserving its intent.
+- **Graph-R2 — Y (2026-07-30; NID-B):** file deletion keeps **tombstones** for verdict-carrying rows (prune only verdict-less; inbound edges revert to pending via ON DELETE SET NULL).
+- **Graph-R3 — Y (2026-07-30; ERP-C):** `contradicts`/`tension` hops neither mark nor traverse (no consequence type exists for them by spec).
+- **Graph-R4 — Y (2026-07-30; ERP-C):** new-relation edge direction = source is the license/bounding/exception note, target is the claim (mirrors `supports`).
+- **Graph-R5 — Y (2026-07-30; ERP-C):** standing triggers fire only on transitions into {retracted, superseded}; archived is shelving.
+- **Graph-R6 — Y (2026-07-30; ERP-C):** "active project's slice" = non-archived project note + thesis target + undirected edge reachability.
+- **Graph-R7 — Y (2026-07-30; ERP-A):** structural-impact traversal widens to all six LINK_RELATIONS at roster convergence (not deferred to the §8 rewire).
+- **Graph-R8 — Y (2026-07-30; ERP-B):** tension retraction verb = `state.delete_concept_edge` (no tombstone; existence-based semantics per spec); per-candidate tension prompt cards added as the minimal enabling surface.
+- **Graph-R9 — Y (2026-07-30; NID-B / contract 10):** `catalog_sources.work_id` is the sole catalog↔Concept join, references `concepts.concept_id` as the bare work identity with `ON UPDATE RESTRICT ON DELETE RESTRICT`, and never uses `concept_path` as an FK, mirror, edge, or verdict identity. The parent must exist before the child is rebuilt or upserted; an identity collision fails rather than being accepted.
+- **Graph-R10 — Y (2026-07-30; alpha.15 importer):** normalize each imported typed document to its current type schema, map a valid legacy `contradictions` list to `links.contradicts`, drop retired verdict fields, preserve other source-only metadata under `x.alpha15`, and validate the completed workspace before reporting success. No schema grace path or successful copy-through of invalid typed frontmatter is permitted.
 
 ---
 # Section NID-A — Concept-type registry + closed frontmatter validation
@@ -500,8 +671,8 @@ either order of later consumers.
   `tests/test_exploration_channel.py`, `tests/test_search_index.py`,
   `tests/test_trusted_writer.py`, `tests/test_precommit_schema.py`, and
   `tests/test_detectors.py` as the closure-boundary sweep requires.
-- Conditional on the PI decision below: modify `src/memoria_vault/cli.py` and
-  `tests/test_cli.py` for the alpha.15 importer.
+- Per recorded Graph-R10: modify `src/memoria_vault/cli.py` and `tests/test_cli.py`
+  for the alpha.15 importer.
 
 **Interfaces:**
 - Consumes: `schema.validate_frontmatter(fm, schema, vocabulary_terms=None) -> list[str]`
@@ -522,23 +693,21 @@ either order of later consumers.
   retain its existing `contradictions` key. The digest-only contradiction checker
   owns this relation so generic link-target checking skips only a digest's
   `links.contradicts`; non-digest relations remain generically checked.
-- **PI decision required before implementation — alpha.15 importer.** The current
+- **PI decision recorded — alpha.15 importer (Graph-R10).** The current
   `memoria migrate --from-alpha15` copy-through path does not validate imported
-  typed documents. The recommended disposition is to normalize each target document
-  to its current type schema, map a valid legacy `contradictions` list to
-  `links.contradicts`, drop retired verdict fields, preserve other source-only
-  metadata under `x.alpha15`, and validate the completed workspace before reporting
-  success. A stricter alternative is to reject unsupported legacy fields rather
-  than preserving them. Neither choice permits a schema grace path or successful
-  copy-through of invalid typed frontmatter.
+  typed documents. Normalize each target document to its current type schema, map
+  a valid legacy `contradictions` list to `links.contradicts`, drop retired verdict
+  fields, preserve other source-only metadata under `x.alpha15`, and validate the
+  completed workspace before reporting success. No schema grace path or successful
+  copy-through of invalid typed frontmatter is permitted.
 
 **Steps:**
 
 - [x] Complete the fixture sweep before closing validation. All eight live disposable
   `test-vault` Concepts, four cassette-generated Concepts, and M0 strict-workspace
   fixtures have no unknown top-level fields. The seeded-error root `contradictions`
-  exception was canonicalized in `4f370c04`; the Alpha15 importer remains pending
-  the PI decision above.
+  exception was canonicalized in `4f370c04`; the Alpha15 importer remains to be
+  implemented according to Graph-R10.
 
 - [ ] Write the failing test. In `tests/test_schemas.py`, replace
   `test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration` (:160-171)
@@ -730,8 +899,8 @@ executing.
   (three concept rows per work). This section keys **catalog works by bare
   `work_id`** and keeps **digests/fulltexts keyed by their paths**
   (`digests/<work_id>.md` — a pure function of `work_id`, and their filenames are
-  machine-fixed, so rename-reconciliation is moot for them). PI to ratify or supply
-  distinct id forms. Uniform runtime rule used throughout: *DB key = frontmatter
+  machine-fixed, so rename-reconciliation is moot for them), as ratified by
+  Graph-R1. Uniform runtime rule used throughout: *DB key = frontmatter
   `id` when it is a ULID, else the concept's path; catalog works = bare `work_id`.*
 - **SPEC GAP (deletion semantics):** the spec decides rename semantics, not what
   happens to id-keyed verdict rows when a concept file is deleted outright. This
@@ -4272,11 +4441,14 @@ plus slice 4's activation migration and the §4 plan-amendment notes.
   (`state.MIGRATIONS: dict[int, tuple[int, list[str | Callable]]]`, key =
   from-version, steps applied in `_init` before `executescript(_schema_sql())`,
   which stamps the final `user_version`).
-- **Merge ERP-A.1 and ERP-A.2 in the same PR.** A.1 widens frontmatter
+- **Public activation is ERP-A.1–.5, in one PR.** A.1 widens frontmatter
   validation to six relations (via the `schema.py` re-export feeding
   `_check_links`) while the DB CHECK still rejects the three new values; A.2
-  closes that window. Neither commit may reach `main` without the other.
-  ERP-A.3/.4 execute after A.2; ERP-A.5 (docs) any time after A.2.
+  closes that first window, A.3 converges readers, A.4 makes the PI write
+  paths accept the same verbs, and A.5 updates U3's served-roster tests and
+  manual acceptance. The commits may be developed in that order and stay
+  green individually, but none may reach `main` until the whole group is
+  ready. This is the EDGES §4 same-release guard against a dead served verb.
 - Line refs verified at `main @ 9c77ba61` (pre-Plan-22). Where Plan 22 or
   NID-B will have shifted a line, the step says so and gives the content
   anchor to re-locate by.
@@ -5032,15 +5204,17 @@ relation-roster definition").
   block (after `from memoria_vault.runtime.paths import safe_filename`,
   line 27)
 - Test: `tests/test_schemas.py` (contract), `tests/test_knowledge.py`
-  (runtime), `tests/test_query_substrate.py` (contract), `tests/test_edges.py`
-  (unit) — all registered, no conftest change
+  (direct runtime), `tests/test_worker_product_jobs.py` (worker runtime),
+  `tests/test_query_substrate.py` (contract), `tests/test_edges.py` (unit) —
+  all registered, no conftest change
 
 **Interfaces:**
 - Consumes: `edges.LINK_RELATIONS` (already imported into `knowledge.py` by
   ERP-A.3); `schema.validate_frontmatter` / `schema.load_types`;
   `state.concept_edges`; `tests.helpers.ROOT`, `write_checked_concept`,
-  `copy_memoria_dirs`; the `rebuild_passage_index` wrapper at
-  `tests/test_query_substrate.py:18-19`.
+  `copy_memoria_dirs`; `enqueue_operation` / `run_next_job` and `write_note`
+  in `tests/test_worker_product_jobs.py`; the `rebuild_passage_index` wrapper
+  at `tests/test_query_substrate.py:18-19`.
 - Produces:
   - `curate_note_link` accepts exactly `edges.LINK_RELATIONS`; error message
     `f"note link_type must be one of {', '.join(sorted(LINK_RELATIONS))}"`
@@ -5048,6 +5222,11 @@ relation-roster definition").
     here; the relate control's served roster — `summary.link_relations` in
     the surfaces plan — serves these same six via `LINK_RELATIONS`).
   - `memoria link --rel` choices == `tuple(sorted(edges.LINK_RELATIONS))`.
+  - Direct and worker acceptance both parameterize over
+    `sorted(edges.LINK_RELATIONS)`, assert each matching `links.<relation>`
+    write, and separately reject `tension`. This is the executable half of
+    the public-roster activation guard: a reader may not advertise a verb
+    unless both the direct PI path and queued worker path complete it.
   - Repo guard test: no `.py` file under `src/memoria_vault` except
     `lib/edges.py` contains a quoted `"supports", "contradicts"` roster
     literal.
@@ -5081,10 +5260,16 @@ relation-roster definition").
   ```
 
   At the end of `tests/test_knowledge.py` (mirrors
-  `test_curate_note_link_records_typed_link_on_checked_note`, line 395):
+  `test_curate_note_link_records_typed_link_on_checked_note`, line 395), add
+  `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS` to
+  the imports. Keep that existing one-case event/commit regression, then add
+  this all-served direct-path proof plus the separate negative case:
 
   ```python
-  def test_curate_note_link_accepts_rebuttal_and_rejects_tension(tmp_path: Path) -> None:
+  @pytest.mark.parametrize("relation", sorted(LINK_RELATIONS))
+  def test_curate_note_link_accepts_each_served_relation(
+      tmp_path: Path, relation: str
+  ) -> None:
       vault = workspace(tmp_path)
       _md(
           vault / "notes/source.md",
@@ -5096,15 +5281,73 @@ relation-roster definition").
       )
 
       result = curate_note_link(
-          vault, "source", "rebuttal", "target", actor="pi", machine="curator"
+          vault, "source", relation, "target", actor="pi", machine="curator"
       )
 
-      assert result["link_type"] == "rebuttal"
+      assert result["link_type"] == relation
       source_fm = read_frontmatter(vault / "notes/source.md")
-      assert source_fm["links"] == {"rebuttal": ["notes/target.md"]}
+      assert source_fm["links"] == {relation: ["notes/target.md"]}
 
-      with pytest.raises(ValueError, match="link_type must be one of"):
+
+  def test_curate_note_link_rejects_tension(tmp_path: Path) -> None:
+      vault = workspace(tmp_path)
+      _md(vault / "notes/source.md", "type: note\ncheck_status: checked\ntitle: Source\nstatus: accepted\n")
+      _md(vault / "notes/target.md", "type: note\ncheck_status: checked\ntitle: Target\nstatus: accepted\n")
+      with pytest.raises(ValueError, match="link_type must be"):
           curate_note_link(vault, "source", "tension", "target", actor="pi", machine="curator")
+  ```
+
+  At the end of `tests/test_worker_product_jobs.py`, import
+  `LINK_RELATIONS` from `runtime.subsystems.lib.edges` and add the matching
+  queued-worker proof. Keep a fresh disposable vault per parameter value so
+  the expected frontmatter is one relation at a time:
+
+  ```python
+  @pytest.mark.parametrize("relation", sorted(LINK_RELATIONS))
+  def test_worker_runs_each_served_curate_note_link(
+      tmp_path: Path, relation: str
+  ) -> None:
+      vault = workspace(tmp_path)
+      source = write_note(vault, "source", "checked", "Source body.")
+      target = write_note(vault, "target", "checked", "Target body.")
+      queued = enqueue_operation(
+          vault,
+          "curate-note-link",
+          payload={
+              "source_note_path": source.relative_to(vault).as_posix(),
+              "link_type": relation,
+              "target_path": target.relative_to(vault).as_posix(),
+          },
+          idempotency_key=f"served-link-{relation}",
+          actor="pi",
+      )
+      done = run_next_job(vault, machine="test-machine")
+
+      assert queued["kind"] == "operation"
+      assert done is not None and done["status"] == "done"
+      assert done["link_type"] == relation
+      assert read_frontmatter(source)["links"] == {relation: ["notes/target.md"]}
+
+
+  def test_worker_rejects_tension_curate_note_link(tmp_path: Path) -> None:
+      vault = workspace(tmp_path)
+      source = write_note(vault, "source", "checked", "Source body.")
+      target = write_note(vault, "target", "checked", "Target body.")
+      enqueue_operation(
+          vault,
+          "curate-note-link",
+          payload={
+              "source_note_path": source.relative_to(vault).as_posix(),
+              "link_type": "tension",
+              "target_path": target.relative_to(vault).as_posix(),
+          },
+          idempotency_key="served-link-tension",
+          actor="pi",
+      )
+      failed = run_next_job(vault, machine="test-machine")
+
+      assert failed is not None and failed["status"] == "failed"
+      assert "link_type must be" in str(failed["error"])
   ```
 
   At the end of `tests/test_query_substrate.py` (the vim round-trip;
@@ -5164,10 +5407,12 @@ relation-roster definition").
   ```
 
 - [ ] Run tests to verify they fail:
-  `python -m pytest tests/test_schemas.py::test_note_links_accept_activated_toulmin_relations "tests/test_knowledge.py::test_curate_note_link_accepts_rebuttal_and_rejects_tension" "tests/test_query_substrate.py::test_activated_link_round_trips_to_edge_row" tests/test_edges.py::test_single_roster_definition_repo_wide -v`
+  `python -m pytest tests/test_schemas.py::test_note_links_accept_activated_toulmin_relations tests/test_knowledge.py::test_curate_note_link_accepts_each_served_relation tests/test_knowledge.py::test_curate_note_link_rejects_tension tests/test_worker_product_jobs.py::test_worker_runs_each_served_curate_note_link tests/test_worker_product_jobs.py::test_worker_rejects_tension_curate_note_link tests/test_query_substrate.py::test_activated_link_round_trips_to_edge_row tests/test_edges.py::test_single_roster_definition_repo_wide -v`
   Expected: the schemas test PASSES already (the roster widened in A.1 —
-  it pins the behavior); the knowledge test fails with
+  it pins the behavior); the direct and worker parameterized groups pass for
+  the old three verbs and fail for `warrant`, `qualifier`, and `rebuttal` with
   `ValueError: note link_type must be supports, contradicts, or extends`;
+  their `tension` cases still reject;
   the round-trip PASSES already (A.1 + A.2 + G2S1.1 — it pins §10's
   acceptance); the guard test fails listing `src/memoria_vault/cli.py` and
   `src/memoria_vault/runtime/knowledge.py`.
@@ -5193,13 +5438,13 @@ relation-roster definition").
   ```
 
 - [ ] Run tests to verify they pass, plus the touched suites:
-  `python -m pytest tests/test_edges.py tests/test_schemas.py tests/test_knowledge.py tests/test_query_substrate.py tests/test_cli.py -v`
+  `python -m pytest tests/test_edges.py tests/test_schemas.py tests/test_knowledge.py tests/test_worker_product_jobs.py tests/test_query_substrate.py tests/test_cli.py -v`
   — expect PASS.
 - [ ] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```
-  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_schemas.py tests/test_knowledge.py tests/test_query_substrate.py tests/test_edges.py
+  git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/cli.py tests/test_schemas.py tests/test_knowledge.py tests/test_worker_product_jobs.py tests/test_query_substrate.py tests/test_edges.py
   git commit -m "feat(graph): validator, curate-note-link, and CLI accept the six link relations
 
   warrant/qualifier/rebuttal round-trip from vim to concept_edges rows;
@@ -5211,6 +5456,15 @@ relation-roster definition").
 ---
 
 ### Task ERP-A.5: plan amendments — served-verbs acceptance + `claims.base` glyph column
+
+> **Execution override:** The 2026-07-29 cross-section contracts above now
+> own the surfaces changes, including the direct `edges.LINK_RELATIONS` import,
+> all-six acceptance, and the U3 warrant wire. This task makes that owner
+> migration executable by requiring the atomic U3-ENG.1/.2/.3 slice to start
+> only after ERP-A.1–.5 and to import `LINK_RELATIONS` from `lib.edges` on its
+> first implementation. Do not reapply the stale line-specific surface
+> instructions below. This task still carries the independent Alpha23
+> `claims.base` glyph amendment, re-anchored by its quoted context.
 
 The two recorded amendments EDGES §4 and §5 direct at the surfaces and
 alpha.23 plans. Docs only; no code, no tests, no verify-gated behavior (the
@@ -5291,6 +5545,114 @@ doc-claims check).
   git commit -m "docs(plans): record EDGES roster amendments — served verbs + claims.base glyph column
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+  ```
+
+---
+
+### Task ERP-A.6: Public identity-safe concept-edge path projections
+
+**Preconditions:** NID-B v16 and the atomic ERP-A.1–.5 activation are merged.
+This task is the graph producer required by R2 G and every path-facing
+propagation/structural consumer; it is not optional prose in the A-section
+amendment.
+
+**Files:**
+
+- Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py`
+- Modify: `tests/test_edges.py`
+
+**Interfaces:**
+
+- Consumes: v16 `concept_edges` (`source_concept_id` identity FK,
+  nullable `target_concept_id`, durable `target_path`, checked status), and
+  `concepts.path` from the identity mirror.
+- Produces:
+
+  ```python
+  def concept_edge_path_pairs(
+      vault: Path, *, checked_only: bool = True
+  ) -> list[dict[str, str]]:
+      """Deterministic graph edges projected to source/target paths."""
+
+
+  def concept_edge_path_records(
+      vault: Path, *, checked_only: bool = True
+  ) -> list[dict[str, Any]]:
+      """Deterministic projected paths plus parsed safe edge attributes."""
+  ```
+
+  `concept_edge_path_pairs` is the strict public endpoint API: every row has
+  exactly `source_path`, `target_path`, and `relation_type`.
+  `concept_edge_path_records` is its metadata-safe sibling for graph-internal
+  consumers: every row has those path fields plus parsed `attributes`.
+  Source comes from the source mirror's current `concepts.path`; target is the
+  target mirror path when resolved, otherwise the durable pending
+  `concept_edges.target_path`.  A malformed or non-object `attributes_json`
+  yields `{}`.  `checked_only=True` filters on the edge row; `False`
+  deliberately includes unchecked/pending topology.  Neither API exposes a
+  concept ID or `edge_id`.
+
+**Steps:**
+
+- [ ] Write failing tests in `tests/test_edges.py` (extend the existing module;
+  no `TEST_LEVELS` change).  Seed the v16 mirror with a source whose
+  `concept_id` is a ULID and whose `path` is `notes/source.md`, a resolved
+  target at `notes/resolved.md`, and a checked pending target path
+  `notes/pending.md`.  Insert the edge rows through the NID-B trusted state
+  seam.  Assert the public result is deterministic and exactly:
+
+  ```python
+  [
+      {
+          "source_path": "notes/source.md",
+          "target_path": "notes/pending.md",
+          "relation_type": "extends",
+      },
+      {
+          "source_path": "notes/source.md",
+          "target_path": "notes/resolved.md",
+          "relation_type": "supports",
+      },
+  ]
+  ```
+
+  Give the resolved row `{"warrant": "licensed"}` and the pending row
+  `{"addressed": false}` attributes.  Assert neither serialized pair contains
+  the source ULID, then assert the record API returns the same path/relation
+  ordering with exactly those parsed attribute dictionaries and no identity
+  keys.  Add an unchecked edge and prove it is absent by default and present
+  only with `checked_only=False` in both projections.
+- [ ] Run the focused test red:
+
+  ```bash
+  python -m pytest tests/test_edges.py -q
+  ```
+
+  Expected: import/attribute failure for both path-projection functions.
+- [ ] Implement in `edges.py`.  Keep the `state` import inside the function so
+  ERP-A.2's module-level `state → edges` roster import cannot cycle.  Implement
+  `concept_edge_path_records` as the shared query: join the edge table to
+  `concepts AS source` and left-join `concepts AS target`; select source
+  `path`, `COALESCE(NULLIF(target.path, ''), edge.target_path)` as target path,
+  relation type, and `attributes_json`.  Apply the checked predicate
+  parametrically, normalize only the selected paths, parse a JSON object to
+  `attributes` (otherwise `{}`), skip a corrupt blank endpoint, sort by source
+  path, relation type, target path, and return plain dicts.  Implement
+  `concept_edge_path_pairs` by mapping each record to a newly built dict with
+  exactly its three public fields.  Do not select into, return, or normalize
+  raw identity columns or `edge_id`.
+- [ ] Run the focused and dependent graph tests:
+
+  ```bash
+  python -m pytest tests/test_edges.py tests/test_query_substrate.py -q
+  ```
+
+- [ ] Run `python scripts/verify` — expect PASS.
+- [ ] Commit:
+
+  ```bash
+  git add src/memoria_vault/runtime/subsystems/lib/edges.py tests/test_edges.py
+  git commit -m "feat(graph): project identity-keyed edges to durable paths (ERP-A.6)"
   ```
 # Section ERP-B — Catalog bridge fix + tension confirmation surface
 
@@ -5641,6 +6003,11 @@ procedure and include the regenerated goldens in that task's commit.
 ---
 
 ### Task ERP-B.2: `state.insert_concept_edge` — single-row upsert
+
+> **Execution override — v16 identity form:** Follow the 2026-07-29
+> path-projection amendment, point 5.  The historical path-as-ID INSERT,
+> target-id conflict key, and raw-ID fixtures below are superseded by the
+> source-resolution / durable-`target_path` triple contract.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (insert the new function
@@ -6191,6 +6558,12 @@ procedure and include the regenerated goldens in that task's commit.
 ---
 
 ### Task ERP-B.4: Retraction = row delete — `state.delete_concept_edge`
+
+> **Execution override — v16 identity form:** Follow the 2026-07-29
+> path-projection amendment, point 5.  Retraction resolves the source path,
+> normalizes the durable target path, and deletes the
+> `(source_concept_id, relation_type, target_path)` triple; it never deletes by
+> a nullable target ID.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (insert directly after
@@ -8028,7 +8401,11 @@ sections. This section owns **no schema migration** (v16 = NID-B, v17 = ERP-A,
 v18 = ERP-C per the binding version chain).
 
 **SPEC GAP:** the EDGES spec names ERP-C's typed-consequence engine but not its symbol; this section assumes `memoria_vault.runtime.subsystems.integrity.consequences.derive_consequences(vault, target_id, *, trigger: str, context: OperationContext) -> dict` returning `{"consequences": [{"type": str, "target_id": str}, ...]}` — reconcile the import path at plan assembly if ERP-C names it differently.
-**SPEC GAP:** the spec names ERP-B's §2 claim→work bridge but not its accessor; this section assumes `memoria_vault.runtime.subsystems.lib.edges.claim_work_edges(vault: Path) -> list[dict]` with rows shaped like `state.concept_edges` rows (`source_concept_id`, `relation_type`, `target_concept_id`, `attributes_json`) — reconcile at assembly.
+**Reconciled bridge contract:** the claim→work bridge is not a second raw-row
+accessor.  ERP-B's checked `catalog/sources/*` link is indexed into
+`concept_edges`; ERP-A.6 projects it as a normal path record, so structural
+impact consumes it through `concept_edge_path_records` with every other edge.
+This prevents a second graph reader from leaking v16 identity keys.
 **SPEC GAP:** the spec does not fix where the §4 absence-honesty threshold lives; this section registers it as `.memoria/config/edges.yaml` key `warrant_absence_threshold` (int ≥ 1; absent/malformed = disabled), following the shipped `feedback.yaml` fail-safe pattern (`runtime/feedback.py:9-27`).
 **SPEC GAP:** whether reindex preserves a frontmatter link's `addressed`/`status` bit into `attributes_json` is Plan 22 G2S1.1/.2 territory; this section reads `attributes_json["addressed"]` defaulting to `True` when absent.
 
@@ -8315,13 +8692,22 @@ def _write_blast_radius_report(
 
 ### Task ERP-D.3: finding hygiene — `no-support` collapse + guarded `unstated-warrant` retarget
 
+> **Execution override — identity-safe warrant analysis:** Follow the
+> 2026-07-29 path-projection amendment, point 7.  The historical raw
+> `state.concept_edges` endpoint loop, path-keyed edge fixture, and helper that
+> parses `attributes_json` in `knowledge.py` are superseded by
+> `edges.concept_edge_path_records(vault, checked_only=False)`.  This task may
+> compare the argument component only with projected `source_path` and
+> `target_path`; its only attribute input is the projection's parsed
+> `record["attributes"]`.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py` (ERP-A's module; append the config loader)
 - Modify: `src/memoria_vault/runtime/knowledge.py` (`_argument_gap_findings` lines 2943-2977, `_argument_next_action` lines 957-968, `analyze_project_argument` call site line 1716; new `_warrant_absence_gap` helper near `_note_edges` line 3001)
 - Modify: `tests/test_project_knowledge.py` (append after line 121)
 
 **Interfaces:**
-- Consumes: **Plan 22 G2S1.2:** `state.concept_edges(vault, checked_only=False)` rows carrying `attributes_json` (`runtime/state.py:2055-2076` post-reshape); **ERP-A:** `edges.py` module exists with the converged roster, and schema v17's `relation_type` CHECK admits `warrant` so a warrant row can be seeded in tests.
+- Consumes: **ERP-A.6:** `edges.concept_edge_path_records(vault, checked_only=False)` (durable endpoint paths plus parsed attributes, never raw identities); **ERP-A:** `edges.py` module exists with the converged roster, and schema v17's `relation_type` CHECK admits `warrant` so a warrant row can be seeded in tests.
 - Produces: `edges.warrant_absence_threshold(vault: Path) -> int | None` (None = disabled; the default); `knowledge._argument_gap_findings(counts, relation_count, *, warrant_gap: dict[str, Any] | None = None) -> list[dict[str, Any]]`; the `supports == 0` gap row is now `kind="no-support"` (alias pair deleted); `unstated-warrant` means "grounded claim component with no warrant edge or edge-attribute", fires only when the vault-wide warrant count ≥ the configured threshold, and always carries `warrant_count` as denominator (absence-honesty guard, EDGES section 4).
 
 **Steps:**
@@ -8390,9 +8776,10 @@ def test_warrant_absence_finding_fires_above_threshold_with_denominator(
         tmp_path,
         [
             {
-                "source_concept_id": "notes/elsewhere-license.md",
+                "source_concept_id": ULID_ELSEWHERE_LICENSE,
                 "relation_type": "warrant",
-                "target_concept_id": "notes/elsewhere-claim.md",
+                "target_concept_id": ULID_ELSEWHERE_CLAIM,
+                "target_path": "notes/elsewhere-claim.md",
                 "check_status": "checked",
                 "source_path": "notes/elsewhere-license.md",
             }
@@ -8406,6 +8793,19 @@ def test_warrant_absence_finding_fires_above_threshold_with_denominator(
     assert rows[0]["warrant_count"] == 1
     assert rows[0]["severity"] == "medium"
 ```
+
+  **v16 fixture amendment:** `_seed_argument` and this test must write
+  id-bearing checked concepts with fixed valid ULIDs, then call
+  `trusted_writer.rebuild_concept_mirror_from_files(vault)` before inserting
+  any edge.  Seed the elsewhere warrant as a resolved ULID-keyed edge with
+  `source_concept_id=ULID_ELSEWHERE_LICENSE`,
+  `target_concept_id=ULID_ELSEWHERE_CLAIM`, and the durable
+  `source_path`/`target_path` values; do not use a path in either identity
+  field.  Add the complementary local-warrant case: its projected
+  `source_path` or `target_path` is in the component, so it suppresses the
+  `unstated-warrant` finding.  The assertions must prove the behavior after
+  the mirror re-keys paths to ULIDs rather than only in the provisional
+  path-keyed state.
 
 - [ ] Run to verify they fail:
   `python -m pytest tests/test_project_knowledge.py::test_no_support_gap_replaces_unstated_warrant_alias tests/test_project_knowledge.py::test_warrant_absence_finding_disabled_by_default tests/test_project_knowledge.py::test_warrant_absence_finding_fires_above_threshold_with_denominator -v`
@@ -8503,37 +8903,30 @@ def _warrant_absence_gap(
     vault: Path, component: set[str], counts: dict[str, int]
 ) -> dict[str, Any] | None:
     """Guarded warrant-absence signal: grounded component, no warrant edge/attribute."""
-    from memoria_vault.runtime.subsystems.lib.edges import warrant_absence_threshold
+    from memoria_vault.runtime.subsystems.lib.edges import (
+        concept_edge_path_records,
+        warrant_absence_threshold,
+    )
 
     threshold = warrant_absence_threshold(vault)
     if threshold is None or counts["supports"] == 0:
         return None
     warrant_count = 0
     component_has_warrant = False
-    for row in state.concept_edges(vault, checked_only=False):
-        attributes = _concept_edge_attributes(row)
-        if row["relation_type"] != "warrant" and not attributes.get("warrant"):
+    for record in concept_edge_path_records(vault, checked_only=False):
+        attributes = record["attributes"]
+        if record["relation_type"] != "warrant" and not attributes.get("warrant"):
             continue
         warrant_count += 1
-        if row["source_concept_id"] in component or row["target_concept_id"] in component:
+        if record["source_path"] in component or record["target_path"] in component:
             component_has_warrant = True
     if warrant_count < threshold or component_has_warrant:
         return None
     return {"warrant_count": warrant_count}
-
-
-def _concept_edge_attributes(row: dict[str, Any]) -> dict[str, Any]:
-    raw = row.get("attributes_json")
-    if not isinstance(raw, str) or not raw.strip():
-        return {}
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        return {}
-    return data if isinstance(data, dict) else {}
 ```
 
-  (`json` is already imported at the top of `knowledge.py`; verify, add if not.)
+  (`json` is not needed by this task after the projection takes responsibility
+  for safe attribute parsing.)
   (3) In `analyze_project_argument` change line 1716 to:
 
 ```python
@@ -8565,38 +8958,63 @@ def _concept_edge_attributes(row: dict[str, Any]) -> dict[str, Any]:
 
 ### Task ERP-D.4: `structural_impact` rewires onto `concept_edges` + the bridge
 
+> **Execution override — projected endpoints:** Follow the 2026-07-29
+> path-projection amendment, point 6.  The historical raw
+> `state.concept_edges` endpoint loop and path-ID fixtures are superseded by
+> `edges.concept_edge_path_records(vault, checked_only=False)`.  The record
+> projection is required here because `attributes["addressed"]` must survive
+> the rewire; the strict three-field pair API cannot carry it.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/subsystems/processing/project/structural_impact_graph.py` (add `substrate_edges`; delete `build_edges`/`build_descriptive_edges`, lines 105-133)
 - Modify: `src/memoria_vault/runtime/subsystems/processing/project/structural_impact.py` (imports lines 13-29; `analyze_survey` edge read line 79; `analyze` edge read line 262; `gap_taxonomy` non-note guard lines 166-167)
 - Modify: `tests/test_project_structural_impact.py` (fixtures lines 10-90 and the edge seeding in every test)
 
 **Interfaces:**
-- Consumes: **Plan 22 G2S1.1/.2:** `state.replace_concept_edges(vault, rows)` (upsert-and-prune sparing tension rows) and edge rows with `edge_id` + `attributes_json` via `state.concept_edges(vault, checked_only=False)`; **ERP-B:** `edges.claim_work_edges(vault) -> list[dict]` (see SPEC GAP; claim→work rows whose targets are `catalog/sources/*` virtual paths). Roster convergence of `RELATIONS` (`structural_impact_graph.py:14`) is **ERP-A's** — untouched here.
-- Produces: `structural_impact_graph.substrate_edges(vault: Path, notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]` — the only edge source for structural impact (no frontmatter text parsing); `Edge.addressed` from `attributes_json["addressed"]` defaulting `True`. `impact.analyze` / `impact.run` signatures unchanged.
+- Consumes: **ERP-A.6:** `edges.concept_edge_path_records(vault, checked_only=False)` (identity-safe source/target paths plus parsed attributes, including ERP-B's `catalog/sources/*` bridge targets). Test setup may use Plan 22's `state.replace_concept_edges(vault, rows)` after rebuilding a v16 mirror, but production code must never read raw state endpoints. Roster convergence of `RELATIONS` (`structural_impact_graph.py:14`) is **ERP-A's** — untouched here.
+- Produces: `structural_impact_graph.substrate_edges(vault: Path, notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]` — the only edge source for structural impact (no frontmatter text parsing); `Edge.addressed` from projected `attributes["addressed"]`, defaulting to `True`. `impact.analyze` / `impact.run` signatures unchanged.
 
 **Steps:**
 
 - [ ] Update the test fixtures to seed the substrate. In `tests/test_project_structural_impact.py` add after the imports (line 8):
 
 ```python
+import json
+
 from memoria_vault.runtime import state
 
 _EDGE_ROWS: dict[str, list[dict]] = {}
 
 
-def link_row(vault: Path, source: str, relation: str, target: str):
+def link_row(
+    vault: Path, source: str, relation: str, target: str, *, addressed: bool = True
+):
+    with state.connect(vault) as conn:
+        source_id = state.resolve_concept_id(conn, f"notes/{source}.md")
+        target_id = state.resolve_concept_id(conn, f"notes/{target}.md")
     rows = _EDGE_ROWS.setdefault(str(vault), [])
     rows.append(
         {
-            "source_concept_id": f"notes/{source}.md",
+            "source_concept_id": source_id,
             "relation_type": relation,
-            "target_concept_id": f"notes/{target}.md",
+            "target_concept_id": target_id,
+            "target_path": f"notes/{target}.md",
             "check_status": "checked",
             "source_path": f"notes/{source}.md",
+            "attributes_json": json.dumps({"addressed": addressed}),
         }
     )
     state.replace_concept_edges(vault, rows)
 ```
+
+  The fixture writes each note with a fixed valid ULID and rebuilds the v16
+  concept mirror before the first `link_row` call.  Thus `resolve_concept_id`
+  returns a ULID in the setup while the projection observed by the code under
+  test returns only the note paths.  The unresolved-row test uses a ULID source,
+  `target_concept_id=None`, and `target_path="notes/ghost.md"`; it must not use
+  a path in an identity column.  Add one `addressed=False` row and assert it is
+  absent from the addressed structural result, proving that metadata survived
+  without a raw state read.
 
   and append `link_row(vault, name, relation, target)` as the last line of both the `claim()` helper (after line 63) and the `gap()` helper (after line 80). Every existing test seeds edges only through these two helpers, so no per-test edits are needed; the frontmatter `links:` blocks stay (they remain the PI-authored source of the substrate fill, and `find_thesis`/`normalize_target` still read frontmatter).
 
@@ -8625,9 +9043,10 @@ def test_substrate_edges_skips_unresolved_and_bridge_targets_survive(tmp_path):
     seed_mature_graph(tmp_path)
     rows = _EDGE_ROWS[str(tmp_path)] + [
         {
-            "source_concept_id": "notes/a.md",
+            "source_concept_id": ULID_A,
             "relation_type": "supports",
-            "target_concept_id": "notes/ghost.md",
+            "target_concept_id": None,
+            "target_path": "notes/ghost.md",
             "check_status": "checked",
             "source_path": "notes/a.md",
         }
@@ -8652,35 +9071,23 @@ def substrate_edges(
     vault: Path, notes: dict[str, Note], resolver: dict[str, str]
 ) -> list[Edge]:
     """Read edges from the concept_edges substrate plus the claim→work bridge."""
-    import json
-
-    from memoria_vault.runtime import state
-    from memoria_vault.runtime.subsystems.lib.edges import claim_work_edges
+    from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_records
 
     edges: list[Edge] = []
-    for row in state.concept_edges(vault, checked_only=False) + claim_work_edges(vault):
-        source = resolver.get(_edge_key(str(row["source_concept_id"])))
-        target_raw = _edge_key(str(row["target_concept_id"]))
+    for record in concept_edge_path_records(vault, checked_only=False):
+        source = resolver.get(_edge_key(record["source_path"]))
+        target_raw = _edge_key(record["target_path"])
         target = resolver.get(target_raw)
         if target is None and target_raw.startswith("catalog/sources/"):
-            target = target_raw  # virtual work node from the bridge
+            target = target_raw  # virtual work node carried by the projection
         if not source or not target or source == target:
             continue
-        addressed = True
-        raw = row.get("attributes_json")
-        if isinstance(raw, str) and raw.strip():
-            try:
-                attributes = json.loads(raw)
-            except json.JSONDecodeError:
-                attributes = {}
-            if isinstance(attributes, dict) and "addressed" in attributes:
-                addressed = bool(attributes["addressed"])
         edges.append(
             Edge(
                 source=source,
                 target=target,
-                relation=str(row["relation_type"]),
-                addressed=addressed,
+                relation=record["relation_type"],
+                addressed=bool(record["attributes"].get("addressed", True)),
             )
         )
     return edges
@@ -8716,14 +9123,20 @@ def _edge_key(path: str) -> str:
 
 ### Task ERP-D.5: `curate-note-link` warrant parameter → `attributes_json.warrant`
 
+> **Execution override — v16 writer result:** Follow the 2026-07-29
+> path-projection amendment, point 8.  The historical path-hash calculation,
+> raw `state.concept_edges` filters, and path-keyed test fixture below are
+> superseded by a rebuilt ULID mirror, the `insert_concept_edge` result, and
+> `edges.concept_edge_path_records` assertions.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/knowledge.py` (`curate_note_link`, lines 346-414)
 - Modify: `src/memoria_vault/runtime/worker.py` (`curate-note-link` handler, lines 471-497)
 - Modify: `tests/test_knowledge.py` (append after line 428)
 
 **Interfaces:**
-- Consumes: **Plan 22 G2S1.2:** `state.concept_edge_id(source, relation, target) -> str` (sha256 triple `[:24]` — deterministic, so pre-reindex addressing is sound); **ERP-B:** `state.insert_concept_edge(vault, *, source, relation_type, target, attributes=None, context) -> dict` with upsert mode keyed on the deterministic `edge_id` (result dict includes `"edge_id"`).
-- Produces: `knowledge.curate_note_link(vault, source_note_path, link_type, target_path, *, context, reason="", warrant="") -> dict` — when `warrant` is non-blank the same trusted-writer transaction upserts `attributes_json.warrant` on the deterministic edge and the result/journal event carry `edge_id` and `warrant`; worker payload key `warrant` on `curate-note-link`. (EDGES section 4 write path: warrant *text* on a grounding edge — the lightweight Option-B form; the `warrant` *relation* itself is a plain `link_type` after ERP-A activates the roster.)
+- Consumes: **ERP-A.6:** `edges.concept_edge_path_records(vault, checked_only=False)` for identity-safe postcondition checks; **ERP-B.2:** `state.insert_concept_edge(vault, *, source, relation_type, target, attributes=None, context) -> dict` with v16 path-boundary resolution, PK-triple upsert, and result `{"edge_id": str, "created": bool, "attributes": dict}`.  The writer supplies paths only; it never derives an edge id itself.
+- Produces: `knowledge.curate_note_link(vault, source_note_path, link_type, target_path, *, context, reason="", warrant="") -> dict` — when `warrant` is non-blank the same trusted-writer transaction upserts `attributes_json.warrant` on the identity-keyed edge and the result/journal event carry `edge_id` and `warrant`; worker payload key `warrant` on `curate-note-link`. (EDGES section 4 write path: warrant *text* on a grounding edge — the lightweight Option-B form; the `warrant` *relation* itself is a plain `link_type` after ERP-A activates the roster.)
 
 **Steps:**
 
@@ -8734,14 +9147,20 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
+    from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_records
+    from memoria_vault.runtime.trusted_writer import rebuild_concept_mirror_from_files
+    from memoria_vault.runtime.vaultio import new_ulid
+
+    source_id, target_id = new_ulid(), new_ulid()
     _md(
         vault / "notes/source.md",
-        "type: note\ncheck_status: checked\ntitle: Source\nstatus: accepted\n",
+        f"type: note\nid: {source_id}\ncheck_status: checked\ntitle: Source\nstatus: accepted\n",
     )
     _md(
         vault / "notes/target.md",
-        "type: note\ncheck_status: checked\ntitle: Target\nstatus: accepted\n",
+        f"type: note\nid: {target_id}\ncheck_status: checked\ntitle: Target\nstatus: accepted\n",
     )
+    rebuild_concept_mirror_from_files(vault)
 
     result = curate_note_link(
         vault,
@@ -8754,19 +9173,25 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
         machine="curator",
     )
 
-    edge_id = state.concept_edge_id("notes/source.md", "supports", "notes/target.md")
-    assert result["edge_id"] == edge_id
-    rows = [
-        row
-        for row in state.concept_edges(vault, checked_only=False)
-        if row["source_concept_id"] == "notes/source.md"
-        and row["target_concept_id"] == "notes/target.md"
+    edge_id = str(result["edge_id"])
+    assert edge_id
+    records = [
+        record
+        for record in concept_edge_path_records(vault, checked_only=False)
+        if record["source_path"] == "notes/source.md"
+        and record["relation_type"] == "supports"
+        and record["target_path"] == "notes/target.md"
     ]
-    assert len(rows) == 1
-    import json as _json
-
-    attributes = _json.loads(rows[0]["attributes_json"])
-    assert attributes["warrant"] == "RCTs in this population license the inference"
+    assert records == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/target.md",
+            "relation_type": "supports",
+            "attributes": {"warrant": "RCTs in this population license the inference"},
+        }
+    ]
+    assert source_id not in repr(records)
+    assert target_id not in repr(records)
     event = list(iter_jsonl(vault / ".memoria/journal/curator.jsonl"))[-1]
     assert event["warrant"] == "RCTs in this population license the inference"
     assert event["edge_id"] == edge_id
@@ -8782,14 +9207,15 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
         machine="curator",
     )
     assert updated["changed"] is False
-    rows = [
-        row
-        for row in state.concept_edges(vault, checked_only=False)
-        if row["source_concept_id"] == "notes/source.md"
-        and row["target_concept_id"] == "notes/target.md"
+    assert updated["edge_id"] == edge_id
+    records = [
+        record
+        for record in concept_edge_path_records(vault, checked_only=False)
+        if record["source_path"] == "notes/source.md"
+        and record["relation_type"] == "supports"
+        and record["target_path"] == "notes/target.md"
     ]
-    assert len(rows) == 1
-    assert _json.loads(rows[0]["attributes_json"])["warrant"] == "Updated license"
+    assert records[0]["attributes"]["warrant"] == "Updated license"
 ```
 
 - [ ] Run to verify it fails:
@@ -8831,7 +9257,7 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
 
 - [ ] Regenerate floor goldens if drifted (manifest note at top) and commit:
   `git add src/memoria_vault/runtime/knowledge.py src/memoria_vault/runtime/worker.py tests/test_knowledge.py tests/fixtures/floor/goldens`
-  Message: `feat(knowledge): curate-note-link warrant text upserts attributes_json.warrant on the deterministic edge (EDGES section 4)` ending with
+  Message: `feat(knowledge): curate-note-link warrant text upserts attributes_json.warrant on the identity-keyed edge (EDGES section 4)` ending with
   `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
 
 ---

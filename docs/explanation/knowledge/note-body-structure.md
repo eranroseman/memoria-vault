@@ -41,18 +41,28 @@ agenda.
 
 ---
 
-## Why claim-bearing notes have a required Links section
+## Why claim-bearing notes benefit from Claim, Evidence, and Links sections
 
-The three required sections of a claim-bearing note correspond to three
-epistemic commitments.
+The recommended Claim, Evidence, and Links headings of a claim-bearing note
+correspond to three epistemic commitments. They guide authors; the body headings
+are not validated.
 
 The `## Claim` section states the single durable idea. Atomicity is the constraint here — one claim per note, not one topic. The discipline matters because wikilinks citing a multi-claim note become ambiguous: does the link support claim A or claim B? And when evidence changes, which part of the note gets superseded?
 
 The `## Evidence and argument` section is what distinguishes a claim from an assertion. A claim with no evidence is an opinion. A claim with citekeys pointing to supporting sources is an argument that can be verified, updated, and superseded as evidence accumulates.
 
-The `## Links` section is the most structurally significant. A claim with no `links:` to other claims has not made it into the knowledge graph — it exists in isolation, where it cannot compound. The `links:` here are *authored* connections (as distinct from the *given* `relationships` on entities — that distinction is explained in [Document types and epistemic roles](document-types.md)), and they are what make the vault a graph rather than a collection. A note that supports, contradicts, or extends another note has been integrated; one without links has not.
+The `## Links` section is the most structurally significant convention. The
+required `links:` frontmatter records authored connections (as distinct from
+the *given* `relationships` on entities — that distinction is explained in
+[Document types and epistemic roles](document-types.md)), and is what makes the
+vault a graph rather than a collection. A note that supports, contradicts, or
+extends another note has been integrated; one without links has not.
 
-This is the **Zettelkasten** principle at the center of the method: a note's value comes from its links, not its contents — an unlinked note is, in Luhmann's terms, lost to the box. The required Links section makes that discipline structural rather than aspirational (see [Intellectual foundations](../rationale/foundations/intellectual-foundations.md#luhmanns-zettelkasten)).
+This is the **Zettelkasten** principle at the center of the method: a note's
+value comes from its links, not its contents — an unlinked note is, in
+Luhmann's terms, lost to the box. Required `links:` frontmatter makes that
+discipline structural; the recommended body heading keeps it legible (see
+[Intellectual foundations](../rationale/foundations/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 

@@ -13,24 +13,26 @@ also leave SQLite and journal evidence. There is no card, nothing to claim, and
 no state transition. Logging runs underneath request-driven workflows rather
 than being one of them.
 
-A second, per-request log — a deterministic digest the Linter writes from the
-audit trail — accumulates alongside it under `system/logs/sessions/`. This page
-explains the two-log design and why they stay separate.
+A second, per-request audit digest — a deterministic derivative the Linter
+writes from policy-audit rows grouped by `request_id` — accumulates alongside
+it under `system/logs/sessions/`. It does not summarize SQLite worker-request
+rows or journal events. This page explains the two-log design and why these
+evidence streams stay separate.
 
 ---
 
 ## Two logs
 
-The audit log and per-request summaries are different artifacts written for
-different readers. The policy audit log records gated adapter writes for
-forensic review. Request rows, journal events, and per-request summaries show
-what worker-controlled work accomplished so the PI can inspect a session without
-reading every event.
+The audit log and its per-request digests are different artifacts for different
+readers. The policy audit log records individual gated adapter writes for
+forensic review; its digest compacts those audit rows for one `request_id`.
+SQLite request rows and journal events remain separate evidence of
+worker-controlled work.
 
-These two logs are the **audit** and **analytics** planes of the three planes
-described in [Telemetry architecture](telemetry-architecture.md); this page
-does not cover the third (diagnostics), which is intentionally out of the
-session-inspection surface.
+The audit log and its digest preserve audit evidence, while SQLite request and
+journal records preserve execution evidence. This page does not cover the
+separate diagnostics plane described in
+[Telemetry architecture](telemetry-architecture.md).
 
 The exact paths, writers, and retention contract belong in [Memory
 substrates](../../reference/pipelines-and-io/memory-substrates.md) and [Policy audit
@@ -45,23 +47,26 @@ authorized?" — it is forensic and append-only. Because each policy write is
 hash-paired (the mechanism is owned by
 [Policy audit log](../../reference/control-and-policy/policy-audit-log.md)), a write can be
 reversed and an edit made outside the trail is detectable; the Linter closes the
-loop over this evidence with audit and hash-drift detectors. Worker request rows,
-journal events, and per-request summaries answer "what did the request
-accomplish?" — they are request evidence, not policy-gate evidence.
+loop over this evidence with audit and hash-drift detectors. Per-request
+digests make that same policy-audit evidence easier to inspect without
+replacing the detailed log. SQLite request rows and journal events answer what
+the worker request accomplished; they are not inputs to the session digest.
 
-Combining them would make the audit log verbose (request detail) and would make
-request summaries harder to query (mixed with per-write events). Each log has a
-different reader: the audit log feeds tamper detection and may feed optional
-dashboards; request summaries are for the PI reviewing what happened. The decision is
-[quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+Combining audit, request/journal, and diagnostic evidence would blur their
+different authorities. The audit log feeds tamper detection and may feed
+optional dashboards; its per-request digests help the PI review the recorded
+adapter activity. The decision is [quarantine-and-verify with durable,
+audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 ---
 
 ## Filename collision safety
 
-Per-request files are named by `YYYY-MM-DD-HHMM`, so repeated operator runs get
-stable, sortable names. The supported deployment model remains local-only;
-multi-machine sync needs its own deployment decision before support.
+Per-request files use a `YYYY-MM-DD-HHMM` base name from the earliest valid
+policy-audit timestamp.
+Requests that share a start minute receive deterministic `-2`, `-3`, … suffixes,
+so the names stay stable and sortable. The supported deployment model remains
+local-only; multi-machine sync needs its own deployment decision before support.
 
 ---
 
@@ -69,4 +74,4 @@ multi-machine sync needs its own deployment decision before support.
 
 - The Linter operation (reads `system/logs/`; runs the integrity checks; writes the request digests): [Operations](../execution/operations.md)
 - Session-log granularity (per-request files, not per-action): [Memory substrates](../../reference/pipelines-and-io/memory-substrates.md)
-- Audit log (the other log): [Policy gate](../../reference/control-and-policy/policy-mcp.md)
+- Audit log contract: [Policy audit log](../../reference/control-and-policy/policy-audit-log.md)

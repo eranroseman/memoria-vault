@@ -31,6 +31,64 @@
 10. **Golden serialization:** D-section tasks add journal events and may drift floor goldens (`tests/fixtures/floor/goldens/`). Regenerate with `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_invariants.py -q`, review `git diff --stat tests/fixtures/floor/goldens/`, commit with the task. Never run golden-touching tasks concurrently with other plans' golden tasks (Plan 21 COV.*, Plan 22 S68.3/COST.4, graph ERP-D.1/D.5, surfaces contract 10 list).
 11. **TEST_LEVELS registrations** (`tests/conftest.py:18`): new files — `test_telemetry_events.py: "contract"`, `test_telemetry_read_paths.py: "runtime"`, `test_attention_ordering.py: "contract"`, `test_attention_flow.py: "contract"`, `test_dashboard_view.py: "contract"`, `test_decision_rules.py: "contract"`. Extended files (`test_empirical_events.py`, `test_operations.py`, `test_worker_*.py`, `test_loudness.py`, `test_knowledge.py`, `test_feedback_instrumentation.py`) are already registered — no conftest change.
 
+## Plan-reconciliation amendment — dashboard read purity and registered view (2026-07-29)
+
+This amendment supersedes the conditional-router wording and incomplete CLI
+snippet in H.2, and H.4's instruction to write a card or change rule status
+from `assemble_dashboard`. The retained snippets are drafting history. A
+dashboard read is a read under U1's floor guard regardless of whether it is
+called from the CLI, engine, or HTTP.
+
+1. **Assessment is pure; application is explicit.**
+   `assemble_dashboard(vault)` remains a pure seven-panel assembler: it neither
+   writes a vault file nor changes a decision-rule status. H.4 replaces its
+   mutating end-of-assembly call with a pure
+   `assess_decision_rules(panels, rules) -> list[str]` that returns the armed
+   rule ids that would fire; the `decision_rules` panel exposes those ids as
+   `would_fire`. A separate PI-protected worker operation,
+   `apply-decision-rule-notices`, recomputes the panels and assessment from the
+   workspace (never trusts caller-supplied panels), then performs the existing
+   deduped `write_finding` and `update_rule_status` effects. It is the only
+   path that may mint a notice or flip `armed` to `fired`; it needs a capability
+   manifest, operation registration, and its normal floor treatment. Tests
+   prove both that repeated `assemble_dashboard` calls leave all non-SQLite
+   vault files and rule statuses unchanged, and that the explicit operation
+   makes exactly one deduped notice/status transition.
+
+2. **H.2 owns a registry-backed HTTP view, not an ad-hoc router branch.**
+   Run its view portion after U3-ENG.4 and U1 J.1/M.4. Add the HTTP-only
+   `views.dashboard` action with `job: "review"`, engine
+   `read_dashboard_view`, kind `read`, workspace scope, no params, `GET
+   /v1/views/dashboard`, and `response_version: ENGINE_READ_API_VERSION`.
+   `engine_api.read_dashboard_view(workspace)` wraps the pure assembler with
+   `_read_payload(view=_view("dashboard", blocks))`, returning exactly
+   `{ok, api_version, view: {version: "view-spec.v1", kind: "dashboard",
+   blocks}}`. `blocks` is seven top-level `text` blocks in this fixed order:
+   `attention_flow`, `dispositions`, `evidence_review`, `reads_staleness`,
+   `edge_writes`, `exploration`, `decision_rules`; each has id
+   `dashboard-<panel>` and text equal to
+   `json.dumps(panels[panel], ensure_ascii=False, sort_keys=True,
+   separators=(",", ":"))`. No dashboard view mutates or embeds an action
+   row.
+
+3. **Complete surface and CLI wiring.** H.2 adds the registry row, the
+   registered `_read` branch, `ARG_TABLE` HTTP entry, surface-contract/OpenAPI
+   expectations, direct dispatch and wrong-method tests, a real-server bearer
+   test, and a direct read-only test. It does not add an HTTP shortcut outside
+   `HTTP_ROUTES`. The engine-direct `memoria dashboard` front remains separate
+   from U2's later CLI-only `dashboard.read` row: call `_common(dashboard_cmd)`,
+   emit `{ok: True, dashboard: assemble_dashboard(...)}`, update the pinned
+   command set, and park `"memoria dashboard"` in U1 M.4's
+   `CLI_ONLY_COMMANDS` until U2 T.3 moves it out. The H.2 commit stages every
+   touched engine, registry, transport, floor, test, CLI, and weekly-review
+   documentation path explicitly.
+
+4. **Cross-plan preservation.** U1 J.1 must retain every already-landed
+   `views.*` row when adding its job field and assign each the `review` job;
+   U2 T.3 remains the owner of `dashboard.read` and `read_dashboard`, not
+   `views.dashboard` or `read_dashboard_view`. This is additive to U3's view
+   transport, not a second view registry.
+
 ---
 # Section T — Telemetry substrate (spec §1; slices 1–3)
 

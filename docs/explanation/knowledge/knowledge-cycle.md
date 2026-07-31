@@ -73,18 +73,18 @@ slip-box depended on the same density (see [Intellectual foundations](../rationa
 
 ## Where the cycle gets stuck
 
-The shipped CLI and read API show where work stopped. Sources awaiting work are
-visible through `memoria list --type work`, `memoria work export`, request
-state, and file-backed Inbox attention; no separate named pipeline ships.
-Unconnected claims remain visible in the checked note graph, and open
-verification findings appear as Inbox `flag`/`alert` attention items. These
-surfaces expose stalled work before it hardens.
+The shipped CLI and read API make stalled work inspectable. Sources awaiting
+work appear in catalog, request, and file-backed Inbox attention state; no
+separate named pipeline ships. Unconnected claims remain visible in the checked
+note graph, and open verification findings appear as Inbox `flag`/`alert`
+attention items. These surfaces expose stalled work before it hardens.
 
-The project transition is now explicit: `memoria project slice` proposes a
-checked outline, `compose` writes a draft, `verify` gates the evidence markers,
-and `promote` turns selected passages into unchecked notes. Broad writability
-scoring remains out of scope; the shipped signal is concrete file state and
-verification findings, not a synthetic score.
+The current project transition makes its artifacts explicit: a slice identifies
+the intended evidence set, a draft holds its composition, verification evaluates
+evidence markers, and promotion returns selected passages as unchecked notes for
+review. Broad writability scoring remains out of scope; the shipped signal is
+concrete file state and verification findings, not a synthetic score. For the
+task sequence, see [Compose a draft](../../how-to-guides/project/compose-a-draft.md).
 
 ## Project slices
 
@@ -136,15 +136,15 @@ every actor but the PI.
 
 **Explanation**
 
-- The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
-- The daily practice surface: [Knowledge how-to guides](../../how-to-guides/knowledge/README.md)
 - The epistemic roles of document types: [Document types and epistemic roles](document-types.md)
 - Why promotion is gated: [Promotion and the write boundary](promotion-and-gated-zones.md)
 - The folder structure the cycle flows through: [The vault](../architecture/vault.md)
-- The project drafting task flow: [Compose a draft](../../how-to-guides/project/compose-a-draft.md)
 - The read contract behind project slices: [Engine read API](../../reference/commands-and-transports/read-api.md)
 
 **How-to**
 
+- The daily practice surface: [Knowledge how-to guides](../../how-to-guides/knowledge/README.md)
+- The Inbox disposition task: [Work the action queue](../../how-to-guides/inbox/work-the-action-queue.md)
 - The weekly maintenance pass: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
 - The cycle's key linking step: [Link checked notes](../../how-to-guides/knowledge/link-checked-notes.md)
+- The project drafting task flow: [Compose a draft](../../how-to-guides/project/compose-a-draft.md)

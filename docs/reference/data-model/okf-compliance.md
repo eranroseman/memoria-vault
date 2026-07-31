@@ -13,8 +13,8 @@ conformance bar; the rationale lives in
 
 ## The bar
 
-- Every non-reserved `.md` file has parseable YAML frontmatter with a
-  non-empty `type`.
+- Every non-reserved Markdown Concept under a configured bundle root has
+  parseable YAML frontmatter with a non-empty `type`.
 - Reserved files (`index.md`, `log.md`) follow their reserved structure.
 - The **OKF Concept ID** is path-derived (the file path minus `.md`); a
   Concept's **internal id** (a ULID for `note`/`hub`/`project`; the source

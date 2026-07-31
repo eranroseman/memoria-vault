@@ -595,8 +595,14 @@ def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
             f"{markdown_code_span(subject)} outside the trusted writer; until "
             "reviewed the file can re-enter Ask and pass the export gate."
         )
-        subject_digest = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
-        slug = f"cs3-restriction-key-removed-{key}-{subject_digest}-{subject}"
+        prefix = "cs3-restriction-key-removed-"
+        key_slug = re.sub(r"[^a-z0-9]+", "-", key.lower()).strip("-")
+        subject_slug = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")
+        subject_fingerprint = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
+        subject_limit = 60 - len(prefix) - len(subject_fingerprint) - len(key_slug) - 2
+        slug = (
+            f"{prefix}{subject_slug[:subject_limit].rstrip('-')}-{subject_fingerprint}-{key_slug}"
+        )
     else:
         current = str(finding["current_human_sha256"])
         title = f"Foreign edit: {subject}"
@@ -605,7 +611,15 @@ def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
             f"expected {markdown_code_span(str(finding['prior_human_sha256']))}, "
             f"found {markdown_code_span(current)}."
         )
-        slug = f"cs3-foreign-edit-{current.removeprefix('sha256:')[:12]}-{subject}"
+        prefix = "cs3-foreign-edit-"
+        current_slug = current.removeprefix("sha256:")[:12]
+        subject_slug = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")
+        subject_fingerprint = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
+        subject_limit = 60 - len(prefix) - len(current_slug) - len(subject_fingerprint) - 2
+        slug = (
+            f"{prefix}{current_slug}-"
+            f"{subject_slug[:subject_limit].rstrip('-')}-{subject_fingerprint}"
+        )
     write_finding(
         vault,
         "flag",
@@ -872,16 +886,52 @@ def materialize_unchecked(
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
+    contract = _load_contract(vault, None)
+    _bundle_for_target(contract, target)
     staged_path = _staged_path(vault, target)
     if not staged_path.is_file():
         raise FileNotFoundError(staged_path)
     frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
+    _validate_concept(contract, target, frontmatter)
+    output = state.output_record(vault, target)
+    if output is None:
+        raise ValueError(f"missing staged output record: {target}")
+    if output["concept_type"] != frontmatter["type"]:
+        raise ValueError(f"staged concept type does not match its output record: {target}")
+    if output["check_status"] != "unchecked":
+        raise ValueError(f"staged output is not unchecked: {target}")
     if context.actor != "pi":
         body = neutralize_untrusted_markdown(body)
     output_path = vault / target
+    payload_text = frontmatter_doc(frontmatter, body)
+    output_sha256 = sha256_bytes(payload_text.encode("utf-8"))
+    if output["output_sha256"] != output_sha256:
+        event = append_journal_event(
+            vault,
+            {
+                "event": EVENT_DERIVED,
+                "timestamp": now_iso(),
+                "output_id": target,
+                "staging_id": _rel(vault, staged_path),
+                "output_sha256": output_sha256,
+                "inputs": _latest_derived_inputs(vault, target),
+            },
+            context=context,
+        )
+        state.record_file_output(
+            vault,
+            output_id=target,
+            concept_type=str(frontmatter["type"]),
+            check_status="unchecked",
+            output_sha256=event["output_sha256"],
+            staging_id=event["staging_id"],
+            payload_text=payload_text,
+            context=context,
+            inputs=event["inputs"],
+        )
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     staged_path.unlink()
-    return {"output_id": target, "output_sha256": sha256_file(output_path)}
+    return {"output_id": target, "output_sha256": output_sha256}
 
 
 def quarantine_untraced(

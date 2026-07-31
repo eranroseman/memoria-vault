@@ -444,7 +444,8 @@ def _fill(template, manifest: dict):
 # each entry, including two corrections vs the original brief
 # (curate-note-link, enrich-source).
 #
-# Complete as of Task 7b-2: all 52 cataloged operation ids are registered
+# Every cataloged operation id has a floor entry; cross-worktree rendezvous may
+# add independently owned operations before this branch merges.
 # (7 seeded in Task 6, 22 in Task 7b-1, the final 23 in Task 7b-2) — see
 # test_floor_coverage.py's test_every_operation_has_a_floor_entry.
 OPERATION_REGISTRY: dict[str, dict] = {
@@ -615,6 +616,24 @@ OPERATION_REGISTRY: dict[str, dict] = {
         },
         "expect": "refused",
         "reason": "PDF capture requires PyMuPDF",
+    },
+    # O2 A.2 adds a policy-bound remote-PDF operation. The floor sweep runs as
+    # actor=agent, so this PI-only operation refuses before resolver, policy,
+    # or network work can run.
+    "capture-remote-pdf-source": {
+        "payload": {
+            "fetch": {
+                "method": "pdf-url",
+                "url": "https://www.frontiersin.org/articles/floor.pdf",
+            },
+            "capture": {
+                "work_id": "floor-sweep-remote-pdf",
+                "title": "Floor sweep remote PDF source",
+                "description": "A remote PDF captured by the floor sweep.",
+            },
+        },
+        "expect": "refused",
+        "reason": "requires PI actor authority",
     },
     # worker.py:1156-1194 (`_run_capture_source_operation`) requires
     # work_id/title/description/content_text; dispatches to

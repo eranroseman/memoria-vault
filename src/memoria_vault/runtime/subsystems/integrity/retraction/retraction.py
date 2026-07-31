@@ -14,11 +14,11 @@ most-authoritative first:
   3. Open Retractions  GET https://openretractions.com/api/doi/{doi}/data.json
      -> .retracted (an independent cross-check; data ~2020).
 
-The tool is **deterministic and read-only** — index/HTTP lookup + boolean combine.
-It writes nothing and never flips a note; the caller reports the verdict and the
-human decides (flag-don't-fix). Stdlib only (urllib, csv), so tests run offline
-against fixtures with no network. If the RW CSV is absent the checker still
-works, degraded to the two live-API sources.
+The `--doi` lookup is **deterministic and read-only** — index/HTTP lookup +
+boolean combine. `--sweep` reads checked SQLite Catalog Works and writes an
+Inbox `alert` for each retracted DOI; it never mutates Work state. Stdlib only
+(urllib, csv), so tests run offline against fixtures with no network. If the RW
+CSV is absent the checker still works, degraded to the two live-API sources.
 
     python retraction.py --refresh               # download/refresh the RW CSV
     python retraction.py --doi 10.x/y            # one-off CLI lookup (live)
@@ -35,8 +35,6 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
-
-from memoria_vault.runtime.vaultio import read_frontmatter
 
 CROSSREF_URL = "https://api.crossref.org/works/{doi}"
 OPEN_RETRACTIONS_URL = "https://openretractions.com/api/doi/{doi}/data.json"
@@ -301,51 +299,49 @@ def check_doi(doi: str, offline: bool = False) -> dict:
 
 
 def sweep(vault: Path, offline: bool = True) -> dict:
-    """Scan catalog source DOIs against the local RW CSV; raise an Inbox
-    `alert` for each retracted work (the writing half of the sweep operation)."""
+    """Scan checked SQLite Catalog Work DOIs and write an Inbox alert per hit."""
+    from memoria_vault.runtime import state
     from memoria_vault.runtime.subsystems.lib import inbox as inbox_writer
 
     checked = hits = 0
-    d = vault / "catalog" / "sources"
-    if d.is_dir():
-        for note in sorted(d.glob("*/source.md")):
-            fm = read_frontmatter(note)
-            doi = str(fm.get("doi") or (fm.get("identifiers") or {}).get("doi") or "").strip()
-            if not doi:
-                continue
-            checked += 1
-            result = check_doi(doi, offline=offline)
-            if result.get("retracted"):
-                hits += 1
-                ck = str(fm.get("citekey") or "")
-                inbox_writer.write_finding(
-                    vault,
-                    "alert",
-                    f"Retraction: {note.stem}",
-                    f"DOI {doi} is retracted "
-                    f"({result.get('nature') or 'see retraction record'}); claims citing it "
-                    "need re-adjudication.",
-                    raised_by="sweep",
-                    agent_recommendation="issues-found",
-                    target=note.relative_to(vault).as_posix(),
-                    citekey=ck,
-                    loudness="alert",
-                )
+    for source in state.catalog_sources(vault):
+        doi = str(source.get("doi") or "").strip()
+        if not doi:
+            continue
+        checked += 1
+        result = check_doi(doi, offline=offline)
+        if result.get("retracted"):
+            hits += 1
+            work_id = str(source["work_id"])
+            inbox_writer.write_finding(
+                vault,
+                "alert",
+                f"Retraction: {source['title']}",
+                f"DOI {doi} is retracted "
+                f"({result.get('nature') or 'see retraction record'}); claims citing it "
+                "need re-adjudication.",
+                raised_by="sweep",
+                agent_recommendation="issues-found",
+                target=f"catalog/sources/{work_id}",
+                citekey=str(source.get("citekey") or ""),
+                loudness="alert",
+            )
     return {"checked": checked, "retracted": hits}
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Retraction sweep operation (Retraction Watch CSV + CrossRef + Open Retractions)"
+        description="Retraction DOI lookup and checked SQLite Work sweep "
+        "(Retraction Watch CSV + CrossRef + Open Retractions)"
     )
     ap.add_argument(
         "--refresh", action="store_true", help="download/refresh the Retraction Watch CSV and exit"
     )
-    ap.add_argument("--doi", help="one-off CLI lookup (makes live HTTP calls)")
+    ap.add_argument("--doi", help="one-off read-only DOI lookup (makes live HTTP calls)")
     ap.add_argument(
         "--sweep",
         action="store_true",
-        help="scan catalog DOIs; write Inbox alerts for retracted works",
+        help="scan checked SQLite Catalog Works; write Inbox alerts for retracted works",
     )
     ap.add_argument("--vault", type=Path, help="vault root (for --sweep)")
     args = ap.parse_args()

@@ -25,7 +25,7 @@ findings use the base variant.
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Exported CSL JSON and BibTeX files stage unchecked Work rows and queue DOI enrichment. Live Zotero API and annotation import are outside the standalone path. |
+| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Exported CSL JSON and BibTeX files stage unchecked Work rows; `memoria work import --enrich` queues DOI enrichment for each newly admitted DOI-bearing entry. Live Zotero API and annotation import are outside the standalone path. |
 | **`bibliography.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized after bibliography-changing captures or enrichment; never hand-maintained. |
 
 ---
