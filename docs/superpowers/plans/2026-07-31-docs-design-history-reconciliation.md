@@ -123,6 +123,8 @@
 
   Run `python scripts/verify`, inspect its full output and exit code, then run `git status --short --branch` and `git diff main...HEAD --check`.
 
+  Final verification after CSpell correction `333e377b`: the full gate exited 0 with 2707 passed, 11 skipped, and 1 warning; the offline e2e smoke was green and the final result was `verify: OK`.
+
 - [x] **Step 3: Record issue tracking.**
 
   Add a concise completion comment to the existing documentation reconciliation tracker, GitHub issue `#1504`, naming the bootstrap/reference, navigation, and curated-history corrections plus the verification result. Do not close the tracker because it remains the additive documentation workstream.
