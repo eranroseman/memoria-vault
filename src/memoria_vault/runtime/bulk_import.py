@@ -55,20 +55,37 @@ _DATASET_DOI_PREFIXES = frozenset(
     {"10.5281", "10.5061", "10.6084", "10.7910", "10.17632", "10.3886", "10.15468", "10.24432"}
 )
 _DUPLICATE_IDENTIFIER_FIELDS = ("arxiv", "pmcid")
+_BIBTEX_ENTRY_START = re.compile(r"@\s*[A-Za-z][A-Za-z0-9_-]*\s*[({]")
 
 
 def split_bibtex_entries(text: str) -> list[str]:
     """Split BibTeX text on top-level @ boundaries, brace- and paren-aware."""
     entries: list[str] = []
-    index = text.find("@")
+    index = _next_bibtex_entry_start(text, 0)
     while index != -1:
         end = _entry_end(text, index)
         if end is None:
             entries.append(text[index:].strip())
             break
         entries.append(text[index : end + 1].strip())
-        index = text.find("@", end + 1)
+        index = _next_bibtex_entry_start(text, end + 1)
     return entries
+
+
+def _next_bibtex_entry_start(text: str, start: int) -> int:
+    """Find a real entry opener, ignoring @ signs in percent comments."""
+    in_comment = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if char == "\n":
+            in_comment = False
+        elif in_comment:
+            continue
+        elif char == "%":
+            in_comment = True
+        elif char == "@" and _BIBTEX_ENTRY_START.match(text, index):
+            return index
+    return -1
 
 
 def _entry_end(text: str, start: int) -> int | None:

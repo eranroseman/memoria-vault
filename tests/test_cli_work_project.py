@@ -1474,6 +1474,28 @@ def test_cli_work_import_bulk_admits_every_entry_with_run_scoped_keys(
     assert enrich_count == 0
 
 
+def test_cli_work_import_bulk_ignores_at_signs_in_external_comments(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bib = tmp_path / "sources.bib"
+    bib.write_text("% contact: user@example.org\n" + THREE_ENTRY_BIB, encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(_bulk_import(workspace, bib))
+    out = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert out["entries_total"] == 3
+    assert out["failed"] == []
+    assert out["admitted"] == [
+        "doi-10.1000_alpha.2026",
+        "doi-10.1000_beta.2026",
+        "doi-10.1000_gamma.2026",
+    ]
+
+
 def test_cli_work_import_bulk_rerun_skips_admitted_rows_without_new_requests(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

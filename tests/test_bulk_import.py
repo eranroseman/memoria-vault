@@ -81,6 +81,18 @@ def test_split_bibtex_entries_handles_paren_containers_and_inter_entry_junk() ->
     assert bibtex_capture_payload(chunks[0])["citekey"] == "paren2026"
 
 
+def test_split_bibtex_entries_ignores_at_signs_in_external_comments() -> None:
+    text = "% contact: user@example.org\n" + TWO_ENTRIES
+
+    chunks = split_bibtex_entries(text)
+
+    assert len(chunks) == 2
+    assert [bibtex_capture_payload(chunk)["citekey"] for chunk in chunks] == [
+        "alpha2026",
+        "beta2026",
+    ]
+
+
 def test_split_bibtex_entries_keeps_an_unclosed_tail_as_a_failing_chunk() -> None:
     text = TWO_ENTRIES + "\n@article{broken2026,\n  title = {Unclosed\n"
 
