@@ -1269,7 +1269,7 @@ site.
 - Consumes: `sweep(vault: Path, offline: bool = True) -> dict` (returns `{"checked": int, "retracted": int}`); `check_doi(doi: str, offline: bool = False) -> dict`; `build_rw_index(rows) -> dict[str, dict]`; and — post-Task-21.1 — `write_finding(vault, card_type, title, finding, raised_by, agent_recommendation="issues-found", target="", citekey="", loudness="alert", evidence="", dedupe_slug="") -> Path | None` (Task 21.1 of this plan changes it; COV.3 runs after 21.1).
 - Produces: tests `test_build_rw_index_severity_tie_break_keeps_retraction_over_concern`, `test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert`, `test_check_doi_offline_warns_once_when_rw_csv_is_missing`.
 
-- [ ] Extend the alias block at the top of `tests/test_sweeps_retraction.py` (after line 11, matching the existing `_m` style):
+- [x] Extend the alias block at the top of `tests/test_sweeps_retraction.py` (after line 11, matching the existing `_m` style):
 
   ```python
   check_doi = _m.check_doi
@@ -1306,7 +1306,7 @@ site.
       assert idx_reversed["10.1/twice"]["nature"] == "Retraction"
   ```
 - [x] Prove the test bites: temporarily change `retraction.py:113` from `if prev is None or (rec["retracted"] and not prev["retracted"]):` to `if prev is None:`, run `python -m pytest tests/test_sweeps_retraction.py::test_build_rw_index_severity_tie_break_keeps_retraction_over_concern -v` — expect `AssertionError` at `nature == "Retraction"` (got `'Expression of Concern'`). Restore, rerun, expect PASS.
-- [ ] Write the failing test (offline sweep writes the Inbox alert) below it:
+- [x] Write the failing test (offline sweep writes the Inbox alert) below it:
 
   ```python
   def test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert(tmp_path, monkeypatch):
@@ -1373,7 +1373,7 @@ site.
   variables and stubs `push_card` to avoid both an outbound attempt and an
   irrelevant push-log side effect; (4) `_RW_INDEX` reset mirrors the file's
   existing cache hygiene.
-- [ ] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
+- [x] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
 - [x] Write the failing test (one-time offline no-CSV warning) below it:
 
   ```python
@@ -1783,6 +1783,11 @@ contract file.
 
 ### Task COV.8: `worker.py` — `main()` subcommand dispatch wiring
 
+> **Execution receipt (2026-07-31):** already landed — the checkboxes below had
+> drifted, not the code. `test_worker_cli_dispatches_each_subcommand_to_its_handler`
+> exists at `tests/test_worker_queue.py:643` with all seven param rows; re-verified
+> green (`7 passed`). Reconciled to `[x]` without re-implementation.
+
 **Files:**
 - Modify (tests only): `tests/test_worker_queue.py` (append after `test_worker_cli_enqueues_operation_payload`, line 517)
 - Read-only production: `src/memoria_vault/runtime/worker.py` — `main()` at **1387-1484** (spec said 1436-1484 — drifted; the dispatcher body is 1413-1484: `scan` 1436-1445, `run-scheduled` 1446-1462, `integrity-sweep` 1463-1470, `observe-pi-edits` 1471-1479 with an in-function import from `trusted_writer`, `recover` 1480-1482, `run-pending` fallthrough 1483). Only `enqueue-operation` has a wiring test today.
@@ -1792,7 +1797,7 @@ contract file.
 - Consumes: `main(argv: list[str] | None = None) -> int` (as the file's existing `worker_main` alias); patch points `memoria_vault.runtime.worker.enqueue_operation`, `memoria_vault.runtime.worker.run_pending_jobs`, `memoria_vault.runtime.worker.run_integrity_sweep`, `memoria_vault.runtime.trusted_writer.observe_pi_edits_explicit_from_status`, `memoria_vault.runtime.state.recover_pending_materializations`.
 - Produces: test `test_worker_cli_dispatches_each_subcommand_to_its_handler` (parametrized over the six remaining subcommands) plus module helper `_dispatch_recorder`.
 
-- [ ] Write the failing test — one parametrized test, one param row per remaining subcommand, mirroring the enqueue-operation test's argv shape. Handlers are recorded, not run, so a bare `tmp_path` suffices as the vault:
+- [x] Write the failing test — one parametrized test, one param row per remaining subcommand, mirroring the enqueue-operation test's argv shape. Handlers are recorded, not run, so a bare `tmp_path` suffices as the vault:
 
   ```python
   def _dispatch_recorder(calls: list, name: str):
@@ -1953,9 +1958,9 @@ contract file.
   this file. `observe-pi-edits` is patched at its `trusted_writer` home because
   `main()` imports it inside the branch; `recover` is patched on the `state`
   module `main()` calls through.)
-- [ ] Prove the test bites: temporarily change `worker.py:1463` from `if args.command == "integrity-sweep":` to `if args.command == "never":`, run `python -m pytest "tests/test_worker_queue.py::test_worker_cli_dispatches_each_subcommand_to_its_handler[integrity-sweep]" -v` — expect `AssertionError: run_integrity_sweep called 0 times` (the argv falls through to `run_pending_jobs`, which is unpatched here and irrelevant to the recorded-call assertion). Restore, rerun, expect PASS.
-- [ ] Run all seven param rows: `python -m pytest tests/test_worker_queue.py::test_worker_cli_dispatches_each_subcommand_to_its_handler -v` — 7 passed.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily change `worker.py:1463` from `if args.command == "integrity-sweep":` to `if args.command == "never":`, run `python -m pytest "tests/test_worker_queue.py::test_worker_cli_dispatches_each_subcommand_to_its_handler[integrity-sweep]" -v` — expect `AssertionError: run_integrity_sweep called 0 times` (the argv falls through to `run_pending_jobs`, which is unpatched here and irrelevant to the recorded-call assertion). Restore, rerun, expect PASS.
+- [x] Run all seven param rows: `python -m pytest tests/test_worker_queue.py::test_worker_cli_dispatches_each_subcommand_to_its_handler -v` — 7 passed.
+- [x] Commit:
   ```
   git add tests/test_worker_queue.py
   git commit -m "test(worker): pin main() subcommand dispatch wiring for every subcommand
@@ -2110,7 +2115,7 @@ disjoint regions, so either order is safe.
 - [x] Run `python -m pytest tests/test_runtime_state.py tests/test_worker_queue.py -q` — all pass (comment-only change; the Windows lock still works, per the multiprocess lock test).
 - [x] 11b — in `tests/test_workspace_seed_links.py` delete: line 23 (`YAML_FENCE_RE = ...`), line 24 (`DROPPED_KEYS = ...`), lines 75-79 (`def _check_template_frontmatter(...)` and body), lines 127-130 in `_collect_errors` (`tmpl_dir = SEED / "system/templates"` through the `_check_template_frontmatter(md, errors)` call), and replace the two docstring lines with `references to published docs and vault wikilink discipline (link text is the page title, and every [[note]] resolves to a real seed note).` so the module description remains grammatical and matches what it still checks. Leave the `"templates" in md.parts` skip at line 139 untouched (it guards the wikilink checks generally, not the retired check).
 - [x] Run `python -m pytest tests/test_workspace_seed_links.py -v` — passes; then `! rg -n 'YAML_FENCE_RE|DROPPED_KEYS|_check_template_frontmatter|tmpl_dir' tests/test_workspace_seed_links.py` — no output and a successful absence check.
-- [ ] Run `python scripts/verify` — full gate green.
+- [x] Run `python scripts/verify` — full gate green.
 - [x] Commit:
   ```
   git add src/memoria_vault/runtime/state.py tests/test_workspace_seed_links.py
@@ -2128,4 +2133,16 @@ disjoint regions, so either order is safe.
 
 ### Section close-out
 
-- [ ] Run `python scripts/verify` once over the assembled branch state (whatever subset of COV tasks landed together) before any PR — it is the one merge gate, alongside `gitleaks`.
+- [x] Run `python scripts/verify` once over the assembled branch state (whatever subset of COV tasks landed together) before any PR — it is the one merge gate, alongside `gitleaks`.
+
+> **Plan close-out (2026-07-31).** All sections complete. Final open items were
+> COV.3's sweep-alert test (landed `790396fd`; full gate green — 2,709 passed, 11
+> skipped) and COV.8, which had drifted checkboxes over already-landed code.
+>
+> **Open decision — [#1559](https://github.com/eranroseman/memoria-vault/issues/1559):**
+> task review found COV.3's mandated `test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert`
+> is an assertion-level subset of `test_sweep_flags_checked_sqlite_retraction_without_legacy_fallback`
+> (`tests/test_sweeps_retraction.py:173`), which additionally covers unchecked/quarantined
+> filtering and the card `title`. The plan's `Produces` contract mandates the test;
+> AGENTS.md's "prefer deletion" rule argues against the redundancy. Execution kept the
+> plan-mandated state pending the PI's ruling.
