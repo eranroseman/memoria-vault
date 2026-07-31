@@ -25,6 +25,25 @@
 - 1000-scale anything is beta.2 (spec §8); nothing here may assume corpus sizes beyond the 100-work stage.
 - All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
 
+## Execution status — 2026-07-31
+
+- [x] **P.1 complete:** `d21b18fe` is an ancestor of `main`; it adds the
+  multi-entry BibTeX/CSL splitters and their contract registration.
+- [x] **P.2 complete:** `2a4d6bc1` is an ancestor of `main`; it adds the
+  bulk driver loop and the declared payload/ref seams with CLI coverage.
+- [x] **P.3 complete:** `b030ec84` is an ancestor of `main`; it makes
+  enrichment opt-in and adds the post-loop index-refresh behavior, tests, and
+  accompanying reference corrections.
+- [x] **A.1 complete:** `2b89062b` is an ancestor of `main`; it adds the
+  item-type normalization seam and its focused contract coverage.
+- [x] **A.2 complete under its execution amendment:** `8c1d0d41` is an
+  ancestor of `main`; it lands the policy-bound remote-PDF route and its
+  declared worker, capability, floor, test, and reference changes.
+- [x] **A.3 complete:** `143a3d45` is an ancestor of `main`; it adds exact
+  cross-identifier collision detection and the DOI-UNIQUE classifier.
+- [x] **W.1 complete:** `0dc8ec59` is an ancestor of `main`; it adds the
+  raised-by/loudness passthrough and run-scoped quiet import worklist.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **`runtime/bulk_import.py` module seams:** P.1's `split_bibtex_entries(text) -> list[str]` / `split_csl_entries(text) -> list[str]`; P.2's `build_entry_payload(fmt, entry_text) -> dict` (section A's interception point) and `entry_ref(fmt, entry_text, index) -> str` (citekey / CSL id / `entry-<index>` — the worklist item-ref vocabulary).
@@ -319,6 +338,11 @@ splitter seam; the shipped builders stay untouched.
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor d21b18fe main`
+> succeeded. `d21b18fe` creates `runtime/bulk_import.py` and
+> `tests/test_bulk_import.py`, and adds the declared `tests/conftest.py`
+> contract registration for P.1.
 
 ---
 
@@ -766,6 +790,10 @@ byte-identical.
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 2a4d6bc1 main`
+> succeeded. `2a4d6bc1` changes the P.2-declared CLI driver and bulk-import
+> seams, with the corresponding bulk-import and work-project test coverage.
+
 ---
 
 ### Task P.3: The enrichment default flip (`--enrich`) + the timed post-loop index refresh
@@ -1027,6 +1055,11 @@ whole-index refresh into index_refresh_s (LOOP.1 order tolerance noted).
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor b030ec84 main`
+> succeeded. `b030ec84` changes the P.3 CLI and work-project coverage and the
+> three declared reference pages for opt-in enrichment and index refresh.
+
 # A — Adapter normalization + duplicates
 
 This section implements spec §4 (per-type adapter matrix: the normalization dict + heuristics onto the **shipped** `item_type` vocabulary, and the fetch-synthesis rule over the O1 resolve layer) and spec §5 (duplicates: identifier-exact detection, the `doi UNIQUE` failure classifier, the same-DOI structural skip) — implementation slices 3–4 of `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md`.
@@ -1323,6 +1356,10 @@ git commit -m "feat(bulk-import): normalization dict + heuristics onto shipped i
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 2b89062b main`
+> succeeded. `2b89062b` changes only A.1's declared `runtime/bulk_import.py`
+> normalization seam and `tests/test_bulk_import.py` coverage.
+
 > **Execution amendment — policy-bearing remote-PDF route (2026-07-30).**
 > This replaces A.2's Files block and Steps 1–5 in their entirety; do **not**
 > execute the historical blocks below. It also replaces A.2's CLI-side
@@ -1480,6 +1517,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 >    git add -- src/memoria_vault/runtime/bulk_import.py src/memoria_vault/runtime/capture.py src/memoria_vault/runtime/worker.py src/memoria_vault/product/capabilities/operations/capture-remote-pdf-source.md tests/test_bulk_import.py tests/test_capture.py tests/test_worker_capture_jobs.py tests/test_capabilities.py tests/fixtures/floor/goldens/regenerate-capability-index.json tests/floor_lib.py tests/test_floor_coverage.py docs/reference/pipelines-and-io/ingest.md docs/reference/commands-and-transports/system-actions.md docs/reference/commands-and-transports/system-actions-operations.md docs/reference/commands-and-transports/operations.md project-words.txt
 >    git commit -m "feat(bulk-import): route imported PDFs through a policy-bound worker"
 >    ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 8c1d0d41 main`
+> succeeded. `8c1d0d41` implements this adopted policy-bearing remote-PDF
+> replacement, including the worker/capability/floor changes and focused test
+> coverage named above. The historical A.2 blocks below remain documentary.
 
 ### Task A.2: Fetch synthesis + admission-tier routing (`entry_fetch`, `entry_capture_request`)
 
@@ -2033,6 +2075,10 @@ git commit -m "feat(bulk-import): exact-identifier duplicate detection + doi-UNI
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 143a3d45 main`
+> succeeded. `143a3d45` changes A.3's declared `runtime/bulk_import.py` and
+> `tests/test_bulk_import.py` seams for exact-identifier collision handling.
+
 # Section W — Bulk artifacts, telemetry, registry, protocol (spec §3, §6, §7, §8; slices 5–8)
 
 This section lands the bulk-admission artifacts (spec §3: the `emit_worklist` raised_by/loudness seam co-change and the one run-scoped quiet worklist per run), the `import-run.v1` instrumentation row (spec §6), the `staged-import` decision-rule registry entry (spec §7), and the Phase 1 staged-run protocol block (spec §6 protocol-level rows, §7 stop rule, §8 beta.2 ceiling — nothing here assumes corpus sizes beyond the 100-work stage).
@@ -2275,6 +2321,10 @@ git commit -m "feat(worklists): raised_by/loudness passthrough + run-scoped quie
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 0dc8ec59 main`
+> succeeded. `0dc8ec59` changes W.1's declared worklist seam and
+> `tests/test_worklists.py` coverage for the quiet, run-scoped import worklist.
 
 ### Task W.2: `import-run.v1` — typed validator + telemetry dispatch (spec §6; slice 6)
 
