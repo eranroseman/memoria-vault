@@ -26,7 +26,7 @@ from memoria_vault.runtime.trusted_writer import (
     stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, note_text
+from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
 
 
 def _call(function, vault: Path, *args, **kwargs):
@@ -71,6 +71,10 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def current_note_text(title: str) -> str:
+    return f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n# {title}\n\nBody.\n"
+
+
 def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     tmp_path: Path,
 ) -> None:
@@ -105,9 +109,9 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     pi_note = "notes/pi-downstream.md"
     pi_path = vault / pi_note
     pi_path.parent.mkdir(parents=True, exist_ok=True)
-    pi_path.write_text(note_text("PI downstream"), encoding="utf-8")
+    pi_path.write_text(current_note_text("PI downstream"), encoding="utf-8")
     prior_sha = sha256_file(pi_path)
-    pi_path.write_text(note_text("PI downstream") + "\nPI edit.\n", encoding="utf-8")
+    pi_path.write_text(current_note_text("PI downstream") + "\nPI edit.\n", encoding="utf-8")
     observe_pi_edit(
         vault,
         pi_note,

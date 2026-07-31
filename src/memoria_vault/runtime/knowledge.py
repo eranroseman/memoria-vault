@@ -389,11 +389,12 @@ def curate_note_link(
     if changed:
         bucket.append(target_rel)
         frontmatter["links"] = links
-        write_frontmatter_doc(source_note, frontmatter, body)
         mark_checked(
             vault,
             source_rel,
             context=context,
+            frontmatter=frontmatter,
+            body=body,
         )
 
     event = append_journal_event(

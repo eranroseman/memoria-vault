@@ -29,7 +29,6 @@ from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
-    RETIRED_FRONTMATTER_FIELDS,
     apply_universal_concept_frontmatter,
     frontmatter_doc,
     iter_markdown,
@@ -772,8 +771,10 @@ def mark_checked(
     check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
     schemas_dir: Path | None = None,
+    frontmatter: dict[str, Any] | None = None,
+    body: str | None = None,
 ) -> dict[str, Any]:
-    """Mark an existing live Concept checked after the worker's checks pass."""
+    """Mark a live Concept checked, optionally validating and writing replacement content atomically."""
     validate_operation_context(vault, context)
     vault = Path(vault)
     target = _target_path(target_path)
@@ -781,17 +782,16 @@ def mark_checked(
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
     output_path = vault / target
-    frontmatter, body = split_frontmatter(output_path.read_text(encoding="utf-8"))
+    current_frontmatter, current_body = split_frontmatter(output_path.read_text(encoding="utf-8"))
     return _write_checked(
         vault,
         target,
         output_path,
-        frontmatter,
-        body,
+        current_frontmatter if frontmatter is None else frontmatter,
+        current_body if body is None else body,
         promotion_checks,
         context,
         contract,
-        allow_retired_input=True,
     )
 
 
@@ -1221,13 +1221,8 @@ def _write_checked(
     checks: Iterable[str],
     context: OperationContext,
     contract: dict[str, Any],
-    *,
-    allow_retired_input: bool = False,
 ) -> dict[str, Any]:
     promotion_checks = normalize_promotion_checks(checks)
-    if allow_retired_input:
-        for field in RETIRED_FRONTMATTER_FIELDS:
-            frontmatter.pop(field, None)
     _validate_concept(contract, target, frontmatter)
     payload_text = frontmatter_doc(frontmatter, body)
     output_sha256 = sha256_bytes(payload_text.encode("utf-8"))

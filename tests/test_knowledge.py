@@ -28,6 +28,7 @@ from tests.helpers import (
     copy_memoria_dirs,
     git,
     init_git,
+    mark_file_status,
     operation_context,
 )
 
@@ -70,6 +71,17 @@ def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas", "config")
     init_git(tmp_path, "knowledge@example.invalid", "Knowledge")
     return tmp_path
+
+
+def checked_note(vault: Path, name: str, title: str, note_id: str) -> Path:
+    path = vault / "notes" / f"{name}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"---\ntype: note\nid: {note_id}\ntitle: {title}\ntags: []\nlinks: {{}}\n---\nBody.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, path.relative_to(vault).as_posix())
+    return path
 
 
 def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -> None:
@@ -394,14 +406,8 @@ def test_curate_note_candidate_rejects_non_candidate_status(tmp_path: Path) -> N
 
 def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    _md(
-        vault / "notes/source.md",
-        "type: note\ncheck_status: checked\ntitle: Source\nstatus: accepted\n",
-    )
-    _md(
-        vault / "notes/target.md",
-        "type: note\ncheck_status: checked\ntitle: Target\nstatus: accepted\n",
-    )
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
 
     result = curate_note_link(
         vault,
@@ -426,3 +432,26 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert event["reason"] == "PI linked claims"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/source.md"}
+
+
+def test_curate_note_link_rejects_invalid_source_without_mutation(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    source = checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+    source.write_text(
+        source.read_text(encoding="utf-8").replace(
+            "type: note\n", "type: note\ncheck_status: checked\n"
+        ),
+        encoding="utf-8",
+    )
+    mark_file_status(vault, "notes/source.md")
+    before = source.read_text(encoding="utf-8")
+    journal = vault / ".memoria/journal/curator.jsonl"
+    assert not journal.exists()
+
+    with pytest.raises(ValueError, match="retired frontmatter field is ignored: check_status"):
+        curate_note_link(vault, "source", "supports", "target", actor="pi", machine="curator")
+
+    assert source.read_text(encoding="utf-8") == before
+    assert not journal.exists()
+    assert state.concept_check_status(vault, "notes/source.md") == "checked"

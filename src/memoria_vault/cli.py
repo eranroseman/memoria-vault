@@ -188,11 +188,6 @@ def _build_parser() -> argparse.ArgumentParser:
     handshake.add_argument("--quiet", action="store_true")
     handshake.set_defaults(handler=_cmd_handshake)
 
-    migrate = sub.add_parser("migrate")
-    _common(migrate)
-    migrate.add_argument("--from-alpha15", required=True)
-    migrate.set_defaults(handler=_cmd_migrate)
-
     mcp = sub.add_parser("mcp")
     mcp.add_argument("--workspace", required=True)
     mcp.add_argument("--read-scope", action="append", default=[])
@@ -1174,19 +1169,6 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
         return _fail("mcp requires at least one --read-scope", json_output=False)
     run_mcp_server(_workspace(args), read_scope=args.read_scope, agent_identity=args.actor)
     return 0
-
-
-def _cmd_migrate(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    source = Path(args.from_alpha15).expanduser().resolve()
-    if not source.is_dir():
-        return _fail(f"alpha.15 workspace not found: {source}", json_output=args.json)
-    if workspace == source:
-        return _fail("migrate requires a separate target workspace", json_output=args.json)
-    if not (workspace / ".memoria/schemas/folders.yaml").is_file():
-        _initialize_workspace_files(workspace)
-    result = _import_alpha15_workspace(source, workspace)
-    return _emit({"ok": True, "workspace": str(workspace), **result}, args)
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:
@@ -2860,91 +2842,6 @@ def _initialize_workspace_files(
 
     write_tracked_projections_explicit(workspace, actor="operation", machine="memoria-init")
     _ensure_git(workspace, commit_created_repository=commit_created_repository)
-
-
-def _import_alpha15_workspace(source: Path, workspace: Path) -> dict[str, Any]:
-    copied: list[str] = []
-    copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/notes", "notes"))
-    copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/hubs", "hubs"))
-    copied.extend(_copy_alpha15_projects(source, workspace))
-    copied.extend(_copy_alpha15_works(source, workspace))
-    bibliography = source / "references.bib"
-    if bibliography.is_file():
-        target = workspace / "bibliography.bib"
-        if target.exists() and target.read_text(encoding="utf-8").strip():
-            raise FileExistsError(target)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(bibliography, target)
-        copied.append("bibliography.bib")
-    return {"imported": sorted(copied), "imported_count": len(copied)}
-
-
-def _copy_alpha15_tree(source: Path, workspace: Path, old_root: str, new_root: str) -> list[str]:
-    root = source / old_root
-    if not root.is_dir():
-        return []
-    copied: list[str] = []
-    for path in sorted(root.rglob("*.md")):
-        rel = path.relative_to(root).as_posix()
-        target = workspace / new_root / rel
-        _copy_no_overwrite(path, target)
-        copied.append(target.relative_to(workspace).as_posix())
-    return copied
-
-
-def _copy_alpha15_projects(source: Path, workspace: Path) -> list[str]:
-    root = source / "knowledge/projects"
-    if not root.is_dir():
-        return []
-    copied: list[str] = []
-    for path in sorted(root.rglob("*.md")):
-        rel = path.relative_to(root)
-        if len(rel.parts) == 1:
-            target = workspace / "projects" / path.stem / "project.md"
-        else:
-            target = workspace / "projects" / rel
-        _copy_no_overwrite(path, target)
-        copied.append(target.relative_to(workspace).as_posix())
-    return copied
-
-
-def _copy_alpha15_works(source: Path, workspace: Path) -> list[str]:
-    from memoria_vault.runtime.paths import safe_filename
-    from memoria_vault.runtime.vaultio import split_frontmatter
-
-    root = source / "knowledge/works"
-    if not root.is_dir():
-        return []
-    copied: list[str] = []
-    for path in sorted(root.glob("*.md")):
-        frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
-        work_id = safe_filename(str(frontmatter.get("work_id") or path.stem)).strip("._-")
-        if not work_id:
-            work_id = path.stem
-        digest_path = workspace / "digests" / f"{work_id}.md"
-        digest = dict(frontmatter)
-        digest.update({"type": "digest", "id": work_id, "work_id": work_id})
-        digest.setdefault("title", str(frontmatter.get("title") or path.stem))
-        digest.setdefault("tags", [])
-        digest.setdefault("links", {})
-        _write_no_overwrite(digest_path, digest, body)
-        copied.append(digest_path.relative_to(workspace).as_posix())
-    return copied
-
-
-def _copy_no_overwrite(source: Path, target: Path) -> None:
-    if target.exists():
-        raise FileExistsError(target)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, target)
-
-
-def _write_no_overwrite(target: Path, frontmatter: dict[str, Any], body: str) -> None:
-    from memoria_vault.runtime.vaultio import write_frontmatter_doc
-
-    if target.exists():
-        raise FileExistsError(target)
-    write_frontmatter_doc(target, frontmatter, body, create_parent=True)
 
 
 def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:

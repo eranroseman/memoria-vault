@@ -50,13 +50,11 @@ def load_concept_types(schemas_dir: Path | None = None) -> dict[str, str]:
     """Return {concept type: one-line role} from the seeded registry.
 
     concept-types.yaml is the single source of the DB Concept-type roster;
-    the schema.sql CHECK is held to it by the registry parity test. A
-    vault-local schemas dir that predates the registry falls back to the
-    packaged seed copy.
+    the schema.sql CHECK is held to it by the registry parity test.
     """
     registry_file = _schemas_dir(schemas_dir) / "concept-types.yaml"
     if not registry_file.is_file():
-        registry_file = SCHEMAS_DIR / "concept-types.yaml"
+        raise ValueError(f"missing required concept-types.yaml: {registry_file}")
     data = yaml.safe_load(registry_file.read_text(encoding="utf-8"))
     return {str(name): str(role) for name, role in data["concept_types"].items()}
 
@@ -65,24 +63,13 @@ def load_types(schemas_dir: Path | None = None) -> dict[str, dict]:
     """Return {document type: schema dict} for every types/<type>.yaml.
 
     Raises ValueError when a doc-type yaml names no concept-type registry
-    member in its concept_type key (the NODES §2 load-time check). A local
-    schemas directory without the registry is legacy: its shipped type-file
-    names retain their packaged mappings in memory only.
+    member in its concept_type key (the NODES §2 load-time check).
     """
     schema_dir = _schemas_dir(schemas_dir)
-    legacy_schema_dir = (
-        schemas_dir is not None and not (schema_dir / "concept-types.yaml").is_file()
-    )
     registry = load_concept_types(schemas_dir)
     out: dict[str, dict] = {}
     for f in sorted((schema_dir / "types").glob("*.yaml")):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
-        if legacy_schema_dir and "concept_type" not in data:
-            packaged_type_file = SCHEMAS_DIR / "types" / f.name
-            if packaged_type_file.is_file():
-                packaged_data = yaml.safe_load(packaged_type_file.read_text(encoding="utf-8"))
-                if "concept_type" in packaged_data:
-                    data["concept_type"] = packaged_data["concept_type"]
         member = data.get("concept_type")
         if member not in registry:
             raise ValueError(
@@ -263,14 +250,21 @@ def validate_frontmatter(
     """Validate one document's frontmatter against its type schema.
 
     Returns a list of human-readable error strings (empty = valid).
-    Unknown extra fields are accepted. The schema enforces required meaning fields
-    without making hand-authored markdown brittle during alpha migrations.
+    Validation is closed: fields not declared by the type schema are rejected
+    (nest extension data under the declared `x:` map instead).
     """
     errors: list[str] = []
     enums = schema.get("enums", {})
     for field in schema.get("forbidden") or []:
         if field in fm:
             errors.append(f"{field}: field is retired")
+    known_fields = (
+        set(schema.get("required") or {})
+        | set(schema.get("optional") or {})
+        | set(schema.get("forbidden") or [])
+    )
+    for field in sorted(set(fm) - known_fields):
+        errors.append(f"{field}: unknown field; declare it in the type schema or nest under x:")
     for field, kind in (schema.get("required") or {}).items():
         if field not in fm or fm[field] in (None, ""):
             errors.append(f"missing required field: {field}")

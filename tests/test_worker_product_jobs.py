@@ -1040,7 +1040,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     assert git(vault, "status", "--short", "--", ".memoria/overrides.jsonl") == ""
 
 
-def test_update_work_removes_legacy_topics_from_pre_f4_catalog_row(tmp_path: Path) -> None:
+def test_update_work_preserves_unrecognized_topics_from_catalog_row(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
@@ -1054,7 +1054,7 @@ def test_update_work_removes_legacy_topics_from_pre_f4_catalog_row(tmp_path: Pat
         vault,
         "update-work",
         payload={"work_id": "legacy", "methodology": ["rct"]},
-        idempotency_key="normalize-legacy-work",
+        idempotency_key="preserve-catalog-work",
         actor="pi",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -1062,10 +1062,12 @@ def test_update_work_removes_legacy_topics_from_pre_f4_catalog_row(tmp_path: Pat
     assert done is not None
     assert done["status"] == "done"
     assert done["work"]["csl_json"]["memoria"] == {
+        "topics": ["legacy-topic"],
         "standing": "current",
         "methodology": ["rct"],
     }
     assert state.catalog_source(vault, "legacy")["csl_json"]["memoria"] == {
+        "topics": ["legacy-topic"],
         "standing": "current",
         "methodology": ["rct"],
     }

@@ -143,7 +143,6 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria explore",
         "memoria handshake",
         "memoria serve",
-        "memoria migrate",
         "memoria mcp",
         "memoria help",
         "memoria new hub",
@@ -850,62 +849,3 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
         "command": "capture-source",
         "surface": "memoria-cli",
     }
-
-
-def test_cli_migrate_from_alpha15_imports_current_root_contract(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    old = tmp_path / "old"
-    old_note = old / "knowledge/notes/claim.md"
-    old_hub = old / "knowledge/hubs/topic.md"
-    old_project = old / "knowledge/projects/review.md"
-    old_work = old / "knowledge/works/source-alpha.md"
-    old_work.parent.mkdir(parents=True, exist_ok=True)
-    old_note.parent.mkdir(parents=True, exist_ok=True)
-    old_hub.parent.mkdir(parents=True, exist_ok=True)
-    old_project.parent.mkdir(parents=True, exist_ok=True)
-    old_work.write_text(
-        "---\n"
-        "type: work\n"
-        "id: 01KBN6V6KX0000000000000001\n"
-        "title: Alpha Source\n"
-        "tags: [memory]\n"
-        "links: {}\n"
-        "work_id: source-alpha\n"
-        "---\n"
-        "Digest body.\n",
-        encoding="utf-8",
-    )
-    old_note.write_text("---\ntype: note\ntitle: Claim\n---\nClaim body.\n", encoding="utf-8")
-    old_hub.write_text("---\ntype: hub\ntitle: Topic\n---\nTopic body.\n", encoding="utf-8")
-    old_project.write_text(
-        "---\ntype: project\ntitle: Review\n---\nProject body.\n", encoding="utf-8"
-    )
-    (old / "references.bib").write_text("@article{alpha,title={Alpha}}\n", encoding="utf-8")
-
-    workspace = tmp_path / "new"
-    rc = main(
-        [
-            "migrate",
-            "--workspace",
-            str(workspace),
-            "--from-alpha15",
-            str(old),
-            "--json",
-        ]
-    )
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 0
-    assert output["imported_count"] == 5
-    assert (workspace / "notes/claim.md").is_file()
-    assert (workspace / "hubs/topic.md").is_file()
-    assert (workspace / "projects/review/project.md").is_file()
-    assert (workspace / "bibliography.bib").read_text(encoding="utf-8") == (
-        "@article{alpha,title={Alpha}}\n"
-    )
-    digest = read_frontmatter(workspace / "digests/source-alpha.md")
-    assert digest["type"] == "digest"
-    assert digest["work_id"] == "source-alpha"
-    assert not (workspace / "works/source-alpha/record.md").exists()
-    assert "Digest body." in (workspace / "digests/source-alpha.md").read_text(encoding="utf-8")

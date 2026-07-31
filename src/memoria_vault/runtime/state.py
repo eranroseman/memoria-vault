@@ -2658,15 +2658,6 @@ def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str,
 
 def _source_row(row: sqlite3.Row) -> dict[str, Any]:
     csl_json = json.loads(row["csl_json"] or "{}")
-    memoria = csl_json.get("memoria") if isinstance(csl_json, dict) else None
-    if isinstance(memoria, dict) and "topics" in memoria:
-        csl_json = dict(csl_json)
-        memoria = dict(memoria)
-        memoria.pop("topics")
-        if memoria:
-            csl_json["memoria"] = memoria
-        else:
-            csl_json.pop("memoria", None)
     return {
         "work_id": row["work_id"],
         "concept_path": row["concept_path"],

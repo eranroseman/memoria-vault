@@ -961,7 +961,6 @@ def _run_operation_job(
             csl_json["URL"] = str(payload.get("resource") or "")
 
         memoria = dict(csl_json["memoria"]) if isinstance(csl_json.get("memoria"), dict) else {}
-        memoria.pop("topics", None)
         if standing := str(payload.get("standing") or "").strip():
             if standing not in {"current", "archived", "retracted", "superseded"}:
                 raise ValueError(f"update-work standing is invalid: {standing}")

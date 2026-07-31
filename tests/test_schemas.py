@@ -110,47 +110,30 @@ def test_load_types_rejects_doc_type_outside_registry(tmp_path):
         schema.load_types(tmp_path / "schemas")
 
 
-def test_vault_schemas_dir_without_registry_falls_back_to_packaged_roster(tmp_path):
-    shutil.copytree(schema.SCHEMAS_DIR, tmp_path / "schemas")
-    (tmp_path / "schemas/concept-types.yaml").unlink()
-    assert set(schema.load_concept_types(tmp_path / "schemas")) == set(schema.load_concept_types())
-
-
-def test_legacy_vault_schemas_without_registry_keep_packaged_type_mappings(tmp_path):
+def test_schemas_dir_without_registry_fails_closed(tmp_path):
     schemas_dir = tmp_path / "schemas"
     shutil.copytree(schema.SCHEMAS_DIR, schemas_dir)
     (schemas_dir / "concept-types.yaml").unlink()
-    for type_file in (schemas_dir / "types").glob("*.yaml"):
-        data = yaml.safe_load(type_file.read_text(encoding="utf-8"))
+    with pytest.raises(ValueError, match=r"missing required concept-types\.yaml"):
+        schema.load_concept_types(schemas_dir)
+    with pytest.raises(ValueError, match=r"missing required concept-types\.yaml"):
+        schema.load_types(schemas_dir)
+
+
+@pytest.mark.parametrize("concept_type", [None, ""])
+def test_load_types_requires_explicit_concept_type(tmp_path, concept_type):
+    schemas_dir = tmp_path / "schemas"
+    shutil.copytree(schema.SCHEMAS_DIR, schemas_dir)
+    type_file = schemas_dir / "types/note.yaml"
+    data = yaml.safe_load(type_file.read_text(encoding="utf-8"))
+    if concept_type is None:
         data.pop("concept_type")
-        type_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
-
-    loaded = schema.load_types(schemas_dir)
-
-    assert {name: data["concept_type"] for name, data in loaded.items()} == {
-        "code-artifact": "project",
-        "digest": "digest",
-        "fulltext": "work",
-        "hub": "hub",
-        "note": "note",
-        "project": "project",
-    }
-    assert all(
-        "concept_type" not in yaml.safe_load(type_file.read_text(encoding="utf-8"))
-        for type_file in (schemas_dir / "types").glob("*.yaml")
-    )
-
-
-def test_load_types_rejects_unmapped_legacy_doc_type(tmp_path):
-    schemas_dir = tmp_path / "schemas"
-    shutil.copytree(schema.SCHEMAS_DIR, schemas_dir)
-    (schemas_dir / "concept-types.yaml").unlink()
-    (schemas_dir / "types/legacy.yaml").write_text(
-        "type: legacy\ncategory: notes\n", encoding="utf-8"
-    )
+    else:
+        data["concept_type"] = concept_type
+    type_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
     with pytest.raises(
-        ValueError, match=r"legacy\.yaml: concept_type None is not in concept-types\.yaml"
+        ValueError, match=r"note\.yaml: concept_type .* is not in concept-types\.yaml"
     ):
         schema.load_types(schemas_dir)
 
@@ -255,7 +238,7 @@ def test_validate_frontmatter_round_trip():
     assert any("id" in e for e in schema.validate_frontmatter(dict(good, id=123), digest))
 
 
-def test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration():
+def test_schema_rejects_undeclared_fields_while_x_hatch_passes():
     note = schema.load_types()["note"]
     good = {
         "id": "01KBN6V6KX0000000000000001",
@@ -263,10 +246,13 @@ def test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration()
         "title": "T",
         "tags": [],
         "links": {},
-        "x": {"local": "ok"},
+        "x": {"local": "ok", "nested": {"deep": 1}},
     }
     assert schema.validate_frontmatter(good, note) == []
-    assert schema.validate_frontmatter(dict(good, surprise=True), note) == []
+    errors = schema.validate_frontmatter(dict(good, surprise=True), note)
+    assert any("surprise: unknown field" in error for error in errors)
+    retired = schema.validate_frontmatter(dict(good, citations=[]), note)
+    assert [error for error in retired if "citations" in error] == ["citations: field is retired"]
 
 
 def test_note_links_are_typed_maps():

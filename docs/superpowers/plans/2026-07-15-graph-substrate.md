@@ -312,6 +312,33 @@ version is current when it runs (v12 today; v13-15 land in Plan 22 without touch
   (refused in CI by design, `floor_lib.py:345`).
 - Test vaults: disposable `tmp_path` vaults only.
 
+### Binding clean-slate override — vault-local explicit concept registry (2026-07-30)
+
+There are no pre-registry vaults to recover. This override supersedes the
+NID-A.1 fallback and implicit-mapping snippets below; those snippets remain
+historical drafting record only and must not be implemented or copied.
+
+1. **One required local source.** Every supported fresh vault contains
+   `.memoria/schemas/concept-types.yaml`. When a vault schema directory is
+   supplied, `load_concept_types(schemas_dir)` reads exactly that file and
+   raises a clear `ValueError` if it is missing and otherwise fails closed on
+   malformed content. It must never
+   fall back to `SCHEMAS_DIR`, a packaged seed copy, or a hard-coded roster.
+   The no-argument product-resource read is allowed only for packaging/seed
+   construction, never as runtime recovery for a vault.
+2. **No inferred `concept_type`.** Every `types/<type>.yaml` explicitly names
+   one nonblank `concept_type` that is a member of that same local registry.
+   Missing, blank, or unknown values fail `load_types`; document `type` does
+   not imply, default, or otherwise synthesize a Concept type. Mirror writers
+   use the validated explicit mapping and reject an invalid contract before
+   mutation.
+3. **Required proofs.** NID-A.1 tests a missing local registry, a missing
+   `concept_type`, a blank `concept_type`, and an unknown member as failures.
+   Delete the historical `test_vault_schemas_dir_without_registry_falls_back_to_packaged_roster`
+   and do not retain an equivalent recovery test. The runtime linter and
+   pre-commit checker load a vault's local contract and fail closed when that
+   directory or registry is absent; neither substitutes package schemas.
+
 ---
 
 ### Task NID-A.1: Seed `concept-types.yaml` registry + validator rewire + load-time membership check

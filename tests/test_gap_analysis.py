@@ -222,7 +222,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     assert gaps["Graph-only Keyword"]["note_count"] == 0
 
 
-def test_analyze_gaps_ignores_retired_topics_from_untouched_catalog_work(tmp_path: Path) -> None:
+def test_analyze_gaps_includes_unrecognized_topics_from_catalog_work(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
         work_id="legacy-work",
@@ -239,7 +239,7 @@ def test_analyze_gaps_ignores_retired_topics_from_untouched_catalog_work(tmp_pat
 
     result = analyze_gaps(tmp_path, dense_threshold=1)
 
-    assert {gap["topic"] for gap in result["gaps"]} == {"current-area"}
+    assert {gap["topic"] for gap in result["gaps"]} == {"current-area", "legacy-only"}
 
 
 def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path) -> None:

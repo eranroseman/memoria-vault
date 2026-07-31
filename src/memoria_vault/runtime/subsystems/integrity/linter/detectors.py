@@ -32,6 +32,7 @@ from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
     read,
     vault_hash_drift,
 )
+from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter_field_errors
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
@@ -40,15 +41,6 @@ TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector
 # skips both so it never flags those moves.
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
-TYPE_HOME = {
-    "digest": "digests/",
-    "fulltext": "fulltexts/",
-    "note": "notes/",
-    "hub": "hubs/",
-    "project": "projects/",
-}
-# Top-level folders the vault schema permits; anything else at the root is stray.
-KNOWN_TOP_DIRS = {"notes", "hubs", "projects", "digests", "fulltexts", "system", "inbox"}
 # Optional prompt scaffolding, not authored documents. Detectors that assert
 # things about real documents skip these when present.
 SCAFFOLD_PREFIXES = (".memoria/patterns/",)
@@ -72,35 +64,24 @@ LEFTOVER_PATTERNS = [
         r".*\.rej$",
     )
 ]
-REQUIRED_FIELDS = {
-    "note": ["id", "title", "tags", "links"],
-    "fulltext": ["id", "title", "tags", "links", "work_id"],
-    "hub": ["id", "title", "tags", "links", "tag"],
-    "project": ["id", "title", "tags", "links"],
-}
-# Canonical schemas: when .memoria/schemas/ + PyYAML are available the
-# constants above are *derived* from the one schema home; the hardcodes remain
-# the dependency-free fallback so the operation still runs without PyYAML.
-TYPE_SCHEMAS: dict | None = None
-_FOLDERS: dict | None = None
-_VOCABULARY_BY_VAULT: dict[Path, dict[str, set[str]]] = {}
-try:
-    from memoria_vault.runtime.subsystems.lib import schema as _schema
-
-    TYPE_SCHEMAS = _schema.load_types()
-    _FOLDERS = _schema.load_folders()
-    TYPE_HOME = {n: _schema.home_for(n, _FOLDERS).rstrip("/") + "/" for n in TYPE_SCHEMAS}
-    KNOWN_TOP_DIRS = set(_FOLDERS["bundle_roots"])
-    KNOWN_TOP_DIRS |= {str(path).split("/", 1)[0] for path in _FOLDERS.get("skeleton") or []}
-    KNOWN_TOP_DIRS |= {
-        str(path).strip("/").split("/", 1)[0]
-        for path in _FOLDERS.get("transient_prefixes") or []
-        if str(path).strip("/")
-    }
-except Exception:  # noqa: BLE001 -- dependency-free fallback when schemas cannot load
-    _schema = None
-
 SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
+
+
+def _vault_schema_contract(
+    vault: Path,
+) -> tuple[tuple[dict, dict, dict[str, set[str]]] | None, str]:
+    """Load the explicit schema contract for one vault without package fallback."""
+    vault = Path(vault)
+    schemas_dir = vault / ".memoria/schemas"
+    if not schemas_dir.is_dir():
+        return None, "missing required schema directory"
+    try:
+        types = schema.load_types(schemas_dir)
+        folders = schema.load_folders(schemas_dir)
+        vocabulary = schema.load_vocabulary(vault / "system/vocabulary.md", schemas_dir)
+    except Exception as exc:  # noqa: BLE001 -- malformed vault contract must become a finding
+        return None, str(exc) or exc.__class__.__name__
+    return (types, folders, vocabulary), ""
 
 
 def iter_files(vault: Path):
@@ -197,12 +178,11 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
 
 
 def frontmatter_schema_check(vault: Path) -> list[Finding]:
+    contract, error = _vault_schema_contract(vault)
+    if contract is None:
+        return [Finding("schema-check", "MEDIUM", ".memoria/schemas", error)]
+    types, _folders, vocabulary_terms = contract
     out = []
-    vocabulary_terms = None
-    if _schema is not None:
-        vocabulary_terms = _VOCABULARY_BY_VAULT.setdefault(
-            vault, _schema.load_vocabulary(vault / "system" / "vocabulary.md")
-        )
     for p in iter_notes(vault):
         rp = relpath(vault, p)
         if is_untyped_infra(rp):  # system infra isn't typed knowledge
@@ -216,33 +196,21 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
         if not ntype:
             out.append(Finding("schema-check", "MEDIUM", rp, "missing required 'type' field"))
             continue
-        if TYPE_SCHEMAS is not None:
-            sc = TYPE_SCHEMAS.get(ntype)
-            if sc is None:
-                out.append(
-                    Finding(
-                        "schema-check",
-                        "MEDIUM",
-                        rp,
-                        f"unknown type '{ntype}' (no schema in .memoria/schemas/types/)",
-                    )
+        sc = types.get(ntype)
+        if sc is None:
+            out.append(
+                Finding(
+                    "schema-check",
+                    "MEDIUM",
+                    rp,
+                    f"unknown type '{ntype}' (no schema in .memoria/schemas/types/)",
                 )
-                continue
-            for err in retired_frontmatter_field_errors(fm):
-                out.append(Finding("schema-check", "LOW", rp, err))
-            for err in _schema.validate_frontmatter(fm, sc, vocabulary_terms):
-                out.append(Finding("schema-check", "MEDIUM", rp, f"{ntype}: {err}"))
-        else:
-            for field in REQUIRED_FIELDS.get(ntype, []):
-                if field not in fm:
-                    out.append(
-                        Finding(
-                            "schema-check",
-                            "MEDIUM",
-                            rp,
-                            f"{ntype} missing required field '{field}'",
-                        )
-                    )
+            )
+            continue
+        for err in retired_frontmatter_field_errors(fm):
+            out.append(Finding("schema-check", "LOW", rp, err))
+        for err in schema.validate_frontmatter(fm, sc, vocabulary_terms):
+            out.append(Finding("schema-check", "MEDIUM", rp, f"{ntype}: {err}"))
     return out
 
 
@@ -396,6 +364,22 @@ def misplaced_note(vault: Path) -> list[Finding]:
     auto-move; the human decides. Skips scaffolding (templates/assets/skeleton),
     vault-root nav pages, and the work-in-flight / archive zones where a note
     legitimately lives outside its type-home (see MISPLACED_SKIP_PREFIXES)."""
+    contract, _error = _vault_schema_contract(vault)
+    if contract is None:
+        return []
+    types, folders, _vocabulary = contract
+    type_home = {
+        type_name: str(home).rstrip("/") + "/"
+        for type_name in types
+        if (home := schema.home_for(type_name, folders))
+    }
+    known_top_dirs = set(folders.get("bundle_roots") or [])
+    known_top_dirs |= {str(path).split("/", 1)[0] for path in folders.get("skeleton") or []}
+    known_top_dirs |= {
+        str(path).strip("/").split("/", 1)[0]
+        for path in folders.get("transient_prefixes") or []
+        if str(path).strip("/")
+    }
     out = []
     for p in iter_notes(vault):
         rp = relpath(vault, p)
@@ -404,12 +388,12 @@ def misplaced_note(vault: Path) -> list[Finding]:
         if rp.startswith(MISPLACED_SKIP_PREFIXES):
             continue
         ntype = parse_frontmatter(read(p)).get("type")
-        home = TYPE_HOME.get(ntype)
+        home = type_home.get(ntype)
         if home and not rp.startswith(home):
             out.append(Finding("misplaced-note", "MEDIUM", rp, f"{ntype} should live under {home}"))
     # Stray top-level folders: any vault-root dir outside the numbered schema set.
     for d in vault.iterdir():
-        if d.is_dir() and d.name not in SKIP_DIRS and d.name not in KNOWN_TOP_DIRS:
+        if d.is_dir() and d.name not in SKIP_DIRS and d.name not in known_top_dirs:
             out.append(
                 Finding(
                     "misplaced-note",
@@ -491,18 +475,20 @@ def skeleton_drift(vault: Path) -> list[Finding]:
 
     Verifies the `skeleton` list of `.memoria/schemas/folders.yaml` exists as
     directories in the vault. The fix is mechanical -- re-run the installer or create the dir --
-    so the finding is MEDIUM, not CRITICAL. Needs the schema home + PyYAML;
-    without them (the dependency-free fallback path) the check is skipped.
+    so the finding is MEDIUM, not CRITICAL. A missing schema contract is reported
+    by frontmatter_schema_check; this derived check then stays silent.
 
     Only meaningful for an *installed* vault: the repo's src/ tree deliberately
     ships no empty dirs, so the check keys on the vault Git repo the installer
     creates -- absent `.git`, no skeleton was ever scaffolded, and the check is skipped."""
-    if _FOLDERS is None:
-        return []
     if not (vault / ".git").is_dir():
         return []
+    contract, _error = _vault_schema_contract(vault)
+    if contract is None:
+        return []
+    _types, folders, _vocabulary = contract
     out = []
-    for d in _FOLDERS.get("skeleton") or []:
+    for d in folders.get("skeleton") or []:
         if not (vault / d).is_dir():
             out.append(
                 Finding(

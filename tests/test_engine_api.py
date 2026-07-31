@@ -61,7 +61,7 @@ def test_engine_read_explore_wraps_the_pure_engine_payload(
     assert payload == {"ok": True, "api_version": api.READ_API_VERSION, "explore": expected}
 
 
-def test_engine_read_work_omits_retired_topics_from_untouched_legacy_row(
+def test_engine_read_work_preserves_unrecognized_topics_from_catalog_row(
     workspace: Path,
 ) -> None:
     state.upsert_catalog_record(
@@ -83,7 +83,11 @@ def test_engine_read_work_omits_retired_topics_from_untouched_legacy_row(
 
     assert work["csl_json"] == {
         "id": "legacy-work",
-        "memoria": {"research_area": ["current-area"], "standing": "current"},
+        "memoria": {
+            "topics": ["legacy-only"],
+            "research_area": ["current-area"],
+            "standing": "current",
+        },
     }
 
 

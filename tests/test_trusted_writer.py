@@ -283,6 +283,23 @@ def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> Non
         )
 
 
+def test_mark_checked_rejects_retired_frontmatter_without_write_or_event(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    target = vault / "notes/alpha.md"
+    target.parent.mkdir()
+    target.write_text(
+        note_text().replace("type: note\n", "type: note\ncheck_status: checked\n"),
+        encoding="utf-8",
+    )
+    before = target.read_text(encoding="utf-8")
+
+    with pytest.raises(ValueError, match="retired frontmatter field is ignored: check_status"):
+        mark_checked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert target.read_text(encoding="utf-8") == before
+    assert events(vault) == []
+
+
 def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
