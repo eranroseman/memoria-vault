@@ -6872,6 +6872,20 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
   `python -m pytest tests/test_onboarding.py -v`
   Expected: `AttributeError: ... has no attribute 'open_vault_in_obsidian'`.
 
+> **Adopted post-review amendment (2026-07-31):**
+> `subprocess.run(..., capture_output=True)` delegates to
+> `Popen.communicate(timeout=...)`, which waits for EOF on the pipes, not for
+> the child to exit. `xdg-open` is a shell script: it launches the handler
+> and exits immediately, but the launched GUI app inherits the pipe fds and
+> holds them open for its entire lifetime. So the literal snippet below —
+> `run(opener, capture_output=True, text=True, check=False, timeout=20)` —
+> stalls for the full 20s on the most likely Linux path and then returns
+> `"manual"` even though Obsidian did open; `result.stdout`/`result.stderr`
+> are never read, so the capture buys nothing, and the sibling BOOT-D.2 call
+> deliberately omits it. Pass `stdout=subprocess.DEVNULL,
+> stderr=subprocess.DEVNULL` instead of `capture_output=True, text=True`.
+> Found by review on 2026-07-31; this is what shipped.
+
 - [x] Write minimal implementation. Add `import urllib.parse` to
   `onboarding.py` imports (stdlib group, after `subprocess`), then append:
 
@@ -6901,7 +6915,13 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
           say(fallback)
           return "manual"
       try:
-          result = run(opener, capture_output=True, text=True, check=False, timeout=20)
+          result = run(
+              opener,
+              stdout=subprocess.DEVNULL,
+              stderr=subprocess.DEVNULL,
+              check=False,
+              timeout=20,
+          )
       except (OSError, subprocess.TimeoutExpired):
           result = None
       if result is None or result.returncode != 0:

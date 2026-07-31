@@ -198,7 +198,13 @@ def open_vault_in_obsidian(
         say(fallback)
         return "manual"
     try:
-        result = run(opener, capture_output=True, text=True, check=False, timeout=20)
+        result = run(
+            opener,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
     except (OSError, subprocess.TimeoutExpired):
         result = None
     if result is None or result.returncode != 0:
