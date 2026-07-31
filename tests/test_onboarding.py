@@ -99,3 +99,113 @@ def test_detect_obsidian_dispatches_windows(tmp_path: Path) -> None:
         is True
     )
     assert onboarding.detect_obsidian("win32", env={}, home=home, run=FakeRun()) is False
+
+
+def test_install_allowlist_is_frozen_verbatim() -> None:
+    assert onboarding.OBSIDIAN_INSTALL_ALLOWLIST == {
+        "darwin": ("brew", "install", "--cask", "obsidian"),
+        "windows": ("winget", "install", "Obsidian.Obsidian"),
+        "linux": ("flatpak", "install", "md.obsidian.Obsidian"),
+    }
+
+
+def test_offer_install_shows_command_then_runs_on_yes() -> None:
+    run = FakeRun(returncode=0)
+    said: list[str] = []
+    prompts: list[str] = []
+
+    def ask(prompt: str) -> str:
+        prompts.append(prompt)
+        return "y"
+
+    status = onboarding.offer_obsidian_install("linux", ask=ask, say=said.append, run=run)
+
+    assert status == "installed"
+    assert run.calls == [["flatpak", "install", "md.obsidian.Obsidian"]]
+    # The exact command is shown verbatim, and consent is asked, before it runs.
+    assert "  flatpak install md.obsidian.Obsidian" in said
+    assert prompts == ["Run this command now? [y/N] "]
+
+
+def test_offer_install_declines_without_running() -> None:
+    run = FakeRun(returncode=0)
+    said: list[str] = []
+
+    status = onboarding.offer_obsidian_install(
+        "darwin", ask=lambda _prompt: "n", say=said.append, run=run
+    )
+
+    assert status == "declined"
+    assert run.calls == []
+    assert any(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said)
+
+
+def test_offer_install_treats_eof_as_decline() -> None:
+    run = FakeRun(returncode=0)
+
+    def ask(_prompt: str) -> str:
+        raise EOFError
+
+    status = onboarding.offer_obsidian_install("win32", ask=ask, say=lambda _line: None, run=run)
+
+    assert status == "declined"
+    assert run.calls == []
+
+
+def test_offer_install_directs_to_download_when_no_allowlisted_manager() -> None:
+    said: list[str] = []
+
+    status = onboarding.offer_obsidian_install(
+        "plan9", ask=lambda _prompt: "y", say=said.append, run=FakeRun()
+    )
+
+    assert status == "manual"
+    assert any(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said)
+
+
+def test_offer_install_reports_missing_manager_and_nonzero_exit() -> None:
+    said: list[str] = []
+    missing = onboarding.offer_obsidian_install(
+        "linux", ask=lambda _prompt: "y", say=said.append, run=FakeRun(raises=FileNotFoundError())
+    )
+    failed = onboarding.offer_obsidian_install(
+        "linux", ask=lambda _prompt: "y", say=said.append, run=FakeRun(returncode=1)
+    )
+
+    assert missing == "manual"
+    assert failed == "failed"
+    assert sum(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said) >= 2
+
+
+def test_offer_install_treats_hang_as_failed_not_a_crash() -> None:
+    # A hanging installer (subprocess.run(..., timeout=...) expiring) must
+    # never propagate and crash onboarding; it is reported the same as any
+    # other failed install, with the manual fallback shown.
+    said: list[str] = []
+
+    status = onboarding.offer_obsidian_install(
+        "linux",
+        ask=lambda _prompt: "y",
+        say=said.append,
+        run=FakeRun(raises=subprocess.TimeoutExpired(cmd="flatpak", timeout=1)),
+    )
+
+    assert status == "failed"
+    assert any(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said)
+
+
+def test_offer_install_never_runs_a_command_outside_the_allowlist() -> None:
+    # The allowlist is frozen: even if `ask` is abused to return something
+    # that looks like a command, only the literal allowlisted tuple for the
+    # resolved platform is ever passed to `run`.
+    run = FakeRun(returncode=0)
+
+    status = onboarding.offer_obsidian_install(
+        "darwin",
+        ask=lambda _prompt: "y; rm -rf /",
+        say=lambda _line: None,
+        run=run,
+    )
+
+    assert status == "declined"
+    assert run.calls == []

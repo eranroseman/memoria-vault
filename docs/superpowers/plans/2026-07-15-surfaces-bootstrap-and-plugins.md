@@ -6623,7 +6623,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_onboarding.py`:
+- [x] Write the failing test. Append to `tests/test_onboarding.py`:
 
   ```python
   def test_install_allowlist_is_frozen_verbatim() -> None:
@@ -6704,12 +6704,12 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       assert sum(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said) >= 2
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_onboarding.py -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.onboarding' has no
   attribute 'OBSIDIAN_INSTALL_ALLOWLIST'` (and siblings).
 
-- [ ] Write minimal implementation. In `onboarding.py`, add the constants
+- [x] Write minimal implementation. In `onboarding.py`, add the constants
   right after the type aliases and the function after `_detect_linux`:
 
   ```python
@@ -6760,10 +6760,10 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       return "installed"
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_onboarding.py -v` — all tests pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/onboarding.py tests/test_onboarding.py

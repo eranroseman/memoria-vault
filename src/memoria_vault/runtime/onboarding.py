@@ -15,6 +15,22 @@ RunFn = Callable[..., subprocess.CompletedProcess[str]]
 AskFn = Callable[[str], str]
 SayFn = Callable[[str], None]
 
+OBSIDIAN_DOWNLOAD_URL = "https://obsidian.md/download"
+
+# Frozen allowlist (bootstrap spec section 7.1): the command is shown
+# verbatim and run only on explicit yes. The engine never downloads
+# binaries itself; anything off this list is detect-and-direct.
+OBSIDIAN_INSTALL_ALLOWLIST: dict[str, tuple[str, ...]] = {
+    "darwin": ("brew", "install", "--cask", "obsidian"),
+    "windows": ("winget", "install", "Obsidian.Obsidian"),
+    "linux": ("flatpak", "install", "md.obsidian.Obsidian"),
+}
+
+# Package-manager installs (unlike the quick `_detect_linux` version probe)
+# can legitimately take minutes to download; this only bounds a stalled
+# process so onboarding can never hang forever.
+_INSTALL_TIMEOUT_S = 300
+
 
 def platform_key(sys_platform: str) -> str | None:
     if sys_platform == "darwin":
@@ -97,3 +113,51 @@ def _detect_linux(run: RunFn, data_dirs: tuple[Path, ...]) -> bool:
     return any(
         (data_dir / "applications" / entry).is_file() for data_dir in data_dirs for entry in entries
     )
+
+
+def offer_obsidian_install(
+    sys_platform: str,
+    *,
+    ask: AskFn,
+    say: SayFn,
+    run: RunFn = subprocess.run,
+) -> str:
+    """Offer to install Obsidian via the frozen per-platform allowlist.
+
+    The command run, if any, is always the literal tuple looked up from
+    ``OBSIDIAN_INSTALL_ALLOWLIST`` for the resolved platform key — never a
+    value derived from ``ask``'s answer or any other input. Nothing runs
+    without an explicit "y"/"yes" answer; any other answer, including EOF or
+    an ambiguous response, is treated as a decline.
+    """
+    command = OBSIDIAN_INSTALL_ALLOWLIST.get(platform_key(sys_platform) or "")
+    if command is None:
+        say(f"Obsidian not detected. Download it from {OBSIDIAN_DOWNLOAD_URL}")
+        return "manual"
+    say("Obsidian not detected. Memoria can install it with:")
+    say(f"  {' '.join(command)}")
+    try:
+        answer = ask("Run this command now? [y/N] ").strip().lower()
+    except EOFError:
+        answer = ""
+    if answer not in ("y", "yes"):
+        say(f"Skipped. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
+        return "declined"
+    try:
+        result = run(list(command), check=False, timeout=_INSTALL_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        say(
+            f"Install command did not finish within {_INSTALL_TIMEOUT_S}s. "
+            f"Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}"
+        )
+        return "failed"
+    except OSError:
+        say(f"{command[0]} is not available. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
+        return "manual"
+    if result.returncode != 0:
+        say(
+            f"Install command exited {result.returncode}. "
+            f"Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}"
+        )
+        return "failed"
+    return "installed"
