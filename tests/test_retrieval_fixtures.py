@@ -10,8 +10,11 @@ grouped explore payload.
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.search_index import evaluate_bm25
@@ -110,6 +113,62 @@ def test_fixture_form_validation_names_the_broken_row() -> None:
             assert fragment in str(exc)
         else:
             raise AssertionError(f"row must be refused: {fragment}")
+
+
+def test_fixture_form_refuses_scalar_coercion_and_non_integer_shape() -> None:
+    checks = [
+        (valid_row(id=42), "id must be a nonblank string"),
+        (valid_row(query=["example query"]), "query must be a nonblank string"),
+        (valid_row(metric=5), "metric must be a string"),
+        (valid_row(shape=True), "shape must be 1 or 2"),
+        (valid_row(shape=1.0), "shape must be 1 or 2"),
+    ]
+    for broken, fragment in checks:
+        try:
+            validate_retrieval_fixture_rows([broken])
+        except ValueError as exc:
+            assert fragment in str(exc)
+        else:
+            raise AssertionError(f"row must be refused: {fragment}")
+
+
+def test_fixture_form_validates_calendar_dates_and_normalizes_yaml_dates() -> None:
+    for broken in [
+        valid_row(registered="2026-02-30"),
+        valid_row(frozen=True, frozen_on="2026-02-30"),
+    ]:
+        try:
+            validate_retrieval_fixture_rows([broken])
+        except ValueError as exc:
+            assert "must be a valid ISO calendar date" in str(exc)
+        else:
+            raise AssertionError("impossible calendar date must be refused")
+
+    native_dates = yaml.safe_load(
+        """
+        - id: native-yaml-date
+          shape: 1
+          query: example query
+          gold: [settles-2016-spaced-repetition#^p0007]
+          metric: hit@5
+          registered: 2026-07-17
+          frozen: true
+          frozen_on: 2026-07-18
+        """
+    )
+    assert native_dates[0]["registered"] == date(2026, 7, 17)
+    assert validate_retrieval_fixture_rows(native_dates) == [
+        {
+            "id": "native-yaml-date",
+            "shape": 1,
+            "query": "example query",
+            "gold": ["settles-2016-spaced-repetition#^p0007"],
+            "metric": "hit@5",
+            "registered": "2026-07-17",
+            "frozen": True,
+            "frozen_on": "2026-07-18",
+        }
+    ]
 
 
 def test_shape1_gold_maps_to_document_paths_and_feeds_evaluate_bm25(tmp_path: Path) -> None:

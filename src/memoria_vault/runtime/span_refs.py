@@ -32,35 +32,44 @@ def resolve_span_ref(vault: Path, ref: str) -> dict[str, str] | None:
         span = parse_source_span_ref(ref)
     except ValueError:
         return None
+    source = state.catalog_source(vault, span.work_id)
+    if source is None:
+        return None
+    path = f"fulltexts/{safe_filename(span.work_id)}.md"
     if state.db_path(vault).is_file():
         with state.connect(vault) as conn:
             row = conn.execute(
                 """
                 SELECT path
                 FROM passages
-                WHERE work_id = ? AND anchor = ?
-                ORDER BY path
-                LIMIT 1
+                WHERE work_id = ?
+                  AND anchor = ?
+                  AND origin = 'generated'
+                  AND concept_id = ?
+                  AND path = ?
                 """,
-                (span.work_id, span.page),
+                (span.work_id, span.page, f"catalog/sources/{span.work_id}", path),
             ).fetchone()
         if row is not None:
             return {"work_id": span.work_id, "anchor": span.page, "path": str(row["path"])}
-    return _file_scan_resolution(vault, span.work_id, span.page)
+    return _file_scan_resolution(vault, span.work_id, span.page, source=source)
 
 
-def _file_scan_resolution(vault: Path, work_id: str, anchor: str) -> dict[str, str] | None:
+def _file_scan_resolution(
+    vault: Path, work_id: str, anchor: str, *, source: dict[str, object] | None = None
+) -> dict[str, str] | None:
     """Interim resolution: scan the work's content file for the anchor."""
-    source = state.catalog_source(vault, work_id)
+    source = source or state.catalog_source(vault, work_id)
     if source is None:
         return None
     content_path = vault / normalize_path(str(source.get("content_path") or ""))
     if not content_path.is_file():
         return None
-    anchors = {
-        match.removeprefix("^")
-        for match in _ANCHOR_RE.findall(content_path.read_text(encoding="utf-8"))
-    }
+    try:
+        text = content_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None
+    anchors = {match.removeprefix("^") for match in _ANCHOR_RE.findall(text)}
     if anchor not in anchors:
         return None
     return {

@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import indexing, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import answer_query as _answer_query
@@ -152,6 +154,86 @@ def test_resolve_span_ref_matches_passages_then_falls_back_to_file_scan(
     # still resolve through its passages row; ^p0009 honestly cannot.
     content.unlink()
     assert resolve_span_ref(vault, f"{WORK_ID}#^p0007") == resolved
+    assert resolve_span_ref(vault, f"{WORK_ID}#^p0009") is None
+
+
+def test_resolve_span_ref_uses_only_the_canonical_catalog_fulltext_passage(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    checked_fulltext_source(vault, WORK_ID, "Canonical finding. ^p0007\n")
+    decoy = vault / "fulltexts/000-colliding-note.md"
+    decoy.parent.mkdir(parents=True)
+    decoy.write_text(
+        "---\ntype: note\nwork_id: settles-2016-spaced-repetition\n"
+        "check_status: checked\ntitle: Colliding note\n---\n"
+        "Checked note collision. ^p0007\n",
+        encoding="utf-8",
+    )
+    state.record_observed_file_edit(
+        vault,
+        output_id="fulltexts/000-colliding-note.md",
+        concept_type="note",
+        output_sha256=sha256_file(decoy),
+    )
+    state.set_concept_verdict(vault, "fulltexts/000-colliding-note.md", "checked")
+    indexing.rebuild_passage_index_explicit(vault, actor="operation", machine="test-machine")
+
+    # A checked note can share a work id and anchor.  Its path sorts before
+    # the canonical generated fulltext, so the old lexical query returned it.
+    with state.connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO passages(
+                passage_id, origin, concept_id, work_id, path, anchor, page,
+                byte_start, byte_end, text_sha256, text, check_status, mode,
+                question_status, source_mtime_ns, indexed_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "orphan-passage",
+                "file",
+                "notes/orphan.md",
+                "orphan-work",
+                "a-orphan-note.md",
+                "p0007",
+                "p0001",
+                0,
+                0,
+                "sha256:orphan",
+                "Orphan collision. ^p0007",
+                "checked",
+                "",
+                "",
+                0,
+                "2026-07-30T00:00:00Z",
+            ),
+        )
+
+    assert resolve_span_ref(vault, f"{WORK_ID}#^p0007") == {
+        "work_id": WORK_ID,
+        "anchor": "p0007",
+        "path": f"fulltexts/{WORK_ID}.md",
+    }
+    assert resolve_span_ref(vault, "orphan-work#^p0007") is None
+
+
+@pytest.mark.parametrize("error", [OSError("read failed"), UnicodeError("bad text")])
+def test_resolve_span_ref_file_scan_returns_none_when_read_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: Exception
+) -> None:
+    vault = workspace(tmp_path)
+    content = checked_fulltext_source(vault, WORK_ID, "Finding only in file. ^p0009\n")
+    original_read_text = Path.read_text
+
+    def failing_read_text(path: Path, *args: object, **kwargs: object) -> str:
+        if path == content:
+            raise error
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", failing_read_text)
+
+    assert content.is_file()
     assert resolve_span_ref(vault, f"{WORK_ID}#^p0009") is None
 
 

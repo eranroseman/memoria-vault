@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -49,19 +50,21 @@ def validate_retrieval_fixture_rows(
     for row in rows:
         if not isinstance(row, dict):
             raise ValueError(f"{source}: fixture case must be a mapping, got: {row!r}")
-        case_id = str(row.get("id") or "")
+        case_id = row.get("id")
         missing = sorted(_REQUIRED_KEYS - set(row))
         unknown = sorted(set(row) - _REQUIRED_KEYS - _OPTIONAL_KEYS)
-        if missing or unknown or not case_id:
-            raise ValueError(
-                f"{source}: case {case_id or '<no id>'}: missing {missing}, unknown {unknown}"
-            )
+        if not isinstance(case_id, str) or not case_id.strip():
+            raise ValueError(f"{source}: case <no id>: id must be a nonblank string")
+        case_id = case_id.strip()
+        if missing or unknown:
+            raise ValueError(f"{source}: case {case_id}: missing {missing}, unknown {unknown}")
         shape = row["shape"]
-        if shape not in (1, 2):
+        if type(shape) is not int or shape not in (1, 2):
             raise ValueError(f"{source}: {case_id}: shape must be 1 or 2, got: {shape!r}")
-        query = str(row["query"] or "").strip()
-        if not query:
-            raise ValueError(f"{source}: {case_id}: query must be nonblank")
+        query = row["query"]
+        if not isinstance(query, str) or not query.strip():
+            raise ValueError(f"{source}: {case_id}: query must be a nonblank string")
+        query = query.strip()
         gold = row["gold"]
         if (
             not isinstance(gold, list)
@@ -69,21 +72,23 @@ def validate_retrieval_fixture_rows(
             or not all(isinstance(item, str) and item.strip() for item in gold)
         ):
             raise ValueError(f"{source}: {case_id}: gold must be a nonempty list of refs/ids")
-        metric = str(row["metric"] or "")
+        metric = row["metric"]
+        if not isinstance(metric, str):
+            raise ValueError(f"{source}: {case_id}: metric must be a string")
         metric_re = _SHAPE1_METRIC_RE if shape == 1 else _SHAPE2_METRIC_RE
         if not metric_re.fullmatch(metric):
             raise ValueError(f"{source}: {case_id}: metric {metric!r} is invalid for shape {shape}")
         if shape == 1:
             for ref in gold:
                 parse_source_span_ref(ref)
-        registered = str(row["registered"])
-        if not _DATE_RE.fullmatch(registered):
-            raise ValueError(f"{source}: {case_id}: registered must be YYYY-MM-DD")
+        registered = _normalize_calendar_date(row["registered"], "registered", source, case_id)
         frozen = row["frozen"]
         if not isinstance(frozen, bool):
             raise ValueError(f"{source}: {case_id}: frozen must be a bool")
-        frozen_on = str(row.get("frozen_on") or "")
-        if frozen and not _DATE_RE.fullmatch(frozen_on):
+        frozen_on = ""
+        if "frozen_on" in row:
+            frozen_on = _normalize_calendar_date(row["frozen_on"], "frozen_on", source, case_id)
+        if frozen and not frozen_on:
             raise ValueError(f"{source}: {case_id}: frozen rows must record frozen_on (YYYY-MM-DD)")
         if not frozen and frozen_on:
             raise ValueError(f"{source}: {case_id}: frozen_on requires frozen: true")
@@ -100,6 +105,20 @@ def validate_retrieval_fixture_rows(
             normalized["frozen_on"] = frozen_on
         validated.append(normalized)
     return validated
+
+
+def _normalize_calendar_date(value: object, field: str, source: str, case_id: str) -> str:
+    """Return an ISO date while refusing scalar coercion and impossible dates."""
+    if isinstance(value, datetime):
+        value = value.date()
+    if isinstance(value, date):
+        return value.isoformat()
+    if not isinstance(value, str) or not _DATE_RE.fullmatch(value):
+        raise ValueError(f"{source}: {case_id}: {field} must be a valid ISO calendar date")
+    try:
+        return date.fromisoformat(value).isoformat()
+    except ValueError as exc:
+        raise ValueError(f"{source}: {case_id}: {field} must be a valid ISO calendar date") from exc
 
 
 def shape1_bm25_cases(vault: Path, cases: list[dict[str, Any]]) -> list[dict[str, Any]]:
