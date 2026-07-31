@@ -305,14 +305,7 @@ def sweep(vault: Path, offline: bool = True) -> dict:
 
     checked = hits = 0
     for source in state.catalog_sources(vault):
-        identifiers = source.get("identifiers")
-        csl_json = source.get("csl_json")
-        doi = str(
-            source.get("doi")
-            or (identifiers.get("doi") if isinstance(identifiers, dict) else None)
-            or (csl_json.get("DOI") if isinstance(csl_json, dict) else None)
-            or ""
-        ).strip()
+        doi = str(source.get("doi") or "").strip()
         if not doi:
             continue
         checked += 1

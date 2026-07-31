@@ -220,12 +220,6 @@ def test_sweep_flags_checked_sqlite_retraction_without_legacy_fallback(tmp_path,
         csl_json={"title": "Quarantined Retracted SQLite Work"},
         check_status="quarantined",
     )
-    legacy_note = vault / "catalog" / "sources" / "legacy2024" / "source.md"
-    legacy_note.parent.mkdir(parents=True)
-    legacy_note.write_text(
-        "---\ntype: source\ncitekey: legacy2024\ndoi: 10.1/Legacy\n---\nBody.\n",
-        encoding="utf-8",
-    )
     retracted_rows = [
         *RW_ROWS,
         {
@@ -239,12 +233,6 @@ def test_sweep_flags_checked_sqlite_retraction_without_legacy_fallback(tmp_path,
             "RetractionNature": "Retraction",
             "RetractionDate": "2021-05-03",
             "RetractionDOI": "10.1/rw-quarantined",
-        },
-        {
-            "OriginalPaperDOI": "10.1/Legacy",
-            "RetractionNature": "Retraction",
-            "RetractionDate": "2021-05-03",
-            "RetractionDOI": "10.1/rw-legacy",
         },
     ]
     rw_csv = tmp_path / "rw.csv"
@@ -314,6 +302,44 @@ def test_sweep_checks_canonical_doi_column_and_alerts_on_retraction(tmp_path, mo
     fm = read_frontmatter(cards[0])
     assert fm["title"] == "Retraction: Canonical DOI Column Work"
     assert "10.1/ColumnOnly is retracted" in str(fm["finding"])
+
+
+def test_sweep_does_not_read_legacy_doi_fields(tmp_path, monkeypatch):
+    vault = capture_workspace(tmp_path)
+    state.upsert_catalog_record(
+        vault,
+        work_id="legacy-doi-work",
+        title="Legacy DOI Work",
+        identifiers={"doi": "10.1/LegacyOnly"},
+        csl_json={"title": "Legacy DOI Work", "DOI": "10.1/LegacyOnly"},
+        check_status="checked",
+    )
+    with state.connect(vault) as conn:
+        conn.execute("UPDATE catalog_sources SET doi = NULL WHERE work_id = ?", ("legacy-doi-work",))
+    rw_csv = tmp_path / "rw.csv"
+    with rw_csv.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=["OriginalPaperDOI", "RetractionNature", "RetractionDate", "RetractionDOI"],
+        )
+        writer.writeheader()
+        writer.writerow(
+            {
+                "OriginalPaperDOI": "10.1/LegacyOnly",
+                "RetractionNature": "Retraction",
+                "RetractionDate": "2021-05-03",
+                "RetractionDOI": "10.1/rw-legacy-only",
+            }
+        )
+    monkeypatch.setenv("MEMORIA_RW_CSV", str(rw_csv))
+    _m._RW_INDEX = None
+    try:
+        result = sweep(vault, offline=True)
+    finally:
+        _m._RW_INDEX = None
+
+    assert result == {"checked": 0, "retracted": 0}
+    assert list((vault / "inbox").glob("alert-*.md")) == []
 
 
 def test_check_doi_offline_warns_once_when_rw_csv_is_missing(tmp_path, monkeypatch, capsys):
