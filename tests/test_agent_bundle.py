@@ -5,7 +5,11 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from pathlib import Path
 
+import pytest
+
+from memoria_vault import cli
 from tests.helpers import WORKSPACE_SEED
 
 PERIMETER_MESSAGE = (
@@ -57,7 +61,7 @@ def test_seed_claude_settings_registers_the_perimeter_hook():
 def test_write_perimeter_hook_denies_unconditionally_with_exit_2():
     hook = WORKSPACE_SEED / ".claude/hooks/write_perimeter.py"
     result = subprocess.run(
-        [sys.executable, str(hook)],
+        [sys.executable, "-B", str(hook)],
         input='{"tool_name": "Write", "tool_input": {"file_path": "notes/x.md"}}',
         capture_output=True,
         text=True,
@@ -66,6 +70,51 @@ def test_write_perimeter_hook_denies_unconditionally_with_exit_2():
     assert result.returncode == 2
     assert PERIMETER_MESSAGE in result.stderr
     assert result.stdout == ""
+
+
+def test_seed_tree_skips_python_bytecode_caches(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed = tmp_path / "seed"
+    hook = seed / ".claude/hooks/write_perimeter.py"
+    hook.parent.mkdir(parents=True)
+    hook.write_text("# hook\n", encoding="utf-8")
+    artifacts = (
+        seed / ".claude/__pycache__/ignored.cpython-312.pyc",
+        seed / ".claude/hooks/__pycache__/write_perimeter.cpython-312.pyc",
+        seed / ".claude/hooks/stray.pyc",
+    )
+    for artifact in artifacts:
+        artifact.parent.mkdir(exist_ok=True)
+        artifact.write_bytes(b"compiled bytecode")
+
+    def fake_seed_resource(source_rel: str) -> Path:
+        return seed.joinpath(*source_rel.split("/"))
+
+    monkeypatch.setattr(cli, "_seed_resource", fake_seed_resource)
+    monkeypatch.setattr(cli, "SEED_TREES", ((".claude", ".claude"),))
+    monkeypatch.setattr(cli, "SEED_FILES", ())
+
+    delivered = tmp_path / "workspace/.claude"
+    cli._copy_seed_tree(".claude", delivered, overwrite=False, target_rel=".claude")
+    manifest_targets = cli._seed_tree_file_targets(".claude", ".claude")
+    preflight_targets = cli._seed_tree_write_targets(".claude", ".claude")
+    repair_targets = cli._repair_seed_write_targets(tmp_path / "repair")
+    repair_preflight_targets = cli._repair_write_targets(
+        tmp_path / "preflight", include_obsidian=False
+    )
+
+    assert (delivered / "hooks/write_perimeter.py").read_text(encoding="utf-8") == "# hook\n"
+    assert not (delivered / "__pycache__").exists()
+    assert not (delivered / "hooks/__pycache__").exists()
+    assert not (delivered / "hooks/stray.pyc").exists()
+    for targets in (manifest_targets, preflight_targets, repair_targets, repair_preflight_targets):
+        assert ".claude/hooks/write_perimeter.py" in targets
+        assert ".claude/hooks/stray.pyc" not in targets
+    assert all("__pycache__" not in Path(target).parts for target in manifest_targets)
+    assert all("__pycache__" not in Path(target).parts for target in preflight_targets)
+    assert all("__pycache__" not in Path(target).parts for target in repair_targets)
+    assert all("__pycache__" not in Path(target).parts for target in repair_preflight_targets)
 
 
 def test_write_perimeter_hook_is_stdlib_only():
