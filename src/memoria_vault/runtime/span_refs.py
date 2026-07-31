@@ -33,7 +33,7 @@ def resolve_span_ref(vault: Path, ref: str) -> dict[str, str] | None:
     except ValueError:
         return None
     source = state.catalog_source(vault, span.work_id)
-    if source is None:
+    if source is None or source.get("check_status") != "checked":
         return None
     path = f"fulltexts/{safe_filename(span.work_id)}.md"
     if state.db_path(vault).is_file():

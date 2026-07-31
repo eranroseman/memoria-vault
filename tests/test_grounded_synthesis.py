@@ -237,6 +237,45 @@ def test_resolve_span_ref_file_scan_returns_none_when_read_fails(
     assert resolve_span_ref(vault, f"{WORK_ID}#^p0009") is None
 
 
+def test_resolve_span_ref_refuses_an_unchecked_or_quarantined_source(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    content = checked_fulltext_source(vault, WORK_ID, "First finding. ^p0007\n")
+    indexing.rebuild_passage_index_explicit(vault, actor="operation", machine="test-machine")
+
+    resolved = {
+        "work_id": WORK_ID,
+        "anchor": "p0007",
+        "path": f"fulltexts/{WORK_ID}.md",
+    }
+    assert resolve_span_ref(vault, f"{WORK_ID}#^p0007") == resolved
+
+    # Flip the same record to unchecked without touching its passage row or
+    # blob: the ref must refuse to resolve through either the passages route
+    # or the file-scan fallback.
+    state.upsert_catalog_record(
+        vault,
+        work_id=WORK_ID,
+        title="A Trainable Spaced Repetition Model",
+        provider_coverage="full",
+        text_status="full-text",
+        check_status="unchecked",
+        content_path=content.relative_to(vault).as_posix(),
+    )
+    assert resolve_span_ref(vault, f"{WORK_ID}#^p0007") is None
+
+    # Quarantined must refuse too.
+    state.upsert_catalog_record(
+        vault,
+        work_id=WORK_ID,
+        title="A Trainable Spaced Repetition Model",
+        provider_coverage="full",
+        text_status="full-text",
+        check_status="quarantined",
+        content_path=content.relative_to(vault).as_posix(),
+    )
+    assert resolve_span_ref(vault, f"{WORK_ID}#^p0007") is None
+
+
 def test_resolve_span_ref_refuses_malformed_and_unknown_refs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
