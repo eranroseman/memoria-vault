@@ -7,10 +7,10 @@ nav_order: 3
 
 # Run the weekly review
 
-Walk the Friday ritual: refresh your steering, sweep the Inbox, inspect new
-material, and run the structural checks. Allow up to ~60 minutes; closer to
-20–30 once the vault is established and the queues run near-empty — **empty is
-success**.
+Walk the Friday ritual: archive stale projects and prune the watch/mute
+override, sweep the Inbox, inspect new material, and run the structural checks.
+Allow up to ~60 minutes; closer to 20–30 once the vault is established and the
+queues run near-empty — **empty is success**.
 
 ## Prerequisites
 
@@ -19,9 +19,14 @@ success**.
 
 ## Steps
 
-**Step 1 — Refresh research priorities (2 min).**
+**Step 1 — Refresh derived steering (2 min).**
 
-Open `steering.md`. Confirm or update the active questions and reading focus — the [Librarian](../../explanation/execution/operation-postures/librarian.md) reads this to aim discovery, and it sets the lens for every decision below.
+Run `memoria steering show --workspace .`. Effective steering derives from
+active projects, hubs, and unresolved question notes, plus watch bullets minus
+mute bullets. Archive a project that is no longer live by setting
+`archived: true` in its frontmatter, and prune stale override bullets. The
+[Librarian](../../explanation/execution/operation-postures/librarian.md) reads
+this to aim discovery, and it sets the lens for every decision below.
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
@@ -82,7 +87,8 @@ severity meanings are in [Run the Linter](../operate/run-the-linter.md).
 - `memoria attention list --workspace . --json` has no open item that needs PI action
 - No stale unchecked note backlog remains
 - A fresh Linter run has no HIGH or CRITICAL finding
-- `steering.md` reflects what you actually intend to read next week
+- `memoria steering show` reflects what you actually intend to read next week:
+  current projects, hubs, and questions; watch/mute entries pruned
 
 ## Related
 

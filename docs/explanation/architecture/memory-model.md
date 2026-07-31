@@ -20,8 +20,9 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 ## The ones you steer and read
 
-**Program memory** (your standing steering — `steering` discovery priorities +
-`screening-protocol` review mode), **project memory** (one sub-project's
+**Program memory** (effective steering derived from active projects, hubs, and
+unresolved question notes, plus the `steering.md` watch/mute override),
+**project memory** (one sub-project's
 cross-operation working state — open questions, decisions, framing), and
 **audit memory** (the tamper-evident record of every gated write, append-only
 forever per [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).

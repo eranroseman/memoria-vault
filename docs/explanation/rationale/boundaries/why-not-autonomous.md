@@ -110,11 +110,12 @@ human-set strategy and per-batch review, L4 self-directed within a domain, and
 L5 fully self-directed.
 
 Memoria is L3. Operations execute multi-step work unattended within request and
-manifest ceilings. The human sets the strategy (`steering.md`,
-`screening-protocol.md`) and the review gate blocks unchecked or unwarranted
-promotion from entering checked readers. L4 requires autonomous keep/revert on
-synthesis; L5 requires self-directed agenda-setting. Both fail the
-preconditions test for knowledge work.
+manifest ceilings. The human sets the strategy by framing projects, curating
+hubs and open questions, and maintaining the `steering.md` watch/mute override;
+the review gate blocks unchecked or unwarranted promotion from entering checked
+readers. L4 requires autonomous keep/revert on synthesis; L5 requires
+self-directed agenda-setting. Both fail the preconditions test for knowledge
+work.
 
 ---
 

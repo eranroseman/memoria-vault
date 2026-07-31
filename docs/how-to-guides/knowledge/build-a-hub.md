@@ -76,7 +76,9 @@ not overwrite curated hub judgment.
 - The hub validates: `type: hub`, a stable ULID `id`, `tag: <topic-tag>`, `tags: []`, and `links: {}`
 - Every intended member has the hub tag and is checked in the DB/read API
 - The member notes link back (open the backlinks panel on the hub)
-- The hub shows up where you'd look for the topic — link it from `steering.md` or a parent hub if not
+- Link the hub from a parent hub when that improves navigation. Its title,
+  `tag`, and `tags` already contribute to effective steering; `memoria steering
+  show` renders that contribution with hub provenance.
 
 ## Related
 
