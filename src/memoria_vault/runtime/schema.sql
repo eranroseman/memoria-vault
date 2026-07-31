@@ -55,10 +55,14 @@ CREATE TABLE IF NOT EXISTS concepts (
             'work', 'digest', 'note', 'hub', 'project', 'capability',
             'operation', 'skill', 'adapter', 'workflow'
         )),
-    store TEXT NOT NULL CHECK (store IN ('db', 'file'))
+    store TEXT NOT NULL CHECK (store IN ('db', 'file')),
+    path TEXT NOT NULL DEFAULT ''
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_concepts_path
+    ON concepts(path) WHERE path != '';
 CREATE TABLE IF NOT EXISTS concept_verdicts (
-    concept_id TEXT PRIMARY KEY,
+    concept_id TEXT PRIMARY KEY
+        REFERENCES concepts(concept_id) ON UPDATE CASCADE,
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined'))
 );
 CREATE TABLE IF NOT EXISTS concept_flags (
@@ -74,6 +78,7 @@ SELECT
     c.concept_id,
     c.concept_type,
     c.store,
+    c.path,
     COALESCE(v.check_status, 'unchecked') AS check_status
 FROM concepts c
 LEFT JOIN concept_verdicts v ON v.concept_id = c.concept_id;
@@ -96,7 +101,8 @@ CREATE TABLE IF NOT EXISTS materialization_payloads (
     payload_text TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS catalog_sources (
-    work_id TEXT PRIMARY KEY,
+    work_id TEXT PRIMARY KEY
+        REFERENCES concepts(concept_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
     concept_path TEXT NOT NULL,
     doi TEXT UNIQUE,
     title TEXT NOT NULL,
@@ -241,16 +247,19 @@ CREATE TABLE IF NOT EXISTS file_index_state (
 );
 CREATE TABLE IF NOT EXISTS concept_edges (
     edge_id TEXT NOT NULL DEFAULT '',
-    source_concept_id TEXT NOT NULL,
+    source_concept_id TEXT NOT NULL
+        REFERENCES concepts(concept_id) ON UPDATE CASCADE ON DELETE CASCADE,
     relation_type TEXT NOT NULL CHECK (
         relation_type IN ('supports', 'contradicts', 'extends', 'tension')
     ),
-    target_concept_id TEXT NOT NULL,
+    target_concept_id TEXT
+        REFERENCES concepts(concept_id) ON UPDATE CASCADE ON DELETE SET NULL,
+    target_path TEXT NOT NULL DEFAULT '',
     attributes_json TEXT NOT NULL DEFAULT '{}',
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
     source_path TEXT NOT NULL DEFAULT '',
     updated_at TEXT NOT NULL,
-    PRIMARY KEY (source_concept_id, relation_type, target_concept_id)
+    PRIMARY KEY (source_concept_id, relation_type, target_path)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_concept_edges_edge_id
     ON concept_edges(edge_id) WHERE edge_id != '';
@@ -262,8 +271,8 @@ BEGIN
     UPDATE passages
     SET check_status = NEW.check_status
     WHERE concept_id = NEW.concept_id
-       OR path = NEW.concept_id
-       OR ('catalog/sources/' || work_id) = NEW.concept_id;
+       OR work_id = NEW.concept_id
+       OR path = (SELECT path FROM concepts WHERE concept_id = NEW.concept_id);
 END;
 CREATE TRIGGER IF NOT EXISTS concept_verdicts_passage_cascade_update
 AFTER UPDATE OF check_status ON concept_verdicts
@@ -271,8 +280,8 @@ BEGIN
     UPDATE passages
     SET check_status = NEW.check_status
     WHERE concept_id = NEW.concept_id
-       OR path = NEW.concept_id
-       OR ('catalog/sources/' || work_id) = NEW.concept_id;
+       OR work_id = NEW.concept_id
+       OR path = (SELECT path FROM concepts WHERE concept_id = NEW.concept_id);
 END;
 CREATE TRIGGER IF NOT EXISTS concept_verdicts_edge_demotion_insert
 AFTER INSERT ON concept_verdicts
@@ -300,7 +309,7 @@ BEGIN
     UPDATE passages
     SET check_status = NEW.check_status
     WHERE work_id = NEW.work_id
-       OR concept_id = ('catalog/sources/' || NEW.work_id);
+       OR concept_id = NEW.work_id;
 END;
 CREATE TRIGGER IF NOT EXISTS passage_fts_insert
 AFTER INSERT ON passages
@@ -403,4 +412,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 15;
+PRAGMA user_version = 16;

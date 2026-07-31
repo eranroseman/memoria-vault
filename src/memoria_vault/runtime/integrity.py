@@ -1317,13 +1317,15 @@ def _quarantine_catalog_source(
             "UPDATE catalog_sources SET check_status = 'quarantined' WHERE work_id = ?",
             (work_id,),
         )
+        # v16 keys a catalog Concept by its bare work_id; source_ref is the
+        # rendered `catalog/sources/<work_id>` path, not the verdict identity.
         conn.execute(
             """
             INSERT INTO concept_verdicts(concept_id, check_status)
             VALUES (?, 'quarantined')
             ON CONFLICT(concept_id) DO UPDATE SET check_status = 'quarantined'
             """,
-            (source_ref,),
+            (state.resolve_concept_id(conn, source_ref),),
         )
     quarantine_path = _unique_path(vault / ".memoria/quarantine" / source_ref)
     quarantine_path.parent.mkdir(parents=True, exist_ok=True)

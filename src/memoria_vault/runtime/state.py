@@ -54,7 +54,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 15
+SCHEMA_VERSION = 16
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -62,6 +62,8 @@ WORK_ASPECT_TYPES = frozenset(
     {"context", "key_idea", "method", "outcome", "limitation", "assumption"}
 )
 EVIDENCE_TYPES = frozenset({"single-span", "multi-span", "multi-hop", "implicit", "computed"})
+_CONCEPT_TYPE_MAPS: dict[Path, dict[str, str]] = {}
+_FOLDER_CONCEPT_TYPES: dict[Path, dict[str, str]] = {}
 _DIRECT_EVIDENCE_MARKER_RE = re.compile(
     r"(?m)^(?![ \t>|\ufeff])(?!(?:[-+*]|\d+[.)]|:)[ \t]+)"
     r"(?P<prefix>[^\r\n]*\S)[ \t]+(?P<marker>%%ev:\s*[^\r\n]*?%%)"
@@ -1095,13 +1097,12 @@ def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None
 
 
 def concept_check_status(vault: Path, concept_id: str) -> str:
-    target = normalize_path(concept_id)
     if not db_path(vault).is_file():
         return "unchecked"
     with connect(vault) as conn:
         row = conn.execute(
             "SELECT check_status FROM concept_status WHERE concept_id = ?",
-            (target,),
+            (resolve_concept_id(conn, concept_id),),
         ).fetchone()
     return "unchecked" if row is None else str(row["check_status"])
 
@@ -1132,16 +1133,33 @@ def output_record(vault: Path, output_id: str) -> dict[str, Any] | None:
 
 
 def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> dict[str, int]:
+    """Rebuild path-keyed file Concept parents, normalizing types through the registry.
+
+    Only absent file rows carrying no verdict are pruned: a verdict-bearing row
+    is the PI's judgment and survives its file. Pruning a row cascades its
+    outgoing edges and pends inbound ones through the v16 foreign keys.
+    """
     rows = list(rows)
     with connect(vault) as conn:
-        deleted = conn.execute("DELETE FROM concepts WHERE store = 'file'").rowcount
-        for row in rows:
-            _upsert_concept_mirror_conn(
+        keep = [
+            ensure_concept_parent_conn(
                 conn,
                 normalize_path(row["concept_id"]),
-                str(row["concept_type"]),
-                "file",
+                concept_type=str(row["concept_type"]),
+                store="file",
+                path=normalize_path(row["concept_id"]),
             )
+            for row in rows
+        ]
+        deleted = conn.execute(
+            """
+            DELETE FROM concepts
+            WHERE store = 'file'
+              AND concept_id NOT IN (SELECT value FROM json_each(?))
+              AND concept_id NOT IN (SELECT concept_id FROM concept_verdicts)
+            """,
+            (_json(keep),),
+        ).rowcount
     return {"deleted": int(deleted), "inserted": len(rows)}
 
 
@@ -1163,7 +1181,9 @@ def record_file_output(
     if _sha256_text(payload_text) != output_sha256:
         raise ValueError(f"materialization payload hash mismatch for {target}")
     with connect(vault) as conn:
-        _upsert_concept_mirror_conn(conn, target, concept_type, "file")
+        ensure_concept_parent_conn(
+            conn, target, concept_type=concept_type, store="file", path=target
+        )
         _set_concept_verdict_conn(conn, target, _check_status(check_status))
         conn.execute(
             """
@@ -1210,7 +1230,7 @@ def record_file_output(
                     ON CONFLICT(input_id, output_id)
                     DO UPDATE SET actor = excluded.actor
                     """,
-                    (normalize_path(input_id), target, context.actor),
+                    (resolve_concept_id(conn, input_id), target, context.actor),
                 )
 
 
@@ -1245,7 +1265,9 @@ def record_observed_file_edit(
 ) -> None:
     target = normalize_path(output_id)
     with connect(vault) as conn:
-        _upsert_concept_mirror_conn(conn, target, concept_type, "file")
+        ensure_concept_parent_conn(
+            conn, target, concept_type=concept_type, store="file", path=target
+        )
         _set_concept_verdict_conn(conn, target, "unchecked")
         conn.execute(
             """
@@ -1575,6 +1597,13 @@ def upsert_catalog_record(
     csl_json = dict(csl_json or {})
     stable_doi = str(doi or identifiers.get("doi") or csl_json.get("DOI") or "").strip() or None
     with connect(vault) as conn:
+        concept_id = ensure_concept_parent_conn(
+            conn,
+            stable_work_id,
+            concept_type="work",
+            store="db",
+            path=f"catalog/sources/{stable_work_id}",
+        )
         conn.execute(
             """
             INSERT INTO catalog_sources(
@@ -1637,8 +1666,6 @@ def upsert_catalog_record(
                 normalize_path(raw_path) if raw_path else "",
             ),
         )
-        concept_id = f"catalog/sources/{stable_work_id}"
-        _upsert_concept_mirror_conn(conn, concept_id, "work", "db")
         _set_concept_verdict_conn(conn, concept_id, _check_status(check_status))
 
 
@@ -2071,43 +2098,48 @@ def replace_concept_edges(
     *,
     paths: Iterable[str] | None = None,
 ) -> dict[str, int]:
-    """Reconcile the links mirror without changing PI-owned tension rows."""
-    target_paths = (
-        {normalize_path(str(path)) for path in paths if normalize_path(str(path))}
-        if paths is not None
-        else None
-    )
-    if target_paths == set():
-        return {"deleted": 0, "inserted": 0}
+    """Reconcile the links mirror without changing PI-owned tension rows.
 
-    mirror_rows = []
-    for value in rows:
-        row = dict(value)
-        source = normalize_path(str(row["source_concept_id"]))
-        relation = _concept_edge_relation(str(row["relation_type"]))
-        target = normalize_path(str(row["target_concept_id"]))
-        if relation == "tension":
-            continue
-        source_path = normalize_path(str(row.get("source_path") or ""))
-        if target_paths is not None and source_path not in target_paths:
-            continue
-        row["source_concept_id"] = source
-        row["relation_type"] = relation
-        row["target_concept_id"] = target
-        mirror_rows.append(row)
+    Rows key by the v16 scoped triple ``(source_concept_id, relation_type,
+    target_path)``, so the bare, rendered, ``./``, and ``/source.md`` catalog
+    forms share one edge. Sources are resolved or ensured; targets are resolved
+    but never created, and an unresolved target parks the edge as a pending row.
+    ``paths=None`` is a full mirror pass; an empty scope is a no-op.
+    """
+    path_list = None if paths is None else list(paths)
+    if path_list == []:
+        return {"deleted": 0, "inserted": 0}
+    target_paths = (
+        None
+        if path_list is None
+        else {normalize_path(str(path)) for path in path_list if normalize_path(str(path))}
+    )
 
     with connect(vault) as conn:
-        keep = {
-            (
-                normalize_path(str(row["source_concept_id"])),
-                str(row["relation_type"]),
-                normalize_path(str(row["target_concept_id"])),
-            )
-            for row in mirror_rows
+        catalog_ids = {
+            str(row["work_id"]) for row in conn.execute("SELECT work_id FROM catalog_sources")
         }
+        prepared = []
+        for value in rows:
+            row = dict(value)
+            relation = _concept_edge_relation(str(row["relation_type"]))
+            if relation == "tension":
+                continue
+            source_path = normalize_path(str(row.get("source_path") or ""))
+            if target_paths is not None and source_path not in target_paths:
+                continue
+            source = _resolve_or_ensure_concept_conn(
+                conn, normalize_path(str(row["source_concept_id"]))
+            )
+            target_path = _concept_edge_target_path(
+                str(row.get("target_path") or row.get("target_concept_id") or ""), catalog_ids
+            )
+            prepared.append((row, source, relation, target_path, source_path))
+
+        keep = {(source, relation, path) for _row, source, relation, path, _ in prepared}
         existing = conn.execute(
             """
-            SELECT source_concept_id, relation_type, target_concept_id, source_path
+            SELECT source_concept_id, relation_type, target_path, source_path
             FROM concept_edges
             WHERE relation_type != 'tension'
             """
@@ -2117,7 +2149,7 @@ def replace_concept_edges(
             key = (
                 str(stale["source_concept_id"]),
                 str(stale["relation_type"]),
-                str(stale["target_concept_id"]),
+                str(stale["target_path"]),
             )
             if key in keep:
                 continue
@@ -2126,12 +2158,13 @@ def replace_concept_edges(
             conn.execute(
                 """
                 DELETE FROM concept_edges
-                WHERE source_concept_id = ? AND relation_type = ? AND target_concept_id = ?
+                WHERE source_concept_id = ? AND relation_type = ? AND target_path = ?
                 """,
                 key,
             )
             deleted += 1
-        for row in mirror_rows:
+        for row, source, relation, target_path, source_path in prepared:
+            target_id = _lookup_concept_id(conn, target_path)
             conn.execute(
                 """
                 INSERT INTO concept_edges(
@@ -2139,35 +2172,55 @@ def replace_concept_edges(
                     source_concept_id,
                     relation_type,
                     target_concept_id,
+                    target_path,
                     attributes_json,
                     check_status,
                     source_path,
                     updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(source_concept_id, relation_type, target_concept_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source_concept_id, relation_type, target_path)
                 DO UPDATE SET
-                    edge_id = excluded.edge_id,
+                    edge_id = CASE
+                        WHEN excluded.edge_id != '' THEN excluded.edge_id
+                        ELSE concept_edges.edge_id
+                    END,
+                    target_concept_id = COALESCE(
+                        excluded.target_concept_id, concept_edges.target_concept_id
+                    ),
                     check_status = excluded.check_status,
                     source_path = excluded.source_path,
                     updated_at = excluded.updated_at
                 """,
                 (
-                    concept_edge_id(
-                        str(row["source_concept_id"]),
-                        str(row["relation_type"]),
-                        str(row["target_concept_id"]),
-                    ),
-                    str(row["source_concept_id"]),
-                    str(row["relation_type"]),
-                    str(row["target_concept_id"]),
+                    concept_edge_id(source, relation, target_id) if target_id else "",
+                    source,
+                    relation,
+                    target_id,
+                    target_path,
                     str(row.get("attributes_json") or "{}"),
                     _check_status(str(row.get("check_status") or "unchecked")),
-                    normalize_path(str(row.get("source_path") or "")),
+                    source_path,
                     now_iso(),
                 ),
             )
-    return {"deleted": int(deleted), "inserted": len(mirror_rows)}
+    return {"deleted": int(deleted), "inserted": len(prepared)}
+
+
+def _resolve_or_ensure_concept_conn(conn: sqlite3.Connection, ref: str) -> str:
+    """Return an edge endpoint's parent id, minting a registry-shaped one if absent."""
+    resolved = _lookup_concept_id(conn, ref)
+    if resolved is not None:
+        return resolved
+    concept_type, store, path = _concept_parent_shape(ref)
+    return ensure_concept_parent_conn(conn, ref, concept_type=concept_type, store=store, path=path)
+
+
+def _concept_edge_target_path(raw_target: str, catalog_ids: set[str]) -> str:
+    """Return the v16 edge path key: catalog references collapse to one rendering."""
+    rel = normalize_path(raw_target)
+    rendered = rel.removeprefix("catalog/sources/").removesuffix("/source.md")
+    return f"catalog/sources/{rendered}" if rendered in catalog_ids else rel
 
 
 def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:
@@ -2178,19 +2231,19 @@ def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, A
             rows = conn.execute(
                 """
                 SELECT edge_id, source_concept_id, relation_type, target_concept_id,
-                       attributes_json, check_status, source_path
+                       target_path, attributes_json, check_status, source_path
                 FROM concept_edges
                 WHERE check_status = 'checked'
-                ORDER BY source_concept_id, relation_type, target_concept_id
+                ORDER BY source_concept_id, relation_type, target_path
                 """
             ).fetchall()
         else:
             rows = conn.execute(
                 """
                 SELECT edge_id, source_concept_id, relation_type, target_concept_id,
-                       attributes_json, check_status, source_path
+                       target_path, attributes_json, check_status, source_path
                 FROM concept_edges
-                ORDER BY source_concept_id, relation_type, target_concept_id
+                ORDER BY source_concept_id, relation_type, target_path
                 """
             ).fetchall()
     return [dict(row) for row in rows]
@@ -4189,22 +4242,119 @@ def evidence_markers_from_markdown(text: str) -> list[EvidenceMarker]:
     return [marker for _span, marker in direct_evidence_marker_spans_from_markdown(text)]
 
 
-def _upsert_concept_mirror_conn(
+def resolve_concept_id(conn: sqlite3.Connection, ref: str) -> str:
+    """Return the canonical ``concepts`` key for a reference, minting nothing.
+
+    v16 identity: a catalog work keys by its bare ``work_id`` while its
+    ``concepts.path`` renders as ``catalog/sources/<work_id>``, so the bare,
+    rendered, ``./``-prefixed, and ``/source.md`` forms all resolve to one
+    parent. An unknown reference resolves to its normalized self.
+    """
+    rel = normalize_path(ref)
+    return _lookup_concept_id(conn, rel) or rel
+
+
+def ensure_concept_parent_conn(
     conn: sqlite3.Connection,
-    concept_id: str,
+    ref: str,
+    *,
     concept_type: str,
     store: str,
-) -> None:
+    path: str,
+) -> str:
+    """Create or refresh the FK parent row for one Concept and return its id."""
+    concept_id = _lookup_concept_id(conn, ref) or _canonical_concept_ref(ref)
+    if not concept_id:
+        raise ValueError("concept reference is required")
     conn.execute(
         """
-        INSERT INTO concepts(concept_id, concept_type, store)
-        VALUES (?, ?, ?)
+        INSERT INTO concepts(concept_id, concept_type, store, path)
+        VALUES (?, ?, ?, ?)
         ON CONFLICT(concept_id) DO UPDATE SET
             concept_type = excluded.concept_type,
-            store = excluded.store
+            store = excluded.store,
+            path = excluded.path
         """,
-        (concept_id, concept_type, store),
+        (concept_id, _registry_concept_type(concept_type), store, normalize_path(path)),
     )
+    return concept_id
+
+
+def _lookup_concept_id(conn: sqlite3.Connection, ref: str) -> str | None:
+    """Return the existing concepts key for a reference, or None."""
+    rel = normalize_path(ref)
+    if not rel:
+        return None
+    candidates = [rel]
+    rendered = _canonical_concept_ref(rel)
+    if rendered and rendered != rel:
+        candidates.append(rendered)
+    for candidate in candidates:
+        row = conn.execute(
+            "SELECT concept_id FROM concepts WHERE concept_id = ? OR path = ?",
+            (candidate, candidate),
+        ).fetchone()
+        if row is not None:
+            return str(row["concept_id"])
+    return None
+
+
+def _canonical_concept_ref(ref: str) -> str:
+    """Return the identity a reference would mint: catalog renderings go bare."""
+    rel = normalize_path(ref)
+    if rel.startswith("catalog/sources/"):
+        return rel.removeprefix("catalog/sources/").removesuffix("/source.md")
+    return rel
+
+
+def _concept_parent_shape(rel: str) -> tuple[str, str, str]:
+    """Return the (concept_type, store, path) to mint for an unmirrored reference."""
+    if rel.startswith("catalog/sources/"):
+        return "work", "db", f"catalog/sources/{_canonical_concept_ref(rel)}"
+    return _folder_concept_types().get(rel.split("/", 1)[0], "note"), "file", rel
+
+
+def _registry_concept_type(value: str) -> str:
+    """Map a document type onto its Concept-type registry member, failing closed."""
+    name = str(value).strip()
+    mapped = _concept_type_map().get(name)
+    if mapped is None:
+        raise ValueError(f"unknown concept type: {value!r}")
+    return mapped
+
+
+def _concept_type_map() -> dict[str, str]:
+    """Return {document or concept type: registry concept type} from the seed."""
+    from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+
+    schemas_dir = Path(schema_lib.SCHEMAS_DIR)
+    cached = _CONCEPT_TYPE_MAPS.get(schemas_dir)
+    if cached is None:
+        cached = {str(name): str(name) for name in schema_lib.load_concept_types(schemas_dir)}
+        cached.update(
+            {
+                str(name): str(data["concept_type"])
+                for name, data in schema_lib.load_types(schemas_dir).items()
+            }
+        )
+        _CONCEPT_TYPE_MAPS[schemas_dir] = cached
+    return cached
+
+
+def _folder_concept_types() -> dict[str, str]:
+    """Return {bundle folder: registry concept type} from the seeded folder homes."""
+    from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+
+    schemas_dir = Path(schema_lib.SCHEMAS_DIR)
+    cached = _FOLDER_CONCEPT_TYPES.get(schemas_dir)
+    if cached is None:
+        homes = schema_lib.load_folders(schemas_dir).get("homes") or {}
+        cached = {
+            str(folder): _registry_concept_type(str(document_type))
+            for document_type, folder in homes.items()
+        }
+        _FOLDER_CONCEPT_TYPES[schemas_dir] = cached
+    return cached
 
 
 def _set_concept_verdict_conn(
@@ -4212,6 +4362,7 @@ def _set_concept_verdict_conn(
     concept_id: str,
     check_status: str,
 ) -> None:
+    target = resolve_concept_id(conn, concept_id)
     conn.execute(
         """
         INSERT INTO concept_verdicts(concept_id, check_status)
@@ -4219,9 +4370,9 @@ def _set_concept_verdict_conn(
         ON CONFLICT(concept_id) DO UPDATE SET
             check_status = excluded.check_status
         """,
-        (concept_id, _check_status(check_status)),
+        (target, _check_status(check_status)),
     )
-    _cascade_passage_check_status_conn(conn, concept_id, check_status)
+    _cascade_passage_check_status_conn(conn, target, check_status)
 
 
 def _cascade_passage_check_status_conn(
@@ -4235,8 +4386,8 @@ def _cascade_passage_check_status_conn(
         UPDATE passages
         SET check_status = ?
         WHERE concept_id = ?
-           OR path = ?
-           OR ('catalog/sources/' || work_id) = ?
+           OR work_id = ?
+           OR path = (SELECT path FROM concepts WHERE concept_id = ?)
         """,
         (status, concept_id, concept_id, concept_id),
     )

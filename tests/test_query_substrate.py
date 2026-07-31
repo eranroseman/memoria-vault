@@ -36,7 +36,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 15
+    assert state.SCHEMA_VERSION == 16
     assert {
         "passages",
         "passage_fts",
@@ -240,12 +240,19 @@ def test_replace_concept_edges_preserves_direct_tension_and_ignores_tension_mirr
     tmp_path: Path,
 ) -> None:
     vault = tmp_path
+    state.rebuild_file_concept_mirror(
+        vault,
+        [
+            {"concept_id": rel, "concept_type": "note"}
+            for rel in ("notes/alpha.md", "notes/beta.md", "notes/gamma.md")
+        ],
+    )
     with state.connect(vault) as conn:
         conn.execute(
             "INSERT INTO concept_edges("
-            " source_concept_id, relation_type, target_concept_id,"
+            " source_concept_id, relation_type, target_concept_id, target_path,"
             " check_status, source_path, updated_at)"
-            " VALUES ('notes/alpha.md', 'tension', 'notes/beta.md',"
+            " VALUES ('notes/alpha.md', 'tension', 'notes/beta.md', 'notes/beta.md',"
             " 'checked', '', '2026-07-15T00:00:00Z')"
         )
 
@@ -279,8 +286,7 @@ def test_replace_concept_edges_preserves_direct_tension_and_ignores_tension_mirr
     assert result == {"deleted": 0, "inserted": 1}
     edges = state.concept_edges(vault)
     assert {
-        (edge["source_concept_id"], edge["relation_type"], edge["target_concept_id"])
-        for edge in edges
+        (edge["source_concept_id"], edge["relation_type"], edge["target_path"]) for edge in edges
     } == {
         ("notes/alpha.md", "supports", "notes/gamma.md"),
         ("notes/alpha.md", "tension", "notes/beta.md"),
@@ -326,7 +332,7 @@ def test_replace_concept_edges_scopes_upserts_pruning_and_distinguishes_empty_sc
         paths=[],
     ) == {"deleted": 0, "inserted": 0}
     assert {
-        (edge["source_concept_id"], edge["relation_type"], edge["target_concept_id"])
+        (edge["source_concept_id"], edge["relation_type"], edge["target_path"])
         for edge in state.concept_edges(vault)
     } == {
         ("notes/alpha.md", "supports", "notes/beta.md"),
@@ -347,7 +353,7 @@ def test_replace_concept_edges_scopes_upserts_pruning_and_distinguishes_empty_sc
         paths=["notes/alpha.md"],
     ) == {"deleted": 1, "inserted": 1}
     assert {
-        (edge["source_concept_id"], edge["relation_type"], edge["target_concept_id"])
+        (edge["source_concept_id"], edge["relation_type"], edge["target_path"])
         for edge in state.concept_edges(vault)
     } == {
         ("notes/alpha.md", "contradicts", "notes/delta.md"),
@@ -368,9 +374,28 @@ def test_concept_edges_fresh_schema_exposes_reader_fields(tmp_path: Path) -> Non
     fresh = tmp_path / "fresh"
     with state.connect(fresh) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_edges)")}
-        assert {"edge_id", "attributes_json"}.issubset(columns)
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 15
+        assert {"edge_id", "target_path", "attributes_json"}.issubset(columns)
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 16
 
+    # v16 edges are FK-backed and resolve targets, so seed both endpoints.
+    state.rebuild_file_concept_mirror(
+        fresh,
+        [
+            {"concept_id": rel, "concept_type": "note"}
+            for rel in (
+                "notes/fresh.md",
+                "notes/target.md",
+                "notes/one.md",
+                "notes/two.md",
+                "notes/three.md",
+                "notes/four.md",
+                "notes/blank-one.md",
+                "notes/blank-two.md",
+                "notes/target-one.md",
+                "notes/target-two.md",
+            )
+        ],
+    )
     state.replace_concept_edges(
         fresh,
         [
@@ -406,6 +431,7 @@ def test_concept_edges_fresh_schema_exposes_reader_fields(tmp_path: Path) -> Non
             "source_concept_id": "notes/fresh.md",
             "relation_type": "supports",
             "target_concept_id": "notes/target.md",
+            "target_path": "notes/target.md",
             "attributes_json": '{"warrant_ref":"evidence/items/fresh"}',
             "check_status": "unchecked",
             "source_path": "notes/fresh.md",
@@ -569,12 +595,13 @@ def test_verdict_demotion_revokes_mirror_edges_before_passage_refresh(
     with state.connect(vault) as conn:
         conn.execute(
             "INSERT INTO concept_edges("
-            " source_concept_id, relation_type, target_concept_id,"
+            " source_concept_id, relation_type, target_concept_id, target_path,"
             " check_status, source_path, updated_at)"
-            " VALUES (?, ?, ?, ?, ?, ?)",
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 "notes/a.md",
                 "tension",
+                "notes/d.md",
                 "notes/d.md",
                 "checked",
                 "",

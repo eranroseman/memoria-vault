@@ -230,7 +230,7 @@ def _edges_by_concept(vault: Path, ids: set[str]) -> dict[str, list[dict[str, st
     touching: dict[str, set[tuple[str, str]]] = {concept_id: set() for concept_id in ids}
     for edge in state.concept_edges(vault):
         source = str(edge["source_concept_id"])
-        target = str(edge["target_concept_id"])
+        target = str(edge["target_path"])
         if source not in ids or target not in ids:
             continue
         relation = str(edge["relation_type"])
@@ -257,7 +257,7 @@ def _tension_pairs(
         if str(edge["relation_type"]) != "tension":
             continue
         source = str(edge["source_concept_id"])
-        target = str(edge["target_concept_id"])
+        target = str(edge["target_path"])
         if source not in safe_ids or target not in safe_ids:
             continue
         crosses = (source in left_ids and target in right_ids) or (

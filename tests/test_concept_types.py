@@ -58,11 +58,11 @@ def test_catalog_record_mirror_uses_work_concept_type(tmp_path: Path) -> None:
 
     with state.connect(tmp_path) as conn:
         row = conn.execute(
-            "SELECT concept_id, concept_type, store FROM concepts WHERE concept_id = ?",
-            ("catalog/sources/alpha-work",),
+            "SELECT concept_id, concept_type, store, path FROM concepts WHERE concept_id = ?",
+            ("alpha-work",),
         ).fetchone()
 
-    assert tuple(row) == ("catalog/sources/alpha-work", "work", "db")
+    assert tuple(row) == ("alpha-work", "work", "db", "catalog/sources/alpha-work")
 
 
 def test_work_graph_edges_rename_source_relation_to_published_in(tmp_path: Path) -> None:

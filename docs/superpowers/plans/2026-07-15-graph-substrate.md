@@ -1010,7 +1010,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
 
 **Steps:**
 
-- [ ] Write the failing v16 contract tests in `tests/test_schema_v16_identity.py`.
+- [x] Write the failing v16 contract tests in `tests/test_schema_v16_identity.py`.
   Build a v15 fixture containing `concepts`, `concept_verdicts`, `concept_flags`,
   `concept_edges`, `derivations`, `passages`, and `catalog_sources`. Include:
   a catalog work with `concept_path='notes/alpha.md'`; both
@@ -1050,13 +1050,13 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   post-Plan-22, pre-B.4 `rebuild_passage_index` row with only
   `target_concept_id` (no `target_path`) persists and resolves under v16.
 
-- [ ] Run the new tests and confirm they fail before the v16 implementation:
+- [x] Run the new tests and confirm they fail before the v16 implementation:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py -v
   ```
 
-- [ ] Define one normalizer in `state.py` and use it before every v15→v16 mapping or
+- [x] Define one normalizer in `state.py` and use it before every v15→v16 mapping or
   lookup. The migration and runtime resolver must share these semantics:
 
   ```python
@@ -1107,7 +1107,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   `path`, `work_id`, or `passage_id`). End with `PRAGMA foreign_key_check` and raise
   if it is nonempty; let the normal schema pass recreate indexes, triggers, and view.
 
-- [ ] Make the v16 runtime seams safe before NID-B.2. `upsert_catalog_record` first
+- [x] Make the v16 runtime seams safe before NID-B.2. `upsert_catalog_record` first
   calls `ensure_concept_parent_conn(conn, stable_work_id, concept_type="work",
   store="db", path=f"catalog/sources/{stable_work_id}")`, then writes the catalog
   child and its verdict by that bare id. It retains the public `concept_path`
@@ -1125,7 +1125,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   Read-only `concept_check_status` resolves but does not mint. Catalog bare, rendered,
   and `./` forms resolve to the same bare parent.
 
-- [ ] Replace `replace_concept_edges(vault, rows, *, paths=None)` under this exact
+- [x] Replace `replace_concept_edges(vault, rows, *, paths=None)` under this exact
   contract:
 
   ```python
@@ -1159,7 +1159,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   target_path)`, preserve `attributes_json`, and never clear a previously resolved
   target/edge id on a partial pass.
 
-- [ ] Run the focused migration/runtime suites, then the one correctness gate:
+- [x] Run the focused migration/runtime suites, then the one correctness gate:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_query_substrate.py tests/test_runtime_state.py -v
@@ -1168,7 +1168,7 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
 
   Expected: all focused tests pass; `verify: OK`.
 
-- [ ] Commit the atomic safety floor:
+- [x] Commit the atomic safety floor:
 
   ```bash
   git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py \

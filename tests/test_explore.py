@@ -77,13 +77,14 @@ def _insert_tensions(vault: Path) -> None:
     with state.connect(vault) as conn:
         conn.executemany(
             "INSERT INTO concept_edges("
-            " source_concept_id, relation_type, target_concept_id,"
+            " source_concept_id, relation_type, target_concept_id, target_path,"
             " check_status, source_path, updated_at)"
-            " VALUES (?, ?, ?, ?, ?, ?)",
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
             [
                 (
                     "notes/claim-spacing.md",
                     "tension",
+                    "notes/claim-massed.md",
                     "notes/claim-massed.md",
                     "checked",
                     "",
@@ -92,6 +93,7 @@ def _insert_tensions(vault: Path) -> None:
                 (
                     "notes/claim-massed.md",
                     "tension",
+                    "notes/claim-spacing.md",
                     "notes/claim-spacing.md",
                     "checked",
                     "",

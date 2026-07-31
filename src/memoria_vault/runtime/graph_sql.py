@@ -71,7 +71,7 @@ def neighborhood(
             """
             WITH RECURSIVE
             eligible_edges(origin_id, target_id) AS (
-                SELECT edge.source_concept_id, edge.target_concept_id
+                SELECT edge.source_concept_id, edge.target_path
                 FROM concept_edges AS edge
                 LEFT JOIN concept_status AS source_status
                   ON source_status.concept_id = edge.source_path
@@ -193,10 +193,10 @@ def degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]:
         rows = conn.execute(
             """
             SELECT concept_id, COUNT(DISTINCT neighbor) AS degree FROM (
-                SELECT source_concept_id AS concept_id, target_concept_id AS neighbor
+                SELECT source_concept_id AS concept_id, target_path AS neighbor
                 FROM concept_edges WHERE check_status = 'checked'
                 UNION
-                SELECT target_concept_id AS concept_id, source_concept_id AS neighbor
+                SELECT target_path AS concept_id, source_concept_id AS neighbor
                 FROM concept_edges WHERE check_status = 'checked'
             )
             WHERE concept_id IN (SELECT value FROM json_each(?))
