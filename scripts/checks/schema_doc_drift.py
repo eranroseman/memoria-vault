@@ -18,6 +18,7 @@ SCHEMA_KEYS = {
     "required",
     "optional",
     "enums",
+    "required_any",
     "required_when",
     "forbidden",
 }
@@ -115,6 +116,7 @@ def _schema_claim_errors(claim: dict[str, Any], live: dict[str, Any], type_name:
     errors.extend(_field_map_errors(claim, live, type_name, "optional"))
     errors.extend(_enum_errors(claim, live, type_name))
     errors.extend(_required_when_errors(claim, live, type_name))
+    errors.extend(_list_subset_errors(claim, live, type_name, "required_any"))
     errors.extend(_list_subset_errors(claim, live, type_name, "forbidden"))
     return errors
 
