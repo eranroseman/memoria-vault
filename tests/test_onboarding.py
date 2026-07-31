@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import urllib.parse
 from pathlib import Path
 
 import pytest
@@ -225,3 +226,54 @@ def test_offer_install_declines_a_command_injection_shaped_answer() -> None:
 
     assert status == "declined"
     assert run.calls == []
+
+
+def test_open_vault_uses_xdg_open_with_encoded_uri(tmp_path: Path) -> None:
+    run = FakeRun(returncode=0)
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="linux", run=run, say=said.append
+    )
+
+    expected_uri = "obsidian://open?path=" + urllib.parse.quote(str(tmp_path), safe="")
+    assert status == "opened"
+    assert run.calls == [["xdg-open", expected_uri]]
+    # A zero exit does not prove Obsidian registered a new vault: the
+    # verbatim manual fallback is always shown.
+    fallback = onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path)
+    assert any(fallback in line for line in said)
+
+
+def test_open_vault_deep_links_start_here_when_present(tmp_path: Path) -> None:
+    (tmp_path / "Start here.md").write_text("# Start here\n", encoding="utf-8")
+    run = FakeRun(returncode=0)
+
+    onboarding.open_vault_in_obsidian(tmp_path, sys_platform="darwin", run=run, say=lambda _l: None)
+
+    expected_uri = "obsidian://open?path=" + urllib.parse.quote(
+        str(tmp_path / "Start here.md"), safe=""
+    )
+    assert run.calls == [["open", expected_uri]]
+
+
+def test_open_vault_prints_verbatim_fallback_when_uri_bounces(tmp_path: Path) -> None:
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="linux", run=FakeRun(raises=FileNotFoundError()), say=said.append
+    )
+
+    assert status == "manual"
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path) in said
+
+
+def test_open_vault_unsupported_platform_is_manual(tmp_path: Path) -> None:
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="plan9", run=FakeRun(), say=said.append
+    )
+
+    assert status == "manual"
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path) in said

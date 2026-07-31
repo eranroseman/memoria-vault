@@ -6813,7 +6813,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_onboarding.py`
+- [x] Write the failing test. Append to `tests/test_onboarding.py`
   (also add `import urllib.parse` to the file's imports):
 
   ```python
@@ -6868,11 +6868,11 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       assert onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path) in said
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_onboarding.py -v`
   Expected: `AttributeError: ... has no attribute 'open_vault_in_obsidian'`.
 
-- [ ] Write minimal implementation. Add `import urllib.parse` to
+- [x] Write minimal implementation. Add `import urllib.parse` to
   `onboarding.py` imports (stdlib group, after `subprocess`), then append:
 
   ```python
@@ -6912,10 +6912,10 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       return "opened"
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_onboarding.py -v` — all tests pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/onboarding.py tests/test_onboarding.py
