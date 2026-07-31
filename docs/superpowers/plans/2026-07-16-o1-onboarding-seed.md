@@ -3550,9 +3550,22 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-### Task D.3: stale-steering sweep across the seven named pages
+### Task D.3: stale-steering sweep across eight published pages
 
-Spec slice 7 names eight stale-steering surfaces; seven are published doc pages swept here, the eighth (the seeded `Start here.md` co-PI link) is D.4. Every edit below asserts the derived model — steering derives from active projects/hubs/question notes, `steering.md` is the watch/mute override, `memoria steering show` is the effective render with provenance — and stays within one-to-three line edits per page except where noted. Same §4 precondition as D.2 (the greps at the top of D.2 — run them again; hold if they miss).
+Spec slice 7 names eight stale-steering surfaces; seven are published doc pages
+swept here, the eighth (the seeded `Start here.md` co-PI link) is D.4.
+**#1551 amendment (2026-07-31):** the published [autonomy
+rationale](../../explanation/rationale/boundaries/why-not-autonomous.md) also
+names a nonexistent `screening-protocol.md` and treats `steering.md` as
+authored strategy, so it is the eighth page in this sweep. D.2 continues to own
+the full [Tutorial 07](../../tutorials/07-customize.md) and tutorials-index
+rewrite; execute those repairs alongside this sweep, but do not mark D.2 or D.3
+complete merely because the published docs are reconciled. Every edit below
+asserts the derived model — steering derives from active projects/hubs/unresolved
+question notes, `steering.md` is the watch/mute override, `memoria steering
+show` is the effective render with provenance — and stays within one-to-three
+line edits per page except where noted. Same §4 precondition as D.2 (the greps
+at the top of D.2 — run them again; hold if they miss).
 
 **Files:**
 
@@ -3563,6 +3576,7 @@ Spec slice 7 names eight stale-steering surfaces; seven are published doc pages 
 - Modify: `docs/reference/system/on-disk-layout.md` (:31, :120)
 - Modify: `docs/how-to-guides/knowledge/build-a-hub.md` (:79)
 - Modify: `docs/how-to-guides/inbox/run-the-weekly-review.md` (:10-11, :22, :24, :85 — this page gets four edits because spec §4.5 additionally mandates the "refresh your steering" line, which lives at :10, alongside the task-named :24 and :85)
+- Modify: `docs/explanation/rationale/boundaries/why-not-autonomous.md` (:113-114 — #1551: remove the nonexistent `screening-protocol.md` and name the actual derived-steering inputs)
 
 **Interfaces:**
 
@@ -3582,6 +3596,7 @@ Spec slice 7 names eight stale-steering surfaces; seven are published doc pages 
   grep -n "Standing program memory read and edited" docs/reference/system/on-disk-layout.md
   grep -n "link it from \`steering.md\` or a parent hub" docs/how-to-guides/knowledge/build-a-hub.md
   grep -n "refresh your steering" docs/how-to-guides/inbox/run-the-weekly-review.md
+  grep -n "screening-protocol.md" docs/explanation/rationale/boundaries/why-not-autonomous.md
   ```
 
 - [ ] `docs/reference/pipelines-and-io/memory-substrates.md` — four exact line edits:
@@ -3764,7 +3779,31 @@ Spec slice 7 names eight stale-steering surfaces; seven are published doc pages 
   - `memoria steering show` reflects what you actually intend to read next week — active projects current, watch/mute pruned
   ```
 
-- [ ] **SPEC GAP:** two pages outside the spec's named list still mention `steering.md` generically — `docs/explanation/rationale/boundaries/why-not-autonomous.md:107-108` ("The human sets the strategy (`steering.md`, `screening-protocol.md`)") and `docs/explanation/surfaces/obsidian/README.md:22` ("A fresh workspace gives you `steering.md`"). Resolution: the spec's page list was adversarially verified and is decided; both statements stay literally true under the derived model (the file exists at the root and the PI still authors it), so they are left untouched here and flagged for the next consistency-audit rather than swept.
+- [ ] `docs/explanation/rationale/boundaries/why-not-autonomous.md` — #1551 amendment. Replace:
+
+  ```markdown
+  manifest ceilings. The human sets the strategy (`steering.md`,
+  `screening-protocol.md`) and the review gate blocks unchecked or unwarranted
+  promotion from entering checked readers. L4 requires autonomous keep/revert on
+  synthesis; L5 requires self-directed agenda-setting. Both fail the
+  preconditions test for knowledge work.
+  ```
+
+  with:
+
+  ```markdown
+  manifest ceilings. The human sets the strategy by framing projects, curating
+  hubs and open questions, and maintaining the `steering.md` watch/mute override;
+  the review gate blocks unchecked or unwarranted promotion from entering checked
+  readers. L4 requires autonomous keep/revert on synthesis; L5 requires
+  self-directed agenda-setting. Both fail the preconditions test for knowledge
+  work.
+  ```
+
+- [ ] `docs/explanation/surfaces/obsidian/README.md:22` remains untouched. Its
+  statement that a fresh workspace includes `steering.md` is a correct
+  file-existence statement, not a claim that authored prose sets effective
+  steering.
 
 - [ ] Green state — every red-state grep from step 1 now exits 1, then:
 
@@ -3776,8 +3815,8 @@ Spec slice 7 names eight stale-steering surfaces; seven are published doc pages 
 - [ ] Commit:
 
   ```bash
-  git add docs/reference/pipelines-and-io/memory-substrates.md docs/explanation/architecture/memory-model.md docs/how-to-guides/using-obsidian/README.md docs/reference/commands-and-transports/cli.md docs/reference/system/on-disk-layout.md docs/how-to-guides/knowledge/build-a-hub.md docs/how-to-guides/inbox/run-the-weekly-review.md
-  git commit -m "docs: stale-steering sweep - assert the derived steering model on the seven spec-named pages (O1 slice 7)
+  git add docs/reference/pipelines-and-io/memory-substrates.md docs/explanation/architecture/memory-model.md docs/how-to-guides/using-obsidian/README.md docs/reference/commands-and-transports/cli.md docs/reference/system/on-disk-layout.md docs/how-to-guides/knowledge/build-a-hub.md docs/how-to-guides/inbox/run-the-weekly-review.md docs/explanation/rationale/boundaries/why-not-autonomous.md
+  git commit -m "docs: stale-steering sweep - assert the derived steering model on eight published pages (O1 slice 7)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```

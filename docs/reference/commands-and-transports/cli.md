@@ -62,7 +62,7 @@ This page mirrors `src/memoria_vault/cli.py` and is kept in sync by hand.
 | `memoria check` | Mark a Concept checked as the PI, or run integrity-owned workspace checks when no target is given. |
 | `memoria show/list [--type note\|work\|hub\|project]/export` | Inspect and export Concepts; `--type` filters to exactly one type per invocation — `list --type work` enumerates only catalog Works, never merged with note/hub/project Concepts. |
 | `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
-| `memoria steering show/edit` | Read steering; editing is PI-only. |
+| `memoria steering show/edit` | Show effective steering—derived from active projects, hubs, and unresolved question notes—with per-token provenance; edit the PI-owned `steering.md` watch/mute override. |
 | `memoria vocab list/add/rename/merge` | Read controlled vocabulary; mutations are PI-only. |
 | `memoria journal tail/show/verify` | Inspect journal entries or verify the authoritative hash chain, live-tip anchor, committed anchor prefix, and JSONL export subset. |
 

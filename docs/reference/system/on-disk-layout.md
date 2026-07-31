@@ -28,7 +28,7 @@ Where every file lives.
 ```text
 <vault>/
 ├── index.md                 generated workspace index
-├── steering.md              program memory; the PI's standing steering
+├── steering.md              watch/mute override; effective steering derives from active projects, hubs, and unresolved question notes
 ├── bibliography.bib         generated portable bibliography
 ├── notes/                   claim and question notes
 ├── hubs/                    topic hubs with human salience
@@ -134,7 +134,7 @@ The package seed contains only files with direct runtime readers:
 | `.obsidian/core-plugins.json` | Core plugin settings for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
 | `.obsidian/community-plugins.json` | Enables the bundled `memoria-obsidian` plugin. |
 | `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. |
-| `steering.md` | Standing program memory read and edited through the CLI and knowledge runtime. |
+| `steering.md` | Watch/mute override read by the knowledge runtime and steering CLI; effective steering derives from active projects, hubs, and unresolved question notes. |
 | `system/vocabulary.md` | Controlled vocabulary read by schema/linter and knowledge runtime. |
 
 The policy gate's stable implementation lives in the installed

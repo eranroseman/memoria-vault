@@ -6,26 +6,32 @@ nav_order: 7
 
 # 07: Customize
 
-Now that one loop works, make one small, reversible customization and confirm
-that Memoria reads it back. We will change the workspace steering note, then
-create one project that uses the new intent.
+Now that one loop works, tune what the workspace pursues and confirm that
+Memoria reads it back. Effective steering is derived from active projects,
+hubs, and unresolved question notes. `steering.md` is a thin override with two
+levers: **Watch for** terms that fit no artifact yet, and **Muted** terms to
+suppress. This chapter exercises a new project, a watch entry, and a mute
+entry.
 
 ## Steps
 
-**1. Read the current steering note.**
+**1. Read the effective steering.**
 
 ```bash
 memoria steering show --workspace .
 ```
 
-Notice that steering is workspace guidance, not a chat message. It lives with
-the vault.
+Every effective steering token renders with its provenance: the project, hub,
+question note, or watch entry that contributed it. In this workspace, tokens
+already trace to the tutorial project from Tutorial 04. They are derived from
+the work you keep active, not authored as steering prose.
 
-**2. Replace it with one concrete research focus.**
+**2. Create a second, narrower project.**
 
 ```bash
-memoria steering edit --workspace . \
-  --body "Focus this tutorial workspace on JITAI receptivity and participant burden."
+memoria new project "Burden follow-up" \
+  --workspace . \
+  --description "A follow-up question about participant burden in JITAIs."
 ```
 
 Run the read command again:
@@ -34,21 +40,70 @@ Run the read command again:
 memoria steering show --workspace .
 ```
 
-You should see the new sentence. That is the first customization: durable
-workspace intent.
+New tokens appear with the new project as their provenance. Framing a project
+is the main steering move; an archived project stops contributing.
 
-**3. Create a second, narrower project.**
+**3. Add a Watch-for entry.**
+
+Some terms are worth pursuing before any project, hub, or question note exists
+for them. Put those in the override file's **Watch for** section. Replace the
+override with one watch entry:
 
 ```bash
-memoria new project "Burden follow-up" \
-  --workspace . \
-  --description "A follow-up question about participant burden in JITAIs."
+mkdir -p tmp/tutorial
+cat > tmp/tutorial/steering.md <<'EOF'
+---
+type: system
+title: Steering
+---
+
+# Steering
+
+## Watch for
+
+- ecological momentary assessment
+
+## Muted
+EOF
+memoria steering edit --workspace . --file tmp/tutorial/steering.md
+memoria steering show --workspace .
 ```
 
-Notice the difference: steering says what the workspace is about; the project
-says what one piece of work is about.
+The watch entry's tokens now appear in effective steering with `watch`
+provenance, so they can steer discovery before an artifact expresses them.
 
-**4. Check what changed.**
+**4. Mute a term.**
+
+Muting subtracts tokens from effective steering, even when an active project
+contributes them. Rewrite the override with a **Muted** entry:
+
+```bash
+cat > tmp/tutorial/steering.md <<'EOF'
+---
+type: system
+title: Steering
+---
+
+# Steering
+
+## Watch for
+
+- ecological momentary assessment
+
+## Muted
+
+- burden
+EOF
+memoria steering edit --workspace . --file tmp/tutorial/steering.md
+memoria steering show --workspace .
+```
+
+The token from "Burden follow-up" is gone from the effective set. A discovery
+candidate matching only that term routes to exploration rather than the ranked
+list; one that also matches a surviving token still ranks. A multi-word mute
+entry suppresses each word separately, so keep mute entries narrow.
+
+**5. Check what changed.**
 
 ```bash
 memoria workspace scan --workspace .
@@ -56,13 +111,16 @@ memoria status --workspace .
 git status --short
 ```
 
-The changed files should be ordinary workspace files. Nothing about this step
-requires Obsidian, Zotero, or a live model provider.
+The changed files are ordinary workspace files. Nothing in this step requires
+Obsidian, Zotero, or a live model provider.
 
 ## What you should have seen
 
-- Customization starts with one durable file, not a new product path.
-- Workspace steering and project scope are different levels of intent.
-- The CLI remains the surface that reads, checks, and reports the change.
+- Steering is derived: active projects, hubs, and unresolved question notes
+  aim the system; archiving a project lets that topic go quiet.
+- `steering.md` is a thin override for watch and mute terms, not an essay about
+  your research.
+- `memoria steering show` is the read surface for each effective token and its
+  provenance.
 
 For optional setup, continue with [How-to guides](../how-to-guides/README.md).

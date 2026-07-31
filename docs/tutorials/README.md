@@ -9,7 +9,8 @@ permalink: /tutorials/
 
 This tutorial arc walks through one small research loop in a fresh vault. By the
 end, you will have captured a source, created checked notes, drafted from a
-project slice, verified the draft, and made one workspace customization.
+project slice, verified the draft, and tuned the steering override with watch
+and mute entries.
 
 Start with a fresh vault from [Quickstart](../how-to-guides/setup/quickstart.md),
 then move through the pages in order.
@@ -22,7 +23,7 @@ then move through the pages in order.
 | [04: Draft section](04-draft-section.md) | Create a project slice, compose a draft, and verify it |
 | [05: Verify evidence](05-verify-evidence.md) | Resolve one evidence review result |
 | [06: Close loop](06-close-loop.md) | Refresh projections and make the workspace commit-ready |
-| [07: Customize](07-customize.md) | Change steering and create one narrower project |
+| [07: Customize](07-customize.md) | Watch, mute, and see steering derive from active projects |
 
 For exact command flags, use the [CLI reference](../reference/commands-and-transports/cli.md). For task
 recipes outside the tutorial path, use the [How-to guides](../how-to-guides/README.md).
