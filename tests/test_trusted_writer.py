@@ -142,7 +142,7 @@ def test_promote_checked_neutralizes_even_when_the_stager_forgot(tmp_path: Path)
     assert_neutralized((vault / "notes/alpha.md").read_text(encoding="utf-8"))
 
 
-def test_materialize_unchecked_neutralizes_even_when_the_stager_forgot(
+def test_materialize_unchecked_keeps_tampered_staging_provenance_aligned(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
@@ -150,9 +150,59 @@ def test_materialize_unchecked_neutralizes_even_when_the_stager_forgot(
     staged_path = vault / ".memoria/staging/notes/alpha.md"
     staged_path.write_text(hostile_note_text(), encoding="utf-8")  # bypassed neutralization
 
-    materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
+    materialized = materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
 
-    assert_neutralized((vault / "notes/alpha.md").read_text(encoding="utf-8"))
+    target = vault / "notes/alpha.md"
+    assert_neutralized(target.read_text(encoding="utf-8"))
+    output_sha256 = sha256_file(target)
+    assert materialized == {"output_id": "notes/alpha.md", "output_sha256": output_sha256}
+    assert state.output_record(vault, "notes/alpha.md")["output_sha256"] == output_sha256
+    with state.connect(vault) as conn:
+        payload = conn.execute(
+            """
+            SELECT expected_sha256, payload_text
+            FROM materialization_payloads
+            WHERE output_id = ?
+            """,
+            ("notes/alpha.md",),
+        ).fetchone()
+    assert tuple(payload) == (output_sha256, target.read_text(encoding="utf-8"))
+    assert rebuild_trace_state(vault)["notes/alpha.md"]["output_sha256"] == output_sha256
+    assert events(vault)[-1]["output_sha256"] == output_sha256
+    assert quarantine_untraced(vault, ["notes/alpha.md"], machine="test-machine") == []
+
+
+def test_materialize_unchecked_rejects_a_staging_file_without_a_record(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.parent.mkdir(parents=True)
+    staged_path.write_text(note_text(), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="missing staged output record"):
+        materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert not (vault / "notes/alpha.md").exists()
+    assert state.output_record(vault, "notes/alpha.md") is None
+    assert events(vault) == []
+
+
+def test_materialize_unchecked_rejects_invalid_tampered_frontmatter_before_journaling(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    staged_path = vault / ".memoria/staging/notes/alpha.md"
+    staged_path.write_text("---\ntitle: Missing type\n---\nBody.\n", encoding="utf-8")
+    before_events = events(vault)
+    before_output = state.output_record(vault, "notes/alpha.md")
+
+    with pytest.raises(ValueError, match="unknown Concept type"):
+        materialize_unchecked(vault, "notes/alpha.md", machine="test-machine")
+
+    assert not (vault / "notes/alpha.md").exists()
+    assert events(vault) == before_events
+    assert state.output_record(vault, "notes/alpha.md") == before_output
+    assert staged_path.is_file()
 
 
 def cs3_inbox_cards(vault: Path) -> list[Path]:
