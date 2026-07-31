@@ -386,13 +386,16 @@ def test_http_transport_route_status_codes(workspace: Path) -> None:
         lambda: _raise(PayloadTooLarge("request body too large")),
     )
 
-    assert (unknown, unknown_status) == ({"ok": False, "error": "not found"}, HTTPStatus.NOT_FOUND)
+    assert (unknown, unknown_status) == (
+        {"ok": False, "error": "no such route: /missing"},
+        HTTPStatus.NOT_FOUND,
+    )
     assert (wrong_method, wrong_status) == (
-        {"ok": False, "error": "method not allowed"},
+        {"ok": False, "error": "method not allowed: POST /status"},
         HTTPStatus.METHOD_NOT_ALLOWED,
     )
     assert (wrong_write_method, wrong_write_status) == (
-        {"ok": False, "error": "method not allowed"},
+        {"ok": False, "error": "method not allowed: GET /operation/run"},
         HTTPStatus.METHOD_NOT_ALLOWED,
     )
     assert (bad_body, bad_body_status) == (
@@ -629,7 +632,7 @@ def test_http_transport_unknown_write_does_not_create_request(workspace: Path) -
     )
 
     assert http_status == HTTPStatus.NOT_FOUND
-    assert response == {"ok": False, "error": "not found"}
+    assert response == {"ok": False, "error": "no such route: /raw-sql"}
     with state.connect(workspace) as conn:
         count = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
     assert count == 0
@@ -661,8 +664,14 @@ def test_http_server_handler_enforces_bearer_auth_and_body_size(workspace: Path)
         thread.join(timeout=5)
         server.server_close()
 
-    assert no_auth == (HTTPStatus.UNAUTHORIZED, {"ok": False, "error": "unauthorized"})
-    assert wrong_auth == (HTTPStatus.UNAUTHORIZED, {"ok": False, "error": "unauthorized"})
+    assert no_auth == (
+        HTTPStatus.UNAUTHORIZED,
+        {"ok": False, "error": "unauthorized: missing or invalid bearer token"},
+    )
+    assert wrong_auth == (
+        HTTPStatus.UNAUTHORIZED,
+        {"ok": False, "error": "unauthorized: missing or invalid bearer token"},
+    )
     assert authorized[0] == HTTPStatus.OK
     assert authorized[1]["ok"] is True
     assert authorized[1]["api_version"] == "engine-read-api.v1"
