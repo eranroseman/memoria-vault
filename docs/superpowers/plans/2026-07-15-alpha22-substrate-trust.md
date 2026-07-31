@@ -4249,9 +4249,11 @@ and the BOOT-B.5 secret-perimeter task.
 
 **Steps:**
 
-- [ ] **Step 0 — PI confirmation checkpoint:** confirm with the PI that the spec's "Design decisions (made here; confirm at review)" block stands as written (extend `model_call`, plain-dict return, nullable `cost_usd`, no content capture, fixture nulls, no new dep / no `SCHEMA_VERSION` bump). No code.
+- [x] **Step 0 — PI confirmation checkpoint:** confirm with the PI that the spec's "Design decisions (made here; confirm at review)" block stands as written (extend `model_call`, plain-dict return, nullable `cost_usd`, no content capture, fixture nulls, no new dep / no `SCHEMA_VERSION` bump). No code.
+  Ratified 2026-07-31: the PI's standing directive to execute this plan ratifies
+  the spec's stated defaults as written; no separate review was held.
 
-- [ ] **Upgrade the test fake** — first add this module-level fixture after
+- [x] **Upgrade the test fake** — first add this module-level fixture after
   `WORKSPACE_SEED` in `tests/helpers.py`, then replace `patch_pydantic_ai` at
   `:362-393` (only `run_sync` and the signature change; existing `seen`
   behavior is preserved, so current callers in `test_cli_doctor_eval.py:698,743,778`
@@ -4317,7 +4319,7 @@ def patch_pydantic_ai(
     return seen
 ```
 
-- [ ] **Write the failing tests** — in `tests/test_operations.py`: add `from decimal import Decimal` to the stdlib imports (after `from copy import deepcopy`, line 6), add `_pydantic_ai_chat` to the first `memoria_vault.runtime.operations` import block (line 14-21, alphabetically first: `_pydantic_ai_chat,` before `_source_interviews,`), then append at end of file:
+- [x] **Write the failing tests** — in `tests/test_operations.py`: add `from decimal import Decimal` to the stdlib imports (after `from copy import deepcopy`, line 6), add `_pydantic_ai_chat` to the first `memoria_vault.runtime.operations` import block (line 14-21, alphabetically first: `_pydantic_ai_chat,` before `_source_interviews,`), then append at end of file:
 
 ```python
 def chat_runner(model: str = "gpt-test") -> dict[str, object]:
@@ -4394,11 +4396,11 @@ def test_pydantic_ai_chat_still_rejects_empty_output(monkeypatch: pytest.MonkeyP
   raises from `usage()`. They prove telemetry extraction cannot replace or weaken
   `_record_token_usage`'s existing safe fallback behavior.
 
-- [ ] **Run tests to verify they fail:**
+- [x] **Run tests to verify they fail:**
   `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" -v`
   Expected: the first two fail with `TypeError: string indices must be integers, not 'str'` (current `_pydantic_ai_chat` returns a bare `str`, so `result["text"]` is a string index). The third **passes already** — it pins the empty-output `RuntimeError` that must survive the change.
 
-- [ ] **Write minimal implementation** — in `src/memoria_vault/runtime/operations.py`, add `import time` after `import re` (line 8), and replace `_pydantic_ai_chat` (lines 951-984) with:
+- [x] **Write minimal implementation** — in `src/memoria_vault/runtime/operations.py`, add `import time` after `import re` (line 8), and replace `_pydantic_ai_chat` (lines 951-984) with:
 
 ```python
 def _pydantic_ai_chat(
@@ -4452,18 +4454,18 @@ def _pydantic_ai_chat(
   fallback; `float(...)` converts `genai-prices`' `Decimal` so the journal row stays
   `json.dumps`-serializable; `elapsed_s` brackets only `run_sync`.
 
-- [ ] **Run tests to verify they pass:**
+- [x] **Run tests to verify they pass:**
   `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" tests/test_token_ceiling.py -v`
   Expected: all pass, including the prior exact-boundary, reported-usage, invalid-usage,
   and max-token-fallback charging proofs.
 
-- [ ] **Guard the fake's existing consumers:**
+- [x] **Guard the fake's existing consumers:**
   `python -m pytest tests/test_cli_doctor_eval.py tests/test_runtime_gate_replay.py -v`
   Expected: all pass (`_runner_status` at `cli.py:3064` discards the return;
   the fake stays output-compatible). A broken intermediate is not permitted:
   the callers change in the same atomic COST.1–.3 tranche.
 
-- [ ] **Do not commit yet.** Continue directly into COST.2 and COST.3 in the
+- [x] **Do not commit yet.** Continue directly into COST.2 and COST.3 in the
   same worktree. The atomic tranche's single staging/commit step is at the
   end of COST.3; a COST.1-only commit leaves active callers expecting `str`.
 
@@ -4487,7 +4489,7 @@ def _pydantic_ai_chat(
 
 **Steps:**
 
-- [ ] **Write the failing test** — append to `tests/test_operations.py` (add `_run_prompt_model` to the first operations import block, alphabetically after `_pydantic_ai_chat,`):
+- [x] **Write the failing test** — append to `tests/test_operations.py` (add `_run_prompt_model` to the first operations import block, alphabetically after `_pydantic_ai_chat,`):
 
 ```python
 def test_run_prompt_model_fixture_branch_returns_null_telemetry() -> None:
@@ -4502,11 +4504,11 @@ def test_run_prompt_model_fixture_branch_returns_null_telemetry() -> None:
     assert result["text"].startswith(f"## {policy['title']}")
 ```
 
-- [ ] **Run test to verify it fails:**
+- [x] **Run test to verify it fails:**
   `python -m pytest "tests/test_operations.py::test_run_prompt_model_fixture_branch_returns_null_telemetry" -v`
   Expected: `TypeError: string indices must be integers, not 'str'` (fixture branch currently returns a bare `str`).
 
-- [ ] **Write minimal implementation** — replace `_run_prompt_model` (anchored at `def _run_prompt_model(`):
+- [x] **Write minimal implementation** — replace `_run_prompt_model` (anchored at `def _run_prompt_model(`):
 
 ```python
 def _run_prompt_model(
@@ -4539,7 +4541,7 @@ def _run_prompt_model(
 
   In `run_operation_model_text` (anchored at the line after `validate_operation_context(vault, context)`), apply the identical two-line replacement. Everything downstream in both functions (`_sha256_text(output)` in the event dicts, `neutralize_untrusted_markdown(output)` at staging, `return {"output": output, "model_call": model_call}`) is untouched — `output` is still the plain string.
 
-- [ ] **Update the existing monkeypatch** at `tests/test_operations.py:245-248` (in `test_prompt_operation_neutralizes_model_output_before_staging`) to the new shape — populated telemetry values are chosen here so COST.4 can assert them flowing into the journal event:
+- [x] **Update the existing monkeypatch** at `tests/test_operations.py:245-248` (in `test_prompt_operation_neutralizes_model_output_before_staging`) to the new shape — populated telemetry values are chosen here so COST.4 can assert them flowing into the journal event:
 
 ```python
     monkeypatch.setattr(
@@ -4559,11 +4561,11 @@ def _run_prompt_model(
     )
 ```
 
-- [ ] **Run tests to verify they pass:**
+- [x] **Run tests to verify they pass:**
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass, including `test_run_prompt_model_fixture_branch_returns_null_telemetry` and the updated neutralization test (its `output_hash` assertion still hashes `raw_output`).
 
-- [ ] **Do not commit yet.** Continue directly into COST.3. The only valid
+- [x] **Do not commit yet.** Continue directly into COST.3. The only valid
   commit for this return-contract change stages all COST.1–.3 files together
   at COST.3's final step.
 
@@ -4586,7 +4588,7 @@ def _run_prompt_model(
 
 **Steps:**
 
-- [ ] **Write the failing test** — append to `tests/test_operations.py` (add `_run_digest_model` to the first operations import block, after `_pydantic_ai_chat,`):
+- [x] **Write the failing test** — append to `tests/test_operations.py` (add `_run_digest_model` to the first operations import block, after `_pydantic_ai_chat,`):
 
 ```python
 def test_run_digest_model_fixture_branch_returns_null_telemetry() -> None:
@@ -4610,11 +4612,11 @@ def test_run_digest_model_fixture_branch_returns_null_telemetry() -> None:
     assert "## Hub suggestions" in result["text"]
 ```
 
-- [ ] **Run test to verify it fails:**
+- [x] **Run test to verify it fails:**
   `python -m pytest "tests/test_operations.py::test_run_digest_model_fixture_branch_returns_null_telemetry" -v`
   Expected: `TypeError: string indices must be integers, not 'str'` (`_run_digest_model` currently returns the validated `str`).
 
-- [ ] **Write minimal implementation** — replace `_run_digest_model` (anchored at `def _run_digest_model(`); `_validate_digest_output` keeps receiving plain text and the validated text is swapped back into the dict, per spec §2:
+- [x] **Write minimal implementation** — replace `_run_digest_model` (anchored at `def _run_digest_model(`); `_validate_digest_output` keeps receiving plain text and the validated text is swapped back into the dict, per spec §2:
 
 ```python
 def _run_digest_model(
@@ -4662,7 +4664,7 @@ def _run_digest_model(
 
   Downstream uses of `digest_text` (`_sha256_text(digest_text)` in the event dict, `neutralize_untrusted_markdown(digest_text)`) are untouched.
 
-- [ ] **Update the two existing monkeypatch lambdas.** At `tests/test_operations.py:287-290` (in `test_digest_and_hub_apply_neutralize_source_model_and_topic_text`):
+- [x] **Update the two existing monkeypatch lambdas.** At `tests/test_operations.py:287-290` (in `test_digest_and_hub_apply_neutralize_source_model_and_topic_text`):
 
 ```python
     monkeypatch.setattr(
@@ -4690,11 +4692,11 @@ def _run_digest_model(
     )
 ```
 
-- [ ] **Run tests to verify they pass:**
+- [x] **Run tests to verify they pass:**
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass.
 
-- [ ] **Commit the atomic COST.1–.3 tranche:** Stage only the three files
+- [x] **Commit the atomic COST.1–.3 tranche:** Stage only the three files
   changed across the tranche, after the combined regression command from the
   reconciliation amendment passes:
 

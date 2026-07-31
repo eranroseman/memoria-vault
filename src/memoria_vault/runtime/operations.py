@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import time
 from collections.abc import Iterable, Mapping
 from datetime import date
 from pathlib import Path
@@ -436,7 +437,8 @@ def run_prompt_operation(
         {"event": "run", "workflow": operation_id, "status": "started"},
         context=context,
     )
-    output = _run_prompt_model(policy, runner, prompt, input_text)
+    result = _run_prompt_model(policy, runner, prompt, input_text)
+    output = result["text"]
     model_call = append_journal_event(
         vault,
         {
@@ -522,7 +524,8 @@ def run_operation_model_text(
 ) -> dict[str, Any]:
     """Run a policy-scoped text model call and record the model-call event."""
     validate_operation_context(vault, context)
-    output = _run_prompt_model(policy, runner, prompt, input_text)
+    result = _run_prompt_model(policy, runner, prompt, input_text)
+    output = result["text"]
     model_call = append_journal_event(
         Path(vault),
         {
@@ -594,7 +597,8 @@ def compile_source_digest(
     content = safe_read(content_path)
     interviews = _source_interviews(vault, work_id)
     digest_prompt = _digest_prompt(source_fm, content, topics, interviews)
-    digest_text = _run_digest_model(policy, runner, source_fm, content, topics, interviews)
+    digest_result = _run_digest_model(policy, runner, source_fm, content, topics, interviews)
+    digest_text = digest_result["text"]
     model_call = append_journal_event(
         vault,
         {
@@ -872,9 +876,14 @@ def _prompt_text(vault: Path, policy: dict[str, Any], pattern: str, input_text: 
 
 def _run_prompt_model(
     policy: dict[str, Any], runner: dict[str, Any], prompt: str, input_text: str
-) -> str:
+) -> dict[str, Any]:
     if runner["model"] == "deterministic-fixture":
-        return _prompt_fixture_body(policy, input_text)
+        return {
+            "text": _prompt_fixture_body(policy, input_text),
+            "usage": None,
+            "cost_usd": None,
+            "elapsed_s": 0.0,
+        }
     if runner["runner"] == "pydantic-ai":
         return _pydantic_ai_chat(policy, runner, prompt)
     raise ValueError(f"unsupported operation runner: {runner['runner']}")
@@ -972,9 +981,14 @@ def _run_digest_model(
     content: str,
     topics: list[str],
     interviews: list[dict[str, Any]],
-) -> str:
+) -> dict[str, Any]:
     if runner["model"] == "deterministic-fixture":
-        text = _digest_body(source_fm, content, topics, interviews)
+        result: dict[str, Any] = {
+            "text": _digest_body(source_fm, content, topics, interviews),
+            "usage": None,
+            "cost_usd": None,
+            "elapsed_s": 0.0,
+        }
     else:
         _require_untrusted_fields(
             str(policy.get("operation_id") or "<unknown>"),
@@ -983,10 +997,11 @@ def _run_digest_model(
         )
         prompt = _digest_prompt(source_fm, content, topics, interviews)
         if runner["runner"] == "pydantic-ai":
-            text = _pydantic_ai_chat(policy, runner, prompt)
+            result = _pydantic_ai_chat(policy, runner, prompt)
         else:
             raise ValueError(f"unsupported operation runner: {runner['runner']}")
-    return _validate_digest_output(text, content, topics, interviews)
+    result["text"] = _validate_digest_output(result["text"], content, topics, interviews)
+    return result
 
 
 def _digest_prompt(
@@ -1041,18 +1056,41 @@ def _require_token_budget(operation_id: str) -> None:
         )
 
 
-def _record_token_usage(result: Any, settings: dict[str, Any]) -> None:
+_USAGE_FIELDS = (
+    "input_tokens",
+    "output_tokens",
+    "cache_read_tokens",
+    "cache_write_tokens",
+    "total_tokens",
+)
+
+
+def _record_token_usage(result: Any, settings: dict[str, Any]) -> dict[str, int]:
+    """Harvest the five-field usage telemetry once, charge the token ledger, and return it.
+
+    This is the tranche's single point of contact with the SDK's `result.usage()` --
+    both the ledger charge and the canonical result's telemetry are derived from this
+    one call so a completed dispatch is never charged or reported twice.
+    """
     try:
-        usage = getattr(result, "usage", None)
-        total = getattr(usage(), "total_tokens", None) if callable(usage) else None
+        usage_fn = getattr(result, "usage", None)
+        run_usage = usage_fn() if callable(usage_fn) else None
     except Exception:  # noqa: BLE001 -- completed calls must still be charged.
-        total = None
-    if type(total) is not int or total <= 0:
+        run_usage = None
+    usage: dict[str, int] = {}
+    for field in _USAGE_FIELDS:
+        value = getattr(run_usage, field, None) if run_usage is not None else None
+        usage[field] = value if type(value) is int else 0
+    total = usage["total_tokens"]
+    if total <= 0:
         total = int(settings.get("max_tokens") or 0)
     _TOKEN_LEDGER["total_tokens"] += total
+    return usage
 
 
-def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> str:
+def _pydantic_ai_chat(
+    policy: dict[str, Any], runner: dict[str, Any], prompt: str
+) -> dict[str, Any]:
     _require_token_budget(str(policy.get("operation_id") or "<unknown>"))
     base_url = str(runner["base_url"])
     require_allowed_network(policy, base_url)
@@ -1070,14 +1108,20 @@ def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: st
         provider_kwargs = {"base_url": base_url, "api_key": api_key}
         model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
         agent = Agent(model)
+        started_at = time.monotonic()
         result = agent.run_sync(prompt, model_settings=settings)
-        _record_token_usage(result, settings)
+        elapsed_s = time.monotonic() - started_at
+        usage = _record_token_usage(result, settings)
         text = str(getattr(result, "output", "") or "").strip()
     except Exception:  # noqa: BLE001 -- adapter failures must not reflect credentials.
         raise RuntimeError("pydantic-ai model request failed") from None
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
-    return text
+    try:
+        cost_usd: float | None = float(result.response.cost().total_price)
+    except (AttributeError, LookupError):
+        cost_usd = None
+    return {"text": text, "usage": usage, "cost_usd": cost_usd, "elapsed_s": elapsed_s}
 
 
 def _load_pydantic_ai_openai() -> tuple[Any, Any, Any]:

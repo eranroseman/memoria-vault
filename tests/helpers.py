@@ -17,6 +17,14 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_SEED = ROOT / "src/memoria_vault/product/workspace_seed"
 
+LIVE_USAGE = {
+    "input_tokens": 17,
+    "output_tokens": 5,
+    "cache_read_tokens": 2,
+    "cache_write_tokens": 1,
+    "total_tokens": 25,
+}
+
 
 def operation_context(
     vault: Path,
@@ -364,6 +372,7 @@ def patch_pydantic_ai(
     *,
     output: str = "",
     seen: dict[str, Any] | None = None,
+    total_price: Any | None = None,
 ) -> dict[str, Any]:
     seen = seen if seen is not None else {}
 
@@ -385,7 +394,21 @@ def patch_pydantic_ai(
         def run_sync(self, prompt: str, *, model_settings: dict[str, Any]) -> SimpleNamespace:
             seen["prompt"] = prompt
             seen["model_settings"] = model_settings
-            return SimpleNamespace(output=output)
+
+            def usage() -> SimpleNamespace:
+                seen["usage_calls"] = int(seen.get("usage_calls", 0)) + 1
+                return SimpleNamespace(**LIVE_USAGE)
+
+            def cost() -> SimpleNamespace:
+                if total_price is None:
+                    raise LookupError("model not present in local price snapshot")
+                return SimpleNamespace(total_price=total_price)
+
+            return SimpleNamespace(
+                output=output,
+                usage=usage,
+                response=SimpleNamespace(cost=cost),
+            )
 
     monkeypatch.setattr(
         "memoria_vault.runtime.operations._load_pydantic_ai_openai",

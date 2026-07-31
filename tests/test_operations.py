@@ -4,6 +4,7 @@ import hashlib
 import shutil
 import subprocess
 from copy import deepcopy
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,9 @@ from memoria_vault.runtime import operations, state, trusted_writer
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
+    _pydantic_ai_chat,
+    _run_digest_model,
+    _run_prompt_model,
     _source_interviews,
     emit_explicit_disposition_event,
     load_operation_policy,
@@ -324,7 +328,18 @@ def test_prompt_operation_neutralizes_model_output_before_staging(
     )
     monkeypatch.setattr(
         "memoria_vault.runtime.operations._run_prompt_model",
-        lambda _policy, _runner, _prompt, _input: raw_output,
+        lambda _policy, _runner, _prompt, _input: {
+            "text": raw_output,
+            "usage": {
+                "input_tokens": 17,
+                "output_tokens": 5,
+                "cache_read_tokens": 2,
+                "cache_write_tokens": 1,
+                "total_tokens": 25,
+            },
+            "cost_usd": 0.0125,
+            "elapsed_s": 0.25,
+        },
     )
 
     result = run_prompt_operation(
@@ -366,7 +381,12 @@ def test_digest_and_hub_apply_neutralize_source_model_and_topic_text(
     )
     monkeypatch.setattr(
         "memoria_vault.runtime.operations._run_digest_model",
-        lambda _policy, _runner, _source, _content, _topics, _interviews: raw_digest,
+        lambda _policy, _runner, _source, _content, _topics, _interviews: {
+            "text": raw_digest,
+            "usage": None,
+            "cost_usd": None,
+            "elapsed_s": 0.0,
+        },
     )
 
     result = compile_source_digest(
@@ -422,9 +442,12 @@ def test_digest_and_hub_render_composed_fenced_fragments_inert(
     )
     monkeypatch.setattr(
         "memoria_vault.runtime.operations._run_digest_model",
-        lambda _policy, _runner, _source, _content, _topics, _interviews: (
-            "## Synthesis\n\nModel digest.\n\n## Hub suggestions\n\n- Framing\n"
-        ),
+        lambda _policy, _runner, _source, _content, _topics, _interviews: {
+            "text": "## Synthesis\n\nModel digest.\n\n## Hub suggestions\n\n- Framing\n",
+            "usage": None,
+            "cost_usd": None,
+            "elapsed_s": 0.0,
+        },
     )
 
     result = compile_source_digest(
@@ -917,3 +940,102 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
         )
 
     assert not (vault / "digests/source-alpha.md").exists()
+
+
+def chat_runner(model: str = "gpt-test") -> dict[str, object]:
+    return {
+        "mode": "test",
+        "runner": "pydantic-ai",
+        "provider": "local",
+        "model": model,
+        "base_url": "http://model.test/v1",
+        "key_env": None,
+        "params": {"temperature": 0},
+    }
+
+
+CHAT_POLICY = {"operation_id": "chat-test", "allowed_network": ["http://model.test/v1"]}
+
+
+def test_pydantic_ai_chat_returns_text_usage_cost_and_timing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen = patch_pydantic_ai(monkeypatch, output="model text", total_price=Decimal("0.0125"))
+
+    result = _pydantic_ai_chat(CHAT_POLICY, chat_runner(), "prompt body")
+
+    assert result["text"] == "model text"
+    assert result["usage"] == {
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "cache_read_tokens": 2,
+        "cache_write_tokens": 1,
+        "total_tokens": 25,
+    }
+    assert isinstance(result["cost_usd"], float)
+    assert result["cost_usd"] == pytest.approx(0.0125)
+    assert isinstance(result["elapsed_s"], float)
+    assert result["elapsed_s"] >= 0.0
+    assert seen["prompt"] == "prompt body"
+    assert seen["provider_kwargs"] == {
+        "base_url": "http://model.test/v1",
+        "api_key": "api-key-not-set",
+    }
+    assert seen["usage_calls"] == 1
+
+
+def test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    patch_pydantic_ai(monkeypatch, output="model text")
+
+    result = _pydantic_ai_chat(CHAT_POLICY, chat_runner(), "prompt body")
+
+    assert result["cost_usd"] is None
+    assert result["usage"] == {
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "cache_read_tokens": 2,
+        "cache_write_tokens": 1,
+        "total_tokens": 25,
+    }
+
+
+def test_pydantic_ai_chat_still_rejects_empty_output(monkeypatch: pytest.MonkeyPatch) -> None:
+    patch_pydantic_ai(monkeypatch, output="")
+
+    with pytest.raises(RuntimeError, match="pydantic-ai model returned no message content"):
+        _pydantic_ai_chat(CHAT_POLICY, chat_runner(), "prompt body")
+
+
+def test_run_prompt_model_fixture_branch_returns_null_telemetry() -> None:
+    policy = compile_policy()
+    runner = chat_runner(model="deterministic-fixture")
+
+    result = _run_prompt_model(policy, runner, "prompt body", "input body")
+
+    assert result["usage"] is None
+    assert result["cost_usd"] is None
+    assert result["elapsed_s"] == 0.0
+    assert result["text"].startswith(f"## {policy['title']}")
+
+
+def test_run_digest_model_fixture_branch_returns_null_telemetry() -> None:
+    policy = compile_policy()
+    runner = chat_runner(model="deterministic-fixture")
+    source_fm = {"title": "Alpha Source", "description": "A fixture source."}
+
+    result = _run_digest_model(
+        policy,
+        runner,
+        source_fm,
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+        [],
+    )
+
+    assert result["usage"] is None
+    assert result["cost_usd"] is None
+    assert result["elapsed_s"] == 0.0
+    assert "## Synthesis" in result["text"]
+    assert "## Hub suggestions" in result["text"]
