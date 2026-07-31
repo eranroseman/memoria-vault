@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.trusted_writer import OperationContext
+from memoria_vault.runtime.trusted_writer import OperationContext, rebuild_concept_mirror_from_files
+from tests.helpers import copy_memoria_dirs
 
 CONTEXT = OperationContext(
     actor="operation",
@@ -28,6 +29,8 @@ CATALOG_FORMS = (
     "./catalog/sources/smith-2020",
     "catalog/sources/smith-2020/source.md",
 )
+ULID_A = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+ULID_B = "01BX5ZZKBKACTAV9WEVGEMMVRZ"
 
 
 def _mirror(vault: Path, *rels: str) -> None:
@@ -454,6 +457,238 @@ def test_two_identities_claiming_one_path_raise_a_descriptive_error(tmp_path: Pa
     assert second in message
     assert "notes/alpha.md" in message
     assert str(owner) == first
+
+
+def test_same_identity_rename_updates_the_path_instead_of_colliding(tmp_path: Path) -> None:
+    """A rename is an attribute update: same id, requested path owned by nobody."""
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, ULID_A, concept_type="note", store="file", path="notes/old.md"
+        )
+        state._set_concept_verdict_conn(conn, ULID_A, "checked")
+        renamed = state.ensure_concept_parent_conn(
+            conn, ULID_A, concept_type="note", store="file", path="notes/new.md"
+        )
+        concepts = conn.execute("SELECT concept_id, path FROM concepts").fetchall()
+        verdicts = conn.execute("SELECT concept_id, check_status FROM concept_verdicts").fetchall()
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    assert renamed == ULID_A
+    assert [tuple(row) for row in concepts] == [(ULID_A, "notes/new.md")]
+    # The PI's verdict rides along; a rename never drops it.
+    assert [tuple(row) for row in verdicts] == [(ULID_A, "checked")]
+
+
+def test_same_identity_concept_type_change_at_one_path_updates(tmp_path: Path) -> None:
+    """An in-place concept_type change is an attribute update, not a collision."""
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, ULID_A, concept_type="note", store="file", path="notes/alpha.md"
+        )
+        retyped = state.ensure_concept_parent_conn(
+            conn, ULID_A, concept_type="hub", store="file", path="notes/alpha.md"
+        )
+        concepts = conn.execute("SELECT concept_id, concept_type, path FROM concepts").fetchall()
+
+    assert retyped == ULID_A
+    assert [tuple(row) for row in concepts] == [(ULID_A, "hub", "notes/alpha.md")]
+
+
+def test_rename_onto_a_path_another_identity_owns_still_collides(tmp_path: Path) -> None:
+    """The allowance is scoped to an unowned path; two ids for one path still raise."""
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, ULID_A, concept_type="note", store="file", path="notes/alpha.md"
+        )
+        state.ensure_concept_parent_conn(
+            conn, ULID_B, concept_type="note", store="file", path="notes/beta.md"
+        )
+        with pytest.raises(RuntimeError, match="concept identity collision") as excinfo:
+            state.ensure_concept_parent_conn(
+                conn, ULID_B, concept_type="note", store="file", path="notes/alpha.md"
+            )
+        paths = dict(conn.execute("SELECT concept_id, path FROM concepts").fetchall())
+
+    message = str(excinfo.value)
+    assert ULID_A in message and ULID_B in message and "notes/alpha.md" in message
+    assert paths == {ULID_A: "notes/alpha.md", ULID_B: "notes/beta.md"}
+
+
+def test_a_batch_rename_does_not_roll_back_the_whole_mirror_pass(tmp_path: Path) -> None:
+    """One renamed row must not refuse — and so must not lose — its batch."""
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": ULID_A, "concept_type": "note", "path": "notes/old.md"},
+            {"concept_id": "notes/plain.md", "concept_type": "note"},
+        ],
+    )
+
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": ULID_A, "concept_type": "note", "path": "notes/new.md"},
+            {"concept_id": "notes/plain.md", "concept_type": "note"},
+        ],
+    )
+
+    with state.connect(tmp_path) as conn:
+        rows = dict(conn.execute("SELECT concept_id, path FROM concepts").fetchall())
+
+    assert rows == {ULID_A: "notes/new.md", "notes/plain.md": "notes/plain.md"}
+
+
+def test_flagging_an_unmirrored_concept_raises_a_descriptive_error(tmp_path: Path) -> None:
+    """A missing FK parent is named, not surfaced as a bare IntegrityError."""
+    with pytest.raises(RuntimeError) as excinfo:
+        state.set_concept_flag(tmp_path, "notes/ghost.md", "stale", reason="upstream demoted")
+
+    assert not isinstance(excinfo.value, sqlite3.IntegrityError)
+    message = str(excinfo.value)
+    assert "notes/ghost.md" in message
+    assert "stale" in message
+
+
+def _write(vault: Path, rel: str, frontmatter: str) -> None:
+    path = vault / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
+
+
+def test_concept_key_for_file_prefers_a_valid_frontmatter_ulid(tmp_path: Path) -> None:
+    _write(tmp_path, "notes/alpha.md", f"type: note\nid: {ULID_A}\n")
+    _write(tmp_path, "notes/plain.md", "type: note\n")
+    _write(tmp_path, "fulltexts/smith-2020.md", "type: fulltext\nid: smith-2020\n")
+
+    assert state._concept_key_for_file(tmp_path, "notes/alpha.md") == ULID_A
+    # A non-ULID identity keeps its B.1 path key, normalized.
+    assert state._concept_key_for_file(tmp_path, "./notes/plain.md") == "notes/plain.md"
+    assert (
+        state._concept_key_for_file(tmp_path, "fulltexts/smith-2020.md")
+        == "fulltexts/smith-2020.md"
+    )
+    # A staged payload is the identity of record before the file exists.
+    assert (
+        state._concept_key_for_file(
+            tmp_path, "notes/ghost.md", f"---\ntype: note\nid: {ULID_B}\n---\n"
+        )
+        == ULID_B
+    )
+    assert state._concept_key_for_file(tmp_path, "notes/ghost.md") == "notes/ghost.md"
+
+
+def test_check_status_projection_keys_by_rendered_path(tmp_path: Path) -> None:
+    """The search index gates files by path, so the bulk verdict map must key by path."""
+    _write(tmp_path, "notes/alpha.md", f"type: note\nid: {ULID_A}\ntitle: Alpha\n")
+    state.record_observed_file_edit(
+        tmp_path, output_id="notes/alpha.md", concept_type="note", output_sha256="sha256:beef"
+    )
+    state.set_concept_verdict(tmp_path, "notes/alpha.md", "checked")
+    state.upsert_catalog_record(
+        tmp_path, work_id="smith-2020", title="Smith 2020", check_status="checked"
+    )
+
+    assert state.concept_check_statuses(tmp_path) == {
+        "notes/alpha.md": "checked",
+        "catalog/sources/smith-2020": "checked",
+    }
+
+
+def test_observed_file_edit_keys_the_concept_by_its_frontmatter_ulid(tmp_path: Path) -> None:
+    _write(tmp_path, "notes/alpha.md", f"type: note\nid: {ULID_A}\ntitle: Alpha\n")
+
+    state.record_observed_file_edit(
+        tmp_path, output_id="notes/alpha.md", concept_type="note", output_sha256="sha256:beef"
+    )
+
+    with state.connect(tmp_path) as conn:
+        concepts = conn.execute(
+            "SELECT concept_id, concept_type, store, path FROM concepts"
+        ).fetchall()
+        outputs = conn.execute("SELECT output_id FROM outputs").fetchall()
+    assert [tuple(row) for row in concepts] == [(ULID_A, "note", "file", "notes/alpha.md")]
+    # `outputs` keeps its own path-keyed space.
+    assert [tuple(row) for row in outputs] == [("notes/alpha.md",)]
+    # Path references still resolve onto the id-keyed row.
+    assert state.concept_check_status(tmp_path, "notes/alpha.md") == "unchecked"
+    state.set_concept_verdict(tmp_path, "notes/alpha.md", "checked")
+    assert state.concept_check_status(tmp_path, ULID_A) == "checked"
+
+
+def test_file_output_keys_by_payload_ulid_and_identity_keys_its_derivation(
+    tmp_path: Path,
+) -> None:
+    state.upsert_catalog_record(tmp_path, work_id="smith-2020", title="Smith 2020")
+    payload = f"---\ntype: note\nid: {ULID_A}\ntitle: Alpha\n---\n\nBody.\n"
+
+    state.record_file_output(
+        tmp_path,
+        output_id="notes/alpha.md",
+        concept_type="note",
+        check_status="unchecked",
+        output_sha256="sha256:" + hashlib.sha256(payload.encode()).hexdigest(),
+        staging_id=".memoria/staging/notes/alpha.md",
+        payload_text=payload,
+        context=CONTEXT,
+        inputs=[{"id": "catalog/sources/smith-2020/source.md", "role": "source"}],
+    )
+
+    with state.connect(tmp_path) as conn:
+        concept = conn.execute(
+            "SELECT concept_id, path FROM concepts WHERE store = 'file'"
+        ).fetchone()
+        derivations = conn.execute("SELECT input_id, output_id FROM derivations").fetchall()
+        verdict = conn.execute("SELECT concept_id FROM concept_verdicts").fetchall()
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    assert tuple(concept) == (ULID_A, "notes/alpha.md")
+    # Both derivation endpoints are canonical identities, never renderings.
+    assert [tuple(row) for row in derivations] == [("smith-2020", ULID_A)]
+    assert sorted(str(row["concept_id"]) for row in verdict) == sorted([ULID_A, "smith-2020"])
+
+
+def test_mirror_rebuild_keys_files_by_ulid_and_maps_types_through_the_registry(
+    tmp_path: Path,
+) -> None:
+    copy_memoria_dirs(tmp_path, "schemas")
+    _write(tmp_path, "notes/alpha.md", f"type: note\nid: {ULID_A}\ntitle: Alpha\n")
+    # A fulltext's `id` is its work_id, not a ULID: it stays on its B.1 path key.
+    _write(tmp_path, "fulltexts/smith-2020.md", "type: fulltext\nid: smith-2020\n")
+    # Tolerant observation: an untrusted external file missing authored fields is
+    # still mirrored, keyed by its path because it carries no ULID.
+    _write(tmp_path, "notes/external.md", "type: note\n")
+
+    rebuild_concept_mirror_from_files(tmp_path)
+
+    with state.connect(tmp_path) as conn:
+        rows = {
+            str(row["concept_id"]): (str(row["concept_type"]), str(row["path"]))
+            for row in conn.execute("SELECT concept_id, concept_type, path FROM concepts")
+        }
+
+    assert rows == {
+        ULID_A: ("note", "notes/alpha.md"),
+        "fulltexts/smith-2020.md": ("work", "fulltexts/smith-2020.md"),
+        "notes/external.md": ("note", "notes/external.md"),
+    }
+
+
+def test_mirror_rebuild_keeps_one_identity_across_a_file_rename(tmp_path: Path) -> None:
+    copy_memoria_dirs(tmp_path, "schemas")
+    _write(tmp_path, "notes/old.md", f"type: note\nid: {ULID_A}\ntitle: Alpha\n")
+    rebuild_concept_mirror_from_files(tmp_path)
+    state.set_concept_verdict(tmp_path, "notes/old.md", "checked")
+
+    (tmp_path / "notes/old.md").rename(tmp_path / "notes/new.md")
+    rebuild_concept_mirror_from_files(tmp_path)
+
+    with state.connect(tmp_path) as conn:
+        rows = dict(conn.execute("SELECT concept_id, path FROM concepts").fetchall())
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    assert rows == {ULID_A: "notes/new.md"}
+    # The verdict rode the rename because the identity never moved.
+    assert state.concept_check_status(tmp_path, "notes/new.md") == "checked"
 
 
 def test_identity_correct_verdict_clears_a_path_written_stale_flag(tmp_path: Path) -> None:

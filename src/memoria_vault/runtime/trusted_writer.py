@@ -13,8 +13,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from memoria_vault.runtime import state
 from memoria_vault.runtime.content_security import (
     markdown_code_span,
@@ -31,7 +29,9 @@ from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
     frontmatter_doc,
+    is_ulid,
     iter_markdown,
+    read_frontmatter,
     retired_frontmatter_field_errors,
     split_frontmatter,
     universal_concept_frontmatter_errors,
@@ -755,11 +755,20 @@ def rebuild_concept_mirror_from_files(
         for path in iter_markdown(base, skip_dirs=frozenset()):
             target = path.relative_to(vault).as_posix()
             frontmatter, _body = split_frontmatter(path.read_text(encoding="utf-8"))
+            # Read the authored id before validation: _validate_concept mints a
+            # fresh ULID into an id-less Concept, which would re-key it every pass.
+            raw_id = str(frontmatter.get("id") or "")
             try:
                 _validate_concept(contract, target, frontmatter, strict_writer=False)
             except ValueError:
                 continue
-            rows.append({"concept_id": target, "concept_type": str(frontmatter["type"])})
+            rows.append(
+                {
+                    "concept_id": raw_id if is_ulid(raw_id) else target,
+                    "concept_type": _concept_type_for(contract, str(frontmatter["type"])),
+                    "path": target,
+                }
+            )
     return state.rebuild_file_concept_mirror(vault, rows)
 
 
@@ -814,6 +823,7 @@ def stage_concept(
     frontmatter, body = split_frontmatter(content)
     if context.actor != "pi":
         body = neutralize_untrusted_markdown(body)
+    _inherit_authored_identity(vault, target, frontmatter)
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
@@ -1030,14 +1040,25 @@ def rebuild_trace_state(vault: Path) -> dict[str, dict[str, Any]]:
 
 
 def _load_contract(vault: Path, schemas_dir: Path | None) -> dict[str, Any]:
+    """Return the vault's folder homes and its registry-validated document types.
+
+    Types load through ``schema.load_types``, which rejects a document type whose
+    ``concept_type`` is not a registry member, so a mirror row's Concept type is
+    never the raw frontmatter ``type`` this module is asked to trust.
+    """
     root = Path(schemas_dir) if schemas_dir else vault / ".memoria/schemas"
-    folders = yaml.safe_load((root / "folders.yaml").read_text(encoding="utf-8")) or {}
-    types: dict[str, dict[str, Any]] = {}
-    for path in sorted((root / "types").glob("*.yaml")):
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        if data.get("type"):
-            types[str(data["type"])] = data
-    return {"folders": folders, "types": types}
+    return {
+        "folders": schema_lib.load_folders(root) or {},
+        "types": schema_lib.load_types(root),
+    }
+
+
+def _concept_type_for(contract: dict[str, Any], document_type: str) -> str:
+    """Return the registry Concept type for one document type (``schema.concept_type_for``)."""
+    type_schema = contract["types"].get(document_type)
+    if type_schema is None:
+        raise ValueError(f"unknown document type: {document_type}")
+    return str(type_schema["concept_type"])
 
 
 def _target_path(path: str) -> str:
@@ -1182,6 +1203,23 @@ def _restriction_keys(frontmatter: dict[str, Any]) -> list[str]:
 
 def _staged_path(vault: Path, target: str) -> Path:
     return vault / ".memoria/staging" / target
+
+
+def _inherit_authored_identity(vault: Path, target: str, frontmatter: dict[str, Any]) -> None:
+    """Give id-less content the ULID already authored at its path, if there is one.
+
+    ``apply_universal_concept_frontmatter`` mints a ULID for content that carries
+    no ``id``, so without this a rewrite of one path would claim a second identity
+    over the Concept living there — which v16 refuses as an identity collision.
+    Staged content is the more recent authored state, so it wins over the promoted file.
+    """
+    if frontmatter.get("id"):
+        return
+    for path in (_staged_path(vault, target), vault / target):
+        resident = str(read_frontmatter(path).get("id") or "")
+        if is_ulid(resident):
+            frontmatter["id"] = resident
+            return
 
 
 def _validate_concept(

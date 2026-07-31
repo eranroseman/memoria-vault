@@ -37,7 +37,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
-from memoria_vault.runtime.vaultio import write_text_durable
+from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read, write_text_durable
 
 try:
     import fcntl
@@ -1111,11 +1111,17 @@ def concept_check_status(vault: Path, concept_id: str) -> str:
 
 
 def concept_check_statuses(vault: Path) -> dict[str, str]:
+    """Return every Concept verdict keyed by its rendered path, id when it has none.
+
+    v16 decouples the identity from the path, so this bulk projection keys by the
+    path its one caller walks the vault by — the id-keyed map it used to return
+    reads as ``unchecked`` for every ULID-keyed file Concept.
+    """
     if not db_path(vault).is_file():
         return {}
     with connect(vault) as conn:
-        rows = conn.execute("SELECT concept_id, check_status FROM concept_status").fetchall()
-    return {str(row["concept_id"]): str(row["check_status"]) for row in rows}
+        rows = conn.execute("SELECT concept_id, path, check_status FROM concept_status").fetchall()
+    return {str(row["path"] or row["concept_id"]): str(row["check_status"]) for row in rows}
 
 
 def output_record(vault: Path, output_id: str) -> dict[str, Any] | None:
@@ -1136,11 +1142,14 @@ def output_record(vault: Path, output_id: str) -> dict[str, Any] | None:
 
 
 def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> dict[str, int]:
-    """Rebuild path-keyed file Concept parents, normalizing types through the registry.
+    """Rebuild identity-keyed file Concept parents, normalizing types through the registry.
 
-    Only absent file rows carrying no verdict are pruned: a verdict-bearing row
-    is the PI's judgment and survives its file. Pruning a row cascades its
-    outgoing edges and pends inbound ones through the v16 foreign keys.
+    Each row carries its own ``concept_id`` and ``path``: v16 decouples the two, so
+    a row whose ``id`` is a frontmatter ULID keeps that identity across a rename,
+    and one without a ULID keeps its path key. Only absent file rows carrying no
+    verdict are pruned: a verdict-bearing row is the PI's judgment and survives its
+    file. Pruning a row cascades its outgoing edges and pends inbound ones through
+    the v16 foreign keys.
     """
     rows = list(rows)
     with connect(vault) as conn:
@@ -1150,7 +1159,7 @@ def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> 
                 normalize_path(row["concept_id"]),
                 concept_type=str(row["concept_type"]),
                 store="file",
-                path=normalize_path(row["concept_id"]),
+                path=normalize_path(str(row.get("path") or row["concept_id"])),
             )
             for row in rows
         ]
@@ -1184,10 +1193,16 @@ def record_file_output(
     if _sha256_text(payload_text) != output_sha256:
         raise ValueError(f"materialization payload hash mismatch for {target}")
     with connect(vault) as conn:
-        ensure_concept_parent_conn(
-            conn, target, concept_type=concept_type, store="file", path=target
+        # `outputs` and its materialization payload stay path-keyed; the Concept
+        # parent, its verdict, and the derivation endpoints use the file identity.
+        key = ensure_concept_parent_conn(
+            conn,
+            _concept_key_for_file(vault, target, payload_text),
+            concept_type=concept_type,
+            store="file",
+            path=target,
         )
-        _set_concept_verdict_conn(conn, target, _check_status(check_status))
+        _set_concept_verdict_conn(conn, key, _check_status(check_status))
         conn.execute(
             """
             INSERT INTO outputs(
@@ -1233,7 +1248,7 @@ def record_file_output(
                     ON CONFLICT(input_id, output_id)
                     DO UPDATE SET actor = excluded.actor
                     """,
-                    (resolve_concept_id(conn, input_id), target, context.actor),
+                    (resolve_concept_id(conn, input_id), key, context.actor),
                 )
 
 
@@ -1274,10 +1289,14 @@ def record_observed_file_edit(
 ) -> None:
     target = normalize_path(output_id)
     with connect(vault) as conn:
-        ensure_concept_parent_conn(
-            conn, target, concept_type=concept_type, store="file", path=target
+        key = ensure_concept_parent_conn(
+            conn,
+            _concept_key_for_file(vault, target),
+            concept_type=concept_type,
+            store="file",
+            path=target,
         )
-        _set_concept_verdict_conn(conn, target, "unchecked")
+        _set_concept_verdict_conn(conn, key, "unchecked")
         conn.execute(
             """
             INSERT INTO outputs(
@@ -1378,17 +1397,22 @@ def set_concept_flag(
         # concepts(concept_id) rejects a flag on a Concept that does not exist and
         # cascades the row away when that Concept is pruned.
         target = resolve_concept_id(conn, concept_id)
-        conn.execute(
-            """
-            INSERT INTO concept_flags(concept_id, flag, reason, trigger_id, created_at)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(concept_id, flag) DO UPDATE SET
-                reason = excluded.reason,
-                trigger_id = excluded.trigger_id,
-                created_at = excluded.created_at
-            """,
-            (target, flag, reason, normalize_path(trigger_id) if trigger_id else "", now_iso()),
-        )
+        try:
+            conn.execute(
+                """
+                INSERT INTO concept_flags(concept_id, flag, reason, trigger_id, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(concept_id, flag) DO UPDATE SET
+                    reason = excluded.reason,
+                    trigger_id = excluded.trigger_id,
+                    created_at = excluded.created_at
+                """,
+                (target, flag, reason, normalize_path(trigger_id) if trigger_id else "", now_iso()),
+            )
+        except sqlite3.IntegrityError as exc:
+            if "FOREIGN KEY" not in str(exc):
+                raise
+            raise _concept_missing_parent(concept_id, target, f"flag {flag!r}") from exc
 
 
 def concept_flags(vault: Path, concept_id: str) -> dict[str, dict[str, str]]:
@@ -4265,6 +4289,18 @@ def resolve_concept_id(conn: sqlite3.Connection, ref: str) -> str:
     return _lookup_concept_id(conn, rel) or rel
 
 
+def _concept_key_for_file(vault: Path, path: str, payload_text: str = "") -> str:
+    """Return the identity a file Concept is created with on first observation.
+
+    A valid frontmatter ULID is the identity; any other ``id`` (a catalog
+    ``work_id``, a blank, a hand-written slug) leaves the Concept on its B.1 path
+    key. ``payload_text`` is the staged content for a file that is not on disk yet.
+    """
+    text = payload_text or safe_read(Path(vault) / path)
+    raw_id = str(parse_frontmatter(text).get("id") or "")
+    return raw_id if is_ulid(raw_id) else normalize_path(path)
+
+
 def ensure_concept_parent_conn(
     conn: sqlite3.Connection,
     ref: str,
@@ -4275,11 +4311,15 @@ def ensure_concept_parent_conn(
 ) -> str:
     """Create or refresh the FK parent row for one Concept and return its id.
 
-    Never silently accepts an identity collision (contract 10): if the reference
-    resolves to a Concept whose ``(concept_type, store, path)`` disagrees with the
-    requested shape, or if another Concept already owns the requested path, the
-    write is refused with a descriptive ``RuntimeError`` naming both shapes rather
-    than overwriting the resident identity and its FK-backed verdict.
+    Never silently accepts an identity collision (contract 10), while still
+    letting one identity update its own attributes. v16 decouples the id from the
+    path, so *same resolved id, requested path owned by nobody else* is a rename
+    (or an in-place ``concept_type`` change), not a collision, and it updates.
+    Two refusals remain, each a descriptive ``RuntimeError`` naming both shapes:
+    a reference resolving onto a row of a different ``store`` — the line between
+    a db catalog work and a mirrored file Concept, which is the hijack contract 10
+    forbids — and two distinct ids claiming one path, caught below by
+    ``idx_concepts_path`` so the message names the resident owner.
     """
     concept_id = _lookup_concept_id(conn, ref) or _canonical_concept_ref(ref)
     if not concept_id:
@@ -4289,10 +4329,9 @@ def ensure_concept_parent_conn(
         "SELECT concept_type, store, path FROM concepts WHERE concept_id = ?",
         (concept_id,),
     ).fetchone()
-    if resident is not None:
+    if resident is not None and str(resident["store"]) != wanted[1]:
         found = (str(resident["concept_type"]), str(resident["store"]), str(resident["path"]))
-        if found != wanted:
-            raise _concept_shape_collision(ref, concept_id, found, concept_id, wanted)
+        raise _concept_shape_collision(ref, concept_id, found, concept_id, wanted)
     try:
         conn.execute(
             """
@@ -4341,6 +4380,14 @@ def _concept_shape_collision(
     return RuntimeError(
         f"concept identity collision for {ref!r}: {shape(found_id, found)}"
         f" already exists; refusing to rewrite it as {shape(wanted_id, wanted)}"
+    )
+
+
+def _concept_missing_parent(ref: str, concept_id: str, subject: str) -> RuntimeError:
+    """Return the descriptive refusal for an FK-backed write with no Concept parent."""
+    return RuntimeError(
+        f"unknown Concept for {subject}: {ref!r} resolves to concept_id={concept_id!r},"
+        " which has no concepts row; mirror the Concept before writing to it"
     )
 
 

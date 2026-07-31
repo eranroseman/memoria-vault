@@ -1998,7 +1998,7 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
 
 **Steps:**
 
-- [ ] Add RED tests proving that a note/hub/project row keyed by its provisional path
+- [x] Add RED tests proving that a note/hub/project row keyed by its provisional path
   re-keys to its valid frontmatter ULID on observation, carries verdicts/flags/edges
   through their required update paths, and retains its path. Verdicts and edges carry
   through FK `ON UPDATE CASCADE`; `_rekey_concept_conn` moves flags manually because
@@ -2018,13 +2018,13 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
   up the staged note's canonical frontmatter ULID, and assert the derivation pair is
   `("source-a", note_ulid)`.
 
-- [ ] Run the focused tests and confirm the ULID row is absent before implementation:
+- [x] Run the focused tests and confirm the ULID row is absent before implementation:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py tests/test_runtime_state.py tests/test_operation_context.py -v
   ```
 
-- [ ] Implement file-key derivation and collision-safe re-keying. A valid ULID wins;
+- [x] Implement file-key derivation and collision-safe re-keying. A valid ULID wins;
   otherwise keep the normalized path. The in-transaction re-key must reject a
   conflicting target id, flag, or derivation before changing rows:
 
@@ -2046,19 +2046,19 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
   `derivations.input_id` and `derivations.output_id` occurrences. `outputs` and
   materialization-payload tables remain path keyed and are not derivation endpoints.
 
-- [ ] Make trusted-writer mirror inputs registry-aware. `_load_contract` uses
+- [x] Make trusted-writer mirror inputs registry-aware. `_load_contract` uses
   `schema.load_types` / `schema.concept_type_for` rather than manually trusting the
   raw document `type`; mirror rows carry `concept_id`, mapped `concept_type`, and
   normalized `path`. Preserve `strict_writer=False` as tolerant observation behavior:
   it records an unchecked external file rather than treating that path as a valid
   authored write.
 
-- [ ] Route `record_file_output` and `record_observed_file_edit` through
+- [x] Route `record_file_output` and `record_observed_file_edit` through
   `_concept_key_for_file`; write/re-key **both** derivation endpoints through B.1's
   resolver, while keeping `outputs` and materialization payloads path-keyed. Do not move B.1's parent
   ensuring, pruning, catalog alias, or status semantics back into this task.
 
-- [ ] Run focused suites and the gate:
+- [x] Run focused suites and the gate:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py tests/test_runtime_state.py tests/test_operation_context.py -v
@@ -2067,7 +2067,7 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
 
   Expected: all tests pass and `verify: OK`.
 
-- [ ] Commit only ULID-reconciliation changes:
+- [x] Commit only ULID-reconciliation changes:
 
   ```bash
   git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/trusted_writer.py \
