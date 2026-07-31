@@ -2827,6 +2827,10 @@ def _repair_seed_write_targets(workspace: Path) -> list[str]:
     )
 
 
+def _seed_tree_child_is_cache(name: str) -> bool:
+    return name == "__pycache__" or name.endswith(".pyc")
+
+
 def _seed_tree_file_targets(source_rel: str, target_rel: str) -> list[str]:
     source = _seed_resource(source_rel)
     if source.is_file():
@@ -2835,6 +2839,8 @@ def _seed_tree_file_targets(source_rel: str, target_rel: str) -> list[str]:
         return []
     targets: list[str] = []
     for child in source.iterdir():
+        if _seed_tree_child_is_cache(child.name):
+            continue
         child_target = (Path(target_rel) / child.name).as_posix()
         targets.extend(_seed_tree_file_targets(f"{source_rel}/{child.name}", child_target))
     return targets
@@ -2846,6 +2852,8 @@ def _seed_tree_write_targets(source_rel: str, target_rel: str) -> list[str]:
     if not source.is_dir():
         return targets
     for child in source.iterdir():
+        if _seed_tree_child_is_cache(child.name):
+            continue
         child_target = (Path(target_rel) / child.name).as_posix()
         targets.append(child_target)
         if child.is_dir():
@@ -2926,6 +2934,8 @@ def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_re
         return
     target.mkdir(parents=True, exist_ok=True)
     for child in source.iterdir():
+        if _seed_tree_child_is_cache(child.name):
+            continue
         child_target = target / child.name
         child_rel = f"{target_rel}/{child.name}"
         if child.is_dir():
