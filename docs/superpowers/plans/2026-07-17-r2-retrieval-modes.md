@@ -42,6 +42,15 @@
 - Verification: `python scripts/verify` passed (**2,405 passed, 9 skipped**;
   one existing multiprocessing-fork warning).
 
+## Execution status — 2026-07-31
+
+- [x] **F.1 complete:** `aeeca6e2` is an ancestor of `main`; its diff adds
+  the shared span-ref helper, grounded-synthesis contract suite, and required
+  test-level registration declared by this task.
+- [x] **F.2 complete:** `fcca90f4` is an ancestor of `main`; its diff adds
+  the retrieval-fixture form, loader, contract suite, and registration
+  declared by this task.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Primitives** (G produces): `graph_sql.DEPTH_CAP = 2`; `concept_edge_relations(vault) -> set[str]` (live-CHECK read; subset parity vs packaged schema — the graph plan's widening flows through); `neighborhood(vault, seeds, *, depth=1, relations=None) -> {"ids", "counts"}` (checked path-projected edges only; depth 1..2 rejected naming the cap); `co_citation` / `coupling` (over `references` rows); `degree_centrality(vault, ids) -> dict[str,int]` (distinct-neighbor orderer only); `project_slice(vault, project) -> {"ids", "counts", "source"}` (adapts graph `propagation.active_project_slices(vault)` by project-relative path; before that producer exists, uses the project `links:` closure).
@@ -3241,6 +3250,11 @@ git add src/memoria_vault/runtime/span_refs.py tests/test_grounded_synthesis.py 
 git commit -m "R2 F.1: grounded-synthesis contract tests + shared span-ref resolution (spec section 5)" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor aeeca6e2 main`
+> succeeded. `aeeca6e2` adds `runtime/span_refs.py`,
+> `tests/test_grounded_synthesis.py`, and the corresponding `tests/conftest.py`
+> registration: the task's declared file set.
+
 ---
 
 ### Task F.2: The preregistration fixture form, loader, and baseline wiring
@@ -3714,6 +3728,11 @@ Expected: `verify: OK` (ruff/ruff-format cover the two new Python files; yamllin
 git add tests/retrieval_fixtures.py tests/fixtures/retrieval/cases.yaml tests/test_retrieval_fixtures.py tests/conftest.py
 git commit -m "R2 F.2: retrieval-fixture preregistration form, loader, and baseline wiring (spec section 7)" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor fcca90f4 main`
+> succeeded. `fcca90f4` adds `tests/retrieval_fixtures.py`,
+> `tests/fixtures/retrieval/cases.yaml`, `tests/test_retrieval_fixtures.py`,
+> and the task's `tests/conftest.py` registration.
 
 ---
 

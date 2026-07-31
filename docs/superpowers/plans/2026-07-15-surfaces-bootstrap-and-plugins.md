@@ -66,6 +66,12 @@
   completed, and the sealed final-snapshot security scan found no reportable issue:
   `/tmp/codex-security-scans/memoria-vault/4114cd0b_bootb3_20260729T201022Z/report.md`.
 
+## Execution status — 2026-07-31
+
+- [x] **BOOT-C.1 complete:** `3b0a1454` is an ancestor of `main`; its diff
+  adds the declared agent-bundle seed templates plus their test, package, and
+  test-level wiring.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Handshake stdout** (BOOT-A produces, U3-PLUG consumes): `{ok, port, token, boot_id, engine_version, pid}` — BOOT-A.8 includes `pid` (from runtime.json). Handshake-failure stderr names `serve.log`.
@@ -5424,6 +5430,12 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
 )"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 3b0a1454 main`
+> succeeded. `3b0a1454` adds the BOOT-C.1 `.claude`, `.codex`, MCP, and
+> `CLAUDE.md` seed-template files, along with the declared agent-bundle,
+> installer-skeleton, package-spine, and test-level wiring. BOOT-C.2 is not
+> included in this receipt.
 
 ---
 

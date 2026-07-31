@@ -17,6 +17,18 @@
 - All line refs verified at origin/main `07bedc74` (post-PR-#1502); re-anchor by symbol if drifted.
 - The spec's §1 ledger Y-statement and the #902 re-deferral comment already shipped with the spec PR — not re-planned here.
 
+## Execution status — 2026-07-31
+
+- [x] **S.1 complete:** `56dd5e3d` is an ancestor of `main`; it adds the
+  derived-steering module, moves the tokenizer, and registers the new contract
+  suite.
+- [x] **S.2 complete:** `d0f2af64` is an ancestor of `main`; it switches the
+  discovery-relevance caller to effective steering and updates its regression
+  coverage.
+- [x] **S.3 complete:** `378e64a5` is an ancestor of `main`; it reseeds the
+  thin override and adds effective-steering provenance to the CLI surface and
+  focused tests.
+
 ## Cross-section contracts (BINDING — the manifests' seam resolutions)
 
 1. **Manifest** (M.1 produces): `src/memoria_vault/product/seed_corpus/manifest.yaml`, rows `{id, title, identifier, license, license_evidence, fetch{method,url}, role, repo?}`; `load_seed_manifest() -> list[dict]` / `parse_seed_manifest(text) -> list[dict]` in `memoria_vault.product.seed_corpus`; the eight pinned work_ids: `chen-2018-undesirable-difficulty, moreira-2019-retrieval-practice, settles-2016-spaced-repetition, morrison-2020-offloading, ose-askvik-2020-handwriting, schmidt-2018-luhmann-card-index, mirzababaei-2021-toulmin-agent, asai-2024-openscholar`.
@@ -1796,6 +1808,11 @@ EOF
 )"
 ```
 
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 56dd5e3d main`
+> succeeded. `56dd5e3d` creates `runtime/steering.py` and
+> `tests/test_steering_tokens.py`, and changes `runtime/knowledge.py` plus the
+> declared test-level registration.
+
 ---
 
 ### Task S.2: call-site switch — discovery relevance ranks against effective steering
@@ -2030,6 +2047,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
 )"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor d0f2af64 main`
+> succeeded. `d0f2af64` changes only the declared `runtime/knowledge.py` call
+> site and `tests/test_gap_analysis.py` coverage for the effective-steering
+> switch.
 
 ---
 
@@ -2287,6 +2309,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
 )"
 ```
+
+> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor 378e64a5 main`
+> succeeded. `378e64a5` changes the declared steering seed, provenance/CLI
+> implementation, and `test_steering_tokens.py`/`test_cli.py` coverage.
+
 # T — Onboarding-step telemetry + diary template
 
 Implements O1 spec §5 (time-to-first-answer instrumentation: the `onboarding-step` native event type and its five emit points, including the exact `first-answer` rule) and §6's diary line (the five-line session-diary template seeded at `system/templates/session-diary.md`) — implementation slices 5 and 6 of `docs/superpowers/specs/2026-07-16-o1-onboarding-seed-design.md`.
