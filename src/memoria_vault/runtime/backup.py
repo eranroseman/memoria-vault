@@ -976,8 +976,6 @@ def _read_backup_transaction(vault: Path) -> dict[str, Any] | None:
         raise ValueError(f"backup transaction marker is invalid: {exc}") from exc
     if not isinstance(value, dict):
         raise ValueError("backup transaction marker must be an object")
-    if value.get("format") == BACKUP_TRANSACTION_FORMAT and value.get("version") == 1:
-        raise ValueError("legacy backup transaction marker identity is invalid")
     if (
         value.get("format") != BACKUP_TRANSACTION_FORMAT
         or value.get("version") != BACKUP_TRANSACTION_VERSION
@@ -1136,8 +1134,6 @@ def _read_restore_transaction(vault: Path) -> dict[str, Any] | None:
         raise ValueError(f"restore transaction marker is invalid: {exc}") from exc
     if not isinstance(value, dict):
         raise ValueError("restore transaction marker must be an object")
-    if value.get("format") == RESTORE_TRANSACTION_FORMAT and value.get("version") == 1:
-        raise ValueError("legacy restore transaction marker identity is invalid")
     if (
         value.get("format") != RESTORE_TRANSACTION_FORMAT
         or value.get("version") != RESTORE_TRANSACTION_VERSION
