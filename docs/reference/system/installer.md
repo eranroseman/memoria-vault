@@ -11,9 +11,11 @@ The bootstrap installers (`scripts/install.sh` for Linux/WSL and
 `scripts/install.ps1` for Windows) create a standalone Memoria CLI/runtime
 workspace. They do not install external agent runtimes, the Obsidian desktop
 app, or live Zotero integration. They do seed Memoria's Obsidian plugin files
-and core Obsidian settings as part of `memoria init`; entering local adapter
-tokens remains a user action. Direct CLI initialization can opt out with
-`memoria init --no-obsidian`; the bootstrap installers use the default.
+and core Obsidian settings, plus the first-init agent/MCP host configuration,
+as part of `memoria init`; entering local adapter tokens remains a user action.
+Direct CLI initialization can opt out with `memoria init --no-obsidian`, which
+skips only editor settings and root Base views; it still seeds the agent/MCP
+configuration. The bootstrap installers use the default.
 
 The install model is **prepare target -> install package -> initialize
 workspace**: the installer creates the target folder, installs the CLI package
@@ -37,7 +39,7 @@ repo tree copy.
 | Prerequisites | Ensures `git` and Python 3.12+ with venv support. `pandoc` is optional and only needed for DOCX/PDF exports. |
 | Source | Uses the local checkout or clones `memoria-vault` to a temporary staging directory. |
 | Runtime dependencies | Creates `<workspace>/.memoria/.venv`, upgrades pip, then installs the Memoria Python package from the repo. |
-| Workspace init | Runs the installed `memoria init --workspace <workspace> --yes`, which copies the package seed, including Obsidian defaults, and creates schema-owned folders from `folders.yaml`. The installer refuses an existing Memoria workspace. |
+| Workspace init | Runs the installed `memoria init --workspace <workspace> --yes`, which copies the package seed, including Obsidian defaults and first-init agent/MCP host configuration, and creates schema-owned folders from `folders.yaml`. The installer refuses an existing Memoria workspace. |
 | Git hooks | Initializes Git when needed and wires `.githooks/pre-commit`. On a freshly created repository it falls back to a local `memoria@example.invalid` / `Memoria` identity if none is configured, and commits the seed as `initialize memoria workspace`. The installer never adds a remote. File-change work is observed with `memoria workspace scan`. |
 | Next steps | Prints vault-local Python commands for `memoria doctor bundle`, `memoria workspace rebuild --search`, and `memoria ask`. |
 

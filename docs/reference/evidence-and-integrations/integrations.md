@@ -55,6 +55,7 @@ The runtime classifies credentials by their behavior when absent:
 | Credential | Class | Behavior when unset |
 | --- | --- | --- |
 | `OPENALEX_API_KEY` | enhancing | OpenAlex DOI enrichment still runs in keyless polite-pool mode with lower limits, and reports a keyless-mode notice. It does not fail merely because this key is absent. |
+| `PUBMED_API_KEY` | enhancing | Uses the NCBI keyless tier when the reserved PubMed adapter lands. |
 | `NCBI_EMAIL` | identity | Provider `mailto`/`email` query parameters are omitted, with a keyless-mode notice where applicable. |
 | `SEMANTIC_SCHOLAR_API_KEY` | enhancing | The Semantic Scholar adapter is off by default unless a key or replay fixture supplies it. |
 | `GITHUB_TOKEN` | enhancing | GitHub access uses anonymous limits; private repositories refuse honestly. |

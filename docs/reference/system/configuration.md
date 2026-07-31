@@ -17,7 +17,8 @@ linked reference pages and schema files.
 | Surface | Source | Installed location | Owner | Edit policy | Validator |
 | --- | --- | --- | --- | --- | --- |
 | Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<workspace>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
-| Workspace seed | `src/memoria_vault/product/workspace_seed/**` | copied by `memoria init` | Memoria | Edit source; reinstall or repair workspace | package-seed tests |
+| Runtime workspace seed | `src/memoria_vault/product/workspace_seed/**` except the agent/MCP bundle | copied by `memoria init` | Memoria | Edit source; reinstall or repair workspace | package-seed tests |
+| First-init agent/MCP bundle | `src/memoria_vault/product/workspace_seed/.claude/`, `src/memoria_vault/product/workspace_seed/.codex/hooks.json`, `src/memoria_vault/product/workspace_seed/.mcp.json`, `src/memoria_vault/product/workspace_seed/CLAUDE.md` | copied once by `memoria init`, including `--no-obsidian` | PI after bootstrap | Configure hosts; `memoria doctor --repair` neither creates nor overwrites it | package-seed tests |
 | Schema config | `src/memoria_vault/product/workspace_seed/.memoria/schemas/**` | `<workspace>/.memoria/schemas/**` | Memoria | Edit source; reinstall or repair workspace | linter and schema tests |
 | Search index state | checked-only BM25 input tree and manifest | `<workspace>/.memoria/index/search/` | generated | Rebuild; do not hand-edit | `memoria doctor --check search` |
 | Optional editor adapter settings | adapter package, not the standalone seed | adapter-owned files | adapter owner | Not part of standalone baseline | adapter tests |
@@ -27,9 +28,17 @@ linked reference pages and schema files.
 | Change | Command |
 | --- | --- |
 | Schema or workspace source config | reinstall or run `memoria doctor --repair`, then run the linter |
+| First-init agent/MCP configuration | configure the PI-owned copy directly; repair does not manage it |
 | Search index inputs | `memoria workspace rebuild --search` |
 
 Use a disposable workspace under `~/memoria-vault/test-vault` for development verification.
+
+## Model token ceiling
+
+`MEMORIA_MODEL_TOKEN_CEILING` limits live model use in one process. It accepts a
+nonnegative integer; when unset or set to `0`, it is disabled. Actual model
+token usage accumulates for the process, and a later model call is refused once
+the ceiling has been reached.
 
 ## Never commit
 

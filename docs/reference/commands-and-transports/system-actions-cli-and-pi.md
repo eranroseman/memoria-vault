@@ -40,7 +40,7 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 | --- | --- |
 | Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set DB/read API `check_status = checked`; operation-owned promotions enforce their `required_checks` (`memoria-runtime`) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
 | Inbox triage | Resolve or act on attention projections; dispositions are logged for trust and attention metrics. |
-| Evidence disposition | `memoria project resolve-evidence` records the PI's accept/reject decision for one draft evidence item. A CLI invocation declared `agent` is rejected, and HTTP/MCP expose no such action. |
+| Evidence disposition | `memoria project resolve-evidence` records the PI's accept, reject, edit, or defer decision for one draft evidence item. A CLI invocation declared `agent` is rejected, and HTTP/MCP expose no such action. |
 | Steering and vocabulary | `memoria steering edit` and `memoria vocab add/rename/merge` record PI-owned direct mutations. A CLI invocation declared `agent` is rejected, and HTTP/MCP expose no such action. |
 | Workspace recover | `memoria workspace recover` restores recognized interrupted-restore and backup-publication transactions, marks interrupted running requests failed for explicit retry, and replays pending materialization payloads; `--fixture crash-before-materialization` is a test-only recovery harness. |
 
