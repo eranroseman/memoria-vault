@@ -62,7 +62,7 @@ stable-filename mode mirroring `write_work_prompt`'s (`inbox.py:163-172`),
 
 **Steps:**
 
-- [ ] Write the failing test for the `write_finding` dedupe mode. Append to `tests/test_inbox_cards.py` (style mirrors `test_work_prompt_dedupe_slug_is_idempotent` at line 131):
+- [x] Write the failing test for the `write_finding` dedupe mode. Append to `tests/test_inbox_cards.py` (style mirrors `test_work_prompt_dedupe_slug_is_idempotent` at line 131):
 
 ```python
 def test_finding_dedupe_slug_is_idempotent(tmp_path):
@@ -89,8 +89,8 @@ def test_finding_dedupe_slug_is_idempotent(tmp_path):
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 1
 ```
 
-- [ ] Run it and verify it fails: `python -m pytest tests/test_inbox_cards.py::test_finding_dedupe_slug_is_idempotent -v` — expected failure: `TypeError: write_finding() got an unexpected keyword argument 'dedupe_slug'`.
-- [ ] Implement the dedupe mode. In `src/memoria_vault/runtime/subsystems/lib/inbox.py`, change the `write_finding` signature (line 75-86) to add the trailing parameter and return type:
+- [x] Run it and verify it fails: `python -m pytest tests/test_inbox_cards.py::test_finding_dedupe_slug_is_idempotent -v` — expected failure: `TypeError: write_finding() got an unexpected keyword argument 'dedupe_slug'`.
+- [x] Implement the dedupe mode. In `src/memoria_vault/runtime/subsystems/lib/inbox.py`, change the `write_finding` signature (line 75-86) to add the trailing parameter and return type:
 
 ```python
 def write_finding(
@@ -134,8 +134,8 @@ Also extend the docstring (line 87): `"""Write a flag/alert card that leads with
     With ``dedupe_slug`` the filename is stable and an already-present card is
     left untouched — returns None instead of a path.
     """`
-- [ ] Run it and verify it passes: `python -m pytest tests/test_inbox_cards.py -v`.
-- [ ] Write the failing runtime test for durable routing + rescan idempotence. Append to `tests/test_trusted_writer.py` (uses the file's existing `workspace`, `note_text`, `init_git`, `git`, `observe_pi_edits_from_status`, `read_frontmatter` helpers):
+- [x] Run it and verify it passes: `python -m pytest tests/test_inbox_cards.py -v`.
+- [x] Write the failing runtime test for durable routing + rescan idempotence. Append to `tests/test_trusted_writer.py` (uses the file's existing `workspace`, `note_text`, `init_git`, `git`, `observe_pi_edits_from_status`, `read_frontmatter` helpers):
 
 ```python
 def cs3_inbox_cards(vault: Path) -> list[Path]:
@@ -186,8 +186,8 @@ def test_observe_sweep_routes_findings_to_durable_inbox_cards(tmp_path: Path) ->
     assert cs3_inbox_cards(vault) == cards  # rescan mints no duplicate cards
 ```
 
-- [ ] Run it and verify it fails: `python -m pytest tests/test_trusted_writer.py::test_observe_sweep_routes_findings_to_durable_inbox_cards -v` — expected failure: `AssertionError` at `assert len(cards) == 2` (cards is `[]`; nothing routes findings to the inbox yet).
-- [ ] Implement the routing. In `src/memoria_vault/runtime/trusted_writer.py`, change line 28 to:
+- [x] Run it and verify it fails: `python -m pytest tests/test_trusted_writer.py::test_observe_sweep_routes_findings_to_durable_inbox_cards -v` — expected failure: `AssertionError` at `assert len(cards) == 2` (cards is `[]`; nothing routes findings to the inbox yet).
+- [x] Implement the routing. In `src/memoria_vault/runtime/trusted_writer.py`, change line 28 to:
 
 ```python
 from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_work_prompt
@@ -240,8 +240,8 @@ replace the return at line 605:
     return {"paths": targets, "observed": observed, "findings": findings, "commit": commit}
 ```
 
-- [ ] Run it and verify it passes: `python -m pytest tests/test_trusted_writer.py::test_observe_sweep_routes_findings_to_durable_inbox_cards -v`.
-- [ ] Write the failing CLI test for the human scan output. Append to `tests/test_cli_workspace_requests.py` (file already imports `main`, `json`, `Path`, `pytest`):
+- [x] Run it and verify it passes: `python -m pytest tests/test_trusted_writer.py::test_observe_sweep_routes_findings_to_durable_inbox_cards -v`.
+- [x] Write the failing CLI test for the human scan output. Append to `tests/test_cli_workspace_requests.py` (file already imports `main`, `json`, `Path`, `pytest`):
 
 ```python
 def test_workspace_scan_prints_and_persists_cs3_findings(
@@ -281,8 +281,8 @@ def test_workspace_scan_prints_and_persists_cs3_findings(
     assert rescanned == cards  # rescan is idempotent on the durable surface
 ```
 
-- [ ] Run it and verify it fails: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_prints_and_persists_cs3_findings -v` — expected failure: `AssertionError` at `assert "finding: foreign-edit notes/witness.md" in out` (the human path prints only the `_success_detail` summary line).
-- [ ] Implement the human output. In `src/memoria_vault/cli.py`, replace `_cmd_workspace_scan` (lines 1797-1798) with:
+- [x] Run it and verify it fails: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_prints_and_persists_cs3_findings -v` — expected failure: `AssertionError` at `assert "finding: foreign-edit notes/witness.md" in out` (the human path prints only the `_success_detail` summary line).
+- [x] Implement the human output. In `src/memoria_vault/cli.py`, replace `_cmd_workspace_scan` (lines 1797-1798) with:
 
 ```python
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
@@ -304,10 +304,10 @@ def _print_scan_findings(payload: dict[str, Any], args: argparse.Namespace) -> N
         print(f"finding: {kind} {subject}{suffix}")
 ```
 
-- [ ] Run it and verify it passes: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_prints_and_persists_cs3_findings -v`.
-- [ ] Run the neighboring suites for fallout: `python -m pytest tests/test_trusted_writer.py tests/test_inbox_cards.py tests/test_cli_workspace_requests.py tests/test_journal_trust.py -q`.
-- [ ] Run the gate: `python scripts/verify`.
-- [ ] Commit:
+- [x] Run it and verify it passes: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_prints_and_persists_cs3_findings -v`.
+- [x] Run the neighboring suites for fallout: `python -m pytest tests/test_trusted_writer.py tests/test_inbox_cards.py tests/test_cli_workspace_requests.py tests/test_journal_trust.py -q`.
+- [x] Run the gate: `python scripts/verify`.
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/subsystems/lib/inbox.py src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/cli.py tests/test_inbox_cards.py tests/test_trusted_writer.py tests/test_cli_workspace_requests.py
@@ -346,7 +346,7 @@ guarantee.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_trusted_writer.py` (uses existing `workspace`, `note_text`, `stage_concept`, `promote_checked` wrappers; add a module-level wrapper for `materialize_unchecked` beside the others at lines 42-68):
+- [x] Write the failing tests. Append to `tests/test_trusted_writer.py` (uses existing `workspace`, `note_text`, `stage_concept`, `promote_checked` wrappers; add a module-level wrapper for `materialize_unchecked` beside the others at lines 42-68):
 
 ```python
 from memoria_vault.runtime.trusted_writer import (
@@ -422,8 +422,8 @@ def test_materialize_unchecked_neutralizes_even_when_the_stager_forgot(
 ```
 
 (Place the import beside the existing aliased imports at lines 12-37 and the wrapper beside the others; `call_with_context` defaults `actor="operation"`, a machine actor.)
-- [ ] Run them and verify they fail: `python -m pytest tests/test_trusted_writer.py::test_stage_concept_neutralizes_machine_actor_bodies tests/test_trusted_writer.py::test_promote_checked_neutralizes_even_when_the_stager_forgot tests/test_trusted_writer.py::test_materialize_unchecked_neutralizes_even_when_the_stager_forgot -v` — expected failure: `AssertionError` in `assert_neutralized` at `assert "![beacon]" not in text` for all three (bodies land untouched). `test_stage_concept_preserves_pi_authored_body` passes vacuously today; keep it — it pins the carve-out.
-- [ ] Implement the seam. In `src/memoria_vault/runtime/trusted_writer.py`, extend the import at lines 19-22:
+- [x] Run them and verify they fail: `python -m pytest tests/test_trusted_writer.py::test_stage_concept_neutralizes_machine_actor_bodies tests/test_trusted_writer.py::test_promote_checked_neutralizes_even_when_the_stager_forgot tests/test_trusted_writer.py::test_materialize_unchecked_neutralizes_even_when_the_stager_forgot -v` — expected failure: `AssertionError` in `assert_neutralized` at `assert "![beacon]" not in text` for all three (bodies land untouched). `test_stage_concept_preserves_pi_authored_body` passes vacuously today; keep it — it pins the carve-out.
+- [x] Implement the seam. In `src/memoria_vault/runtime/trusted_writer.py`, extend the import at lines 19-22:
 
 ```python
 from memoria_vault.runtime.content_security import (
@@ -463,10 +463,10 @@ In `materialize_unchecked`, after the staged read (line 753):
 bodies may be PI-authored observed edits — neutralizing there would mangle
 human content, violating the spec's carve-out. Double application across
 stage→promote is safe: the transform is idempotent.)
-- [ ] Run the new tests and verify they pass: `python -m pytest tests/test_trusted_writer.py -v -k "neutraliz or preserves_pi"`.
-- [ ] Run the seam's consumer suites for mangling regressions (callers that already neutralize must be unaffected by the idempotent second pass): `python -m pytest tests/test_trusted_writer.py tests/test_knowledge.py tests/test_content_security.py tests/test_worker_knowledge_cycle.py -q`.
-- [ ] Run the gate: `python scripts/verify`.
-- [ ] Commit:
+- [x] Run the new tests and verify they pass: `python -m pytest tests/test_trusted_writer.py -v -k "neutraliz or preserves_pi"`.
+- [x] Run the seam's consumer suites for mangling regressions (callers that already neutralize must be unaffected by the idempotent second pass): `python -m pytest tests/test_trusted_writer.py tests/test_knowledge.py tests/test_content_security.py tests/test_worker_knowledge_cycle.py -q`.
+- [x] Run the gate: `python scripts/verify`.
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/trusted_writer.py tests/test_trusted_writer.py
@@ -501,7 +501,7 @@ both to the existing `write_text_durable(path: Path, text: str, *, create_parent
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_cli_workspace_requests.py`:
+- [x] Write the failing test. Append to `tests/test_cli_workspace_requests.py`:
 
 ```python
 def test_steering_and_vocabulary_writes_survive_a_failed_replace(
@@ -579,8 +579,8 @@ def test_steering_and_vocabulary_writes_survive_a_failed_replace(
     )  # PI steering content lands byte-exact, never neutralized
 ```
 
-- [ ] Run it and verify it fails: `python -m pytest tests/test_cli_workspace_requests.py::test_steering_and_vocabulary_writes_survive_a_failed_replace -v` — expected failure: `AssertionError` at `assert steering.read_text(encoding="utf-8") == steering_before` (raw `write_text` mutated the file before the journal write raised; today the file is clobbered even though `main` exits 2).
-- [ ] Implement the fix. In `src/memoria_vault/cli.py`, `_cmd_steering_edit` (lines 2010-2020) — extend the lazy import block and replace the write:
+- [x] Run it and verify it fails: `python -m pytest tests/test_cli_workspace_requests.py::test_steering_and_vocabulary_writes_survive_a_failed_replace -v` — expected failure: `AssertionError` at `assert steering.read_text(encoding="utf-8") == steering_before` (raw `write_text` mutated the file before the journal write raised; today the file is clobbered even though `main` exits 2).
+- [x] Implement the fix. In `src/memoria_vault/cli.py`, `_cmd_steering_edit` (lines 2010-2020) — extend the lazy import block and replace the write:
 
 ```python
 def _cmd_steering_edit(args: argparse.Namespace) -> int:
@@ -607,10 +607,10 @@ In `_update_vocabulary` (lines 2862-2891) — extend the lazy import block the s
     write_text_durable(path, text)
 ```
 
-- [ ] Run it and verify it passes: `python -m pytest tests/test_cli_workspace_requests.py::test_steering_and_vocabulary_writes_survive_a_failed_replace -v`.
-- [ ] Run the neighboring steering/vocab tests for fallout: `python -m pytest tests/test_cli_workspace_requests.py -q -k "steering or vocab"`.
-- [ ] Run the gate: `python scripts/verify`.
-- [ ] Commit:
+- [x] Run it and verify it passes: `python -m pytest tests/test_cli_workspace_requests.py::test_steering_and_vocabulary_writes_survive_a_failed_replace -v`.
+- [x] Run the neighboring steering/vocab tests for fallout: `python -m pytest tests/test_cli_workspace_requests.py -q -k "steering or vocab"`.
+- [x] Run the gate: `python scripts/verify`.
+- [x] Commit:
 
 ```
 git add src/memoria_vault/cli.py tests/test_cli_workspace_requests.py
@@ -649,13 +649,13 @@ fsync-injection pattern from `tests/test_backup_restore.py:926-975`.
 
 **Steps:**
 
-- [ ] Register the new test file. In `tests/conftest.py`, after `"test_trusted_writer.py": "runtime",` (line 111) insert:
+- [x] Register the new test file. In `tests/conftest.py`, after `"test_trusted_writer.py": "runtime",` (line 111) insert:
 
 ```python
     "test_vaultio.py": "unit",
 ```
 
-- [ ] Write the failing tests. Create `tests/test_vaultio.py`:
+- [x] Write the failing tests. Create `tests/test_vaultio.py`:
 
 ```python
 """Durability contract for vaultio's atomic write helpers."""
@@ -731,8 +731,8 @@ def test_fsync_dir_raises_when_directory_cannot_be_opened(
         vaultio._fsync_dir(tmp_path)
 ```
 
-- [ ] Run them and verify they fail on POSIX: `python -m pytest tests/test_vaultio.py -v` — expected failure: all three fail with `Failed: DID NOT RAISE <class 'OSError'>` (the current `_fsync_dir` swallows both the open error and the fsync error). On Windows, the module-level skip is the required mirror of backup's intentionally tolerated unavailable directory fsync.
-- [ ] Write the implementation. In `src/memoria_vault/runtime/vaultio.py`, replace `_fsync_dir` (lines 204-214) with the exact semantics of `backup._fsync_directory`:
+- [x] Run them and verify they fail on POSIX: `python -m pytest tests/test_vaultio.py -v` — expected failure: all three fail with `Failed: DID NOT RAISE <class 'OSError'>` (the current `_fsync_dir` swallows both the open error and the fsync error). On Windows, the module-level skip is the required mirror of backup's intentionally tolerated unavailable directory fsync.
+- [x] Write the implementation. In `src/memoria_vault/runtime/vaultio.py`, replace `_fsync_dir` (lines 204-214) with the exact semantics of `backup._fsync_directory`:
 
 ```python
 def _fsync_dir(path: Path) -> None:
@@ -751,10 +751,10 @@ def _fsync_dir(path: Path) -> None:
         os.close(fd)
 ```
 
-- [ ] Run them and verify they pass on POSIX: `python -m pytest tests/test_vaultio.py -v`; on Windows, confirm the three tests skip with the stated portability reason.
-- [ ] Run the write-path consumers for fallout (every durable write now inherits the raise): `python -m pytest tests/test_backup_restore.py tests/test_trusted_writer.py tests/test_journal_trust.py tests/test_inbox_cards.py -q`.
-- [ ] Run the gate: `python scripts/verify`.
-- [ ] Commit:
+- [x] Run them and verify they pass on POSIX: `python -m pytest tests/test_vaultio.py -v`; on Windows, confirm the three tests skip with the stated portability reason.
+- [x] Run the write-path consumers for fallout (every durable write now inherits the raise): `python -m pytest tests/test_backup_restore.py tests/test_trusted_writer.py tests/test_journal_trust.py tests/test_inbox_cards.py -q`.
+- [x] Run the gate: `python scripts/verify`.
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/vaultio.py tests/test_vaultio.py tests/conftest.py
@@ -817,7 +817,7 @@ record — do not touch.
   `PUSH_LOUDNESS`, `TELEGRAM_TOKEN_ENV`, `TELEGRAM_CHAT_ENV`,
   `TELEGRAM_API_BASE_ENV`.
 
-- [ ] **Step 1: Rewrite the transport tests as no-push-log assertions (failing)**
+- [x] **Step 1: Rewrite the transport tests as no-push-log assertions (failing)**
 
 Replace `tests/test_loudness.py` lines 1-39 (the module docstring, `json`
 import, and the two transport tests) with this final test shape:
@@ -875,7 +875,7 @@ The literal is the current `PUSH_LOG_RELPATH` value. It catches both the shared
 not retain a hidden transport call. Keep
 `test_open_blockers_only_reads_open_block_attention_projections` unchanged.
 
-- [ ] **Step 2: Run tests to verify the alert-card test fails**
+- [x] **Step 2: Run tests to verify the alert-card test fails**
 
 Before the one red run, temporarily add this test-local safety helper and call
 it at the top of both alert tests (add a `monkeypatch` parameter to each). It
@@ -898,7 +898,7 @@ Expected: both alert-path tests FAIL (the transport still writes a
 its calls, and the temporary `monkeypatch` parameters are red-run-only and must
 be removed in Step 3, restoring the symbol-free final test shape above.
 
-- [ ] **Step 3: Delete the transport**
+- [x] **Step 3: Delete the transport**
 
 In `src/memoria_vault/runtime/subsystems/lib/loudness.py`: delete
 `PUSH_LOUDNESS`, the three `TELEGRAM_*` constants, `PUSH_LOG_RELPATH`,
@@ -914,14 +914,14 @@ frontmatter intact. In `tests/test_sweeps_retraction.py`, remove the COV.3-local
 Telegram environment cleanup, `push_card` monkeypatch, and unused `loudness`
 import while retaining the SQLite retraction assertions.
 
-- [ ] **Step 4: Run the module tests to verify green**
+- [x] **Step 4: Run the module tests to verify green**
 
 Run: `python -m pytest tests/test_loudness.py tests/test_inbox_cards.py tests/test_sweeps_retraction.py -v`
 Expected: PASS across the board. Also run
 `python -m pytest tests/test_runtime_policy.py::test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged -v`
 to prove the preserved blocker gate still holds.
 
-- [ ] **Step 5: Fix the seven docs claims**
+- [x] **Step 5: Fix the seven docs claims**
 
 - `docs/README.md:135`: replace the bullet with:
   `- **Mobile capture is not available** — no push channel ships; inbound capture from a phone is out of scope for beta.1. See [Architecture](explanation/architecture/README.md#interaction-channels).`
@@ -941,7 +941,7 @@ to prove the preserved blocker gate still holds.
   the Loudness-routing row describe attention metadata and open-blocker
   exposure, never a push attempt.
 
-- [ ] **Step 6: Repo-wide leftover sweep**
+- [x] **Step 6: Repo-wide leftover sweep**
 
 Run both:
 
@@ -958,7 +958,7 @@ Expected: zero runtime/published-doc hits. `docs/superpowers/` is retained
 working-plan history and `design-history/` is frozen history; neither is a
 product Telegram surface.
 
-- [ ] **Step 7: Full gate + commit**
+- [x] **Step 7: Full gate + commit**
 
 Run: `python scripts/verify`
 Expected: PASS.
@@ -1102,24 +1102,24 @@ key (`cache-dependency-path: requirements-dev.txt`) will not track the extra,
 so `mcp` installs uncached — it is a small offline pure-pip wheel with no live
 service or secret behind it.
 
-- [ ] In a fresh disposable venv, install the current lower-bound extra and
+- [x] In a fresh disposable venv, install the current lower-bound extra and
   record the reproduced failure: it resolves MCP 2.x and
   `from mcp.server.fastmcp import FastMCP` fails. This is the red proof for the
   compatibility bound; do not adapt the transport to a prerelease v2 API.
-- [ ] Update the existing exact assertion in
+- [x] Update the existing exact assertion in
   `tests/test_package_spine.py::test_stack_dependencies_stay_small_and_no_orm`
   first to expect `["mcp>=1.27,<2"]`; run that test and confirm it is red
   against the current metadata.
-- [ ] Update `pyproject.toml` to `mcp = ["mcp>=1.27,<2"]`; do not edit
+- [x] Update `pyproject.toml` to `mcp = ["mcp>=1.27,<2"]`; do not edit
   `requirements-dev.txt`. Run the package-spine test green.
-- [ ] Edit `.github/workflows/verify.yml` line 44: change `python -m pip install --quiet -e .` to `python -m pip install --quiet -e ".[mcp]"` (retain the already-landed workflow change if this task resumes after it).
-- [ ] Prove it locally exactly as CI will see it in a fresh disposable venv:
+- [x] Edit `.github/workflows/verify.yml` line 44: change `python -m pip install --quiet -e .` to `python -m pip install --quiet -e ".[mcp]"` (retain the already-landed workflow change if this task resumes after it).
+- [x] Prove it locally exactly as CI will see it in a fresh disposable venv:
   install `-r requirements-dev.txt`, then `-e ".[mcp]"`; assert the installed
   MCP version is `<2`, import `FastMCP`, and run
   `python -m pytest tests/test_mcp_transport.py -v -rs` — expect 13 passed,
   zero skipped.
-- [ ] Run `python scripts/verify` to confirm the full gate stays green with the extra installed.
-- [ ] Commit:
+- [x] Run `python scripts/verify` to confirm the full gate stays green with the extra installed.
+- [x] Commit:
   ```
   git add .github/workflows/verify.yml pyproject.toml tests/test_package_spine.py
   git commit -m "ci: install the mcp extra so mcp transport tests run in verify
@@ -1145,7 +1145,7 @@ service or secret behind it.
 - Consumes: `evaluate_pre(payload: dict, actor: str, workspace: Path) -> dict`; `evaluate_post(payload: dict, actor: str, workspace: Path) -> dict`; `append_audit(vault: Path, entry: dict) -> None` (writes `system/logs/audit.jsonl`); `record_event(*, component, level, code, payload=None, details=None, vault_path=None, state_dir=None, now=None) -> dict | None` (honors `MEMORIA_DIAGNOSTICS_DIR`); `PolicyEngine.complete_write(actor, action, path, request_id, before_hash)`.
 - Produces: tests `test_denied_write_tool_lands_a_deny_row_in_the_audit_log`, `test_evaluate_post_records_completion_failure_and_still_unlinks_stash`.
 
-- [ ] Write the failing test (deny-path audit) at the end of `tests/test_policy_hook.py`, mirroring the file's `_m`-alias style (no new imports needed):
+- [x] Write the failing test (deny-path audit) at the end of `tests/test_policy_hook.py`, mirroring the file's `_m`-alias style (no new imports needed):
 
   ```python
   def test_denied_write_tool_lands_a_deny_row_in_the_audit_log(tmp_path):
@@ -1183,8 +1183,8 @@ service or secret behind it.
   (The `readonly` actor in the file's `POLICY_CONFIG` allows only read tools, so
   `obsidian_patch_content` is denied by the allowlist with a valid
   path+request_id — exactly the branch at `hook.py:238-259`.)
-- [ ] Prove the test bites: temporarily comment out the `_audit_tool_policy_block(...)` call at `hook.py:322`, run `python -m pytest tests/test_policy_hook.py::test_denied_write_tool_lands_a_deny_row_in_the_audit_log -v` — expect `AssertionError` at `assert len(denies) == 1` (0 rows). Restore the line, rerun, expect PASS.
-- [ ] Write the failing test (completion-failure handler) below it:
+- [x] Prove the test bites: temporarily comment out the `_audit_tool_policy_block(...)` call at `hook.py:322`, run `python -m pytest tests/test_policy_hook.py::test_denied_write_tool_lands_a_deny_row_in_the_audit_log -v` — expect `AssertionError` at `assert len(denies) == 1` (0 rows). Restore the line, rerun, expect PASS.
+- [x] Write the failing test (completion-failure handler) below it:
 
   ```python
   def test_evaluate_post_records_completion_failure_and_still_unlinks_stash(
@@ -1236,9 +1236,9 @@ service or secret behind it.
   paths inside the vault or the repo worktree, and `record_event` honors
   `MEMORIA_DIAGNOSTICS_DIR`. `evaluate_post` re-imports `PolicyEngine` inside
   the function, but patching the class attribute reaches it.)
-- [ ] Prove the test bites: temporarily replace the `record_event(...)` call at `hook.py:422-432` with `pass`, run `python -m pytest tests/test_policy_hook.py::test_evaluate_post_records_completion_failure_and_still_unlinks_stash -v` — expect `AssertionError` at the `["audit_completion_failed"]` comparison (got `[]`). Restore, rerun, expect PASS.
-- [ ] Run the whole file: `python -m pytest tests/test_policy_hook.py -v` — all pass.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily replace the `record_event(...)` call at `hook.py:422-432` with `pass`, run `python -m pytest tests/test_policy_hook.py::test_evaluate_post_records_completion_failure_and_still_unlinks_stash -v` — expect `AssertionError` at the `["audit_completion_failed"]` comparison (got `[]`). Restore, rerun, expect PASS.
+- [x] Run the whole file: `python -m pytest tests/test_policy_hook.py -v` — all pass.
+- [x] Commit:
   ```
   git add tests/test_policy_hook.py
   git commit -m "test(policy): cover hook deny-path auditing and completion-failure recording
@@ -1278,7 +1278,7 @@ site.
   ```
   Add `from memoria_vault.runtime.subsystems.lib import loudness` to the
   module imports as well; the sweep-alert test below stubs its legacy transport.
-- [ ] Write the failing test (severity tie-break) at the end of the file:
+- [x] Write the failing test (severity tie-break) at the end of the file:
 
   ```python
   def test_build_rw_index_severity_tie_break_keeps_retraction_over_concern():
@@ -1305,7 +1305,7 @@ site.
       assert idx["10.1/twice"]["retraction_doi"] == "10.1/rw-ret2"
       assert idx_reversed["10.1/twice"]["nature"] == "Retraction"
   ```
-- [ ] Prove the test bites: temporarily change `retraction.py:113` from `if prev is None or (rec["retracted"] and not prev["retracted"]):` to `if prev is None:`, run `python -m pytest tests/test_sweeps_retraction.py::test_build_rw_index_severity_tie_break_keeps_retraction_over_concern -v` — expect `AssertionError` at `nature == "Retraction"` (got `'Expression of Concern'`). Restore, rerun, expect PASS.
+- [x] Prove the test bites: temporarily change `retraction.py:113` from `if prev is None or (rec["retracted"] and not prev["retracted"]):` to `if prev is None:`, run `python -m pytest tests/test_sweeps_retraction.py::test_build_rw_index_severity_tie_break_keeps_retraction_over_concern -v` — expect `AssertionError` at `nature == "Retraction"` (got `'Expression of Concern'`). Restore, rerun, expect PASS.
 - [ ] Write the failing test (offline sweep writes the Inbox alert) below it:
 
   ```python
@@ -1374,7 +1374,7 @@ site.
   irrelevant push-log side effect; (4) `_RW_INDEX` reset mirrors the file's
   existing cache hygiene.
 - [ ] Prove the test bites: temporarily change `retraction.py:318` from `if result.get("retracted"):` to `if False:`, run `python -m pytest tests/test_sweeps_retraction.py::test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert -v` — expect `AssertionError` at `result == {"checked": 2, "retracted": 1}` (got `retracted: 0`). Restore, rerun, expect PASS.
-- [ ] Write the failing test (one-time offline no-CSV warning) below it:
+- [x] Write the failing test (one-time offline no-CSV warning) below it:
 
   ```python
   def test_check_doi_offline_warns_once_when_rw_csv_is_missing(tmp_path, monkeypatch, capsys):
@@ -1394,9 +1394,9 @@ site.
       assert "UNKNOWN" in first["note"]
       assert second["retracted"] is None
   ```
-- [ ] Prove the test bites: temporarily comment out the `print(...)` warning block at `retraction.py:277-283`, run `python -m pytest tests/test_sweeps_retraction.py::test_check_doi_offline_warns_once_when_rw_csv_is_missing -v` — expect `AssertionError` at `err.count(...) == 1` (got 0). Restore, rerun, expect PASS.
-- [ ] Run the whole file: `python -m pytest tests/test_sweeps_retraction.py -v` — all pass.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily comment out the `print(...)` warning block at `retraction.py:277-283`, run `python -m pytest tests/test_sweeps_retraction.py::test_check_doi_offline_warns_once_when_rw_csv_is_missing -v` — expect `AssertionError` at `err.count(...) == 1` (got 0). Restore, rerun, expect PASS.
+- [x] Run the whole file: `python -m pytest tests/test_sweeps_retraction.py -v` — all pass.
+- [x] Commit:
   ```
   git add tests/test_sweeps_retraction.py
   git commit -m "test(retraction): cover sweep, offline no-CSV warning, and severity tie-break
@@ -1417,7 +1417,7 @@ site.
 - Consumes: `record_event(*, component, level, code, payload=None, details=None, vault_path=None, state_dir=None, now=None) -> dict | None`; `create_redacted_bundle(output: Path, *, state_dir=None, include_raw: bool = False) -> Path`; `RAW_ONCE_ENV = "MEMORIA_DIAGNOSTIC_RAW_ONCE"`.
 - Produces: tests `test_content_light_hashes_sequence_items_and_arbitrary_objects`, `test_redacted_bundle_include_raw_re_redacts_captured_payloads`.
 
-- [ ] Write the failing test (content-light sequences and object fallback), mirroring the file's fixture style:
+- [x] Write the failing test (content-light sequences and object fallback), mirroring the file's fixture style:
 
   ```python
   def test_content_light_hashes_sequence_items_and_arbitrary_objects(tmp_path, monkeypatch):
@@ -1450,8 +1450,8 @@ site.
       for secret in ("Secret Draft", "Second Secret", "left-secret", "opaque-secret-body"):
           assert secret not in text
   ```
-- [ ] Prove the test bites: temporarily change `diagnostics.py:89-90` (the `list | tuple | set` branch) to `return value`, run `python -m pytest tests/test_diagnostics.py::test_content_light_hashes_sequence_items_and_arbitrary_objects -v` — expect failure (either `AssertionError: assert 'Secret Draft' not in text` or a `TypeError` on the dict subscript — both prove the branch is load-bearing). Restore, rerun, expect PASS.
-- [ ] Write the failing test (include_raw re-redaction) below it. It follows the spec's prescribed shape (raw-once env var, secret payload, `include_raw=True`) and additionally seeds one forged log row whose `payload_redacted` still holds a raw secret — the exact input the defensive re-redaction at 237-238 exists for:
+- [x] Prove the test bites: temporarily change `diagnostics.py:89-90` (the `list | tuple | set` branch) to `return value`, run `python -m pytest tests/test_diagnostics.py::test_content_light_hashes_sequence_items_and_arbitrary_objects -v` — expect failure (either `AssertionError: assert 'Secret Draft' not in text` or a `TypeError` on the dict subscript — both prove the branch is load-bearing). Restore, rerun, expect PASS.
+- [x] Write the failing test (include_raw re-redaction) below it. It follows the spec's prescribed shape (raw-once env var, secret payload, `include_raw=True`) and additionally seeds one forged log row whose `payload_redacted` still holds a raw secret — the exact input the defensive re-redaction at 237-238 exists for:
 
   ```python
   def test_redacted_bundle_include_raw_re_redacts_captured_payloads(tmp_path, monkeypatch):
@@ -1493,9 +1493,9 @@ site.
       assert "[REDACTED]" in text
       assert "body text" in text
   ```
-- [ ] Prove the test bites: temporarily change `diagnostics.py:237-238` (`elif "payload_redacted" in clean: ... redact_text(...)`) to `elif "payload_redacted" in clean:` + `pass`, run `python -m pytest tests/test_diagnostics.py::test_redacted_bundle_include_raw_re_redacts_captured_payloads -v` — expect `AssertionError: assert 'forgedtokenabcdefghijklmn' not in text`. Restore, rerun, expect PASS.
-- [ ] Run the whole file: `python -m pytest tests/test_diagnostics.py -v` — all pass.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily change `diagnostics.py:237-238` (`elif "payload_redacted" in clean: ... redact_text(...)`) to `elif "payload_redacted" in clean:` + `pass`, run `python -m pytest tests/test_diagnostics.py::test_redacted_bundle_include_raw_re_redacts_captured_payloads -v` — expect `AssertionError: assert 'forgedtokenabcdefghijklmn' not in text`. Restore, rerun, expect PASS.
+- [x] Run the whole file: `python -m pytest tests/test_diagnostics.py -v` — all pass.
+- [x] Commit:
   ```
   git add tests/test_diagnostics.py
   git commit -m "test(diagnostics): cover content-light sequences and raw-bundle re-redaction
@@ -1516,9 +1516,9 @@ site.
 - Consumes: `make_http_server(workspace: Path, *, host: str, port: int, token: str, read_scope: list[str] | None = None) -> ThreadingHTTPServer`; `_scope_intersection(maximum: list[str], requested: list[str]) -> list[str]`; `_dispatch(workspace, method, raw_path, body, *, read_scope=None) -> tuple[dict, HTTPStatus]`; existing fixtures `workspace` (via `tests.helpers.init_cli_workspace`) and `write_checked_note`.
 - Produces: tests `test_http_server_handler_enforces_bearer_auth_and_body_size`, `test_http_transport_scope_intersection_narrows_to_requested_subscope`; module helper `_http_request`.
 
-- [ ] Extend the imports: add `import http.client` and `import threading` to the stdlib import block, and change line 15 to
+- [x] Extend the imports: add `import http.client` and `import threading` to the stdlib import block, and change line 15 to
   `from memoria_vault.runtime.http_transport import MAX_BODY_BYTES, PayloadTooLarge, _dispatch, _scope_intersection, is_authorized, make_http_server`.
-- [ ] Write the failing test (real server, real HTTP requests) plus its request helper (helper goes next to `_raise` at the bottom of the file):
+- [x] Write the failing test (real server, real HTTP requests) plus its request helper (helper goes next to `_raise` at the bottom of the file):
 
   ```python
   def test_http_server_handler_enforces_bearer_auth_and_body_size(workspace: Path) -> None:
@@ -1583,8 +1583,8 @@ site.
   server has already responded 413; (3) the `"request body too large"` body
   string is produced only by `PayloadTooLarge`, pinning the 413 to the
   `_json_body` guard rather than any generic 400.
-- [ ] Prove the test bites: temporarily change the auth condition at `http_transport.py:63` from `if not is_authorized(...)` to `if False:` (leaving its indented 401 response in place), run `python -m pytest tests/test_http_transport.py::test_http_server_handler_enforces_bearer_auth_and_body_size -v` — expect `AssertionError` on `no_auth == (HTTPStatus.UNAUTHORIZED, ...)` (got 200). Restore, rerun, expect PASS.
-- [ ] Write the failing test (scope-intersection: requested scope strictly inside the granted scope) after `test_http_transport_startup_read_scope_cannot_be_widened` (line 229):
+- [x] Prove the test bites: temporarily change the auth condition at `http_transport.py:63` from `if not is_authorized(...)` to `if False:` (leaving its indented 401 response in place), run `python -m pytest tests/test_http_transport.py::test_http_server_handler_enforces_bearer_auth_and_body_size -v` — expect `AssertionError` on `no_auth == (HTTPStatus.UNAUTHORIZED, ...)` (got 200). Restore, rerun, expect PASS.
+- [x] Write the failing test (scope-intersection: requested scope strictly inside the granted scope) after `test_http_transport_startup_read_scope_cannot_be_widened` (line 229):
 
   ```python
   def test_http_transport_scope_intersection_narrows_to_requested_subscope(
@@ -1610,9 +1610,9 @@ site.
   (The existing tests cover widen-and-clamp and disjoint; this is the third
   case at line 291-292 — the request lies inside the startup maximum and the
   *requested* scope must win, hiding `notes/beta.md`.)
-- [ ] Prove the test bites: temporarily change `http_transport.py:292` from `narrowed.add(request_scope)` to `narrowed.add(max_scope)`, run `python -m pytest tests/test_http_transport.py::test_http_transport_scope_intersection_narrows_to_requested_subscope -v` — expect `AssertionError` at the `_scope_intersection` equality (got `['notes']`). Restore, rerun, expect PASS.
-- [ ] Run the whole file: `python -m pytest tests/test_http_transport.py -v` — all pass.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily change `http_transport.py:292` from `narrowed.add(request_scope)` to `narrowed.add(max_scope)`, run `python -m pytest tests/test_http_transport.py::test_http_transport_scope_intersection_narrows_to_requested_subscope -v` — expect `AssertionError` at the `_scope_intersection` equality (got `['notes']`). Restore, rerun, expect PASS.
+- [x] Run the whole file: `python -m pytest tests/test_http_transport.py -v` — all pass.
+- [x] Commit:
   ```
   git add tests/test_http_transport.py
   git commit -m "test(http): end-to-end Handler auth and body-size gate plus scope narrowing
@@ -1633,7 +1633,7 @@ site.
 - Consumes: `check_schema_docs(schemas_dir: Path, docs_dir: Path) -> list[str]`; local fixture helper `_write_fixture(root: Path, *, enum_values: str = "claim, question") -> tuple[Path, Path]` (live schema: `type: note`, `category: notes`, no `required_when`/`required_any`/`forbidden`).
 - Produces: tests `test_schema_doc_lint_fails_on_seeded_category_mismatch`, `test_schema_doc_lint_fails_on_required_when_rule_not_live`, `test_schema_doc_lint_fails_on_seeded_list_subset_mismatch`.
 
-- [ ] Write the failing test (documented `category` mismatch), reusing `_write_fixture` and overwriting only the frontmatter doc, matching the file's style:
+- [x] Write the failing test (documented `category` mismatch), reusing `_write_fixture` and overwriting only the frontmatter doc, matching the file's style:
 
   ```python
   def test_schema_doc_lint_fails_on_seeded_category_mismatch(tmp_path: Path) -> None:
@@ -1649,8 +1649,8 @@ site.
           "note.category: documented 'cards' != live 'notes'" in error for error in errors
       )
   ```
-- [ ] Prove the test bites: temporarily comment out the scalar loop at `schema_doc_drift.py:110-114` (replace with `pass`), run `python -m pytest tests/test_schema_doc_drift.py::test_schema_doc_lint_fails_on_seeded_category_mismatch -v` — expect `AssertionError` (empty errors). Restore, rerun, expect PASS.
-- [ ] Write the failing test (`required_when` entry absent from the live schema):
+- [x] Prove the test bites: temporarily comment out the scalar loop at `schema_doc_drift.py:110-114` (replace with `pass`), run `python -m pytest tests/test_schema_doc_drift.py::test_schema_doc_lint_fails_on_seeded_category_mismatch -v` — expect `AssertionError` (empty errors). Restore, rerun, expect PASS.
+- [x] Write the failing test (`required_when` entry absent from the live schema):
 
   ```python
   def test_schema_doc_lint_fails_on_required_when_rule_not_live(tmp_path: Path) -> None:
@@ -1667,8 +1667,8 @@ site.
           for error in errors
       )
   ```
-- [ ] Prove the test bites: temporarily change `schema_doc_drift.py:140-141` (the `if key not in live_map:` append) to `continue`, run `python -m pytest tests/test_schema_doc_drift.py::test_schema_doc_lint_fails_on_required_when_rule_not_live -v` — expect `AssertionError` (empty errors). Restore, rerun, expect PASS. (Note this mutation also breaks the two existing `_field_map_errors` paths — confirmation the shared helper is what fires here.)
-- [ ] Write the failing test (`required_any`/`forbidden` list-subset mismatch, seeded via `required_any`):
+- [x] Prove the test bites: temporarily change `schema_doc_drift.py:140-141` (the `if key not in live_map:` append) to `continue`, run `python -m pytest tests/test_schema_doc_drift.py::test_schema_doc_lint_fails_on_required_when_rule_not_live -v` — expect `AssertionError` (empty errors). Restore, rerun, expect PASS. (Note this mutation also breaks the two existing `_field_map_errors` paths — confirmation the shared helper is what fires here.)
+- [x] Write the failing test (`required_any`/`forbidden` list-subset mismatch, seeded via `required_any`):
 
   ```python
   def test_schema_doc_lint_fails_on_seeded_list_subset_mismatch(tmp_path: Path) -> None:
@@ -1685,9 +1685,9 @@ site.
           for error in errors
       )
   ```
-- [ ] Prove the test bites: temporarily add `return []` as the first line of `_list_subset_errors` (`schema_doc_drift.py:166`), run `python -m pytest tests/test_schema_doc_drift.py::test_schema_doc_lint_fails_on_seeded_list_subset_mismatch -v` — expect `AssertionError` (empty errors). Restore, rerun, expect PASS.
-- [ ] Run the whole file: `python -m pytest tests/test_schema_doc_drift.py -v` — all pass.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily add `return []` as the first line of `_list_subset_errors` (`schema_doc_drift.py:166`), run `python -m pytest tests/test_schema_doc_drift.py::test_schema_doc_lint_fails_on_seeded_list_subset_mismatch -v` — expect `AssertionError` (empty errors). Restore, rerun, expect PASS.
+- [x] Run the whole file: `python -m pytest tests/test_schema_doc_drift.py -v` — all pass.
+- [x] Commit:
   ```
   git add tests/test_schema_doc_drift.py
   git commit -m "test(checks): seed mismatch fixtures for three schema-doc drift dimensions
@@ -1716,7 +1716,7 @@ contract file.
 - Consumes: `find_violations(repo: Path = ROOT, contract_path: Path = CONTRACT) -> list[str]`; `iter_files(repo: Path, root: Path, allow_text_files: frozenset[str])`; test-local `write_contract(path: Path) -> None` (contract with `search_roots: ["docs"]`).
 - Produces: behavior change — a missing search root now appends `"missing search root: <rel>"` to the violations list (gate fails loudly instead of silently skipping); tests `test_scans_file_type_search_roots`, `test_missing_search_root_is_a_hard_failure`.
 
-- [ ] Write the failing test (file-type search root — the real production shape: the live contract lists `.pre-commit-config.yaml`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md` as file roots):
+- [x] Write the failing test (file-type search root — the real production shape: the live contract lists `.pre-commit-config.yaml`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md` as file roots):
 
   ```python
   def test_scans_file_type_search_roots(tmp_path: Path) -> None:
@@ -1742,8 +1742,8 @@ contract file.
 
       assert gate.find_violations(tmp_path, contract) == ["NOTES.md: contains OldSurface"]
   ```
-- [ ] Prove the test bites: temporarily change `removed_surface_gate.py:66` from `if root.is_file():` to `if False:` — the file root then falls into `rglob` (yielding nothing for a file), run `python -m pytest tests/test_removed_surface_gate.py::test_scans_file_type_search_roots -v` — expect `AssertionError` (got `[]`). Restore, rerun, expect PASS.
-- [ ] Write the failing test (missing search root is a hard failure — true red: fails against current code):
+- [x] Prove the test bites: temporarily change `removed_surface_gate.py:66` from `if root.is_file():` to `if False:` — the file root then falls into `rglob` (yielding nothing for a file), run `python -m pytest tests/test_removed_surface_gate.py::test_scans_file_type_search_roots -v` — expect `AssertionError` (got `[]`). Restore, rerun, expect PASS.
+- [x] Write the failing test (missing search root is a hard failure — true red: fails against current code):
 
   ```python
   def test_missing_search_root_is_a_hard_failure(tmp_path: Path) -> None:
@@ -1752,8 +1752,8 @@ contract file.
 
       assert gate.find_violations(tmp_path, contract) == ["missing search root: docs"]
   ```
-- [ ] Run test to verify it fails: `python -m pytest tests/test_removed_surface_gate.py::test_missing_search_root_is_a_hard_failure -v` — expect `AssertionError: assert [] == ['missing search root: docs']` (current code silently `continue`s at lines 97-98).
-- [ ] Write minimal implementation — in `find_violations` (`removed_surface_gate.py:95-98`) replace the silent skip:
+- [x] Run test to verify it fails: `python -m pytest tests/test_removed_surface_gate.py::test_missing_search_root_is_a_hard_failure -v` — expect `AssertionError: assert [] == ['missing search root: docs']` (current code silently `continue`s at lines 97-98).
+- [x] Write minimal implementation — in `find_violations` (`removed_surface_gate.py:95-98`) replace the silent skip:
 
   ```python
       for rel in contract.search_roots:
@@ -1762,11 +1762,11 @@ contract file.
               errors.append(f"missing search root: {rel}")
               continue
   ```
-- [ ] Run test to verify it passes: `python -m pytest tests/test_removed_surface_gate.py -v` — all pass.
-- [ ] Run the hardened gate against the real repo to watch it catch the live stale root: `python scripts/checks/removed_surface_gate.py` — expect `removed-surface-gate: FAIL` / `missing search root: .agents` (exit 1). This is the hardening doing its job, not a regression.
-- [ ] Remove the `".agents",` entry from `search_roots` in `scripts/checks/removed_surfaces.json` (the directory was removed/renamed out of the repo; the silent skip hid it until now).
-- [ ] Rerun `python scripts/checks/removed_surface_gate.py` — expect `removed-surface-gate: clean` (exit 0), then `python scripts/verify` to confirm the full gate.
-- [ ] Commit:
+- [x] Run test to verify it passes: `python -m pytest tests/test_removed_surface_gate.py -v` — all pass.
+- [x] Run the hardened gate against the real repo to watch it catch the live stale root: `python scripts/checks/removed_surface_gate.py` — expect `removed-surface-gate: FAIL` / `missing search root: .agents` (exit 1). This is the hardening doing its job, not a regression.
+- [x] Remove the `".agents",` entry from `search_roots` in `scripts/checks/removed_surfaces.json` (the directory was removed/renamed out of the repo; the silent skip hid it until now).
+- [x] Rerun `python scripts/checks/removed_surface_gate.py` — expect `removed-surface-gate: clean` (exit 0), then `python scripts/verify` to confirm the full gate.
+- [x] Commit:
   ```
   git add scripts/checks/removed_surface_gate.py scripts/checks/removed_surfaces.json tests/test_removed_surface_gate.py
   git commit -m "fix(checks): fail hard on a missing removed-surface search root
@@ -1976,7 +1976,7 @@ contract file.
 - Consumes: `run_artifact(vault: Path, artifact_id: str, *, run_id: str | None = None, timeout_s: int = 30, max_output_bytes: int = 1_000_000) -> dict[str, Any]`; `create_code_artifact(vault, project_path, artifact_id, *, title="", purpose="warrant", approved_command, declared_inputs=None, declared_outputs=None, dependency_notes="") -> dict[str, Any]`.
 - Produces: test `test_run_artifact_rejects_unknown_artifact_and_malformed_command`.
 
-- [ ] Write the failing test. This file deliberately does not import pytest, so use the repo's pytest-independent try/except/else idiom (see the PT011 waiver comment in `pyproject.toml`). Add `monkeypatch` to the test signature and pin the availability seam before the malformed-artifact loop: the stub is inert while both guards are correct, and makes the bite proof deterministic without ever invoking `bwrap`.
+- [x] Write the failing test. This file deliberately does not import pytest, so use the repo's pytest-independent try/except/else idiom (see the PT011 waiver comment in `pyproject.toml`). Add `monkeypatch` to the test signature and pin the availability seam before the malformed-artifact loop: the stub is inert while both guards are correct, and makes the bite proof deterministic without ever invoking `bwrap`.
 
   ```python
   def test_run_artifact_rejects_unknown_artifact_and_malformed_command(
@@ -2013,9 +2013,9 @@ contract file.
           else:
               raise AssertionError(f"run_artifact executed malformed command {artifact_id!r}")
   ```
-- [ ] Prove the test bites: temporarily change `runner.py:53` from `if not command or not all(isinstance(part, str) and part for part in command):` to `if False:`, run `python -m pytest tests/test_code_artifacts.py::test_run_artifact_rejects_unknown_artifact_and_malformed_command -v` — expect `AssertionError: run_artifact executed malformed command 'empty-argv'` (the malformed command reaches the stubbed availability check and comes back as an `unavailable` run record instead of raising). Restore, rerun, expect PASS.
-- [ ] Run the whole file: `python -m pytest tests/test_code_artifacts.py -v` — all pass.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily change `runner.py:53` from `if not command or not all(isinstance(part, str) and part for part in command):` to `if False:`, run `python -m pytest tests/test_code_artifacts.py::test_run_artifact_rejects_unknown_artifact_and_malformed_command -v` — expect `AssertionError: run_artifact executed malformed command 'empty-argv'` (the malformed command reaches the stubbed availability check and comes back as an `unavailable` run record instead of raising). Restore, rerun, expect PASS.
+- [x] Run the whole file: `python -m pytest tests/test_code_artifacts.py -v` — all pass.
+- [x] Commit:
   ```
   git add tests/test_code_artifacts.py
   git commit -m "test(code): pin run_artifact ValueError guards for garbage artifact input
@@ -2036,7 +2036,7 @@ contract file.
 - Consumes: `_check_wikilink_aliases(md: Path, errors: list[str]) -> None`; `_check_broken_wikilinks(md: Path, errors: list[str], vault_stems: set[str]) -> None` (both are module-level functions in this same test file — called directly).
 - Produces: test `test_wikilink_detectors_flag_bare_and_broken_links`.
 
-- [ ] Write the failing test — a tmp markdown fixture carrying one bare wikilink (also broken), one aliased-but-broken wikilink, and one aliased link that resolves:
+- [x] Write the failing test — a tmp markdown fixture carrying one bare wikilink (also broken), one aliased-but-broken wikilink, and one aliased link that resolves:
 
   ```python
   def test_wikilink_detectors_flag_bare_and_broken_links(tmp_path: Path) -> None:
@@ -2066,9 +2066,9 @@ contract file.
           f"{md}: wikilink [[absent-note|Absent Note]] resolves to no vault note",
       ]
   ```
-- [ ] Prove the test bites: temporarily replace the `errors.append(...)` at line 108 in `_check_wikilink_aliases` with `pass`, run `python -m pytest tests/test_workspace_seed_links.py::test_wikilink_detectors_flag_bare_and_broken_links -v` — expect `AssertionError` at the `alias_errors` equality (got `[]`). Restore, rerun, expect PASS.
-- [ ] Run the whole file: `python -m pytest tests/test_workspace_seed_links.py -v` — both tests pass.
-- [ ] Commit:
+- [x] Prove the test bites: temporarily replace the `errors.append(...)` at line 108 in `_check_wikilink_aliases` with `pass`, run `python -m pytest tests/test_workspace_seed_links.py::test_wikilink_detectors_flag_bare_and_broken_links -v` — expect `AssertionError` at the `alias_errors` equality (got `[]`). Restore, rerun, expect PASS.
+- [x] Run the whole file: `python -m pytest tests/test_workspace_seed_links.py -v` — both tests pass.
+- [x] Commit:
   ```
   git add tests/test_workspace_seed_links.py
   git commit -m "test(seed): exercise the wikilink detectors on a synthetic violation fixture
@@ -2093,7 +2093,7 @@ disjoint regions, so either order is safe.
 - Consumes: coverage.py's default `# pragma: no cover` exclusion (a pragma on a `def` line excludes the whole function body).
 - Produces: no runtime behavior change; `state.py` coverage stops inflating on Windows-only code; `test_workspace_seed_links.py` sheds its dead check.
 
-- [ ] 11a — edit `state.py:115` to carry the pragma on the function header,
+- [x] 11a — edit `state.py:115` to carry the pragma on the function header,
   wording matched to its siblings at lines 40/45. Ruff may format this long
   signature across lines; keep the pragma on the closing header line (not a
   function-body line), which excludes the whole function without a formatter
@@ -2107,11 +2107,11 @@ disjoint regions, so either order is safe.
 
   (If Ruff keeps a future signature on one line, retain the same pragma at the
   end of that header. Do not add `# fmt: skip`.)
-- [ ] Run `python -m pytest tests/test_runtime_state.py tests/test_worker_queue.py -q` — all pass (comment-only change; the Windows lock still works, per the multiprocess lock test).
-- [ ] 11b — in `tests/test_workspace_seed_links.py` delete: line 23 (`YAML_FENCE_RE = ...`), line 24 (`DROPPED_KEYS = ...`), lines 75-79 (`def _check_template_frontmatter(...)` and body), lines 127-130 in `_collect_errors` (`tmpl_dir = SEED / "system/templates"` through the `_check_template_frontmatter(md, errors)` call), and replace the two docstring lines with `references to published docs and vault wikilink discipline (link text is the page title, and every [[note]] resolves to a real seed note).` so the module description remains grammatical and matches what it still checks. Leave the `"templates" in md.parts` skip at line 139 untouched (it guards the wikilink checks generally, not the retired check).
-- [ ] Run `python -m pytest tests/test_workspace_seed_links.py -v` — passes; then `! rg -n 'YAML_FENCE_RE|DROPPED_KEYS|_check_template_frontmatter|tmpl_dir' tests/test_workspace_seed_links.py` — no output and a successful absence check.
+- [x] Run `python -m pytest tests/test_runtime_state.py tests/test_worker_queue.py -q` — all pass (comment-only change; the Windows lock still works, per the multiprocess lock test).
+- [x] 11b — in `tests/test_workspace_seed_links.py` delete: line 23 (`YAML_FENCE_RE = ...`), line 24 (`DROPPED_KEYS = ...`), lines 75-79 (`def _check_template_frontmatter(...)` and body), lines 127-130 in `_collect_errors` (`tmpl_dir = SEED / "system/templates"` through the `_check_template_frontmatter(md, errors)` call), and replace the two docstring lines with `references to published docs and vault wikilink discipline (link text is the page title, and every [[note]] resolves to a real seed note).` so the module description remains grammatical and matches what it still checks. Leave the `"templates" in md.parts` skip at line 139 untouched (it guards the wikilink checks generally, not the retired check).
+- [x] Run `python -m pytest tests/test_workspace_seed_links.py -v` — passes; then `! rg -n 'YAML_FENCE_RE|DROPPED_KEYS|_check_template_frontmatter|tmpl_dir' tests/test_workspace_seed_links.py` — no output and a successful absence check.
 - [ ] Run `python scripts/verify` — full gate green.
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/runtime/state.py tests/test_workspace_seed_links.py
   git commit -m "chore: pragma the Windows-only lock opener; delete retired template check

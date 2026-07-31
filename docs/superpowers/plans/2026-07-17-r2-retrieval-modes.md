@@ -2706,7 +2706,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
 **Files:** `src/memoria_vault/runtime/explore.py`, `src/memoria_vault/cli.py`, `tests/test_explore.py`.
 **Interfaces:** `payload["honest_empty"]: str` on any explore side with `returned == 0` — the §4 sentence `"0 of <candidates> candidates matched; <n> unchecked documents were not searched"` (candidates = the last filter-stage count before `ranked`, i.e. the denominator the candidate set defines); the CLI text front prints that sentence instead of a bare summary. The slice-4 (honest-empty/ride-through enforcement) section consumes this field for its cross-front tests.
 
-- [x] Extend `tests/test_explore.py` imports for the CLI-front tests:
+- [ ] Extend `tests/test_explore.py` imports for the CLI-front tests:
 
   old:
   ```python
@@ -2729,7 +2729,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
   from memoria_vault.runtime import state
   ```
 
-- [x] Write the failing honest-empty test — append to `tests/test_explore.py`:
+- [ ] Write the failing honest-empty test — append to `tests/test_explore.py`:
 
   ```python
   def test_explore_honest_empty_renders_counts_on_text_and_json_fronts(
@@ -2758,7 +2758,7 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert output["explore"]["honest_empty"] == sentence
   ```
 
-- [x] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`.
+- [ ] Run: `python -m pytest tests/test_explore.py -q` — expected failure: `KeyError: 'honest_empty'`.
 - [x] Minimal implementation — two edits. In `src/memoria_vault/runtime/explore.py` (`_explore_side`, before the return):
 
   old:
@@ -2809,8 +2809,8 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       return _emit({"ok": True, "explore": payload}, args)
   ```
 
-- [x] Run to pass: `python -m pytest tests/test_explore.py -q`.
-- [x] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
+- [ ] Run to pass: `python -m pytest tests/test_explore.py -q`.
+- [ ] Add the §9 acceptance pin — append to `tests/test_explore.py` (this drives the full fixture through the real CLI: five groups, tension listed, zero-grounds mark, exact ordered counts, per-side versus counts, intersection with the shared work, crossing tension, depth cap named on the CLI front). Expected: **pass immediately** — it pins E.1/E.2 behavior end-to-end; any failure is a defect in those tasks and must be fixed before commit:
 
   ```python
   def test_cli_explore_acceptance_five_groups_versus_counts_and_depth_cap(
@@ -2881,9 +2881,9 @@ Shipped seams consumed (verified): `checked_search_documents` `search_index.py:1
       assert "hard cap of 2" in refusal["error"]
   ```
 
-- [x] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.
+- [ ] Run: `python -m pytest tests/test_explore.py tests/test_cli.py -q` — all passed.
 - [x] Section-final gate: `python scripts/verify` — green (the roster gate `test_testing_levels.py` sees `test_explore.py` registered from E.1; the doc-claims gate is unaffected — it only fails on docs citing commands that do not exist, and `memoria explore` now exists).
-- [x] Commit:
+- [ ] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/explore.py src/memoria_vault/cli.py tests/test_explore.py
@@ -2965,7 +2965,7 @@ Implements spec §5 (grounded synthesis + the anchor-locator contract — **the 
 >    `test_hub_handoff`), run focused tests plus `git diff --check` and the full
 >    verify gate, then stage only its three files explicitly.
 
-- [ ] **Step 1: Write the failing test** — create `tests/test_grounded_synthesis.py`:
+- [x] **Step 1: Write the failing test** — create `tests/test_grounded_synthesis.py`:
 
 ```python
 """R2 section-5 grounded-synthesis contract, pinned before any composer exists.
@@ -3135,7 +3135,7 @@ def test_resolve_span_ref_refuses_malformed_and_unknown_refs(tmp_path: Path) -> 
     assert resolve_span_ref(vault, "ghost-work#^p0007") is None
 ```
 
-- [ ] **Step 2: Run the test — expect the failure**:
+- [x] **Step 2: Run the test — expect the failure**:
 
 ```bash
 python3 -m pytest tests/test_grounded_synthesis.py -q
@@ -3143,7 +3143,7 @@ python3 -m pytest tests/test_grounded_synthesis.py -q
 
 Expected failure: collection error, `ModuleNotFoundError: No module named 'memoria_vault.runtime.span_refs'`.
 
-- [ ] **Step 3: Minimal implementation** — create `src/memoria_vault/runtime/span_refs.py`:
+- [x] **Step 3: Minimal implementation** — create `src/memoria_vault/runtime/span_refs.py`:
 
 ```python
 """Source-span ref resolution - the R2 section-5 anchor-locator rule, once.
@@ -3218,7 +3218,7 @@ def _file_scan_resolution(vault: Path, work_id: str, anchor: str) -> dict[str, s
     }
 ```
 
-- [ ] **Step 4: Register the new test file** — in `tests/conftest.py`, edit the `TEST_LEVELS` dict:
+- [x] **Step 4: Register the new test file** — in `tests/conftest.py`, edit the `TEST_LEVELS` dict:
 
 old:
 
@@ -3235,7 +3235,7 @@ new:
     "test_hub_handoff.py": "contract",
 ```
 
-- [ ] **Step 5: Run to pass**:
+- [x] **Step 5: Run to pass**:
 
 ```bash
 python3 -m pytest tests/test_grounded_synthesis.py tests/test_testing_levels.py -q
@@ -3243,17 +3243,35 @@ python3 -m pytest tests/test_grounded_synthesis.py tests/test_testing_levels.py 
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Commit (explicit paths only)**:
+- [x] **Step 6: Commit (explicit paths only)**:
 
 ```bash
 git add src/memoria_vault/runtime/span_refs.py tests/test_grounded_synthesis.py tests/conftest.py
 git commit -m "R2 F.1: grounded-synthesis contract tests + shared span-ref resolution (spec section 5)" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
-> **Execution receipt (2026-07-31):** `git merge-base --is-ancestor aeeca6e2 main`
-> succeeded. `aeeca6e2` adds `runtime/span_refs.py`,
-> `tests/test_grounded_synthesis.py`, and the corresponding `tests/conftest.py`
-> registration: the task's declared file set.
+> **Execution receipt (2026-07-31, corrected):** the prior receipt's
+> `git merge-base --is-ancestor aeeca6e2 main` claim was false — that command
+> exits 1. `aeeca6e2` and its follow-up `a856567b` ("fix: harden R2 span refs
+> and fixture validation") are real commits (`git cat-file -t` confirms) but
+> are not ancestors of `main`: the squash-merge that landed this task's three
+> files created a new SHA, `31e3bc1a` (PR #1556), which is the sole commit
+> `git log -- src/memoria_vault/runtime/span_refs.py` shows on `main`.
+>
+> That squash-merge also shipped with a real gap against point 3 above: the
+> landed `resolve_span_ref` never checked `source.get("check_status")`, so an
+> `unchecked` or `quarantined` source's span refs still resolved instead of
+> returning `None`. Confirmed by direct reproduction, then pinned red with
+> `test_resolve_span_ref_refuses_an_unchecked_or_quarantined_source` in
+> `tests/test_grounded_synthesis.py` (point 4's first red pin) before the
+> one-line fix (gate on `check_status == "checked"` where `source` is first
+> loaded); full `tests/test_grounded_synthesis.py` (8 tests) and
+> `tests/test_retrieval_fixtures.py` (the other shared consumer, 9 tests) pass
+> green with no regressions. Point 4's second red pin (a checked note
+> declaring the canonical source's work id) is structurally unreachable
+> already: `_file_scan_resolution` only ever reads the source's own
+> registered `content_path`, never a note file, so no dedicated fixture was
+> added for it.
 
 ---
 
@@ -3271,7 +3289,7 @@ git commit -m "R2 F.1: grounded-synthesis contract tests + shared span-ref resol
 - Consumes: `resolve_span_ref` (F.1); `parse_source_span_ref` (evidence.py:44-49, load-time gold validation); `evaluate_bm25(vault, cases, *, k=5) -> dict` (search_index.py:344-376, case shape `{"query": str, "relevant": [paths]}`); `checked_search_documents`/`_checked_work_documents` (search_index.py:115-131, :425-480 — `fulltexts/<work_id>.md` by construction); `state.upsert_catalog_record` (state.py:1510); `yaml.safe_load` (PyYAML, pyproject.toml:15); the O1 seed-corpus work ids (`docs/superpowers/plans/2026-07-16-o1-onboarding-seed.md` interface 1). `evaluate_fixture` (retrieval.py:122-145) needs no wiring here: it already consumes the same `{query, relevant}` case shape via `evaluate_bm25`, so `shape1_bm25_cases` output feeds both evaluators unchanged.
 - Produces: `load_retrieval_fixtures(*, spike_mode: bool = False) -> list[dict[str, Any]]`; `validate_retrieval_fixture_rows(rows: list[Any], *, source: str = "<memory>") -> list[dict[str, Any]]`; `shape1_bm25_cases(vault: Path, cases: list[dict[str, Any]]) -> list[dict[str, Any]]`; `score_present_at_depth(payload: dict[str, Any], gold_ids: list[str]) -> bool`; `FIXTURES_DIR`; the fixture row form `{id, shape, query, gold, metric, registered, frozen[, frozen_on]}` the R3 spike and LOOP.13 consume.
 
-- [ ] **Step 1: Write the failing test** — create `tests/test_retrieval_fixtures.py`:
+- [x] **Step 1: Write the failing test** — create `tests/test_retrieval_fixtures.py`:
 
 ```python
 """Contract tests for the R2 section-7 retrieval-fixture preregistration form.
@@ -3472,7 +3490,7 @@ def test_present_at_depth_scores_membership_over_the_grouped_payload() -> None:
     assert score_present_at_depth({}, GOLD_TENSION_IDS) is False
 ```
 
-- [ ] **Step 2: Run the test — expect the failure**:
+- [x] **Step 2: Run the test — expect the failure**:
 
 ```bash
 python3 -m pytest tests/test_retrieval_fixtures.py -q
@@ -3480,7 +3498,7 @@ python3 -m pytest tests/test_retrieval_fixtures.py -q
 
 Expected failure: collection error, `ModuleNotFoundError: No module named 'tests.retrieval_fixtures'`.
 
-- [ ] **Step 3: Minimal implementation, part 1** — create `tests/fixtures/retrieval/cases.yaml`:
+- [x] **Step 3: Minimal implementation, part 1** — create `tests/fixtures/retrieval/cases.yaml`:
 
 ```yaml
 # Preregistered retrieval fixtures - R2 section 7, the R3 spike's
@@ -3523,7 +3541,7 @@ Expected failure: collection error, `ModuleNotFoundError: No module named 'tests
   frozen: false
 ```
 
-- [ ] **Step 4: Minimal implementation, part 2** — create `tests/retrieval_fixtures.py`:
+- [x] **Step 4: Minimal implementation, part 2** — create `tests/retrieval_fixtures.py`:
 
 ```python
 """Preregistered retrieval-fixture loader (R2 section 7).
@@ -3689,7 +3707,7 @@ def _collect_ids(node: object, found: set[str]) -> None:
             _collect_ids(child, found)
 ```
 
-- [ ] **Step 5: Register the new test file** — in `tests/conftest.py`, edit the `TEST_LEVELS` dict:
+- [x] **Step 5: Register the new test file** — in `tests/conftest.py`, edit the `TEST_LEVELS` dict:
 
 old:
 
@@ -3706,7 +3724,7 @@ new:
     "test_retrieval_substrate.py": "contract",
 ```
 
-- [ ] **Step 6: Run to pass**:
+- [x] **Step 6: Run to pass**:
 
 ```bash
 python3 -m pytest tests/test_retrieval_fixtures.py tests/test_testing_levels.py -q
@@ -3714,7 +3732,7 @@ python3 -m pytest tests/test_retrieval_fixtures.py tests/test_testing_levels.py 
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Section-final gate**:
+- [x] **Step 7: Section-final gate**:
 
 ```bash
 python scripts/verify
@@ -3722,7 +3740,7 @@ python scripts/verify
 
 Expected: `verify: OK` (ruff/ruff-format cover the two new Python files; yamllint covers `cases.yaml` — the relaxed profile with line-length disabled; cspell scopes to `**/*.md` only, so no dictionary changes are needed).
 
-- [ ] **Step 8: Commit (explicit paths only)**:
+- [x] **Step 8: Commit (explicit paths only)**:
 
 ```bash
 git add tests/retrieval_fixtures.py tests/fixtures/retrieval/cases.yaml tests/test_retrieval_fixtures.py tests/conftest.py

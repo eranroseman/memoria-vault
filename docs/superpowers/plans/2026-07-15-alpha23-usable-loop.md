@@ -2442,18 +2442,18 @@ non-backfillable and precedes all ingestion.
 
 **Steps:**
 
-- [ ] Confirm the skeleton is merged and its seams exist as documented:
+- [x] Confirm the skeleton is merged and its seams exist as documented:
   `grep -n "emit_disposition_event\|DISPOSITION_EVENT_SCHEMA\|READ_EVENT_SCHEMA" src/memoria_vault/runtime/operations.py src/memoria_vault/engine/empirical_events.py`
   — every name must resolve; if any is missing, stop and report (the shipped
   skeleton diverged from its design,
   `docs/superpowers/specs/2026-07-14-i1-skeleton-design.md`).
-- [ ] Run the brainstorming skill with the named inputs:
+- [x] Run the brainstorming skill with the named inputs:
   `Skill(skill="superpowers:brainstorming", args="Design the beta.1 I1 full instrumentation wiring. Inputs: docs/superpowers/specs/2026-07-12-beta.1-consolidation.md §2 I1 unit list (line 181); docs/superpowers/specs/2026-07-14-i1-skeleton-design.md including its Out-of-scope deferred list and the journal-head-must-not-dirty review finding; docs/superpowers/specs/0.1.0-beta.1-empirical-use-action-plan.md §2 field table and §4 decision rules. Must decide: read-path staleness sink, six remaining disposition call-sites, loudness policy, honest dashboard (raw counts only), decision-rule registry, human back-pressure. Constraint: this package must be implementable before any O2 ingestion begins.")`
-- [ ] Write the ratified outcome to
+- [x] Write the ratified outcome to
   `docs/superpowers/specs/$(date +%F)-i1-full-wiring-design.md` with the six
   Produces sections above, a "Deliberately not building" section, and a
   testing section naming which `TEST_LEVELS` level each new test file takes.
-- [ ] Commit the spec:
+- [x] Commit the spec:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-i1-full-wiring-design.md
@@ -2462,9 +2462,9 @@ non-backfillable and precedes all ingestion.
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-i1-full-wiring-design.md — produce docs/superpowers/plans/$(date +%F)-i1-full-wiring.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-i1-full-wiring-design.md — produce docs/superpowers/plans/$(date +%F)-i1-full-wiring.md")`
   and commit the plan the same way.
-- [ ] Acceptance: spec + plan exist in `docs/superpowers/specs|plans/`, the
+- [x] Acceptance: spec + plan exist in `docs/superpowers/specs|plans/`, the
   spec covers all six decided sections and every unit named in consolidation
   §2 line 181 (each either designed or explicitly routed to another package
   with the receiving package named), and LOOP.6's precondition checkbox can
@@ -2510,18 +2510,18 @@ must be recorded before any source is selected or fetched**.
 
 **Steps:**
 
-- [ ] Read the ADR and issue first (the wizard cannot contradict a standing
+- [x] Read the ADR and issue first (the wizard cannot contradict a standing
   deferral): `sed -n '7570,7660p' design-history/archive/notes/docs-exports/adr-full.md`
   and `gh issue view 902 --repo eranroseman/memoria-vault`.
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 O1 onboarding + seed corpus. Inputs: consolidation §2 O1 unit list (line 174); ADR-113 co-PI-guided onboarding (deferred) + issue #902 preconditions; empirical-use action plan Phase 0 (license/fetch rule before selection, diary template) and the ≤30-minute time-to-first-answer bar; existing CLI seams memoria init / work add / ask. HARD ORDER: the seed-corpus licensing decision (PMC Commercial-Use / arXiv CC BY, BY-SA, CC0) is decided and recorded before any source is selected — it is a freeze blocker and an impl-start check. steering.md authoring must precede first import.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 O1 onboarding + seed corpus. Inputs: consolidation §2 O1 unit list (line 174); ADR-113 co-PI-guided onboarding (deferred) + issue #902 preconditions; empirical-use action plan Phase 0 (license/fetch rule before selection, diary template) and the ≤30-minute time-to-first-answer bar; existing CLI seams memoria init / work add / ask. HARD ORDER: the seed-corpus licensing decision (PMC Commercial-Use / arXiv CC BY, BY-SA, CC0) is decided and recorded before any source is selected — it is a freeze blocker and an impl-start check. steering.md authoring must precede first import.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-o1-onboarding-seed-design.md` with the
   five Produces sections, section 1 (licensing) carrying its own decision date.
-- [ ] Copy the section-1 licensing entry into the project decision record the
+- [x] Copy the section-1 licensing entry into the project decision record the
   session identifies as authoritative (the consolidation calls it
   `decisions.md`; if the file does not exist in this repo, the spec's section 1
   IS the record and must say so).
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-o1-onboarding-seed-design.md
@@ -2530,9 +2530,9 @@ must be recorded before any source is selected or fetched**.
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-o1-onboarding-seed-design.md — produce docs/superpowers/plans/$(date +%F)-o1-onboarding-seed.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-o1-onboarding-seed-design.md — produce docs/superpowers/plans/$(date +%F)-o1-onboarding-seed.md")`
   and commit the plan.
-- [ ] Acceptance: the licensing decision is recorded with a date **earlier
+- [x] Acceptance: the licensing decision is recorded with a date **earlier
   than or equal to** the seed-source list's date; every listed source names
   its license and fetch rule; the wizard flow references only CLI commands
   that exist (or tasks in the produced plan that create them); the ≤30-min bar
@@ -2580,17 +2580,17 @@ and merged — instrumentation precedes all ingestion, non-backfillable.**
 
 **Steps:**
 
-- [ ] Precondition check (blocking): the LOOP.4 plan's implementation PR is
+- [x] Precondition check (blocking): the LOOP.4 plan's implementation PR is
   merged — verify with `gh pr list --repo eranroseman/memoria-vault --search "i1-full-wiring" --state merged`;
   and the seeded-error battery passes:
   `memoria eval seeded-error-verdict --workspace test-vault/vault --json`
   (verdict must be green). If either fails, this task does not start.
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 O2 staged import + bulk admission. Inputs: consolidation §2 O2 (line 175), §1 Tier −1 gate corrections (line 112), §5 schema-before-corpus note (line 354); empirical-use action plan Phase 1 metric list and stop rules; existing single-entry seam memoria work import --format bibtex|csl (cli.py:207, _cmd_work_import cli.py:951) over the capture-source operation. Scope: 10→100 staged import is beta.1; 1000-scale seed-corpus-load is beta.2. Admission is catalog-only, zero digests. Must consume I1 loudness policy for bulk-admission quiet mode and emit the Phase 1 per-stage metrics.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 O2 staged import + bulk admission. Inputs: consolidation §2 O2 (line 175), §1 Tier −1 gate corrections (line 112), §5 schema-before-corpus note (line 354); empirical-use action plan Phase 1 metric list and stop rules; existing single-entry seam memoria work import --format bibtex|csl (cli.py:207, _cmd_work_import cli.py:951) over the capture-source operation. Scope: 10→100 staged import is beta.1; 1000-scale seed-corpus-load is beta.2. Admission is catalog-only, zero digests. Must consume I1 loudness policy for bulk-admission quiet mode and emit the Phase 1 per-stage metrics.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-o2-staged-import-design.md` with the
   five Produces sections plus an explicit "1000-scale is beta.2" boundary
   section.
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-o2-staged-import-design.md
@@ -2599,9 +2599,9 @@ and merged — instrumentation precedes all ingestion, non-backfillable.**
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-o2-staged-import-design.md — produce docs/superpowers/plans/$(date +%F)-o2-staged-import.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-o2-staged-import-design.md — produce docs/superpowers/plans/$(date +%F)-o2-staged-import.md")`
   and commit the plan.
-- [ ] Acceptance: spec exists; its instrumentation section maps every Phase 1
+- [x] Acceptance: spec exists; its instrumentation section maps every Phase 1
   metric to a concrete I1 event type or names the gap; the import path admits
   to catalog only; LOOP.13 can execute against the produced plan's merged
   implementation.
@@ -2645,11 +2645,11 @@ every sentence carries a resolvable `passage_id`), `check-gate-ride-through`,
 
 **Steps:**
 
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 R2 retrieval modes + fusion + shapes. Inputs: consolidation §2 R2 (line 154) with reranking off-by-default fixture-gated; query-mechanism-analysis.md §5 KNN flip condition; beta.1 design §12; current seams runtime/retrieval.py and runtime/search_index.py; the incremental refresh from LOOP.1. BM25 stays the default; dense activation is beta.2 behind the pre-registered spike. Must define Shape-1/Shape-2 queries measurably (LOOP.13 times them) and the search-honesty denominator contract.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 R2 retrieval modes + fusion + shapes. Inputs: consolidation §2 R2 (line 154) with reranking off-by-default fixture-gated; query-mechanism-analysis.md §5 KNN flip condition; beta.1 design §12; current seams runtime/retrieval.py and runtime/search_index.py; the incremental refresh from LOOP.1. BM25 stays the default; dense activation is beta.2 behind the pre-registered spike. Must define Shape-1/Shape-2 queries measurably (LOOP.13 times them) and the search-honesty denominator contract.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-r2-retrieval-modes-design.md` with the
   five Produces sections.
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-r2-retrieval-modes-design.md
@@ -2658,9 +2658,9 @@ every sentence carries a resolvable `passage_id`), `check-gate-ride-through`,
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-r2-retrieval-modes-design.md — produce docs/superpowers/plans/$(date +%F)-r2-retrieval-modes.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-r2-retrieval-modes-design.md — produce docs/superpowers/plans/$(date +%F)-r2-retrieval-modes.md")`
   and commit the plan.
-- [ ] Acceptance: spec exists; reranking remains off-by-default with the
+- [x] Acceptance: spec exists; reranking remains off-by-default with the
   fixture gate named; Shape-1/Shape-2 are defined as runnable queries; the
   preregistration form exists for R3.
 
@@ -2697,11 +2697,11 @@ until review fits a session; if skipped, simplify the gate."
 
 **Steps:**
 
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 V2 evidence-set review UI. Inputs: consolidation §2 V2 (line 169, evidence-set-review-ui and export-target-choice are freeze blockers); 2026-07-14-evidence-set-grounds-contract-design.md; existing seam memoria project resolve-evidence (cli.py:328); empirical plan §4 evidence-review decision rule (ten items across two sessions; batch/filter until review fits a session); LOOP.4 disposition events. Every review action must emit a disposition.v1 event.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 V2 evidence-set review UI. Inputs: consolidation §2 V2 (line 169, evidence-set-review-ui and export-target-choice are freeze blockers); 2026-07-14-evidence-set-grounds-contract-design.md; existing seam memoria project resolve-evidence (cli.py:328); empirical plan §4 evidence-review decision rule (ten items across two sessions; batch/filter until review fits a session); LOOP.4 disposition events. Every review action must emit a disposition.v1 event.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-v2-evidence-review-design.md` with the
   five Produces sections.
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-v2-evidence-review-design.md
@@ -2710,9 +2710,9 @@ until review fits a session; if skipped, simplify the gate."
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-v2-evidence-review-design.md — produce docs/superpowers/plans/$(date +%F)-v2-evidence-review.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-v2-evidence-review-design.md — produce docs/superpowers/plans/$(date +%F)-v2-evidence-review.md")`
   and commit the plan.
-- [ ] Acceptance: spec exists; both freeze blockers
+- [x] Acceptance: spec exists; both freeze blockers
   (`evidence-set-review-ui`, `export-target-choice`) carry an explicit
   decision; every review action maps to a disposition event.
 
@@ -2751,11 +2751,11 @@ U2, U3, and U4 all consume this contract — it goes first among the surfaces.
 
 **Steps:**
 
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U1 read-API + surface contract. Inputs: consolidation §2 U1 (line 196); 2026-07-12-surface-design-notes.md; existing runtime/http_transport.py, runtime/mcp_transport.py, memoria serve (cli.py:109) and the SURFACE_ACTION registry (cli.py:569). Constraints: on-demand service only (no resident daemon — beta.2 deferral, consolidation §4); operation_run is the only write tool over MCP; all writes go through request envelopes. Output must include the read-api-acceptance checklist U2/U3/U4 build against.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U1 read-API + surface contract. Inputs: consolidation §2 U1 (line 196); 2026-07-12-surface-design-notes.md; existing runtime/http_transport.py, runtime/mcp_transport.py, memoria serve (cli.py:109) and the SURFACE_ACTION registry (cli.py:569). Constraints: on-demand service only (no resident daemon — beta.2 deferral, consolidation §4); operation_run is the only write tool over MCP; all writes go through request envelopes. Output must include the read-api-acceptance checklist U2/U3/U4 build against.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-u1-read-api-design.md` with the four
   Produces sections.
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-u1-read-api-design.md
@@ -2764,9 +2764,9 @@ U2, U3, and U4 all consume this contract — it goes first among the surfaces.
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u1-read-api-design.md — produce docs/superpowers/plans/$(date +%F)-u1-read-api.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u1-read-api-design.md — produce docs/superpowers/plans/$(date +%F)-u1-read-api.md")`
   and commit the plan.
-- [ ] Acceptance: spec exists; the five workspace jobs each map to named
+- [x] Acceptance: spec exists; the five workspace jobs each map to named
   actions; the no-daemon constraint is explicit; the acceptance checklist is
   quotable by LOOP.10–LOOP.12.
 
@@ -2800,11 +2800,11 @@ terminal), `co-pi-loop`, `static-review-cockpit`, `trace-to-revert-preview`,
 
 **Steps:**
 
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U2 deep-work + review cockpit. Inputs: consolidation §2 U2 (line 197) including the vim/nano keep-test; 2026-07-12-surface-design-notes.md; the U1 read-API spec from LOOP.9; the V2 review-surface decision from LOOP.8; empirical plan §4 two-window-friction and workspace-topology decision rules. The cockpit is a read-API client; attention renders as a projection of I1 worklists.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U2 deep-work + review cockpit. Inputs: consolidation §2 U2 (line 197) including the vim/nano keep-test; 2026-07-12-surface-design-notes.md; the U1 read-API spec from LOOP.9; the V2 review-surface decision from LOOP.8; empirical plan §4 two-window-friction and workspace-topology decision rules. The cockpit is a read-API client; attention renders as a projection of I1 worklists.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-u2-cockpit-design.md` with the four
   Produces sections.
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-u2-cockpit-design.md
@@ -2813,9 +2813,9 @@ terminal), `co-pi-loop`, `static-review-cockpit`, `trace-to-revert-preview`,
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u2-cockpit-design.md — produce docs/superpowers/plans/$(date +%F)-u2-cockpit.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u2-cockpit-design.md — produce docs/superpowers/plans/$(date +%F)-u2-cockpit.md")`
   and commit the plan.
-- [ ] Acceptance: spec exists; the keep-test appears as an acceptance
+- [x] Acceptance: spec exists; the keep-test appears as an acceptance
   criterion; the cockpit consumes only U1 actions (no private engine calls).
 
 ---
@@ -2853,11 +2853,11 @@ reconcile discipline live in `2026-07-12-surface-design-notes.md`.
 
 **Steps:**
 
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U3 Obsidian plugin thin renderer. Inputs: consolidation §2 U3 (line 198; live on-save badges are beta.2 — poll-based only); 2026-07-12-surface-design-notes.md (the .base specs, Bases constraints, canvas fork-to-scratch, reconcile discipline); the plugin package under packages/ post-#1369; U1 read-API spec (loopback reads, operation_run-only writes); I1 loudness taxonomy. Cards enqueue existing operations only.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U3 Obsidian plugin thin renderer. Inputs: consolidation §2 U3 (line 198; live on-save badges are beta.2 — poll-based only); 2026-07-12-surface-design-notes.md (the .base specs, Bases constraints, canvas fork-to-scratch, reconcile discipline); the plugin package under packages/ post-#1369; U1 read-API spec (loopback reads, operation_run-only writes); I1 loudness taxonomy. Cards enqueue existing operations only.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-u3-obsidian-cards-design.md` with the
   five Produces sections.
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-u3-obsidian-cards-design.md
@@ -2866,9 +2866,9 @@ reconcile discipline live in `2026-07-12-surface-design-notes.md`.
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
-- [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u3-obsidian-cards-design.md — produce docs/superpowers/plans/$(date +%F)-u3-obsidian-cards.md")`
+- [x] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u3-obsidian-cards-design.md — produce docs/superpowers/plans/$(date +%F)-u3-obsidian-cards.md")`
   and commit the plan.
-- [ ] Acceptance: spec exists; every card action names an existing operation
+- [x] Acceptance: spec exists; every card action names an existing operation
   id; no SSE/daemon dependency anywhere; the `.base` views are specified
   concretely enough to seed from `memoria init`.
 
@@ -2904,11 +2904,11 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 
 **Steps:**
 
-- [ ] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U4 co-PI skill / MCP surface. Inputs: consolidation §2 U4 (line 199, copi-surface-split: engine authors the method, the user's agent voices it); 2026-07-12-surface-design-notes.md; U1 MCP scoping (operation_run only write tool); runtime/mcp_transport.py and memoria mcp (cli.py:125); the trust axiom (inspectable grounding structure, never author trust). Conversational answers must carry resolvable sources like answer_query.")`
-- [ ] Write the spec to
+- [x] Run `Skill(skill="superpowers:brainstorming", args="Design beta.1 U4 co-PI skill / MCP surface. Inputs: consolidation §2 U4 (line 199, copi-surface-split: engine authors the method, the user's agent voices it); 2026-07-12-surface-design-notes.md; U1 MCP scoping (operation_run only write tool); runtime/mcp_transport.py and memoria mcp (cli.py:125); the trust axiom (inspectable grounding structure, never author trust). Conversational answers must carry resolvable sources like answer_query.")`
+- [x] Write the spec to
   `docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md` with the four
   Produces sections.
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md
@@ -2919,7 +2919,7 @@ authors the method, user's agent voices it**), `mcp-server-wiring`,
 
 - [ ] Run `Skill(skill="superpowers:writing-plans", args="docs/superpowers/specs/$(date +%F)-u4-copi-agent-plugin-design.md — produce docs/superpowers/plans/$(date +%F)-u4-copi-skill.md")`
   and commit the plan.
-- [ ] Acceptance: spec exists; the write path is exclusively `operation_run`;
+- [x] Acceptance: spec exists; the write path is exclusively `operation_run`;
   the engine-authored vs agent-voiced boundary is explicit per artifact.
 
 ---
