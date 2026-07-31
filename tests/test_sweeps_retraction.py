@@ -275,6 +275,47 @@ def test_sweep_flags_checked_sqlite_retraction_without_legacy_fallback(tmp_path,
     assert "10.1/Retracted is retracted" in str(fm["finding"])
 
 
+def test_sweep_checks_canonical_doi_column_and_alerts_on_retraction(tmp_path, monkeypatch):
+    vault = capture_workspace(tmp_path)
+    state.upsert_catalog_record(
+        vault,
+        work_id="column-doi-work",
+        title="Canonical DOI Column Work",
+        doi="10.1/ColumnOnly",
+        identifiers={},
+        csl_json={"title": "Canonical DOI Column Work"},
+        check_status="checked",
+    )
+    rw_csv = tmp_path / "rw.csv"
+    with rw_csv.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(
+            f,
+            fieldnames=["OriginalPaperDOI", "RetractionNature", "RetractionDate", "RetractionDOI"],
+        )
+        w.writeheader()
+        w.writerow(
+            {
+                "OriginalPaperDOI": "10.1/ColumnOnly",
+                "RetractionNature": "Retraction",
+                "RetractionDate": "2021-05-03",
+                "RetractionDOI": "10.1/rw-column-only",
+            }
+        )
+    monkeypatch.setenv("MEMORIA_RW_CSV", str(rw_csv))
+    _m._RW_INDEX = None
+    try:
+        result = sweep(vault, offline=True)
+    finally:
+        _m._RW_INDEX = None
+
+    cards = list((vault / "inbox").glob("alert-*.md"))
+    assert result == {"checked": 1, "retracted": 1}
+    assert len(cards) == 1
+    fm = read_frontmatter(cards[0])
+    assert fm["title"] == "Retraction: Canonical DOI Column Work"
+    assert "10.1/ColumnOnly is retracted" in str(fm["finding"])
+
+
 def test_check_doi_offline_warns_once_when_rw_csv_is_missing(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("MEMORIA_RW_CSV", str(tmp_path / "missing.csv"))
     _m._RW_INDEX = None
