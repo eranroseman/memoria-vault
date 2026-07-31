@@ -4763,7 +4763,7 @@ EOF
 
 **Steps:**
 
-- [ ] **Write the failing tests.** In `tests/test_operations.py`: add `import json` to the stdlib imports (after `import hashlib`, line 3), add `run_operation_model_text` to the first operations import block (alphabetically between `resolve_operation_runner,` and `validate_operation_policy,`).
+- [x] **Write the failing tests.** In `tests/test_operations.py`: add `import json` to the stdlib imports (after `import hashlib`, line 3), add `run_operation_model_text` to the first operations import block (alphabetically between `resolve_operation_runner,` and `validate_operation_policy,`).
 
   (a) Extend `test_prompt_operation_neutralizes_model_output_before_staging` — after the existing `assert events[1]["output_hash"] == (...)` block (currently `:265-267`), add:
 
@@ -4846,11 +4846,11 @@ def test_run_operation_model_text_records_telemetry_without_content(
     assert isinstance(model_call["elapsed_s"], float)
 ```
 
-- [ ] **Run tests to verify they fail:**
+- [x] **Run tests to verify they fail:**
   `python -m pytest "tests/test_operations.py::test_prompt_operation_neutralizes_model_output_before_staging" "tests/test_operations.py::test_compile_source_digest_traces_model_call_and_stages_hub_suggestions" "tests/test_operations.py::test_run_operation_model_text_records_telemetry_without_content" -v`
   Expected: all three fail with `KeyError: 'usage'` (the journal rows do not carry the new keys yet).
 
-- [ ] **Write minimal implementation** — exactly the spec §3 three-key addition, one per literal, inserted immediately after each literal's `"output_hash"` line. In `run_prompt_operation` (literal anchored by `"route": "prompt-operation",`), after `"output_hash": _sha256_text(output),`:
+- [x] **Write minimal implementation** — exactly the spec §3 three-key addition, one per literal, inserted immediately after each literal's `"output_hash"` line. In `run_prompt_operation` (literal anchored by `"route": "prompt-operation",`), after `"output_hash": _sha256_text(output),`:
 
 ```python
             "usage": result["usage"],
@@ -4876,11 +4876,11 @@ def test_run_operation_model_text_records_telemetry_without_content(
 
   No other change to those dicts; `context`, `append_journal_event`, and `commit_writer_changes` plumbing untouched.
 
-- [ ] **Run tests to verify they pass:**
+- [x] **Run tests to verify they pass:**
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass.
 
-- [ ] **Regenerate floor goldens** (journal hashes changed; the new fixture-path values are deterministic so the refreshed goldens are stable):
+- [x] **Regenerate floor goldens** (journal hashes changed; the new fixture-path values are deterministic so the refreshed goldens are stable):
 
 ```bash
 MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -v
@@ -4892,7 +4892,7 @@ git diff tests/fixtures/floor/goldens/
   `python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_coverage.py -v`
   Expected: all pass with the env var **unset**.
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/memoria_vault/runtime/operations.py tests/test_operations.py tests/fixtures/floor/goldens

@@ -464,6 +464,9 @@ def run_prompt_operation(
             "compression_used": False,
             "input_hash": _sha256_text(input_text),
             "output_hash": _sha256_text(output),
+            "usage": result["usage"],
+            "cost_usd": result["cost_usd"],
+            "elapsed_s": result["elapsed_s"],
         },
         context=context,
     )
@@ -552,6 +555,9 @@ def run_operation_model_text(
             "compression_used": False,
             "input_hash": _sha256_text(input_text),
             "output_hash": _sha256_text(output),
+            "usage": result["usage"],
+            "cost_usd": result["cost_usd"],
+            "elapsed_s": result["elapsed_s"],
         },
         context=context,
     )
@@ -624,6 +630,9 @@ def compile_source_digest(
             "compression_used": False,
             "input_hash": _compile_input_hash(content_path, interviews),
             "output_hash": _sha256_text(digest_text),
+            "usage": digest_result["usage"],
+            "cost_usd": digest_result["cost_usd"],
+            "elapsed_s": digest_result["elapsed_s"],
         },
         context=context,
     )
