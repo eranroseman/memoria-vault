@@ -13,8 +13,8 @@ enrichment does not complete and the DOI source stays unchecked.
 **Diagnosis:** enrichment (`enrich-source`) either did not run or failed before
 the source could be promoted as checked. The two common causes:
 
-1. A required provider key/contact email is missing or invalid, so provider
-   calls fail.
+1. A configured provider fails, or an enhancing credential leaves its result
+   thinner than expected.
 2. The enrichment request is stuck (`pending`/`running`/`failed`) rather than
    never started.
 
@@ -31,11 +31,15 @@ request exists for the work at all.
 
 ## Fix
 
-**1. Check provider config.** DOI enrichment (Crossref, OpenAlex, Unpaywall)
-reads `OPENALEX_API_KEY` and `NCBI_EMAIL` from the workspace runtime
-environment, declared in `<workspace>/.memoria/config/providers.yaml`; Semantic
-Scholar is optional and only called when `SEMANTIC_SCHOLAR_API_KEY` is present.
-Confirm these are set — see [External integrations → API keys and rate limits](../../reference/evidence-and-integrations/integrations.md#api-keys-and-rate-limits).
+**1. Inspect provider credentials and the recorded error.** DOI enrichment
+(Crossref, OpenAlex, Unpaywall) reads `OPENALEX_API_KEY` and `NCBI_EMAIL` from
+the local runtime environment. `OPENALEX_API_KEY` is enhancing: without it,
+OpenAlex still runs in keyless polite-pool mode and reports a notice. `NCBI_EMAIL`
+is an identity value, while Semantic Scholar is optional and only called when
+`SEMANTIC_SCHOLAR_API_KEY` is present. Use `memoria secrets list` to inspect
+credential status, then follow the request's exact provider error rather than
+assuming that an absent OpenAlex key caused the failure. See [External
+integrations → Credentials and keyless behavior](../../reference/evidence-and-integrations/integrations.md#credentials-and-keyless-behavior).
 
 **2. Rerun enrichment.**
 
@@ -66,6 +70,6 @@ There is no classification-attention lifecycle to wait for or clear.
 
 ## Related
 
-- API keys and rate limits: [External integrations](../../reference/evidence-and-integrations/integrations.md#api-keys-and-rate-limits)
+- Credentials and keyless behavior: [External integrations](../../reference/evidence-and-integrations/integrations.md#credentials-and-keyless-behavior)
 - Request commands: [CLI](../../reference/commands-and-transports/cli.md)
 - Failure catalog: [Failure modes](../../reference/system/failure-modes.md)
