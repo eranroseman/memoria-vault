@@ -1254,7 +1254,9 @@ def test_cli_wires_maintenance_and_pi_commands(
         == 0
     )
     imported = json.loads(capsys.readouterr().out)
-    assert imported["result"]["work_id"] == "portable-work"
+    assert imported["entries_total"] == 1
+    assert imported["admitted"] == ["portable-work"]
+    assert imported["failed"] == []
 
     assert (
         main(
@@ -1917,12 +1919,13 @@ def test_workspace_scan_prints_and_persists_cs3_findings(
     assert main(["workspace", "scan", "--workspace", str(workspace)]) == 0
     out = capsys.readouterr().out
     assert "finding: foreign-edit notes/witness.md" in out
-    cards = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*notes-witness-md.md"))
+    cards = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*.md"))
     assert len(cards) == 1
+    assert {read_frontmatter(card)["target"] for card in cards} == {"notes/witness.md"}
 
     assert main(["workspace", "scan", "--workspace", str(workspace)]) == 0
     capsys.readouterr()
-    rescanned = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*notes-witness-md.md"))
+    rescanned = sorted((workspace / "inbox").glob("flag-cs3-foreign-edit-*.md"))
     assert rescanned == cards  # rescan is idempotent on the durable surface
 
 
