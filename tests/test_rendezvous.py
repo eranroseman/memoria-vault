@@ -711,7 +711,10 @@ def test_authenticated_request_resets_idle_timer_and_unauthorized_does_not(
         marked = server.last_authenticated
         status, payload = _request(port, "GET", "/status")
         assert status == 401
-        assert payload == {"ok": False, "error": "unauthorized"}
+        assert payload == {
+            "ok": False,
+            "error": "unauthorized: missing or invalid bearer token",
+        }
         assert server.last_authenticated == marked
 
 
@@ -850,7 +853,10 @@ def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
     try:
         denied, payload = _request(port, "POST", "/v1/shutdown")
         assert denied == 401
-        assert payload == {"ok": False, "error": "unauthorized"}
+        assert payload == {
+            "ok": False,
+            "error": "unauthorized: missing or invalid bearer token",
+        }
         wrong_method, _payload = _request(port, "GET", "/v1/shutdown", token="test-token")
         assert wrong_method == 405
         status, payload = _request(

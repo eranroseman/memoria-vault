@@ -22,7 +22,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import http_routes
-from memoria_vault.runtime.http_transport import make_http_server
+from memoria_vault.runtime.http_transport import _dispatch, make_http_server
 
 TOKEN = "auth-walk-token"
 
@@ -101,3 +101,33 @@ def test_v1_status_liveness_probe_is_unauthenticated_once_boot_lands(
     status, payload = _request(server_address, "GET", "/v1/status", token=None)
     assert status == HTTPStatus.OK
     assert payload.get("ok") is True
+
+
+def test_http_refusals_name_the_refused_thing(
+    walk_workspace: Path, server_address: tuple[str, int]
+) -> None:
+    """U1 checklist letter (j): every refusal is JSON naming the refused
+    thing (route, scope, token, or parameter) - never a bare status code."""
+    unauthorized_status, unauthorized = _request(server_address, "GET", "/status", token=None)
+    unknown, unknown_status = _dispatch(walk_workspace, "GET", "/missing", dict)
+    wrong_method, wrong_method_status = _dispatch(walk_workspace, "POST", "/status", dict)
+    missing_param, missing_param_status = _dispatch(walk_workspace, "GET", "/request", dict)
+    root_scope, root_scope_status = _dispatch(walk_workspace, "GET", "/concepts?read_scope=/", dict)
+
+    assert unauthorized_status == HTTPStatus.UNAUTHORIZED
+    assert unauthorized == {
+        "ok": False,
+        "error": "unauthorized: missing or invalid bearer token",
+    }
+    assert (unknown, unknown_status) == (
+        {"ok": False, "error": "no such route: /missing"},
+        HTTPStatus.NOT_FOUND,
+    )
+    assert (wrong_method, wrong_method_status) == (
+        {"ok": False, "error": "method not allowed: POST /status"},
+        HTTPStatus.METHOD_NOT_ALLOWED,
+    )
+    assert missing_param_status == HTTPStatus.BAD_REQUEST
+    assert missing_param == {"ok": False, "error": "id is required"}
+    assert root_scope_status == HTTPStatus.BAD_REQUEST
+    assert root_scope == {"ok": False, "error": "http read_scope must be non-root"}

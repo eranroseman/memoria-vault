@@ -152,7 +152,10 @@ def make_http_server(
                 )
                 return
             if not is_authorized(self.headers.get("Authorization"), token):
-                self._write({"ok": False, "error": "unauthorized"}, HTTPStatus.UNAUTHORIZED)
+                self._write(
+                    {"ok": False, "error": "unauthorized: missing or invalid bearer token"},
+                    HTTPStatus.UNAUTHORIZED,
+                )
                 return
             with self.server.authenticated_request() as admitted:
                 if not admitted:
@@ -287,9 +290,10 @@ def _dispatch(
     query = parse_qs(parsed.query)
     path = parsed.path.rstrip("/") or "/"
     if (method, path) not in HTTP_ROUTES:
-        status = HTTPStatus.METHOD_NOT_ALLOWED if path in HTTP_PATHS else HTTPStatus.NOT_FOUND
-        error = "method not allowed" if status == HTTPStatus.METHOD_NOT_ALLOWED else "not found"
-        return {"ok": False, "error": error}, status
+        if path in HTTP_PATHS:
+            error = f"method not allowed: {method} {path}"
+            return {"ok": False, "error": error}, HTTPStatus.METHOD_NOT_ALLOWED
+        return {"ok": False, "error": f"no such route: {path}"}, HTTPStatus.NOT_FOUND
     try:
         startup_read_scope = _normalize_read_scope(read_scope)
         if method == "GET":
@@ -302,7 +306,8 @@ def _dispatch(
         return {"ok": False, "error": str(exc)}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE
     except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns JSON errors.
         return {"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST
-    return {"ok": False, "error": "method not allowed"}, HTTPStatus.METHOD_NOT_ALLOWED
+    error = f"method not allowed: {method} {path}"
+    return {"ok": False, "error": error}, HTTPStatus.METHOD_NOT_ALLOWED
 
 
 def _read(
@@ -371,12 +376,12 @@ def _read(
         return engine_api.read_exploration(
             workspace, limit=_int_query(query, "limit", 10), read_scope=read_scope
         )
-    return {"ok": False, "error": "not found"}
+    return {"ok": False, "error": f"no such route: {path}"}
 
 
 def _write(workspace: Path, path: str, body: dict[str, Any]) -> dict[str, Any]:
     if path != "/operation/run":
-        return {"ok": False, "error": "not found"}
+        return {"ok": False, "error": f"no such route: {path}"}
     operation_id = str(body.get("operation_id") or "").strip()
     if not operation_id:
         raise ValueError("operation_id is required")

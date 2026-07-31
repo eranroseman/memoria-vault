@@ -165,10 +165,10 @@ Current status behavior is intentionally small:
 | Case | HTTP status | Body |
 | --- | --- | --- |
 | Missing or wrong `Host`, or forbidden `Origin` | `403` | `{"ok": false, "error": "forbidden host"}` or `{"ok": false, "error": "forbidden origin"}` |
-| Missing or wrong bearer token on an endpoint other than `GET /v1/status` | `401` | `{"ok": false, "error": "unauthorized"}` |
+| Missing or wrong bearer token on an endpoint other than `GET /v1/status` | `401` | `{"ok": false, "error": "unauthorized: missing or invalid bearer token"}` |
 | Bad JSON, non-object body, missing or invalid parameter, root/traversing scope | `400` | `{"ok": false, "error": "..."}` |
-| Unknown route or engine not-found | `404` | `{"ok": false, "error": "..."}` |
-| Known route with unsupported method | `405` | `{"ok": false, "error": "method not allowed"}` |
+| Unknown route or engine not-found | `404` | `{"ok": false, "error": "..."}` — unknown routes read `no such route: <path>` |
+| Known route with unsupported method | `405` | `{"ok": false, "error": "method not allowed: <METHOD> <path>"}` |
 | Missing or stale boot ID on `POST /v1/shutdown` | `409` | `{"ok": false, "error": "stale server"}` |
 | Body over `MAX_BODY_BYTES` | `413` | `{"ok": false, "error": "request body too large"}` |
 | Operation ran but worker failed it | `200` | `{"ok": false, "job": ..., "result": ...}` |
