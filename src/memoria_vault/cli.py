@@ -39,8 +39,6 @@ from memoria_vault.runtime.worker import (
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
 WORKSPACE_SEED_PACKAGE = "memoria_vault.product.workspace_seed"
 SEED_TREES = (
-    (".claude", ".claude"),
-    (".codex", ".codex"),
     (".githooks", ".githooks"),
     (".memoria/config", ".memoria/config"),
     (".memoria/eval", ".memoria/eval"),
@@ -50,8 +48,6 @@ SEED_TREES = (
 )
 SEED_FILES = (
     (".gitignore", ".gitignore"),
-    (".mcp.json", ".mcp.json"),
-    ("CLAUDE.md", "CLAUDE.md"),
     ("steering.md", "steering.md"),
     ("system/vocabulary.md", "system/vocabulary.md"),
     ("catalog.base", "catalog.base"),
@@ -59,6 +55,17 @@ SEED_FILES = (
     ("inbox.base", "inbox.base"),
     ("projects.base", "projects.base"),
     ("sources.base", "sources.base"),
+)
+# The agent bundle is a first-install bootstrap, not a repair-managed runtime
+# seed. A later doctor repair must never recreate or overwrite PI-owned agent
+# configuration and perimeter policy.
+AGENT_BUNDLE_SEED_TREES = (
+    (".claude", ".claude"),
+    (".codex", ".codex"),
+)
+AGENT_BUNDLE_SEED_FILES = (
+    (".mcp.json", ".mcp.json"),
+    ("CLAUDE.md", "CLAUDE.md"),
 )
 # Seeded-config lifecycle — two classes (consolidation 2026-07-12, line 105).
 # View preferences are seeded once and PI-owned afterwards: repair/upgrade must
@@ -715,9 +722,14 @@ def _cmd_init(args: argparse.Namespace) -> int:
     runtime_backup.validate_workspace_write_targets(workspace, [".git"])
     _validate_workspace_git_metadata(workspace)
     runtime_backup.validate_workspace_write_targets(
-        workspace, _repair_write_targets(workspace, include_obsidian=include_obsidian)
+        workspace,
+        _repair_write_targets(
+            workspace, include_obsidian=include_obsidian, include_agent_bundle=True
+        ),
     )
-    _initialize_workspace_files(workspace, include_obsidian=include_obsidian)
+    _initialize_workspace_files(
+        workspace, include_obsidian=include_obsidian, include_agent_bundle=True
+    )
     return _emit({"ok": True, "workspace": str(workspace), "created": created}, args)
 
 
@@ -2660,16 +2672,22 @@ def _workspace_plan(workspace: Path) -> list[str]:
     return list(schema.load_folders()["skeleton"])
 
 
-def _active_seed_trees(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]:
+def _active_seed_trees(
+    *, include_obsidian: bool, include_agent_bundle: bool = False
+) -> tuple[tuple[str, str], ...]:
+    trees = SEED_TREES + (AGENT_BUNDLE_SEED_TREES if include_agent_bundle else ())
     if include_obsidian:
-        return SEED_TREES
-    return tuple(pair for pair in SEED_TREES if pair[1] != ".obsidian")
+        return trees
+    return tuple(pair for pair in trees if pair[1] != ".obsidian")
 
 
-def _active_seed_files(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]:
+def _active_seed_files(
+    *, include_obsidian: bool, include_agent_bundle: bool = False
+) -> tuple[tuple[str, str], ...]:
+    seed_files = SEED_FILES + (AGENT_BUNDLE_SEED_FILES if include_agent_bundle else ())
     if include_obsidian:
-        return SEED_FILES
-    return tuple(pair for pair in SEED_FILES if not pair[1].endswith(".base"))
+        return seed_files
+    return tuple(pair for pair in seed_files if not pair[1].endswith(".base"))
 
 
 def _init_dry_run_report(
@@ -2677,8 +2695,18 @@ def _init_dry_run_report(
 ) -> dict[str, Any]:
     from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
 
-    seed_trees = [target for _, target in _active_seed_trees(include_obsidian=include_obsidian)]
-    seed_files = [target for _, target in _active_seed_files(include_obsidian=include_obsidian)]
+    seed_trees = [
+        target
+        for _, target in _active_seed_trees(
+            include_obsidian=include_obsidian, include_agent_bundle=True
+        )
+    ]
+    seed_files = [
+        target
+        for _, target in _active_seed_files(
+            include_obsidian=include_obsidian, include_agent_bundle=True
+        )
+    ]
     search = {
         "engine": "bm25",
         "checked_root": ".memoria/index/search/checked",
@@ -2725,12 +2753,22 @@ def _init_dry_run_report(
     }
 
 
-def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
-    for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
+def _seed_workspace(
+    workspace: Path,
+    *,
+    overwrite: bool,
+    include_obsidian: bool = True,
+    include_agent_bundle: bool = False,
+) -> None:
+    for source_rel, target_rel in _active_seed_trees(
+        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+    ):
         _copy_seed_tree(
             source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
         )
-    for source_rel, target_rel in _active_seed_files(include_obsidian=include_obsidian):
+    for source_rel, target_rel in _active_seed_files(
+        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+    ):
         _copy_seed_file(
             source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
         )
@@ -2742,14 +2780,24 @@ def _repair_workspace(workspace: Path) -> list[str]:
     return repaired
 
 
-def _repair_write_targets(workspace: Path, *, include_obsidian: bool = True) -> list[str]:
+def _repair_write_targets(
+    workspace: Path,
+    *,
+    include_obsidian: bool = True,
+    include_agent_bundle: bool = False,
+) -> list[str]:
     from memoria_vault.runtime.projections import _tracked_projection_paths
 
     targets = set(_workspace_plan(workspace))
-    for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
+    for source_rel, target_rel in _active_seed_trees(
+        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+    ):
         targets.update(_seed_tree_write_targets(source_rel, target_rel))
     targets.update(
-        target for _source, target in _active_seed_files(include_obsidian=include_obsidian)
+        target
+        for _source, target in _active_seed_files(
+            include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
+        )
     )
     targets.update(
         {
@@ -2850,12 +2898,18 @@ def _initialize_workspace_files(
     *,
     overwrite: bool = False,
     include_obsidian: bool = True,
+    include_agent_bundle: bool = False,
     commit_created_repository: bool = True,
 ) -> None:
     workspace.mkdir(parents=True, exist_ok=True)
     for rel in _workspace_plan(workspace):
         (workspace / rel).mkdir(parents=True, exist_ok=True)
-    _seed_workspace(workspace, overwrite=overwrite, include_obsidian=include_obsidian)
+    _seed_workspace(
+        workspace,
+        overwrite=overwrite,
+        include_obsidian=include_obsidian,
+        include_agent_bundle=include_agent_bundle,
+    )
     state.connect(workspace).close()
     _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections_explicit

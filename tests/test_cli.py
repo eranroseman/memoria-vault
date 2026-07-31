@@ -659,6 +659,14 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
     )
     assert (workspace / ".memoria/schemas/folders.yaml").is_file()
     assert (workspace / "steering.md").is_file()
+    for rel in (
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
+        "CLAUDE.md",
+    ):
+        assert (workspace / rel).is_file()
 
     rc = main(["init", "--workspace", str(dry_workspace), "--dry-run", "--no-obsidian", "--json"])
     output = json.loads(capsys.readouterr().out)
@@ -672,6 +680,8 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
         "projects.base",
         "sources.base",
     }
+    assert {".claude", ".codex"} <= set(output["package"]["seed_trees"])
+    assert {".mcp.json", "CLAUDE.md"} <= set(output["package"]["seed_files"])
     assert not dry_workspace.exists()
 
 
@@ -835,8 +845,6 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert ".memoria/index/search" in output["skeleton"]["missing"]
     assert output["package"]["seed_files"] == [
         ".gitignore",
-        ".mcp.json",
-        "CLAUDE.md",
         "steering.md",
         "system/vocabulary.md",
         "catalog.base",
@@ -844,6 +852,8 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "inbox.base",
         "projects.base",
         "sources.base",
+        ".mcp.json",
+        "CLAUDE.md",
     ]
     assert "capabilities" not in output["package"]["seed_trees"]
     assert {

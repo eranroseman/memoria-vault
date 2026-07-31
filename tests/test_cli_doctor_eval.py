@@ -229,6 +229,47 @@ def test_cli_doctor_repair_restores_runtime_seed_files(
     )
 
 
+def test_cli_doctor_repair_does_not_overwrite_agent_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    sentinels = {
+        ".claude/hooks/write_perimeter.py": b"PI-owned hook\n",
+        ".claude/settings.json": b'{"PI-owned": true}\n',
+        ".codex/hooks.json": b'{"PI-owned": true}\n',
+        ".mcp.json": b'{"PI-owned": true}\n',
+        "CLAUDE.md": b"PI-owned instructions\n",
+    }
+    for rel, value in sentinels.items():
+        (workspace / rel).write_bytes(value)
+
+    assert main(["doctor", "--workspace", str(workspace), "--repair", "--json"]) == 0
+    capsys.readouterr()
+
+    assert {rel: (workspace / rel).read_bytes() for rel in sentinels} == sentinels
+
+
+def test_cli_doctor_repair_does_not_create_agent_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    shutil.rmtree(workspace / ".claude")
+    shutil.rmtree(workspace / ".codex")
+    (workspace / ".mcp.json").unlink()
+    (workspace / "CLAUDE.md").unlink()
+
+    assert main(["doctor", "--workspace", str(workspace), "--repair", "--json"]) == 0
+    capsys.readouterr()
+
+    assert not any(
+        (workspace / rel).exists() for rel in (".claude", ".codex", ".mcp.json", "CLAUDE.md")
+    )
+
+
 def test_cli_doctor_repair_rejects_symlinked_runtime_before_seed_writes(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
