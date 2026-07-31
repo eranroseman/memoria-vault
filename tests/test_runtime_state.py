@@ -151,7 +151,7 @@ def test_sqlite_schema_rejects_future_user_version(tmp_path: Path) -> None:
         state.connect(tmp_path)
 
 
-@pytest.mark.parametrize("version", (state.SCHEMA_VERSION - 1, state.SCHEMA_VERSION + 1))
+@pytest.mark.parametrize("version", [state.SCHEMA_VERSION - 1, state.SCHEMA_VERSION + 1])
 def test_sqlite_schema_rejects_noncurrent_database_without_rewriting(
     tmp_path: Path, version: int
 ) -> None:

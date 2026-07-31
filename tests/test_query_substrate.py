@@ -18,6 +18,7 @@ from tests.helpers import (
     write_checked_concept,
 )
 
+
 def answer_query(vault: Path, *args, **kwargs):
     return call_with_context(_answer_query, vault, *args, **kwargs)
 
@@ -452,6 +453,7 @@ def test_concept_edges_fresh_schema_exposes_reader_fields(tmp_path: Path) -> Non
         ]
 
     assert blank_edge_ids == ["", ""]
+
 
 def test_reverse_traversal_indexes_exist(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
