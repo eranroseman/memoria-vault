@@ -1953,6 +1953,25 @@ green; the id-space emission itself is NID-B.2/NID-B.4.
 
 ### Task NID-B.2: write file Concept identities from frontmatter ULIDs
 
+> **Binding amendment from NID-B.1's review (2026-07-31) — implement before the rest of
+> B.2.** B.1's `ensure_concept_parent_conn` collision guard conflates *identity collision*
+> with *attribute update*. It refuses `ensure_concept_parent_conn(conn, <same ULID>,
+> path="notes/new.md")` over a resident at `notes/old.md` — same identity, the requested
+> path owned by nobody — which is a **rename**, not a collision. It likewise refuses an
+> in-place `concept_type` change at an unchanged path, and one such row rolls back the
+> entire `rebuild_file_concept_mirror` batch.
+>
+> Neither is reachable under B.1: `_validate_concept` (`trusted_writer.py:1203-1205`) ties
+> every document type to its folder home, so `concept_type` is a function of the path; and
+> file Concepts key by path, so id and path move together and a rename mints a new id.
+> **B.2 destroys both properties** — decoupling id from path is its entire job — so B.2
+> hits this on its first re-key. Add a "same resolved id, requested path unowned → update"
+> allowance to the guard before anything else in this task.
+>
+> Related (Minor): `set_concept_flag` on an unmirrored ref fails with a bare
+> `sqlite3.IntegrityError: FOREIGN KEY constraint failed`. Route it through the same
+> descriptive-error wording while you are in there.
+
 B.2 consumes B.1's safe v16 floor. It does not alter schema DDL, version pins,
 catalog-parent setup, mirror-pruning/tombstone rules, catalog status/verdict
 resolution, or scoped-edge semantics. Fresh file Concepts are keyed from their
