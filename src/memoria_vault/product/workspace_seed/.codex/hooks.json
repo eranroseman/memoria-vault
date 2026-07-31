@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "description": "Memoria write-perimeter mirror for Codex. Vault notes are engine-mediated; use the memoria CLI or the MCP tool operation_run instead of direct edits.",
+  "deny": {
+    "tools": ["edit", "write"],
+    "paths": [
+      "**/*.md",
+      ".claude/**",
+      ".codex/**",
+      ".mcp.json",
+      ".memoria/**",
+      ".obsidian/**"
+    ]
+  }
+}
