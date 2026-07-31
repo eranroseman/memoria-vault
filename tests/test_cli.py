@@ -13,7 +13,7 @@ from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import _cli_command_surface
-from tests.helpers import ROOT, _assert_request_columns, git, write_checked_concept
+from tests.helpers import ROOT, WORKSPACE_SEED, _assert_request_columns, git, write_checked_concept
 
 
 def _parser_for_command(parser: argparse.ArgumentParser, command: str) -> argparse.ArgumentParser:
@@ -615,6 +615,33 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()
 
 
+def test_cli_init_seeds_exact_boot_c1_agent_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    expected = {
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
+        "CLAUDE.md",
+    }
+    delivered = {
+        path.relative_to(workspace).as_posix()
+        for directory in (workspace / ".claude", workspace / ".codex")
+        for path in directory.rglob("*")
+        if path.is_file()
+    } | {rel for rel in (".mcp.json", "CLAUDE.md") if (workspace / rel).is_file()}
+
+    assert delivered == expected
+    for rel in expected:
+        assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes()
+
+
 def test_cli_init_no_obsidian_skips_obsidian_seed(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -808,6 +835,8 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert ".memoria/index/search" in output["skeleton"]["missing"]
     assert output["package"]["seed_files"] == [
         ".gitignore",
+        ".mcp.json",
+        "CLAUDE.md",
         "steering.md",
         "system/vocabulary.md",
         "catalog.base",

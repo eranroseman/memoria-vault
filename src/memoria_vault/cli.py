@@ -39,6 +39,8 @@ from memoria_vault.runtime.worker import (
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
 WORKSPACE_SEED_PACKAGE = "memoria_vault.product.workspace_seed"
 SEED_TREES = (
+    (".claude", ".claude"),
+    (".codex", ".codex"),
     (".githooks", ".githooks"),
     (".memoria/config", ".memoria/config"),
     (".memoria/eval", ".memoria/eval"),
@@ -48,6 +50,8 @@ SEED_TREES = (
 )
 SEED_FILES = (
     (".gitignore", ".gitignore"),
+    (".mcp.json", ".mcp.json"),
+    ("CLAUDE.md", "CLAUDE.md"),
     ("steering.md", "steering.md"),
     ("system/vocabulary.md", "system/vocabulary.md"),
     ("catalog.base", "catalog.base"),
