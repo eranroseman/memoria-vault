@@ -2460,6 +2460,7 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
     return {
         "work_id": row["work_id"],
         "concept_path": row["concept_path"],
+        "doi": row["doi"],
         "title": row["title"],
         "description": row["description"],
         "resource": row["resource"],
