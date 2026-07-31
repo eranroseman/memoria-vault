@@ -664,6 +664,80 @@ def test_observe_sweep_keeps_restriction_key_card_ids_distinct_for_long_subjects
     assert sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md")) == cards
 
 
+def test_observe_sweep_keeps_restriction_key_card_ids_distinct_for_long_same_key_subjects(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    prefix = "identical-long-subject-prefix-" * 4
+    targets = [
+        vault / "notes" / f"{prefix}one.md",
+        vault / "notes" / f"{prefix}two.md",
+    ]
+    original = note_text(title="Long restricted note").replace(
+        "tags: []\n", "superseded: true\ntags: []\n"
+    )
+    for target in targets:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(original, encoding="utf-8")
+    target_ids = {target.relative_to(vault).as_posix() for target in targets}
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "seed long restricted notes")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    for target in targets:
+        target.write_text(note_text(title="Long restricted note"), encoding="utf-8")
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "remove same long-path restriction key")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    cards = sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md"))
+    assert len(cards) == 2
+    assert len({card.name for card in cards}) == 2
+    assert {read_frontmatter(card)["target"] for card in cards} == target_ids
+
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted((vault / "inbox").glob("flag-cs3-restriction-key-removed-*.md")) == cards
+
+
+def test_observe_sweep_keeps_foreign_edit_card_ids_distinct_for_long_same_hash_subjects(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    prefix = "identical-long-subject-prefix-" * 4
+    targets = [
+        vault / "notes" / f"{prefix}one.md",
+        vault / "notes" / f"{prefix}two.md",
+    ]
+    for target in targets:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(note_text(title="Long foreign edit"), encoding="utf-8")
+    target_ids = {target.relative_to(vault).as_posix() for target in targets}
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "seed long foreign edit notes")
+    observe_pi_edits_from_status(vault, machine="test-machine")
+
+    changed = note_text(title="Long foreign edit") + "\nChanged out of band.\n"
+    for target in targets:
+        target.write_text(changed, encoding="utf-8")
+    git(vault, "add", "--", *sorted(target_ids))
+    git(vault, "commit", "-m", "same-hash foreign edits")
+    result = observe_pi_edits_from_status(vault, machine="test-machine")
+
+    assert [finding["kind"] for finding in result["findings"]] == [
+        "foreign-edit",
+        "foreign-edit",
+    ]
+    cards = sorted((vault / "inbox").glob("flag-cs3-foreign-edit-*.md"))
+    assert len(cards) == 2
+    assert len({card.name for card in cards}) == 2
+    assert {read_frontmatter(card)["target"] for card in cards} == target_ids
+
+    observe_pi_edits_from_status(vault, machine="test-machine")
+    assert sorted((vault / "inbox").glob("flag-cs3-foreign-edit-*.md")) == cards
+
+
 def test_observe_sweep_seeds_clean_bundle_file_baseline(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     init_git(vault, "writer@example.invalid", "Trusted Writer")

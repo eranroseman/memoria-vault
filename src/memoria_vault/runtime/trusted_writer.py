@@ -515,8 +515,11 @@ def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
         prefix = "cs3-restriction-key-removed-"
         key_slug = re.sub(r"[^a-z0-9]+", "-", key.lower()).strip("-")
         subject_slug = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")
-        subject_limit = 60 - len(prefix) - len(key_slug) - 1
-        slug = f"{prefix}{subject_slug[:subject_limit].rstrip('-')}-{key_slug}"
+        subject_fingerprint = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
+        subject_limit = 60 - len(prefix) - len(subject_fingerprint) - len(key_slug) - 2
+        slug = (
+            f"{prefix}{subject_slug[:subject_limit].rstrip('-')}-{subject_fingerprint}-{key_slug}"
+        )
     else:
         current = str(finding["current_human_sha256"])
         title = f"Foreign edit: {subject}"
@@ -525,7 +528,15 @@ def _route_finding_to_inbox(vault: Path, finding: Mapping[str, str]) -> None:
             f"expected {markdown_code_span(str(finding['prior_human_sha256']))}, "
             f"found {markdown_code_span(current)}."
         )
-        slug = f"cs3-foreign-edit-{current.removeprefix('sha256:')[:12]}-{subject}"
+        prefix = "cs3-foreign-edit-"
+        current_slug = current.removeprefix("sha256:")[:12]
+        subject_slug = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")
+        subject_fingerprint = sha256_bytes(subject.encode("utf-8")).removeprefix("sha256:")[:12]
+        subject_limit = 60 - len(prefix) - len(current_slug) - len(subject_fingerprint) - 2
+        slug = (
+            f"{prefix}{current_slug}-"
+            f"{subject_slug[:subject_limit].rstrip('-')}-{subject_fingerprint}"
+        )
     write_finding(
         vault,
         "flag",
