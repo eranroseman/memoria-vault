@@ -30,6 +30,13 @@ synthesis-vs-structural split is by *actor*: open questions and contradictions
 are the **PI's** unfinished thinking; loose ends and Drift watch are the
 **Linter operation's** structural debt — kept separate, not collapsed.
 
+## Dashboard map
+
+- [Daily glance](daily-glance/) — daily attention
+- [Synthesis agenda](synthesis-agenda/) — unfinished thinking
+- [Structural health](structural-health/) — vault integrity
+- [Operational health](operational-health/) — runtime evidence
+
 ## Related
 
 - How to operate the shipped workspace: [Using Obsidian](../../../how-to-guides/using-obsidian/README.md)
