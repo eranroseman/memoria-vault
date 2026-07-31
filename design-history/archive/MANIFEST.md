@@ -7,10 +7,13 @@ adjudications, and early explorations that the summaries distilled from.
 
 ## What this is (and isn't)
 
-The curated `design-history/00-origins.md … 20-alpha.20.md` records are the
+The curated `design-history/00-origins.md … 21-alpha.21.md` records are the
 **authoritative, compiled history** — authored *from* this material. This archive
 is the **appendix**: the detail (research findings, adjudication reasoning,
 rejected explorations) that the summaries condense.
+
+Raw links in the curated records retain their historical paths. Targets pruned
+from this archive are recoverable from `scratch-final` or Git history.
 
 It holds **research and explorations only**. Release-engineering process
 artifacts (exec-plans, release-plans, validation logs, spike scripts, test

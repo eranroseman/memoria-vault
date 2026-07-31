@@ -1,6 +1,6 @@
 # Part I — Origins (pre-alpha.1)
 
-*This prologue is context, not a version entry: it is the design Memoria inherited on day one of alpha.1. Sources: the researcher's origin notes ([researcher-notes.md](sources/researcher-notes.md)); the pre-alpha.1 Drive "Old Skeleton" snapshot dated 2026-05-29 ([sources/old-skeleton/](sources/old-skeleton/)); and the alpha.11 design's own genesis account.*
+*This prologue is context, not a version entry: it is the design Memoria inherited on day one of alpha.1. Sources: the researcher's origin notes ([researcher-notes.md](archive/researcher-notes.md)); the pre-alpha.1 Drive "Old Skeleton" snapshot dated 2026-05-29 ([archive/old-skeleton/](archive/old-skeleton/)); and the alpha.11 design's own genesis account.*
 
 ## The goal it started from
 
