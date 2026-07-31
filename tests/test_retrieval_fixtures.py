@@ -10,6 +10,7 @@ grouped explore payload.
 
 from __future__ import annotations
 
+import datetime
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -169,6 +170,32 @@ def test_fixture_form_validates_calendar_dates_and_normalizes_yaml_dates() -> No
             "frozen_on": "2026-07-18",
         }
     ]
+
+
+def test_fixture_form_refuses_datetime_values_for_calendar_dates() -> None:
+    yaml_timestamp = yaml.safe_load(
+        """
+        - id: yaml-timestamp
+          shape: 1
+          query: example query
+          gold: [settles-2016-spaced-repetition#^p0007]
+          metric: hit@5
+          registered: 2026-07-17T12:30:00
+          frozen: false
+        """
+    )
+    assert isinstance(yaml_timestamp[0]["registered"], datetime.datetime)
+
+    for broken in [
+        valid_row(registered=datetime.datetime(2026, 7, 17, 12, 30, tzinfo=datetime.UTC)),
+        yaml_timestamp[0],
+    ]:
+        try:
+            validate_retrieval_fixture_rows([broken])
+        except ValueError as exc:
+            assert "registered must be a valid ISO calendar date" in str(exc)
+        else:
+            raise AssertionError("datetime calendar values must be refused")
 
 
 def test_shape1_gold_maps_to_document_paths_and_feeds_evaluate_bm25(tmp_path: Path) -> None:

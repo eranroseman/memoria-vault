@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -109,9 +109,7 @@ def validate_retrieval_fixture_rows(
 
 def _normalize_calendar_date(value: object, field: str, source: str, case_id: str) -> str:
     """Return an ISO date while refusing scalar coercion and impossible dates."""
-    if isinstance(value, datetime):
-        value = value.date()
-    if isinstance(value, date):
+    if type(value) is date:
         return value.isoformat()
     if not isinstance(value, str) or not _DATE_RE.fullmatch(value):
         raise ValueError(f"{source}: {case_id}: {field} must be a valid ISO calendar date")
