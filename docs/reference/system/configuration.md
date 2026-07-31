@@ -17,7 +17,8 @@ linked reference pages and schema files.
 | Surface | Source | Installed location | Owner | Edit policy | Validator |
 | --- | --- | --- | --- | --- | --- |
 | Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<workspace>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
-| Runtime workspace seed | `src/memoria_vault/product/workspace_seed/**` except the agent/MCP bundle | copied by `memoria init` | Memoria | Edit source; reinstall or repair workspace | package-seed tests |
+| Runtime-managed workspace seed | Packaged seed paths except the PI-owned preference and first-init bundle rows below | copied by `memoria init` | Memoria | Edit source; reinstall or repair workspace | package-seed tests |
+| PI-owned view preferences | `catalog.base`, `claims.base`, `inbox.base`, `projects.base`, `sources.base`, `.obsidian/graph.json`, `.obsidian/types.json`, `steering.md`, `system/vocabulary.md` in `src/memoria_vault/product/workspace_seed/` | copied by `memoria init`; Obsidian files and Base files are skipped by `--no-obsidian` | PI after bootstrap | Edit the installed copy directly; `memoria doctor --repair` restores only a missing copy and preserves an existing one | seed-lifecycle tests |
 | First-init agent/MCP bundle | `src/memoria_vault/product/workspace_seed/.claude/`, `src/memoria_vault/product/workspace_seed/.codex/hooks.json`, `src/memoria_vault/product/workspace_seed/.mcp.json`, `src/memoria_vault/product/workspace_seed/CLAUDE.md` | copied once by `memoria init`, including `--no-obsidian` | PI after bootstrap | Configure hosts; `memoria doctor --repair` neither creates nor overwrites it | package-seed tests |
 | Schema config | `src/memoria_vault/product/workspace_seed/.memoria/schemas/**` | `<workspace>/.memoria/schemas/**` | Memoria | Edit source; reinstall or repair workspace | linter and schema tests |
 | Search index state | checked-only BM25 input tree and manifest | `<workspace>/.memoria/index/search/` | generated | Rebuild; do not hand-edit | `memoria doctor --check search` |
@@ -27,7 +28,8 @@ linked reference pages and schema files.
 
 | Change | Command |
 | --- | --- |
-| Schema or workspace source config | reinstall or run `memoria doctor --repair`, then run the linter |
+| Schema or runtime-managed workspace source config | reinstall or run `memoria doctor --repair`, then run the linter |
+| PI-owned view preference | edit the installed copy directly; repair only restores a missing copy |
 | First-init agent/MCP configuration | configure the PI-owned copy directly; repair does not manage it |
 | Search index inputs | `memoria workspace rebuild --search` |
 
