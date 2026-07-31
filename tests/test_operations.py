@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import shutil
 import subprocess
 from copy import deepcopy
@@ -22,6 +23,7 @@ from memoria_vault.runtime.operations import (
     load_runner_provider_config,
     require_allowed_network,
     resolve_operation_runner,
+    run_operation_model_text,
     validate_operation_policy,
 )
 from memoria_vault.runtime.operations import (
@@ -304,6 +306,9 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert events[1]["model"] == "deterministic-fixture"
     assert events[1]["model_params"] == {"temperature": 0}
     assert events[1]["prompt_hash"].startswith("sha256:")
+    assert events[1]["usage"] is None
+    assert events[1]["cost_usd"] is None
+    assert events[1]["elapsed_s"] == 0.0
     assert events[-1]["suggestions"] == result["hub_suggestions"]
     assert events[-1]["outputs"] == ["digests/source-alpha.md", *result["hub_paths"]]
 
@@ -360,6 +365,71 @@ def test_prompt_operation_neutralizes_model_output_before_staging(
     assert events[1]["output_hash"] == (
         "sha256:" + hashlib.sha256(raw_output.encode("utf-8")).hexdigest()
     )
+    assert events[1]["usage"] == {
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "cache_read_tokens": 2,
+        "cache_write_tokens": 1,
+        "total_tokens": 25,
+    }
+    assert events[1]["cost_usd"] == pytest.approx(0.0125)
+    assert events[1]["elapsed_s"] == pytest.approx(0.25)
+
+
+def test_run_operation_model_text_records_telemetry_without_content(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path)
+    policy = compile_policy()
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._run_prompt_model",
+        lambda _policy, _runner, _prompt, _input: {
+            "text": "tier-two verdict text",
+            "usage": {
+                "input_tokens": 17,
+                "output_tokens": 5,
+                "cache_read_tokens": 2,
+                "cache_write_tokens": 1,
+                "total_tokens": 25,
+            },
+            "cost_usd": 0.0125,
+            "elapsed_s": 0.25,
+        },
+    )
+
+    call = call_with_context(
+        run_operation_model_text,
+        vault,
+        policy,
+        chat_runner(),
+        "tier-two prompt body",
+        input_text="left excerpt\n\nright excerpt",
+        call_id="surface-tensions:tier2:testcall",
+        route="surface-tensions-tier2",
+        purpose="surface-tensions",
+        machine="tier2-machine",
+    )
+
+    assert call["output"] == "tier-two verdict text"
+    events = list(iter_jsonl(vault / ".memoria/journal/tier2-machine.jsonl"))
+    model_call = next(event for event in events if event["event"] == "model_call")
+    assert model_call["usage"] == {
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "cache_read_tokens": 2,
+        "cache_write_tokens": 1,
+        "total_tokens": 25,
+    }
+    assert model_call["cost_usd"] == pytest.approx(0.0125)
+    assert model_call["elapsed_s"] == pytest.approx(0.25)
+    # No content capture: counts, cost, and timing only — never prompt or output text.
+    serialized = json.dumps(model_call)
+    assert "tier-two prompt body" not in serialized
+    assert "tier-two verdict text" not in serialized
+    assert "left excerpt" not in serialized
+    assert all(isinstance(value, int) for value in model_call["usage"].values())
+    assert isinstance(model_call["cost_usd"], float)
+    assert isinstance(model_call["elapsed_s"], float)
 
 
 def test_digest_and_hub_apply_neutralize_source_model_and_topic_text(
