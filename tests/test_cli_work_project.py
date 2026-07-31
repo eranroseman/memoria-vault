@@ -50,9 +50,9 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["result"]["work_id"] == "doi-10.1000_import.2026"
-    assert output["enrichment_job"]["operation_id"] == "enrich-source"
-    assert output["enrichment_job"]["status"] == "pending"
+    assert output["entries_total"] == 1
+    assert output["admitted"] == ["doi-10.1000_import.2026"]
+    assert len(output["enrichment_jobs"]) == 1
     assert not (workspace / "catalog/sources/doi-10.1000_import.2026/source.md").exists()
     with state.connect(workspace) as conn:
         row = conn.execute(
@@ -61,12 +61,12 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
         ).fetchone()
         enrich = conn.execute(
             "SELECT operation_id, status, actor FROM operation_requests WHERE request_id = ?",
-            ("enrich-doi-10.1000_import.2026_import-bibtex",),
+            (output["enrichment_jobs"][0],),
         ).fetchone()
     assert tuple(row) == (
         "Alpha Import",
         "unchecked",
-        output["result"]["content_path"],
+        ".memoria/blobs/source-content/doi-10.1000_import.2026/content.txt",
     )
     assert tuple(enrich) == ("enrich-source", "pending", "operation")
 
@@ -1287,7 +1287,8 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["result"]["work_id"] == "book2026"
+    assert output["entries_total"] == 1
+    assert output["admitted"] == ["book2026"]
     assert not (workspace / "catalog/sources/book2026/source.md").exists()
     with state.connect(workspace) as conn:
         row = conn.execute(
@@ -1560,8 +1561,9 @@ def test_cli_work_import_default_leaves_enrichment_unqueued(
 
     assert rc == 0
     assert output["ok"] is True
-    assert "enrichment_job" not in output
-    assert "index_refresh_s" not in output
+    assert output["entries_total"] == 1
+    assert output["enrichment_jobs"] == []
+    assert output["index_refresh_s"] > 0.0
     with state.connect(workspace) as conn:
         pending = conn.execute(
             "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'enrich-source'"
@@ -1588,12 +1590,12 @@ def test_cli_work_import_single_enrich_does_not_requeue_existing_doi(
     first = _bulk_import(workspace, bibtex, "--enrich", "--idempotency-key", "first-import")
     assert main(first) == 0
     first_out = json.loads(capsys.readouterr().out)
-    assert first_out["enrichment_job"]["operation_id"] == "enrich-source"
+    assert len(first_out["enrichment_jobs"]) == 1
 
     retry = _bulk_import(workspace, bibtex, "--enrich", "--idempotency-key", "retry-import")
     assert main(retry) == 0
     retry_out = json.loads(capsys.readouterr().out)
-    assert "enrichment_job" not in retry_out
+    assert retry_out["enrichment_jobs"] == []
     with state.connect(workspace) as conn:
         enrich = conn.execute(
             "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'enrich-source'"
@@ -1808,14 +1810,14 @@ def test_cli_work_import_bulk_csl_array_admits_each_item(
 
 
 @pytest.mark.parametrize(
-    ("text", "error"),
+    "text",
     [
-        ("42", "CSL import expects a JSON object or one-item array"),
-        ("[42]", "CSL import expects one item"),
+        "42",
+        "[42]",
     ],
 )
-def test_cli_work_import_invalid_csl_keeps_legacy_single_entry_error(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], text: str, error: str
+def test_cli_work_import_invalid_csl_reports_one_failed_bulk_row(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], text: str
 ) -> None:
     workspace = tmp_path / "workspace"
     csl = tmp_path / "invalid.csl.json"
@@ -1838,8 +1840,12 @@ def test_cli_work_import_invalid_csl_keeps_legacy_single_entry_error(
     )
     out = json.loads(capsys.readouterr().out)
 
-    assert rc == 2
-    assert out["error"] == error
+    assert rc == 1
+    assert out["ok"] is False
+    assert out["entries_total"] == 1
+    assert out["admitted"] == []
+    assert out["skipped"] == []
+    assert out["failed"] == [{"ref": "entry-1", "error": "CSL entry must be a JSON object"}]
 
 
 @pytest.mark.parametrize(

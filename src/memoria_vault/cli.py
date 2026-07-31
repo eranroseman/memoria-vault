@@ -962,39 +962,10 @@ def _cmd_work_import(args: argparse.Namespace) -> int:
         except ValueError:
             entries = [text]
         else:
-            if isinstance(csl_data, list) and (
-                not csl_data
-                or (len(csl_data) > 1 and all(isinstance(item, dict) for item in csl_data))
-            ):
+            if isinstance(csl_data, list) and all(isinstance(item, dict) for item in csl_data):
                 entries = split_csl_entries(text)
             else:
                 entries = [text]
-    if len(entries) == 1:
-        if args.format == "bibtex":
-            from memoria_vault.runtime.capture import bibtex_capture_payload
-
-            payload = bibtex_capture_payload(text)
-        else:
-            from memoria_vault.runtime.capture import csl_capture_payload
-
-            csl_item = _read_csl_item(text)
-            payload = csl_capture_payload(csl_item, raw_text=text)
-        try:
-            already_admitted = (
-                state.catalog_source(_workspace(args), str(payload["work_id"])) is not None
-            )
-        except ValueError:
-            # Preserve the legacy single-entry error surface for an invalid work ID;
-            # the capture operation below remains its authoritative validator.
-            already_admitted = False
-        output = _enqueue_and_run(args, "capture-source", payload)
-        if (
-            args.enrich
-            and not already_admitted
-            and (enrichment := _queue_import_enrichment(args, payload, output))
-        ):
-            output["enrichment_job"] = enrichment
-        return _emit(output, args)
     return _emit(_bulk_work_import(args, entries), args)
 
 
@@ -3089,17 +3060,6 @@ def _next_heading(lines: list[str], start: int) -> int:
         if lines[index].startswith("## "):
             return index
     return len(lines)
-
-
-def _read_csl_item(text: str) -> dict[str, Any]:
-    data = json.loads(text)
-    if isinstance(data, list):
-        if len(data) != 1 or not isinstance(data[0], dict):
-            raise ValueError("CSL import expects one item")
-        return data[0]
-    if isinstance(data, dict):
-        return data
-    raise ValueError("CSL import expects a JSON object or one-item array")
 
 
 def _search_status(workspace: Path) -> dict[str, Any]:

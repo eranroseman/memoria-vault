@@ -336,36 +336,35 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: `state.catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None` (runtime/state.py:1603 — the O1 resume-pre-check pattern; it sanitizes `source_ref` internally, so raw payload work_ids match); `engine_api.run_operation(workspace, operation_id, payload, *, actor, idempotency_key=None, schedule_id=None, command="") -> {ok, job, result}` (engine/api.py:414-444); `_queue_import_enrichment(args, payload, output) -> dict | None` (cli.py:2101-2127, DOI-gated at :2109 — unchanged in this task: bulk keeps the shipped auto-enqueue default until P.3 flips it); `enqueue_operation`'s request-id derivation `job_id = safe_filename(idempotency_key)` (worker.py:123-141, paths.py:15-17) — makes bulk request ids greppable as `import-<run_id>-%`.
 - Produces: `build_entry_payload(fmt: str, entry_text: str) -> dict[str, Any]` and `entry_ref(fmt: str, entry_text: str, index: int) -> str` in `runtime/bulk_import.py` (the adapter section's normalization interception point and the worklist section's failed-row item-ref rule, respectively); `_bulk_work_import(args, entries) -> dict` returning `{ok, run_id, format, entries_total, admitted, skipped, failed:[{ref,error}], enrichment_jobs}` (P.3 adds `index_refresh_s`); run-scoped idempotency keys `import-<run_id>-<work_id>` with `run_id = uuid.uuid4().hex`.
 
-> **Execution amendment (2026-07-30): preserve single-entry CSL errors and
-> per-row honesty.** This supersedes the unconditional CSL
-> `split_csl_entries(text)` dispatch and the narrower failure snippets below.
+> **Execution amendment (2026-07-31): clean-slate import contract.** There are
+> no installed vaults to preserve, so every parsed input count — zero, one, or
+> many — takes `_bulk_work_import`; delete the single-entry branch and
+> `_read_csl_item`. This supersedes the compatibility amendment above and all
+> single-entry-preservation instructions in this task.
 >
-> 1. **Classify CSL before splitting.** `json.loads(text)` is only a classifier:
->    `[]` takes the bulk zero-row path; only an array of more than one object
->    takes `split_csl_entries(text)` and bulk. A JSON object, one-item array,
->    scalar, malformed JSON, or any array containing a non-object stays in the
->    existing single-entry `_read_csl_item(text)` path. This preserves its exact
->    legacy errors (notably `42` → `CSL import expects a JSON object or one-item
->    array`, `[42]` → `CSL import expects one item`) while retaining the deliberate
->    zero-entry result for `[]`.
-> 2. **Keep failure rows local.** The per-entry `try` covers payload building,
->    `work_id` extraction, `state.catalog_source(...)`, and
->    `engine_api.run_operation(...)`. A `ValueError` from any of those seams
->    appends `{ref: entry_ref(...), error: str(exc)}` and continues; in
->    particular, a root-escaping Work ID is a named failed row rather than a
->    run abort. Worker-result failures use the same `entry_ref(...)`, not a
->    payload title/work-id fallback.
+> 1. **Classify CSL only to make rows.** A JSON object becomes `[text]`; an
+>    array whose items are all objects (including `[]` and a one-item array)
+>    uses `split_csl_entries(text)`; malformed JSON, scalars, and arrays with a
+>    non-object become `[text]`. In every case the resulting list goes to the
+>    bulk driver. Invalid content is therefore one named failed row instead of
+>    a separate CLI error surface; `[]` remains the deliberate zero-row result.
+> 2. **Keep validation and failure rows local.** The per-entry `try` covers
+>    payload building, `work_id` extraction, `state.catalog_source(...)`, and
+>    `engine_api.run_operation(...)`. A `ValueError` from any seam appends
+>    `{ref: entry_ref(...), error: str(exc)}` and continues; a root-escaping
+>    Work ID is a named failed row rather than a run abort. Worker-result
+>    failures use the same `entry_ref(...)`, not a payload title/work-id
+>    fallback.
 > 3. **Mirror the shipped BibTeX parser for recoverable refs.** `_CITEKEY`
 >    accepts any nonempty entry-type text before its first `{` or `(`, as the
 >    shipped parser does (for example `@article-type{...}` and
 >    `@custom:type{...}`); a missing type still falls back to `entry-<index>`.
-> 4. **Additional pins.** Add tests for the two preserved CSL errors, a valid /
->    root-escaping-ID / valid continuation sequence, empty BibTeX and `[]` CSL
->    returning `ok: false`, `entries_total: 0`, and no capture requests, and a
->    caller-supplied bulk `--idempotency-key` being ignored in favor of
->    `import-<run_id>-...` request IDs. The legacy-CSL preservation tests pass
->    before P.2; the zero-entry, continuation, matcher, and caller-key tests
->    supply additional red proof.
+> 4. **Additional pins.** One-entry BibTeX and CSL imports report the normal
+>    bulk summary and use `enrichment_jobs`; invalid CSL values report one
+>    `entry-1` failed row. Empty BibTeX and `[]` CSL return `ok: false`,
+>    `entries_total: 0`, and no capture requests. A caller-supplied
+>    `--idempotency-key` is ignored for every count in favor of
+>    `import-<run_id>-...` request IDs.
 
 - [ ] **Step 1: Write the failing contract tests** — append to `tests/test_bulk_import.py`:
 
@@ -804,16 +803,13 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 > bibliographic-input row too, so no published reference still promises
 > automatic import enrichment.
 
-> **Execution amendment (2026-07-30): do not requeue a single-entry retry.**
-> This supersedes the simple single-entry gate in Step 4(b). After building the
-> existing single payload, precheck `state.catalog_source(_workspace(args),
-> str(payload["work_id"]))`; a `ValueError` means "not already admitted" so the
-> following `capture-source` call remains the authoritative validator and keeps
-> its legacy invalid-ID error surface. Always run that existing capture call,
-> but require both `args.enrich` and no pre-existing catalog row before calling
-> `_queue_import_enrichment`. Pin two `--enrich` imports of the same entry under
-> different idempotency keys: the retry has no `enrichment_job` and the database
-> still has exactly one `enrich-source` request.
+> **Execution amendment (2026-07-31): one retry rule for every import.** The
+> bulk driver alone prechecks `state.catalog_source(...)`, mints the run-scoped
+> request key, and queues `--enrich` only for newly admitted DOI-bearing rows.
+> A one-entry retry is consequently a normal bulk skip: it has
+> `enrichment_jobs: []` and leaves exactly one `enrich-source` request in the
+> database. There is no single-entry precheck, idempotency behavior, or error
+> surface to preserve.
 
 - [ ] **Step 1: Write the failing tests** — append to `tests/test_cli_work_project.py`:
 
