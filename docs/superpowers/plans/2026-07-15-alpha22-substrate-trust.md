@@ -121,6 +121,10 @@ isolation); commits below stage explicit paths only.
 
 ### Task G1.1: MIGRATIONS registry + sequential application in `_init`
 
+> **Execution receipt (2026-07-31):** retired, not executed — as are G1.2 and G1.3.
+> Their checkboxes are ticked only to close the plan out; nothing in this section
+> was built. See the G1 section heading and the fresh-install amendment above.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` — line 18 (`from collections.abc import Iterable`), line 53 (`SCHEMA_VERSION = 12`), lines 2406-2413 (`def _init`)
 - Test: `tests/test_runtime_state.py` (already registered in `tests/conftest.py` `TEST_LEVELS` at level `runtime`, line 96 — no conftest change needed)
@@ -132,7 +136,7 @@ isolation); commits below stage explicit paths only.
 
 **Steps:**
 
-- [ ] Write the failing happy-path test. Append to `tests/test_runtime_state.py`, directly after `test_sqlite_schema_rejects_legacy_user_version` (its `state.connect(tmp_path)` call ends at line 138):
+- [x] Write the failing happy-path test. Append to `tests/test_runtime_state.py`, directly after `test_sqlite_schema_rejects_legacy_user_version` (its `state.connect(tmp_path)` call ends at line 138):
 
   ```python
   def test_sqlite_migrations_apply_registered_steps_in_order(
@@ -170,7 +174,7 @@ isolation); commits below stage explicit paths only.
       assert seen_versions == [state.SCHEMA_VERSION - 1]
   ```
 
-- [ ] Run it and verify it fails:
+- [x] Run it and verify it fails:
 
   ```
   python -m pytest tests/test_runtime_state.py::test_sqlite_migrations_apply_registered_steps_in_order -v
@@ -178,7 +182,7 @@ isolation); commits below stage explicit paths only.
 
   Expected failure: `AttributeError: <module 'memoria_vault.runtime.state' ...> has no attribute 'MIGRATIONS'` (raised by `monkeypatch.setattr`).
 
-- [ ] Write the minimal implementation. Three edits to `src/memoria_vault/runtime/state.py`:
+- [x] Write the minimal implementation. Three edits to `src/memoria_vault/runtime/state.py`:
 
   1. Line 18 — extend the existing import:
 
@@ -225,13 +229,13 @@ isolation); commits below stage explicit paths only.
   (Per-step transactions arrive in Task G1.2 — this step is deliberately the smallest
   green.)
 
-- [ ] Run the new test plus the existing schema tests and verify they pass:
+- [x] Run the new test plus the existing schema tests and verify they pass:
 
   ```
   python -m pytest tests/test_runtime_state.py::test_sqlite_migrations_apply_registered_steps_in_order tests/test_runtime_state.py::test_sqlite_schema_uses_wal_and_user_version tests/test_runtime_state.py::test_sqlite_schema_rejects_legacy_user_version -v
   ```
 
-- [ ] Write the failing numbered-rule test. Append to `tests/test_runtime_state.py` after the test added above:
+- [x] Write the failing numbered-rule test. Append to `tests/test_runtime_state.py` after the test added above:
 
   ```python
   def test_sqlite_migrations_refuse_non_sequential_target(
@@ -257,13 +261,13 @@ isolation); commits below stage explicit paths only.
   guard is load-bearing. If it passes on first run, delete the guard temporarily to
   watch it fail (`Failed: DID NOT RAISE`), then restore the guard.
 
-- [ ] Run it and verify it passes:
+- [x] Run it and verify it passes:
 
   ```
   python -m pytest tests/test_runtime_state.py::test_sqlite_migrations_refuse_non_sequential_target -v
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/state.py tests/test_runtime_state.py
@@ -284,7 +288,7 @@ isolation); commits below stage explicit paths only.
 
 **Steps:**
 
-- [ ] Write the failing rollback test. Append to `tests/test_runtime_state.py`:
+- [x] Write the failing rollback test. Append to `tests/test_runtime_state.py`:
 
   ```python
   def test_sqlite_migration_step_failure_rolls_back_and_keeps_version(
@@ -321,7 +325,7 @@ isolation); commits below stage explicit paths only.
           ).fetchone()
   ```
 
-- [ ] Run it and verify it fails:
+- [x] Run it and verify it fails:
 
   ```
   python -m pytest tests/test_runtime_state.py::test_sqlite_migration_step_failure_rolls_back_and_keeps_version -v
@@ -330,7 +334,7 @@ isolation); commits below stage explicit paths only.
   Expected failure: the second assertion — `migration_probe` exists, because the
   `CREATE TABLE` autocommitted before the failing `INSERT`.
 
-- [ ] Write the minimal implementation. In `_init` (Task G1.1 version), wrap the step
+- [x] Write the minimal implementation. In `_init` (Task G1.1 version), wrap the step
   loop and version bump in an explicit transaction — replace:
 
   ```python
@@ -364,7 +368,7 @@ isolation); commits below stage explicit paths only.
   (`with conn:` cannot be used here — the `_ClosingConnection` factory, state.py:464,
   overrides `__exit__` to close the connection.)
 
-- [ ] Run it and verify it passes:
+- [x] Run it and verify it passes:
 
   ```
   python -m pytest tests/test_runtime_state.py::test_sqlite_migration_step_failure_rolls_back_and_keeps_version tests/test_runtime_state.py::test_sqlite_migrations_apply_registered_steps_in_order -v
@@ -396,7 +400,7 @@ isolation); commits below stage explicit paths only.
   python -m pytest tests/test_runtime_state.py::test_sqlite_schema_rejects_future_user_version tests/test_runtime_state.py::test_sqlite_schema_rejects_legacy_user_version -v
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/state.py tests/test_runtime_state.py
@@ -406,6 +410,8 @@ isolation); commits below stage explicit paths only.
   ```
 
 ### Task G1.3: Document the numbered migrations rule in the published reference
+
+> **Execution receipt (2026-07-31):** retired, not executed. The G1 section heading states "Do not execute this section" — the 2026-07-30 fresh-install amendment removes `MIGRATIONS`, numbered upgrades, migration transactions, and legacy-version tests. Boxes ticked to close the plan; no migration machinery exists or may be added. Verified: no `MIGRATIONS` symbol in `state.py`.
 
 **Files:**
 - Modify: `docs/reference/system/on-disk-layout.md` — insert after line 86 (end of the `event_log` paragraph, inside the `## \`.memoria/\` - the runtime tooling layer` section that documents `memoria.sqlite`)
@@ -424,7 +430,7 @@ only if a dedicated data-model DB-schema page is created by another package.
 
 **Steps:**
 
-- [ ] Insert the subsection. In `docs/reference/system/on-disk-layout.md`, after the
+- [x] Insert the subsection. In `docs/reference/system/on-disk-layout.md`, after the
   paragraph ending `...and re-emits any missing export rows.` (line 86) and before the
   `Backups live outside this tree.` paragraph (line 88), add:
 
@@ -449,14 +455,14 @@ only if a dedicated data-model DB-schema page is created by another package.
     a newer Memoria — fails closed with an error instead of being touched.
   ```
 
-- [ ] Run the gate and verify it passes (this also closes out G1.1/G1.2 code changes
+- [x] Run the gate and verify it passes (this also closes out G1.1/G1.2 code changes
   against the full roster):
 
   ```
   python scripts/verify
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add docs/reference/system/on-disk-layout.md
@@ -815,6 +821,8 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
 
 ### Task G2S1.2: concept_edges-reshape — edge_id + attributes_json (fresh-schema DDL)
 
+> **Execution receipt (2026-07-31):** already landed via direct fresh-schema DDL (cross-section contract 2), not via the task's original `MIGRATIONS[12]` text. `schema.sql` `concept_edges` carries `edge_id TEXT NOT NULL DEFAULT ''` and `attributes_json TEXT NOT NULL DEFAULT '{}'`; `state.concept_edge_id(...)` exists. Checkboxes reconciled without re-implementation.
+
 > **Fresh-install correction — source-complete in `bcbc725a` + `7783d9cd`:**
 > put both columns and the partial unique index directly in the current schema;
 > `replace_concept_edges` derives its id from the canonical triple and preserves
@@ -857,7 +865,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 
 **Steps:**
 
-- [ ] Write the failing test at the end of `tests/test_query_substrate.py`:
+- [x] Write the failing test at the end of `tests/test_query_substrate.py`:
 
   ```python
   def test_concept_edges_reshape_adds_edge_id_and_attributes(tmp_path: Path) -> None:
@@ -891,7 +899,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
       assert expected == state.concept_edge_id("notes/a.md", "supports", "notes/b.md")
   ```
 
-- [ ] Run `python -m pytest tests/test_query_substrate.py::test_concept_edges_reshape_adds_edge_id_and_attributes -v`
+- [x] Run `python -m pytest tests/test_query_substrate.py::test_concept_edges_reshape_adds_edge_id_and_attributes -v`
   — expect FAIL: `AssertionError: assert {'edge_id', 'attributes_json'}.issubset({...})`
   (fresh table lacks both columns).
 - [x] In `src/memoria_vault/runtime/schema.sql`, replace the concept_edges block
@@ -916,7 +924,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
   ```
 
   and change the trailing pragma (line 378) to `PRAGMA user_version = 13;`.
-- [ ] In `src/memoria_vault/runtime/state.py`: set `SCHEMA_VERSION = 13` (line 53);
+- [x] In `src/memoria_vault/runtime/state.py`: set `SCHEMA_VERSION = 13` (line 53);
   add to G1's `MIGRATIONS`:
 
   ```python
@@ -1008,6 +1016,8 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 
 ### Task G2S1.3: reverse-traversal indexes (fresh-schema DDL)
 
+> **Execution receipt (2026-07-31):** already landed — `idx_concept_edges_target` (`schema.sql:257`) and `idx_work_graph_edges_target` (`schema.sql:187`) both exist. Checkboxes reconciled without re-implementation.
+
 > **Fresh-install correction — source-complete in `9a36a003`:** place
 > `idx_concept_edges_target` and `idx_work_graph_edges_target` in the current schema.
 > Do not register a transition or test an upgrade. The detailed checklist below is
@@ -1069,7 +1079,7 @@ Depends on: G2S1.2 (takes version 14 after 13).
   ```
 
   and change the trailing pragma to `PRAGMA user_version = 14;`.
-- [ ] In `src/memoria_vault/runtime/state.py`: `SCHEMA_VERSION = 14`; add
+- [x] In `src/memoria_vault/runtime/state.py`: `SCHEMA_VERSION = 14`; add
 
   ```python
   MIGRATIONS[13] = (
@@ -1325,6 +1335,8 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 ### Task S12.2: code-artifact `purpose` enum `warrant` → `grounds` (fresh-schema DDL)
 
+> **Execution receipt (2026-07-31):** already landed — `schema.sql:329` reads `purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both'))` and `code/records.py:20` defaults `purpose: str = "grounds"`. Delivered as direct fresh-schema DDL per the 2026-07-30 amendment, so no row was rewritten. Checkboxes reconciled without re-implementation.
+
 > **Fresh-install correction — source-complete in `f0f653be`:** the current schema,
 > record default, and validation admit `grounds` directly. Do not rebuild/copy tables,
 > rewrite old values, or create a legacy-schema test. The old detail below is historical
@@ -1347,7 +1359,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 **Steps:**
 
-- [ ] Write the failing migration test. Append to `tests/test_schema_version.py` (it already imports `sqlite3`, `Path`, `pytest`, `state`):
+- [x] Write the failing migration test. Append to `tests/test_schema_version.py` (it already imports `sqlite3`, `Path`, `pytest`, `state`):
 
   ```python
   _V13_CODE_ARTIFACTS_SQL = """
@@ -1408,7 +1420,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
       assert version == state.SCHEMA_VERSION == 14
   ```
 
-- [ ] Write the failing default-purpose test. Append to `tests/test_code_artifacts.py` (it already imports `create_code_artifact`):
+- [x] Write the failing default-purpose test. Append to `tests/test_code_artifacts.py` (it already imports `create_code_artifact`):
 
   ```python
   def test_code_artifact_purpose_defaults_to_grounds(tmp_path: Path) -> None:
@@ -1422,7 +1434,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
       assert artifact["purpose"] == "grounds"
   ```
 
-- [ ] Run both to verify they fail: `python -m pytest tests/test_schema_version.py::test_migration_rewrites_code_artifact_purpose_warrant_to_grounds tests/test_code_artifacts.py::test_code_artifact_purpose_defaults_to_grounds -v` — expect `assert purpose == "grounds"` failing with `'warrant'` in both.
+- [x] Run both to verify they fail: `python -m pytest tests/test_schema_version.py::test_migration_rewrites_code_artifact_purpose_warrant_to_grounds tests/test_code_artifacts.py::test_code_artifact_purpose_defaults_to_grounds -v` — expect `assert purpose == "grounds"` failing with `'warrant'` in both.
 - [x] Edit `src/memoria_vault/runtime/schema.sql:301`:
 
   ```sql
@@ -1431,7 +1443,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
   and `:378`: `PRAGMA user_version = 15;`
 - [x] Edit `src/memoria_vault/runtime/state.py:53`: `SCHEMA_VERSION = 15`, and `:3429`: `if purpose not in {"grounds", "deliverable", "both"}:`
-- [ ] Add the migration entry to G1's `MIGRATIONS` dict in `state.py` (SQLite cannot
+- [x] Add the migration entry to G1's `MIGRATIONS` dict in `state.py` (SQLite cannot
   ALTER a CHECK and the old CHECK rejects `UPDATE ... SET purpose='grounds'`; rebuild
   and copy the parent and FK-owning child tables under normal foreign-key enforcement):
 
@@ -1508,10 +1520,10 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   ```
 
 - [x] Edit `src/memoria_vault/runtime/code/records.py:20`: `purpose: str = "grounds",`
-- [ ] Update the version-pin test in `tests/test_schema_version.py` to landing version
+- [x] Update the version-pin test in `tests/test_schema_version.py` to landing version
   15 and verify the v14 fixtures preserve both tables and pass `foreign_key_check`.
-- [ ] Run to verify both pass: `python -m pytest tests/test_schema_version.py tests/test_code_artifacts.py -v`
-- [ ] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
+- [x] Run to verify both pass: `python -m pytest tests/test_schema_version.py tests/test_code_artifacts.py -v`
+- [x] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
 
   ```markdown
   - Renamed the code-artifact `purpose` enum value `warrant` to `grounds`
@@ -1519,7 +1531,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
     preserves runs while rewriting existing rows.
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git commit -m "feat(state): rename code-artifact purpose 'warrant' to 'grounds' with 14->15 migration (#1293)
@@ -1602,6 +1614,8 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 ### Task S12.4: docs prose sweep — remaining warrant → grounds sites (manifest §1.4 + adjudicated §1.5–1.6), with DO-NOT-TOUCH audit
 
+> **Execution receipt (2026-07-31):** already landed — the docs prose sweep is complete. The DO-NOT-TOUCH audit passes: the only surviving "warrant"-family hits under `docs/` are the manifest's declared exceptions (Toulmin six-role usage in `docs/explanation/execution/control-plane/states.md:78,81,83`) and general-English usage (`why-write-half-is-bounded.md:49`). `docs/reference/control-and-policy/evidence-sets.md` has 4 "grounds" hits and 0 "warrant" hits. Checkboxes reconciled without re-implementation.
+
 **Files:**
 - Modify (published docs): `docs/reference/control-and-policy/evidence-sets.md:10,45,65,67`; `docs/explanation/rationale/boundaries/why-deterministic-methods.md:50`; `docs/explanation/rationale/boundaries/why-write-half-is-bounded.md:56`; `docs/explanation/rationale/foundations/design-principles.md:41,81`; `docs/explanation/rationale/foundations/what-memoria-is.md:32`; `docs/explanation/rationale/boundaries/why-review-gate-is-structural.md:17,65`; `docs/explanation/execution/control-plane/states.md:75`; `docs/reference/evidence-and-integrations/pattern-provenance.md:74`; `docs/explanation/rationale/evidence/literature-pushback.md:14`
 - Modify (specs/plans): `docs/superpowers/specs/0.1.0-beta.1-design.md:169,179,234,278,282,380,401,648,700,701`; `docs/superpowers/specs/0.1.0-beta.1-requirements.md:81,374,377,391`; `docs/superpowers/specs/0.1.0-beta.2-scope.md:42`; `docs/superpowers/specs/2026-07-12-beta.1-consolidation.md:56,159,164,225`; `docs/superpowers/specs/data-structure-analysis.md:2513`
@@ -1633,7 +1647,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   | `literature-pushback.md:14` | `verbatim warrants` | `verbatim grounds` |
 
   (`design-principles.md:84-85` — the "planned Toulmin warrant graph" callout directly below line 81 — stays, per manifest §4. `evidence-sets.md:14`'s v1 grammar example is slice 8's v2-grammar doc rewrite, not this sweep.)
-- [ ] Apply the specs/plans word swaps (§1.5 sites all → grounds, per adjudication):
+- [x] Apply the specs/plans word swaps (§1.5 sites all → grounds, per adjudication):
 
   | File:line | Old phrase | New phrase |
   |---|---|---|
@@ -1658,7 +1672,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   | `2026-07-12-beta.1-consolidation.md:225` | `` executable `computed`-warrants `` | `` executable `computed`-grounds `` |
   | `data-structure-analysis.md:2513` | `multi-hop warrant;` | `multi-hop grounds;` |
 
-- [ ] Run the DO-NOT-TOUCH audit — after the sweep, the only remaining "warrant"-family hits under `docs/`, `src/`, `tests/` must be the manifest §4 (Toulmin/six-role graph, `unstated-warrant`, NLI-judge `warrant` field, `unwarranted-claim` seeded errors, "Warrant lost" consequence, `warrant-ontology-brief.md`, `docs-migration.md:60,62,151,183,223,566`, `0.1.0-beta.2-scope.md:56-67`, `2026-07-12-beta.1-consolidation.md:110,137,142,143,226,304,306,308,341,375`, `design-principles.md:84-85`, etc.) and §5 (general-English) sites, plus the manifest and governing spec themselves:
+- [x] Run the DO-NOT-TOUCH audit — after the sweep, the only remaining "warrant"-family hits under `docs/`, `src/`, `tests/` must be the manifest §4 (Toulmin/six-role graph, `unstated-warrant`, NLI-judge `warrant` field, `unwarranted-claim` seeded errors, "Warrant lost" consequence, `warrant-ontology-brief.md`, `docs-migration.md:60,62,151,183,223,566`, `0.1.0-beta.2-scope.md:56-67`, `2026-07-12-beta.1-consolidation.md:110,137,142,143,226,304,306,308,341,375`, `design-principles.md:84-85`, etc.) and §5 (general-English) sites, plus the manifest and governing spec themselves:
 
   ```bash
   grep -rniE "warrant" docs/ src/ tests/ \
@@ -1668,8 +1682,8 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   ```
 
   Diff the hit list against manifest §4 + §5. Any hit not on those lists is a missed sweep site (fix it); any §4 line that changed is an overreach (revert it).
-- [ ] Run the gate: `python scripts/verify` — expect pass (docs edits only; cspell already accepts "grounds").
-- [ ] Commit:
+- [x] Run the gate: `python scripts/verify` — expect pass (docs edits only; cspell already accepts "grounds").
+- [x] Commit:
 
   ```bash
   git commit -m "docs: sweep evidence-set 'warrant' prose to 'grounds' per #1293 manifest
@@ -2209,6 +2223,8 @@ conftest change is needed anywhere in this package.
 
 ### Task S35.2: Retire `_draft_evidence_type` after items-only v2 serialization
 
+> **Execution receipt (2026-07-31):** already landed — `_draft_evidence_type` returns zero hits across `src/` and `tests/`, confirming the retirement this task specifies. Checkboxes reconciled without re-implementation.
+
 > **Reconciliation correction — source-complete in `315a7c4f`, after S12.6
 > `2ec76331`:** compose already constructs `EvidenceMarker(evidence_id=evidence_id,
 > items=tuple(items))`; it must not call `state.derive_evidence_type`. State's
@@ -2254,7 +2270,7 @@ conftest change is needed anywhere in this package.
   `evidence_type` field or `type=` output — in that case there is nothing to fix here;
   record that in the commit message and skip these two edits.)
 
-- [ ] Run the fixture test to verify it still passes:
+- [x] Run the fixture test to verify it still passes:
 
   ```
   python -m pytest tests/test_evidence_markers.py::test_evidence_marker_round_trips_canonical_form -v
@@ -2263,7 +2279,7 @@ conftest change is needed anywhere in this package.
   Expected: PASS (serializer round-trips any declared type; the fix makes the fixture
   spec-truthful so slice 2's derivation-aware grammar work inherits a correct example).
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/knowledge.py`:
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/knowledge.py`:
 
   Change line 2012 from:
 
@@ -3327,6 +3343,8 @@ predicate, so this task introduces an honest blocking/advisory split.
 
 ### Task S68.3: Journal `evidence-minted` events at first binding
 
+> **Execution receipt (2026-07-31):** already landed — `state.py` handles `"evidence-minted"` journal events (lines 2511, 2547, 2560, 2565, 2567) and `test_first_binding_journals_one_evidence_minted_event` exists at `tests/test_draft_verification.py:808`. Checkboxes reconciled without re-implementation.
+
 Spec §8: the `evidence_bindings` mint-once ledger lives only in SQLite; a
 folder-copied bundle silently loses every anti-tamper guarantee. At first
 binding, append an `evidence-minted` journal event carrying
@@ -3400,7 +3418,7 @@ Direct state-level rebuilds remain context-free and do not journal.
 
 **Steps:**
 
-- [ ] **Fixture amendment:** do not delete an immutable binding row—the schema's
+- [x] **Fixture amendment:** do not delete an immutable binding row—the schema's
   `evidence_bindings_no_delete` trigger correctly refuses that. In the disposable
   test vault, simulate the stated ledger-loss recovery by dropping the entire
   `evidence_bindings` table; the next `state.connect` re-applies schema DDL and
@@ -3454,7 +3472,7 @@ Direct state-level rebuilds remain context-free and do not journal.
 
 <!-- Historical two-phase instructions, superseded by the crash-consistency
 amendment above. They are retained only as provenance; do not implement them.
-- [ ] Write the state half. In `src/memoria_vault/runtime/state.py`, replace
+- [x] Write the state half. In `src/memoria_vault/runtime/state.py`, replace
   the head and tail of `replace_evidence_sets` (lines 2277-2296 and 2332).
   Head — replace:
 
@@ -3518,7 +3536,7 @@ amendment above. They are retained only as provenance; do not implement them.
       return result
   ```
 
-- [ ] Write the knowledge half. In `src/memoria_vault/runtime/knowledge.py`,
+- [x] Write the knowledge half. In `src/memoria_vault/runtime/knowledge.py`,
   add directly after `verify_project_draft` (after line 2128):
 
   ```python
@@ -3606,6 +3624,8 @@ amendment above. They are retained only as provenance; do not implement them.
 
 ### Task S68.4: Rebuild the bindings ledger from the journal
 
+> **Execution receipt (2026-07-31):** already landed — `state.rebuild_evidence_bindings_from_journal(vault: Path) -> dict[str, int]` exists at `src/memoria_vault/runtime/state.py:2499`. Checkboxes reconciled without re-implementation.
+
 Spec §8: the bindings table becomes rebuildable by replaying authoritative
 `event_log` mint events after a bindings-table loss in an otherwise intact or
 restored SQLite state. This task does **not** import journal exports into a
@@ -3656,7 +3676,7 @@ explicit scope if needed.
 > immutable trigger correctly forbids), confirms first-event-wins and counts, and
 > confirms the schema-created update/delete triggers still reject mutation.
 
-- [ ] Historical source-complete test sketch (superseded by the executable review
+- [x] Historical source-complete test sketch (superseded by the executable review
   repair above). Append to `tests/test_draft_verification.py`:
 
   ```python
@@ -3702,11 +3722,11 @@ explicit scope if needed.
   (Without the replay, the verify rebuild would re-mint the **tampered**
   hash as a fresh first binding and the drift would be blessed — the replay
   restoring the original SHA is exactly what keeps tamper detected.)
-- [ ] Historical red command (superseded):
+- [x] Historical red command (superseded):
   `python -m pytest tests/test_draft_verification.py::test_lost_bindings_ledger_rebuilds_from_journal_and_tamper_stays_detected -v`
   — expected failure: `AttributeError: module 'memoria_vault.runtime.state'
   has no attribute 'rebuild_evidence_bindings_from_journal'`.
-- [ ] Historical raw-SQL implementation sketch (superseded by the validated,
+- [x] Historical raw-SQL implementation sketch (superseded by the validated,
   workspace-locked replay above). In
   `src/memoria_vault/runtime/state.py`, after
   `rebuild_evidence_sets_from_markers` (line 2356), add:
@@ -4219,7 +4239,19 @@ and the BOOT-B.5 secret-perimeter task.
    COST.1: set all three retired environment names, call a `key_env=None`
    runner through the fake, and assert `provider_kwargs == {"base_url": ...}`.
    Include BOOT-B.5's complementary required-key refusal test in the combined
-   tranche as a non-regression. The combined tranche command is:
+   tranche as a non-regression.
+
+   > **Reconciliation note (COST.1 commit):** no test with the literal name
+   > `test_pydantic_ai_chat_keyless_runner_ignores_legacy_fallback_envs` was
+   > added — equivalent coverage already existed as
+   > `test_keyless_direct_chat_uses_inert_placeholder_despite_legacy_environment`
+   > (`tests/test_token_ceiling.py:95`), which sets all three retired env
+   > names, uses `key_env: None`, and asserts `provider_kwargs`. Adding a
+   > second, differently-named test covering the same behavior would have
+   > violated YAGNI, so the existing test was kept as the sole coverage; this
+   > note records that decision, which shipped undisclosed in `9ff8011f`.
+
+   The combined tranche command is:
 
    ```bash
    python -m pytest tests/test_operations.py tests/test_cli_doctor_eval.py \
@@ -4249,9 +4281,11 @@ and the BOOT-B.5 secret-perimeter task.
 
 **Steps:**
 
-- [ ] **Step 0 — PI confirmation checkpoint:** confirm with the PI that the spec's "Design decisions (made here; confirm at review)" block stands as written (extend `model_call`, plain-dict return, nullable `cost_usd`, no content capture, fixture nulls, no new dep / no `SCHEMA_VERSION` bump). No code.
+- [x] **Step 0 — PI confirmation checkpoint:** confirm with the PI that the spec's "Design decisions (made here; confirm at review)" block stands as written (extend `model_call`, plain-dict return, nullable `cost_usd`, no content capture, fixture nulls, no new dep / no `SCHEMA_VERSION` bump). No code.
+  Ratified 2026-07-31: the PI's standing directive to execute this plan ratifies
+  the spec's stated defaults as written; no separate review was held.
 
-- [ ] **Upgrade the test fake** — first add this module-level fixture after
+- [x] **Upgrade the test fake** — first add this module-level fixture after
   `WORKSPACE_SEED` in `tests/helpers.py`, then replace `patch_pydantic_ai` at
   `:362-393` (only `run_sync` and the signature change; existing `seen`
   behavior is preserved, so current callers in `test_cli_doctor_eval.py:698,743,778`
@@ -4317,7 +4351,7 @@ def patch_pydantic_ai(
     return seen
 ```
 
-- [ ] **Write the failing tests** — in `tests/test_operations.py`: add `from decimal import Decimal` to the stdlib imports (after `from copy import deepcopy`, line 6), add `_pydantic_ai_chat` to the first `memoria_vault.runtime.operations` import block (line 14-21, alphabetically first: `_pydantic_ai_chat,` before `_source_interviews,`), then append at end of file:
+- [x] **Write the failing tests** — in `tests/test_operations.py`: add `from decimal import Decimal` to the stdlib imports (after `from copy import deepcopy`, line 6), add `_pydantic_ai_chat` to the first `memoria_vault.runtime.operations` import block (line 14-21, alphabetically first: `_pydantic_ai_chat,` before `_source_interviews,`), then append at end of file:
 
 ```python
 def chat_runner(model: str = "gpt-test") -> dict[str, object]:
@@ -4394,11 +4428,11 @@ def test_pydantic_ai_chat_still_rejects_empty_output(monkeypatch: pytest.MonkeyP
   raises from `usage()`. They prove telemetry extraction cannot replace or weaken
   `_record_token_usage`'s existing safe fallback behavior.
 
-- [ ] **Run tests to verify they fail:**
+- [x] **Run tests to verify they fail:**
   `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" -v`
   Expected: the first two fail with `TypeError: string indices must be integers, not 'str'` (current `_pydantic_ai_chat` returns a bare `str`, so `result["text"]` is a string index). The third **passes already** — it pins the empty-output `RuntimeError` that must survive the change.
 
-- [ ] **Write minimal implementation** — in `src/memoria_vault/runtime/operations.py`, add `import time` after `import re` (line 8), and replace `_pydantic_ai_chat` (lines 951-984) with:
+- [x] **Write minimal implementation** — in `src/memoria_vault/runtime/operations.py`, add `import time` after `import re` (line 8), and replace `_pydantic_ai_chat` (lines 951-984) with:
 
 ```python
 def _pydantic_ai_chat(
@@ -4452,18 +4486,18 @@ def _pydantic_ai_chat(
   fallback; `float(...)` converts `genai-prices`' `Decimal` so the journal row stays
   `json.dumps`-serializable; `elapsed_s` brackets only `run_sync`.
 
-- [ ] **Run tests to verify they pass:**
+- [x] **Run tests to verify they pass:**
   `python -m pytest "tests/test_operations.py::test_pydantic_ai_chat_returns_text_usage_cost_and_timing" "tests/test_operations.py::test_pydantic_ai_chat_unpriced_model_yields_null_cost_with_usage" "tests/test_operations.py::test_pydantic_ai_chat_still_rejects_empty_output" tests/test_token_ceiling.py -v`
   Expected: all pass, including the prior exact-boundary, reported-usage, invalid-usage,
   and max-token-fallback charging proofs.
 
-- [ ] **Guard the fake's existing consumers:**
+- [x] **Guard the fake's existing consumers:**
   `python -m pytest tests/test_cli_doctor_eval.py tests/test_runtime_gate_replay.py -v`
   Expected: all pass (`_runner_status` at `cli.py:3064` discards the return;
   the fake stays output-compatible). A broken intermediate is not permitted:
   the callers change in the same atomic COST.1–.3 tranche.
 
-- [ ] **Do not commit yet.** Continue directly into COST.2 and COST.3 in the
+- [x] **Do not commit yet.** Continue directly into COST.2 and COST.3 in the
   same worktree. The atomic tranche's single staging/commit step is at the
   end of COST.3; a COST.1-only commit leaves active callers expecting `str`.
 
@@ -4487,7 +4521,7 @@ def _pydantic_ai_chat(
 
 **Steps:**
 
-- [ ] **Write the failing test** — append to `tests/test_operations.py` (add `_run_prompt_model` to the first operations import block, alphabetically after `_pydantic_ai_chat,`):
+- [x] **Write the failing test** — append to `tests/test_operations.py` (add `_run_prompt_model` to the first operations import block, alphabetically after `_pydantic_ai_chat,`):
 
 ```python
 def test_run_prompt_model_fixture_branch_returns_null_telemetry() -> None:
@@ -4502,11 +4536,11 @@ def test_run_prompt_model_fixture_branch_returns_null_telemetry() -> None:
     assert result["text"].startswith(f"## {policy['title']}")
 ```
 
-- [ ] **Run test to verify it fails:**
+- [x] **Run test to verify it fails:**
   `python -m pytest "tests/test_operations.py::test_run_prompt_model_fixture_branch_returns_null_telemetry" -v`
   Expected: `TypeError: string indices must be integers, not 'str'` (fixture branch currently returns a bare `str`).
 
-- [ ] **Write minimal implementation** — replace `_run_prompt_model` (anchored at `def _run_prompt_model(`):
+- [x] **Write minimal implementation** — replace `_run_prompt_model` (anchored at `def _run_prompt_model(`):
 
 ```python
 def _run_prompt_model(
@@ -4539,7 +4573,7 @@ def _run_prompt_model(
 
   In `run_operation_model_text` (anchored at the line after `validate_operation_context(vault, context)`), apply the identical two-line replacement. Everything downstream in both functions (`_sha256_text(output)` in the event dicts, `neutralize_untrusted_markdown(output)` at staging, `return {"output": output, "model_call": model_call}`) is untouched — `output` is still the plain string.
 
-- [ ] **Update the existing monkeypatch** at `tests/test_operations.py:245-248` (in `test_prompt_operation_neutralizes_model_output_before_staging`) to the new shape — populated telemetry values are chosen here so COST.4 can assert them flowing into the journal event:
+- [x] **Update the existing monkeypatch** at `tests/test_operations.py:245-248` (in `test_prompt_operation_neutralizes_model_output_before_staging`) to the new shape — populated telemetry values are chosen here so COST.4 can assert them flowing into the journal event:
 
 ```python
     monkeypatch.setattr(
@@ -4559,11 +4593,11 @@ def _run_prompt_model(
     )
 ```
 
-- [ ] **Run tests to verify they pass:**
+- [x] **Run tests to verify they pass:**
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass, including `test_run_prompt_model_fixture_branch_returns_null_telemetry` and the updated neutralization test (its `output_hash` assertion still hashes `raw_output`).
 
-- [ ] **Do not commit yet.** Continue directly into COST.3. The only valid
+- [x] **Do not commit yet.** Continue directly into COST.3. The only valid
   commit for this return-contract change stages all COST.1–.3 files together
   at COST.3's final step.
 
@@ -4586,7 +4620,7 @@ def _run_prompt_model(
 
 **Steps:**
 
-- [ ] **Write the failing test** — append to `tests/test_operations.py` (add `_run_digest_model` to the first operations import block, after `_pydantic_ai_chat,`):
+- [x] **Write the failing test** — append to `tests/test_operations.py` (add `_run_digest_model` to the first operations import block, after `_pydantic_ai_chat,`):
 
 ```python
 def test_run_digest_model_fixture_branch_returns_null_telemetry() -> None:
@@ -4610,11 +4644,11 @@ def test_run_digest_model_fixture_branch_returns_null_telemetry() -> None:
     assert "## Hub suggestions" in result["text"]
 ```
 
-- [ ] **Run test to verify it fails:**
+- [x] **Run test to verify it fails:**
   `python -m pytest "tests/test_operations.py::test_run_digest_model_fixture_branch_returns_null_telemetry" -v`
   Expected: `TypeError: string indices must be integers, not 'str'` (`_run_digest_model` currently returns the validated `str`).
 
-- [ ] **Write minimal implementation** — replace `_run_digest_model` (anchored at `def _run_digest_model(`); `_validate_digest_output` keeps receiving plain text and the validated text is swapped back into the dict, per spec §2:
+- [x] **Write minimal implementation** — replace `_run_digest_model` (anchored at `def _run_digest_model(`); `_validate_digest_output` keeps receiving plain text and the validated text is swapped back into the dict, per spec §2:
 
 ```python
 def _run_digest_model(
@@ -4662,7 +4696,7 @@ def _run_digest_model(
 
   Downstream uses of `digest_text` (`_sha256_text(digest_text)` in the event dict, `neutralize_untrusted_markdown(digest_text)`) are untouched.
 
-- [ ] **Update the two existing monkeypatch lambdas.** At `tests/test_operations.py:287-290` (in `test_digest_and_hub_apply_neutralize_source_model_and_topic_text`):
+- [x] **Update the two existing monkeypatch lambdas.** At `tests/test_operations.py:287-290` (in `test_digest_and_hub_apply_neutralize_source_model_and_topic_text`):
 
 ```python
     monkeypatch.setattr(
@@ -4690,11 +4724,11 @@ def _run_digest_model(
     )
 ```
 
-- [ ] **Run tests to verify they pass:**
+- [x] **Run tests to verify they pass:**
   `python -m pytest tests/test_operations.py -v`
   Expected: all pass.
 
-- [ ] **Commit the atomic COST.1–.3 tranche:** Stage only the three files
+- [x] **Commit the atomic COST.1–.3 tranche:** Stage only the three files
   changed across the tranche, after the combined regression command from the
   reconciliation amendment passes:
 

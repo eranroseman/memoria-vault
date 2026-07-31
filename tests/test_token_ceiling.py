@@ -23,6 +23,14 @@ RUNNER = {
     "key_env": None,
     "params": {"temperature": 0, "max_tokens": 64},
 }
+# patch_pydantic_ai's fake now reports real usage (tests.helpers.LIVE_USAGE,
+# total_tokens=25) instead of leaving `usage` unset. _record_token_usage has
+# always preferred a valid reported total over the max_tokens fallback above
+# (see test_reported_usage_is_preferred_over_max_tokens_fallback below), so
+# every ceiling test driven by patch_pydantic_ai now charges 25 tokens per
+# call, not 64. Ceilings and expected ledger totals below are calibrated to
+# 25/call; the max_tokens=64 fallback path is exercised separately by the
+# malformed/missing-usage tests further down.
 
 
 def _reset_ledger(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -31,14 +39,17 @@ def _reset_ledger(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_ceiling_trips_after_budget_is_spent(monkeypatch: pytest.MonkeyPatch) -> None:
     _reset_ledger(monkeypatch)
-    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, "100")
+    # 2 calls x 25 tokens/call = 50, strictly over the 40-token ceiling (unlike
+    # the exact-boundary sibling test below), so the third call is the one that
+    # trips it.
+    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, "40")
     seen = patch_pydantic_ai(monkeypatch, output="fixture reply")
 
-    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt one") == "fixture reply"
-    assert operations._TOKEN_LEDGER["total_tokens"] == 64
+    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt one")["text"] == "fixture reply"
+    assert operations._TOKEN_LEDGER["total_tokens"] == 25
 
     operations._pydantic_ai_chat(POLICY, RUNNER, "prompt two")
-    assert operations._TOKEN_LEDGER["total_tokens"] == 128
+    assert operations._TOKEN_LEDGER["total_tokens"] == 50
 
     with pytest.raises(RuntimeError, match="model token ceiling reached"):
         operations._pydantic_ai_chat(POLICY, RUNNER, "prompt three")
@@ -50,11 +61,13 @@ def test_ceiling_refuses_at_the_exact_boundary_before_dispatch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _reset_ledger(monkeypatch)
-    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, "64")
+    # The ceiling equals one call's charge (25) so the second call lands exactly
+    # on the boundary.
+    monkeypatch.setenv(operations.TOKEN_CEILING_ENV, "25")
     seen = patch_pydantic_ai(monkeypatch, output="fixture reply")
 
-    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt one") == "fixture reply"
-    assert operations._TOKEN_LEDGER["total_tokens"] == 64
+    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt one")["text"] == "fixture reply"
+    assert operations._TOKEN_LEDGER["total_tokens"] == 25
 
     with pytest.raises(RuntimeError, match="model token ceiling reached"):
         operations._pydantic_ai_chat(POLICY, RUNNER, "prompt two")
@@ -72,8 +85,12 @@ def test_disabled_ceiling_never_trips(monkeypatch: pytest.MonkeyPatch, ceiling: 
     patch_pydantic_ai(monkeypatch, output="fixture reply")
 
     for index in range(3):
-        assert operations._pydantic_ai_chat(POLICY, RUNNER, f"prompt {index}") == "fixture reply"
-    assert operations._TOKEN_LEDGER["total_tokens"] == 192
+        assert (
+            operations._pydantic_ai_chat(POLICY, RUNNER, f"prompt {index}")["text"]
+            == "fixture reply"
+        )
+    # 3 calls x 25 tokens/call.
+    assert operations._TOKEN_LEDGER["total_tokens"] == 75
 
 
 def test_keyless_direct_chat_uses_inert_placeholder_despite_legacy_environment(
@@ -86,7 +103,7 @@ def test_keyless_direct_chat_uses_inert_placeholder_despite_legacy_environment(
     monkeypatch.setenv("KILOCODE_API_KEY", "legacy-gateway-secret")
     seen = patch_pydantic_ai(monkeypatch, output="fixture reply")
 
-    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt") == "fixture reply"
+    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")["text"] == "fixture reply"
     assert seen["provider_kwargs"] == {
         "base_url": "http://127.0.0.1:11434",
         "api_key": "api-key-not-set",
@@ -95,7 +112,7 @@ def test_keyless_direct_chat_uses_inert_placeholder_despite_legacy_environment(
 
 @pytest.mark.parametrize(
     "failure_site",
-    ["loader", "provider", "model", "agent", "dispatch", "output"],
+    ["loader", "provider", "model", "agent", "dispatch", "output", "cost"],
 )
 def test_direct_chat_sdk_failure_does_not_reflect_configured_key(
     monkeypatch: pytest.MonkeyPatch,
@@ -116,12 +133,22 @@ def test_direct_chat_sdk_failure_does_not_reflect_configured_key(
             if failure_site == "model":
                 raise RuntimeError(f"model rejected {configured_key}")
 
+    class FakeResponse:
+        def cost(self) -> object:
+            # Only reached when failure_site == "cost": every other site
+            # raises before the call reaches cost extraction.
+            raise RuntimeError(f"cost rejected {configured_key}")
+
     class FakeResult:
         @property
         def output(self) -> str:
             if failure_site == "output":
                 raise RuntimeError(f"output rejected {configured_key}")
             return "fixture reply"
+
+        @property
+        def response(self) -> FakeResponse:
+            return FakeResponse()
 
     class FakeAgent:
         def __init__(self, model: object) -> None:
@@ -149,6 +176,16 @@ def test_direct_chat_sdk_failure_does_not_reflect_configured_key(
         "key_env": "KILOCODE_API_KEY",
     }
     policy = {**POLICY, "allowed_network": ["https://gateway.test/v1"]}
+
+    if failure_site == "cost":
+        # cost_usd is a nullable best-effort estimate, never a breaker input:
+        # a cost-extraction failure must not fail an otherwise-completed call,
+        # so this site degrades to cost_usd=None instead of raising.
+        result = operations._pydantic_ai_chat(policy, runner, "prompt")
+        assert result["text"] == "fixture reply"
+        assert result["cost_usd"] is None
+        assert configured_key not in str(result)
+        return
 
     with pytest.raises(RuntimeError) as exc_info:
         operations._pydantic_ai_chat(policy, runner, "prompt")
@@ -184,8 +221,18 @@ def test_reported_usage_is_preferred_over_max_tokens_fallback(
         lambda: (UsageAgent, lambda model, provider: model, Passthrough),
     )
 
-    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt") == "usage reply"
+    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")["text"] == "usage reply"
     assert operations._TOKEN_LEDGER["total_tokens"] == 7
+
+
+class _RaisingTotalTokensUsage:
+    """Mimics RunUsage(input_tokens=None): usage() itself succeeds, but
+    total_tokens is a computed property (input + output) that raises on
+    access rather than on the usage() call."""
+
+    @property
+    def total_tokens(self) -> int:
+        raise TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")
 
 
 @pytest.mark.parametrize(
@@ -193,8 +240,9 @@ def test_reported_usage_is_preferred_over_max_tokens_fallback(
     [
         lambda: SimpleNamespace(total_tokens=True),
         lambda: (_ for _ in ()).throw(RuntimeError("usage unavailable")),
+        lambda: _RaisingTotalTokensUsage(),
     ],
-    ids=["boolean-total", "raising-accessor"],
+    ids=["boolean-total", "raising-accessor", "raising-property-access"],
 )
 def test_invalid_reported_usage_falls_back_to_max_tokens(
     monkeypatch: pytest.MonkeyPatch, usage: Callable[[], object]
@@ -218,7 +266,7 @@ def test_invalid_reported_usage_falls_back_to_max_tokens(
         lambda: (UsageAgent, lambda model, provider: model, Passthrough),
     )
 
-    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt") == "usage reply"
+    assert operations._pydantic_ai_chat(POLICY, RUNNER, "prompt")["text"] == "usage reply"
     assert operations._TOKEN_LEDGER["total_tokens"] == 64
 
 
