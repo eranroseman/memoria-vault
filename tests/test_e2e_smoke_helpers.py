@@ -42,10 +42,17 @@ def test_assert_executable_reports_missing_path(tmp_path) -> None:
         e2e_smoke.assert_executable(tmp_path / "missing", "missing helper")
 
 
-def test_test_vault_root_defaults_to_named_test_vault(monkeypatch) -> None:
+def test_test_vault_root_defaults_to_the_running_checkouts_test_vault(monkeypatch) -> None:
+    """The default follows the checkout, not $HOME.
+
+    It used to be a hardcoded `~/memoria-vault/test-vault`, so `verify` run from any
+    git worktree targeted the main checkout's vault — and since `_reset_test_vault`
+    wipes that directory, concurrent gates destroyed each other's vault mid-run.
+    """
     monkeypatch.delenv("MEMORIA_TEST_ROOT", raising=False)
 
-    assert e2e_smoke._test_vault_root() == Path("~/memoria-vault/test-vault").expanduser()
+    repo_root = Path(e2e_smoke.__file__).resolve().parents[2]
+    assert e2e_smoke._test_vault_root() == repo_root / "test-vault"
 
 
 def test_test_vault_root_honors_memoria_test_root(monkeypatch, tmp_path) -> None:
