@@ -11,6 +11,10 @@ nav_order: 1
 Three steps from zero to an installed standalone CLI/runtime workspace. For the
 full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
+> **Tutorial 00 — onboarding exception.** This page stays in Setup so new users
+> can install a vault first. Unlike the other how-to guides, it assumes no
+> prior Memoria knowledge.
+
 ## Prerequisites
 
 - Git and Python 3.12+ with venv support on your `PATH`; sandbox images must include Git too.

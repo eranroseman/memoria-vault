@@ -12,8 +12,8 @@ end, you will have captured a source, created checked notes, drafted from a
 project slice, verified the draft, and tuned the steering override with watch
 and mute entries.
 
-Start with a fresh vault from [Quickstart](../how-to-guides/setup/quickstart.md),
-then move through the pages in order.
+Start with [Tutorial 00: Quickstart](../how-to-guides/setup/quickstart.md) to
+create a fresh vault, then move through the numbered pages in order.
 
 | Tutorial | What you will do |
 | --- | --- |

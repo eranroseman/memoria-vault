@@ -7,8 +7,9 @@ permalink: /how-to-guides/
 
 # How-to guides
 
-Task-oriented recipes for getting specific things done with Memoria. Each guide assumes you already
-know the system — if you're new, start with the [Quickstart](setup/quickstart.md).
+Task-oriented recipes for getting specific things done with Memoria. Each guide
+assumes you already know the system, except [Quickstart](setup/quickstart.md):
+it is Tutorial 00, the beginner onboarding entry point.
 
 For operating explanations, see [Explanation](../explanation/). For the design
 rationale, see [Design](../explanation/rationale/README.md). For exact field names,
