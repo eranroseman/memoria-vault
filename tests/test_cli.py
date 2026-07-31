@@ -13,7 +13,7 @@ from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import _cli_command_surface
-from tests.helpers import ROOT, _assert_request_columns, git, write_checked_concept
+from tests.helpers import ROOT, WORKSPACE_SEED, _assert_request_columns, git, write_checked_concept
 
 
 def _parser_for_command(parser: argparse.ArgumentParser, command: str) -> argparse.ArgumentParser:
@@ -615,6 +615,33 @@ def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     assert (workspace / ".obsidian/plugins/memoria-obsidian/styles.css").is_file()
 
 
+def test_cli_init_seeds_exact_boot_c1_agent_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    expected = {
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
+        "CLAUDE.md",
+    }
+    delivered = {
+        path.relative_to(workspace).as_posix()
+        for directory in (workspace / ".claude", workspace / ".codex")
+        for path in directory.rglob("*")
+        if path.is_file()
+    } | {rel for rel in (".mcp.json", "CLAUDE.md") if (workspace / rel).is_file()}
+
+    assert delivered == expected
+    for rel in expected:
+        assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes()
+
+
 def test_cli_init_no_obsidian_skips_obsidian_seed(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -632,6 +659,14 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
     )
     assert (workspace / ".memoria/schemas/folders.yaml").is_file()
     assert (workspace / "steering.md").is_file()
+    for rel in (
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
+        "CLAUDE.md",
+    ):
+        assert (workspace / rel).is_file()
 
     rc = main(["init", "--workspace", str(dry_workspace), "--dry-run", "--no-obsidian", "--json"])
     output = json.loads(capsys.readouterr().out)
@@ -645,6 +680,8 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
         "projects.base",
         "sources.base",
     }
+    assert {".claude", ".codex"} <= set(output["package"]["seed_trees"])
+    assert {".mcp.json", "CLAUDE.md"} <= set(output["package"]["seed_files"])
     assert not dry_workspace.exists()
 
 
@@ -815,6 +852,8 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "inbox.base",
         "projects.base",
         "sources.base",
+        ".mcp.json",
+        "CLAUDE.md",
     ]
     assert "capabilities" not in output["package"]["seed_trees"]
     assert {
