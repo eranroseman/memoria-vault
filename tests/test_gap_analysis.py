@@ -393,10 +393,13 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_search
     assert state.catalog_source(vault, "https://openalex.org/W777") is None
 
 
-def test_analyze_gaps_ranks_discovery_candidates_against_steering(tmp_path: Path) -> None:
+def test_analyze_gaps_ranks_discovery_candidates_against_effective_steering(
+    tmp_path: Path,
+) -> None:
     vault = workspace(tmp_path / "vault")
-    (vault / "steering.md").write_text(
-        "Prioritize neural retrieval evaluation.\n", encoding="utf-8"
+    _md(
+        vault / "projects/neural-retrieval/project.md",
+        "type: project\ntitle: Neural Retrieval Evaluation\ntags: []\nlinks: {}\n",
     )
     state.upsert_catalog_record(
         vault,
@@ -442,6 +445,104 @@ def test_analyze_gaps_ranks_discovery_candidates_against_steering(tmp_path: Path
         "retrieval",
     ]
     assert exploration["discovery_relevance_channel"] == "exploration"
+
+
+def test_analyze_gaps_muted_terms_subtract_from_effective_steering(tmp_path: Path) -> None:
+    vault = workspace(tmp_path / "vault")
+    _md(
+        vault / "projects/srs/project.md",
+        "type: project\ntitle: Spaced Repetition Scheduling\ntags: []\nlinks: {}\n",
+    )
+    (vault / "steering.md").write_text(
+        "---\ntype: system\ntitle: Steering\n---\n\n"
+        "## Watch for\n\n## Muted\n\n- spaced repetition\n",
+        encoding="utf-8",
+    )
+    state.upsert_catalog_record(
+        vault,
+        work_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "db-alpha",
+        [
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W111",
+                "target_title": "Spaced Repetition Flashcards",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Spaced Repetition Scheduling Systems",
+                "source_provider": "openalex",
+            },
+        ],
+    )
+
+    result = analyze_gaps(vault, dense_threshold=1, machine="gap-machine")
+
+    channels = {
+        rel: read_frontmatter(vault / rel)["discovery_relevance_channel"]
+        for rel in result["discovery_candidate_paths"]
+    }
+    assert channels == {
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W999.md": "ranked",
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W111.md": "exploration",
+    }
+
+
+def test_analyze_gaps_watch_entries_rank_and_prose_stops_polluting(tmp_path: Path) -> None:
+    vault = workspace(tmp_path / "vault")
+    (vault / "steering.md").write_text(
+        "---\ntype: system\ntitle: Steering\n---\n\n"
+        "Guidance prose mentioning template placeholder terms contributes nothing.\n\n"
+        "## Watch for\n\n- neural retrieval\n\n"
+        "## Muted\n",
+        encoding="utf-8",
+    )
+    state.upsert_catalog_record(
+        vault,
+        work_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"research_area": ["catalog-only"]}},
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "db-alpha",
+        [
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W111",
+                "target_title": "Template Placeholder Terms",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Neural Retrieval Evaluation",
+                "source_provider": "openalex",
+            },
+        ],
+    )
+
+    result = analyze_gaps(vault, dense_threshold=1, machine="gap-machine")
+
+    channels = {
+        rel: read_frontmatter(vault / rel)["discovery_relevance_channel"]
+        for rel in result["discovery_candidate_paths"]
+    }
+    assert channels == {
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W999.md": "ranked",
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W111.md": "exploration",
+    }
 
 
 def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:

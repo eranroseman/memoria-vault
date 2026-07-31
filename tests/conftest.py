@@ -119,6 +119,7 @@ TEST_LEVELS = {
     "test_session_summary.py": "contract",
     "test_slice_outline.py": "runtime",
     "test_source_enrichment.py": "runtime",
+    "test_steering_tokens.py": "contract",
     "test_surface_contract.py": "contract",
     "test_sweeps_retraction.py": "contract",
     "test_test_env_harness.py": "package",

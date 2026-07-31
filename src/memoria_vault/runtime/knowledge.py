@@ -33,6 +33,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path, require_policy_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
@@ -90,22 +91,6 @@ _TAG_CANDIDATE_STOPWORDS = frozenset(
         "with",
     }
 )
-_DISCOVERY_RELEVANCE_STOPWORDS = _TAG_CANDIDATE_STOPWORDS | {
-    "candidate",
-    "current",
-    "paper",
-    "papers",
-    "priority",
-    "question",
-    "questions",
-    "research",
-    "source",
-    "sources",
-    "steering",
-    "system",
-    "work",
-    "works",
-}
 PAPER_PLAN_REQUIRED_FIELDS = (
     "target",
     "audience",
@@ -1152,7 +1137,7 @@ def _write_gap_discovery_candidates(
     from memoria_vault.runtime.enrichment import _write_discovery_candidate
 
     captured = _captured_work_ids(vault)
-    steering_tokens = _steering_tokens(vault)
+    steering_tokens = effective_steering_tokens(vault)
     relevance_by_path: dict[str, dict[str, Any]] = {}
     new_paths = []
     for work_id in sorted(edges_by_source):
@@ -1203,13 +1188,6 @@ def _write_gap_discovery_candidates(
     return new_paths, commit
 
 
-def _steering_tokens(vault: Path) -> set[str]:
-    path = vault / "steering.md"
-    if not path.is_file():
-        return set()
-    return _relevance_tokens(path.read_text(encoding="utf-8"))
-
-
 def _discovery_relevance(
     steering_tokens: set[str],
     source: dict[str, Any],
@@ -1217,11 +1195,11 @@ def _discovery_relevance(
 ) -> dict[str, Any]:
     title_overlap = sorted(
         steering_tokens
-        & _relevance_tokens(edge.get("target_title"), edge.get("target_id"), edge.get("target_doi"))
+        & relevance_tokens(edge.get("target_title"), edge.get("target_id"), edge.get("target_doi"))
     )
     tag_tokens = set()
     for term in _catalog_source_terms(source):
-        tag_tokens.update(_relevance_tokens(term))
+        tag_tokens.update(relevance_tokens(term))
     tag_overlap = sorted(steering_tokens & tag_tokens)
     citation_overlap = 2 if str(edge.get("relation_type")) == "references" else 1
     channel = "ranked" if title_overlap or tag_overlap else "exploration"
@@ -1236,15 +1214,6 @@ def _discovery_relevance(
             "tag_overlap": tag_overlap,
             "citation_overlap": citation_overlap,
         },
-    }
-
-
-def _relevance_tokens(*values: object) -> set[str]:
-    text = " ".join(str(value) for value in values if value)
-    return {
-        token
-        for token in re.findall(r"[a-z0-9]{3,}", text.casefold())
-        if token not in _DISCOVERY_RELEVANCE_STOPWORDS and not token.isdigit()
     }
 
 

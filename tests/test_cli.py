@@ -506,6 +506,62 @@ def test_memoria_new_defaults_include_description_key(
     assert frontmatter["description"] == ""
 
 
+def test_steering_show_renders_effective_steering_provenance(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "new",
+                "project",
+                "Retrieval Practice",
+                "--workspace",
+                str(workspace),
+                "--json",
+                "--idempotency-key",
+                "steering-show-project",
+            ]
+        )
+        == 0
+    )
+    created = json.loads(capsys.readouterr().out)
+    assert (
+        main(
+            [
+                "steering",
+                "edit",
+                "--workspace",
+                str(workspace),
+                "--body",
+                "---\ntype: system\ntitle: Steering\n---\n\n"
+                "## Watch for\n\n- interleaving\n\n## Muted\n\n- practice\n",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+
+    assert main(["steering", "show", "--workspace", str(workspace), "--json"]) == 0
+    shown = json.loads(capsys.readouterr().out)
+
+    assert shown["ok"] is True
+    assert shown["path"] == "steering.md"
+    assert shown["muted"] == ["practice"]
+    by_token = {row["token"]: row["sources"] for row in shown["tokens"]}
+    assert by_token["retrieval"] == [f"project:{created['path']}"]
+    assert by_token["interleaving"] == ["watch"]
+    assert "practice" not in by_token
+
+    assert main(["steering", "show", "--workspace", str(workspace)]) == 0
+    readable = capsys.readouterr().out
+    assert "interleaving" in readable
+    assert "muted: practice" in readable
+
+
 def test_cli_init_seeds_obsidian_defaults_and_memoria_plugin(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
