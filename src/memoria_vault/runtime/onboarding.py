@@ -8,6 +8,7 @@ with a production default, so each branch is testable without patching.
 from __future__ import annotations
 
 import subprocess
+import urllib.parse
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
@@ -161,3 +162,54 @@ def offer_obsidian_install(
         )
         return "failed"
     return "installed"
+
+
+MANUAL_OPEN_FALLBACK = "Open Obsidian → Open folder as vault → {path}"
+
+
+def open_vault_in_obsidian(
+    workspace: Path,
+    *,
+    sys_platform: str,
+    run: RunFn = subprocess.run,
+    say: SayFn = print,
+) -> str:
+    """Open the vault in Obsidian via the ``obsidian://open`` URI.
+
+    Deep-links to ``<workspace>/Start here.md`` when that file exists, else
+    the vault root (spec §7.3). The path is percent-encoded with an empty
+    ``safe`` set so nothing in it — including ``&``/``=`` — can inject an
+    additional URI parameter; a zero exit from the opener does not prove
+    Obsidian actually registered the vault, so the verbatim manual fallback
+    is always shown alongside a successful launch, not just on failure.
+    """
+    start_here = workspace / "Start here.md"
+    open_target = start_here if start_here.is_file() else workspace
+    uri = "obsidian://open?path=" + urllib.parse.quote(str(open_target), safe="")
+    fallback = MANUAL_OPEN_FALLBACK.format(path=workspace)
+    key = platform_key(sys_platform)
+    openers = {
+        "darwin": ["open", uri],
+        "windows": ["cmd", "/c", "start", "", uri],
+        "linux": ["xdg-open", uri],
+    }
+    opener = openers.get(key or "")
+    if opener is None:
+        say(fallback)
+        return "manual"
+    try:
+        result = run(
+            opener,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        result = None
+    if result is None or result.returncode != 0:
+        say(fallback)
+        return "manual"
+    say(f"Opening {uri}")
+    say(f"If Obsidian shows no vault: {fallback}")
+    return "opened"

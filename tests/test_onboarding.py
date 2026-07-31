@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import urllib.parse
 from pathlib import Path
 
 import pytest
@@ -13,11 +14,13 @@ from memoria_vault.runtime import onboarding
 class FakeRun:
     def __init__(self, returncode: int = 0, raises: Exception | None = None) -> None:
         self.calls: list[list[str]] = []
+        self.kwargs: list[dict[str, object]] = []
         self.returncode = returncode
         self.raises = raises
 
     def __call__(self, argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
         self.calls.append(list(argv))
+        self.kwargs.append(kwargs)
         if self.raises is not None:
             raise self.raises
         return subprocess.CompletedProcess(argv, self.returncode, stdout="", stderr="")
@@ -225,3 +228,149 @@ def test_offer_install_declines_a_command_injection_shaped_answer() -> None:
 
     assert status == "declined"
     assert run.calls == []
+
+
+def test_open_vault_uses_xdg_open_with_encoded_uri(tmp_path: Path) -> None:
+    run = FakeRun(returncode=0)
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="linux", run=run, say=said.append
+    )
+
+    expected_uri = "obsidian://open?path=" + urllib.parse.quote(str(tmp_path), safe="")
+    assert status == "opened"
+    assert run.calls == [["xdg-open", expected_uri]]
+    # A zero exit does not prove Obsidian registered a new vault: the
+    # verbatim manual fallback is always shown.
+    fallback = onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path)
+    assert any(fallback in line for line in said)
+
+
+def test_open_vault_deep_links_start_here_when_present(tmp_path: Path) -> None:
+    (tmp_path / "Start here.md").write_text("# Start here\n", encoding="utf-8")
+    run = FakeRun(returncode=0)
+
+    onboarding.open_vault_in_obsidian(tmp_path, sys_platform="darwin", run=run, say=lambda _l: None)
+
+    expected_uri = "obsidian://open?path=" + urllib.parse.quote(
+        str(tmp_path / "Start here.md"), safe=""
+    )
+    assert run.calls == [["open", expected_uri]]
+
+
+def test_open_vault_prints_verbatim_fallback_when_uri_bounces(tmp_path: Path) -> None:
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="linux", run=FakeRun(raises=FileNotFoundError()), say=said.append
+    )
+
+    assert status == "manual"
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path) in said
+
+
+def test_open_vault_unsupported_platform_is_manual(tmp_path: Path) -> None:
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="plan9", run=FakeRun(), say=said.append
+    )
+
+    assert status == "manual"
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path) in said
+
+
+def test_open_vault_uses_windows_start_command(tmp_path: Path) -> None:
+    run = FakeRun(returncode=0)
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="win32", run=run, say=lambda _l: None
+    )
+
+    expected_uri = "obsidian://open?path=" + urllib.parse.quote(str(tmp_path), safe="")
+    assert status == "opened"
+    assert run.calls == [["cmd", "/c", "start", "", expected_uri]]
+
+
+def test_open_vault_redirects_output_to_devnull_and_never_passes_shell(tmp_path: Path) -> None:
+    # capture_output=True would wait for EOF on the pipes rather than the
+    # child's exit: a GUI opener that daemonizes (xdg-open's normal shape)
+    # inherits the fds and holds them open, so run() would block for the
+    # full timeout even though the opener already exited 0. DEVNULL avoids
+    # that trap; this pins the redirection so it cannot silently regress.
+    run = FakeRun(returncode=0)
+
+    onboarding.open_vault_in_obsidian(tmp_path, sys_platform="linux", run=run, say=lambda _l: None)
+
+    assert run.kwargs == [
+        {
+            "stdout": subprocess.DEVNULL,
+            "stderr": subprocess.DEVNULL,
+            "check": False,
+            "timeout": 20,
+        }
+    ]
+    assert "shell" not in run.kwargs[0]
+
+
+def test_open_vault_timeout_expired_falls_back_to_manual_without_raising(tmp_path: Path) -> None:
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path,
+        sys_platform="linux",
+        run=FakeRun(raises=subprocess.TimeoutExpired(cmd="xdg-open", timeout=20)),
+        say=said.append,
+    )
+
+    assert status == "manual"
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path) in said
+
+
+def test_open_vault_nonzero_exit_falls_back_to_manual(tmp_path: Path) -> None:
+    said: list[str] = []
+
+    status = onboarding.open_vault_in_obsidian(
+        tmp_path, sys_platform="linux", run=FakeRun(returncode=1), say=said.append
+    )
+
+    assert status == "manual"
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=tmp_path) in said
+
+
+@pytest.mark.parametrize(
+    "hostile",
+    [
+        "vault&admin=1",
+        "vault?x=1",
+        "vault#frag",
+        "vault=path",
+        "vault%26encoded",
+        "vault with spaces",
+        "vault-☃-unicode",
+        "..",
+        "vaultobsidian://open?path=/etc",
+    ],
+)
+def test_open_vault_uri_encoding_cannot_inject_params_or_change_action(
+    tmp_path: Path, hostile: str
+) -> None:
+    # The property that matters is not "safe='' was used" (an implementation
+    # detail) but that no hostile workspace path can add a query key, set a
+    # fragment, or change the scheme/action. Prove it structurally instead of
+    # restating the encoding call.
+    workspace = tmp_path / hostile
+    run = FakeRun(returncode=0)
+
+    onboarding.open_vault_in_obsidian(workspace, sys_platform="linux", run=run, say=lambda _l: None)
+
+    uri = run.calls[0][1]
+    parts = urllib.parse.urlsplit(uri)
+    query = urllib.parse.parse_qs(parts.query, keep_blank_values=True)
+
+    assert parts.scheme == "obsidian"
+    assert parts.netloc == "open"
+    assert parts.fragment == ""
+    assert set(query) == {"path"}
+    assert query["path"] == [str(workspace)]
