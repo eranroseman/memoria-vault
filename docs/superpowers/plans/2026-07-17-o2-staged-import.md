@@ -125,7 +125,7 @@ Implements O2 spec §2 — entry iteration over the **unchanged** shipped builde
 - Consumes: `bibtex_capture_payload(bibtex: str, *, content_text=None, work_id=None, description=None) -> dict[str, Any]` (capture.py:295-329) and `csl_capture_payload(csl_json: dict[str, Any], *, raw_text: str, ...) -> dict[str, Any]` (capture.py:332-364) — in tests only, proving N chunks → N payloads through the **unchanged** builders; `parse_bibtex_entry` (capture.py:540-555) is the pinned-defect subject, not an import.
 - Produces: `split_bibtex_entries(text: str) -> list[str]` (top-level `@` boundaries, brace/paren-aware, unclosed tail kept as a final failing chunk); `split_csl_entries(text: str) -> list[str]` (JSON array → per-item dumps; single object → `[text]`; non-object members and scalars raise `ValueError`).
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_bulk_import.py`:
+- [x] **Step 1: Write the failing tests** — create `tests/test_bulk_import.py`:
 
 ```python
 """Contract tests for multi-entry import splitting (O2 spec section 2, slice 1).
@@ -239,7 +239,7 @@ def test_split_csl_entries_rejects_non_object_members_and_scalars() -> None:
         split_csl_entries("42")
 ```
 
-- [ ] **Step 2: Register the test file** — in `tests/conftest.py`, `TEST_LEVELS` (line 18):
+- [x] **Step 2: Register the test file** — in `tests/conftest.py`, `TEST_LEVELS` (line 18):
 
 ```python
 # old
@@ -249,9 +249,9 @@ def test_split_csl_entries_rejects_non_object_members_and_scalars() -> None:
     "test_bulk_import.py": "contract",
 ```
 
-- [ ] **Step 3: Run and confirm the expected failure** — `python -m pytest tests/test_bulk_import.py -q` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.runtime.bulk_import'`.
+- [x] **Step 3: Run and confirm the expected failure** — `python -m pytest tests/test_bulk_import.py -q` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.runtime.bulk_import'`.
 
-- [ ] **Step 4: Minimal implementation** — create `src/memoria_vault/runtime/bulk_import.py`:
+- [x] **Step 4: Minimal implementation** — create `src/memoria_vault/runtime/bulk_import.py`:
 
 ```python
 """Multi-entry splitting for `memoria work import` (O2 spec section 2).
@@ -325,9 +325,9 @@ def split_csl_entries(text: str) -> list[str]:
     raise ValueError("CSL import expects a JSON object or array of objects")
 ```
 
-- [ ] **Step 5: Run to pass** — `python -m pytest tests/test_bulk_import.py -q` → 7 passed.
+- [x] **Step 5: Run to pass** — `python -m pytest tests/test_bulk_import.py -q` → 7 passed.
 
-- [ ] **Step 6: Commit (explicit paths only):**
+- [x] **Step 6: Commit (explicit paths only):**
 
 ```bash
 git add src/memoria_vault/runtime/bulk_import.py tests/test_bulk_import.py tests/conftest.py
@@ -390,7 +390,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 >    `--idempotency-key` is ignored for every count in favor of
 >    `import-<run_id>-...` request IDs.
 
-- [ ] **Step 1: Write the failing contract tests** — append to `tests/test_bulk_import.py`:
+- [x] **Step 1: Write the failing contract tests** — append to `tests/test_bulk_import.py`:
 
 ```python
 def test_build_entry_payload_dispatches_per_format() -> None:
@@ -414,7 +414,7 @@ def test_entry_ref_names_citekey_csl_id_or_entry_index() -> None:
     assert entry_ref("csl", "not json", 2) == "entry-2"
 ```
 
-- [ ] **Step 2: Write the failing CLI tests** — append to `tests/test_cli_work_project.py` (its existing imports — `json`, `Path`, `pytest`, `main`, `state` — suffice):
+- [x] **Step 2: Write the failing CLI tests** — append to `tests/test_cli_work_project.py` (its existing imports — `json`, `Path`, `pytest`, `main`, `state` — suffice):
 
 ```python
 THREE_ENTRY_BIB = """@article{alpha2026,
@@ -655,9 +655,9 @@ def test_cli_work_import_bulk_csl_array_admits_each_item(
     assert out["admitted"] == ["alpha-csl", "beta-csl"]
 ```
 
-- [ ] **Step 3: Run and confirm the expected failures** — `python -m pytest tests/test_bulk_import.py tests/test_cli_work_project.py -q` → the two new contract tests fail with `ImportError: cannot import name 'build_entry_payload'`; the bulk CLI tests fail with `KeyError: 'entries_total'` (the shipped path truncates a multi-entry file to one single-entry admission — the pinned defect), except the zero-rows test (`ValueError: BibTeX field 'title' is missing =` — shipped uncaught traceback) and the CSL-array test (`ValueError: CSL import expects one item`). The shipped single-entry tests (`test_cli_work_project.py:14-70`, `:1244-1317`) still pass — they are the byte-identity pin and are not edited in P.2.
+- [x] **Step 3: Run and confirm the expected failures** — `python -m pytest tests/test_bulk_import.py tests/test_cli_work_project.py -q` → the two new contract tests fail with `ImportError: cannot import name 'build_entry_payload'`; the bulk CLI tests fail with `KeyError: 'entries_total'` (the shipped path truncates a multi-entry file to one single-entry admission — the pinned defect), except the zero-rows test (`ValueError: BibTeX field 'title' is missing =` — shipped uncaught traceback) and the CSL-array test (`ValueError: CSL import expects one item`). The shipped single-entry tests (`test_cli_work_project.py:14-70`, `:1244-1317`) still pass — they are the byte-identity pin and are not edited in P.2.
 
-- [ ] **Step 4: Minimal implementation.** First extend `src/memoria_vault/runtime/bulk_import.py` — add to the imports block:
+- [x] **Step 4: Minimal implementation.** First extend `src/memoria_vault/runtime/bulk_import.py` — add to the imports block:
 
 ```python
 import re
@@ -773,9 +773,9 @@ def _bulk_work_import(args: argparse.Namespace, entries: list[str]) -> dict[str,
 
 The single-entry branch is the shipped cli.py:951-966 body verbatim (behavior byte-identical, `--idempotency-key` included); the bulk branch mints run-scoped keys and ignores `args.idempotency_key` (GAP 2).
 
-- [ ] **Step 5: Run to pass** — `python -m pytest tests/test_bulk_import.py tests/test_cli_work_project.py -q` → all pass, including the untouched shipped single-entry tests.
+- [x] **Step 5: Run to pass** — `python -m pytest tests/test_bulk_import.py tests/test_cli_work_project.py -q` → all pass, including the untouched shipped single-entry tests.
 
-- [ ] **Step 6: Commit (explicit paths only):**
+- [x] **Step 6: Commit (explicit paths only):**
 
 ```bash
 git add src/memoria_vault/cli.py src/memoria_vault/runtime/bulk_import.py \
@@ -839,7 +839,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 > database. There is no single-entry precheck, idempotency behavior, or error
 > surface to preserve.
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_cli_work_project.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_cli_work_project.py`:
 
 ```python
 def test_cli_work_import_default_leaves_enrichment_unqueued(
@@ -925,7 +925,7 @@ def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
     assert enrich == 3
 ```
 
-- [ ] **Step 2: Sweep the tests pinning the shipped auto-enrichment** (GAP 5 — the complete sweep set; the worker-side pins at `tests/test_worker_capture_jobs.py:159-173` and `tests/test_worker_knowledge_cycle.py:116` pin `capture-bibtex-source`, a different surface, and are **not** touched):
+- [x] **Step 2: Sweep the tests pinning the shipped auto-enrichment** (GAP 5 — the complete sweep set; the worker-side pins at `tests/test_worker_capture_jobs.py:159-173` and `tests/test_worker_knowledge_cycle.py:116` pin `capture-bibtex-source`, a different surface, and are **not** touched):
 
   In `test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown` (tests/test_cli_work_project.py:33-47), the argv list gains the flag — it now pins that `--enrich` restores shipped parity exactly:
 
@@ -957,9 +957,9 @@ def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
     assert out["index_refresh_s"] > 0.0  # explicit post-loop refresh, timed (spec section 2)
 ```
 
-- [ ] **Step 3: Run and confirm the expected failures** — `python -m pytest tests/test_cli_work_project.py -q` → `test_cli_work_import_default_leaves_enrichment_unqueued` fails (`AssertionError`: `enrichment_job` present); both `--enrich` tests fail with `SystemExit: 2` (argparse: unrecognized arguments: --enrich); the edited bulk assert fails (`enrichment_jobs` has 3 entries; `KeyError: 'index_refresh_s'`).
+- [x] **Step 3: Run and confirm the expected failures** — `python -m pytest tests/test_cli_work_project.py -q` → `test_cli_work_import_default_leaves_enrichment_unqueued` fails (`AssertionError`: `enrichment_job` present); both `--enrich` tests fail with `SystemExit: 2` (argparse: unrecognized arguments: --enrich); the edited bulk assert fails (`enrichment_jobs` has 3 entries; `KeyError: 'index_refresh_s'`).
 
-- [ ] **Step 4: Minimal implementation** — three edits in `src/memoria_vault/cli.py`.
+- [x] **Step 4: Minimal implementation** — three edits in `src/memoria_vault/cli.py`.
 
   (a) Parser (cli.py:207-211):
 
@@ -1037,9 +1037,9 @@ def test_cli_work_import_bulk_enrich_flag_queues_once_per_admitted_doi_work(
   Zotero + Better BibTeX row's automatic-enrichment claim with the same
   `work import --enrich` / newly-admitted DOI rule.
 
-- [ ] **Step 5: Run to pass, then the full gate** — `python -m pytest tests/test_cli_work_project.py tests/test_bulk_import.py -q` → all pass. Then `python scripts/verify` → green (lint, product gates, tests, offline smoke, syntax; the doc-claims gate stays green — `memoria work import` is a real CLI path and no new command was added).
+- [x] **Step 5: Run to pass, then the full gate** — `python -m pytest tests/test_cli_work_project.py tests/test_bulk_import.py -q` → all pass. Then `python scripts/verify` → green (lint, product gates, tests, offline smoke, syntax; the doc-claims gate stays green — `memoria work import` is a real CLI path and no new command was added).
 
-- [ ] **Step 6: Commit (explicit paths only):**
+- [x] **Step 6: Commit (explicit paths only):**
 
 ```bash
 git add src/memoria_vault/cli.py tests/test_cli_work_project.py \
@@ -1105,9 +1105,9 @@ Decisions made here (spec gaps resolved inline, recorded in the module docstring
 - The DataCite prefix heuristic is a curated frozenset of eight common data-repository prefixes (Zenodo, Dryad, figshare, Harvard Dataverse, Mendeley Data, ICPSR, GBIF, UCI ML) — offline and keyless, extension is a one-line diff. The spec names the heuristic without naming prefixes.
 - BibTeX `@conference` (alias of `@inproceedings`) maps to `article`, mirroring `_csl_type`'s `inproceedings|conference` handling (capture.py:981); it is absent from the spec table but shipped-consistent.
 
-- [ ] **Step 0: Order-tolerance check** — `grep -n "def entry_item_type" src/memoria_vault/runtime/bulk_import.py 2>/dev/null`. P.1 already created this module and registered `test_bulk_import.py`, so append the constants/functions and tests; do not edit `conftest.py`.
+- [x] **Step 0: Order-tolerance check** — `grep -n "def entry_item_type" src/memoria_vault/runtime/bulk_import.py 2>/dev/null`. P.1 already created this module and registered `test_bulk_import.py`, so append the constants/functions and tests; do not edit `conftest.py`.
 
-- [ ] **Step 1: Write the failing tests** — append to the existing
+- [x] **Step 1: Write the failing tests** — append to the existing
   `tests/test_bulk_import.py` and extend its existing imports:
 
 ```python
@@ -1238,12 +1238,12 @@ def test_unknown_types_fall_back_to_article_and_are_flagged() -> None:
     assert entry_type_mapped({"type": "article"}) is True
 ```
 
-- [ ] **Step 2: Watch the extended tests fail** — `test_bulk_import.py` is
+- [x] **Step 2: Watch the extended tests fail** — `test_bulk_import.py` is
   already registered as `contract` by P.1, so do not edit `tests/conftest.py`.
   Run `python -m pytest tests/test_bulk_import.py -v` → collection error:
   `ImportError: cannot import name 'entry_item_type'`.
 
-- [ ] **Step 3: Minimal implementation** — append to
+- [x] **Step 3: Minimal implementation** — append to
   `src/memoria_vault/runtime/bulk_import.py`, preserving the P.1/P.2 helpers
   and extending their module docstring:
 
@@ -1345,9 +1345,9 @@ def _is_repo_host(url: str) -> bool:
     return any(host == repo or host.endswith(f".{repo}") for repo in _REPO_HOSTS)
 ```
 
-- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 16 passed.
+- [x] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 16 passed.
 
-- [ ] **Step 5: Commit** —
+- [x] **Step 5: Commit** —
 
 ```
 git add src/memoria_vault/runtime/bulk_import.py tests/test_bulk_import.py
@@ -1865,7 +1865,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: `state.catalog_sources(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]` (state.py:1615-1636; rows carry `identifiers` parsed from the `identifiers_json` TEXT column by `_source_row`, state.py:2465 — identifiers live **only** there for catalog sources; the `external_ids` table is enrichment-owned and not consulted); `state.catalog_source(vault, source_ref)` (state.py:1603-1612 — the §2 pre-check seam, work_id-normalizing via `state._work_id` exactly as `stage_catalog_source` normalizes on write, capture.py:96/660-664); `_bibtex_default_work_id` (capture.py:667-673 — DOI-bearing entries key as `doi-<doi.lower()>`); `doi TEXT UNIQUE` (schema.sql:101) with `upsert_catalog_record`'s `ON CONFLICT(work_id) DO UPDATE` (state.py:1558) — a *cross-work_id* DOI collision is not absorbed by the conflict clause and raises `sqlite3.IntegrityError: UNIQUE constraint failed: catalog_sources.doi` out of `stage_capture_payload` (capture.py:129), which the worker records verbatim as `{"status": "failed", "error": str(exc)}` (worker.py:224-226); test helpers `call_with_context`/`copy_memoria_dirs`/`init_git` (tests/helpers.py:71/201/222).
 - Produces: `detect_identifier_collisions(vault: Path, work_id: str, identifiers: dict[str, Any]) -> list[dict[str, str]]` (rows `{"other_work_id": ..., "field": ...}`, fields checked: `arxiv`, `pmcid` — exact match only, per the §5 PI ruling; **contract: `work_id` is the admitted row id as returned in the capture result** (`result["work_id"]`, capture.py:171 / worker.py:1120-1128), already normalized, so self-exclusion is plain equality) and `is_doi_collision_error(error: str) -> bool` (the §5 `doi UNIQUE` edge classifier the driver applies to a failed job's `error` string to record the entry **failed-and-flagged duplicate** instead of a bare failure). The scan is honest: a full-catalog Python loop over `state.catalog_sources(checked_only=False)` — O(N) with no new SQL and no index, correct at beta.1's 100-work ceiling (spec §8); DOI is deliberately **not** a triage field (same-DOI is structural dedupe or the UNIQUE edge, never a judgment row).
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_bulk_import.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_bulk_import.py`:
 
 ```python
 import sqlite3
@@ -2004,9 +2004,9 @@ def test_same_doi_entries_collapse_structurally_to_one_row(tmp_path: Path) -> No
     ) == []
 ```
 
-- [ ] **Step 2: Run and watch it fail** — `python -m pytest tests/test_bulk_import.py -v` → collection error: `ImportError: cannot import name 'detect_identifier_collisions' from 'memoria_vault.runtime.bulk_import'`.
+- [x] **Step 2: Run and watch it fail** — `python -m pytest tests/test_bulk_import.py -v` → collection error: `ImportError: cannot import name 'detect_identifier_collisions' from 'memoria_vault.runtime.bulk_import'`.
 
-- [ ] **Step 3: Minimal implementation** — in `src/memoria_vault/runtime/bulk_import.py`, add to the imports:
+- [x] **Step 3: Minimal implementation** — in `src/memoria_vault/runtime/bulk_import.py`, add to the imports:
 
 ```python
 from pathlib import Path
@@ -2062,11 +2062,11 @@ def is_doi_collision_error(error: str) -> bool:
     return "catalog_sources.doi" in str(error)
 ```
 
-- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 17 passed.
+- [x] **Step 4: Run to pass** — `python -m pytest tests/test_bulk_import.py -v` → 17 passed.
 
-- [ ] **Step 5: Section-final gate** — `python scripts/verify` → green (lint, product gates, tests, offline smoke, syntax). This is the one gate; fix anything it names before committing.
+- [x] **Step 5: Section-final gate** — `python scripts/verify` → green (lint, product gates, tests, offline smoke, syntax). This is the one gate; fix anything it names before committing.
 
-- [ ] **Step 6: Commit** —
+- [x] **Step 6: Commit** —
 
 ```
 git add src/memoria_vault/runtime/bulk_import.py tests/test_bulk_import.py
@@ -2099,7 +2099,7 @@ No new test files in this section: `tests/test_worklists.py` (`tests/conftest.py
 - Consumes: `inbox.write_work_prompt(vault, title, action, what_happened, raised_by, target="", request_id="", posture="", loudness="notice", dedupe_slug="", prompt_kind="") -> Path | None` (`runtime/subsystems/lib/inbox.py:116-128` — both params already exist there and land in card frontmatter at `inbox.py:157`; the co-change is confined to `emit_worklist`). Shipped empty refusal `raise ValueError("a worklist needs at least one row")` (`worklists.py:78`). Shipped `_item_ref` fallback order including `citekey` (`worklists.py:38-43`) — failed rows carry `citekey` or an `entry-<index>` `item_ref`, per spec §3 (failed entries have no work_id). `inbox.LOUDNESS` includes `"quiet"` (`inbox.py:22`). The `raised_by="import"` producer key is what I1's `producer_mode(vault, raised_by)` throttle map (`attention.yaml` `producers:` map, I1 contract 5) governs for bulk runs.
 - Produces: `emit_worklist(vault: Path, title: str, rows: list[dict[str, Any]], source_report: str = "", workflow: str = "screen", worklist_id: str = "", raised_by: str = "worklists", loudness: str = "notice") -> dict[str, Any]`; `emit_import_worklist(vault: Path, *, run_id: str, rows: list[dict[str, Any]], entries_total: int, admitted: int) -> dict[str, Any] | None` — the driver-facing seam: worklist id `import-<run_id>` (run-scoped, successive runs never collide), rows ranked duplicates → retraction → failed → unmapped, one quiet card with honest denominators in its title, `None` on an empty judgment set (no worklist, no card — the shipped empty refusal is respected, never reached).
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_worklists.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_worklists.py`:
 
 ```python
 def test_emit_worklist_passes_raised_by_and_loudness_through(tmp_path):
@@ -2172,12 +2172,12 @@ def test_emit_import_worklist_empty_judgment_set_mints_nothing(tmp_path):
     assert not (tmp_path / "inbox").exists()
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_worklists.py -v`
 Expected: FAIL — `TypeError: emit_worklist() got an unexpected keyword argument 'raised_by'` and `AttributeError: module 'memoria_vault.runtime.subsystems.lib.worklists' has no attribute 'emit_import_worklist'`. The five shipped tests stay green.
 
-- [ ] **Step 3: Implement.** Replace `emit_worklist` (`worklists.py:63-138`) with (body unchanged except the signature and the two previously hardcoded kwargs) and append `emit_import_worklist` directly after it:
+- [x] **Step 3: Implement.** Replace `emit_worklist` (`worklists.py:63-138`) with (body unchanged except the signature and the two previously hardcoded kwargs) and append `emit_import_worklist` directly after it:
 
 ```python
 def emit_worklist(
@@ -2308,12 +2308,12 @@ def emit_import_worklist(
 
 (The honest denominators live in the card **title**: `emit_worklist` composes `what_happened` itself, and widening the co-change with a message passthrough would exceed the seam the spec names — SPEC GAP resolved, recorded for review. This is producer behavior only; I1 §6's no-withholding invariant is untouched, and the card's `attention-admitted` flow telemetry is emitted by I1's admission wiring as normal — worklist *row* volume rides `import-run.v1` counts, not per-row flow events.)
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_worklists.py -v`
 Expected: PASS — all eight tests, including the shipped `raised_by == "worklists"` default pin at `tests/test_worklists.py:49`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/subsystems/lib/worklists.py tests/test_worklists.py

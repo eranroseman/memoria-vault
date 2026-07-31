@@ -370,7 +370,7 @@ isolation); commits below stage explicit paths only.
   python -m pytest tests/test_runtime_state.py::test_sqlite_migration_step_failure_rolls_back_and_keeps_version tests/test_runtime_state.py::test_sqlite_migrations_apply_registered_steps_in_order -v
   ```
 
-- [ ] Write the future-version pin. Append to `tests/test_runtime_state.py`:
+- [x] Write the future-version pin. Append to `tests/test_runtime_state.py`:
 
   ```python
   def test_sqlite_schema_rejects_future_user_version(tmp_path: Path) -> None:
@@ -386,7 +386,7 @@ isolation); commits below stage explicit paths only.
           state.connect(tmp_path)
   ```
 
-- [ ] Run it and verify it passes on first run — this is a deliberate behavior pin, not
+- [x] Run it and verify it passes on first run — this is a deliberate behavior pin, not
   a red-green cycle: it fixes the guarantee that a DB written by a *newer* Memoria
   (no registered downgrade path) is never touched, so future refactors of the loop
   cannot silently weaken it. Also re-run the pre-existing legacy-version test, which
@@ -579,7 +579,7 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
 
 **Steps:**
 
-- [ ] Write the failing test at the end of `tests/test_query_substrate.py`:
+- [x] Write the failing test at the end of `tests/test_query_substrate.py`:
 
   ```python
   def test_concept_edges_mirror_links_and_persist_across_reindex(tmp_path: Path) -> None:
@@ -628,10 +628,10 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
 
   (Reuses the module-level `rebuild_passage_index` wrapper already defined at
   tests/test_query_substrate.py:18-19.)
-- [ ] Run `python -m pytest tests/test_query_substrate.py::test_concept_edges_mirror_links_and_persist_across_reindex -v`
+- [x] Run `python -m pytest tests/test_query_substrate.py::test_concept_edges_mirror_links_and_persist_across_reindex -v`
   — expect FAIL: `AssertionError: assert set() == {('notes/alpha.md', ...)}` (stub
   returns `[]`, so the first edge assertion sees an empty table).
-- [ ] In `src/memoria_vault/runtime/subsystems/lib/schema.py`, add after
+- [x] In `src/memoria_vault/runtime/subsystems/lib/schema.py`, add after
   `_check_links` (below line 158):
 
   ```python
@@ -662,7 +662,7 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
       return pairs
   ```
 
-- [ ] In the same file, refactor `_check_links` lines 148-150 to reuse the
+- [x] In the same file, refactor `_check_links` lines 148-150 to reuse the
   normalizer — replace
 
   ```python
@@ -681,7 +681,7 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
   refactor keeps the call late-bound at call time — module-level order is fine
   either way in Python; place the two new functions directly **above**
   `_check_links` for readability.)
-- [ ] In `src/memoria_vault/runtime/indexing.py`, add the import (after line 11):
+- [x] In `src/memoria_vault/runtime/indexing.py`, add the import (after line 11):
 
   ```python
   from memoria_vault.runtime.subsystems.lib.schema import parse_links
@@ -716,7 +716,7 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
       return edges
   ```
 
-- [ ] In `src/memoria_vault/runtime/state.py`, replace `replace_concept_edges`
+- [x] In `src/memoria_vault/runtime/state.py`, replace `replace_concept_edges`
   (lines 2026-2052) with the upsert-and-prune form:
 
   ```python
@@ -797,12 +797,12 @@ and replace the wipe-on-reindex with upsert-and-prune that never touches durable
   (No call-site changes: `_rebuild_passage_index` at indexing.py:37 and
   `refresh_stale_passages` at indexing.py:58 both pass the full-vault row set, so
   `paths=None` full-mirror reconciliation is correct for both.)
-- [ ] Run `python -m pytest tests/test_query_substrate.py::test_concept_edges_mirror_links_and_persist_across_reindex -v`
+- [x] Run `python -m pytest tests/test_query_substrate.py::test_concept_edges_mirror_links_and_persist_across_reindex -v`
   — expect PASS.
-- [ ] Run `python -m pytest tests/test_query_substrate.py tests/test_schemas.py tests/test_frontmatter_contract.py -v`
+- [x] Run `python -m pytest tests/test_query_substrate.py tests/test_schemas.py tests/test_frontmatter_contract.py -v`
   — expect all PASS (`_check_links` refactor must not change validation behavior).
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/subsystems/lib/schema.py src/memoria_vault/runtime/indexing.py src/memoria_vault/runtime/state.py tests/test_query_substrate.py
@@ -894,7 +894,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 - [ ] Run `python -m pytest tests/test_query_substrate.py::test_concept_edges_reshape_adds_edge_id_and_attributes -v`
   — expect FAIL: `AssertionError: assert {'edge_id', 'attributes_json'}.issubset({...})`
   (fresh table lacks both columns).
-- [ ] In `src/memoria_vault/runtime/schema.sql`, replace the concept_edges block
+- [x] In `src/memoria_vault/runtime/schema.sql`, replace the concept_edges block
   (lines 240-250) with:
 
   ```sql
@@ -944,7 +944,7 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
       return hashlib.sha256(key.encode()).hexdigest()[:24]
   ```
 
-- [ ] Still in state.py, extend the `replace_concept_edges` insert (as landed by
+- [x] Still in state.py, extend the `replace_concept_edges` insert (as landed by
   G2S1.1) to write both columns while preserving `attributes_json` on conflict:
 
   ```python
@@ -986,16 +986,16 @@ lost to reindex. Depends on: G1 migration machinery merged; G2S1.1 merged.
 
   (`attributes_json` deliberately absent from `DO UPDATE SET`: a reindex refreshes
   the mirror without clobbering attributes hung on the edge.)
-- [ ] Add `edge_id, attributes_json` to both SELECT column lists in
+- [x] Add `edge_id, attributes_json` to both SELECT column lists in
   `state.concept_edges` (both branches, state.py:2060-2075 pre-task numbering).
-- [ ] Bump the three version pins: tests/test_schema_version.py — rename
+- [x] Bump the three version pins: tests/test_schema_version.py — rename
   `test_schema_lands_at_user_version_12` to `test_schema_lands_at_user_version_13`
   and change both `12`s to `13`; tests/test_schema_v10.py:41 `== 12` → `== state.SCHEMA_VERSION`;
   tests/test_query_substrate.py:31 `state.SCHEMA_VERSION == 12` → `== 13`.
-- [ ] Run `python -m pytest tests/test_query_substrate.py tests/test_schema_version.py tests/test_schema_v10.py -v`
+- [x] Run `python -m pytest tests/test_query_substrate.py tests/test_schema_version.py tests/test_schema_v10.py -v`
   — expect PASS (including the G2S1.1 mirror test: edge_ids now populated).
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py tests/test_query_substrate.py tests/test_schema_version.py tests/test_schema_v10.py
@@ -1037,7 +1037,7 @@ Depends on: G2S1.2 (takes version 14 after 13).
 
 **Steps:**
 
-- [ ] Write the failing test at the end of `tests/test_query_substrate.py`:
+- [x] Write the failing test at the end of `tests/test_query_substrate.py`:
 
   ```python
   def test_reverse_traversal_indexes_exist(tmp_path: Path) -> None:
@@ -1050,9 +1050,9 @@ Depends on: G2S1.2 (takes version 14 after 13).
       assert "idx_work_graph_edges_target" in names
   ```
 
-- [ ] Run `python -m pytest tests/test_query_substrate.py::test_reverse_traversal_indexes_exist -v`
+- [x] Run `python -m pytest tests/test_query_substrate.py::test_reverse_traversal_indexes_exist -v`
   — expect FAIL: `AssertionError: assert 'idx_concept_edges_target' in {...}`.
-- [ ] In `src/memoria_vault/runtime/schema.sql`: after the
+- [x] In `src/memoria_vault/runtime/schema.sql`: after the
   `idx_concept_edges_edge_id` index add
 
   ```sql
@@ -1081,14 +1081,14 @@ Depends on: G2S1.2 (takes version 14 after 13).
   )
   ```
 
-- [ ] Bump the two version pins: tests/test_schema_version.py (13 → 14, rename the
+- [x] Bump the two version pins: tests/test_schema_version.py (13 → 14, rename the
   test to `test_schema_lands_at_user_version_14`); tests/test_query_substrate.py:31
   (13 → 14). (tests/test_schema_v10.py already reads `state.SCHEMA_VERSION` after
   G2S1.2 — no change.)
-- [ ] Run `python -m pytest tests/test_query_substrate.py tests/test_schema_version.py tests/test_schema_v10.py -v`
+- [x] Run `python -m pytest tests/test_query_substrate.py tests/test_schema_version.py tests/test_schema_v10.py -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py tests/test_query_substrate.py tests/test_schema_version.py
@@ -1120,7 +1120,7 @@ own definition; no test exercises any of them. Independent of G1/G2 tasks.
 
 **Steps:**
 
-- [ ] Write the failing test at the end of `tests/test_schemas.py` (style precedent:
+- [x] Write the failing test at the end of `tests/test_schemas.py` (style precedent:
   `test_type_schemas_do_not_ship_dead_gated_keys`, line 83):
 
   ```python
@@ -1131,9 +1131,9 @@ own definition; no test exercises any of them. Independent of G1/G2 tasks.
       assert "promotion_gate" not in source
   ```
 
-- [ ] Run `python -m pytest tests/test_schemas.py::test_schema_module_carries_no_dead_validation_machinery -v`
+- [x] Run `python -m pytest tests/test_schemas.py::test_schema_module_carries_no_dead_validation_machinery -v`
   — expect FAIL: `AssertionError: assert not hasattr(schema, 'UNIVERSAL_LIFECYCLE')`.
-- [ ] In `src/memoria_vault/runtime/subsystems/lib/schema.py` delete these exact
+- [x] In `src/memoria_vault/runtime/subsystems/lib/schema.py` delete these exact
   fragments:
   - line 37: `UNIVERSAL_LIFECYCLE = ["proposed", "provisional", "current", "retracted", "archived"]`
   - lines 187-189:
@@ -1155,10 +1155,10 @@ own definition; no test exercises any of them. Independent of G1/G2 tasks.
   - docstring line 12, the sentence `` `required_any` lists field names of which at
     least one must be present.`` (keep the `required_when`/`forbidden` sentence on
     line 13).
-- [ ] Run `python -m pytest tests/test_schemas.py tests/test_frontmatter_contract.py tests/test_precommit_schema.py -v`
+- [x] Run `python -m pytest tests/test_schemas.py tests/test_frontmatter_contract.py tests/test_precommit_schema.py -v`
   — expect PASS (nothing shipped ever produced these error paths).
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/subsystems/lib/schema.py tests/test_schemas.py
@@ -1231,7 +1231,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_evidence_markers.py` (and extend the import block at lines 5–15 with `CodeGroundsRef,` and `parse_code_grounds_ref,` in alphabetical position):
+- [x] Write the failing tests. Append to `tests/test_evidence_markers.py` (and extend the import block at lines 5–15 with `CodeGroundsRef,` and `parse_code_grounds_ref,` in alphabetical position):
 
   ```python
   def test_evidence_ref_kind_recognizes_code_grounds_refs() -> None:
@@ -1252,8 +1252,8 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
           evidence_ref_kind(old)
   ```
 
-- [ ] Run to verify they fail: `python -m pytest tests/test_evidence_markers.py -v` — expect `ImportError: cannot import name 'CodeGroundsRef' from 'memoria_vault.runtime.evidence'`.
-- [ ] Rename in `src/memoria_vault/runtime/evidence.py`. Lines 16–19 become:
+- [x] Run to verify they fail: `python -m pytest tests/test_evidence_markers.py -v` — expect `ImportError: cannot import name 'CodeGroundsRef' from 'memoria_vault.runtime.evidence'`.
+- [x] Rename in `src/memoria_vault/runtime/evidence.py`. Lines 16–19 become:
 
   ```python
   _CODE_GROUNDS_RE = re.compile(
@@ -1278,7 +1278,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   ```
 
   In `evidence_ref_kind` (lines 64–67): `if _CODE_GROUNDS_RE.fullmatch(value): return "code-grounds"`.
-- [ ] Rename in `src/memoria_vault/runtime/state.py`. Line 28 import: `parse_code_grounds_ref,`. Line 2632: `if any(evidence_ref_kind(item) == "code-grounds" for item in items):`. Lines 2650–2651: `if kind == "code-grounds":` / `if not _code_grounds_resolves(vault, item):`. Lines 2664–2673 become:
+- [x] Rename in `src/memoria_vault/runtime/state.py`. Line 28 import: `parse_code_grounds_ref,`. Line 2632: `if any(evidence_ref_kind(item) == "code-grounds" for item in items):`. Lines 2650–2651: `if kind == "code-grounds":` / `if not _code_grounds_resolves(vault, item):`. Lines 2664–2673 become:
 
   ```python
   def _code_grounds_resolves(vault: Path, item: str) -> bool:
@@ -1293,16 +1293,16 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
       )
   ```
 
-- [ ] Rename in `src/memoria_vault/runtime/code/runs.py:26`: `def code_grounds_complete(` (signature body unchanged).
-- [ ] Update the durable-format reader in `src/memoria_vault/runtime/knowledge.py:3318` (it scans draft content for the marker prefix, so it renames in lockstep — manifest §3d):
+- [x] Rename in `src/memoria_vault/runtime/code/runs.py:26`: `def code_grounds_complete(` (signature body unchanged).
+- [x] Update the durable-format reader in `src/memoria_vault/runtime/knowledge.py:3318` (it scans draft content for the marker prefix, so it renames in lockstep — manifest §3d):
 
   ```python
       if re.search(r"\b(analysis-computed|analysis code|code-grounds)\b", content, re.I):
   ```
 
-- [ ] Update the on-disk fixture in `tests/test_code_artifacts.py:64`: `f"review=false items=code-grounds:run-1:analysis:{output_hash}%%\n",` (the `type=`/`state=`/`review=` fields on lines 63–64 stay for now; S12.7 strips them).
-- [ ] Run the new tests and every suite that exercises the renamed seam: `python -m pytest tests/test_evidence_markers.py tests/test_evidence_sets.py tests/test_code_artifacts.py -v` — expect all pass.
-- [ ] Add to `CHANGELOG.md` under `## [Unreleased]` (create a `### Changed` heading there if absent):
+- [x] Update the on-disk fixture in `tests/test_code_artifacts.py:64`: `f"review=false items=code-grounds:run-1:analysis:{output_hash}%%\n",` (the `type=`/`state=`/`review=` fields on lines 63–64 stay for now; S12.7 strips them).
+- [x] Run the new tests and every suite that exercises the renamed seam: `python -m pytest tests/test_evidence_markers.py tests/test_evidence_sets.py tests/test_code_artifacts.py -v` — expect all pass.
+- [x] Add to `CHANGELOG.md` under `## [Unreleased]` (create a `### Changed` heading there if absent):
 
   ```markdown
   - Renamed the evidence-set code-item marker prefix `code-warrant:` to
@@ -1312,7 +1312,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
     closed as invalid source-span refs.
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git commit -m "refactor(evidence): rename code-warrant item family to code-grounds (#1293)
@@ -1423,14 +1423,14 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   ```
 
 - [ ] Run both to verify they fail: `python -m pytest tests/test_schema_version.py::test_migration_rewrites_code_artifact_purpose_warrant_to_grounds tests/test_code_artifacts.py::test_code_artifact_purpose_defaults_to_grounds -v` — expect `assert purpose == "grounds"` failing with `'warrant'` in both.
-- [ ] Edit `src/memoria_vault/runtime/schema.sql:301`:
+- [x] Edit `src/memoria_vault/runtime/schema.sql:301`:
 
   ```sql
       purpose TEXT NOT NULL CHECK (purpose IN ('grounds', 'deliverable', 'both')),
   ```
 
   and `:378`: `PRAGMA user_version = 15;`
-- [ ] Edit `src/memoria_vault/runtime/state.py:53`: `SCHEMA_VERSION = 15`, and `:3429`: `if purpose not in {"grounds", "deliverable", "both"}:`
+- [x] Edit `src/memoria_vault/runtime/state.py:53`: `SCHEMA_VERSION = 15`, and `:3429`: `if purpose not in {"grounds", "deliverable", "both"}:`
 - [ ] Add the migration entry to G1's `MIGRATIONS` dict in `state.py` (SQLite cannot
   ALTER a CHECK and the old CHECK rejects `UPDATE ... SET purpose='grounds'`; rebuild
   and copy the parent and FK-owning child tables under normal foreign-key enforcement):
@@ -1507,7 +1507,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
       ),
   ```
 
-- [ ] Edit `src/memoria_vault/runtime/code/records.py:20`: `purpose: str = "grounds",`
+- [x] Edit `src/memoria_vault/runtime/code/records.py:20`: `purpose: str = "grounds",`
 - [ ] Update the version-pin test in `tests/test_schema_version.py` to landing version
   15 and verify the v14 fixtures preserve both tables and pass `foreign_key_check`.
 - [ ] Run to verify both pass: `python -m pytest tests/test_schema_version.py tests/test_code_artifacts.py -v`
@@ -1546,7 +1546,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 **Steps:**
 
-- [ ] Make the tests fail first — flip the expectations. In `tests/test_gap_analysis.py` lines 73–74:
+- [x] Make the tests fail first — flip the expectations. In `tests/test_gap_analysis.py` lines 73–74:
 
   ```python
               tmp_path / f"notes/grounds-{idx}.md",
@@ -1562,8 +1562,8 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   ```
 
   lines 570 and 572: replace `"under-warranted"` with `"under-grounded"`. In `tests/test_worker_knowledge_cycle.py:90`: `] == "under-grounded"`.
-- [ ] Run to verify they fail: `python -m pytest tests/test_gap_analysis.py tests/test_worker_knowledge_cycle.py -v` — expect assertions failing with observed `gap_type == "under-warranted"` (and `_assert_gap_contract` rejecting the unknown expected kind).
-- [ ] Implement in `src/memoria_vault/runtime/knowledge.py`. Line 60 (inside `GAP_KINDS`): `"under-grounded",`. Lines 486–491:
+- [x] Run to verify they fail: `python -m pytest tests/test_gap_analysis.py tests/test_worker_knowledge_cycle.py -v` — expect assertions failing with observed `gap_type == "under-warranted"` (and `_assert_gap_contract` rejecting the unknown expected kind).
+- [x] Implement in `src/memoria_vault/runtime/knowledge.py`. Line 60 (inside `GAP_KINDS`): `"under-grounded",`. Lines 486–491:
 
   ```python
           elif note_count >= dense_threshold and source_count == 0:
@@ -1575,19 +1575,19 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
               )
   ```
 
-- [ ] Run to verify they pass: `python -m pytest tests/test_gap_analysis.py tests/test_worker_knowledge_cycle.py -v`
-- [ ] Update the four prose echoes:
+- [x] Run to verify they pass: `python -m pytest tests/test_gap_analysis.py tests/test_worker_knowledge_cycle.py -v`
+- [x] Update the four prose echoes:
   - `docs/explanation/knowledge/document-types.md:53`: `absent; \`under-grounded\` means notes exist without enough source support.`
   - `docs/reference/commands-and-transports/system-actions-operations.md:124`: `Reports topic, digest, grounds, and project argument gaps from checked state;` (rest of cell unchanged)
   - `docs/explanation/knowledge/consequence-propagation.md:38` **and** `docs/superpowers/plans/2026-07-12-docs-migration.md:236` (identical sentence, identical edit): `computed and affected nodes are marked — stale, under-grounded, needing` (line 25 of `consequence-propagation.md`, the formal "Warrant lost" consequence type, stays — manifest §4)
-- [ ] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
+- [x] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
 
   ```markdown
   - Renamed the `analyze-gaps` gap kind `under-warranted` to `under-grounded`
     (breaking for scripts that branch on `gap_type`; no compatibility alias).
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git commit -m "refactor(knowledge): rename under-warranted gap kind to under-grounded (#1293)
@@ -1613,7 +1613,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 **Steps:**
 
-- [ ] Apply the published-docs word swaps (each edit replaces only the quoted phrase on the cited line):
+- [x] Apply the published-docs word swaps (each edit replaces only the quoted phrase on the cited line):
 
   | File:line | Old phrase | New phrase |
   |---|---|---|
@@ -1709,7 +1709,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
 
 **Steps:**
 
-- [ ] Rewrite the grammar tests in `tests/test_evidence_markers.py` (replace `test_evidence_marker_round_trips_canonical_form` at lines 18–33 and `test_extract_evidence_markers_from_draft_text` at lines 36–47 with the following; imports need no change beyond S12.1's):
+- [x] Rewrite the grammar tests in `tests/test_evidence_markers.py` (replace `test_evidence_marker_round_trips_canonical_form` at lines 18–33 and `test_extract_evidence_markers_from_draft_text` at lines 36–47 with the following; imports need no change beyond S12.1's):
 
   ```python
   def test_evidence_marker_round_trips_canonical_v2_form() -> None:
@@ -1754,8 +1754,8 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
       assert evidence_ids_in_text(text) == {"ev-11111111", "ev-22222222"}
   ```
 
-- [ ] Run to verify they fail: `python -m pytest tests/test_evidence_markers.py -v` — expect `TypeError: EvidenceMarker.__init__() missing 3 required positional arguments` on the round-trip test and `ValueError: invalid evidence type: ''` (not the unknown-field error) from `test_empty_and_omitted_items_both_parse_as_no_items`.
-- [ ] Implement in `src/memoria_vault/runtime/evidence.py`. Delete lines 10–11 (`EVIDENCE_TYPES`, `EVIDENCE_STATES`). Replace the dataclass (lines 35–41) with:
+- [x] Run to verify they fail: `python -m pytest tests/test_evidence_markers.py -v` — expect `TypeError: EvidenceMarker.__init__() missing 3 required positional arguments` on the round-trip test and `ValueError: invalid evidence type: ''` (not the unknown-field error) from `test_empty_and_omitted_items_both_parse_as_no_items`.
+- [x] Implement in `src/memoria_vault/runtime/evidence.py`. Delete lines 10–11 (`EVIDENCE_TYPES`, `EVIDENCE_STATES`). Replace the dataclass (lines 35–41) with:
 
   ```python
   @dataclass(frozen=True)
@@ -1806,8 +1806,8 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
   ```
 
   Delete `_parse_review` (lines 154–160).
-- [ ] Run to verify the unit suite passes: `python -m pytest tests/test_evidence_markers.py -v` — expect all pass. (The runtime suites that construct `EvidenceMarker` or carry v1 fixture markers — `test_draft_compose.py`, `test_evidence_sets.py`, `test_mc_hash_binding.py`, `test_code_artifacts.py` — go red here and are restored by S12.6–S12.7; the full gate runs at the end of S12.7.)
-- [ ] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
+- [x] Run to verify the unit suite passes: `python -m pytest tests/test_evidence_markers.py -v` — expect all pass. (The runtime suites that construct `EvidenceMarker` or carry v1 fixture markers — `test_draft_compose.py`, `test_evidence_sets.py`, `test_mc_hash_binding.py`, `test_code_artifacts.py` — go red here and are restored by S12.6–S12.7; the full gate runs at the end of S12.7.)
+- [x] Add to `CHANGELOG.md` under `## [Unreleased]` → `### Changed`:
 
   ```markdown
   - Marker grammar v2: `%%ev: ev-<8hex> items=a|b%%`. The `type=`, `state=`,
@@ -1816,7 +1816,7 @@ not `:3321`; `test_gap_analysis.py:73-140,570-572`, not `:107-174,604-606`;
     from `items=`, the sole authoritative field.
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git commit -m "feat(evidence): marker grammar v2 - id + items only, derived fields rejected (#1293)
@@ -1845,8 +1845,8 @@ constructors/fixtures (S12.5/S12.7). `state.py` consumes only `.evidence_id`/`.i
 
 **Steps:**
 
-- [ ] Run the already-failing consumer tests to capture the failure: `python -m pytest tests/test_draft_compose.py -v` — expect `TypeError: EvidenceMarker.__init__() got an unexpected keyword argument 'evidence_type'` from the compose path.
-- [ ] Fix the compose constructor. `src/memoria_vault/runtime/knowledge.py` lines 2008–2020 currently read:
+- [x] Run the already-failing consumer tests to capture the failure: `python -m pytest tests/test_draft_compose.py -v` — expect `TypeError: EvidenceMarker.__init__() got an unexpected keyword argument 'evidence_type'` from the compose path.
+- [x] Fix the compose constructor. `src/memoria_vault/runtime/knowledge.py` lines 2008–2020 currently read:
 
   ```python
           frontmatter, body = split_frontmatter((vault / note_rel).read_text(encoding="utf-8"))
@@ -1874,7 +1874,7 @@ constructors/fixtures (S12.5/S12.7). `state.py` consumes only `.evidence_id`/`.i
           marker = EvidenceMarker(evidence_id=evidence_id, items=tuple(items))
   ```
 
-- [ ] Fix the `read_project_draft` payload. Lines 2100–2109 currently read:
+- [x] Fix the `read_project_draft` payload. Lines 2100–2109 currently read:
 
   ```python
           "evidence_markers": [
@@ -1902,8 +1902,8 @@ constructors/fixtures (S12.5/S12.7). `state.py` consumes only `.evidence_id`/`.i
   ```
 
   (Verified consumers: `tests/test_draft_verification.py:337,360,877,991`, `tests/test_draft_compose.py:89`, `tests/test_cli_work_project.py:785,910`, and `worker.py:659` read only `"id"`/list length; `test_draft_compose.py:85` reads `review_required` from the `evidence_sets` DB rows, which keep it.)
-- [ ] Run to verify the compose path passes: `python -m pytest tests/test_draft_compose.py tests/test_draft_verification.py -v` — expect all pass (compose now writes v2 markers; `test_draft_compose.py:73`'s regex `\^blk-[0-9a-f]{8} %%ev: ev-[0-9a-f]{8} ` matches the v2 form).
-- [ ] Commit:
+- [x] Run to verify the compose path passes: `python -m pytest tests/test_draft_compose.py tests/test_draft_verification.py -v` — expect all pass (compose now writes v2 markers; `test_draft_compose.py:73`'s regex `\^blk-[0-9a-f]{8} %%ev: ev-[0-9a-f]{8} ` matches the v2 form).
+- [x] Commit:
 
   ```bash
   git commit -m "refactor(knowledge): compose and read_project_draft use items-only v2 markers (#1293)
@@ -1926,8 +1926,8 @@ constructors/fixtures (S12.5/S12.7). `state.py` consumes only `.evidence_id`/`.i
 
 **Steps:**
 
-- [ ] Run the failing suites to capture the failure mode: `python -m pytest tests/test_evidence_sets.py tests/test_mc_hash_binding.py tests/test_code_artifacts.py -v` — expect failures like `assert result == {"deleted": 0, "inserted": 5}` observing `inserted: 0` (the v2 parser rejects the v1 fixtures' `type=`/`state=`/`review=` fields, so rebuild skips every marker — the fail-closed behavior working as specified, against stale fixtures).
-- [ ] Rewrite the draft fixture in `tests/test_evidence_sets.py:54-65`:
+- [x] Run the failing suites to capture the failure mode: `python -m pytest tests/test_evidence_sets.py tests/test_mc_hash_binding.py tests/test_code_artifacts.py -v` — expect failures like `assert result == {"deleted": 0, "inserted": 5}` observing `inserted: 0` (the v2 parser rejects the v1 fixtures' `type=`/`state=`/`review=` fields, so rebuild skips every marker — the fail-closed behavior working as specified, against stale fixtures).
+- [x] Rewrite the draft fixture in `tests/test_evidence_sets.py:54-65`:
 
   ```python
       note.write_text(
@@ -1941,7 +1941,7 @@ constructors/fixtures (S12.5/S12.7). `state.py` consumes only `.evidence_id`/`.i
   ```
 
   (Row assertions below it are untouched: `type`/`state`/`review_required` are DB-derived from items, and the v1 fixture's deliberately-wrong inline `type=` values never influenced them.)
-- [ ] Rewrite the marker constant in `tests/test_mc_hash_binding.py:13`:
+- [x] Rewrite the marker constant in `tests/test_mc_hash_binding.py:13`:
 
   ```python
   _MARKER = "%%ev: ev-11111111 items=%%"
@@ -1956,7 +1956,7 @@ constructors/fixtures (S12.5/S12.7). `state.py` consumes only `.evidence_id`/`.i
           ),
   ```
 
-- [ ] Rewrite the computed-evidence fixture in `tests/test_code_artifacts.py:62-66`:
+- [x] Rewrite the computed-evidence fixture in `tests/test_code_artifacts.py:62-66`:
 
   ```python
       draft.write_text(
@@ -1965,10 +1965,10 @@ constructors/fixtures (S12.5/S12.7). `state.py` consumes only `.evidence_id`/`.i
       )
   ```
 
-- [ ] Run to verify they pass: `python -m pytest tests/test_evidence_sets.py tests/test_mc_hash_binding.py tests/test_code_artifacts.py tests/test_content_security.py -v` — expect all pass, `test_content_security.py` unmodified.
-- [ ] Confirm zero v1 marker fields remain anywhere: `grep -rn "%%ev:" src/ tests/ | grep -E "type=|state=|review="` — expect no output.
-- [ ] Run the full gate: `python scripts/verify` — expect pass.
-- [ ] Commit:
+- [x] Run to verify they pass: `python -m pytest tests/test_evidence_sets.py tests/test_mc_hash_binding.py tests/test_code_artifacts.py tests/test_content_security.py -v` — expect all pass, `test_content_security.py` unmodified.
+- [x] Confirm zero v1 marker fields remain anywhere: `grep -rn "%%ev:" src/ tests/ | grep -E "type=|state=|review="` — expect no output.
+- [x] Run the full gate: `python scripts/verify` — expect pass.
+- [x] Commit:
 
   ```bash
   git commit -m "test(evidence): move all marker fixtures to items-only v2 grammar (#1293)
@@ -2031,7 +2031,7 @@ conftest change is needed anywhere in this package.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_evidence_sets.py` (after line 89):
+- [x] Write the failing tests. Append to `tests/test_evidence_sets.py` (after line 89):
 
   ```python
   def _seed_source(vault: Path, work_id: str, text: str) -> None:
@@ -2129,7 +2129,7 @@ conftest change is needed anywhere in this package.
   The last two tests are the machine-routed regression controls the spec's R3/R4 pins
   demand (they pass before AND after the change — they pin that R2 does not overreach).
 
-- [ ] Run the tests to verify the two new-behavior tests fail:
+- [x] Run the tests to verify the two new-behavior tests fail:
 
   ```
   python -m pytest tests/test_evidence_sets.py -v -k "cross_work or code_and_span or same_work or pure_code"
@@ -2142,7 +2142,7 @@ conftest change is needed anywhere in this package.
   mix). `test_same_work_two_span_marker_stays_multi_span` and
   `test_pure_code_items_derive_computed` PASS (controls).
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/state.py`, replace
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/state.py`, replace
   lines 2629–2636 (`_derived_evidence_type`) with:
 
   ```python
@@ -2180,7 +2180,7 @@ conftest change is needed anywhere in this package.
   (`code-warrant` → whatever `evidence_ref_kind` then returns for code refs); check
   `evidence_ref_kind` in `src/memoria_vault/runtime/evidence.py:64-71` and match it.
 
-- [ ] Run the tests to verify they pass, plus the neighbors that exercise the rebuild path:
+- [x] Run the tests to verify they pass, plus the neighbors that exercise the rebuild path:
 
   ```
   python -m pytest tests/test_evidence_sets.py tests/test_evidence_markers.py tests/test_draft_verification.py -v
@@ -2190,7 +2190,7 @@ conftest change is needed anywhere in this package.
   asserts `single-span`, nested-set → `multi-hop`, and `implicit` rows — those
   expectations are unchanged under R1–R4.)
 
-- [ ] Run the full gate:
+- [x] Run the full gate:
 
   ```
   python scripts/verify
@@ -2198,7 +2198,7 @@ conftest change is needed anywhere in this package.
 
   Expected: exit 0.
 
-- [ ] Commit (explicit paths only — the git index is shared per checkout):
+- [x] Commit (explicit paths only — the git index is shared per checkout):
 
   ```
   git add src/memoria_vault/runtime/state.py tests/test_evidence_sets.py
@@ -2228,7 +2228,7 @@ conftest change is needed anywhere in this package.
 
 **Steps:**
 
-- [ ] Fix the wrong fixture. In `tests/test_evidence_markers.py`, line 21, change:
+- [x] Fix the wrong fixture. In `tests/test_evidence_markers.py`, line 21, change:
 
   ```python
           evidence_type="multi-span",
@@ -2286,7 +2286,7 @@ conftest change is needed anywhere in this package.
       return "single-span" if len(items) == 1 else "multi-span"
   ```
 
-- [ ] Verify no reference to the deleted function survives:
+- [x] Verify no reference to the deleted function survives:
 
   ```
   grep -rn "_draft_evidence_type" src tests
@@ -2294,7 +2294,7 @@ conftest change is needed anywhere in this package.
 
   Expected: no output.
 
-- [ ] Run the affected suites:
+- [x] Run the affected suites:
 
   ```
   python -m pytest tests/test_draft_compose.py tests/test_draft_verification.py tests/test_evidence_markers.py tests/test_evidence_sets.py -v
@@ -2302,7 +2302,7 @@ conftest change is needed anywhere in this package.
 
   Expected: all pass.
 
-- [ ] Run the full gate:
+- [x] Run the full gate:
 
   ```
   python scripts/verify
@@ -2310,7 +2310,7 @@ conftest change is needed anywhere in this package.
 
   Expected: exit 0.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_evidence_markers.py
@@ -2355,7 +2355,7 @@ conftest change is needed anywhere in this package.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_evidence_sets.py`:
+- [x] Write the failing tests. Append to `tests/test_evidence_sets.py`:
 
   ```python
   def test_nested_incomplete_child_flips_parent_incomplete(tmp_path: Path) -> None:
@@ -2425,7 +2425,7 @@ conftest change is needed anywhere in this package.
       assert rows["ev-eeee0002"]["type"] == "multi-hop"
   ```
 
-- [ ] Run the tests to verify the three cycle/nesting tests fail:
+- [x] Run the tests to verify the three cycle/nesting tests fail:
 
   ```
   python -m pytest tests/test_evidence_sets.py -v -k "nested_incomplete or mutually_referencing or self_referencing or healthy_nested"
@@ -2438,7 +2438,7 @@ conftest change is needed anywhere in this package.
   FAILS (id is in `marker_ids`, so it "resolves" against itself).
   `test_healthy_nested_chain_stays_complete` PASSES (control).
 
-- [ ] Write the minimal implementation in `src/memoria_vault/runtime/state.py`.
+- [x] Write the minimal implementation in `src/memoria_vault/runtime/state.py`.
 
   (a) Replace `_evidence_items_resolve` (currently lines 2639–2661; locate by name) with:
 
@@ -2545,7 +2545,7 @@ conftest change is needed anywhere in this package.
   Keep `_code_warrant_resolves` (state.py:2664–2673) unchanged — it is still the code
   leaf of resolution.
 
-- [ ] Verify no reference to the deleted function survives:
+- [x] Verify no reference to the deleted function survives:
 
   ```
   grep -rn "_evidence_items_resolve" src tests
@@ -2553,7 +2553,7 @@ conftest change is needed anywhere in this package.
 
   Expected: no output.
 
-- [ ] Run the tests to verify they pass, plus the rebuild-path neighbors:
+- [x] Run the tests to verify they pass, plus the rebuild-path neighbors:
 
   ```
   python -m pytest tests/test_evidence_sets.py tests/test_draft_verification.py tests/test_code_artifacts.py -v
@@ -2562,7 +2562,7 @@ conftest change is needed anywhere in this package.
   Expected: all pass. (The existing `ev-33333333` expectation — nested set over a
   complete child stays `complete` — is exactly the healthy-chain case.)
 
-- [ ] Run the full gate:
+- [x] Run the full gate:
 
   ```
   python scripts/verify
@@ -2570,7 +2570,7 @@ conftest change is needed anywhere in this package.
 
   Expected: exit 0.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/state.py tests/test_evidence_sets.py
@@ -2612,7 +2612,7 @@ conftest change is needed anywhere in this package.
 
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_draft_verification.py`, add `import hashlib`
+- [x] Write the failing tests. In `tests/test_draft_verification.py`, add `import hashlib`
   after line 4 (`from pathlib import Path`), then append after line 343:
 
   ```python
@@ -2683,7 +2683,7 @@ conftest change is needed anywhere in this package.
   (Slice-2 coordination: `"items=%%"` is the tail of the composed implicit marker in both
   grammars, so the replace target is stable.)
 
-- [ ] Run the tests to verify they fail:
+- [x] Run the tests to verify they fail:
 
   ```
   python -m pytest tests/test_draft_verification.py -v -k "items_digest or voids_prior or matching_evidence_record"
@@ -2695,7 +2695,7 @@ conftest change is needed anywhere in this package.
   forever, regardless of item edits); `test_disposition_requires_matching_evidence_record`
   FAILS with `DID NOT RAISE`.
 
-- [ ] Write the minimal implementation in `src/memoria_vault/runtime/knowledge.py`.
+- [x] Write the minimal implementation in `src/memoria_vault/runtime/knowledge.py`.
 
   (a) Immediately before `_disposed_evidence_ids` (currently line 3241; locate by name),
   add:
@@ -2782,7 +2782,7 @@ conftest change is needed anywhere in this package.
   (`src/memoria_vault/cli.py:1133-1138`), so the new `ValueError` only hardens direct
   runtime callers — same contract, now enforced at the seam that journals.
 
-- [ ] Verify no reference to the replaced function survives:
+- [x] Verify no reference to the replaced function survives:
 
   ```
   grep -rn "_disposed_evidence_ids" src tests
@@ -2790,7 +2790,7 @@ conftest change is needed anywhere in this package.
 
   Expected: no output.
 
-- [ ] Run the tests to verify they pass, including the pre-existing disposition tests:
+- [x] Run the tests to verify they pass, including the pre-existing disposition tests:
 
   ```
   python -m pytest tests/test_draft_verification.py -v
@@ -2802,7 +2802,7 @@ conftest change is needed anywhere in this package.
   `test_draft_text_drift_overrides_pi_disposition_and_refuses_export` (drift remains a
   permanent block a disposition never touches).
 
-- [ ] Run the full gate:
+- [x] Run the full gate:
 
   ```
   python scripts/verify
@@ -2810,7 +2810,7 @@ conftest change is needed anywhere in this package.
 
   Expected: exit 0.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
@@ -2875,7 +2875,7 @@ names it: `no-evidence-set`, severity high, permanent block.
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_draft_verification.py`
+- [x] Write the failing test. Append to `tests/test_draft_verification.py`
   (uses the file's existing `_project` helper and `verify_project_draft`
   wrapper):
 
@@ -2910,11 +2910,11 @@ names it: `no-evidence-set`, severity high, permanent block.
   (The hand-written draft has no `Source note:` line, so
   `missing-structural-reference` is expected alongside — asserting the full
   ordered list pins the insertion point.)
-- [ ] Run to verify it fails:
+- [x] Run to verify it fails:
   `python -m pytest tests/test_draft_verification.py::test_draft_with_zero_evidence_sets_reports_no_evidence_set_finding -v`
   — expected failure: findings list is `["missing-structural-reference"]`
   (no `no-evidence-set` entry).
-- [ ] Write the minimal implementation. In
+- [x] Write the minimal implementation. In
   `src/memoria_vault/runtime/knowledge.py`, directly after the
   `evidence-id-duplicate` findings comprehension (after the line
   `for evidence_id in sorted(duplicate_ids & draft_occurrence_ids)` and its
@@ -2940,11 +2940,11 @@ names it: `no-evidence-set`, severity high, permanent block.
   (`bool(draft["evidence_sets"])` is now redundant: the empty case always
   contributes the named blocking finding, so `ok` semantics are unchanged and
   `missing` is honest.)
-- [ ] Run to verify it passes:
+- [x] Run to verify it passes:
   `python -m pytest tests/test_draft_verification.py::test_draft_with_zero_evidence_sets_reports_no_evidence_set_finding -v`
-- [ ] Run the neighbors to catch regressions:
+- [x] Run the neighbors to catch regressions:
   `python -m pytest tests/test_draft_verification.py tests/test_draft_compose.py tests/test_evidence_sets.py -q`
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
@@ -3010,7 +3010,7 @@ predicate, so this task introduces an honest blocking/advisory split.
 
 **Steps:**
 
-- [ ] Add the standing-flip helper to `tests/test_draft_verification.py`
+- [x] Add the standing-flip helper to `tests/test_draft_verification.py`
   (next to `_source_span`, after line 966):
 
   ```python
@@ -3025,7 +3025,7 @@ predicate, so this task introduces an honest blocking/advisory split.
       )
   ```
 
-- [ ] Write the failing tests (all four, appended to
+- [x] Write the failing tests (all four, appended to
   `tests/test_draft_verification.py`):
 
   ```python
@@ -3146,12 +3146,12 @@ predicate, so this task introduces an honest blocking/advisory split.
 
   (The nested-path test writes v2 markers by hand — it parses only after the
   slice-2 grammar package, which precedes this one.)
-- [ ] Run to verify they fail:
+- [x] Run to verify they fail:
   `python -m pytest tests/test_draft_verification.py -k "stale or archived or unset_standing" -v`
   — expected: the stale/archived tests fail with `ready is True` after the
   standing flip and empty `stale`/`archived` filtered lists; the
   unset-standing control may already pass (it pins existing behavior).
-- [ ] Write the implementation, part 1 — standing reader split. Replace
+- [x] Write the implementation, part 1 — standing reader split. Replace
   `src/memoria_vault/runtime/knowledge.py:765-770`:
 
   ```python
@@ -3177,7 +3177,7 @@ predicate, so this task introduces an honest blocking/advisory split.
       return _catalog_source_standing(source) not in {"archived", "retracted", "superseded"}
   ```
 
-- [ ] Write the implementation, part 2 — module constants and the findings
+- [x] Write the implementation, part 2 — module constants and the findings
   helper. Add next to the other module constants (after the `GAP_KINDS`
   block, knowledge.py:57-63):
 
@@ -3240,7 +3240,7 @@ predicate, so this task introduces an honest blocking/advisory split.
   what makes `evidence-source-stale` undisposable. `rows_by_id` is built from all
   `state.evidence_sets(vault)`, not just the draft's rows, so nested refs outside
   the draft still taint.
-- [ ] Write the implementation, part 3 — wire into
+- [x] Write the implementation, part 3 — wire into
   `_verify_project_draft_snapshot`. After the per-row loop and before
   `findings.extend(_draft_structural_reference_findings(...))`
   (knowledge.py:2244), retain the existing draft-only lookup as
@@ -3292,7 +3292,7 @@ predicate, so this task introduces an honest blocking/advisory split.
               "missing": [] if ok else _verification_finding_labels(blocking[:max_findings]),
   ```
 
-- [ ] Write the implementation, part 4 — export refusal reasons must not
+- [x] Write the implementation, part 4 — export refusal reasons must not
   list advisories. In `render_project_draft_export_markdown`
   (knowledge.py:2591), replace:
 
@@ -3308,13 +3308,13 @@ predicate, so this task introduces an honest blocking/advisory split.
 
   (`missing` is exactly the blocking labels; the existing drift/unbound
   refusal tests keep matching because label format is unchanged.)
-- [ ] Run to verify the new tests pass:
+- [x] Run to verify the new tests pass:
   `python -m pytest tests/test_draft_verification.py -k "stale or archived or unset_standing" -v`
-- [ ] Run the full neighbors:
+- [x] Run the full neighbors:
   `python -m pytest tests/test_draft_verification.py tests/test_gap_analysis.py tests/test_knowledge.py tests/test_evidence_sets.py -q`
   (gap analysis consumes `_is_current_catalog_source`; behavior for it is
   unchanged by the split).
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py
@@ -3405,7 +3405,7 @@ Direct state-level rebuilds remain context-free and do not journal.
   test vault, simulate the stated ledger-loss recovery by dropping the entire
   `evidence_bindings` table; the next `state.connect` re-applies schema DDL and
   recreates the empty table and its immutability triggers before replay.
-- [ ] Write the failing test. Append to `tests/test_draft_verification.py`:
+- [x] Write the failing test. Append to `tests/test_draft_verification.py`:
 
   ```python
   def test_first_binding_journals_one_evidence_minted_event(tmp_path: Path) -> None:
@@ -3428,10 +3428,10 @@ Direct state-level rebuilds remain context-free and do not journal.
   (The re-verify rebuild must **not** re-emit: the binding already exists,
   so the ON-CONFLICT insert is a no-op and `minted` stays empty —
   mint-once durability, not an event per rebuild.)
-- [ ] Run to verify it fails:
+- [x] Run to verify it fails:
   `python -m pytest tests/test_draft_verification.py::test_first_binding_journals_one_evidence_minted_event -v`
   — expected failure: `events == []`.
-- [ ] Implement the atomic trusted-writer seam. Extract
+- [x] Implement the atomic trusted-writer seam. Extract
   `state._replace_evidence_sets_conn(conn, rows)` from the current direct
   replacement path (including mint detection), and let the public direct
   functions retain their own connection/context-free behavior. Extract
@@ -3445,7 +3445,7 @@ Direct state-level rebuilds remain context-free and do not journal.
   It writes the head and appends the collected JSONL events only after that
   commit. Replace both knowledge production rebuild calls with this
   trusted-writer function.
-- [ ] Add a fault-injection regression beside the integration test: monkeypatch
+- [x] Add a fault-injection regression beside the integration test: monkeypatch
   `_insert_journal_row_conn` to raise during compose; assert the failed call
   leaves no `evidence_bindings`, no active `evidence_sets`, and no
   `evidence-minted` event. Restore the helper, verify the already-written draft,
@@ -3566,7 +3566,7 @@ amendment above. They are retained only as provenance; do not implement them.
 
 -->
 
-- [ ] Update the exact-dict rebuild assertion at
+- [x] Update the exact-dict rebuild assertion at
   `tests/test_evidence_sets.py:71` (five direct markers all mint there).
   Replace:
 
@@ -3589,11 +3589,11 @@ amendment above. They are retained only as provenance; do not implement them.
 
   (`tests/test_mc_hash_binding.py:142` asserts `{"deleted": 0, "inserted": 0}`
   with zero rows — no mint, no `minted` key, unchanged.)
-- [ ] Run to verify it passes:
+- [x] Run to verify it passes:
   `python -m pytest tests/test_draft_verification.py::test_first_binding_journals_one_evidence_minted_event tests/test_evidence_sets.py tests/test_mc_hash_binding.py -v`
-- [ ] Run the journal-trust neighbors (the event rides the hash chain):
+- [x] Run the journal-trust neighbors (the event rides the hash chain):
   `python -m pytest tests/test_journal_trust.py tests/test_draft_compose.py -q`
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/trusted_writer.py src/memoria_vault/runtime/knowledge.py tests/test_draft_verification.py tests/test_evidence_sets.py
@@ -3743,10 +3743,10 @@ explicit scope if needed.
       return {"replayed": replayed, "inserted": inserted}
   ```
 
-- [ ] Run the current focused recovery suite:
+- [x] Run the current focused recovery suite:
   `python -m pytest tests/test_draft_verification.py -q`
-- [ ] Run the correctness gate: `python scripts/verify`
-- [ ] Commit:
+- [x] Run the correctness gate: `python scripts/verify`
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/state.py tests/test_draft_verification.py
@@ -3778,7 +3778,7 @@ pointer line to the governing spec. Docs task — no failing test; the gate is
 
 **Steps:**
 
-- [ ] Edit 1 — type-name wording (lines 169-171). The rename-sweep package
+- [x] Edit 1 — type-name wording (lines 169-171). The rename-sweep package
   (slice 1) owns the `Warrant =` → `Grounds =` lead-in; if it has already
   landed, match `Grounds` in old_string instead of `Warrant` — the payload
   of THIS edit is only the type list. Replace:
@@ -3797,7 +3797,7 @@ pointer line to the governing spec. Docs task — no failing test; the gate is
     **computed**. Claims that need project computation or future software work are
   ```
 
-- [ ] Edit 2 — derivation list gains `computed` and `implicit` gets its
+- [x] Edit 2 — derivation list gains `computed` and `implicit` gets its
   ratified trigger (lines 177-179). Replace:
 
   ```text
@@ -3815,7 +3815,7 @@ pointer line to the governing spec. Docs task — no failing test; the gate is
     code-grounds refs) — and never asserts it.
   ```
 
-- [ ] Edit 3 — pointer line. After the bullet's closing sentence
+- [x] Edit 3 — pointer line. After the bullet's closing sentence
   `…§4.1's citation/number checks and §8 Q2's routing measurement run on.`
   (line 191), append to the same bullet:
 
@@ -3827,8 +3827,8 @@ pointer line to the governing spec. Docs task — no failing test; the gate is
     derived at read time, never stored in the marker.
   ```
 
-- [ ] Run the gate: `python scripts/verify`
-- [ ] Commit:
+- [x] Run the gate: `python scripts/verify`
+- [x] Commit:
 
   ```bash
   git add docs/superpowers/specs/0.1.0-beta.1-design.md

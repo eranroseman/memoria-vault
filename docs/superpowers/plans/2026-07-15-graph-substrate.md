@@ -372,7 +372,7 @@ historical drafting record only and must not be implemented or copied.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_schemas.py` (file already imports
+- [x] Write the failing tests. Append to `tests/test_schemas.py` (file already imports
   `shutil`, `yaml`, and `schema`; add `import pytest` after the `import shutil` line at :3):
 
   ```python
@@ -413,11 +413,11 @@ historical drafting record only and must not be implemented or copied.
       )
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_schemas.py::test_concept_type_registry_is_seeded_and_every_doc_type_names_a_member -v`
   — expected: `AttributeError: module ... has no attribute 'load_concept_types'`.
 
-- [ ] Create the seed registry
+- [x] Create the seed registry
   `src/memoria_vault/product/workspace_seed/.memoria/schemas/concept-types.yaml`:
 
   ```yaml
@@ -437,7 +437,7 @@ historical drafting record only and must not be implemented or copied.
     workflow: Registered workflow (db-store registry row).
   ```
 
-- [ ] Add the mapping line to each of the six type yamls, directly after `category:`:
+- [x] Add the mapping line to each of the six type yamls, directly after `category:`:
   - `types/note.yaml` (after :2 `category: notes`): `concept_type: note`
   - `types/hub.yaml` (after :2): `concept_type: hub`
   - `types/project.yaml` (after :2): `concept_type: project`
@@ -445,7 +445,7 @@ historical drafting record only and must not be implemented or copied.
   - `types/fulltext.yaml` (after `category: fulltext`): `concept_type: work`
   - `types/code-artifact.yaml` (after `category: projects`): `concept_type: project`
 
-- [ ] Rewire the loader in `src/memoria_vault/runtime/subsystems/lib/schema.py`.
+- [x] Rewire the loader in `src/memoria_vault/runtime/subsystems/lib/schema.py`.
   Insert after `load_types` (below :56), and replace `load_types`' body:
 
   ```python
@@ -488,20 +488,20 @@ historical drafting record only and must not be implemented or copied.
   Also extend the module docstring (:4-6) sentence listing schema files to mention
   `concept-types.yaml` (the roster) alongside `types/<type>.yaml` and `folders.yaml`.
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_schemas.py -v` — all pass (the three new tests plus the
   existing file; `test_concept_types_load` still passes because the six doc types are
   unchanged).
 
-- [ ] Regenerate floor goldens (seed changed):
+- [x] Regenerate floor goldens (seed changed):
   `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_coverage.py -q`
   then review the drift is hash-only churn under `.memoria/schemas/` with `git diff --stat tests/fixtures/floor/goldens`.
 
-- [ ] Run the gate: `python scripts/verify` (the schema-doc drift check
+- [x] Run the gate: `python scripts/verify` (the schema-doc drift check
   `scripts/checks/schema_doc_drift.py` is subset-direction per `_map_section_errors`
   :139-145, so the new `concept_type:` key in live yamls does not trip the docs).
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/product/workspace_seed/.memoria/schemas/concept-types.yaml \
@@ -538,7 +538,7 @@ historical drafting record only and must not be implemented or copied.
 
 **Steps:**
 
-- [ ] Write the test file `tests/test_concept_type_registry.py`:
+- [x] Write the test file `tests/test_concept_type_registry.py`:
 
   ```python
   """Drift closure: concept-types.yaml is the single source of the DB Concept roster.
@@ -576,16 +576,16 @@ historical drafting record only and must not be implemented or copied.
   other `concept_type` column, `outputs.concept_type` at `schema.sql:82`, has no CHECK,
   so the first-match search cannot mis-bind.)
 
-- [ ] Register the file's level in `tests/conftest.py` `TEST_LEVELS`:
+- [x] Register the file's level in `tests/conftest.py` `TEST_LEVELS`:
   `"test_concept_type_registry.py": "contract",` (alphabetical position, near
   `"test_capabilities.py"` :23).
 
-- [ ] Run: `python -m pytest tests/test_concept_type_registry.py -v` — expected: PASS
+- [x] Run: `python -m pytest tests/test_concept_type_registry.py -v` — expected: PASS
   immediately (the shipped v12 CHECK already equals the 10-value roster; this task adds
   the gate, not a behavior change). Sanity-check the parser really extracted the CHECK by
   running once with the `len(registry) == 10` assertion — a regex under-match fails there.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add tests/test_concept_type_registry.py tests/conftest.py
@@ -626,7 +626,7 @@ either order of later consumers.
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_schemas.py`:
+- [x] Write the failing test. Append to `tests/test_schemas.py`:
 
   ```python
   def test_consequence_mark_fields_registered_on_kb_doc_types():
@@ -654,11 +654,11 @@ either order of later consumers.
       assert any("stale: expected bool" in error for error in bad_stale)
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_schemas.py::test_consequence_mark_fields_registered_on_kb_doc_types -v`
   — expected: `AssertionError: note` on the `optional.get("stale")` line.
 
-- [ ] Edit the four yamls (exact additions; keep existing key order):
+- [x] Edit the four yamls (exact additions; keep existing key order):
   - `note.yaml` — append to the `enums:` block (after :7 `item_type:` line):
     `  consequence: [grounds-lost, warrant-lost, qualifier-regression, rebuttal-strengthened]`
     and add to `optional:` (after :17 `archived: bool`): `  consequence: enum:consequence`
@@ -678,19 +678,19 @@ either order of later consumers.
     add to `optional:` (after `archived: bool` :12): `  consequence: enum:consequence`,
     (after `description: str` :13): `  stale: bool`
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_schemas.py -v` — all pass
   (`test_frontmatter_has_no_verdict_or_standing_fields` :92-98 is unaffected — `stale`
   is a consequence mark, not a verdict field; `check_status`/`standing` stay banned).
 
-- [ ] Regenerate floor goldens (seed changed):
+- [x] Regenerate floor goldens (seed changed):
   `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py tests/test_floor_coverage.py -q`
 
-- [ ] Run the gate: `python scripts/verify` (docs yaml examples are checked
+- [x] Run the gate: `python scripts/verify` (docs yaml examples are checked
   subset-direction, so new live optional fields cannot trip
   `scripts/checks/schema_doc_drift.py`).
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/product/workspace_seed/.memoria/schemas/types/note.yaml \
@@ -760,7 +760,7 @@ either order of later consumers.
   exception was canonicalized in `4f370c04`; the Alpha15 importer is retired by the
   clean-slate ruling.
 
-- [ ] Write the failing test. In `tests/test_schemas.py`, replace
+- [x] Write the failing test. In `tests/test_schemas.py`, replace
   `test_schema_accepts_undeclared_meaning_fields_during_root_layout_migration` (:160-171)
   with:
 
@@ -784,11 +784,11 @@ either order of later consumers.
       ]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_schemas.py::test_schema_rejects_undeclared_fields_while_x_hatch_passes -v`
   — expected: the `surprise: unknown field` assertion fails (open validator returns `[]`).
 
-- [ ] Write the minimal implementation in
+- [x] Write the minimal implementation in
   `src/memoria_vault/runtime/subsystems/lib/schema.py`. Replace the docstring lines
   :166-168 with:
 
@@ -813,7 +813,7 @@ either order of later consumers.
   (`forbidden` names are folded into `known_fields` so a retired field yields exactly its
   one "field is retired" error, never a second "unknown field" error.)
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_schemas.py -v`.
 
 - [ ] Add closure-boundary coverage: strict `stage_concept` rejects an undeclared
@@ -826,7 +826,7 @@ either order of later consumers.
   remove the dead `type == "work"` branch from `check_contradiction_links`
   (`4f370c04`; independent review approved).
 
-- [ ] Update the docs prose `docs/reference/data-model/frontmatter.md:41-43` — replace
+- [x] Update the docs prose `docs/reference/data-model/frontmatter.md:41-43` — replace
   the three lines beginning "Unknown extra fields are accepted during the alpha
   migration." with:
 
@@ -836,9 +836,9 @@ either order of later consumers.
   reported as retired rather than unknown.
   ```
 
-- [ ] Run the gate: `python scripts/verify`.
+- [x] Run the gate: `python scripts/verify`.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/subsystems/lib/schema.py \
@@ -5565,7 +5565,7 @@ doc-claims check).
 
   `` `link_relations` from `edges.LINK_RELATIONS` (moved from `schema.LINK_RELATIONS` by the graph-edges plan ERP-A.1; the `schema` re-export stays valid for one release) ``
 
-- [x] In the surfaces plan, line 7411, change
+- [ ] In the surfaces plan, line 7411, change
 
   `` `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` ``
 

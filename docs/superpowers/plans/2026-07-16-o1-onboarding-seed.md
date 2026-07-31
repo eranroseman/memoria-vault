@@ -583,7 +583,7 @@ It extracts page text via `_extract_pdf_pages` (capture.py:698-720, optional PyM
 - Consumes: `urllib.request.build_opener` with `HTTPRedirectHandler` (default opener only; never called in tests), stdlib `gzip`, `tarfile`, `io`, and `xml.parsers.expat`.
 - Produces: `resolve_fetch(row: dict[str, Any], *, opener: Callable[[str], Any] | None = None, authorize_url: Callable[[str], None]) -> bytes` — `opener(url)` must return a context-manager response exposing `.read(limit: int | None = None) -> bytes`; `None` resolves the module-level no-redirect `_default_opener` at call time so tests and M.3's CLI test can monkeypatch it. Every request first validates and authorizes its HTTPS URL; PMC handling prefers a `format="pdf"` link, otherwise consumes the single `format="tgz"` package PDF; XML, byte, and archive limits are binding as stated in the execution amendment.
 
-- [ ] **Step 1: Write the failing tests** — create `tests/test_seed_install.py`:
+- [x] **Step 1: Write the failing tests** — create `tests/test_seed_install.py`:
 
 ```python
 """Contract tests for the seed-corpus fetch/resolve layer and seed install.
@@ -789,9 +789,9 @@ def test_resolve_fetch_requires_https() -> None:
         raise AssertionError("non-https fetch URLs must be refused")
 ```
 
-- [ ] **Step 2: Run and watch it fail** — `python -m pytest tests/test_seed_install.py -v` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.runtime.seed_install'`.
+- [x] **Step 2: Run and watch it fail** — `python -m pytest tests/test_seed_install.py -v` → collection error: `ModuleNotFoundError: No module named 'memoria_vault.runtime.seed_install'`.
 
-- [ ] **Step 3: Minimal implementation.** Create `src/memoria_vault/runtime/seed_install.py`:
+- [x] **Step 3: Minimal implementation.** Create `src/memoria_vault/runtime/seed_install.py`:
 
 ```python
 """Seed-corpus fetch/resolve layer in front of the shipped capture seams.
@@ -890,9 +890,9 @@ In `tests/conftest.py` `TEST_LEVELS` (dict at :18), add alphabetically (immediat
     "test_seed_install.py": "contract",
 ```
 
-- [ ] **Step 4: Run to pass** — `python -m pytest tests/test_seed_install.py -v` → 8 passed.
+- [x] **Step 4: Run to pass** — `python -m pytest tests/test_seed_install.py -v` → 8 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/memoria_vault/runtime/seed_install.py tests/test_seed_install.py tests/conftest.py
@@ -1459,7 +1459,7 @@ Implements spec §4 (steering: derived signal + thin override — the *steering 
 
 **Steps:**
 
-- [ ] Write the failing test file `tests/test_steering_tokens.py` (new file — register it in the same step; the vault fixtures are bare `tmp_path` directories, no git/schemas needed because `steering.py` only reads markdown):
+- [x] Write the failing test file `tests/test_steering_tokens.py` (new file — register it in the same step; the vault fixtures are bare `tmp_path` directories, no git/schemas needed because `steering.py` only reads markdown):
 
 ```python
 """Contract tests for the derived-steering unit (runtime/steering.py)."""
@@ -1586,13 +1586,13 @@ def test_effective_steering_subtracts_muted_tokens_per_word(tmp_path: Path) -> N
     assert effective_steering_tokens(tmp_path) == {"scheduling"}
 ```
 
-- [ ] Register the new file in `tests/conftest.py` `TEST_LEVELS` — insert between the `test_source_enrichment.py` row (`:107`) and the `test_surface_contract.py` row (`:108`); `tests/test_testing_levels.py:10-14` fails otherwise:
+- [x] Register the new file in `tests/conftest.py` `TEST_LEVELS` — insert between the `test_source_enrichment.py` row (`:107`) and the `test_surface_contract.py` row (`:108`); `tests/test_testing_levels.py:10-14` fails otherwise:
 
 ```python
     "test_steering_tokens.py": "contract",
 ```
 
-- [ ] Run and confirm the failure is the missing module:
+- [x] Run and confirm the failure is the missing module:
 
 ```
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_steering_tokens.py -q
@@ -1600,7 +1600,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_steering_tokens.py
 
 Expected: collection error — `ModuleNotFoundError: No module named 'memoria_vault.runtime.steering'`.
 
-- [ ] Create `src/memoria_vault/runtime/steering.py` (complete file):
+- [x] Create `src/memoria_vault/runtime/steering.py` (complete file):
 
 ```python
 """Derived steering: the effective token set discovery ranking reads.
@@ -1757,7 +1757,7 @@ def effective_steering_tokens(vault: Path) -> set[str]:
 
 The SPEC GAP resolutions land here: hubs contribute the required singular `tag` alongside `tags` (gap 1); `archived: true` excludes uniformly across the three types (gap 2); `question_status: resolved` questions are skipped (gap 3).
 
-- [ ] Move the tokenizer out of `knowledge.py` — four edits, behavior-preserving:
+- [x] Move the tokenizer out of `knowledge.py` — four edits, behavior-preserving:
 
 Delete the block at `knowledge.py:85-100`:
 
@@ -1788,7 +1788,7 @@ from memoria_vault.runtime.steering import relevance_tokens
 
 Repoint `_steering_tokens` (`:1197`): `return _relevance_tokens(path.read_text(encoding="utf-8"))` becomes `return relevance_tokens(path.read_text(encoding="utf-8"))`. Repoint `_discovery_relevance`: at `:1207` `& _relevance_tokens(edge.get("target_title"), edge.get("target_id"), edge.get("target_doi"))` becomes `& relevance_tokens(...)` (same arguments), and at `:1211` `tag_tokens.update(_relevance_tokens(term))` becomes `tag_tokens.update(relevance_tokens(term))`. Then delete the `_relevance_tokens` definition at `:1229-1235`. (`re` stays imported — `knowledge.py` still uses it at `:1298`, `:2282`, `:3318`, `:3344-3345`.)
 
-- [ ] Run to pass, including the untouched whole-file behavior at the call site and the registration gate:
+- [x] Run to pass, including the untouched whole-file behavior at the call site and the registration gate:
 
 ```
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_steering_tokens.py tests/test_gap_analysis.py tests/test_testing_levels.py -q
@@ -1796,7 +1796,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_steering_tokens.py
 
 Expected: all pass (6 new tests + existing suites; `test_analyze_gaps_ranks_discovery_candidates_against_steering` still passes because `_steering_tokens` is still whole-file until S.2).
 
-- [ ] Commit:
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/steering.py src/memoria_vault/runtime/knowledge.py tests/test_steering_tokens.py tests/conftest.py
@@ -1829,7 +1829,7 @@ EOF
 
 **Steps:**
 
-- [ ] Rewrite the existing test's arrange (`tests/test_gap_analysis.py:394-442`) — replace the whole-file prose write at `:396-398` with an active-project write and rename the test; every assertion below the arrange stays byte-identical to the shipped test (the arrange otherwise mirrors the shipped fixture at `tests/test_gap_analysis.py:399-424`; `_md` is already imported at `:17`, the `workspace` fixture is `:38-41`):
+- [x] Rewrite the existing test's arrange (`tests/test_gap_analysis.py:394-442`) — replace the whole-file prose write at `:396-398` with an active-project write and rename the test; every assertion below the arrange stays byte-identical to the shipped test (the arrange otherwise mirrors the shipped fixture at `tests/test_gap_analysis.py:399-424`; `_md` is already imported at `:17`, the `workspace` fixture is `:38-41`):
 
 ```python
 def test_analyze_gaps_ranks_discovery_candidates_against_effective_steering(
@@ -1888,7 +1888,7 @@ def test_analyze_gaps_ranks_discovery_candidates_against_effective_steering(
 
 The unchecked project file is inert everywhere else in `analyze_gaps`: project-argument gaps only fire when `project_path` is passed (`knowledge.py:432-435`), and `_checked_concepts` skips it (no recorded verdict).
 
-- [ ] Add the mute-subtraction test (the §8 acceptance sentence, exactly — the muted term also appears in the project title, and a candidate carrying a surviving token still ranks):
+- [x] Add the mute-subtraction test (the §8 acceptance sentence, exactly — the muted term also appears in the project title, and a candidate carrying a surviving token still ranks):
 
 ```python
 def test_analyze_gaps_muted_terms_subtract_from_effective_steering(tmp_path: Path) -> None:
@@ -1941,7 +1941,7 @@ def test_analyze_gaps_muted_terms_subtract_from_effective_steering(tmp_path: Pat
     }
 ```
 
-- [ ] Add the watch-plus-prose test (discriminating pre/post: under the whole-file bag the prose-matched candidate ranks, which is the placeholder-pollution defect):
+- [x] Add the watch-plus-prose test (discriminating pre/post: under the whole-file bag the prose-matched candidate ranks, which is the placeholder-pollution defect):
 
 ```python
 def test_analyze_gaps_watch_entries_rank_and_prose_stops_polluting(tmp_path: Path) -> None:
@@ -1992,7 +1992,7 @@ def test_analyze_gaps_watch_entries_rank_and_prose_stops_polluting(tmp_path: Pat
     }
 ```
 
-- [ ] Run and confirm all three fail against the whole-file implementation:
+- [x] Run and confirm all three fail against the whole-file implementation:
 
 ```
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_gap_analysis.py -q -k steering
@@ -2000,7 +2000,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_gap_analysis.py -q
 
 Expected: 3 failures, all `AssertionError` — the project-based test finds both candidates in `exploration` (no `steering.md`, empty bag flips the expected path order too); the mute test finds `Spaced Repetition Flashcards` ranked (whole-file bag contains the muted words); the watch test finds `Template Placeholder Terms` ranked (prose pollutes the bag).
 
-- [ ] Implement the switch in `knowledge.py` — three edits. Widen the S.1 import line:
+- [x] Implement the switch in `knowledge.py` — three edits. Widen the S.1 import line:
 
 ```python
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
@@ -2024,7 +2024,7 @@ def _steering_tokens(vault: Path) -> set[str]:
 
 No other change: `_discovery_relevance`, `_annotate_discovery_candidate`, `_sort_discovery_candidate_paths`, and `exploration_channel` (`:1270`) all consume the token set or the written frontmatter and are indifferent to how the set was derived.
 
-- [ ] Run to pass, then the neighboring runtime suites:
+- [x] Run to pass, then the neighboring runtime suites:
 
 ```
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_gap_analysis.py -q -k steering
@@ -2033,7 +2033,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_gap_analysis.py te
 
 Expected: 3 passed on the first, all green on the second.
 
-- [ ] Commit:
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/knowledge.py tests/test_gap_analysis.py
@@ -2071,7 +2071,7 @@ EOF
 
 **Steps:**
 
-- [ ] Add the failing tests to `tests/test_steering_tokens.py` (extend the S.1 imports with `effective_steering_provenance` and add `from tests.helpers import WORKSPACE_SEED`):
+- [x] Add the failing tests to `tests/test_steering_tokens.py` (extend the S.1 imports with `effective_steering_provenance` and add `from tests.helpers import WORKSPACE_SEED`):
 
 ```python
 def test_effective_steering_provenance_labels_every_source(tmp_path: Path) -> None:
@@ -2119,7 +2119,7 @@ def test_shipped_seed_steering_is_override_only_and_contributes_no_tokens(
     assert effective_steering_tokens(tmp_path) == set()
 ```
 
-- [ ] Add the failing CLI test to `tests/test_cli.py` (arrange mirrors the init-then-create pattern of `test_memoria_new_defaults_include_description_key`, `tests/test_cli.py:319-333`; `json`, `main`, `Path`, `pytest` are already imported at `:4/:11/:6/:8`):
+- [x] Add the failing CLI test to `tests/test_cli.py` (arrange mirrors the init-then-create pattern of `test_memoria_new_defaults_include_description_key`, `tests/test_cli.py:319-333`; `json`, `main`, `Path`, `pytest` are already imported at `:4/:11/:6/:8`):
 
 ```python
 def test_steering_show_renders_effective_steering_provenance(
@@ -2178,7 +2178,7 @@ def test_steering_show_renders_effective_steering_provenance(
     assert "muted: practice" in readable
 ```
 
-- [ ] Run and confirm the failures:
+- [x] Run and confirm the failures:
 
 ```
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_steering_tokens.py -q
@@ -2187,7 +2187,7 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_cli.py -q -k steer
 
 Expected: the first errors at collection — `ImportError: cannot import name 'effective_steering_provenance' from 'memoria_vault.runtime.steering'`; the second fails with `KeyError: 'muted'` (the shipped payload carries `body`, not `tokens`/`muted`).
 
-- [ ] Append the provenance render to `src/memoria_vault/runtime/steering.py`:
+- [x] Append the provenance render to `src/memoria_vault/runtime/steering.py`:
 
 ```python
 def effective_steering_provenance(vault: Path) -> list[dict[str, Any]]:
@@ -2203,7 +2203,7 @@ def effective_steering_provenance(vault: Path) -> list[dict[str, Any]]:
     ]
 ```
 
-- [ ] Rewrite `src/memoria_vault/product/workspace_seed/steering.md` (complete file — same frontmatter; guidance is blockquote prose, never bullets, so a fresh seed contributes zero tokens; the multi-word over-suppression consequence is documented; the two Pages URLs are retained verbatim from the shipped seed so `tests/test_workspace_seed_links.py` keeps resolving them):
+- [x] Rewrite `src/memoria_vault/product/workspace_seed/steering.md` (complete file — same frontmatter; guidance is blockquote prose, never bullets, so a fresh seed contributes zero tokens; the multi-word over-suppression consequence is documented; the two Pages URLs are retained verbatim from the shipped seed so `tests/test_workspace_seed_links.py` keeps resolving them):
 
 ```markdown
 ---
@@ -2250,7 +2250,7 @@ archive stale projects, prune these two lists. Where steering sits in
 Memoria's memory model: [The memory model](https://eranroseman.github.io/memoria-vault/explanation/architecture/memory-model#why-each-substrate-has-its-scope).
 ```
 
-- [ ] Repoint `_cmd_steering_show` (`cli.py:2001-2007` — full replacement; local import matches the `_cmd_steering_edit` pattern at `:2011`, the custom non-JSON render matches `_cmd_export` at `:1256-1261`; the not-found guard is kept per SPEC GAP 4):
+- [x] Repoint `_cmd_steering_show` (`cli.py:2001-2007` — full replacement; local import matches the `_cmd_steering_edit` pattern at `:2011`, the custom non-JSON render matches `_cmd_export` at `:1256-1261`; the not-found guard is kept per SPEC GAP 4):
 
 ```python
 def _cmd_steering_show(args: argparse.Namespace) -> int:
@@ -2275,7 +2275,7 @@ def _cmd_steering_show(args: argparse.Namespace) -> int:
     return _emit(payload, args)
 ```
 
-- [ ] Run the task's tests to pass, plus the seed and smoke neighbors:
+- [x] Run the task's tests to pass, plus the seed and smoke neighbors:
 
 ```
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_steering_tokens.py tests/test_cli.py tests/test_cli_workspace_requests.py tests/test_workspace_seed_links.py tests/test_package_spine.py -q
@@ -2292,13 +2292,13 @@ Expected: all pass (8 tests in `test_steering_tokens.py`; the workspace-requests
   recorded this required 35-fixture refresh in #1541; it is not caused by the
   not-yet-materialized BOOT-C templates.
 
-- [ ] Section-final gate — run the full verification roster and confirm it exits clean (lint incl. markdownlint/cspell over the rewritten seed, product gates incl. the doc-claims gate, full test suite, offline smoke):
+- [x] Section-final gate — run the full verification roster and confirm it exits clean (lint incl. markdownlint/cspell over the rewritten seed, product gates incl. the doc-claims gate, full test suite, offline smoke):
 
 ```
 python scripts/verify
 ```
 
-- [ ] Commit:
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/steering.py src/memoria_vault/cli.py src/memoria_vault/product/workspace_seed/steering.md tests/test_steering_tokens.py tests/test_cli.py tests/fixtures/floor/goldens
@@ -3393,7 +3393,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
 
 **Steps:**
 
-- [ ] Precondition (order tolerance for the §4 tasks — hold D.2 and D.3 if either grep misses):
+- [x] Precondition (order tolerance for the §4 tasks — hold D.2 and D.3 if either grep misses):
 
   ```bash
   grep -rn "effective_steering_tokens" src/memoria_vault/          # >=1 hit
@@ -3402,9 +3402,9 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
 
   If the reseed task changed the seed frontmatter, mirror the actual seeded frontmatter in the heredocs below instead of `type: system` / `title: Steering`.
 
-- [ ] Red state: `grep -n "## Watch for" docs/tutorials/07-customize.md` — expected: no match, exit 1.
+- [x] Red state: `grep -n "## Watch for" docs/tutorials/07-customize.md` — expected: no match, exit 1.
 
-- [ ] Replace the full contents of `docs/tutorials/07-customize.md` with (**SPEC GAP:** spec slice 7 says only "chapter 07's steering exercise rewrites against the derived model" and does not say whether the old page's second-project step survives; resolution: keep it — creating "Burden follow-up" is the cleanest demonstration that steering derives from projects, and it supplies the term-also-in-a-project-title case that spec §8's mute acceptance requires):
+- [x] Replace the full contents of `docs/tutorials/07-customize.md` with (**SPEC GAP:** spec slice 7 says only "chapter 07's steering exercise rewrites against the derived model" and does not say whether the old page's second-project step survives; resolution: keep it — creating "Burden follow-up" is the cleanest demonstration that steering derives from projects, and it supplies the term-also-in-a-project-title case that spec §8's mute acceptance requires):
 
   ````markdown
   ---
@@ -3541,7 +3541,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   For optional setup, continue with [How-to guides](../how-to-guides/README.md).
   ````
 
-- [ ] Edit `docs/tutorials/README.md`. Replace row 07 (line 25):
+- [x] Edit `docs/tutorials/README.md`. Replace row 07 (line 25):
 
   old:
 
@@ -3560,7 +3560,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   old: `verified the draft, and made one workspace customization.`
   new: `verified the draft, and tuned the steering override with one watch and one mute entry.`
 
-- [ ] Green state:
+- [x] Green state:
 
   ```bash
   grep -n "## Watch for" docs/tutorials/07-customize.md              # >=2 hits (both heredocs)
@@ -3568,7 +3568,7 @@ Verified CLI surfaces these docs instruct (all at 07bedc74): `memoria new projec
   python3 scripts/checks/doc_claims_gate.py                          # doc-claims-gate: clean
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add docs/tutorials/07-customize.md docs/tutorials/README.md
@@ -3612,7 +3612,7 @@ at the top of D.2 — run them again; hold if they miss).
 
 **Steps:**
 
-- [ ] Red state — confirm every stale line is present (each grep hits exactly once):
+- [x] Red state — confirm every stale line is present (each grep hits exactly once):
 
   ```bash
   grep -n "The PI authors \`steering.md\`" docs/reference/pipelines-and-io/memory-substrates.md
@@ -3626,7 +3626,7 @@ at the top of D.2 — run them again; hold if they miss).
   grep -n "screening-protocol.md" docs/explanation/rationale/boundaries/why-not-autonomous.md
   ```
 
-- [ ] `docs/reference/pipelines-and-io/memory-substrates.md` — four exact line edits:
+- [x] `docs/reference/pipelines-and-io/memory-substrates.md` — four exact line edits:
 
   :19 old:
 
@@ -3676,7 +3676,7 @@ at the top of D.2 — run them again; hold if they miss).
   | The PI's preferences and style | Checked preference notes | Adapter chat/session history |
   ```
 
-- [ ] `docs/explanation/architecture/memory-model.md` — :23-24 old:
+- [x] `docs/explanation/architecture/memory-model.md` — :23-24 old:
 
   ```markdown
   **Program memory** (your standing steering — `steering` discovery priorities +
@@ -3691,7 +3691,7 @@ at the top of D.2 — run them again; hold if they miss).
   **project memory** (one sub-project's
   ```
 
-- [ ] `docs/how-to-guides/using-obsidian/README.md` — :17 old:
+- [x] `docs/how-to-guides/using-obsidian/README.md` — :17 old:
 
   ```markdown
   2. Open `steering.md` when you need the project direction.
@@ -3705,7 +3705,7 @@ at the top of D.2 — run them again; hold if they miss).
      holds only your watch/mute override.
   ```
 
-- [ ] `docs/reference/commands-and-transports/cli.md` — :66 old:
+- [x] `docs/reference/commands-and-transports/cli.md` — :66 old:
 
   ```markdown
   | `memoria steering show/edit` | Read steering; editing is PI-only. |
@@ -3717,7 +3717,7 @@ at the top of D.2 — run them again; hold if they miss).
   | `memoria steering show/edit` | Render effective steering (derived from active projects, hubs, and question notes, plus the watch/mute override) with per-token provenance; edit the `steering.md` override. Editing is PI-only. |
   ```
 
-- [ ] `docs/reference/system/on-disk-layout.md` — :31 old:
+- [x] `docs/reference/system/on-disk-layout.md` — :31 old:
 
   ```text
   ├── steering.md              program memory; the PI's standing steering
@@ -3741,7 +3741,7 @@ at the top of D.2 — run them again; hold if they miss).
   | `steering.md` | Watch/mute steering override read by the knowledge runtime and the steering CLI; effective steering derives from active projects, hubs, and question notes. |
   ```
 
-- [ ] `docs/how-to-guides/knowledge/build-a-hub.md` — :79 old:
+- [x] `docs/how-to-guides/knowledge/build-a-hub.md` — :79 old:
 
   ```markdown
   - The hub shows up where you'd look for the topic — link it from `steering.md` or a parent hub if not
@@ -3753,7 +3753,7 @@ at the top of D.2 — run them again; hold if they miss).
   - The hub shows up where you'd look for the topic — link it from a parent hub if not; its title and tags already feed effective steering (`memoria steering show` renders them with hub provenance)
   ```
 
-- [ ] `docs/how-to-guides/inbox/run-the-weekly-review.md` — spec §4.5's exact rewording plus the two task-named lines:
+- [x] `docs/how-to-guides/inbox/run-the-weekly-review.md` — spec §4.5's exact rewording plus the two task-named lines:
 
   :10-11 old:
 
@@ -3806,7 +3806,7 @@ at the top of D.2 — run them again; hold if they miss).
   - `memoria steering show` reflects what you actually intend to read next week — active projects current, watch/mute pruned
   ```
 
-- [ ] `docs/explanation/rationale/boundaries/why-not-autonomous.md` — #1551 amendment. Replace:
+- [x] `docs/explanation/rationale/boundaries/why-not-autonomous.md` — #1551 amendment. Replace:
 
   ```markdown
   manifest ceilings. The human sets the strategy (`steering.md`,
@@ -3827,19 +3827,19 @@ at the top of D.2 — run them again; hold if they miss).
   work.
   ```
 
-- [ ] `docs/explanation/surfaces/obsidian/README.md:22` remains untouched. Its
+- [x] `docs/explanation/surfaces/obsidian/README.md:22` remains untouched. Its
   statement that a fresh workspace includes `steering.md` is a correct
   file-existence statement, not a claim that authored prose sets effective
   steering.
 
-- [ ] Green state — every red-state grep from step 1 now exits 1, then:
+- [x] Green state — every red-state grep from step 1 now exits 1, then:
 
   ```bash
   python3 scripts/checks/doc_claims_gate.py       # doc-claims-gate: clean
   python -m pytest tests/test_workspace_seed_links.py -q  # passes (seed->docs refs unchanged)
   ```
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add docs/reference/pipelines-and-io/memory-substrates.md docs/explanation/architecture/memory-model.md docs/how-to-guides/using-obsidian/README.md docs/reference/commands-and-transports/cli.md docs/reference/system/on-disk-layout.md docs/how-to-guides/knowledge/build-a-hub.md docs/how-to-guides/inbox/run-the-weekly-review.md docs/explanation/rationale/boundaries/why-not-autonomous.md

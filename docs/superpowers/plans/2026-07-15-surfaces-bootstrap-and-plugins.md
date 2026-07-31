@@ -629,7 +629,7 @@ No journal events are touched — **no floor-golden regeneration needed**.
 
 **Steps:**
 
-- [ ] Write the failing tests. Create `tests/test_rendezvous.py`:
+- [x] Write the failing tests. Create `tests/test_rendezvous.py`:
 
 ```python
 """Server rendezvous, lifecycle, and handshake tests."""
@@ -737,7 +737,7 @@ def test_vault_state_dir_is_keyed_and_private(tmp_path: Path) -> None:
     assert stat.S_IMODE(state_dir.stat().st_mode) == 0o700
 ```
 
-- [ ] Register the file and isolate state. In `tests/conftest.py`, insert after line 92 (`"test_refresh_test_vault.py": "package",`):
+- [x] Register the file and isolate state. In `tests/conftest.py`, insert after line 92 (`"test_refresh_test_vault.py": "package",`):
 
 ```python
     "test_rendezvous.py": "runtime",
@@ -756,11 +756,11 @@ def _isolated_memoria_state(
 
   (Verified: nothing under `tests/` reads `XDG_STATE_HOME` today; `src/memoria_vault/runtime/diagnostics.py:48` reads it and is *better* isolated by this fixture, not broken.)
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -v`
   Expected: `ModuleNotFoundError: No module named 'memoria_vault.runtime.rendezvous'` (collection error).
 
-- [ ] Write the minimal implementation. Create `src/memoria_vault/runtime/rendezvous.py`:
+- [x] Write the minimal implementation. Create `src/memoria_vault/runtime/rendezvous.py`:
 
 ```python
 """Per-vault server rendezvous: state dir, runtime.json, serve.lock."""
@@ -818,10 +818,10 @@ def _case_insensitive_filesystem(path: Path) -> bool:
         return False
 ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all 9 pass.
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/runtime/rendezvous.py tests/test_rendezvous.py tests/conftest.py
   git commit -m "feat(rendezvous): per-vault state dir + sha256 path key
@@ -854,7 +854,7 @@ def _case_insensitive_filesystem(path: Path) -> bool:
 
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_rendezvous.py`, add to the imports `import json`, `import subprocess`, and `from memoria_vault import __version__`; then append:
+- [x] Write the failing tests. In `tests/test_rendezvous.py`, add to the imports `import json`, `import subprocess`, and `from memoria_vault import __version__`; then append:
 
 ```python
 def _runtime_record(
@@ -958,11 +958,11 @@ def test_pid_alive_detects_live_and_dead_processes() -> None:
   reached.  Keep the full `OpenProcess`/`GetExitCodeProcess` fake focused on
   process-query outcomes rather than calling a real Windows API in tests.
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "runtime or pid_alive" -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'write_runtime'` (and siblings).
 
-- [ ] Write the minimal implementation. In `rendezvous.py`, add `import ctypes`,
+- [x] Write the minimal implementation. In `rendezvous.py`, add `import ctypes`,
   `import json`, `import tempfile`, and `from typing import Any` to the imports,
   then append:
 
@@ -1083,10 +1083,10 @@ def _windows_pid_alive(pid: int) -> bool:
         close_handle(handle)
 ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/runtime/rendezvous.py tests/test_rendezvous.py
   git commit -m "feat(rendezvous): atomic 0600 runtime.json + pid liveness
@@ -1122,7 +1122,7 @@ def _windows_pid_alive(pid: int) -> bool:
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_rendezvous.py`:
+- [x] Write the failing tests. Append to `tests/test_rendezvous.py`:
 
 ```python
 def test_serve_lock_is_exclusive_and_released(tmp_path: Path) -> None:
@@ -1169,11 +1169,11 @@ def test_gc_stale_entries_tolerates_missing_root(tmp_path: Path) -> None:
   leaves redirected roots and children intact.  Keep the POSIX-only cases
   guarded by the platform/no-follow capability.
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "serve_lock or gc_stale" -v`
   Expected: `AttributeError: … has no attribute 'serve_lock'`.
 
-- [ ] Write the minimal implementation. In `rendezvous.py`, add imports `import stat`,
+- [x] Write the minimal implementation. In `rendezvous.py`, add imports `import stat`,
   `from collections.abc import Iterator`, and `from contextlib import contextmanager`,
   plus the guarded fcntl import after the stdlib imports:
 
@@ -1281,10 +1281,10 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
 
   (`flock` locks belong to the open file description, so a second `os.open` in the same process conflicts — the nested-context test is a real exclusivity test. Windows permits an `msvcrt` lock beyond EOF, so do not write a byte just to establish the range.)
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/runtime/rendezvous.py tests/test_rendezvous.py
   git commit -m "feat(rendezvous): serve.lock exclusive lock + stale-entry GC
@@ -1330,7 +1330,7 @@ def gc_stale_entries(root: Path | None = None) -> list[str]:
 
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_rendezvous.py`, add imports `import contextlib`, `import http.client`, `import threading`, `from collections.abc import Iterator`, `from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed`, `from tests.helpers import init_cli_workspace`; then append:
+- [x] Write the failing tests. In `tests/test_rendezvous.py`, add imports `import contextlib`, `import http.client`, `import threading`, `from collections.abc import Iterator`, `from memoria_vault.runtime.http_transport import host_allowed, make_http_server, origin_allowed`, `from tests.helpers import init_cli_workspace`; then append:
 
 ```python
 @pytest.fixture
@@ -1475,11 +1475,11 @@ def test_shutdown_requires_auth_and_stops_server(workspace: Path) -> None:
 
   (`json` is already imported from A.2; keep the import list alphabetized to satisfy ruff.)
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "v1_status or idle_timer or host_header or origin or shutdown" -v`
   Expected: `ImportError: cannot import name 'host_allowed' from 'memoria_vault.runtime.http_transport'`.
 
-- [ ] Write the minimal implementation in `src/memoria_vault/runtime/http_transport.py`. Add to the import block (lines 3–18): `import threading`, `import time`, and `from memoria_vault import __version__`. After the module constants (line 22) add:
+- [x] Write the minimal implementation in `src/memoria_vault/runtime/http_transport.py`. Add to the import block (lines 3–18): `import threading`, `import time`, and `from memoria_vault import __version__`. After the module constants (line 22) add:
 
 ```python
 ALLOWED_ORIGIN = "app://obsidian.md"
@@ -1565,10 +1565,10 @@ def origin_allowed(origin: str | None) -> bool:
             self._write(payload, status)
 ```
 
-- [ ] Run new tests and the existing transport suite:
+- [x] Run new tests and the existing transport suite:
   `python -m pytest tests/test_rendezvous.py tests/test_http_transport.py -v` — all pass (existing tests use `_dispatch` directly and fakes, untouched by handler-order changes).
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/runtime/http_transport.py tests/test_rendezvous.py
   git commit -m "feat(http): /v1/status + /v1/shutdown lifecycle, Host/Origin validation, auth-only idle touch
@@ -1613,7 +1613,7 @@ def origin_allowed(origin: str | None) -> bool:
 
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_rendezvous.py` add `import time` and extend the http_transport import line with `bind_http_server, start_idle_monitor`; append:
+- [x] Write the failing tests. In `tests/test_rendezvous.py` add `import time` and extend the http_transport import line with `bind_http_server, start_idle_monitor`; append:
 
 ```python
 def test_idle_monitor_exits_despite_unauthenticated_probes(workspace: Path) -> None:
@@ -1696,11 +1696,11 @@ def test_bind_http_server_walks_past_occupied_ports(workspace: Path) -> None:
   interleaved with a new bearer request returns 503 and never dispatches; and
   a mock binder proves candidate order and re-raises the final `OSError`.
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "idle_monitor or bind_http_server" -v`
   Expected: `ImportError: cannot import name 'bind_http_server' from 'memoria_vault.runtime.http_transport'`.
 
-- [ ] Write the minimal implementation. Add `import math`,
+- [x] Write the minimal implementation. Add `import math`,
   `from collections.abc import Iterator`, and `from contextlib import contextmanager`.
   Replace A.4's `MemoriaHTTPServer` with:
 
@@ -1857,10 +1857,10 @@ def bind_http_server(
     raise last_error
 ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/runtime/http_transport.py tests/test_rendezvous.py
   git commit -m "feat(http): idle-exit monitor + candidate-port walk binder
@@ -1931,7 +1931,7 @@ def bind_http_server(
 
 **Steps:**
 
-- [ ] Update the two existing assertions in `tests/test_http_transport.py::test_serve_http_once_reports_loopback_token` (lines 54–60). Replace:
+- [x] Update the two existing assertions in `tests/test_http_transport.py::test_serve_http_once_reports_loopback_token` (lines 54–60). Replace:
 
 ```python
     assert rc == 0
@@ -1955,7 +1955,7 @@ def bind_http_server(
     assert output["token_source"] == "env"
 ```
 
-- [ ] Write the failing tests. In `tests/test_rendezvous.py` add `import socket` and append:
+- [x] Write the failing tests. In `tests/test_rendezvous.py` add `import socket` and append:
 
 ```python
 def _require_loopback() -> None:
@@ -2083,12 +2083,12 @@ def test_serve_stop_reports_when_nothing_runs(
   PID-live record; and a boot mismatch sends no bearer POST.  Exercise direct
   lifecycle requests with a proxy, redirect, and oversized-body regression.
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k "serve_" -v`
   Expected: `SystemExit: 2` from argparse (`unrecognized arguments: --ephemeral` / `--stop` / `--idle-exit`), and `ImportError` for `_serve_port_candidates`.
   Also: `python -m pytest tests/test_http_transport.py::test_serve_http_once_reports_loopback_token -v` — fails with `KeyError: 'port'`.
 
-- [ ] Write the implementation.
+- [x] Write the implementation.
 
   In `rendezvous.py` add `import urllib.error` and `import urllib.request` to
   the imports and append:
@@ -2360,10 +2360,10 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
   Its tests must reject both a missing/mismatched and duplicate boot ID with
   409, while the client-side status mismatch proves no bearer POST occurs.
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py tests/test_http_transport.py -v` — all pass.
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/cli.py src/memoria_vault/runtime/rendezvous.py tests/test_rendezvous.py tests/test_http_transport.py
   git commit -m "feat(serve): --on-demand/--ephemeral/--idle-exit/--stop, port walk, runtime.json lifecycle
@@ -2428,7 +2428,7 @@ def _cmd_serve_stop(args: argparse.Namespace) -> int:
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_rendezvous.py`:
+- [x] Write the failing tests. Append to `tests/test_rendezvous.py`:
 
 ```python
 def test_handshake_reports_when_no_server_and_no_spawn(workspace: Path) -> None:
@@ -2605,11 +2605,11 @@ def test_handshake_converges_with_a_direct_serve_race(workspace: Path) -> None:
   string, and a missing value): only a real positive `int` that remains
   PID-live may be returned.
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k handshake -v`
   Expected: `AttributeError: module 'memoria_vault.runtime.rendezvous' has no attribute 'HandshakeError'`.
 
-- [ ] Write the minimal implementation. In `rendezvous.py` add `import math`,
+- [x] Write the minimal implementation. In `rendezvous.py` add `import math`,
   `import subprocess`, and `import time` to the imports, then append:
 
 ```python
@@ -2735,10 +2735,10 @@ def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
   `serve_forever` starts answering, and clearing in that window would GC a
   healthy newborn.)
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py -v` — all pass.
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/runtime/rendezvous.py tests/test_rendezvous.py
   git commit -m "feat(rendezvous): handshake connect-else-spawn-else-report with lock race + 5s wait
@@ -2794,7 +2794,7 @@ def _wait_for_live(state_dir: Path, *, timeout: float) -> dict[str, Any] | None:
 
 **Steps:**
 
-- [ ] Write the failing tests. In `tests/test_cli.py`, add `"memoria handshake",` to the set in `test_cli_command_surface_is_exact` (after line 81, `"memoria ask",`). In `tests/test_rendezvous.py`, append:
+- [x] Write the failing tests. In `tests/test_cli.py`, add `"memoria handshake",` to the set in `test_cli_command_surface_is_exact` (after line 81, `"memoria ask",`). In `tests/test_rendezvous.py`, append:
 
 ```python
 def test_handshake_cli_reports_when_no_server(
@@ -2940,11 +2940,11 @@ def test_handshake_cli_spawns_detached_server_and_reuses_it(
         assert _wait_until(lambda: rendezvous.read_runtime(state_dir) is None)
 ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_rendezvous.py -k handshake_cli -v` — expected `SystemExit: 2` (argparse: `invalid choice: 'handshake'`).
   `python -m pytest tests/test_cli.py::test_cli_command_surface_is_exact -v` — expected assertion failure (set mismatch: `memoria handshake` expected but absent).
 
-- [ ] Write the minimal implementation in `src/memoria_vault/cli.py`.
+- [x] Write the minimal implementation in `src/memoria_vault/cli.py`.
 
   Parser, inserted directly after the serve block (after the `serve.set_defaults(handler=_cmd_serve)` line):
 
@@ -2979,13 +2979,13 @@ def _cmd_handshake(args: argparse.Namespace) -> int:
     return _emit({"ok": True, **coordinates}, args)
 ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_rendezvous.py tests/test_cli.py::test_cli_command_surface_is_exact -v` — all pass.
 
-- [ ] Run the full gate before finishing the section:
+- [x] Run the full gate before finishing the section:
   `python scripts/verify` — must pass clean (no journal-event changes, so floor goldens are untouched).
 
-- [ ] Commit:
+- [x] Commit:
   ```
   git add src/memoria_vault/cli.py tests/test_cli.py tests/test_rendezvous.py
   git commit -m "feat(cli): memoria handshake --vault [--spawn] --json rendezvous verb
@@ -3067,7 +3067,7 @@ each is the standard reading; assembler may veto):
 
 **Steps:**
 
-- [ ] Make the test suite hermetic against the developer's real `~/.config/memoria`
+- [x] Make the test suite hermetic against the developer's real `~/.config/memoria`
   before any test can touch it. In `tests/conftest.py`, change line 5's import block and
   `pytest_configure` (lines 124-127):
 
@@ -3085,7 +3085,7 @@ each is the standard reading; assembler may veto):
       os.environ["XDG_CONFIG_HOME"] = tempfile.mkdtemp(prefix="memoria-test-xdg-")
   ```
 
-- [ ] Register the new test file in `tests/conftest.py` `TEST_LEVELS` (insert after
+- [x] Register the new test file in `tests/conftest.py` `TEST_LEVELS` (insert after
   `"test_seeded_errors.py": "runtime",`, matching the nearest runtime-module unit
   sibling `test_runtime_helpers.py`):
 
@@ -3093,7 +3093,7 @@ each is the standard reading; assembler may veto):
       "test_secrets.py": "unit",
   ```
 
-- [ ] Write the failing test — create `tests/test_secrets.py`:
+- [x] Write the failing test — create `tests/test_secrets.py`:
 
   ```python
   """Unit tests for the user-scope secrets file (bootstrap spec section 4b)."""
@@ -3214,7 +3214,7 @@ each is the standard reading; assembler may veto):
       assert "world-readable" in report["warning"]
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
 
   ```
   python -m pytest tests/test_secrets.py -v
@@ -3223,7 +3223,7 @@ each is the standard reading; assembler may veto):
   Expected: collection error `ModuleNotFoundError: No module named
   'memoria_vault.runtime.secrets'`.
 
-- [ ] Write minimal implementation — create `src/memoria_vault/runtime/secrets.py`:
+- [x] Write minimal implementation — create `src/memoria_vault/runtime/secrets.py`:
 
   ```python
   """User-scope secrets file loading and the credentials registry (spec section 4b)."""
@@ -3287,7 +3287,7 @@ each is the standard reading; assembler may veto):
       return values
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
 
   ```
   python -m pytest tests/test_secrets.py -v
@@ -3295,7 +3295,7 @@ each is the standard reading; assembler may veto):
 
   Expected: 7 passed.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/secrets.py tests/test_secrets.py tests/conftest.py
@@ -3893,7 +3893,7 @@ each is the standard reading; assembler may veto):
 
 **Steps:**
 
-- [ ] Write the failing unit tests — append to `tests/test_secrets.py` (extend the
+- [x] Write the failing unit tests — append to `tests/test_secrets.py` (extend the
   module import with `credential_report`, and add
   `from tests.cli_test_helpers import write_runner_provider_config` plus `import os` if
   not present):
@@ -3983,7 +3983,7 @@ each is the standard reading; assembler may veto):
       ]
   ```
 
-- [ ] Write the failing CLI test — append to `tests/test_cli_secrets.py`:
+- [x] Write the failing CLI test — append to `tests/test_cli_secrets.py`:
 
   ```python
   def test_cli_secrets_list_reports_names_and_sources_never_values(
@@ -4017,7 +4017,7 @@ each is the standard reading; assembler may veto):
   `"memoria secrets list"`; its red proves the exact parser roster cannot drift
   while B.4 adds the new subcommand.
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
 
   ```
   python -m pytest tests/test_secrets.py tests/test_operations.py tests/test_cli_secrets.py \
@@ -4028,7 +4028,7 @@ each is the standard reading; assembler may veto):
   argparse (`invalid choice: 'list'`); and the parser-roster pin fails because
   `memoria secrets list` is absent.
 
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/secrets.py`, extend the
+- [x] Write minimal implementation. In `src/memoria_vault/runtime/secrets.py`, extend the
   `collections.abc` import with `Collection` and `Mapping`, harden the reader and provider
   loader as the adopted amendment requires, then append:
 
@@ -4179,7 +4179,7 @@ each is the standard reading; assembler may veto):
       return _emit(payload, args)
   ```
 
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
 
   ```
   python -m pytest tests/test_secrets.py tests/test_operations.py tests/test_cli_secrets.py \
@@ -4188,7 +4188,7 @@ each is the standard reading; assembler may veto):
 
   Expected: all pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/secrets.py src/memoria_vault/runtime/operations.py \
@@ -4481,7 +4481,7 @@ each is the standard reading; assembler may veto):
 
 **Steps:**
 
-- [ ] Write the failing tests — in `tests/test_source_enrichment.py`, extend the
+- [x] Write the failing tests — in `tests/test_source_enrichment.py`, extend the
   `memoria_vault.runtime.enrichment` import block (lines 11-19) with
   `_credential_notices`, then append:
 
@@ -4622,7 +4622,7 @@ each is the standard reading; assembler may veto):
       ]
   ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
 
   ```
   python -m pytest tests/test_source_enrichment.py::test_credential_notices_name_keyless_and_gated_providers tests/test_source_enrichment.py::test_credential_notices_silent_when_keys_present_or_fixture_served tests/test_source_enrichment.py::test_enrich_source_output_states_keyless_degradation tests/test_source_enrichment.py::test_credential_notices_skip_malformed_environment_names tests/test_source_enrichment.py::test_credential_notices_deduplicate_duplicate_branch_providers -v
@@ -4630,7 +4630,7 @@ each is the standard reading; assembler may veto):
 
   Expected: `ImportError: cannot import name '_credential_notices'`.
 
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/enrichment.py`, add
+- [x] Write minimal implementation. In `src/memoria_vault/runtime/enrichment.py`, add
   `import re` beside `import os`, add the regex at module scope, replace
   `_provider_default_on`, and add the helpers after it:
 
@@ -4721,7 +4721,7 @@ each is the standard reading; assembler may veto):
           "credential_notices": credential_notices,
   ```
 
-- [ ] Run tests to verify they pass, plus the whole file for regressions:
+- [x] Run tests to verify they pass, plus the whole file for regressions:
 
   ```
   python -m pytest tests/test_source_enrichment.py -v
@@ -4730,7 +4730,7 @@ each is the standard reading; assembler may veto):
   Expected: all pass (existing tests access `done` keys individually, never by full
   equality, so the added key is compatible).
 
-- [ ] Commit:
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/enrichment.py tests/test_source_enrichment.py
@@ -5142,7 +5142,7 @@ files, not from specs).
 
 **Steps:**
 
-- [ ] Create `tests/test_agent_bundle.py` with the failing content tests:
+- [x] Create `tests/test_agent_bundle.py` with the failing content tests:
 
 ```python
 """Agent-bundle seed-template content checks."""
@@ -5245,19 +5245,19 @@ def test_seed_codex_hooks_mirror_the_deny_rules():
     assert mirror["deny"]["paths"] == list(PROTECTED_PATTERNS)
 ```
 
-- [ ] Register the file in `tests/conftest.py` `TEST_LEVELS` — insert
+- [x] Register the file in `tests/conftest.py` `TEST_LEVELS` — insert
       immediately before the line `"test_bases.py": "contract",` (line 20):
 
 ```python
     "test_agent_bundle.py": "contract",
 ```
 
-- [ ] Run to verify the right failure:
+- [x] Run to verify the right failure:
       `python -m pytest tests/test_agent_bundle.py -v`
       — expected: every test fails with `FileNotFoundError` on the missing
       seed files.
 
-- [ ] Create `src/memoria_vault/product/workspace_seed/.claude/settings.json`:
+- [x] Create `src/memoria_vault/product/workspace_seed/.claude/settings.json`:
 
 ```json
 {
@@ -5299,7 +5299,7 @@ def test_seed_codex_hooks_mirror_the_deny_rules():
 }
 ```
 
-- [ ] Create `src/memoria_vault/product/workspace_seed/.claude/hooks/write_perimeter.py`:
+- [x] Create `src/memoria_vault/product/workspace_seed/.claude/hooks/write_perimeter.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -5329,7 +5329,7 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] Create `src/memoria_vault/product/workspace_seed/.mcp.json`:
+- [x] Create `src/memoria_vault/product/workspace_seed/.mcp.json`:
 
 ```json
 {
@@ -5358,14 +5358,14 @@ if __name__ == "__main__":
 }
 ```
 
-- [ ] Create `src/memoria_vault/product/workspace_seed/CLAUDE.md` with exactly
+- [x] Create `src/memoria_vault/product/workspace_seed/CLAUDE.md` with exactly
       this content (one line plus newline):
 
 ```markdown
 @AGENTS.md
 ```
 
-- [ ] Create `src/memoria_vault/product/workspace_seed/.codex/hooks.json`:
+- [x] Create `src/memoria_vault/product/workspace_seed/.codex/hooks.json`:
 
 ```json
 {
@@ -5385,7 +5385,7 @@ if __name__ == "__main__":
 }
 ```
 
-- [ ] In `pyproject.toml`, extend the
+- [x] In `pyproject.toml`, extend the
       `"memoria_vault.product.workspace_seed"` package-data list (lines 32-45)
       — add these entries after the `".obsidian/plugins/memoria-obsidian/*.css",`
       line:
@@ -5398,7 +5398,7 @@ if __name__ == "__main__":
   "CLAUDE.md",
 ```
 
-- [ ] In `tests/test_installer_skeleton.py` `expected_files` (lines 31-55), add
+- [x] In `tests/test_installer_skeleton.py` `expected_files` (lines 31-55), add
       (keeping the set's alphabetical grouping — the four dot-entries go before
       `".githooks/pre-commit"`, and `"CLAUDE.md"` before `"steering.md"`):
 
@@ -5410,11 +5410,11 @@ if __name__ == "__main__":
         "CLAUDE.md",
 ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
       `python -m pytest tests/test_agent_bundle.py tests/test_installer_skeleton.py -v`
       — expected: pass.
 
-- [ ] Commit:
+- [x] Commit:
 
 ```bash
 git add src/memoria_vault/product/workspace_seed/.claude/settings.json src/memoria_vault/product/workspace_seed/.claude/hooks/write_perimeter.py src/memoria_vault/product/workspace_seed/.mcp.json src/memoria_vault/product/workspace_seed/CLAUDE.md src/memoria_vault/product/workspace_seed/.codex/hooks.json tests/test_agent_bundle.py tests/test_installer_skeleton.py tests/conftest.py pyproject.toml
