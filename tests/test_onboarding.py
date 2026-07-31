@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import http.client
+import socket
 import subprocess
+import urllib.error
 import urllib.parse
 from pathlib import Path
 
@@ -374,3 +377,138 @@ def test_open_vault_uri_encoding_cannot_inject_params_or_change_action(
     assert parts.fragment == ""
     assert set(query) == {"path"}
     assert query["path"] == [str(workspace)]
+
+
+class FakeResponse:
+    def __init__(self, status: int) -> None:
+        self.status = status
+
+    def __enter__(self) -> FakeResponse:
+        return self
+
+    def __exit__(self, *exc: object) -> bool:
+        return False
+
+
+class MalformedStatusResponse:
+    """A response whose ``status`` cannot be coerced to ``int``.
+
+    Covers the ``ValueError`` path a malformed connector reply can take.
+    """
+
+    status = "not-a-number"
+
+    def __enter__(self) -> MalformedStatusResponse:
+        return self
+
+    def __exit__(self, *exc: object) -> bool:
+        return False
+
+
+def test_zotero_probe_hits_connector_ping_with_short_timeout() -> None:
+    calls: list[tuple[str, float]] = []
+
+    def url_open(url: str, timeout: float = 0.0) -> FakeResponse:
+        calls.append((url, timeout))
+        return FakeResponse(200)
+
+    assert onboarding.zotero_running(url_open=url_open) is True
+    assert calls == [("http://127.0.0.1:23119/connector/ping", 0.5)]
+
+
+def test_zotero_probe_forwards_a_custom_timeout() -> None:
+    # Regression guard: BOOT-D.3 shipped a fake that discarded its kwargs, so
+    # nothing pinned that `timeout=` was actually forwarded. Use a non-default
+    # value so a dropped/hardcoded timeout fails this assertion.
+    calls: list[tuple[str, float]] = []
+
+    def url_open(url: str, timeout: float = 0.0) -> FakeResponse:
+        calls.append((url, timeout))
+        return FakeResponse(200)
+
+    assert onboarding.zotero_running(url_open=url_open, timeout=2.5) is True
+    assert calls == [("http://127.0.0.1:23119/connector/ping", 2.5)]
+
+
+def test_zotero_probe_uses_loopback_literal_not_localhost() -> None:
+    # 127.0.0.1 is not localhost: localhost can resolve to IPv6 ::1 or hit a
+    # hosts-file override. Pin the literal the contract specifies.
+    assert onboarding.ZOTERO_CONNECTOR_URL == "http://127.0.0.1:23119/connector/ping"
+
+
+@pytest.mark.parametrize(
+    "kind",
+    ["off-range-status", "204-no-content"],
+)
+def test_zotero_probe_reads_status_from_response(kind: str) -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        return FakeResponse(500 if kind == "off-range-status" else 204)
+
+    expected = kind == "204-no-content"
+    assert onboarding.zotero_running(url_open=url_open) is expected
+
+
+def test_zotero_probe_is_false_when_connection_refused() -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        raise OSError("connection refused")
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_is_false_on_connection_refused_error_subclass() -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        raise ConnectionRefusedError("connection refused")
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_is_false_on_url_error() -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        raise urllib.error.URLError("no route to host")
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_is_false_on_http_error() -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        raise urllib.error.HTTPError(
+            "http://127.0.0.1:23119/connector/ping", 500, "boom", None, None
+        )
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_is_false_on_timeout_error() -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        raise TimeoutError("timed out")
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_is_false_on_socket_timeout_alias() -> None:
+    # socket.timeout is an alias of TimeoutError (an OSError subclass) as of
+    # Python 3.10, but pin it explicitly via the alias so a runtime downgrade
+    # cannot silently reopen this gap.
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        raise socket.timeout("timed out")  # noqa: UP041 -- deliberately the alias, not TimeoutError
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_is_false_on_http_client_exception_not_an_oserror() -> None:
+    # http.client.HTTPException is NOT an OSError subclass (unlike
+    # ConnectionRefusedError/TimeoutError/URLError) -- catching only OSError
+    # would let this one escape and crash onboarding. This is the exact class
+    # of bug BOOT-D.2 shipped with `except OSError` around a
+    # subprocess.TimeoutExpired (also not an OSError).
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        raise http.client.BadStatusLine("garbage")
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_is_false_on_malformed_status_value_error() -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> MalformedStatusResponse:
+        return MalformedStatusResponse()
+
+    assert onboarding.zotero_running(url_open=url_open) is False

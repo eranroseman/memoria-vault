@@ -7,10 +7,13 @@ with a production default, so each branch is testable without patching.
 
 from __future__ import annotations
 
+import http.client
 import subprocess
 import urllib.parse
+import urllib.request
 from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import Any
 
 RunFn = Callable[..., subprocess.CompletedProcess[str]]
 AskFn = Callable[[str], str]
@@ -213,3 +216,32 @@ def open_vault_in_obsidian(
     say(f"Opening {uri}")
     say(f"If Obsidian shows no vault: {fallback}")
     return "opened"
+
+
+ZOTERO_CONNECTOR_URL = "http://127.0.0.1:23119/connector/ping"
+
+
+def zotero_running(
+    *,
+    url_open: Callable[..., Any] = urllib.request.urlopen,
+    timeout: float = 0.5,
+) -> bool:
+    """Probe the local Zotero Connector on 127.0.0.1:23119 (bootstrap spec §7.4).
+
+    ``127.0.0.1`` is used verbatim rather than ``localhost``, which can
+    resolve to IPv6 ``::1`` or hit a hosts-file override and silently miss
+    the connector. Must never raise: a probe that crashes onboarding is the
+    failure mode this section keeps hitting. ``urlopen`` collapses to
+    ``OSError`` subclasses (``URLError``, ``HTTPError``, ``TimeoutError`` —
+    ``socket.timeout`` is its alias —, ``ConnectionRefusedError``, ...), but
+    ``http.client.HTTPException`` (a malformed response, e.g. a bad status
+    line) is a plain ``Exception``, not an ``OSError`` subclass, and the
+    ``int(status)`` coercion below can raise ``ValueError`` on a malformed
+    status value; all three branches are caught explicitly.
+    """
+    try:
+        with url_open(ZOTERO_CONNECTOR_URL, timeout=timeout) as response:
+            status = getattr(response, "status", None)
+            return status is None or 200 <= int(status) < 300
+    except (OSError, ValueError, http.client.HTTPException):
+        return False

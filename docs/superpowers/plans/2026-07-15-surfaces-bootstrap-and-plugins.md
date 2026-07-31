@@ -6962,7 +6962,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_onboarding.py`:
+- [x] Write the failing test. Append to `tests/test_onboarding.py`:
 
   ```python
   class FakeResponse:
@@ -6994,12 +6994,27 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       assert onboarding.zotero_running(url_open=url_open) is False
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_onboarding.py -v`
   Expected: `AttributeError: ... has no attribute 'zotero_running'`.
 
-- [ ] Write minimal implementation. Add `import urllib.request` and
-  `from typing import Any` to `onboarding.py` imports, then append:
+> **Adopted post-review amendment (2026-07-31):** `http.client.HTTPException`
+> is not an `OSError` (`HTTPException` → `Exception` directly — unlike
+> `URLError`/`HTTPError`/`TimeoutError`/`ConnectionRefusedError`, which are all
+> `OSError` subclasses), so the literal snippet below — `except OSError` only
+> — lets a malformed-response exception (e.g. a bad status line) escape and
+> crash onboarding, violating this task's own "must never raise" requirement.
+> The same `getattr(...)`/`int(status)` coercion can also raise `ValueError`
+> on a malformed status value, which `except OSError` likewise misses. Catch
+> `(OSError, ValueError, http.client.HTTPException)` and add `import
+> http.client` to the module imports. This is the same class of bug BOOT-D.2
+> shipped with `except OSError` around a `subprocess.TimeoutExpired` (also not
+> an `OSError`). Found during BOOT-D.4 implementation on 2026-07-31, before
+> this snippet shipped.
+
+- [x] Write minimal implementation. Add `import http.client`, `import
+  urllib.request`, and `from typing import Any` to `onboarding.py` imports,
+  then append:
 
   ```python
   ZOTERO_CONNECTOR_URL = "http://127.0.0.1:23119/connector/ping"
@@ -7014,14 +7029,14 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
           with url_open(ZOTERO_CONNECTOR_URL, timeout=timeout) as response:
               status = getattr(response, "status", None)
               return status is None or 200 <= int(status) < 300
-      except OSError:
+      except (OSError, ValueError, http.client.HTTPException):
           return False
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_onboarding.py -v` — all tests pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/onboarding.py tests/test_onboarding.py
