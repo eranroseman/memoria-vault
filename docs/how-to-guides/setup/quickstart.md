@@ -24,6 +24,8 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 - Obsidian is optional as an app; the workspace seed already includes Memoria's
   Obsidian adapter files and core settings. Generic BibTeX/CSL files exported
   from Zotero can be imported when you need them ([Set up Zotero](set-up-zotero.md)).
+- The initial workspace also receives agent/MCP host configuration, which does
+  not install an external agent runtime.
 
 ## Steps
 
@@ -39,7 +41,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, seeds the Memoria Obsidian adapter/config, and wires local hooks. It does not install external search tooling or the Obsidian app.
+The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, seeds the Memoria Obsidian adapter/config and first-init agent/MCP host configuration, and wires local hooks. It does not install external search tooling, an external agent runtime, or the Obsidian app. Direct `memoria init --no-obsidian` skips only editor settings and root Base views; it still seeds the agent/MCP configuration.
 
 **2. Verify the CLI runtime.**
 

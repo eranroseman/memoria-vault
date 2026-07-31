@@ -16,7 +16,7 @@ The site navigation and this index group reference pages by domain. Pages that
 summarize schema-owned contracts name the owning source rather than mirroring
 every field and count.
 
-## Vault data model
+## [Vault data model](data-model/)
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ every field and count.
 | [Glossary](data-model/glossary.md) | Term definitions, alphabetical | Manual |
 | [OKF compliance contract](data-model/okf-compliance.md) | OKF bundle conformance boundary and typed-frontmatter rule | Manual |
 
-## Commands and transports
+## [Commands and transports](commands-and-transports/)
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ every field and count.
 | [MCP transport](commands-and-transports/mcp-transport.md) | Optional FastMCP stdio agent surface, required read scope, tool roster, and write provenance | Manual |
 | [Prompt operations](commands-and-transports/prompt-operations.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
 
-## Request, review, and policy contracts
+## [Request, review, and policy contracts](control-and-policy/)
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ every field and count.
 | [Policy gate](control-and-policy/policy-mcp.md) | Runtime policy hook, optional adapter contract, auto-fix classes, audit pairing, and fail-closed behavior | Manual |
 | [Policy audit log](control-and-policy/policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 
-## Analysis, diagnostics, and surfaces
+## [Analysis, diagnostics, and surfaces](analysis-and-surfaces/)
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -65,7 +65,7 @@ every field and count.
 | [Calibration](analysis-and-surfaces/calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Manual |
 | [Surfaces and dashboards](analysis-and-surfaces/dashboards.md) | CLI/read-API surface inventory plus planned optional-adapter Maintenance, corpus, and runtime-ops views | Manual |
 
-## Pipelines and I/O
+## [Pipelines and I/O](pipelines-and-io/)
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -77,7 +77,7 @@ every field and count.
 | [Telemetry & logs](pipelines-and-io/telemetry.md) | Operational log inventory, exact JSONL schemas, conventions, cadence, and join keys | Manual |
 | [Diagnostics](pipelines-and-io/diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract | Manual |
 
-## System and infrastructure
+## [System and infrastructure](system/)
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ every field and count.
 | [Backup and recovery](system/backup-and-recovery.md) | Backup, restore, recovery, and journal-validation contract | Manual |
 | [Failure modes](system/failure-modes.md) | Failure modes by severity: symptom, cause, fix | Manual |
 
-## Evidence and integrations
+## [Evidence and integrations](evidence-and-integrations/)
 
 | File | What it covers | Source |
 | --- | --- | --- |

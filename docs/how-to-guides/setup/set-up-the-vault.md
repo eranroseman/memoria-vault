@@ -8,7 +8,7 @@ nav_order: 2
 
 # Set up the vault
 
-Run the bootstrap installer to provision the standalone CLI/runtime workspace and lay the vault down. This is the foundation step; the package seed also includes the default Memoria Obsidian adapter/config.
+Run the bootstrap installer to provision the standalone CLI/runtime workspace and lay the vault down. This is the foundation step; the package seed includes the default Memoria Obsidian adapter/config and first-init agent/MCP host configuration.
 
 ## Prerequisites
 
@@ -16,6 +16,8 @@ Run the bootstrap installer to provision the standalone CLI/runtime workspace an
 - Windows PowerShell 5.1+ on Windows, or Ubuntu/Debian/WSL for the Linux path — macOS is not supported.
 - Obsidian is optional as an app, but the workspace seed includes Memoria's
   Obsidian adapter files and core settings.
+- The initial workspace also receives agent/MCP host configuration. It configures
+  hosts but does not install any external agent runtime.
 
 ## Steps
 
@@ -39,12 +41,13 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer creates the runtime vault folder (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, initializes the workspace from the package seed, including Obsidian defaults, wires local hooks, and prints the vault-local CLI commands.
+**2. What it does.** With your confirmation at each external step, the installer creates the runtime vault folder (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, initializes the workspace from the package seed, including Obsidian defaults and first-init agent/MCP host configuration, wires local hooks, and prints the vault-local CLI commands.
 
 The installer is standalone-only. It does not install external search tooling,
 external agent runtimes, the Obsidian app, or Zotero integration. Direct
-`memoria init` calls can skip the seeded Obsidian settings with `--no-obsidian`;
-the bootstrap path keeps the default.
+`memoria init` calls can use `--no-obsidian` to skip only editor settings and
+root Base views; the first-init agent/MCP configuration is still seeded. The
+bootstrap path keeps the default.
 
 **3. Add a remote** (optional).
 

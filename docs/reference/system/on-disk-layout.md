@@ -11,9 +11,10 @@ Where every file lives.
 
 - The installed Python package ships the minimal workspace seed under
   `memoria_vault.product.workspace_seed`.
-- `memoria init` copies only runtime-required seed files, then creates writable
-  runtime and content directories from `.memoria/schemas/folders.yaml`. It also
-  initializes generated control/projection files such as `index.md`,
+- `memoria init` copies runtime seeds, PI-owned preferences, and the first-init
+  agent/MCP host bundle, then creates writable runtime and content directories
+  from `.memoria/schemas/folders.yaml`. It also initializes generated
+  control/projection files such as `index.md`,
   `bibliography.bib`, `.memoria/overrides.jsonl`, `.memoria/journal-head`, and
   `system/manifest.jsonl`.
 - Product operation manifests ship inside the installed Python package, not the
@@ -118,9 +119,12 @@ installed `memoria_vault` package.
 
 ## Packaged Seed Inventory
 
-The package seed contains only files with direct runtime readers:
+The package seed contains runtime files, PI-owned preferences, and first-init
+host configuration; a packaged file does not necessarily have a direct runtime
+reader. `memoria doctor --repair` restores runtime seeds and missing view
+preferences, but preserves an existing PI-owned view preference.
 
-| Seed path | Runtime reader |
+| Seed path | Purpose and lifecycle |
 | --- | --- |
 | `.githooks/pre-commit` | Installer copies it to `.git/hooks/pre-commit`; the hook runs schema/frontmatter checks before commit. |
 | `.gitignore` | `memoria init` installs it so generated DBs, journals, indexes, blobs, and local caches stay out of git. |
@@ -134,12 +138,17 @@ The package seed contains only files with direct runtime readers:
 | `.obsidian/core-plugins.json` | Core plugin settings for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
 | `.obsidian/community-plugins.json` | Enables the bundled `memoria-obsidian` plugin. |
 | `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. |
+| `catalog.base`, `claims.base`, `inbox.base`, `projects.base`, `sources.base` | Root Base view preferences. `--no-obsidian` skips them; repair restores a missing file but preserves the PI's existing copy. |
+| `.obsidian/graph.json`, `.obsidian/types.json` | Obsidian graph and type view preferences. Repair restores a missing file but preserves the PI's existing copy. |
+| `.claude/`, `.codex/hooks.json`, `.mcp.json`, `CLAUDE.md` | First-init agent/MCP host configuration. It configures installed hosts but installs no external runtime. `memoria init`, including `--no-obsidian`, seeds it once; `memoria doctor --repair` never recreates or overwrites it, so it is PI-owned after bootstrap. |
 | `steering.md` | Watch/mute override read by the knowledge runtime and steering CLI; effective steering derives from active projects, hubs, and unresolved question notes. |
 | `system/vocabulary.md` | Controlled vocabulary read by schema/linter and knowledge runtime. |
 
 The policy gate's stable implementation lives in the installed
 `memoria_vault.runtime.policy` package. The seeded Obsidian plugin is an editor
 entrypoint only; the baseline workspace still has no hidden adapter code home.
+`AGENTS.md` is not copied from the package seed: it is a generated tracked
+projection.
 
 ## `.githooks/` - source hooks
 

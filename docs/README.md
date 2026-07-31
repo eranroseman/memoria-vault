@@ -176,8 +176,9 @@ invoke-only skill; the rules below are the Memoria-specific ones.
   route. Link unpublished targets (root files, `design-history/`) by GitHub blob
   URL. Never relative-link into `src/` (those 404 on the site) — cite a source
   file as an inline-code path.
-- **Indexing:** every new page goes in its section README (how-to pages also in
-  `how-to-guides/README.md`); set `nav_order` for a logical sequence.
+- **Indexing:** every new page goes in its section README; each new how-to also
+  belongs in its section index. The intentionally shallow `how-to-guides/README.md`
+  lists sections rather than every guide. Set `nav_order` for a logical sequence.
 - **Citations:** new works go in `reference/evidence-and-integrations/bibliography.md`
   (ACM author-date, `<a id>` anchor); link in-text mentions to the published anchor.
 - **Spelling:** American English (`-ize`/`-or`); `cspell` is the gate. Add a real

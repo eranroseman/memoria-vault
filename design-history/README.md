@@ -4,7 +4,7 @@ This directory is the durable design-history record for released Memoria design.
 It preserves facts about what each alpha release claimed, changed, removed, and
 implemented.
 
-Latest completed checkpoint: `alpha.21`
+Latest completed checkpoint: [alpha.21](21-alpha.21.md)
 
 Open release work: `beta.1` (unreleased). Its working plans are not a
 frozen history chapter.
@@ -35,7 +35,7 @@ frozen history chapter.
 
 The chapters were rebuilt from the record, not from memory. Each version's design
 state was reconstructed from its release-boundary commit on `main` (there are no
-git tags — boundary commits are named per chapter), and every version-to-version
+release tags; boundary commits are named per chapter), and every version-to-version
 delta was produced by diffing that boundary against the prior across `docs/`,
 `vault-template/`, and `src/`, cross-read against that version's own
 release/design/exec-plan documents. The *why* was mined from the design docs, the
