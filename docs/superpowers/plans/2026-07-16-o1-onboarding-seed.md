@@ -2261,6 +2261,15 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_steering_tokens.py
 
 Expected: all pass (8 tests in `test_steering_tokens.py`; the workspace-requests smoke at `:1482-1484` passes on the retained `path` key; seed-links and package-spine confirm the rewritten seed file is well-formed and still shipped).
 
+- [x] **Regenerate the floor goldens after reseeding.** `build_floor_seed` copies
+  the materialized `steering.md`, and every operation golden deliberately hashes
+  every seeded file. Run
+  `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_sweep_operations.py -q`,
+  review that every changed fixture updates only `files["steering.md"]`, then
+  rerun the same sweep without the environment variable. The integrated repair
+  recorded this required 35-fixture refresh in #1541; it is not caused by the
+  not-yet-materialized BOOT-C templates.
+
 - [ ] Section-final gate — run the full verification roster and confirm it exits clean (lint incl. markdownlint/cspell over the rewritten seed, product gates incl. the doc-claims gate, full test suite, offline smoke):
 
 ```
@@ -2270,7 +2279,7 @@ python scripts/verify
 - [ ] Commit:
 
 ```
-git add src/memoria_vault/runtime/steering.py src/memoria_vault/cli.py src/memoria_vault/product/workspace_seed/steering.md tests/test_steering_tokens.py tests/test_cli.py
+git add src/memoria_vault/runtime/steering.py src/memoria_vault/cli.py src/memoria_vault/product/workspace_seed/steering.md tests/test_steering_tokens.py tests/test_cli.py tests/fixtures/floor/goldens
 git commit -m "$(cat <<'EOF'
 feat(steering): reseed steering.md as thin override; steering show renders effective-steering provenance
 
