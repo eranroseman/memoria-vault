@@ -1050,6 +1050,16 @@ It implements NODES §1.1, §1.4, §1.6–.8 and preserves the G2 mirror contrac
   post-Plan-22, pre-B.4 `rebuild_passage_index` row with only
   `target_concept_id` (no `target_path`) persists and resolves under v16.
 
+  > **Sub-clause (b), fresh-install reading (2026-07-31 review repair):** the
+  > amendment retires *migrations*, not fresh-install correctness. The binding
+  > half — an identity collision raises a descriptive `RuntimeError` instead of
+  > being silently accepted (cross-section contract 10) — is implemented in
+  > `ensure_concept_parent_conn` and covered by
+  > `test_catalog_upsert_refuses_to_hijack_a_file_concept`,
+  > `test_mirror_rebuild_refuses_to_hijack_a_catalog_work`, and
+  > `test_two_identities_claiming_one_path_raise_a_descriptive_error`. Only the
+  > "leaves the DB at user version 15" half is retired, there being no v15.
+
 - [x] Run the new tests and confirm they fail before the v16 implementation:
 
   ```bash

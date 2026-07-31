@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS concept_verdicts (
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined'))
 );
 CREATE TABLE IF NOT EXISTS concept_flags (
-    concept_id TEXT NOT NULL,
+    concept_id TEXT NOT NULL
+        REFERENCES concepts(concept_id) ON UPDATE CASCADE ON DELETE CASCADE,
     flag TEXT NOT NULL CHECK (flag IN ('stale')),
     reason TEXT NOT NULL DEFAULT '',
     trigger_id TEXT NOT NULL DEFAULT '',

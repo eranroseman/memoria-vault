@@ -1081,13 +1081,16 @@ def _journal_verification_failure(
 
 
 def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None:
-    target = normalize_path(concept_id)
     status = _check_status(check_status)
     with connect(vault) as conn:
+        # One key space per identity: the verdict and its flags are both FK-backed
+        # by concepts.concept_id, so resolve once and write both by that id.
+        # `outputs` keeps its own path-keyed output_id space.
+        target = resolve_concept_id(conn, concept_id)
         _set_concept_verdict_conn(conn, target, status)
         conn.execute(
             "UPDATE outputs SET check_status = ? WHERE output_id = ?",
-            (status, target),
+            (status, normalize_path(concept_id)),
         )
         if status == "checked":
             conn.execute(
@@ -1241,8 +1244,14 @@ def mark_checked(vault: Path, output_id: str, output_sha256: str, payload_text: 
             "UPDATE outputs SET check_status = 'checked', output_sha256 = ? WHERE output_id = ?",
             (output_sha256, target),
         )
-        _set_concept_verdict_conn(conn, target, "checked")
-        conn.execute("DELETE FROM concept_flags WHERE concept_id = ? AND flag = 'stale'", (target,))
+        # Same one-key-space rule as set_concept_verdict: the flag delete must use
+        # the resolved identity, not the raw output path.
+        concept_id = resolve_concept_id(conn, target)
+        _set_concept_verdict_conn(conn, concept_id, "checked")
+        conn.execute(
+            "DELETE FROM concept_flags WHERE concept_id = ? AND flag = 'stale'",
+            (concept_id,),
+        )
         if payload_text:
             if _sha256_text(payload_text) != output_sha256:
                 raise ValueError(f"checked payload hash mismatch for {target}")
@@ -1364,8 +1373,11 @@ def set_concept_flag(
 ) -> None:
     if flag != "stale":
         raise ValueError(f"invalid concept flag: {flag!r}")
-    target = normalize_path(concept_id)
     with connect(vault) as conn:
+        # v16 keys flags by the resolved Concept identity: the FK to
+        # concepts(concept_id) rejects a flag on a Concept that does not exist and
+        # cascades the row away when that Concept is pruned.
+        target = resolve_concept_id(conn, concept_id)
         conn.execute(
             """
             INSERT INTO concept_flags(concept_id, flag, reason, trigger_id, created_at)
@@ -1380,7 +1392,6 @@ def set_concept_flag(
 
 
 def concept_flags(vault: Path, concept_id: str) -> dict[str, dict[str, str]]:
-    target = normalize_path(concept_id)
     if not db_path(vault).is_file():
         return {}
     with connect(vault) as conn:
@@ -1391,7 +1402,7 @@ def concept_flags(vault: Path, concept_id: str) -> dict[str, dict[str, str]]:
             WHERE concept_id = ?
             ORDER BY flag
             """,
-            (target,),
+            (resolve_concept_id(conn, concept_id),),
         ).fetchall()
     return {
         str(row["flag"]): {
@@ -4262,22 +4273,75 @@ def ensure_concept_parent_conn(
     store: str,
     path: str,
 ) -> str:
-    """Create or refresh the FK parent row for one Concept and return its id."""
+    """Create or refresh the FK parent row for one Concept and return its id.
+
+    Never silently accepts an identity collision (contract 10): if the reference
+    resolves to a Concept whose ``(concept_type, store, path)`` disagrees with the
+    requested shape, or if another Concept already owns the requested path, the
+    write is refused with a descriptive ``RuntimeError`` naming both shapes rather
+    than overwriting the resident identity and its FK-backed verdict.
+    """
     concept_id = _lookup_concept_id(conn, ref) or _canonical_concept_ref(ref)
     if not concept_id:
         raise ValueError("concept reference is required")
-    conn.execute(
-        """
-        INSERT INTO concepts(concept_id, concept_type, store, path)
-        VALUES (?, ?, ?, ?)
-        ON CONFLICT(concept_id) DO UPDATE SET
-            concept_type = excluded.concept_type,
-            store = excluded.store,
-            path = excluded.path
-        """,
-        (concept_id, _registry_concept_type(concept_type), store, normalize_path(path)),
-    )
+    wanted = (_registry_concept_type(concept_type), store, normalize_path(path))
+    resident = conn.execute(
+        "SELECT concept_type, store, path FROM concepts WHERE concept_id = ?",
+        (concept_id,),
+    ).fetchone()
+    if resident is not None:
+        found = (str(resident["concept_type"]), str(resident["store"]), str(resident["path"]))
+        if found != wanted:
+            raise _concept_shape_collision(ref, concept_id, found, concept_id, wanted)
+    try:
+        conn.execute(
+            """
+            INSERT INTO concepts(concept_id, concept_type, store, path)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(concept_id) DO UPDATE SET
+                concept_type = excluded.concept_type,
+                store = excluded.store,
+                path = excluded.path
+            """,
+            (concept_id, *wanted),
+        )
+    except sqlite3.IntegrityError as exc:
+        # idx_concepts_path: a different identity already renders at this path.
+        if "concepts.path" not in str(exc):
+            raise
+        owner = conn.execute(
+            "SELECT concept_id, concept_type, store, path FROM concepts WHERE path = ?",
+            (wanted[2],),
+        ).fetchone()
+        found = (
+            (str(owner["concept_type"]), str(owner["store"]), str(owner["path"]))
+            if owner is not None
+            else wanted
+        )
+        owner_id = str(owner["concept_id"]) if owner is not None else "<unknown>"
+        raise _concept_shape_collision(ref, owner_id, found, concept_id, wanted) from exc
     return concept_id
+
+
+def _concept_shape_collision(
+    ref: str,
+    found_id: str,
+    found: tuple[str, str, str],
+    wanted_id: str,
+    wanted: tuple[str, str, str],
+) -> RuntimeError:
+    """Return the descriptive refusal for a v16 Concept identity collision."""
+
+    def shape(concept_id: str, values: tuple[str, str, str]) -> str:
+        return (
+            f"(concept_id={concept_id!r}, concept_type={values[0]!r},"
+            f" store={values[1]!r}, path={values[2]!r})"
+        )
+
+    return RuntimeError(
+        f"concept identity collision for {ref!r}: {shape(found_id, found)}"
+        f" already exists; refusing to rewrite it as {shape(wanted_id, wanted)}"
+    )
 
 
 def _lookup_concept_id(conn: sqlite3.Connection, ref: str) -> str | None:
@@ -4315,7 +4379,17 @@ def _concept_parent_shape(rel: str) -> tuple[str, str, str]:
 
 
 def _registry_concept_type(value: str) -> str:
-    """Map a document type onto its Concept-type registry member, failing closed."""
+    """Map a document type onto its Concept-type registry member, failing closed.
+
+    Deliberately a superset of the named Consumes seam
+    ``schema.concept_type_for(document_type)``, which accepts document types only
+    and re-reads every types/*.yaml per call. The v16 parent-ensure seam is on the
+    hot path of every mirror rebuild and edge pass, and its callers pass registry
+    members (``work``, ``note``) as often as document types (``fulltext``,
+    ``code-artifact``), so this maps both domains over one cached table. For the
+    document-type domain it returns exactly what ``concept_type_for`` returns —
+    `tests/test_concept_types.py` pins that equivalence.
+    """
     name = str(value).strip()
     mapped = _concept_type_map().get(name)
     if mapped is None:

@@ -268,8 +268,7 @@ def test_mirror_prunes_absent_verdictless_rows_and_pends_inbound_edges(tmp_path:
     with state.connect(tmp_path) as conn:
         ids = sorted(row["concept_id"] for row in conn.execute("SELECT concept_id FROM concepts"))
         edges = {
-            row["target_path"]: dict(row)
-            for row in conn.execute("SELECT * FROM concept_edges")
+            row["target_path"]: dict(row) for row in conn.execute("SELECT * FROM concept_edges")
         }
         assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
 
@@ -382,3 +381,124 @@ def test_v16_cascade_triggers_use_bare_work_id_endpoints(tmp_path: Path) -> None
 
     assert trigger_sql
     assert "'catalog/sources/' ||" not in trigger_sql
+
+
+def test_catalog_upsert_refuses_to_hijack_a_file_concept(tmp_path: Path) -> None:
+    """Contract 10: an identity collision is never silently accepted."""
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, "alpha.md", concept_type="note", store="file", path="alpha.md"
+        )
+        state._set_concept_verdict_conn(conn, "alpha.md", "checked")
+
+    with pytest.raises(RuntimeError, match="concept identity collision"):
+        state.upsert_catalog_record(tmp_path, work_id="alpha.md", title="Alpha")
+
+    with state.connect(tmp_path) as conn:
+        concept = conn.execute(
+            "SELECT concept_id, concept_type, store, path FROM concepts"
+        ).fetchall()
+        verdicts = conn.execute("SELECT concept_id, check_status FROM concept_verdicts").fetchall()
+        catalog = conn.execute("SELECT COUNT(*) FROM catalog_sources").fetchone()[0]
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    # No silent mutation: type, store, path and the PI's verdict all survive.
+    assert [tuple(row) for row in concept] == [("alpha.md", "note", "file", "alpha.md")]
+    assert [tuple(row) for row in verdicts] == [("alpha.md", "checked")]
+    assert catalog == 0
+
+
+def test_mirror_rebuild_refuses_to_hijack_a_catalog_work(tmp_path: Path) -> None:
+    """A catalog work's Concept is FK'd by catalog_sources; the mirror cannot re-shape it."""
+    state.upsert_catalog_record(tmp_path, work_id="smith-2020", title="Smith 2020")
+
+    with pytest.raises(RuntimeError, match="concept identity collision"):
+        state.rebuild_file_concept_mirror(
+            tmp_path,
+            [{"concept_id": "catalog/sources/smith-2020", "concept_type": "note"}],
+        )
+
+    with state.connect(tmp_path) as conn:
+        concept = conn.execute(
+            "SELECT concept_id, concept_type, store, path FROM concepts"
+        ).fetchall()
+        work_id = conn.execute("SELECT work_id FROM catalog_sources").fetchone()[0]
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    assert [tuple(row) for row in concept] == [
+        ("smith-2020", "work", "db", "catalog/sources/smith-2020")
+    ]
+    assert str(work_id) == "smith-2020"
+
+
+def test_two_identities_claiming_one_path_raise_a_descriptive_error(tmp_path: Path) -> None:
+    """The NID-B.2 shape (ULID id + path attribute) must not surface a bare UNIQUE error."""
+    first = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    second = "01BX5ZZKBKACTAV9WEVGEMMVRZ"
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, first, concept_type="note", store="file", path="notes/alpha.md"
+        )
+        with pytest.raises(RuntimeError, match="concept identity collision") as excinfo:
+            state.ensure_concept_parent_conn(
+                conn, second, concept_type="note", store="file", path="notes/alpha.md"
+            )
+        owner = conn.execute(
+            "SELECT concept_id FROM concepts WHERE path = 'notes/alpha.md'"
+        ).fetchone()[0]
+
+    message = str(excinfo.value)
+    assert not isinstance(excinfo.value, sqlite3.IntegrityError)
+    # Both shapes are named, so the re-key that hit the collision is diagnosable.
+    assert first in message
+    assert second in message
+    assert "notes/alpha.md" in message
+    assert str(owner) == first
+
+
+def test_identity_correct_verdict_clears_a_path_written_stale_flag(tmp_path: Path) -> None:
+    """set_concept_verdict resolves once: verdict and flag share one key space."""
+    state.upsert_catalog_record(tmp_path, work_id="smith-2020", title="Smith 2020")
+    # seeded_errors writes the flag in the rendered path form.
+    state.set_concept_flag(tmp_path, "catalog/sources/smith-2020", "stale", reason="retracted")
+    assert "stale" in state.concept_flags(tmp_path, "catalog/sources/smith-2020")
+
+    # The identity-correct call is the one that must clear it.
+    state.set_concept_verdict(tmp_path, "smith-2020", "checked")
+
+    assert state.concept_flags(tmp_path, "smith-2020") == {}
+    assert state.concept_flags(tmp_path, "catalog/sources/smith-2020") == {}
+    assert state.concept_check_status(tmp_path, "smith-2020") == "checked"
+
+
+def test_concept_flags_are_fk_backed_and_cascade_on_prune(tmp_path: Path) -> None:
+    """Flags live inside v16's key discipline: no orphan survives a pruned Concept."""
+    state.rebuild_file_concept_mirror(
+        tmp_path, [{"concept_id": "notes/alpha.md", "concept_type": "note"}]
+    )
+    state.set_concept_flag(tmp_path, "notes/alpha.md", "stale", reason="upstream demoted")
+    assert "stale" in state.concept_flags(tmp_path, "notes/alpha.md")
+
+    with state.connect(tmp_path) as conn:
+        flag_fks = {
+            (row["table"], row["from"], row["to"], row["on_delete"])
+            for row in conn.execute("PRAGMA foreign_key_list(concept_flags)")
+        }
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO concept_flags(concept_id, flag, created_at)"
+                " VALUES ('no-such-concept', 'stale', '2026-07-15T00:00:00Z')"
+            )
+
+    assert ("concepts", "concept_id", "concept_id", "CASCADE") in flag_fks
+
+    # Pruning the verdictless file Concept must take its flag with it.
+    state.rebuild_file_concept_mirror(tmp_path, [])
+
+    with state.connect(tmp_path) as conn:
+        concepts = conn.execute("SELECT COUNT(*) FROM concepts").fetchone()[0]
+        flags = conn.execute("SELECT COUNT(*) FROM concept_flags").fetchone()[0]
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    assert concepts == 0
+    assert flags == 0
