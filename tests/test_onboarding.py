@@ -594,6 +594,11 @@ def test_zotero_probe_default_opener_ignores_ambient_proxy(monkeypatch: pytest.M
 
     monkeypatch.setenv("http_proxy", f"http://127.0.0.1:{proxy_port}")
     monkeypatch.delenv("no_proxy", raising=False)
+    # getproxies_environment() honours both cases. Without clearing the uppercase
+    # form this guard goes vacuous under NO_PROXY=localhost,127.0.0.1 — which
+    # corporate and dev-container images set by default, i.e. exactly the
+    # environments the ProxyHandler({}) fix exists for.
+    monkeypatch.delenv("NO_PROXY", raising=False)
     try:
         with onboarding._open_zotero_probe(
             f"http://127.0.0.1:{target_port}/connector/ping", timeout=2.0
