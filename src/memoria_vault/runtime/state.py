@@ -2428,6 +2428,10 @@ def replace_concept_edges(
                     now_iso(),
                 ),
             )
+        # After the loop, not before: this pass's own inserts can mint the Concept a
+        # retained row has been waiting for. Running it first is not a corruption --
+        # those rows just wait one more reindex -- which is why nothing pins the
+        # ordering.
         _resolve_pending_concept_edges_conn(conn)
     return {"deleted": int(deleted), "inserted": len(prepared)}
 

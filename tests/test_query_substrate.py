@@ -1005,7 +1005,7 @@ def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
         for target_path, attributes_json in (
             ("notes/future.md", '{"warrant": "w9"}'),
             ("notes/future-ulid.md", "{}"),
-            ("catalog/sources/w-alpha", "{}"),
+            ("catalog/sources/w-alpha/source.md", "{}"),
         ):
             conn.execute(
                 "INSERT INTO concept_edges("
@@ -1063,11 +1063,15 @@ def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
     )
     assert tension["attributes_json"] == '{"warrant": "w9"}'
     # Neither of these targets has `concept_id == target_path`: the note resolves
-    # through `concepts.path`, the work through its bare `work_id` rendering.
+    # through `concepts.path`, and the work resolves through neither -- it is spelled
+    # at its source file, so only the bare-`work_id` rendering reaches it. That is the
+    # spelling a tension parks at when the work is not yet in `catalog_sources`, since
+    # ERP-B.2's `_concept_edge_target_path` collapses `/source.md` only for works it
+    # already knows; the rendering arm is what resolves it once the work lands.
     ulid_target = rows[("tension", "notes/future-ulid.md")]
     assert ulid_target["target_concept_id"] == ULID_NOTE
     assert ulid_target["edge_id"] == state.concept_edge_id("notes/early.md", "tension", ULID_NOTE)
-    work_target = rows[("tension", "catalog/sources/w-alpha")]
+    work_target = rows[("tension", "catalog/sources/w-alpha/source.md")]
     assert work_target["target_concept_id"] == "w-alpha"
     assert work_target["edge_id"] == state.concept_edge_id("notes/early.md", "tension", "w-alpha")
 

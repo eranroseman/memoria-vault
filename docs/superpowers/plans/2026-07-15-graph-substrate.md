@@ -6478,8 +6478,12 @@ procedure and include the regenerated goldens in that task's commit.
 > live `catalog_sources` id set (or an equivalent that is provably the same key
 > function), and ERP-B.2's tests must include two spellings of one catalog work
 > inserted through the public seam, followed by a `replace_concept_edges` pass that
-> does not raise. ERP-B.4 deletes by the same triple, so it inherits the same key
-> function. See also cross-section contract 4 for this function's call ordering.
+> does not raise. **That test discriminates only if the work is already in
+> `catalog_sources` at insert time** — `_concept_edge_target_path` collapses nothing
+> for a work it does not know, so against an absent work both spellings stay pending
+> under correct *and* incorrect code and the pass never raises. Seed the work first.
+> ERP-B.4 deletes by the same triple, so it inherits the same key function. See also
+> cross-section contract 4 for this function's call ordering.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (insert the new function
