@@ -12,6 +12,8 @@ holds no state, re-sorts nothing, and never writes.
 
 from __future__ import annotations
 
+import json
+import textwrap
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -106,6 +108,11 @@ def _draft_panel(slice_payload: dict[str, Any], draft_payload: dict[str, Any]) -
     draft = draft_payload["draft"]
     return {
         "source_action": "project.draft.read",
+        # The panel composes two reads, and one string cannot say so. The
+        # singular key keeps naming the primary read (it is what the `--json`
+        # surface and the screen heading carry); the list is the honest full
+        # attribution for a reader checking where `outline_members` came from.
+        "source_actions": ["project.draft.read", "project.slice.read"],
         "draft_path": draft["draft_path"],
         "outline_members": len(slice_payload["slice"]["members"]),
         "draft_present": bool(draft["content"]),
@@ -121,7 +128,13 @@ def _grounds_panel(draft_payload: dict[str, Any], slice_payload: dict[str, Any])
     grounds marks written in the draft (`evidence_markers`), `complete` counts
     the derived records that resolved (`evidence_sets` — only those carry
     `state`), zero-grounds marks become honesty-card findings, and unresolved
-    outline ids (project.slice.read `missing`) are open gaps."""
+    outline ids (project.slice.read `missing`) are open gaps.
+
+    Each finding names the read that produced it. The panel's own numbers come
+    from `project.draft.read`, but every open gap comes from the slice — and a
+    reader who follows the panel's attribution to check one would land on a read
+    that never produced it. Attribution is the whole trust claim; per finding is
+    the only granularity that keeps it true."""
     markers = draft_payload["draft"]["evidence_markers"]
     findings = [
         {
@@ -129,6 +142,7 @@ def _grounds_panel(draft_payload: dict[str, Any], slice_payload: dict[str, Any])
                 f"open gap: outline id {row['id']} resolves to no checked note (line {row['line']})"
             ),
             "what_tipped_it": f"{slice_payload['slice']['outline_path']} line {row['line']}",
+            "source_action": "project.slice.read",
         }
         for row in slice_payload["slice"]["missing"]
     ]
@@ -136,6 +150,7 @@ def _grounds_panel(draft_payload: dict[str, Any], slice_payload: dict[str, Any])
         {
             "finding": f"thin claim: {marker['id']} has 0 grounds items",
             "what_tipped_it": "items=",
+            "source_action": "project.draft.read",
         }
         for marker in markers
         if not marker["items"]
@@ -228,3 +243,158 @@ def _flow_panel() -> dict[str, Any]:
         "source_action": "",
         "pending": "the dashboard.read registry row (U2 plan T.3)",
     }
+
+
+LAYOUT_COLUMNS = 80
+
+
+def render_findings(findings: list[dict[str, Any]]) -> list[str]:
+    """cli-voice-findings (U2 spec §4): the honesty-card fields verbatim —
+    finding/action, argument-for/against only when both sides are present
+    (one-sided arguments drop — V2's card grammar), tipped-by, coarse
+    certainty, and the read the card came from when it carries one. Never a
+    verdict line, never a pre-selected action. One function, used by every panel
+    (and by section T's preview screen)."""
+    lines: list[str] = []
+    for card in findings:
+        headline = str(card.get("finding") or card.get("action") or "")
+        if headline:
+            lines.extend(_fit("  - ", headline))
+        if card.get("argument_for") and card.get("argument_against"):
+            lines.extend(_fit("    for: ", str(card["argument_for"])))
+            lines.extend(_fit("    against: ", str(card["argument_against"])))
+        if card.get("what_tipped_it"):
+            lines.extend(_fit("    tipped by: ", str(card["what_tipped_it"])))
+        if card.get("certainty"):
+            lines.extend(_fit("    certainty: ", str(card["certainty"])))
+        if card.get("source_action"):
+            lines.extend(_fit("    from: ", str(card["source_action"])))
+    return lines
+
+
+def render_deep(payload: dict[str, Any]) -> str:
+    """The deep screen (U2 spec §1/§2): fixed panel order, plain sequential
+    text, static per invocation. No curses, no ANSI, no tty branching —
+    `memoria cockpit | cat` is byte-identical by construction."""
+    if payload.get("resolution") == "ambiguous":
+        return _render_ambiguous(payload)
+    panels = payload["panels"]
+    lines: list[str] = ["memoria cockpit: deep work"]
+    lines.extend(_fit("project: ", str(payload.get("project") or "")))
+    lines.append("")
+
+    project = panels["project"]
+    lines.append(_heading("project", project))
+    lines.extend(_fit("  title: ", project["title"]))
+    if project["thesis"]:
+        lines.extend(_fit("  thesis: ", project["thesis"]))
+    lines.append(f"  archived: {'yes' if project['archived'] else 'no'}")
+    lines.append("")
+
+    slice_panel = panels["slice"]
+    lines.append(_heading("slice", slice_panel))
+    lines.append(f"  members: {slice_panel['members']}")
+    edges = " ".join(f"{kind}={count}" for kind, count in slice_panel["edges_by_type"].items())
+    lines.extend(_fit("  edges: ", edges or "none"))
+    lines.append(f"  unresolved outline ids: {slice_panel['missing']}")
+    lines.append("")
+
+    draft = panels["draft"]
+    lines.append(_heading("draft", draft))
+    lines.extend(_fit("  draft path: ", draft["draft_path"]))
+    lines.append(f"  draft present: {'yes' if draft['draft_present'] else 'no'}")
+    lines.append(f"  outline members: {draft['outline_members']}")
+    states = " ".join(f"{state}={count}" for state, count in draft["evidence_states"].items())
+    lines.extend(_fit("  evidence states: ", states or "none"))
+    lines.append(f"  review required: {draft['review_required']}")
+    lines.append("")
+
+    grounds = panels["grounds"]
+    lines.append(_heading("grounds", grounds))
+    lines.append(f"  complete evidence sets: {grounds['complete']}/{grounds['total']}")
+    lines.extend(render_findings(grounds["findings"]) or ["  (no gaps or thin claims)"])
+    lines.append("")
+
+    trace = panels["trace"]
+    lines.append(_heading("recent machine changes", trace))
+    lines.extend(_trace_lines(trace))
+    lines.append("")
+
+    context = panels["context"]
+    lines.append(_heading("context handoff", context))
+    lines.extend(_context_lines(context))
+    return _buffer(lines)
+
+
+def _trace_lines(trace: dict[str, Any]) -> list[str]:
+    if "pending" in trace:
+        return _fit("  pending: ", str(trace["pending"]))
+    lines: list[str] = []
+    for event in trace.get("events") or []:
+        ref = str(event.get("event_id", ""))
+        summary = " ".join(
+            str(event[key]) for key in ("timestamp", "event_type", "output_id") if event.get(key)
+        )
+        lines.extend(_fit(f"  ref {ref}: ", summary or "(no summary fields)"))
+    if not lines:
+        lines.append("  (no machine changes recorded)")
+    if "total" in trace and "shown" in trace:
+        lines.append(f"  showing {trace['shown']} of {trace['total']}")
+    if trace.get("events"):
+        # Only advertise the preview when there is a ref to preview with.
+        lines.append("  refs preview via trace.revert_preview")
+    return lines
+
+
+def _context_lines(context: dict[str, Any]) -> list[str]:
+    if "reserved" in context:
+        return _fit("  reserved: ", str(context["reserved"]))
+    lines: list[str] = []
+    for key in sorted(context.get("bundle") or {}):
+        lines.extend(_fit(f"  {key}: ", _scalar(context["bundle"][key])))
+    lines.extend(_fit("  invocation: ", str(context["invocation"])))
+    return lines
+
+
+def _render_ambiguous(payload: dict[str, Any]) -> str:
+    projects = payload.get("projects") or []
+    lines = ["memoria cockpit: active-project resolution", ""]
+    if projects:
+        lines.append(f"{len(projects)} active projects; pass --project <path>:")
+        for row in projects:
+            lines.extend(_fit("  ", f"{row['path']}  ({row['title']})"))
+    else:
+        lines.append("no active projects (type: project, archived not True)")
+        lines.append("pass --project <path> to open one directly")
+    return _buffer(lines)
+
+
+def _heading(label: str, panel: dict[str, Any]) -> str:
+    source = str(panel.get("source_action") or "")
+    return f"{label} ({source})" if source else f"{label} (no registry row yet)"
+
+
+def _fit(prefix: str, value: str) -> list[str]:
+    """80-column layout target; identifiers are never wrapped
+    mid-identifier — a token longer than the layout renders whole on its
+    own line (keep-test, U2 spec §2)."""
+    line = f"{prefix}{value}"
+    if len(line) <= LAYOUT_COLUMNS:
+        return [line]
+    return textwrap.wrap(
+        line,
+        width=LAYOUT_COLUMNS,
+        subsequent_indent=" " * len(prefix),
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+
+
+def _scalar(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    return json.dumps(value, ensure_ascii=False, sort_keys=True)
+
+
+def _buffer(lines: list[str]) -> str:
+    return "\n".join(lines).rstrip("\n") + "\n"
