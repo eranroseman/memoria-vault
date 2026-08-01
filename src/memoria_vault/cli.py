@@ -9,6 +9,7 @@ import math
 import os
 import secrets
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
@@ -2399,12 +2400,14 @@ def _workspace_scan_payload(
                 {"paths": regeneration_paths},
             )
     observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})
+    inbox_compaction = _compact_resolved_inbox(workspace)
     needs_check_paths = list(observed["result"].get("paths") or [])
     payload = {
         "ok": (
             observed["ok"]
             and (quarantine is None or quarantine["ok"])
             and (regeneration is None or regeneration["ok"])
+            and not inbox_compaction.get("error")
         ),
         "job": observed["job"],
         "result": observed["result"],
@@ -2412,6 +2415,7 @@ def _workspace_scan_payload(
         "needs_check_paths": needs_check_paths,
         "journal": journal,
         "journal_reconciled": journal_reconciled,
+        "inbox_compaction": inbox_compaction,
     }
     if quarantine is not None:
         payload["quarantine"] = quarantine["result"]
@@ -2424,6 +2428,26 @@ def _workspace_scan_payload(
     if scan_args.schedule_id:
         payload["schedule_id"] = scan_args.schedule_id
     return payload
+
+
+def _compact_resolved_inbox(workspace: Path) -> dict[str, Any]:
+    """Compact the resolved attention tail, reporting a failure instead of raising it.
+
+    `workspace scan` is the file-watch tick as much as a command the PI runs, and
+    its caller reads one JSON payload from stdout: an exception escaping the hygiene
+    pass would end the watch loop and print no payload at all. A vault with no git
+    repo, a read-only tree, or a busy journal is therefore a reported `error`, which
+    the payload's `ok` carries -- a scan never reports success over a step that
+    failed.
+    """
+    # Lazy, like the journal and projection imports above: the scan path is the only
+    # caller and `memoria --help` should not pay for the trusted writer.
+    from memoria_vault.runtime.subsystems.lib import lifecycle
+
+    try:
+        return lifecycle.compact_resolved_cards(workspace)
+    except (OSError, RuntimeError, sqlite3.Error) as exc:
+        return {"adopted": [], "archived": [], "digests": [], "commit": "", "error": str(exc)}
 
 
 def _workspace_change_signature(workspace: Path) -> str:

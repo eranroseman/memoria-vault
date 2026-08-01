@@ -8329,9 +8329,75 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
   - `lifecycle.compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]` — returns `{"adopted": list[dict], "archived": list[str], "digests": list[str], "commit": str}` (rel posix paths; `commit` empty when nothing archived). Archives only `projection: attention` + `attention_status: resolved` cards in `inbox/*.md`; `deferred` and `open` stay. Month key = `resolved_at[:7]` when it matches `YYYY-MM`, else the compaction date's month. Digest sections are append-only; deletions of git-tracked cards are staged in the same commit (actor `integrity`). Requires the vault git repo every real vault has (vault versioning is product behavior) only when there is something to archive.
   - Scan payload gains key `"inbox_compaction"` = that return dict (`memoria workspace scan --json`).
 
+> **Adopted U3-SUB.2 execution amendment (2026-08-01):** the drafted snippets
+> below archive before they check whether the vault can record the archive, and
+> they run unserialized. What shipped differs in five places; the returned keys,
+> the digest format, and the trigger seam are unchanged.
+>
+> 1. **The git repo is checked before the first write, not discovered at the
+>    commit.** The drafted body appends each digest section and unlinks each card
+>    and only then calls `commit_explicit_writer_changes`, so a vault with no
+>    `.git` loses its whole resolved tail out of `inbox/` into an uncommitted file
+>    the vault's history cannot describe — and `_tracked` silently reports
+>    `False` for every card there, so nothing even looks wrong until git fails.
+>    `compact_resolved_cards` now raises before the loop when there is something
+>    to archive and no repo to archive it into, leaving the cards where a later
+>    scan can retry them. "Only when there is something to archive" is unchanged
+>    and now pinned: the probe returns first, so an ordinary scan of a vault with
+>    nothing resolved neither needs a repo nor takes a lock.
+> 2. **The read that decides and the writes it drives are one critical section**,
+>    for the reason U3-SUB.1's amendment 5 gave for the journaling half. `workspace
+>    scan` is the file-watch tick *and* a command the PI runs, so two overlap on a
+>    live vault; unserialized, both read the same card, both append it to the
+>    digest, and the second `unlink` raises `FileNotFoundError` out of a hygiene
+>    pass. `state.workspace_lock` now spans the in-lock read, the appends, the
+>    unlinks, and the commit. The probe stays outside it (same shape as the
+>    journaling half), and because the in-lock read is authoritative, the loser of
+>    a race archives nothing and commits nothing rather than committing a tail
+>    that moved nowhere.
+> 3. **Compaction failures are contained at the CLI seam, not in the lib.** The
+>    call sits inside `_workspace_scan_payload`, whose caller reads one JSON
+>    payload from stdout and whose watch loop dies on an exception; a vault with no
+>    git repo, a read-only tree, or a busy journal must not raise out of `memoria
+>    workspace scan`. `cli._compact_resolved_inbox` catches `(OSError,
+>    RuntimeError, sqlite3.Error)` and returns the same dict with an `error` key —
+>    the U3-SUB.1 shape, where the lib raises and the call site decides (the gate
+>    turned the same failures into an `attention.journal-error` deny). The scan's
+>    `ok` carries that error, as it already carries the observe/quarantine/
+>    regeneration steps': a scan that reported success over a step that failed
+>    would be the silent clear this section exists to remove.
+> 4. **`_resolved_cards` reads the card once, through `safe_read`.** It returns
+>    `(path, frontmatter, body)` triples instead of the drafted in-loop
+>    `path.read_text()` plus inline projection/status tests, so the probe and the
+>    authoritative in-lock read are the same function, and a card that vanished
+>    between them parses as no card rather than raising. Status and projection are
+>    case-folded, as `loudness.is_open_blocker` and the journaling half both fold
+>    them — otherwise a `projection: Attention` card can block the gate, be
+>    journaled when it closes, and then never leave `inbox/`.
+> 5. **The commit actor is its own constant.** `COMPACTION_ACTOR = "integrity"`
+>    rather than reuse of `JOURNAL_ACTOR`: same name, opposite justification. The
+>    journaling half names `integrity` because it *cannot* say who caused the
+>    change; compaction names it because the runtime *is* the cause.
+>
+> Two smaller things. The docstring's untouched-by-construction argument names
+> what each consumer actually does: `loudness.open_blockers` and
+> `engine.api._attention_cards` glob `inbox/*.md` non-recursively, but the
+> work-prompt dedupe checks one direct path in `inbox/` (it never globs), and the
+> seeded `inbox.base` view selects a *folder* — for which only the belt-and-braces
+> half (no frontmatter, so no `projection` match) holds. Each clause has a test.
+> And the four drafted tests shipped verbatim as the floor, joined by twelve more:
+> a two-month multi-card fixture, the month-key fallback's producer states
+> (missing, empty, unparseable, and YAML's `int` for a bare year) plus a hostile
+> `resolved_at` that cannot steer the write out of `inbox/archive/`, the title
+> fallback, case-variant frontmatter, second-run idempotence, non-attention
+> `inbox/` files (compaction deletes what it archives — the projection test is all
+> that stands between a hand-written note and a file the PI never gets back), the
+> two git-repo cases, the two consumers the plan's tests did not reach, and two
+> races.
+
 **Steps:**
 
-- [ ] Write the failing lib tests. Append to `tests/test_attention_lifecycle.py` (extends the imports at the top of the file with `from memoria_vault.runtime.subsystems.lib import loudness` and `from memoria_vault.runtime.vaultio import read_frontmatter` and `from tests.helpers import git, init_git`):
+- [x] Write the failing lib tests. Append to `tests/test_attention_lifecycle.py` (extends the imports at the top of the file with `from memoria_vault.runtime.subsystems.lib import loudness` and `from memoria_vault.runtime.vaultio import read_frontmatter` and `from tests.helpers import git, init_git`):
 
 ```python
 def test_compact_moves_resolved_cards_to_monthly_archive(tmp_path):
@@ -8392,8 +8458,8 @@ def test_compact_commits_deletion_of_tracked_cards(tmp_path):
     assert "inbox/alert-done.md" not in git(tmp_path, "ls-files")
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -k compact -v` — expected failure: `AttributeError: module 'memoria_vault.runtime.subsystems.lib.lifecycle' has no attribute 'compact_resolved_cards'`.
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`: extend the module docstring's second paragraph with:
+- [x] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -k compact -v` — expected failure: `AttributeError: module 'memoria_vault.runtime.subsystems.lib.lifecycle' has no attribute 'compact_resolved_cards'`.
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`: extend the module docstring's second paragraph with:
 
 ```
 Resolved cards are compacted into an append-only monthly digest under
@@ -8512,8 +8578,8 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     return {"adopted": adopted, "archived": archived, "digests": digests, "commit": commit}
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all tests pass.
-- [ ] Write the failing scan-wiring test. Append to `tests/test_cli_workspace_requests.py` (file already imports `json`, `main`; uses inline init like its first test at line 29-30):
+- [x] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all tests pass.
+- [x] Write the failing scan-wiring test. Append to `tests/test_cli_workspace_requests.py` (file already imports `json`, `main`; uses inline init like its first test at line 29-30):
 
 ```python
 def test_workspace_scan_compacts_resolved_inbox_cards(
@@ -8544,8 +8610,8 @@ def test_workspace_scan_compacts_resolved_inbox_cards(
     assert (inbox / "archive/2026-07.md").is_file()
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v` — expected failure: `KeyError: 'inbox_compaction'`.
-- [ ] Wire the scan seam. In `src/memoria_vault/cli.py` `_workspace_scan_payload`, immediately after `observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})` (line 1850) insert:
+- [x] Run to verify failure: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v` — expected failure: `KeyError: 'inbox_compaction'`.
+- [x] Wire the scan seam. In `src/memoria_vault/cli.py` `_workspace_scan_payload`, immediately after `observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})` (line 1850) insert:
 
 ```python
     from memoria_vault.runtime.subsystems.lib import lifecycle
@@ -8559,8 +8625,8 @@ def test_workspace_scan_compacts_resolved_inbox_cards(
     payload["inbox_compaction"] = inbox_compaction
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v`, then the neighboring scan tests: `python -m pytest tests/test_cli_workspace_requests.py -k scan -v`.
-- [ ] Run the gate: `python scripts/verify` — clean (watch the floor level; expected unaffected, see section note).
+- [x] Run to verify pass: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v`, then the neighboring scan tests: `python -m pytest tests/test_cli_workspace_requests.py -k scan -v`.
+- [x] Run the gate: `python scripts/verify` — clean (watch the floor level; expected unaffected, see section note).
 - [ ] Commit:
 
 ```
