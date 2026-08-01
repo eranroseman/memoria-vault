@@ -76,6 +76,37 @@ def _importable_by_spawn_children() -> Iterator[None]:
             os.environ["PYTHONPATH"] = previous
 
 
+def _report_child_import_environment(report) -> None:
+    report.put(
+        json.dumps(
+            {
+                "executable": sys.executable,
+                "sys_path": sys.path,
+                "pythonpath": os.environ.get("PYTHONPATH"),
+                "cwd": os.getcwd(),
+                "memoria_vault": getattr(__import__("memoria_vault"), "__file__", "<no __file__>"),
+                "memoria_vault_path": list(getattr(__import__("memoria_vault"), "__path__", [])),
+            }
+        )
+    )
+
+
+def test_zz_diagnose_spawn_child_import_environment() -> None:
+    """TEMPORARY (#1613): report the child's import environment, then fail loudly."""
+    context = multiprocessing.get_context("spawn")
+    report = context.Queue()
+    process = context.Process(target=_report_child_import_environment, args=(report,))
+    with _importable_by_spawn_children():
+        parent = json.dumps({"executable": sys.executable, "sys_path": sys.path})
+        process.start()
+    try:
+        payload = report.get(timeout=SPAWN_TIMEOUT)
+    except queue.Empty:
+        payload = "<child never reported>"
+    process.join(timeout=SPAWN_TIMEOUT)
+    raise AssertionError(f"PARENT={parent}\nCHILD={payload}\nEXITCODE={process.exitcode}")
+
+
 def test_spawn_children_are_handed_this_process_s_import_path() -> None:
     """The path a child needs is stated in the environment, not left to inheritance.
 
