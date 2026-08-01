@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import hmac
 import http.client
 import json
 import threading
 import uuid
 from http import HTTPStatus
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.engine.surface_contract import http_routes
-from memoria_vault.runtime import state, worker
+from memoria_vault.runtime import http_transport, state, worker
 from memoria_vault.runtime.http_transport import (
     MAX_BODY_BYTES,
     PayloadTooLarge,
@@ -151,6 +153,30 @@ def test_http_transport_authorization_helper() -> None:
     assert is_authorized("Bearer test-token", "test-token")
     assert not is_authorized(None, "test-token")
     assert not is_authorized("Bearer other", "test-token")
+
+
+def test_http_transport_authorization_compares_in_constant_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The per-boot token gates PI authority, so `==` would be a timing side channel."""
+    calls: list[tuple[object, object]] = []
+
+    def recording_compare_digest(left: bytes, right: bytes) -> bool:
+        calls.append((left, right))
+        return hmac.compare_digest(left, right)
+
+    monkeypatch.setattr(
+        http_transport, "hmac", SimpleNamespace(compare_digest=recording_compare_digest)
+    )
+
+    assert http_transport.is_authorized("Bearer test-token", "test-token") is True
+    assert http_transport.is_authorized("Bearer other", "test-token") is False
+    assert http_transport.is_authorized(None, "test-token") is False
+    assert calls == [
+        (b"Bearer test-token", b"Bearer test-token"),
+        (b"Bearer other", b"Bearer test-token"),
+        (b"", b"Bearer test-token"),
+    ]
 
 
 def test_http_transport_reads_status(workspace: Path) -> None:
@@ -442,7 +468,8 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
             ("http-create",),
         ).fetchone()
     assert row["operation_id"] == "create-concept"
-    assert row["actor"] == "agent"
+    # The door assigns authority; the caller's "actor": "agent" body field is ignored.
+    assert row["actor"] == "pi"
     assert json.loads(row["provenance_json"]) == {
         "surface": "memoria-http",
         "command": "http:create-concept",
@@ -472,8 +499,10 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
     }
 
 
-def test_http_transport_operation_run_cannot_claim_pi_authority(workspace: Path) -> None:
-    _write_attention(workspace, "agent-cannot-resolve")
+def test_http_transport_operation_run_uses_pi_authority_without_caller_actor(
+    workspace: Path,
+) -> None:
+    _write_attention(workspace, "http-pi-resolve")
 
     response, http_status = _dispatch(
         workspace,
@@ -482,29 +511,47 @@ def test_http_transport_operation_run_cannot_claim_pi_authority(workspace: Path)
         lambda: {
             "operation_id": "resolve-attention",
             "payload": {
-                "target_id": "inbox/agent-cannot-resolve.md",
+                "target_id": "inbox/http-pi-resolve.md",
                 "outcome": "apply",
                 "routing_class": "ask",
-                "reason": "caller claimed PI authority",
+                "reason": "authenticated pane disposition",
             },
-            "idempotency_key": "http-agent-cannot-resolve",
-            "actor": "pi",
+            "idempotency_key": "http-pi-resolve",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert response["ok"] is True
+    assert response["result"]["status"] == "done"
+    request = state.request_row(workspace, "http-pi-resolve")
+    assert request is not None
+    assert request["actor"] == "pi"
+    assert "attention_status: resolved" in (workspace / "inbox/http-pi-resolve.md").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_http_transport_operation_run_ignores_caller_supplied_actor(workspace: Path) -> None:
+    """A body `actor` neither escalates past `pi` nor is echoed into the envelope."""
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "trace-integrity-scan",
+            "payload": {},
+            "idempotency_key": "http-claims-integrity",
+            "actor": "integrity",
         },
     )
 
     assert http_status == HTTPStatus.OK
     assert response["ok"] is False
     assert response["result"]["status"] == "failed"
-    assert response["result"]["error"] == "resolve-attention requires PI actor authority"
-    with state.connect(workspace) as conn:
-        request = conn.execute(
-            "SELECT actor FROM operation_requests WHERE request_id = ?",
-            ("http-agent-cannot-resolve",),
-        ).fetchone()
-    assert request["actor"] == "agent"
-    assert "attention_status: open" in (workspace / "inbox/agent-cannot-resolve.md").read_text(
-        encoding="utf-8"
-    )
+    assert response["result"]["error"] == "trace-integrity-scan requires integrity actor authority"
+    request = state.request_row(workspace, "http-claims-integrity")
+    assert request is not None
+    assert request["actor"] == "pi"
 
 
 def test_http_transport_rejects_idempotency_key_bound_to_pending_pi_request(
@@ -681,12 +728,64 @@ def test_http_server_handler_enforces_bearer_auth_and_body_size(workspace: Path)
     )
 
 
+def test_http_server_refuses_unauthenticated_operation_run_before_the_write_seam(
+    workspace: Path,
+) -> None:
+    """PI authority lives behind the bearer gate: no token, no enqueue, no vault change."""
+    _write_attention(workspace, "unauthenticated-resolve")
+    body = json.dumps(
+        {
+            "operation_id": "resolve-attention",
+            "payload": {
+                "target_id": "inbox/unauthenticated-resolve.md",
+                "outcome": "apply",
+                "routing_class": "ask",
+                "reason": "no bearer token",
+            },
+            "idempotency_key": "http-unauthenticated",
+        }
+    ).encode("utf-8")
+    server = make_http_server(workspace, host="127.0.0.1", port=0, token="test-token")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address[0], server.server_address[1]
+    try:
+        refused = _http_request(
+            host,
+            port,
+            "POST",
+            "/operation/run",
+            {"Content-Type": "application/json", "Content-Length": str(len(body))},
+            body=body,
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+    assert refused == (
+        HTTPStatus.UNAUTHORIZED,
+        {"ok": False, "error": "unauthorized: missing or invalid bearer token"},
+    )
+    with state.connect(workspace) as conn:
+        count = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
+    assert count == 0
+    assert "attention_status: open" in (workspace / "inbox/unauthenticated-resolve.md").read_text(
+        encoding="utf-8"
+    )
+
+
 def _raise(exc: Exception) -> None:
     raise exc
 
 
 def _http_request(
-    host: str, port: int, method: str, path: str, headers: dict[str, str]
+    host: str,
+    port: int,
+    method: str,
+    path: str,
+    headers: dict[str, str],
+    body: bytes | None = None,
 ) -> tuple[HTTPStatus, dict]:
     conn = http.client.HTTPConnection(host, port, timeout=10)
     try:
@@ -694,6 +793,8 @@ def _http_request(
         for name, value in headers.items():
             conn.putheader(name, value)
         conn.endheaders()
+        if body is not None:
+            conn.send(body)
         response = conn.getresponse()
         return HTTPStatus(response.status), json.loads(response.read().decode("utf-8"))
     finally:

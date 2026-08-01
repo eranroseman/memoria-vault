@@ -45,8 +45,10 @@ exact repeat appends that one missing event without creating another successor
 or reopening work that has since finished.
 
 The local CLI's `--actor` value records declared provenance; it does not
-authenticate a caller. Keep the raw CLI PI-owned. Agent integrations use HTTP
-or MCP, which bind their request actor to `agent`.
+authenticate a caller. Keep the raw CLI PI-owned. MCP binds its request actor to
+`agent`. The loopback HTTP transport binds its request actor to `pi` — it is the
+one adapter that authenticates its caller, with a per-boot bearer token the user
+holds, over a loopback-only bind. Neither adapter reads a caller-supplied actor.
 
 ## Actor Authority Guard
 

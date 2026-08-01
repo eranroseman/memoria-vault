@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hmac
 import json
 import math
 import threading
@@ -275,7 +276,8 @@ def bind_http_server(
 
 
 def is_authorized(authorization: str | None, token: str) -> bool:
-    return authorization == f"Bearer {token}"
+    # This token gates PI authority (see _write), so it is never compared with ==.
+    return hmac.compare_digest((authorization or "").encode("utf-8"), f"Bearer {token}".encode())
 
 
 def _dispatch(
@@ -392,7 +394,19 @@ def _write(workspace: Path, path: str, body: dict[str, Any]) -> dict[str, Any]:
         payload,
         idempotency_key=str(body.get("idempotency_key") or "") or None,
         schedule_id=str(body.get("schedule_id") or "") or None,
-        actor="agent",
+        # Loopback surface = the PI's hand: human-driven, user-held per-boot token
+        # (bootstrap spec §4; plan contract 5). The door assigns authority; a client
+        # `actor` field is never read.
+        #
+        # DECISION (#1562): this grant is door-wide, not per-operation. The seam is a
+        # single actor= value, so every operation reachable here inherits PI authority
+        # — including cascade-rollback, promote-draft-passage and
+        # capture-remote-pdf-source. A per-operation allowlist at the door was
+        # considered and rejected: such a roster drifts out of date silently, which is
+        # worse than one boundary a reader can see. The boundary that holds is the
+        # door itself: loopback-only bind, Host/Origin allowlists, and the per-boot
+        # bearer token above. The MCP stdio door keeps actor="agent".
+        actor="pi",
         agent_identity=str(body.get("agent_identity") or ""),
         command=f"http:{operation_id}",
         surface="memoria-http",

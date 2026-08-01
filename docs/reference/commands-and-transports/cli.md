@@ -183,8 +183,10 @@ or `operation failed` when none is available — and the command exits nonzero;
 it never prints a path or success token for an operation the engine did not
 perform. In `--json` mode the payload carries `"ok": false` alongside the same
 failing detail.
-Agent-facing adapters use [HTTP](local-http-transport.md) or
-[MCP](mcp-transport.md), which always record request actor `agent`.
+[MCP](mcp-transport.md) is the agent-facing adapter and always records request
+actor `agent`. The token-authenticated loopback
+[HTTP](local-http-transport.md) transport records request actor `pi`, because
+its caller is the PI's own editor plugin holding the per-boot token.
 `workspace scan`, `workspace check`, and scans performed by `serve --watch`
 always record actor `integrity`. `memoria mcp` has no `--json` mode, requires
 `--read-scope`, and uses `--actor` only as the concrete agent identity recorded
