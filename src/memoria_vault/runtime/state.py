@@ -2449,6 +2449,14 @@ def _resolve_pending_concept_edges_conn(conn: sqlite3.Connection) -> None:
     still agree with the id space — and write the answer the same way.
     ``_lookup_concept_id`` is the module's one resolver, so a catalog reference
     resolves here exactly as it does at insert.
+
+    **This pass is graph-wide and ignores the caller's ``paths`` scope.** That is
+    deliberate — the rows it settles are exactly the ones a scoped pass spared, so
+    scoping it would re-create the leak — but it does mean a scoped
+    ``replace_concept_edges`` can write rows outside the requested scope, while an
+    empty scope still short-circuits before reaching here. ``indexing.py`` is the
+    only caller today and passes ``paths=None``; a future scoped caller has to
+    accept that asymmetry or move the pass out of this function.
     """
     unsettled = conn.execute(
         "SELECT source_concept_id, relation_type, target_path, target_concept_id"

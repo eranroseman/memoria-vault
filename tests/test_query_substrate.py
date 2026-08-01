@@ -980,6 +980,17 @@ def test_rename_reconciliation_carries_the_writer_materialization_payload(
 
 
 def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
+    """Retained rows resolve through `_lookup_concept_id`, not a bare `concept_id` probe.
+
+    v16 decouples identity from path, so a retained row's `target_path` is a path
+    and the id it has to resolve to usually is not one: a machine-authored note
+    keys by its frontmatter ULID, and a catalog work keys by its bare `work_id`
+    while rendering at `catalog/sources/<work_id>`. A probe matching only
+    `concepts.concept_id = target_path` still passes a path-keyed fixture and
+    leaves both of those permanently dangling — `target_concept_id IS NULL`,
+    `edge_id = ''` — which is the one thing this pass exists to prevent, and the
+    ULID case is the normal case for a machine-authored note.
+    """
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas")
     write_checked_concept(
@@ -988,15 +999,22 @@ def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
         'type: note\ntitle: Early\ntags: []\nlinks:\n  supports: ["[[notes/future]]"]\n',
     )
     rebuild_passage_index(vault)
-    # A durable tension row targeting the same future note, hung with attributes.
+    # Durable tension rows across all three target id-spaces: the path-keyed note
+    # the frontmatter link also points at, a ULID-keyed note, and a catalog work.
     with state.connect(vault) as conn:
-        conn.execute(
-            "INSERT INTO concept_edges("
-            " edge_id, source_concept_id, relation_type, target_concept_id,"
-            " target_path, attributes_json, check_status, source_path, updated_at)"
-            " VALUES ('', 'notes/early.md', 'tension', NULL, 'notes/future.md',"
-            " '{\"warrant\": \"w9\"}', 'checked', '', '2026-07-15T00:00:00Z')"
-        )
+        for target_path, attributes_json in (
+            ("notes/future.md", '{"warrant": "w9"}'),
+            ("notes/future-ulid.md", "{}"),
+            ("catalog/sources/w-alpha", "{}"),
+        ):
+            conn.execute(
+                "INSERT INTO concept_edges("
+                " edge_id, source_concept_id, relation_type, target_concept_id,"
+                " target_path, attributes_json, check_status, source_path, updated_at)"
+                " VALUES ('', 'notes/early.md', 'tension', NULL, ?, ?, 'checked', '',"
+                " '2026-07-15T00:00:00Z')",
+                (target_path, attributes_json),
+            )
         pending = conn.execute(
             "SELECT target_concept_id, edge_id FROM concept_edges"
             " WHERE target_path = 'notes/future.md' AND relation_type = 'supports'"
@@ -1005,27 +1023,98 @@ def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
     assert pending["target_concept_id"] is None
     assert pending["edge_id"] == ""
 
-    # The target appears; the next reindex resolves both rows to its id.
+    # The targets appear; the next reindex resolves every retained row to its id.
     write_checked_concept(
         vault, "notes/future.md", "type: note\ntitle: Future\ntags: []\nlinks: {}\n"
     )
+    write_checked_concept(
+        vault,
+        "notes/future-ulid.md",
+        f"type: note\nid: {ULID_NOTE}\ntitle: Future ULID\ntags: []\nlinks: {{}}\n",
+    )
+    with state.connect(vault) as conn:
+        state.ensure_concept_parent_conn(
+            conn,
+            "catalog/sources/w-alpha",
+            concept_type="work",
+            store="db",
+            path="catalog/sources/w-alpha",
+        )
     rebuild_passage_index(vault)
 
     with state.connect(vault) as conn:
         rows = {
-            str(row["relation_type"]): dict(row)
+            (str(row["relation_type"]), str(row["target_path"])): dict(row)
             for row in conn.execute(
-                "SELECT relation_type, target_concept_id, edge_id, attributes_json"
-                " FROM concept_edges WHERE target_path = 'notes/future.md'"
+                "SELECT relation_type, target_path, target_concept_id, edge_id,"
+                " attributes_json FROM concept_edges"
             )
         }
-    assert rows["supports"]["target_concept_id"] == "notes/future.md"
-    assert rows["supports"]["edge_id"] == state.concept_edge_id(
+    supports = rows[("supports", "notes/future.md")]
+    assert supports["target_concept_id"] == "notes/future.md"
+    assert supports["edge_id"] == state.concept_edge_id(
         "notes/early.md", "supports", "notes/future.md"
     )
     # The retained tension row resolves too — attributes still hanging on it.
-    assert rows["tension"]["target_concept_id"] == "notes/future.md"
-    assert rows["tension"]["edge_id"] == state.concept_edge_id(
+    tension = rows[("tension", "notes/future.md")]
+    assert tension["target_concept_id"] == "notes/future.md"
+    assert tension["edge_id"] == state.concept_edge_id(
         "notes/early.md", "tension", "notes/future.md"
     )
-    assert rows["tension"]["attributes_json"] == '{"warrant": "w9"}'
+    assert tension["attributes_json"] == '{"warrant": "w9"}'
+    # Neither of these targets has `concept_id == target_path`: the note resolves
+    # through `concepts.path`, the work through its bare `work_id` rendering.
+    ulid_target = rows[("tension", "notes/future-ulid.md")]
+    assert ulid_target["target_concept_id"] == ULID_NOTE
+    assert ulid_target["edge_id"] == state.concept_edge_id("notes/early.md", "tension", ULID_NOTE)
+    work_target = rows[("tension", "catalog/sources/w-alpha")]
+    assert work_target["target_concept_id"] == "w-alpha"
+    assert work_target["edge_id"] == state.concept_edge_id("notes/early.md", "tension", "w-alpha")
+
+
+def test_a_pruned_target_relinks_when_its_concept_returns(tmp_path: Path) -> None:
+    """`target_concept_id IS NULL` is the pass predicate's `ON DELETE SET NULL` half.
+
+    Graph-R2: pruning a verdict-less Concept pends every inbound edge through the
+    v16 foreign key, which nulls the endpoint but leaves `edge_id` at the digest it
+    already carried. That row is invisible to an `edge_id = ''` scan, so without
+    this half of the predicate it stays dangling even once the Concept returns.
+    The other half catches the mirror-image shape a re-key leaves — live endpoint,
+    blank `edge_id` — and neither half covers the other's row.
+    """
+    vault = tmp_path
+    mirror = [
+        {"concept_id": "notes/early.md", "concept_type": "note", "path": "notes/early.md"},
+        {"concept_id": "notes/gone.md", "concept_type": "note", "path": "notes/gone.md"},
+    ]
+    state.rebuild_file_concept_mirror(vault, mirror)
+    with state.connect(vault) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " edge_id, source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'notes/early.md', 'tension', 'notes/gone.md', 'notes/gone.md',"
+            " 'checked', '', '2026-07-15T00:00:00Z')",
+            (state.concept_edge_id("notes/early.md", "tension", "notes/gone.md"),),
+        )
+
+    state.rebuild_file_concept_mirror(vault, mirror[:1])
+
+    with state.connect(vault) as conn:
+        pended = conn.execute("SELECT target_concept_id, edge_id FROM concept_edges").fetchone()
+    assert pended["target_concept_id"] is None
+    # The digest survived the prune, so `edge_id = ''` alone never sees this row.
+    assert str(pended["edge_id"]) == state.concept_edge_id(
+        "notes/early.md", "tension", "notes/gone.md"
+    )
+
+    state.rebuild_file_concept_mirror(vault, mirror)
+    state.replace_concept_edges(vault, [])
+
+    with state.connect(vault) as conn:
+        relinked = conn.execute("SELECT target_concept_id, edge_id FROM concept_edges").fetchone()
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+    assert str(relinked["target_concept_id"]) == "notes/gone.md"
+    assert str(relinked["edge_id"]) == state.concept_edge_id(
+        "notes/early.md", "tension", "notes/gone.md"
+    )
