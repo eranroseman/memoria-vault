@@ -186,7 +186,10 @@ failing detail.
 [MCP](mcp-transport.md) is the agent-facing adapter and always records request
 actor `agent`. The token-authenticated loopback
 [HTTP](local-http-transport.md) transport records request actor `pi`, because
-its caller is the PI's own editor plugin holding the per-boot token.
+its caller is the PI's own editor plugin holding the per-boot token. Both doors
+mark their requests machine-authored, so Concept bodies posted through either
+one are neutralized before they are written; only the CLI writes a PI-typed body
+verbatim.
 `workspace scan`, `workspace check`, and scans performed by `serve --watch`
 always record actor `integrity`. `memoria mcp` has no `--json` mode, requires
 `--read-scope`, and uses `--actor` only as the concrete agent identity recorded

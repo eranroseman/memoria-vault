@@ -319,6 +319,12 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
         ).fetchone()
     assert row["operation_id"] == "create-concept"
     assert row["actor"] == "agent"
+    # Stated, not inferred from actor="agent" (#1596): bodies arriving over this
+    # transport are machine-authored, so a later authority change here cannot
+    # silently disable untrusted-Markdown neutralization.
+    job = state.request_job(workspace, "mcp-create")
+    assert job is not None
+    assert job["request_envelope"]["machine_authored"] is True
     assert json.loads(row["provenance_json"]) == {
         "surface": "memoria-mcp",
         "command": "mcp:create-concept",

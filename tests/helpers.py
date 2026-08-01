@@ -11,7 +11,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.trusted_writer import OperationContext
+from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,18 +43,13 @@ def operation_context(
         args={"run_id": run_id},
         provenance={"surface": "pytest"},
     )
+    context = OperationContext(actor, run_id, request_id, operation_id, machine)
     job = {
         "job_id": request_id,
         "kind": "operation",
         "operation_id": operation_id,
         "status": "running",
-        "bound_context": {
-            "actor": actor,
-            "run_id": run_id,
-            "request_id": request_id,
-            "operation_id": operation_id,
-            "machine": machine,
-        },
+        "bound_context": operation_context_record(context),
     }
     saved = state.save_request(
         vault,
@@ -63,7 +58,7 @@ def operation_context(
     )
     saved["status"] = "running"
     state.set_request_running(vault, request_id, saved)
-    return OperationContext(actor, run_id, request_id, operation_id, machine)
+    return context
 
 
 def _assert_request_columns(columns: set[str]) -> None:

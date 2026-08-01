@@ -76,7 +76,7 @@ def add_repo_paths(root: Path) -> None:
 
 def _operation_context(vault: Path, operation_id: str):
     from memoria_vault.runtime import state
-    from memoria_vault.runtime.trusted_writer import OperationContext
+    from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 
     request_id = f"e2e-{uuid.uuid4().hex}"
     envelope = state.request_envelope(
@@ -85,6 +85,7 @@ def _operation_context(vault: Path, operation_id: str):
         actor="operation",
         provenance={"surface": "e2e-smoke"},
     )
+    context = OperationContext("operation", request_id, request_id, operation_id, "e2e")
     job = state.save_request(
         vault,
         envelope,
@@ -92,18 +93,12 @@ def _operation_context(vault: Path, operation_id: str):
             "job_id": request_id,
             "kind": "operation",
             "operation_id": operation_id,
-            "bound_context": {
-                "actor": "operation",
-                "run_id": request_id,
-                "request_id": request_id,
-                "operation_id": operation_id,
-                "machine": "e2e",
-            },
+            "bound_context": operation_context_record(context),
         },
     )
     job["status"] = "running"
     state.set_request_running(vault, request_id, job)
-    return OperationContext("operation", request_id, request_id, operation_id, "e2e")
+    return context
 
 
 def assert_offline_ingest(root: Path, vault: Path) -> None:

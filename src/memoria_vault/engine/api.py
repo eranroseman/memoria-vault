@@ -439,6 +439,7 @@ def run_operation(
     payload: dict[str, Any],
     *,
     actor: str,
+    machine_authored: bool = False,
     agent_identity: str = "",
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
@@ -457,6 +458,7 @@ def run_operation(
         provenance=provenance,
         schedule_id=schedule_id,
         actor=actor,
+        machine_authored=machine_authored,
     )
     result = _run_saved_request(workspace, job, machine=machine)
     return {

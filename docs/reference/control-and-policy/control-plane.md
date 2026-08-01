@@ -58,16 +58,26 @@ run them at all. `_require_operation_actor` is the first check inside
 actor fails the job with `"{operation_id} requires {label} actor authority"`
 and the rejected job appends zero `event_log` rows.
 
+The live roster is `PROTECTED_OPERATION_ACTORS` in `worker.py`:
+
 | Required actor | Operations |
 | --- | --- |
-| `pi` | `acknowledge-attention`, `resolve-attention`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback` |
+| `pi` | `acknowledge-attention`, `resolve-attention`, `resolve-evidence`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback`, `capture-remote-pdf-source` |
 | `integrity` | `trace-integrity-scan`, `observe-pi-edits` |
 
-A few CLI-only PI actions — `memoria project resolve-evidence` among them —
-are not worker operations dispatched through this table at all; they enforce
-PI-only authority directly in the CLI handler (`_require_pi_actor`) before
-calling their runtime function. The table above is the complete list of
-*worker-dispatched* protected operations, not of every PI-only action.
+Some PI-only actions are *additionally* guarded in the CLI handler
+(`_require_pi_actor`) before they reach the runtime function; that is a second
+check on the same authority, not an alternative to this table. The table above
+is the complete list of worker-dispatched protected operations, not of every
+PI-only action — a CLI-only action such as `memoria steering edit` never
+becomes a request at all.
+
+Authority is not authorship. Passing this guard says the request may run, not
+that a human wrote its content: the loopback HTTP transport holds `pi` authority
+while the bodies it posts are composed by a plugin or an agent. Those bodies are
+still neutralized before they are written — the request envelope records
+`machine_authored`, and the trusted writer gates untrusted-Markdown
+neutralization on that field rather than on `actor`.
 
 ## WIP Limits
 

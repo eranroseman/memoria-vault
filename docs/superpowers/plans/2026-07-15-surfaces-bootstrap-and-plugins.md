@@ -510,7 +510,7 @@ other task bodies remain unchanged.
 > **Ruling 1 — the door-wide grant is accepted, and recorded as a decision.**
 > The seam is a single `actor=` value, so the grant cannot be scoped to the two
 > pane operations: *every* operation reachable through the loopback door
-> inherits PI authority, including `cascade-rollback`,
+> inherits PI authority, including `cascade-rollback`, `resolve-evidence`,
 > `promote-draft-passage` and `capture-remote-pdf-source`. A per-operation
 > allowlist at the door was considered and rejected — such a roster drifts out
 > of date silently, the failure mode AGENTS.md's "prefer deletion > mechanism >
@@ -518,6 +518,32 @@ other task bodies remain unchanged.
 > (loopback-only bind, `Host`/`Origin` allowlists, per-boot bearer token). A
 > comment at the seam states this plainly so a later reader meets a decision
 > rather than an oversight.
+>
+> **Ruling 1 corrected — 2026-07-31 (issue #1596).** Ruling 1 reasoned about
+> `PROTECTED_OPERATION_ACTORS` alone. That was the wrong artifact: `actor` has a
+> second consumer. `trusted_writer` gates untrusted-Markdown neutralization on
+> it at three sites — `stage_concept`, `promote_checked`, `materialize_unchecked`
+> — so raising the door to `pi` also disabled the CS1 defusal for *every body
+> written through the door*, `create-concept` included. That removed an existing
+> control on an already-HTTP-reachable operation, and SEAM.1 gates U3-PLUG /
+> U3-CANVAS / U4, whose bodies are LLM-generated.
+>
+> The root cause is that `actor` conflated **authority** with **authorship**. The
+> corrected ruling separates them: `OperationContext` carries `machine_authored`,
+> the transport doors (HTTP *and* MCP) set it true, and the neutralizer gates on
+> `context.body_is_pi_authored` — PI authority *and* PI authorship — rather than
+> on `actor` alone. PI authority for the reserved operations is preserved intact;
+> machine-posted bodies stay neutralized. The grant is still door-wide and there
+> is still no per-operation allowlist.
+>
+> Two further consequences of the grant are recorded, not changed. (a)
+> `integrity.py:978` and `:1093` branch `cascade-rollback` descendant handling on
+> `event["actor"] == "pi"`, so subtrees written through the plugin now route to
+> `needs_human` review instead of automatic revert — conservative, and left
+> alone. (b) The shipped plugin still sends `actor: "agent"` in its request body
+> (`packages/memoria-obsidian/main.js:325` and the seeded copy). The field is
+> inert — the door never reads it — but a plugin reader would wrongly infer its
+> writes are journaled `agent`. U3-PLUG owns the removal.
 >
 > **Ruling 2 — the token comparison is fixed in the same commit.**
 > `is_authorized` compared the per-boot bearer token with `==`. That was

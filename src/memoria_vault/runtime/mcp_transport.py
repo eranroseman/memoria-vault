@@ -72,6 +72,10 @@ def make_mcp_app(workspace: Path, *, read_scope: list[str], agent_identity: str 
             idempotency_key=idempotency_key or None,
             schedule_id=schedule_id or None,
             actor="agent",
+            # Stated, not inferred from actor="agent" (#1596): bodies posted through a
+            # transport are machine-authored and stay neutralized on their own terms,
+            # so a later authority change here cannot silently disable that.
+            machine_authored=True,
             agent_identity=agent_identity,
             command=f"mcp:{operation_id}",
             surface="memoria-mcp",
