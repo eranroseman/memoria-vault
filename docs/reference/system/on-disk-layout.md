@@ -68,7 +68,7 @@ writable runtime directories are created from `folders.yaml`:
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
 ├── overrides.jsonl          Git-tracked log of PI overrides recorded at init and beyond
-├── vault.json               Git-tracked as-created receipt: vault identity and the agent/Obsidian bundle hashes, written once at init
+├── vault.json               Git-tracked creation receipt: vault identity and bundle hashes, written once at init (see below)
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── code-runs/<run-id>/      gitignored recorded code-execution run artifacts
 ├── journal/                 derived per-machine JSONL synchronization exports
@@ -80,6 +80,23 @@ writable runtime directories are created from `folders.yaml`:
 ├── locks/worker.lock         fail-closed no-follow workspace writer lock
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ```
+
+`vault.json` is written once, by `memoria init`, and is never rewritten. It
+records this vault's identity and the SHA-256 of each agent and Obsidian bundle
+file **as the vault was created** - not a live inventory of what is on disk now:
+
+- A bundle file already present at init is adopted, not replaced, and its own
+  hash is recorded. A vault can therefore carry perimeter configuration it
+  never received from the package.
+- A bundle delivered by a later run is on disk but absent from the record. That
+  includes `memoria init --no-obsidian` followed by `memoria doctor --repair`
+  or a second `memoria init`, which installs the Obsidian plugin while the
+  record still lists the agent bundle alone.
+- After `memoria doctor --repair` on a newer engine, a reseeded
+  `.obsidian/plugins/` file no longer matches its recorded hash.
+
+No runtime reads these hashes. A future drift or tamper check needs its own
+record of what was seeded and must not read this one.
 
 The append-only, hash-chained `event_log` in `memoria.sqlite` is the journal of
 record. Trust-sensitive readers query it in event order. A journal append

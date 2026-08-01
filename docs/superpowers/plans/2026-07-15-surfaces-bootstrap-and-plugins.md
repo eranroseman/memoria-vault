@@ -5146,6 +5146,14 @@ history.
    Tests prove that every seeded file matches its current recorded hash. Do not
    stamp bundle or schema versions, preserve a prior manifest, repair a missing
    manifest, or invoke the writer from `doctor --repair`.
+
+   > **Narrowed by the BOOT-C.6 decision (2026-08-01, below).** "Current file
+   > hashes" holds *as the vault is created*: the manifest is written
+   > write-if-absent, so a later run neither refreshes a hash nor re-mints
+   > `vault_id`. The hash-match test therefore covers the creating run, not
+   > every subsequent one. The shape above is unchanged, and the four
+   > prohibitions in this paragraph still bind — write-if-absent needs no
+   > read-back, so it preserves nothing.
 3. **No lifecycle compatibility surface.** Do not add a `memoria upgrade`
    parser, handler, recovery path, backup directory, backup gitignore entry,
    version comparator, skew warning, or version advice. `doctor` neither
@@ -6409,7 +6417,7 @@ EOF
 
 ---
 
-### Task BOOT-C.6: one writer, one policy for the agent bundle (OPEN)
+### Task BOOT-C.6: one writer, one policy for the agent bundle
 
 > **Ledger additions from BOOT-C.2's re-review (2026-08-01) — three things this task must
 > not have to rediscover.**
@@ -6439,9 +6447,10 @@ EOF
 > Also folded in: `write_manifest` is unconditional while the nine bundle writes are not
 > (the asymmetry that produces the dirty tree above — one decision with item 1, not two).
 
-Owns every item in "Post-BOOT-C.2 review follow-ups" above. Not started; runs
-before U3-PLUG adds `viewspec.js` to the plugin bundle, because a second file
-joining the plugin is exactly the case the split writers get wrong.
+Owns every item in "Post-BOOT-C.2 review follow-ups" above. Runs before
+U3-PLUG adds `viewspec.js` to the plugin bundle, because a second file joining
+the plugin is exactly the case the split writers get wrong. The decision it
+had to make, and the shipped behavior, are recorded in the BINDING block below.
 
 Scope: collapse `cli._seed_workspace`'s agent/Obsidian tree copy and
 `bundles.seed_bundles` into a single writer with a single overwrite policy
@@ -6475,11 +6484,22 @@ unconditional manifest write was the whole of the churn.
 | Rejected: unconditional manifest, `vault_id` read back from the prior manifest | Keeps BOOT-C.2's as-on-disk hashes and a complete record for the current registry | Reading the prior `vault_id` *is* preserving a prior manifest, which the clean-slate amendment forbids in as many words ("Do not … preserve a prior manifest"), and it re-opens the permanent surface that deletion removed: corrupt/hostile/non-dict manifest handling, its fallbacks, and their tests. Cost lands on a **supported** path (`scripts/install.sh` re-runs `init --yes`) |
 | Rejected: mint `vault_id` in a separate write-if-absent file, keep the manifest unconditional | Would give both a pinned identity and as-on-disk hashes | Two artifacts for one record; the read-back objection only moves to the new file; a second tracked path to seed, document, and preflight — more surface bought for a field with no consumer |
 | Rejected: derive `vault_id` from the canonical vault path | No stored state at all | Duplicates the rendezvous state-dir key (`sha256(path)[:16]`) and changes when the vault moves, which is the opposite of an identity |
+| Rejected **for now, not on the merits**: drop `bundles` entirely — manifest becomes `{schema, vault_id}` | Deletes every hazard this decision has to manage at once: the "not an as-seeded baseline" trap, the `--no-obsidian`-then-repair gap, the post-repair authority question, and the whole hash-source surface — with strictly less code, for a field with no reader | Out of BOOT-C.6's scope, and not a code-level call: cross-section contract 6 hands U4-A a bundle-file registry and the clean-slate amendment's own example JSON specifies `bundles.files`, so removing it changes both. It also rewrites `.memoria/vault.json`'s bytes, drifting all 35 floor goldens — contract 10 must sequence it. Raised by the 2026-08-01 re-review; recorded here so the next bootstrap task can take it as a plan-level decision rather than rediscover it |
 
 The chosen cost is acceptable because **no code reads these hashes** (`cli._vault_id`
 reads `vault_id` only, and BOOT-C.3/.4/.5 are removed) and because, per the ledger
 item below, no future check may read them either. The rejected option's cost is
 paid on every installer run, in a repo where vault versioning is product behavior.
+
+**If that last row is ever taken up**, the question to settle first is whether
+the vault records *any* creation evidence. The receipt's one defensible
+remaining use is human/forensic — it is the only on-disk sign that a vault
+**adopted** a pre-existing perimeter file instead of receiving the shipped one
+— and even that is unusable today, because the manifest does not record the
+engine version the hashes came from. So the real choice is `{schema, vault_id}`
+versus `{schema, vault_id, engine_version, bundles}`; keeping `bundles` without
+`engine_version`, which is what ships, is the one combination that cannot
+answer a question later.
 
 **Carry forward — do not point a drift check at this field.** These hashes are
 not an as-seeded baseline: a file already present when the vault was created
@@ -6504,12 +6524,19 @@ which only `init` passes). It still restores `.obsidian/plugins/*` as the
 runtime seed it has always been — the documented `--no-obsidian` → repair →
 Obsidian path in `docs/how-to-guides/setup/set-up-obsidian.md` depends on it.
 The BOOT-C.2 docstring warning that "the manifest is not authoritative
-post-repair" is **deleted rather than kept**: under an as-created receipt,
-repair rewrites those files with the same package bytes the receipt recorded,
-so it moves disk back onto the manifest instead of away from it (pinned:
-PI-patch `main.js`, repair, assert the file's hash equals the recorded hash).
-Under the rejected as-on-disk option the warning would still be needed — that
-asymmetry is itself an argument for the decision.
+post-repair" is **kept, narrowed to the case that actually produces it**
+(2026-08-01 re-review): within one engine version repair rewrites those files
+with the same package bytes the receipt recorded, so it moves disk back onto
+the manifest (pinned: PI-patch `main.js`, repair, assert the file's hash equals
+the recorded hash). Across an engine upgrade it does not — repair reseeds from
+the installed package while the receipt is deliberately never refreshed, so
+disk moves off the record and the vault tree goes `' M
+.obsidian/plugins/memoria-obsidian/main.js'`. That case is pinned by a test
+that varies the packaged bytes and holds the vault fixed; the first draft's
+pin fixed the engine version and could not see it. Updating the manifest at
+repair was the rejected half of the plan's either/or: it would make repair a
+manifest writer, which contradicts both "repair never touches the bundle
+record" and the as-created semantics.
 
 **Spec.** `specs/2026-07-15-surfaces-bootstrap-design.md`'s decision row now
 carries the shipped shape (`schema`, `vault_id`, per-bundle file hashes, written

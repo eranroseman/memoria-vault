@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -188,6 +189,10 @@ def test_init_seeds_agent_and_obsidian_bundles_and_writes_the_as_created_manifes
     for rel in bundles.BUNDLE_FILES["agent"] + bundles.BUNDLE_FILES["obsidian"]:
         assert (workspace / rel).is_file(), rel
         assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes(), rel
+        # Durably written, so 0600 like the other engine-written control files
+        # (`.memoria/vault.json`, `.memoria/overrides.jsonl`) rather than the
+        # 0644 the seed-class copy leaves.
+        assert (workspace / rel).stat().st_mode & 0o777 == 0o600, rel
 
     manifest = _read_manifest(workspace)
     assert manifest["schema"] == bundles.MANIFEST_SCHEMA
@@ -253,6 +258,40 @@ def test_reinit_preserves_pi_edited_bundle_files_and_the_as_created_manifest(
     assert recorded[".claude/settings.json"] == sha256_file(
         WORKSPACE_SEED / ".claude/settings.json"
     )
+
+
+def test_init_records_the_hash_of_an_adopted_file_not_of_the_skipped_template(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`init --yes` over a directory that already carries bundle files.
+
+    Write-if-absent adopts the file that is there rather than seeding the
+    shipped one, so hashing the template would record a digest for content the
+    vault does not hold — the manifest would describe a perimeter this vault
+    never received.
+    """
+    workspace = tmp_path / "workspace"
+    (workspace / ".claude").mkdir(parents=True)
+    adopted = {
+        ".claude/settings.json": '{"permissions": {"deny": []}}\n',
+        "CLAUDE.md": "@AGENTS.md\n\nPre-existing loader.\n",
+    }
+    for rel, text in adopted.items():
+        (workspace / rel).write_text(text, encoding="utf-8")
+    modes = {rel: (workspace / rel).stat().st_mode for rel in adopted}
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    recorded = _read_manifest(workspace)["bundles"]["agent"]["files"]
+    for rel, text in adopted.items():
+        assert (workspace / rel).read_text(encoding="utf-8") == text, rel
+        assert recorded[rel] == sha256_file(workspace / rel), rel
+        assert recorded[rel] != sha256_file(WORKSPACE_SEED / rel), rel
+        # Adoption touches neither the bytes nor the mode the PI's file had.
+        assert (workspace / rel).stat().st_mode == modes[rel], rel
+    # A path the vault did not already carry is seeded, so both agree there.
+    assert recorded[".codex/hooks.json"] == sha256_file(WORKSPACE_SEED / ".codex/hooks.json")
 
 
 def test_reinit_pins_the_vault_identity_and_leaves_the_vault_git_tree_clean(
@@ -339,7 +378,13 @@ def test_the_bundle_writer_is_the_only_writer_of_bundle_paths_on_init(
 def test_the_seed_class_copy_declines_every_bundle_path_on_the_init_path(
     tmp_path: Path,
 ) -> None:
-    """One policy: the seed-class writer never competes for a bundle path."""
+    """One policy: the seed-class writer never competes for a bundle path.
+
+    `BUNDLE_PATHS` is both the refusal set and this test's range (and the
+    one-writer test's), so it is checked against the registry first: narrowing
+    it would otherwise shrink the assertions along with the behavior.
+    """
+    assert bundles.BUNDLE_PATHS == {rel for rels in bundles.BUNDLE_FILES.values() for rel in rels}
     for rel in sorted(bundles.BUNDLE_PATHS):
         assert cli._seed_write_allowed(rel, tmp_path / rel, overwrite=False) is False, rel
 
@@ -419,11 +464,11 @@ def test_doctor_repair_never_touches_the_agent_bundle(
 def test_doctor_repair_restores_the_obsidian_plugin_to_the_recorded_bytes(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Why the manifest needs no post-repair warning under an as-created receipt.
+    """Within one engine version, repair moves disk back *onto* the receipt.
 
-    Repair reseeds `.obsidian/plugins/*` as a runtime seed. Those are the same
-    package bytes the receipt recorded, so repair moves disk back *onto* the
-    manifest rather than away from it.
+    Repair reseeds `.obsidian/plugins/*` as a runtime seed, from the same
+    package bytes the receipt recorded. The engine-upgrade case, where it does
+    not, is the next test.
     """
     workspace = _init(tmp_path, capsys)
     rel = f"{OBSIDIAN_PLUGIN_REL}/main.js"
@@ -436,3 +481,40 @@ def test_doctor_repair_restores_the_obsidian_plugin_to_the_recorded_bytes(
     assert rc == 0
     assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes()
     assert sha256_file(workspace / rel) == recorded
+
+
+def test_doctor_repair_on_a_newer_engine_leaves_the_manifest_behind_disk(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The manifest is not authoritative after a repair on a newer engine.
+
+    Repair reseeds `.obsidian/plugins/*` from whatever the *installed* package
+    ships, and this module never refreshes the receipt, so an upgraded engine
+    moves disk off the record — and leaves the vault's own tree modified.
+    Only the packaged bytes vary here; the vault is untouched between runs.
+    """
+    workspace = _init(tmp_path, capsys)
+    rel = f"{OBSIDIAN_PLUGIN_REL}/main.js"
+    recorded = _read_manifest(workspace)["bundles"]["obsidian"]["files"][rel]
+
+    engine_b = tmp_path / "engine-b-seed"
+    shutil.copytree(WORKSPACE_SEED, engine_b)
+    (engine_b / rel).write_text(
+        (WORKSPACE_SEED / rel).read_text("utf-8") + "\n// engine B\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        cli, "_seed_resource", lambda source_rel: engine_b.joinpath(*source_rel.split("/"))
+    )
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes()
+    assert git(workspace, "status", "--porcelain") == ""
+
+    assert main(["doctor", "--workspace", str(workspace), "--repair", "--json"]) == 0
+    capsys.readouterr()
+
+    assert (workspace / rel).read_bytes() == (engine_b / rel).read_bytes()
+    assert sha256_file(workspace / rel) != recorded
+    assert _read_manifest(workspace)["bundles"]["obsidian"]["files"][rel] == recorded
+    assert git(workspace, "status", "--porcelain") == f"M {rel}"

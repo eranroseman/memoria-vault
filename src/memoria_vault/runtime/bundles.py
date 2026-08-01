@@ -12,8 +12,15 @@ alike. An existing file is PI-owned and is never overwritten, so re-running the
 installer (``scripts/install.sh`` runs ``memoria init --yes`` unconditionally)
 can neither destroy edited perimeter policy nor churn the vault identity that
 ``runtime.json`` publishes. ``doctor --repair`` never calls this module; it
-restores ``.obsidian/plugins/*`` as a runtime seed, which is the same package
-bytes the manifest recorded, so it cannot move disk away from the manifest.
+restores ``.obsidian/plugins/*`` as a runtime seed. Within one engine version
+those are the bytes the receipt recorded, so repair moves disk back onto the
+manifest — but **the manifest is not authoritative after a repair on a newer
+engine**: repair reseeds from whatever the installed package ships, and nothing
+here refreshes the record.
+
+Files this module creates land 0600 (``write_bytes_durable``'s ``mkstemp``),
+matching the other engine-written control files rather than the seed-class
+copy's 0644. A file it adopts keeps the mode the PI's copy already had.
 
 **The manifest is an as-created receipt** (BOOT-C.6, 2026-08-01): vault
 identity plus the SHA-256 of each bundle file as the vault received it. It is
