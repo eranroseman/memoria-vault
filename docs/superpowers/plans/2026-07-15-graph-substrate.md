@@ -2856,9 +2856,81 @@ one transaction, and commits everything through the trusted writer.
   - `knowledge._rewrite_inbound_links(vault: Path, old_rel: str, new_rel: str) -> list[str]`
     (private) — rewritten inbound-linker rel paths, sorted.
 
+> **Execution notes (2026-07-31) — four deviations from the drafted code below,
+> each proven by a mutation that fails a shipped test.** Consumers NID-B.6/.7
+> should read the shipped seam, not the draft.
+>
+> 1. **A checked linker's rewrite is re-signed, not written raw — and only if the
+>    read barrier, not the verdict, says it is checked.** The draft's
+>    `_rewrite_inbound_links` writes with `write_frontmatter_doc`, which changes a
+>    `checked` file's bytes out of band: `is_consumable_checked_file` then fails the
+>    sha256 comparison and every note that linked to the moved one silently drops
+>    out of consumption. Shipped: `_write_link_rewrite` routes a checked linker
+>    through `trusted_writer.mark_checked` — the same seam `curate_note_link` uses —
+>    which re-validates *and* re-records the hash. The gate on that re-sign is
+>    `is_consumable_checked_file(vault, rel, enqueue_scan=False)`, never the raw
+>    `concept_check_status`: `mark_checked` re-validates the schema and nothing about
+>    the content (unlike `promote_checked`), so gating on the verdict alone would
+>    re-sign a linker whose bytes drifted out of band and launder the edit back into
+>    consumption — N files found by a vault-wide scan, on an action having nothing to
+>    do with them. A drifted linker falls to the raw write and stays exactly as
+>    unconsumable as it already was; the move still proceeds. Consequence of the
+>    re-sign: a linker carrying a retired frontmatter field refuses the move instead
+>    of being rewritten, and the refusal names the rel path (the writer's own message
+>    carries only the field, which is useless after a vault-wide scan).
+> 2. **Plan-then-apply, with a byte-exact undo for the *files*.** The draft renames
+>    first and then mutates while it scans, so a mid-scan failure strands a
+>    half-applied move. Shipped: `_plan_inbound_link_rewrites` is pure reads and
+>    replaces `_rewrite_inbound_links`; `move_concept` snapshots the files it will
+>    touch and, on any exception, renames the file back *first*, then reverses
+>    `update_concept_path`, then restores each written linker byte-for-byte
+>    (`_restore_link_rewrite`). The rename goes first because it is the one step
+>    nothing else can redo — a restore raising after the DB was reversed would leave
+>    the row at the old path and the file at the new one. The **DB** reverse is not
+>    byte-exact: `update_concept_path` moves `file_index_state` and `outputs` with
+>    `UPDATE OR REPLACE`, which drops a conflicting row already at the destination,
+>    and reversing the update cannot resurrect it.
+> 3. **The path-key re-key is `_rekey_path_keyed_concept_conn`, not
+>    `_rekey_concept_conn`.** NID-B.2's execution replacement did not add that
+>    helper ("do not add `_rekey_concept_conn`"), and its shape (mirror-observation
+>    re-key) is not this one. `update_concept_path` splits cleanly: the statements in
+>    its own body are path space, and the helper is identity space — it re-keys
+>    `concepts.concept_id` and hand-moves **every** table keyed by that identity with
+>    no FK to carry it (`derivations.input_id`/`output_id`, `passages.concept_id`).
+>    That enumeration lives in exactly one named place because the first pass at it
+>    stopped one table short: `passages.concept_id` left at the vacated path lets the
+>    verdict-cascade triggers (`WHERE concept_id = NEW.concept_id`) hand the *moved*
+>    note's passages to the next file dropped there, while `concept_check_status`
+>    still reads `checked`. It self-heals on a full `rebuild_passage_index`, never on
+>    `refresh_stale_passages`. Verdicts, flags and edges ride the v16
+>    `ON UPDATE CASCADE`. `edge_id` is left stale after a re-key — the next
+>    `replace_concept_edges` pass recomputes it.
+> 4. **`update_concept_path` calls `_reconcile_renamed_output_conn`,** never
+>    re-issues it, and runs it *after* the re-key and *before* `concepts.path` moves,
+>    since it reads the old path off the row. `move_concept` names the vacated path
+>    to the writer only when git tracks it (`_committable`): `git add` exits 128 on a
+>    pathspec matching nothing, which would kill every move of an uncommitted file.
+>
+> **Carried forward, with owners (review of `fe308225..aaf2bb3e`, 2026-07-31):**
+>
+> - **Journal residue on a rolled-back move — owner NID-B.6.** The `resolved`/
+>   `moved_from` event and every per-linker `check-fired` event are appended before
+>   `commit_writer_changes`, and the `except` block compensates none of them: a
+>   refused move still journals as having happened. Append-only journals cannot be
+>   rewound, so B.6 has to pick one — append the move event *after* the commit, or
+>   emit a compensating event — before `memoria mv` puts this in a PI's hands.
+> - **Digest linkers are mechanism-only — owner NID-B.7.** `_plan_inbound_link_rewrites`
+>   scans `digests/` as the draft specified, so a checked digest linking to a moved
+>   note is re-signed through `mark_checked` against the digest schema. The mechanism
+>   is type-agnostic but only the note case has a test.
+> - **Stale `edge_id` after a path-key re-key — owner NID-B.7.** Self-heals on the
+>   next `replace_concept_edges` pass; B.7 is the task that touches edge resolution,
+>   so it owns either recomputing it in the re-key or documenting the window for ERP
+>   consumers.
+
 **Steps:**
 
-- [ ] Append the failing tests to `tests/test_knowledge.py` (reuse the module's
+- [x] Append the failing tests to `tests/test_knowledge.py` (reuse the module's
   `workspace`/`_md`/`_call` helpers; wrapper next to `curate_note_link`'s at `:47`):
 
   ```python
@@ -2937,11 +3009,11 @@ one transaction, and commits everything through the trusted writer.
           move_concept(vault, "digests/a.md", "digests/b.md", actor="pi", machine="m")
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_knowledge.py::test_move_concept_rewrites_inbound_links_and_path_in_one_transaction tests/test_knowledge.py::test_move_concept_refuses_bad_targets -v`
   — expect FAIL: `ImportError: cannot import name 'move_concept' from
   'memoria_vault.runtime.knowledge'`.
-- [ ] Add `update_concept_path` to `src/memoria_vault/runtime/state.py` (below
+- [x] Add `update_concept_path` to `src/memoria_vault/runtime/state.py` (below
   `rebuild_file_concept_mirror`):
 
   ```python
@@ -2975,7 +3047,7 @@ one transaction, and commits everything through the trusted writer.
           )
   ```
 
-- [ ] Add the move seam to `src/memoria_vault/runtime/knowledge.py` (after
+- [x] Add the move seam to `src/memoria_vault/runtime/knowledge.py` (after
   `curate_note_link`, `:414`); extend its vaultio import with `is_ulid`:
 
   ```python
@@ -3088,11 +3160,11 @@ one transaction, and commits everything through the trusted writer.
       return new_rel if value.endswith(".md") else new_stem
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_knowledge.py::test_move_concept_rewrites_inbound_links_and_path_in_one_transaction tests/test_knowledge.py::test_move_concept_refuses_bad_targets -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/knowledge.py tests/test_knowledge.py
@@ -3104,6 +3176,37 @@ one transaction, and commits everything through the trusted writer.
 ---
 
 ### Task NID-B.6: `memoria mv` — operation card, worker dispatch, CLI, floor entry, docs
+
+> **Inherited from NID-B.5's re-review (2026-07-31) — two path-space enumeration gaps
+> and one sharpened characterisation.**
+>
+> 1. **`evidence_sets.block_ref` is path-prefixed and was NOT in B.5's moved table set
+>    (Important).** `_movable_rel` admits `projects/`; `block_ref` is
+>    `{draft_rel}#^blk-…`, joined with `startswith(draft_rel)` (`knowledge.py:2267`).
+>    Probe: a `projects/` move succeeds and leaves `block_refs ==
+>    ['projects/draft.md#^blk-1']` at the **vacated** path, so the moved draft reads as
+>    having no evidence and raises a false `{"kind": "no-evidence-set", "severity":
+>    "high"}`. `evidence_bindings` is immutable by trigger, so a later repair cannot
+>    simply rewrite it. Loud false alarm, not a silent trust failure — but B.5's "full
+>    table set" is one table short in **path** space.
+>
+> 2. **`file_baseline.subject_id` is path-keyed and does not move — and this is NOT
+>    merely "a stale row".** Re-review sharpened B.5's own characterisation: the verdict
+>    is safe (demotion and the read barrier both key off `outputs`/trace state, which
+>    move correctly — a tampered moved file still demotes to `unchecked`), **but
+>    `_reconcile_file_baselines` and the observe loop both take a `baseline is None`
+>    early exit, so the foreign-edit finding is SUPPRESSED.** Probe: `findings: []` on a
+>    tampered moved file, and the baseline silently adopts the tampered hash as truth.
+>    The mirror case fires too — a newcomer at the vacated path inherits the stale
+>    baseline and raises a **spurious** `foreign-edit`. So: one lost alert per moved
+>    file, plus one false alert if the path is reoccupied. Alert-level, not
+>    verdict-level.
+>
+> 3. **Journal residue on a rolled-back move (M5, from the first review).** The
+>    `resolved`/`moved_from` event and the per-linker `check-fired` events land before
+>    `commit_writer_changes` and are never compensated, so a refused move still journals
+>    as having happened. Append-only journals cannot be rewound — either append the move
+>    event after the commit, or emit a compensating event.
 
 Wires NID-B.5 as the PI-protected `move-concept` operation and the `memoria mv`
 CLI command, following the `curate-note-link` pattern end to end.

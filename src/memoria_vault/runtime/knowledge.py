@@ -52,6 +52,7 @@ from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
     concept_text,
     frontmatter_doc,
+    is_ulid,
     iter_markdown,
     read_frontmatter,
     split_frontmatter,
@@ -406,6 +407,206 @@ def curate_note_link(
         "event": event,
         "commit": commit,
     }
+
+
+def move_concept(
+    vault: Path,
+    old_path: str,
+    new_path: str,
+    *,
+    context: OperationContext,
+    reason: str = "",
+) -> dict[str, Any]:
+    """Rename a concept file, rewriting inbound links in one writer transaction.
+
+    Every inbound rewrite is planned by pure reads before anything moves, and on
+    any refusal the *files* go back byte-for-byte: a partial move that commits is
+    worse than a refusal. The DB reverse is not byte-exact — ``update_concept_path``
+    moves ``file_index_state`` and ``outputs`` with ``UPDATE OR REPLACE``, which
+    drops a conflicting row already sitting at the destination, and reversing the
+    update cannot resurrect it.
+    """
+    validate_operation_context(vault, context)
+    vault = Path(vault)
+    old_rel = _movable_rel(old_path)
+    new_rel = _movable_rel(new_path)
+    if old_rel.split("/", 1)[0] != new_rel.split("/", 1)[0]:
+        raise ValueError(f"move must stay inside its bundle: {old_rel} -> {new_rel}")
+    source = vault / old_rel
+    if not source.is_file():
+        raise FileNotFoundError(source)
+    destination = vault / new_rel
+    if destination.exists():
+        raise FileExistsError(destination)
+    raw_id = str(read_frontmatter(source).get("id") or "")
+    concept_id = raw_id if is_ulid(raw_id) else new_rel
+    rewrites = _plan_inbound_link_rewrites(vault, old_rel, new_rel)
+    rewritten = sorted(rewrites)
+    undo = {rel: (vault / rel).read_bytes() for rel in rewritten}
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    source.rename(destination)
+    applied: list[str] = []
+    moved = False
+    try:
+        for rel in rewritten:
+            frontmatter, body, checked = rewrites[rel]
+            try:
+                _write_link_rewrite(vault, rel, frontmatter, body, checked=checked, context=context)
+            except ValueError as error:
+                # The writer's refusals name the offending field, not the file. A
+                # move plans its rewrites from a vault-wide scan, so without the rel
+                # path the PI is handed a field name and no offender to go fix.
+                raise ValueError(f"inbound link rewrite refused for {rel}: {error}") from error
+            applied.append(rel)
+        state.update_concept_path(vault, concept_id, old_rel, new_rel)
+        moved = True
+        event = append_journal_event(
+            vault,
+            {
+                "event": "resolved",
+                "target_id": new_rel,
+                "moved_from": old_rel,
+                "target_sha256": sha256_file(destination),
+                "reason": reason.strip(),
+            },
+            context=context,
+        )
+        commit = commit_writer_changes(
+            vault,
+            f"mv {old_rel} -> {new_rel}",
+            [*_committable(vault, old_rel), new_rel, *rewritten],
+            context=context,
+        )
+    except Exception:
+        # The rename goes back first. It is the one step nothing else can redo: a
+        # restore that raises after the DB is already reversed would otherwise leave
+        # the row at the old path and the file at the new one.
+        destination.rename(source)
+        if moved:
+            state.update_concept_path(
+                vault, raw_id if is_ulid(raw_id) else old_rel, new_rel, old_rel
+            )
+        for rel in applied:
+            _restore_link_rewrite(vault, rel, undo[rel], checked=rewrites[rel][2])
+        raise
+    return {
+        "old_path": old_rel,
+        "new_path": new_rel,
+        "rewritten": rewritten,
+        "event": event,
+        "commit": commit,
+    }
+
+
+def _movable_rel(path: str) -> str:
+    rel = normalize_path(path)
+    if not rel.endswith(".md"):
+        rel += ".md"
+    if not rel.startswith(("notes/", "hubs/", "projects/")):
+        raise ValueError(f"memoria mv supports notes/, hubs/, and projects/ files: {rel}")
+    return rel
+
+
+def _plan_inbound_link_rewrites(
+    vault: Path, old_rel: str, new_rel: str
+) -> dict[str, tuple[dict[str, Any], str, bool]]:
+    """Return rel -> (rewritten frontmatter, body, is consumable as checked).
+
+    Pure reads. An unreadable or malformed linker refuses the move before a single
+    byte has moved, rather than stranding it half-applied.
+    """
+    plan: dict[str, tuple[dict[str, Any], str, bool]] = {}
+    for bundle in ("notes", "hubs", "projects", "digests"):
+        base = vault / bundle
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*.md")):
+            rel = path.relative_to(vault).as_posix()
+            if rel == old_rel:
+                continue
+            frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+            links = frontmatter.get("links")
+            if not isinstance(links, dict):
+                continue
+            changed = False
+            for values in links.values():
+                if not isinstance(values, list):
+                    continue
+                for index, raw in enumerate(values):
+                    if _link_target(raw) != old_rel:
+                        continue
+                    values[index] = _rewrite_link_value(raw, old_rel, new_rel)
+                    changed = True
+            if changed:
+                frontmatter["links"] = links
+                # The read barrier, not the raw verdict. A linker whose bytes drifted
+                # out of band still holds a `checked` verdict while the barrier already
+                # refuses it; re-signing on the verdict alone would hand `mark_checked`
+                # — which re-validates the schema and nothing about the content — a
+                # file the PI never checked in its current form, and launder it back
+                # into consumption on a scan that has nothing to do with it.
+                checked = is_consumable_checked_file(vault, rel, enqueue_scan=False)
+                plan[rel] = (frontmatter, body, checked)
+    return plan
+
+
+def _rewrite_link_value(raw: Any, old_rel: str, new_rel: str) -> Any:
+    """Swap the target while preserving the entry's surface form."""
+    if not isinstance(raw, str):
+        return raw
+    value = raw.strip()
+    old_stem = old_rel.removesuffix(".md")
+    new_stem = new_rel.removesuffix(".md")
+    if value.startswith("[[") and value.endswith("]]"):
+        inner = value[2:-2]
+        head, sep, tail = inner.partition("|")
+        anchor_head, anchor_sep, anchor_tail = head.partition("#")
+        target = new_stem if anchor_head.strip() in {old_stem, old_rel} else anchor_head
+        return f"[[{target}{anchor_sep}{anchor_tail}{sep}{tail}]]"
+    return new_rel if value.endswith(".md") else new_stem
+
+
+def _write_link_rewrite(
+    vault: Path,
+    rel: str,
+    frontmatter: dict[str, Any],
+    body: str,
+    *,
+    checked: bool,
+    context: OperationContext,
+) -> None:
+    """Write one rewritten linker, re-signing it if it is consumable as checked.
+
+    A checked file whose bytes change out of band fails the sha256 read barrier and
+    falls out of consumption, so a mechanical ``links:`` rewrite has to go back
+    through the same trusted-writer seam ``curate_note_link`` uses. That re-validates
+    the document as well as re-recording its hash, so the perimeter does not widen:
+    a linker the writer would refuse refuses the move instead.
+    """
+    if checked:
+        mark_checked(vault, rel, context=context, frontmatter=frontmatter, body=body)
+    else:
+        write_frontmatter_doc(vault / rel, frontmatter, body)
+
+
+def _restore_link_rewrite(vault: Path, rel: str, blob: bytes, *, checked: bool) -> None:
+    """Put one linker back byte-for-byte and re-point its recorded hash at it."""
+    path = vault / rel
+    path.write_bytes(blob)
+    if checked:
+        state.mark_checked(vault, rel, sha256_file(path), path.read_text(encoding="utf-8"))
+
+
+def _committable(vault: Path, rel: str) -> list[str]:
+    """Name the vacated path only when git tracks it: `git add` fails on the rest."""
+    proc = subprocess.run(
+        ["git", "ls-files", "--", rel],
+        cwd=vault,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    return [rel] if proc.stdout.strip() else []
 
 
 def analyze_gaps(
