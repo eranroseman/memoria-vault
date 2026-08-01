@@ -9943,9 +9943,65 @@ envelopes or fields.
 
 Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); handshake `engine_version` remains transport metadata and drives no plugin lifecycle decision.
 
+### Execution amendment — U3-PLUG.1–.4 as built (2026-08-01)
+
+Recorded by the executor of U3-PLUG.1–.4. It governs those four tasks only;
+U3-PLUG.5–.11 are untouched except where item 1 says otherwise.
+
+1. **The harness command is bare `node --test`, not `node --test scripts/`.**
+   Node dropped directory arguments to `--test`: on the node in this
+   environment (v24.18.0) `node --test scripts/` resolves `scripts` as a module
+   path and dies with `Cannot find module …/scripts`, while `node --test .`
+   answers `Could not find '.'`. Bare `node --test` keeps the documented
+   recursive-discovery behaviour on both the CI-pinned node 22 and node 24, so
+   `package.json`'s `"test"` script and `tests/test_memoria_obsidian_package.py`
+   both use `["node", "--test"]` with the plugin package as the working
+   directory. The produced convention is unchanged — every
+   `packages/memoria-obsidian/scripts/test*.mjs` file runs under both `npm test`
+   and the Python contract test — so later U3-PLUG tasks (and the
+   `node --test scripts/` quotations in
+   `docs/superpowers/plans/2026-07-16-v2-evidence-review.md`) read as bare
+   `node --test`. Two quotations of the *pre-switch* command survive further
+   down and are stale from U3-PLUG.1 onward: the "Context the executor must
+   know" note above, which records the harness this task replaces, and
+   U3-CANVAS's "the Node schema harness (`node scripts/test.mjs`, untouched)"
+   step, whose parenthetical now means `node --test`. Neither changes what that
+   step must do.
+2. **`sortCards` loses its redundant `block` pin.** The drafted body ranked
+   `block` twice: once through `pinA`/`pinB` and again through
+   `LOUDNESS_RANK.block === 0`. The pin could never change an outcome, so the
+   prescribed test's claim to exercise it was satisfied by the rank branch
+   instead. The pin is deleted and a comment records why the rank alone is
+   enough; the test's expectation (`["b", "d", "c", "a", "e"]`) is unchanged and
+   still fails if `LOUDNESS_RANK.block` stops ranking first.
+3. **Tests added beyond the drafted bodies.** Each names the producer state that
+   reaches the branch it covers, and each was confirmed to fail under a mutation
+   of that branch alone:
+   - `handshake.js`: an absent (not merely blank) engine-command setting; empty
+     and null handshake stdout; a nonpositive or fractional port; a payload from
+     an engine older than BOOT-A.8 that omits `pid` entirely; a respawn gate
+     built with no injected clock (main.js's zero-argument call); a respawn gate
+     whose caller only ever calls `tryAcquire`.
+   - `pill.js`: a retained `missing_required_credentials` name from the last
+     good summary combined with a failing poll — the connection fault outranks
+     the key nag for all four fault states.
+   - `viewspec.js`: a non-object block; an absent `view` (the summary payload
+     has none); a known-version view actually rendering its blocks in order; a
+     card's loudness band on the card and its kind line; an empty evidence list
+     and a labelless evidence row; an unrecognized loudness band that is also
+     the oldest card; a card with no `age_s`; `sortCards` not reordering the
+     caller's array; a key that is neither `j` nor `k`; and a nested
+     `materialize` walk that pins child parentage, attributes, and the return
+     value.
+4. **Knowingly unfixtured.** `String(block.text || "")` and
+   `String(block.label || "")` in `viewspec.js` survive mutation: no producer
+   omits those fields, and the empty-string case is indistinguishable from the
+   coercion. They are kept as payload-boundary coercions rather than covered by
+   a fabricated fixture.
+
 ---
 
-### Task U3-PLUG.1: Switch the plugin test harness to `node --test scripts/`
+### Task U3-PLUG.1: Switch the plugin test harness to `node --test`
 
 **Files:**
 - Modify: `packages/memoria-obsidian/package.json` (line 8, the `"test"` script)
@@ -9953,29 +10009,29 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Interfaces:**
 - Consumes: existing `packages/memoria-obsidian/scripts/test.mjs` (plain top-level asserts; its filename `test.mjs` matches the node test-runner discovery pattern, so it runs unchanged).
-- Produces: harness convention **`node --test scripts/` discovers every `scripts/test*.mjs` file**; all later tasks add `scripts/test-<module>.mjs` files and they run under both `npm test` and the Python contract test.
+- Produces: harness convention **`node --test`, run from the plugin package, discovers every `scripts/test*.mjs` file** (see the 2026-08-01 execution amendment for why the directory argument is gone); all later tasks add `scripts/test-<module>.mjs` files and they run under both `npm test` and the Python contract test.
 
 **Steps:**
 
-- [ ] Write the failing test — edit `tests/test_memoria_obsidian_package.py`:
-  - line 25: `assert package["scripts"]["test"] == "node --test scripts/"`
+- [x] Write the failing test — edit `tests/test_memoria_obsidian_package.py`:
+  - line 25: `assert package["scripts"]["test"] == "node --test"`
   - lines 39–41, replace the subprocess argv:
     ```python
     result = subprocess.run(
-        ["node", "--test", "scripts/"],
+        ["node", "--test"],
         cwd=PLUGIN,
     ```
     (keep the existing `text=True, capture_output=True, check=False` lines).
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_memoria_obsidian_package.py::test_memoria_obsidian_package_has_obsidian_release_artifacts -v`
-  Expected: `AssertionError` on the `scripts.test` string (`'node scripts/test.mjs' == 'node --test scripts/'`).
-- [ ] Write minimal implementation — edit `packages/memoria-obsidian/package.json` line 8:
+  Expected: `AssertionError` on the `scripts.test` string (`'node scripts/test.mjs' == 'node --test'`).
+- [x] Write minimal implementation — edit `packages/memoria-obsidian/package.json` line 8:
   ```json
-  "test": "node --test scripts/"
+  "test": "node --test"
   ```
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_memoria_obsidian_package.py -v` (all green) and
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   Expected: `# pass 1` (test.mjs runs as one passing file).
 - [ ] Commit:
   `git add packages/memoria-obsidian/package.json tests/test_memoria_obsidian_package.py`
@@ -9999,7 +10055,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Steps:**
 
-- [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-handshake.mjs`:
+- [x] Write the failing test — create `packages/memoria-obsidian/scripts/test-handshake.mjs`:
   ```js
   import assert from "node:assert/strict";
   import test from "node:test";
@@ -10094,10 +10150,10 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(RESPAWN_LIMIT, 3);
   });
   ```
-- [ ] Run test to verify it fails:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+- [x] Run test to verify it fails:
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   Expected: `Cannot find module '../handshake.js'`.
-- [ ] Write minimal implementation — create `packages/memoria-obsidian/handshake.js`:
+- [x] Write minimal implementation — create `packages/memoria-obsidian/handshake.js`:
   ```js
   // Pure handshake-client logic: argv construction, stdout parsing, spawn-error
   // classification, and the bounded-respawn gate (bootstrap spec sections 2-3).
@@ -10188,7 +10244,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     parseHandshake,
   };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `# pass 5` (4 new tests + test.mjs).
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `# pass 10` (9 handshake tests per the 2026-08-01 amendment + test.mjs).
 - [ ] Commit:
   `git add packages/memoria-obsidian/handshake.js packages/memoria-obsidian/scripts/test-handshake.mjs`
   `git commit -m "feat(obsidian): pure handshake-client module (argv, parse, ENOENT, respawn gate)` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10216,7 +10272,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Steps:**
 
-- [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-pill.mjs`:
+- [x] Write the failing test — create `packages/memoria-obsidian/scripts/test-pill.mjs`:
   ```js
   import assert from "node:assert/strict";
   import test from "node:test";
@@ -10280,8 +10336,8 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(computeNextPollDelay(false), 120000);
   });
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../pill.js'`.
-- [ ] Write minimal implementation — create `packages/memoria-obsidian/pill.js`:
+- [x] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../pill.js'`.
+- [x] Write minimal implementation — create `packages/memoria-obsidian/pill.js`:
   ```js
   // Pure status-pill state machine and poll cadence (U3 spec sections 3 and
   // 5). No Obsidian imports; headless-testable with node.
@@ -10343,7 +10399,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     formatAsOf,
   };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (14 after this task).
 - [ ] Commit:
   `git add packages/memoria-obsidian/pill.js packages/memoria-obsidian/scripts/test-pill.mjs`
   `git commit -m "feat(obsidian): pure pill state machine and poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10461,7 +10517,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Steps:**
 
-- [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-viewspec.mjs`:
+- [x] Write the failing test — create `packages/memoria-obsidian/scripts/test-viewspec.mjs`:
   ```js
   import assert from "node:assert/strict";
   import test from "node:test";
@@ -10669,8 +10725,8 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(made[0].text, "hello");
   });
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../viewspec.js'`.
-- [ ] Write minimal implementation — create `packages/memoria-obsidian/viewspec.js`:
+- [x] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../viewspec.js'`.
+- [x] Write minimal implementation — create `packages/memoria-obsidian/viewspec.js`:
   ```js
   // Pure view-spec.v1 rendering (U3 spec section 2): blocks become plain
   // {tag, cls, text, attrs, children} trees; only materialize() touches a DOM
@@ -10847,7 +10903,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     sortCards,
   };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (35 after this task).
 - [ ] Commit:
   `git add packages/memoria-obsidian/viewspec.js packages/memoria-obsidian/scripts/test-viewspec.mjs`
   `git commit -m "feat(obsidian): pure view-spec.v1 block rendering with labeled fallback` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`

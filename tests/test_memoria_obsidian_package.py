@@ -22,7 +22,7 @@ def test_memoria_obsidian_package_has_obsidian_release_artifacts() -> None:
         "author": "Memoria",
         "isDesktopOnly": False,
     }
-    assert package["scripts"]["test"] == "node scripts/test.mjs"
+    assert package["scripts"]["test"] == "node --test"
     assert (PLUGIN / "main.js").is_file()
     assert (PLUGIN / "schema.js").is_file()
     assert (PLUGIN / "styles.css").is_file()
@@ -37,7 +37,7 @@ def test_memoria_obsidian_seed_matches_release_artifacts() -> None:
 
 def test_memoria_obsidian_event_schema_rejects_leaky_fields() -> None:
     result = subprocess.run(
-        ["node", "scripts/test.mjs"],
+        ["node", "--test"],
         cwd=PLUGIN,
         text=True,
         capture_output=True,
