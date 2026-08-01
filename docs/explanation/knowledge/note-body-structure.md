@@ -55,8 +55,8 @@ The `## Links` section is the most structurally significant convention. The
 required `links:` frontmatter records authored connections (as distinct from
 the *given* `relationships` on entities — that distinction is explained in
 [Document types and epistemic roles](document-types.md)), and is what makes the
-vault a graph rather than a collection. A note that supports, contradicts, or
-extends another note has been integrated; one without links has not.
+vault a graph rather than a collection. A note that stands in an authored
+relation to another note has been integrated; one without links has not.
 
 This is the **Zettelkasten** principle at the center of the method: a note's
 value comes from its links, not its contents — an unlinked note is, in

@@ -25,7 +25,7 @@ python3 -m memoria_vault.runtime.subsystems.processing.project.structural_impact
 
 ## Inputs
 
-The operation scans markdown notes, resolves the selected Project and active Thesis, then follows authored `links.supports` and `links.contradicts` relationships. Scope terms and relation values come from the same note frontmatter fields documented in [Frontmatter fields](../data-model/frontmatter.md).
+The operation scans markdown notes, resolves the selected Project and active Thesis, then follows every authored `links` relationship — `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, and `rebuttal`. Scope terms and relation values come from the same note frontmatter fields documented in [Frontmatter fields](../data-model/frontmatter.md).
 
 ## Output note
 

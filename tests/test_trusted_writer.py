@@ -1053,3 +1053,24 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
     assert "UU notes/shared.md" in git(device_b, "status", "--short")
     assert "<<<<<<<" in (device_b / "notes/shared.md").read_text(encoding="utf-8")
     assert (device_b / ".memoria/journal/b.jsonl").is_file()
+
+
+def test_commit_writer_extracts_rebuttal_candidate_and_skips_tension(tmp_path: Path) -> None:
+    """Typed body wikilinks mint candidates for every served relation, never for tension."""
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    content = note_text().replace(
+        "Alpha body.",
+        "Typed [[rebuttal::notes/beta.md]] and [[tension::notes/gamma.md]].",
+    )
+
+    stage_concept(vault, "notes/alpha.md", content, machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    commit_writer_changes(vault, "trusted write alpha", ["notes/alpha.md"], machine="test-machine")
+
+    prompts = sorted((vault / "inbox").glob("work-prompt-edge-candidate-*.md"))
+    assert len(prompts) == 1
+    prompt_text = prompts[0].read_text(encoding="utf-8")
+    assert "rebuttal" in prompt_text
+    assert "notes/beta.md" in prompt_text
+    assert "notes/gamma.md" not in prompt_text

@@ -25,4 +25,6 @@ links: {}
 
 # Operation
 
-Add a PI-authored supports, contradicts, or extends link to a checked note.
+Add a PI-authored typed link to a checked note. The relation is one of
+`supports`, `contradicts`, `extends`, `warrant`, `qualifier`, or `rebuttal`;
+`tension` is machine-surfaced and PI-confirmed, never authored here.

@@ -37,7 +37,7 @@ kinds:
 | `date` | a YAML date or an ISO-8601 date string |
 | `list` | a YAML sequence |
 | `map` | a YAML mapping |
-| `links` | a YAML mapping from `supports`, `contradicts`, or `extends` to target lists |
+| `links` | a YAML mapping from one of the six relations — `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, `rebuttal` — to target lists |
 | `ulid` | a valid ULID string |
 | `literal:<value>` | exactly that value; for example, `type: literal:note` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
@@ -145,8 +145,11 @@ frontmatter verdict fields so a forged file field cannot grant a checked verdict
 Documents use `work_id` to point at the SQLite catalog Work row. Backing
 resource URLs and external identifiers live in `.memoria/memoria.sqlite` and
 the generated `bibliography.bib` projection, not in human note frontmatter.
-`links` is the required relation field for Concepts. It is a map from
-`supports`, `contradicts`, or `extends` to lists of local Concept targets.
+`links` is the required relation field for Concepts. It is a map from one of
+the six frontmatter-legal relations — `supports`, `contradicts`, `extends`,
+`warrant`, `qualifier`, `rebuttal` — to lists of local Concept targets.
+`tension` is an edge relation the machine surfaces and the PI confirms; it is
+never authored here.
 
 Draft write-back reuses the existing note `work_id` field for provenance when
 a promoted draft passage is tied to a catalog Work. It does not add a

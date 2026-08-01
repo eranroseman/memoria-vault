@@ -20,6 +20,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib.edges import normalize_link_target
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 DEPTH_CAP = 2
@@ -301,13 +302,19 @@ def _link_targets(frontmatter: dict[str, Any]) -> set[str]:
 
 
 def _link_target(value: Any) -> str:
+    """Resolve one link value to a vault-relative Concept path, or `""`.
+
+    Path space (`lib.edges.normalize_link_target`), so this reader rejects exactly
+    what `links` validation rejects. The empty check is load-bearing: `notes/`
+    plus the `.md` default renders `notes/.md`, a file `iter_markdown` can yield.
+    """
     if isinstance(value, dict):
         value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
     if not isinstance(value, str) or not value.strip():
         return ""
-    raw = value.strip()
-    if raw.startswith("[[") and raw.endswith("]]"):
-        raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
+    raw = normalize_link_target(value)
+    if not raw:
+        return ""
     try:
         rel = normalize_path(raw)
     except ValueError:

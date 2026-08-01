@@ -16,6 +16,7 @@ from memoria_vault.runtime.projections import (
     write_tracked_projections as _write_tracked_projections,
 )
 from memoria_vault.runtime.search_index import answer_query as _answer_query
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes as _commit_writer_changes,
 )
@@ -1180,3 +1181,49 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
 
     assert {job["status"] for job in replay["jobs"]} == {"done"}
     assert replay["results"] == []
+
+
+@pytest.mark.parametrize("relation", sorted(LINK_RELATIONS))
+def test_worker_runs_each_served_curate_note_link(tmp_path: Path, relation: str) -> None:
+    """The queued worker path completes the same verbs the direct path does."""
+    vault = workspace(tmp_path)
+    source = write_note(vault, "source", "checked", "Source body.")
+    target = write_note(vault, "target", "checked", "Target body.")
+    queued = enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={
+            "source_note_path": source.relative_to(vault).as_posix(),
+            "link_type": relation,
+            "target_path": target.relative_to(vault).as_posix(),
+        },
+        idempotency_key=f"served-link-{relation}",
+        actor="pi",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None and done["status"] == "done", done
+    assert done["link_type"] == relation
+    assert read_frontmatter(source)["links"] == {relation: ["notes/target.md"]}
+
+
+def test_worker_rejects_tension_curate_note_link(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    source = write_note(vault, "source", "checked", "Source body.")
+    target = write_note(vault, "target", "checked", "Target body.")
+    enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={
+            "source_note_path": source.relative_to(vault).as_posix(),
+            "link_type": "tension",
+            "target_path": target.relative_to(vault).as_posix(),
+        },
+        idempotency_key="served-link-tension",
+        actor="pi",
+    )
+    failed = run_next_job(vault, machine="test-machine")
+
+    assert failed is not None and failed["status"] == "failed"
+    assert "link_type must be one of" in str(failed["error"])

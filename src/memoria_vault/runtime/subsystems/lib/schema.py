@@ -21,6 +21,16 @@ from pathlib import Path
 
 import yaml
 
+# Re-exports live one release for external importers, then die by the sweep
+# discipline (EDGES design, section 1). New code imports lib.edges directly;
+# `_normalized_link_target` is not a re-export but this module's own use of the
+# owner's target normalizer, which `_check_links` needs for its reason codes.
+from memoria_vault.runtime.subsystems.lib.edges import (  # noqa: F401
+    LINK_RELATIONS,
+    _normalized_link_target,
+    normalize_link_target,
+    parse_links,
+)
 from memoria_vault.runtime.vaultio import is_ulid, universal_concept_frontmatter_errors
 
 
@@ -35,7 +45,6 @@ def _default_schemas_dir() -> Path:
 SCHEMAS_DIR = _default_schemas_dir()
 
 VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
-LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})
 
 
 def _present(value) -> bool:
@@ -161,64 +170,6 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
     if kind == "ulid":
         return None if isinstance(value, str) and is_ulid(value) else "expected ULID"
     return f"unknown kind {kind!r}"
-
-
-_LINK_TARGET_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
-
-
-def _normalized_link_target(target: str) -> tuple[str, str | None]:
-    """Return one local Concept target and an invalidity reason, if any."""
-    raw = target.strip()
-    wrapped = raw.startswith("[[") or raw.endswith("]]")
-    if wrapped:
-        if not (raw.startswith("[[") and raw.endswith("]]")):
-            return "", "invalid"
-        raw = raw[2:-2]
-        if "[" in raw or "]" in raw:
-            return "", "invalid"
-        raw = raw.split("|", 1)[0].split("#", 1)[0].strip()
-    elif "[" in raw or "]" in raw:
-        return "", "invalid"
-
-    if not raw:
-        return "", "empty"
-
-    path = raw.replace("\\", "/")
-    if path.startswith(("/", "#")) or path.endswith("/") or _LINK_TARGET_URI_RE.match(raw):
-        return "", "invalid"
-    if ".." in [part for part in path.split("/") if part and part != "."]:
-        return "", "traversal"
-
-    suffix = Path(path.rsplit("/", 1)[-1]).suffix
-    if suffix and suffix != ".md":
-        return "", "invalid"
-    return raw, None
-
-
-def normalize_link_target(target: str) -> str:
-    """Normalize one valid local Concept target, or return an empty string for junk."""
-    if not isinstance(target, str):
-        return ""
-    return _normalized_link_target(target)[0]
-
-
-def parse_links(links: object) -> list[tuple[str, str]]:
-    """Return ``(relation, normalized target)`` pairs from a links frontmatter map."""
-    pairs: list[tuple[str, str]] = []
-    if not isinstance(links, dict):
-        return pairs
-    for relation, targets in links.items():
-        if (
-            not isinstance(relation, str)
-            or relation not in LINK_RELATIONS
-            or not isinstance(targets, list)
-        ):
-            continue
-        for target in targets:
-            normalized = normalize_link_target(target) if isinstance(target, str) else ""
-            if normalized:
-                pairs.append((relation, normalized))
-    return pairs
 
 
 def _check_links(value) -> str | None:

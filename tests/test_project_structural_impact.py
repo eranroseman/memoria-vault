@@ -262,3 +262,73 @@ def test_survey_mode_uses_coverage_saturation(tmp_path):
 
     assert payload["evidence_saturation"] == "unsaturated"
     assert any(row["path"] == "notes/survey-gap.md" for row in payload["gap_findings"])
+
+
+def test_build_edges_includes_activated_relations(tmp_path):
+    """`build_edges` traverses every frontmatter-legal relation, not a two-value roster."""
+    write(
+        tmp_path / "notes/a.md",
+        "---\ntype: note\ntitle: A\nlinks:\n  rebuttal:\n    - notes/b\n---\nBody.\n",
+    )
+    write(tmp_path / "notes/b.md", "---\ntype: note\ntitle: B\n---\nBody.\n")
+
+    notes = impact_graph.read_notes(tmp_path)
+    resolver = impact_graph.build_resolver(notes)
+    built = impact_graph.build_edges(notes, resolver)
+
+    assert [(edge.source, edge.relation, edge.target) for edge in built] == [
+        ("notes/a", "rebuttal", "notes/b")
+    ]
+
+
+def test_build_edges_resolves_link_titles_that_are_not_path_shaped(tmp_path):
+    """Alias space, not path space.
+
+    `build_resolver` keys on title / slug / stem as well as path, so a link value
+    here is any of those. Research titles routinely carry a colon or a trailing
+    dotted token — inputs a vault-relative-path validator rejects outright.
+    """
+    write(
+        tmp_path / "notes/warrant.md",
+        "---\ntype: note\ntitle: 'Toulmin: the warrant'\n---\nBody.\n",
+    )
+    write(tmp_path / "notes/study.md", "---\ntype: note\ntitle: Study 1.2\n---\nBody.\n")
+    write(
+        tmp_path / "notes/claim.md",
+        "---\ntype: note\ntitle: Claim\nlinks:\n"
+        "  supports:\n    - '[[Toulmin: the warrant]]'\n"
+        "  contradicts:\n    - '[[Study 1.2|the pilot]]'\n---\nBody.\n",
+    )
+
+    notes = impact_graph.read_notes(tmp_path)
+    built = impact_graph.build_edges(notes, impact_graph.build_resolver(notes))
+
+    assert {(edge.source, edge.relation, edge.target) for edge in built} == {
+        ("notes/claim", "supports", "notes/warrant"),
+        ("notes/claim", "contradicts", "notes/study"),
+    }
+
+
+def test_structural_impact_resolves_a_thesis_whose_title_carries_a_colon(tmp_path):
+    """The `thesis:` value is an alias too: a colon in the title must not read as a URI."""
+    project(tmp_path, active="thesis")
+    # No `role: thesis` / `project:` pair, so the `thesis:` alias is the only
+    # route to this note: the fallback scan must not rescue the lookup.
+    write(
+        tmp_path / "notes/thesis.md",
+        "---\ntype: note\ncheck_status: checked\ntitle: 'Toulmin: the warrant'\n"
+        "description: Demo thesis\nstatus: accepted\nevidence_set: []\n---\n",
+    )
+    write(
+        tmp_path / "projects/demo/project.md",
+        (tmp_path / "projects/demo/project.md")
+        .read_text(encoding="utf-8")
+        .replace("thesis: '[[notes/thesis]]'", "thesis: '[[Toulmin: the warrant]]'"),
+    )
+    claim(tmp_path, "a", "supports", "thesis")
+
+    payload = impact.run(tmp_path, "projects/demo/project")["payload"]
+
+    assert payload["active_thesis"] == "notes/thesis.md"
+    assert payload["argument_stage"] == "developing"
+    assert payload["relation_count"] == 1

@@ -9,7 +9,7 @@ import posixpath
 import re
 import shutil
 import subprocess
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable
 from datetime import UTC, date, timedelta
 from itertools import pairwise
@@ -35,6 +35,7 @@ from memoria_vault.runtime.policy.paths import normalize_path, require_policy_pa
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, normalize_link_target
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -352,8 +353,8 @@ def curate_note_link(
     source_rel = _note_rel(source_note_path)
     target_rel = _concept_rel(target_path)
     link_type = link_type.strip().lower()
-    if link_type not in {"supports", "contradicts", "extends"}:
-        raise ValueError("note link_type must be supports, contradicts, or extends")
+    if link_type not in LINK_RELATIONS:
+        raise ValueError(f"note link_type must be one of {', '.join(sorted(LINK_RELATIONS))}")
 
     source_note = vault / source_rel
     if not source_note.is_file():
@@ -1906,10 +1907,10 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     component_edges = [
         edge for edge in edges if edge["source"] in component and edge["target"] in component
     ]
-    counts = {
-        relation: sum(1 for edge in component_edges if edge["type"] == relation)
-        for relation in ("supports", "contradicts", "extends")
-    }
+    # Tally what the component actually holds. The lens below reads three of the
+    # six relations by name; a roster loop here would only manufacture zeros for
+    # the other three, so there is no roster at this site at all.
+    counts = Counter(str(edge["type"]) for edge in component_edges)
     relation_count = len(component_edges)
     findings = _argument_findings(counts, relation_count)
     saturation_conditions = _argument_saturation_conditions(counts, relation_count)
@@ -3373,7 +3374,7 @@ def _argument_advisories(counts: dict[str, int], relation_count: int) -> list[di
 def _note_edges(notes: dict[str, dict[str, Any]]) -> list[dict[str, str]]:
     edges = []
     for source, frontmatter in notes.items():
-        for link_type in ("supports", "contradicts", "extends"):
+        for link_type in sorted(LINK_RELATIONS):
             for raw in _link_values(frontmatter, link_type):
                 target = _link_target(raw)
                 if target in notes and target != source:
@@ -3410,9 +3411,11 @@ def _link_target(value: Any) -> str:
         value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
     if not isinstance(value, str) or not value.strip():
         return ""
-    raw = value.strip()
-    if raw.startswith("[[") and raw.endswith("]]"):
-        raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
+    raw = normalize_link_target(value)
+    if not raw:
+        # `_concept_rel("")` renders `notes/.md`, which `iter_markdown` really can
+        # yield: without this, every rejected target lands on one absorbing sink.
+        return ""
     try:
         return _concept_rel(raw)
     except ValueError:

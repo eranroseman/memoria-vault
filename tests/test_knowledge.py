@@ -21,6 +21,7 @@ from memoria_vault.runtime.knowledge import (
 )
 from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.trusted_writer import mark_checked as _mark_checked
 from memoria_vault.runtime.trusted_writer import observe_pi_edit_from_head
 from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
@@ -1152,3 +1153,28 @@ def test_move_concept_rollback_keeps_linker_text_out_of_the_journal(tmp_path: Pa
         assert fragment not in json.dumps(reverted[0])
         for journal in sorted((vault / ".memoria/journal").glob("*.jsonl")):
             assert fragment not in journal.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("relation", sorted(LINK_RELATIONS))
+def test_curate_note_link_accepts_each_served_relation(tmp_path: Path, relation: str) -> None:
+    """The direct PI path completes every verb the roster serves — no dead vocabulary."""
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+
+    result = curate_note_link(vault, "source", relation, "target", actor="pi", machine="curator")
+
+    assert result["link_type"] == relation
+    assert read_frontmatter(vault / "notes/source.md")["links"] == {relation: ["notes/target.md"]}
+
+
+def test_curate_note_link_rejects_tension(tmp_path: Path) -> None:
+    """`tension` is machine-surfaced and PI-confirmed: never authored through this door."""
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+
+    with pytest.raises(ValueError, match="link_type must be one of"):
+        curate_note_link(vault, "source", "tension", "target", actor="pi", machine="curator")
+
+    assert read_frontmatter(vault / "notes/source.md")["links"] == {}

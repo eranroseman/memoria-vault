@@ -14,7 +14,7 @@ argument Canvas projection beside the project.
 
 - A checked project Concept under `projects/`
 - A `thesis` value on the project that points at a checked note
-- Checked notes linked with `supports`, `contradicts`, or `extends`
+- Checked notes linked with any of the six authored relations: `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, `rebuttal`
 
 ## Steps
 
