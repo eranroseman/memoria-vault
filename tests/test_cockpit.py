@@ -45,6 +45,13 @@ def vault(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
     - **Three worklist cards whose path order matches no other key.** Path order
       is candidate/gap/work-prompt; title order is work-prompt/candidate/gap —
       neither the same nor the reverse.
+    - **Three draft marks, two derived records.** The third mark is written
+      *after* `rebuild_evidence_sets_from_markers`, so the draft is one mark
+      ahead of the derived index — the ordinary state of a draft between
+      rebuilds. `len(evidence_markers)` is 3 and `len(evidence_sets)` is 2, so
+      counting the wrong one is visible (R2's honest denominator: panel 4's
+      `total` is the marks the researcher wrote, not the rows the machine
+      managed to derive).
     """
     workspace = init_cli_workspace(tmp_path, capsys)
     write_checked_concept(
@@ -90,13 +97,21 @@ def vault(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
     source_text = workspace / ".memoria/blobs/source-content/work-a.md"
     source_text.parent.mkdir(parents=True, exist_ok=True)
     source_text.write_text("Grounding passage. ^p0001\n", encoding="utf-8")
-    (workspace / "projects/study-alpha/draft.md").write_text(
+    draft_path = workspace / "projects/study-alpha/draft.md"
+    draft_path.write_text(
         "# Draft\n\n"
         "Claim one holds. %%ev: ev-22222222 items=work-a#^p0001%%\n\n"
         "Claim two is thin. %%ev: ev-11111111 items=%%\n",
         encoding="utf-8",
     )
     state.rebuild_evidence_sets_from_markers(workspace)
+    # Written after the derivation run, so the draft carries three marks while
+    # the derived index still holds two records.
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8")
+        + "\nClaim three is fresh. %%ev: ev-33333333 items=work-a#^p0001%%\n",
+        encoding="utf-8",
+    )
     inbox.write_proposal(
         workspace,
         "candidate",
@@ -218,7 +233,13 @@ def test_draft_panel_is_honest_about_a_project_with_no_composed_draft(vault: Pat
     assert panels["draft"]["draft_path"] == "projects/study-delta/draft.md"
     assert panels["draft"]["outline_members"] == 0
     assert panels["draft"]["evidence_states"] == {}
+    # Nothing to review and nothing unresolved: the fixture's own counts are 1,
+    # so only a project with none of either can tell a real count from a
+    # hard-coded one.
+    assert panels["draft"]["review_required"] == 0
     assert panels["slice"]["members"] == 0
+    assert panels["slice"]["missing"] == 0
+    assert panels["slice"]["edges_by_type"] == {}
     assert panels["grounds"]["total"] == 0
     assert panels["grounds"]["findings"] == []
 
@@ -254,6 +275,46 @@ def test_resolver_with_zero_active_projects_is_ambiguous(
     }
 
 
+def test_resolver_emits_the_producer_order_whatever_it_is(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The composer re-sorts nothing (module docstring, spec §1) — `concepts.list`
+    owns listing order, here as much as in the worklist.
+
+    Today's producer sorts concepts by path, so a cockpit-side
+    `sorted(projects, key=path)` would be a no-op against the real payload and no
+    assertion on the fixture could see it. Hold the guarantee against a producer
+    order that matches no obvious key — not path, not title, not the reverse of
+    either.
+    """
+    write_checked_concept(
+        vault, "projects/study-beta/project.md", "type: project\ntitle: Zulu\n", "project"
+    )
+    write_checked_concept(
+        vault, "projects/study-gamma/project.md", "type: project\ntitle: Gamma\n", "project"
+    )
+    natural = engine_api.read_concepts(vault, concept_type="project")["concepts"]
+    rotated = natural[1:] + natural[:1]
+    paths = [row["path"] for row in rotated]
+    assert len(rotated) == 3
+    assert paths != sorted(paths)
+    assert paths != [row["path"] for row in sorted(rotated, key=lambda row: row["title"])]
+    assert paths != sorted(paths, reverse=True)
+
+    real_read_concepts = engine_api.read_concepts
+
+    def rotated_read_concepts(workspace: Path, **kwargs: Any) -> dict[str, Any]:
+        payload = dict(real_read_concepts(workspace, **kwargs))
+        rows = payload["concepts"]
+        payload["concepts"] = rows[1:] + rows[:1]
+        return payload
+
+    monkeypatch.setattr(engine_api, "read_concepts", rotated_read_concepts)
+
+    assert [row["path"] for row in cockpit.active_projects(vault)] == paths
+    assert [row["path"] for row in cockpit.resolve_active_project(vault)["projects"]] == paths
+
+
 def test_assemble_deep_panels_wrap_named_registry_actions(vault: Path) -> None:
     panels = cockpit.assemble_deep(vault, PROJECT_REL)
 
@@ -279,6 +340,11 @@ def test_assemble_deep_panels_wrap_named_registry_actions(vault: Path) -> None:
 
     draft = panels["draft"]
     assert draft["source_action"] == "project.draft.read"
+    # Panel 3 composes two reads and says so: `outline_members` comes from the
+    # slice, everything else from the draft. The singular key keeps naming the
+    # panel's primary read (the pinned `--json` surface); the list is the honest
+    # full attribution.
+    assert draft["source_actions"] == ["project.draft.read", "project.slice.read"]
     assert draft["draft_path"] == "projects/study-alpha/draft.md"
     assert draft["outline_members"] == 3
     assert draft["draft_present"] is True
@@ -297,7 +363,11 @@ def test_grounds_panel_flags_thin_claims_and_unresolved_outline_ids(vault: Path)
 
     assert grounds["source_action"] == "project.draft.read"
     assert grounds["complete"] == 1
-    assert grounds["total"] == 2
+    # The denominator is the draft's own grounds marks, not the derived records:
+    # the fixture's draft carries three marks while `evidence_sets` still holds
+    # two, so the two counts are distinguishable.
+    assert grounds["total"] == 3
+    assert len(engine_api.read_draft(vault, PROJECT_REL)["draft"]["evidence_sets"]) == 2
     # Spec §4: every finding says what tipped it — the honesty-card field is not
     # optional, and each one points at the datum the reader can go check.
     assert grounds["findings"] == [
@@ -306,10 +376,12 @@ def test_grounds_panel_flags_thin_claims_and_unresolved_outline_ids(vault: Path)
                 "open gap: outline id note-claim-four resolves to no checked note (line 4)"
             ),
             "what_tipped_it": "projects/study-alpha/outline.md line 4",
+            "source_action": "project.slice.read",
         },
         {
             "finding": "thin claim: ev-11111111 has 0 grounds items",
             "what_tipped_it": "items=",
+            "source_action": "project.draft.read",
         },
     ]
 
@@ -439,8 +511,15 @@ def test_trace_and_context_panels_are_both_branch_honest(vault: Path) -> None:
     context = panels["context"]
     assert context["source_action"] == "context.read"
     row = actions_by_id().get("context.read")
-    if row is None or not row.get("engine"):
-        assert "reserved" in context  # honest placeholder naming the row
+    if row is None:
+        assert context["reserved"] == "context.read is not in the surface-contract registry"
+        assert "bundle" not in context
+    elif not row.get("engine"):
+        # The placeholder repeats the registry's own word for the row rather
+        # than an empty string: `"reserved" in context` is true of `""` too, and
+        # a blank line under the panel heading reads as "nothing to say here"
+        # instead of "U1 declared this row and left the transport to U2".
+        assert context["reserved"] == row["reserved"] == "U2"
         assert "bundle" not in context
     else:
         assert "bundle" in context
@@ -522,3 +601,805 @@ def test_every_panel_source_action_is_registered_or_named_pending(vault: Path) -
             assert source_action in registered, f"{name} names an unregistered action"
         else:
             assert panel["pending"], f"{name} has neither a source action nor a pending line"
+        # The same rule for the two additive attribution keys C.2 introduced:
+        # a panel-level list and a per-finding id are grounding claims too.
+        for extra in panel.get("source_actions") or []:
+            assert extra in registered, f"{name} lists an unregistered action"
+        for finding in panel.get("findings") or []:
+            assert finding["source_action"] in registered, (
+                f"{name} finding names an unregistered action"
+            )
+
+
+def test_context_panel_names_the_engine_when_the_bound_row_has_no_cli_command(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Panel 6's invocation line is what the researcher pastes to re-run the read
+    themselves (spec §1 panel 6). A row registered without a CLI transport — the
+    registry allows it — still has to name something runnable, so the fallback
+    names the engine entry point rather than going blank."""
+
+    def probe_context(workspace: Path, *, read_scope: list[str] | None = None) -> dict[str, Any]:
+        return {"ok": True, "api_version": 1, "context": {}}
+
+    monkeypatch.setattr(engine_api, "read_context_probe", probe_context, raising=False)
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {
+            **actions_by_id(),
+            "context.read": {"id": "context.read", "engine": "read_context_probe"},
+        },
+    )
+
+    context = cockpit.assemble_deep(vault, PROJECT_REL)["context"]
+
+    assert context["invocation"] == "context.read via engine_api.read_context_probe"
+
+
+def test_findings_renderer_speaks_honesty_card_grammar_only() -> None:
+    """U2 spec §4: honesty-card fields verbatim; no verdict line, no
+    pre-selected action; one-sided arguments drop (V2's card grammar)."""
+    findings = [
+        {
+            "finding": "thin claim: ev-22222222 has 0 grounds items",
+            "argument_for": "reads as a synthesis claim",
+            "argument_against": "no grounds item was ever attached",
+            "what_tipped_it": "items=",
+            "certainty": "low",
+            "verdict": "reject",
+            "recommended_action": "quarantine now",
+        },
+        {"finding": "one-sided card", "argument_for": "only one side present"},
+        {"action": "attach a source span to claim two"},
+    ]
+
+    lines = cockpit.render_findings(findings)
+    text = "\n".join(lines)
+
+    assert "thin claim: ev-22222222 has 0 grounds items" in text
+    assert "for: reads as a synthesis claim" in text
+    assert "against: no grounds item was ever attached" in text
+    assert "tipped by: items=" in text
+    assert "certainty: low" in text
+    assert "one-sided card" in text
+    # A card whose headline field is `action` (the shape V2 and the inbox
+    # writers use) still gets rendered — the grammar bans a *pre-selected*
+    # action, not an action the card names as its finding.
+    assert "attach a source span to claim two" in text
+    assert "verdict" not in text
+    assert "reject" not in text
+    assert "quarantine now" not in text
+    assert "only one side present" not in text
+    assert cockpit.render_findings([]) == []
+
+
+def test_findings_renderer_emits_its_contract_fields_in_contract_order() -> None:
+    """ "Per card, in order" is the renderer's contract (spec §4), and order is
+    load-bearing: the headline first, then the two sides of the argument, then
+    what tipped it, then how sure, then where it came from. A card whose
+    attribution floats above its own headline reads as a heading for the card
+    below it. `finding` outranks `action` for the headline, and a card carrying
+    neither renders no bullet at all rather than an empty one.
+
+    Two cards, because the renderer returns one flat list and the panels splice
+    it straight into the screen: anything the loop emits *between* cards — a
+    separator, a rule, a blank line — is invisible to a one-card fixture, and a
+    blank line inside a panel body is what `_panel_body` reads as the end of the
+    panel.
+    """
+    card = {
+        "finding": "thin claim: ev-22222222 has 0 grounds items",
+        "action": "quarantine the claim",
+        "argument_for": "reads as a synthesis claim",
+        "argument_against": "no grounds item was ever attached",
+        "what_tipped_it": "items=",
+        "certainty": "low",
+        "source_action": "project.draft.read",
+    }
+    second = {"action": "attach a source span to claim two", "certainty": "likely"}
+
+    assert cockpit.render_findings([card, second]) == [
+        "  - thin claim: ev-22222222 has 0 grounds items",
+        "    for: reads as a synthesis claim",
+        "    against: no grounds item was ever attached",
+        "    tipped by: items=",
+        "    certainty: low",
+        "    from: project.draft.read",
+        "  - attach a source span to claim two",
+        "    certainty: likely",
+    ]
+    assert cockpit.render_findings([{"what_tipped_it": "items="}]) == ["    tipped by: items="]
+
+
+def test_findings_name_the_read_that_produced_them(vault: Path) -> None:
+    """Grounding attribution is the product's whole trust claim, so a finding
+    names the read that produced it rather than inheriting its panel's heading.
+    Panel 4's headline numbers come from `project.draft.read`, but every open gap
+    comes from `project.slice.read`'s `missing` — a reader following the panel
+    heading to check one would land on a read that never produced it."""
+    grounds = cockpit.assemble_deep(vault, PROJECT_REL)["grounds"]
+    by_finding = {card["finding"]: card["source_action"] for card in grounds["findings"]}
+
+    assert set(by_finding.values()) == {"project.slice.read", "project.draft.read"}
+    assert (
+        by_finding["open gap: outline id note-claim-four resolves to no checked note (line 4)"]
+        == "project.slice.read"
+    )
+    assert by_finding["thin claim: ev-11111111 has 0 grounds items"] == "project.draft.read"
+
+    text = "\n".join(cockpit.render_findings(grounds["findings"]))
+    assert "from: project.slice.read" in text
+    assert "from: project.draft.read" in text
+    # A card with no attribution claims none — the renderer never invents one.
+    assert cockpit.render_findings([{"finding": "unattributed"}]) == ["  - unattributed"]
+
+
+def test_long_identifiers_render_whole_on_their_own_line() -> None:
+    ident = "notes/" + "x" * 120 + ".md"
+
+    lines = cockpit.render_findings([{"finding": f"thin claim: {ident} has 0 grounds items"}])
+
+    assert any(line.strip() == ident for line in lines)
+    for line in lines:
+        assert len(line) <= 80 or line.strip() == ident
+
+
+def test_the_layout_target_is_exactly_eighty_columns() -> None:
+    """80 columns is the target the keep-test measures (spec §2), so the boundary
+    is part of the contract: a line that fits in 80 stays whole, and the next
+    character wraps it."""
+    assert cockpit.LAYOUT_COLUMNS == 80
+    exactly_eighty = " ".join(["x"] * 37 + ["xx"])
+    assert len(f"  - {exactly_eighty}") == 80
+
+    assert cockpit.render_findings([{"finding": exactly_eighty}]) == [f"  - {exactly_eighty}"]
+    # 80 is also the width the wrapper *uses*, and the continuation lines hang
+    # under the prefix. Pinning the constant alone leaves both free: `_fit` can
+    # wrap at 76, or drop the hanging indent, while `LAYOUT_COLUMNS` still reads
+    # 80. The split below is the one only a width of exactly 80 produces.
+    assert cockpit.render_findings([{"finding": exactly_eighty + "x"}]) == [
+        "  - " + " ".join(["x"] * 37),
+        "    xxx",
+    ]
+
+
+def _panel_body(out: str, heading: str) -> list[str]:
+    """The lines of one panel: everything between its heading and the blank
+    separator that ends it.
+
+    Panel-scoped assertions keep saying the same thing after T.1's trace events
+    and T.3's context bundle land. A whole-screen `not in` would quietly start
+    covering payloads C.2 does not own, so an unrelated key would fail a C.2
+    test.
+    """
+    lines = out.splitlines()
+    start = lines.index(heading) + 1
+    end = next((i for i in range(start, len(lines)) if lines[i] == ""), len(lines))
+    return lines[start:end]
+
+
+def test_deep_screen_renders_panels_in_fixed_order(vault: Path) -> None:
+    payload = {
+        "screen": "deep",
+        "project": PROJECT_REL,
+        "panels": cockpit.assemble_deep(vault, PROJECT_REL),
+    }
+
+    out = cockpit.render_deep(payload)
+
+    headings = [
+        "project (concepts.get)",
+        "slice (project.slice.read)",
+        "draft (project.draft.read)",
+        "grounds (project.draft.read)",
+        "recent machine changes (journal.list)",
+        "context handoff (context.read)",
+    ]
+    positions = [out.index(heading) for heading in headings]
+    assert positions == sorted(positions)
+    assert "title: Study Alpha" in out
+    assert "thesis: Sleep loss impairs recall" in out
+    assert "complete evidence sets: 1/3" in out
+    assert "unresolved outline ids: 1" in out
+    assert "edges: contradicts=1 supports=1" in out
+    assert "evidence states: complete=1 evidence-incomplete=1" in out
+    assert "review required: 1" in out
+    assert "open gap: outline id note-claim-four" in out
+    # spec §1 panel 3: no such line. Scoped to the panel that must not invent
+    # it — as a whole-screen assertion this would also cover T.3's context
+    # bundle and T.1's trace events, where an unrelated key containing
+    # "verification" would fail a C.2 test for no C.2 reason.
+    assert not any("verification" in line.lower() for line in _panel_body(out, headings[2]))
+    assert out.endswith("\n")
+    assert not out.endswith("\n\n")
+
+
+def test_deep_screen_never_wraps_an_identifier_mid_token(vault: Path) -> None:
+    """The keep-test rule (spec §2) has to hold for the screen, not only for the
+    findings renderer: a panel line that interpolates a value without going
+    through the wrapper emits an over-long line, and no other assertion notices.
+
+    The fixture is the whole test. `_fit(prefix, value)` and
+    `f"{prefix}{value}"` are byte-identical for every line that already fits, so
+    a value that *cannot* exceed the layout cannot tell the wrapper from a bare
+    f-string — which is how a `Study Long` title left every interpolated line
+    below 80 and made this assertion unfailable.
+
+    The vault supplies the over-long path, title and thesis. The other four
+    interpolated values arrive as an explicit payload because today's *producers*
+    hold them under the layout — `_note_edges` knows three edge types, the
+    deriver two evidence states, and the two placeholder lines are constants —
+    while the *renderer* bounds none of them. That gap is exactly what routing
+    `edges:` and `evidence states:` through `_fit` was for, and it is not
+    hypothetical: `_review_panel`'s own pending string is 91 characters today.
+    """
+    project_rel = f"projects/study-{'y' * 100}/project.md"
+    draft_rel = f"projects/study-{'y' * 100}/draft.md"
+    title = "Sleep restriction and the durable decay of recall over consecutive study nights"
+    thesis = (
+        "Restricting sleep degrades declarative consolidation in a dose dependent way "
+        "that survives a night of recovery sleep"
+    )
+    assert len(f"  title: {title}") > cockpit.LAYOUT_COLUMNS
+    assert len(f"  thesis: {thesis}") > cockpit.LAYOUT_COLUMNS
+    write_checked_concept(
+        vault, project_rel, f"type: project\ntitle: {title}\nthesis: {thesis}\n", "project"
+    )
+    panels = cockpit.assemble_deep(vault, project_rel)
+
+    out = cockpit.render_deep({"screen": "deep", "project": project_rel, "panels": panels})
+    lines = out.splitlines()
+
+    assert any(line.strip() == project_rel for line in lines)
+    assert any(line.strip() == draft_rel for line in lines)
+
+    # The same rule over the four values only the payload can lengthen. The
+    # vocabulary is deliberately wider than today's producers emit — the
+    # renderer is what is under test, and it declares no bound on either
+    # breakdown or on what a pending/reserved line may say.
+    wide = cockpit.render_deep(
+        {
+            "screen": "deep",
+            "project": project_rel,
+            "panels": {
+                **panels,
+                "slice": {
+                    **panels["slice"],
+                    "edges_by_type": {
+                        "contradicts": 12,
+                        "extends": 34,
+                        "qualifies": 5,
+                        "rebuts": 6,
+                        "refines": 7,
+                        "supports": 89,
+                        "undercuts": 10,
+                    },
+                },
+                "draft": {
+                    **panels["draft"],
+                    "evidence_states": {
+                        "complete": 12,
+                        "evidence-incomplete": 34,
+                        "quote-drifted": 5,
+                        "source-withdrawn": 6,
+                    },
+                },
+                "trace": {
+                    "source_action": "journal.list",
+                    "pending": (
+                        "engine_api.evidence_review_queue + the views.evidence_review "
+                        "registry row (V2 plan V2R-B.4)"
+                    ),
+                },
+                "context": {
+                    "source_action": "context.read",
+                    "reserved": (
+                        "context.read is declared by U1 and has no engine binding in the "
+                        "surface-contract registry yet"
+                    ),
+                },
+            },
+        }
+    )
+
+    for line in lines + wide.splitlines():
+        assert len(line) <= cockpit.LAYOUT_COLUMNS or line.strip() in {project_rel, draft_rel}
+
+
+def test_deep_screen_states_the_archived_and_draft_facts_its_panels_carry(vault: Path) -> None:
+    """Two booleans the screen turns into English, plus the thesis line's guard.
+
+    C.1 pins `archived` and `draft_present` in the *payload*; the render layer
+    is the sentence the researcher actually reads, and an inverted mapping makes
+    the screen state a falsehood — an archived project rendering `archived: no`.
+    Held in both directions on two projects whose facts differ, so no constant
+    passes.
+    """
+    live = cockpit.render_deep(
+        {
+            "screen": "deep",
+            "project": PROJECT_REL,
+            "panels": cockpit.assemble_deep(vault, PROJECT_REL),
+        }
+    )
+    live_project = _panel_body(live, "project (concepts.get)")
+    live_draft = _panel_body(live, "draft (project.draft.read)")
+
+    assert "  archived: no" in live_project
+    assert "  archived: yes" not in live_project
+    assert "  thesis: Sleep loss impairs recall" in live_project
+    assert "  draft present: yes" in live_draft
+    assert "  draft present: no" not in live_draft
+
+    write_checked_concept(
+        vault,
+        "projects/study-beta/project.md",
+        "type: project\ntitle: Study Beta\narchived: true\n",
+        "project",
+    )
+    panels = cockpit.assemble_deep(vault, "projects/study-beta/project.md")
+    assert panels["project"]["archived"] is True
+    assert panels["project"]["thesis"] == ""
+    assert panels["draft"]["draft_present"] is False
+
+    archived = cockpit.render_deep(
+        {"screen": "deep", "project": "projects/study-beta/project.md", "panels": panels}
+    )
+    archived_project = _panel_body(archived, "project (concepts.get)")
+    archived_draft = _panel_body(archived, "draft (project.draft.read)")
+
+    assert "  archived: yes" in archived_project
+    assert "  archived: no" not in archived_project
+    assert "  draft present: no" in archived_draft
+    assert "  draft present: yes" not in archived_draft
+    # A project with no thesis prints no thesis line: an empty value under a
+    # label reads as "the thesis is blank", which is a different claim from
+    # "none was written yet". Same rule as panel 6's reserved line (E16).
+    assert not any(line.lstrip().startswith("thesis:") for line in archived_project)
+
+
+def test_deep_screen_prints_the_member_counts_both_panels_carry(vault: Path) -> None:
+    """Panel 2's `members:` and panel 3's `outline members:` — the one datum the
+    slice contributes to panel 3, and the whole point of deviation 2. Both lines
+    were rendered and unasserted, so deleting either (or hard-coding it) kept the
+    suite green. Two vaults whose counts differ, so a constant fails one."""
+    panels = cockpit.assemble_deep(vault, PROJECT_REL)
+    assert panels["slice"]["members"] == 3
+    assert panels["draft"]["outline_members"] == 3
+
+    out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
+
+    assert "  members: 3" in _panel_body(out, "slice (project.slice.read)")
+    assert "  outline members: 3" in _panel_body(out, "draft (project.draft.read)")
+
+    write_checked_concept(
+        vault, "projects/study-delta/project.md", "type: project\ntitle: Study Delta\n", "project"
+    )
+    empty_panels = cockpit.assemble_deep(vault, "projects/study-delta/project.md")
+    assert empty_panels["slice"]["members"] == 0
+    assert empty_panels["draft"]["outline_members"] == 0
+
+    empty = cockpit.render_deep(
+        {"screen": "deep", "project": "projects/study-delta/project.md", "panels": empty_panels}
+    )
+
+    assert "  members: 0" in _panel_body(empty, "slice (project.slice.read)")
+    assert "  outline members: 0" in _panel_body(empty, "draft (project.draft.read)")
+
+
+def test_grounds_panel_says_it_found_nothing_rather_than_going_silent(vault: Path) -> None:
+    """An honesty branch: "we checked and found nothing" is a claim the reader
+    can act on; a panel that prints its numbers and stops is silence.
+
+    The fallback runs on every clean project, so it was executed by other tests
+    and asserted by none — dropping it, or swapping the sentence for one that
+    says something else, both escaped.
+    """
+    write_checked_concept(
+        vault, "projects/study-delta/project.md", "type: project\ntitle: Study Delta\n", "project"
+    )
+    panels = cockpit.assemble_deep(vault, "projects/study-delta/project.md")
+    assert panels["grounds"]["findings"] == []
+
+    clean = cockpit.render_deep(
+        {"screen": "deep", "project": "projects/study-delta/project.md", "panels": panels}
+    )
+
+    assert _panel_body(clean, "grounds (project.draft.read)") == [
+        "  complete evidence sets: 0/0",
+        "  (no gaps or thin claims)",
+    ]
+
+    with_findings = _panel_body(
+        cockpit.render_deep(
+            {
+                "screen": "deep",
+                "project": PROJECT_REL,
+                "panels": cockpit.assemble_deep(vault, PROJECT_REL),
+            }
+        ),
+        "grounds (project.draft.read)",
+    )
+
+    # The sentence is a claim about this project, not panel furniture: a panel
+    # that found gaps must not also say it found none.
+    assert "  (no gaps or thin claims)" not in with_findings
+    assert with_findings[0] == "  complete evidence sets: 1/3"
+    assert with_findings[1].startswith("  - open gap: outline id note-claim-four")
+
+
+def test_trace_lines_render_every_summary_field_and_survive_a_partial_builder(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`_trace_lines`' actual contract with T.1, which the handoff note claimed
+    and no test held.
+
+    Three things: the summary is `timestamp event_type output_id` in that order
+    (no fixture event carried an `output_id`, so dropping the key from the tuple
+    escaped); an event the journal gave no summary fields says so rather than
+    rendering a bare `ref N:`; and the shown-of-total line needs *both* counts —
+    a builder that carries one must still render, not raise.
+
+    The first event's summary is deliberately longer than the layout. A `ref`
+    line whose three fields all fit is byte-identical whether it goes through
+    `_fit` or straight into an f-string, so a short-summary fixture cannot see
+    the wrapper at all — and an `output_id` that names the file the run wrote is
+    the ordinary case, not a contrived one.
+    """
+    monkeypatch.setattr(
+        cockpit,
+        "trace_panel",
+        lambda *args, **kwargs: {
+            "source_action": "journal.list",
+            "events": [
+                {
+                    "event_id": 5,
+                    "timestamp": "2026-07-30T09:00:00Z",
+                    "event_type": "derived-output",
+                    "output_id": "projects/study-alpha/draft.md#ev-22222222",
+                },
+                {"event_id": 9},
+            ],
+            "total": 4,
+            "shown": 2,
+        },
+        raising=False,
+    )
+
+    body = _panel_body(
+        cockpit.render_deep(
+            {
+                "screen": "deep",
+                "project": PROJECT_REL,
+                "panels": cockpit.assemble_deep(vault, PROJECT_REL),
+            }
+        ),
+        "recent machine changes (journal.list)",
+    )
+
+    assert body == [
+        "  ref 5: 2026-07-30T09:00:00Z derived-output",
+        "         projects/study-alpha/draft.md#ev-22222222",
+        "  ref 9: (no summary fields)",
+        "  showing 2 of 4",
+        "  refs preview via trace.revert_preview",
+    ]
+
+    monkeypatch.setattr(
+        cockpit,
+        "trace_panel",
+        lambda *args, **kwargs: {"source_action": "journal.list", "events": [], "total": 4},
+        raising=False,
+    )
+
+    partial = _panel_body(
+        cockpit.render_deep(
+            {
+                "screen": "deep",
+                "project": PROJECT_REL,
+                "panels": cockpit.assemble_deep(vault, PROJECT_REL),
+            }
+        ),
+        "recent machine changes (journal.list)",
+    )
+
+    # Half a count is not an honest "showing N of M", and reaching for the
+    # missing half would crash the whole screen over one panel.
+    assert partial == ["  (no machine changes recorded)"]
+
+
+def test_both_screens_open_with_their_banner_and_one_blank_between_panels(vault: Path) -> None:
+    """Screen furniture (spec §2): each screen names itself on line 1, the deep
+    screen then names the project it opened, and panels are separated by exactly
+    one blank line. Plain sequential text is the whole layout contract, so the
+    separators are part of it."""
+    panels = cockpit.assemble_deep(vault, PROJECT_REL)
+    out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
+    lines = out.splitlines()
+
+    assert lines[0] == "memoria cockpit: deep work"
+    assert lines[1] == f"project: {PROJECT_REL}"
+    assert lines[2] == ""
+    for heading in (
+        "project (concepts.get)",
+        "slice (project.slice.read)",
+        "draft (project.draft.read)",
+        "grounds (project.draft.read)",
+        "recent machine changes (journal.list)",
+        "context handoff (context.read)",
+    ):
+        assert lines[lines.index(heading) - 1] == "", f"no separator above {heading}"
+    assert "\n\n\n" not in out
+
+    # `_buffer` terminates the screen, and collapsing the blank separators
+    # `render_deep` appends between panels is the whole of its job. Editing the
+    # last line is not: panel 6 ends on a string the composer took from the
+    # registry and printed for the researcher to paste, and a command stub that
+    # ends where its argument begins is a value, not stray whitespace. `memoria
+    # cockpit | cat` is byte-identical by construction (module docstring), and
+    # every screen above ends on a line that a wider strip would leave alone.
+    stub = cockpit.render_deep(
+        {
+            "screen": "deep",
+            "project": PROJECT_REL,
+            "panels": {
+                **panels,
+                "context": {
+                    "source_action": "context.read",
+                    "bundle": {"project": PROJECT_REL},
+                    "invocation": "memoria context --project ",
+                },
+            },
+        }
+    )
+
+    assert stub.endswith("  invocation: memoria context --project \n")
+
+    resolution = cockpit.render_deep(
+        {"screen": "deep", "resolution": "ambiguous", "projects": []}
+    ).splitlines()
+
+    assert resolution[0] == "memoria cockpit: active-project resolution"
+    assert resolution[1] == ""
+
+
+def test_deep_screen_heading_says_when_a_panel_has_no_registry_row(vault: Path) -> None:
+    """A heading is a grounding claim. C.3's triage panels and any pre-seam panel
+    carry `source_action: ""`, and the heading must say so rather than print a
+    bare label that reads as though the panel were backed by a registered read."""
+    panels = cockpit.assemble_deep(vault, PROJECT_REL)
+    panels["grounds"] = {**panels["grounds"], "source_action": ""}
+
+    out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
+
+    assert "grounds (no registry row yet)" in out
+    assert "grounds (project.draft.read)" not in out
+
+
+def test_trace_panel_renders_refs_and_an_honest_shown_of_total(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Panel 5's live branch (section T lands the builder). The ref the line
+    carries is the journal `event_id` §3's preview consumes, and the preview
+    pointer is only honest when there is a ref to preview."""
+    events = [
+        {"event_id": 42, "timestamp": "2026-07-30T09:00:00Z", "event_type": "derived-output"},
+        {"event_id": 7, "timestamp": "2026-07-29T09:00:00Z", "event_type": "derived-output"},
+    ]
+    monkeypatch.setattr(
+        cockpit,
+        "trace_panel",
+        lambda *args, **kwargs: {
+            "source_action": "journal.list",
+            "events": events,
+            "total": 9,
+            "shown": 2,
+        },
+        raising=False,
+    )
+    payload = {
+        "screen": "deep",
+        "project": PROJECT_REL,
+        "panels": cockpit.assemble_deep(vault, PROJECT_REL),
+    }
+
+    out = cockpit.render_deep(payload)
+
+    assert "ref 42: 2026-07-30T09:00:00Z derived-output" in out
+    assert "ref 7: 2026-07-29T09:00:00Z derived-output" in out
+    assert out.index("ref 42") < out.index("ref 7")  # newest first, order preserved
+    assert "showing 2 of 9" in out
+    assert "refs preview via trace.revert_preview" in out
+
+    monkeypatch.setattr(
+        cockpit,
+        "trace_panel",
+        lambda *args, **kwargs: {
+            "source_action": "journal.list",
+            "events": [],
+            "total": 0,
+            "shown": 0,
+        },
+        raising=False,
+    )
+    payload["panels"] = cockpit.assemble_deep(vault, PROJECT_REL)
+
+    empty = cockpit.render_deep(payload)
+
+    assert "(no machine changes recorded)" in empty
+    assert "showing 0 of 0" in empty
+    # Nothing to preview, so the screen does not advertise a preview.
+    assert "refs preview" not in empty
+
+
+def test_trace_panel_pending_line_names_its_absent_producer(vault: Path) -> None:
+    panels = cockpit.assemble_deep(vault, PROJECT_REL)
+    out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
+    section = out[out.index("recent machine changes (journal.list)") :]
+
+    if "pending" in panels["trace"]:
+        assert f"pending: {panels['trace']['pending']}" in section
+        assert "refs preview" not in section
+    else:
+        assert f"showing {panels['trace']['shown']} of {panels['trace']['total']}" in section
+
+
+def test_context_handoff_block_renders_reserved_or_bundle_with_invocation(
+    vault: Path,
+) -> None:
+    panels = cockpit.assemble_deep(vault, PROJECT_REL)
+    out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
+
+    section = out[out.index("context handoff (context.read)") :]
+    if "bundle" in panels["context"]:
+        # live transport: fixed-order bundle lines, the pasteable
+        # invocation line beneath them (spec §1 panel 6)
+        assert "invocation: " in section
+        assert section.rstrip().splitlines()[-1].lstrip().startswith("invocation: ")
+    else:
+        # names the reserved row honestly — the value, not a blank line
+        assert panels["context"]["reserved"]
+        assert f"reserved: {panels['context']['reserved']}" in section
+
+
+def test_context_bundle_renders_in_fixed_key_order_with_the_invocation_last(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Panel 6's live branch, which only exists once section T binds an engine to
+    the reserved row: "a short fixed-order block, one item per line, a one-line
+    invocation of the underlying action beneath it for pasting" (spec §1 panel
+    6). The bundle arrives as a mapping, so the block's order has to be the
+    renderer's, not whatever insertion order the transport happened to use.
+
+    Nothing in the block is short by construction: the transport owns the bundle
+    values and the registry owns the command string, so one value runs past the
+    layout, one carries a character outside ASCII, and the invocation is a real
+    scoped command rather than a two-word stub. A block that fits in 80 columns
+    and stays in ASCII cannot distinguish `_fit` from an f-string, nor
+    `ensure_ascii=False` from the json default — the researcher pastes these
+    lines, so both are the difference between a value and a mangling of it.
+    """
+
+    def probe_context(workspace: Path, *, read_scope: list[str] | None = None) -> dict[str, Any]:
+        return {
+            "ok": True,
+            "api_version": 1,
+            "project": "projects/study-alpha/project.md",
+            "attention": {"open": 3, "kinds": ["candidate", "gap"], "tipped": "gap — one"},
+            "open_question": (
+                "does the 2019 review supersede the meta-analysis the draft leans on"
+            ),
+        }
+
+    monkeypatch.setattr(engine_api, "read_context_probe", probe_context, raising=False)
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {
+            **actions_by_id(),
+            "context.read": {
+                "id": "context.read",
+                "engine": "read_context_probe",
+                "cli": {
+                    "commands": [
+                        "memoria context --project projects/study-alpha/project.md "
+                        "--scope notes,projects"
+                    ]
+                },
+            },
+        },
+    )
+    panels = cockpit.assemble_deep(vault, PROJECT_REL)
+
+    out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
+    section = out[out.index("context handoff (context.read)") :].rstrip().splitlines()
+
+    assert [line.strip() for line in section[1:]] == [
+        # `attention` before `open_question` before `project` although the
+        # transport emitted `project` first, and a non-scalar value rendered as
+        # data — sorted keys, `—` intact — rather than as a Python repr.
+        'attention: {"kinds": ["candidate", "gap"], "open": 3, "tipped": "gap — one"}',
+        "open_question: does the 2019 review supersede the meta-analysis the draft",
+        "leans on",
+        "project: projects/study-alpha/project.md",
+        "invocation: memoria context --project projects/study-alpha/project.md --scope",
+        "notes,projects",
+    ]
+
+
+def test_ambiguous_resolution_screen_lists_active_projects(vault: Path) -> None:
+    write_checked_concept(
+        vault,
+        "projects/study-gamma/project.md",
+        "type: project\ntitle: Study Gamma\n",
+        "project",
+    )
+
+    out = cockpit.render_deep({"screen": "deep", **cockpit.resolve_active_project(vault)})
+
+    assert "2 active projects; pass --project <path>:" in out
+    assert PROJECT_REL in out
+    assert "projects/study-gamma/project.md" in out
+    assert "Study Alpha" in out
+    assert "Study Gamma" in out
+    # list-and-exit: the resolution screen shows no panel content
+    assert "thesis:" not in out
+
+    # The screen prints the resolver's order, whatever it is. Every vault the
+    # resolver can build lists projects in path order, so a renderer-side sort
+    # would be a no-op against one — hold it against a listing that matches no
+    # obvious key, which is what an I1-ranked listing will look like.
+    rows = [
+        {"path": "projects/study-beta/project.md", "title": "Zulu"},
+        {"path": "projects/study-gamma/project.md", "title": "Alpha"},
+        {"path": PROJECT_REL, "title": "Mid"},
+    ]
+    paths = [row["path"] for row in rows]
+    assert paths != sorted(paths)
+    assert paths != sorted(paths, reverse=True)
+    assert paths != [row["path"] for row in sorted(rows, key=lambda row: row["title"])]
+
+    listed = cockpit.render_deep({"screen": "deep", "resolution": "ambiguous", "projects": rows})
+
+    assert [listed.index(path) for path in paths] == sorted(listed.index(p) for p in paths)
+    assert "3 active projects; pass --project <path>:" in listed
+
+
+def test_resolution_screen_never_truncates_a_project_path(vault: Path) -> None:
+    """The keep-test rule (spec §2) on the one screen whose whole job is printing
+    pasteable `--project <path>` values.
+
+    §2 was asserted for the deep screen and the findings renderer but not here,
+    where a truncated path is not a cosmetic wrap — it is a value the researcher
+    copies and the CLI then cannot resolve. The path is longer than the layout,
+    so it may only render whole on a line of its own.
+    """
+    long_path = f"projects/study-{'z' * 90}/project.md"
+    assert len(long_path) > cockpit.LAYOUT_COLUMNS
+
+    out = cockpit.render_deep(
+        {
+            "screen": "deep",
+            "resolution": "ambiguous",
+            "projects": [{"path": long_path, "title": "Study Long"}],
+        }
+    )
+    lines = out.splitlines()
+
+    assert any(line.strip() == long_path for line in lines)
+    assert "(Study Long)" in out
+    for line in lines:
+        assert len(line) <= cockpit.LAYOUT_COLUMNS or line.strip() == long_path
+
+
+def test_resolution_screen_with_no_active_projects_names_the_predicate(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    out = cockpit.render_deep({"screen": "deep", **cockpit.resolve_active_project(workspace)})
+
+    assert "no active projects (type: project, archived not True)" in out
+    assert "pass --project <path> to open one directly" in out
+    assert "active projects; pass" not in out
