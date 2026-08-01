@@ -544,12 +544,13 @@ def test_worker_binds_exact_context_to_running_request_before_dispatch(
         ("request_id", "missing-request"),
         ("operation_id", "forged-operation"),
         ("machine", "forged-machine"),
+        ("machine_authored", True),
     ],
 )
 def test_forged_or_nonexistent_context_rejected_without_journal_mutation(
     tmp_path: Path,
     field: str,
-    value: str,
+    value: object,
 ) -> None:
     context = _saved_operation_context(tmp_path)
     forged = replace(context, **{field: value})

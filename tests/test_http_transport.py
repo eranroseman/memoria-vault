@@ -617,6 +617,76 @@ def test_http_transport_neutralizes_machine_authored_bodies_despite_pi_authority
     assert job["bound_context"]["machine_authored"] is True
 
 
+def test_request_amend_successor_inherits_machine_authorship_of_its_source(
+    workspace: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`request amend` must not launder a machine-authored body into a PI-authored one.
+
+    The natural repair loop: a plugin posts a request the worker rejects for a
+    missing field, and the PI fixes the field with `memoria request amend`. The
+    successor inherits `args` wholesale, so the machine-composed `content` rides
+    along untouched — if the successor also reset `machine_authored` to its
+    default, the body would land verbatim under PI authorship (#1596).
+    """
+    response, _ = _dispatch(
+        workspace,
+        "POST",
+        "/operation/run",
+        lambda: {
+            "operation_id": "create-concept",
+            "payload": {
+                "target_path": "notes/laundered.md",
+                "content": (
+                    "---\ntype: note\ntitle: Laundered\ntags: []\nlinks: {}\n---\n" + HOSTILE_BODY
+                ),
+            },
+            "idempotency_key": "launder-src",
+        },
+    )
+    assert response["ok"] is False
+    assert not (workspace / "notes/laundered.md").exists()
+    source = state.request_job(workspace, "launder-src")
+    assert source is not None
+    assert source["request_envelope"]["machine_authored"] is True
+
+    assert (
+        main(
+            [
+                "request",
+                "amend",
+                "--workspace",
+                str(workspace),
+                "--idempotency-key",
+                "launder-fix",
+                "launder-src",
+                "concept_type=note",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+    worker.run_request(workspace, "launder-fix", machine="test-machine")
+
+    successor = state.request_job(workspace, "launder-fix")
+    assert successor is not None
+    assert successor["status"] == "done"
+    assert successor["request_envelope"]["actor"] == "pi"
+    # PI *authority* over the successor, machine *authorship* of the body it carries.
+    assert successor["request_envelope"]["machine_authored"] is True
+    assert successor["bound_context"]["machine_authored"] is True
+
+    written = (workspace / "notes/laundered.md").read_text(encoding="utf-8")
+    assert "\\[exfil] (`https://evil.test/pixel?d=SECRET`)" in written
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in written
+    assert "&lt;img src=x onerror=alert(1)&gt;" in written
+    assert "click me (`https://evil.test/phish`)" in written
+    assert "![exfil](" not in written
+    assert "<script>" not in written
+    assert "<img src=x" not in written
+    assert "[click me](" not in written
+
+
 def test_http_transport_pi_authority_still_runs_pi_reserved_operations(
     workspace: Path,
 ) -> None:
