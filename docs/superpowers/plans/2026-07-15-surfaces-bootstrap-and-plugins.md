@@ -88,7 +88,7 @@
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
-12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers — non-recursive `inbox/*.md` globs at `loudness.py:30`, `engine/api.py:706` and (U3-SUB.3) `inbox.py` `_open_fingerprint_match`, and a direct single-path existence check (not a glob) in both `inbox.py` dedupe writers. No task may add recursive inbox globs or frontmatter to digests. **Corollary (U3-SUB.2):** because a digest removes the card, an `inbox/` filename is reusable, so any path-keyed judgement about a card must be released when the card is archived — see `lifecycle._held_disposition_targets`. **Corollary (U3-SUB.3):** `write_finding` is now a *reading* member of this inventory, not only a writer, and it is the one whose failure is silent and permanent — `lifecycle._DIGEST_FIELDS` carries `fingerprint` into the digest, so an `rglob` here would let an archived card suppress every future re-raise of its condition with nothing to observe but the alert that never came. The glob is `*.md`, not `*`: `write_text_durable` leaves in-flight `.{name}.{rand}.tmp` siblings in `inbox/`, and an unfingerprinted `write_finding` creates them outside the fingerprint lock.
+12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers — non-recursive `inbox/*.md` globs at `loudness.py:30`, `engine/api.py:706` and (U3-SUB.3) `inbox.py` `_open_fingerprint_match`, and a direct single-path existence check (not a glob) in both `inbox.py` dedupe writers. No task may add recursive inbox globs or frontmatter to digests. **Corollary (U3-SUB.2, extended by U3-SUB.4):** because a digest removes the card, an `inbox/` filename is reusable, so any path-keyed judgement about a card must be released when the card is archived — **or when a scan observes the card gone from a path the journal still holds**, since `inbox/` deletions reach no observer at all (outside every bundle root; `_pi_edit_targets` requires `is_file()`). See `lifecycle._held_disposition_targets` and `_reconcile_released_paths`. The release is **not** swept at the review gate, and U3-SUB.4 rejects that variant explicitly: it would put a journal read on every review-gated write and retire `test_a_vault_with_no_closed_card_never_takes_the_workspace_lock` (`tests/test_attention_lifecycle.py:116`). The gate stays a cheap `inbox/` frontmatter probe, per the ruling recorded in U3-SUB.2's trigger-seam decision. **Corollary (U3-SUB.3):** `write_finding` is now a *reading* member of this inventory, not only a writer, and it is the one whose failure is silent and permanent — `lifecycle._DIGEST_FIELDS` carries `fingerprint` into the digest, so an `rglob` here would let an archived card suppress every future re-raise of its condition with nothing to observe but the alert that never came. The glob is `*.md`, not `*`: `write_text_durable` leaves in-flight `.{name}.{rand}.tmp` siblings in `inbox/`, and an unfingerprinted `write_finding` creates them outside the fingerprint lock.
 13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
     U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
     U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
@@ -8005,9 +8005,11 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 # U3-SUB — Attention substrate prerequisites (U3 spec §1)
 
 Source spec: `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md` §1
-("Attention substrate prerequisites"). Three lifecycle repairs land ahead of
+("Attention substrate prerequisites"). Four lifecycle repairs land ahead of
 plugin work: manual-edit adoption at the policy gate, monthly compaction of the
-resolved tail, and open-status fingerprint dedupe for findings.
+resolved tail, open-status fingerprint dedupe for findings, and the
+release-reconcile that keeps a card deleted outside the runtime from silencing
+its path (U3-SUB.4, added after U3-SUB.1/.2/.3 merged — issue #1616).
 
 **CRITICAL cross-plan dependency (Plan 21 Task 21.1).** Task U3-SUB.3 writes
 AGAINST the post-21.1 `write_finding` signature from
@@ -8595,7 +8597,9 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
 > it. **Out-of-band deletion** (PI in Obsidian, `git checkout`/`restore`/`revert`,
 > an adapter) still poisons a slot permanently — issue #1616, which also records why
 > a release sweep was rejected: it puts a DB read on the `PreToolUse` hot path
-> unconditionally and retires the no-lock pin.
+> unconditionally and retires the no-lock pin. *(Closed by U3-SUB.4, which
+> reconciles at the scan tick rather than at the gate, so the rejection above still
+> stands.)*
 >
 > **Coverage note (`cli.py`).** The `OSError` and `RuntimeError` arms of
 > `_compact_resolved_inbox` have producer tests. `sqlite3.Error` has none, and none
@@ -9194,6 +9198,164 @@ git commit -m "feat(attention): open-status fingerprint dedupe for findings; ret
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+---
+
+### Task U3-SUB.4: release-reconcile for out-of-band card deletion (closes #1616)
+
+Added after U3-SUB.1/.2/.3 merged. It closes the standing limit U3-SUB.2's review
+amendment declared and issue #1616 recorded: the runtime records what the runtime
+causes, so a card removed any other way holds its `inbox/` path with no release row
+coming for it.
+
+**Framing correction — the issue names the wrong silencer, and its own description
+will send the next reader after state that does not exist.** U3-SUB.3's dedupe keeps
+nothing in the database: `_open_fingerprint_match` re-scans live `inbox/*.md` files
+on every call, and `fingerprint` appears nowhere in `runtime/schema.sql` or
+`runtime/state.py`. Deleting a card cannot poison dedupe — it *frees* it. The real
+silencer is the **journal path-hold**: `_held_disposition_targets`
+(`lifecycle.py:100-133`, pre-task `:91-123`) folds a resolved card's claim open until an
+`EVENT_ATTENTION_ARCHIVED` release row, and **nothing observes an `inbox/`
+deletion** — the directory is outside every `bundle_roots` entry
+(`workspace_seed/.memoria/schemas/folders.yaml:4`) and `_pi_edit_targets`
+(`trusted_writer.py:1115`) skips any path that is not `is_file()`. So a card the PI
+deletes in Obsidian, or that `git restore`/`revert` removes, leaves its path held
+with no release row coming, and every later card at that reused name is journaled by
+nothing while the review gate honours its close.
+
+Precisely, because "forever" in the issue is one step too strong and the next reader
+should not have to re-derive it: the hold lasts until *some* card at that path is
+archived by compaction, which repairs the path and loses that card's disposition on
+the way. For a PI whose habit is deleting cards rather than resolving them, that
+never happens. The issue's comment thread — the loss is now a whole condition's
+history rather than one row of it, because U3-SUB.3 stopped the duplicate cards that
+were accidentally carrying the journal's coverage — is exactly right and unaffected
+by the correction.
+
+**Mechanics.** In `compact_resolved_cards`, **under the existing workspace lock** —
+after the in-lock `journal_unattributed_dispositions` call, before the unlink loop —
+diff `_held_disposition_targets(vault)` against the filesystem. For each held relpath
+whose file is gone, append one `EVENT_ATTENTION_ARCHIVED` row: actor `integrity`, and
+a new `RECONCILE_REASON` constant, *"released a held inbox path whose card was
+removed outside the runtime"*. The same reconcile runs on the **no-resolved-cards
+early-return path** under its own short lock, so a poisoned-and-empty inbox heals on
+the next scan tick — the deletion is itself why there is nothing to archive. Released
+relpaths surface as a `released` key in the result dict, so the scan payload carries
+them fail-visibly.
+
+**The `PreToolUse` cheap-probe pinned test stays.** This task extends contract 12's
+corollary to *"released when the card is archived — or observed gone at the scan
+tick"* and **explicitly rejects** the always-sweep-at-the-gate variant issue #1616
+weighed: it would put a journal read on every review-gated write and retire
+`test_a_vault_with_no_closed_card_never_takes_the_workspace_lock`
+(`tests/test_attention_lifecycle.py:116`). The gate stays cheap, per the ruling
+recorded in U3-SUB.2's trigger-seam decision; the scan is already the periodic,
+explicitly-provenanced hygiene pass and is where this belongs.
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/subsystems/lib/lifecycle.py` (`RECONCILE_REASON`, `_reconcile_row`, `_reconcile_released_paths`, both call sites in `compact_resolved_cards`, module docstring)
+- Modify: `src/memoria_vault/cli.py` (`_compact_resolved_inbox`'s error payload gains `released` so the failure arm keeps the success arm's shape)
+- Modify: `tests/test_attention_lifecycle.py` (reconcile tests; the probe/lock race's rival becomes a faithful winner)
+- Modify: `tests/test_cli_workspace_requests.py` (the scan-seam reproduction of #1616)
+
+**Interfaces:**
+- Consumes: `lifecycle._held_disposition_targets` (U3-SUB.2), `append_explicit_event_batch`, `state.workspace_lock` (re-entrant on the same thread)
+- Produces: `compact_resolved_cards(...) -> dict` gains `"released": list[str]` (sorted vault-relative posix paths, `[]` when nothing was reconciled), carried through the scan payload's `inbox_compaction`. No new event type, no signature change, no new operation.
+
+> **U3-SUB.4 as built (2026-08-01).** Mechanics as stated above. Seven things the
+> task text left to the implementer:
+>
+> 1. **The row is `_reconcile_row`, not `_release_row` with an empty `outputs`.**
+>    Same event type — the fold reads one transition and there is only one, the path
+>    is free — but no `outputs` key at all: the archival row's `outputs` names the
+>    digest that now holds the card, and this card was not filed anywhere. `target_id`
+>    alone keeps it in scope for an `inbox/**` reader, because `_journal_paths`
+>    (`engine/api.py:1064`) sweeps `target_id` as well as `outputs`.
+> 2. **`actor=JOURNAL_ACTOR`, not `COMPACTION_ACTOR`.** The two constants are the
+>    same string `"integrity"` for opposite reasons, so the choice is documentation
+>    rather than behaviour (mutation M4, below, is equivalent by construction). The
+>    reason that applies here is the disposition row's: the runtime is the author of
+>    the row and of nothing it describes. The reason text stops at *that* the removal
+>    happened outside the runtime — `inbox/**` is writable by the PI's hand, a `git
+>    restore` and an adapter alike, no observer saw which, and the journal forbids
+>    UPDATE and DELETE, so naming one would be U3-SUB.1's Critical again.
+> 3. **Occupancy is observed, never inferred.** A held path that still carries a file
+>    is left alone whatever the file is (`.exists()`, so a name occupied by anything
+>    is not free). Releasing an occupied path is the catastrophic direction: a
+>    `deferred` card is a permanent resident nothing archives, so a wrongly released
+>    path would re-journal its disposition on every review-gated write, permanently
+>    and undeletably.
+> 4. **Before the unlinks is load-bearing**, as the task says. Taken after them the
+>    diff reads every card this run archived as gone and writes each a second release
+>    row claiming it was removed outside the runtime — false, about the one removal
+>    the runtime did cause.
+> 5. **The race fixture's rival became faithful.**
+>    `test_a_tail_archived_between_the_probe_and_the_lock_is_not_archived_twice`
+>    simulated a winner that unlinked a card and wrote no release row. That state is
+>    now exactly the reconcile's trigger, and no real winner can produce it (release
+>    row first, then the unlink, which U3-SUB.2 pinned). The rival now writes its row
+>    before unlinking, and the assertion sharpens from "no release rows" to "the
+>    winner's row and nothing of the loser's".
+> 6. **Two paths, two pins.** The early-return reconcile and the in-lock reconcile
+>    are covered by disjoint tests: removing either fails only its own (M5/M6).
+> 7. **`released` is sorted.** A set's iteration order would reach the scan payload
+>    and the journal batch, so the N>1 test pins the order as well as the count.
+>
+> **Declared, not fixed.**
+> - **A successor raised onto a held path before any scan sees the gap keeps the
+>   hold.** The reconcile heals what it can observe, and the journal row carries no
+>   card identity — `target_id` is a path — so "same path, different card" is
+>   unobservable by construction. That successor's disposition is still lost, and the
+>   path then heals the old way when compaction archives it. Closing this needs card
+>   identity in the disposition row, which is a format change to an append-only log.
+> - **`_uncommittable` still precedes the in-lock reconcile**, so a vault that has
+>   something to archive and a momentarily unusable git defers its reconcile to the
+>   next scan. The early-return path has no git check at all, which is where a
+>   deleted-card vault lands anyway.
+> - **The gate does not reconcile**, per the rejection above. A poisoned path is
+>   repaired at scan cadence, not at write cadence.
+> - **The invariant remains unenforced.** "Every code path that removes an
+>   `inbox/*.md` card owes a release row" is still prose; what changed is that the
+>   paths *outside* `src/` — the PI, git, an adapter — no longer owe one, because the
+>   scan now observes them.
+>
+> **Mutation proofs (11 applied, restored after each; suite = the 61-test
+> `tests/test_attention_lifecycle.py` plus the new CLI test for M5/M6).** Killed:
+> M1 reconcile moved after the unlink loop (1 failure, the double-release test
+> alone); M2 the fold replaced by an order-blind "disposed and not on disk" set (2:
+> the once-not-per-tick test and the faithful-rival race); M3 occupancy check dropped
+> (14, including all three `still carries a card` cases); M5 early-return reconcile
+> removed (5, including the CLI seam test, and *not* the in-lock test); M6 in-lock
+> reconcile removed (1, the in-lock test alone); M7 the row borrows `ARCHIVE_REASON`
+> (2); M8 the row carries `outputs` (1); M9 `sorted` dropped (1). **Survivors, all
+> three judged intentional:** M4 `JOURNAL_ACTOR` → `COMPACTION_ACTOR` — the two
+> constants are the same string, so no test can distinguish them and the choice is
+> documentation (see 2); M10 the reconcile moved *above* the in-lock
+> `journal_unattributed_dispositions` — order-independent by construction, since a
+> card on a held path either exists (the reconcile skips it) or does not (journaling
+> has nothing to read), and the module makes no claim about it; M11 `.exists()` →
+> `.is_file()` — differs only when a directory or a dangling symlink occupies a
+> card's name, which no fixture produces and neither `inbox.py` writer can create.
+> `.exists()` is kept as the conservative reading of "occupied" and left unpinned
+> rather than pinned to an arbitrary state.
+
+**Steps:**
+
+- [x] Verify the framing before building on it: `grep -rn "fingerprint" src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py` (empty), `bundle_roots` in `workspace_seed/.memoria/schemas/folders.yaml` (no `inbox`), and the `is_file()` guard in `_pi_edit_targets`.
+- [x] Write the reconcile tests red first (`tests/test_attention_lifecycle.py`): held + missing → released with the successor's close journaled after it; released once, not per scan tick; held + occupied → never released, parametrized over `resolved`/`deferred`/`open` with the release rows each state legitimately produces; a card archived in the same run released once, by the archival row; N>1 vanished paths; the row's own shape. Plus the scan-seam reproduction in `tests/test_cli_workspace_requests.py` (a `deferred` card journaled, deleted, then re-raised).
+- [x] Implement `RECONCILE_REASON`, `_reconcile_row`, `_reconcile_released_paths`, and the two call sites; extend the module and `_held_disposition_targets` docstrings; add `released` to `cli._compact_resolved_inbox`'s error payload.
+- [x] `ruff format` the four files; `python -m pytest tests/test_attention_lifecycle.py` green.
+- [x] Mutation-test the ordering and state claims in both directions; restore each.
+- [x] Run the gate: `python scripts/verify` — `verify: OK`.
+- [ ] Commit:
+
+```
+git add src/memoria_vault/runtime/subsystems/lib/lifecycle.py src/memoria_vault/cli.py tests/test_attention_lifecycle.py tests/test_cli_workspace_requests.py docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md
+git commit -m "fix(attention): release a held inbox path whose card was removed outside the runtime (closes #1616)
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+```
+
 # U3-ENG — Engine-side view endpoints (`GET /v1/views/attention`)
 
 Section of the composite U3/U4/BOOT implementation plan. Repo: `/home/eranr/memoria-vault`
