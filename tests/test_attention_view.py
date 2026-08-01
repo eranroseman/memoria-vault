@@ -466,6 +466,10 @@ def test_attention_view_ages_cards_from_created(workspace: Path) -> None:
     unparseable = _write_view_card(
         workspace, "unparseable", loudness="alert", created="last Tuesday"
     )
+    # A hand-edited future date is the one input that makes age negative. It is
+    # fixtured rather than clamped because it is where this producer's order and
+    # the plugin's `sortCards` disagree -- see the plan amendment.
+    future = _write_view_card(workspace, "future", loudness="alert", created=_days_ago(-3))
 
     payload = api.read_attention_view(workspace)
     cards = {card["ref"]: card for card in payload["view"]["blocks"]}
@@ -476,8 +480,13 @@ def test_attention_view_ages_cards_from_created(workspace: Path) -> None:
     assert (cards[today]["age_s"], cards[today]["age_label"]) == (0, "0d")
     assert (cards[undated]["age_s"], cards[undated]["age_label"]) == (0, "")
     assert (cards[unparseable]["age_s"], cards[unparseable]["age_label"]) == (0, "")
+    assert (cards[future]["age_s"], cards[future]["age_label"]) == (-259_200, "-3d")
     assert "raised_at" not in cards[undated]
     assert cards[unparseable]["raised_at"] == "last Tuesday"
+    # The engine orders on the full `created` string, so the future card sorts
+    # ahead of the undated sentinel; the plugin's day-granular `age_s` puts it
+    # behind every `age_s == 0` card instead.
+    assert _refs(payload) == [aged, today, future, undated, unparseable]
 
 
 def test_attention_view_reads_unquoted_yaml_date_scalars(workspace: Path) -> None:
@@ -517,6 +526,9 @@ def test_attention_view_summary_returns_cheap_counts(
     _write_view_card(workspace, "alerting", loudness="alert", created=_days_ago(9))
     _write_view_card(workspace, "noticed", loudness="notice", created=_days_ago(9))
     _write_view_card(workspace, "noticed-too", loudness="notice", created=_days_ago(8))
+    # A hand-edited card with no band at all: the poll still has to bucket it,
+    # and the pill renders whatever key it is given.
+    _write_view_card(workspace, "unbanded", loudness="", created=_days_ago(8))
     _write_view_card(workspace, "closed", loudness="alert", created=_days_ago(9), status="resolved")
 
     monkeypatch.setattr(
@@ -528,6 +540,9 @@ def test_attention_view_summary_returns_cheap_counts(
             {"name": "SET_KEY", "class": "required-for-operation", "status": "set"},
             {"name": "OPTIONAL_KEY", "class": "enhancing", "status": "unset"},
             {"name": "", "class": "required-for-operation", "status": "unset"},
+            # A row with no `name` key at all -- one step past the blank one, and
+            # the difference between dropping it and nagging about "None".
+            {"class": "required-for-operation", "status": "unset"},
         ],
     )
     monkeypatch.setattr(api, "now_iso", lambda: "2011-02-03T04:05:06Z")
@@ -546,8 +561,8 @@ def test_attention_view_summary_returns_cheap_counts(
     }
     assert payload["ok"] is True
     assert payload["api_version"] == api.READ_API_VERSION
-    assert payload["open"] == 4
-    assert payload["by_loudness"] == {"block": 1, "alert": 1, "notice": 2}
+    assert payload["open"] == 5
+    assert payload["by_loudness"] == {"block": 1, "alert": 1, "notice": 2, "": 1}
     assert "view" not in payload
     assert payload["as_of"] == "2011-02-03T04:05:06Z"
     assert payload["engine_version"] == "9.9.9-probe"
@@ -563,6 +578,22 @@ def test_attention_view_summary_returns_cheap_counts(
     assert "tension" not in payload["link_relations"]
     # Sorted, so the pill's nag lists the same names in the same order every poll.
     assert payload["missing_required_credentials"] == ["ANOTHER_KEY", "MODEL_KEY"]
+
+
+def test_attention_view_summary_derives_link_relations_from_the_edge_roster(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Asserting today's six proves nothing a literal six would not also satisfy.
+
+    The roster is the one summary field a *different* plan owns: when the graph
+    section activates a seventh relation, an engine that froze the six would keep
+    the plugin's link picker offering six with every suite green.
+    """
+    monkeypatch.setattr(api, "LINK_RELATIONS", frozenset({"zeta", "alpha", "mu"}))
+
+    payload = api.read_attention_view(workspace, summary=True)
+
+    assert payload["link_relations"] == ["alpha", "mu", "zeta"]
 
 
 def test_attention_view_summary_stamps_the_running_engine_and_clock(workspace: Path) -> None:
@@ -627,14 +658,29 @@ def test_attention_honesty_fields_pin_the_wire_names() -> None:
     )
 
 
-def test_attention_view_block_kinds_are_all_known_to_the_plugin_renderer(
+def _js_function(source: str, name: str) -> str:
+    """Return one top-level `viewspec.js` function's source.
+
+    Chunking on column-zero `function` is enough for that module's style and
+    fails loudly if the name ever moves, which is the point: a silently empty
+    match would make every subset assertion below vacuous.
+    """
+    for chunk in re.split(r"^function ", source, flags=re.MULTILINE):
+        if chunk.startswith(f"{name}("):
+            return chunk
+    raise AssertionError(f"viewspec.js has no top-level function {name}")
+
+
+def test_attention_view_payload_matches_what_the_plugin_renderer_reads(
     workspace: Path,
 ) -> None:
-    """Contract 3: the pane renders whatever the engine emits.
+    """Contract 3, both halves: the kinds it dispatches and the fields it reads.
 
-    `viewspec.js` dispatches on `kind` and falls through to a labeled unknown
-    box, so an engine-only kind would ship a payload the pane cannot draw. The
-    plugin's own catalog and rank map are parsed here rather than retyped.
+    Comparing the two sides' declared catalogs is not enough -- a renderer that
+    renames its read of `kind_line` draws every card with a blank kind line, no
+    unknown-block box, nothing logged, and green suites on both sides. So this
+    parses `renderBlock`'s `switch` (the mechanism, not the declaration) and
+    `renderCard`'s `block.<field>` reads, and holds the payload to both.
     """
     inbox.write_proposal(
         workspace, "candidate", "Capture", "act", "for", "against", "tip", "likely", "sweep"
@@ -644,22 +690,40 @@ def test_attention_view_block_kinds_are_all_known_to_the_plugin_renderer(
     catalog = json.loads(
         re.search(r"KNOWN_BLOCK_KINDS = (\[[^\]]*\])", source).group(1).replace("'", '"')
     )
-    plugin_rank = json.loads(
-        re.sub(
-            r"(\w+):",
-            r'"\1":',
-            re.search(r"LOUDNESS_RANK = (\{[^}]*\})", source).group(1),
+    dispatched = set(re.findall(r'case "([^"]+)":', _js_function(source, "renderBlock")))
+    card_reads = set(
+        re.findall(
+            r"\bblock\.(\w+)",
+            _js_function(source, "renderCard") + _js_function(source, "loudnessClass"),
         )
     )
+    plugin_rank = json.loads(
+        re.sub(r"(\w+):", r'"\1":', re.search(r"LOUDNESS_RANK = (\{[^}]*\})", source).group(1))
+    )
+    fallback_band = re.search(r"LOUDNESS_RANK\.(\w+) \+ 1", source)
 
     payload = api.read_attention_view(workspace)
     emitted = set()
     for card in payload["view"]["blocks"]:
         emitted.add(card["kind"])
         emitted.update(child["kind"] for child in card["blocks"])
+    # The proposal card is the one that carries every present-only field, so it
+    # is the only card that can answer for the whole read set.
+    proposal = next(card for card in payload["view"]["blocks"] if card["kind_line"] == "candidate")
 
     assert emitted == {"card", "evidence-list", "text", "action-row"}
-    assert emitted <= set(catalog)
+    # Dispatchable, not merely cataloged: renaming a `case` label fails here.
+    assert emitted <= dispatched
+    assert dispatched == set(catalog)
+    # Every field the card renderer reads is a field this producer emits. The
+    # floor keeps the subset from passing vacuously if the regex stops matching.
+    assert {"kind_line", "title", "loudness", "ref", "blocks"} <= card_reads
+    assert card_reads <= set(proposal), sorted(card_reads - set(proposal))
     # Both halves sort by band; a divergence would order the pane differently
     # from the payload it was handed.
     assert plugin_rank == api.ATTENTION_LOUDNESS_RANK
+    # ... and both must rank an unrecognized band after every known one. The two
+    # sides spell that fallback differently (`len(map)` here, `quiet + 1` there),
+    # so a fifth band would silently tie unknown with it on the plugin side.
+    assert fallback_band is not None, "viewspec.js no longer ranks unknown from LOUDNESS_RANK"
+    assert plugin_rank[fallback_band.group(1)] + 1 == len(api.ATTENTION_LOUDNESS_RANK)

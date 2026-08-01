@@ -9280,43 +9280,108 @@ below is its canonical body, with the one hoist recorded in item 1.
    added to the writer without a rank fails. A separate fixture reaches every
    band through its real writer (`write_proposal` defaults to `notice`,
    the commonest card in the queue), so a rank swap cannot pass.
-3. **One cross-language conformance test.** `viewspec.js` is the producer of the
-   block-shape contract (Cross-section contract 3) and the only consumer that
-   draws it. `test_attention_view_block_kinds_are_all_known_to_the_plugin_renderer`
-   parses `KNOWN_BLOCK_KINDS` and `LOUDNESS_RANK` out of `viewspec.js` and
-   asserts every kind this producer emits — nested kinds included — is
-   dispatchable, and that both halves rank loudness identically. The recurring
-   failure it prevents: engine and plugin drift, and the pane either draws an
-   unknown-block box or orders the queue differently from the payload it was
-   handed, with green suites on both sides. It is not U3-ENG.5's
-   `VIEW_BLOCK_KINDS` assertion, which stays inside Python and stays owed.
-4. **Knowingly unfixtured — four, each provably equivalent.** Every survivor of
-   a 54-mutation sweep of the new code, with its equivalence proof:
-   `str(card["loudness"] or "")` (both call sites) — `_attention_card` already
-   normalizes every falsy loudness to `""`, so no input reaches the `or`;
-   `str(card["body_data"]["text"])` and `str(card["path"])` — `split_frontmatter`
-   returns a `str` body and `as_posix()` a `str` path, so neither coercion has a
-   non-`str` input; and the `card["path"]` tiebreak in `_attention_view_sort_key`
-   — `_attention_cards` already returns path-sorted cards and `list.sort` is
-   stable, so removing the component cannot reorder anything *today*. The
-   tiebreak is kept deliberately: it makes the total order a property of the
-   sort key rather than of an upstream glob's incidental ordering, which is
-   exactly the coupling a refactor of `_attention_cards` would break silently.
-5. **`_attention_card`'s projection read is left alone.** This slice consumes
+3. **One cross-language conformance test — kinds *and* field names.**
+   `viewspec.js` is the producer of the block-shape contract (Cross-section
+   contract 3) and the only consumer that draws it, so
+   `test_attention_view_payload_matches_what_the_plugin_renderer_reads` holds
+   this payload to three things parsed out of that file: the `case` labels of
+   `renderBlock`'s `switch` (the dispatch mechanism, not the
+   `KNOWN_BLOCK_KINDS` declaration, which is separately asserted equal to it);
+   every `block.<field>` read in `renderCard`/`loudnessClass`, which must be a
+   subset of the emitted card's keys behind a five-name floor so the subset can
+   never pass vacuously; and the `LOUDNESS_RANK` map plus the *expression* of
+   its unknown-band fallback. Comparing only the two declared catalogs was the
+   weaker earlier form and missed a whole class: a renderer that renames its
+   read of `kind_line` or `title` draws every card with that line blank — no
+   unknown-block box, nothing logged, green suites on both sides. Confirmed by
+   mutation: renaming either read, renaming a `case` label, or changing the
+   fallback to `-1` or to `notice + 1` each fails this test now and none did
+   before. What this test does *not* own is that a dispatched kind renders
+   anything sensible — that chain closes in
+   `packages/memoria-obsidian/scripts/test-viewspec.mjs` (which loops the
+   catalog through `renderBlock` and asserts node text and attributes) run
+   inside pytest by `tests/test_memoria_obsidian_package.py`. It is also not
+   U3-ENG.5's `VIEW_BLOCK_KINDS` assertion, which stays inside Python and stays
+   owed.
+4. **Knowingly unfixtured — five, all *equivalent-until*, none equivalent-forever.**
+   Survivors of a 57-mutation sweep of the new code, with the collaborator each
+   depends on. Stating that dependency is the point: every one of these is
+   equivalent only while some function this slice does not own keeps its current
+   behaviour, so "provably equivalent" here always means "given today's
+   collaborator", never "no input could distinguish them".
+   - `str(card["loudness"] or "")` (both call sites),
+     `str(card["body_data"]["text"])`, and `str(card["path"])` — all three rest
+     on `_attention_card`, which normalizes falsy loudness to `""` and builds
+     `body_data` from `split_frontmatter`'s `str` body and `path` from
+     `as_posix()`. Kept as defensive coercions precisely *because* that
+     collaborator is not ours to hold still.
+   - The `card["path"]` tiebreak in `_attention_view_sort_key` —
+     `_attention_cards` already returns path-sorted cards and `list.sort` is
+     stable, so removing it cannot reorder anything today. Kept so the total
+     order is a property of the sort key rather than of an upstream glob's
+     incidental ordering.
+   - The `or ""` in the *value* half of the `missing_required_credentials`
+     comprehension — the filter clause already requires
+     `str(row.get("name") or "")` to be truthy, so by the time the value is
+     built `row.get("name")` cannot be absent or blank. Mutating the filter
+     clause instead, or both halves, is killed by a report row that carries no
+     `name` key at all.
+   - Reported by review and confirmed: `len(ATTENTION_LOUDNESS_RANK)` → the
+     literal `4` also survives, and is equivalent-until in the sharpest sense —
+     it breaks the moment a fifth band lands. No fixture can kill it without
+     changing the constant under test, but item 3's fallback-expression
+     assertion now fails the instant a fifth band is added to either side, which
+     is when the divergence would otherwise become invisible.
+5. **Engine order and plugin `sortCards` diverge on one input, deliberately
+   fixtured rather than silently equal.** They agree for every non-future card:
+   the engine sorts on the full `created` string ascending, the plugin on
+   `age_s` descending, and `Array.prototype.sort` is stable over the order the
+   engine already produced. A hand-edited *future* `created` breaks the
+   agreement — `age_days` goes negative, so the engine sorts the card ahead of
+   the undated `"9999-12-31"` sentinel while the plugin sorts it behind every
+   `age_s == 0` card. `test_attention_view_ages_cards_from_created` fixtures it
+   (`age_s == -259_200`, `age_label == "-3d"`) and pins the engine's order, so
+   the behaviour is recorded rather than assumed. Clamping the age at zero was
+   rejected here: the reconciliation amendment fixes the formula, and the
+   reconciliation belongs to whichever of U3-PLUG or V2 owns the queue ordering,
+   not to this producer slice.
+6. **Three more declared symbols and one key died with Curate.** U3-ENG.2's
+   Produces line still names `ATTENTION_PROPOSAL_KINDS`, `ATTENTION_CARD_ACTIONS`,
+   and `ATTENTION_PROPOSAL_ACTION`, and gives the action row a `ref` key. None
+   is produced. The reconciliation amendment removed the generic Curate button,
+   which was the only reason a row differed by card kind, so there is no
+   proposal-kind set and no per-kind action pair to hold; its canonical row
+   carries `id`, `kind`, and `actions` only, and the target path travels inside
+   each action's `payload.target_id`. Item 1 hoisted `ATTENTION_HONESTY_FIELDS`
+   because a real consumer contract still needed a name; these four have no
+   consumer and are recorded dead rather than resurrected. The V2 plan's
+   cross-reference to "U3-ENG's Produces"
+   (`2026-07-16-v2-evidence-review.md:1584-1590`) names only surviving symbols,
+   so nothing downstream breaks.
+7. **`_attention_card`'s projection read is left alone.** This slice consumes
    `_attention_cards`; it does not touch the raw
    `frontmatter.get("projection") != "attention"` comparison or the bare
    `read_text(encoding="utf-8")` beside it. Both are issue #1617's, and adding a
    fourth spelling of the comparison here would make that issue worse. A
    non-UTF-8 file in `inbox/` therefore raises out of this view exactly as it
    already raises out of `read_attention`.
-6. **The three `Commit:` boxes stay unticked.** The slice is one commit by the
+8. **`link_relations` is proved derived, not merely correct today.** Asserting
+   the served roster equals `sorted(LINK_RELATIONS)` is satisfied by any
+   producer that emits today's six, so a frozen literal passed the whole gate.
+   `test_attention_view_summary_derives_link_relations_from_the_edge_roster`
+   monkeypatches `api.LINK_RELATIONS` to a sentinel roster and asserts the
+   payload follows it, the same shape already used for `__version__`,
+   `now_iso`, and `credential_report`. This is the field graph ERP-A.5 pinned to
+   this slice: a seventh relation must reach the plugin's link picker through
+   the payload, and nothing else in the suite would have noticed if it did not.
+9. **The three `Commit:` boxes stay unticked.** The slice is one commit by the
    reconciliation amendment, and the executing session was directed to leave
    committing to its caller. Every other box below is ticked against the atomic
    slice's equivalent, not against its superseded literal body: the drafted flat
    assertions, the per-task red stages, and the drafted three-then-five-then-six
    test counts are drafting history. What actually ran is one red stage (every
    test failing on the absent attribute), one implementation, and one green
-   stage of 20 tests in `tests/test_attention_view.py`.
+   stage of 21 tests in `tests/test_attention_view.py`.
 
 ---
 
