@@ -81,6 +81,52 @@ def test_a_closed_card_is_journaled_without_naming_an_author(tmp_path: Path) -> 
     assert events[0]["resolution"] == "resolved"
 
 
+def test_every_closed_card_is_journaled_not_just_the_first(tmp_path: Path) -> None:
+    """One batch, N rows -- a truncated batch clears the rest silently.
+
+    The rows go out through a single `append_explicit_event_batch`, so nothing
+    downstream would notice a comprehension that dropped cards after the first;
+    the dispositions would just never be recorded, which is the silent clear this
+    journaling exists to remove.
+    """
+    _write_card(tmp_path, "alert-one.md", "resolved")
+    _write_card(tmp_path, "alert-two.md", "resolved", "resolution_outcome: reject\n")
+    _write_card(tmp_path, "alert-three.md", "deferred")
+
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+
+    assert {event["target_id"] for event in journaled} == {
+        "inbox/alert-one.md",
+        "inbox/alert-two.md",
+        "inbox/alert-three.md",
+    }
+    assert {event["target_id"] for event in _dispositions(tmp_path)} == {
+        "inbox/alert-one.md",
+        "inbox/alert-two.md",
+        "inbox/alert-three.md",
+    }
+
+
+def test_a_vault_with_no_closed_card_never_takes_the_workspace_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The deciding read moved inside the lock; the frontmatter scan stayed outside.
+
+    This runs on every gated write, so if the scan moved in too, every such write
+    would contend on the workspace lock to discover there was nothing to do.
+    """
+    _write_card(tmp_path, "alert-open.md", "open")
+    taken = []
+    real_lock = state.workspace_lock
+    monkeypatch.setattr(
+        state, "workspace_lock", lambda vault: (taken.append(vault), real_lock(vault))[1]
+    )
+
+    assert lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine") == []
+
+    assert taken == []
+
+
 def test_journaling_is_idempotent(tmp_path: Path) -> None:
     _write_card(tmp_path, "alert-stop.md", "resolved")
     lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
