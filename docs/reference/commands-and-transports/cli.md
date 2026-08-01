@@ -165,8 +165,9 @@ This roster mirrors the live argparse tree:
 Run `memoria <command> --help` for exact flags.
 
 `memoria new note` accepts `--description` plus `--body` or `--file`, optional
-`--mode claim|question|definition|work`, `--work-id` when `--mode work` is
-selected, and a repeatable `--tag` (may be passed multiple times). `memoria new
+`--mode claim|question|definition|work`, `--work-id` to link the note to a
+source Work (required when `--mode work`), and a repeatable `--tag` (may be
+passed multiple times). `memoria new
 hub` accepts `--description` plus optional `--body`;
 `memoria new project` accepts `--description` plus optional `--direction`. The
 generated files include the same frontmatter defaults and body heading shape as
