@@ -24,15 +24,23 @@ FORBIDDEN_GLOBS = (
     "tests/**/test_*obsidian_plugin*.py",
 )
 SEED_OBSIDIAN = Path("src/memoria_vault/product/workspace_seed/.obsidian")
+# Deny by default: exact membership, never a prefix or glob. Widening it is a
+# deliberate act per file, which is the only reason it catches the payload it
+# exists to catch. The `memoria-obsidian/*.js` entries are the plugin's
+# hand-authored CommonJS modules (U3-PLUG); each was added when the entrypoint
+# began requiring it.
 ALLOWED_SEED_OBSIDIAN_FILES = {
     Path("app.json"),
     Path("community-plugins.json"),
     Path("core-plugins.json"),
     Path("graph.json"),
+    Path("plugins/memoria-obsidian/handshake.js"),
     Path("plugins/memoria-obsidian/main.js"),
     Path("plugins/memoria-obsidian/manifest.json"),
+    Path("plugins/memoria-obsidian/pill.js"),
     Path("plugins/memoria-obsidian/schema.js"),
     Path("plugins/memoria-obsidian/styles.css"),
+    Path("plugins/memoria-obsidian/viewspec.js"),
     Path("types.json"),
 }
 

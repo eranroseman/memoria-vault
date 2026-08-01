@@ -5,3 +5,18 @@
 .memoria-event-modal textarea {
   min-height: 7rem;
 }
+
+/* Status pill (U3 section 3) — tones map to the theme's semantic accents. */
+.memoria-pill-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+.memoria-pill-green { background-color: var(--color-green); }
+.memoria-pill-amber { background-color: var(--color-orange); }
+.memoria-pill-red { background-color: var(--color-red); }
+.memoria-pill-gray { background-color: var(--text-faint); }
+.memoria-pill-accent { background-color: var(--interactive-accent); }
+.memoria-pill-text { font-variant-numeric: tabular-nums; }

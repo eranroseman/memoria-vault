@@ -442,6 +442,26 @@ test("a card missing age_s sorts last within its band, not at random", () => {
   );
 });
 
+// Producer state: `created` is hand-editable frontmatter, so a date in the
+// future makes `age_s` negative -- the one input on which this comparator and
+// the engine's used to disagree (U3-PLUG.7 reconciliation, 2026-08-01). The
+// fixture is the engine's own order from
+// `test_attention_view_ages_cards_from_created`, plus a misbanded card at the
+// front so an inert comparator cannot pass by leaving the array alone.
+test("a future-dated card keeps the engine's row order, not a younger-than-new one", () => {
+  const cards = [
+    { ref: "quiet", loudness: "quiet", age_s: 0 },
+    { ref: "aged", loudness: "alert", age_s: 259200 },
+    { ref: "today", loudness: "alert", age_s: 0 },
+    { ref: "future", loudness: "alert", age_s: -259200 },
+    { ref: "undated", loudness: "alert", age_s: 0 },
+  ];
+  assert.deepEqual(
+    sortCards(cards).map((card) => card.ref),
+    ["aged", "today", "future", "undated", "quiet"],
+  );
+});
+
 test("moveSelection clamps j/k", () => {
   assert.equal(moveSelection(3, 0, "j"), 1);
   assert.equal(moveSelection(3, 2, "j"), 2);

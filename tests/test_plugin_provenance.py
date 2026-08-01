@@ -31,6 +31,35 @@ def test_plugin_scope_doctor_allows_ring1_view_preference_files(tmp_path):
     assert doctor.check(root) == []
 
 
+def test_plugin_scope_doctor_still_denies_an_unlisted_memoria_obsidian_file(tmp_path):
+    """The allowlist stayed deny-by-default after U3-PLUG widened it.
+
+    It was widened once, from four files to seven, to let the plugin ship the
+    CommonJS modules its entrypoint requires. A widening implemented as a
+    prefix or glob over `plugins/memoria-obsidian/` would have passed every
+    other test in this file while silently admitting anything dropped in that
+    directory forever after -- which is the payload this doctor exists to
+    refuse. So the seeded plugin directory is rebuilt with exactly its allowed
+    files plus one interloper, and only the interloper may be reported.
+    """
+    root = tmp_path / "repo"
+    seed_obsidian = root / "src/memoria_vault/product/workspace_seed/.obsidian"
+    for rel in sorted(doctor.ALLOWED_SEED_OBSIDIAN_FILES):
+        target = seed_obsidian / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("", encoding="utf-8")
+    interloper = seed_obsidian / "plugins/memoria-obsidian/relate.js"
+    interloper.write_text("// not yet allowed\n", encoding="utf-8")
+
+    findings = doctor.check(root)
+
+    assert [finding.split(":", 1)[0] for finding in findings] == [
+        "src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/relate.js"
+    ]
+    interloper.unlink()
+    assert doctor.check(root) == []
+
+
 def test_plugin_scope_doctor_flags_removed_payloads(tmp_path):
     root = tmp_path / "repo"
     (root / "src/memoria_vault/product/workspace_seed/.obsidian/plugins/extra").mkdir(parents=True)

@@ -10795,6 +10795,150 @@ them is the command repair recorded in item 1.
    have put the string `"undefined"` in `data-payload` for the pane's click
    handler to choke on. They are now covered by item 7's last entry.
 
+### Execution amendment — U3-PLUG.6 as built, and why .7 stopped (2026-08-01)
+
+Recorded by the executor of U3-PLUG.6. It governs U3-PLUG.6 and U3-PLUG.7's
+first checkbox only; every other U3-PLUG.7–.11 checkbox and body is unchanged.
+
+1. **U3-PLUG.10's seed half landed here, because .6 could not ship without
+   it.** U3-PLUG.6's `main.js` requires `./handshake` and `./pill` by relative
+   path. Merging .6 with the seed unsynced leaves
+   `test_memoria_obsidian_seed_matches_release_artifacts` red; merging it with
+   the seed synced but the modules absent ships every freshly-inited vault an
+   entrypoint that throws MODULE_NOT_FOUND on the host's first load. There is
+   no third option that ships a working vault, so the seed enablement came
+   forward into this change.
+2. **The roster that actually mattered was not on anyone's list:
+   `src/memoria_vault/runtime/bundles.py`.** `BUNDLE_FILES["obsidian"]` is the
+   *writer* — `seed_bundles` copies exactly its tuple into a vault. The seed
+   directory is inert without it: `workspace_seed/` could hold all seven files
+   while a vault received four, and no file-list or byte-parity test would
+   notice, because they all compare the package to the seed and never ask what
+   `memoria init` wrote. Six rosters had to move together:
+
+   | roster | what it pins |
+   | --- | --- |
+   | `runtime/bundles.py` `BUNDLE_FILES["obsidian"]` | what `memoria init` writes |
+   | `scripts/checks/plugin_provenance_doctor.py` | what the seed tree may contain |
+   | `tests/test_installer_skeleton.py` | packaged seed contents |
+   | `tests/test_package_spine.py` | packaged seed contents |
+   | `tests/test_cli.py` (×2) | init file presence, `doctor --json` `bundle_files` |
+   | `tests/test_memoria_obsidian_package.py` | package↔seed byte parity |
+
+   `tests/test_agent_bundle.py` needed no edit and is the reason this was caught
+   in one step rather than in production: its
+   `test_bundle_files_registry_covers_every_packaged_bundle_file` already derives
+   the expected roster from the packaged tree and names U3-PLUG's `viewspec.js`
+   in its docstring as the case it was written for. It goes red the moment a
+   file joins the seed without joining `BUNDLE_FILES`.
+3. **Two proofs, not two assertions.** (a)
+   `test_memoria_obsidian_seeded_plugin_loads_every_module_it_requires` calls the
+   real `seed_bundles` into a temp vault and then really `require`s the written
+   `main.js` under node, stubbing only `obsidian` (the host's own module) via
+   `Module._load`; `child_process` and every relative sibling resolve normally,
+   so a module the vault did not receive raises MODULE_NOT_FOUND and the test
+   exits nonzero. Byte-equality between package and seed cannot make that claim.
+   Its coverage widens on its own: it fails today for `handshake.js`/`pill.js`
+   and will start covering `viewspec.js` the moment U3-PLUG.7 adds the require.
+   (b) `test_plugin_scope_doctor_still_denies_an_unlisted_memoria_obsidian_file`
+   rebuilds the seed tree with exactly the allowed files plus one interloper and
+   asserts only the interloper is reported, then that removing it returns the
+   doctor to clean. The allowlist stays **deny-by-default, exact membership** —
+   both the prefix-match and suffix-match weakenings are mutation-tested and die
+   in that test.
+4. **Golden regeneration, run last and fully accounted for.** 35 goldens changed,
+   `245 insertions / 140 deletions`, and every one of those 385 lines is one of
+   seven distinct changes repeated 35 times: three modified hashes
+   (`main.js`, `manifest.json`, `styles.css` — the files this task edited), three
+   added entries (`handshake.js`, `pill.js`, `viewspec.js` — newly seeded), and
+   `.memoria/vault.json`, whose `bundles.obsidian.files` receipt gained the three
+   new paths. Every value is identical across all 35 goldens, and no other path
+   in any golden moved. `schema.js` kept its pre-existing hash `14d90d94b619`,
+   confirming the untouched file was untouched.
+5. **U3-PLUG.7 stopped after its first checkbox.** Its second checkbox is the
+   post-SEAM.1 live HTTP proof, which "must stay green while the pane code below
+   is developed" and reuses U3-ENG.6's `live_server`/`_http_get`. SEAM.1 and
+   graph ERP-A.1–.5 have landed, but **U3-ENG.4/.5/.6 have not**: there is no
+   `views.attention` row in `engine/surface_contract.py`, no `/v1/views/attention`
+   route in `runtime/http_transport.py`, and no `live_server` fixture anywhere in
+   `tests/`. The 2026-07-29 nested-card amendment's item 5 already ordered
+   U3-ENG.4/.5/.6 before U3-PLUG.7. Writing the pane first would have shipped the
+   client half of an integration whose server half cannot be reached, so the pane,
+   its styles, its Node-mock assertions, and its command-roster entry are left
+   unstarted rather than stubbed.
+6. **`sortCards` reconciliation — ruled: clamp on the plugin side.** U3-PLUG.7's
+   first checkbox is discharged here. The engine sorts on `(rank, created or
+   "9999-12-31", path)`; `sortCards` sorts on `(rank, age_s descending)`, and
+   `age_s` is day-granular and goes negative for a hand-edited future `created`.
+   The two disagreed on exactly that card: the engine placed it ahead of the
+   undated sentinel, the plugin behind every `age_s == 0` card.
+   `sortCards` now clamps with `Math.max(0, Number(card.age_s) || 0)`.
+
+   Considered and rejected: (a) *delete the plugin sort and render payload order
+   verbatim* — the most single-source answer and the most code deleted, but it
+   also deletes the cross-language `LOUDNESS_RANK` conformance the plan spent
+   three review rounds building (`test_attention_view_payload_matches_what_the_
+   plugin_renderer_reads` asserts `plugin_rank == api.ATTENTION_LOUDNESS_RANK`),
+   and it makes the pane defenceless against an unsorted payload; (b) *record the
+   divergence as intended* — cheapest, but it leaves the pane showing a different
+   order from the CLI and the payload for a state a PI can produce by editing
+   frontmatter. The clamp is chosen because it is one expression, keeps the
+   defensive sort and its conformance pin, and makes the two orders provably
+   identical rather than merely close: for non-negative ages, descending `age_s`
+   *is* ascending `created` at day granularity, and every day-granular tie falls
+   back through a stable sort to the order the engine already chose. Clamping
+   says of a future date exactly what the undated card says — "age unknown" —
+   instead of "younger than new". The producer keeps the signed value: `age_s ==
+   -259_200` and `age_label == "-3d"` still ship, because the row must show the
+   PI that the date is wrong.
+7. **Tests added beyond the drafted `test.mjs` body.** The drafted body's mock
+   answers 200 to every request, so the 401 recovery ladder — the headline
+   feature of this task — had zero coverage, as did `probeStatus`, the non-401
+   error paths, `poll`'s degrade-to-stale, the credential/roster mapping,
+   `vaultPath`'s method-over-property precedence, the poll cadence's focus
+   wiring, `renderPill`'s `setText` fallback, all six `onPillClick`
+   remediations, and `connect`. Each is now fixtured from the producer state
+   that reaches it, and each was confirmed to fail under a mutation of that
+   branch alone. Three mock changes made that possible and are the only
+   departures from the drafted mock: `Notice` records its message instead of
+   being an inert `Base` (the pill wordings are fixed by this task, so they are
+   assertable), `requestUrl` consults a swappable responder, and
+   `registerDomEvent` records its `(target, event, handler)` triples. The
+   fixture's `by_loudness` is `{notice: 1, alert: 1}` rather than the drafted
+   `{notice: 2}`, so no other field in the payload equals `open`'s 2 — the
+   `open`/`open_count` mapping cannot pass by coincidence.
+8. **Mutation result: 54 of 55 killed, and the survivor was deleted rather than
+   fixtured.** The drafted Part 2 body reads
+   `const persistedSettings = (await this.loadData()) || {};`. Removing `|| {}`
+   changes nothing for any input — `Object.assign` skips a null or undefined
+   source, and every falsy primitive contributes no own enumerable property
+   either — so the guard could not change an outcome. On the precedent of the
+   U3-PLUG.1–.4 amendment's item 3, it is deleted with a comment recording why,
+   rather than left as a branch no test can reach. The first mutation round had
+   seven survivors (the `open` fallback, the 401 coordinate wipe, the handshake
+   error's message fallback, `hasFocus()` itself, the engine-missing retry, the
+   first poll inside `connect`, and the persisted-settings merge); all seven
+   were coverage gaps in the drafted body, and all seven now die.
+9. **Knowingly unfixtured, with the reason.** `execEngine`'s `String(stdout ||
+   "")` normalization is unreachable from a callback-based stub that can only
+   pass a string or a falsy value already refused by `parseHandshake`'s "stdout
+   is not JSON"; and `activateAttentionView` has no assertable effect until
+   U3-PLUG.7 registers the view, so only its no-leaf early return runs here.
+10. **Part 1's requires carry only what Part 1 uses.** The drafted header
+   destructures `AbstractInputSuggest` and `ItemView` from `obsidian` and
+   `formatAsOf` from `./pill`; each appears exactly once in the resulting
+   `main.js` — in the require itself. Their consumers are U3-PLUG.8, .7, and .7
+   respectively, and since U3-PLUG.7 did not execute here (item 3), shipping
+   them would leave three inert bindings in a repo that lints no JS. **U3-PLUG.7
+   must re-add `ItemView` and `formatAsOf`; U3-PLUG.8 must re-add
+   `AbstractInputSuggest`** — stated here because the comment in `main.js` is
+   easy to miss when the next executor is reading this plan rather than the code.
+   `activateAttentionView` and its `"memoria-attention"` literal *do* stay: they
+   are Part 5's live connected-pill click path, not a forward declaration.
+11. **`MIN_NODE_TESTS` is 42.** The reconciliation added one `test-viewspec.mjs`
+   case. `test.mjs` stays a single flat script (one `# tests` unit however many
+   assertions it carries), so the additions in item 5 do not move the floor.
+
 ---
 
 ### Task U3-PLUG.1: Switch the plugin test harness to `node --test`
@@ -11860,7 +12004,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 **Steps:**
 
-- [ ] Write the failing test — replace the body of `packages/memoria-obsidian/scripts/test.mjs` below the schema assertions (keep lines 1–31, the `validateEvent`/`sanitizeItemId` block, verbatim) with:
+- [x] Write the failing test — replace the body of `packages/memoria-obsidian/scripts/test.mjs` below the schema assertions (keep lines 1–31, the `validateEvent`/`sanitizeItemId` block, verbatim) with:
   ```js
   const requests = [];
   const originalLoad = Module._load;
@@ -12041,10 +12185,10 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     Module._load = originalLoad;
   }
   ```
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   Expected: `test.mjs` fails — `plugin.runHandshake is not a function`.
-- [ ] Write minimal implementation, part 1 — `packages/memoria-obsidian/main.js` header. Replace lines 1–15 with:
+- [x] Write minimal implementation, part 1 — `packages/memoria-obsidian/main.js` header. Replace lines 1–15 with:
   ```js
   // Obsidian-compatible CommonJS; hand-authored (no build step).
   const {
@@ -12082,7 +12226,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   const OPERATION_PATH = "/operation/run";
   ```
   (This deletes the stale "Generated by scripts/build.mjs" comment and the `TOKEN_KEY` constant.)
-- [ ] Part 2 — load current settings, then initialize lifecycle state. Replace
+- [x] Part 2 — load current settings, then initialize lifecycle state. Replace
   the first line of `onload()` with:
 
   ```js
@@ -12116,13 +12260,13 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     }
   ```
   and change the last line of `onload` from `this.updateStatus();` to `this.renderPill();`.
-- [ ] Part 3 — delete `setToken` (lines 86–99) and `token` (lines 101–106); in `saveSettings` (lines 81–84) drop the `hasToken` wrapping:
+- [x] Part 3 — delete `setToken` (lines 86–99) and `token` (lines 101–106); in `saveSettings` (lines 81–84) drop the `hasToken` wrapping:
   ```js
     async saveSettings() {
       await this.saveData(Object.assign({}, this.settings));
     }
   ```
-- [ ] Part 4 — replace `connect` (lines 133–153):
+- [x] Part 4 — replace `connect` (lines 133–153):
   ```js
     async connect() {
       this.respawnGate = createRespawnGate();
@@ -12140,7 +12284,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       }
     }
   ```
-- [ ] Part 5 — replace `getJson` / `postOperation` / `headers` / `updateStatus` (lines 302–349) with the client block:
+- [x] Part 5 — replace `getJson` / `postOperation` / `headers` / `updateStatus` (lines 302–349) with the client block:
   ```js
     vaultPath() {
       const adapter = this.app.vault.adapter || {};
@@ -12388,7 +12532,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   `rg -n '(this|this\.plugin)\.(getJson|updateStatus)\(' packages/memoria-obsidian/main.js`
   must print nothing: U3-CANVAS.5 consumes `authedJson`/`renderPill` too, so no
   compatibility alias may mask a dangling legacy call.
-- [ ] Part 6 — settings tab: replace the "Server URL" setting (lines 370–377) and the whole "Bearer token" setting (lines 378–393) with:
+- [x] Part 6 — settings tab: replace the "Server URL" setting (lines 370–377) and the whole "Bearer token" setting (lines 378–393) with:
   ```js
       new Setting(containerEl)
         .setName("Engine command")
@@ -12400,7 +12544,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
           }),
         );
   ```
-- [ ] Part 7 — `packages/memoria-obsidian/manifest.json`:
+- [x] Part 7 — `packages/memoria-obsidian/manifest.json`:
   ```json
   {
     "id": "memoria-obsidian",
@@ -12412,7 +12556,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     "isDesktopOnly": true
   }
   ```
-- [ ] Part 8 — append to `packages/memoria-obsidian/styles.css` (theme variables only, zero hardcoded colors):
+- [x] Part 8 — append to `packages/memoria-obsidian/styles.css` (theme variables only, zero hardcoded colors):
   ```css
   /* Status pill (U3 section 3) — tones map to the theme's semantic accents. */
   .memoria-pill-dot {
@@ -12429,7 +12573,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   .memoria-pill-accent { background-color: var(--interactive-accent); }
   .memoria-pill-text { font-variant-numeric: tabular-nums; }
   ```
-- [ ] Part 9 — update `tests/test_memoria_obsidian_package.py`: manifest equality block (lines 16–24) gets the new `description` and `"isDesktopOnly": True`; replace `test_memoria_obsidian_uses_memoria_operation_run_only` (lines 50–64) with:
+- [x] Part 9 — update `tests/test_memoria_obsidian_package.py`: manifest equality block (lines 16–24) gets the new `description` and `"isDesktopOnly": True`; replace `test_memoria_obsidian_uses_memoria_operation_run_only` (lines 50–64) with:
   ```python
   def _plugin_js_source() -> str:
       return "\n".join(
@@ -12461,10 +12605,10 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       assert "vault.delete(" not in source
       assert "adapter.write(" not in source
   ```
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` (all pass) and
   `python -m pytest tests/test_memoria_obsidian_package.py -v` — expected: everything green **except** `test_memoria_obsidian_seed_matches_release_artifacts` (seed is stale) — fixed next step.
-- [ ] Sync the seed and regenerate goldens:
+- [x] Sync the seed and regenerate goldens:
   ```
   cp packages/memoria-obsidian/main.js packages/memoria-obsidian/manifest.json \
      packages/memoria-obsidian/styles.css packages/memoria-obsidian/handshake.js \
@@ -12475,7 +12619,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   git diff --stat tests/fixtures/floor/goldens/
   ```
   Review the diff: only `files` hash entries under `.obsidian/plugins/memoria-obsidian/` may change.
-- [ ] Run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
+- [x] Run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 - [ ] Commit:
   `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/manifest.json packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
   `git commit -m "feat(obsidian): handshake client, in-memory token, six-state pill, 30s/2m poll loop` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -12517,7 +12661,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 **Steps:**
 
-- [ ] Reconcile queue order with the engine's, or record the divergence as
+- [x] Reconcile queue order with the engine's, or record the divergence as
   intended. Handed over by the U3-ENG.1/.2/.3 execution amendment (item 5),
   which pinned the engine side rather than guessing the client's: the engine
   orders on the full `created` string, `sortCards` on day-granular `age_s`, and
@@ -13164,8 +13308,22 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 ### Task U3-PLUG.10: Seed-parity roster extension + full gate
 
+> **Execution note (2026-08-01): the seed half of this task already landed
+> with U3-PLUG.6.** It had to — U3-PLUG.6's `main.js` requires `./handshake`
+> and `./pill`, so shipping .6 without the modules in the vault would have
+> given every freshly-inited vault an entrypoint that throws MODULE_NOT_FOUND.
+> The seed copies, the six rosters below, and the golden regeneration are done;
+> what remains for this task is the `relate.js` entry (blocked with U3-PLUG.5)
+> and the full-gate run. See the "U3-PLUG.6 as built" amendment, item 10.
+
 **Files:**
 - Modify: `tests/test_memoria_obsidian_package.py` (lines 31–35 artifact tuple; lines 26–28 file-presence asserts)
+- Modify: `src/memoria_vault/runtime/bundles.py` (`BUNDLE_FILES["obsidian"]` — the
+  **actual writer**; the seed directory is inert without it)
+- Modify: `scripts/checks/plugin_provenance_doctor.py` (`ALLOWED_SEED_OBSIDIAN_FILES`)
+- Modify: `tests/test_installer_skeleton.py`, `tests/test_package_spine.py`,
+  `tests/test_cli.py` (two rosters: the init file-presence asserts and the
+  `doctor --json` `bundle_files` list)
 
 **Interfaces:**
 - Produces: parity roster is now the closed set `("main.js", "schema.js", "manifest.json", "styles.css", "handshake.js", "pill.js", "viewspec.js", "relate.js")` — the seed and the release package are byte-identical across all eight; anyone adding a ninth plugin file must extend this tuple or parity will not protect it.
