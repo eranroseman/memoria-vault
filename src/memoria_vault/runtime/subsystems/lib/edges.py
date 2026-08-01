@@ -41,6 +41,16 @@ EDGE_RELATIONS = frozenset(
 )
 LINK_RELATIONS = EDGE_RELATIONS - {"tension"}
 
+# Graph-R11: which side of the argument each verb speaks for. The three
+# partition EDGE_RELATIONS exactly — tests/test_edges.py holds that, so a
+# seventh verb without a role fails there instead of defaulting to structure.
+# `qualifier` is structure, not challenge: EDGES spec section 4 defines it as
+# bounding a claim's scope or strength, which is also what ERP-C's
+# qualifier-regression semantics read it as.
+SUPPORT_RELATIONS = frozenset({"supports"})
+CHALLENGE_RELATIONS = frozenset({"contradicts", "rebuttal", "tension"})
+STRUCTURE_RELATIONS = frozenset({"warrant", "qualifier", "extends"})
+
 TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\]\]")
 
 _LINK_TARGET_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")

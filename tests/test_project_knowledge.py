@@ -602,6 +602,128 @@ def test_analyze_project_argument_reads_activated_relation_links(tmp_path: Path)
     }
 
 
+def _staged_argument_vault(tmp_path: Path, relations: list[str]) -> Path:
+    """Wire one checked note per entry of `relations` into the thesis component.
+
+    One edge per note, so the component's relation tally is exactly `relations`.
+    Callers pass three or more: the stage threshold is three, and a shorter
+    fixture only exercises the `developing` short-circuit and says nothing about
+    which role the verb carries.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    for index, relation in enumerate(relations):
+        _md(
+            tmp_path / f"notes/edge-{index}.md",
+            f"type: note\ncheck_status: checked\ntitle: Edge {index}\n"
+            f"links:\n  {relation}:\n    - notes/thesis.md\n",
+        )
+    return tmp_path
+
+
+def test_a_rebuttal_only_component_stages_contested_and_never_supported(
+    tmp_path: Path,
+) -> None:
+    """Three rebuttals are a challenged thesis, not a supported one (Graph-R11).
+
+    `rebuttal` is the challenge verb this seam can actually produce — `tension` is
+    outside `LINK_RELATIONS`, so no frontmatter fixture reaches the lens with one.
+    Before the recalibration this component reported `supported` /
+    `below-threshold` / `has_refutation: False`, all three at once.
+    """
+    vault = _staged_argument_vault(tmp_path, ["rebuttal", "rebuttal", "rebuttal"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["relation_count"] == 3
+    assert result["argument_stage"] == "contested"
+    assert result["displayed_confidence"] == "contested"
+    assert result["saturation_conditions"] == {
+        "mature_graph": True,
+        "has_support": False,
+        "has_refutation": True,
+    }
+    assert result["evidence_saturation"] == "unsaturated"
+
+
+def test_a_qualifier_only_component_stages_developing_as_structure_not_challenge(
+    tmp_path: Path,
+) -> None:
+    """`qualifier` bounds scope, so it neither supports nor challenges (Graph-R11).
+
+    The stage is read alongside both saturation sides in one payload: a component
+    that merely counted three edges would be indistinguishable from one whose
+    qualifiers were classified as challenge, and only `has_refutation is False`
+    separates them. `developing` is the derived value — no support edge, no
+    challenge edge, and the ruling forbids a fifth stage name.
+    """
+    vault = _staged_argument_vault(tmp_path, ["qualifier", "qualifier", "qualifier"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["relation_count"] == 3
+    assert result["argument_stage"] == "developing"
+    assert result["displayed_confidence"] == "below-threshold"
+    assert result["saturation_conditions"] == {
+        "mature_graph": True,
+        "has_support": False,
+        "has_refutation": False,
+    }
+
+
+def test_a_genuinely_supported_component_is_not_demoted_by_the_recalibration(
+    tmp_path: Path,
+) -> None:
+    """One `supports` plus structure at threshold stays `supported`.
+
+    The regression guard for the other direction: requiring a support edge must
+    not turn every mixed component into `developing`.
+    """
+    vault = _staged_argument_vault(tmp_path, ["supports", "extends", "extends"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["relation_count"] == 3
+    assert result["argument_stage"] == "supported"
+    assert result["displayed_confidence"] == "supported"
+    assert result["saturation_conditions"] == {
+        "mature_graph": True,
+        "has_support": True,
+        "has_refutation": False,
+    }
+
+
+def test_support_and_a_rebuttal_coexist_as_contested_without_masking_the_support(
+    tmp_path: Path,
+) -> None:
+    """Challenge wins the stage, but the support side stays visible in saturation.
+
+    Neither roster absorbs the other: `contested` is the stage and
+    `has_support` stays True, which is what makes this component `saturated`
+    while the rebuttal-only one above is not.
+    """
+    vault = _staged_argument_vault(tmp_path, ["supports", "rebuttal", "extends"])
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["relation_count"] == 3
+    assert result["argument_stage"] == "contested"
+    assert result["displayed_confidence"] == "contested"
+    assert result["saturation_conditions"] == {
+        "mature_graph": True,
+        "has_support": True,
+        "has_refutation": True,
+    }
+    assert result["evidence_saturation"] == "saturated"
+
+
 def test_analyze_project_argument_ignores_a_link_target_that_escapes_its_folder(
     tmp_path: Path,
 ) -> None:

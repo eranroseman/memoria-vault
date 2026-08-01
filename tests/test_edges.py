@@ -21,6 +21,39 @@ def test_link_relations_is_everything_except_tension() -> None:
     assert edges.LINK_RELATIONS == edges.EDGE_RELATIONS - {"tension"}
 
 
+def test_the_three_role_rosters_are_the_ruled_literals() -> None:
+    """Graph-R11's placement, spelled out rather than derived from the code."""
+    assert edges.SUPPORT_RELATIONS == frozenset({"supports"})
+    assert edges.CHALLENGE_RELATIONS == frozenset({"contradicts", "rebuttal", "tension"})
+    assert edges.STRUCTURE_RELATIONS == frozenset({"warrant", "qualifier", "extends"})
+
+
+def test_the_role_rosters_partition_edge_relations() -> None:
+    """A seventh verb with no role must fail here, not default silently to structure.
+
+    Union-equal plus a cardinality sum is disjointness: a verb landing in two
+    rosters keeps the union right while inflating the sum, and a verb landing in
+    none shrinks the union.
+    """
+    roles = (edges.SUPPORT_RELATIONS, edges.CHALLENGE_RELATIONS, edges.STRUCTURE_RELATIONS)
+    assert (
+        edges.SUPPORT_RELATIONS | edges.CHALLENGE_RELATIONS | edges.STRUCTURE_RELATIONS
+        == edges.EDGE_RELATIONS
+    )
+    assert sum(len(role) for role in roles) == len(edges.EDGE_RELATIONS)
+
+
+def test_tension_carries_a_challenge_role_though_no_frontmatter_can_author_it() -> None:
+    """The one role assignment no `links:` fixture can exercise downstream.
+
+    `_note_edges` iterates `LINK_RELATIONS`, so the argument lens never sees a
+    `tension` edge; its `concept_edges` consumers do, and this is where that
+    placement is held.
+    """
+    assert "tension" in edges.CHALLENGE_RELATIONS
+    assert "tension" not in edges.LINK_RELATIONS
+
+
 def test_schema_reexports_the_moved_names() -> None:
     assert schema.LINK_RELATIONS is edges.LINK_RELATIONS
     assert schema.parse_links is edges.parse_links
