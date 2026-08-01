@@ -36,7 +36,9 @@ from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.subsystems.lib.edges import (
+    CHALLENGE_RELATIONS,
     LINK_RELATIONS,
+    SUPPORT_RELATIONS,
     normalize_link_target,
     thesis_rel,
 )
@@ -3296,14 +3298,30 @@ def _project_argument_empty(project_rel: str, thesis_rel: str, finding: str) -> 
     }
 
 
+def _support_count(counts: dict[str, int]) -> int:
+    return sum(counts[relation] for relation in SUPPORT_RELATIONS)
+
+
+def _challenge_count(counts: dict[str, int]) -> int:
+    return sum(counts[relation] for relation in CHALLENGE_RELATIONS)
+
+
 def _argument_stage(counts: dict[str, int], relation_count: int) -> str:
+    """Stage the component by which roles its edges carry (Graph-R11).
+
+    A structure-only component at or above the threshold is `developing`: it has
+    no support edge, so it cannot be `supported`, and the ruling adds no fifth
+    stage for it.
+    """
     if relation_count == 0:
         return "cold-start"
     if relation_count < 3:
         return "developing"
-    if counts["contradicts"] > 0:
+    if _challenge_count(counts) > 0:
         return "contested"
-    return "supported"
+    if _support_count(counts) > 0:
+        return "supported"
+    return "developing"
 
 
 def _argument_findings(counts: dict[str, int], relation_count: int) -> list[dict[str, str]]:
@@ -3322,8 +3340,8 @@ def _argument_findings(counts: dict[str, int], relation_count: int) -> list[dict
 def _argument_saturation_conditions(counts: dict[str, int], relation_count: int) -> dict[str, bool]:
     return {
         "mature_graph": relation_count >= 3,
-        "has_support": counts["supports"] > 0,
-        "has_refutation": counts["contradicts"] > 0,
+        "has_support": _support_count(counts) > 0,
+        "has_refutation": _challenge_count(counts) > 0,
     }
 
 
@@ -3336,9 +3354,9 @@ def _argument_saturation(conditions: dict[str, bool], relation_count: int) -> st
 def _argument_confidence(counts: dict[str, int], relation_count: int) -> str:
     if relation_count < 3:
         return "below-threshold"
-    if counts["contradicts"] > 0:
+    if _challenge_count(counts) > 0:
         return "contested"
-    if counts["supports"] > 0:
+    if _support_count(counts) > 0:
         return "supported"
     return "below-threshold"
 
