@@ -32,8 +32,9 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.http_transport import _dispatch, make_http_server
 from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
-from tests.helpers import init_cli_workspace
+from tests.helpers import init_cli_workspace, write_checked_note
 
 VIEWSPEC_JS = (
     Path(__file__).resolve().parent.parent / "packages" / "memoria-obsidian" / "viewspec.js"
@@ -986,6 +987,35 @@ def _http(url: str, *, token: str | None = None, method: str = "GET") -> tuple[i
         return error.code, json.loads(error.read().decode("utf-8"))
 
 
+def _http_post(url: str, body: dict, token: str) -> tuple[int, dict]:
+    """POST with no `actor` argument, so this client cannot send one.
+
+    The signature is the assertion: the door's PI authority (contract 5) has to
+    come from the door, and a helper that could pass `actor` would let a green
+    test coexist with a client that supplies it.
+
+    The timeout is a worker's budget, not a reader's: this door runs the whole
+    operation inline -- frontmatter write, vault commit, journal append -- before
+    it answers, where `_http` above only reads. Measured at 1.5s per request on
+    an idle machine and 10s under a saturated one, so the 10s a read is given
+    would make this test fail for load rather than for behaviour.
+    """
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return response.status, json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        return error.code, json.loads(error.read().decode("utf-8"))
+
+
 UNAUTHORIZED = {"ok": False, "error": "unauthorized: missing or invalid bearer token"}
 
 
@@ -1096,3 +1126,64 @@ def test_live_server_attention_view_cannot_widen_the_startup_read_scope(
     assert summary_code == HTTPStatus.OK
     assert summary["open"] == 1
     assert summary["by_loudness"] == {"alert": 1}
+
+
+def test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension(
+    workspace: Path, live_server: str
+) -> None:
+    """The pane's own path, end to end: served roster in, PI-authored edge out.
+
+    The loop is derived from the HTTP summary rather than from a second
+    client-side roster, because the served list is exactly what the plugin's
+    relation control renders; the one direct `LINK_RELATIONS` assertion is what
+    pins the server as the graph's owner. `tension` is checked from both sides
+    -- never served, and refused when submitted anyway.
+    """
+    write_checked_note(workspace, "notes/source.md", "Source")
+    write_checked_note(workspace, "notes/target.md", "Target")
+    summary_code, summary = _http(
+        f"{live_server}/v1/views/attention?summary=true", token=LIVE_TOKEN
+    )
+
+    assert summary_code == HTTPStatus.OK
+    assert summary["link_relations"] == sorted(LINK_RELATIONS)
+    assert "tension" not in summary["link_relations"]
+    for relation in summary["link_relations"]:
+        body = {
+            "operation_id": "curate-note-link",
+            "payload": {
+                "source_note_path": "notes/source.md",
+                "link_type": relation,
+                "target_path": "notes/target.md",
+            },
+            "idempotency_key": f"live-served-link-{relation}",
+        }
+        assert "actor" not in body
+        code, response = _http_post(f"{live_server}/operation/run", body, LIVE_TOKEN)
+
+        assert code == HTTPStatus.OK
+        assert response["ok"] is True
+        assert response["result"]["status"] == "done"
+        request = state.request_row(workspace, response["job"]["job_id"])
+        assert request is not None and request["actor"] == "pi"
+        assert read_frontmatter(workspace / "notes/source.md")["links"][relation] == [
+            "notes/target.md"
+        ]
+
+    tension_code, tension = _http_post(
+        f"{live_server}/operation/run",
+        {
+            "operation_id": "curate-note-link",
+            "payload": {
+                "source_note_path": "notes/source.md",
+                "link_type": "tension",
+                "target_path": "notes/target.md",
+            },
+            "idempotency_key": "live-served-link-tension",
+        },
+        LIVE_TOKEN,
+    )
+
+    assert tension_code == HTTPStatus.OK
+    assert tension["ok"] is False
+    assert tension["result"]["status"] == "failed"

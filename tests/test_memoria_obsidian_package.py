@@ -188,6 +188,7 @@ def test_memoria_obsidian_registers_minimal_proof_commands() -> None:
     source = (PLUGIN / "main.js").read_text(encoding="utf-8")
 
     for command_id in (
+        "open-attention",
         "connect",
         "show-attention",
         "show-active-concept",
