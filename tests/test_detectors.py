@@ -520,3 +520,28 @@ def test_skeleton_drift(tmp_path):
 def test_skeleton_drift_skips_uninstalled_trees(tmp_path):
     """No .git repo = never installed -> silent."""
     assert _m.skeleton_drift(tmp_path) == []
+
+
+def test_walk_never_reaches_skipped_dirs(tmp_path):
+    """iter_files prunes SKIP_DIRS, so no prefix filter under one can ever fire.
+
+    This is the premise that made `.memoria/staging/`, `.memoria/quarantine/`
+    and the `.memoria/patterns/` scaffolding tuple removable: they read as live
+    protection but filtered nothing, because the walk never yields a path under
+    `.memoria/` in the first place. Pin it, so anyone taking `.memoria` back out
+    of SKIP_DIRS finds out here that those filters have to come back with it.
+    """
+    for rel in (
+        ".memoria/staging/note.md",
+        ".memoria/quarantine/note.md",
+        ".memoria/patterns/example.md",
+        ".git/config",
+        "notes/real.md",
+    ):
+        target = tmp_path / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("x\n", encoding="utf-8")
+
+    walked = {_m.relpath(tmp_path, p) for p in _m.iter_files(tmp_path)}
+
+    assert walked == {"notes/real.md"}
