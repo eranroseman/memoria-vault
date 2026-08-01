@@ -24,6 +24,7 @@ import yaml
 
 from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
+from memoria_vault.engine import cockpit as engine_cockpit
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
@@ -218,6 +219,13 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Show Memoria surfaces grouped by the five workspace jobs.",
     )
     help_cmd.set_defaults(handler=_cmd_help)
+
+    cockpit_help = "Compose the deep-work or triage cockpit screen (read-only)."
+    cockpit_cmd = sub.add_parser("cockpit", help=cockpit_help, description=cockpit_help)
+    _common(cockpit_cmd)
+    cockpit_cmd.add_argument("--project", default="")
+    cockpit_cmd.add_argument("--triage", action="store_true")
+    cockpit_cmd.set_defaults(handler=_cmd_cockpit)
 
     _surface_commands(sub)
     _new_commands(sub)
@@ -805,6 +813,31 @@ def _run_onboarding_for_args(workspace: Path, args: argparse.Namespace) -> dict[
 
 def _cmd_status(args: argparse.Namespace) -> int:
     return _emit(engine_api.read_status(_workspace(args)), args)
+
+
+def _cmd_cockpit(args: argparse.Namespace) -> int:
+    """U2 spec §1/§2: static text photograph, or the composed --json payload.
+
+    The rendered screen is written verbatim -- no tty branching, no ANSI -- so
+    `memoria cockpit | cat` is byte-identical to terminal output by
+    construction.
+    """
+    if args.triage and args.project:
+        return _fail(
+            "the two screens never mix: pass --project (deep) or --triage, not both",
+            json_output=bool(args.json),
+        )
+    payload = engine_api.read_cockpit(
+        _workspace(args), project_path=args.project or "", triage=bool(args.triage)
+    )
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+        return 0
+    if payload.get("screen") == "triage":
+        sys.stdout.write(engine_cockpit.render_triage(payload))
+    else:
+        sys.stdout.write(engine_cockpit.render_deep(payload))
+    return 0
 
 
 def _cmd_surface_schema(args: argparse.Namespace) -> int:

@@ -191,6 +191,10 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria link",
     "memoria mv",
     "memoria check",
+    # Parked by the U2 plan (section C): `memoria cockpit` lands before its
+    # cockpit.read registry row; U2 section T.3 registers the row and moves
+    # this entry out.
+    "memoria cockpit",
     "memoria export",
     "memoria project ask",
     "memoria project trace",
