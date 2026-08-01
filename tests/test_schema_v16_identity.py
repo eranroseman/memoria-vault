@@ -820,3 +820,53 @@ def test_concept_flags_are_fk_backed_and_cascade_on_prune(tmp_path: Path) -> Non
 
     assert concepts == 0
     assert flags == 0
+
+
+def test_ulid_identity_required_for_note_hub_project() -> None:
+    from memoria_vault.runtime.subsystems.lib.schema import load_types, validate_frontmatter
+    from memoria_vault.runtime.vaultio import universal_concept_frontmatter_errors
+
+    types = load_types()
+    for type_name in ("note", "hub", "project"):
+        assert types[type_name]["required"]["id"] == "ulid", type_name
+        errors = validate_frontmatter(
+            {
+                "type": type_name,
+                "id": "not-a-ulid",
+                "title": "T",
+                "tags": [],
+                "links": {},
+                **({"tag": "t"} if type_name == "hub" else {}),
+            },
+            types[type_name],
+        )
+        assert any("expected ULID" in error for error in errors), type_name
+    assert universal_concept_frontmatter_errors(
+        {"type": "hub", "id": "not-a-ulid", "links": {}}, "hubs/x.md"
+    ) == ["id must be a ULID"]
+
+
+def test_digest_and_fulltext_accept_non_ulid_ids() -> None:
+    """Negative direction: the ULID floor is scoped to note/hub/project.
+
+    Digest and fulltext are keyed by ``work_id`` (a catalog identity, not a
+    fresh ULID) and must stay accepted without one — otherwise the guard
+    above would be pinning an over-broad rule instead of the actual clause.
+    """
+    from memoria_vault.runtime.subsystems.lib.schema import load_types, validate_frontmatter
+    from memoria_vault.runtime.vaultio import universal_concept_frontmatter_errors
+
+    types = load_types()
+    for type_name, rel_path in (("digest", "digests/x.md"), ("fulltext", "fulltexts/x.md")):
+        assert types[type_name]["required"]["id"] == "str", type_name
+        frontmatter = {
+            "type": type_name,
+            "id": "smith-2020",
+            "title": "T",
+            "tags": [],
+            "links": {},
+            "work_id": "smith-2020",
+        }
+        errors = validate_frontmatter(frontmatter, types[type_name])
+        assert not any("ULID" in error for error in errors), (type_name, errors)
+        assert universal_concept_frontmatter_errors(frontmatter, rel_path) == []

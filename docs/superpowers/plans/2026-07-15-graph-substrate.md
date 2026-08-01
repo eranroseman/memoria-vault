@@ -2484,7 +2484,7 @@ could silently drop the requirement. This task adds the guard tests only.
 
 **Steps:**
 
-- [ ] Append to `tests/test_schema_v16_identity.py`:
+- [x] Append to `tests/test_schema_v16_identity.py`:
 
   ```python
   def test_ulid_identity_required_for_note_hub_project() -> None:
@@ -2511,14 +2511,14 @@ could silently drop the requirement. This task adds the guard tests only.
       ) == ["id must be a ULID"]
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_schema_v16_identity.py::test_ulid_identity_required_for_note_hub_project -v`
   — expected outcome: **PASS on first run** (the requirement is already seeded;
   this is a ratification guard, not new behavior). Verify it actually guards:
   temporarily change `hub.yaml:5` to `id: str`, rerun, confirm FAIL
   (`AssertionError: hub`), revert the yaml, rerun, confirm PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add tests/test_schema_v16_identity.py
