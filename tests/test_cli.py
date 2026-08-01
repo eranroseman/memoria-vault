@@ -132,6 +132,7 @@ def test_pyproject_exposes_memoria_console_script() -> None:
 def test_cli_command_surface_is_exact() -> None:
     assert _cli_command_surface() == {
         "memoria init",
+        "memoria onboard",
         "memoria status",
         "memoria surface schema",
         "memoria doctor",
@@ -962,3 +963,110 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
         "command": "capture-source",
         "surface": "memoria-cli",
     }
+
+
+def test_cli_onboard_runs_runway_and_is_non_interactive_under_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    capsys.readouterr()
+    seen: dict[str, object] = {}
+
+    def fake_run_onboarding(ws: Path, **kwargs: object) -> dict[str, object]:
+        seen["workspace"] = ws
+        # Pin the production call site: BOOT-D.4 replaced a bare
+        # urllib.request.urlopen default with the proxy-free, redirect-free
+        # `_open_zotero_probe` specifically so a `127.0.0.1` probe cannot
+        # leave the machine under an ambient proxy. `memoria onboard` is the
+        # real caller that exercises that default in production, so it must
+        # thread the hardened opener explicitly rather than merely rely on
+        # `run_onboarding`'s own default staying correct.
+        seen["url_open"] = kwargs["url_open"]
+        ask = kwargs["ask"]
+        seen["ask_result"] = ask("Run this command now? [y/N] ")  # type: ignore[operator]
+        return {"ok": True, "workspace": str(ws), "completed": True, "steps": []}
+
+    monkeypatch.setattr(onboarding, "run_onboarding", fake_run_onboarding)
+    rc = main(["onboard", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["completed"] is True
+    assert seen["workspace"] == workspace.resolve()
+    assert seen["ask_result"] == ""  # --json never prompts: consent defaults to no
+    assert seen["url_open"] is onboarding._open_zotero_probe
+
+
+def test_cli_init_onboard_flag_runs_onboarding_tail(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    calls: list[Path] = []
+
+    def fake_run_onboarding(ws: Path, **kwargs: object) -> dict[str, object]:
+        calls.append(ws)
+        return {
+            "ok": True,
+            "workspace": str(ws),
+            "completed": True,
+            "steps": [{"step": "obsidian", "status": "present"}],
+        }
+
+    monkeypatch.setattr(onboarding, "run_onboarding", fake_run_onboarding)
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--onboard", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert calls == [workspace.resolve()]
+    assert output["ok"] is True
+    assert output["onboard"]["steps"] == [{"step": "obsidian", "status": "present"}]
+    assert (workspace / "Start here.md").is_file()
+
+
+def test_cli_onboard_ask_survives_unusable_stdin_without_a_traceback(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`ask` is not total end to end: `run_onboarding` only guards its own
+    call sites against `EOFError`/`RuntimeError` (a closed-stdin `input()`
+    can also raise `OSError` -- a closed fd 0 -- or `ValueError` -- an
+    in-process `sys.stdin.close()`), and neither is caught there. Under
+    `memoria onboard` with no `--json`/`--quiet` (the interactive branch),
+    the CLI-level `ask` closure itself must swallow every unusable-stdin
+    shape so a piped/closed-stdin invocation degrades to a declined prompt,
+    never an uncaught exception.
+    """
+    from memoria_vault.runtime import onboarding
+
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--quiet"]) == 0
+    capsys.readouterr()
+    captured: dict[str, object] = {}
+
+    def fake_run_onboarding(ws: Path, **kwargs: object) -> dict[str, object]:
+        captured["ask"] = kwargs["ask"]
+        return {"ok": True, "workspace": str(ws), "completed": True, "steps": []}
+
+    monkeypatch.setattr(onboarding, "run_onboarding", fake_run_onboarding)
+
+    def closed_fd_input(_prompt: str = "") -> str:
+        raise OSError("[Errno 9] Bad file descriptor")
+
+    monkeypatch.setattr("builtins.input", closed_fd_input)
+    rc = main(["onboard", "--workspace", str(workspace)])
+    capsys.readouterr()
+
+    assert rc == 0
+    ask = captured["ask"]
+    assert ask("prompt? ") == ""  # type: ignore[operator]
+
+    def closed_file_input(_prompt: str = "") -> str:
+        raise ValueError("I/O operation on closed file")
+
+    monkeypatch.setattr("builtins.input", closed_file_input)
+    assert ask("prompt? ") == ""  # type: ignore[operator]

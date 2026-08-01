@@ -141,6 +141,7 @@ def test_surface_contract_binds_project_reads_to_http_and_mcp() -> None:
 # review, I1 dashboard, O1 onboard) move their commands out of this list.
 CLI_ONLY_COMMANDS: set[str] = {
     "memoria init",
+    "memoria onboard",
     "memoria doctor",
     "memoria doctor bundle",
     "memoria doctor self-test",

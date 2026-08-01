@@ -132,7 +132,17 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip seeded Obsidian settings and the Memoria Obsidian plugin.",
     )
+    init.add_argument(
+        "--onboard",
+        action="store_true",
+        help="Run the interactive onboarding runway after initialization.",
+    )
     init.set_defaults(handler=_cmd_init)
+
+    onboard_help = "Walk from installed engine to the tutorial open in Obsidian."
+    onboard = sub.add_parser("onboard", description=onboard_help, help=onboard_help)
+    _common(onboard, workspace_required=False)
+    onboard.set_defaults(handler=_cmd_onboard)
 
     status = sub.add_parser("status", **_surface_help("status.read"))
     _common(status)
@@ -731,7 +741,63 @@ def _cmd_init(args: argparse.Namespace) -> int:
     _initialize_workspace_files(
         workspace, include_obsidian=include_obsidian, include_agent_bundle=True
     )
-    return _emit({"ok": True, "workspace": str(workspace), "created": created}, args)
+    payload: dict[str, Any] = {"ok": True, "workspace": str(workspace), "created": created}
+    if args.onboard:
+        payload["onboard"] = _run_onboarding_for_args(workspace, args)
+    return _emit(payload, args)
+
+
+def _cmd_onboard(args: argparse.Namespace) -> int:
+    workspace = Path(args.workspace or ".").resolve()
+    return _emit(_run_onboarding_for_args(workspace, args), args)
+
+
+def _run_onboarding_for_args(workspace: Path, args: argparse.Namespace) -> dict[str, Any]:
+    from memoria_vault.runtime import onboarding
+
+    interactive = not (args.quiet or args.json)
+
+    def say(line: str) -> None:
+        if interactive:
+            print(line)
+
+    def ask(prompt: str) -> str:
+        if not interactive:
+            return ""
+        try:
+            return input(prompt)
+        except (EOFError, RuntimeError, ValueError, OSError):
+            # `ask` is not total: `run_onboarding` only guards its own call
+            # sites against EOFError/RuntimeError (builtin `input()` raises
+            # RuntimeError("input(): lost sys.stdin") when stdin is
+            # detached). A closed stdin fd raises OSError and an in-process
+            # `sys.stdin.close()` raises ValueError; neither is caught
+            # there, so this real `input()`-based `ask` -- the first
+            # production caller -- must swallow every unusable-stdin shape
+            # itself. Otherwise a plain `memoria onboard` with no
+            # `--json`/`--quiet` run under CI or `< /dev/null` degrades from
+            # an honest "no consent obtained" outcome to an uncaught
+            # traceback. Treat every such shape as run_onboarding already
+            # treats EOFError: a declined prompt, never a crash.
+            return ""
+
+    return onboarding.run_onboarding(
+        workspace,
+        sys_platform=sys.platform,
+        env=os.environ,
+        home=Path.home(),
+        ask=ask,
+        say=say,
+        # Thread the hardened, proxy-free/redirect-free opener explicitly
+        # rather than relying on run_onboarding's own default staying
+        # correct: BOOT-D.4 replaced a bare `urllib.request.urlopen`
+        # default specifically because it honors `http_proxy`/`https_proxy`
+        # even for a `127.0.0.1` target, so an unguarded default drift here
+        # would silently send a loopback Zotero probe through an ambient
+        # proxy. This CLI command is the production call site that fix
+        # exists for.
+        url_open=onboarding._open_zotero_probe,
+    )
 
 
 def _cmd_status(args: argparse.Namespace) -> int:
