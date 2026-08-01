@@ -3177,6 +3177,37 @@ one transaction, and commits everything through the trusted writer.
 
 ### Task NID-B.6: `memoria mv` — operation card, worker dispatch, CLI, floor entry, docs
 
+> **Inherited from NID-B.5's re-review (2026-07-31) — two path-space enumeration gaps
+> and one sharpened characterisation.**
+>
+> 1. **`evidence_sets.block_ref` is path-prefixed and was NOT in B.5's moved table set
+>    (Important).** `_movable_rel` admits `projects/`; `block_ref` is
+>    `{draft_rel}#^blk-…`, joined with `startswith(draft_rel)` (`knowledge.py:2267`).
+>    Probe: a `projects/` move succeeds and leaves `block_refs ==
+>    ['projects/draft.md#^blk-1']` at the **vacated** path, so the moved draft reads as
+>    having no evidence and raises a false `{"kind": "no-evidence-set", "severity":
+>    "high"}`. `evidence_bindings` is immutable by trigger, so a later repair cannot
+>    simply rewrite it. Loud false alarm, not a silent trust failure — but B.5's "full
+>    table set" is one table short in **path** space.
+>
+> 2. **`file_baseline.subject_id` is path-keyed and does not move — and this is NOT
+>    merely "a stale row".** Re-review sharpened B.5's own characterisation: the verdict
+>    is safe (demotion and the read barrier both key off `outputs`/trace state, which
+>    move correctly — a tampered moved file still demotes to `unchecked`), **but
+>    `_reconcile_file_baselines` and the observe loop both take a `baseline is None`
+>    early exit, so the foreign-edit finding is SUPPRESSED.** Probe: `findings: []` on a
+>    tampered moved file, and the baseline silently adopts the tampered hash as truth.
+>    The mirror case fires too — a newcomer at the vacated path inherits the stale
+>    baseline and raises a **spurious** `foreign-edit`. So: one lost alert per moved
+>    file, plus one false alert if the path is reoccupied. Alert-level, not
+>    verdict-level.
+>
+> 3. **Journal residue on a rolled-back move (M5, from the first review).** The
+>    `resolved`/`moved_from` event and the per-linker `check-fired` events land before
+>    `commit_writer_changes` and are never compensated, so a refused move still journals
+>    as having happened. Append-only journals cannot be rewound — either append the move
+>    event after the commit, or emit a compensating event.
+
 Wires NID-B.5 as the PI-protected `move-concept` operation and the `memoria mv`
 CLI command, following the `curate-note-link` pattern end to end.
 
