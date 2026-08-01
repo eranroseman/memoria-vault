@@ -88,25 +88,6 @@ def _write_note(
     return done
 
 
-def _backfill_tags(vault: Path, rel: str, concept_type: str) -> None:
-    """assert_typed_graph's fixtures omit `tags` (its own bar is PASS|REVIEW,
-    so a missing-required-field REVIEW finding is tolerable there); the floor
-    seed's bar is PASS, so add the field here and re-record the edit so the
-    runtime's recorded hash tracks the patched content."""
-    from memoria_vault.runtime import state
-    from memoria_vault.runtime.policy.audit import sha256_file
-    from memoria_vault.runtime.vaultio import split_frontmatter, write_frontmatter_doc
-
-    path = vault / rel
-    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    frontmatter.setdefault("tags", [])
-    write_frontmatter_doc(path, frontmatter, body)
-    state.record_observed_file_edit(
-        vault, output_id=rel, concept_type=concept_type, output_sha256=sha256_file(path)
-    )
-    state.set_concept_verdict(vault, rel, "checked")
-
-
 def build_floor_seed(workspace: Path) -> dict:
     """Build the rich seed vault. Deterministic; used once per session."""
     workspace.mkdir(parents=True, exist_ok=True)
@@ -118,12 +99,6 @@ def build_floor_seed(workspace: Path) -> dict:
 
     assert_offline_ingest(ROOT, workspace)
     assert_typed_graph(ROOT, workspace)
-    # assert_typed_graph's own fixtures (project/thesis/support) don't set
-    # `tags`, which note.yaml/project.yaml require; its own smoke gate
-    # tolerates the resulting REVIEW, but this floor seed's bar is PASS.
-    _backfill_tags(workspace, "projects/package-gate/project.md", "project")
-    _backfill_tags(workspace, "notes/package-thesis.md", "note")
-    _backfill_tags(workspace, "notes/package-support.md", "note")
 
     manifest = {
         "note_claim": "notes/floor-claim.md",
