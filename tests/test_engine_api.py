@@ -453,3 +453,28 @@ def _write_attention(workspace: Path, name: str, *, target: str) -> None:
         ),
         encoding="utf-8",
     )
+
+
+def test_journal_paths_sweeps_every_path_field_a_move_reverted_row_carries() -> None:
+    """Read-scope filtering must see a move's destination and its rewritten linkers.
+
+    `_journal_paths` is a pure function of the payload, so this needs no vault: it pins
+    the two keys NID-B.6 added to the sweep. Without `new_path` a `move-reverted` row
+    escapes a scope restriction via its destination; without the `outputs` list key it
+    escapes via the linkers it rewrote. Both directions loosen scope, which is why they
+    are asserted rather than left to the scope-walk fixtures.
+    """
+    payload = {
+        "event": "move-reverted",
+        "target_id": "notes/source.md",
+        "old_path": "notes/source.md",
+        "new_path": "notes/destination.md",
+        "outputs": ["notes/linker-one.md", "notes/linker-two.md"],
+    }
+
+    assert set(api._journal_paths(payload)) == {
+        "notes/source.md",
+        "notes/destination.md",
+        "notes/linker-one.md",
+        "notes/linker-two.md",
+    }
