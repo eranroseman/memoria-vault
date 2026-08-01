@@ -48,6 +48,7 @@ memoria_vault = ["runtime/*.sql"]
   "CLAUDE.md",
   "*.base",
   ".gitignore",
+  "Start here.md",
   "steering.md",
   "system/*.md",
 ]

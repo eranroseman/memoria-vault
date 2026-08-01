@@ -62,6 +62,7 @@ def test_package_seed_is_runtime_minimum():
         "projects.base",
         "sources.base",
         "CLAUDE.md",
+        "Start here.md",
         "steering.md",
         "system/vocabulary.md",
     }

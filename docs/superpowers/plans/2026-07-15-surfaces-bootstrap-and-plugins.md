@@ -7362,7 +7362,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 **Steps:**
 
-- [ ] Write the failing test. In `tests/test_cli.py`, first fix the exact
+- [x] Write the failing test. In `tests/test_cli.py`, first fix the exact
   list at line 414 (this is the failing edit — dry-run derives from
   `SEED_FILES`):
 
@@ -7396,12 +7396,12 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       assert "memoria status --workspace ." in text
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_cli.py::test_cli_init_seeds_start_here_front_door tests/test_cli.py::test_cli_init_dry_run_reports_runtime_setup_without_mutation -v`
   Expected: `FileNotFoundError: ... 'Start here.md'` in the new test and an
   assertion mismatch on `seed_files` in the dry-run test.
 
-- [ ] Write minimal implementation, part 1 — create
+- [x] Write minimal implementation, part 1 — create
   `src/memoria_vault/product/workspace_seed/Start here.md`:
 
   ```markdown
@@ -7439,7 +7439,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
   `tests/test_workspace_seed_links.py` rejects labels that restate them;
   every Pages URL above resolves to a real `docs/tutorials/*.md` file.)
 
-- [ ] Write minimal implementation, part 2 — register the seed. In
+- [x] Write minimal implementation, part 2 — register the seed. In
   `src/memoria_vault/cli.py` change lines 47–52 to:
 
   ```python
@@ -7459,7 +7459,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
     "Start here.md",
   ```
 
-- [ ] Update the exact-list mirrors (these are the guards that would
+- [x] Update the exact-list mirrors (these are the guards that would
   otherwise fail):
   - `tests/test_package_spine.py:29-42` — add `"Start here.md",` after
     `".gitignore",` in the asserted pyproject list.
@@ -7469,11 +7469,11 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
   - `tests/test_installer_skeleton.py:31-54` — add `"Start here.md",` to
     `expected_files`.
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_cli.py tests/test_package_spine.py tests/test_installer_skeleton.py tests/test_workspace_seed_links.py -v`
   — all pass.
 
-- [ ] Regenerate the floor goldens (the vault digest gains a
+- [x] Regenerate the floor goldens (the vault digest gains a
   `Start here.md` entry):
 
   ```bash
@@ -7485,7 +7485,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
   pass clean without the env var. Review the golden diff: every changed
   golden should only gain a `"Start here.md"` files entry.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add "src/memoria_vault/product/workspace_seed/Start here.md" src/memoria_vault/cli.py pyproject.toml tests/test_package_spine.py tests/test_installer_skeleton.py tests/test_cli.py tests/fixtures/floor/goldens

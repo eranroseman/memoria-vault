@@ -845,6 +845,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert ".memoria/index/search" in output["skeleton"]["missing"]
     assert output["package"]["seed_files"] == [
         ".gitignore",
+        "Start here.md",
         "steering.md",
         "system/vocabulary.md",
         "catalog.base",
@@ -882,6 +883,23 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "gitignore": ".gitignore",
     }
     assert not workspace.exists()
+
+
+def test_cli_init_seeds_start_here_front_door(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    rc = main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    text = (workspace / "Start here.md").read_text(encoding="utf-8")
+
+    assert rc == 0
+    assert "type: system" in text
+    assert "tutorials/01-system-tour" in text
+    assert "tutorials/07-customize" in text
+    assert ".claude/skills/memoria-copi/SKILL.md" in text
+    assert "memoria status --workspace ." in text
 
 
 def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
