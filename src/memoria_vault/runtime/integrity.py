@@ -150,7 +150,7 @@ def check_evidence_integrity(
         frontmatter = read_frontmatter(path)
         if not _is_checked_concept(vault, rel):
             continue
-        if frontmatter.get("type") not in {"work", "digest", "note"}:
+        if frontmatter.get("type") not in {"digest", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
             status = _concept_status(vault, evidence_rel)
@@ -604,7 +604,7 @@ def check_provenance_checkpoint(
         frontmatter = read_frontmatter(path)
         if not _is_checked_concept(vault, rel):
             continue
-        if frontmatter.get("type") not in {"work", "note"}:
+        if frontmatter.get("type") != "note":
             continue
         for evidence_rel in _evidence_refs(frontmatter):
             source_ref, status = _source_provider_coverage(vault, evidence_rel)
@@ -974,19 +974,7 @@ def _propagate_scan_demotion(
         if status != "checked":
             skipped.append(output_id)
             continue
-        actor = str(event.get("actor") or "")
-        if actor == "pi":
-            _flag_descendant(
-                vault,
-                output_id,
-                target,
-                reason,
-                append_event,
-                check="cascade-rollback",
-                route="ask",
-            )
-            needs_human.append(output_id)
-        elif depth == 1:
+        if depth == 1:
             _flag_descendant(
                 vault,
                 output_id,
@@ -1179,7 +1167,13 @@ def resolve_attention(
     target_path = vault / target
     if resolution == "resolved" and target_path.is_file():
         frontmatter, body = split_frontmatter(target_path.read_text(encoding="utf-8"))
-        if frontmatter.get("projection") == "attention":
+        # `.strip().lower()`, like `lifecycle`, `loudness` and `engine.api`. A raw
+        # comparison here is the one that cannot be shrugged off: `loudness` folds, so
+        # a card written `projection: Attention` gates delegation and review-gated
+        # promotion, and a raw read means `attention resolve` journals the disposition
+        # and never writes the closed status back -- leaving the gate held with no way
+        # to clear it through the CLI.
+        if str(frontmatter.get("projection") or "").strip().lower() == "attention":
             frontmatter["attention_status"] = "deferred" if outcome == "defer" else "resolved"
             frontmatter["resolution_outcome"] = outcome
             frontmatter["routing_class"] = routing_class
@@ -1390,7 +1384,7 @@ def _checked_tension_rows(vault: Path) -> list[dict[str, str]]:
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter, body = split_frontmatter(safe_read(path))
-        if frontmatter.get("type") not in {"note", "work"}:
+        if frontmatter.get("type") != "note":
             continue
         if not is_consumable_checked_file(vault, rel):
             continue

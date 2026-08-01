@@ -1,6 +1,10 @@
 # O2 · Staged import + bulk admission — Design
 
-Date: 2026-07-17. Status: **design (PI-approved in session), pre-plan**.
+Date: 2026-07-17. Status: **design (PI-approved in session), pre-plan**;
+amended 2026-08-01 by
+[#1517](https://github.com/eranroseman/memoria-vault/issues/1517) — §3's
+retraction bullet and §6's `import-run.v1` field list (`retraction_flags`
+removed; the event has nine fields).
 Plan 23 LOOP.6 output. Consumes the consolidation §2 O2 unit list
 (`2026-07-12-beta.1-consolidation.md:175`), the §1 Tier −1 gate corrections
 (`:112`), the §5 schema-before-corpus note (`:354`), the empirical plan
@@ -102,10 +106,16 @@ work-prompt card points at it with honest denominators (*"100 entries ·
   consequence.
 - Individual producers do not spray per-work cards during a bulk run; the
   loudness tier is `quiet` per I1 §3's batch-worklist row.
-- **Retraction flags:** with `--enrich`, enrichment-surfaced retractions
-  land as worklist rows in the same run; without it, the standing
-  retraction sweep raises its own cards on its own schedule (out of bulk
-  scope — no duplication).
+- **Retraction flags: the run raises none** (#1517, 2026-08-01). With
+  `--enrich` the driver only *queues* `enrich-source` jobs
+  (`cli.py:1452`); the source-retraction attention flag is raised when
+  each job **executes** later, at `memoria workspace run`
+  (`enrichment.py:258-271` — a contested/retracted block reason flags
+  `check="source-retraction"`). Without `--enrich`, the standing
+  retraction sweep raises its own alerts on its own schedule, deduped by
+  DOI fingerprint (`retraction.py:301-330`). Either way the rows belong
+  to those producers, not to the import run; the ranking vocabulary
+  keeps its retraction slot for sweep-raised rows.
 
 ## 4. Per-type adapter matrix (PI ruling: all five, tiered depth)
 
@@ -178,8 +188,16 @@ ruling):
 
 ```
 {run_id, format, entries_total, admitted, skipped, failed,
- duplicates_flagged, retraction_flags, duration_s, index_refresh_s}
+ duplicates_flagged, duration_s, index_refresh_s}
 ```
+
+**Nine fields, and no retraction count** (#1517, 2026-08-01). The
+finalizer is the driver itself at command return, after the
+index-refresh boundary, and it reports only what it honestly knows
+there. `--enrich` merely queues `enrich-source` jobs (`cli.py:1452`)
+that execute later at `memoria workspace run`, so retraction truth does
+not exist at return; a field claiming it would be fiction. Per-stage
+retraction counts are a **queue-drain protocol measurement** (§3).
 
 The Phase 1 metric map, every row concrete or an honest gap:
 
@@ -188,8 +206,9 @@ The Phase 1 metric map, every row concrete or an honest gap:
 | import wall-clock | `import-run.duration_s` |
 | index rebuild time | `import-run.index_refresh_s` (measured around the post-run refresh; LOOP.1's `stale_checked_search_documents` sizes it) |
 | attention items minted per 100 works | I1 flow panel (`attention-admitted` rows) — already shipped by the I1 plan |
-| duplicate-triage / retraction-flag counts | `import-run.duplicates_flagged` / `.retraction_flags` |
-| enrichment provider load | the shipped enrichment result payloads, measured under `--enrich` (no new event) |
+| duplicate-triage counts | `import-run.duplicates_flagged` |
+| retraction-flag counts | **protocol-level**: read after the stage's queue drain (`memoria workspace run` — the step the enrichment-load row already needs), when the queued `enrich-source` jobs raise their `source-retraction` flags; plus the standing sweep's own alerts. Not an `import-run.v1` field (#1517) |
+| enrichment provider load | the shipped enrichment result payloads, measured under `--enrich` after `memoria workspace run` drains the queued jobs (no new event) |
 | Shape-1/Shape-2 query latency | **protocol-level**: the staged-run script times `memoria ask`/query calls — named honestly as protocol measurement, not a product event |
 | journal/DB growth | **protocol-level**: the script sizes `event_log` rows and store bytes per stage |
 

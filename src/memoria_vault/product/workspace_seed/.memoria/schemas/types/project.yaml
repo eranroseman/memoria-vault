@@ -14,10 +14,11 @@ optional:
   archived: bool
   consequence: enum:consequence
   description: str
-  thesis: str
+  thesis: link
   outcome_frame: map
   paper_plan: map
   question: str
   stale: bool
   todo: list
   x: map
+forbidden: [active_thesis]

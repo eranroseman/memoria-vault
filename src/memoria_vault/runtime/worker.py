@@ -492,6 +492,7 @@ def _run_operation_job(
             target_path,
             context=context,
             reason=str(payload.get("reason") or ""),
+            warrant=str(payload.get("warrant") or ""),
         )
         return {
             "commit": result["commit"],

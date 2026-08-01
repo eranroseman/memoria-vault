@@ -128,6 +128,17 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
+        "id": "views.attention",
+        "job": "review",
+        "summary": "Render the attention pane view.",
+        "engine": "read_attention_view",
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {"summary": {"type": "boolean", "default": False}},
+        "http": {"method": "GET", "path": "/v1/views/attention"},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
         "id": "concepts.list",
         "job": "read",
         "summary": "List scoped Concept summaries.",

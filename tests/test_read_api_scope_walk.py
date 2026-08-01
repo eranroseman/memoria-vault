@@ -50,6 +50,9 @@ PROBES: dict[str, tuple[str, str | None]] = {
     "requests.get": ("refused", "{request_id}"),
     "attention.list": ("excluded", "{attention_path}"),
     "attention.get": ("refused", "{attention_path}"),
+    # The pane's own view is a list read: a void scope leaves a 200 whose
+    # `view.blocks` no longer names the seeded card.
+    "views.attention": ("excluded", "{attention_path}"),
     "concepts.list": ("excluded", "{note_claim}"),
     "concepts.get": ("refused", "{note_claim}"),
     "work.get": ("refused", "{work_id}"),

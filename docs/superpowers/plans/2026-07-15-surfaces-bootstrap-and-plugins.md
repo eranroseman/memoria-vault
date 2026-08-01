@@ -80,7 +80,7 @@
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
 6. **BOOT-C ↔ U4-A interface**: fresh `memoria init` iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`. `memoria doctor --json --quick` may emit the current engine version and credential rows, but it emits no bundle-version or skew result. U4-A's hook consumes credential rows defensively.
-7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces).
+7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces). **Amended 2026-08-01:** `HONEST_EMPTY_PREFIX` is struck — the honest-empty sentence is engine-rendered per query by `retrieval_pipeline.honest_empty`, so `PRIORS_REFUSAL` is the one single-source constant and the scan test (a U4-C.2 deliverable; it has never shipped) guards only it. See the amendment above the U4-C section header.
 8. **Plugin settings**: fresh settings omit `serverUrl` and token settings;
    the empirical-recorder settings (`enabled`, `defaultProjectId`,
    `retentionDays`, `showPrivacyPreview`) remain. This plan does not migrate
@@ -88,7 +88,7 @@
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
-12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
+12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers — non-recursive `inbox/*.md` globs at `loudness.py:30`, `engine/api.py:706` and (U3-SUB.3) `inbox.py` `_open_fingerprint_match`, and a direct single-path existence check (not a glob) in both `inbox.py` dedupe writers. No task may add recursive inbox globs or frontmatter to digests. **Corollary (U3-SUB.2, extended by U3-SUB.4):** because a digest removes the card, an `inbox/` filename is reusable, so any path-keyed judgement about a card must be released when the card is archived — **or when a scan observes the card gone from a path the journal still holds**, since `inbox/` deletions reach no observer at all (outside every bundle root; `_pi_edit_targets` requires `is_file()`). See `lifecycle._held_disposition_targets` and `_reconcile_released_paths`. The release is **not** swept at the review gate, and U3-SUB.4 rejects that variant explicitly: it would put a journal read on every review-gated write and retire `test_a_vault_with_no_closed_card_never_takes_the_workspace_lock` (`tests/test_attention_lifecycle.py:116`). The gate stays a cheap `inbox/` frontmatter probe, per the ruling recorded in U3-SUB.2's trigger-seam decision. **Corollary (U3-SUB.3):** `write_finding` is now a *reading* member of this inventory, not only a writer, and it is the one whose failure is silent and permanent — `lifecycle._DIGEST_FIELDS` carries `fingerprint` into the digest, so an `rglob` here would let an archived card suppress every future re-raise of its condition with nothing to observe but the alert that never came. The glob is `*.md`, not `*`: `write_text_durable` leaves in-flight `.{name}.{rand}.tmp` siblings in `inbox/`, and an unfingerprinted `write_finding` creates them outside the fingerprint lock.
 13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
     U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
     U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
@@ -8005,9 +8005,11 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 # U3-SUB — Attention substrate prerequisites (U3 spec §1)
 
 Source spec: `docs/superpowers/specs/2026-07-15-u3-obsidian-cards-design.md` §1
-("Attention substrate prerequisites"). Three lifecycle repairs land ahead of
+("Attention substrate prerequisites"). Four lifecycle repairs land ahead of
 plugin work: manual-edit adoption at the policy gate, monthly compaction of the
-resolved tail, and open-status fingerprint dedupe for findings.
+resolved tail, open-status fingerprint dedupe for findings, and the
+release-reconcile that keeps a card deleted outside the runtime from silencing
+its path (U3-SUB.4, added after U3-SUB.1/.2/.3 merged — issue #1616).
 
 **CRITICAL cross-plan dependency (Plan 21 Task 21.1).** Task U3-SUB.3 writes
 AGAINST the post-21.1 `write_finding` signature from
@@ -8436,9 +8438,192 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
   - `lifecycle.compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]` — returns `{"adopted": list[dict], "archived": list[str], "digests": list[str], "commit": str}` (rel posix paths; `commit` empty when nothing archived). Archives only `projection: attention` + `attention_status: resolved` cards in `inbox/*.md`; `deferred` and `open` stay. Month key = `resolved_at[:7]` when it matches `YYYY-MM`, else the compaction date's month. Digest sections are append-only; deletions of git-tracked cards are staged in the same commit (actor `integrity`). Requires the vault git repo every real vault has (vault versioning is product behavior) only when there is something to archive.
   - Scan payload gains key `"inbox_compaction"` = that return dict (`memoria workspace scan --json`).
 
+> **Adopted U3-SUB.2 execution amendment (2026-08-01):** the drafted snippets
+> below archive before they check whether the vault can record the archive, and
+> they run unserialized. What shipped differs in five places; the returned keys,
+> the digest format, and the trigger seam are unchanged.
+>
+> 1. **The git repo is checked before the first write, not discovered at the
+>    commit.** The drafted body appends each digest section and unlinks each card
+>    and only then calls `commit_explicit_writer_changes`, so a vault with no
+>    `.git` loses its whole resolved tail out of `inbox/` into an uncommitted file
+>    the vault's history cannot describe — and `_tracked` silently reports
+>    `False` for every card there, so nothing even looks wrong until git fails.
+>    `compact_resolved_cards` now raises before the loop when there is something
+>    to archive and no repo to archive it into, leaving the cards where a later
+>    scan can retry them. "Only when there is something to archive" is unchanged
+>    and now pinned: the probe returns first, so an ordinary scan of a vault with
+>    nothing resolved neither needs a repo nor takes a lock.
+> 2. **The read that decides and the writes it drives are one critical section**,
+>    for the reason U3-SUB.1's amendment 5 gave for the journaling half. `workspace
+>    scan` is the file-watch tick *and* a command the PI runs, so two overlap on a
+>    live vault; unserialized, both read the same card, both append it to the
+>    digest, and the second `unlink` raises `FileNotFoundError` out of a hygiene
+>    pass. `state.workspace_lock` now spans the in-lock read, the appends, the
+>    unlinks, and the commit. The probe stays outside it (same shape as the
+>    journaling half), and because the in-lock read is authoritative, the loser of
+>    a race archives nothing and commits nothing rather than committing a tail
+>    that moved nowhere.
+> 3. **Compaction failures are contained at the CLI seam, not in the lib.** The
+>    call sits inside `_workspace_scan_payload`, whose caller reads one JSON
+>    payload from stdout and whose watch loop dies on an exception; a vault with no
+>    git repo, a read-only tree, or a busy journal must not raise out of `memoria
+>    workspace scan`. `cli._compact_resolved_inbox` catches `(OSError,
+>    RuntimeError, sqlite3.Error)` and returns the same dict with an `error` key —
+>    the U3-SUB.1 shape, where the lib raises and the call site decides (the gate
+>    turned the same failures into an `attention.journal-error` deny). The scan's
+>    `ok` carries that error, as it already carries the observe/quarantine/
+>    regeneration steps': a scan that reported success over a step that failed
+>    would be the silent clear this section exists to remove.
+> 4. **`_resolved_cards` reads the card once, through `safe_read`.** It returns
+>    `(path, frontmatter, body)` triples instead of the drafted in-loop
+>    `path.read_text()` plus inline projection/status tests, so the probe and the
+>    authoritative in-lock read are the same function, and a card that vanished
+>    between them parses as no card rather than raising. Status and projection are
+>    case-folded, as `loudness.is_open_blocker` and the journaling half both fold
+>    them — otherwise a `projection: Attention` card can block the gate, be
+>    journaled when it closes, and then never leave `inbox/`.
+> 5. **The commit actor is its own constant.** `COMPACTION_ACTOR = "integrity"`
+>    rather than reuse of `JOURNAL_ACTOR`: same name, opposite justification. The
+>    journaling half names `integrity` because it *cannot* say who caused the
+>    change; compaction names it because the runtime *is* the cause.
+>
+> Two smaller things. The docstring's untouched-by-construction argument names
+> what each consumer actually does: `loudness.open_blockers` and
+> `engine.api._attention_cards` glob `inbox/*.md` non-recursively, but the
+> work-prompt dedupe checks one direct path in `inbox/` (it never globs), and the
+> seeded `inbox.base` view selects a *folder* — for which only the belt-and-braces
+> half (no frontmatter, so no `projection` match) holds. Each clause has a test.
+> And the four drafted tests shipped verbatim as the floor, joined by twelve more:
+> a two-month multi-card fixture, the month-key fallback's producer states
+> (missing, empty, unparseable, and YAML's `int` for a bare year) plus a hostile
+> `resolved_at` that cannot steer the write out of `inbox/archive/`, the title
+> fallback, case-variant frontmatter, second-run idempotence, non-attention
+> `inbox/` files (compaction deletes what it archives — the projection test is all
+> that stands between a hand-written note and a file the PI never gets back), the
+> two git-repo cases, the two consumers the plan's tests did not reach, and two
+> races.
+
+> **Adopted U3-SUB.2 review amendment — the archival release row (2026-08-01):**
+> compaction as first shipped deleted a card and recorded nothing, which broke a
+> guarantee U3-SUB.1 had been getting for free. Returned keys, digest format and
+> trigger seam are unchanged; five edits in `lifecycle.py` and one in `cli.py`.
+>
+> 1. **An `inbox/` filename is reusable now, and nothing knew that.** Both writers
+>    in `inbox.py` refuse an occupied name (`:120-124` dedupe slot, `:193-195`
+>    collision loop) and take a freed one, so before compaction a resolved card sat
+>    on its path forever and `_journaled_disposition_targets` — a set keyed on that
+>    path — only ever grew. Once compaction deletes the card, the *second* card at
+>    that name is read as already-disposed: no row, and compaction deletes it too.
+>    Reproduced through `write_finding(dedupe_slug=…)`, through `_write`'s collision
+>    loop, and — worse — through `integrity.resolve_attention`, whose row carries
+>    `source: attention` + `resolution: resolved` and so poisons the slot while
+>    making the journal *look* properly attributed.
+> 2. **Fix: an archival release row.** `EVENT_ATTENTION_ARCHIVED =
+>    "attention-card-archived"`, local to `lifecycle.py` (`event_log.event_type` is
+>    bare TEXT with no CHECK or registry, `runtime/schema.sql:30`; house precedent
+>    is an inline literal in the owning module, `knowledge.py:513`,
+>    `backup.py:792`). Bare `archived` is taken four times over. The row carries
+>    `source`, `target_id`, `outputs: [digest]`, `reason` — no `via`, `resolution`
+>    or `outcome`, because it records a removal and not a judgment, and no
+>    `archived_at`, because `_prepare_explicit_journal_event` already stamps
+>    `timestamp` and the log forbids UPDATE. `outputs` so `_journal_paths`
+>    (`engine/api.py:940`) scopes it like any other output.
+> 3. **`_journaled_disposition_targets` → `_held_disposition_targets`**: one
+>    `read_event_log` widened to both types, `source` guard hoisted, `add` on a
+>    disposition and `discard` on a release — an ordered fold, not a filter. The
+>    rename is load-bearing: it returns "journaled and not released".
+> 4. **The card read moves inside the lock.** `journal_unattributed_dispositions`
+>    read `_closed_cards` outside its lock. At HEAD that was inert because the held
+>    set only grew, so a stale entry was always already held. Under a fold the set
+>    shrinks and the stale entry *wins*: it writes a permanent disposition built
+>    from a deleted card's frontmatter and re-claims the slot, reproducing the very
+>    bug for the successor. The outside call stays as the cheap probe that keeps
+>    every gated write off the lock.
+> 5. **A `.strip()` at `_closed_cards`.** Journaling folded `projection` but did not
+>    strip it; compaction did both. `projection: " attention "` was therefore
+>    invisible to journaling and visible to compaction — archived and deleted with
+>    zero journal rows, sequentially, in one process. (`loudness.is_open_blocker`
+>    has the same unstripped read; out of scope here, filed separately.)
+> 6. **The git pre-flight tested the wrong thing.** `(vault / ".git").exists()` is
+>    the one git failure `workspace scan` can never reach — the scan's own `git
+>    status` fails first. The reachable ones — a crashed git leaving `index.lock`,
+>    an unconfigured identity — passed it, appended the whole tail into a digest,
+>    unlinked every card and failed at the commit. `_uncommittable` now checks repo,
+>    lock and `git var GIT_COMMITTER_IDENT`. The lock check follows a `.git` *file*
+>    gitlink, because `Path(".git/index.lock").exists()` swallows `ENOTDIR` on a
+>    linked worktree or submodule and reports no lock.
+>
+>    The residual commit failure is **not** fixed by assignment order.
+>    `result["archived"]` already preceded the commit; moving it after changes
+>    nothing observable, because `cli._compact_resolved_inbox` returns a literal
+>    `{"archived": [], …}` on any catch and so cannot carry a count however the lib
+>    orders its assignments. The only real change is that the re-raised error names
+>    the count and the digest path. Closing it properly means changing the lib→CLI
+>    contract from "raise" to "return a partial payload with an error", which is a
+>    larger move than this fix should make.
+>
+> 7. **Journaling and archiving were two critical sections with a wide gap.** The
+>    journaling half took the workspace lock and released it; compaction then ran a
+>    probe, spawned git subprocesses, and waited for the lock again. A card the PI
+>    flipped to `resolved` anywhere in that window was absent from the journaling
+>    read and present in the in-lock archive read — digested, released and unlinked
+>    with no disposition row anywhere, which made the "no card leaves `inbox/`
+>    without a journaled disposition" claim false. Pre-existing, but this fix
+>    widened the window and newly asserted in prose that it could not happen.
+>    `compact_resolved_cards` now re-runs `journal_unattributed_dispositions` inside
+>    its own lock (re-entrant on the same thread) and merges the rows into
+>    `adopted`; the held set makes it a no-op for everything the outer call covered.
+>    `_uncommittable` moved inside the lock with it, so the window it closes cannot
+>    reopen during the lock wait. The outer call stays: a vault with nothing to
+>    archive must still journal its deferred closes without needing a git repo.
+>
+> **Costs, declared rather than mechanized.** A crash between the release row and
+> the unlink leaves a briefly-false row: the next scan re-journals the card and
+> appends a duplicate digest section (the duplicate half is HEAD's behaviour
+> already). A persistent unlink failure on a read-only `inbox/` now costs ~2
+> permanent rows per file-watch tick where HEAD already spammed a duplicate section
+> per tick. And the invariant "every code path that removes an `inbox/*.md` card
+> owes a release row" is load-bearing and unenforced — `lifecycle.py`'s is today the
+> only `.unlink()` in `src/` touching `inbox/`; U3-SUB.3's re-raise work is the
+> nearest risk.
+>
+> **Not claimed:** this does not make the digest checkable against a
+> non-forgeable index. `_digest_section` heads sections with attacker-controlled
+> `title` plus a basename, the row keys on the full relpath, and slot reuse is
+> deliberate — a forged section naming any genuinely archived basename matches. The
+> honest claim is the whole point: the runtime was deleting a PI-visible file and
+> recording nothing; it now records which card left, when, and which digest holds
+> it. **Out-of-band deletion** (PI in Obsidian, `git checkout`/`restore`/`revert`,
+> an adapter) still poisons a slot permanently — issue #1616, which also records why
+> a release sweep was rejected: it puts a DB read on the `PreToolUse` hot path
+> unconditionally and retires the no-lock pin. *(Closed by U3-SUB.4, which
+> reconciles at the scan tick rather than at the gate, so the rejection above still
+> stands.)*
+>
+> **Coverage note (`cli.py`).** The `OSError` and `RuntimeError` arms of
+> `_compact_resolved_inbox` have producer tests. `sqlite3.Error` has none, and none
+> that meets the standard the other two are held to: a database this scan cannot
+> write is one `verify_journal_chain` already refused several steps earlier
+> (verified — exit 2, no payload). A barrier thread opening `BEGIN IMMEDIATE`
+> between the observe step and compaction *could* produce it, which is exactly the
+> stubbing this task rejected for the `RuntimeError` arm, so it is rejected here
+> too. The arm stays as named defence-in-depth — the inter-step window is real for
+> a non-Memoria writer, since the flock does not exclude one and `state.connect`
+> does not wrap the error — matching `policy/engine.py`.
+>
+> **Escape class carried forward.** The ordered fold and the two-lock window were
+> both found by *trajectory* coverage, not by fixture size: every fixture that
+> reached slot reuse archived the second card in the same `compact_resolved_cards`
+> call, so the re-claimed-and-still-held state — the ordinary production state,
+> because the policy hook journals without compacting — was never sampled. An
+> order-blind `disposed - released` passed the entire suite. This module now holds
+> two multi-step state machines; a fixture that runs one to its fixed point cannot
+> tell a correct implementation from a wrong one that converges there.
+
 **Steps:**
 
-- [ ] Write the failing lib tests. Append to `tests/test_attention_lifecycle.py` (extends the imports at the top of the file with `from memoria_vault.runtime.subsystems.lib import loudness` and `from memoria_vault.runtime.vaultio import read_frontmatter` and `from tests.helpers import git, init_git`):
+- [x] Write the failing lib tests. Append to `tests/test_attention_lifecycle.py` (extends the imports at the top of the file with `from memoria_vault.runtime.subsystems.lib import loudness` and `from memoria_vault.runtime.vaultio import read_frontmatter` and `from tests.helpers import git, init_git`):
 
 ```python
 def test_compact_moves_resolved_cards_to_monthly_archive(tmp_path):
@@ -8499,8 +8684,8 @@ def test_compact_commits_deletion_of_tracked_cards(tmp_path):
     assert "inbox/alert-done.md" not in git(tmp_path, "ls-files")
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -k compact -v` — expected failure: `AttributeError: module 'memoria_vault.runtime.subsystems.lib.lifecycle' has no attribute 'compact_resolved_cards'`.
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`: extend the module docstring's second paragraph with:
+- [x] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -k compact -v` — expected failure: `AttributeError: module 'memoria_vault.runtime.subsystems.lib.lifecycle' has no attribute 'compact_resolved_cards'`.
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`: extend the module docstring's second paragraph with:
 
 ```
 Resolved cards are compacted into an append-only monthly digest under
@@ -8619,8 +8804,8 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     return {"adopted": adopted, "archived": archived, "digests": digests, "commit": commit}
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all tests pass.
-- [ ] Write the failing scan-wiring test. Append to `tests/test_cli_workspace_requests.py` (file already imports `json`, `main`; uses inline init like its first test at line 29-30):
+- [x] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all tests pass.
+- [x] Write the failing scan-wiring test. Append to `tests/test_cli_workspace_requests.py` (file already imports `json`, `main`; uses inline init like its first test at line 29-30):
 
 ```python
 def test_workspace_scan_compacts_resolved_inbox_cards(
@@ -8651,8 +8836,8 @@ def test_workspace_scan_compacts_resolved_inbox_cards(
     assert (inbox / "archive/2026-07.md").is_file()
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v` — expected failure: `KeyError: 'inbox_compaction'`.
-- [ ] Wire the scan seam. In `src/memoria_vault/cli.py` `_workspace_scan_payload`, immediately after `observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})` (line 1850) insert:
+- [x] Run to verify failure: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v` — expected failure: `KeyError: 'inbox_compaction'`.
+- [x] Wire the scan seam. In `src/memoria_vault/cli.py` `_workspace_scan_payload`, immediately after `observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})` (line 1850) insert:
 
 ```python
     from memoria_vault.runtime.subsystems.lib import lifecycle
@@ -8666,8 +8851,8 @@ def test_workspace_scan_compacts_resolved_inbox_cards(
     payload["inbox_compaction"] = inbox_compaction
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v`, then the neighboring scan tests: `python -m pytest tests/test_cli_workspace_requests.py -k scan -v`.
-- [ ] Run the gate: `python scripts/verify` — clean (watch the floor level; expected unaffected, see section note).
+- [x] Run to verify pass: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v`, then the neighboring scan tests: `python -m pytest tests/test_cli_workspace_requests.py -k scan -v`.
+- [x] Run the gate: `python scripts/verify` — clean (watch the floor level; expected unaffected, see section note).
 - [ ] Commit:
 
 ```
@@ -8710,10 +8895,135 @@ resolution/archival writes a fresh open card.
   - `write_finding(vault: Path, card_type: str, title: str, finding: str, raised_by: str, agent_recommendation: str = "issues-found", target: str = "", citekey: str = "", loudness: str = "alert", evidence: str = "", dedupe_slug: str = "", fingerprint: str = "") -> Path | None` — with `fingerprint`: if an `inbox/*.md` card has `projection: attention`, `attention_status: open`, and the same `fingerprint`, its `last_seen` is set to today and `None` is returned (no new card, no push); otherwise the new card carries `fingerprint` and `last_seen` frontmatter. The fingerprint check runs before the `dedupe_slug` existence check; the two are orthogonal.
   - Retraction-sweep alert cards carry `fingerprint: "retraction:<normalized-doi>"`.
 
+> **Adopted U3-SUB.3 execution amendment (2026-08-01):** the signature, the
+> semantics, and the sweep wiring are exactly as drafted. Six things below differ,
+> five of them because the drafted snippets predate U3-SUB.1/.2 and one because the
+> drafted sweep fixture seeds a catalog route the sweep no longer reads.
+>
+> 1. **The decision and the write it drives are one `state.workspace_lock`
+>    section.** The drafted code reads `inbox/`, decides, and writes with nothing
+>    serializing it — the same check-then-act U3-SUB.2's amendment 2 closed for
+>    compaction. Two overlapping sweeps both read an inbox with no standing card and
+>    both write one, which is the duplicate this task exists to stop, narrowed to a
+>    window rather than removed. Worse, `_touch_last_seen` renames a temp file into
+>    place: a touch racing compaction's unlink would resurrect a card the journal has
+>    already recorded as archived, and the drafted `path.read_text()` would raise
+>    `FileNotFoundError` out of the sweep if it lost the race the other way.
+>    Compaction takes the same lock, so under this one it cannot. **No probe outside
+>    the lock**, unlike both halves of `lifecycle`: the probe there keeps the ordinary
+>    *no-op* scan off the lock, and there is no no-op case here — every fingerprinted
+>    call intends to write or to touch. The lock is scoped to `if fingerprint:`, so
+>    `write_finding`'s other callers keep their footprint and their timing (pinned:
+>    an unfingerprinted call still creates only `inbox/`).
+> 2. **The two new frontmatter reads normalize like `lifecycle`, and the
+>    fingerprint deliberately does not.** The drafted helper compares `projection`
+>    with neither `.strip()` nor `.lower()` and `attention_status` with `.lower()`
+>    alone — a fourth and fifth spelling in a module family where an unstripped
+>    `projection` already cost a card its journal row (U3-SUB.2 review amendment 5,
+>    and issue #1617 for the two still open). Both vocabulary fields now read
+>    `str(... or "").strip().lower()`, character for character as
+>    `lifecycle._closed_cards` and `_resolved_cards` read them. `fingerprint` is
+>    `.strip()`ed on both sides and **not** case-folded: it is an identity like the
+>    journal's `target_id`, not a term from a fixed vocabulary, and folding it would
+>    merge conditions whose producer distinguishes them — the retraction sweep folds
+>    case itself, in `normalize_doi`, which is the producer's call to make. The
+>    argument is canonicalized once at the top so producers that disagree about
+>    padding still match and a whitespace-only fingerprint is no fingerprint.
+> 3. **The card is read once.** `_open_fingerprint_match` returns
+>    `(path, frontmatter, body)` and `_touch_last_seen(path, frontmatter, body)`
+>    consumes it, instead of the drafted re-read inside the touch — `_resolved_cards`'
+>    discipline, so the read that decides and the write it drives cannot disagree.
+>    The read is `safe_read`, so an `inbox/` file that is gone or is not text parses
+>    as no card rather than raising out of a monthly sweep.
+> 4. **The drafted `if not inbox.is_dir(): return None` guard is gone.**
+>    `Path.glob` on a missing directory yields nothing, so the guard only restated
+>    the loop's own answer.
+> 5. **The drafted sweep test's fixture cannot reach the sweep.** It seeds
+>    `catalog/sources/w1/source.md`, but `sweep` iterates `state.catalog_sources`
+>    (SQLite) and never reads that file, so the drafted test asserts
+>    `{"checked": 1, ...}` against a vault the sweep sees as empty. Shipped with
+>    `state.upsert_catalog_record` and the file's own `capture_workspace` idiom, like
+>    every other sweep test here.
+> 6. **`fingerprint` needed nothing in `lifecycle`:** `_DIGEST_FIELDS` already
+>    carries it, so an archived card's fingerprint lands in the digest and survives
+>    only there — no frontmatter, below a directory no `inbox/` reader descends into,
+>    which is what makes the re-raise possible at all. Nor does this task owe a
+>    release row: it adds no `.unlink()`, and a touch leaves the card on its path.
+>    Contract 12's reader inventory *did* need updating, and now names this scan.
+>    **`last_seen` has no such luck.** `_DIGEST_FIELDS` carries `fingerprint` and
+>    `created` but not `last_seen`, so a card observed monthly for two years archives
+>    with no trace of its twenty-four re-observations — the digest can say when the
+>    condition was first raised and never how long it stood. Left as found rather than
+>    added silently: the field is one line from `_DIGEST_FIELDS` and belongs to
+>    U3-SUB.2's format, whose digest sections are append-only and already written in
+>    real vaults. Worth deciding deliberately, not as a side effect of this task.
+>    Related and equally declared: `last_seen` has **no consumer anywhere in `src/`**
+>    outside the writer and toucher here. The spec mandates it and the plan's own test
+>    asserts it, so writing it is not a violation — but until a reader exists, nothing
+>    observes it before archival either, and both gaps close together or not at all.
+>
+> **What the fingerprint is, next to the three identities already here.** It is
+> orthogonal to all of them. To the *path*: the scan finds the standing card wherever
+> it sits, and a re-raise after archival lands back on the archived card's freed name
+> through `_write`'s collision loop — the journal reads that second card as its own,
+> because compaction's release row un-held the path (pinned end to end, and the
+> chain `resolved/reject → archived → resolved/apply → archived` is asserted with
+> distinguishable outcomes so a run that journals one card twice cannot produce it).
+> To `dedupe_slug`: the slug suppresses while the *file* is there whatever its status,
+> the fingerprint suppresses while an *open card* is there whatever its filename;
+> checked first, and pinned by passing both with the slot free. To the journal's
+> `target_id`: nothing fingerprinted is journaled, and the fingerprint never reaches
+> a row.
+>
+> **The two drafted tests shipped essentially verbatim** (the re-raise test also ages
+> the resolved card, to show the re-raise does not touch it), joined by fourteen more:
+> the five one-field-at-a-time normalization cases, the deliberate non-fold, the four
+> non-open producer states (`resolved`, `deferred`, empty, `projection: note`), the
+> ordering against `dedupe_slug`, an N>1 inbox where two cards match, the
+> no-fingerprint default arm, the non-recursive glob against a whole card under
+> `archive/`, argument stripping, the whitespace-only argument, an undecodable
+> `inbox/` file, and two races — one proving the section is closed, one proving the
+> lock is the workspace lock and not a private one. At the sweep layer: an N>1
+> two-retracted-DOI fixture (one card per condition, both touched), and the two
+> trajectory tests that sample every state of `open → re-observed → resolved →
+> archived → re-raised → re-observed → resolved → archived` at each step rather than
+> at rest.
+>
+> **Review round added seven pins, all for mutants that passed the suite above.** The
+> non-fold was pinned only against a folding *reader* — every fixture built its
+> standing card by hand — so `.lower()` on the write side, the one line this amendment
+> introduces for canonicalisation, survived; two `write_finding` calls that differ only
+> in case now close it. The touch's "changes nothing else" was pinned field by field,
+> so dropping `loudness`, clobbering `title`, and canonicalising `attention_status`
+> all survived; whole-frontmatter equality except `last_seen` now closes the class, on
+> a `loudness: block` card the PI hand-escalated (that mutant opens the review gate on
+> a schedule) and across the five normalization cases (which is what catches the
+> canonicalising rewrite, since the escalation fixture's status is already canonical).
+> Three equality tests meant three chances to become prefix or substring tests, none
+> of which the normalization cases could see: three near-miss fixtures now cover the
+> operators. `glob("*")` survived: the pin said non-recursive and never said `*.md`.
+> And the touch's atomicity lived only in prose — an in-place `write_text` survived —
+> so a hardlink witness now pins the replace, which matters because
+> `loudness.open_blockers` reads `inbox/*.md` on the review-gate path without this
+> lock and a half-written card parses as no card.
+>
+> **Declared, not fixed.** A `deferred` card does not suppress a re-raise: the
+> contract says `open`, and compaction leaves `deferred` cards in `inbox/` forever,
+> so the cost is **one card per deferral** — measured, not reasoned: defer once and
+> the vault sits at two cards across four sweeps, because the fresh card is open and
+> absorbs the next sweep; defer each new card in turn and it goes 1, 2, 3, 4, with
+> compaction never removing any of them. That is growth in the number of deferrals,
+> not a constant, and re-deferring a monthly alert is precisely what a PI who
+> deferred it once will do. Kept anyway: re-raising is the safe direction, and every
+> card is journaled, so the growth is visible rather than silent. Passing
+> `dedupe_slug` and `fingerprint` together where a *resolved* card still occupies the
+> slot returns `None` from the slug arm; no caller does both, and the ordering
+> contract is what is pinned.
+
 **Steps:**
 
-- [ ] Confirm the 21.1 precondition: `grep -n "dedupe_slug" src/memoria_vault/runtime/subsystems/lib/inbox.py` shows a `dedupe_slug` parameter on `write_finding` (not only on `write_work_prompt`). If not, STOP and land Plan 21 Task 21.1 first.
-- [ ] Write the failing contract tests. Append to `tests/test_inbox_cards.py`:
+- [x] Confirm the 21.1 precondition: `grep -n "dedupe_slug" src/memoria_vault/runtime/subsystems/lib/inbox.py` shows a `dedupe_slug` parameter on `write_finding` (not only on `write_work_prompt`). If not, STOP and land Plan 21 Task 21.1 first.
+- [x] Write the failing contract tests. Append to `tests/test_inbox_cards.py`:
 
 ```python
 def test_finding_fingerprint_dedupes_against_open_card_and_touches_last_seen(tmp_path):
@@ -8769,8 +9079,8 @@ def test_finding_fingerprint_reraises_after_resolution(tmp_path):
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 2
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_inbox_cards.py -k fingerprint -v` — expected failure: `TypeError: write_finding() got an unexpected keyword argument 'fingerprint'`.
-- [ ] Write the minimal implementation in `src/memoria_vault/runtime/subsystems/lib/inbox.py`:
+- [x] Run to verify failure: `python -m pytest tests/test_inbox_cards.py -k fingerprint -v` — expected failure: `TypeError: write_finding() got an unexpected keyword argument 'fingerprint'`.
+- [x] Write the minimal implementation in `src/memoria_vault/runtime/subsystems/lib/inbox.py`:
   1. Extend the vaultio import (line 16) to `from memoria_vault.runtime.vaultio import frontmatter_doc, read_frontmatter, split_frontmatter, write_frontmatter_doc, write_text_durable`.
   2. Add `fingerprint: str = ""` as the last parameter of `write_finding` (after the post-21.1 `dedupe_slug: str = ""`).
   3. Immediately after the `if card_type == "flag" and not (target or citekey):` validation block (currently ends line 95), insert:
@@ -8815,8 +9125,8 @@ def _touch_last_seen(path: Path) -> None:
     write_frontmatter_doc(path, frontmatter, body)
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_inbox_cards.py -v` — all tests pass (including the pre-existing and 21.1 tests).
-- [ ] Write the failing sweep test. Append to `tests/test_sweeps_retraction.py`:
+- [x] Run to verify pass: `python -m pytest tests/test_inbox_cards.py -v` — all tests pass (including the pre-existing and 21.1 tests).
+- [x] Write the failing sweep test. Append to `tests/test_sweeps_retraction.py`:
 
 ```python
 def test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived(
@@ -8871,15 +9181,15 @@ def test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived(
         _m._RW_INDEX = None
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_sweeps_retraction.py::test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived -v` — expected failure: `assert len(open_cards) == 1` fails with 2 (the duplicate-alert-per-sweep bug, live).
-- [ ] Wire the sweep. In `src/memoria_vault/runtime/subsystems/integrity/retraction/retraction.py`, add one argument to the `inbox_writer.write_finding` call (lines 321-333), after `loudness="alert",`:
+- [x] Run to verify failure: `python -m pytest tests/test_sweeps_retraction.py::test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived -v` — expected failure: `assert len(open_cards) == 1` fails with 2 (the duplicate-alert-per-sweep bug, live).
+- [x] Wire the sweep. In `src/memoria_vault/runtime/subsystems/integrity/retraction/retraction.py`, add one argument to the `inbox_writer.write_finding` call (lines 321-333), after `loudness="alert",`:
 
 ```python
                     fingerprint=f"retraction:{normalize_doi(doi)}",
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_sweeps_retraction.py -v` — all tests pass.
-- [ ] Run the gate: `python scripts/verify` — clean.
+- [x] Run to verify pass: `python -m pytest tests/test_sweeps_retraction.py -v` — all tests pass.
+- [x] Run the gate: `python scripts/verify` — clean.
 - [ ] Commit:
 
 ```
@@ -8888,6 +9198,164 @@ git commit -m "feat(attention): open-status fingerprint dedupe for findings; ret
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+---
+
+### Task U3-SUB.4: release-reconcile for out-of-band card deletion (closes #1616)
+
+Added after U3-SUB.1/.2/.3 merged. It closes the standing limit U3-SUB.2's review
+amendment declared and issue #1616 recorded: the runtime records what the runtime
+causes, so a card removed any other way holds its `inbox/` path with no release row
+coming for it.
+
+**Framing correction — the issue names the wrong silencer, and its own description
+will send the next reader after state that does not exist.** U3-SUB.3's dedupe keeps
+nothing in the database: `_open_fingerprint_match` re-scans live `inbox/*.md` files
+on every call, and `fingerprint` appears nowhere in `runtime/schema.sql` or
+`runtime/state.py`. Deleting a card cannot poison dedupe — it *frees* it. The real
+silencer is the **journal path-hold**: `_held_disposition_targets`
+(`lifecycle.py:100-133`, pre-task `:91-123`) folds a resolved card's claim open until an
+`EVENT_ATTENTION_ARCHIVED` release row, and **nothing observes an `inbox/`
+deletion** — the directory is outside every `bundle_roots` entry
+(`workspace_seed/.memoria/schemas/folders.yaml:4`) and `_pi_edit_targets`
+(`trusted_writer.py:1115`) skips any path that is not `is_file()`. So a card the PI
+deletes in Obsidian, or that `git restore`/`revert` removes, leaves its path held
+with no release row coming, and every later card at that reused name is journaled by
+nothing while the review gate honours its close.
+
+Precisely, because "forever" in the issue is one step too strong and the next reader
+should not have to re-derive it: the hold lasts until *some* card at that path is
+archived by compaction, which repairs the path and loses that card's disposition on
+the way. For a PI whose habit is deleting cards rather than resolving them, that
+never happens. The issue's comment thread — the loss is now a whole condition's
+history rather than one row of it, because U3-SUB.3 stopped the duplicate cards that
+were accidentally carrying the journal's coverage — is exactly right and unaffected
+by the correction.
+
+**Mechanics.** In `compact_resolved_cards`, **under the existing workspace lock** —
+after the in-lock `journal_unattributed_dispositions` call, before the unlink loop —
+diff `_held_disposition_targets(vault)` against the filesystem. For each held relpath
+whose file is gone, append one `EVENT_ATTENTION_ARCHIVED` row: actor `integrity`, and
+a new `RECONCILE_REASON` constant, *"released a held inbox path whose card was
+removed outside the runtime"*. The same reconcile runs on the **no-resolved-cards
+early-return path** under its own short lock, so a poisoned-and-empty inbox heals on
+the next scan tick — the deletion is itself why there is nothing to archive. Released
+relpaths surface as a `released` key in the result dict, so the scan payload carries
+them fail-visibly.
+
+**The `PreToolUse` cheap-probe pinned test stays.** This task extends contract 12's
+corollary to *"released when the card is archived — or observed gone at the scan
+tick"* and **explicitly rejects** the always-sweep-at-the-gate variant issue #1616
+weighed: it would put a journal read on every review-gated write and retire
+`test_a_vault_with_no_closed_card_never_takes_the_workspace_lock`
+(`tests/test_attention_lifecycle.py:116`). The gate stays cheap, per the ruling
+recorded in U3-SUB.2's trigger-seam decision; the scan is already the periodic,
+explicitly-provenanced hygiene pass and is where this belongs.
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/subsystems/lib/lifecycle.py` (`RECONCILE_REASON`, `_reconcile_row`, `_reconcile_released_paths`, both call sites in `compact_resolved_cards`, module docstring)
+- Modify: `src/memoria_vault/cli.py` (`_compact_resolved_inbox`'s error payload gains `released` so the failure arm keeps the success arm's shape)
+- Modify: `tests/test_attention_lifecycle.py` (reconcile tests; the probe/lock race's rival becomes a faithful winner)
+- Modify: `tests/test_cli_workspace_requests.py` (the scan-seam reproduction of #1616)
+
+**Interfaces:**
+- Consumes: `lifecycle._held_disposition_targets` (U3-SUB.2), `append_explicit_event_batch`, `state.workspace_lock` (re-entrant on the same thread)
+- Produces: `compact_resolved_cards(...) -> dict` gains `"released": list[str]` (sorted vault-relative posix paths, `[]` when nothing was reconciled), carried through the scan payload's `inbox_compaction`. No new event type, no signature change, no new operation.
+
+> **U3-SUB.4 as built (2026-08-01).** Mechanics as stated above. Seven things the
+> task text left to the implementer:
+>
+> 1. **The row is `_reconcile_row`, not `_release_row` with an empty `outputs`.**
+>    Same event type — the fold reads one transition and there is only one, the path
+>    is free — but no `outputs` key at all: the archival row's `outputs` names the
+>    digest that now holds the card, and this card was not filed anywhere. `target_id`
+>    alone keeps it in scope for an `inbox/**` reader, because `_journal_paths`
+>    (`engine/api.py:1064`) sweeps `target_id` as well as `outputs`.
+> 2. **`actor=JOURNAL_ACTOR`, not `COMPACTION_ACTOR`.** The two constants are the
+>    same string `"integrity"` for opposite reasons, so the choice is documentation
+>    rather than behaviour (mutation M4, below, is equivalent by construction). The
+>    reason that applies here is the disposition row's: the runtime is the author of
+>    the row and of nothing it describes. The reason text stops at *that* the removal
+>    happened outside the runtime — `inbox/**` is writable by the PI's hand, a `git
+>    restore` and an adapter alike, no observer saw which, and the journal forbids
+>    UPDATE and DELETE, so naming one would be U3-SUB.1's Critical again.
+> 3. **Occupancy is observed, never inferred.** A held path that still carries a file
+>    is left alone whatever the file is (`.exists()`, so a name occupied by anything
+>    is not free). Releasing an occupied path is the catastrophic direction: a
+>    `deferred` card is a permanent resident nothing archives, so a wrongly released
+>    path would re-journal its disposition on every review-gated write, permanently
+>    and undeletably.
+> 4. **Before the unlinks is load-bearing**, as the task says. Taken after them the
+>    diff reads every card this run archived as gone and writes each a second release
+>    row claiming it was removed outside the runtime — false, about the one removal
+>    the runtime did cause.
+> 5. **The race fixture's rival became faithful.**
+>    `test_a_tail_archived_between_the_probe_and_the_lock_is_not_archived_twice`
+>    simulated a winner that unlinked a card and wrote no release row. That state is
+>    now exactly the reconcile's trigger, and no real winner can produce it (release
+>    row first, then the unlink, which U3-SUB.2 pinned). The rival now writes its row
+>    before unlinking, and the assertion sharpens from "no release rows" to "the
+>    winner's row and nothing of the loser's".
+> 6. **Two paths, two pins.** The early-return reconcile and the in-lock reconcile
+>    are covered by disjoint tests: removing either fails only its own (M5/M6).
+> 7. **`released` is sorted.** A set's iteration order would reach the scan payload
+>    and the journal batch, so the N>1 test pins the order as well as the count.
+>
+> **Declared, not fixed.**
+> - **A successor raised onto a held path before any scan sees the gap keeps the
+>   hold.** The reconcile heals what it can observe, and the journal row carries no
+>   card identity — `target_id` is a path — so "same path, different card" is
+>   unobservable by construction. That successor's disposition is still lost, and the
+>   path then heals the old way when compaction archives it. Closing this needs card
+>   identity in the disposition row, which is a format change to an append-only log.
+> - **`_uncommittable` still precedes the in-lock reconcile**, so a vault that has
+>   something to archive and a momentarily unusable git defers its reconcile to the
+>   next scan. The early-return path has no git check at all, which is where a
+>   deleted-card vault lands anyway.
+> - **The gate does not reconcile**, per the rejection above. A poisoned path is
+>   repaired at scan cadence, not at write cadence.
+> - **The invariant remains unenforced.** "Every code path that removes an
+>   `inbox/*.md` card owes a release row" is still prose; what changed is that the
+>   paths *outside* `src/` — the PI, git, an adapter — no longer owe one, because the
+>   scan now observes them.
+>
+> **Mutation proofs (11 applied, restored after each; suite = the 61-test
+> `tests/test_attention_lifecycle.py` plus the new CLI test for M5/M6).** Killed:
+> M1 reconcile moved after the unlink loop (1 failure, the double-release test
+> alone); M2 the fold replaced by an order-blind "disposed and not on disk" set (2:
+> the once-not-per-tick test and the faithful-rival race); M3 occupancy check dropped
+> (14, including all three `still carries a card` cases); M5 early-return reconcile
+> removed (5, including the CLI seam test, and *not* the in-lock test); M6 in-lock
+> reconcile removed (1, the in-lock test alone); M7 the row borrows `ARCHIVE_REASON`
+> (2); M8 the row carries `outputs` (1); M9 `sorted` dropped (1). **Survivors, all
+> three judged intentional:** M4 `JOURNAL_ACTOR` → `COMPACTION_ACTOR` — the two
+> constants are the same string, so no test can distinguish them and the choice is
+> documentation (see 2); M10 the reconcile moved *above* the in-lock
+> `journal_unattributed_dispositions` — order-independent by construction, since a
+> card on a held path either exists (the reconcile skips it) or does not (journaling
+> has nothing to read), and the module makes no claim about it; M11 `.exists()` →
+> `.is_file()` — differs only when a directory or a dangling symlink occupies a
+> card's name, which no fixture produces and neither `inbox.py` writer can create.
+> `.exists()` is kept as the conservative reading of "occupied" and left unpinned
+> rather than pinned to an arbitrary state.
+
+**Steps:**
+
+- [x] Verify the framing before building on it: `grep -rn "fingerprint" src/memoria_vault/runtime/schema.sql src/memoria_vault/runtime/state.py` (empty), `bundle_roots` in `workspace_seed/.memoria/schemas/folders.yaml` (no `inbox`), and the `is_file()` guard in `_pi_edit_targets`.
+- [x] Write the reconcile tests red first (`tests/test_attention_lifecycle.py`): held + missing → released with the successor's close journaled after it; released once, not per scan tick; held + occupied → never released, parametrized over `resolved`/`deferred`/`open` with the release rows each state legitimately produces; a card archived in the same run released once, by the archival row; N>1 vanished paths; the row's own shape. Plus the scan-seam reproduction in `tests/test_cli_workspace_requests.py` (a `deferred` card journaled, deleted, then re-raised).
+- [x] Implement `RECONCILE_REASON`, `_reconcile_row`, `_reconcile_released_paths`, and the two call sites; extend the module and `_held_disposition_targets` docstrings; add `released` to `cli._compact_resolved_inbox`'s error payload.
+- [x] `ruff format` the four files; `python -m pytest tests/test_attention_lifecycle.py` green.
+- [x] Mutation-test the ordering and state claims in both directions; restore each.
+- [x] Run the gate: `python scripts/verify` — `verify: OK`.
+- [ ] Commit:
+
+```
+git add src/memoria_vault/runtime/subsystems/lib/lifecycle.py src/memoria_vault/cli.py tests/test_attention_lifecycle.py tests/test_cli_workspace_requests.py docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md
+git commit -m "fix(attention): release a held inbox path whose card was removed outside the runtime (closes #1616)
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+```
+
 # U3-ENG — Engine-side view endpoints (`GET /v1/views/attention`)
 
 Section of the composite U3/U4/BOOT implementation plan. Repo: `/home/eranr/memoria-vault`
@@ -8947,6 +9415,283 @@ block is preserved inside `view.blocks`, and an unknown renderer kind fails visi
 
 No task here writes journal events, so no floor-golden regeneration is needed.
 
+### Execution amendment — U3-ENG.1/.2/.3 as built (2026-08-01)
+
+Recorded by the executor of the atomic U3-ENG.1/.2/.3 slice. It governs those
+three tasks only; U3-ENG.4–.6 keep every checkbox and body they had. The
+2026-07-29 reconciliation amendment still governs the payload; the producer
+below is its canonical body, with the one hoist recorded in item 1.
+
+1. **`ATTENTION_HONESTY_FIELDS` survives as the mapping, not a flat name list.**
+   U3-ENG.1's Produces line declares the constant, and the reconciliation
+   amendment's canonical body inlines the same data as a `(frontmatter, wire)`
+   pair tuple. Both are kept by hoisting that literal to the declared name:
+   `(("argument_for", "argument_for"), ("argument_against", "argument_against"),
+   ("what_tipped_it", "tipped_by"), ("certainty", "certainty"), ("raised_by",
+   "raised_by"))`. The payload is byte-identical to the inline form. The flat
+   nine-name tuple U3-ENG.1 drafted is gone with the flat card it served:
+   `action`, `finding`, `agent_recommendation`, and `what_happened` are no
+   longer public card fields, and `what_tipped_it` is renamed on the wire, so a
+   name list can no longer express the mapping. Hoisting rather than inlining is
+   what lets the test pin the wire names against a literal instead of looping
+   the constant under test.
+2. **Both constants are pinned against literals before anything iterates them.**
+   `ATTENTION_LOUDNESS_RANK` is asserted equal to
+   `{"block": 0, "alert": 1, "notice": 2, "quiet": 3}` and then cross-checked
+   against `inbox.LOUDNESS` — two independently owned constants, so a band
+   added to the writer without a rank fails. A separate fixture reaches every
+   band through its real writer (`write_proposal` defaults to `notice`,
+   the commonest card in the queue), so a rank swap cannot pass.
+3. **One cross-language conformance test — kinds *and* field names.**
+   `viewspec.js` is the producer of the block-shape contract (Cross-section
+   contract 3) and the only consumer that draws it, so
+   `test_attention_view_payload_matches_what_the_plugin_renderer_reads` holds
+   this payload to three things parsed out of that file: the `case` labels of
+   `renderBlock`'s `switch` (the dispatch mechanism, not the
+   `KNOWN_BLOCK_KINDS` declaration, which is separately asserted equal to it);
+   every `block.<field>` read in the card renderer and its block-taking
+   helpers, which must be a subset of the emitted card's keys behind a
+   five-name floor so the subset can never pass vacuously; and the
+   `LOUDNESS_RANK` map plus the *expression* of its unknown-band fallback.
+   Comparing only the two declared catalogs was the weaker earlier form and
+   missed a whole class: a renderer that renames its read of `kind_line` or
+   `title` draws every card with that line blank — no unknown-block box,
+   nothing logged, green suites on both sides. Confirmed by mutation: renaming
+   either read, renaming a `case` label, or changing the fallback to `-1` or to
+   `notice + 1` each fails this test now and none did before. Two further
+   blindnesses were closed after review: every scan runs over
+   **comment-stripped** code, because a read deleted while a comment still
+   named it satisfied the floor and hid from the subset; and the scan
+   **follows the dispatch rather than naming a function** — `case "card":` to
+   its callee, then that callee to whatever helpers it hands the whole block to
+   — because a name-bound scan happily validates a renderer no card is routed
+   to. Both mutants die now, and the control that shows the binding is to
+   behaviour rather than to the identifier is that a *faithful* rename of the
+   renderer stays green. What this test does *not* own is that a dispatched
+   kind renders anything sensible — that chain closes in
+   `packages/memoria-obsidian/scripts/test-viewspec.mjs` (which loops the
+   catalog through `renderBlock` and asserts node text and attributes) run
+   inside pytest by `tests/test_memoria_obsidian_package.py`. It is also not
+   U3-ENG.5's `VIEW_BLOCK_KINDS` assertion, which stays inside Python and stays
+   owed.
+4. **Knowingly unfixtured — ten, all *equivalent-until*, none equivalent-forever.**
+   This slice's own sweeps run 64 engine mutations (10 survive) and 16
+   cross-language ones plus a control (0 survive; the control is a *faithful*
+   renderer rename, which must stay green). Review sweeps ran 95 engine and 42
+   cross-language mutations across three rounds. The ten survivors are these,
+   each named with the collaborator it depends on.
+   Stating that dependency is the point: every one is equivalent only while some
+   function this slice does not own keeps its current behaviour, so "provably
+   equivalent" here always means "given today's collaborator", never "no input
+   could distinguish them". Anything that failed that test was deleted instead —
+   see the `TypeError` arm in item 5.
+   - `str(card["loudness"] or "")` (both call sites),
+     `str(card["body_data"]["text"])` (dropping the coercion, and reading
+     `card["body"]` instead), and `str(card["path"])` — all rest on
+     `_attention_card`, which normalizes falsy loudness to `""`, wraps
+     `split_frontmatter`'s `str` body into `body_data`, and builds `path` from
+     `as_posix()`. Kept as defensive coercions precisely *because* that
+     collaborator is not ours to hold still.
+   - `isinstance(value, datetime.date)` narrowed to `datetime.datetime` — a
+     plain `date` then falls to `str(value or "")`, and `str(date)` happens to
+     equal `date.isoformat()`. Equivalent until those two spellings diverge;
+     the `datetime` case is separately fixtured and does *not* survive, because
+     `str(datetime)` uses a space where `isoformat()` uses `T`.
+   - `Path(workspace)` dropped at either call site — equivalent until a caller
+     passes a `str`. Every caller in the tree passes a `Path`; the wrap is what
+     lets the public signature keep accepting either.
+   - The `card["path"]` tiebreak in `_attention_view_sort_key` —
+     `_attention_cards` already returns path-sorted cards and `list.sort` is
+     stable, so removing it cannot reorder anything today. Kept so the total
+     order is a property of the sort key rather than of an upstream glob's
+     incidental ordering.
+   - The `or ""` in the *value* half of the `missing_required_credentials`
+     comprehension — the filter clause already requires
+     `str(row.get("name") or "")` to be truthy, so by the time the value is
+     built `row.get("name")` cannot be absent or blank. Mutating the filter
+     clause instead, or both halves, is killed by a report row that carries no
+     `name` key at all.
+   - `len(ATTENTION_LOUDNESS_RANK)` → the literal `4`: equivalent-until in the
+     sharpest sense — it breaks the moment a fifth band lands. No fixture can
+     kill it without changing the constant under test, but item 3's
+     fallback-expression assertion fails the instant a fifth band is added to
+     either side, which is when the divergence would otherwise go invisible.
+5. **Engine order and plugin `sortCards` diverge on one input, deliberately
+   fixtured rather than silently equal.** They agree for every non-future card:
+   the engine sorts on the full `created` string ascending, the plugin on
+   `age_s` descending, and `Array.prototype.sort` is stable over the order the
+   engine already produced. A hand-edited *future* `created` breaks the
+   agreement — `age_days` goes negative, so the engine sorts the card ahead of
+   the undated `"9999-12-31"` sentinel while the plugin sorts it behind every
+   `age_s == 0` card. `test_attention_view_ages_cards_from_created` fixtures it
+   (`age_s == -259_200`, `age_label == "-3d"`) and pins the engine's order, so
+   the behaviour cannot drift silently: `age_s = max(0, ...)` fails that test.
+   Clamping was rejected here because the reconciliation amendment fixes the
+   formula and the reconciliation belongs to whoever owns the queue's order.
+   **The debt is a checkbox, not this note:** U3-PLUG.7 carries it, because that
+   is the task where the divergence first becomes visible to the PI.
+   `_attention_age_days` also drops the drafted `TypeError` arm of its `except`.
+   `_attention_created` is its only producer and always returns a `str`, so
+   neither the slice nor `date.fromisoformat` can raise `TypeError` there; the
+   arm was unreachable, no fixture could name a producer for it, and AGENTS.md
+   prefers deletion to an unreachable guard. If V2's reuse of this helper
+   introduces a non-`str` caller, it re-adds the guard together with the fixture
+   that reaches it.
+6. **Three more declared symbols and one key died with Curate.** U3-ENG.2's
+   Produces line still names `ATTENTION_PROPOSAL_KINDS`, `ATTENTION_CARD_ACTIONS`,
+   and `ATTENTION_PROPOSAL_ACTION`, and gives the action row a `ref` key. None
+   is produced. The reconciliation amendment removed the generic Curate button,
+   which was the only reason a row differed by card kind, so there is no
+   proposal-kind set and no per-kind action pair to hold; its canonical row
+   carries `id`, `kind`, and `actions` only, and the target path travels inside
+   each action's `payload.target_id`. Item 1 hoisted `ATTENTION_HONESTY_FIELDS`
+   because a real consumer contract still needed a name; these four have no
+   consumer and are recorded dead rather than resurrected. The V2 plan's
+   cross-reference to "U3-ENG's Produces"
+   (`2026-07-16-v2-evidence-review.md:1584-1590`) names only surviving symbols,
+   so nothing downstream breaks.
+7. **`_attention_card`'s projection read is left alone.** This slice consumes
+   `_attention_cards`; it does not touch the raw
+   `frontmatter.get("projection") != "attention"` comparison or the bare
+   `read_text(encoding="utf-8")` beside it. Both are issue #1617's, and adding a
+   fourth spelling of the comparison here would make that issue worse. A
+   non-UTF-8 file in `inbox/` therefore raises out of this view exactly as it
+   already raises out of `read_attention`.
+8. **`link_relations` is proved derived, not merely correct today.** Asserting
+   the served roster equals `sorted(LINK_RELATIONS)` is satisfied by any
+   producer that emits today's six, so a frozen literal passed the whole gate.
+   `test_attention_view_summary_derives_link_relations_from_the_edge_roster`
+   monkeypatches `api.LINK_RELATIONS` to a sentinel roster and asserts the
+   payload follows it, the same shape already used for `__version__`,
+   `now_iso`, and `credential_report`. This is the field graph ERP-A.5 pinned to
+   this slice: a seventh relation must reach the plugin's link picker through
+   the payload, and nothing else in the suite would have noticed if it did not.
+9. **The three `Commit:` boxes stay unticked.** The slice is one commit by the
+   reconciliation amendment, and the executing session was directed to leave
+   committing to its caller. Every other box below is ticked against the atomic
+   slice's equivalent, not against its superseded literal body: the drafted flat
+   assertions, the per-task red stages, and the drafted three-then-five-then-six
+   test counts are drafting history. What actually ran is one red stage (every
+   test failing on the absent attribute), one implementation, and one green
+   stage of 21 tests in `tests/test_attention_view.py`.
+
+### Execution amendment — U3-ENG.4/.5/.6 as built (2026-08-01)
+
+Recorded by the executor of U3-ENG.4/.5/.6. It governs those three tasks only;
+the 2026-07-29 reconciliation amendment still governs the payload and the
+U3-ENG.1/.2/.3 execution amendment above is unchanged.
+
+1. **The drafted refusal literals are superseded, exactly as the U1 amendment
+   said they would be.** U1 M.3 has landed, so U3-ENG.4's
+   `{"ok": False, "error": "method not allowed"}` and U3-ENG.6's
+   `{"ok": False, "error": "unauthorized"}` executed as the named forms
+   `"method not allowed: POST /v1/views/attention"` and
+   `"unauthorized: missing or invalid bearer token"` — the 2026-07-29 "U1
+   transport, scope-walk, and CLI-parity handoffs" amendment, item 1.
+
+2. **The registered row carries `job: "review"`.** U1 J.1 has landed, so the
+   reconciliation amendment item 6's first branch applies: the drafted dict
+   gains `"job": "review"` — the queue `attention.list`/`attention.get`
+   already file under `review`, seen through another surface — and
+   `test_surface_contract_job_mapping_is_pinned` is updated in the same
+   change. No jobless row was left.
+
+3. **M.3's scope-walk probe landed with the route.**
+   `"views.attention": ("excluded", "{attention_path}")` reuses M.3's seeded
+   card and adds no second fixture; the registry-derived
+   `set(PROBES) == http_scoped_ids` assertion is untouched, so it is the row's
+   arrival that forces the probe.
+
+4. **`VIEW_BLOCK_KINDS` joined the existing cross-language equality instead of
+   becoming a third roster.** The catalog is declared in three places:
+   `viewspec.js`'s `KNOWN_BLOCK_KINDS`, the `case` labels of its `renderBlock`
+   switch, and `api.VIEW_BLOCK_KINDS`. U3-ENG.1/.2/.3's conformance test
+   already held the first two equal by parsing the dispatch; the Python
+   constant was added to that same line
+   (`dispatched == set(catalog) == set(api.VIEW_BLOCK_KINDS)`) rather than
+   given a test of its own beside it, so no pair of the three can drift.
+   U3-ENG.5's own test still pins the tuple against a literal — order
+   included — before anything iterates it, and names the one cataloged kind
+   this producer never emits (`badge`, the loudness chip other views draw), so
+   a silently widened catalog fails there too.
+
+5. **Additive-block tolerance is two-sided, and the plugin does not *ignore*
+   an unknown kind.** `viewspec.js` renders it as a labeled fallback box
+   carrying the raw JSON — what the section preamble already claims ("an
+   unknown renderer kind fails visibly"). The Python half (the transport
+   imposes no whitelist) is
+   `test_http_dispatch_passes_additive_unknown_blocks_through`, strengthened
+   to carry a future top-level block *and* a future card child through whole,
+   with the known cards keeping their places. The pane half is pinned by the
+   side that decides it: two new cases in
+   `packages/memoria-obsidian/scripts/test-viewspec.mjs` prove an additive
+   block joins a view *between* two known cards without displacing either, and
+   that an additive child fails visible in place rather than blanking its
+   card. That file is not a seeded release artifact
+   (`test_memoria_obsidian_seed_matches_release_artifacts` mirrors only
+   `main.js`, `schema.js`, `manifest.json`, `styles.css`), so **no floor
+   golden moved**: this task stays outside contract 10's serialized set.
+
+6. **The dispatch fixture is N=2 and its scope probe narrows rather than
+   empties.** A single card under a scope matching nothing cannot tell
+   "`read_scope` forwarded" from "`read_scope` hard-coded to nothing".
+   `_seed_two_open_cards` writes one targeted finding and one untargeted
+   proposal, so `?read_scope=notes/alpha.md` must leave exactly one card:
+   forwarding nothing leaves two, forwarding an empty scope leaves none.
+
+7. **The `summary` flag's unfixtured states are named and produced.** Absent
+   (the pane's render request), an explicit `false` from a client that always
+   sends the parameter, and the capitalized `True` a naive client serializes —
+   the state that makes the route's `.lower()` load-bearing. The summary mode
+   is also exercised under a read scope, because the poll pill must never
+   count cards the boot scope hides.
+
+8. **U3-ENG.6 pins the ceiling as well as the door.** Beyond the drafted
+   token/no-token pair it adds two near misses — a prefix of the real token
+   and an extension of it, which kill `startswith`-shaped comparisons — plus
+   two authority ceilings SEAM.1 makes worth stating: `POST` to the view route
+   is refused by the route gate and enqueues nothing (the door-wide PI grant
+   reaches `POST /operation/run` and no other path), and a boot-scoped server
+   serves the scoped view to a valid token while a `read_scope` query cannot
+   widen it. `missing_required_credentials` is asserted nonempty against a
+   cleared environment rather than as a bare key presence: a fresh vault's
+   seeded runner provider does declare a required credential, so the drafted
+   `"missing_required_credentials" in summary` would have passed on a payload
+   that dropped the names.
+
+9. **Two survivors were closed rather than reported, in the files that own
+   them.** `test_surface_contract_views_attention_is_http_only_with_current_shape`
+   pins the whole registered row, because `engine`, `response_version` and the
+   param schema had no other pin — the transport calls `read_attention_view`
+   directly rather than through the registry, and the floor sweep only checks
+   `api_version` for rows that *declare* a `response_version`, so dropping the
+   declaration removed the check instead of failing it.
+   `test_every_swept_http_binding_names_the_registry_route` (floor coverage)
+   holds every `ARG_TABLE` http binding to the route its action declares:
+   `/attention` and `/v1/views/attention` are both scoped attention list reads
+   over the same seeded card, so a mistyped binding kept the read sweep and
+   the scope walk green while never exercising the action they parametrize
+   over. That one guards every row, not only this task's.
+
+10. **One reference row.**
+    `docs/reference/commands-and-transports/local-http-transport.md` mirrors
+    every route in `http_routes()`; the new route joined that table in the same
+    change so the reference does not go stale. Nothing else in `docs/`
+    enumerates the route set, and `views.attention` has no MCP binding to
+    document.
+
+11. **Mutation sweep: 35 mutants, 0 survivors**, over the registered row, the
+    transport branch, the route gate, the bearer check, the scope plumbing,
+    the block catalog on both sides of the language boundary, and this task's
+    own floor/walk wiring. The sweep asserts a green baseline before and after
+    itself, after an earlier run reported every mutant "killed" from a
+    poisoned baseline. A separate 11-case attribution pass mutates one branch
+    and runs one named test, confirming the test whose *name* claims the
+    branch fails alone — including all four auth/authority cases.
+
+12. **The three `Commit:` boxes stay unticked.** The executing session was
+    directed to leave committing to its caller.
+
 ---
 
 ### Task U3-ENG.1: `read_attention_view` — sorted card blocks with present-only honesty fields
@@ -8977,14 +9722,14 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Register the new test file. In `tests/conftest.py`, above the line
+- [x] Register the new test file. In `tests/conftest.py`, above the line
   `    "test_bases.py": "contract",` insert:
 
   ```python
       "test_attention_view.py": "contract",
   ```
 
-- [ ] Write the failing tests — create `tests/test_attention_view.py`:
+- [x] Write the failing tests — create `tests/test_attention_view.py`:
 
   ```python
   """Contract tests for the /v1/views/attention engine view endpoints (U3)."""
@@ -9139,12 +9884,12 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert [card["title"] for card in cards] == ["In scope"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py -v`
   Expected: all three tests fail with
   `AttributeError: module 'memoria_vault.engine.api' has no attribute 'read_attention_view'`.
 
-- [ ] Write the minimal implementation in `src/memoria_vault/engine/api.py`.
+- [x] Write the minimal implementation in `src/memoria_vault/engine/api.py`.
 
   Add to the imports (top of file — `import datetime` above `import json` line 5;
   `now_iso` is used first in U3-ENG.3, so do NOT import it yet):
@@ -9242,7 +9987,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
   `yaml.safe_load`; `write_proposal`/`write_finding` persist it as a quoted string —
   `_attention_created` normalizes both.)
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 3 passed.
 
 - [ ] Commit:
@@ -9274,7 +10019,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_attention_view.py`:
+- [x] Write the failing tests — append to `tests/test_attention_view.py`:
 
   ```python
   def test_attention_view_action_rows_follow_cards_and_name_operations(
@@ -9347,12 +10092,12 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert named <= catalog
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_action_rows_follow_cards_and_name_operations tests/test_attention_view.py::test_attention_view_actions_name_cataloged_operation_ids -v`
   Expected: first fails on the `["card", "action-row", "card", "action-row"]`
   assertion (only card blocks exist); second fails on `assert named` (empty set).
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/engine/api.py`, extend the
+- [x] Write the minimal implementation. In `src/memoria_vault/engine/api.py`, extend the
   U3-ENG.1 constants block:
 
   ```python
@@ -9392,7 +10137,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       }
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 5 passed (U3-ENG.1 tests still green — they filter on `kind == "card"`).
 
 - [ ] Commit:
@@ -9422,7 +10167,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing test — add `from memoria_vault import __version__`
+- [x] Write the failing test — add `from memoria_vault import __version__`
   and `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`
   to `tests/test_attention_view.py`, then append:
 
@@ -9459,11 +10204,11 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert payload["missing_required_credentials"] == ["MODEL_KEY"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_summary_returns_cheap_counts -v`
   Expected: `TypeError: read_attention_view() got an unexpected keyword argument 'summary'`.
 
-- [ ] Write the minimal implementation. Alongside the existing U3 imports, add
+- [x] Write the minimal implementation. Alongside the existing U3 imports, add
   `from memoria_vault import __version__`,
   `from memoria_vault.runtime.secrets import credential_report`, and
   `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`;
@@ -9510,7 +10255,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       )
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 6 passed.
 
 - [ ] Commit:
@@ -9555,7 +10300,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_attention_view.py`:
+- [x] Write the failing tests — append to `tests/test_attention_view.py`:
 
   ```python
   def test_http_dispatch_serves_attention_view(workspace: Path) -> None:
@@ -9612,14 +10357,14 @@ No task here writes journal events, so no floor-golden regeneration is needed.
   U1 M.3 is re-anchored; do not create the scope-walk file early or replace
   its dynamic completeness assertion with a count.
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_http_dispatch_serves_attention_view tests/test_attention_view.py::test_http_dispatch_rejects_wrong_method_for_attention_view tests/test_surface_contract.py -v`
   Expected: dispatch tests fail with status `HTTPStatus.NOT_FOUND` (route not in
   registry); `test_surface_contract_registry_is_minimal_and_unique` and
   `test_surface_contract_matches_current_http_and_mcp_bindings` fail on the added
   entries.
 
-- [ ] Write the minimal implementation.
+- [x] Write the minimal implementation.
 
   In `src/memoria_vault/engine/surface_contract.py`, insert after the `attention.get`
   action dict (before the `concepts.list` entry):
@@ -9661,7 +10406,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       },
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```bash
   python -m pytest tests/test_attention_view.py tests/test_surface_contract.py \
@@ -9706,7 +10451,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the tests — append to `tests/test_attention_view.py`:
+- [x] Write the tests — append to `tests/test_attention_view.py`:
 
   ```python
   def test_attention_view_emits_only_cataloged_block_kinds(workspace: Path) -> None:
@@ -9762,21 +10507,21 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert response["view"]["blocks"][-1] == {"id": "future", "kind": "sparkline"}
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_emits_only_cataloged_block_kinds tests/test_attention_view.py::test_http_dispatch_passes_additive_unknown_blocks_through -v`
   Expected: the first fails with `AttributeError: module 'memoria_vault.engine.api'
   has no attribute 'VIEW_BLOCK_KINDS'`. The second **passes immediately** — it is a
   deliberate regression pin proving the transport imposes no block-kind whitelist, so
   a future additive block type cannot break the contract; keep it.
 
-- [ ] Write the minimal implementation — in `src/memoria_vault/engine/api.py`, directly
+- [x] Write the minimal implementation — in `src/memoria_vault/engine/api.py`, directly
   after `VIEW_SPEC_VERSION = "view-spec.v1"`:
 
   ```python
   VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row", "evidence-list")
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 10 passed.
 
 - [ ] Commit:
@@ -9805,7 +10550,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_attention_view.py`:
+- [x] Write the failing tests — append to `tests/test_attention_view.py`:
 
   ```python
   @pytest.fixture
@@ -9880,14 +10625,14 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert "missing_required_credentials" in summary
   ```
 
-- [ ] Run to verify the tests exercise real sockets and fail only if the route were
+- [x] Run to verify the tests exercise real sockets and fail only if the route were
   absent: `python -m pytest tests/test_attention_view.py -k live_server -v`
   Expected: 2 passed (the route landed in U3-ENG.4; these tests bind the auth
   semantics end-to-end — to confirm they are live, temporarily change the fixture
   token to `"x"` and watch `test_live_server_serves_view_and_summary_with_token` fail
   with 401, then restore).
 
-- [ ] Run the full gate: `python scripts/verify`
+- [x] Run the full gate: `python scripts/verify`
   Expected: pass (lint, product gates, tests incl. the floor sweep entry from
   U3-ENG.4, offline smoke, syntax).
 
@@ -9939,13 +10684,120 @@ envelopes or fields.
   ignores any caller-supplied actor and persists `actor="pi"`; the client
   intentionally omits that non-authoritative field.
 
-**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` and U3 §4 names it "the single source"; a plugin-side copy would be a second source that drifts from engine truth, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill.
+**Relation-roster decision (Task U3-PLUG.5/.8):** the roster comes from the **server payload** (`summary.link_relations`), not a hardcoded triple. Justification against single-source doctrine: `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/edges.py` (formerly `schema.py:39`; moved by the graph-edges plan ERP-A.1) and U3 §4 names it "the single source"; a plugin-side copy would be a second source that drifts from engine truth, while "rendered, never invented" (U3 §2) already commits the plugin to rendering server values verbatim. Cost accepted: the relate control is inert until the first successful poll — zero *new* failure modes, since without a live server the enqueue it exists to perform is impossible anyway; the modal states this and points at the pill. **Recorded amendment (EDGES §4, graph-edges plan ERP-A.5 — landed 2026-08-01):** `warrant`/`qualifier`/`rebuttal` are activated, so the served roster is now exactly `edges.LINK_RELATIONS` — six verbs (`contradicts`, `extends`, `qualifier`, `rebuttal`, `supports`, `warrant`) — and still excludes `tension`, which stays machine-surfaced and PI-confirmed. Every acceptance here reads "exactly the served verbs" — never a counted three — and the control renders as a segmented control or dropdown accordingly.
 
 Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOnly: true` (spawning `child_process` requires desktop Node — a forced consequence of the handshake design); within a loudness band cards sort **oldest first** (largest `age_s`; anti-starvation reading of U3 §3's "then age"); handshake `engine_version` remains transport metadata and drives no plugin lifecycle decision.
 
+### Execution amendment — U3-PLUG.1–.4 as built (2026-08-01)
+
+Recorded by the executor of U3-PLUG.1–.4. It governs those four tasks only;
+U3-PLUG.5–.11 keep every checkbox and body they had; the only edit made to
+them is the command repair recorded in item 1.
+
+1. **The harness command is bare `node --test`; `node --test scripts/` never
+   worked.** The directory argument is not a newer-node regression — it fails on
+   the node this repo pins. Measured directly, same worktree, same four suites:
+
+   | command | node 22.20.0 (`mise.toml`, CI) | node 24.18.0 (local) |
+   | --- | --- | --- |
+   | `node --test scripts/` | **exit 1** | **exit 1** |
+   | `node --test` | 41 pass, exit 0 | 41 pass, exit 0 |
+
+   Both resolve `scripts` as a module path and die with
+   `Cannot find module …/scripts` (`node --test .` answers `Could not find
+   '.'`). Shipping the drafted command would therefore have been a red CI run on
+   the pinned runtime, not a near miss. Bare `node --test` keeps the documented
+   recursive-discovery behaviour on both majors, so `package.json`'s `"test"`
+   script and `tests/test_memoria_obsidian_package.py` both use `node --test`
+   with the plugin package as the working directory, and the produced convention
+   is unchanged: every `packages/memoria-obsidian/scripts/test*.mjs` file runs
+   under both `npm test` and the Python contract test. Every step in this plan
+   that quoted the directory form is repaired in place (U3-PLUG.5–.11 and
+   U3-CANVAS); the same substitution is still owed to the
+   `node --test scripts/` quotations in
+   `docs/superpowers/plans/2026-07-16-v2-evidence-review.md`, which this
+   execution did not touch. Two quotations of the *pre-switch* command survive
+   here and are stale from U3-PLUG.1 onward: the "Context the executor must
+   know" note above, which records the harness this task replaces, and
+   U3-CANVAS's "the Node schema harness (`node scripts/test.mjs`, untouched)"
+   step, whose parenthetical now means `node --test`. Neither changes what that
+   step must do.
+2. **The Python contract test pins how much ran, not just the exit code.**
+   `node --test` exits **0 when it discovers no files at all** (measured on both
+   majors). An outer test asserting only `returncode == 0` therefore stays green
+   after every inner suite stops being discovered — rename the four files out of
+   the runner's glob and all of the old assertions pass. Since this task
+   replaced a loud harness (`node scripts/test.mjs` → `MODULE_NOT_FOUND` →
+   exit 1) with a discovery-based one, the switch is only safe with a floor:
+   `test_memoria_obsidian_node_suite_still_discovers_every_file` parses
+   `# tests N` from a pinned `--test-reporter=tap` run, asserts
+   `N >= MIN_NODE_TESTS`, asserts the four known suite files are present, and
+   asserts no `scripts/*.mjs` file sits outside the runner's name patterns.
+   Later tasks that add a suite raise `MIN_NODE_TESTS` in the same change.
+3. **`sortCards` loses its redundant `block` pin.** The drafted body ranked
+   `block` twice: once through `pinA`/`pinB` and again through
+   `LOUDNESS_RANK.block === 0`. Whenever `pinA !== pinB` exactly one card is
+   `block`, and `rank(block) = 0` is below every other rank, so the rank branch
+   already returns the same sign — the pin could never change an outcome, and
+   the prescribed test's claim to exercise it was satisfied by the rank branch
+   instead. The pin is deleted and a comment records why the rank alone is
+   enough; the fixture still fails if `LOUDNESS_RANK.block` stops ranking first.
+4. **The loudness fixture carries every band the engine writes.** The drafted
+   fixture omitted `notice`, so swapping the `alert` and `notice` ranks stayed
+   green. `lib/inbox.py:21` defines `("quiet", "notice", "alert", "block")` and
+   validates it on write, and `notice` is the *default* for a written proposal
+   (`lib/inbox.py:39,138`) — the omitted band was the commonest card in the
+   queue. The `sortCards` fixture now spans all four bands plus an unrecognized
+   one, and expects `["b", "d", "c", "n", "a", "e"]`.
+5. **`renderCard`'s `arguments` local is renamed `argumentNodes`.** Legal in the
+   package's declared CommonJS, but nothing in this repo lints JS, so a reader
+   mis-parsing it as the arguments object would never be corrected by a tool.
+6. **`test-pill.mjs` pins `process.env.TZ`.** `formatAsOf` is specified in local
+   time, and its drafted test built the expected instant with the same local
+   API. Under CI's `TZ=UTC` the local and UTC clocks coincide, so both
+   `getHours → getUTCHours` and `getMinutes → getUTCMinutes` survived there
+   while dying elsewhere — coverage that depends on the developer's timezone.
+   The file now pins `Asia/Kolkata` (a half-hour offset moves the hour *and* the
+   minute), asserts the pin took effect, and states the `formatAsOf` instant in
+   UTC against a local expectation, so the test can no longer be satisfied by
+   the UTC call it exists to reject.
+7. **Tests added beyond the drafted bodies.** Each names the producer state that
+   reaches the branch it covers, and each was confirmed to fail under a mutation
+   of that branch alone:
+   - `handshake.js`: an absent (not merely blank) engine-command setting; empty
+     and null handshake stdout; a nonpositive or fractional port; a payload from
+     an engine older than BOOT-A.8 that omits `pid` entirely; a respawn gate
+     built with no injected clock (main.js's zero-argument call); a respawn gate
+     whose caller only ever calls `tryAcquire`; both sides of the respawn
+     window's boundary, so a *shortened* window is caught and not only a
+     lengthened one; and `HANDSHAKE_TIMEOUT_MS`, which nothing else pinned.
+   - `pill.js`: a retained `missing_required_credentials` name from the last
+     good summary combined with a failing poll — the connection fault outranks
+     the key nag for all four fault states.
+   - `viewspec.js`: a non-object block; an absent `view` (the summary payload
+     has none); a versioned view whose block list is absent; a known-version
+     view actually rendering its blocks in order; a card's loudness band on the
+     card and its kind line; an empty evidence list and a labelless evidence
+     row; a card whose `blocks` is not a list; an unrecognized loudness band
+     that is also the oldest card; a card with no `age_s`; `sortCards` not
+     reordering the caller's array; a key that is neither `j` nor `k`; a nested
+     `materialize` walk that pins child parentage, attributes, and the return
+     value; every tree carrying the declared `attrs`/`children` slots; and any
+     omitted payload field rendering empty rather than the literal word
+     `undefined`.
+8. **Knowingly unfixtured — one item, and it is provably equivalent.**
+   `Number(payload.pid || 0)` in `handshake.js` survives mutation to
+   `Number(payload.pid)`: every falsy input coerces to `0` or `NaN` and is
+   refused by the same `Number.isInteger(...) && > 0` guard with the identical
+   message, so no input distinguishes them. The `String(x || "")` coercions
+   first recorded here as unfixtured were **not** equivalent — `String(undefined)`
+   is `"undefined"`, and `JSON.stringify(undefined)` is `undefined`, which would
+   have put the string `"undefined"` in `data-payload` for the pane's click
+   handler to choke on. They are now covered by item 7's last entry.
+
 ---
 
-### Task U3-PLUG.1: Switch the plugin test harness to `node --test scripts/`
+### Task U3-PLUG.1: Switch the plugin test harness to `node --test`
 
 **Files:**
 - Modify: `packages/memoria-obsidian/package.json` (line 8, the `"test"` script)
@@ -9953,29 +10805,29 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Interfaces:**
 - Consumes: existing `packages/memoria-obsidian/scripts/test.mjs` (plain top-level asserts; its filename `test.mjs` matches the node test-runner discovery pattern, so it runs unchanged).
-- Produces: harness convention **`node --test scripts/` discovers every `scripts/test*.mjs` file**; all later tasks add `scripts/test-<module>.mjs` files and they run under both `npm test` and the Python contract test.
+- Produces: harness convention **`node --test`, run from the plugin package, discovers every `scripts/test*.mjs` file** (see the 2026-08-01 execution amendment for why the directory argument is gone); all later tasks add `scripts/test-<module>.mjs` files and they run under both `npm test` and the Python contract test.
 
 **Steps:**
 
-- [ ] Write the failing test — edit `tests/test_memoria_obsidian_package.py`:
-  - line 25: `assert package["scripts"]["test"] == "node --test scripts/"`
+- [x] Write the failing test — edit `tests/test_memoria_obsidian_package.py`:
+  - line 25: `assert package["scripts"]["test"] == "node --test"`
   - lines 39–41, replace the subprocess argv:
     ```python
     result = subprocess.run(
-        ["node", "--test", "scripts/"],
+        ["node", "--test"],
         cwd=PLUGIN,
     ```
     (keep the existing `text=True, capture_output=True, check=False` lines).
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_memoria_obsidian_package.py::test_memoria_obsidian_package_has_obsidian_release_artifacts -v`
-  Expected: `AssertionError` on the `scripts.test` string (`'node scripts/test.mjs' == 'node --test scripts/'`).
-- [ ] Write minimal implementation — edit `packages/memoria-obsidian/package.json` line 8:
+  Expected: `AssertionError` on the `scripts.test` string (`'node scripts/test.mjs' == 'node --test'`).
+- [x] Write minimal implementation — edit `packages/memoria-obsidian/package.json` line 8:
   ```json
-  "test": "node --test scripts/"
+  "test": "node --test"
   ```
-- [ ] Run tests to verify they pass:
+- [x] Run tests to verify they pass:
   `python -m pytest tests/test_memoria_obsidian_package.py -v` (all green) and
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   Expected: `# pass 1` (test.mjs runs as one passing file).
 - [ ] Commit:
   `git add packages/memoria-obsidian/package.json tests/test_memoria_obsidian_package.py`
@@ -9999,7 +10851,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Steps:**
 
-- [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-handshake.mjs`:
+- [x] Write the failing test — create `packages/memoria-obsidian/scripts/test-handshake.mjs`:
   ```js
   import assert from "node:assert/strict";
   import test from "node:test";
@@ -10094,10 +10946,10 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(RESPAWN_LIMIT, 3);
   });
   ```
-- [ ] Run test to verify it fails:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+- [x] Run test to verify it fails:
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   Expected: `Cannot find module '../handshake.js'`.
-- [ ] Write minimal implementation — create `packages/memoria-obsidian/handshake.js`:
+- [x] Write minimal implementation — create `packages/memoria-obsidian/handshake.js`:
   ```js
   // Pure handshake-client logic: argv construction, stdout parsing, spawn-error
   // classification, and the bounded-respawn gate (bootstrap spec sections 2-3).
@@ -10188,7 +11040,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     parseHandshake,
   };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `# pass 5` (4 new tests + test.mjs).
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `# pass 12` (11 handshake tests per the 2026-08-01 amendment + test.mjs).
 - [ ] Commit:
   `git add packages/memoria-obsidian/handshake.js packages/memoria-obsidian/scripts/test-handshake.mjs`
   `git commit -m "feat(obsidian): pure handshake-client module (argv, parse, ENOENT, respawn gate)` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10216,7 +11068,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Steps:**
 
-- [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-pill.mjs`:
+- [x] Write the failing test — create `packages/memoria-obsidian/scripts/test-pill.mjs`:
   ```js
   import assert from "node:assert/strict";
   import test from "node:test";
@@ -10280,8 +11132,8 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(computeNextPollDelay(false), 120000);
   });
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../pill.js'`.
-- [ ] Write minimal implementation — create `packages/memoria-obsidian/pill.js`:
+- [x] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../pill.js'`.
+- [x] Write minimal implementation — create `packages/memoria-obsidian/pill.js`:
   ```js
   // Pure status-pill state machine and poll cadence (U3 spec sections 3 and
   // 5). No Obsidian imports; headless-testable with node.
@@ -10343,7 +11195,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     formatAsOf,
   };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (16 after this task).
 - [ ] Commit:
   `git add packages/memoria-obsidian/pill.js packages/memoria-obsidian/scripts/test-pill.mjs`
   `git commit -m "feat(obsidian): pure pill state machine and poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10461,7 +11313,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
 **Steps:**
 
-- [ ] Write the failing test — create `packages/memoria-obsidian/scripts/test-viewspec.mjs`:
+- [x] Write the failing test — create `packages/memoria-obsidian/scripts/test-viewspec.mjs`:
   ```js
   import assert from "node:assert/strict";
   import test from "node:test";
@@ -10669,8 +11521,8 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     assert.equal(made[0].text, "hello");
   });
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../viewspec.js'`.
-- [ ] Write minimal implementation — create `packages/memoria-obsidian/viewspec.js`:
+- [x] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../viewspec.js'`.
+- [x] Write minimal implementation — create `packages/memoria-obsidian/viewspec.js`:
   ```js
   // Pure view-spec.v1 rendering (U3 spec section 2): blocks become plain
   // {tag, cls, text, attrs, children} trees; only materialize() touches a DOM
@@ -10847,7 +11699,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     sortCards,
   };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (41 after this task).
 - [ ] Commit:
   `git add packages/memoria-obsidian/viewspec.js packages/memoria-obsidian/scripts/test-viewspec.mjs`
   `git commit -m "feat(obsidian): pure view-spec.v1 block rendering with labeled fallback` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10935,7 +11787,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
     );
   });
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../relate.js'`.
+- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../relate.js'`.
 - [ ] Write minimal implementation — create `packages/memoria-obsidian/relate.js`:
   ```js
   // Pure relate-control payload builder (U3 spec section 4). The relation
@@ -10969,7 +11821,7 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 
   module.exports = { buildRelateOperation };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
+- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass.
 - [ ] Commit:
   `git add packages/memoria-obsidian/relate.js packages/memoria-obsidian/scripts/test-relate.mjs`
   `git commit -m "feat(obsidian): pure relate payload builder validated against server roster` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -11190,7 +12042,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   ```
 - [ ] Run test to verify it fails:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   Expected: `test.mjs` fails — `plugin.runHandshake is not a function`.
 - [ ] Write minimal implementation, part 1 — `packages/memoria-obsidian/main.js` header. Replace lines 1–15 with:
   ```js
@@ -11610,7 +12462,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       assert "adapter.write(" not in source
   ```
 - [ ] Run tests to verify they pass:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` (all pass) and
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` (all pass) and
   `python -m pytest tests/test_memoria_obsidian_package.py -v` — expected: everything green **except** `test_memoria_obsidian_seed_matches_release_artifacts` (seed is stale) — fixed next step.
 - [ ] Sync the seed and regenerate goldens:
   ```
@@ -11664,6 +12516,19 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     submitted anyway.
 
 **Steps:**
+
+- [ ] Reconcile queue order with the engine's, or record the divergence as
+  intended. Handed over by the U3-ENG.1/.2/.3 execution amendment (item 5),
+  which pinned the engine side rather than guessing the client's: the engine
+  orders on the full `created` string, `sortCards` on day-granular `age_s`, and
+  the two disagree for exactly one input — a hand-edited *future* `created`,
+  where `age_s` goes negative. The engine puts that card ahead of the undated
+  `"9999-12-31"` sentinel; the plugin puts it behind every `age_s == 0` card.
+  This is the task where a PI first sees the resulting row order, so it decides:
+  either make the pane follow payload order for equal ranks, or clamp/compare
+  differently and say so. `test_attention_view_ages_cards_from_created` already
+  pins the engine's half (`age_s == -259_200`, `age_label == "-3d"`), so
+  whichever way this goes, the fixture that would have to change is visible.
 
 - [ ] Add the post-SEAM.1 live HTTP integration proof to
   `tests/test_attention_view.py`, alongside the existing live-server tests.
@@ -11786,7 +12651,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     assert.ok(result);
   ```
   Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name). The fixture deliberately leaves collection enabled: `enqueueNamedOperation` must issue the named operation **and** its `empirical-event-record` telemetry, so the assertion filters and verifies both rather than assuming the named operation is the final request.
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `attention view registered` assertion failure.
+- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `attention view registered` assertion failure.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Add to the requires block: `const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");` and the constant `const VIEW_TYPE_ATTENTION = "memoria-attention";` (replace the string literal `"memoria-attention"` inside `activateAttentionView` with the constant).
   2. In `onload`, after the settings tab line, add:
@@ -12066,7 +12931,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
   ```
   7. In `tests/test_memoria_obsidian_package.py::test_memoria_obsidian_registers_minimal_proof_commands`, add `"open-attention",` to the command tuple.
-- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
+- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
 - [ ] Sync seed + regenerate goldens (same three commands as U3-PLUG.6's sync step; only `main.js` and `styles.css` changed this time), re-run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 - [ ] Commit:
   `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py tests/test_attention_view.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
@@ -12112,7 +12977,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
           "the selected edge."
       ) in _plugin_js_source()
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected assertion failure on `relate`.
+- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected assertion failure on `relate`.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Requires: `const { buildRelateOperation } = require("./relate");`
   2. `onload` command:
@@ -12255,7 +13120,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   ```
   6. Add `"relate",` to the roster tuple in `tests/test_memoria_obsidian_package.py`.
-- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test red until sync).
+- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test red until sync).
 - [ ] Sync seed + regenerate goldens (same commands as U3-PLUG.6; `main.js` + `styles.css`), re-run the pytest file — all green.
 - [ ] Commit:
   `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
@@ -13281,7 +14146,7 @@ Steps:
     U3-PLUG.6's shared Node `Plugin` mock must include both
     `workspace.on: () => ({})` and `registerEvent() {}` (already required by its
     revised fixture) so this onload path is exercised by the ordinary
-    `node --test scripts/` run rather than only by the static test.
+    `node --test` run rather than only by the static test.
 
   - Extend U3-PLUG.6's `renderPill()` after its normal pill-text span with:
 
@@ -15495,6 +16360,19 @@ floor_lib.py:258-279).
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Plan-reconciliation amendment — honest-empty is engine-rendered, not templated (2026-08-01, BINDING)**
+
+R2 P.2 (#1556) replaced the `search_index.py:243` literal this section was written against: the honest-empty sentence is now computed per query by `retrieval_pipeline.honest_empty(pipeline_counts, strata)` (`retrieval_pipeline.py:85-91`) — counts vary per query and the query string never appears, so no `<prefix><query>` shape exists to hoist and single-sourcing under `src/` is already achieved (every emission site calls the one function). Consequences, task by task:
+
+- **U4-C.1: removed as satisfied.** Its deliverable (`HONEST_EMPTY_PREFIX` hoisted from an inline f-string) has no subject; the anchoring literal and its byte-identical test assertion are gone.
+- **U4-C.2:** keeps its module and `PRIORS_REFUSAL`. Its retrieval-empty paragraph is retargeted: the method text instructs the agent to **voice the payload's `unknowns[0]` verbatim** — never a template, never re-rendered counts. The scan test drops the `HONEST_EMPTY_PREFIX` half of contract 7 and keeps the refusal half.
+- **U4-C.4:** the MCP pin retargets from wording equality to **payload structure** — assert the operation payload carries `pipeline_counts`, `excluded_strata` and `unknowns` through worker dispatch intact (the dict already flows whole; `search_index.py:346-357`, `worker.py:767+`).
+- **U4-A.1:** `HONEST_EMPTY_WORDING`, its pinned-literal test, and the "substituting the actual query" instruction are struck. The SKILL.md empty-results section says: quote `unknowns[0]` verbatim; the engine computed those denominators and the agent must not re-derive or restate them.
+- **Refusal-wording fork, resolved:** contract 7 makes C.2's module the single source, so **C.2's `PRIORS_REFUSAL` wording wins**; U4-A.1's variant (`PRIORS_REFUSAL_WORDING = "I cannot answer that from my own knowledge…"`) is struck and A.1 imports the C.2 constant, per the consumers-import-never-retype rule.
+
+Contract 7 is amended accordingly (**one** single-source constant remains: `PRIORS_REFUSAL`); contract 13's ordering is unchanged.
+
 # U4-C · Conversational-ask grounding contract (U4 spec §4)
 
 > SPEC GAP: U4 §4's last bullet ("I1's `read-observed`/staleness telemetry fires

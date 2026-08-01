@@ -9,7 +9,9 @@ This module is the reader shared by the Linter, the pre-commit hook,
 `memoria init`, package-spine tests, and no-Bases seed tests, so a schema change is a
 one-file edit, never a hunt across hardcoded lists.
 
-Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.
+Field kinds: str | int | bool | date | list | map | link | links | ulid | literal:<value>
+| enum:<name>. `link` is one path-space Concept reference (a project's `thesis:`);
+`links` is the relation→targets map.
 `required_when` maps a field to {field, equals}; `forbidden` lists retired fields.
 """
 
@@ -21,6 +23,16 @@ from pathlib import Path
 
 import yaml
 
+# Re-exports live one release for external importers, then die by the sweep
+# discipline (EDGES design, section 1). New code imports lib.edges directly;
+# `_normalized_link_target` is not a re-export but this module's own use of the
+# owner's target normalizer, which `_check_links` needs for its reason codes.
+from memoria_vault.runtime.subsystems.lib.edges import (  # noqa: F401
+    LINK_RELATIONS,
+    _normalized_link_target,
+    normalize_link_target,
+    parse_links,
+)
 from memoria_vault.runtime.vaultio import is_ulid, universal_concept_frontmatter_errors
 
 
@@ -35,7 +47,6 @@ def _default_schemas_dir() -> Path:
 SCHEMAS_DIR = _default_schemas_dir()
 
 VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
-LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})
 
 
 def _present(value) -> bool:
@@ -156,6 +167,8 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
         return None if isinstance(value, list) else f"expected list, got {type(value).__name__}"
     if kind == "map":
         return None if isinstance(value, dict) else f"expected map, got {type(value).__name__}"
+    if kind == "link":
+        return _check_link(value)
     if kind == "links":
         return _check_links(value)
     if kind == "ulid":
@@ -163,62 +176,23 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
     return f"unknown kind {kind!r}"
 
 
-_LINK_TARGET_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+def _check_link(value) -> str | None:
+    """Validate one path-space Concept reference, in `_check_links`' wording.
 
-
-def _normalized_link_target(target: str) -> tuple[str, str | None]:
-    """Return one local Concept target and an invalidity reason, if any."""
-    raw = target.strip()
-    wrapped = raw.startswith("[[") or raw.endswith("]]")
-    if wrapped:
-        if not (raw.startswith("[[") and raw.endswith("]]")):
-            return "", "invalid"
-        raw = raw[2:-2]
-        if "[" in raw or "]" in raw:
-            return "", "invalid"
-        raw = raw.split("|", 1)[0].split("#", 1)[0].strip()
-    elif "[" in raw or "]" in raw:
-        return "", "invalid"
-
-    if not raw:
-        return "", "empty"
-
-    path = raw.replace("\\", "/")
-    if path.startswith(("/", "#")) or path.endswith("/") or _LINK_TARGET_URI_RE.match(raw):
-        return "", "invalid"
-    if ".." in [part for part in path.split("/") if part and part != "."]:
-        return "", "traversal"
-
-    suffix = Path(path.rsplit("/", 1)[-1]).suffix
-    if suffix and suffix != ".md":
-        return "", "invalid"
-    return raw, None
-
-
-def normalize_link_target(target: str) -> str:
-    """Normalize one valid local Concept target, or return an empty string for junk."""
-    if not isinstance(target, str):
-        return ""
-    return _normalized_link_target(target)[0]
-
-
-def parse_links(links: object) -> list[tuple[str, str]]:
-    """Return ``(relation, normalized target)`` pairs from a links frontmatter map."""
-    pairs: list[tuple[str, str]] = []
-    if not isinstance(links, dict):
-        return pairs
-    for relation, targets in links.items():
-        if (
-            not isinstance(relation, str)
-            or relation not in LINK_RELATIONS
-            or not isinstance(targets, list)
-        ):
-            continue
-        for target in targets:
-            normalized = normalize_link_target(target) if isinstance(target, str) else ""
-            if normalized:
-                pairs.append((relation, normalized))
-    return pairs
+    The schema layer is where issue #1623 decided that `thesis:` is path space:
+    a title, slug, or prose sentence fails here, visibly, instead of resolving
+    to nothing in five readers that each missed it differently.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return f"expected non-empty target string, got {type(value).__name__}"
+    raw, reason = _normalized_link_target(value)
+    if raw:
+        return None
+    if reason == "traversal":
+        return "target must not escape the workspace"
+    if reason == "empty":
+        return "expected non-empty target string"
+    return "expected local Concept target"
 
 
 def _check_links(value) -> str | None:

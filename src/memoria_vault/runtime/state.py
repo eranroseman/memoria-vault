@@ -36,6 +36,7 @@ from memoria_vault.runtime.evidence import (
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read, write_text_durable
 
@@ -54,7 +55,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 16
+SCHEMA_VERSION = 17
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -2505,6 +2506,104 @@ def _concept_edge_target_path(raw_target: str, catalog_ids: set[str]) -> str:
     return f"catalog/sources/{rendered}" if rendered in catalog_ids else rel
 
 
+def insert_concept_edge(
+    vault: Path,
+    *,
+    source: str,
+    relation_type: str,
+    target: str,
+    attributes: dict[str, Any] | None = None,
+    context: OperationContext,
+) -> dict[str, Any]:
+    """Upsert one PI-confirmed concept edge without touching any other row.
+
+    The single-row seam for edges no frontmatter mirrors — a confirmed
+    ``tension``, or warrant text hung on a grounding edge. On conflict the given
+    attributes merge over the stored ``attributes_json``; ``None`` leaves the
+    stored attributes untouched, and the row's ``check_status``/``source_path``
+    stay as written so hanging an attribute on a mirrored edge never takes that
+    edge out of the demotion triggers' scope.
+
+    Both endpoints resolve through the exact functions ``replace_concept_edges``
+    uses, because this is the second writer into one keyspace. ``source`` may be
+    spelled as a path or as an identity and resolves to one ``concepts`` key,
+    minting nothing: an unmirrored source is a foreign-key refusal, not a new
+    Concept. ``target`` is path space, and its durable key **must** come from
+    ``_concept_edge_target_path`` rather than a bare ``normalize_path`` — that is
+    the function folding the bare ``work_id``, the rendered
+    ``catalog/sources/<work_id>``, the ``./`` form and the ``/source.md`` form of
+    one catalog work onto one ``target_path``. Admitted as distinct PK triples
+    those spellings still resolve to one ``target_concept_id``, so they mint one
+    deterministic ``edge_id`` twice and violate the UNIQUE
+    ``idx_concept_edges_edge_id`` — inside ``replace_concept_edges``' single
+    transaction, which rolls the whole mirror pass back and takes out `memoria
+    index` vault-wide instead of the one bad row.
+    """
+    from memoria_vault.runtime.trusted_writer import validate_operation_context
+
+    validate_operation_context(vault, context)
+    relation = _concept_edge_relation(str(relation_type))
+    with connect(vault) as conn:
+        catalog_ids = {
+            str(row["work_id"]) for row in conn.execute("SELECT work_id FROM catalog_sources")
+        }
+        source_concept = resolve_concept_id(conn, str(source))
+        target_path = _concept_edge_target_path(str(target), catalog_ids)
+        target_id = _lookup_concept_id(conn, target_path)
+        if not source_concept or not target_path or source_concept == (target_id or target_path):
+            raise ValueError("concept edge requires two distinct endpoints")
+        stored = conn.execute(
+            """
+            SELECT edge_id, target_concept_id, attributes_json FROM concept_edges
+            WHERE source_concept_id = ? AND relation_type = ? AND target_path = ?
+            """,
+            (source_concept, relation, target_path),
+        ).fetchone()
+        if stored is not None and target_id is None:
+            # A settled row whose spelling stopped resolving — its target moved out
+            # of band, so `concepts.path` left this `target_path` behind — keeps the
+            # identity it already holds, the same call the mirror pass's COALESCE
+            # makes. Re-deriving NULL here would un-resolve a live edge and blank an
+            # edge_id every caller was promised is stable.
+            target_id = stored["target_concept_id"]
+        merged = {
+            **(json.loads(stored["attributes_json"] or "{}") if stored is not None else {}),
+            **(attributes or {}),
+        }
+        edge_id = concept_edge_id(source_concept, relation, str(target_id)) if target_id else ""
+        conn.execute(
+            """
+            INSERT INTO concept_edges(
+                edge_id,
+                source_concept_id,
+                relation_type,
+                target_concept_id,
+                target_path,
+                attributes_json,
+                check_status,
+                source_path,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, 'checked', '', ?)
+            ON CONFLICT(source_concept_id, relation_type, target_path) DO UPDATE SET
+                edge_id = excluded.edge_id,
+                target_concept_id = excluded.target_concept_id,
+                attributes_json = excluded.attributes_json,
+                updated_at = excluded.updated_at
+            """,
+            (
+                edge_id,
+                source_concept,
+                relation,
+                target_id,
+                target_path,
+                json.dumps(merged, sort_keys=True),
+                now_iso(),
+            ),
+        )
+    return {"edge_id": edge_id, "created": stored is None, "attributes": merged}
+
+
 def concept_edges(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:
     if not db_path(vault).is_file():
         return []
@@ -3285,7 +3384,7 @@ def _block_text_sha256(vault: Path, block_ref: str) -> str | None:
     return _block_text_sha256_from_text(text, block_ref)
 
 
-def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
+def _block_canonical_text_from_text(text: str, block_ref: str) -> str | None:
     _rel, separator, anchor = str(block_ref).partition("#^")
     if not separator or not anchor:
         return None
@@ -3333,7 +3432,13 @@ def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
         reverse=True,
     ):
         canonical = canonical[:start] + canonical[end:]
-    canonical = canonical.strip()
+    return canonical.strip()
+
+
+def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
+    canonical = _block_canonical_text_from_text(text, block_ref)
+    if canonical is None:
+        return None
     return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -4812,8 +4917,8 @@ def _work_aspect_type(value: str) -> str:
 
 
 def _concept_edge_relation(value: str) -> str:
-    relation = value.strip().lower().replace("_", "-")
-    if relation not in {"supports", "contradicts", "extends", "tension"}:
+    relation = value.strip().lower()
+    if relation not in EDGE_RELATIONS:
         raise ValueError(f"unknown concept edge relation: {value}")
     return relation
 

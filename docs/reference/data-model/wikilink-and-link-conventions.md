@@ -73,7 +73,8 @@ digest/fulltext
 
 note
   -> source evidence in body text, anchors, digests, and operation records
-  -> note/hub/project through supports / contradicts / extends
+  -> note/hub/project through supports / contradicts / extends /
+     warrant / qualifier / rebuttal
 
 hub
   -> tag-owned membership through checked Concept tags

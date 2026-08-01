@@ -40,8 +40,10 @@ desktop.ini
 /.notes/
 TODO*
 
-# Per-branch worktrees and the disposable installed test-vault (its own nested
-# .git; always reconstructible — never source of truth).
+# Codex's per-branch worktrees (Claude's live in .claude/worktrees/ above; both
+# are in use — see AGENTS.md session isolation) and the disposable installed
+# test-vault (its own nested .git; always reconstructible — never source of
+# truth).
 .worktrees/
 /test-vault/
 

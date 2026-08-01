@@ -507,6 +507,156 @@ execute a superseded snippet merely because it remains below as drafting history
     SEAM.1's required full gate and security diff scan are owned by the surfaces
     plan amendment; D.2/D.3 do not proceed until that authority change is clean.
 
+## Plan-reconciliation amendment — row `kind`, `disposition`, and V2R-B.1–.3 as landed (2026-08-01)
+
+This is the latest-dated reconciliation layer. It settles the three-layer
+contradiction between the top-of-file amendments, the undated
+"replaces superseded B/C/D snippets" amendment above, and the V2R-B executable
+replacement tasks below, and it records what V2R-B.1–.3 actually landed.
+**Read this before executing V2R-B.4 or V2R-B.5.**
+
+1. **The 2026-07-29 amendment stack governs.** Re-derived at execution time
+   against `wip/v2-evidence` @ `a582a510`:
+
+   - The public engine-direct façade is `engine_api.evidence_review_queue(...)`
+     — binding cross-section contract 1 (line 25) and the raw-queue amendment
+     §1 (line 219).
+   - The raw queue is a discriminated union: an evidence-set row *or*
+     `{"kind": "srd-gap", "card_block": <normalized U3 card>}` — raw-queue
+     amendment §2 (lines 245-248).
+   - The collector "discovers drafts/SRD cards" — nested-collector amendment §2
+     (line 334).
+   - V2's own consumer rule is `row.get("kind") == "evidence-set"` — raw-queue
+     amendment §4 (line 275) and nested-collector amendment §3 (line 357).
+   - The raw-queue amendment states in its own opening (lines 203-208) that it
+     supersedes conflicting B.2/B.4/C snippets **below**, naming "every
+     reference to an undefined queue API", `latest_decision`, `routing`, and
+     "an evidence-only assumption for an SRD-gap queue entry". The undated
+     amendment at line 415 and the executable task bodies at line 1797 are both
+     below it.
+
+   Therefore: raw rows carry `kind`, SRD rows live in the raw queue (unioned by
+   B.4's collector, not by the pure assembler), and `evidence_review_queue` is
+   the public name.
+
+2. **`disposition` is NOT renamed to `latest_decision`.** The undated
+   amendment's §2 DTO rename (`project_path → project`, `routing_type →
+   routing`, `disposition → latest_decision`) is superseded in full. Checked
+   consumer by consumer:
+
+   - `engine/cockpit.py` `_review_panel` (U2 C.3, in flight on `wip/u2-cockpit`,
+     not yet on `origin/main`) counts
+     `Counter(str(row.get("disposition") or "open") for row in rows if
+     row.get("kind") == "evidence-set")` and reports `counts.get("open", 0)`
+     plus a separate `kind == "srd-gap"` count. Under the rename it would report
+     `open: 0` and `counts: {}` with no error — a confident zero, not a failure.
+   - The raw-queue amendment §3 (line 269) already forbids the `routing` and
+     `latest_decision` spellings for all of V2R-C.
+
+   B.4 must therefore keep `disposition`, `routing_type`, and `project_path` on
+   raw rows. The `project` / `routing_type` spellings on the **card** are a view
+   projection (nested-card amendment §1) and are unaffected.
+
+3. **`kind` on every raw row is load-bearing, not decoration.** The cockpit's
+   live branch arms the moment both `engine_api.evidence_review_queue` and the
+   `views.evidence_review` registry row exist — V2R-B.4 and V2R-B.5 land those
+   two halves independently. A collector that drops `kind` makes the panel
+   report a confident zero. V2R-B.2 emits `"kind": "evidence-set"` on every row
+   and pins it; B.4 must preserve it through the collector and add the
+   `{"kind": "srd-gap", "card_block": ...}` variant.
+
+4. **What V2R-B.1–.3 landed** (`src/memoria_vault/runtime/evidence_review.py`,
+   `tests/test_evidence_review_queue.py` at `"unit"`,
+   `state._block_canonical_text_from_text`):
+
+   ```python
+   assemble_evidence_review_queue(drafts, dispositions, *, minted_at=None, today) -> list[dict]
+   queue_facets(queue) -> {"routing_type": ..., "project": ..., "total": int}
+   filter_queue(queue, *, routing_type="", project="", min_age_days=0) -> list[dict]
+   canonical_project(project) -> str
+   evidence_review_blocks(rows) -> list[dict]
+   evidence_review_card(row) -> dict
+   routing_reason(row, previews) -> str
+   analysis_fields(row, previews) -> dict[str, str]
+   PERMANENT_BLOCK_CURE, EVIDENCE_REVIEW_ROUTING_TYPES
+   ```
+
+   Raw evidence-set row keys: `kind`, `evidence_id`, `project_path`,
+   `draft_path`, `block_ref`, `claim_text`, `items` (raw v2 reference strings),
+   `item_count`, `evidence_type`, `routing_type`, `holds`, `blocked_by`,
+   `reviewable`, `disposition`, `age_days`; present-only `cure` (whenever
+   `blocked_by` is nonempty), `disposition_reason`, `warrant`, `argument_for`,
+   `argument_against`, `certainty`.
+
+   Both B.3 public names exist on purpose: `evidence_review_blocks(rows)` is the
+   list projector the view calls (nested-card amendment §3, nested-collector
+   amendment §2), and `evidence_review_card(row)` is its single-row body, named
+   by the executable B.3 task. The card projection consumes `row["item_count"]`
+   and `row["cure"]` and never recomputes them.
+
+5. **Deliberately not landed in B.1–.3; V2R-B.4 owns them.** The executable B.2
+   and B.3 slices are pure-function slices, so the vault-reading helpers the
+   historical drafts listed were left for the collector that actually needs
+   them: `evidence_dispositions(vault)`, `evidence_minted_at(vault)`,
+   `span_source_index(vault)`, and `resolve_item_previews(vault, items, *,
+   rows_by_id, span_sources)`. Their historical bodies (this file, the
+   "Historical draft — V2R-B.2/.3" sections) remain the specification, with two
+   corrections: `parse_code_warrant_ref` / `code_warrant_complete` /
+   `code-warrant:` are now `parse_code_grounds_ref` / `code_grounds_complete` /
+   `code-grounds:`, and `evidence_ref_kind` returns `"code-grounds"`.
+
+   B.3 also does **not** inject a preview `label`. The executable B.3 sentence
+   "every preview has a `label`, defaulting to its excerpt or ref" belongs to
+   the superseded DTO layer, and the nested-card amendment's replacement
+   implementation passes previews through verbatim. The renderer already falls
+   back — `packages/memoria-obsidian/viewspec.js` renders
+   `String(item.label || item.ref || "")` — so the label is the preview
+   producer's to add in B.4 if it wants a richer one, not the card projector's
+   to invent.
+
+6. **Drafting-history defects found while executing** (do not copy them into
+   B.4/B.5):
+
+   - The historical B.3 test `test_read_only_row_names_cure_and_omits_analysis`
+     asserts the drift reason as the routing text of an **implicit** drifted
+     row. `_routing_reason` returns `"implicit"` for that row; the block reason
+     only surfaces when `routing_type` is `""`, whose real producer is a
+     complete, unflagged row whose draft text drifted. The landed tests cover
+     both.
+   - Evidence-marker items are `|`-separated, not comma-separated
+     (`evidence.parse_evidence_marker`); a `%%ev: <id> items=a,b%%` fixture
+     silently fails to parse and the block hash resolves to `None`.
+   - `state._block_text_sha256_from_text` is at `state.py:3289`, not the
+     `:2705-2754` the B.1 body cites. Re-anchor every remaining B/C/D edit by
+     symbol; the cited commit SHAs are pre-squash and are not ancestors of
+     `main`.
+
+7. **Two mutation-driven deviations from the amendment's literal snippet.** Both
+   remove a branch with no producer rather than fabricate a fixture for it:
+
+   - `analysis_fields` sets `tipped_by` unconditionally. `_tipping_factor` is
+     total — every branch names something — so the snippet's `if tipped_by:`
+     guard was dead, and a mutant that dropped it was indistinguishable.
+   - `_tipping_factor` reads the local `routing_type` rather than
+     `row["evidence_type"]`. `_routing_type` returns `evidence_type` exactly
+     when it is `implicit`/`multi-hop`, which is the only branch that read it,
+     so the two are provably equal; using one field removes an equivalent
+     mutant and a `KeyError` risk for callers projecting rows without
+     `evidence_type`.
+
+   A third mutation-driven correction is in the tests, not the code:
+   `resolve_evidence_review` journals `items_sha256` on **every** decision, not
+   only accept. A reject fixture without a digest cannot detect a queue that
+   clears holds on reject — the exact defect V2R-A.1 exists to fix — so the
+   test event builder now carries the seam's digest by default.
+
+8. **Open contract question for B.4, not decided here.** `filter_queue` is
+   evidence-only: under §1 the collector filters the pure evidence queue and
+   unions SRD cards afterwards, so no SRD row ever reaches it. The "SRD cards
+   appear only with no evidence filter" rule (raw-queue amendment §4) therefore
+   lives in B.4, which must append none when any routing/project/age filter is
+   active.
+
 ---
 
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1
@@ -1700,14 +1850,14 @@ the extractor out; the hash wrapper delegates — bindings and goldens unchanged
 
 **Steps:**
 
-- [ ] Register the new test file. In `tests/conftest.py`, after the line
+- [x] Register the new test file. In `tests/conftest.py`, after the line
   `    "test_evidence_markers.py": "unit",` (line 45) insert:
 
   ```python
       "test_evidence_review_queue.py": "unit",
   ```
 
-- [ ] Write the failing test — create `tests/test_evidence_review_queue.py`:
+- [x] Write the failing test — create `tests/test_evidence_review_queue.py`:
 
   ```python
   """Unit tests for evidence-review queue assembly and honesty-card blocks (V2 slice 1)."""
@@ -1741,12 +1891,12 @@ the extractor out; the hash wrapper delegates — bindings and goldens unchanged
       assert state._block_canonical_text_from_text(CONTENT, "draft.md#^blk-99999999") is None
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_evidence_review_queue.py -v`
   Expected: both tests fail with `AttributeError: module
   'memoria_vault.runtime.state' has no attribute '_block_canonical_text_from_text'`.
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/state.py`,
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/state.py`,
   rename `_block_text_sha256_from_text` (line 2705) to
   `_block_canonical_text_from_text` and change only its last two lines — from:
 
@@ -1774,7 +1924,7 @@ the extractor out; the hash wrapper delegates — bindings and goldens unchanged
   (Callers — `_block_text_sha256` at state.py:2693 and
   `knowledge.py:2190` — are untouched; hashes are byte-identical.)
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```bash
   python -m pytest tests/test_evidence_review_queue.py tests/test_evidence_sets.py tests/test_draft_verification.py -v
@@ -1783,7 +1933,7 @@ the extractor out; the hash wrapper delegates — bindings and goldens unchanged
   Expected: all pass (the two new tests plus the untouched binding/verification
   suites — the refactor is behavior-preserving).
 
-- [ ] Commit:
+- [ ] Commit (not done — the executing session had no commit authority):
 
   ```bash
   git add src/memoria_vault/runtime/state.py tests/test_evidence_review_queue.py tests/conftest.py
@@ -1796,12 +1946,53 @@ the extractor out; the hash wrapper delegates — bindings and goldens unchanged
 
 ## V2R-B executable replacement tasks
 
+> **Read first (2026-08-01 amendment, top of file):** these bodies are below the
+> 2026-07-29 amendment stack and are superseded wherever they conflict with it.
+> In particular: raw rows keep `kind`, `disposition`, `routing_type`, and
+> `project_path`; there is no `latest_decision`/`routing` DTO rename; SRD-gap
+> rows are unioned into the raw queue by B.4's collector; and the card's
+> `kind_line` is `"evidence-review"`, not the routing type. B.1–.3 have landed
+> against that reading — the amendment lists their exact public surface and the
+> four vault-reading helpers it deliberately left to B.4.
+
 The following four task bodies are the executable V2R-B plan. They replace the
 historical B.2–B.5 drafts below, which remain only to preserve the reasoning trail.
 Do not mix an interface, fixture, or assertion from a historical body into these
 tasks. All marker fixtures below and in their tests use post-Plan-22 grammar:
 `%%ev: <id> items=...%%`; all code references use `code-grounds:` plus
 `parse_code_grounds_ref` / `code_grounds_complete`.
+
+> **A consumer outside this plan depends on the raw row shape (filed
+> 2026-08-01 by U2 C.3's review closeout).** U2's cockpit triage screen counts
+> this queue engine-direct and discriminates the union on `kind`: it counts
+> `row.get("kind") == "evidence-set"` rows by `disposition`, and
+> `row.get("kind") == "srd-gap"` rows separately as a read-only total
+> (`engine/cockpit.py`, `_review_panel`; U2 plan task INT.1). Three
+> consequences for B.2/B.4/B.5:
+>
+> 1. **Keep `kind` on the evidence arm, not just the SRD arm.** The 2026-07-29
+>    amendment §2 above spells the key out only on `{"kind": "srd-gap", ...}`,
+>    but its own consumer rules (§4 of that amendment, and §3 of the nested
+>    collector amendment) discriminate on `kind == "evidence-set"` — so both
+>    arms carry it, exactly as the historical row builder does. A raw evidence
+>    row that ships without `kind` is not merely a U2 problem: it breaks the
+>    discriminated union this plan's own §4 relies on.
+> 2. **`disposition` is the key name, and `evidence_review_queue` the façade.**
+>    The undated `Plan-reconciliation amendment (BINDING)` §2 below, and B.4's
+>    own body, still describe an `_evidence_review_cli_row` DTO renaming
+>    `disposition → latest_decision` behind a `read_evidence_review_queue`
+>    façade. Both are **superseded** by the 2026-07-29 amendment, which names
+>    them among the things it replaces and states at §3 "never the superseded
+>    `routing` and `latest_decision` names". Shipping the rename would make U2's
+>    panel read every row as open.
+> 3. **SRD-gap rows stay in the raw queue.** The same superseded layers say the
+>    collector "excludes SRD-gap rows" / "returns evidence rows only"; the
+>    2026-07-29 amendment §4 says the opposite and forbids dropping them. U2
+>    counts them from the raw queue and never calls
+>    `read_evidence_review_view`.
+>
+> If B.4/B.5 deliberately depart from any of the three, say so in this plan and
+> flag U2 INT.1 — do not let the consumer discover it as a silent zero.
 
 ### Task V2R-B.2: pure evidence-set queue, facets, and filters
 
@@ -1837,21 +2028,22 @@ owns SRD cards.
 
 **Executable TDD slice:**
 
-- [ ] **Files:** create `src/memoria_vault/runtime/evidence_review.py`; create or
+- [x] **Files:** create `src/memoria_vault/runtime/evidence_review.py`; create or
   modify `tests/test_evidence_review_queue.py`.
-- [ ] **Red:** add
+- [x] **Red:** add
   `test_queue_is_evidence_set_only_and_uses_v2_grounds`,
   `test_queue_facets_are_evidence_denominators_only`,
   `test_filter_queue_normalizes_the_three_project_spellings`, and
   `test_filter_queue_rejects_invalid_project_and_negative_age`; run
   `python -m pytest tests/test_evidence_review_queue.py -q` and confirm the
   missing module/behavior fails before implementation.
-- [ ] **Green:** implement the pure assembler, facet calculation, canonical project
+- [x] **Green:** implement the pure assembler, facet calculation, canonical project
   helper, and conjunctive filter without importing `engine.api`, HTTP transport, or
   SRD helpers. Re-run the focused command, then
   `python -m pytest tests/test_evidence_review_queue.py tests/test_evidence_sets.py -q`.
 - [ ] **Commit:** stage only the two files and commit
   `feat(evidence): assemble evidence-review queue and evidence facets`.
+  (Not done: the executing session was scoped to B.1-.3 without commit authority.)
 
 ### Task V2R-B.3: nested evidence-review cards and grounds previews
 
@@ -1888,20 +2080,40 @@ Delete every assertion of flat sequences such as
 
 **Executable TDD slice:**
 
-- [ ] **Files:** modify `src/memoria_vault/runtime/evidence_review.py` and
+- [x] **Files:** modify `src/memoria_vault/runtime/evidence_review.py` and
   `tests/test_evidence_review_queue.py`.
-- [ ] **Red:** add
+- [x] **Red:** add
   `test_evidence_review_card_has_ordered_nested_semantic_children` and
   `test_evidence_review_cure_card_omits_actions_and_analysis`; run
   `python -m pytest tests/test_evidence_review_queue.py -q` and confirm the
   old flat shape fails the assertions.
-- [ ] **Green:** implement `evidence_review_card` from the DTO only. Assert exact
+- [x] **Green:** implement `evidence_review_card` from the raw queue row (not the
+  superseded DTO — 2026-08-01 amendment §1). Assert exact
   action payloads and child order; do not add a second collector or renderer-side
   routing decision. Re-run the focused command.
 - [ ] **Commit:** stage only those two files and commit
   `feat(evidence): render nested evidence-review cards`.
+  (Not done: the executing session was scoped to B.1-.3 without commit authority.)
 
 ### Task V2R-B.4: one direct collector plus one view projection
+
+> **Superseded names in this body (2026-07-29 amendment; §§1-3 of the 2026-08-01
+> amendment at the top of this file).** The public engine-direct façade is
+> `engine_api.evidence_review_queue(...)`, not `read_evidence_review_queue`; its
+> `rows` are the raw discriminated union (`kind` on every row, `{"kind":
+> "srd-gap", "card_block": ...}` for SRD entries); and the
+> `_evidence_review_cli_row` renames (`project_path → project`, `routing_type →
+> routing`, `disposition → latest_decision`) **do not happen**. "Returns
+> evidence rows only", below, is likewise superseded.
+>
+> `engine/cockpit.py`'s `_review_panel` counts `row["disposition"]` off rows it
+> selects by `row["kind"] == "evidence-set"` — either rename, or a dropped
+> `kind`, makes it report `open: 0` **silently**. Two independent adjudications
+> (U2 C.3 and V2R-B) reached this conclusion separately.
+>
+> This task also owns `evidence_dispositions`, `evidence_minted_at`,
+> `span_source_index`, and `resolve_item_previews` — see amendment §5 for their
+> corrected historical bodies.
 
 Define and test these helpers in `engine/api.py` before wiring HTTP:
 
@@ -1975,6 +2187,16 @@ the nested cards rather than a flat block list.
   `feat(engine): collect and project scoped evidence-review views`.
 
 ### Task V2R-B.5: HTTP registration and nonnegative age parsing
+
+> **This task arms a consumer in another plan. Read the 2026-08-01 amendment
+> (top of file) first.** U2's cockpit review panel goes live only when
+> `engine_api.evidence_review_queue` *and* the registered `views.evidence_review`
+> row both exist — the row this task registers is the second half.
+>
+> Until then U2 renders a named-pending line and reads nothing, so a half-landed
+> V2 is safe. The moment both halves exist, U2 INT.1's integration proof is due.
+> **Land the row only when B.4's collector emits `kind` and `disposition` on raw
+> rows**, or the panel counts zero without saying so.
 
 Register only `GET /v1/views/evidence-review` and its floor contract. Preserve
 positive-only `_int_query` for `batch`; add a local parser for age:
@@ -5202,7 +5424,7 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
      `plugin.authedJson(path) -> Promise<object>`,
      `plugin.enqueueNamedOperation(operationId, payload) -> Promise<object|null>`,
      the `AttentionView` ItemView pattern, `formatAsOf`/`skewBanner` (U3-PLUG.3),
-     the `node --test scripts/` harness with its `plugin.views`/`plugin.commands`/
+     the `node --test` harness with its `plugin.views`/`plugin.commands`/
      `requests` mocks, and the seed-parity + floor-golden sync discipline
      (byte-identical copies under
      `src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/`,
@@ -5627,7 +5849,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   ```
 
 - [ ] Run to verify failure:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   — expected: `TypeError: collapseAnalysis is not a function`.
 
 - [ ] Write the minimal implementation — in `packages/memoria-obsidian/viewspec.js`,
@@ -5675,7 +5897,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   Add `collapseAnalysis,` to `module.exports`.
 
 - [ ] Run to verify pass:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — all green.
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — all green.
 
 - [ ] Commit (seed copy travels with V2R-D.3's sync; the shipped module alone here):
 
@@ -5756,7 +5978,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   ```
 
 - [ ] Run to verify failure:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   — expected: `evidence review view registered` assertion failure.
 
 - [ ] Write the minimal implementation — in `packages/memoria-obsidian/main.js`:
@@ -5998,7 +6220,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   `"open-attention",`).
 
 - [ ] Run tests:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   (all pass) then `python -m pytest tests/test_memoria_obsidian_package.py -v`
   — expected: green except `test_memoria_obsidian_seed_matches_release_artifacts`
   (seed stale) — fixed next step.

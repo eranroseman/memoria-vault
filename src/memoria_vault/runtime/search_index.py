@@ -19,6 +19,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.subsystems.lib.edges import thesis_rel
 from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
@@ -29,7 +30,7 @@ from memoria_vault.runtime.vaultio import (
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
-SEARCHABLE_TYPES = frozenset({"work", "digest", "note", "hub", "project"})
+SEARCHABLE_TYPES = frozenset({"digest", "note", "hub", "project"})
 
 
 def rebuild_checked_search_index(
@@ -386,7 +387,7 @@ def _project_context(
         }
         if target not in aliases and normalized not in aliases:
             continue
-        thesis = _project_link(frontmatter.get("thesis") or frontmatter.get("active_thesis"))
+        thesis = thesis_rel(frontmatter)
         context = {
             "project_id": path_id,
             "project_path": path,
@@ -411,18 +412,6 @@ def _project_query(query: str, project_context: dict[str, Any]) -> str:
         *[str(term) for term in project_context.get("retrieval_terms") or []],
     ]
     return " ".join([query, *(term for term in terms if term)]).strip()
-
-
-def _project_link(raw: object) -> str:
-    value = raw
-    if isinstance(raw, dict):
-        value = raw.get("target") or raw.get("path") or raw.get("id")
-    if not isinstance(value, str):
-        return ""
-    text = value.strip()
-    if text.startswith("[[") and text.endswith("]]"):
-        text = text[2:-2].split("|", 1)[0].split("#", 1)[0]
-    return normalize_path(text).removesuffix(".md") + ".md" if text else ""
 
 
 def _linked_concept_terms(relpath: str, docs: list[tuple[str, str, dict[str, Any]]]) -> list[str]:

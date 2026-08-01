@@ -283,6 +283,35 @@ def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> Non
         )
 
 
+def test_stage_concept_rejects_undeclared_root_field_and_stages_nested_x(tmp_path: Path) -> None:
+    """Closed validation reaches the strict writer, not only `validate_frontmatter`.
+
+    An undeclared root field is refused before anything is staged; the declared
+    `x:` hatch carries arbitrary nested data through untouched.
+    """
+    vault = workspace(tmp_path)
+    staged = vault / ".memoria/staging/notes/alpha.md"
+
+    with pytest.raises(ValueError, match="surprise: unknown field"):
+        stage_concept(
+            vault,
+            "notes/alpha.md",
+            note_text().replace("links: {}\n", "links: {}\nsurprise: true\n"),
+            machine="test-machine",
+        )
+
+    assert not staged.exists()
+
+    stage_concept(
+        vault,
+        "notes/alpha.md",
+        note_text().replace("links: {}\n", "links: {}\nx:\n  local: ok\n  nested:\n    deep: 1\n"),
+        machine="test-machine",
+    )
+
+    assert read_frontmatter(staged)["x"] == {"local": "ok", "nested": {"deep": 1}}
+
+
 def test_mark_checked_rejects_retired_frontmatter_without_write_or_event(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     target = vault / "notes/alpha.md"
@@ -1053,3 +1082,24 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
     assert "UU notes/shared.md" in git(device_b, "status", "--short")
     assert "<<<<<<<" in (device_b / "notes/shared.md").read_text(encoding="utf-8")
     assert (device_b / ".memoria/journal/b.jsonl").is_file()
+
+
+def test_commit_writer_extracts_rebuttal_candidate_and_skips_tension(tmp_path: Path) -> None:
+    """Typed body wikilinks mint candidates for every served relation, never for tension."""
+    vault = workspace(tmp_path)
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
+    content = note_text().replace(
+        "Alpha body.",
+        "Typed [[rebuttal::notes/beta.md]] and [[tension::notes/gamma.md]].",
+    )
+
+    stage_concept(vault, "notes/alpha.md", content, machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
+    commit_writer_changes(vault, "trusted write alpha", ["notes/alpha.md"], machine="test-machine")
+
+    prompts = sorted((vault / "inbox").glob("work-prompt-edge-candidate-*.md"))
+    assert len(prompts) == 1
+    prompt_text = prompts[0].read_text(encoding="utf-8")
+    assert "rebuttal" in prompt_text
+    assert "notes/beta.md" in prompt_text
+    assert "notes/gamma.md" not in prompt_text

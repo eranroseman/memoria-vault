@@ -8,6 +8,7 @@ from typing import Any
 from memoria_vault.runtime import graph_sql, retrieval_pipeline, state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.search_index import _bm25, _tokens, checked_search_universe
+from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs, thesis_rel
 
 SEED_K = 5
 DEPTH_CAP = 2
@@ -227,13 +228,16 @@ def _entry_order(entry: dict[str, Any]) -> tuple[float, str, str]:
 
 def _edges_by_concept(vault: Path, ids: set[str]) -> dict[str, list[dict[str, str]]]:
     """Return only safe, displayed edges, treated as undirected for presentation."""
-    # Mixed key spaces: `source_concept_id` is identity space, `target_path` is
-    # path space, and both are matched against one `ids` set. Correct only while
-    # file Concepts key by path; NID-B.2's ULIDs break the coincidence and ERP-A.6
-    # owns the identity-safe path projection this should read.
+    # `ids` are path-space Concept ids (`_concept_id` above), so both endpoints
+    # arrive already projected: the ERP-A.6 family renders a ULID source at its
+    # `concepts.path` and a catalog work at `catalog/sources/<work_id>`, the
+    # rendering `_concept_id` produces for the synthesized fulltext document. The
+    # two agree for every document the catalog writes; `_concept_id` also fires
+    # on any other path under `fulltexts/`, where the work id is the file stem
+    # and nothing guarantees a catalog parent renders there.
     touching: dict[str, set[tuple[str, str]]] = {concept_id: set() for concept_id in ids}
-    for edge in state.concept_edges(vault):
-        source = str(edge["source_concept_id"])
+    for edge in concept_edge_path_pairs(vault):
+        source = str(edge["source_path"])
         target = str(edge["target_path"])
         if source not in ids or target not in ids:
             continue
@@ -255,15 +259,15 @@ def _tension_pairs(
     titles: dict[str, str],
 ) -> list[dict[str, Any]]:
     """Return deduplicated tension pairs whose endpoints are both safe ids."""
-    # Mixed key spaces: `source_concept_id` is identity space, `target_path` is
-    # path space, and both are matched against `safe_ids`. Correct only while file
-    # Concepts key by path; ERP-A.6 owns the projection that survives NID-B.2.
+    # Path space on both sides, through the same ERP-A.6 projection
+    # `_edges_by_concept` reads: a PI-owned tension row is identity-keyed like any
+    # other edge, and its endpoints are compared against path-space `safe_ids`.
     safe_ids = left_ids | right_ids
     pairs: dict[tuple[str, str], dict[str, Any]] = {}
-    for edge in state.concept_edges(vault):
+    for edge in concept_edge_path_pairs(vault):
         if str(edge["relation_type"]) != "tension":
             continue
-        source = str(edge["source_concept_id"])
+        source = str(edge["source_path"])
         target = str(edge["target_path"])
         if source not in safe_ids or target not in safe_ids:
             continue
@@ -312,7 +316,7 @@ def _vetted_project_slice_ids(
 
     seen: set[str] = set()
     queue = sorted(_link_targets(_frontmatter(project_document)))
-    thesis = _link_target(_frontmatter(project_document).get("thesis"))
+    thesis = thesis_rel(_frontmatter(project_document))
     if thesis:
         queue.append(thesis)
     while queue:
@@ -350,42 +354,11 @@ def _active_member_id(member: object) -> str:
         return ""
 
 
-def _link_targets(frontmatter: dict[str, Any]) -> set[str]:
-    links = frontmatter.get("links")
-    if not isinstance(links, dict):
-        return set()
-    targets: set[str] = set()
-    for values in links.values():
-        for value in values if isinstance(values, list) else [values]:
-            target = _link_target(value)
-            if target:
-                targets.add(target)
-    return targets
-
-
-def _link_target(value: object) -> str:
-    if isinstance(value, dict):
-        value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
-    if not isinstance(value, str) or not value.strip():
-        return ""
-    raw = value.strip()
-    if raw.startswith("[[") and raw.endswith("]]"):
-        raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
-    try:
-        relpath = normalize_path(raw)
-    except ValueError:
-        return ""
-    if "/" not in relpath:
-        relpath = f"notes/{relpath}"
-    if relpath.startswith("catalog/sources/"):
-        relpath = relpath.rstrip("/")
-        if relpath.count("/") != 2:
-            return ""
-    elif not relpath.endswith(".md"):
-        relpath += ".md"
-    if not relpath.startswith(("catalog/sources/", "notes/", "hubs/", "digests/", "fulltexts/")):
-        return ""
-    return relpath
+# The links closure resolves targets exactly as `graph_sql`'s does — same
+# namespace, same rejections. It was a byte-identical copy; `_active_project_slices`
+# above already reaches for that module's private closure helpers.
+_link_targets = graph_sql._link_targets
+_link_target = graph_sql._link_target
 
 
 def _payload_titles(payload: dict[str, Any]) -> dict[str, str]:

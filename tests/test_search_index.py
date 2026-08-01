@@ -82,6 +82,32 @@ def mark_note_candidate(vault: Path, path: Path) -> None:
     )
 
 
+def test_search_universe_admits_every_declared_searchable_type(tmp_path: Path) -> None:
+    """``SEARCHABLE_TYPES`` gates on frontmatter, so every member must name a
+    type a real vault file can carry — dropping one drops its document."""
+    vault = workspace(tmp_path)
+    concepts = {
+        "note": "notes/typed-note.md",
+        "digest": "digests/typed-digest.md",
+        "hub": "hubs/typed-hub.md",
+        "project": "projects/typed-project/project.md",
+    }
+    for concept_type, rel in concepts.items():
+        path = vault / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            f"---\ntype: {concept_type}\ncheck_status: checked\ntitle: {concept_type}\n"
+            "---\nsharedmarker body\n",
+            encoding="utf-8",
+        )
+        set_db_status(vault, path, concept_type, "checked")
+
+    universe = checked_search_universe(vault)
+
+    assert [row["path"] for row in universe["documents"]] == sorted(concepts.values())
+    assert {row["frontmatter"]["type"] for row in universe["documents"]} == set(concepts)
+
+
 def test_rebuild_checked_search_index_copies_only_checked_concepts(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     note(vault, "checked", "checked", "alpha beta")
@@ -494,6 +520,39 @@ def test_answer_query_carries_project_context(tmp_path: Path) -> None:
     assert [source["path"] for source in answer["sources"]][:1] == [
         "projects/project-alpha/project.md"
     ]
+
+
+def test_project_context_resolves_the_thesis_through_the_one_path_space_normalizer(
+    tmp_path: Path,
+) -> None:
+    """This context builder is its own `thesis:` reader (issue #1623).
+
+    It used to carry an inline `[[…]]` stripper with no `notes/` completion, so
+    a bare stem became `thesis.md` here and `notes/thesis.md` everywhere else,
+    and a title became a phantom path the linked-terms lookup then missed.
+    """
+    vault = workspace(tmp_path)
+    project = vault / "projects/project-alpha/project.md"
+    project.parent.mkdir(parents=True, exist_ok=True)
+    note(vault, "thesis", "checked", "methods caveat")
+
+    def context(field: str) -> str:
+        project.write_text(
+            "---\ntype: project\ncheck_status: checked\ntitle: Framing project\n"
+            f"{field}\n---\nProject body.\n",
+            encoding="utf-8",
+        )
+        set_db_status(vault, project, "project", "checked")
+        return answer_query(vault, "what matters", project_id="project-alpha")["project_context"][
+            "thesis_path"
+        ]
+
+    assert context("thesis: thesis") == "notes/thesis.md"
+    assert context("thesis: '[[notes/thesis]]'") == "notes/thesis.md"
+    assert context("thesis: 'Toulmin: the warrant'") == ""
+    # `active_thesis:` is retired by project.yaml: this reader was the last one
+    # still falling back to it.
+    assert context("active_thesis: notes/thesis.md") == ""
 
 
 def test_project_answer_expands_bm25_query_with_project_and_thesis_terms(

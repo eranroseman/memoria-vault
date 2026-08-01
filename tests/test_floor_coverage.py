@@ -37,6 +37,27 @@ def test_every_read_action_covers_every_declared_transport() -> None:
     assert not problems, "\n".join(problems)
 
 
+def test_every_swept_http_binding_names_the_registry_route() -> None:
+    """A swept binding must dispatch the action whose name it carries.
+
+    Route paths overlap in behaviour -- `/attention` and `/v1/views/attention`
+    are both scoped attention list reads over the same seeded card -- so a
+    binding pointed at the wrong one keeps the read sweep and the scope walk
+    green while never exercising the action they are parametrized over.
+    """
+    problems = []
+    for action_id, action in actions_by_id().items():
+        http = action.get("http")
+        entry = ARG_TABLE.get(action_id)
+        if not isinstance(http, dict) or entry is None or entry.get("http") is None:
+            continue
+        method, path = entry["http"]
+        declared = (str(http["method"]), str(http["path"]))
+        if (str(method), str(path).split("?")[0]) != declared:
+            problems.append(f"{action_id}: sweeps {method} {path}, contract declares {declared}")
+    assert not problems, "\n".join(problems)
+
+
 def test_every_operation_has_a_floor_entry() -> None:
     catalog = {m["frontmatter"]["operation_id"] for m in iter_capability_manifests("operation")}
     missing = sorted(catalog - OPERATION_REGISTRY.keys())
