@@ -1184,6 +1184,58 @@ def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> 
     return {"deleted": int(deleted), "inserted": len(rows)}
 
 
+def update_concept_path(vault: Path, concept_id: str, old_path: str, new_path: str) -> None:
+    """Move one Concept's path across every path-keyed table, in one transaction.
+
+    The in-band seam behind ``memoria mv``. It is a strict superset of the
+    out-of-band reconcile it calls (``_reconcile_renamed_output_conn``): that pass
+    only has to keep the materialization ledger findable at the new path, while a
+    move must also carry the edge mirror, the passage index and
+    ``file_index_state`` — the row the out-of-band pass strands, and the one
+    ``refresh_stale_passages`` computes its removed set from. The reconcile
+    statement is *called*, never re-issued: it shipped a Critical once already
+    (``materialization_payloads`` had no ``ON UPDATE CASCADE``) and a second copy
+    is a second place for the next one to hide.
+
+    Nothing here touches ``output_sha256``. A rename does not change a byte, so
+    the barrier keeps hashing the same content at the new path and edited content
+    still cannot keep a ``checked`` verdict.
+    """
+    old_rel = normalize_path(old_path)
+    new_rel = normalize_path(new_path)
+    with connect(vault) as conn:
+        if concept_id == new_rel:
+            # Path-keyed Concept (no frontmatter ULID): the path *is* the key, so
+            # it moves too. Left behind, the next file dropped at the vacated path
+            # resolves onto this row and inherits the PI's verdict. The v16 foreign
+            # keys carry the verdict, flags and edges; `derivations` has no FK by
+            # design and moves by hand. A conflicting id raises and rolls the whole
+            # move back, which is the refusal the caller wants.
+            conn.execute(
+                "UPDATE concepts SET concept_id = ? WHERE concept_id = ?", (new_rel, old_rel)
+            )
+            conn.execute(
+                "UPDATE derivations SET input_id = ? WHERE input_id = ?", (new_rel, old_rel)
+            )
+            conn.execute(
+                "UPDATE derivations SET output_id = ? WHERE output_id = ?", (new_rel, old_rel)
+            )
+        # Reads `concepts.path` for the old key, so it runs before that column moves.
+        _reconcile_renamed_output_conn(conn, concept_id, new_rel)
+        conn.execute("UPDATE concepts SET path = ? WHERE concept_id = ?", (new_rel, concept_id))
+        conn.execute(
+            "UPDATE OR REPLACE concept_edges SET target_path = ? WHERE target_path = ?",
+            (new_rel, old_rel),
+        )
+        conn.execute(
+            "UPDATE concept_edges SET source_path = ? WHERE source_path = ?", (new_rel, old_rel)
+        )
+        conn.execute("UPDATE passages SET path = ? WHERE path = ?", (new_rel, old_rel))
+        conn.execute(
+            "UPDATE OR REPLACE file_index_state SET path = ? WHERE path = ?", (new_rel, old_rel)
+        )
+
+
 def _reconcile_renamed_output_conn(
     conn: sqlite3.Connection, concept_id: str, new_path: str
 ) -> None:

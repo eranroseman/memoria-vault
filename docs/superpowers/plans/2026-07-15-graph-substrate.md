@@ -2856,9 +2856,39 @@ one transaction, and commits everything through the trusted writer.
   - `knowledge._rewrite_inbound_links(vault: Path, old_rel: str, new_rel: str) -> list[str]`
     (private) — rewritten inbound-linker rel paths, sorted.
 
+> **Execution notes (2026-07-31) — four deviations from the drafted code below,
+> each proven by a mutation that fails a shipped test.** Consumers NID-B.6/.7
+> should read the shipped seam, not the draft.
+>
+> 1. **A checked linker's rewrite is re-signed, not written raw.** The draft's
+>    `_rewrite_inbound_links` writes with `write_frontmatter_doc`, which changes a
+>    `checked` file's bytes out of band: `is_consumable_checked_file` then fails the
+>    sha256 comparison and every note that linked to the moved one silently drops
+>    out of consumption. Shipped: `_write_link_rewrite` routes a checked linker
+>    through `trusted_writer.mark_checked` — the same seam `curate_note_link` uses —
+>    which re-validates *and* re-records the hash. Consequence: a linker carrying a
+>    retired frontmatter field refuses the move instead of being rewritten.
+> 2. **Plan-then-apply, with a byte-exact undo.** The draft renames first and then
+>    mutates while it scans, so a mid-scan failure strands a half-applied move.
+>    Shipped: `_plan_inbound_link_rewrites` is pure reads and replaces
+>    `_rewrite_inbound_links`; `move_concept` snapshots the files it will touch and,
+>    on any exception, reverses `update_concept_path`, restores each written linker
+>    byte-for-byte (`_restore_link_rewrite`) and renames the file back.
+> 3. **The path-key re-key is inline, not `_rekey_concept_conn`.** NID-B.2's
+>    execution replacement did not add that helper ("do not add
+>    `_rekey_concept_conn`"). `update_concept_path` re-keys `concepts.concept_id`
+>    directly and hand-moves `derivations` (the one identity-keyed table with no FK);
+>    verdicts, flags and edges ride the v16 `ON UPDATE CASCADE`. `edge_id` is left
+>    stale after a re-key — the next `replace_concept_edges` pass recomputes it.
+> 4. **`update_concept_path` calls `_reconcile_renamed_output_conn`,** never
+>    re-issues it, and runs it *after* the re-key and *before* `concepts.path` moves,
+>    since it reads the old path off the row. `move_concept` names the vacated path
+>    to the writer only when git tracks it (`_committable`): `git add` exits 128 on a
+>    pathspec matching nothing, which would kill every move of an uncommitted file.
+
 **Steps:**
 
-- [ ] Append the failing tests to `tests/test_knowledge.py` (reuse the module's
+- [x] Append the failing tests to `tests/test_knowledge.py` (reuse the module's
   `workspace`/`_md`/`_call` helpers; wrapper next to `curate_note_link`'s at `:47`):
 
   ```python
@@ -2937,11 +2967,11 @@ one transaction, and commits everything through the trusted writer.
           move_concept(vault, "digests/a.md", "digests/b.md", actor="pi", machine="m")
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_knowledge.py::test_move_concept_rewrites_inbound_links_and_path_in_one_transaction tests/test_knowledge.py::test_move_concept_refuses_bad_targets -v`
   — expect FAIL: `ImportError: cannot import name 'move_concept' from
   'memoria_vault.runtime.knowledge'`.
-- [ ] Add `update_concept_path` to `src/memoria_vault/runtime/state.py` (below
+- [x] Add `update_concept_path` to `src/memoria_vault/runtime/state.py` (below
   `rebuild_file_concept_mirror`):
 
   ```python
@@ -2975,7 +3005,7 @@ one transaction, and commits everything through the trusted writer.
           )
   ```
 
-- [ ] Add the move seam to `src/memoria_vault/runtime/knowledge.py` (after
+- [x] Add the move seam to `src/memoria_vault/runtime/knowledge.py` (after
   `curate_note_link`, `:414`); extend its vaultio import with `is_ulid`:
 
   ```python
@@ -3088,11 +3118,11 @@ one transaction, and commits everything through the trusted writer.
       return new_rel if value.endswith(".md") else new_stem
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_knowledge.py::test_move_concept_rewrites_inbound_links_and_path_in_one_transaction tests/test_knowledge.py::test_move_concept_refuses_bad_targets -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/knowledge.py tests/test_knowledge.py
