@@ -1074,7 +1074,6 @@ def test_idle_monitor_waits_for_an_authenticated_dispatch_to_finish(
     )
     serve_thread.start()
     assert server.serve_forever_started.wait(timeout=5)
-    monitor = start_idle_monitor(server, idle_exit_seconds=0.03, poll_interval=0.01)
     response: dict[str, object] = {}
 
     def request() -> None:
@@ -1083,8 +1082,16 @@ def test_idle_monitor_waits_for_an_authenticated_dispatch_to_finish(
 
     request_thread = threading.Thread(target=request, daemon=True)
     request_thread.start()
+    monitor: threading.Thread | None = None
     try:
+        # Start the monitor only once the dispatch is in flight. Started before
+        # that it races the request for a 30ms idle window the request has to
+        # win just to be admitted -- a coin flip on a loaded machine, and not
+        # what this test is about. The assertions below are that in-flight work
+        # defers the idle shutdown, and that finishing it releases the server.
         assert entered_dispatch.wait(timeout=5)
+        monitor = start_idle_monitor(server, idle_exit_seconds=0.03, poll_interval=0.01)
+
         time.sleep(0.1)
         assert serve_thread.is_alive()
         assert monitor.is_alive()
@@ -1103,7 +1110,8 @@ def test_idle_monitor_waits_for_an_authenticated_dispatch_to_finish(
         server.shutdown()
         request_thread.join(timeout=5)
         serve_thread.join(timeout=5)
-        monitor.join(timeout=5)
+        if monitor is not None:
+            monitor.join(timeout=5)
         server.server_close()
 
 
