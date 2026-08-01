@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.27,<2"]
+mcp = ["mcp>=1.27,<3"]
 vector = ["sqlite-vec>=0.1.6"]
 
 [project.scripts]
