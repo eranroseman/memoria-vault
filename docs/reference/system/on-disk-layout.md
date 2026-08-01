@@ -68,7 +68,7 @@ writable runtime directories are created from `folders.yaml`:
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
 ├── overrides.jsonl          Git-tracked log of PI overrides recorded at init and beyond
-├── vault.json               Git-tracked init manifest: vault identity and the seeded agent/Obsidian bundle hashes
+├── vault.json               Git-tracked creation receipt: vault identity and bundle hashes, written once at init (see below)
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── code-runs/<run-id>/      gitignored recorded code-execution run artifacts
 ├── journal/                 derived per-machine JSONL synchronization exports
@@ -80,6 +80,26 @@ writable runtime directories are created from `folders.yaml`:
 ├── locks/worker.lock         fail-closed no-follow workspace writer lock
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ```
+
+`vault.json` is written once, by `memoria init`, and is never rewritten. It
+records this vault's identity and the SHA-256 of each agent and Obsidian bundle
+file **as the vault was created** - not a live inventory of what is on disk now:
+
+- A bundle file already present at init is adopted, not replaced, and its own
+  hash is recorded. A vault can therefore carry perimeter configuration it
+  never received from the package.
+- A bundle delivered by a later run is on disk but absent from the record. That
+  includes `memoria init --no-obsidian` followed by `memoria doctor --repair`
+  or a second `memoria init`, which installs the Obsidian plugin while the
+  record still lists the agent bundle alone.
+- The same holds one level down: a file a newer engine adds to a bundle the
+  record already lists arrives on disk, while that bundle's recorded file map
+  keeps the shorter list it had at creation.
+- After `memoria doctor --repair` on a newer engine, a reseeded
+  `.obsidian/plugins/` file no longer matches its recorded hash.
+
+No runtime reads these hashes. A future drift or tamper check needs its own
+record of what was seeded and must not read this one.
 
 The append-only, hash-chained `event_log` in `memoria.sqlite` is the journal of
 record. Trust-sensitive readers query it in event order. A journal append
@@ -140,7 +160,7 @@ preferences, but preserves an existing PI-owned view preference.
 | `.obsidian/app.json` | Obsidian file/link defaults chosen to avoid root clutter and frontmatter UI rewriting. |
 | `.obsidian/core-plugins.json` | Core plugin settings for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
 | `.obsidian/community-plugins.json` | Enables the bundled `memoria-obsidian` plugin. |
-| `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. |
+| `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. `memoria init` seeds them once and never overwrites an existing copy; `memoria doctor --repair` restores them from the package. |
 | `catalog.base`, `claims.base`, `inbox.base`, `projects.base`, `sources.base` | Root Base view preferences. `--no-obsidian` skips them; repair restores a missing file but preserves the PI's existing copy. |
 | `.obsidian/graph.json`, `.obsidian/types.json` | Obsidian graph and type view preferences. Repair restores a missing file but preserves the PI's existing copy. |
 | `.claude/`, `.codex/hooks.json`, `.mcp.json`, `CLAUDE.md` | First-init agent/MCP host configuration. It configures installed hosts but installs no external runtime. `memoria init`, including `--no-obsidian`, seeds it once; `memoria doctor --repair` never recreates or overwrites it, so it is PI-owned after bootstrap. |

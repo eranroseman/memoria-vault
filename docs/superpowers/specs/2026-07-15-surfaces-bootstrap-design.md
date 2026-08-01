@@ -20,7 +20,7 @@ vault; the vault is the distribution channel.**
 | Item | Decision |
 | --- | --- |
 | Engine install | `pipx install memoria` (or `uv tool install memoria`) — the only thing ever installed outside a vault |
-| Vault manifest | `.memoria/vault.json`: vault_id, schema_version, per-bundle versions + SHA-256 content hashes |
+| Vault manifest | `.memoria/vault.json`: `{schema, vault_id, bundles: {<name>: {files: {<rel>: "sha256:<hex>"}}}}` — written once at init, write-if-absent, so `vault_id` is minted once and the hashes are an as-created receipt. No `schema_version` and no per-bundle versions: the 2026-07-30 clean-slate amendment retired both with the upgrade path (BOOT-C.6 decision, 2026-08-01) |
 | Per-user state dir (never synced) | Linux/WSL2 `~/.local/state/memoria/vaults/<key>/`; macOS `~/Library/Application Support/Memoria/vaults/<key>/`; Windows `%LOCALAPPDATA%\Memoria\vaults\<key>\` — `<key>` = sha256(canonical vault path)[:16], computed only by the engine |
 | Rendezvous | `<state>/runtime.json`, mode 0600, atomic write: `{schema, vault_path, vault_id, port, pid, boot_id, token, engine_version, started_at}`; deleted on clean exit |
 | Server | `memoria serve`: foreground default port 8765 (walks 8765–8785); surface-spawned servers bind port 0 (ephemeral). Idle-exit 15 min, reset only by authenticated requests. One server per vault |

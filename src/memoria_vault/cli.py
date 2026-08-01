@@ -58,16 +58,10 @@ SEED_FILES = (
     ("sources.base", "sources.base"),
 )
 # The agent bundle is a first-install bootstrap, not a repair-managed runtime
-# seed. A later doctor repair must never recreate or overwrite PI-owned agent
-# configuration and perimeter policy.
-AGENT_BUNDLE_SEED_TREES = (
-    (".claude", ".claude"),
-    (".codex", ".codex"),
-)
-AGENT_BUNDLE_SEED_FILES = (
-    (".mcp.json", ".mcp.json"),
-    ("CLAUDE.md", "CLAUDE.md"),
-)
+# seed: it is absent from the rosters above, so a later doctor repair cannot
+# recreate or overwrite PI-owned agent configuration and perimeter policy.
+# `runtime.bundles` is the single init-path writer of every bundle path
+# (write-if-absent) and feeds `.memoria/vault.json` — see `_seed_write_allowed`.
 # Seeded-config lifecycle — two classes (consolidation 2026-07-12, line 105).
 # View preferences are seeded once and PI-owned afterwards: repair/upgrade must
 # not clobber an existing copy (it does reseed a deleted one). Data projections
@@ -2769,22 +2763,20 @@ def _workspace_plan(workspace: Path) -> list[str]:
     return list(schema.load_folders()["skeleton"])
 
 
-def _active_seed_trees(
-    *, include_obsidian: bool, include_agent_bundle: bool = False
-) -> tuple[tuple[str, str], ...]:
-    trees = SEED_TREES + (AGENT_BUNDLE_SEED_TREES if include_agent_bundle else ())
+def _active_seed_trees(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]:
     if include_obsidian:
-        return trees
-    return tuple(pair for pair in trees if pair[1] != ".obsidian")
+        return SEED_TREES
+    return tuple(pair for pair in SEED_TREES if pair[1] != ".obsidian")
 
 
-def _active_seed_files(
-    *, include_obsidian: bool, include_agent_bundle: bool = False
-) -> tuple[tuple[str, str], ...]:
-    seed_files = SEED_FILES + (AGENT_BUNDLE_SEED_FILES if include_agent_bundle else ())
+def _active_seed_files(*, include_obsidian: bool) -> tuple[tuple[str, str], ...]:
     if include_obsidian:
-        return seed_files
-    return tuple(pair for pair in seed_files if not pair[1].endswith(".base"))
+        return SEED_FILES
+    return tuple(pair for pair in SEED_FILES if not pair[1].endswith(".base"))
+
+
+def _bundle_names(*, include_obsidian: bool) -> list[str]:
+    return ["agent", "obsidian"] if include_obsidian else ["agent"]
 
 
 def _init_dry_run_report(
@@ -2793,18 +2785,8 @@ def _init_dry_run_report(
     from memoria_vault.runtime import bundles
     from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
 
-    seed_trees = [
-        target
-        for _, target in _active_seed_trees(
-            include_obsidian=include_obsidian, include_agent_bundle=True
-        )
-    ]
-    seed_files = [
-        target
-        for _, target in _active_seed_files(
-            include_obsidian=include_obsidian, include_agent_bundle=True
-        )
-    ]
+    seed_trees = [target for _, target in _active_seed_trees(include_obsidian=include_obsidian)]
+    seed_files = [target for _, target in _active_seed_files(include_obsidian=include_obsidian)]
     search = {
         "engine": "bm25",
         "checked_root": ".memoria/index/search/checked",
@@ -2828,6 +2810,7 @@ def _init_dry_run_report(
         "package": {
             "seed_trees": seed_trees,
             "seed_files": seed_files,
+            "bundle_files": bundles.bundle_files(_bundle_names(include_obsidian=include_obsidian)),
             "version": __version__,
         },
         "generated_targets": list(TRACKED_PROJECTION_PATHS),
@@ -2852,22 +2835,12 @@ def _init_dry_run_report(
     }
 
 
-def _seed_workspace(
-    workspace: Path,
-    *,
-    overwrite: bool,
-    include_obsidian: bool = True,
-    include_agent_bundle: bool = False,
-) -> None:
-    for source_rel, target_rel in _active_seed_trees(
-        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
-    ):
+def _seed_workspace(workspace: Path, *, overwrite: bool, include_obsidian: bool = True) -> None:
+    for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
         _copy_seed_tree(
             source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
         )
-    for source_rel, target_rel in _active_seed_files(
-        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
-    ):
+    for source_rel, target_rel in _active_seed_files(include_obsidian=include_obsidian):
         _copy_seed_file(
             source_rel, workspace / target_rel, overwrite=overwrite, target_rel=target_rel
         )
@@ -2885,19 +2858,19 @@ def _repair_write_targets(
     include_obsidian: bool = True,
     include_agent_bundle: bool = False,
 ) -> list[str]:
+    from memoria_vault.runtime import bundles
     from memoria_vault.runtime.projections import _tracked_projection_paths
 
     targets = set(_workspace_plan(workspace))
-    for source_rel, target_rel in _active_seed_trees(
-        include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
-    ):
+    for source_rel, target_rel in _active_seed_trees(include_obsidian=include_obsidian):
         targets.update(_seed_tree_write_targets(source_rel, target_rel))
     targets.update(
-        target
-        for _source, target in _active_seed_files(
-            include_obsidian=include_obsidian, include_agent_bundle=include_agent_bundle
-        )
+        target for _source, target in _active_seed_files(include_obsidian=include_obsidian)
     )
+    if include_agent_bundle:
+        targets.update(
+            bundles.bundle_write_targets(_bundle_names(include_obsidian=include_obsidian))
+        )
     targets.update(
         {
             state.DB_REL,
@@ -3011,24 +2984,21 @@ def _initialize_workspace_files(
     workspace.mkdir(parents=True, exist_ok=True)
     for rel in _workspace_plan(workspace):
         (workspace / rel).mkdir(parents=True, exist_ok=True)
-    _seed_workspace(
-        workspace,
-        overwrite=overwrite,
-        include_obsidian=include_obsidian,
-        include_agent_bundle=include_agent_bundle,
-    )
+    _seed_workspace(workspace, overwrite=overwrite, include_obsidian=include_obsidian)
     state.connect(workspace).close()
     _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections_explicit
 
     write_tracked_projections_explicit(workspace, actor="operation", machine="memoria-init")
-    if not overwrite and include_agent_bundle:
+    if include_agent_bundle:
         from memoria_vault.runtime import bundles
 
-        bundle_names = ["agent"] + (["obsidian"] if include_obsidian else [])
+        # `init` alone passes this: repair must never reach the bundle writer.
         # Before _ensure_git so the created repository's first commit tracks
         # .memoria/vault.json; otherwise a fresh vault starts dirty.
-        bundles.seed_bundles(workspace, bundle_names=bundle_names)
+        bundles.seed_bundles(
+            workspace, bundle_names=_bundle_names(include_obsidian=include_obsidian)
+        )
     _ensure_git(workspace, commit_created_repository=commit_created_repository)
 
 
@@ -3037,6 +3007,12 @@ def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_re
     if not source.is_dir():
         return
     if target.exists() and any(target.iterdir()) and not overwrite:
+        # Standing debt (flagged 2026-08-01, not BOOT-C.6's to fix): a
+        # non-empty tree is skipped whole on the init path, so a file missing
+        # from inside it is not restored — dropping this branch would restore
+        # per-file instead, and no test covers the difference. BOOT-C.6 moved
+        # the bundle paths out of the seed rosters, leaving `.obsidian` as the
+        # only tree here that carries any.
         return
     target.mkdir(parents=True, exist_ok=True)
     for child in source.iterdir():
@@ -3064,6 +3040,13 @@ def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool, target_re
 
 
 def _seed_write_allowed(target_rel: str, target: Path, *, overwrite: bool) -> bool:
+    from memoria_vault.runtime import bundles
+
+    if not overwrite and target_rel in bundles.BUNDLE_PATHS:
+        # One writer on the init path: `runtime.bundles` writes every bundle
+        # path write-if-absent and records it in `.memoria/vault.json`. Repair
+        # still restores `.obsidian/plugins/*` as the runtime seed it is.
+        return False
     if not target.exists():
         return True
     return overwrite and target_rel not in VIEW_PREFERENCE_PATHS

@@ -682,8 +682,15 @@ def test_cli_init_no_obsidian_skips_obsidian_seed(
         "projects.base",
         "sources.base",
     }
-    assert {".claude", ".codex"} <= set(output["package"]["seed_trees"])
-    assert {".mcp.json", "CLAUDE.md"} <= set(output["package"]["seed_files"])
+    assert not {".claude", ".codex"} & set(output["package"]["seed_trees"])
+    assert not {".mcp.json", "CLAUDE.md"} & set(output["package"]["seed_files"])
+    assert output["package"]["bundle_files"] == [
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
+        ".mcp.json",
+        "CLAUDE.md",
+    ]
     assert not dry_workspace.exists()
 
 
@@ -855,7 +862,18 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "inbox.base",
         "projects.base",
         "sources.base",
+    ]
+    # The bundle files are reported separately: `runtime.bundles` writes them,
+    # not the seed-class copy (BOOT-C.6, one writer).
+    assert output["package"]["bundle_files"] == [
+        ".claude/hooks/write_perimeter.py",
+        ".claude/settings.json",
+        ".codex/hooks.json",
         ".mcp.json",
+        ".obsidian/plugins/memoria-obsidian/main.js",
+        ".obsidian/plugins/memoria-obsidian/manifest.json",
+        ".obsidian/plugins/memoria-obsidian/schema.js",
+        ".obsidian/plugins/memoria-obsidian/styles.css",
         "CLAUDE.md",
     ]
     assert "capabilities" not in output["package"]["seed_trees"]
