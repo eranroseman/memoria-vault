@@ -2527,6 +2527,20 @@ could silently drop the requirement. This task adds the guard tests only.
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
 
+**Post-merge amendment (review escape, closed):** the guard test above only ever
+drove `universal_concept_frontmatter_errors` with `type: "hub"`; `note` and
+`project` were pinned only through `schema.load_types`/`validate_frontmatter`,
+never through the vaultio validator. That let a one-line widening of the
+`{"digest", "fulltext"}` exclusion set (to include `"project"`, or to include
+`"note"`) pass all 36 tests in the file — the linter/pre-commit-facing check
+would silently stop requiring a ULID for that type while the schema-layer check
+kept passing, and no other test in the repo references the function. Review
+found the gap; `test_ulid_identity_required_for_note_hub_project` was widened
+to loop `universal_concept_frontmatter_errors` over all three of
+`note`/`hub`/`project`, not just `hub`. The negative-direction guard
+(`test_digest_and_fulltext_accept_non_ulid_ids`) was unaffected and still
+covers the dropped-exclusion-set mutation.
+
 ---
 
 ### Task NID-B.4: indexer path→id resolution + reconcile-by-id on rename (clause 3)
