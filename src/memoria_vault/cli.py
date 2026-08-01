@@ -1855,6 +1855,14 @@ def _request_successor(
         precondition_hashes=request["precondition_hashes"],
         causal_refs=[*request["causal_refs"], request["request_id"]],
         actor="pi",
+        # Authorship is inherited from the source, not reset by PI authority: the
+        # successor payload is `{**request["args"], ...}`, so a machine-authored
+        # body survives `request amend`/`answer` verbatim unless the flag travels
+        # with it (#1596). Tradeoff: a PI who genuinely rewrites `content` via
+        # `--update` still gets a neutralized body. That is the safe direction —
+        # an explicit authorship-claim affordance can be added later, but a
+        # default of "trusted" cannot be un-shipped.
+        machine_authored=bool(envelope.get("machine_authored", False)),
         provenance={
             "surface": "memoria-cli",
             "command": f"request-{command}",

@@ -319,6 +319,12 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
         ).fetchone()
     assert row["operation_id"] == "create-concept"
     assert row["actor"] == "agent"
+    # Stated, not inferred from actor="agent" (#1596): bodies arriving over this
+    # transport are machine-authored, so a later authority change here cannot
+    # silently disable untrusted-Markdown neutralization.
+    job = state.request_job(workspace, "mcp-create")
+    assert job is not None
+    assert job["request_envelope"]["machine_authored"] is True
     assert json.loads(row["provenance_json"]) == {
         "surface": "memoria-mcp",
         "command": "mcp:create-concept",
@@ -346,6 +352,46 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
             )
         )
     }
+
+
+def test_mcp_operation_run_never_carries_pi_authority(workspace: Path) -> None:
+    """The loopback HTTP door's PI grant must not reach the stdio agent door."""
+    pytest.importorskip("mcp")
+    attention_path = workspace / "inbox/mcp-cannot-resolve.md"
+    attention_path.parent.mkdir(parents=True, exist_ok=True)
+    attention_path.write_text(
+        "---\n"
+        "projection: attention\n"
+        "title: MCP cannot resolve\n"
+        "attention_kind: work-prompt\n"
+        "attention_status: open\n"
+        "routing_class: ask\n"
+        "---\n"
+        "Review.\n",
+        encoding="utf-8",
+    )
+    app = make_mcp_app(workspace, read_scope=["inbox"], agent_identity="review-agent")
+
+    response = _call(
+        app,
+        "operation_run",
+        operation_id="resolve-attention",
+        payload={
+            "target_id": "inbox/mcp-cannot-resolve.md",
+            "outcome": "apply",
+            "routing_class": "ask",
+            "reason": "agent disposition",
+        },
+        idempotency_key="mcp-cannot-resolve",
+    )
+
+    assert response["ok"] is False
+    assert response["result"]["status"] == "failed"
+    assert response["result"]["error"] == "resolve-attention requires PI actor authority"
+    request = state.request_row(workspace, "mcp-cannot-resolve")
+    assert request is not None
+    assert request["actor"] == "agent"
+    assert "attention_status: open" in attention_path.read_text(encoding="utf-8")
 
 
 def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path) -> None:

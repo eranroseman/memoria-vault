@@ -526,6 +526,7 @@ def request_envelope(
     precondition_hashes: dict[str, Any] | None = None,
     causal_refs: Iterable[str | dict[str, Any]] = (),
     actor: str,
+    machine_authored: bool = False,
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
 ) -> dict[str, Any]:
@@ -546,6 +547,9 @@ def request_envelope(
         "precondition_hashes": dict(precondition_hashes or {}),
         "causal_refs": _json_rows(causal_refs),
         "actor": actor,
+        # Authority (`actor`) is not authorship. A door authenticated as the PI can
+        # still be posting a body a machine composed; that body must stay untrusted.
+        "machine_authored": bool(machine_authored),
         "provenance": dict(provenance or {}),
         "schedule_id": schedule_id or None,
     }

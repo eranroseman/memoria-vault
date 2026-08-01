@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -76,7 +75,7 @@ def add_repo_paths(root: Path) -> None:
 
 def _operation_context(vault: Path, operation_id: str):
     from memoria_vault.runtime import state
-    from memoria_vault.runtime.trusted_writer import OperationContext
+    from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 
     request_id = f"e2e-{uuid.uuid4().hex}"
     envelope = state.request_envelope(
@@ -85,6 +84,7 @@ def _operation_context(vault: Path, operation_id: str):
         actor="operation",
         provenance={"surface": "e2e-smoke"},
     )
+    context = OperationContext("operation", request_id, request_id, operation_id, "e2e")
     job = state.save_request(
         vault,
         envelope,
@@ -92,18 +92,12 @@ def _operation_context(vault: Path, operation_id: str):
             "job_id": request_id,
             "kind": "operation",
             "operation_id": operation_id,
-            "bound_context": {
-                "actor": "operation",
-                "run_id": request_id,
-                "request_id": request_id,
-                "operation_id": operation_id,
-                "machine": "e2e",
-            },
+            "bound_context": operation_context_record(context),
         },
     )
     job["status"] = "running"
     state.set_request_running(vault, request_id, job)
-    return OperationContext("operation", request_id, request_id, operation_id, "e2e")
+    return context
 
 
 def assert_offline_ingest(root: Path, vault: Path) -> None:
@@ -164,20 +158,26 @@ def assert_typed_graph(root: Path, vault: Path) -> None:
     project = vault / "projects/package-gate/project.md"
     thesis = vault / "notes/package-thesis.md"
     support = vault / "notes/package-support.md"
+    # `tags` is required by note.yaml/project.yaml. These fixtures write
+    # frontmatter straight to disk instead of going through the product writers,
+    # so nothing else enforces it -- and omitting it put three MEDIUM
+    # schema-check findings into the vault this smoke then lints, which held the
+    # final verdict at REVIEW and made stage 8 unable to fail on schema drift.
     _write_note(
         project,
-        "type: project\nid: 01KBN6V6KX0000000000000001\nlinks: {}\ntitle: Package gate\n"
+        "type: project\nid: 01KBN6V6KX0000000000000001\ntags: []\nlinks: {}\n"
+        "title: Package gate\n"
         "description: Package gate project.\nthesis: notes/package-thesis.md\n",
         "Package gate project.",
     )
     _write_note(
         thesis,
-        "type: note\nid: 01KBN6V6KX0000000000000002\nlinks: {}\ntitle: Package thesis\n",
+        "type: note\nid: 01KBN6V6KX0000000000000002\ntags: []\nlinks: {}\ntitle: Package thesis\n",
         "Package thesis.",
     )
     _write_note(
         support,
-        "type: note\nid: 01KBN6V6KX0000000000000003\ntitle: Package support\n"
+        "type: note\nid: 01KBN6V6KX0000000000000003\ntags: []\ntitle: Package support\n"
         "links:\n  supports:\n    - notes/package-thesis.md\n",
         "Package support.",
     )
@@ -221,7 +221,15 @@ def assert_workflow_replay_artifacts(vault: Path) -> None:
 
 
 def assert_final_verdict(verdict: str) -> None:
-    assert re.search(r"PASS|REVIEW", verdict), f"worked vault verdict: {verdict}"
+    """The worked vault must lint clean, not merely non-fatally.
+
+    This used to accept REVIEW, because the fixtures above omitted `tags` and so
+    seeded their own MEDIUM findings. `verdict()` maps any MEDIUM to REVIEW, so
+    accepting REVIEW meant a real schema regression read exactly like the
+    fixtures' own noise and the stage could not fail. With the fixtures valid,
+    PASS is reachable and the stage means something again.
+    """
+    assert "PASS" in verdict, f"worked vault verdict: {verdict}"
 
 
 def _fail(message: str) -> None:

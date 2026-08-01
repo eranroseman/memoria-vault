@@ -79,8 +79,17 @@ def test_temp_vaults_land_on_the_selected_tmpdir(tmp_path: Path) -> None:
 
     conftest sets TMPDIR at import; this fails if that lands after pytest has
     already resolved a basetemp, which is the one real risk in doing it there.
+
+    Reads the environment rather than conftest's `_TMPDIR`: under xdist the
+    controller exports TMPDIR and the workers inherit it, so a worker re-running
+    the selection sees it already set and correctly declines to choose again.
+    Keying the assertion on `_TMPDIR` therefore skipped in every worker, which
+    is everywhere the gate runs. The environment is what pytest actually reads,
+    and it holds in controller and worker alike -- and is still unset on CI,
+    where the real filesystem is the point.
     """
-    if test_config._TMPDIR is None:
+    selected = os.environ.get("TMPDIR")
+    if selected is None:
         pytest.skip("no tmpfs selected in this environment")
 
-    assert str(tmp_path).startswith(test_config._TMPDIR)
+    assert str(tmp_path).startswith(selected)

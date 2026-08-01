@@ -134,6 +134,7 @@ def enqueue_operation(
     precondition_hashes: dict[str, Any] | None = None,
     causal_refs: list[str | dict[str, Any]] | None = None,
     actor: str,
+    machine_authored: bool = False,
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
     supersede_request_id: str | None = None,
@@ -180,6 +181,7 @@ def enqueue_operation(
         precondition_hashes=precondition_hashes,
         causal_refs=request_causal_refs,
         actor=actor,
+        machine_authored=machine_authored,
         provenance=request_provenance,
         schedule_id=schedule_id,
     )
