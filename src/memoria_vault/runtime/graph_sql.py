@@ -20,7 +20,10 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib.edges import normalize_link_target
+from memoria_vault.runtime.subsystems.lib.edges import (
+    concept_edge_path_pairs,
+    normalize_link_target,
+)
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 DEPTH_CAP = 2
@@ -67,21 +70,30 @@ def neighborhood(
         return {"ids": [], "counts": {"seeds": 0, "neighbors": 0, "returned": 0}}
     relations_json = json.dumps(sorted(chosen))
     seeds_json = json.dumps(seed_ids)
-    # Mixed key spaces: `source_concept_id` is identity space while `target_path`
-    # is path space. They coincide only while file Concepts key by path. NID-B.2
-    # gives file Concepts ULIDs and breaks that; ERP-A.6 owns the identity-safe
-    # path projection that this walk must read instead.
+    # Both endpoints are projected to path space exactly as
+    # `edges.concept_edge_path_pairs` projects them, because the walk, its seeds
+    # and its returned ids are all paths. It joins that projection in SQL rather
+    # than consuming the public one because the eligibility predicate below needs
+    # two columns the strict endpoint API deliberately withholds: the edge's own
+    # `source_path` (blank marks a PI-owned row, which no verdict gates) and the
+    # source Concept's verdict. Identity is matched against identity —
+    # `source_status.concept_id` against `edge.source_concept_id`, never against
+    # a path — which is the ERP-A.6 correction to the NID-B.2 join.
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
             WITH RECURSIVE
             eligible_edges(origin_id, target_id) AS (
-                SELECT edge.source_concept_id, edge.target_path
+                SELECT source_status.path,
+                       COALESCE(NULLIF(target.path, ''), edge.target_path)
                 FROM concept_edges AS edge
-                LEFT JOIN concept_status AS source_status
-                  ON source_status.concept_id = edge.source_path
+                JOIN concept_status AS source_status
+                  ON source_status.concept_id = edge.source_concept_id
+                LEFT JOIN concepts AS target
+                  ON target.concept_id = edge.target_concept_id
                 WHERE edge.check_status = 'checked'
                   AND edge.relation_type IN (SELECT value FROM json_each(?))
+                  AND source_status.path != ''
                   AND (
                       edge.source_path = ''
                       OR source_status.check_status = 'checked'
@@ -194,27 +206,18 @@ def degree_centrality(vault: Path, ids: list[str]) -> dict[str, int]:
     wanted = list(dict.fromkeys(normalize_path(str(value)) for value in ids if str(value).strip()))
     if not wanted:
         return {}
-    # Mixed key spaces: one endpoint is `source_concept_id` (identity space), the
-    # other `target_path` (path space). Correct only while file Concepts key by
-    # path; NID-B.2's ULIDs break it and ERP-A.6 owns the projection that fixes it.
-    with state.connect(vault) as conn:
-        rows = conn.execute(
-            """
-            SELECT concept_id, COUNT(DISTINCT neighbor) AS degree FROM (
-                SELECT source_concept_id AS concept_id, target_path AS neighbor
-                FROM concept_edges WHERE check_status = 'checked'
-                UNION
-                SELECT target_path AS concept_id, source_concept_id AS neighbor
-                FROM concept_edges WHERE check_status = 'checked'
-            )
-            WHERE concept_id IN (SELECT value FROM json_each(?))
-            GROUP BY concept_id
-            """,
-            (json.dumps(wanted),),
-        ).fetchall()
-    degrees = dict.fromkeys(wanted, 0)
-    degrees.update({str(row["concept_id"]): int(row["degree"]) for row in rows})
-    return degrees
+    # Both endpoints come from the one graph-owned path projection, so a ULID
+    # source and a bare `work_id` source are counted at the paths their callers
+    # know them by. Parallel relations between the same two Concepts are one
+    # neighbor, which is what the pre-ERP-A.6 `UNION` + `COUNT(DISTINCT …)` said.
+    neighbors: dict[str, set[str]] = {value: set() for value in wanted}
+    for pair in concept_edge_path_pairs(vault):
+        source, target = pair["source_path"], pair["target_path"]
+        if source in neighbors:
+            neighbors[source].add(target)
+        if target in neighbors:
+            neighbors[target].add(source)
+    return {value: len(neighbors[value]) for value in wanted}
 
 
 def project_slice(vault: Path, project: str) -> dict[str, Any]:
@@ -345,17 +348,27 @@ def filter_ids(
         return {"ids": [], "counts": {"before": 0, "after": 0}}
     if types is None and check_status is None:
         return {"ids": wanted, "counts": {"before": len(wanted), "after": len(wanted)}}
+    # Path space in, path space out: these ids are the ones `neighborhood` and
+    # `project_slice` return, so a Concept is found by its `concepts.path`
+    # rendering and keyed back by it. The `concept_id` arm is what still finds a
+    # db-store Concept that renders nowhere, and is the only reason a caller
+    # holding such an id keeps working; it is not a licence to pass a ULID.
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT concept_id, concept_type, check_status
+            SELECT concept_id, path, concept_type, check_status
             FROM concept_status
-            WHERE concept_id IN (SELECT value FROM json_each(?))
+            WHERE path IN (SELECT value FROM json_each(?))
+               OR concept_id IN (SELECT value FROM json_each(?))
             """,
-            (json.dumps(wanted),),
+            (json.dumps(wanted), json.dumps(wanted)),
         ).fetchall()
     known = {
-        str(row["concept_id"]): (str(row["concept_type"]), str(row["check_status"])) for row in rows
+        str(row["path"] or row["concept_id"]): (
+            str(row["concept_type"]),
+            str(row["check_status"]),
+        )
+        for row in rows
     }
     kept = []
     for concept_id in wanted:

@@ -6272,10 +6272,61 @@ amendment.
 > Join `concepts.path` to `source_path`, or `concepts.concept_id` to
 > `source_concept_id` — never one against the other. NID-B.4 did not touch this join.
 
+> **Execution amendment (2026-08-01, as landed): the consumers land here too.**
+> The Files list and the step checkboxes below name only the producer
+> (`edges.py` + `tests/test_edges.py`), but the two blockquotes above say the
+> `explore` regression persists "until this task lands", and the in-source
+> comments at all four defective sites name ERP-A.6 as the owner of the fix. A
+> producer nobody reads would have left every measured symptom in place, so this
+> task also rewires the consumers and adds
+> `src/memoria_vault/runtime/graph_sql.py`,
+> `src/memoria_vault/runtime/explore.py`, `tests/test_graph_sql.py` and
+> `tests/test_explore.py` to its Files. R2's amendment already assigns this
+> wiring to G.1/E.1, but both shipped before ERP-A.6 existed; nothing else in
+> either plan comes back for them.
+>
+> 1. **Measured before, measured after.** One vault built twice — once with
+>    id-less files (path keys) and once with frontmatter ULIDs — through
+>    `record_observed_file_edit`/`replace_concept_edges`, then read through
+>    `explore.explore_topic`. Before: the path-keyed arm returned 5 ids, 8
+>    displayed edge entries and 1 tension; the ULID arm returned 3 ids, **0**
+>    edge entries and **0** tensions,
+>    `neighborhood` emitted a raw ULID into its path-space `ids`,
+>    `degree_centrality` read 1/1 instead of 3/2, and `filter_ids` kept nothing
+>    (`after: 0` of 2). After: the two arms are byte-identical.
+> 2. **`explore._edges_by_concept` and `_tension_pairs` consume
+>    `concept_edge_path_pairs`**, and `degree_centrality` builds its adjacency
+>    from it. `state.concept_edges` now has no `src/` consumer at all.
+> 3. **`neighborhood` keeps its own SQL, projecting the same two endpoints the
+>    same way** (`concepts.path` for the source, `COALESCE(NULLIF(target.path,
+>    ''), edge.target_path)` for the target) and joining
+>    `concept_status.concept_id` to `edge.source_concept_id`. It does *not*
+>    consume the strict projection: R2's "solely from
+>    `edges.concept_edge_path_pairs`" would silently delete the revoked-source
+>    gate, which needs the edge's own `source_path` (blank = PI-owned, no verdict
+>    gates it) and the source Concept's verdict — two columns the three-field
+>    public API deliberately withholds. `tests/test_graph_sql.py`'s
+>    `test_neighborhood_rejects_stale_checked_mirror_edges_for_revoked_source`
+>    pins that gate, and the ULID fixture now pins it a second time in identity
+>    space.
+> 4. **`filter_ids` is not an edge reader.** Its defect is the same namespace
+>    error one table over: path-space ids matched against
+>    `concept_status.concept_id`. It now looks a Concept up by `path` and keys
+>    the result back under `path or concept_id`, the convention
+>    `state.concept_check_statuses` already uses. The `concept_id` arm is
+>    retained so a caller holding a db-store Concept that renders nowhere keeps
+>    working; it is not a licence to pass a ULID.
+> 5. **Not done, deliberately.** No consumer outside these two modules was
+>    touched. `structural_impact_graph` reads frontmatter, not `concept_edges`,
+>    and its rewire onto `concept_edge_path_records` stays ERP-D.4's.
+
 **Files:**
 
 - Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py`
 - Modify: `tests/test_edges.py`
+- Modify (2026-08-01 amendment): `src/memoria_vault/runtime/graph_sql.py`,
+  `src/memoria_vault/runtime/explore.py`, `tests/test_graph_sql.py`,
+  `tests/test_explore.py`
 
 **Interfaces:**
 
@@ -6310,7 +6361,7 @@ amendment.
 
 **Steps:**
 
-- [ ] Write failing tests in `tests/test_edges.py` (extend the existing module;
+- [x] Write failing tests in `tests/test_edges.py` (extend the existing module;
   no `TEST_LEVELS` change).  Seed the v16 mirror with a source whose
   `concept_id` is a ULID and whose `path` is `notes/source.md`, a resolved
   target at `notes/resolved.md`, and a checked pending target path
@@ -6338,14 +6389,14 @@ amendment.
   ordering with exactly those parsed attribute dictionaries and no identity
   keys.  Add an unchecked edge and prove it is absent by default and present
   only with `checked_only=False` in both projections.
-- [ ] Run the focused test red:
+- [x] Run the focused test red:
 
   ```bash
   python -m pytest tests/test_edges.py -q
   ```
 
   Expected: import/attribute failure for both path-projection functions.
-- [ ] Implement in `edges.py`.  Keep the `state` import inside the function so
+- [x] Implement in `edges.py`.  Keep the `state` import inside the function so
   ERP-A.2's module-level `state → edges` roster import cannot cycle.  Implement
   `concept_edge_path_records` as the shared query: join the edge table to
   `concepts AS source` and left-join `concepts AS target`; select source
@@ -6357,13 +6408,13 @@ amendment.
   `concept_edge_path_pairs` by mapping each record to a newly built dict with
   exactly its three public fields.  Do not select into, return, or normalize
   raw identity columns or `edge_id`.
-- [ ] Run the focused and dependent graph tests:
+- [x] Run the focused and dependent graph tests:
 
   ```bash
   python -m pytest tests/test_edges.py tests/test_query_substrate.py -q
   ```
 
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```bash
