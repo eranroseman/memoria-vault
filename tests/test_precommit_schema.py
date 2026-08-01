@@ -119,6 +119,25 @@ def test_nested_link_shape_blocks(tmp_path):
     assert any("links.related: unknown relation" in error for error in errors)
 
 
+def test_undeclared_root_field_blocks_while_x_hatch_passes(tmp_path):
+    vault = _vault(tmp_path)
+    (vault / "notes/hatch.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\nlinks: {}\ntitle: T\nx:\n  local: ok\n  nested:\n    deep: 1\n---\nBody.\n",
+        encoding="utf-8",
+    )
+    (vault / "notes/surprise.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\nlinks: {}\ntitle: T\nsurprise: true\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    assert precommit_check.check_paths(vault, ["notes/hatch.md", "notes/surprise.md"]) == [
+        "notes/surprise.md: note: surprise: unknown field; "
+        "declare it in the type schema or nest under x:"
+    ]
+
+
 def test_unknown_type_blocks(tmp_path):
     vault = _vault(tmp_path)
     (vault / "notes/odd.md").write_text(

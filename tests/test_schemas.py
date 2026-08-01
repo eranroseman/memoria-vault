@@ -288,6 +288,34 @@ def test_note_links_are_typed_maps():
     )
 
 
+def test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_tension():
+    # The six verbs are spelled out rather than read from `edges.LINK_RELATIONS`:
+    # a fixture derived from the roster it claims to cover stays green when the
+    # roster narrows. This is the independent statement the owner is held to.
+    served = ("contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant")
+    note = schema.load_types()["note"]
+    frontmatter = {
+        "id": "01KBN6V6KX0000000000000001",
+        "type": "note",
+        "title": "T",
+        "tags": [],
+        "links": {
+            relation: [f"notes/{relation}-one.md", f"[[notes/{relation}-two]]"]
+            for relation in served
+        },
+    }
+
+    assert schema.validate_frontmatter(frontmatter, note) == []
+    # `tension` is machine-surfaced and PI-confirmed: an edge relation that
+    # frontmatter may never author, so it fails validation like any non-relation.
+    tension = schema.validate_frontmatter(
+        dict(frontmatter, links={"tension": ["notes/other.md"]}), note
+    )
+    assert any("links.tension: unknown relation" in error for error in tension)
+    # Catches a widening too: the rejection message names the whole roster.
+    assert any(str(list(served)) in error for error in tension)
+
+
 def test_okf_core_empty_workspace_validates(tmp_path):
     assert schema.validate_okf_core_workspace(_empty_workspace(tmp_path)) == []
 

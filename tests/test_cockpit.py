@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -242,6 +243,36 @@ def test_draft_panel_is_honest_about_a_project_with_no_composed_draft(vault: Pat
     assert panels["slice"]["edges_by_type"] == {}
     assert panels["grounds"]["total"] == 0
     assert panels["grounds"]["findings"] == []
+
+
+def test_project_panel_reports_an_untitled_project_as_blank_not_as_a_stand_in(
+    vault: Path,
+) -> None:
+    """Panel 1's `title` fallback, held against the producer state that reaches it.
+
+    A `type: project` concept with no frontmatter `title` is not malformed —
+    `read_concepts` anticipates exactly that row and substitutes `path.stem` for
+    its listing (`engine/api.py`). The panel deliberately does *not* substitute:
+    it reads the frontmatter the researcher wrote and reports blank when nothing
+    is there, so the screen never shows a filename dressed as a title. Every
+    other fixture titles its project, which leaves that fallback free to return
+    any literal at all.
+    """
+    write_checked_concept(
+        vault,
+        "projects/study-epsilon/project.md",
+        "type: project\n",
+        "project",
+    )
+
+    panels = cockpit.assemble_deep(vault, "projects/study-epsilon/project.md")
+
+    assert panels["project"]["title"] == ""
+    out = cockpit.render_deep(
+        {"screen": "deep", "project": "projects/study-epsilon/project.md", "panels": panels}
+    )
+    assert "  title: " in out
+    assert "study-epsilon" not in _panel_body(out, "project (concepts.get)")[0]
 
 
 def test_resolver_sees_projects_from_the_production_create_concept_writer(vault: Path) -> None:
@@ -573,19 +604,49 @@ def test_worklist_panel_emits_the_producer_order_whatever_it_is(
     assert cockpit.assemble_triage(vault)["worklist"]["cards"] == ranked
 
 
+def _review_seam_is_live() -> bool:
+    """The live-branch predicate for triage panel 2, stated independently of the
+    composer (raw-counts amendment 2026-07-29 §1): the panel counts V2's queue
+    engine-direct, so it needs the collector *and* the registered row that is the
+    only registry id it may name. Either half alone is not a seam."""
+    return hasattr(engine_api, "evidence_review_queue") and "views.evidence_review" in (
+        actions_by_id()
+    )
+
+
+def _flow_seam_is_live() -> bool:
+    """The live-branch predicate for triage panel 3 (registered-only composition
+    amendment §2/§3): a registered `dashboard.read` row whose engine is bound. An
+    unbound row is a reservation, not a producer."""
+    row = actions_by_id().get("dashboard.read") or {}
+    return bool(row.get("engine")) and hasattr(engine_api, str(row["engine"]))
+
+
 def test_named_pending_triage_panels_name_their_absent_producer(vault: Path) -> None:
     """Reconciliation amendment (2026-07-29) §2/§3: a panel with no registered
     producer carries an empty source_action and names what is missing — it never
-    whitelists a future action id nor reaches past the registry."""
+    whitelists a future action id nor reaches past the registry.
+
+    Both-branch, and the post-landing half is INT.1's endgame rule: once a seam is
+    live the named-pending form must be *gone*, not merely joined by real counts.
+    """
     panels = cockpit.assemble_triage(vault)
 
-    assert panels["review"]["source_action"] == ""
-    assert panels["review"]["pending"] == (
-        "engine_api.evidence_review_queue + the views.evidence_review registry row "
-        "(V2 plan V2R-B.4)"
-    )
-    assert panels["flow"]["source_action"] == ""
-    assert panels["flow"]["pending"] == "the dashboard.read registry row (U2 plan T.3)"
+    if _review_seam_is_live():
+        assert "pending" not in panels["review"]
+        assert panels["review"]["source_action"] == "views.evidence_review"
+    else:
+        assert panels["review"]["source_action"] == ""
+        assert panels["review"]["pending"] == (
+            "engine_api.evidence_review_queue + the views.evidence_review registry row "
+            "(V2 plan V2R-B.4)"
+        )
+    if _flow_seam_is_live():
+        assert "pending" not in panels["flow"]
+        assert panels["flow"]["source_action"] == "dashboard.read"
+    else:
+        assert panels["flow"]["source_action"] == ""
+        assert panels["flow"]["pending"] == "the dashboard.read registry row (U2 plan T.3)"
 
 
 def test_every_panel_source_action_is_registered_or_named_pending(vault: Path) -> None:
@@ -1403,3 +1464,862 @@ def test_resolution_screen_with_no_active_projects_names_the_predicate(
     assert "no active projects (type: project, archived not True)" in out
     assert "pass --project <path> to open one directly" in out
     assert "active projects; pass" not in out
+
+
+def _triage_panels(
+    cards: list[dict[str, Any]],
+    *,
+    review: dict[str, Any] | None = None,
+    flow: dict[str, Any] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """An explicit triage panel set for the renderer's own tests.
+
+    The screen is under test here, not the composer: three of the four
+    variable-length values it interpolates (the disposition breakdown, the
+    oldest-bucket label, either pending line) are bounded by their *producers*
+    and not by the renderer, exactly as C.2's `edges_by_type` was — so they are
+    pinned against a payload rather than a vault.
+    """
+    return {
+        "worklist": {"source_action": "attention.list", "cards": cards},
+        "review": review or {"source_action": "", "pending": "a named review producer"},
+        "flow": flow or {"source_action": "", "pending": "a named flow producer"},
+    }
+
+
+def test_triage_screen_renders_its_panels_in_fixed_order_with_banner_and_separators(
+    vault: Path,
+) -> None:
+    """Screen furniture (spec §2), the triage half of C.2's deep-screen test: the
+    screen names itself on line 1, the three panels come in the §1 fixed order
+    worklist → review → flow, and exactly one blank line separates them."""
+    out = cockpit.render_triage({"screen": "triage", "panels": cockpit.assemble_triage(vault)})
+    lines = out.splitlines()
+
+    assert lines[0] == "memoria cockpit: triage"
+    assert lines[1] == ""
+    labels = ("attention worklist (", "review queue (", "flow (")
+    headings = [next(line for line in lines if line.startswith(label)) for label in labels]
+    positions = [lines.index(heading) for heading in headings]
+    assert positions == sorted(positions)
+    for heading in headings:
+        assert lines[lines.index(heading) - 1] == "", f"no separator above {heading}"
+    assert "\n\n\n" not in out
+    assert out.endswith("\n")
+    assert not out.endswith("\n\n")
+
+
+def test_triage_headings_name_the_row_each_panel_wrapped(vault: Path) -> None:
+    """A heading is a grounding claim, on this screen as on the deep one.
+
+    The review and flow headings change with their seams, so both forms are held
+    by the both-branch test below. The worklist's row is registered today and its
+    heading is therefore the same string in every vault — which is exactly what
+    makes a hard-coded heading invisible. Hold it against a panel that names a
+    different row, and one that names none.
+    """
+    panels = cockpit.assemble_triage(vault)
+
+    unsourced = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": {**panels, "worklist": {**panels["worklist"], "source_action": ""}},
+        }
+    )
+
+    assert "attention worklist (no registry row yet)" in unsourced
+    assert "attention worklist (attention.list)" not in unsourced
+
+    renamed = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": {
+                **panels,
+                "worklist": {**panels["worklist"], "source_action": "attention.get"},
+            },
+        }
+    )
+
+    assert "attention worklist (attention.get)" in renamed
+
+
+def test_triage_worklist_rows_render_in_payload_order_verbatim(vault: Path) -> None:
+    """Spec §1 triage 1 / I1 contract 6: `attention-as-projection` is satisfied
+    structurally — I1 owns the order and the cockpit re-sorts nothing, at the text
+    layer as much as in the payload.
+
+    The vault's own worklist happens to arrive in path order, so a renderer-side
+    `sorted()` would be a no-op against it and no assertion on the fixture could
+    see it. The second half holds the guarantee against an order that matches no
+    obvious key — not path, not title, not either reversed — which is what an
+    I1-ranked worklist will look like.
+    """
+    panels = cockpit.assemble_triage(vault)
+    cards = panels["worklist"]["cards"]
+    assert len(cards) == 3
+
+    out = cockpit.render_triage({"screen": "triage", "panels": panels})
+
+    assert [out.index(card["path"]) for card in cards] == sorted(
+        out.index(card["path"]) for card in cards
+    )
+
+    ranked = cards[1:] + cards[:1]
+    paths = [card["path"] for card in ranked]
+    assert paths != sorted(paths)
+    assert paths != sorted(paths, reverse=True)
+    assert paths != [card["path"] for card in sorted(ranked, key=lambda card: card["title"])]
+
+    listed = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": {**panels, "worklist": {**panels["worklist"], "cards": ranked}},
+        }
+    )
+
+    assert [listed.index(path) for path in paths] == sorted(listed.index(path) for path in paths)
+
+
+def test_triage_worklist_row_states_the_title_kind_and_path_it_carries() -> None:
+    """One row, numbered, saying which card it is (`title`), what kind of call it
+    makes (`kind`) and where it lives (`path` — the value the researcher opens).
+    Dropping any of the three still renders a plausible-looking worklist."""
+    out = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": _triage_panels(
+                [
+                    {"title": "Ground claim two", "kind": "gap", "path": "inbox/gap-two.md"},
+                    {"title": "Extend the outline", "kind": "work-prompt", "path": "inbox/wp.md"},
+                ]
+            ),
+        }
+    )
+
+    assert _panel_body(out, "attention worklist (attention.list)") == [
+        "  1. Ground claim two  [gap]  inbox/gap-two.md",
+        "  2. Extend the outline  [work-prompt]  inbox/wp.md",
+    ]
+
+
+def test_triage_worklist_discloses_rank_factors_only_when_the_card_carries_them() -> None:
+    """I1 contract 6, both-branch: `rank_factors` is the per-row disclosure of an
+    order the cockpit does not own. A card carrying it gets one disclosure line in
+    a fixed key order; a card carrying none gets no line at all — an empty `rank:`
+    under a row claims the ranker weighed nothing, which is a different claim from
+    "this vault has no ranker yet"."""
+    out = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": _triage_panels(
+                [
+                    {
+                        "title": "Ground claim two",
+                        "kind": "gap",
+                        "path": "inbox/gap-two.md",
+                        # Emitted in an order that is neither sorted nor its
+                        # reverse, so the renderer's fixed order is load-bearing.
+                        "rank_factors": {"loudness": "alert", "age_days": 12, "kind_weight": 3},
+                    },
+                    {"title": "Extend the outline", "kind": "work-prompt", "path": "inbox/wp.md"},
+                    # Present but empty: a ranker that weighed nothing on this
+                    # card. Same rule as panel 1's empty thesis — a label with
+                    # no value under it is a claim, not a blank.
+                    {
+                        "title": "Read the 2019 review",
+                        "kind": "candidate",
+                        "path": "inbox/cand.md",
+                        "rank_factors": {},
+                    },
+                    # Truthy but not a mapping. I1's own contract discloses a
+                    # non-enum ranking input "verbatim in rank_factors (fail
+                    # visible, never silent)", and every attention-card field is
+                    # read straight off note frontmatter (`_attention_card`,
+                    # engine/api.py) — so a hand-edited `rank_factors: alert`
+                    # reaches this renderer as a bare string. Without the
+                    # isinstance half of the guard, `sorted("alert")` succeeds
+                    # and the key lookup then raises, killing the whole screen
+                    # over one edited note.
+                    {
+                        "title": "Check the deprivation protocol",
+                        "kind": "gap",
+                        "path": "inbox/protocol.md",
+                        "rank_factors": "alert",
+                    },
+                ]
+            ),
+        }
+    )
+
+    assert _panel_body(out, "attention worklist (attention.list)") == [
+        "  1. Ground claim two  [gap]  inbox/gap-two.md",
+        "     rank: age_days=12 kind_weight=3 loudness=alert",
+        "  2. Extend the outline  [work-prompt]  inbox/wp.md",
+        "  3. Read the 2019 review  [candidate]  inbox/cand.md",
+        "  4. Check the deprivation protocol  [gap]  inbox/protocol.md",
+    ]
+
+
+def test_triage_worklist_says_it_is_empty_rather_than_going_silent() -> None:
+    """The honesty branch C.2 met in panel 4: "the queue is empty" is a claim the
+    researcher can act on, a heading with nothing under it is silence. A worklist
+    that has cards must not also say it is empty."""
+    empty = cockpit.render_triage({"screen": "triage", "panels": _triage_panels([])})
+
+    assert _panel_body(empty, "attention worklist (attention.list)") == ["  (worklist empty)"]
+
+    full = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": _triage_panels(
+                [{"title": "Ground claim two", "kind": "gap", "path": "inbox/gap-two.md"}]
+            ),
+        }
+    )
+
+    assert "(worklist empty)" not in full
+
+
+def test_triage_screen_states_the_live_counts_its_panels_carry() -> None:
+    """The live review and flow lines — the numbers the researcher reads. C.2's
+    lesson: a count pinned in the payload and unasserted in the render can be
+    dropped, swapped or hard-coded with the suite green, so both bodies are held
+    as exact lists. The disposition breakdown arrives unsorted, and the empty
+    queue renders `none` rather than an empty pair of brackets."""
+    panels = _triage_panels(
+        [],
+        review={
+            "source_action": "views.evidence_review",
+            "open": 4,
+            "counts": {"accepted": 3, "deferred": 2, "open": 4},
+            "srd_gaps": 1,
+        },
+        flow={
+            "source_action": "dashboard.read",
+            "open_total": 7,
+            "inflow": 5,
+            "drain": 2,
+            "oldest": ">30d",
+        },
+    )
+
+    out = cockpit.render_triage({"screen": "triage", "panels": panels})
+
+    assert _panel_body(out, "review queue (views.evidence_review)") == [
+        "  open: 4  (accepted=3 deferred=2 open=4)",
+        "  srd gaps: 1",
+        "  hosted by: memoria review (V2)",
+    ]
+    assert _panel_body(out, "flow (dashboard.read)") == [
+        "  open 7 | inflow 5 / drain 2 | oldest >30d"
+    ]
+
+    drained = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": {
+                **panels,
+                "review": {
+                    "source_action": "views.evidence_review",
+                    "open": 0,
+                    "counts": {},
+                    "srd_gaps": 0,
+                },
+            },
+        }
+    )
+
+    assert _panel_body(drained, "review queue (views.evidence_review)")[0] == "  open: 0  (none)"
+
+
+def test_triage_review_and_flow_lines_are_both_branch_honest(vault: Path) -> None:
+    """The two seams C.3 composes without owning: V2R-B.4's queue and T.3's
+    dashboard row. Live when present, an honest named line when absent — and the
+    `memoria review` invocation on both branches, because the cockpit links to
+    V2's review flow and never re-hosts it (spec §1 triage 2)."""
+    panels = cockpit.assemble_triage(vault)
+    out = cockpit.render_triage({"screen": "triage", "panels": panels})
+
+    review = panels["review"]
+    if _review_seam_is_live():
+        assert review["source_action"] == "views.evidence_review"
+        assert {"open", "counts", "srd_gaps"} <= set(review)
+        body = _panel_body(out, "review queue (views.evidence_review)")
+        assert body[0] == f"  open: {review['open']}  " + (
+            "(" + " ".join(f"{k}={v}" for k, v in review["counts"].items()) + ")"
+            if review["counts"]
+            else "(none)"
+        )
+        assert not any(line.lstrip().startswith("pending:") for line in body)
+    else:
+        assert review["source_action"] == ""
+        body = _panel_body(out, "review queue (no registry row yet)")
+        named = body[: body.index("  hosted by: memoria review (V2)")]
+        # The producer's name is 91 characters, so it is wrapped across lines —
+        # and reassembles to exactly the panel's own value rather than a
+        # truncation of it.
+        assert len(named) > 1
+        assert " ".join(line.strip() for line in named) == f"pending: {review['pending']}"
+    assert "  hosted by: memoria review (V2)" in out
+
+    flow = panels["flow"]
+    if _flow_seam_is_live():
+        assert flow["source_action"] == "dashboard.read"
+        assert _panel_body(out, "flow (dashboard.read)") == [
+            f"  open {flow['open_total']} | inflow {flow['inflow']} / "
+            f"drain {flow['drain']} | oldest {flow['oldest']}"
+        ]
+    else:
+        assert flow["source_action"] == ""
+        assert _panel_body(out, "flow (no registry row yet)") == [f"  pending: {flow['pending']}"]
+
+
+def test_triage_screen_never_wraps_an_identifier_mid_token(vault: Path) -> None:
+    """The keep-test rule (spec §2) on the triage screen, and the routing class
+    C.2's second review found: `_fit(prefix, value)` and `f"{prefix}{value}"` are
+    byte-identical for every line that already fits, so a call site whose value
+    cannot exceed the layout is untested however many assertions surround it.
+
+    Every interpolated value is therefore made over-long at least once: the
+    worklist row (a vault can supply a long attention path), the rank disclosure,
+    both live count lines and both pending lines. The last four are bounded by
+    their producers rather than by the renderer — which is not hypothetical, the
+    review panel's own pending string is 91 characters — so they come from an
+    explicit payload.
+    """
+    long_path = "inbox/" + "z" * 100 + ".md"
+    assert len(long_path) > cockpit.LAYOUT_COLUMNS
+    live = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": _triage_panels(
+                [
+                    {
+                        "title": "Follow up the 2019 sleep restriction review before the "
+                        "draft leans on it again",
+                        "kind": "candidate",
+                        "path": long_path,
+                        "rank_factors": {
+                            "age_days": 41,
+                            "kind_weight": 3,
+                            "loudness": "alert",
+                            "open_dependents": 6,
+                            "routing_class": "ask",
+                            "staleness_days": 19,
+                        },
+                    }
+                ],
+                review={
+                    "source_action": "views.evidence_review",
+                    "open": 4,
+                    "counts": {
+                        "accepted": 31,
+                        "deferred": 22,
+                        "edited": 13,
+                        "open": 4,
+                        "quarantined": 5,
+                        "rejected": 26,
+                        "superseded": 7,
+                    },
+                    "srd_gaps": 2,
+                },
+                flow={
+                    "source_action": "dashboard.read",
+                    "open_total": 1240,
+                    "inflow": 3175,
+                    "drain": 2896,
+                    "oldest": "older than the first journal entry this vault carries",
+                },
+            ),
+        }
+    )
+    pending = cockpit.render_triage(
+        {
+            "screen": "triage",
+            "panels": _triage_panels(
+                [],
+                review={
+                    "source_action": "",
+                    "pending": (
+                        "engine_api.evidence_review_queue + the views.evidence_review "
+                        "registry row (V2 plan V2R-B.4)"
+                    ),
+                },
+                flow={
+                    "source_action": "",
+                    "pending": (
+                        "a registered dashboard.read row with a live engine binding "
+                        "(U2 plan T.3, after I1 H.2)"
+                    ),
+                },
+            ),
+        }
+    )
+    real = cockpit.render_triage({"screen": "triage", "panels": cockpit.assemble_triage(vault)})
+
+    for line in live.splitlines() + pending.splitlines() + real.splitlines():
+        assert len(line) <= cockpit.LAYOUT_COLUMNS or line.strip() == long_path
+    assert any(line.strip() == long_path for line in live.splitlines())
+
+
+def test_the_two_screens_never_mix(vault: Path) -> None:
+    """Spec §1: deep work sees no queue; triage sees no draft. The split is
+    enforced by layout, which is what makes the frame fixed and the content
+    adaptive rather than the other way round."""
+    deep = cockpit.render_deep(
+        {
+            "screen": "deep",
+            "project": PROJECT_REL,
+            "panels": cockpit.assemble_deep(vault, PROJECT_REL),
+        }
+    )
+    triage = cockpit.render_triage({"screen": "triage", "panels": cockpit.assemble_triage(vault)})
+
+    assert "attention worklist (" not in deep
+    assert "review queue (" not in deep
+    assert "flow (" not in deep
+    assert "memoria cockpit: deep work" not in triage
+    assert "draft (project.draft.read)" not in triage
+    assert "grounds (project.draft.read)" not in triage
+    assert "thesis" not in triage
+
+
+def _queue_rows() -> list[dict[str, Any]]:
+    """Twelve evidence rows plus one SRD gap and one row of a kind the panel has
+    never heard of. More than ten, so an unbounded `batch=0` read is the only one
+    that can produce these counts against V2's default batch of ten.
+
+    The dispositions arrive in an order that is neither sorted nor its reverse,
+    and four rows are open in four different shapes — the literal `"open"`, an
+    explicit `None`, an empty string, and no `disposition` key at all — because
+    "not yet decided" is what a fresh queue row looks like from every producer
+    that has not written a disposition event for it.
+    """
+    dispositions: list[Any] = [
+        "rejected",
+        None,
+        "accepted",
+        "deferred",
+        "",
+        "rejected",
+        "accepted",
+        "deferred",
+        "accepted",
+        "rejected",
+        "open",
+    ]
+    rows: list[dict[str, Any]] = [
+        {
+            "kind": "evidence-set",
+            "evidence_id": f"ev-{index:08d}",
+            "disposition": disposition,
+            "claim_text": "Sleep restriction degrades declarative consolidation",
+            "project": PROJECT_REL,
+        }
+        for index, disposition in enumerate(dispositions)
+    ]
+    rows.append(
+        {
+            "kind": "evidence-set",
+            "evidence_id": "ev-00000011",
+            "claim_text": "Recovery sleep does not restore the lost consolidation",
+            "project": PROJECT_REL,
+        }
+    )
+    rows.append({"kind": "srd-gap", "ref": "inbox/srd-one.md", "title": "SRD gap"})
+    # One row of an unrecognised kind *among* recognised ones: there is no
+    # honest count for a third variant, so it joins neither total. That is a
+    # narrower claim than "an unknown row may always be dropped" — a queue in
+    # which *no* row is recognised is a shape mismatch, and the panel says so
+    # rather than reporting a confident zero (see the shape test below).
+    rows.append({"evidence_id": "ev-99999999", "disposition": "accepted"})
+    return rows
+
+
+def _live_review_seam(monkeypatch: pytest.MonkeyPatch, rows: list[dict[str, Any]]) -> None:
+    """Both halves of V2R-B.4's seam, serving `rows`."""
+
+    def fake_queue(workspace: Path, **kwargs: Any) -> dict[str, Any]:
+        return {"ok": True, "rows": rows, "total": len(rows), "batch": 0, "facet_totals": {}}
+
+    monkeypatch.setattr(engine_api, "evidence_review_queue", fake_queue, raising=False)
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {
+            **actions_by_id(),
+            "views.evidence_review": {"id": "views.evidence_review", "engine": "x"},
+        },
+    )
+
+
+def test_review_panel_reports_no_open_work_on_a_fully_triaged_queue(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The drained queue, held on the *builder* side.
+
+    `open` falls back to `0` whenever the live queue has no `open` row, and per
+    V2's own row builder that is not an edge case: a raw row's `disposition` is
+    only ever `"rejected"` or `"open"` (accepted-and-cleared and defer-active
+    rows leave the queue entirely), so a vault whose reviewer has worked the
+    queue down takes this default on *every* read. The renderer's own drained
+    case is pinned against an explicit `{"open": 0, "counts": {}}` payload,
+    which is exactly what leaves the builder's default unheld: under a mutated
+    default the screen reads `open: None  (rejected=3)` with the suite green.
+    """
+    rows = [
+        {"kind": "evidence-set", "evidence_id": f"ev-{index:08d}", "disposition": "rejected"}
+        for index in range(3)
+    ]
+    _live_review_seam(monkeypatch, rows)
+
+    review = cockpit.assemble_triage(vault)["review"]
+
+    assert review == {
+        "source_action": "views.evidence_review",
+        "open": 0,
+        "counts": {"rejected": 3},
+        "srd_gaps": 0,
+    }
+    out = cockpit.render_triage({"screen": "triage", "panels": cockpit.assemble_triage(vault)})
+    assert "  open: 0  (rejected=3)" in out
+
+
+def test_review_panel_says_the_queue_shape_changed_rather_than_counting_zero(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Absence and shape mismatch are different claims (spec §1 triage 2).
+
+    The panel discriminates V2's raw union on `kind`. Two superseded layers of
+    the V2 plan still describe a CLI DTO carrying no `kind` at all, and V2R-B.5
+    lands independently of this consumer — so "the seam landed with a different
+    row shape" is a live outcome, not a hypothetical. Counting such a queue
+    yields `open: 0  (none)` under a registry-row heading: a confident number
+    about rows the panel never understood. Naming the mismatch is worth more
+    than a wrong zero, and it fails INT.1's endgame rule loudly.
+    """
+    rows = [
+        {"evidence_id": "ev-00000001", "latest_decision": "accept", "project": PROJECT_REL},
+        {"evidence_id": "ev-00000002", "latest_decision": "", "project": PROJECT_REL},
+    ]
+    _live_review_seam(monkeypatch, rows)
+
+    review = cockpit.assemble_triage(vault)["review"]
+
+    assert review["source_action"] == "views.evidence_review"
+    assert "open" not in review
+    assert review["pending"] == (
+        "2 queue rows carry no evidence-set/srd-gap kind — the raw queue shape changed "
+        "(V2 plan amendment 2026-07-29 §2)"
+    )
+
+    out = cockpit.render_triage({"screen": "triage", "panels": cockpit.assemble_triage(vault)})
+    assert "open: 0" not in out
+    assert "queue rows carry no evidence-set/srd-gap kind" in out
+
+    # An empty queue is still absence, not mismatch: it counts to zero.
+    _live_review_seam(monkeypatch, [])
+
+    assert cockpit.assemble_triage(vault)["review"] == {
+        "source_action": "views.evidence_review",
+        "open": 0,
+        "counts": {},
+        "srd_gaps": 0,
+    }
+
+
+def test_review_panel_counts_the_raw_queue_once_and_never_the_view(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Raw-counts amendment (2026-07-29) §1: the live branch calls V2's
+    engine-direct collector with `batch=0` and the cockpit's `read_scope`, counts
+    only `kind == "evidence-set"` rows by disposition, and reports the SRD-gap
+    variants as a separate read-only count. It never calls
+    `read_evidence_review_view` — counting a projection means parsing cards V2
+    owns, which is the re-hosting the spec forbids — so that helper is poisoned
+    here and would fail the test if reached.
+    """
+    calls: list[dict[str, Any]] = []
+
+    def fake_queue(workspace: Path, **kwargs: Any) -> dict[str, Any]:
+        calls.append({"workspace": workspace, **kwargs})
+        rows = _queue_rows()
+        return {"ok": True, "rows": rows, "total": len(rows), "batch": 0, "facet_totals": {}}
+
+    def poisoned_view(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        raise AssertionError("the review panel must never call read_evidence_review_view")
+
+    monkeypatch.setattr(engine_api, "evidence_review_queue", fake_queue, raising=False)
+    monkeypatch.setattr(engine_api, "read_evidence_review_view", poisoned_view, raising=False)
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {
+            **actions_by_id(),
+            "views.evidence_review": {
+                "id": "views.evidence_review",
+                "job": "review",
+                "engine": "read_evidence_review_view",
+            },
+        },
+    )
+    scope = ["projects", "inbox"]
+
+    review = cockpit.assemble_triage(vault, read_scope=scope)["review"]
+
+    assert calls == [{"workspace": Path(vault), "batch": 0, "read_scope": scope}]
+    assert review == {
+        "source_action": "views.evidence_review",
+        "open": 4,
+        # Sorted, though the queue emitted `rejected` first, and the row whose
+        # `kind` the panel does not recognise is in none of these counts.
+        "counts": {"accepted": 3, "deferred": 2, "open": 4, "rejected": 3},
+        "srd_gaps": 1,
+    }
+    assert list(review["counts"]) == ["accepted", "deferred", "open", "rejected"]
+
+
+def test_review_panel_counts_the_queue_and_never_re_hosts_it(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Spec §1 triage 2: the triage screen *counts* V2's queue and links to it —
+    it never re-hosts it. A claim rendered here would be a second review surface
+    with none of V2's card grammar, so no row content may reach the screen."""
+
+    def fake_queue(workspace: Path, **kwargs: Any) -> dict[str, Any]:
+        rows = _queue_rows()
+        return {"ok": True, "rows": rows, "total": len(rows), "batch": 0, "facet_totals": {}}
+
+    monkeypatch.setattr(engine_api, "evidence_review_queue", fake_queue, raising=False)
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {
+            **actions_by_id(),
+            "views.evidence_review": {"id": "views.evidence_review", "engine": "x"},
+        },
+    )
+
+    panels = cockpit.assemble_triage(vault)
+    out = cockpit.render_triage({"screen": "triage", "panels": panels})
+
+    assert _panel_body(out, "review queue (views.evidence_review)") == [
+        "  open: 4  (accepted=3 deferred=2 open=4 rejected=3)",
+        "  srd gaps: 1",
+        "  hosted by: memoria review (V2)",
+    ]
+    assert "Sleep restriction degrades" not in out
+    assert "ev-00000000" not in out
+    assert "claim_text" not in json.dumps(panels["review"])
+
+
+def test_review_panel_stays_pending_until_both_halves_of_the_seam_exist(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Either half alone is not a seam (raw-counts amendment §1). A collector with
+    no registered row has no honest `source_action` to name — naming an
+    unregistered id is the whitelisting §2/§3 forbids — and a registered row with
+    no collector has nothing to count. The panel must not call the collector in
+    either case, or a half-landed V2 turns every cockpit read into an error."""
+    calls: list[Path] = []
+
+    def fake_queue(workspace: Path, **kwargs: Any) -> dict[str, Any]:
+        calls.append(workspace)
+        return {"ok": True, "rows": [], "total": 0, "batch": 0, "facet_totals": {}}
+
+    without_row = {
+        key: row for key, row in actions_by_id().items() if key != "views.evidence_review"
+    }
+    with_row = {**without_row, "views.evidence_review": {"id": "views.evidence_review"}}
+
+    monkeypatch.setattr(engine_api, "evidence_review_queue", fake_queue, raising=False)
+    monkeypatch.setattr(cockpit, "actions_by_id", lambda: without_row)
+
+    collector_only = cockpit.assemble_triage(vault)["review"]
+
+    monkeypatch.delattr(engine_api, "evidence_review_queue", raising=False)
+    monkeypatch.setattr(cockpit, "actions_by_id", lambda: with_row)
+
+    row_only = cockpit.assemble_triage(vault)["review"]
+
+    assert calls == []
+    for panel in (collector_only, row_only):
+        assert panel["source_action"] == ""
+        assert panel["pending"] == (
+            "engine_api.evidence_review_queue + the views.evidence_review registry row "
+            "(V2 plan V2R-B.4)"
+        )
+
+
+def _dashboard_row() -> dict[str, dict[str, Any]]:
+    return {
+        **actions_by_id(),
+        "dashboard.read": {"id": "dashboard.read", "job": "review", "engine": "read_dashboard"},
+    }
+
+
+def test_flow_panel_consumes_the_registered_dashboard_engine(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Registered-only composition amendment §2/§3: the panel calls whatever
+    engine the `dashboard.read` row binds — never `assemble_dashboard` directly,
+    which would reconstruct a view U2 does not own — and reads
+    `dashboard["attention_flow"]` out of that engine's read envelope.
+
+    Every number is distinguishable: the two day maps carry several days each, so
+    a panel that reported a day count or the first day's value instead of the sum
+    would pass on a one-day fixture, and inflow, drain and the open total are
+    three different numbers.
+    """
+    seen: list[Path] = []
+
+    def fake_read_dashboard(workspace: Path) -> dict[str, Any]:
+        seen.append(workspace)
+        return {
+            "ok": True,
+            "api_version": 1,
+            "dashboard": {
+                "attention_flow": {
+                    "open_total": 7,
+                    "open_by_loudness": {"alert": 5, "block": 2},
+                    "inflow_by_day": {"2026-07-28": 2, "2026-07-29": 3, "2026-07-30": 6},
+                    "drain_by_day": {"2026-07-29": 1, "2026-07-30": 3},
+                    "net_by_day": {"2026-07-30": 3},
+                    "age_distribution": {"0-7d": 4, "8-30d": 2, ">30d": 1},
+                    "per_producer": {"sweep": 7},
+                    "skipped_runs": {},
+                },
+                "dispositions": {"total": 9},
+            },
+        }
+
+    monkeypatch.setattr(engine_api, "read_dashboard", fake_read_dashboard, raising=False)
+    monkeypatch.setattr(cockpit, "actions_by_id", _dashboard_row)
+
+    flow = cockpit.assemble_triage(vault)["flow"]
+
+    assert seen == [Path(vault)]
+    assert flow == {
+        "source_action": "dashboard.read",
+        "open_total": 7,
+        "inflow": 11,
+        "drain": 4,
+        "oldest": ">30d",
+    }
+
+
+def test_flow_panel_names_the_oldest_non_empty_age_bucket(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """ "Oldest" is the oldest bucket that actually holds a card, so the search
+    runs oldest-first and an empty bucket is not an answer: a panel that took the
+    first key, or any key present, would pass on a single-bucket fixture and
+    report `0-7d` for a queue whose oldest item is a month old.
+
+    A dashboard that carries only `open_total` still renders: an I1 payload
+    missing a key it declares is one panel's problem, not the whole screen's.
+    """
+    ages: dict[str, Any] = {}
+
+    def fake_read_dashboard(workspace: Path) -> dict[str, Any]:
+        return {"ok": True, "dashboard": {"attention_flow": {"open_total": 3, **ages}}}
+
+    monkeypatch.setattr(engine_api, "read_dashboard", fake_read_dashboard, raising=False)
+    monkeypatch.setattr(cockpit, "actions_by_id", _dashboard_row)
+
+    ages = {"age_distribution": {"0-7d": 4, "8-30d": 2}}
+    assert cockpit.assemble_triage(vault)["flow"]["oldest"] == "8-30d"
+
+    ages = {"age_distribution": {"0-7d": 4, "8-30d": 0, ">30d": 0}}
+    assert cockpit.assemble_triage(vault)["flow"]["oldest"] == "0-7d"
+
+    ages = {"age_distribution": {}}
+    assert cockpit.assemble_triage(vault)["flow"]["oldest"] == "none"
+
+    ages = {}
+    assert cockpit.assemble_triage(vault)["flow"] == {
+        "source_action": "dashboard.read",
+        "open_total": 3,
+        "inflow": 0,
+        "drain": 0,
+        "oldest": "none",
+    }
+
+
+def test_flow_panel_reports_a_drained_dashboard_as_zero_rather_than_a_default(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The `open_total` fallback, held on the builder side.
+
+    Every other fixture on this panel carries a truthy `open_total`, so the
+    `or 0` default is only ever reached by the producer state none of them
+    build: a workspace whose attention queue is drained. I1 may report that as
+    `open_total: 0` (falsy, so the default fires) or by omitting the key, and
+    both must read as zero rather than as whatever literal the fallback names.
+    """
+    flow: dict[str, Any] = {}
+
+    def fake_read_dashboard(workspace: Path) -> dict[str, Any]:
+        return {"ok": True, "dashboard": {"attention_flow": flow}}
+
+    monkeypatch.setattr(engine_api, "read_dashboard", fake_read_dashboard, raising=False)
+    monkeypatch.setattr(cockpit, "actions_by_id", _dashboard_row)
+
+    flow = {"open_total": 0, "inflow_by_day": {"2026-07-30": 2}}
+    assert cockpit.assemble_triage(vault)["flow"]["open_total"] == 0
+
+    flow = {"inflow_by_day": {"2026-07-30": 2}}
+    assert cockpit.assemble_triage(vault)["flow"]["open_total"] == 0
+
+
+def test_flow_panel_stays_pending_unless_a_registered_row_binds_a_live_engine(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Registered-only composition, in both directions (amendment §2/§3).
+
+    A reserved row is not a producer: U1's registry can carry a row with no
+    engine — `context.read` does today — and a panel that named `dashboard.read`
+    on the strength of the row alone would claim a read that cannot run. And an
+    engine with no row is not a producer either: I1 ships `assemble_dashboard`
+    and `memoria dashboard` long before T.3 registers U2's CLI-only row, and
+    consuming it then would be the reaching-past-the-registry the amendment
+    forbids. Neither half may call anything.
+    """
+    calls: list[Path] = []
+
+    def fake_read_dashboard(workspace: Path) -> dict[str, Any]:
+        calls.append(workspace)
+        return {"ok": True, "dashboard": {"attention_flow": {"open_total": 9}}}
+
+    monkeypatch.setattr(engine_api, "read_dashboard", fake_read_dashboard, raising=False)
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {**actions_by_id(), "dashboard.read": {"id": "dashboard.read", "engine": None}},
+    )
+
+    unbound = cockpit.assemble_triage(vault)["flow"]
+
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {
+            **actions_by_id(),
+            "dashboard.read": {"id": "dashboard.read", "engine": "read_dashboard_absent"},
+        },
+    )
+
+    unresolvable = cockpit.assemble_triage(vault)["flow"]
+
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {key: row for key, row in actions_by_id().items() if key != "dashboard.read"},
+    )
+
+    unregistered = cockpit.assemble_triage(vault)["flow"]
+
+    assert calls == []
+    for panel in (unbound, unresolvable, unregistered):
+        assert panel["source_action"] == ""
+        assert panel["pending"] == "the dashboard.read registry row (U2 plan T.3)"

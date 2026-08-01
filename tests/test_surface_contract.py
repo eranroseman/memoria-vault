@@ -28,6 +28,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "requests.get",
         "attention.list",
         "attention.get",
+        "views.attention",
         "concepts.list",
         "concepts.get",
         "work.get",
@@ -84,6 +85,30 @@ def test_surface_contract_explore_is_cli_only_with_current_shape() -> None:
     }
 
 
+def test_surface_contract_views_attention_is_http_only_with_current_shape() -> None:
+    """The whole row, not just its route.
+
+    `engine`, `response_version` and the param schema have no other pin: the
+    transport calls `read_attention_view` directly rather than through the
+    registry, and the floor sweep only checks `api_version` for rows that
+    *declare* a `response_version`, so dropping the declaration removes the
+    check instead of failing it.
+    """
+    action = actions_by_id()["views.attention"]
+
+    assert action == {
+        "id": "views.attention",
+        "job": "review",
+        "summary": "Render the attention pane view.",
+        "engine": "read_attention_view",
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {"summary": {"type": "boolean", "default": False}},
+        "http": {"method": "GET", "path": "/v1/views/attention"},
+        "response_version": engine_api.READ_API_VERSION,
+    }
+
+
 def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
     assert http_routes() == {
         ("GET", "/status"),
@@ -93,6 +118,7 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
         ("GET", "/request"),
         ("GET", "/attention"),
         ("GET", "/attention/card"),
+        ("GET", "/v1/views/attention"),
         ("GET", "/concepts"),
         ("GET", "/concept"),
         ("GET", "/work"),
@@ -235,6 +261,7 @@ def test_surface_contract_job_mapping_is_pinned() -> None:
         "requests.get": "review",
         "attention.list": "review",
         "attention.get": "review",
+        "views.attention": "review",
         "concepts.list": "read",
         "concepts.get": "read",
         "work.get": "read",

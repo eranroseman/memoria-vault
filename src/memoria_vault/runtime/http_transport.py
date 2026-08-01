@@ -343,6 +343,12 @@ def _read(
         return engine_api.read_attention_card(
             workspace, _required(query, "path"), read_scope=read_scope
         )
+    if path == "/v1/views/attention":
+        return engine_api.read_attention_view(
+            workspace,
+            summary=_one(query, "summary").lower() == "true",
+            read_scope=read_scope,
+        )
     if path == "/concepts":
         return engine_api.read_concepts(
             workspace, concept_type=_one(query, "type"), read_scope=read_scope

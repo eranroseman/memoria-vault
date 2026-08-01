@@ -16,6 +16,7 @@ from memoria_vault.runtime.projections import (
     write_tracked_projections as _write_tracked_projections,
 )
 from memoria_vault.runtime.search_index import answer_query as _answer_query
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes as _commit_writer_changes,
 )
@@ -842,6 +843,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     direct_rel = "digests/direct.md"
     depth_two_rel = "digests/depth-two.md"
     pi_rel = "notes/pi-downstream.md"
+    pi_depth_two_rel = "notes/pi-depth-two.md"
 
     enqueue_trusted_write(
         vault, source_rel, note_text(), idempotency_key="write-source", actor="operation"
@@ -879,7 +881,22 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         machine="pi-machine",
     )
     mark_checked(vault, pi_rel, machine="pi-machine")
-    commit_writer_changes(vault, "observe pi downstream", [pi_rel], machine="pi-machine")
+
+    pi_depth_two_path = vault / pi_depth_two_rel
+    pi_depth_two_path.write_text(note_text(), encoding="utf-8")
+    depth_two_prior_sha = sha256_file(pi_depth_two_path)
+    pi_depth_two_path.write_text(note_text() + "\nPI two hops down.\n", encoding="utf-8")
+    observe_pi_edit(
+        vault,
+        pi_depth_two_rel,
+        depth_two_prior_sha,
+        inputs=[{"id": direct_rel, "sha256": sha256_file(vault / direct_rel)}],
+        machine="pi-machine",
+    )
+    mark_checked(vault, pi_depth_two_rel, machine="pi-machine")
+    commit_writer_changes(
+        vault, "observe pi downstream", [pi_rel, pi_depth_two_rel], machine="pi-machine"
+    )
 
     source_path = vault / source_rel
     source_path.write_text(note_text() + "\nEdited source.\n", encoding="utf-8")
@@ -896,9 +913,14 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     assert done["paths"] == [source_rel]
     assert state.concept_check_status(vault, source_rel) == "unchecked"
     assert state.concept_check_status(vault, direct_rel) == "unchecked"
-    assert state.concept_check_status(vault, pi_rel) == "checked"
+    # Epistemic marks are origin-blind (EDGES section 7): a PI-authored descendant
+    # takes the mark its depth earns, exactly like a machine-derived one. Depth 1
+    # demotes; depth 2+ goes stale.
+    assert state.concept_check_status(vault, pi_rel) == "unchecked"
     assert state.concept_check_status(vault, depth_two_rel) == "checked"
     assert state.concept_flags(vault, depth_two_rel)["stale"]["trigger_id"] == source_rel
+    assert state.concept_check_status(vault, pi_depth_two_rel) == "checked"
+    assert state.concept_flags(vault, pi_depth_two_rel)["stale"]["trigger_id"] == source_rel
 
     answer = answer_query(vault, "depthtwomarker", include_stale=True)
     assert [source["path"] for source in answer["sources"]] == [depth_two_rel]
@@ -911,11 +933,18 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         for event in event_log
     )
     assert any(
-        event.get("check") == "cascade-rollback"
+        event.get("check") == "scan-demotion-propagation"
         and event.get("target_id") == pi_rel
-        and event.get("route") == "ask"
+        and event.get("route") == "act"
         for event in event_log
     )
+    assert any(
+        event.get("check") == "scan-demotion-stale"
+        and event.get("target_id") == pi_depth_two_rel
+        and event.get("route") == "log"
+        for event in event_log
+    )
+    assert not any(event.get("check") == "cascade-rollback" for event in event_log)
 
 
 def test_observe_pi_edits_quarantines_changed_tracked_projection(tmp_path: Path) -> None:
@@ -1180,3 +1209,79 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
 
     assert {job["status"] for job in replay["jobs"]} == {"done"}
     assert replay["results"] == []
+
+
+@pytest.mark.parametrize("relation", sorted(LINK_RELATIONS))
+def test_worker_runs_each_served_curate_note_link(tmp_path: Path, relation: str) -> None:
+    """The queued worker path completes the same verbs the direct path does."""
+    vault = workspace(tmp_path)
+    source = write_note(vault, "source", "checked", "Source body.")
+    target = write_note(vault, "target", "checked", "Target body.")
+    queued = enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={
+            "source_note_path": source.relative_to(vault).as_posix(),
+            "link_type": relation,
+            "target_path": target.relative_to(vault).as_posix(),
+        },
+        idempotency_key=f"served-link-{relation}",
+        actor="pi",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None and done["status"] == "done", done
+    assert done["link_type"] == relation
+    assert read_frontmatter(source)["links"] == {relation: ["notes/target.md"]}
+
+
+def test_worker_curate_note_link_carries_warrant_to_the_edge(tmp_path: Path) -> None:
+    """The queued path wires `payload.warrant` through; without it no edge is written."""
+    vault = workspace(tmp_path)
+    source = write_note(vault, "source", "checked", "Source body.")
+    write_note(vault, "target", "checked", "Target body.")
+    payload = {
+        "source_note_path": source.relative_to(vault).as_posix(),
+        "link_type": "supports",
+        "target_path": "notes/target.md",
+    }
+    enqueue_operation(
+        vault, "curate-note-link", payload=payload, idempotency_key="link-no-warrant", actor="pi"
+    )
+    bare = run_next_job(vault, machine="test-machine")
+    enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={**payload, "warrant": "the trial licenses this step"},
+        idempotency_key="link-warrant",
+        actor="pi",
+    )
+    warranted = run_next_job(vault, machine="test-machine")
+
+    assert bare is not None and bare["status"] == "done", bare
+    assert warranted is not None and warranted["status"] == "done", warranted
+    assert [
+        record["attributes"] for record in concept_edge_path_records(vault, checked_only=False)
+    ] == [{"warrant": "the trial licenses this step"}]
+
+
+def test_worker_rejects_tension_curate_note_link(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    source = write_note(vault, "source", "checked", "Source body.")
+    target = write_note(vault, "target", "checked", "Target body.")
+    enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={
+            "source_note_path": source.relative_to(vault).as_posix(),
+            "link_type": "tension",
+            "target_path": target.relative_to(vault).as_posix(),
+        },
+        idempotency_key="served-link-tension",
+        actor="pi",
+    )
+    failed = run_next_job(vault, machine="test-machine")
+
+    assert failed is not None and failed["status"] == "failed"
+    assert "link_type must be one of" in str(failed["error"])

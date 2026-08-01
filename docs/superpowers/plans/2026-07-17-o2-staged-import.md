@@ -91,6 +91,54 @@ is the only place allowed to compose them into the command driver.
    `memoria ask`.  A stale `ask`-for-Shape-2 snippet below is superseded.
 
 ---
+
+## Finalization amendment — the driver finalizes at command return (2026-08-01, [#1517](https://github.com/eranroseman/memoria-vault/issues/1517))
+
+The PI's ruling on #1517 (now closed) resolves the finalization question the
+2026-07-29 amendment deferred. It supersedes that amendment's item 1 clause
+"before the #1517-selected terminal finalizer can include delayed retraction
+rows", its item 3 in full, and every "waits for #1517's finalization choice"
+precondition in this plan: **that condition is now satisfied; I.1's only
+remaining blocker is external I1.**
+
+1. **Finalizer identity.** The I.1 driver itself, at command return, after the
+   documented index-refresh boundary. No durable run state, no post-enrichment
+   finalizer, no synchronous `--enrich`.
+2. **Run identity and idempotency.** The authoritative `run_id` is P.2's
+   `uuid4` hex. One `emit_import_worklist` call and one `import-run.v1` row per
+   `run_id`. A retried command mints a **new** `run_id` and converges through
+   the catalog pre-check (admitted works are skipped, so the retry's artifacts
+   describe the retry honestly rather than duplicating the first run's).
+3. **Failure/timeout policy: not applicable.** No state crosses commands, so
+   there is nothing to expire, lock, or reconcile — the exactly-once lock and
+   the invented timeout that a durable finalizer would need do not exist here.
+4. **`retraction_flags` is removed from the `import-run.v1` contract.** The
+   event has **nine** fields. `--enrich` only *queues* `enrich-source` jobs
+   (`cli.py:1452` → `_queue_import_enrichment` → `enqueue_operation`); they run
+   later at `memoria workspace run`, so retraction truth does not exist at
+   command return. A nine-field event that omits it is honest; a ten-field
+   event that includes it would not be. The spec's acceptance explicitly
+   permitted "removed from the event contract".
+5. **Retraction ownership stays where it already ships.** The enrichment-time
+   source-retraction attention flag, raised when a queued `enrich-source` job
+   actually executes (`runtime/enrichment.py:258-271` — a contested/retracted
+   block reason flags `check="source-retraction"`), and the standing retraction
+   sweep with its DOI fingerprint dedupe
+   (`runtime/subsystems/integrity/retraction/retraction.py:301-330`, fingerprint
+   at `:328`). Spec §3's same-run-retraction-rows bullet is superseded.
+   **W.1's landed retraction worklist group stays in the ranking vocabulary** —
+   it is where sweep-raised rows land.
+6. **Phase 1 still records per-stage retraction counts**, at the protocol's
+   queue-drain step (`memoria workspace run` after each stage, the same step the
+   enrichment-load metric needs), which is the moment those counts become real.
+   W.4's protocol block names that step explicitly.
+7. **Rejected alternatives, recorded.** Durable-state-plus-finalizer needs a
+   schema migration, an exactly-once lock, and an invented timeout, and withholds
+   the duplicates/failed/unmapped judgment the driver already knows until some
+   later drain. Synchronous `--enrich` puts up to 100 network calls inside one
+   CLI command and contradicts the driver-never-fetches contract.
+
+---
 # P — Multi-entry parsing + the driver loop
 
 Implements O2 spec §2 — entry iteration over the **unchanged** shipped builders, one worker request per entry under run-scoped idempotency keys `import-<run_id>-<work_id>`, resume via the `state.catalog_source` pre-check, per-row honesty with the zero-rows-PRESENT failure rule, the enrichment default flip behind `--enrich` (the one deliberate behavior change), and the explicit timed post-loop index refresh — slices 1–2 of spec §11. Spec §5's **structural same-DOI dedupe** lands here for free because it *is* the §2 skip path (same DOI ⇒ same `_bibtex_default_work_id` ⇒ pre-check hit ⇒ `skipped`), and P.2 pins it. Spec of record: `docs/superpowers/specs/2026-07-17-o2-staged-import-design.md` (§2, §5 first bullet, §10's single-entry-unchanged and flip-asserted criteria). All line refs verified at origin/main `51395f15`; re-anchor by symbol if drifted.
@@ -2085,7 +2133,7 @@ This section lands the bulk-admission artifacts (spec §3: the `emit_worklist` r
 
 **Cross-plan preconditions (per-task, binding):** W.1 is independent of external I1 and may be implemented and tested on disposable vaults before I1; it must not be wired to a real import or emit telemetry. W.2 consumes external I1 T.1+T.2's `runtime/telemetry.py` and stops until both are implemented and merged. W.3 consumes external I1 H.3's seeded `decision-rules.yaml` + `tests/test_decision_rules.py` and stops until H.3 is implemented and merged. O2's I.1 driver stitch waits for external I1 plus #1517's finalization choice. The O1 policy-bound resolver (`runtime/seed_install.py resolve_fetch(row, *, opener, authorize_url)`, O1 M.2) is consumed only inside A.2's PI-only worker; I.1 builds/enqueues the request and Section W consumes neither seam. All shipped line refs below are verified at `51395f15`; re-anchor by symbol if drifted.
 
-**Driver stitches (for the plan assembler):** I.1, not the slice-2 P driver, composes W.1 and W.2 after A.1–.3. It calls `emit_import_worklist(...)` at most once per run (zero judgment rows ⇒ `None`, no worklist, no card) and the chosen finalizer calls `record_telemetry_event(vault, "import-run.v1", row)` exactly once per run, after the documented index-refresh boundary. I.1 is blocked pending external I1 and #1517; W.2's validator honestly allows `index_refresh_s >= 0`.
+**Driver stitches (for the plan assembler):** I.1, not the slice-2 P driver, composes W.1 and W.2 after A.1–.3. **The finalizer is the I.1 driver itself, at command return, after the documented index-refresh boundary** (#1517, 2026-08-01 amendment): it calls `emit_import_worklist(...)` at most once per run (zero judgment rows ⇒ `None`, no worklist, no card) and `record_telemetry_event(vault, "import-run.v1", row)` exactly once per run — a nine-field row with no retraction count, because `--enrich` only queues `enrich-source` jobs and retraction truth does not exist at return. I.1's one remaining blocker is external I1; #1517 is decided and closed. W.2's validator honestly allows `index_refresh_s >= 0`.
 
 No new test files in this section: `tests/test_worklists.py` (`tests/conftest.py:120`, `contract`) and `tests/test_empirical_events.py` (`tests/conftest.py:42`, `contract`) are shipped-registered; `tests/test_telemetry_events.py` and `tests/test_decision_rules.py` are created and registered by the I1 plan (T.2, H.3). No `TEST_LEVELS` change here.
 
@@ -2334,7 +2382,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: I1 T.2's `record_telemetry_event(vault: Path, event_type: str, payload: dict[str, Any]) -> str` and its `_validated` dispatch (`runtime/telemetry.py`); I1 T.1's `telemetry_events` table (columns `event_id, ts, event_type, session_id, surface, payload_json`); shipped private helpers `_missing` (`empirical_events.py:187`), `_string_field` (`:198`), `_reject_pathlike` (`:236`); `state.connect` bootstraps the schema on a bare `tmp_path` vault (`state.py:472-481`), so tests need no init and no network.
-- Produces: `empirical_events.IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"`; `empirical_events.validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]` — its own `IMPORT_RUN_REQUIRED_FIELDS` (the `edge-write.v1` pattern, graph plan ERP-D.6: a separate validator so integer fields are legal — `validate_empirical_event`'s `ALLOWED_FIELDS`/string coercion cannot carry counts); the `_validated` branch making `record_telemetry_event(vault, "import-run.v1", row)` a working call. Row shape (spec §6): `{run_id, format, entries_total, admitted, skipped, failed, duplicates_flagged, retraction_flags, duration_s, index_refresh_s}` — `run_id` an opaque string, `format ∈ {bibtex, csl}`, the six counts non-negative `int`s (bool rejected), the two timings non-negative numerics. One row per run is emitted by I.1's decision-selected finalizer, never speculatively by P.2/P.3.
+- Produces: `empirical_events.IMPORT_RUN_EVENT_SCHEMA = "import-run.v1"`; `empirical_events.validate_import_run_event(payload: dict[str, Any]) -> dict[str, Any]` — its own `IMPORT_RUN_REQUIRED_FIELDS` (the `edge-write.v1` pattern, graph plan ERP-D.6: a separate validator so integer fields are legal — `validate_empirical_event`'s `ALLOWED_FIELDS`/string coercion cannot carry counts); the `_validated` branch making `record_telemetry_event(vault, "import-run.v1", row)` a working call. Row shape (spec §6, amended by #1517 — **nine** fields, no `retraction_flags`): `{run_id, format, entries_total, admitted, skipped, failed, duplicates_flagged, duration_s, index_refresh_s}` — `run_id` an opaque string, `format ∈ {bibtex, csl}`, the five counts non-negative `int`s (bool rejected), the two timings non-negative numerics. One row per run is emitted by I.1's finalizer (the driver at command return), never speculatively by P.2/P.3.
 
 - [ ] **Step 1: Grep-first (order tolerance).** Run `grep -n "_validated\|edge-write.v1" src/memoria_vault/runtime/telemetry.py`. If the file is absent, the plan header's precondition is unmet — **STOP: land and merge the I1 plan (2026-07-16-i1-full-wiring.md, T.1/T.2) first.** If present but the `edge-write.v1` branch is absent (graph-plan ordering), insert the new branch in the same position relative to the native-fields fallback; anchor by symbol, not line.
 
@@ -2350,7 +2398,6 @@ def _import_run_row(**overrides: object) -> dict[str, object]:
         "skipped": 1,
         "failed": 2,
         "duplicates_flagged": 1,
-        "retraction_flags": 0,
         "duration_s": 41.5,
         "index_refresh_s": 3.2,
     }
@@ -2411,7 +2458,6 @@ def test_record_telemetry_event_routes_import_run_through_its_validator(tmp_path
         "skipped": 1,
         "failed": 0,
         "duplicates_flagged": 0,
-        "retraction_flags": 0,
         "duration_s": 4.2,
         "index_refresh_s": 0.8,
     }
@@ -2446,7 +2492,6 @@ IMPORT_RUN_COUNT_FIELDS = (
     "skipped",
     "failed",
     "duplicates_flagged",
-    "retraction_flags",
 )
 IMPORT_RUN_TIMING_FIELDS = ("duration_s", "index_refresh_s")
 IMPORT_RUN_REQUIRED_FIELDS = frozenset(
@@ -2532,20 +2577,20 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 **Status:** do not start until the external I1 full-wiring plan
 (`docs/superpowers/plans/2026-07-16-i1-full-wiring.md`) is implemented and
-merged, and [#1517](https://github.com/eranroseman/memoria-vault/issues/1517)
-records its finalization choice. This task exists to make the omitted handoff
-explicit; its finalizer subsection is intentionally deferred to that issue's
-selected lifecycle rather than inventing synchronous enrichment or a second
-artifact writer.
+merged. That is now the **only** blocker:
+[#1517](https://github.com/eranroseman/memoria-vault/issues/1517) is decided and
+closed, and the 2026-08-01 finalization amendment above fixes the lifecycle —
+this driver finalizes at command return, after the index-refresh boundary, with
+no durable run state and no synchronous enrichment.
 
 **Files (once unblocked):**
 
 - Modify `src/memoria_vault/cli.py` — `_bulk_work_import` (re-anchor by symbol)
 - Modify `tests/test_cli_work_project.py` — real bulk CLI integration coverage
 - Modify `tests/test_bulk_import.py` only for any pure entry-field helper required to prevent duplicated BibTeX/CSL extraction
-- Extend the W.1/W.2 test files only for the chosen finalizer's exactly-once proof
+- Extend the W.1/W.2 test files only for the driver finalizer's exactly-once proof
 
-**Immediate composition contract (must survive any #1517 decision):**
+**Composition contract (steps 1–3 predate #1517 and are unchanged by it):**
 
 1. Build each payload through P.2's `build_entry_payload`, derive the A.1
    `entry_fields` shape from the original entry, set `payload["item_type"] =
@@ -2560,22 +2605,34 @@ artifact writer.
    named failure and a duplicate judgment row through `is_doi_collision_error`.
    Same-DOI pre-check skips remain non-judgment rows.
 4. Normalize every judgment row into W.1's documented vocabulary and retain it
-   under the authoritative `run_id`.  The #1517-selected terminal finalizer —
-   not the immediate adapter loop — calls `emit_import_worklist` once after it
-   has incorporated the delayed retraction outcome. Do not emit per-entry cards
-   or call W seams from the pure A module.
-5. The #1517 decision specifies how enrichment child completion contributes
-   retraction rows and when the single telemetry call occurs. It must preserve
-   one authoritative `run_id`, no duplicate artifacts on retries, and a
-   terminal-path test for failed/late enrichment.
+   under the authoritative `run_id` (P.2's `uuid4` hex). At command return,
+   after the index-refresh boundary, the driver calls `emit_import_worklist`
+   at most once and `record_telemetry_event(vault, "import-run.v1", row)`
+   exactly once for that `run_id` — the loop itself emits neither. Do not emit
+   per-entry cards or call W seams from the pure A module.
+5. **The run contributes no retraction rows** (#1517). `--enrich` only queues
+   `enrich-source` jobs; their source-retraction flags are raised later, when
+   `memoria workspace run` executes them, and the standing sweep raises its own.
+   The telemetry row therefore carries **nine** fields and no retraction count.
+   A retried command mints a new `run_id` and converges through the catalog
+   pre-check; no state crosses commands, so there is no failure/timeout policy
+   to implement.
 
 **Required red/green proof once unblocked:** a multi-entry CLI test must exercise
 one mapped admission, one unmapped admission, one cross-identifier duplicate, one
 DOI-UNIQUE failure, and a malformed/fetch-failed row; it asserts one ranked
-worklist, one `import-run.v1` row, no per-entry cards, correct integer counts, and
-the chosen delayed-enrichment retraction behavior. Keep the test fully offline with
-the injectable opener/provider replay seam. Run the focused tests, then
-`python scripts/verify` before committing.
+worklist, one `import-run.v1` row, no per-entry cards, and correct integer counts.
+
+Plus the #1517 finalization obligation, as its own test: **a bulk `--enrich` run
+finalizes at return with its `enrich-source` children still queued and zero
+retraction rows in its worklist** — the pending jobs are still pending
+(`memoria workspace run` has not been called), the nine-field telemetry row is
+already written, and the run's worklist holds only duplicate/failed/unmapped
+rows. The shipped enrichment source-retraction flag tests
+(`enrichment.py:258-271`) stand unchanged and own the other half.
+
+Keep the test fully offline with the injectable opener/provider replay seam. Run
+the focused tests, then `python scripts/verify` before committing.
 
 ### Task W.3: `staged-import` decision-rule registry entry (spec §7; slice 7)
 
@@ -2623,7 +2680,7 @@ Expected: FAIL — the renamed count test asserts `17` against 16 loaded rules; 
 ```yaml
 - id: staged-import
   blocker: "Staged import (O2 Phase 1 protocol)"
-  metric: "import-run.duration_s / import-run.index_refresh_s / import-run.duplicates_flagged / import-run.retraction_flags; flow-panel attention-admitted counts; protocol-measured session-fit and Shape-1/Shape-2 query latency"
+  metric: "import-run.duration_s / import-run.index_refresh_s / import-run.duplicates_flagged; flow-panel attention-admitted counts; protocol-measured session-fit, post-drain retraction counts, and Shape-1/Shape-2 query latency"
   window: "after each stage (10 works, then 100)"
   threshold: "the run's triage worklist did not fit one session, or rebuild/query latency broke the session's flow"
   recommendation: "After each stage (10 works, then 100): if the run's triage worklist did not fit one session, or rebuild/query latency broke the session's flow, stop the protocol and record the observation in the diary and this rule — the observation IS the finding."
@@ -2679,9 +2736,21 @@ memoria work import --workspace "$VAULT" --format bibtex --file stage1.bib --enr
   | tee stage1-import.json
 
 # Product-side record: the run's one import-run.v1 row (duration_s, index_refresh_s, counts).
+# It is already written at this point — the driver finalizes at command return (#1517).
 sqlite3 "$VAULT/.memoria/memoria.sqlite" \
   "SELECT payload_json FROM telemetry_events WHERE event_type='import-run.v1' ORDER BY ts DESC LIMIT 1;" \
   | tee -a staged-import-metrics.txt
+
+# Queue drain: --enrich only QUEUED enrich-source jobs; this is where they run, and where
+# enrichment provider load and retraction counts become real (#1517 — no import-run field
+# claims them). Repeat until the queue reports nothing pending.
+memoria workspace run --workspace "$VAULT" --json | tee -a stage1-enrichment.json
+
+# Per-stage retraction count (protocol-level): the source-retraction flags those jobs raised.
+sqlite3 "$VAULT/.memoria/memoria.sqlite" \
+  "SELECT COUNT(*) FROM event_log WHERE event_type='check-fired'
+     AND json_extract(payload_json, '\$.check')='source-retraction';" \
+  | xargs -I{} echo "stage1_source_retraction_flags={}" | tee -a staged-import-metrics.txt
 
 # Query timing (protocol-level, spec §6 — honestly a protocol measurement, not a product event).
 # Shape-1/Shape-2 definitions come from the R2/LOOP.7 spec; fall back to the two literals below.

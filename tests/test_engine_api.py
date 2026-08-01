@@ -280,6 +280,25 @@ def test_engine_read_scope_filters_attention_by_card_or_target(workspace: Path) 
         api.read_attention_card(workspace, "inbox/beta.md", read_scope=["notes/alpha.md"])
 
 
+def test_engine_attention_list_skips_an_unreadable_inbox_file(workspace: Path) -> None:
+    """One undecodable `inbox/` file must not take the whole listing down.
+
+    `inbox/**` is the one write target the reference actor policy grants a non-PI
+    actor, so a stray binary or a mis-encoded adapter write lands on exactly the
+    directory this globs. A raw `read_text` there raised `UnicodeDecodeError` out of
+    `_attention_card`, so `memoria attention list` failed outright instead of
+    listing the cards it can read -- and the card it stopped listing may be the one
+    holding the PI's gate. `lifecycle._resolved_cards` reads through `safe_read` for
+    this reason; this reads the same way.
+    """
+    _write_attention(workspace, "alpha", target="notes/alpha.md")
+    (workspace / "inbox" / "corrupt.md").write_bytes(b"---\nprojection: \xff\xfe\n---\n")
+
+    listed = api.read_attention(workspace)
+
+    assert [card["path"] for card in listed["attention"]] == ["inbox/alpha.md"]
+
+
 def test_engine_attention_read_api_returns_table_and_card_view_specs(workspace: Path) -> None:
     _write_attention(workspace, "alpha", target="notes/alpha.md")
     _write_attention(workspace, "beta", target="notes/beta.md")

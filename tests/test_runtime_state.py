@@ -13,20 +13,27 @@ from memoria_vault.runtime.capture import write_references_bib as _write_referen
 from memoria_vault.runtime.integrity import check_citation_survival as _check_citation_survival
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    rebuild_concept_mirror_from_files,
+)
+from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes as _commit_writer_changes,
 )
 from memoria_vault.runtime.trusted_writer import (
     promote_checked as _promote_checked,
 )
 from memoria_vault.runtime.trusted_writer import (
-    rebuild_concept_mirror_from_files,
-)
-from memoria_vault.runtime.trusted_writer import (
     stage_concept as _stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write, run_next_job
-from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+from tests.helpers import (
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_git,
+    operation_context,
+)
 
 
 def capture_source(vault: Path, *args, **kwargs):
@@ -596,3 +603,343 @@ def test_private_journal_storage_does_not_normalize_machine(
         row = conn.execute("SELECT machine, payload_json FROM event_log").fetchone()
     assert row["machine"] == "already_normalized"
     assert json.loads(row["payload_json"]) == event
+
+
+# --- state.insert_concept_edge (ERP-B.2) -------------------------------------
+
+EDGE_ULID_LEFT = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+EDGE_ULID_RIGHT = "01BX5ZZKBKACTAV9WEVGEMMVRZ"
+EDGE_ULID_LATER = "01CXPT4A1RRXMWJRW8DJDJPYVE"
+EDGE_ULID_OTHER = "01D1TP0RPX2FGKM8VJ9DNQ5W3T"
+# Every spelling of one catalog work that `_concept_edge_target_path` folds onto a
+# single durable key. Written out here rather than imported: a test that iterated
+# the producer's own collapse rule could not fail when that rule shrank.
+CATALOG_EDGE_FORMS = (
+    "smith-2020",
+    "catalog/sources/smith-2020",
+    "./catalog/sources/smith-2020",
+    "catalog/sources/smith-2020/source.md",
+)
+
+
+def _mirror_notes(vault: Path, **paths: str) -> None:
+    """Mirror ULID-keyed note Concepts: ``_mirror_notes(vault, ULID='notes/x.md')``."""
+    state.rebuild_file_concept_mirror(
+        vault,
+        [
+            {"concept_id": concept_id, "concept_type": "note", "path": path}
+            for concept_id, path in paths.items()
+        ],
+    )
+
+
+def _edge_rows(vault: Path) -> list[dict[str, object]]:
+    with state.connect(vault) as conn:
+        return [
+            dict(row)
+            for row in conn.execute(
+                "SELECT edge_id, source_concept_id, relation_type, target_concept_id,"
+                " target_path, attributes_json, check_status, source_path"
+                " FROM concept_edges ORDER BY source_concept_id, relation_type, target_path"
+            )
+        ]
+
+
+def test_insert_concept_edge_upserts_one_identity_keyed_row(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(
+        vault,
+        **{EDGE_ULID_LEFT: "notes/left.md", EDGE_ULID_RIGHT: "notes/right.md"},
+    )
+
+    first = state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/right.md",
+        attributes={"warrant": "same trial, opposite outcomes"},
+        context=context,
+    )
+    second = state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/right.md",
+        context=context,
+    )
+    third = state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/right.md",
+        attributes={"warrant": "revised license", "addressed": False},
+        context=context,
+    )
+
+    assert [first["created"], second["created"], third["created"]] == [True, False, False]
+    assert first["edge_id"] == second["edge_id"] == third["edge_id"]
+    # The row keys in identity space, not path space: the ULID mirror is what the
+    # deterministic id is minted over.
+    assert first["edge_id"] == state.concept_edge_id(EDGE_ULID_LEFT, "tension", EDGE_ULID_RIGHT)
+    assert first["edge_id"] != state.concept_edge_id("notes/left.md", "tension", "notes/right.md")
+    # `attributes=None` leaves the stored map alone; a map merges over it.
+    assert second["attributes"] == {"warrant": "same trial, opposite outcomes"}
+    assert third["attributes"] == {"addressed": False, "warrant": "revised license"}
+    assert _edge_rows(vault) == [
+        {
+            "edge_id": first["edge_id"],
+            "source_concept_id": EDGE_ULID_LEFT,
+            "relation_type": "tension",
+            "target_concept_id": EDGE_ULID_RIGHT,
+            "target_path": "notes/right.md",
+            "attributes_json": '{"addressed": false, "warrant": "revised license"}',
+            "check_status": "checked",
+            "source_path": "",
+        }
+    ]
+
+
+def test_insert_concept_edge_rejects_unknown_relation_and_one_concept(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(
+        vault,
+        **{EDGE_ULID_LEFT: "notes/left.md", EDGE_ULID_RIGHT: "notes/right.md"},
+    )
+    state.upsert_catalog_record(vault, work_id="smith-2020", title="Smith 2020")
+
+    with pytest.raises(ValueError, match="relation"):
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="refutes",
+            target="notes/right.md",
+            context=context,
+        )
+    with pytest.raises(ValueError, match="distinct"):
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="tension",
+            target="notes/left.md",
+            context=context,
+        )
+    # Identity space and path space are one endpoint set: a ULID source and that
+    # Concept's own path are the same node, and so are a bare work_id and its
+    # rendered catalog path.
+    with pytest.raises(ValueError, match="distinct"):
+        state.insert_concept_edge(
+            vault,
+            source=EDGE_ULID_LEFT,
+            relation_type="tension",
+            target="notes/left.md",
+            context=context,
+        )
+    with pytest.raises(ValueError, match="distinct"):
+        state.insert_concept_edge(
+            vault,
+            source="smith-2020",
+            relation_type="tension",
+            target="catalog/sources/smith-2020/source.md",
+            context=context,
+        )
+    with pytest.raises(ValueError, match="distinct"):
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="tension",
+            target="   ",
+            context=context,
+        )
+    # An unmirrored self-loop resolves to nothing on either side, and the guard
+    # still has to name it: the foreign key would refuse the write anyway, but as
+    # an opaque IntegrityError from inside the transaction.
+    with pytest.raises(ValueError, match="distinct"):
+        state.insert_concept_edge(
+            vault,
+            source="notes/ghost.md",
+            relation_type="tension",
+            target="notes/ghost.md",
+            context=context,
+        )
+
+    assert _edge_rows(vault) == []
+
+
+def test_insert_concept_edge_folds_every_catalog_spelling_onto_one_row(tmp_path: Path) -> None:
+    """One catalog work, four spellings, one row — and a mirror pass that survives it.
+
+    Keying this seam on a bare `normalize_path` admits each spelling as its own PK
+    triple while they all resolve to the same `target_concept_id`, so the same
+    deterministic `edge_id` is minted twice and `idx_concept_edges_edge_id` raises.
+    The work is seeded into `catalog_sources` *first* on purpose: the fold only
+    knows a work the catalog already holds, so against an absent work both
+    spellings park as pending rows under correct and incorrect code alike and this
+    test would prove nothing.
+    """
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(vault, **{EDGE_ULID_LEFT: "notes/left.md"})
+    state.upsert_catalog_record(vault, work_id="smith-2020", title="Smith 2020")
+
+    results = [
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="tension",
+            target=form,
+            attributes={"warrant": f"via {form}"},
+            context=context,
+        )
+        for form in CATALOG_EDGE_FORMS
+    ]
+
+    assert [result["created"] for result in results] == [True, False, False, False]
+    assert {result["edge_id"] for result in results} == {
+        state.concept_edge_id(EDGE_ULID_LEFT, "tension", "smith-2020")
+    }
+    settled = _edge_rows(vault)
+    assert settled == [
+        {
+            "edge_id": results[0]["edge_id"],
+            "source_concept_id": EDGE_ULID_LEFT,
+            "relation_type": "tension",
+            "target_concept_id": "smith-2020",
+            "target_path": "catalog/sources/smith-2020",
+            "attributes_json": '{"warrant": "via catalog/sources/smith-2020/source.md"}',
+            "check_status": "checked",
+            "source_path": "",
+        }
+    ]
+
+    # NID-B.7's resolution pass recomputes every unsettled row's edge_id inside the
+    # mirror transaction, so a second admitted spelling would roll the whole pass
+    # back rather than fail one row.
+    state.replace_concept_edges(vault, [])
+
+    assert _edge_rows(vault) == settled
+
+
+def test_insert_concept_edge_parks_an_unresolved_target_and_settles_it_either_way(
+    tmp_path: Path,
+) -> None:
+    """A forward link to a note that does not exist yet parks, it never drops.
+
+    Two pending rows because there are two settlers: this seam re-upserting the
+    same triple, and NID-B.7's resolution pass inside the mirror transaction. One
+    row would leave whichever settler it skipped free to do nothing.
+    """
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(vault, **{EDGE_ULID_LEFT: "notes/left.md"})
+
+    pending = [
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="tension",
+            target=target,
+            context=context,
+        )
+        for target in ("notes/later.md", "notes/other.md")
+    ]
+
+    assert pending == [{"edge_id": "", "created": True, "attributes": {}}] * 2
+    assert [(row["target_concept_id"], row["target_path"]) for row in _edge_rows(vault)] == [
+        (None, "notes/later.md"),
+        (None, "notes/other.md"),
+    ]
+
+    _mirror_notes(
+        vault,
+        **{
+            EDGE_ULID_LEFT: "notes/left.md",
+            EDGE_ULID_LATER: "notes/later.md",
+            EDGE_ULID_OTHER: "notes/other.md",
+        },
+    )
+    settled = state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/later.md",
+        context=context,
+    )
+
+    # Read storage here, not after the mirror pass: NID-B.7's resolution pass is an
+    # absorbing state that settles every pending row, so a re-upsert that resolved
+    # nothing would be indistinguishable from one that did once it has run. The
+    # returned dict cannot stand in either — it is computed, not read back.
+    assert settled["created"] is False
+    assert settled["edge_id"] == state.concept_edge_id(EDGE_ULID_LEFT, "tension", EDGE_ULID_LATER)
+    assert [(row["edge_id"], row["target_concept_id"]) for row in _edge_rows(vault)] == [
+        (state.concept_edge_id(EDGE_ULID_LEFT, "tension", EDGE_ULID_LATER), EDGE_ULID_LATER),
+        ("", None),
+    ]
+
+    state.replace_concept_edges(vault, [])
+
+    assert [(row["edge_id"], row["target_concept_id"]) for row in _edge_rows(vault)] == [
+        (state.concept_edge_id(EDGE_ULID_LEFT, "tension", EDGE_ULID_LATER), EDGE_ULID_LATER),
+        (state.concept_edge_id(EDGE_ULID_LEFT, "tension", EDGE_ULID_OTHER), EDGE_ULID_OTHER),
+    ]
+
+
+def test_insert_concept_edge_refuses_an_unbound_operation_context(tmp_path: Path) -> None:
+    """No authenticated request, no row: the authority check runs before the write."""
+    vault = workspace(tmp_path)
+    _mirror_notes(
+        vault,
+        **{EDGE_ULID_LEFT: "notes/left.md", EDGE_ULID_RIGHT: "notes/right.md"},
+    )
+    forged = OperationContext("pi", "run", "never-requested", "insert-concept-edge", "machine")
+
+    with pytest.raises(ValueError, match="request does not exist"):
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="tension",
+            target="notes/right.md",
+            context=forged,
+        )
+
+    assert _edge_rows(vault) == []
+
+
+def test_insert_concept_edge_keeps_a_settled_target_whose_path_moved(tmp_path: Path) -> None:
+    """Re-upserting a row whose target_path stopped resolving must not un-resolve it."""
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(
+        vault,
+        **{EDGE_ULID_LEFT: "notes/left.md", EDGE_ULID_RIGHT: "notes/right.md"},
+    )
+    first = state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/right.md",
+        context=context,
+    )
+
+    # An out-of-band rename: the mirror carries the identity to its new path while
+    # the edge keeps the durable target_path it was written at.
+    _mirror_notes(
+        vault,
+        **{EDGE_ULID_LEFT: "notes/left.md", EDGE_ULID_RIGHT: "notes/moved.md"},
+    )
+    again = state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/right.md",
+        attributes={"warrant": "still one tension"},
+        context=context,
+    )
+
+    assert again["created"] is False
+    assert again["edge_id"] == first["edge_id"] != ""
+    assert [(row["edge_id"], row["target_concept_id"]) for row in _edge_rows(vault)] == [
+        (first["edge_id"], EDGE_ULID_RIGHT)
+    ]

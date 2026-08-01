@@ -120,6 +120,73 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
     assert [row["kind"] for row in result["advisories"]] == ["structural"]
 
 
+def _argument_vault(tmp_path: Path, thesis: str) -> Path:
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        f"description: Project\nthesis: {thesis}\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    return tmp_path
+
+
+@pytest.mark.parametrize(
+    ("label", "thesis", "expected_path", "expected_nodes"),
+    [
+        ("canonical path", "notes/thesis.md", "notes/thesis.md", 2),
+        # The shape structural impact's own fixture writes. `_concept_rel` ran on
+        # the raw value here and raised `unsupported note link target:
+        # [[notes/thesis]].md` straight out of the lens (issue #1623).
+        ("wikilink-wrapped path", "'[[notes/thesis]]'", "notes/thesis.md", 2),
+        ("bare stem", "thesis", "notes/thesis.md", 2),
+        # Path space refuses a title, so the lens reports a miss instead of
+        # naming a phantom `notes/Toulmin: the warrant.md` it never found.
+        ("title carrying a colon", "'Toulmin: the warrant'", "", 0),
+        ("traversal", "notes/../thesis.md", "", 0),
+    ],
+)
+def test_analyze_project_argument_reads_thesis_in_one_path_space(
+    tmp_path: Path, label: str, thesis: str, expected_path: str, expected_nodes: int
+) -> None:
+    vault = _argument_vault(tmp_path, thesis)
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["thesis_path"] == expected_path, label
+    assert result["node_count"] == expected_nodes, label
+
+
+def test_project_slice_query_reads_thesis_in_the_same_path_space(tmp_path: Path) -> None:
+    """The retrieval-query builder is its own `thesis:` reader (issue #1623).
+
+    Its `except ValueError` swallowed the wikilink shape and fell back to the
+    raw text, so the thesis note's own terms never reached the query. A value
+    path space refuses is still kept as a term: that is a schema error to
+    report, not a reason to narrow the slice with nothing.
+    """
+    vault = _argument_vault(tmp_path, "'[[notes/thesis]]'")
+    project = knowledge._checked_frontmatter(vault, "projects/project-alpha/project.md", "project")
+
+    def query(frontmatter: dict) -> str:
+        return knowledge._project_slice_query(
+            vault, "projects/project-alpha/project.md", frontmatter, "seed"
+        )
+
+    assert "Thesis" in query(project)
+    assert "[[notes/thesis]]" not in query(project)
+    assert "Toulmin: the warrant" in query({**project, "thesis": "Toulmin: the warrant"})
+    # `active_thesis:` is retired: no reader falls back to it any more.
+    assert "Thesis" not in query({"active_thesis": "notes/thesis.md"})
+
+
 def test_read_project_slice_uses_outline_order_and_computed_edges(tmp_path: Path) -> None:
     _md(
         tmp_path / "projects/project-alpha/project.md",
@@ -500,3 +567,99 @@ def test_write_project_export_requires_pandoc_for_non_markdown(
         )
 
     assert not output_root.exists()
+
+
+def test_analyze_project_argument_reads_activated_relation_links(tmp_path: Path) -> None:
+    """`_note_edges` builds edges from every frontmatter-legal relation, not the old triple.
+
+    That roster — the only one left in this report — is what this test pins:
+    `relation_count` and the component both grow by the `warrant` edge. The per-verb
+    payload keys stay `supports`/`contradicts`/`extends` by design, so a `warrant`
+    edge must move `relation_count` while leaving `supports_count` at zero.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/license.md",
+        "type: note\ncheck_status: checked\ntitle: License\n"
+        "links:\n  warrant:\n    - notes/thesis.md\n",
+    )
+
+    result = analyze_project_argument(tmp_path, "project-alpha")
+
+    assert result["relation_count"] == 1
+    assert result["supports_count"] == 0
+    assert {node["path"] for node in result["nodes"]} == {
+        "notes/thesis.md",
+        "notes/license.md",
+    }
+
+
+def test_analyze_project_argument_ignores_a_link_target_that_escapes_its_folder(
+    tmp_path: Path,
+) -> None:
+    """The report follows only normalized local targets — `notes/../thesis.md` is not one.
+
+    Before the parsers converged on `lib.edges`, this note's link resolved back to
+    `notes/thesis.md` and counted as an edge, while the validator rejected the same
+    string as escaping the workspace.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/escaping.md",
+        "type: note\ncheck_status: checked\ntitle: Escaping\n"
+        "links:\n  supports:\n    - notes/../thesis.md\n",
+    )
+
+    result = analyze_project_argument(tmp_path, "project-alpha")
+
+    assert result["relation_count"] == 0
+    assert {node["path"] for node in result["nodes"]} == {"notes/thesis.md"}
+
+
+def test_analyze_project_argument_never_synthesizes_an_edge_into_the_dot_md_note(
+    tmp_path: Path,
+) -> None:
+    """A rejected target must resolve to nothing, not to a real note named `.md`.
+
+    `iter_markdown` yields a file literally named `.md`, so `notes/.md` is a legal
+    key in the notes map — and every validator-rejected target normalizes to the
+    empty string, which `_concept_rel` renders as exactly that path. Without the
+    empty guard, junk targets become one absorbing edge sink.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(tmp_path / "notes/thesis.md", "type: note\ncheck_status: checked\ntitle: Thesis\n")
+    _md(
+        tmp_path / "notes/.md",
+        "type: note\ncheck_status: checked\ntitle: Dot\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/escaping.md",
+        "type: note\ncheck_status: checked\ntitle: Escaping\n"
+        "links:\n  supports:\n    - notes/../thesis.md\n",
+    )
+
+    result = analyze_project_argument(tmp_path, "project-alpha")
+
+    assert result["relation_count"] == 1
+    assert {node["path"] for node in result["nodes"]} == {"notes/thesis.md", "notes/.md"}

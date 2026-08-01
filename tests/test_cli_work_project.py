@@ -7,6 +7,7 @@ import pytest
 
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import _assert_request_columns, mark_file_status
 
@@ -2045,3 +2046,35 @@ def test_cli_work_import_bulk_empty_input_reports_zero_rows(
             "SELECT COUNT(*) FROM operation_requests WHERE operation_id = 'capture-source'"
         ).fetchone()[0]
     assert captures == 0
+
+
+def test_cli_link_offers_every_served_relation_and_refuses_tension() -> None:
+    """`--rel` choices are the served roster: all six parse, `tension` is not offered."""
+    for relation in sorted(LINK_RELATIONS):
+        parsed = _build_parser().parse_args(
+            [
+                "link",
+                "--workspace",
+                "/tmp/disposable-vault",
+                "notes/source.md",
+                "notes/target.md",
+                "--rel",
+                relation,
+            ]
+        )
+        assert parsed.rel == relation
+
+    with pytest.raises(SystemExit) as exc:
+        _build_parser().parse_args(
+            [
+                "link",
+                "--workspace",
+                "/tmp/disposable-vault",
+                "notes/source.md",
+                "notes/target.md",
+                "--rel",
+                "tension",
+            ]
+        )
+
+    assert exc.value.code == 2

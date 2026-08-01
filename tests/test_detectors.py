@@ -383,6 +383,31 @@ def test_schema_check_flags_off_vocabulary_values(tmp_path):
     assert "topics: off-vocabulary" in messages
 
 
+def test_schema_check_flags_undeclared_root_field_but_not_the_x_hatch(tmp_path):
+    v = tmp_path
+    copy_memoria_dirs(v, "schemas")
+    (v / "notes").mkdir(parents=True)
+    (v / "notes/hatch.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB0\n"
+        "tags: []\nlinks: {}\ntitle: Hatch\nx:\n  local: ok\n  nested:\n    deep: 1\n---\nBody.\n",
+        encoding="utf-8",
+    )
+    (v / "notes/surprise.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB0\n"
+        "tags: []\nlinks: {}\ntitle: Surprise\nsurprise: true\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    findings = _m.frontmatter_schema_check(v)
+
+    assert [(finding.path, finding.message) for finding in findings] == [
+        (
+            "notes/surprise.md",
+            "note: surprise: unknown field; declare it in the type schema or nest under x:",
+        )
+    ]
+
+
 def test_schema_check_fails_closed_without_vault_schemas(tmp_path):
     v = tmp_path
     (v / "notes").mkdir()

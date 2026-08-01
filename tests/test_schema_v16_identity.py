@@ -51,8 +51,11 @@ def _edge_row(source: str, target: str, relation: str = "supports") -> dict[str,
 
 def test_v16_lands_with_path_attribute_and_real_fks(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
-        assert state.SCHEMA_VERSION == 16
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 16
+        # The identity floor is a shape, not a version: the literal version pin
+        # moved on to v17 with the ERP-A roster and lives in
+        # tests/test_schema_version.py. Asserting `user_version ==
+        # state.SCHEMA_VERSION` here would restate what `state._init` already
+        # raises on, so it is left out.
         concept_columns = {row["name"] for row in conn.execute("PRAGMA table_info(concepts)")}
         status_columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_status)")}
         edge_columns = {

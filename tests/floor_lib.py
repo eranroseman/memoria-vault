@@ -1207,6 +1207,13 @@ ARG_TABLE: dict[str, dict] = {
         "http": ("GET", "/attention/card?path={attention_path}"),
         "mcp": ("attention_card", {"path": "{attention_path}"}),
     },
+    # No cli/mcp binding: views.attention is the Obsidian pane's HTTP-only
+    # surface (U3 spec §2/§5); the surface_contract entry declares http only.
+    "views.attention": {
+        "cli": None,
+        "http": ("GET", "/v1/views/attention"),
+        "mcp": None,
+    },
     # No cli binding: the contract declares http+mcp only for exploration.list
     # (surface_contract.py has no "cli" key for this action).
     "exploration.list": {

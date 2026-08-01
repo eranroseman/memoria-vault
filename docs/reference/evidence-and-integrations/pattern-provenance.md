@@ -35,7 +35,7 @@ used as framing, or rejected. The design argument is
 | Inspiration retrieval before drafting | [SciMON](bibliography.md#wang2024scimon) | Novelty optimizer. |
 | Hypothesis-feedback taxonomy | [MOOSE](bibliography.md#yang2026moose) | Autonomous judgment; used as a verification rubric. |
 | Chain-of-Evidence taxonomy | [ScientistOne](bibliography.md#meng2026scientistone) | Score-as-gate; reserved for Peer-reviewer claim trace. |
-| Scenario-typed retrieval | [PARNESS](bibliography.md#wang2026parness) | Memoria keeps the current authored relation vocabulary narrow: `supports`, `contradicts`, and `extends`. |
+| Scenario-typed retrieval | [PARNESS](bibliography.md#wang2026parness) | Memoria keeps the current authored relation vocabulary narrow: the six frontmatter-legal relations `supports`, `contradicts`, `extends`, `warrant`, `qualifier`, `rebuttal` — `tension` is machine-surfaced, never authored. |
 | Per-paper structured representation | [MASSW](bibliography.md#zhang2024massw), [Knows](bibliography.md#yu2026knows) | Five-aspect schema (context/key-idea/method/outcome/projected-impact) drives automatic ingest population; `work_aspects` read-model rows are queryable. |
 | Consensus pre-filter, benchmarks, shared synthesis pool, trace capture, systematic review mode | [AI-Supervisor](bibliography.md#long2026aisupervisor), [CiteME](bibliography.md#press2024citeme), [AutoResearchBench](bibliography.md#xiong2026autoresearchbench), [AgentRxiv](bibliography.md#schmidgall2025agentrxiv), LatteReview, LitLLM | Scores can change what reaches the gate, never where the gate sits. |
 

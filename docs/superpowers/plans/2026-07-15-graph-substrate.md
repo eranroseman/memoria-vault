@@ -13,6 +13,12 @@
 - Correctness gate: `python scripts/verify`; `main` needs PR + `verify`/`gitleaks`; squash merge; explicit-path staging only; disposable vaults only.
 - **Executes AFTER Plan 22's current fresh schema with G2S1.1–.3 (+S12.2) lands** — this plan consumes `concept_edge_id`, upsert-and-prune sparing tension, and edge-id/attribute fields, but no migration mechanism. All line refs are main @ `9c77ba61` and WILL shift after Plan 22 — re-anchor by symbol, not line.
 - **Fresh-schema allocation (binding):** v16 = NID-B identity-safe DDL · v17 = ERP-A roster CHECK · v18 = ERP-C consequence storage. Each schema task updates current `schema.sql`, its trailing `PRAGMA user_version`, `SCHEMA_VERSION`, and fresh-schema assertions in one commit. There is no `MIGRATIONS` entry, backfill, re-key, legacy fixture, or compatibility branch. A nonzero database at any other version is rejected before mutation.
+  **Amended 2026-08-01:** the *ordering* is binding; the *integers* are not reserved
+  across plans. With no `MIGRATIONS` registry and no upgrade path, a bump only declares
+  incompatibility, so a rung is claimed by whichever schema task lands next — including
+  tasks in other plans (the I1 plan's `telemetry_events` T.1 is the live case). Each
+  schema task therefore reads `SCHEMA_VERSION` and takes `current + 1` rather than
+  asserting a pre-agreed number. See Task ERP-C.3's amendment.
 
 ## Execution status — 2026-07-17
 
@@ -70,6 +76,13 @@
     → ERP-A.6 (identity-safe path projection) → ERP-B.2 → ERP-D.5 → remaining
     ERP-B → ERP-C → remaining ERP-D → NID-C
     (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
+    **Early-run exception — ERP-D.3a (2026-08-01):** the stage-machine
+    recalibration may run at any point after ERP-A.1–.5, ahead of ERP-B,
+    ERP-C, and the rest of ERP-D. Its only graph prerequisite is that
+    activated roster, which is merged; it owns no schema version, writes no
+    journal event, and regenerates no golden, so it carries none of contract
+    8's serialization. It must land before ERP-D.3, whose finding hygiene
+    edits the same `no-support`/`no-refutation` family.
 
 ### Fresh-install schema amendment — direct DDL, no compatibility ladder (2026-07-30)
 
@@ -262,6 +275,16 @@ verbatim ruling text.
   --from-alpha15` CLI path; do not normalize, copy through, preserve `x.alpha15`,
   or otherwise implement compatibility for legacy documents. A legacy workspace is
   outside the supported fresh-install contract and is not mutated by Memoria.
+- **Graph-R11 — Y (2026-08-01; ERP-D): stage-role classification for the argument lens.**
+  support = `{supports}`; challenge = `{contradicts, rebuttal, tension}`; structure =
+  `{warrant, qualifier, extends}`. `argument_stage` is never `supported` without at
+  least one `supports` edge; any challenge edge in the component stages `contested`;
+  rebuttal-heavy projects get no new stage name. `mature_graph` remains connectivity
+  (≥3), with `has_support`/`has_refutation` carrying the sides; `has_refutation` and
+  displayed confidence read the challenge roster. **Qualifier is structure, not
+  challenge** — spec §4 defines it as bounding scope/strength, and ERP-C's
+  qualifier-regression semantics depend on that reading. Implemented by Task
+  ERP-D.3a (closes #1624).
 
 ---
 # Section NID-A — Concept-type registry + closed frontmatter validation
@@ -816,10 +839,29 @@ either order of later consumers.
 - [x] Run to verify pass:
   `python -m pytest tests/test_schemas.py -v`.
 
-- [ ] Add closure-boundary coverage: strict `stage_concept` rejects an undeclared
+- [x] Add closure-boundary coverage: strict `stage_concept` rejects an undeclared
   root field and accepts nested `x:` data; pre-commit and linter report the same
   root field; seeded contradiction/error, integrity, exploration, and search fixtures
   use `links.contradicts` while the answer-query response remains compatible.
+
+  *Landed 2026-08-01.* Three new boundary tests, one per closure layer, each
+  asserting the exact `"<field>: unknown field; declare it in the type schema or
+  nest under x:"` string and each proving the `x:` hatch produces no error in
+  the same run:
+  `tests/test_trusted_writer.py::test_stage_concept_rejects_undeclared_root_field_and_stages_nested_x`
+  (also asserts nothing is staged on rejection, and that nested `x:` data
+  survives verbatim rather than merely validating),
+  `tests/test_precommit_schema.py::test_undeclared_root_field_blocks_while_x_hatch_passes`,
+  and
+  `tests/test_detectors.py::test_schema_check_flags_undeclared_root_field_but_not_the_x_hatch`.
+  The last two check both files in one call and assert the full error/finding
+  list, so a hatch-file false positive fails too. The `links.contradicts`
+  half of this box was already satisfied by `4f370c04` and is verified, not
+  rewritten: `seeded_errors.py:396` writes the relation,
+  `tests/test_integrity.py:495-533` keeps a root-`contradictions:` document as
+  a negative reader contract, `tests/test_exploration_channel.py:38` and
+  `tests/test_search_index.py:340-375` seed the relation, and that last test
+  pins the public `answer["contradictions"]` payload key as still populated.
 
 - [x] Replace the root `contradictions` seeded error with
   `links: {contradicts: [<target>]}`, remove every active root-field reader, and
@@ -3640,9 +3682,46 @@ Section-wide constraints:
   `cli.py:158` (`--mode work` is a note *mode*), `cli.py:280`/`cli.py:3126`
   (concept listing types), `knowledge.py:98` (folder-term set).
 
+> **Amendment — measured offender list and the `SEARCHABLE_TYPES` ruling
+> (2026-08-01, applied).** Verified by content at `a582a510`, this task's
+> Files list and its regex guard are both stale:
+>
+> 1. **`integrity.py:640` was already fixed** before this task ran — the site
+>    (now `:641`) reads `!= "digest"`. Nothing to do there.
+> 2. **`search_index.py:380` became the named constant `SEARCHABLE_TYPES`**
+>    (`search_index.py:32`, consumed at `:146` and `:491`). The plan's
+>    line-oriented regex `frontmatter\.get\("type"\)[^\n]*"work"` cannot see it,
+>    so that guard would have gone green over the very literal this task
+>    exists to remove.
+> 3. **Ruling: the constant is in scope, not exempt.** `SEARCHABLE_TYPES` is
+>    consumed only as `frontmatter.get("type") not in SEARCHABLE_TYPES`, so it
+>    *is* a frontmatter type filter — the literal was hoisted, not retired.
+>    Its sibling frontmatter rosters already exclude `"work"`
+>    (`engine/api.py:34 CONCEPT_TYPES`, `vaultio.py:17
+>    UNIVERSAL_CONCEPT_TYPES`), and the catalog work documents that make the
+>    index searchable are generated by `_checked_work_documents`
+>    (`search_index.py:536-552`) carrying `type: fulltext` and appended
+>    *after* the filter — so `"work"` reaches no document either way. It is
+>    dropped, leaving `frozenset({"digest", "note", "hub", "project"})`.
+> 4. **The guard resolves operands instead of matching text.** It parses each
+>    `src`/`scripts` module, finds `Compare` nodes whose left side is
+>    `frontmatter.get("type")` (or a `str(... or "")` wrapper), and resolves a
+>    bare `Name` operand against module-level string rosters collected across
+>    every scanned module. Receiver-restricted to `frontmatter`/`fm` so that
+>    DB-row filters (`row.get("type")`, `source.get("type")`) — where
+>    `"work"` is live — stay untouched, honoring the Produces clause above.
+> 5. **True measured list: seven filter sites, not six.** `cli.py:1573`,
+>    `integrity.py:153`, `:607`, `:1393`, `knowledge.py:1504`, plus
+>    `search_index.py:146` and `:491` through the constant.
+> 6. **One extra test file:** `tests/test_search_index.py` gains
+>    `test_search_universe_admits_every_declared_searchable_type`. The guard
+>    only forbids a token; without this, narrowing `SEARCHABLE_TYPES` further
+>    would break no test. The new test writes one checked concept of each
+>    remaining member and asserts all four reach `checked_search_universe`.
+
 Steps:
 
-- [ ] Write the failing test. Add to `tests/test_identifier_renames.py` —
+- [x] Write the failing test. Add to `tests/test_identifier_renames.py` —
   extend the existing imports (`from pathlib import Path` is present; add
   `import re` below `from __future__ import annotations`) and append:
 
@@ -3665,35 +3744,38 @@ Steps:
       assert offenders == []
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_identifier_renames.py::test_frontmatter_type_filters_carry_no_dead_work_literal -v`
   — expected failure: `AssertionError` listing exactly six offenders
   (`src/memoria_vault/runtime/search_index.py:380`,
   `src/memoria_vault/runtime/integrity.py:152`, `:606`, `:640`, `:1387`,
   `src/memoria_vault/cli.py:1065`,
   `src/memoria_vault/runtime/knowledge.py:1287`).
+  *Measured: seven offenders, per the amendment above —* `cli.py:1573`,
+  `integrity.py:153`, `:607`, `:1393`, `knowledge.py:1504`,
+  `search_index.py:146`, `:491`.
 
-- [ ] Write minimal implementation — drop `"work"` from each filter
-  (singleton sets become `!=` comparisons, matching surrounding style):
-  - `search_index.py:380`:
-    `if frontmatter.get("type") not in {"digest", "note", "hub", "project"}:`
-  - `integrity.py:152`:
+- [x] Write minimal implementation — drop `"work"` from each filter
+  (singleton sets become `!=` comparisons, matching surrounding style).
+  *Applied at the current symbols:*
+  - `search_index.py:32` (`SEARCHABLE_TYPES`, serving `:146`/`:491`):
+    `frozenset({"digest", "note", "hub", "project"})`
+  - `integrity.py:153`:
     `if frontmatter.get("type") not in {"digest", "note"}:`
-  - `integrity.py:606`:
+  - `integrity.py:607`:
     `if frontmatter.get("type") != "note":`
-  - `integrity.py:640`:
-    `if frontmatter.get("type") != "digest" or not _is_checked_concept(vault, rel):`
-  - `integrity.py:1387`:
+  - `integrity.py:641`: already `!= "digest"` before this task — untouched.
+  - `integrity.py:1393`:
     `if frontmatter.get("type") != "note":`
-  - `cli.py:1065`:
+  - `cli.py:1573`:
     `if frontmatter.get("type") not in {"digest", "note"}:`
-  - `knowledge.py:1287`:
+  - `knowledge.py:1504`:
     `if frontmatter.get("type") != "digest":`
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_identifier_renames.py -v`
 
-- [ ] Verify no behavior regression in the touched modules:
+- [x] Verify no behavior regression in the touched modules:
   `python -m pytest tests/test_integrity.py tests/test_knowledge.py tests/test_search_index.py tests/test_cli.py tests/test_cli_honesty.py -q`
   — all pass. Any historical `type: work` importer fixture is unsupported under
   the clean-slate ruling and must be deleted rather than rewritten by a CLI path.
@@ -4866,6 +4948,35 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
 
 ### Task ERP-A.1: `edges.py` owner module — two rosters + one parser family
 
+> **Execution amendment (2026-08-01, as landed):** the module was written from
+> the code as landed, not from the pre-G2S1.1 sketch in the snippet below.
+>
+> 1. **The private target normalizer moved with the public pair.** Landed
+>    `normalize_link_target` is a two-line wrapper over
+>    `_normalized_link_target(target) -> (target, reason)` (plus
+>    `_LINK_TARGET_URI_RE`), and `_check_links` calls that private helper
+>    directly for its `traversal` / `empty` / `invalid` reason codes. The
+>    snippet's inline three-line body would have dropped URI, traversal,
+>    `.md`-suffix, and unbalanced-brace rejection. Both private names therefore
+>    moved to `edges.py` verbatim, and `schema.py` imports
+>    `_normalized_link_target` back beside the three re-exports. Leaving the
+>    normalizer in `schema.py` was rejected: `edges.py` must stay stdlib-only
+>    (`state.py`, `cli.py`, `structural_impact_graph.py` import it), while
+>    `schema.py` imports `yaml` and `vaultio` — the dependency can only run
+>    schema → edges.
+> 2. **`parse_links` moved with its landed guards** (`isinstance(relation, str)`,
+>    `isinstance(targets, list)`, per-target `isinstance(target, str)`) rather
+>    than the shorter body below. Two of those are redundant with a second
+>    guard and no fixture can distinguish them: a non-`str` relation key already
+>    fails `relation not in LINK_RELATIONS`, and a non-`str` target already
+>    returns `""` from `normalize_link_target`'s own `isinstance` check. They
+>    are verbatim-moved dead defence, deliberately left as escapes rather than
+>    covered by a test that would credit the wrong branch.
+> 3. **Tests beyond the six listed:** multi-target/multi-relation `parse_links`
+>    ordering, the per-target skip that keeps a relation's usable siblings, the
+>    non-map `links:` value, a whitespace-only typed-wikilink target, and a
+>    multi-link body — the listed cases are all N=1 on at least one axis.
+
 **Files:**
 - Create: `src/memoria_vault/runtime/subsystems/lib/edges.py`
 - Create: `tests/test_edges.py`
@@ -4914,7 +5025,7 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
 
 **Steps:**
 
-- [ ] Write the failing test file `tests/test_edges.py`:
+- [x] Write the failing test file `tests/test_edges.py`:
 
   ```python
   """Single owner of the concept-relation rosters and links parsing (EDGES spec section 1)."""
@@ -4977,18 +5088,18 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
       ]
   ```
 
-- [ ] Register the file in `tests/conftest.py` TEST_LEVELS (insert
+- [x] Register the file in `tests/conftest.py` TEST_LEVELS (insert
   alphabetically, after `"test_e2e_smoke_helpers.py": "package",` at line 40):
 
   ```python
       "test_edges.py": "unit",
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_edges.py -v`
   Expected failure: `ImportError: cannot import name 'edges' from
   'memoria_vault.runtime.subsystems.lib'`.
-- [ ] Write `src/memoria_vault/runtime/subsystems/lib/edges.py` (the two
+- [x] Write `src/memoria_vault/runtime/subsystems/lib/edges.py` (the two
   function bodies are G2S1.1's, moved verbatim except `parse_links`' roster
   comment; the regex is trusted_writer.py:49's, moved verbatim):
 
@@ -5060,7 +5171,7 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
       return pairs
   ```
 
-- [ ] In `src/memoria_vault/runtime/subsystems/lib/schema.py`: delete the
+- [x] In `src/memoria_vault/runtime/subsystems/lib/schema.py`: delete the
   `LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})` line
   (line 39 at 9c77ba61) and the `normalize_link_target` + `parse_links`
   function definitions G2S1.1 placed directly above `_check_links` (re-locate
@@ -5079,9 +5190,9 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
 
   `_check_links` (lines 141-142) and its error message (`sorted(LINK_RELATIONS)`)
   pick up the six-value roster with no further edit.
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_edges.py -v` — expect PASS (7 tests).
-- [ ] Run the schema-validation neighbors to prove the move changed nothing
+- [x] Run the schema-validation neighbors to prove the move changed nothing
   but the roster width:
   `python -m pytest tests/test_schemas.py tests/test_frontmatter_contract.py tests/test_query_substrate.py -v`
   — expect PASS (`links.related: unknown relation` still fires; `related` is
@@ -5148,9 +5259,48 @@ register or test a v16→v17 migration.
 > following v16 fixture, table-copy, and migration-entry instructions are historical
 > only and must not be executed.
 
+> **Execution amendment (2026-08-01, as landed):**
+>
+> 1. **The `legacy` arm of the parity test is one of the retired instructions.**
+>    It hand-builds a v16-shaped `concept_edges`, stamps
+>    `PRAGMA user_version = 16`, and then expects `state.connect` to return an
+>    upgraded, row-preserving table — a migration assertion in test clothing.
+>    `state._init` rejects any nonzero version other than `SCHEMA_VERSION`
+>    before touching the file, so with v17 landed that arm asserts an upgrade
+>    the product refuses to perform. Only the fresh-schema arm was written.
+> 2. **`test_replace_concept_edges_accepts_activated_relations` asserts
+>    `set(edges.LINK_RELATIONS)`, not `EDGE_RELATIONS`.** `replace_concept_edges`
+>    skips `tension` rows by design (Plan 22 G2S1.1's tension sparing, pinned by
+>    `test_replace_concept_edges_preserves_direct_tension_and_ignores_tension_mirror_rows`),
+>    so feeding all seven lands exactly the six link relations; the snippet
+>    below would fail against landed behaviour. A `pytest.raises` arm keeps the
+>    gate's rejection of a non-roster relation pinned.
+> 3. **No `MIGRATIONS` entry** — sub-step 3 of the `state.py` checkbox is
+>    retired by the Execution replacement above, and
+>    `tests/test_schema_version.py::test_state_has_no_schema_migration_ladder`
+>    fails if one is added.
+> 4. **A third version pin existed.** NID-B's `tests/test_schema_v16_identity.py`
+>    carried its own literal `16`; it now compares the applied pragma to
+>    `state.SCHEMA_VERSION` (its subject is the identity *shape*), leaving the
+>    literal pin in `tests/test_schema_version.py` alone, at 17.
+> 5. **Two consumer-behaviour tests were added for the widening**, because a
+>    roster-equality assertion does not produce the state that changed:
+>    `tests/test_schemas.py::test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_tension`
+>    (`_check_links` now validates six relations and still refuses `tension`)
+>    and
+>    `tests/test_query_substrate.py::test_reindex_mirrors_the_activated_link_relations_from_frontmatter`
+>    (`indexing._concept_edges` now mirrors authored `warrant` / `qualifier` /
+>    `rebuttal` links into real edge rows).
+> 6. **Docs still describe the three-relation roster**
+>    (`docs/reference/data-model/frontmatter.md:40,149`;
+>    `docs/reference/data-model/wikilink-and-link-conventions.md:24-46,76`).
+>    A.1/.2 deliberately left them: the six-verb prose belongs with A.3–A.5,
+>    which make the write paths and the served roster agree, and contract 11
+>    forbids merging A.1/.2 without them.
+
 **Steps:**
 
-- [ ] Write the failing tests at the end of `tests/test_query_substrate.py`
+- [x] Write the failing tests at the end of `tests/test_query_substrate.py`
   (add `import re` to the file's stdlib imports and
   `from memoria_vault.runtime.subsystems.lib import edges` to its package
   imports):
@@ -5233,13 +5383,13 @@ register or test a v16→v17 migration.
   (NID-B shape caveat from the preamble: if v16 changed `concept_edges`
   columns, mirror v16's landed column list in the legacy CREATE + INSERT
   here and in the migration below.)
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest "tests/test_query_substrate.py::test_concept_edges_relation_check_matches_edge_relations" "tests/test_query_substrate.py::test_replace_concept_edges_accepts_activated_relations" -v`
   Expected failures: the first asserts
   `{'supports', 'contradicts', 'extends', 'tension'} == {...seven...}`; the
   second raises `ValueError: unknown concept edge relation: qualifier` from
   `_concept_edge_relation`.
-- [ ] In `src/memoria_vault/runtime/schema.sql`, extend the roster inside the
+- [x] In `src/memoria_vault/runtime/schema.sql`, extend the roster inside the
   `concept_edges` CREATE (re-locate by content):
 
   ```sql
@@ -5252,7 +5402,7 @@ register or test a v16→v17 migration.
   ```
 
   and bump the trailing pragma to `PRAGMA user_version = 17;`.
-- [ ] In `src/memoria_vault/runtime/state.py`:
+- [x] In `src/memoria_vault/runtime/state.py`:
   1. Add to the import block:
 
      ```python
@@ -5316,16 +5466,16 @@ register or test a v16→v17 migration.
          return relation
      ```
 
-- [ ] Bump the two version pins: in `tests/test_schema_version.py` rename the
+- [x] Bump the two version pins: in `tests/test_schema_version.py` rename the
   pin test to `test_schema_lands_at_user_version_17` and change both `16`s to
   `17`; in `tests/test_query_substrate.py` change the
   `state.SCHEMA_VERSION == 16` pin to `== 17`. Verify
   `tests/test_schema_v10.py` already compares against
   `state.SCHEMA_VERSION` (G2S1.2) — no edit.
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_query_substrate.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_edges.py -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```
@@ -5341,6 +5491,158 @@ register or test a v16→v17 migration.
 ---
 
 ### Task ERP-A.3: parser + roster convergence — the remaining hardcoded sites become imports
+
+> **Execution amendment (2026-08-01, as landed):** the convergence itself landed
+> exactly as the table below specifies. It also settled the dead-defence audit
+> A.1 deferred and four review minors, because A.3 rewrites every one of those
+> call sites and has no verbatim-move constraint to protect.
+>
+> 1. **The seven surviving defences, settled — deleted or pinned, no third
+>    category.** *Deleted*, naming the producer state that cannot exist:
+>    `parse_links`' `isinstance(relation, str)` (a non-`str` YAML mapping key
+>    already fails `relation not in LINK_RELATIONS` and takes the same skip —
+>    this answers A.1's deferred question: `parse_links` needs no tolerance of
+>    its own); `parse_links`' per-target `isinstance(target, str)`
+>    (`normalize_link_target` is already total over non-strings);
+>    `parse_typed_wikilinks`' `.strip().lower()` on the relation capture (the
+>    group is `([a-z][a-z0-9-]*)` — it can emit neither whitespace nor
+>    uppercase); `state._concept_edge_relation`'s `.replace("_", "-")` (no
+>    `EDGE_RELATIONS` value contains `-` or `_`, so it can flip no accept/reject
+>    decision and alter no accepted value); and the redundant outer
+>    `frozenset()` around `EDGE_RELATIONS - {"tension"}`. *Pinned*, naming the
+>    producer state now created: `_normalized_link_target`'s two
+>    bracket-rejection arms and its `empty` sentinel, all three through
+>    `test_link_parser_and_validation_reject_invalid_local_targets`
+>    (`[[notes/a[b]]`, `notes/a[1]`, `[[ ]]`) — that test asserts the *validator
+>    message*, so it observes the reason code the public wrapper projects away,
+>    and the `empty` arm is therefore pinned from `schema.py`'s side, the only
+>    side that reads it; `normalize_link_target`'s `isinstance` guard, now the
+>    family's only one (`test_normalize_link_target_is_total_over_non_strings`);
+>    and `_concept_edge_relation`'s surviving `.strip().lower()`, through a
+>    `" Supports "` row in `test_replace_concept_edges_accepts_activated_relations`.
+> 2. **Review minors closed.** `tests/test_query_substrate.py`'s
+>    `_relation_check_roster` — a fourth copy of the roster-reading regex — is
+>    deleted in favour of `graph_sql.concept_edge_relations`, so the parity test
+>    doubles as that reader's pin. `tests/test_schemas.py`'s six-relation fixture
+>    no longer derives itself from `sorted(edges.LINK_RELATIONS)`: it names the
+>    six verbs and the expected message list, so dropping one from the roster now
+>    fails it. `tests/test_schema_v16_identity.py`'s
+>    `user_version == SCHEMA_VERSION` assertion is deleted as a tautology of
+>    `state._init`'s own raise.
+> 3. **`parse_typed_wikilinks` gains its first production caller**
+>    (`trusted_writer._write_edge_candidate_prompts`), which is what retires
+>    `ARGUMENT_EDGE_TYPES` and `TYPED_WIKILINK_RE`.
+> 4. **`knowledge._link_target` widens what it rejects.** Delegating to
+>    `normalize_link_target` sends URI, traversal, non-`.md`-suffix, and
+>    bracketed values to `""`, which reaches `_concept_rel("")` — that returns
+>    the phantom `notes/.md` rather than raising. **Corrected 2026-08-01 (review
+>    T2): that phantom is observable and the first draft of this item was wrong.**
+>    `iter_markdown` yields a file named `.md` (`".md".endswith(".md")`), so
+>    `notes/.md` is a legal key in the notes map, and the convergence had made the
+>    phantom an *absorbing* state — every rejected target now collapses onto one
+>    sink instead of a distinct unreachable one. `_link_target` therefore returns
+>    `""` before `_concept_rel`, pinned by
+>    `test_analyze_project_argument_never_synthesizes_an_edge_into_the_dot_md_note`.
+>    The same guard lands in `graph_sql._link_target`, which has the same renderer.
+> 5. **Correction to A.1's amendment, item 1.** Its counterfactual is loud, not
+>    silent. Replacing the landed normalizer with the plan snippet's inline
+>    three-line body fails existing tests immediately — 9 at A.1's tree (six of
+>    them from the pre-existing parametrized
+>    `test_link_parser_and_validation_reject_invalid_local_targets`), and 12 at
+>    this one, nine of them from that same parametrized test. The deviation was
+>    still necessary, but it was never an undetectable escape and the amendment
+>    should not read as though it were.
+> 6. **One accepted mutation survivor.** Pointing `indexing.py` back at
+>    `lib.schema`'s `parse_links` re-export passes the whole suite, and must:
+>    `test_schema_reexports_the_moved_names` asserts the re-export *is* the same
+>    object, so no behavior can distinguish the two imports. The enforcement is
+>    the sweep discipline that deletes the re-export next release — that deletion
+>    turns a stale import into an `ImportError`, which is louder than any guard
+>    test, so none was added. (A.1's item 2 is superseded by item 1 above: both
+>    guards it left as declared escapes are now deleted.)
+> 7. **Namespace split — the review's Critical, fixed 2026-08-01.** The table
+>    below says the structural-impact stripper delegates to
+>    `normalize_link_target`. It must not: `build_resolver` keys on **title, slug,
+>    and stem** as well as path, so this reader's alphabet includes
+>    `Toulmin: the warrant` (rejected as a URI scheme) and `Study 1.2` (rejected
+>    as a foreign suffix). Delegating silently emptied them — a PI whose thesis
+>    note carries a colon got `active_thesis: ''` and a `cold-start` gate index
+>    with no error. `edges.py` now owns both operations with the domains named:
+>    `strip_wikilink` (syntax only, namespace-free) for alias space, which
+>    structural impact calls, and `normalize_link_target` (validating) for path
+>    space. The unit pin asserts both sides — the stripper keeps a colon title,
+>    the validator still rejects it — and the alias-side behavioural pins are
+>    `test_build_edges_resolves_link_titles_that_are_not_path_shaped` and
+>    `test_structural_impact_resolves_a_thesis_whose_title_carries_a_colon`.
+>    **Detection rule, worth carrying into ERP-B/C/D:** when a refactor gives a
+>    validator a second caller, enumerate the *second* caller's input alphabet.
+>    Fixtures on both sides otherwise draw from the intersection (path-shaped
+>    strings) and the helper looks total.
+> 8. **Sibling readers (review T1), converged in part — ruling.**
+>    `graph_sql._link_target` and `explore._link_target` were byte-identical
+>    copies of the stripper this task deleted from `knowledge`, carrying the same
+>    validator/reader disagreement (`notes/../thesis.md` resolved to a real note).
+>    Both are path space, so both now call `normalize_link_target` — and
+>    `explore`'s copy is deleted outright in favour of `graph_sql`'s, which it
+>    already reaches into for `_active_project_slices`. Their `_link_targets`
+>    keeps iterating the raw `links:` map with **no roster filter**, and the
+>    reason is the retrieval contract, nothing else: `neighborhood` admits every
+>    relation the live CHECK holds "so tensions remain first-class retrievable",
+>    so filtering the fallback closure to `LINK_RELATIONS` would make it strictly
+>    narrower than the substrate traversal it stands in for — a worse reader, not
+>    a stricter one. The only defensible filter would be `EDGE_RELATIONS`, and
+>    even that buys nothing a lenient reader needs. *Not* an argument for this,
+>    though the mutation shows it: adding the filter breaks two `explore` tests
+>    whose fixtures author `links: {related: […]}`, which `_check_links` rejects
+>    outright — they pin behaviour over frontmatter no checked vault can hold, and
+>    leaning on them would contradict this same task's "the reader and the
+>    validator must agree" convergence. `edges.py`'s docstring is corrected to say
+>    what is true: every *roster* imports from here, path-space normalization
+>    comes from here, and retrieval closures walk the raw map by design.
+> 9. **The counts roster is deleted, not narrowed (review T4).**
+>    `analyze_project_argument`'s per-relation tally read only
+>    `supports`/`contradicts`/`extends`, so iterating `sorted(LINK_RELATIONS)`
+>    manufactured three zeros nothing read — a no-op convergence that survived
+>    mutation. It is now `Counter(edge["type"] …)`: no roster at that site at all,
+>    and no roster literal to guard. The payload keys stay the three this plan's
+>    Produces list fixes; widening the per-verb breakdown belongs to whoever
+>    widens `worker.py`'s mirror of them.
+> 10. **Disclosure — the readiness state machine is now wrong for the three new
+>    verbs (issue #1624; ERP-C/ERP-D own the fix, not this task).** A.3 widened
+>    `_note_edges` to six relations, which widened `relation_count`, which drives
+>    `_argument_stage` / `_argument_saturation_conditions` / `_argument_findings`
+>    — branches that read **only** `counts["supports"]` and
+>    `counts["contradicts"]`. Measured here, three checked notes each holding one
+>    relation to the thesis:
+>
+>    | edges | `relation_count` | `argument_stage` | `mature_graph` | gap findings |
+>    | --- | --- | --- | --- | --- |
+>    | 3× `warrant`, pre-A.3 | 0 | `cold-start` | `False` | `structural`, `unstated-warrant` |
+>    | 3× `warrant`, now | 3 | `supported` | `True` | `unstated-warrant` |
+>    | 3× `rebuttal`, now | 3 | `supported` | `True` | `unstated-warrant` |
+>    | 3× `qualifier`, now | 3 | `supported` | `True` | `unstated-warrant` |
+>    | 3× `extends`, now and pre-A.3 | 3 | `supported` | `True` | `unstated-warrant` |
+>
+>    So a rebuttal-only project — every edge naming a condition under which the
+>    thesis fails — reports `argument_stage: "supported"` and `mature_graph:
+>    True`, and a warrant-only project still emits `unstated-warrant`.
+>    `displayed_confidence` stays `below-threshold` in all three, so the
+>    confidence number is not implicated. The hole is pre-existing (`extends`
+>    already had it, last row) but A.3 tripled its blast radius and pulled in the
+>    one relation whose answer is backwards. Recalibrating the machine is a
+>    semantic decision about what each Toulmin role means for maturity — ERP-C's
+>    consequence typing and ERP-D's finding hygiene own it. Nothing in the suite
+>    asserts `argument_stage` for a single-relation project of any of the three;
+>    that gap is deliberate here and belongs with the fix, so the tests encode one
+>    definition of maturity rather than two.
+> 11. **Disclosure — `thesis:` is read in two namespaces by three readers (issue
+>    #1623).** `structural_impact_graph` resolves it through the alias table
+>    (a title works), while `graph_sql._link_target`, `explore` (same object), and
+>    `search_index._project_link` resolve it as a path (a title yields nothing).
+>    The last of those is a third inline stripper this task did not converge; the
+>    earlier sweep in this amendment classified `search_index` as display-only,
+>    which is true of its contradiction items and false of `_project_link`. The
+>    field's contract is not ERP-A's to set.
 
 Mechanical convergence of the audit's parsers/rosters onto `edges.py`
 (EDGES §1). Sites and exact refs (verified at 9c77ba61; `schema.py:39` died
@@ -5383,7 +5685,7 @@ in A.1, `state.py:3422` in A.2):
 
 **Steps:**
 
-- [ ] Write the failing tests. At the end of
+- [x] Write the failing tests. At the end of
   `tests/test_project_structural_impact.py`:
 
   ```python
@@ -5457,13 +5759,13 @@ in A.1, `state.py:3422` in A.2):
       }
   ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest "tests/test_project_structural_impact.py::test_build_edges_includes_activated_relations" "tests/test_trusted_writer.py::test_commit_writer_extracts_rebuttal_candidate_and_skips_tension" "tests/test_project_knowledge.py::test_analyze_project_argument_reads_activated_relation_links" -v`
   Expected failures: structural-impact assertion sees `[]` (rebuttal filtered
   out by the two-value `RELATIONS`); trusted-writer sees `len(prompts) == 0`
   (rebuttal not in `ARGUMENT_EDGE_TYPES`); knowledge sees
   `relation_count == 0` (warrant not in the hardcoded triple).
-- [ ] Edit `structural_impact_graph.py`:
+- [x] Edit `structural_impact_graph.py`:
   1. Add after the existing `from memoria_vault.runtime.vaultio import ...`
      imports (lines 11-12):
 
@@ -5499,7 +5801,7 @@ in A.1, `state.py:3422` in A.2):
 
      (Bare-string `|`/`#` splitting is preserved; for wikilinks the extra
      splits are no-ops after `normalize_link_target`.)
-- [ ] Edit `knowledge.py`:
+- [x] Edit `knowledge.py`:
   1. Add next to the `schema_lib` import (line 34):
 
      ```python
@@ -5519,7 +5821,7 @@ in A.1, `state.py:3422` in A.2):
      ```
 
      → `raw = normalize_link_target(value)`.
-- [ ] Edit `trusted_writer.py`:
+- [x] Edit `trusted_writer.py`:
   1. Delete lines 48-49 (`ARGUMENT_EDGE_TYPES`, `TYPED_WIKILINK_RE`) and add
      to the import block (near the `lib import schema as schema_lib` import,
      line 27):
@@ -5545,7 +5847,7 @@ in A.1, `state.py:3422` in A.2):
      ```
 
      (the loop body below, lines 341-364, is unchanged).
-- [ ] Edit `indexing.py`: change the G2S1.1 import line
+- [x] Edit `indexing.py`: change the G2S1.1 import line
 
   ```python
   from memoria_vault.runtime.subsystems.lib.schema import parse_links
@@ -5557,10 +5859,10 @@ in A.1, `state.py:3422` in A.2):
   from memoria_vault.runtime.subsystems.lib.edges import parse_links
   ```
 
-- [ ] Run tests to verify they pass, plus the touched suites:
+- [x] Run tests to verify they pass, plus the touched suites:
   `python -m pytest tests/test_project_structural_impact.py tests/test_trusted_writer.py tests/test_project_knowledge.py tests/test_query_substrate.py -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```
@@ -5576,6 +5878,44 @@ in A.1, `state.py:3422` in A.2):
 ---
 
 ### Task ERP-A.4: six-verb acceptance — validator, curate-note-link, CLI + vim round-trip
+
+> **Execution amendment (2026-08-01, as landed):** the two production edits are
+> the plan's (`curate_note_link`'s roster gate, `cli.py`'s `--rel` choices, both
+> reading `edges.LINK_RELATIONS`). The test slice deviates in three places.
+>
+> 1. **No new `tests/test_schemas.py` case.** A.1 already landed the equivalent
+>    (`test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_tension`),
+>    and A.3 de-derived its fixture so it is a real roster pin. A second copy
+>    would have pinned nothing further.
+> 2. **The vim round-trip folded into A.2's landed mirror test** instead of
+>    becoming a third fixture over the same three verbs:
+>    `test_activated_links_round_trip_from_frontmatter_to_edge_rows` now reads
+>    the authored frontmatter *back off disk* — the same bytes the mirror reads —
+>    validates it, and then asserts the rows. That is a stronger round-trip than
+>    the plan's hand-built frontmatter dict, in one fixture rather than two.
+> 3. **The CLI gained a behavioural pin the plan's step list lacked**
+>    (`test_cli_link_offers_every_served_relation_and_refuses_tension`, in
+>    `tests/test_cli_work_project.py` beside the existing `link` coverage).
+>    Without it the only proof of `choices` was the roster-literal guard, which a
+>    widening to `tuple(sorted(EDGE_RELATIONS))` — serving `tension` from the
+>    CLI — passes untouched.
+>
+> **Reader updates — deferred in the first draft on a false premise, landed
+> 2026-08-01 (review T3/T6).** The deferral claimed that editing
+> `src/memoria_vault/product/capabilities/operations/curate-note-link.md` forces a
+> floor-golden regeneration because its body is hashed into
+> `capability-index.json`. The hash is there, but `tests/floor_lib.py` redacts
+> `\b[0-9a-f]{32,64}\b` to `<HASH>` before digesting, so a body edit changes
+> nothing the golden records — measured, not assumed: the full gate is green with
+> the manifest widened. Five readers now name the six verbs:
+> `docs/how-to-guides/knowledge/link-checked-notes.md` (step 2 and the Verify
+> list), `docs/reference/data-model/frontmatter.md` (the `links` kind row and the
+> `links` section), the capability manifest, and — a fourth reader the first pass
+> missed, and the only one that was *wrong* rather than understating —
+> `docs/reference/control-and-policy/project-structural-impact.md`, which said the
+> operation follows `links.supports` and `links.contradicts` after ERP-A.3 widened
+> that traversal to all six. `docs/explanation/knowledge/note-body-structure.md`
+> drops its roster-shaped list instead of extending it. No floor golden moved.
 
 The EDGES §10 acceptance slice: writing a `rebuttal` (or `warrant`,
 `qualifier`) link in vim round-trips — validator accepts, edge row appears at
@@ -5620,7 +5960,7 @@ relation-roster definition").
 
 **Steps:**
 
-- [ ] Write the failing tests. At the end of `tests/test_schemas.py` (mirrors
+- [x] Write the failing tests. At the end of `tests/test_schemas.py` (mirrors
   `test_note_links_are_typed_maps`, line 174):
 
   ```python
@@ -5793,7 +6133,7 @@ relation-roster definition").
       assert offenders == []
   ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_schemas.py::test_note_links_accept_activated_toulmin_relations tests/test_knowledge.py::test_curate_note_link_accepts_each_served_relation tests/test_knowledge.py::test_curate_note_link_rejects_tension tests/test_worker_product_jobs.py::test_worker_runs_each_served_curate_note_link tests/test_worker_product_jobs.py::test_worker_rejects_tension_curate_note_link tests/test_query_substrate.py::test_activated_link_round_trips_to_edge_row tests/test_edges.py::test_single_roster_definition_repo_wide -v`
   Expected: the schemas test PASSES already (the roster widened in A.1 —
   it pins the behavior); the direct and worker parameterized groups pass for
@@ -5803,7 +6143,7 @@ relation-roster definition").
   the round-trip PASSES already (A.1 + A.2 + G2S1.1 — it pins §10's
   acceptance); the guard test fails listing `src/memoria_vault/cli.py` and
   `src/memoria_vault/runtime/knowledge.py`.
-- [ ] Edit `knowledge.py` `curate_note_link` (lines 360-362):
+- [x] Edit `knowledge.py` `curate_note_link` (lines 360-362):
 
   ```python
       link_type = link_type.strip().lower()
@@ -5811,7 +6151,7 @@ relation-roster definition").
           raise ValueError(f"note link_type must be one of {', '.join(sorted(LINK_RELATIONS))}")
   ```
 
-- [ ] Edit `cli.py`: add the import after line 27
+- [x] Edit `cli.py`: add the import after line 27
   (`from memoria_vault.runtime.paths import safe_filename`):
 
   ```python
@@ -5824,10 +6164,10 @@ relation-roster definition").
       link.add_argument("--rel", required=True, choices=tuple(sorted(LINK_RELATIONS)))
   ```
 
-- [ ] Run tests to verify they pass, plus the touched suites:
+- [x] Run tests to verify they pass, plus the touched suites:
   `python -m pytest tests/test_edges.py tests/test_schemas.py tests/test_knowledge.py tests/test_worker_product_jobs.py tests/test_query_substrate.py tests/test_cli.py -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```
@@ -5843,6 +6183,14 @@ relation-roster definition").
 ---
 
 ### Task ERP-A.5: plan amendments — served-verbs acceptance + `claims.base` glyph column
+
+> **Execution amendment (2026-08-01, as landed):** the surfaces-plan line-21 and
+> line-9580 edits and the alpha.23 `claims.base` glyph amendment had already
+> landed before this task ran; only the U3-PLUG.5/.8 "Relation-roster decision"
+> paragraph remained. Its appended amendment states the served roster in cross-
+> section contract 11's own terms — after this PR it is exactly
+> `edges.LINK_RELATIONS`, six verbs, still excluding `tension` — so no acceptance
+> text anywhere in the surfaces plan reads as a counted three.
 
 > **Execution override:** The 2026-07-29 cross-section contracts above now
 > own the surfaces changes, including the direct `edges.LINK_RELATIONS` import,
@@ -5884,7 +6232,7 @@ doc-claims check).
 
   `` `link_relations` from `edges.LINK_RELATIONS` (moved from `schema.LINK_RELATIONS` by the graph-edges plan ERP-A.1; the `schema` re-export stays valid for one release) ``
 
-- [ ] In the surfaces plan, line 7411, change
+- [x] In the surfaces plan, line 7411, change
 
   `` `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` ``
 
@@ -6006,10 +6354,97 @@ amendment.
 > Join `concepts.path` to `source_path`, or `concepts.concept_id` to
 > `source_concept_id` — never one against the other. NID-B.4 did not touch this join.
 
+> **Execution amendment (2026-08-01, as landed): the consumers land here too.**
+> The Files list and the step checkboxes below name only the producer
+> (`edges.py` + `tests/test_edges.py`), but the two blockquotes above say the
+> `explore` regression persists "until this task lands", and the in-source
+> comments at all four defective sites name ERP-A.6 as the owner of the fix. A
+> producer nobody reads would have left every measured symptom in place, so this
+> task also rewires the consumers and adds
+> `src/memoria_vault/runtime/graph_sql.py`,
+> `src/memoria_vault/runtime/explore.py`, `tests/test_graph_sql.py` and
+> `tests/test_explore.py` to its Files. R2's amendment already assigns this
+> wiring to G.1/E.1, but both shipped before ERP-A.6 existed; nothing else in
+> either plan comes back for them.
+>
+> 1. **Measured before, measured after.** One vault built twice — once with
+>    id-less files (path keys) and once with frontmatter ULIDs — through
+>    `record_observed_file_edit`/`replace_concept_edges`, then read through
+>    `explore.explore_topic`. Before: the path-keyed arm returned 5 ids, 8
+>    displayed edge entries and 1 tension; the ULID arm returned 3 ids, **0**
+>    edge entries and **0** tensions,
+>    `neighborhood` emitted a raw ULID into its path-space `ids`,
+>    `degree_centrality` read 1/1 instead of 3/2, and `filter_ids` kept nothing
+>    (`after: 0` of 2). After: the two arms are byte-identical.
+> 2. **`explore._edges_by_concept` and `_tension_pairs` consume
+>    `concept_edge_path_pairs`**, and `degree_centrality` builds its adjacency
+>    from it. `state.concept_edges` now has no `src/` consumer at all.
+> 3. **`neighborhood` keeps its own SQL for eligibility only; the endpoint rule
+>    is one function, not a replica.** It cannot consume the strict projection:
+>    R2's "solely from `edges.concept_edge_path_pairs`" would silently delete the
+>    revoked-source gate, which needs the edge's own `source_path` (blank =
+>    PI-owned, no verdict gates it) and the source Concept's verdict — two columns
+>    the three-field API withholds and which no consumer can re-derive from a
+>    projected triple, since two edge rows can project to the same one. So the
+>    first query selects eligible rows with their source/target renderings, and
+>    everything after it is `edges.projected_edge_endpoints`, the same call the
+>    producer makes on every row it returns: normalize both, drop the edge if
+>    either renders blank. The recursive walk then runs over that adjacency.
+> 4. **A sanctioned replica inherits the claim, never the test — which is why the
+>    endpoint rule stopped being a replica.** This is the failure the reviews
+>    named twice: a mutation killed in `edges.py` surviving verbatim in the SQL
+>    copy, because the fixtures attached to the named producer only. Two escapes
+>    came out of it, both the same shape — one Concept with two ids in a single
+>    path-space answer. **Blank endpoint:** unguarded, `''` enters the undirected
+>    walk as a hub joining every blank-target edge's source to every other,
+>    inflating the `neighbors` denominator R2 §4 requires be built where the set
+>    is built. **Unnormalized endpoint:** a stored `./notes/x.md` sat beside the
+>    `notes/x.md` every consumer holds; the producer normalized and the copy did
+>    not, and *neither side was tested* — removing either `normalize_path` passed
+>    the full suite. It is reachable because a PI-owned `tension` row is written
+>    outside the mirror pass by design, so `_concept_edge_target_path` never keys
+>    it; contract 4 binds ERP-B.2's `insert_concept_edge` to that function and
+>    **ERP-B.3's confirm-tension writer must be bound to it too**. Collapsing the
+>    two copies into one call is the fix that cannot drift again; both sides are
+>    pinned anyway, at the producer (`tests/test_edges.py`, an unnormalized
+>    durable `target_path` and an unnormalized `concepts.path`) and at the walk
+>    (`tests/test_graph_sql.py`, the same stored row returned as the normalized
+>    id). The `neighborhood` fixture carries the producer's whole endpoint
+>    alphabet: ULID source, resolved target, pending target, resolved-but-pathless
+>    target, blank source, blank target, unnormalized target. The same rule found
+>    one more, one layer out: the checked gate in `_tension_pairs` was pinned only
+>    through its sibling `_edges_by_concept`, whose fixture edge is an `extends`
+>    row that `_tension_pairs` discards before reaching that gate; it now has an
+>    unchecked *tension* between two displayed Concepts. And ordering is now
+>    pinned on three rows rather than two — with two rows the scan order is either
+>    the answer or its exact reverse, so no two-row fixture can tell a sort from a
+>    `reverse()`.
+> 5. **`filter_ids` is not an edge reader.** Its defect is the same namespace
+>    error one table over: path-space ids matched against
+>    `concept_status.concept_id`. It now looks a Concept up by `path` and keys
+>    the result back under `path or concept_id`, the convention
+>    `state.concept_check_statuses` already uses. The `concept_id` arm is
+>    retained so a caller holding a db-store Concept that renders nowhere keeps
+>    working; it is not a licence to pass a ULID.
+> 6. **Not done, deliberately.** No consumer outside these two modules was
+>    touched. `structural_impact_graph` reads frontmatter, not `concept_edges`,
+>    and its rewire onto `concept_edge_path_records` stays ERP-D.4's.
+>    `_tension_pairs`'s safe-endpoint gate is left in place **and is dead, with
+>    nothing behind it**: for any `left`/`right`, the crossing gate two lines
+>    below admits only edges with one endpoint in each, which implies membership
+>    in `left ∪ right`, so no edge can reach one gate and fail the other — and
+>    deleting it outright passes the full suite, `titles` lookups included.
+>    Deleting it is the repo's stated preference; it is left only because it is
+>    pre-existing code outside this task's defect, and it belongs to whoever
+>    reworks the tension surface in ERP-B.3.
+
 **Files:**
 
 - Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py`
 - Modify: `tests/test_edges.py`
+- Modify (2026-08-01 amendment): `src/memoria_vault/runtime/graph_sql.py`,
+  `src/memoria_vault/runtime/explore.py`, `tests/test_graph_sql.py`,
+  `tests/test_explore.py`
 
 **Interfaces:**
 
@@ -6044,7 +6479,7 @@ amendment.
 
 **Steps:**
 
-- [ ] Write failing tests in `tests/test_edges.py` (extend the existing module;
+- [x] Write failing tests in `tests/test_edges.py` (extend the existing module;
   no `TEST_LEVELS` change).  Seed the v16 mirror with a source whose
   `concept_id` is a ULID and whose `path` is `notes/source.md`, a resolved
   target at `notes/resolved.md`, and a checked pending target path
@@ -6072,14 +6507,14 @@ amendment.
   ordering with exactly those parsed attribute dictionaries and no identity
   keys.  Add an unchecked edge and prove it is absent by default and present
   only with `checked_only=False` in both projections.
-- [ ] Run the focused test red:
+- [x] Run the focused test red:
 
   ```bash
   python -m pytest tests/test_edges.py -q
   ```
 
   Expected: import/attribute failure for both path-projection functions.
-- [ ] Implement in `edges.py`.  Keep the `state` import inside the function so
+- [x] Implement in `edges.py`.  Keep the `state` import inside the function so
   ERP-A.2's module-level `state → edges` roster import cannot cycle.  Implement
   `concept_edge_path_records` as the shared query: join the edge table to
   `concepts AS source` and left-join `concepts AS target`; select source
@@ -6091,17 +6526,20 @@ amendment.
   `concept_edge_path_pairs` by mapping each record to a newly built dict with
   exactly its three public fields.  Do not select into, return, or normalize
   raw identity columns or `edge_id`.
-- [ ] Run the focused and dependent graph tests:
+- [x] Run the focused and dependent graph tests:
 
   ```bash
   python -m pytest tests/test_edges.py tests/test_query_substrate.py -q
   ```
 
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```bash
-  git add src/memoria_vault/runtime/subsystems/lib/edges.py tests/test_edges.py
+  git add src/memoria_vault/runtime/subsystems/lib/edges.py tests/test_edges.py \
+    src/memoria_vault/runtime/graph_sql.py src/memoria_vault/runtime/explore.py \
+    tests/test_graph_sql.py tests/test_explore.py \
+    docs/superpowers/plans/2026-07-15-graph-substrate.md
   git commit -m "feat(graph): project identity-keyed edges to durable paths (ERP-A.6)"
   ```
 # Section ERP-B — Catalog bridge fix + tension confirmation surface
@@ -6485,6 +6923,31 @@ procedure and include the regenerated goldens in that task's commit.
 > ERP-B.4 deletes by the same triple, so it inherits the same key function. See also
 > cross-section contract 4 for this function's call ordering.
 
+> **Execution amendment (2026-08-01) — what ERP-B.2 landed.** Three deviations from
+> the step text below, none of them contract changes.
+> **(1) Placement.** `insert_concept_edge` sits after `_concept_edge_target_path`
+> rather than literally adjacent to `replace_concept_edges`, so that function's
+> private helpers stay beside their only caller; it is still the public single-row
+> seam immediately before the public `concept_edges` reader.
+> **(2) A settled target survives a spelling that stopped resolving.** When a stored
+> row's `target_path` no longer resolves — its target moved out of band, so
+> `concepts.path` left the durable key behind — the upsert keeps the
+> `target_concept_id`/`edge_id` the row already holds instead of re-deriving NULL.
+> That is the same defense `replace_concept_edges` carries in SQL
+> (`COALESCE(excluded.target_concept_id, …)` / `CASE WHEN excluded.edge_id != ''`);
+> dropping it here un-resolves a live edge and breaks ERP-D.5's stable-`edge_id`
+> contract. Pinned by `test_insert_concept_edge_keeps_a_settled_target_whose_path_moved`.
+> **(3) Six tests, not two.** The drafted pair cannot see v16 keying at all. It is
+> joined by the four-spelling catalog fold this section's NID-B.7 blockquote
+> requires; a pending-row test proving `edge_id` stays `''` until the target
+> resolves and that **both** settlers — a re-upsert and B.7's resolution pass —
+> settle it (asserting storage between them, because B.7's pass is an absorbing
+> state that hides a re-upsert which resolved nothing); the out-of-band move above;
+> and an unbound-`OperationContext` refusal for the `validate_operation_context`
+> call the Interfaces list already required. The drafted body's local `source_id` is
+> renamed `source_concept`: `tests/test_identifier_renames.py` forbids that token
+> anywhere under `src/`.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (insert the new function
   directly after `replace_concept_edges`, i.e. after :2052 at the `9c77ba61`
@@ -6514,7 +6977,7 @@ procedure and include the regenerated goldens in that task's commit.
 
 **Steps:**
 
-- [ ] Write the failing tests (append to `tests/test_runtime_state.py`; first
+- [x] Write the failing tests (append to `tests/test_runtime_state.py`; first
   extend the import at :29 to
   `from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, operation_context`):
 
@@ -6585,12 +7048,12 @@ procedure and include the regenerated goldens in that task's commit.
           )
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_runtime_state.py -v -k insert_concept_edge`
   — expected: `AttributeError: module 'memoria_vault.runtime.state' has no
   attribute 'insert_concept_edge'`.
 
-- [ ] Write the minimal implementation (after `replace_concept_edges` in
+- [x] Write the minimal implementation (after `replace_concept_edges` in
   `src/memoria_vault/runtime/state.py`):
 
   ```python
@@ -6667,7 +7130,7 @@ procedure and include the regenerated goldens in that task's commit.
   the same triple. `OperationContext` is already TYPE_CHECKING-imported at
   `state.py:49`.)
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_runtime_state.py -v -k insert_concept_edge`
   — expected: 2 passed.
 
@@ -7718,6 +8181,19 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
 ---
 
 ### Task ERP-C.3: Schema v18 direct DDL — `consequence` column on `concept_verdicts` + DB mirror helpers
+
+> **Schema-rung amendment (2026-08-01, BINDING).** `18` here is **positional, not
+> allocated**: it is "the next free rung", and it reads 18 only for as long as
+> `SCHEMA_VERSION` on `main` is 17. The I1 plan's Task T.1 (`telemetry_events`) previously
+> gated on `SCHEMA_VERSION == 18`, which pinned this task ahead of the whole telemetry
+> tree for bookkeeping rather than dependency; that gate is now "current + 1" (I1 plan
+> T.1, 2026-08-01), so I1 T.1 may claim 18 and this task 19. Neither task reads the
+> other's storage, so either order is correct. **Before executing:** read
+> `SCHEMA_VERSION`, take `current + 1`, and substitute it for every `18` in this task —
+> the Files list, Produces, the DDL, the `PRAGMA user_version`, the renamed test
+> functions and the three pinned assertions. Do **not** stop because the current value is
+> not 17; stop only if a `MIGRATIONS` symbol has appeared, which would mean the
+> fresh-schema rule above no longer holds.
 
 **Direct DDL is needed:** the current verdict row is
 `concept_verdicts(concept_id TEXT PRIMARY KEY, check_status TEXT NOT NULL CHECK(...))`
@@ -9135,7 +9611,18 @@ def _write_blast_radius_report(
 
 **Steps:**
 
-- [ ] Update the pinning test first (it pins the wrong behavior). In `tests/test_worker_product_jobs.py:818-839`, the PI-authored depth-1 descendant `pi_rel` must now receive the same epistemic mark as machine-derived ones. Replace lines 820 and 834-839:
+> **Amendment — the fixture needs a PI descendant at depth ≥ 2 too
+> (2026-08-01, applied).** Deleting the branch changes *two* arms, not one: a
+> PI descendant at depth 1 moves from `cascade-rollback`/`ask` to
+> `scan-demotion-propagation`/`act`, and a PI descendant at depth ≥ 2 moves
+> from `cascade-rollback`/`ask` to `scan-demotion-stale`/`log`. The fixture as
+> written holds exactly one PI descendant, at depth 1, so a mutant restoring
+> `if actor == "pi" and depth > 1:` would survive it. The test therefore also
+> seeds `notes/pi-depth-two.md` — PI-authored, input `digests/direct.md` — and
+> asserts it stays `checked` with a `stale` flag whose `trigger_id` is the
+> scanned source, plus its `scan-demotion-stale`/`log` event.
+
+- [x] Update the pinning test first (it pins the wrong behavior). In `tests/test_worker_product_jobs.py:818-839`, the PI-authored depth-1 descendant `pi_rel` must now receive the same epistemic mark as machine-derived ones. Replace lines 820 and 834-839:
 
 ```python
     assert state.concept_check_status(vault, pi_rel) == "unchecked"
@@ -9155,18 +9642,168 @@ def _write_blast_radius_report(
     assert not any(event.get("check") == "cascade-rollback" for event in event_log)
 ```
 
-- [ ] Run to verify it fails:
+- [x] Run to verify it fails:
   `python -m pytest tests/test_worker_product_jobs.py::test_observe_pi_edits_propagates_scan_side_demotion -v`
   Expected: `AssertionError` at `state.concept_check_status(vault, pi_rel) == "unchecked"` (currently `"checked"` because of the PI branch).
 
-- [ ] Write minimal implementation — in `src/memoria_vault/runtime/integrity.py` delete lines 973-984 (the `actor = str(event.get("actor") or "")` read, the `if actor == "pi":` arm with its `_flag_descendant(check="cascade-rollback", route="ask")` call, and `needs_human.append(output_id)`), changing the `elif depth == 1:` to `if depth == 1:`. Keep `needs_human: list[str] = []` (line 961) and the return key (line 1016) so the result shape is stable. Epistemic marks are now origin-blind; `cascade_rollback` (lines 1051-1124) is not touched.
+- [x] Write minimal implementation — in `src/memoria_vault/runtime/integrity.py` delete lines 973-984 (the `actor = str(event.get("actor") or "")` read, the `if actor == "pi":` arm with its `_flag_descendant(check="cascade-rollback", route="ask")` call, and `needs_human.append(output_id)`), changing the `elif depth == 1:` to `if depth == 1:`. Keep `needs_human: list[str] = []` (line 961) and the return key (line 1016) so the result shape is stable. Epistemic marks are now origin-blind; `cascade_rollback` (lines 1051-1124) is not touched.
 
-- [ ] Run to verify it passes, plus the untouched authority-gate pins:
+- [x] Run to verify it passes, plus the untouched authority-gate pins:
   `python -m pytest tests/test_worker_product_jobs.py tests/test_integrity_cascade_rollback.py tests/test_worker_knowledge_cycle.py tests/test_operation_context.py -v`
+  *Measured: 190 passed. The branch was verbatim at `integrity.py:977-988` (the plan's 973-984 had drifted); `elif depth == 1:` became `if depth == 1:` and `needs_human` stays declared and returned, always `[]`.*
 
 - [ ] Commit:
   `git add src/memoria_vault/runtime/integrity.py tests/test_worker_product_jobs.py`
   Message: `fix(integrity): scan-demotion marks are origin-blind — remove PI descendant exemption (EDGES section 7)` ending with
+  `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
+
+---
+
+### Task ERP-D.3a: stage-machine recalibration — implements Graph-R11, closes #1624
+
+**Early-run exception (contract 13, 2026-08-01):** this task's only graph
+prerequisite is ERP-A's activated roster, which is merged, so it runs ahead of
+ERP-B, ERP-C, and the rest of ERP-D. It must land before ERP-D.3, which edits
+the same `no-support`/`no-refutation` finding family.
+
+**Verified current state (read by content at `a582a510`).** The shipped
+`_argument_stage` (`knowledge.py:3269-3276`) is:
+
+```python
+def _argument_stage(counts: dict[str, int], relation_count: int) -> str:
+    if relation_count == 0:
+        return "cold-start"
+    if relation_count < 3:
+        return "developing"
+    if counts["contradicts"] > 0:
+        return "contested"
+    return "supported"
+```
+
+It reads `counts["contradicts"]` and `relation_count` and nothing else — never
+`supports`, `rebuttal`, `warrant`, or `qualifier`. So a component of three
+`rebuttal` edges returns `supported` while `saturation_conditions` on the same
+payload reports `{"mature_graph": True, "has_support": False,
+"has_refutation": False}`. **This is not a side effect of ERP-A.3 widening
+`relation_count`:** the machine never consulted a support count, so even the
+pre-widening triple staged three `extends` edges as `supported`. ERP-A.3 only
+enlarged the set of relations that can reach the threshold —
+`_note_edges` (`knowledge.py:3374-3382`) now iterates `sorted(LINK_RELATIONS)`.
+`_argument_confidence` (`:3306-3314`) is partially protected — it requires
+`supports > 0` for `supported` — but it too treats only `contradicts` as
+challenge, so three rebuttals render `below-threshold` rather than `contested`.
+
+**Not in scope — the second `argument_stage` producer.**
+`subsystems/processing/project/structural_impact.py` emits its own
+`argument_stage` over a different vocabulary (`cold-start`/`developing`/
+`mature`, `:276-285` and `:88-92`) with `READINESS_RELATION_THRESHOLD = 5`, and
+its trace mode already requires `support_count >= 1 and contradict_count >= 1`.
+It is a different lens, not a replica of `_argument_stage`, and Graph-R11 does
+not rule on it. Do not rename its stages or import the rosters into it; if a
+later task unifies the two lenses, that is its own ruling.
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py` — add the three
+  Graph-R11 role rosters beside `EDGE_RELATIONS`/`LINK_RELATIONS`. Contract 2
+  makes `edges.py` the single roster owner, and `tests/test_edges.py:489`
+  (`test_single_roster_definition_repo_wide`) is the guard; do not spell these
+  sets as literals in `knowledge.py`.
+- Modify: `src/memoria_vault/runtime/knowledge.py` — `_argument_stage`
+  (`:3269-3276`), `_argument_confidence` (`:3306-3314`), and
+  `_argument_saturation_conditions` (`:3292-3298`). The
+  `analyze_project_argument` payload (`:1911-1927`) keeps its existing
+  `supports_count`/`contradicts_count`/`extends_count` keys unchanged — this
+  task changes classification, not the per-verb export.
+- Modify: `tests/test_project_knowledge.py` (stage/confidence/saturation
+  assertions, and the roster pin at `:505-535`).
+- Modify: `tests/test_edges.py` (pin the three new rosters and their
+  partition).
+
+**Interfaces:**
+- Consumes: `edges.EDGE_RELATIONS` / `edges.LINK_RELATIONS` (already merged);
+  nothing from ERP-B, ERP-C, or ERP-D.1/.2.
+- Produces: `edges.SUPPORT_RELATIONS = frozenset({"supports"})`,
+  `edges.CHALLENGE_RELATIONS = frozenset({"contradicts", "rebuttal", "tension"})`,
+  `edges.STRUCTURE_RELATIONS = frozenset({"warrant", "qualifier", "extends"})`.
+  The three partition `EDGE_RELATIONS` exactly (disjoint, union equal) — pin
+  that, so a seventh verb added to `EDGE_RELATIONS` without a role fails here
+  instead of silently classifying as structure.
+  `analyze_project_argument`'s `argument_stage` keeps its existing four values
+  (`cold-start`, `developing`, `contested`, `supported`) — Graph-R11 forbids a
+  new stage name.
+
+**Derived value the ruling does not spell verbatim.** A component at or above
+the connectivity threshold holding only structure edges (e.g. three
+`qualifier`s: no `supports`, no challenge) cannot be `supported` (no support
+edge) and gets no new name, so it is **`developing`**. Do not invent a fifth
+stage for it.
+
+**Fixture warning — `tension` cannot be produced at this seam.**
+`LINK_RELATIONS = EDGE_RELATIONS - {"tension"}` and `_note_edges` iterates
+`sorted(LINK_RELATIONS)`, so no frontmatter `links:` fixture can make a
+`tension` edge reach `_argument_stage` today. `tension` is in the challenge
+roster for the `concept_edges` consumers that ERP-B/D own. Prove the challenge
+arm with `rebuttal` (frontmatter-legal, and the verb #1624 was filed about);
+cover `tension` at the roster level in `tests/test_edges.py`, not with a
+`knowledge.py` fixture that cannot exist.
+
+**Steps:**
+
+- [ ] Write the failing tests first, in `tests/test_project_knowledge.py`.
+  Each must mutate exactly one arm:
+  - three `rebuttal` edges into the thesis component → `argument_stage ==
+    "contested"`, `displayed_confidence == "contested"`,
+    `saturation_conditions["has_refutation"] is True`,
+    `saturation_conditions["has_support"] is False`. Today all four are wrong
+    (`supported`, `below-threshold`, `False`, `False`).
+  - three `qualifier` edges → `argument_stage == "developing"` (today
+    `supported`); assert `has_support is False` and `has_refutation is False`
+    in the same payload, so the qualifier-is-structure half of Graph-R11 is
+    what the assertion observes and not the count.
+  - one `supports` + two `extends` (threshold met, no challenge) →
+    `argument_stage == "supported"` still, so the recalibration does not
+    demote a genuinely supported component.
+  - one `supports` + one `rebuttal` + one `extends` → `contested`, with
+    `has_support is True` — the two sides coexist rather than one masking the
+    other.
+  Use N ≥ 3 distinct edges per fixture (the threshold is 3; an N=1 fixture
+  only exercises the `developing` short-circuit and proves nothing about the
+  roster).
+
+- [ ] Run to verify failure:
+  `python -m pytest tests/test_project_knowledge.py -v` — expected: the
+  rebuttal and qualifier cases fail with `argument_stage == "supported"`.
+
+- [ ] Add the rosters to `edges.py` and pin them in `tests/test_edges.py`,
+  including the partition assertion against `EDGE_RELATIONS`.
+
+- [ ] Write the minimal implementation in `knowledge.py`: a private
+  `_challenge_count(counts)`/`_support_count(counts)` pair summing the
+  imported rosters, then
+  - `_argument_stage`: below threshold → unchanged; challenge present →
+    `contested`; support present → `supported`; otherwise `developing`.
+  - `_argument_confidence`: challenge → `contested`; support → `supported`;
+    otherwise `below-threshold`.
+  - `_argument_saturation_conditions`: `has_refutation` becomes the challenge
+    count; `has_support` and `mature_graph` are unchanged.
+  Leave `_argument_findings`, `_argument_gap_findings`, and
+  `_argument_advisories` alone — ERP-D.3 owns that family, and splitting the
+  edit across two tasks is what the ordering note above prevents.
+
+- [ ] Re-check the callers that re-export the stage without recomputing it:
+  `knowledge.py:788`, `worker.py:570`, `worker.py:606`. They pass the value
+  through; confirm by content that none re-derives it, and if one does, fix it
+  in this task rather than leaving a second stage machine.
+
+- [ ] Run to verify pass, including the surfaces that assert a stage string:
+  `python -m pytest tests/test_project_knowledge.py tests/test_edges.py tests/test_gap_analysis.py tests/test_cli_work_project.py tests/test_worker_product_jobs.py tests/test_project_structural_impact.py -v`
+  (the last file must pass **unmodified** — it pins the other lens).
+
+- [ ] Run the gate: `python scripts/verify`.
+
+- [ ] Commit:
+  `git add src/memoria_vault/runtime/subsystems/lib/edges.py src/memoria_vault/runtime/knowledge.py tests/test_project_knowledge.py tests/test_edges.py`
+  Message: `fix(graph): stage-role classification for the argument lens (Graph-R11, closes #1624)` ending with
   `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
 
 ---
@@ -9610,6 +10247,25 @@ def _edge_key(path: str) -> str:
 > superseded by a rebuilt ULID mirror, the `insert_concept_edge` result, and
 > `edges.concept_edge_path_records` assertions.
 
+> **Execution amendment (2026-08-01) — what ERP-D.5 landed.** The test snippet below
+> is stale twice over and was rewritten, not copied: `check_status:` is a retired
+> frontmatter field `curate_note_link` now refuses outright
+> (`test_curate_note_link_rejects_invalid_source_without_mutation`), so the ULID
+> mirror is built with `tests/test_knowledge.py`'s own `checked_note` helper instead
+> of `_md`. Three tests beyond the drafted round trip, each pinning a branch the
+> round trip cannot: a blank `warrant` writes no edge row and no journal keys;
+> whitespace-only text is blank while padded text is stripped, and the record it
+> lands on is asserted **whole**, because an `attributes`-only assertion cannot tell
+> a warrant hung on `extends` from one hung on `supports`; and a refused link writes
+> no edge, since `insert_concept_edge` commits its own transaction and an edge
+> written before the target check would survive the refusal that follows it. The
+> worker payload wire is pinned in `tests/test_worker_product_jobs.py`, a file this
+> task's Files list does not name — nothing else observes that line. Deliberately
+> not done, as outside the task's Files list: no `memoria link --warrant` CLI flag,
+> and the worker *result* dict is unchanged (the task specifies the input wire
+> only). Floor goldens did not drift — no seeded file changed and the operation's
+> floor entry is `expect: refused` on actor authority before the payload is read.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/knowledge.py` (`curate_note_link`, lines 346-414)
 - Modify: `src/memoria_vault/runtime/worker.py` (`curate-note-link` handler, lines 471-497)
@@ -9621,7 +10277,7 @@ def _edge_key(path: str) -> str:
 
 **Steps:**
 
-- [ ] Write the failing round-trip test — append to `tests/test_knowledge.py`:
+- [x] Write the failing round-trip test — append to `tests/test_knowledge.py`:
 
 ```python
 def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
@@ -9699,11 +10355,11 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
     assert records[0]["attributes"]["warrant"] == "Updated license"
 ```
 
-- [ ] Run to verify it fails:
+- [x] Run to verify it fails:
   `python -m pytest tests/test_knowledge.py::test_curate_note_link_warrant_text_round_trips_to_edge_attribute -v`
   Expected: `TypeError: curate_note_link() got an unexpected keyword argument 'warrant'`.
 
-- [ ] Write minimal implementation in `knowledge.py`. Add `warrant: str = ""` to the signature (line 353, after `reason`), normalize it beside `link_type` (line 360): `warrant = warrant.strip()`. After the `if changed:` block (line 389) and before the journal event (line 391) add:
+- [x] Write minimal implementation in `knowledge.py`. Add `warrant: str = ""` to the signature (line 353, after `reason`), normalize it beside `link_type` (line 360): `warrant = warrant.strip()`. After the `if changed:` block (line 389) and before the journal event (line 391) add:
 
 ```python
     edge_id = ""
@@ -9727,13 +10383,13 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
 
   and add `"edge_id": edge_id,` to the returned dict (lines 407-414).
 
-- [ ] Wire the worker payload — in `worker.py` add to the `curate_note_link(...)` call (lines 483-490):
+- [x] Wire the worker payload — in `worker.py` add to the `curate_note_link(...)` call (lines 483-490):
 
 ```python
             warrant=str(payload.get("warrant") or ""),
 ```
 
-- [ ] Run to verify it passes, plus the existing link pin:
+- [x] Run to verify it passes, plus the existing link pin:
   `python -m pytest tests/test_knowledge.py::test_curate_note_link_warrant_text_round_trips_to_edge_attribute tests/test_knowledge.py::test_curate_note_link_records_typed_link_on_checked_note -v`
 
 - [ ] Regenerate floor goldens if drifted (manifest note at top) and commit:

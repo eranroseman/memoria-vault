@@ -325,6 +325,7 @@ def sweep(vault: Path, offline: bool = True) -> dict:
                 target=f"catalog/sources/{work_id}",
                 citekey=str(source.get("citekey") or ""),
                 loudness="alert",
+                fingerprint=f"retraction:{normalize_doi(doi)}",
             )
     return {"checked": checked, "retracted": hits}
 

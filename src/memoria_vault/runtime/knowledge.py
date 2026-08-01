@@ -9,7 +9,7 @@ import posixpath
 import re
 import shutil
 import subprocess
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable
 from datetime import UTC, date, timedelta
 from itertools import pairwise
@@ -35,6 +35,11 @@ from memoria_vault.runtime.policy.paths import normalize_path, require_policy_pa
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+from memoria_vault.runtime.subsystems.lib.edges import (
+    LINK_RELATIONS,
+    normalize_link_target,
+    thesis_rel,
+)
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -345,15 +350,24 @@ def curate_note_link(
     *,
     context: OperationContext,
     reason: str = "",
+    warrant: str = "",
 ) -> dict[str, Any]:
-    """Record one PI-authored typed link on a checked note."""
+    """Record one PI-authored typed link on a checked note.
+
+    ``warrant`` is the license *text* for this inference (EDGES §4), not the
+    ``warrant`` relation — that one is an ordinary ``link_type`` naming a
+    license note. Non-blank text hangs on the identity-keyed edge as
+    ``attributes_json.warrant``; blank text writes no edge at all, so the
+    frontmatter link stays the whole write.
+    """
     validate_operation_context(vault, context)
     vault = Path(vault)
     source_rel = _note_rel(source_note_path)
     target_rel = _concept_rel(target_path)
+    warrant = warrant.strip()
     link_type = link_type.strip().lower()
-    if link_type not in {"supports", "contradicts", "extends"}:
-        raise ValueError("note link_type must be supports, contradicts, or extends")
+    if link_type not in LINK_RELATIONS:
+        raise ValueError(f"note link_type must be one of {', '.join(sorted(LINK_RELATIONS))}")
 
     source_note = vault / source_rel
     if not source_note.is_file():
@@ -383,6 +397,18 @@ def curate_note_link(
             body=body,
         )
 
+    edge_id = ""
+    if warrant:
+        edge = state.insert_concept_edge(
+            vault,
+            source=source_rel,
+            relation_type=link_type,
+            target=target_rel,
+            attributes={"warrant": warrant},
+            context=context,
+        )
+        edge_id = str(edge["edge_id"])
+
     event = append_journal_event(
         vault,
         {
@@ -393,6 +419,7 @@ def curate_note_link(
             "target_sha256": sha256_file(source_note),
             "changed": changed,
             "reason": reason.strip(),
+            **({"warrant": warrant, "edge_id": edge_id} if warrant else {}),
         },
         context=context,
     )
@@ -404,6 +431,7 @@ def curate_note_link(
         "target_path": target_rel,
         "link_type": link_type,
         "changed": changed,
+        "edge_id": edge_id,
         "event": event,
         "commit": commit,
     }
@@ -1500,7 +1528,7 @@ def _tag_candidates(vault: Path) -> list[dict[str, Any]]:
     counts: dict[str, int] = defaultdict(int)
     refs: dict[str, set[str]] = defaultdict(set)
     for rel, frontmatter in _checked_concepts(vault):
-        if frontmatter.get("type") not in {"work", "digest"}:
+        if frontmatter.get("type") != "digest":
             continue
         path = vault / rel
         _frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
@@ -1887,35 +1915,38 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     project = _checked_frontmatter(vault, project_rel, "project")
-    thesis_raw = str(project.get("thesis") or "").strip()
-    if not thesis_raw:
+    # Path space, one normalizer (issue #1623). `_concept_rel` used to run here
+    # on the raw value: a `[[notes/thesis]]` project — the shape structural
+    # impact's own fixture writes — raised an uncaught ValueError out of this
+    # lens while every other reader resolved it.
+    thesis_path = thesis_rel(project)
+    if not thesis_path:
         return _project_argument_empty(project_rel, "", "missing-thesis")
 
-    thesis_rel = _concept_rel(thesis_raw)
     notes = {
         rel: frontmatter
         for rel, frontmatter in _checked_concepts(vault)
         if frontmatter.get("type") == "note" and _is_current_note(vault, rel, frontmatter)
     }
-    thesis = notes.get(thesis_rel)
+    thesis = notes.get(thesis_path)
     if thesis is None:
-        return _project_argument_empty(project_rel, thesis_rel, "missing-or-unchecked-thesis")
+        return _project_argument_empty(project_rel, thesis_path, "missing-or-unchecked-thesis")
 
     edges = _note_edges(notes)
-    component = _argument_component(thesis_rel, edges)
+    component = _argument_component(thesis_path, edges)
     component_edges = [
         edge for edge in edges if edge["source"] in component and edge["target"] in component
     ]
-    counts = {
-        relation: sum(1 for edge in component_edges if edge["type"] == relation)
-        for relation in ("supports", "contradicts", "extends")
-    }
+    # Tally what the component actually holds. The lens below reads three of the
+    # six relations by name; a roster loop here would only manufacture zeros for
+    # the other three, so there is no roster at this site at all.
+    counts = Counter(str(edge["type"]) for edge in component_edges)
     relation_count = len(component_edges)
     findings = _argument_findings(counts, relation_count)
     saturation_conditions = _argument_saturation_conditions(counts, relation_count)
     return {
         "project_path": project_rel,
-        "thesis_path": thesis_rel,
+        "thesis_path": thesis_path,
         "argument_stage": _argument_stage(counts, relation_count),
         "evidence_saturation": _argument_saturation(saturation_conditions, relation_count),
         "displayed_confidence": _argument_confidence(counts, relation_count),
@@ -1932,7 +1963,7 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
             {
                 "path": rel,
                 "title": str(notes[rel].get("title") or Path(rel).stem),
-                "role": "thesis" if rel == thesis_rel else "note",
+                "role": "thesis" if rel == thesis_path else "note",
             }
             for rel in sorted(component)
         ],
@@ -3373,7 +3404,7 @@ def _argument_advisories(counts: dict[str, int], relation_count: int) -> list[di
 def _note_edges(notes: dict[str, dict[str, Any]]) -> list[dict[str, str]]:
     edges = []
     for source, frontmatter in notes.items():
-        for link_type in ("supports", "contradicts", "extends"):
+        for link_type in sorted(LINK_RELATIONS):
             for raw in _link_values(frontmatter, link_type):
                 target = _link_target(raw)
                 if target in notes and target != source:
@@ -3410,9 +3441,11 @@ def _link_target(value: Any) -> str:
         value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
     if not isinstance(value, str) or not value.strip():
         return ""
-    raw = value.strip()
-    if raw.startswith("[[") and raw.endswith("]]"):
-        raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
+    raw = normalize_link_target(value)
+    if not raw:
+        # `_concept_rel("")` renders `notes/.md`, which `iter_markdown` really can
+        # yield: without this, every rejected target lands on one absorbing sink.
+        return ""
     try:
         return _concept_rel(raw)
     except ValueError:
@@ -3486,17 +3519,21 @@ def _project_slice_query(
         *list(_frontmatter_text_terms(frontmatter)),
         body,
     ]
-    thesis_raw = str(project.get("thesis") or project.get("active_thesis") or "").strip()
-    if thesis_raw:
+    thesis_raw = str(project.get("thesis") or "").strip()
+    thesis_path = thesis_rel(project)
+    if thesis_path:
         try:
-            thesis_rel = _concept_rel(thesis_raw)
-            thesis = _checked_frontmatter(vault, thesis_rel, "note")
+            thesis = _checked_frontmatter(vault, thesis_path, "note")
             _thesis_fm, thesis_body = split_frontmatter(
-                (vault / thesis_rel).read_text(encoding="utf-8")
+                (vault / thesis_path).read_text(encoding="utf-8")
             )
             terms.extend([*list(_frontmatter_text_terms(thesis)), thesis_body])
         except (FileNotFoundError, ValueError):
             terms.append(thesis_raw)
+    elif thesis_raw:
+        # A value path space refuses is a schema error, not a retrieval one:
+        # keep the author's words as a query term so the slice still narrows.
+        terms.append(thesis_raw)
     text = " ".join(str(term).strip() for term in terms if str(term).strip())
     return text or Path(project_rel).stem
 
