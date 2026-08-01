@@ -180,6 +180,55 @@ def test_projection_matching_is_case_folded(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
+    "projection",
+    ['" attention "', "Attention", '" Attention "'],
+    ids=["padded", "capitalized", "both"],
+)
+def test_every_attention_reader_agrees_on_what_an_attention_card_is(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], projection: str
+) -> None:
+    """One card per spelling, asserted against every reader of `projection` at once.
+
+    This defect recurred three times because each reader was written and tested in
+    isolation, and each landed on its own spelling: `lifecycle` stripped and folded,
+    `loudness` folded only, `engine.api` and `integrity` compared raw. Every pair of
+    those disagreeing is a user-visible hole -- a `block` card that gates nothing, a
+    card that gates delegation while `memoria attention list` will not show it, a
+    card the CLI resolves into a journal row and never writes the closed status
+    back, so its gate is held with no way to clear it. So the pin is one assertion
+    over all of them; a reader that drifts fails here rather than in its own file's
+    tests, which by construction would still pass.
+
+    `inbox/**` is the one write target the reference actor policy grants a non-PI
+    actor, so every spelling here is reachable through the documented perimeter.
+    """
+    workspace = init_cli_workspace(tmp_path, capsys)
+    open_rel, closed_rel = "inbox/alert-open.md", "inbox/alert-done.md"
+    _write_card(workspace, "alert-open.md", "open", projection=projection)
+    _write_card(workspace, "alert-done.md", "resolved", projection=projection)
+
+    # engine.api._attention_card -- `memoria attention list` and the pane
+    assert [card["path"] for card in engine_api.read_attention(workspace)["attention"]] == [
+        closed_rel,
+        open_rel,
+    ]
+    # loudness.is_open_blocker -- the delegation / review-gated promotion gate
+    assert [blocker["path"] for blocker in loudness.open_blockers(workspace)] == [open_rel]
+    # lifecycle._closed_cards -- the disposition journal
+    journaled = lifecycle.journal_unattributed_dispositions(workspace, machine="test-machine")
+    assert [event["target_id"] for event in journaled] == [closed_rel]
+    # integrity.resolve_attention -- writing the closed status back to the card
+    engine_api.resolve_attention(
+        workspace, open_rel, outcome="apply", reason="acknowledged", actor="pi"
+    )
+    assert read_frontmatter(workspace / open_rel)["attention_status"] == "resolved"
+    assert loudness.open_blockers(workspace) == []  # the gate is genuinely clearable
+    # lifecycle._resolved_cards -- compaction out of the hot scan
+    result = lifecycle.compact_resolved_cards(workspace, machine="test-machine")
+    assert sorted(result["archived"]) == [closed_rel, open_rel]
+
+
+@pytest.mark.parametrize(
     ("status", "written_outcome", "expected"),
     [
         ("resolved", "reject", "reject"),

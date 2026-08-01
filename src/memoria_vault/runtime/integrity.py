@@ -1179,7 +1179,13 @@ def resolve_attention(
     target_path = vault / target
     if resolution == "resolved" and target_path.is_file():
         frontmatter, body = split_frontmatter(target_path.read_text(encoding="utf-8"))
-        if frontmatter.get("projection") == "attention":
+        # `.strip().lower()`, like `lifecycle`, `loudness` and `engine.api`. A raw
+        # comparison here is the one that cannot be shrugged off: `loudness` folds, so
+        # a card written `projection: Attention` gates delegation and review-gated
+        # promotion, and a raw read means `attention resolve` journals the disposition
+        # and never writes the closed status back -- leaving the gate held with no way
+        # to clear it through the CLI.
+        if str(frontmatter.get("projection") or "").strip().lower() == "attention":
             frontmatter["attention_status"] = "deferred" if outcome == "defer" else "resolved"
             frontmatter["resolution_outcome"] = outcome
             frontmatter["routing_class"] = routing_class

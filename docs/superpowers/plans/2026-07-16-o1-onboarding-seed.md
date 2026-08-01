@@ -2351,7 +2351,7 @@ Other cross-plan seams, all order-tolerant: `memoria onboard` is owned by the su
 - Modify: `tests/conftest.py` (`TEST_LEVELS` dict at `:18`; insert alphabetically after `"test_node_tooling.py": "static",` at `:77`)
 
 **Interfaces:**
-- Consumes: `memoria_vault.runtime.telemetry.record_telemetry_event(vault: Path, event_type: str, payload: dict[str, Any]) -> str` and `NATIVE_EVENT_FIELDS: dict[str, frozenset[str]]` (I1 plan T.2); the v19 `telemetry_events` table (I1 plan T.1); shipped `memoria_vault.runtime.state.connect(vault: Path) -> sqlite3.Connection` (`state.py:472-481`, `sqlite3.Row` factory at `:476`).
+- Consumes: `memoria_vault.runtime.telemetry.record_telemetry_event(vault: Path, event_type: str, payload: dict[str, Any]) -> str` and `NATIVE_EVENT_FIELDS: dict[str, frozenset[str]]` (I1 plan T.2); the `telemetry_events` table (I1 plan T.1 — at whatever schema rung it claimed; see that task's 2026-08-01 amendment); shipped `memoria_vault.runtime.state.connect(vault: Path) -> sqlite3.Connection` (`state.py:472-481`, `sqlite3.Row` factory at `:476`).
 - Produces (later tasks and section M rely on these exact names):
   - `memoria_vault.runtime.onboarding_steps.ONBOARDING_STEPS: frozenset[str]` — exactly `{"init-done", "onboard-done", "project-framed", "seed-installed", "first-answer"}`
   - `emit_onboarding_step(vault: Path, step: str) -> str | None` — the seam **M.3 imports** for `seed-installed`
@@ -2361,12 +2361,30 @@ Other cross-plan seams, all order-tolerant: `memoria onboard` is owned by the su
 
 - [ ] **Step 0: Grep-first dependency check (hard block).** Run:
 
+> **Schema-rung amendment (2026-08-01, BINDING).** This gate previously required
+> `SCHEMA_VERSION >= 19`. The integer was never the precondition: what T.1 consumes is
+> the **`telemetry_events` table and the `record_telemetry_event` writer**, and under
+> this repo's fresh-install rule a version bump only declares incompatibility — there is
+> no `MIGRATIONS` registry and no upgrade path, so the rung carries no meaning beyond
+> ordering. I1 T.1 now takes whichever rung is free when it lands (its own 2026-08-01
+> amendment), so `>= 19` would have blocked this task on a number even after every
+> dependency it names was satisfied. The gate below asserts the two things that must
+> actually exist.
+
 ```bash
-test -f src/memoria_vault/runtime/telemetry.py && grep -n "NATIVE_EVENT_FIELDS" src/memoria_vault/runtime/telemetry.py
-python -c "from memoria_vault.runtime import state; print(state.SCHEMA_VERSION)"
+test -f src/memoria_vault/runtime/telemetry.py && grep -n "NATIVE_EVENT_FIELDS\|def record_telemetry_event" src/memoria_vault/runtime/telemetry.py
+python - <<'PY'
+from pathlib import Path
+import tempfile
+from memoria_vault.runtime import state
+with tempfile.TemporaryDirectory() as d, state.connect(Path(d)) as conn:
+    print(bool(conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='telemetry_events'"
+    ).fetchone()))
+PY
 ```
 
-Required: the file exists with `NATIVE_EVENT_FIELDS`, and `SCHEMA_VERSION >= 19` (the v19 `telemetry_events` migration). At `07bedc74` both fail (`SCHEMA_VERSION` is 12, the module is absent). **If either check fails, STOP: this task blocks on I1 plan Tasks T.1–T.2 (I1 slices 1–2). Do not create a stub `runtime/telemetry.py` and do not renumber schema versions — report the block and land I1 T.1–T.2 first.** If I1 landed with drifted line numbers, re-anchor by symbol (`NATIVE_EVENT_FIELDS`, `record_telemetry_event`).
+Required: `src/memoria_vault/runtime/telemetry.py` exists and defines both `NATIVE_EVENT_FIELDS` and `record_telemetry_event`, and a **fresh** database created by `state.connect` carries a `telemetry_events` table (prints `True`). The schema *version* is not checked and must not be: I1 T.1 records its own rung, and this task neither reads nor writes any other schema task's storage. At `07bedc74` both checks fail (the module is absent and no fresh install carries the table). **If either fails, STOP: this task blocks on I1 plan Tasks T.1–T.2 (I1 slices 1–2). Do not create a stub `runtime/telemetry.py` and do not renumber schema versions — report the block and land I1 T.1–T.2 first.** If I1 landed with drifted line numbers, re-anchor by symbol (`NATIVE_EVENT_FIELDS`, `record_telemetry_event`).
 
 - [ ] **Step 1: Write the failing tests.** Create `tests/test_onboarding_steps.py`:
 
