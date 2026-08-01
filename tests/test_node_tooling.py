@@ -50,7 +50,7 @@ def test_required_node_checks_use_pinned_local_tools():
     markdownlint = _hook("markdownlint-structural")
     assert markdownlint["language"] == "node"
     assert markdownlint["entry"] == "markdownlint --config .markdownlint.json"
-    assert markdownlint["additional_dependencies"] == ["markdownlint-cli@0.49.0"]
+    assert markdownlint["additional_dependencies"] == ["markdownlint-cli@0.49.1"]
 
 
 def test_precommit_hooks_use_pinned_tool_environments():
