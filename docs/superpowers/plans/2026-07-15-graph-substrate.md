@@ -5453,9 +5453,15 @@ register or test a v16→v17 migration.
 > 4. **`knowledge._link_target` widens what it rejects.** Delegating to
 >    `normalize_link_target` sends URI, traversal, non-`.md`-suffix, and
 >    bracketed values to `""`, which reaches `_concept_rel("")` — that returns
->    the phantom `notes/.md` rather than raising. Both call sites (`_note_edges`'
->    `target in notes`, `move_concept`'s `!= old_rel`) reject the phantom exactly
->    as they rejected `""`, so no new guard was added for an unobservable state.
+>    the phantom `notes/.md` rather than raising. **Corrected 2026-08-01 (review
+>    T2): that phantom is observable and the first draft of this item was wrong.**
+>    `iter_markdown` yields a file named `.md` (`".md".endswith(".md")`), so
+>    `notes/.md` is a legal key in the notes map, and the convergence had made the
+>    phantom an *absorbing* state — every rejected target now collapses onto one
+>    sink instead of a distinct unreachable one. `_link_target` therefore returns
+>    `""` before `_concept_rel`, pinned by
+>    `test_analyze_project_argument_never_synthesizes_an_edge_into_the_dot_md_note`.
+>    The same guard lands in `graph_sql._link_target`, which has the same renderer.
 > 5. **Correction to A.1's amendment, item 1.** Its counterfactual is loud, not
 >    silent. Replacing the landed normalizer with the plan snippet's inline
 >    three-line body fails existing tests immediately — 9 at A.1's tree (six of
@@ -5470,9 +5476,50 @@ register or test a v16→v17 migration.
 >    object, so no behavior can distinguish the two imports. The enforcement is
 >    the sweep discipline that deletes the re-export next release — that deletion
 >    turns a stale import into an `ImportError`, which is louder than any guard
->    test, so none was added.
->    A.1's item 2 is superseded here: both guards it left as declared escapes are
->    now deleted.
+>    test, so none was added. (A.1's item 2 is superseded by item 1 above: both
+>    guards it left as declared escapes are now deleted.)
+> 7. **Namespace split — the review's Critical, fixed 2026-08-01.** The table
+>    below says the structural-impact stripper delegates to
+>    `normalize_link_target`. It must not: `build_resolver` keys on **title, slug,
+>    and stem** as well as path, so this reader's alphabet includes
+>    `Toulmin: the warrant` (rejected as a URI scheme) and `Study 1.2` (rejected
+>    as a foreign suffix). Delegating silently emptied them — a PI whose thesis
+>    note carries a colon got `active_thesis: ''` and a `cold-start` gate index
+>    with no error. `edges.py` now owns both operations with the domains named:
+>    `strip_wikilink` (syntax only, namespace-free) for alias space, which
+>    structural impact calls, and `normalize_link_target` (validating) for path
+>    space. The unit pin asserts both sides — the stripper keeps a colon title,
+>    the validator still rejects it — and the alias-side behavioural pins are
+>    `test_build_edges_resolves_link_titles_that_are_not_path_shaped` and
+>    `test_structural_impact_resolves_a_thesis_whose_title_carries_a_colon`.
+>    **Detection rule, worth carrying into ERP-B/C/D:** when a refactor gives a
+>    validator a second caller, enumerate the *second* caller's input alphabet.
+>    Fixtures on both sides otherwise draw from the intersection (path-shaped
+>    strings) and the helper looks total.
+> 8. **Sibling readers (review T1), converged in part — ruling.**
+>    `graph_sql._link_target` and `explore._link_target` were byte-identical
+>    copies of the stripper this task deleted from `knowledge`, carrying the same
+>    validator/reader disagreement (`notes/../thesis.md` resolved to a real note).
+>    Both are path space, so both now call `normalize_link_target` — and
+>    `explore`'s copy is deleted outright in favour of `graph_sql`'s, which it
+>    already reaches into for `_active_project_slices`. Their `_link_targets`
+>    keeps iterating the raw `links:` map with **no roster filter**, deliberately:
+>    these are retrieval closures, and `neighborhood`'s contract is that "every
+>    live-admitted relation is included, so tensions remain first-class
+>    retrievable". Filtering them to `LINK_RELATIONS` would make the fallback
+>    closure narrower than the edge-row traversal it stands in for, and would
+>    shrink a slice no plan task authorizes shrinking. `edges.py`'s docstring is
+>    corrected to say what is true: every *roster* imports from here, path-space
+>    normalization comes from here, and retrieval closures walk the raw map by
+>    design.
+> 9. **The counts roster is deleted, not narrowed (review T4).**
+>    `analyze_project_argument`'s per-relation tally read only
+>    `supports`/`contradicts`/`extends`, so iterating `sorted(LINK_RELATIONS)`
+>    manufactured three zeros nothing read — a no-op convergence that survived
+>    mutation. It is now `Counter(edge["type"] …)`: no roster at that site at all,
+>    and no roster literal to guard. The payload keys stay the three this plan's
+>    Produces list fixes; widening the per-verb breakdown belongs to whoever
+>    widens `worker.py`'s mirror of them.
 
 Mechanical convergence of the audit's parsers/rosters onto `edges.py`
 (EDGES §1). Sites and exact refs (verified at 9c77ba61; `schema.py:39` died
@@ -5730,18 +5777,22 @@ in A.1, `state.py:3422` in A.2):
 >    widening to `tuple(sorted(EDGE_RELATIONS))` — serving `tension` from the
 >    CLI — passes untouched.
 >
-> **Deliberately not done, needs a follow-up:** three user-facing readers still
-> name the old three-verb roster —
-> `docs/how-to-guides/knowledge/link-checked-notes.md` (steps 2 and the Verify
-> list), `docs/reference/data-model/frontmatter.md` (the `links` row and the
-> `links` section), and
-> `src/memoria_vault/product/capabilities/operations/curate-note-link.md`. They
-> understate the roster rather than advertising a verb that cannot complete, so
-> they are not the dead-vocabulary window contract 11 forbids. The capability
-> manifest is the reason they are deferred together: its body text is hashed into
-> `capability-index.json`, so editing it forces a floor-golden regeneration that
-> this section's preamble explicitly promises not to do (and contract 8 sequences
-> against other plans).
+> **Reader updates — deferred in the first draft on a false premise, landed
+> 2026-08-01 (review T3/T6).** The deferral claimed that editing
+> `src/memoria_vault/product/capabilities/operations/curate-note-link.md` forces a
+> floor-golden regeneration because its body is hashed into
+> `capability-index.json`. The hash is there, but `tests/floor_lib.py` redacts
+> `\b[0-9a-f]{32,64}\b` to `<HASH>` before digesting, so a body edit changes
+> nothing the golden records — measured, not assumed: the full gate is green with
+> the manifest widened. Five readers now name the six verbs:
+> `docs/how-to-guides/knowledge/link-checked-notes.md` (step 2 and the Verify
+> list), `docs/reference/data-model/frontmatter.md` (the `links` kind row and the
+> `links` section), the capability manifest, and — a fourth reader the first pass
+> missed, and the only one that was *wrong* rather than understating —
+> `docs/reference/control-and-policy/project-structural-impact.md`, which said the
+> operation follows `links.supports` and `links.contradicts` after ERP-A.3 widened
+> that traversal to all six. `docs/explanation/knowledge/note-body-structure.md`
+> drops its roster-shaped list instead of extending it. No floor golden moved.
 
 The EDGES §10 acceptance slice: writing a `rebuttal` (or `warrant`,
 `qualifier`) link in vim round-trips — validator accepts, edge row appears at

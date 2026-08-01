@@ -352,3 +352,26 @@ def test_primitives_compose_neighborhood_slice_filter(tmp_path: Path) -> None:
     assert sliced == ["notes/a.md", "notes/b.md"]
     assert final["ids"] == ["notes/a.md"]
     assert final["counts"] == {"before": 2, "after": 1}
+
+
+def test_links_closure_ignores_targets_the_validator_rejects(tmp_path: Path) -> None:
+    """The reader and the validator must agree on what a link target is.
+
+    `notes/../secret.md` and `notes/a[1]` both fail `links` validation, yet the
+    closure used to follow the first into a real note (path normalization
+    collapses the `..` while staying inside the vault) and invent the second.
+    """
+    (tmp_path / "projects").mkdir(exist_ok=True)
+    (tmp_path / "notes").mkdir(exist_ok=True)
+    (tmp_path / "projects/p2.md").write_text(
+        "---\ntype: project\nlinks:\n  supports:\n    - notes/../secret.md\n"
+        "    - notes/a[1]\n    - notes/plain.md\n---\nbody\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "notes/secret.md").write_text("---\ntype: note\n---\nsecret\n", encoding="utf-8")
+    (tmp_path / "notes/plain.md").write_text("---\ntype: note\n---\nplain\n", encoding="utf-8")
+
+    result = graph_sql.project_slice(tmp_path, "p2")
+
+    assert result["ids"] == ["notes/plain.md"]
+    assert result["source"] == "links-closure"

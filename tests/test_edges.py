@@ -31,6 +31,23 @@ def test_normalize_link_target_strips_wikilink_alias_and_anchor() -> None:
     assert edges.normalize_link_target("[[ ]]") == ""
 
 
+def test_strip_wikilink_is_syntax_only_and_normalize_link_target_is_not() -> None:
+    """The namespace boundary, asserted from both sides.
+
+    Titles and slugs — the alias space `structural_impact_graph` resolves in —
+    routinely carry a colon or a dotted tail, which the path-space validator
+    rejects as a URI scheme and a foreign suffix. The stripper must not judge,
+    and the validator must keep judging.
+    """
+    assert edges.strip_wikilink("[[Toulmin: the warrant]]") == "Toulmin: the warrant"
+    assert edges.strip_wikilink("[[Study 1.2|the pilot]]") == "Study 1.2"
+    assert edges.strip_wikilink("[[notes/a#section]]") == "notes/a"
+    assert edges.strip_wikilink(" notes/a ") == "notes/a"
+
+    assert edges.normalize_link_target("[[Toulmin: the warrant]]") == ""
+    assert edges.normalize_link_target("[[Study 1.2]]") == ""
+
+
 def test_normalize_link_target_is_total_over_non_strings() -> None:
     # The one isinstance guard left in the parser family: `parse_links` hands its
     # raw YAML list entries straight here, so a non-str target is junk, not a crash.

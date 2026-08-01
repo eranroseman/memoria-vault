@@ -9,7 +9,7 @@ import posixpath
 import re
 import shutil
 import subprocess
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable
 from datetime import UTC, date, timedelta
 from itertools import pairwise
@@ -1907,10 +1907,10 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     component_edges = [
         edge for edge in edges if edge["source"] in component and edge["target"] in component
     ]
-    counts = {
-        relation: sum(1 for edge in component_edges if edge["type"] == relation)
-        for relation in sorted(LINK_RELATIONS)
-    }
+    # Tally what the component actually holds. The lens below reads three of the
+    # six relations by name; a roster loop here would only manufacture zeros for
+    # the other three, so there is no roster at this site at all.
+    counts = Counter(str(edge["type"]) for edge in component_edges)
     relation_count = len(component_edges)
     findings = _argument_findings(counts, relation_count)
     saturation_conditions = _argument_saturation_conditions(counts, relation_count)
@@ -3412,6 +3412,10 @@ def _link_target(value: Any) -> str:
     if not isinstance(value, str) or not value.strip():
         return ""
     raw = normalize_link_target(value)
+    if not raw:
+        # `_concept_rel("")` renders `notes/.md`, which `iter_markdown` really can
+        # yield: without this, every rejected target lands on one absorbing sink.
+        return ""
     try:
         return _concept_rel(raw)
     except ValueError:

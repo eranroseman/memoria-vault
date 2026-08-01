@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import explore, state
+from memoria_vault.runtime import explore, graph_sql, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from tests.floor_lib import read_only_guard
 from tests.helpers import copy_memoria_dirs
@@ -450,3 +450,27 @@ def test_explore_refuses_a_gated_nested_project_without_flat_fallback(tmp_path: 
     )
     assert "hubs/memory.md" not in serialized
     assert "TAMPERED NESTED PROJECT CANARY" not in serialized
+
+
+def test_project_slice_shares_one_links_resolver_with_graph_sql(tmp_path: Path) -> None:
+    """One resolver, not a second copy — and it rejects what `links` validation rejects.
+
+    `notes/../claim-spacing.md` normalizes back inside the vault, so the duplicated
+    resolver these modules used to carry followed it into a real note that the
+    validator refuses to accept as a target.
+    """
+    assert explore._link_target is graph_sql._link_target
+    assert explore._link_targets is graph_sql._link_targets
+
+    vault = _fixture_vault(tmp_path)
+    _concept(
+        vault,
+        "projects/escape.md",
+        "Escape project",
+        "Escape project body.",
+        links=["notes/../claim-spacing.md"],
+    )
+
+    payload = explore.explore_topic(vault, "spacing", project="escape")
+
+    assert _stages(payload)["project-slice"] == 0

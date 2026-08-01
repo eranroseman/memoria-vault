@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, normalize_link_target
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, strip_wikilink
 from memoria_vault.runtime.vaultio import iter_markdown as iter_vault_markdown
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
@@ -72,7 +72,9 @@ def normalize_target(raw: Any) -> tuple[str, bool] | None:
             addressed = str(raw["status"]).lower() in {"addressed", "closed", "current", "done"}
     if not isinstance(value, str) or not value.strip():
         return None
-    value = normalize_link_target(value).split("|", 1)[0].split("#", 1)[0].strip()
+    # Alias space: `build_resolver` keys on title and slug as well as path, so the
+    # value here is not required to look like a vault-relative path.
+    value = strip_wikilink(value)
     if value.endswith(".md"):
         value = value[:-3]
     return value.strip("/"), addressed

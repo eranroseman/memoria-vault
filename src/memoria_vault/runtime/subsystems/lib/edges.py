@@ -6,9 +6,17 @@ and tests/test_query_substrate.py holds the parity test. LINK_RELATIONS is
 the frontmatter-legal subset — everything except 'tension', which is
 machine-surfaced and PI-confirmed, never authored in links: frontmatter
 (docs/superpowers/specs/2026-07-15-graph-edges-roles-propagation-design.md,
-sections 1, 3, 4). Every roster and links-parser in the repo imports from
-here; a relation change is a one-file edit, never a hunt across hardcoded
-sets.
+sections 1, 3, 4). Every relation roster in the repo imports from here; a
+relation change is a one-file edit, never a hunt across hardcoded sets.
+
+Two target namespaces, two functions — mixing them is a silent bug:
+`normalize_link_target` validates *path space* (a vault-relative Concept
+target, the only thing `links:` frontmatter may hold), while `strip_wikilink`
+strips `[[…]]` syntax in *alias space*, where the value may equally be a title,
+slug, or stem. Retrieval closures (`graph_sql`/`explore`) walk the raw `links:`
+map by design and normalize each target through the path-space function; they
+deliberately do not filter by roster, because a reading traversal is broader
+than the argument graph.
 
 Stdlib-only by design so state.py, cli.py, and structural_impact_graph.py can
 import it without a cycle.
@@ -58,8 +66,27 @@ def _normalized_link_target(target: str) -> tuple[str, str | None]:
     return raw, None
 
 
+def strip_wikilink(value: str) -> str:
+    """Strip ``[[…]]`` braces, alias, and anchor from one reference — syntax only.
+
+    Namespace-free: the result may be a vault-relative path, a title, a slug, or
+    a stem, so this applies no path-space rule. Callers that resolve a reference
+    through an alias table (structural impact, whose resolver keys on title and
+    slug as well as path) need exactly this and must not call
+    `normalize_link_target`, which would reject the colons and dotted tails that
+    real titles carry.
+    """
+    raw = str(value).strip()
+    if raw.startswith("[[") and raw.endswith("]]"):
+        raw = raw[2:-2]
+    return raw.split("|", 1)[0].split("#", 1)[0].strip()
+
+
 def normalize_link_target(target: str) -> str:
-    """Normalize one valid local Concept target, or return an empty string for junk."""
+    """Normalize one valid local Concept target, or return an empty string for junk.
+
+    Path space: use `strip_wikilink` instead when the value may be a title or slug.
+    """
     if not isinstance(target, str):
         return ""
     return _normalized_link_target(target)[0]

@@ -350,42 +350,11 @@ def _active_member_id(member: object) -> str:
         return ""
 
 
-def _link_targets(frontmatter: dict[str, Any]) -> set[str]:
-    links = frontmatter.get("links")
-    if not isinstance(links, dict):
-        return set()
-    targets: set[str] = set()
-    for values in links.values():
-        for value in values if isinstance(values, list) else [values]:
-            target = _link_target(value)
-            if target:
-                targets.add(target)
-    return targets
-
-
-def _link_target(value: object) -> str:
-    if isinstance(value, dict):
-        value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
-    if not isinstance(value, str) or not value.strip():
-        return ""
-    raw = value.strip()
-    if raw.startswith("[[") and raw.endswith("]]"):
-        raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
-    try:
-        relpath = normalize_path(raw)
-    except ValueError:
-        return ""
-    if "/" not in relpath:
-        relpath = f"notes/{relpath}"
-    if relpath.startswith("catalog/sources/"):
-        relpath = relpath.rstrip("/")
-        if relpath.count("/") != 2:
-            return ""
-    elif not relpath.endswith(".md"):
-        relpath += ".md"
-    if not relpath.startswith(("catalog/sources/", "notes/", "hubs/", "digests/", "fulltexts/")):
-        return ""
-    return relpath
+# The links closure resolves targets exactly as `graph_sql`'s does — same
+# namespace, same rejections. It was a byte-identical copy; `_active_project_slices`
+# above already reaches for that module's private closure helpers.
+_link_targets = graph_sql._link_targets
+_link_target = graph_sql._link_target
 
 
 def _payload_titles(payload: dict[str, Any]) -> dict[str, str]:
