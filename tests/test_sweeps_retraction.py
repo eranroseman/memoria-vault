@@ -1,9 +1,16 @@
 """L1 component tests for retraction."""
 
+import datetime
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.subsystems.integrity.retraction import retraction as _m
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.subsystems.lib import lifecycle
+from memoria_vault.runtime.vaultio import (
+    frontmatter_doc,
+    read_frontmatter,
+    split_frontmatter,
+)
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
 
 Path = _m.Path
@@ -393,6 +400,219 @@ def test_sweep_flags_a_retracted_cited_source_with_an_inbox_alert(tmp_path, monk
     assert fm["raised_by"] == "sweep"
     assert fm["loudness"] == "alert"
     assert "10.1/Retracted is retracted" in str(fm["finding"])
+
+
+FINGERPRINT = "retraction:10.1/retracted"
+SECOND_FINGERPRINT = "retraction:10.1/retracted2"
+SECOND_RETRACTED_ROW = {
+    "OriginalPaperDOI": "10.1/Retracted2",
+    "RetractionNature": "Retraction",
+    "RetractionDate": "2023-03-03",
+    "RetractionDOI": "10.1/rw-ret2",
+}
+
+
+def _retraction_vault(tmp_path, monkeypatch):
+    """One checked SQLite Work whose DOI the Retraction Watch fixture retracts."""
+    vault = capture_workspace(tmp_path)
+    state.upsert_catalog_record(
+        vault,
+        work_id="smith2020",
+        title="Retracted Cited Work",
+        doi="10.1/Retracted",
+        identifiers={},
+        citekey="smith2020",
+        csl_json={"title": "Retracted Cited Work"},
+        check_status="checked",
+    )
+    rw_csv = tmp_path / "rw.csv"
+    with rw_csv.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(
+            f,
+            fieldnames=["OriginalPaperDOI", "RetractionNature", "RetractionDate", "RetractionDOI"],
+        )
+        w.writeheader()
+        w.writerows([*RW_ROWS, SECOND_RETRACTED_ROW])
+    monkeypatch.setenv("MEMORIA_RW_CSV", str(rw_csv))
+    _m._RW_INDEX = None
+    return vault
+
+
+def _second_retracted_source(vault) -> None:
+    state.upsert_catalog_record(
+        vault,
+        work_id="jones2021",
+        title="Second Retracted Work",
+        doi="10.1/Retracted2",
+        identifiers={},
+        citekey="jones2021",
+        csl_json={"title": "Second Retracted Work"},
+        check_status="checked",
+    )
+
+
+def _today() -> str:
+    return datetime.date.today().isoformat()
+
+
+def _alerts(vault) -> list:
+    return sorted((vault / "inbox").glob("alert-*.md"))
+
+
+def _edit(path, **fields) -> None:
+    """Rewrite a card's frontmatter the way the PI's editor does: no operation, no journal."""
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    frontmatter.update(fields)
+    path.write_text(frontmatter_doc(frontmatter, body), encoding="utf-8")
+
+
+def _attention_chain(vault, rel: str) -> list:
+    """Return `(event, outcome)` for one `inbox/` path's whole journaled life, in order."""
+    return [
+        (str(event.get("event")), event.get("outcome"))
+        for event in state.read_event_log(
+            vault, event_types=("resolved", lifecycle.EVENT_ATTENTION_ARCHIVED)
+        )
+        if event.get("source") == "attention" and event.get("target_id") == rel
+    ]
+
+
+def test_sweep_keeps_one_standing_alert_per_retracted_doi(tmp_path, monkeypatch):
+    """The sweep loops over sources, so the dedupe has to be per condition, not per run.
+
+    With one retracted source every wrong answer looks the same. With two, a scan that
+    matched any open attention card -- or a producer that fingerprinted the sweep
+    rather than the DOI -- collapses the pair into one card and loses an alert
+    permanently, which is the one failure mode worse than the duplication being fixed.
+    """
+    vault = _retraction_vault(tmp_path, monkeypatch)
+    _second_retracted_source(vault)
+    try:
+        first = sweep(vault, offline=True)
+        after_first = _alerts(vault)
+        for card in after_first:
+            _edit(card, last_seen="2020-01-01")
+
+        second = sweep(vault, offline=True)
+        after_second = _alerts(vault)
+        fingerprints = sorted(read_frontmatter(card)["fingerprint"] for card in after_second)
+        seen = {read_frontmatter(card)["last_seen"] for card in after_second}
+
+        assert first == {"checked": 2, "retracted": 2}
+        assert len(after_first) == 2
+        assert second == {"checked": 2, "retracted": 2}
+        assert after_second == after_first  # each DOI kept its own standing card
+        assert fingerprints == [FINGERPRINT, SECOND_FINGERPRINT]
+        assert seen == {_today()}  # both touched; neither absorbed the other
+    finally:
+        _m._RW_INDEX = None
+
+
+def test_sweep_touches_a_standing_alert_and_reraises_once_the_pi_resolves_it(tmp_path, monkeypatch):
+    """The first three states of the card's life, sampled one sweep at a time.
+
+    Open, re-observed, and resolved-but-still-in-`inbox/`. The third is the one an
+    existence dedupe gets wrong and the one the defect lives in: before this change
+    every sweep left another copy of the same standing alert, and after a naive fix
+    no sweep would ever raise it again.
+    """
+    vault = _retraction_vault(tmp_path, monkeypatch)
+    try:
+        first = sweep(vault, offline=True)
+        [standing] = _alerts(vault)
+        opened = read_frontmatter(standing)
+
+        _edit(standing, last_seen="2020-01-01")
+        second = sweep(vault, offline=True)
+        after_second = _alerts(vault)
+        reobserved = read_frontmatter(standing)
+
+        _edit(standing, attention_status="resolved", last_seen="2020-01-01")
+        third = sweep(vault, offline=True)
+        after_third = _alerts(vault)
+        resolved = read_frontmatter(standing)
+
+        assert first == {"checked": 1, "retracted": 1}
+        assert opened["fingerprint"] == FINGERPRINT  # the sweep normalizes the DOI itself
+        assert opened["attention_status"] == "open"
+        assert opened["last_seen"] == _today()
+
+        assert second == {"checked": 1, "retracted": 1}
+        assert after_second == [standing]  # touched in place, not duplicated
+        assert reobserved["last_seen"] == _today()
+        assert reobserved["created"] == opened["created"]
+        assert reobserved["attention_status"] == "open"
+
+        assert third == {"checked": 1, "retracted": 1}
+        assert len(after_third) == 2  # the recurrence re-raises past the PI's resolution
+        [reraised] = [card for card in after_third if card != standing]
+        assert read_frontmatter(reraised)["attention_status"] == "open"
+        assert read_frontmatter(reraised)["fingerprint"] == FINGERPRINT
+        # the resolved card is left exactly as the PI left it -- only compaction may
+        # touch it, because only compaction journals what it does to it
+        assert resolved["last_seen"] == "2020-01-01"
+    finally:
+        _m._RW_INDEX = None
+
+
+def test_sweep_reraises_onto_the_archived_cards_freed_path_and_the_journal_records_both(
+    tmp_path, monkeypatch
+):
+    """The rest of the life: archived, re-raised onto the freed name, standing again, closed.
+
+    An `inbox/` filename is reusable now, so the re-raised card lands on the archived
+    card's exact path -- and the journal has to read that as a second card with its own
+    decision, not as one already disposed of. The two hand-closes carry different
+    outcomes so a run that journals the first card twice cannot produce this chain.
+    """
+    vault = _retraction_vault(tmp_path, monkeypatch)
+    try:
+        sweep(vault, offline=True)
+        [first] = _alerts(vault)
+        rel = first.relative_to(vault).as_posix()
+
+        _edit(first, attention_status="resolved", resolution_outcome="reject")
+        compacted = lifecycle.compact_resolved_cards(vault, machine="test-machine")
+        after_archive = _alerts(vault)
+        digest = (vault / compacted["digests"][0]).read_text(encoding="utf-8")
+
+        third = sweep(vault, offline=True)
+        [reraised] = _alerts(vault)
+        fresh = read_frontmatter(reraised)
+
+        _edit(reraised, last_seen="2020-01-01")
+        fourth = sweep(vault, offline=True)
+        after_fourth = _alerts(vault)
+        standing_again = read_frontmatter(reraised)
+
+        _edit(reraised, attention_status="resolved", resolution_outcome="apply")
+        again = lifecycle.compact_resolved_cards(vault, machine="test-machine")
+
+        assert compacted["archived"] == [rel]
+        assert after_archive == []
+        # after archival the fingerprint survives only in the digest, which carries no
+        # frontmatter and lives below a directory no `inbox/` reader descends into
+        assert f"- fingerprint: {FINGERPRINT}" in digest
+
+        assert third == {"checked": 1, "retracted": 1}
+        assert reraised == first  # the collision loop took the freed name back
+        assert fresh["attention_status"] == "open"
+        assert fresh["fingerprint"] == FINGERPRINT
+        assert fresh["created"] == _today()
+
+        assert fourth == {"checked": 1, "retracted": 1}
+        assert after_fourth == [reraised]  # standing again: touched, not duplicated
+        assert standing_again["last_seen"] == _today()
+
+        assert again["archived"] == [rel]
+        assert _attention_chain(vault, rel) == [
+            ("resolved", "reject"),
+            (lifecycle.EVENT_ATTENTION_ARCHIVED, None),
+            ("resolved", "apply"),
+            (lifecycle.EVENT_ATTENTION_ARCHIVED, None),
+        ]
+    finally:
+        _m._RW_INDEX = None
 
 
 def test_check_doi_offline_warns_once_when_rw_csv_is_missing(tmp_path, monkeypatch, capsys):
