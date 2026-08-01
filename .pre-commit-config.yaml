@@ -32,7 +32,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.21
+    rev: v0.16.0
     hooks:
       - id: ruff
         files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^tests/.*\.py$
