@@ -40,7 +40,7 @@ every field and count.
 | [CLI](commands-and-transports/cli.md) | `memoria` command surface | Guarded mirror |
 | [Engine read API](commands-and-transports/read-api.md) | Host-neutral read/write API functions and project WRITE views | Manual |
 | [Local HTTP transport](commands-and-transports/local-http-transport.md) | REST-like loopback adapter surface, auth, endpoints, scope, write payload, and limits | Manual |
-| [MCP transport](commands-and-transports/mcp-transport.md) | Optional FastMCP stdio agent surface, required read scope, tool roster, and write provenance | Manual |
+| [MCP transport](commands-and-transports/mcp-transport.md) | Optional MCPServer stdio agent surface, required read scope, tool roster, and write provenance | Manual |
 | [Prompt operations](commands-and-transports/prompt-operations.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
 
 ## [Request, review, and policy contracts](control-and-policy/)

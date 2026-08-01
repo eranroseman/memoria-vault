@@ -25,7 +25,7 @@ INSTRUCTIONS = (
 )
 ACTION = actions_by_id()
 
-# Row param `type` -> Python annotation FastMCP models the input schema from.
+# Row param `type` -> Python annotation MCPServer models the input schema from.
 # A new row with an unmapped type fails loudly at app construction.
 _PARAM_TYPES: dict[str, type] = {
     "string": str,
@@ -45,9 +45,9 @@ def make_mcp_app(workspace: Path, *, read_scope: list[str], agent_identity: str 
     workspace = Path(workspace).resolve()
     scope = _normalized_scope(read_scope)
 
-    from mcp.server.fastmcp import FastMCP
+    from mcp.server.mcpserver import MCPServer
 
-    app = FastMCP("memoria", instructions=INSTRUCTIONS)
+    app = MCPServer("memoria", instructions=INSTRUCTIONS)
 
     for action in SURFACE_ACTIONS:
         if action["kind"] != "read" or not isinstance(action.get("mcp"), dict):

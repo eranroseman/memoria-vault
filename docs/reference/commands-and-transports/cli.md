@@ -31,7 +31,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | `memoria serve --http [--read-scope <path>]` | Run the [local HTTP transport](local-http-transport.md) over `engine/api`, optionally capped to one or more read scopes. That reference defines its loopback, authentication, rendezvous, and on-demand lifecycle contract. |
 | `memoria serve --stop` | Stop the live local HTTP server for this workspace after validating its runtime coordinates. |
 | `memoria handshake --vault <path> [--spawn]` | Return live local HTTP coordinates for a vault; `--spawn` starts an on-demand ephemeral server when none is live. |
-| `memoria mcp --workspace <path> --read-scope <path>` | Run the optional [FastMCP stdio transport](mcp-transport.md) with a required engine read scope. |
+| `memoria mcp --workspace <path> --read-scope <path>` | Run the optional [MCPServer stdio transport](mcp-transport.md) with a required engine read scope. |
 | `memoria help` | Show registered surfaces grouped by the five workspace jobs. |
 | `memoria eval select-models [--operation <id>] [--mode test\|live]` | Run the seeded-error bar against manifest-declared runner pins and report the selected passing runner. |
 

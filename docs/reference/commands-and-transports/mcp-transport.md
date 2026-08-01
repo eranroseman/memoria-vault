@@ -8,7 +8,7 @@ grand_parent: Reference
 # MCP transport
 
 The MCP transport is the optional agent-facing control surface. It exposes a
-closed FastMCP stdio server over `memoria_vault.engine.api`; it is not the
+closed MCP stdio server over `memoria_vault.engine.api`; it is not the
 product state layer and it does not grant raw file, SQLite, terminal, browser,
 or network tools.
 

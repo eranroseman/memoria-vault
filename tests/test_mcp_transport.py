@@ -102,7 +102,7 @@ def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
 
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
-    assert sorted(tool.name for tool in app._tool_manager.list_tools()) == [
+    assert sorted(tool.name for tool in _list_tools(app)) == [
         "attention",
         "attention_card",
         "concept",
@@ -126,7 +126,7 @@ def test_mcp_tool_descriptions_match_surface_contract(workspace: Path) -> None:
 
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
     actions = actions_by_id()
-    tools = {tool.name: tool for tool in app._tool_manager.list_tools()}
+    tools = {tool.name: tool for tool in _list_tools(app)}
 
     for action in actions.values():
         mcp = action.get("mcp")
@@ -168,13 +168,13 @@ def test_mcp_read_tool_schemas_match_registry_params(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
-    tools = {tool.name: tool for tool in app._tool_manager.list_tools()}
+    tools = {tool.name: tool for tool in _list_tools(app)}
 
     for action in actions_by_id().values():
         mcp_binding = action.get("mcp")
         if not isinstance(mcp_binding, dict) or action["kind"] != "read":
             continue
-        served = _normalized_tool_schema(tools[mcp_binding["tool"]].parameters)
+        served = _normalized_tool_schema(tools[mcp_binding["tool"]].input_schema)
         assert served == _normalized_row_params(action["params"]), (
             f"{action['id']}: served schema for tool {mcp_binding['tool']!r} "
             "drifts from its registry row's params"
@@ -192,7 +192,7 @@ def test_mcp_tools_bind_read_engine_dispatch_class(workspace: Path) -> None:
         if isinstance(action.get("mcp"), dict)
     }
 
-    for tool in app._tool_manager.list_tools():
+    for tool in _list_tools(app):
         row = rows_by_tool[tool.name]
         if tool.name == "operation_run":
             assert row["kind"] == "write"
@@ -205,11 +205,12 @@ def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> N
     pytest.importorskip("mcp")
     app = make_mcp_app(workspace, read_scope=["notes"], agent_identity="agent")
 
-    content, structured = asyncio.run(app.call_tool("status", {}))
+    result = asyncio.run(app.call_tool("status", {}))
 
-    assert json.loads(content[0].text)["ok"] is True
-    assert structured["ok"] is True
-    assert structured["api_version"] == "engine-read-api.v1"
+    assert result.is_error is False
+    assert json.loads(result.content[0].text)["ok"] is True
+    assert result.structured_content["ok"] is True
+    assert result.structured_content["api_version"] == "engine-read-api.v1"
 
 
 def test_mcp_read_tools_pass_session_scope(
@@ -277,7 +278,7 @@ def test_mcp_read_tools_pass_session_scope(
 
 def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
     pytest.importorskip("mcp")
-    tool_error = pytest.importorskip("mcp.server.fastmcp.exceptions").ToolError
+    tool_error = pytest.importorskip("mcp.server.mcpserver.exceptions").ToolError
 
     write_checked_note(workspace, "notes/alpha.md", "Alpha")
     write_checked_note(workspace, "notes/beta.md", "Beta")
@@ -396,7 +397,7 @@ def test_mcp_operation_run_never_carries_pi_authority(workspace: Path) -> None:
 
 def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path) -> None:
     pytest.importorskip("mcp")
-    tool_error = pytest.importorskip("mcp.server.fastmcp.exceptions").ToolError
+    tool_error = pytest.importorskip("mcp.server.mcpserver.exceptions").ToolError
     attention_path = workspace / "inbox/pi-pending.md"
     attention_path.parent.mkdir(parents=True, exist_ok=True)
     attention_path.write_text(
@@ -441,5 +442,16 @@ def test_mcp_rejects_idempotency_key_bound_to_pending_pi_request(workspace: Path
     assert "attention_status: open" in attention_path.read_text(encoding="utf-8")
 
 
+def _list_tools(app: Any) -> list[Any]:
+    """The served tool roster. `MCPServer.list_tools` is public and async in mcp 2.x."""
+    return asyncio.run(app.list_tools())
+
+
 def _call(app: Any, name: str, **arguments: Any) -> dict[str, Any]:
-    return asyncio.run(app._tool_manager.call_tool(name, arguments, convert_result=False))
+    """One tool call, unwrapped to the engine payload.
+
+    `MCPServer.call_tool` returns a `CallToolResult` whose `structured_content`
+    is the dict the tool function returned — the same value mcp 1.x exposed via
+    the private tool manager's `convert_result=False`.
+    """
+    return asyncio.run(app.call_tool(name, arguments)).structured_content
