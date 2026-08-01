@@ -7101,7 +7101,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 - Produces:
   - `ZOTERO_HOWTO_URL: str = "https://eranroseman.github.io/memoria-vault/how-to-guides/setup/set-up-zotero"`
   - `CREDENTIALS_NOTICE: str` (one line, names `memoria secrets set <NAME>` per spec §4b/§7.5)
-  - `run_onboarding(workspace: Path, *, sys_platform: str, env: Mapping[str, str], home: Path, ask: AskFn, say: SayFn, run: RunFn = subprocess.run, url_open: Callable[..., Any] = urllib.request.urlopen) -> dict[str, Any]` — payload
+  - `run_onboarding(workspace: Path, *, sys_platform: str, env: Mapping[str, str], home: Path, ask: AskFn, say: SayFn, run: RunFn = subprocess.run, url_open: Callable[..., Any] = _open_zotero_probe) -> dict[str, Any]` — payload
     `{"ok": True, "workspace": str, "completed": bool, "steps": [{"step": "obsidian"|"open-vault"|"zotero"|"credentials", "status": str}, ...]}`.
     Step statuses: obsidian `present|installed|declined|failed|manual`;
     open-vault `opened|manual|skipped`; zotero `offered|not-detected`;
@@ -7112,7 +7112,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_onboarding.py`:
+- [x] Write the failing test. Append to `tests/test_onboarding.py`:
 
   ```python
   def _fake_zotero(detected: bool):
@@ -7199,11 +7199,63 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
   flip detection. The `flatpak` probe runs against `FakeRun(returncode=1)`,
   never the real binary.
 
-- [ ] Run test to verify it fails:
+  In addition to the two tests above, add
+  `test_run_onboarding_install_failure_is_reported_and_open_is_skipped` and
+  `test_run_onboarding_open_vault_failure_leaves_incomplete_even_when_obsidian_present`
+  so the `failed` obsidian status and the `manual` open-vault status are each
+  proven reachable through the orchestrator (not just through the underlying
+  D.1–D.4 functions' own tests), plus
+  `test_run_onboarding_ask_failure_is_treated_as_declined_not_a_crash` and
+  `test_run_onboarding_default_zotero_opener_is_the_hardened_opener` for the
+  two defects fixed below.
+
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_onboarding.py -v`
   Expected: `AttributeError: ... has no attribute 'run_onboarding'`.
 
-- [ ] Write minimal implementation. Append to `onboarding.py`:
+> **Adopted post-review amendment (2026-07-31):** The literal snippet below
+> listed `url_open: Callable[..., Any] = urllib.request.urlopen` as
+> `run_onboarding`'s default. That is stale: BOOT-D.4 replaced
+> `zotero_running`'s own default with the proxy-free, redirect-free
+> `_open_zotero_probe` specifically because a bare `urlopen` honors
+> `http_proxy`/`https_proxy` even for a `127.0.0.1` target and follows
+> redirects (see BOOT-D.4's amendments above). `run_onboarding` always
+> forwards `url_open` explicitly to `zotero_running`
+> (`zotero_running(url_open=url_open)`), so a caller that does not override
+> `run_onboarding`'s own default — e.g. the future `memoria onboard` CLI
+> (BOOT-D.7) — would silently overwrite `zotero_running`'s hardened default
+> with the unhardened one at the one call site actually reachable from
+> production, undoing BOOT-D.4's fix. Default `url_open` to
+> `_open_zotero_probe` instead, and add
+> `test_run_onboarding_default_zotero_opener_is_the_hardened_opener` pinning
+> it, mirroring `zotero_running`'s own regression guard
+> (`test_zotero_probe_default_opener_is_the_hardened_opener`). Found during
+> BOOT-D.5 implementation on 2026-07-31, before this snippet shipped.
+
+> **Adopted post-review amendment (2026-07-31):** `ask` is not total.
+> `offer_obsidian_install` (BOOT-D.2) only guards its own `ask()` call
+> against `EOFError`. Some closed-stdin shapes raise something else
+> instead: fd 0 closed, or `sys.stdin = None`, makes builtin `input()` raise
+> `RuntimeError: input(): lost sys.stdin` — a distinct exception not caught
+> there, which would propagate straight out of `offer_obsidian_install` and
+> out of `run_onboarding`, crashing the whole onboarding sequence this task
+> exists to run end to end without crashing. (Other closed-stdin shapes
+> still escape uncaught even after this amendment — an in-process
+> `sys.stdin.close()` raises `ValueError: I/O operation on closed file`, and
+> a pytest-style capture raises `OSError` — neither is a
+> `RuntimeError`/`EOFError`; this amendment closes the one shape review
+> reproduced, not every unreadable-stdin shape.) Wrap the
+> `offer_obsidian_install(...)` call in `run_onboarding` in
+> `except (EOFError, RuntimeError):`, treat an unreadable prompt the same as
+> a decline (`obsidian_status = "declined"`, plus the same "Skipped.
+> Download Obsidian from ..." message the ordinary decline path prints), and
+> add `test_run_onboarding_ask_failure_is_treated_as_declined_not_a_crash` to
+> prove it. This is scoped to `run_onboarding`'s own call site, not a
+> rewrite of `offer_obsidian_install`'s already-reviewed and merged BOOT-D.2
+> implementation. Found during BOOT-D.5 implementation on 2026-07-31, before
+> this snippet shipped.
+
+- [x] Write minimal implementation. Append to `onboarding.py`:
 
   ```python
   ZOTERO_HOWTO_URL = (
@@ -7226,14 +7278,18 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       ask: AskFn,
       say: SayFn,
       run: RunFn = subprocess.run,
-      url_open: Callable[..., Any] = urllib.request.urlopen,
+      url_open: Callable[..., Any] = _open_zotero_probe,
   ) -> dict[str, Any]:
       steps: list[dict[str, str]] = []
 
       if detect_obsidian(sys_platform, env=env, home=home, run=run):
           obsidian_status = "present"
       else:
-          obsidian_status = offer_obsidian_install(sys_platform, ask=ask, say=say, run=run)
+          try:
+              obsidian_status = offer_obsidian_install(sys_platform, ask=ask, say=say, run=run)
+          except (EOFError, RuntimeError):
+              say(f"Skipped. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
+              obsidian_status = "declined"
       steps.append({"step": "obsidian", "status": obsidian_status})
 
       if obsidian_status in ("present", "installed"):
@@ -7262,10 +7318,10 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       }
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_onboarding.py -v` — all tests pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/onboarding.py tests/test_onboarding.py
