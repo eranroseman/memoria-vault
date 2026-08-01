@@ -88,7 +88,7 @@
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
-12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers — non-recursive `inbox/*.md` globs at `loudness.py:30` and `engine/api.py:706`, and a direct single-path existence check (not a glob) in both `inbox.py` dedupe writers at `:120-124` and `:179-183`. No task may add recursive inbox globs or frontmatter to digests. **Corollary (U3-SUB.2):** because a digest removes the card, an `inbox/` filename is reusable, so any path-keyed judgement about a card must be released when the card is archived — see `lifecycle._held_disposition_targets`.
+12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers — non-recursive `inbox/*.md` globs at `loudness.py:30`, `engine/api.py:706` and (U3-SUB.3) `inbox.py` `_open_fingerprint_match`, and a direct single-path existence check (not a glob) in both `inbox.py` dedupe writers. No task may add recursive inbox globs or frontmatter to digests. **Corollary (U3-SUB.2):** because a digest removes the card, an `inbox/` filename is reusable, so any path-keyed judgement about a card must be released when the card is archived — see `lifecycle._held_disposition_targets`. **Corollary (U3-SUB.3):** `write_finding` is now a *reading* member of this inventory, not only a writer, and it is the one whose failure is silent and permanent — `lifecycle._DIGEST_FIELDS` carries `fingerprint` into the digest, so an `rglob` here would let an archived card suppress every future re-raise of its condition with nothing to observe but the alert that never came. The glob is `*.md`, not `*`: `write_text_durable` leaves in-flight `.{name}.{rand}.tmp` siblings in `inbox/`, and an unfingerprinted `write_finding` creates them outside the fingerprint lock.
 13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
     U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
     U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
@@ -8945,6 +8945,18 @@ resolution/archival writes a fresh open card.
 >    only there — no frontmatter, below a directory no `inbox/` reader descends into,
 >    which is what makes the re-raise possible at all. Nor does this task owe a
 >    release row: it adds no `.unlink()`, and a touch leaves the card on its path.
+>    Contract 12's reader inventory *did* need updating, and now names this scan.
+>    **`last_seen` has no such luck.** `_DIGEST_FIELDS` carries `fingerprint` and
+>    `created` but not `last_seen`, so a card observed monthly for two years archives
+>    with no trace of its twenty-four re-observations — the digest can say when the
+>    condition was first raised and never how long it stood. Left as found rather than
+>    added silently: the field is one line from `_DIGEST_FIELDS` and belongs to
+>    U3-SUB.2's format, whose digest sections are append-only and already written in
+>    real vaults. Worth deciding deliberately, not as a side effect of this task.
+>    Related and equally declared: `last_seen` has **no consumer anywhere in `src/`**
+>    outside the writer and toucher here. The spec mandates it and the plan's own test
+>    asserts it, so writing it is not a violation — but until a reader exists, nothing
+>    observes it before archival either, and both gaps close together or not at all.
 >
 > **What the fingerprint is, next to the three identities already here.** It is
 > orthogonal to all of them. To the *path*: the scan finds the standing card wherever
@@ -8973,10 +8985,33 @@ resolution/archival writes a fresh open card.
 > archived → re-raised → re-observed → resolved → archived` at each step rather than
 > at rest.
 >
+> **Review round added seven pins, all for mutants that passed the suite above.** The
+> non-fold was pinned only against a folding *reader* — every fixture built its
+> standing card by hand — so `.lower()` on the write side, the one line this amendment
+> introduces for canonicalisation, survived; two `write_finding` calls that differ only
+> in case now close it. The touch's "changes nothing else" was pinned field by field,
+> so dropping `loudness`, clobbering `title`, and canonicalising `attention_status`
+> all survived; whole-frontmatter equality except `last_seen` now closes the class, on
+> a `loudness: block` card the PI hand-escalated (that mutant opens the review gate on
+> a schedule) and across the five normalization cases (which is what catches the
+> canonicalising rewrite, since the escalation fixture's status is already canonical).
+> Three equality tests meant three chances to become prefix or substring tests, none
+> of which the normalization cases could see: three near-miss fixtures now cover the
+> operators. `glob("*")` survived: the pin said non-recursive and never said `*.md`.
+> And the touch's atomicity lived only in prose — an in-place `write_text` survived —
+> so a hardlink witness now pins the replace, which matters because
+> `loudness.open_blockers` reads `inbox/*.md` on the review-gate path without this
+> lock and a half-written card parses as no card.
+>
 > **Declared, not fixed.** A `deferred` card does not suppress a re-raise: the
-> contract says `open`, `deferred` cards are the ones compaction leaves in `inbox/`
-> forever, so each deferral costs one fresh card — bounded, because that card is
-> open and suppresses the next sweep, and re-raising is the safe direction. Passing
+> contract says `open`, and compaction leaves `deferred` cards in `inbox/` forever,
+> so the cost is **one card per deferral** — measured, not reasoned: defer once and
+> the vault sits at two cards across four sweeps, because the fresh card is open and
+> absorbs the next sweep; defer each new card in turn and it goes 1, 2, 3, 4, with
+> compaction never removing any of them. That is growth in the number of deferrals,
+> not a constant, and re-deferring a monthly alert is precisely what a PI who
+> deferred it once will do. Kept anyway: re-raising is the safe direction, and every
+> card is journaled, so the growth is visible rather than silent. Passing
 > `dedupe_slug` and `fingerprint` together where a *resolved* card still occupies the
 > slot returns `None` from the slug arm; no caller does both, and the ordering
 > contract is what is pinned.

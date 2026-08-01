@@ -255,10 +255,19 @@ def _open_fingerprint_match(
 
 
 def _touch_last_seen(path: Path, frontmatter: dict[str, Any], body: str) -> None:
-    """Record that the condition was observed again, and change nothing else.
+    """Record that the condition was observed again, and change no other field.
 
-    `created` in particular stays put: it is the standing card's birthday, and the
-    age it measures is the PI's reason to act.
+    `created` stays put -- it is the standing card's birthday, and the age it measures
+    is the PI's reason to act -- and so does everything the PI added by hand. Chiefly
+    `loudness`: `is_open_blocker` reads it to hold delegation and review-gated
+    promotion, so a touch that rebuilt the card from the new observation would reset a
+    hand-escalated `block` to `alert` and open the gate on a schedule.
+
+    It does reformat. This is `split_frontmatter` -> mutate -> `write_frontmatter_doc`,
+    the same round trip `integrity.resolve_attention` performs, so the first touch
+    drops YAML comments, normalizes quoting and reflows indentation. The delta from
+    house behaviour is that this one happens unbidden, on the surface the PI is
+    invited to edit by hand.
     """
     frontmatter["last_seen"] = datetime.date.today().isoformat()
     write_frontmatter_doc(path, frontmatter, body)

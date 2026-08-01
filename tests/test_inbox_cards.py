@@ -1,6 +1,7 @@
 """Inbox helpers write attention projections, not Concept cards."""
 
 import datetime
+import os
 import re
 import threading
 import time
@@ -10,7 +11,7 @@ import pytest
 import yaml
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.subsystems.lib import inbox
+from memoria_vault.runtime.subsystems.lib import inbox, loudness
 
 
 def _frontmatter(path) -> dict:
@@ -31,6 +32,8 @@ def _card(
     projection: str = "attention",
     status: str = "open",
     subdir: str = "inbox",
+    card_loudness: str = "alert",
+    extra: str = "",
 ) -> Path:
     """Hand-write an inbox card, YAML scalars verbatim.
 
@@ -48,13 +51,18 @@ def _card(
         f"attention_status: {status}\n"
         f"fingerprint: {fingerprint}\n"
         "raised_by: sweep\n"
-        "loudness: alert\n"
+        f"loudness: {card_loudness}\n"
         "created: '2020-01-01'\n"
         "last_seen: '2020-01-01'\n"
+        f"{extra}"
         "---\n\n# Finding\n\nBody.\n",
         encoding="utf-8",
     )
     return path
+
+
+def _but_last_seen(frontmatter: dict) -> dict:
+    return {key: value for key, value in frontmatter.items() if key != "last_seen"}
 
 
 def _alert(vault: Path, **kwargs) -> Path | None:
@@ -312,12 +320,18 @@ def test_finding_fingerprint_reads_frontmatter_the_way_lifecycle_reads_it(tmp_pa
     fields = {"projection": "attention", "status": "open", "fingerprint": "retraction:10.1/x"}
     fields[field] = scalar  # `status` writes `attention_status`; see `_card`
     standing = _card(tmp_path, "alert-standing.md", **fields)
+    before = _frontmatter(standing)
 
     b = _alert(tmp_path, fingerprint="retraction:10.1/x")
 
+    after = _frontmatter(standing)
     assert b is None
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 1
-    assert _frontmatter(standing)["last_seen"] == _today()
+    assert after["last_seen"] == _today()
+    # The *reader* normalizes; the writer must not. A touch that wrote the folded
+    # value back would quietly rewrite the PI's card to the runtime's spelling, and
+    # every field it did not think to preserve with it.
+    assert _but_last_seen(after) == _but_last_seen(before)
 
 
 def test_finding_fingerprint_is_not_case_folded(tmp_path):
@@ -335,6 +349,54 @@ def test_finding_fingerprint_is_not_case_folded(tmp_path):
     assert b is not None
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 2
     assert _frontmatter(standing)["last_seen"] == "2020-01-01"
+
+
+def test_finding_fingerprint_is_not_case_folded_on_the_way_in_either(tmp_path):
+    """The same decision on the *write* side, where canonicalization happens.
+
+    A hand-built standing card can only ever observe a folding reader. The argument
+    is canonicalized in one place -- the `.strip()` this task added -- and a `.lower()`
+    there is a one-token edit that makes `retraction:10.1/X` and `retraction:10.1/x`
+    one identity, which is exactly what the reader's contract says they are not. Both
+    cards are written by the writer under test, so only the write side can decide it.
+    """
+    a = _alert(tmp_path, fingerprint="retraction:10.1/X")
+    b = _alert(tmp_path, fingerprint="retraction:10.1/x")
+
+    assert a is not None and b is not None and a != b
+    assert _frontmatter(a)["fingerprint"] == "retraction:10.1/X"
+    assert _frontmatter(b)["fingerprint"] == "retraction:10.1/x"
+
+
+def test_the_touch_preserves_the_pis_hand_escalation(tmp_path):
+    """`last_seen` is the only field a re-observation may move, and `loudness` is why.
+
+    The PI hand-escalates a standing retraction alert to `loudness: block` --
+    `inbox/**` is the one write target the policy grants a non-PI actor, and hand
+    editing this surface is the premise of the whole feature. `loudness.is_open_blocker`
+    reads that field to hold delegation and review-gated promotion, so a touch that
+    rebuilt the card from the *new* observation's frontmatter -- the natural
+    alternative, since `write_finding` assembled exactly such a dict five lines
+    earlier -- would silently reset it to `alert` and open the gate on a schedule.
+    Whole-dict equality rather than field assertions, because the fields a rebuild
+    drops are the ones nobody thought to name: here, the PI's own `pi_note`.
+    """
+    standing = _card(
+        tmp_path,
+        "alert-standing.md",
+        fingerprint="retraction:10.1/x",
+        card_loudness="block",
+        extra="pi_note: escalated after the third recurrence\n",
+    )
+    before = _frontmatter(standing)
+
+    b = _alert(tmp_path, fingerprint="retraction:10.1/x")
+
+    after = _frontmatter(standing)
+    assert b is None
+    assert after["last_seen"] == _today() and before["last_seen"] == "2020-01-01"
+    assert _but_last_seen(after) == _but_last_seen(before)
+    assert loudness.is_open_blocker(after)  # the gate still holds after the touch
 
 
 @pytest.mark.parametrize(
@@ -407,9 +469,13 @@ def test_finding_fingerprint_touches_exactly_one_of_several_open_cards(tmp_path)
 
     assert b is None
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 3
+    assert _frontmatter(other)["last_seen"] == "2020-01-01"
+    # The two semantic claims -- exactly one match touched, non-matches never touched
+    # -- hold on any filesystem. The next line is the determinism claim, and it is the
+    # only one that needs readdir order to differ from lexical order to catch an
+    # unsorted scan; on a filesystem where they coincide it is merely true.
     assert _frontmatter(first)["last_seen"] == _today()
     assert _frontmatter(second)["last_seen"] == "2020-01-01"
-    assert _frontmatter(other)["last_seen"] == "2020-01-01"
 
 
 def test_finding_without_a_fingerprint_writes_neither_field_and_still_collides(tmp_path):
@@ -464,6 +530,85 @@ def test_finding_fingerprint_never_looks_inside_the_inbox_archive(tmp_path):
 
     assert b is not None and b.parent == tmp_path / "inbox"
     assert _frontmatter(archived)["last_seen"] == "2020-01-01"
+
+
+def test_finding_fingerprint_reads_only_the_markdown_in_the_inbox(tmp_path):
+    """The scan is `*.md`, not `*` -- `inbox/` holds in-flight temp files too.
+
+    `write_text_durable` writes `.{name}.{rand}.tmp` beside its target before renaming
+    it into place, and an *unfingerprinted* `write_finding` does that outside this
+    lock, so a `glob("*")` reader can meet a half-written sibling carrying a matching
+    fingerprint. It sorts first, because the name begins with a dot. The scan would
+    touch a file that is about to be renamed away and report the condition as
+    standing -- so no card is raised at all, which is the one outcome worse than the
+    duplicate being fixed.
+    """
+    inflight = _card(tmp_path, ".alert-standing.md.ab12cd.tmp", fingerprint="retraction:10.1/x")
+
+    b = _alert(tmp_path, fingerprint="retraction:10.1/x")
+
+    assert b is not None and b.suffix == ".md"
+    assert _frontmatter(inflight)["last_seen"] == "2020-01-01"
+
+
+@pytest.mark.parametrize(
+    ("projection", "status", "fingerprint"),
+    [
+        ("attentionish", "open", "retraction:10.1/x"),
+        ("attention", "opened", "retraction:10.1/x"),
+        ("attention", "open", "retraction:10.1/xyz"),
+    ],
+)
+def test_finding_fingerprint_matches_each_field_exactly_not_by_prefix(
+    tmp_path, projection, status, fingerprint
+):
+    """Three equality tests, so three chances to become a prefix or substring test.
+
+    The five normalization cases pin `.strip().lower()` and say nothing about the
+    operator: `startswith` passes every one of them. Each case here is a near miss on
+    exactly one field, and every near miss must re-raise -- a `10.1/xyz` retraction is
+    not a `10.1/x` retraction, and a card the PI typed `opened` on was never open.
+    """
+    standing = _card(
+        tmp_path,
+        "alert-standing.md",
+        fingerprint=fingerprint,
+        projection=projection,
+        status=status,
+    )
+
+    b = _alert(tmp_path, fingerprint="retraction:10.1/x")
+
+    assert b is not None and b != standing
+    assert len(list((tmp_path / "inbox").glob("*.md"))) == 2
+    assert _frontmatter(standing)["last_seen"] == "2020-01-01"
+
+
+def test_the_touch_replaces_the_card_rather_than_truncating_it(tmp_path):
+    """A half-written attention card reads as no card at all, and the gate opens.
+
+    `write_frontmatter_doc` goes through `write_text_durable`: a sibling temp file,
+    then `os.replace`. An in-place `write_text` truncates first, and the window is not
+    academic -- `loudness.open_blockers` globs `inbox/*.md` on the review-gate path
+    *without* the workspace lock, and `parse_frontmatter` returns `{}` for a document
+    whose closing `---` has not been written yet. A `loudness: block` card would be
+    invisible to the gate for the length of that write.
+
+    The hardlink is the deterministic proxy for "replaced, not truncated": only a
+    rename leaves the old inode's bytes intact behind it.
+    """
+    standing = _card(
+        tmp_path, "alert-standing.md", fingerprint="retraction:10.1/x", card_loudness="block"
+    )
+    before = standing.read_text(encoding="utf-8")
+    witness = tmp_path / "witness.md"  # outside inbox/, so the scan never sees it
+    os.link(standing, witness)
+
+    b = _alert(tmp_path, fingerprint="retraction:10.1/x")
+
+    assert b is None
+    assert witness.read_text(encoding="utf-8") == before
+    assert _frontmatter(standing)["last_seen"] == _today()
 
 
 def test_finding_fingerprint_argument_is_stripped_before_it_is_stored(tmp_path):
