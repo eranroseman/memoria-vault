@@ -1,7 +1,7 @@
 ---
 title: Move concept
 type: operation
-description: Rename a concept file, rewriting inbound links and the DB path attribute transactionally.
+description: Rename a concept file, rewriting inbound links and the DB path attribute in one transaction.
 operation_id: move-concept
 allowed_tools:
 - trusted_writer

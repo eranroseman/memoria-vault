@@ -477,7 +477,7 @@ def move_concept(
             [*_committable(vault, old_rel), new_rel, *rewritten],
             context=context,
         )
-    except Exception as error:
+    except Exception:
         # The rename goes back first. It is the one step nothing else can redo: a
         # restore that raises after the DB is already reversed would otherwise leave
         # the row at the old path and the file at the new one.
@@ -496,6 +496,17 @@ def move_concept(
         # "this move was attempted and reverted" is true even in the refusal that
         # journaled nothing, and bookkeeping that decides otherwise is one more
         # place to be one row wrong.
+        #
+        # The row carries no `reason`. `error` is composed from a linker's own
+        # frontmatter — a file the PI may not have authored — and it is unbounded:
+        # one field per refusal reads as a field name the writer never had to
+        # length-check. Authority is not authorship, so an untrusted body belongs
+        # nowhere in the authoritative log, and this log is append-only: the window
+        # to keep it out closes when the row is written, not when a renderer ships.
+        # The refusal itself still reaches the PI verbatim — it is raised below and
+        # recorded on the mutable `requests.error` row, both of which can be read,
+        # neutralized at render time, and cleaned up. Every field here is
+        # code-derived.
         append_journal_event(
             vault,
             {
@@ -503,8 +514,10 @@ def move_concept(
                 "target_id": old_rel,
                 "old_path": old_rel,
                 "new_path": new_rel,
-                "reverted": applied,
-                "reason": str(error),
+                # `outputs`, not `reverted`: the read-scope filter in
+                # `engine/api._journal_paths` sweeps that key, so naming it right is
+                # what keeps the linker paths inside journal scope checks.
+                "outputs": applied,
             },
             context=context,
         )
