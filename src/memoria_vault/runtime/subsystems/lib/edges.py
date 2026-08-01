@@ -13,10 +13,13 @@ Two target namespaces, two functions — mixing them is a silent bug:
 `normalize_link_target` validates *path space* (a vault-relative Concept
 target, the only thing `links:` frontmatter may hold), while `strip_wikilink`
 strips `[[…]]` syntax in *alias space*, where the value may equally be a title,
-slug, or stem. Retrieval closures (`graph_sql`/`explore`) walk the raw `links:`
-map by design and normalize each target through the path-space function; they
-deliberately do not filter by roster, because a reading traversal is broader
-than the argument graph.
+slug, or stem. Retrieval closures (`graph_sql`/`explore`) normalize each target
+through the path-space function but walk the raw `links:` map without a roster
+filter, deliberately: `neighborhood` admits every relation the live CHECK holds
+so that tensions stay first-class retrievable, and a fallback closure narrower
+than the substrate traversal it stands in for would be a worse reader, not a
+stricter one. If one were ever wanted it would be EDGE_RELATIONS, never
+LINK_RELATIONS.
 
 Stdlib-only by design so state.py, cli.py, and structural_impact_graph.py can
 import it without a cycle.
@@ -74,9 +77,12 @@ def strip_wikilink(value: str) -> str:
     through an alias table (structural impact, whose resolver keys on title and
     slug as well as path) need exactly this and must not call
     `normalize_link_target`, which would reject the colons and dotted tails that
-    real titles carry.
+    real titles carry. Total over non-strings on the same terms as that function:
+    a non-`str` is junk, never `str()`-coerced into a target that never existed.
     """
-    raw = str(value).strip()
+    if not isinstance(value, str):
+        return ""
+    raw = value.strip()
     if raw.startswith("[[") and raw.endswith("]]"):
         raw = raw[2:-2]
     return raw.split("|", 1)[0].split("#", 1)[0].strip()

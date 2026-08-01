@@ -5503,15 +5503,20 @@ register or test a v16→v17 migration.
 >    Both are path space, so both now call `normalize_link_target` — and
 >    `explore`'s copy is deleted outright in favour of `graph_sql`'s, which it
 >    already reaches into for `_active_project_slices`. Their `_link_targets`
->    keeps iterating the raw `links:` map with **no roster filter**, deliberately:
->    these are retrieval closures, and `neighborhood`'s contract is that "every
->    live-admitted relation is included, so tensions remain first-class
->    retrievable". Filtering them to `LINK_RELATIONS` would make the fallback
->    closure narrower than the edge-row traversal it stands in for, and would
->    shrink a slice no plan task authorizes shrinking. `edges.py`'s docstring is
->    corrected to say what is true: every *roster* imports from here, path-space
->    normalization comes from here, and retrieval closures walk the raw map by
->    design.
+>    keeps iterating the raw `links:` map with **no roster filter**, and the
+>    reason is the retrieval contract, nothing else: `neighborhood` admits every
+>    relation the live CHECK holds "so tensions remain first-class retrievable",
+>    so filtering the fallback closure to `LINK_RELATIONS` would make it strictly
+>    narrower than the substrate traversal it stands in for — a worse reader, not
+>    a stricter one. The only defensible filter would be `EDGE_RELATIONS`, and
+>    even that buys nothing a lenient reader needs. *Not* an argument for this,
+>    though the mutation shows it: adding the filter breaks two `explore` tests
+>    whose fixtures author `links: {related: […]}`, which `_check_links` rejects
+>    outright — they pin behaviour over frontmatter no checked vault can hold, and
+>    leaning on them would contradict this same task's "the reader and the
+>    validator must agree" convergence. `edges.py`'s docstring is corrected to say
+>    what is true: every *roster* imports from here, path-space normalization
+>    comes from here, and retrieval closures walk the raw map by design.
 > 9. **The counts roster is deleted, not narrowed (review T4).**
 >    `analyze_project_argument`'s per-relation tally read only
 >    `supports`/`contradicts`/`extends`, so iterating `sorted(LINK_RELATIONS)`
@@ -5520,6 +5525,42 @@ register or test a v16→v17 migration.
 >    and no roster literal to guard. The payload keys stay the three this plan's
 >    Produces list fixes; widening the per-verb breakdown belongs to whoever
 >    widens `worker.py`'s mirror of them.
+> 10. **Disclosure — the readiness state machine is now wrong for the three new
+>    verbs (issue #1624; ERP-C/ERP-D own the fix, not this task).** A.3 widened
+>    `_note_edges` to six relations, which widened `relation_count`, which drives
+>    `_argument_stage` / `_argument_saturation_conditions` / `_argument_findings`
+>    — branches that read **only** `counts["supports"]` and
+>    `counts["contradicts"]`. Measured here, three checked notes each holding one
+>    relation to the thesis:
+>
+>    | edges | `relation_count` | `argument_stage` | `mature_graph` | gap findings |
+>    | --- | --- | --- | --- | --- |
+>    | 3× `warrant`, pre-A.3 | 0 | `cold-start` | `False` | `structural`, `unstated-warrant` |
+>    | 3× `warrant`, now | 3 | `supported` | `True` | `unstated-warrant` |
+>    | 3× `rebuttal`, now | 3 | `supported` | `True` | `unstated-warrant` |
+>    | 3× `qualifier`, now | 3 | `supported` | `True` | `unstated-warrant` |
+>    | 3× `extends`, now and pre-A.3 | 3 | `supported` | `True` | `unstated-warrant` |
+>
+>    So a rebuttal-only project — every edge naming a condition under which the
+>    thesis fails — reports `argument_stage: "supported"` and `mature_graph:
+>    True`, and a warrant-only project still emits `unstated-warrant`.
+>    `displayed_confidence` stays `below-threshold` in all three, so the
+>    confidence number is not implicated. The hole is pre-existing (`extends`
+>    already had it, last row) but A.3 tripled its blast radius and pulled in the
+>    one relation whose answer is backwards. Recalibrating the machine is a
+>    semantic decision about what each Toulmin role means for maturity — ERP-C's
+>    consequence typing and ERP-D's finding hygiene own it. Nothing in the suite
+>    asserts `argument_stage` for a single-relation project of any of the three;
+>    that gap is deliberate here and belongs with the fix, so the tests encode one
+>    definition of maturity rather than two.
+> 11. **Disclosure — `thesis:` is read in two namespaces by three readers (issue
+>    #1623).** `structural_impact_graph` resolves it through the alias table
+>    (a title works), while `graph_sql._link_target`, `explore` (same object), and
+>    `search_index._project_link` resolve it as a path (a title yields nothing).
+>    The last of those is a third inline stripper this task did not converge; the
+>    earlier sweep in this amendment classified `search_index` as display-only,
+>    which is true of its contradiction items and false of `_project_link`. The
+>    field's contract is not ERP-A's to set.
 
 Mechanical convergence of the audit's parsers/rosters onto `edges.py`
 (EDGES §1). Sites and exact refs (verified at 9c77ba61; `schema.py:39` died

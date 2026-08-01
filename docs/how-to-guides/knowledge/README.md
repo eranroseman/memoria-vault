@@ -15,7 +15,7 @@ observed/backfilled.
 
 | Guide | What it covers |
 | --- | --- |
-| [Link checked notes](link-checked-notes.md) | Add typed `supports` / `contradicts` / `extends` relations between checked notes |
+| [Link checked notes](link-checked-notes.md) | Add typed relations between checked notes: `supports` / `contradicts` / `extends` / `warrant` / `qualifier` / `rebuttal` |
 | [Build a hub](build-a-hub.md) | Curate a checked hub under `hubs/` |
 | [Query the vault](query-the-vault.md) | Use the Co-PI for read-only synthesis grounded in your notes |
 | [Explore a topic neighborhood](explore-a-topic-neighborhood.md) | Surface checked claims, questions, tensions, Works, and hubs around a topic |

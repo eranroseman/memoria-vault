@@ -47,6 +47,19 @@ def test_strip_wikilink_is_syntax_only_and_normalize_link_target_is_not() -> Non
     assert edges.normalize_link_target("[[Toulmin: the warrant]]") == ""
     assert edges.normalize_link_target("[[Study 1.2]]") == ""
 
+    # Braces come off only in matched pairs: a half-typed wikilink is returned
+    # whole, never truncated into a target the author never wrote.
+    assert edges.strip_wikilink("[[notes/foo") == "[[notes/foo"
+    assert edges.strip_wikilink("notes/foo]]") == "notes/foo]]"
+
+
+def test_the_two_target_functions_share_one_totality_contract() -> None:
+    # Two public functions in the roster owner: a non-`str` is junk to both, so
+    # neither manufactures `"None"` or a stringified dict as a target.
+    for junk in (None, 17, {"target": "notes/a.md"}, ["notes/a.md"]):
+        assert edges.strip_wikilink(junk) == ""
+        assert edges.normalize_link_target(junk) == ""
+
 
 def test_normalize_link_target_is_total_over_non_strings() -> None:
     # The one isinstance guard left in the parser family: `parse_links` hands its
