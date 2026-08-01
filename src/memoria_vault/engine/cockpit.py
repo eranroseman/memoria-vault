@@ -222,6 +222,9 @@ def _worklist_panel(vault: Path, *, read_scope: list[str] | None = None) -> dict
     return {"source_action": "attention.list", "cards": payload["attention"]}
 
 
+QUEUE_ROW_KINDS = frozenset({"evidence-set", "srd-gap"})
+
+
 def _review_panel(vault: Path, *, read_scope: list[str] | None = None) -> dict[str, Any]:
     """Triage panel 2 (U2 spec §1): V2's review queue, counted and linked with the
     `memoria review` invocation — never re-hosted.
@@ -247,6 +250,22 @@ def _review_panel(vault: Path, *, read_scope: list[str] | None = None) -> dict[s
             ),
         }
     rows = queue(Path(vault), batch=0, read_scope=read_scope)["rows"]
+    if rows and not any(row.get("kind") in QUEUE_ROW_KINDS for row in rows):
+        # A queue that returned rows, none of which carry a `kind` this panel
+        # knows, is a *shape* mismatch — not an empty queue. Counting it anyway
+        # renders a confident `open: 0  (none)` under the row's own heading:
+        # honest about absence, structurally blind to shape. V2's raw-row
+        # grammar is the discriminated union in its 2026-07-29 amendment §2,
+        # but two superseded layers of that plan still describe a CLI DTO with
+        # no `kind` at all, so this is a live way for the seam to land wrong.
+        # Say so, the way the absent-producer branch says absence.
+        return {
+            "source_action": "views.evidence_review",
+            "pending": (
+                f"{len(rows)} queue rows carry no evidence-set/srd-gap kind — the raw "
+                "queue shape changed (V2 plan amendment 2026-07-29 §2)"
+            ),
+        }
     counts = Counter(
         str(row.get("disposition") or "open") for row in rows if row.get("kind") == "evidence-set"
     )
@@ -299,8 +318,14 @@ def render_findings(findings: list[dict[str, Any]]) -> list[str]:
     finding/action, argument-for/against only when both sides are present
     (one-sided arguments drop — V2's card grammar), tipped-by, coarse
     certainty, and the read the card came from when it carries one. Never a
-    verdict line, never a pre-selected action. One function, used by every panel
-    (and by section T's preview screen)."""
+    verdict line, never a pre-selected action.
+
+    One function for every panel whose rows *are* honesty cards: panel 4 today,
+    and section T's preview screen. The triage panels deliberately do not call
+    it — attention cards carry the honesty fields only inside
+    `card["frontmatter"]`, so reaching for them would couple the composer to a
+    card shape no contract names, and spec §1 triage 1 names exactly one per-row
+    disclosure (`rank_factors`). See C.3's amendment 8 in the U2 plan."""
     lines: list[str] = []
     for card in findings:
         headline = str(card.get("finding") or card.get("action") or "")

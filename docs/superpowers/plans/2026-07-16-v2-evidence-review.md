@@ -1803,6 +1803,38 @@ tasks. All marker fixtures below and in their tests use post-Plan-22 grammar:
 `%%ev: <id> items=...%%`; all code references use `code-grounds:` plus
 `parse_code_grounds_ref` / `code_grounds_complete`.
 
+> **A consumer outside this plan depends on the raw row shape (filed
+> 2026-08-01 by U2 C.3's review closeout).** U2's cockpit triage screen counts
+> this queue engine-direct and discriminates the union on `kind`: it counts
+> `row.get("kind") == "evidence-set"` rows by `disposition`, and
+> `row.get("kind") == "srd-gap"` rows separately as a read-only total
+> (`engine/cockpit.py`, `_review_panel`; U2 plan task INT.1). Three
+> consequences for B.2/B.4/B.5:
+>
+> 1. **Keep `kind` on the evidence arm, not just the SRD arm.** The 2026-07-29
+>    amendment §2 above spells the key out only on `{"kind": "srd-gap", ...}`,
+>    but its own consumer rules (§4 of that amendment, and §3 of the nested
+>    collector amendment) discriminate on `kind == "evidence-set"` — so both
+>    arms carry it, exactly as the historical row builder does. A raw evidence
+>    row that ships without `kind` is not merely a U2 problem: it breaks the
+>    discriminated union this plan's own §4 relies on.
+> 2. **`disposition` is the key name, and `evidence_review_queue` the façade.**
+>    The undated `Plan-reconciliation amendment (BINDING)` §2 below, and B.4's
+>    own body, still describe an `_evidence_review_cli_row` DTO renaming
+>    `disposition → latest_decision` behind a `read_evidence_review_queue`
+>    façade. Both are **superseded** by the 2026-07-29 amendment, which names
+>    them among the things it replaces and states at §3 "never the superseded
+>    `routing` and `latest_decision` names". Shipping the rename would make U2's
+>    panel read every row as open.
+> 3. **SRD-gap rows stay in the raw queue.** The same superseded layers say the
+>    collector "excludes SRD-gap rows" / "returns evidence rows only"; the
+>    2026-07-29 amendment §4 says the opposite and forbids dropping them. U2
+>    counts them from the raw queue and never calls
+>    `read_evidence_review_view`.
+>
+> If B.4/B.5 deliberately depart from any of the three, say so in this plan and
+> flag U2 INT.1 — do not let the consumer discover it as a silent zero.
+
 ### Task V2R-B.2: pure evidence-set queue, facets, and filters
 
 Create `runtime/evidence_review.py` with an evidence-set-only pure assembler:
@@ -1903,6 +1935,15 @@ Delete every assertion of flat sequences such as
 
 ### Task V2R-B.4: one direct collector plus one view projection
 
+> **Superseded names in this body.** The `read_evidence_review_queue` façade,
+> the `_evidence_review_cli_row` DTO rename (`routing_type → routing`,
+> disposition → `latest_decision`), and "returns evidence rows only" below are
+> all replaced by the 2026-07-29 amendment: the façade is
+> `engine_api.evidence_review_queue`, the field names stay `routing_type` and
+> `disposition`, and SRD-gap rows remain in the raw union. See the consumer note
+> at the head of this section — U2's cockpit reads this queue and fails silently
+> on any of the three.
+
 Define and test these helpers in `engine/api.py` before wiring HTTP:
 
 ```python
@@ -1975,6 +2016,14 @@ the nested cards rather than a flat block list.
   `feat(engine): collect and project scoped evidence-review views`.
 
 ### Task V2R-B.5: HTTP registration and nonnegative age parsing
+
+> **This task arms a consumer in another plan.** U2's cockpit review panel goes
+> live only when `engine_api.evidence_review_queue` *and* the registered
+> `views.evidence_review` row both exist — the row this task registers is the
+> second half. Until then U2 renders a named-pending line and reads nothing, so
+> a half-landed V2 is safe; the moment both halves exist, U2 INT.1's integration
+> proof is due. See the consumer note at the head of this section for the raw
+> row shape it depends on.
 
 Register only `GET /v1/views/evidence-review` and its floor contract. Preserve
 positive-only `_int_query` for `batch`; add a local parser for age:

@@ -245,6 +245,36 @@ def test_draft_panel_is_honest_about_a_project_with_no_composed_draft(vault: Pat
     assert panels["grounds"]["findings"] == []
 
 
+def test_project_panel_reports_an_untitled_project_as_blank_not_as_a_stand_in(
+    vault: Path,
+) -> None:
+    """Panel 1's `title` fallback, held against the producer state that reaches it.
+
+    A `type: project` concept with no frontmatter `title` is not malformed —
+    `read_concepts` anticipates exactly that row and substitutes `path.stem` for
+    its listing (`engine/api.py`). The panel deliberately does *not* substitute:
+    it reads the frontmatter the researcher wrote and reports blank when nothing
+    is there, so the screen never shows a filename dressed as a title. Every
+    other fixture titles its project, which leaves that fallback free to return
+    any literal at all.
+    """
+    write_checked_concept(
+        vault,
+        "projects/study-epsilon/project.md",
+        "type: project\n",
+        "project",
+    )
+
+    panels = cockpit.assemble_deep(vault, "projects/study-epsilon/project.md")
+
+    assert panels["project"]["title"] == ""
+    out = cockpit.render_deep(
+        {"screen": "deep", "project": "projects/study-epsilon/project.md", "panels": panels}
+    )
+    assert "  title: " in out
+    assert "study-epsilon" not in _panel_body(out, "project (concepts.get)")[0]
+
+
 def test_resolver_sees_projects_from_the_production_create_concept_writer(vault: Path) -> None:
     """Second producer of the same state: `memoria new-project` lands a project
     through create-concept (unchecked, no `archived` key, `_` in the slug), not
@@ -1601,6 +1631,21 @@ def test_triage_worklist_discloses_rank_factors_only_when_the_card_carries_them(
                         "path": "inbox/cand.md",
                         "rank_factors": {},
                     },
+                    # Truthy but not a mapping. I1's own contract discloses a
+                    # non-enum ranking input "verbatim in rank_factors (fail
+                    # visible, never silent)", and every attention-card field is
+                    # read straight off note frontmatter (`_attention_card`,
+                    # engine/api.py) — so a hand-edited `rank_factors: alert`
+                    # reaches this renderer as a bare string. Without the
+                    # isinstance half of the guard, `sorted("alert")` succeeds
+                    # and the key lookup then raises, killing the whole screen
+                    # over one edited note.
+                    {
+                        "title": "Check the deprivation protocol",
+                        "kind": "gap",
+                        "path": "inbox/protocol.md",
+                        "rank_factors": "alert",
+                    },
                 ]
             ),
         }
@@ -1611,6 +1656,7 @@ def test_triage_worklist_discloses_rank_factors_only_when_the_card_carries_them(
         "     rank: age_days=12 kind_weight=3 loudness=alert",
         "  2. Extend the outline  [work-prompt]  inbox/wp.md",
         "  3. Read the 2019 review  [candidate]  inbox/cand.md",
+        "  4. Check the deprivation protocol  [gap]  inbox/protocol.md",
     ]
 
 
@@ -1881,8 +1927,105 @@ def _queue_rows() -> list[dict[str, Any]]:
         }
     )
     rows.append({"kind": "srd-gap", "ref": "inbox/srd-one.md", "title": "SRD gap"})
+    # One row of an unrecognised kind *among* recognised ones: there is no
+    # honest count for a third variant, so it joins neither total. That is a
+    # narrower claim than "an unknown row may always be dropped" — a queue in
+    # which *no* row is recognised is a shape mismatch, and the panel says so
+    # rather than reporting a confident zero (see the shape test below).
     rows.append({"evidence_id": "ev-99999999", "disposition": "accepted"})
     return rows
+
+
+def _live_review_seam(monkeypatch: pytest.MonkeyPatch, rows: list[dict[str, Any]]) -> None:
+    """Both halves of V2R-B.4's seam, serving `rows`."""
+
+    def fake_queue(workspace: Path, **kwargs: Any) -> dict[str, Any]:
+        return {"ok": True, "rows": rows, "total": len(rows), "batch": 0, "facet_totals": {}}
+
+    monkeypatch.setattr(engine_api, "evidence_review_queue", fake_queue, raising=False)
+    monkeypatch.setattr(
+        cockpit,
+        "actions_by_id",
+        lambda: {
+            **actions_by_id(),
+            "views.evidence_review": {"id": "views.evidence_review", "engine": "x"},
+        },
+    )
+
+
+def test_review_panel_reports_no_open_work_on_a_fully_triaged_queue(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The drained queue, held on the *builder* side.
+
+    `open` falls back to `0` whenever the live queue has no `open` row, and per
+    V2's own row builder that is not an edge case: a raw row's `disposition` is
+    only ever `"rejected"` or `"open"` (accepted-and-cleared and defer-active
+    rows leave the queue entirely), so a vault whose reviewer has worked the
+    queue down takes this default on *every* read. The renderer's own drained
+    case is pinned against an explicit `{"open": 0, "counts": {}}` payload,
+    which is exactly what leaves the builder's default unheld: under a mutated
+    default the screen reads `open: None  (rejected=3)` with the suite green.
+    """
+    rows = [
+        {"kind": "evidence-set", "evidence_id": f"ev-{index:08d}", "disposition": "rejected"}
+        for index in range(3)
+    ]
+    _live_review_seam(monkeypatch, rows)
+
+    review = cockpit.assemble_triage(vault)["review"]
+
+    assert review == {
+        "source_action": "views.evidence_review",
+        "open": 0,
+        "counts": {"rejected": 3},
+        "srd_gaps": 0,
+    }
+    out = cockpit.render_triage({"screen": "triage", "panels": cockpit.assemble_triage(vault)})
+    assert "  open: 0  (rejected=3)" in out
+
+
+def test_review_panel_says_the_queue_shape_changed_rather_than_counting_zero(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Absence and shape mismatch are different claims (spec §1 triage 2).
+
+    The panel discriminates V2's raw union on `kind`. Two superseded layers of
+    the V2 plan still describe a CLI DTO carrying no `kind` at all, and V2R-B.5
+    lands independently of this consumer — so "the seam landed with a different
+    row shape" is a live outcome, not a hypothetical. Counting such a queue
+    yields `open: 0  (none)` under a registry-row heading: a confident number
+    about rows the panel never understood. Naming the mismatch is worth more
+    than a wrong zero, and it fails INT.1's endgame rule loudly.
+    """
+    rows = [
+        {"evidence_id": "ev-00000001", "latest_decision": "accept", "project": PROJECT_REL},
+        {"evidence_id": "ev-00000002", "latest_decision": "", "project": PROJECT_REL},
+    ]
+    _live_review_seam(monkeypatch, rows)
+
+    review = cockpit.assemble_triage(vault)["review"]
+
+    assert review["source_action"] == "views.evidence_review"
+    assert "open" not in review
+    assert review["pending"] == (
+        "2 queue rows carry no evidence-set/srd-gap kind — the raw queue shape changed "
+        "(V2 plan amendment 2026-07-29 §2)"
+    )
+
+    out = cockpit.render_triage({"screen": "triage", "panels": cockpit.assemble_triage(vault)})
+    assert "open: 0" not in out
+    assert "queue rows carry no evidence-set/srd-gap kind" in out
+
+    # An empty queue is still absence, not mismatch: it counts to zero.
+    _live_review_seam(monkeypatch, [])
+
+    assert cockpit.assemble_triage(vault)["review"] == {
+        "source_action": "views.evidence_review",
+        "open": 0,
+        "counts": {},
+        "srd_gaps": 0,
+    }
 
 
 def test_review_panel_counts_the_raw_queue_once_and_never_the_view(
@@ -2101,6 +2244,32 @@ def test_flow_panel_names_the_oldest_non_empty_age_bucket(
         "drain": 0,
         "oldest": "none",
     }
+
+
+def test_flow_panel_reports_a_drained_dashboard_as_zero_rather_than_a_default(
+    vault: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The `open_total` fallback, held on the builder side.
+
+    Every other fixture on this panel carries a truthy `open_total`, so the
+    `or 0` default is only ever reached by the producer state none of them
+    build: a workspace whose attention queue is drained. I1 may report that as
+    `open_total: 0` (falsy, so the default fires) or by omitting the key, and
+    both must read as zero rather than as whatever literal the fallback names.
+    """
+    flow: dict[str, Any] = {}
+
+    def fake_read_dashboard(workspace: Path) -> dict[str, Any]:
+        return {"ok": True, "dashboard": {"attention_flow": flow}}
+
+    monkeypatch.setattr(engine_api, "read_dashboard", fake_read_dashboard, raising=False)
+    monkeypatch.setattr(cockpit, "actions_by_id", _dashboard_row)
+
+    flow = {"open_total": 0, "inflow_by_day": {"2026-07-30": 2}}
+    assert cockpit.assemble_triage(vault)["flow"]["open_total"] == 0
+
+    flow = {"inflow_by_day": {"2026-07-30": 2}}
+    assert cockpit.assemble_triage(vault)["flow"]["open_total"] == 0
 
 
 def test_flow_panel_stays_pending_unless_a_registered_row_binds_a_live_engine(
