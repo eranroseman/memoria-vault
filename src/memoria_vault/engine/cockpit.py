@@ -20,6 +20,8 @@ from typing import Any
 
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import actions_by_id
+from memoria_vault.runtime.policy.paths import normalize_path, within_scope
+from memoria_vault.runtime.trusted_writer import EVENT_DERIVED
 
 
 def active_projects(vault: Path, *, read_scope: list[str] | None = None) -> list[dict[str, Any]]:
@@ -179,6 +181,116 @@ def _trace_panel_entry(
             "pending": "engine.cockpit.trace_panel (U2 plan section T)",
         }
     return builder(vault, project, limit=8, read_scope=read_scope)
+
+
+TRACE_PANEL_LIMIT = 8
+
+
+def trace_panel(
+    vault: Path,
+    project_path: str,
+    *,
+    limit: int = TRACE_PANEL_LIMIT,
+    read_scope: list[str] | None = None,
+) -> dict[str, Any]:
+    """Panel 5 (U2 spec §1): the recent machine changes inside one project slice.
+
+    *What "in this slice" means for a journal row.* The ids
+    `project.slice.read` exposes — the project, its outline, each resolved
+    outline member — become the `journal.list` read scope, so the shipped
+    journal predicate decides membership instead of a second one written here:
+    a row is in the slice exactly when it names at least one path and *every*
+    path it names is in the slice (`engine.api._journal_in_scope`'s `all(...)`
+    over `_journal_paths`, which sweeps `output_id`/`target_id`/`target_path`/
+    `new_path`/`linked_id`/`quarantined_id` plus the `outputs`/`paths`/`targets`
+    lists). A run that also wrote outside the slice is not a change *to* this
+    slice, and a row naming no path at all is not a change to any. The caller's
+    own `read_scope` narrows the slice ids first, so the read can only ever see
+    rows inside both bounds (scoped-trace amendment §1).
+
+    *Which rows are previewable.* Only `derived` rows are shown. `derived` is
+    the only journal event that writes the `outputs` record T.2's
+    `read_revert_preview(workspace, event_id)` resolves —
+    `state.record_file_output` has exactly two call sites, both trusted-writer
+    derivations — so `check-fired` (which carries `target_id` and no output
+    record) and the PI-edit observation would be refs the preview cannot
+    preview. The trace is deliberately *not* filtered by `actor`:
+    `OperationContext.actor` is authority, not authorship, so a PI-authorized
+    machine derivation is still a machine change.
+
+    Newest first, because `journal.list` orders by `event_id DESC`. `total` is
+    every in-slice derived row; `shown` is only what the limit left.
+    """
+    vault = Path(vault)
+    project_slice = engine_api.read_slice(vault, project_path, read_scope=read_scope)["slice"]
+    events = [
+        {
+            "event_id": int(row["event_id"]),
+            "timestamp": str(row["timestamp"]),
+            "event_type": str(row["event_type"]),
+            # A derived row that named a path other than its output still
+            # belongs on the trace; naming which record is missing is the
+            # preview's job (U2 spec §3), not a reason to hide the change.
+            "output_id": str(row["payload"].get("output_id") or ""),
+        }
+        for row in engine_api.read_journal(
+            vault,
+            limit=_journal_depth(vault),
+            read_scope=_slice_scope(project_slice, read_scope),
+        )["events"]
+        if row["event_type"] == EVENT_DERIVED
+    ]
+    shown = events[:limit]
+    return {
+        "source_action": "journal.list",
+        "events": shown,
+        "total": len(events),
+        "shown": len(shown),
+    }
+
+
+def _slice_scope(project_slice: dict[str, Any], read_scope: list[str] | None) -> list[str]:
+    """The project slice as a journal read scope, narrowed by the caller's own.
+
+    `read_slice` scope-checks only the outline, so a member can sit outside the
+    caller's scope; carrying it into the journal read would let the panel widen
+    a bounded read. The narrowing calls the shared `within_scope` predicate —
+    the one `engine.api._scope_allows` wraps and `http_transport` narrows
+    request scopes with — rather than a second copy of it. `normalize_path`
+    cannot raise here: `read_slice` ran the same normalization over the same
+    `read_scope` first and turned a traversal into `project slice not found`.
+    """
+    ids = [
+        path
+        for path in (
+            normalize_path(str(project_slice["project_path"])),
+            normalize_path(str(project_slice["outline_path"])),
+            *(normalize_path(str(member["path"])) for member in project_slice["members"]),
+        )
+        if path
+    ]
+    if read_scope is None:
+        return ids
+    bounds = [normalize_path(scope) for scope in read_scope]
+    return [path for path in ids if within_scope(path, bounds)]
+
+
+def _journal_depth(vault: Path) -> int:
+    """A `journal.list` limit that its bounded tail cannot truncate.
+
+    `read_journal` is `ORDER BY event_id DESC LIMIT ?` and applies its scope
+    filter *after* the limit, so any fixed window — its own default is 50 —
+    would quietly turn the panel's `total` into a count of the window instead of
+    a count of the slice. Journal ids are assigned `last + 1` from 1
+    (`state._insert_journal_row_conn`), so the newest id is an upper bound on
+    the number of rows and a limit that large reads all of them.
+
+    The sizing read keeps the id and never the row. `read_journal`'s own SQL is
+    unscoped too: `read_scope` bounds what a caller is told, not what the engine
+    may count.
+    """
+    newest = engine_api.read_journal(vault, limit=1)["events"]
+    return int(newest[0]["event_id"]) if newest else 0
 
 
 def _context_panel(vault: Path, *, read_scope: list[str] | None = None) -> dict[str, Any]:

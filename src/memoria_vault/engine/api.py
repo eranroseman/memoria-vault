@@ -551,6 +551,43 @@ def read_journal_event(
     return _read_payload(event=event)
 
 
+def read_cockpit(
+    workspace: Path,
+    *,
+    project_path: str = "",
+    triage: bool = False,
+    read_scope: list[str] | None = None,
+) -> dict[str, Any]:
+    """U2 cockpit composition (spec §1): one composer, two screens.
+
+    Returns the standard read envelope; every panel carries its
+    ``source_action`` registry id. A bare deep read that cannot name one active
+    project returns the ambiguous resolution instead of picking for the
+    researcher. The lazy import keeps engine.api free of a module-load cycle
+    (engine.cockpit imports engine.api).
+    """
+    from memoria_vault.engine import cockpit
+
+    workspace = Path(workspace)
+    if triage:
+        return _read_payload(
+            screen="triage", panels=cockpit.assemble_triage(workspace, read_scope=read_scope)
+        )
+    project = project_path
+    if not project:
+        resolved = cockpit.resolve_active_project(workspace, read_scope=read_scope)
+        if resolved["resolution"] == "ambiguous":
+            return _read_payload(
+                screen="deep", resolution="ambiguous", projects=resolved["projects"]
+            )
+        project = str(resolved["project"])
+    return _read_payload(
+        screen="deep",
+        project=project,
+        panels=cockpit.assemble_deep(workspace, project, read_scope=read_scope),
+    )
+
+
 def _read_payload(**payload: Any) -> dict[str, Any]:
     return {"ok": True, "api_version": READ_API_VERSION, **payload}
 

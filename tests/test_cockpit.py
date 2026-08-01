@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine import cockpit
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib import inbox
-from tests.helpers import init_cli_workspace, write_checked_concept
+from tests.helpers import ROOT, git, init_cli_workspace, write_checked_concept
 
 PROJECT_REL = "projects/study-alpha/project.md"
 
@@ -2323,3 +2327,165 @@ def test_flow_panel_stays_pending_unless_a_registered_row_binds_a_live_engine(
     for panel in (unbound, unresolvable, unregistered):
         assert panel["source_action"] == ""
         assert panel["pending"] == "the dashboard.read registry row (U2 plan T.3)"
+
+
+def test_read_cockpit_bounds_both_screens_by_read_scope(vault: Path) -> None:
+    """Scoped-trace amendment (2026-07-29) §1: `read_cockpit` is an
+    optional-scope surface, so the envelope entry point has to *propagate*
+    `read_scope` into whichever screen it composes.
+
+    This is the only producer of that parameter: `memoria cockpit` carries no
+    `--read-scope` flag (C.4's interface list), so a hop that accepted the
+    argument and dropped it would widen every bounded caller — the MCP/HTTP
+    doors T.3 registers, and U4's context handoff — with nothing in the CLI
+    tests able to see it. One case per screen, each distinguished by which read
+    refuses first.
+    """
+    outline = "projects/study-alpha/outline.md"
+    draft = "projects/study-alpha/draft.md"
+
+    # deep, resolved: the resolver's read_concepts is scoped away from projects/
+    bare = engine_api.read_cockpit(vault, read_scope=["notes"])
+    assert bare["resolution"] == "ambiguous"
+    assert bare["projects"] == []
+    assert engine_api.read_cockpit(vault)["project"] == PROJECT_REL
+
+    # deep, explicit project: the panel reads refuse in slice → draft → concept
+    # order, so each hop that keeps the scope names itself.
+    with pytest.raises(FileNotFoundError, match="project slice not found"):
+        engine_api.read_cockpit(vault, project_path=PROJECT_REL, read_scope=["notes"])
+    with pytest.raises(FileNotFoundError, match="project draft not found"):
+        engine_api.read_cockpit(vault, project_path=PROJECT_REL, read_scope=[outline])
+    scoped = engine_api.read_cockpit(
+        vault, project_path=PROJECT_REL, read_scope=[outline, draft, PROJECT_REL, "notes"]
+    )
+    assert set(scoped["panels"]) == {"project", "slice", "draft", "grounds", "trace", "context"}
+
+    # triage: the worklist's read_attention is scoped away from inbox/
+    assert len(engine_api.read_cockpit(vault, triage=True)["panels"]["worklist"]["cards"]) == 3
+    assert (
+        engine_api.read_cockpit(vault, triage=True, read_scope=["notes"])["panels"]["worklist"][
+            "cards"
+        ]
+        == []
+    )
+
+
+def test_cli_cockpit_pipe_identity_and_valid_text_buffer(
+    vault: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Keep-test (U2 spec §2): static photograph — two runs byte-identical;
+    `memoria cockpit | cat` (a real pipe, via subprocess) byte-identical to
+    both; no ANSI; a valid nano/vim buffer; 80-column layout target with
+    whole-identifier overflow only.
+
+    Both screens, because the guarantee is the cockpit's and not the deep
+    screen's: the triage screen is the one whose rows come from a projection the
+    cockpit does not own, and it is reached by a different renderer call.
+    """
+    for extra, banner in (
+        (["--project", PROJECT_REL], "memoria cockpit: deep work"),
+        (["--triage"], "memoria cockpit: triage"),
+    ):
+        argv = ["cockpit", "--workspace", str(vault), *extra]
+
+        assert main(argv) == 0
+        first = capsys.readouterr().out
+        assert main(argv) == 0
+        second = capsys.readouterr().out
+        # The child must run *this* checkout, the way pytest's
+        # `pythonpath = ["src"]` makes the in-process call do
+        # (test_package_spine's idiom). Without it the subprocess resolves
+        # whatever `memoria_vault` the environment installed, and the
+        # comparison stops being about this code at all.
+        piped = subprocess.run(
+            [sys.executable, "-m", "memoria_vault.cli", *argv],
+            capture_output=True,
+            text=True,
+            check=True,
+            env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+        ).stdout
+
+        assert first == second == piped
+        assert first.splitlines()[0] == banner
+        assert "\x1b" not in first
+        assert "\r" not in first and "\x00" not in first
+        assert first.endswith("\n")
+        for line in first.splitlines():
+            assert len(line) <= 80 or len(line.split()) == 1
+
+
+def test_cli_cockpit_json_panels_carry_source_action(
+    vault: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The `--json` surface (spec §2): the read envelope, the two fixed panel
+    key sets, and the registered-only composition rule carried through
+    `json.dumps` rather than only through the builder return values.
+
+    Registered-only composition (amendment 2026-07-29 §2/§3): a panel names a
+    *currently registered* action id, or it names nothing and says what it is
+    waiting for. The drafted `known_rows` whitelist for `dashboard.read` is
+    superseded — whitelisting an unregistered id here is precisely what that
+    amendment forbids.
+    """
+    assert main(["cockpit", "--workspace", str(vault), "--project", PROJECT_REL, "--json"]) == 0
+    deep = json.loads(capsys.readouterr().out)
+    assert main(["cockpit", "--workspace", str(vault), "--triage", "--json"]) == 0
+    triage = json.loads(capsys.readouterr().out)
+
+    for payload in (deep, triage):
+        assert payload["ok"] is True
+        assert payload["api_version"] == "engine-read-api.v1"
+    assert deep["screen"] == "deep" and triage["screen"] == "triage"
+    assert deep["project"] == PROJECT_REL
+    assert set(deep["panels"]) == {"project", "slice", "draft", "grounds", "trace", "context"}
+    assert set(triage["panels"]) == {"worklist", "review", "flow"}
+    registered = set(actions_by_id())
+    for name, panel in {**deep["panels"], **triage["panels"]}.items():
+        assert "source_action" in panel, name
+        if panel["source_action"]:
+            assert panel["source_action"] in registered, f"{name} names an unregistered action"
+        else:
+            assert panel["pending"], f"{name} has neither a source action nor a pending line"
+
+
+def test_cli_cockpit_bare_ambiguous_lists_and_exits_honestly(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    assert main(["cockpit", "--workspace", str(workspace)]) == 0
+    assert "no active projects" in capsys.readouterr().out
+
+    assert main(["cockpit", "--workspace", str(workspace), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is True
+    assert payload["resolution"] == "ambiguous"
+    assert payload["projects"] == []
+    assert "panels" not in payload
+
+
+def test_cli_cockpit_refuses_mixed_screens(vault: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    rc = main(["cockpit", "--workspace", str(vault), "--project", PROJECT_REL, "--triage"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "never mix" in captured.err
+    # The refusal happens before any read: neither screen is composed, so
+    # neither screen's banner reaches stdout.
+    assert captured.out == ""
+
+
+def test_cli_cockpit_reads_leave_tree_clean(
+    vault: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """I1 T.4 pattern: reads never touch tracked state (telemetry, once I1
+    lands, goes to the untracked sqlite store)."""
+    before = git(vault, "status", "--porcelain")
+
+    assert main(["cockpit", "--workspace", str(vault), "--project", PROJECT_REL]) == 0
+    assert main(["cockpit", "--workspace", str(vault), "--triage"]) == 0
+    assert main(["cockpit", "--workspace", str(vault), "--project", PROJECT_REL, "--json"]) == 0
+    capsys.readouterr()
+
+    assert git(vault, "status", "--porcelain") == before

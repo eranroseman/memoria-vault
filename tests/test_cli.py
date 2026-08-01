@@ -159,6 +159,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria link",
         "memoria mv",
         "memoria check",
+        "memoria cockpit",
         "memoria show",
         "memoria list",
         "memoria export",
