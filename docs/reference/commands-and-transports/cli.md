@@ -65,6 +65,7 @@ This page summarizes `src/memoria_vault/cli.py`; use `--help` for exact flags.
 | --- | --- |
 | `memoria new note/hub/project` | Author new Concepts through the CLI's code-owned frontmatter/body contract. |
 | `memoria link` | Curate a PI-owned typed relation between checked Concepts. |
+| `memoria mv <old_path> <new_path>` | PI-only rename of a note, hub, or project file; inbound `links:` entries and the Concept's DB `path` move with it in one trusted-writer commit, and the frontmatter `id` identity never changes. |
 | `memoria check` | Mark a Concept checked as the PI, or run integrity-owned workspace checks when no target is given. |
 | `memoria show/list [--type note\|work\|hub\|project]/export` | Inspect and export Concepts; `--type` filters to exactly one type per invocation — `list --type work` enumerates only catalog Works, never merged with note/hub/project Concepts. |
 | `memoria project ask/trace/gaps/frame-paper/slice/compose/verify/resolve-evidence/promote/explore/suggest-hubs/export` | Query, frame, write, verify, record evidence-review dispositions, promote, explore, and export project-level knowledge. Framing, evidence dispositions, and promotion are PI-only. |
@@ -107,6 +108,7 @@ This roster mirrors the live argparse tree:
 - `memoria link`
 - `memoria list`
 - `memoria mcp`
+- `memoria mv`
 - `memoria new hub`
 - `memoria new note`
 - `memoria new project`

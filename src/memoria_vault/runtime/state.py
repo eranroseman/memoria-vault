@@ -1199,10 +1199,9 @@ def update_concept_path(vault: Path, concept_id: str, old_path: str, new_path: s
     ``refresh_stale_passages`` computes its removed set from. The reconcile
     statement is *called*, never re-issued: it shipped a Critical once already
     (``materialization_payloads`` had no ``ON UPDATE CASCADE``) and a second copy
-    is a second place for the next one to hide. For the same reason the identity
-    side of a path-keyed move lives entirely in ``_rekey_path_keyed_concept_conn``:
-    the statements below are path space, that helper is identity space, and neither
-    enumeration is duplicated here.
+    is a second place for the next one to hide. For the same reason neither
+    enumeration is written out here: ``_rekey_path_keyed_concept_conn`` is identity
+    space and ``_rekey_path_space_conn`` is path space, one named home each.
 
     Nothing here touches ``output_sha256``. A rename does not change a byte, so
     the barrier keeps hashing the same content at the new path and edited content
@@ -1216,17 +1215,55 @@ def update_concept_path(vault: Path, concept_id: str, old_path: str, new_path: s
         # Reads `concepts.path` for the old key, so it runs before that column moves.
         _reconcile_renamed_output_conn(conn, concept_id, new_rel)
         conn.execute("UPDATE concepts SET path = ? WHERE concept_id = ?", (new_rel, concept_id))
-        conn.execute(
-            "UPDATE OR REPLACE concept_edges SET target_path = ? WHERE target_path = ?",
-            (new_rel, old_rel),
-        )
-        conn.execute(
-            "UPDATE concept_edges SET source_path = ? WHERE source_path = ?", (new_rel, old_rel)
-        )
-        conn.execute("UPDATE passages SET path = ? WHERE path = ?", (new_rel, old_rel))
-        conn.execute(
-            "UPDATE OR REPLACE file_index_state SET path = ? WHERE path = ?", (new_rel, old_rel)
-        )
+        _rekey_path_space_conn(conn, old_rel, new_rel)
+
+
+def _rekey_path_space_conn(conn: sqlite3.Connection, old_rel: str, new_rel: str) -> None:
+    """Move every row that references a Concept by its **path**, and this is the whole set.
+
+    Identity space is ``_rekey_path_keyed_concept_conn`` and the materialization
+    ledger is ``_reconcile_renamed_output_conn``; this is the third enumeration,
+    and it lives in one named place because each of the first two shipped a defect
+    by stopping one table short. Add here, never at a call site.
+
+    The two tables the first path-space pass missed are the two that key no
+    verdict, which is exactly why they hid. ``file_baseline`` keys the *alert*
+    layer: leave its row at the vacated path and both ``_reconcile_file_baselines``
+    and the observe loop take their ``baseline is None`` early exit, so a tampered
+    moved file raises no ``foreign-edit`` and the baseline adopts the tampered
+    bytes as truth — while a newcomer at the vacated path inherits the stale hash
+    and raises a ``foreign-edit`` nobody caused. ``evidence_sets.block_ref`` is
+    ``{path}#^blk-…`` and a draft's evidence is joined by prefix, so a stale prefix
+    reads as a draft with no evidence at all; ``evidence_bindings`` is immutable by
+    trigger, so the binding cannot simply be reissued afterwards.
+
+    ``UPDATE OR REPLACE`` carries the caller's stated reverse limit: a row already
+    sitting at the destination is dropped, and reversing the update cannot
+    resurrect it.
+    """
+    conn.execute(
+        "UPDATE OR REPLACE concept_edges SET target_path = ? WHERE target_path = ?",
+        (new_rel, old_rel),
+    )
+    conn.execute(
+        "UPDATE concept_edges SET source_path = ? WHERE source_path = ?", (new_rel, old_rel)
+    )
+    conn.execute("UPDATE passages SET path = ? WHERE path = ?", (new_rel, old_rel))
+    conn.execute(
+        "UPDATE OR REPLACE file_index_state SET path = ? WHERE path = ?", (new_rel, old_rel)
+    )
+    conn.execute(
+        "UPDATE OR REPLACE file_baseline SET subject_id = ? WHERE subject_id = ?",
+        (new_rel, old_rel),
+    )
+    # Exact-prefix rewrite, not LIKE: a path may hold `%` or `_`, which LIKE would
+    # read as wildcards and match a sibling Concept's block refs.
+    prefix = f"{old_rel}#"
+    conn.execute(
+        "UPDATE evidence_sets SET block_ref = ? || substr(block_ref, ?) "
+        "WHERE substr(block_ref, 1, ?) = ?",
+        (f"{new_rel}#", len(prefix) + 1, len(prefix), prefix),
+    )
 
 
 def _rekey_path_keyed_concept_conn(conn: sqlite3.Connection, old_id: str, new_id: str) -> None:

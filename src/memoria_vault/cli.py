@@ -360,6 +360,13 @@ def _lifecycle_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     link.add_argument("--reason", default="")
     link.set_defaults(handler=_cmd_link)
 
+    mv = sub.add_parser("mv")
+    _common(mv)
+    mv.add_argument("old_path")
+    mv.add_argument("new_path")
+    mv.add_argument("--reason", default="")
+    mv.set_defaults(handler=_cmd_mv)
+
     check = sub.add_parser("check")
     _common(check)
     check.add_argument("target_path", nargs="?")
@@ -1720,6 +1727,21 @@ def _cmd_link(args: argparse.Namespace) -> int:
                 "source_note_path": args.source_path,
                 "link_type": args.rel,
                 "target_path": args.target_path,
+                "reason": args.reason,
+            },
+        ),
+        args,
+    )
+
+
+def _cmd_mv(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "move-concept",
+            {
+                "old_path": args.old_path,
+                "new_path": args.new_path,
                 "reason": args.reason,
             },
         ),

@@ -57,6 +57,7 @@ PROTECTED_OPERATION_ACTORS = {
     "record-copi-interview": "pi",
     "curate-note-candidate": "pi",
     "curate-note-link": "pi",
+    "move-concept": "pi",
     "mark-checked": "pi",
     "update-work": "pi",
     "frame-paper": "pi",
@@ -498,6 +499,28 @@ def _run_operation_job(
             "target_path": result["target_path"],
             "link_type": result["link_type"],
             "changed": result["changed"],
+        }
+    if operation_id == "move-concept":
+        from memoria_vault.runtime.knowledge import move_concept
+
+        old_path = str(payload.get("old_path") or "").strip()
+        new_path = str(payload.get("new_path") or "").strip()
+        if not old_path:
+            raise ValueError("move-concept requires old_path")
+        if not new_path:
+            raise ValueError("move-concept requires new_path")
+        result = move_concept(
+            vault,
+            old_path,
+            new_path,
+            context=context,
+            reason=str(payload.get("reason") or ""),
+        )
+        return {
+            "commit": result["commit"],
+            "old_path": result["old_path"],
+            "new_path": result["new_path"],
+            "rewritten": result["rewritten"],
         }
     if operation_id == "analyze-gaps":
         from memoria_vault.runtime.knowledge import analyze_gaps

@@ -3237,7 +3237,7 @@ CLI command, following the `curate-note-link` pattern end to end.
 
 **Steps:**
 
-- [ ] Write the failing worker-dispatch test in `tests/test_knowledge.py`:
+- [x] Write the failing worker-dispatch test in `tests/test_knowledge.py`:
 
   ```python
   def test_move_concept_operation_dispatches_via_worker(tmp_path: Path) -> None:
@@ -3263,11 +3263,11 @@ CLI command, following the `curate-note-link` pattern end to end.
 
   (If `state.list_requests` requires a status filter in its current signature,
   match the call shape used by the nearest existing worker test in this file.)
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_knowledge.py::test_move_concept_operation_dispatches_via_worker -v`
   — expect FAIL: the request errors with the missing-manifest/unknown-operation
   message from `load_operation_policy` (`request["status"] == "failed"`).
-- [ ] Create `src/memoria_vault/product/capabilities/operations/move-concept.md`
+- [x] Create `src/memoria_vault/product/capabilities/operations/move-concept.md`
   (mirrors `curate-note-link.md`'s policy contract):
 
   ```markdown
@@ -3307,7 +3307,7 @@ CLI command, following the `curate-note-link` pattern end to end.
   attached. A convenience over reconcile-by-id, not a correctness requirement.
   ```
 
-- [ ] In `src/memoria_vault/runtime/worker.py`: add
+- [x] In `src/memoria_vault/runtime/worker.py`: add
   `"move-concept": "pi",` to `PROTECTED_OPERATION_ACTORS` (after
   `"curate-note-link": "pi",`, `:58`) and the dispatch branch after the
   `curate-note-link` branch (`:497`):
@@ -3337,10 +3337,10 @@ CLI command, following the `curate-note-link` pattern end to end.
           }
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_knowledge.py::test_move_concept_operation_dispatches_via_worker -v`
   — expect PASS.
-- [ ] Add the CLI command in `src/memoria_vault/cli.py`, after the `link` block
+- [x] Add the CLI command in `src/memoria_vault/cli.py`, after the `link` block
   (`:259-265`):
 
   ```python
@@ -3370,7 +3370,7 @@ CLI command, following the `curate-note-link` pattern end to end.
       )
   ```
 
-- [ ] Register the floor entry in `tests/floor_lib.py` `OPERATION_REGISTRY`
+- [x] Register the floor entry in `tests/floor_lib.py` `OPERATION_REGISTRY`
   (alphabetical position; same deterministic-refusal pattern as `curate-note-link`
   — the sweep enqueues as `actor="agent"`, and `move-concept` is pi-protected):
 
@@ -3387,14 +3387,14 @@ CLI command, following the `curate-note-link` pattern end to end.
       },
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_floor_coverage.py -v`
   — expect PASS (`test_every_operation_has_a_floor_entry` now sees the card and the
   entry). Then run the floor sweep level the repo's harness prescribes for
   operation-catalog changes; if the seeded-vault goldens shift (new capability card
   in the seed), regenerate them exactly as the failing floor test's message
   instructs — never hand-edit goldens.
-- [ ] Update the three docs listings (the doc-claims gate checks these):
+- [x] Update the three docs listings (the doc-claims gate checks these):
   add `move-concept` to the alphabetical operation id list at
   `docs/reference/commands-and-transports/system-actions.md:26`; to the pi-protected
   roster sentence at `docs/reference/commands-and-transports/system-actions-operations.md:17`
@@ -3405,8 +3405,8 @@ CLI command, following the `curate-note-link` pattern end to end.
   ```
 
   and to the `pi` row at `docs/reference/control-and-policy/control-plane.md:61`.
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/product/capabilities/operations/move-concept.md src/memoria_vault/runtime/worker.py src/memoria_vault/cli.py tests/floor_lib.py tests/test_knowledge.py docs/reference/commands-and-transports/system-actions.md docs/reference/commands-and-transports/system-actions-operations.md docs/reference/control-and-policy/control-plane.md

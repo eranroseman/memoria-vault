@@ -477,7 +477,7 @@ def move_concept(
             [*_committable(vault, old_rel), new_rel, *rewritten],
             context=context,
         )
-    except Exception:
+    except Exception as error:
         # The rename goes back first. It is the one step nothing else can redo: a
         # restore that raises after the DB is already reversed would otherwise leave
         # the row at the old path and the file at the new one.
@@ -488,6 +488,26 @@ def move_concept(
             )
         for rel in applied:
             _restore_link_rewrite(vault, rel, undo[rel], checked=rewrites[rel][2])
+        # Files, DB and git are back; the journal cannot be. Re-signing each linker
+        # already appended a `check-fired` row, and a move that reached the DB
+        # appended its own `resolved`/`moved_from` — an append-only chain has no way
+        # to drop them, so a refusal that stays silent reads as a move that
+        # happened. Retract them with a row instead. It is appended unconditionally:
+        # "this move was attempted and reverted" is true even in the refusal that
+        # journaled nothing, and bookkeeping that decides otherwise is one more
+        # place to be one row wrong.
+        append_journal_event(
+            vault,
+            {
+                "event": "move-reverted",
+                "target_id": old_rel,
+                "old_path": old_rel,
+                "new_path": new_rel,
+                "reverted": applied,
+                "reason": str(error),
+            },
+            context=context,
+        )
         raise
     return {
         "old_path": old_rel,

@@ -14,8 +14,8 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 
 Every request carries one validated actor. The worker reserves
 `acknowledge-attention`, `resolve-attention`, `record-copi-interview`,
-`curate-note-candidate`, `curate-note-link`, `mark-checked`, `update-work`,
-`frame-paper`, `promote-draft-passage`, `cascade-rollback`, and
+`curate-note-candidate`, `curate-note-link`, `move-concept`, `mark-checked`,
+`update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback`, and
 `capture-remote-pdf-source` for the `pi` actor. It reserves
 `trace-integrity-scan` and `observe-pi-edits` for the `integrity` actor.
 
@@ -122,6 +122,7 @@ retrieval, export, or egress policy.
 | Emit note candidates | worker operation `propose-note-candidates` + runtime helper (`emit_note_candidates`) | Reads one checked digest, records resolved runner provenance in `model_call`, neutralizes model-derived prose fields before apply, promotes checked `note` Concepts, and records note-candidate state in SQLite's authoritative event log rather than frontmatter. |
 | Curate note candidate | worker operation `curate-note-candidate` + runtime helper (`curate_note_candidate`) | Records a PI accept/reject decision for one checked candidate `note` as a journal `resolved` row without mutating Concept frontmatter. |
 | Curate note link | worker operation `curate-note-link` + runtime helper (`curate_note_link`) | Records one PI-authored `supports`, `contradicts`, or `extends` link from a checked note to a checked Concept, updating the note's `links` map and committing it with a journal `resolved` row. |
+| Move concept | worker operation `move-concept` + runtime helper (`move_concept`) | Renames a note, hub, or project file, rewriting inbound `links:` entries and the concept's DB `path` attribute in one trusted-writer commit; identity is the frontmatter `id`, so verdicts and edges stay attached. |
 | Analyze gaps | worker operation `analyze-gaps` + runtime helper (`analyze_gaps`) | Reports topic, digest, grounds, and project argument gaps from checked state; provider candidates and tag candidates surface as unchecked attention, never direct writes. |
 | Analyze project argument | worker operation `analyze-project-argument` + runtime helper (`analyze_project_argument`) | Follows checked, non-candidate note links around a checked project's `thesis` note and returns relation counts, stage, saturation, gap/advisory taxonomy, nodes, and edges. |
 | Render project argument Canvas | worker operation `render-project-argument-canvas` + runtime helper (`write_project_argument_canvas`) | Renders the checked-note argument graph for one project as a generated `projects/<project>/argument.canvas` projection and commits it with a journal row. |
