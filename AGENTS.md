@@ -74,5 +74,12 @@ appropriate mechanism per case:
   anywhere else `EnterWorktree` raises a `safetyCheck` prompt that no
   allow-rule or `PreToolUse` hook can suppress, plus refuses to switch straight
   from one worktree to another.
+- **Claude-side repo policy:** the checked-in `.claude/settings.json` carries
+  what AGENTS.md promises about Claude sessions — the process spine
+  (superpowers, pinned) and security-guidance enablement, a recurring-safe-
+  command allowlist, and a `PreToolUse` hook
+  (`.claude/hooks/block-git-add-all.py`) that rejects unbounded staging per the
+  shared-index rule above. Codex needs no equivalent: its default worktree
+  isolation gives each session a private index.
 
 `CLAUDE.md` is a loader (`@AGENTS.md`) with no content of its own.
