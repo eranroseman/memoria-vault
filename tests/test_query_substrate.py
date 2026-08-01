@@ -11,6 +11,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import answer_query as _answer_query
 from memoria_vault.runtime.subsystems.lib import edges as edges_lib
 from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
 from memoria_vault.runtime.trusted_writer import stage_concept as _stage_concept
 from memoria_vault.runtime.vaultio import read_frontmatter, safe_read
@@ -910,6 +911,14 @@ def test_refresh_removes_barrier_refused_changed_checked_file_without_read(
 
 
 def test_refresh_removes_reverified_non_searchable_file(tmp_path: Path) -> None:
+    """A re-verified file the searchable predicate now rejects leaves the index.
+
+    The rejection is journaled note-curation status, not frontmatter: `lifecycle`
+    is retired (vaultio.RETIRED_FRONTMATTER_FIELDS) and no reader consults it
+    (#1525), so the route this test used to take no longer exists. `mark_file_status`
+    keeps the read barrier open, so the removal is `_is_searchable_frontmatter`
+    refusing the file and not the barrier refusing to open it.
+    """
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas")
     write_checked_concept(
@@ -922,9 +931,15 @@ def test_refresh_removes_reverified_non_searchable_file(tmp_path: Path) -> None:
 
     path = vault / "notes/alpha.md"
     stored_mtime_ns = state.file_index_states(vault)["notes/alpha.md"]["source_mtime_ns"]
-    path.write_text(
-        path.read_text(encoding="utf-8").replace("tags: []\n", "tags: []\nlifecycle: archived\n"),
-        encoding="utf-8",
+    append_explicit_journal_event(
+        vault,
+        {
+            "event": "derived",
+            "operation": "propose-note-candidates",
+            "output_id": "notes/alpha.md",
+        },
+        actor="operation",
+        machine="test-fixture",
     )
     os.utime(
         path,

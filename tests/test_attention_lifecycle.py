@@ -12,6 +12,7 @@ from typing import Any
 
 import pytest
 
+from memoria_vault import cli
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import state, worker
 from memoria_vault.runtime.subsystems.lib import inbox as inbox_lib
@@ -29,6 +30,7 @@ def _write_card(
     *,
     projection: str = "attention",
     loudness: str = "block",
+    kind: str = "alert",
 ) -> Path:
     path = vault / "inbox" / name
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -36,7 +38,7 @@ def _write_card(
         "---\n"
         "title: Stop\n"
         f"projection: {projection}\n"
-        "attention_kind: alert\n"
+        f"attention_kind: {kind}\n"
         f"attention_status: {status}\n"
         f"loudness: {loudness}\n"
         f"{extra}"
@@ -226,6 +228,96 @@ def test_every_attention_reader_agrees_on_what_an_attention_card_is(
     # lifecycle._resolved_cards -- compaction out of the hot scan
     result = lifecycle.compact_resolved_cards(workspace, machine="test-machine")
     assert sorted(result["archived"]) == [closed_rel, open_rel]
+
+
+@pytest.mark.parametrize(
+    ("open_status", "resolved_status"),
+    [
+        ('" open "', '" resolved "'),
+        ("Open", "Resolved"),
+        ('" Open "', '" Resolved "'),
+    ],
+    ids=["padded", "capitalized", "both"],
+)
+def test_every_attention_reader_agrees_on_what_an_open_card_is(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    open_status: str,
+    resolved_status: str,
+) -> None:
+    """One card per spelling of `attention_status`, asserted against every reader.
+
+    The sibling pin above covers `projection`; this one covers the field that says
+    whether the card is still standing. It diverged the same way and for the same
+    reason -- `engine.api._attention_card` carried the raw string into the card
+    payload while `loudness`, `lifecycle` and `inbox` folded their own reads -- so a
+    card written `attention_status: Open` gated delegation and review-gated promotion
+    through `loudness` while being absent from `memoria attention view` and from
+    `attention list --status open`: the PI blocked by a card the CLI will not show
+    them. The payload is the reason a per-site test could not catch it. `read_attention`,
+    `read_attention_view` and the CLI's workspace-export count each compare
+    `card["status"]` a layer away from the frontmatter, so each of them looks correct
+    in isolation and all three are wrong together. The fix is one named reader,
+    `loudness.attention_status`, called at every frontmatter read including the payload
+    boundary; this test is what holds the six sites to it.
+
+    `inbox/**` is the one write target the reference actor policy grants a non-PI
+    actor, so every spelling here is reachable through the documented perimeter.
+    """
+    workspace = init_cli_workspace(tmp_path, capsys)
+    open_rel, resolved_rel = "inbox/alert-open.md", "inbox/alert-done.md"
+    _write_card(
+        workspace,
+        "alert-open.md",
+        open_status,
+        extra="fingerprint: fp-standing\n",
+        kind="work-prompt",
+    )
+    _write_card(workspace, "alert-done.md", resolved_status)
+
+    # engine.api._attention_card -- the payload boundary, canonical for every consumer
+    listing = engine_api.read_attention(workspace)["attention"]
+    assert [(card["path"], card["status"]) for card in listing] == [
+        (resolved_rel, "resolved"),
+        (open_rel, "open"),
+    ]
+    # read_attention(status=...) -- `memoria attention list --status open`
+    filtered = engine_api.read_attention(workspace, status="open")["attention"]
+    assert [card["path"] for card in filtered] == [open_rel]
+    # read_attention(worklist=True) -- `memoria attention worklist`
+    worklist = engine_api.read_attention(workspace, worklist=True)["attention"]
+    assert [card["path"] for card in worklist] == [open_rel]
+    # read_attention_view -- the pane `memoria attention view` draws
+    view = engine_api.read_attention_view(workspace)["view"]
+    assert [block["ref"] for block in view["blocks"]] == [open_rel]
+    assert engine_api.read_attention_view(workspace, summary=True)["open"] == 1
+    # cli._workspace_export_payload -- the reader #1633 does not name
+    assert cli._workspace_export_payload(workspace)["attention_open"] == 1
+    # loudness.is_open_blocker -- the delegation / review-gated promotion gate
+    assert [blocker["path"] for blocker in loudness.open_blockers(workspace)] == [open_rel]
+    # inbox._open_fingerprint_match -- a recurrence must touch the standing card,
+    # never raise a second one beside it
+    assert (
+        inbox_lib.write_finding(
+            workspace,
+            "alert",
+            "Stop",
+            "the same condition",
+            "linter",
+            fingerprint="fp-standing",
+        )
+        is None
+    )
+    assert sorted(p.name for p in (workspace / "inbox").glob("*.md")) == [
+        "alert-done.md",
+        "alert-open.md",
+    ]
+    # lifecycle._closed_cards -- the disposition journal
+    journaled = lifecycle.journal_unattributed_dispositions(workspace, machine="test-machine")
+    assert [event["target_id"] for event in journaled] == [resolved_rel]
+    # lifecycle._resolved_cards -- compaction out of the hot scan
+    result = lifecycle.compact_resolved_cards(workspace, machine="test-machine")
+    assert result["archived"] == [resolved_rel]
 
 
 @pytest.mark.parametrize(

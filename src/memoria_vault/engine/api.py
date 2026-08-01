@@ -19,6 +19,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.secrets import credential_report
+from memoria_vault.runtime.subsystems.lib import loudness
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
@@ -877,6 +878,15 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
     `projection: Attention` gate writes through `loudness` while staying invisible to
     `memoria attention list`, and a raw `read_text` made one non-UTF-8 file in
     `inbox/` fail the whole listing instead of being skipped.
+
+    `status` is `loudness.attention_status`, the same reader the gate, the journal,
+    the compactor and the inbox writer use, so the wire field is canonical rather
+    than whatever the card happened to spell. This is the only place it *can* be
+    normalized: `read_attention`, `read_attention_view` and the CLI's
+    workspace-export count all compare `card["status"]` to `"open"` a layer away,
+    where the raw spelling is already lost. The payload is a wire field the plugin
+    reads, and this narrows it -- to exactly the vocabulary `inbox.py` writes and
+    `integrity.resolve_attention` writes back, never to a new term.
     """
     if not path.is_file():
         return None
@@ -888,7 +898,7 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
         "path": rel,
         "title": frontmatter.get("title") or path.stem,
         "kind": frontmatter.get("attention_kind") or "",
-        "status": frontmatter.get("attention_status") or "",
+        "status": loudness.attention_status(frontmatter),
         "routing_class": frontmatter.get("routing_class") or "ask",
         "target": frontmatter.get("target") or frontmatter.get("target_id") or "",
         "loudness": frontmatter.get("loudness") or "",

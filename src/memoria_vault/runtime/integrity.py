@@ -1853,16 +1853,11 @@ def _concept_status(vault: Path, rel: str) -> dict[str, str]:
         return {"status": "missing"}
     if not _is_checked_concept(vault, rel):
         return {"status": "unchecked"}
-    return _frontmatter_status(read_frontmatter(path))
-
-
-def _frontmatter_status(frontmatter: dict[str, Any]) -> dict[str, str]:
-    lifecycle = str(frontmatter.get("lifecycle") or "")
-    if lifecycle in {"retracted", "archived"}:
-        return {"status": "stale", "lifecycle": lifecycle}
-    status = str(frontmatter.get("status") or "")
-    if status in {"rejected", "superseded"}:
-        return {"status": "stale", "lifecycle": status}
+    # A universal concept is never stale by frontmatter. `lifecycle` and `status`
+    # are both retired (vaultio.RETIRED_FRONTMATTER_FIELDS) and the type schemas
+    # validate closed, so no checked concept can carry either; the canonical
+    # archive state is the schema-declared `archived: bool`, and a Work's is the
+    # journaled SQLite `standing` that `_source_row_status` reads above.
     return {"status": "checked"}
 
 

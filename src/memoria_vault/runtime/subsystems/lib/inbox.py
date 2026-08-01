@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.subsystems.lib.loudness import attention_status
 from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     safe_read,
@@ -253,7 +254,7 @@ def _open_fingerprint_match(
         frontmatter, body = split_frontmatter(safe_read(path))
         if str(frontmatter.get("projection") or "").strip().lower() != "attention":
             continue
-        if str(frontmatter.get("attention_status") or "").strip().lower() != "open":
+        if attention_status(frontmatter) != "open":
             continue
         if str(frontmatter.get("fingerprint") or "").strip() != fingerprint:
             continue

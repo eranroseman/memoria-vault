@@ -7,6 +7,7 @@ and review-gated promotion until the PI acknowledges them by resolving the card.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,32 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 BLOCK_LOUDNESS = "block"
 ATTENTION_PROJECTION = "attention"
 OPEN_ATTENTION_STATUS = "open"
+
+
+def attention_status(frontmatter: Mapping[str, Any]) -> str:
+    """The one reader of a card's `attention_status`: stripped and case-folded.
+
+    Named rather than repeated because, unlike `projection`, this value does not stay
+    in the function that reads it -- `engine.api._attention_card` carries it into the
+    card payload as `status`, and three callers (`read_attention`'s worklist and
+    `--status` filters, `read_attention_view`, and the CLI's workspace-export
+    `attention_open` count) compare it to `"open"` a layer away. A fold at each of
+    those comparisons cannot work: by then the raw spelling is already in the payload.
+    So the fold belongs at every *frontmatter* read, which makes the payload's `status`
+    canonical and every later comparison correct by construction.
+
+    It lives here because this is the only attention module that is a leaf -- stdlib
+    plus `vaultio` -- so the gate, the journal, the compactor, the inbox writer, and
+    the read API can all import it at module scope without a cycle.
+
+    `inbox/**` is the one write target the reference actor policy grants a non-PI
+    actor, so `attention_status: " Open "` -- an ordinary YAML quoting accident, not an
+    exotic input -- is reachable through the documented perimeter. Unfolded, that card
+    gates writes here in `is_open_blocker` while staying invisible to `memoria
+    attention view` and `attention list --status open`: the PI is blocked by a card the
+    CLI will not show them.
+    """
+    return str(frontmatter.get("attention_status") or "").strip().lower()
 
 
 def is_open_blocker(frontmatter: dict[str, Any]) -> bool:
@@ -28,7 +55,7 @@ def is_open_blocker(frontmatter: dict[str, Any]) -> bool:
     """
     return (
         str(frontmatter.get("projection") or "").strip().lower() == ATTENTION_PROJECTION
-        and str(frontmatter.get("attention_status") or "").strip().lower() == OPEN_ATTENTION_STATUS
+        and attention_status(frontmatter) == OPEN_ATTENTION_STATUS
         and str(frontmatter.get("loudness") or "").strip().lower() == BLOCK_LOUDNESS
     )
 
