@@ -4,6 +4,7 @@
     "docs/_site/**": true,
     "docs/.jekyll-cache/**": true,
     ".notes/**": true,
+    ".claude/worktrees/**": true,
     ".worktrees/**": true,
     "test-vault/**": true
   },
@@ -11,6 +12,7 @@
     "**/_site/**": true,
     "docs/_site/**": true,
     ".notes/**": true,
+    ".claude/worktrees/**": true,
     ".worktrees/**": true,
     "test-vault/**": true,
     "docs/.jekyll-cache/**": true

@@ -65,8 +65,12 @@ appropriate mechanism per case:
 - **Write perimeter:** Claude via native permission prompts and bash sandboxing;
   Codex via the sandbox's `writable_roots`.
 - **Session isolation:** Codex isolates each session in its own worktree by
-  default; Claude has to run `git worktree add .worktrees/<name> -b
-  wip/<name> origin/main`, then `EnterWorktree(path: ".worktrees/<name>")`
-  before editing.
+  default; Claude has to run `git worktree add .claude/worktrees/<name> -b
+  wip/<name> origin/main`, then
+  `EnterWorktree(path: ".claude/worktrees/<name>")` before editing.
+  `.claude/worktrees/` is not decoration: Claude Code treats only that path as
+  a managed worktree. Anywhere else, `EnterWorktree` raises a `safetyCheck`
+  prompt that no allow-rule or `PreToolUse` hook can suppress, and switching
+  straight from one worktree to another is refused outright.
 
 `CLAUDE.md` is a loader (`@AGENTS.md`) with no content of its own.
