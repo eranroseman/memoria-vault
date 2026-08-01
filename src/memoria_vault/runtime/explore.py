@@ -8,6 +8,7 @@ from typing import Any
 from memoria_vault.runtime import graph_sql, retrieval_pipeline, state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.search_index import _bm25, _tokens, checked_search_universe
+from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs
 
 SEED_K = 5
 DEPTH_CAP = 2
@@ -227,13 +228,16 @@ def _entry_order(entry: dict[str, Any]) -> tuple[float, str, str]:
 
 def _edges_by_concept(vault: Path, ids: set[str]) -> dict[str, list[dict[str, str]]]:
     """Return only safe, displayed edges, treated as undirected for presentation."""
-    # Mixed key spaces: `source_concept_id` is identity space, `target_path` is
-    # path space, and both are matched against one `ids` set. Correct only while
-    # file Concepts key by path; NID-B.2's ULIDs break the coincidence and ERP-A.6
-    # owns the identity-safe path projection this should read.
+    # `ids` are path-space Concept ids (`_concept_id` above), so both endpoints
+    # arrive already projected: the ERP-A.6 family renders a ULID source at its
+    # `concepts.path` and a catalog work at `catalog/sources/<work_id>`, the
+    # rendering `_concept_id` produces for the synthesized fulltext document. The
+    # two agree for every document the catalog writes; `_concept_id` also fires
+    # on any other path under `fulltexts/`, where the work id is the file stem
+    # and nothing guarantees a catalog parent renders there.
     touching: dict[str, set[tuple[str, str]]] = {concept_id: set() for concept_id in ids}
-    for edge in state.concept_edges(vault):
-        source = str(edge["source_concept_id"])
+    for edge in concept_edge_path_pairs(vault):
+        source = str(edge["source_path"])
         target = str(edge["target_path"])
         if source not in ids or target not in ids:
             continue
@@ -255,15 +259,15 @@ def _tension_pairs(
     titles: dict[str, str],
 ) -> list[dict[str, Any]]:
     """Return deduplicated tension pairs whose endpoints are both safe ids."""
-    # Mixed key spaces: `source_concept_id` is identity space, `target_path` is
-    # path space, and both are matched against `safe_ids`. Correct only while file
-    # Concepts key by path; ERP-A.6 owns the projection that survives NID-B.2.
+    # Path space on both sides, through the same ERP-A.6 projection
+    # `_edges_by_concept` reads: a PI-owned tension row is identity-keyed like any
+    # other edge, and its endpoints are compared against path-space `safe_ids`.
     safe_ids = left_ids | right_ids
     pairs: dict[tuple[str, str], dict[str, Any]] = {}
-    for edge in state.concept_edges(vault):
+    for edge in concept_edge_path_pairs(vault):
         if str(edge["relation_type"]) != "tension":
             continue
-        source = str(edge["source_concept_id"])
+        source = str(edge["source_path"])
         target = str(edge["target_path"])
         if source not in safe_ids or target not in safe_ids:
             continue

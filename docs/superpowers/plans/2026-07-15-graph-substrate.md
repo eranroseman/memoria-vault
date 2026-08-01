@@ -6272,10 +6272,97 @@ amendment.
 > Join `concepts.path` to `source_path`, or `concepts.concept_id` to
 > `source_concept_id` — never one against the other. NID-B.4 did not touch this join.
 
+> **Execution amendment (2026-08-01, as landed): the consumers land here too.**
+> The Files list and the step checkboxes below name only the producer
+> (`edges.py` + `tests/test_edges.py`), but the two blockquotes above say the
+> `explore` regression persists "until this task lands", and the in-source
+> comments at all four defective sites name ERP-A.6 as the owner of the fix. A
+> producer nobody reads would have left every measured symptom in place, so this
+> task also rewires the consumers and adds
+> `src/memoria_vault/runtime/graph_sql.py`,
+> `src/memoria_vault/runtime/explore.py`, `tests/test_graph_sql.py` and
+> `tests/test_explore.py` to its Files. R2's amendment already assigns this
+> wiring to G.1/E.1, but both shipped before ERP-A.6 existed; nothing else in
+> either plan comes back for them.
+>
+> 1. **Measured before, measured after.** One vault built twice — once with
+>    id-less files (path keys) and once with frontmatter ULIDs — through
+>    `record_observed_file_edit`/`replace_concept_edges`, then read through
+>    `explore.explore_topic`. Before: the path-keyed arm returned 5 ids, 8
+>    displayed edge entries and 1 tension; the ULID arm returned 3 ids, **0**
+>    edge entries and **0** tensions,
+>    `neighborhood` emitted a raw ULID into its path-space `ids`,
+>    `degree_centrality` read 1/1 instead of 3/2, and `filter_ids` kept nothing
+>    (`after: 0` of 2). After: the two arms are byte-identical.
+> 2. **`explore._edges_by_concept` and `_tension_pairs` consume
+>    `concept_edge_path_pairs`**, and `degree_centrality` builds its adjacency
+>    from it. `state.concept_edges` now has no `src/` consumer at all.
+> 3. **`neighborhood` keeps its own SQL for eligibility only; the endpoint rule
+>    is one function, not a replica.** It cannot consume the strict projection:
+>    R2's "solely from `edges.concept_edge_path_pairs`" would silently delete the
+>    revoked-source gate, which needs the edge's own `source_path` (blank =
+>    PI-owned, no verdict gates it) and the source Concept's verdict — two columns
+>    the three-field API withholds and which no consumer can re-derive from a
+>    projected triple, since two edge rows can project to the same one. So the
+>    first query selects eligible rows with their source/target renderings, and
+>    everything after it is `edges.projected_edge_endpoints`, the same call the
+>    producer makes on every row it returns: normalize both, drop the edge if
+>    either renders blank. The recursive walk then runs over that adjacency.
+> 4. **A sanctioned replica inherits the claim, never the test — which is why the
+>    endpoint rule stopped being a replica.** This is the failure the reviews
+>    named twice: a mutation killed in `edges.py` surviving verbatim in the SQL
+>    copy, because the fixtures attached to the named producer only. Two escapes
+>    came out of it, both the same shape — one Concept with two ids in a single
+>    path-space answer. **Blank endpoint:** unguarded, `''` enters the undirected
+>    walk as a hub joining every blank-target edge's source to every other,
+>    inflating the `neighbors` denominator R2 §4 requires be built where the set
+>    is built. **Unnormalized endpoint:** a stored `./notes/x.md` sat beside the
+>    `notes/x.md` every consumer holds; the producer normalized and the copy did
+>    not, and *neither side was tested* — removing either `normalize_path` passed
+>    the full suite. It is reachable because a PI-owned `tension` row is written
+>    outside the mirror pass by design, so `_concept_edge_target_path` never keys
+>    it; contract 4 binds ERP-B.2's `insert_concept_edge` to that function and
+>    **ERP-B.3's confirm-tension writer must be bound to it too**. Collapsing the
+>    two copies into one call is the fix that cannot drift again; both sides are
+>    pinned anyway, at the producer (`tests/test_edges.py`, an unnormalized
+>    durable `target_path` and an unnormalized `concepts.path`) and at the walk
+>    (`tests/test_graph_sql.py`, the same stored row returned as the normalized
+>    id). The `neighborhood` fixture carries the producer's whole endpoint
+>    alphabet: ULID source, resolved target, pending target, resolved-but-pathless
+>    target, blank source, blank target, unnormalized target. The same rule found
+>    one more, one layer out: the checked gate in `_tension_pairs` was pinned only
+>    through its sibling `_edges_by_concept`, whose fixture edge is an `extends`
+>    row that `_tension_pairs` discards before reaching that gate; it now has an
+>    unchecked *tension* between two displayed Concepts. And ordering is now
+>    pinned on three rows rather than two — with two rows the scan order is either
+>    the answer or its exact reverse, so no two-row fixture can tell a sort from a
+>    `reverse()`.
+> 5. **`filter_ids` is not an edge reader.** Its defect is the same namespace
+>    error one table over: path-space ids matched against
+>    `concept_status.concept_id`. It now looks a Concept up by `path` and keys
+>    the result back under `path or concept_id`, the convention
+>    `state.concept_check_statuses` already uses. The `concept_id` arm is
+>    retained so a caller holding a db-store Concept that renders nowhere keeps
+>    working; it is not a licence to pass a ULID.
+> 6. **Not done, deliberately.** No consumer outside these two modules was
+>    touched. `structural_impact_graph` reads frontmatter, not `concept_edges`,
+>    and its rewire onto `concept_edge_path_records` stays ERP-D.4's.
+>    `_tension_pairs`'s safe-endpoint gate is left in place **and is dead, with
+>    nothing behind it**: for any `left`/`right`, the crossing gate two lines
+>    below admits only edges with one endpoint in each, which implies membership
+>    in `left ∪ right`, so no edge can reach one gate and fail the other — and
+>    deleting it outright passes the full suite, `titles` lookups included.
+>    Deleting it is the repo's stated preference; it is left only because it is
+>    pre-existing code outside this task's defect, and it belongs to whoever
+>    reworks the tension surface in ERP-B.3.
+
 **Files:**
 
 - Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py`
 - Modify: `tests/test_edges.py`
+- Modify (2026-08-01 amendment): `src/memoria_vault/runtime/graph_sql.py`,
+  `src/memoria_vault/runtime/explore.py`, `tests/test_graph_sql.py`,
+  `tests/test_explore.py`
 
 **Interfaces:**
 
@@ -6310,7 +6397,7 @@ amendment.
 
 **Steps:**
 
-- [ ] Write failing tests in `tests/test_edges.py` (extend the existing module;
+- [x] Write failing tests in `tests/test_edges.py` (extend the existing module;
   no `TEST_LEVELS` change).  Seed the v16 mirror with a source whose
   `concept_id` is a ULID and whose `path` is `notes/source.md`, a resolved
   target at `notes/resolved.md`, and a checked pending target path
@@ -6338,14 +6425,14 @@ amendment.
   ordering with exactly those parsed attribute dictionaries and no identity
   keys.  Add an unchecked edge and prove it is absent by default and present
   only with `checked_only=False` in both projections.
-- [ ] Run the focused test red:
+- [x] Run the focused test red:
 
   ```bash
   python -m pytest tests/test_edges.py -q
   ```
 
   Expected: import/attribute failure for both path-projection functions.
-- [ ] Implement in `edges.py`.  Keep the `state` import inside the function so
+- [x] Implement in `edges.py`.  Keep the `state` import inside the function so
   ERP-A.2's module-level `state → edges` roster import cannot cycle.  Implement
   `concept_edge_path_records` as the shared query: join the edge table to
   `concepts AS source` and left-join `concepts AS target`; select source
@@ -6357,17 +6444,20 @@ amendment.
   `concept_edge_path_pairs` by mapping each record to a newly built dict with
   exactly its three public fields.  Do not select into, return, or normalize
   raw identity columns or `edge_id`.
-- [ ] Run the focused and dependent graph tests:
+- [x] Run the focused and dependent graph tests:
 
   ```bash
   python -m pytest tests/test_edges.py tests/test_query_substrate.py -q
   ```
 
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```bash
-  git add src/memoria_vault/runtime/subsystems/lib/edges.py tests/test_edges.py
+  git add src/memoria_vault/runtime/subsystems/lib/edges.py tests/test_edges.py \
+    src/memoria_vault/runtime/graph_sql.py src/memoria_vault/runtime/explore.py \
+    tests/test_graph_sql.py tests/test_explore.py \
+    docs/superpowers/plans/2026-07-15-graph-substrate.md
   git commit -m "feat(graph): project identity-keyed edges to durable paths (ERP-A.6)"
   ```
 # Section ERP-B — Catalog bridge fix + tension confirmation surface

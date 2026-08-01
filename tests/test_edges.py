@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib import edges, schema
 from tests.helpers import ROOT
 
@@ -158,6 +161,328 @@ def test_parse_typed_wikilinks_reads_every_typed_link_in_one_body() -> None:
         ("supports", "notes/b.md"),
         ("qualifier", "notes/q.md"),
         ("warrant", "notes/w.md"),
+    ]
+
+
+# --- Identity-safe path projections (ERP-A.6) --------------------------------
+#
+# Two namespaces meet here, and every fixture below keeps them distinguishable:
+# `concept_edges.source_concept_id`/`target_concept_id` and `concepts.concept_id`
+# are **identity space** (a ULID for a file Concept that authored one, a bare
+# `work_id` for a catalog work, a provisional path for an id-less file), while
+# `concepts.path`, `concept_edges.target_path` and everything these projections
+# return are **path space**. `concepts.path` relates the two; it is not equal to
+# either. A fixture whose ids happen to equal its paths proves nothing here, so
+# no identity below is path-shaped except where that case is the subject.
+
+SOURCE_ULID = "01JXSSSSSSSSSSSSSSSSSSSSSS"
+RESOLVED_ULID = "01JXRRRRRRRRRRRRRRRRRRRRRR"
+
+
+def _mirror_rows(*, resolved_path: str = "notes/resolved.md") -> list[dict[str, str]]:
+    return [
+        {"concept_id": SOURCE_ULID, "concept_type": "note", "path": "notes/source.md"},
+        {"concept_id": RESOLVED_ULID, "concept_type": "note", "path": resolved_path},
+    ]
+
+
+def _edge(relation: str, target: str, **overrides: str) -> dict[str, str]:
+    row = {
+        "source_concept_id": SOURCE_ULID,
+        "relation_type": relation,
+        "target_path": target,
+        "check_status": "checked",
+        "source_path": "notes/source.md",
+    }
+    row.update(overrides)
+    return row
+
+
+def _seed_projection_vault(vault: Path, *, with_unchecked: bool = False) -> None:
+    """Seed the v16 mirror through the NID-B trusted seam: ULID ids, path renderings."""
+    state.rebuild_file_concept_mirror(vault, _mirror_rows())
+    rows = []
+    if with_unchecked:
+        rows.append(_edge("contradicts", "notes/resolved.md", check_status="unchecked"))
+    rows.append(_edge("supports", "notes/resolved.md", attributes_json='{"warrant": "licensed"}'))
+    rows.append(_edge("extends", "notes/pending.md", attributes_json='{"addressed": false}'))
+    state.replace_concept_edges(vault, rows)
+
+
+def _stored_edge_identities(vault: Path) -> set[str]:
+    with state.connect(vault) as conn:
+        return {
+            str(row["source_concept_id"])
+            for row in conn.execute("SELECT source_concept_id FROM concept_edges")
+        }
+
+
+def test_concept_edge_path_pairs_project_stored_identities_to_durable_paths(
+    tmp_path: Path,
+) -> None:
+    _seed_projection_vault(tmp_path)
+
+    # The fixture is not degenerate: what is stored is the ULID, not the path.
+    assert _stored_edge_identities(tmp_path) == {SOURCE_ULID}
+
+    pairs = edges.concept_edge_path_pairs(tmp_path)
+
+    assert pairs == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/pending.md",
+            "relation_type": "extends",
+        },
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/resolved.md",
+            "relation_type": "supports",
+        },
+    ]
+    serialized = json.dumps(pairs)
+    assert SOURCE_ULID not in serialized
+    assert RESOLVED_ULID not in serialized
+
+
+def test_concept_edge_path_records_add_parsed_attributes_and_nothing_else(
+    tmp_path: Path,
+) -> None:
+    _seed_projection_vault(tmp_path)
+
+    records = edges.concept_edge_path_records(tmp_path)
+
+    # Whole-row equality: the only field the record API adds is `attributes`, so
+    # no `edge_id`, `source_concept_id` or `target_concept_id` can ride along.
+    assert records == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/pending.md",
+            "relation_type": "extends",
+            "attributes": {"addressed": False},
+        },
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/resolved.md",
+            "relation_type": "supports",
+            "attributes": {"warrant": "licensed"},
+        },
+    ]
+    assert SOURCE_ULID not in json.dumps(records)
+
+
+def test_unchecked_topology_is_absent_by_default_from_both_projections(tmp_path: Path) -> None:
+    _seed_projection_vault(tmp_path, with_unchecked=True)
+
+    assert [pair["relation_type"] for pair in edges.concept_edge_path_pairs(tmp_path)] == [
+        "extends",
+        "supports",
+    ]
+    assert [record["relation_type"] for record in edges.concept_edge_path_records(tmp_path)] == [
+        "extends",
+        "supports",
+    ]
+
+    assert [
+        pair["relation_type"]
+        for pair in edges.concept_edge_path_pairs(tmp_path, checked_only=False)
+    ] == ["contradicts", "extends", "supports"]
+    assert [
+        record["relation_type"]
+        for record in edges.concept_edge_path_records(tmp_path, checked_only=False)
+    ] == ["contradicts", "extends", "supports"]
+
+
+def test_a_bare_work_id_endpoint_renders_at_its_catalog_path(tmp_path: Path) -> None:
+    """The second non-path identity shape, and the one that fails quietly.
+
+    A catalog work keys by its bare ``work_id``, which `normalize_path` accepts
+    unchanged — so an implementation that normalized the identity instead of
+    joining `concepts.path` would emit a plausible `settles-2016` node that no
+    consumer's path space contains. Only the rendered `catalog/sources/…` form
+    satisfies this assertion.
+    """
+    state.upsert_catalog_record(tmp_path, work_id="settles-2016", title="A spaced repetition model")
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows())
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            _edge("supports", "catalog/sources/settles-2016"),
+            _edge(
+                "extends",
+                "notes/resolved.md",
+                source_concept_id="settles-2016",
+                source_path="",
+            ),
+        ],
+    )
+
+    assert _stored_edge_identities(tmp_path) == {SOURCE_ULID, "settles-2016"}
+    assert edges.concept_edge_path_pairs(tmp_path) == [
+        {
+            "source_path": "catalog/sources/settles-2016",
+            "target_path": "notes/resolved.md",
+            "relation_type": "extends",
+        },
+        {
+            "source_path": "notes/source.md",
+            "target_path": "catalog/sources/settles-2016",
+            "relation_type": "supports",
+        },
+    ]
+
+
+def test_a_resolved_target_projects_its_current_path_not_the_stored_one(tmp_path: Path) -> None:
+    """The resolved arm has to come from the mirror, or a rename serves a dead path.
+
+    NID-B.4's reconcile-by-id moves `concepts.path` for a file renamed out of
+    band and leaves `concept_edges.target_path` at the vacated path, which is the
+    one state where the two disagree — and the only one that tells a projection
+    reading `target concepts.path` apart from one reading the durable column.
+    """
+    _seed_projection_vault(tmp_path)
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows(resolved_path="notes/renamed.md"))
+
+    with state.connect(tmp_path) as conn:
+        stored = conn.execute(
+            "SELECT target_path FROM concept_edges WHERE relation_type = 'supports'"
+        ).fetchone()
+    assert str(stored["target_path"]) == "notes/resolved.md"
+
+    assert [pair["target_path"] for pair in edges.concept_edge_path_pairs(tmp_path)] == [
+        "notes/pending.md",
+        "notes/renamed.md",
+    ]
+
+
+def test_a_pathless_endpoint_is_skipped_while_its_durable_target_path_survives(
+    tmp_path: Path,
+) -> None:
+    """`concepts.path` is not total: a db-store Concept may render nowhere.
+
+    The schema defaults `path` to `''` and no writer mints such a row today, but
+    a projection that emitted it would hand every path-space walk a `''` node
+    that joins every blank-source edge to every other. The resolved-but-pathless
+    *target* is the opposite case: its durable `target_path` is still the honest
+    answer, so it survives.
+    """
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows())
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, "cap-mv", concept_type="capability", store="db", path=""
+        )
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            _edge("supports", "notes/resolved.md"),
+            _edge("rebuttal", ""),
+            _edge("qualifier", "cap-mv"),
+            _edge("warrant", "notes/resolved.md", source_concept_id="cap-mv", source_path=""),
+        ],
+    )
+
+    assert edges.concept_edge_path_pairs(tmp_path) == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "cap-mv",
+            "relation_type": "qualifier",
+        },
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/resolved.md",
+            "relation_type": "supports",
+        },
+    ]
+
+
+def test_an_unnormalized_stored_endpoint_projects_into_the_one_path_space(
+    tmp_path: Path,
+) -> None:
+    """Neither `concepts.path` nor the durable `target_path` is self-normalizing.
+
+    `state.replace_concept_edges` keys every row it writes through
+    `_concept_edge_target_path`, and contract 4 binds `insert_concept_edge` to the
+    same function — but a PI-owned `tension` row is written outside that pass by
+    design (`graph_sql`'s module docstring names the seam, and ERP-B.3's writer is
+    bound to no key function yet). So `./notes/pending.md` is a reachable stored
+    value, and unnormalized it is a second id for a Concept every consumer holds
+    as `notes/pending.md`. The source arm has no writer that can reach it at all;
+    the direct `UPDATE` below is the only way in, and it is here because a
+    projection that repairs one endpoint and not the other still answers twice.
+    """
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows())
+    state.replace_concept_edges(tmp_path, [_edge("supports", "notes/resolved.md")])
+    with state.connect(tmp_path) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'tension', NULL, './notes/pending.md', 'checked', '', ?)",
+            (SOURCE_ULID, "2026-08-01T00:00:00Z"),
+        )
+        conn.execute(
+            "UPDATE concepts SET path = './notes/source.md' WHERE concept_id = ?",
+            (SOURCE_ULID,),
+        )
+
+    assert edges.concept_edge_path_pairs(tmp_path) == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/resolved.md",
+            "relation_type": "supports",
+        },
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/pending.md",
+            "relation_type": "tension",
+        },
+    ]
+
+
+def test_records_sort_by_source_then_relation_then_target(tmp_path: Path) -> None:
+    """Ordering, pinned where the insertion order can disprove it.
+
+    `concept_edges` is a rowid table, so a full scan comes back in insertion
+    order. With two rows there are only two possible orders — the answer and its
+    reverse — so a two-row fixture structurally cannot tell a real sort from a
+    `records.reverse()`. These three are seeded so that neither the scan
+    (`supports, extends, warrant`) nor its reverse is the answer.
+    """
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows())
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            _edge("supports", "notes/resolved.md"),
+            _edge("extends", "notes/pending.md"),
+            _edge("warrant", "notes/resolved.md"),
+        ],
+    )
+
+    assert [
+        (record["relation_type"], record["target_path"])
+        for record in edges.concept_edge_path_records(tmp_path)
+    ] == [
+        ("extends", "notes/pending.md"),
+        ("supports", "notes/resolved.md"),
+        ("warrant", "notes/resolved.md"),
+    ]
+
+
+def test_unusable_edge_attributes_project_as_an_empty_dict(tmp_path: Path) -> None:
+    # `replace_concept_edges` stores `attributes_json` verbatim, so both shapes
+    # are reachable through the trusted seam: JSON that is not an object, and
+    # text that is not JSON.
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows())
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            _edge("supports", "notes/resolved.md", attributes_json="[1, 2]"),
+            _edge("extends", "notes/resolved.md", attributes_json="{oops"),
+        ],
+    )
+
+    assert [record["attributes"] for record in edges.concept_edge_path_records(tmp_path)] == [
+        {},
+        {},
     ]
 
 

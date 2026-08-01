@@ -21,14 +21,18 @@ than the substrate traversal it stands in for would be a worse reader, not a
 stricter one. If one were ever wanted it would be EDGE_RELATIONS, never
 LINK_RELATIONS.
 
-Stdlib-only by design so state.py, cli.py, and structural_impact_graph.py can
-import it without a cycle.
+Stdlib-only at module scope by design so state.py, cli.py, and
+structural_impact_graph.py can import it without a cycle. The path projections
+at the bottom read the database, and import `state` inside the function for
+exactly that reason.
 """
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
+from typing import Any
 
 EDGE_RELATIONS = frozenset(
     {"supports", "contradicts", "extends", "tension", "warrant", "qualifier", "rebuttal"}
@@ -133,3 +137,112 @@ def parse_typed_wikilinks(body: str) -> list[tuple[str, str]]:
         if relation in LINK_RELATIONS and target:
             pairs.append((relation, target))
     return pairs
+
+
+def concept_edge_path_pairs(vault: Path, *, checked_only: bool = True) -> list[dict[str, str]]:
+    """Return graph edges projected to durable vault paths — the strict endpoint API.
+
+    Every row is exactly ``source_path``, ``target_path`` and ``relation_type``.
+    This is the second namespace boundary this module names — the first being
+    `strip_wikilink` (alias space) vs `normalize_link_target` (path space) —
+    and it is the one v16 created: `concept_edges` keys its
+    endpoints in **identity space**, where a file Concept is a ULID and a catalog
+    work is a bare ``work_id``, while every path-facing consumer — retrieval
+    walks, propagation closures, the structural graph — works in **path space**.
+    `concepts.path` is the map between them, and it is neither the identity nor
+    total, so no consumer may substitute one column for the other.
+    """
+    return [
+        {
+            "source_path": record["source_path"],
+            "target_path": record["target_path"],
+            "relation_type": record["relation_type"],
+        }
+        for record in concept_edge_path_records(vault, checked_only=checked_only)
+    ]
+
+
+def concept_edge_path_records(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:
+    """Return the projected paths plus parsed edge attributes, for graph-internal readers.
+
+    The shared query behind both projections. A source is rendered by its own
+    mirror row; a target that resolved is rendered by the target mirror row's
+    current path, so a rename reconciled by id serves the new path, and a target
+    that never resolved keeps the durable ``concept_edges.target_path`` it was
+    parked at. An endpoint that renders nowhere is dropped rather than published
+    as a blank node. Neither projection emits a concept id or ``edge_id``:
+    `attributes` is the only field this one adds, for the `warrant`/`addressed`
+    readers that need it.
+
+    ``checked_only`` filters on the edge row's own status; ``False`` is for the
+    graph-internal consumers that deliberately walk unchecked/pending topology.
+    """
+    from memoria_vault.runtime import state
+
+    if not state.db_path(vault).is_file():
+        return []
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT source.path AS source_path,
+                   COALESCE(NULLIF(target.path, ''), edge.target_path) AS target_path,
+                   edge.relation_type AS relation_type,
+                   edge.attributes_json AS attributes_json
+            FROM concept_edges AS edge
+            JOIN concepts AS source ON source.concept_id = edge.source_concept_id
+            LEFT JOIN concepts AS target ON target.concept_id = edge.target_concept_id
+            WHERE ? = 0 OR edge.check_status = 'checked'
+            """,
+            (1 if checked_only else 0,),
+        ).fetchall()
+    records: list[dict[str, Any]] = []
+    for row in rows:
+        endpoints = projected_edge_endpoints(row["source_path"], row["target_path"])
+        if endpoints is None:
+            continue
+        source_path, target_path = endpoints
+        records.append(
+            {
+                "source_path": source_path,
+                "target_path": target_path,
+                "relation_type": str(row["relation_type"]),
+                "attributes": _edge_attributes(row["attributes_json"]),
+            }
+        )
+    records.sort(
+        key=lambda record: (record["source_path"], record["relation_type"], record["target_path"])
+    )
+    return records
+
+
+def projected_edge_endpoints(source_path: object, target_path: object) -> tuple[str, str] | None:
+    """Return one edge's two endpoints in path space, or ``None`` if it has no rendering.
+
+    The single home for the endpoint rule, and it is public for one reason:
+    `graph_sql.neighborhood` reimplements this projection's SQL because its
+    eligibility predicate needs columns the public API withholds, so it would
+    otherwise carry a second copy of the rule. Two copies is how one Concept ends
+    up with two ids in a single path-space answer — a blank endpoint entering an
+    undirected walk as a hub, or a stored ``./notes/x.md`` sitting beside the
+    ``notes/x.md`` every consumer holds. Both escaped a review here.
+
+    Normalization is not decoration. ``state.replace_concept_edges`` keys every
+    row it writes through ``_concept_edge_target_path`` and contract 4 binds
+    ``insert_concept_edge`` to the same function, but a PI-owned ``tension`` row
+    is written outside that pass by design, so an unnormalized durable
+    ``target_path`` is reachable and must project to the one path space.
+    """
+    from memoria_vault.runtime.policy.paths import normalize_path
+
+    source = normalize_path(str(source_path or ""))
+    target = normalize_path(str(target_path or ""))
+    return None if not source or not target else (source, target)
+
+
+def _edge_attributes(raw: object) -> dict[str, Any]:
+    """Return one edge's attribute map; anything that is not a JSON object is `{}`."""
+    try:
+        parsed = json.loads(str(raw))
+    except ValueError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}

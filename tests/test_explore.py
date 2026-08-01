@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+import hashlib
 import json
 from pathlib import Path
 
@@ -18,6 +20,13 @@ def _vault(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _ulid_for(relpath: str) -> str:
+    """A stable, valid ULID for one path that looks nothing like it."""
+    alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+    digest = hashlib.sha256(relpath.encode("utf-8")).digest()
+    return "".join(alphabet[byte % 32] for byte in digest[:26])
+
+
 def _concept(
     vault: Path,
     relpath: str,
@@ -27,6 +36,7 @@ def _concept(
     mode: str = "",
     status: str = "checked",
     links: list[str] | None = None,
+    ulid_keyed: bool = False,
 ) -> Path:
     path = vault / relpath
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -43,6 +53,10 @@ def _concept(
         f"check_status: {status}",
         f"title: {title}",
     ]
+    if ulid_keyed:
+        # The identity `_concept_key_for_file` reads: from here the Concept's id
+        # is a ULID and only `concepts.path` still says `relpath`.
+        frontmatter.append(f"id: {_ulid_for(relpath)}")
     if mode:
         frontmatter.append(f"mode: {mode}")
     if links:
@@ -73,7 +87,8 @@ def _work(vault: Path, work_id: str, title: str, body: str) -> None:
     )
 
 
-def _insert_tensions(vault: Path) -> None:
+def _insert_tension_rows(vault: Path, rows: list[tuple[str, str, str]]) -> None:
+    """Seed PI-owned tension rows by identity — the mirror writer never persists one."""
     with state.connect(vault) as conn:
         conn.executemany(
             "INSERT INTO concept_edges("
@@ -82,67 +97,70 @@ def _insert_tensions(vault: Path) -> None:
             " VALUES (?, ?, ?, ?, ?, ?, ?)",
             [
                 (
-                    "notes/claim-spacing.md",
+                    state.resolve_concept_id(conn, source),
                     "tension",
-                    "notes/claim-massed.md",
-                    "notes/claim-massed.md",
-                    "checked",
+                    state.resolve_concept_id(conn, target),
+                    target,
+                    status,
                     "",
                     "2026-07-17T00:00:00Z",
-                ),
-                (
-                    "notes/claim-massed.md",
-                    "tension",
-                    "notes/claim-spacing.md",
-                    "notes/claim-spacing.md",
-                    "checked",
-                    "",
-                    "2026-07-17T00:00:00Z",
-                ),
+                )
+                for source, target, status in rows
             ],
         )
 
 
-def _fixture_vault(tmp_path: Path) -> Path:
-    vault = _vault(tmp_path)
-    _concept(
+def _insert_tensions(vault: Path) -> None:
+    _insert_tension_rows(
         vault,
+        [
+            ("notes/claim-spacing.md", "notes/claim-massed.md", "checked"),
+            ("notes/claim-massed.md", "notes/claim-spacing.md", "checked"),
+            # Unchecked, between two Concepts this topic displays: the only thing
+            # keeping it out of the `tensions` group is the checked gate. The
+            # unchecked `extends` row seeded with the mirror edges cannot stand in
+            # for it — `_tension_pairs` discards a non-tension relation before
+            # that gate is reached.
+            ("notes/question-spacing.md", "notes/claim-spacing.md", "unchecked"),
+        ],
+    )
+
+
+def _fixture_vault(tmp_path: Path, *, ulid_keyed: bool = False) -> Path:
+    vault = _vault(tmp_path)
+    concept = functools.partial(_concept, vault, ulid_keyed=ulid_keyed)
+    concept(
         "notes/claim-spacing.md",
         "Spacing beats cramming",
         "The spacing effect improves retention.",
         mode="claim",
     )
-    _concept(
-        vault,
+    concept(
         "notes/claim-massed.md",
         "Massed practice is superior",
         "Massed practice wins in short-horizon tests.",
         mode="claim",
     )
-    _concept(
-        vault,
+    concept(
         "notes/question-spacing.md",
         "Where does spacing break down?",
         "Open question about spacing boundary conditions.",
         mode="question",
     )
-    _concept(
-        vault,
+    concept(
         "hubs/memory.md",
         "Memory hub",
         "Retrieval practice and memory.",
     )
-    _concept(vault, "hubs/consolidation.md", "Consolidation hub", "Consolidation pathways.")
-    _concept(vault, "notes/generic.md", "Generic note", "GENERIC SPACING CANARY")
-    _concept(
-        vault,
+    concept("hubs/consolidation.md", "Consolidation hub", "Consolidation pathways.")
+    concept("notes/generic.md", "Generic note", "GENERIC SPACING CANARY")
+    concept(
         "projects/memory.md",
         "Memory project",
         "PROJECT SPACING CANARY",
         links=["notes/claim-spacing.md", "hubs/memory.md"],
     )
-    _concept(
-        vault,
+    concept(
         "notes/unchecked.md",
         "Unchecked note",
         "Unchecked spacing noise.",
@@ -180,6 +198,14 @@ def _fixture_vault(tmp_path: Path) -> Path:
                 "relation_type": "extends",
                 "target_concept_id": "hubs/consolidation.md",
                 "check_status": "checked",
+            },
+            # Unchecked topology between two displayed Concepts: it must never
+            # reach the payload, which only ever shows safe edges.
+            {
+                "source_concept_id": "notes/question-spacing.md",
+                "relation_type": "extends",
+                "target_concept_id": "notes/claim-spacing.md",
+                "check_status": "unchecked",
             },
         ],
     )
@@ -275,6 +301,90 @@ def test_explore_groups_safe_displayable_kinds_with_grounds_and_trace(tmp_path: 
     assert "projects/memory.md" not in serialized
     assert "GENERIC SPACING CANARY" not in serialized
     assert "PROJECT SPACING CANARY" not in serialized
+
+
+@pytest.mark.parametrize("ulid_keyed", [False, True], ids=["path-keyed", "ulid-keyed"])
+def test_explore_serves_one_graph_whichever_space_keys_the_concepts(
+    tmp_path: Path, ulid_keyed: bool
+) -> None:
+    """The NID-B.2 regression this surface owned, asserted from both namespaces.
+
+    A machine-authored note keys by its frontmatter ULID and a catalog work by
+    its bare `work_id`, so for a normal v16 vault no stored edge endpoint is a
+    path at all. Reading those identity columns as ids served zero edges and zero
+    tensions here — a silent, total loss for exactly the notes Memoria writes.
+    Both arms must produce the same payload; the ULID arm is the one that failed.
+    """
+    vault = _fixture_vault(tmp_path, ulid_keyed=ulid_keyed)
+    with state.connect(vault) as conn:
+        stored = {
+            str(row["source_concept_id"])
+            for row in conn.execute("SELECT source_concept_id FROM concept_edges")
+        }
+    # Not a degenerate fixture: under ULID keying no stored identity is a path.
+    assert any("/" in identity for identity in stored) is not ulid_keyed
+
+    payload = explore.explore_topic(vault, "spacing")
+
+    assert _returned_ids(payload) == {
+        "catalog/sources/settles-2016",
+        "hubs/memory.md",
+        "notes/claim-massed.md",
+        "notes/claim-spacing.md",
+        "notes/question-spacing.md",
+    }
+    edges_by_id = {
+        str(entry["id"]): entry["edges"]
+        for group in ("claims", "questions", "works", "hubs")
+        for entry in payload[group]
+    }
+    assert edges_by_id["notes/claim-spacing.md"] == [
+        {"relation_type": "extends", "target": "hubs/memory.md"},
+        {"relation_type": "supports", "target": "catalog/sources/settles-2016"},
+        {"relation_type": "tension", "target": "notes/claim-massed.md"},
+    ]
+    # The bare `work_id` identity, rendered at the virtual path the surface uses.
+    assert edges_by_id["catalog/sources/settles-2016"] == [
+        {"relation_type": "supports", "target": "notes/claim-massed.md"},
+        {"relation_type": "supports", "target": "notes/claim-spacing.md"},
+    ]
+    assert payload["tensions"] == [
+        {
+            "pair": ["notes/claim-massed.md", "notes/claim-spacing.md"],
+            "titles": ["Massed practice is superior", "Spacing beats cramming"],
+            "relation_type": "tension",
+        }
+    ]
+    if ulid_keyed:
+        # Only meaningful on this arm: path keying makes identity and path equal,
+        # so the same check there would forbid the answer.
+        serialized = json.dumps(payload)
+        assert not [identity for identity in stored if identity in serialized]
+
+
+def test_versus_crossing_tensions_exclude_a_same_side_pair(tmp_path: Path) -> None:
+    """A tension inside one side is not a *crossing* tension.
+
+    Seeded here rather than in the shared fixture on purpose: in this corpus side
+    B is a subset of side A, so any same-side pair is also a pair of the
+    single-topic run, and putting it in the fixture would rewrite that payload
+    instead of testing this gate. Both halves are asserted, so the exclusion is
+    provably the crossing test and not the safe-id gate that precedes it.
+    """
+    vault = _fixture_vault(tmp_path)
+    _insert_tension_rows(vault, [("hubs/memory.md", "notes/question-spacing.md", "checked")])
+
+    versus = explore.explore_topic(vault, "spacing", versus="massed")
+    solo = explore.explore_topic(vault, "spacing")
+
+    same_side = {"hubs/memory.md", "notes/question-spacing.md"}
+    assert same_side <= _returned_ids(versus["a"])
+    assert not same_side & _returned_ids(versus["b"])
+    assert versus["crossing_tensions"]["count"] == 1
+    assert [pair["pair"] for pair in solo["tensions"]] == [
+        ["hubs/memory.md", "notes/question-spacing.md"],
+        ["notes/claim-massed.md", "notes/claim-spacing.md"],
+    ]
 
 
 def test_explore_project_filter_depth_and_versus_share_one_universe(

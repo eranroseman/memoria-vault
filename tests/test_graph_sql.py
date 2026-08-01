@@ -172,6 +172,196 @@ def test_neighborhood_rejects_stale_checked_mirror_edges_for_revoked_source(tmp_
     assert graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)["ids"] == ["notes/a.md"]
 
 
+ULIDS = {
+    "notes/a.md": "01JXAAAAAAAAAAAAAAAAAAAAAA",
+    "notes/b.md": "01JXBBBBBBBBBBBBBBBBBBBBBB",
+    "notes/c.md": "01JXCCCCCCCCCCCCCCCCCCCCCC",
+    "notes/d.md": "01JXDDDDDDDDDDDDDDDDDDDDDD",
+    "notes/z.md": "01JXZZZZZZZZZZZZZZZZZZZZZZ",
+}
+
+
+def _ulid_edge(
+    source: str, relation: str, target: str, *, pi_owned: bool = False
+) -> dict[str, str]:
+    return {
+        "source_concept_id": ULIDS.get(source, source),
+        "relation_type": relation,
+        "target_path": target,
+        "check_status": "checked",
+        "source_path": "" if pi_owned else source,
+    }
+
+
+def _seed_ulid_keyed_graph(vault: Path) -> None:
+    """Seed the normal v16 shape, carrying every endpoint shape the producer projects.
+
+    `neighborhood` re-implements `edges.concept_edge_path_records`'s projection in
+    SQL, so this fixture carries the same endpoint shapes `tests/test_edges.py`
+    seeds against the producer — a ULID source, a resolved target, a pending
+    target that no Concept claims, a resolved target whose Concept renders
+    nowhere, and a blank endpoint on each side. A sanctioned second
+    implementation inherits the claim, not the coverage.
+    """
+    state.rebuild_file_concept_mirror(
+        vault,
+        [
+            {"concept_id": ulid, "concept_type": "note", "path": path}
+            for path, ulid in ULIDS.items()
+        ],
+    )
+    for path in ("notes/a.md", "notes/b.md", "notes/z.md"):
+        state.set_concept_verdict(vault, path, "checked")
+    # A db-store Concept that renders nowhere. Its own edge is PI-owned
+    # (`source_path = ''`), so the verdict gate exempts it and only the
+    # blank-path guard can keep `''` out of the walk.
+    with state.connect(vault) as conn:
+        state.ensure_concept_parent_conn(
+            conn, "cap-mv", concept_type="capability", store="db", path=""
+        )
+    state.replace_concept_edges(
+        vault,
+        [
+            _ulid_edge("notes/a.md", "supports", "notes/b.md"),
+            # Parallel relation between the same two Concepts: one neighbor.
+            _ulid_edge("notes/a.md", "contradicts", "notes/b.md"),
+            # A second distinct target, so `notes/a.md` — a source and never a
+            # target — has a degree no self-count can reach.
+            _ulid_edge("notes/a.md", "qualifier", "notes/c.md"),
+            _ulid_edge("notes/b.md", "extends", "notes/c.md"),
+            # Pending: no Concept claims this path, so only the durable
+            # `target_path` can render it.
+            _ulid_edge("notes/b.md", "warrant", "notes/pending.md"),
+            # Resolved onto a Concept that renders nowhere: the durable
+            # `target_path` is still the honest answer (the `NULLIF` arm).
+            _ulid_edge("notes/b.md", "rebuttal", "cap-mv"),
+            # Same shape as the others, but its source Concept carries no
+            # `checked` verdict.
+            _ulid_edge("notes/c.md", "supports", "notes/d.md"),
+            _ulid_edge("cap-mv", "warrant", "notes/b.md", pi_owned=True),
+            # Two blank targets from unrelated sources. Unguarded, `''` enters
+            # the undirected walk as a hub and joins `notes/a.md` to a
+            # `notes/z.md` it shares no edge with.
+            _ulid_edge("notes/a.md", "rebuttal", ""),
+            _ulid_edge("notes/z.md", "supports", ""),
+        ],
+    )
+    # PI-owned, and written outside the mirror pass exactly as a confirmed
+    # tension is — which is the one seam that can store an unnormalized durable
+    # `target_path`. `notes/unwritten.md` is the id every consumer holds.
+    with state.connect(vault) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'tension', NULL, './notes/unwritten.md', 'checked', '', ?)",
+            (ULIDS["notes/z.md"], "2026-08-01T00:00:00Z"),
+        )
+
+
+def test_graph_primitives_serve_ulid_keyed_concepts_at_their_paths(tmp_path: Path) -> None:
+    """The NID-B.2 regression these primitives owned: identity joined against path.
+
+    A machine-authored note keys by its frontmatter ULID, so `source_concept_id`
+    and `source_path` name the same Concept in two different spaces. Joining one
+    against the other served no neighbours at all and leaked a raw ULID into a
+    path-space result; `degree_centrality` counted one endpoint of each edge and
+    `filter_ids` matched nothing.
+    """
+    _seed_ulid_keyed_graph(tmp_path)
+    with state.connect(tmp_path) as conn:
+        stored = {
+            str(row["source_concept_id"])
+            for row in conn.execute("SELECT source_concept_id FROM concept_edges")
+        }
+    # Not a degenerate fixture: no stored identity is its Concept's path.
+    assert stored == {
+        ULIDS["notes/a.md"],
+        ULIDS["notes/b.md"],
+        ULIDS["notes/c.md"],
+        ULIDS["notes/z.md"],
+        "cap-mv",
+    }
+
+    hood = graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)
+
+    # Exact, so it is equally the proof of what is *not* here: no `''` hub, no
+    # `notes/z.md` reached through one, no `notes/d.md` behind the unvetted
+    # `notes/c.md`, and no raw identity.
+    assert hood["ids"] == [
+        "cap-mv",
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c.md",
+        "notes/pending.md",
+    ]
+    assert hood["counts"] == {"seeds": 1, "neighbors": 4, "returned": 5}
+    assert not set(hood["ids"]) & set(ULIDS.values())
+    assert graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=1)["ids"] == [
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c.md",
+    ]
+    # The revoked-source gate still refuses, and in identity space: `notes/c.md`
+    # holds no checked verdict, so its own mirrored edge to `notes/d.md` is not
+    # walked, while the checked edges that reach it still are.
+    assert graph_sql.neighborhood(tmp_path, ["notes/c.md"], depth=1)["ids"] == [
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c.md",
+    ]
+    # The stored `./notes/unwritten.md` reaches the walk through the one endpoint
+    # rule, so it is walked — and returned — as the id consumers hold.
+    assert graph_sql.neighborhood(tmp_path, ["notes/z.md"], depth=1)["ids"] == [
+        "notes/unwritten.md",
+        "notes/z.md",
+    ]
+
+    # No source gate here, as before ERP-A.6: `notes/d.md` keeps the degree its
+    # checked-but-unvetted inbound edge gives it. `notes/a.md` is only ever a
+    # source and `notes/c.md` only ever reached from two, so neither count is
+    # satisfiable by counting the node itself.
+    assert graph_sql.degree_centrality(
+        tmp_path, ["notes/a.md", "notes/b.md", "notes/c.md", "notes/d.md", "notes/z.md"]
+    ) == {
+        "notes/a.md": 2,
+        "notes/b.md": 4,
+        "notes/c.md": 3,
+        "notes/d.md": 1,
+        "notes/z.md": 1,
+    }
+
+    assert graph_sql.filter_ids(tmp_path, ["notes/a.md", "notes/c.md"], types={"note"})["ids"] == [
+        "notes/a.md",
+        "notes/c.md",
+    ]
+    assert graph_sql.filter_ids(
+        tmp_path, ["notes/a.md", "notes/c.md"], check_status={"checked"}
+    ) == {"ids": ["notes/a.md"], "counts": {"before": 2, "after": 1}}
+    # The identity arm: a Concept with no path is still found by the only handle
+    # it has, and keyed back under it.
+    assert graph_sql.filter_ids(tmp_path, ["cap-mv"], types={"capability"})["ids"] == ["cap-mv"]
+
+    # An out-of-band rename moves `concepts.path` and leaves the edge's durable
+    # `target_path` at the vacated path. The walk must serve the live rendering.
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": ulid, "concept_type": "note", "path": path}
+            for path, ulid in {**ULIDS, "notes/c-renamed.md": ULIDS["notes/c.md"]}.items()
+            if path != "notes/c.md"
+        ],
+    )
+
+    assert graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)["ids"] == [
+        "cap-mv",
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c-renamed.md",
+        "notes/pending.md",
+    ]
+
+
 def test_neighborhood_relations_filter_restricts_expansion(tmp_path: Path) -> None:
     _seed_concept_edges(tmp_path)
 
