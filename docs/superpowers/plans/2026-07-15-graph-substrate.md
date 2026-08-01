@@ -3862,6 +3862,25 @@ both named floor operations, the documentation-claims gate, and the
 capabilities/integrity suite (20 tests) passed. Branch-wide final verification
 remains scheduled with the next behavioral batch.
 
+> **Re-verification by content (2026-08-01).** `8006b641` is not an ancestor of
+> `main` — it merged by squash — so the record above was re-checked against the
+> files rather than the SHA, at `4bb36255`:
+>
+> 1. The manifest carries the prescribed `description`, `io_schema.input:
+>    checked_catalog_sources`, and body verbatim, with `operation_id`,
+>    `prompt_version`, `allowed_*`, `required_checks`, and `risk_class`
+>    unchanged.
+> 2. The reference row is the prescribed text; it has drifted from `:140` to
+>    `:142`.
+> 3. `tests/fixtures/floor/goldens/regenerate-capability-index.json` is current:
+>    both named floor operations pass without `MEMORIA_FLOOR_UPDATE_GOLDENS`,
+>    so **no golden moves for this task** (contract 8 unaffected).
+> 4. `doc_claims_gate.py` prints `doc-claims-gate: clean`;
+>    `tests/test_capabilities.py` and `tests/test_integrity.py` pass.
+>
+> Nothing was left to do. Every step above is ticked and the shipped files match
+> them, so the task stands complete as recorded.
+
 ---
 
 ### Task NID-C.3: Hub Candidates block writer (delimited terminal section)
@@ -3872,6 +3891,76 @@ remains scheduled with the next behavioral batch.
 > other admission path. The historical snippets below that pass
 > `allow_retired_input=True`, import `RETIRED_FRONTMATTER_FIELDS`, or describe
 > popped fields are non-executable; retain the normal checked-writer validation.
+
+> **Amendment — measured deviations and the fail-closed proof (2026-08-01,
+> applied).** Verified by content at `4bb36255`:
+>
+> 1. **The trusted-writer edit is already landed.** `mark_checked` gained
+>    `body: str | None = None` (and a sibling `frontmatter` keyword) in
+>    `31e3bc1a`, and its tail already calls `_write_checked` with
+>    `current_body if body is None else body`. The Files entry and the
+>    trusted-writer half of the implementation step are no-ops at HEAD; this
+>    task creates `hub_candidates.py`, its tests, and the `conftest.py`
+>    registration only. **No `src/` file other than the new module changed.**
+> 2. **The fail-closed rule needed no new code either.** `_validate_concept`
+>    already raises `retired frontmatter field is ignored: <field>` *before*
+>    any byte is written, on both boundaries the writer uses — `stage_concept`
+>    (validate, then write the staged file) and `_write_checked` (validate,
+>    then journal, then write). `write_hub_candidates` passes the live
+>    frontmatter through untouched and inherits that refusal. There is no
+>    `allow_retired_input`, no stripping normalizer, and no admission path.
+> 3. **Both directions are proved, and the refusal is proved to write
+>    nothing.** `test_write_refuses_retired_frontmatter_field_on_unchecked_hub_without_writing`
+>    and `..._on_checked_hub_without_writing` compare a whole-surface snapshot
+>    across the raise — file bytes, `.memoria/staging/` presence,
+>    `state.journal_head`, the journal JSONL exports, the verdict, and the
+>    `outputs` row — and assert the offending field is still in the file.
+>    Each fixture's frontmatter `check_status:` is deliberately *crossed*
+>    against the database verdict the test installs (`check_status: checked` on
+>    a DB-unchecked hub, `check_status: unchecked` on a DB-checked one), so
+>    neither test can be satisfied by reading the wrong check-status source and
+>    neither arm can be mistaken for the other.
+>    `test_write_accepts_a_schema_valid_hub_carrying_no_retired_field` is the
+>    other direction: valid frontmatter still writes, keeps its ULID, and gains
+>    the terminal section.
+> 4. **Every branch is fixtured by a producer state, not by a hand-built
+>    value.** Verdicts are installed through the shipped observe-then-judge
+>    route (`state.record_observed_file_edit` + `state.set_concept_verdict`,
+>    the same pair `trusted_writer.observe_pi_edit` and `integrity` use), which
+>    covers the checked arm, the registered-unchecked arm, the unregistered
+>    (no-database) arm, and the quarantined refusal. The section splitter's
+>    four branches each have a fixture: no section, section-only body,
+>    unterminated section (kept as curated text), and a body that quotes an
+>    opener earlier than the terminal one. Two writer edge branches that the
+>    plan's snippet carries silently are fixtured too — a curated body missing
+>    its final newline (normalized once, asserted across two writes) and a hub
+>    with no curated body at all (no leading blank line).
+> 5. **The quarantine guard earns its place.** Without it, `stage_concept` →
+>    `record_file_output(check_status="unchecked")` rewrites the verdict row,
+>    silently releasing quarantined content;
+>    `test_write_refuses_quarantined_hub_without_writing` asserts the same
+>    whole-surface snapshot as the retired-field tests.
+> 6. **`checks` cannot be discriminated by a valid value** —
+>    `SUPPORTED_PROMOTION_CHECKS` is the singleton `{"memoria-runtime"}` — so
+>    the passthrough is proved in its fail-closed direction instead
+>    (`test_write_forwards_promotion_checks_to_the_checked_writer`).
+> 7. **Mutation-tested: 22 mutants, 21 killed, 1 equivalent.** The survivor is
+>    dropping the `curated and` conjunct from the trailing-newline
+>    normalization. It is unobservable, not untested: when `curated` is empty
+>    the mutant sets it to `"\n"`, and `frontmatter_doc` (`vaultio.py`) prepends
+>    a newline to a body only when the body does not already start with one, so
+>    the extra newline is absorbed as the one that terminates the closing `---`
+>    line on every write path (`stage_concept`, `materialize_unchecked`, and
+>    `_write_checked` all render through `write_frontmatter_doc`). The conjunct
+>    is kept anyway so the writer's own "normalized exactly once" contract holds
+>    at its call site rather than depending on another module's incidental
+>    absorption. `test_write_on_a_hub_with_no_curated_body_writes_only_the_section`
+>    is named for what it actually asserts, not for that conjunct.
+> 8. **The snippet's trailing `if __name__ == "__main__": print(__doc__)` is
+>    dropped.** Two of the forty `runtime/*.py` modules carry a main guard, both
+>    because they are runnable entry points; this one is not.
+> 9. **NID-C.6 cannot run against its current fixture.** See the blocking
+>    amendment in that task's section.
 
 **Files:**
 - Create: `src/memoria_vault/runtime/hub_candidates.py`
@@ -3917,7 +4006,9 @@ criterion.
 
 Steps:
 
-- [ ] Write the failing tests. Create `tests/test_hub_candidates.py`:
+- [x] Write the failing tests. Create `tests/test_hub_candidates.py`:
+  *Applied: the snippet below is the seed; the shipped file is 21 tests, adding
+  the branch fixtures and the fail-closed pair listed in the amendment above.*
 
   ```python
   from __future__ import annotations
@@ -4080,16 +4171,19 @@ Steps:
   it from where `tests/floor_lib.py:105` imports it and adjust the single
   import line — verify with `grep -n "sha256_file" tests/floor_lib.py`.)
 
-- [ ] Register the test level: in `tests/conftest.py` `TEST_LEVELS` (line 18),
+- [x] Register the test level: in `tests/conftest.py` `TEST_LEVELS` (line 18),
   insert `"test_hub_candidates.py": "contract",` immediately before
-  `"test_hub_handoff.py": "contract",`.
+  `"test_hub_handoff.py": "contract",`. *Applied; the sibling entry has drifted
+  to line 79.*
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_hub_candidates.py -v`
   — expected failure: `ModuleNotFoundError: No module named
-  'memoria_vault.runtime.hub_candidates'`.
+  'memoria_vault.runtime.hub_candidates'`. *Measured exactly that.*
 
-- [ ] Write minimal implementation. First, extend
+- [x] Write minimal implementation. *The `trusted_writer` half below is already
+  landed at HEAD (amendment item 1) — do not re-apply it; only the new module
+  was created.* First, extend
   `trusted_writer.mark_checked` (`trusted_writer.py:632`): add the keyword
   `body: str | None = None` after `schemas_dir`, extend the docstring with
   `With ``body``, rewrite the Concept's body in the same checked write;
@@ -4224,12 +4318,14 @@ Steps:
       print(__doc__)
   ```
 
-- [ ] Run tests to verify they pass:
-  `python -m pytest tests/test_hub_candidates.py -v`
+- [x] Run tests to verify they pass:
+  `python -m pytest tests/test_hub_candidates.py -v` — 21 passed.
 
-- [ ] Verify no trusted-writer regression:
+- [x] Verify no trusted-writer regression:
   `python -m pytest tests/test_trusted_writer.py -q` if that file exists, else
   `python -m pytest tests/test_journal_trust.py tests/test_operations.py -q`.
+  *`tests/test_trusted_writer.py` exists; ran it and the fallback pair, then
+  the full `python scripts/verify`.*
 
 - [ ] Commit:
   ```
@@ -4674,6 +4770,40 @@ Steps:
 ---
 
 ### Task NID-C.6: Wire compile-source-digest's hub suggestions through the block writer
+
+> **Amendment — the curated-hub fixture must be rewritten before this task runs
+> (2026-08-01, blocking).** This task's fixture and NID-C.3's binding
+> clean-slate override cannot both pass as written. The override (2026-07-30,
+> and the newer text) makes frontmatter carrying a retired field invalid input
+> that "must fail closed without a write" and forbids a retired-field stripping
+> normalizer. This task's fixture keeps `check_status: checked` on
+> `hubs/framing.md` "deliberately to exercise the writer's retired-field pop"
+> and then asserts `"check_status" not in read_frontmatter(curated_hub)`.
+>
+> **There is no pop.** NID-C.3 shipped the override as written: the block write
+> reaches `stage_concept` → `_validate_concept`, which raises `retired
+> frontmatter field is ignored: check_status` before anything is written. So
+> `compile_source_digest` aborts on the framing hub, no Candidates section is
+> written, and `result["hub_suggestions"] == ["hubs/framing.md"]` is
+> unreachable. C.3 is not weakened to keep this fixture alive.
+>
+> **Required rewrite, before this task's first step:**
+>
+> 1. Drop the `"check_status: checked\n"` line from `curated_text` — the
+>    fixture becomes a schema-valid curated hub (`hub.yaml` still requires
+>    `tag`, which it already carries).
+> 2. Drop `assert "check_status" not in read_frontmatter(curated_hub)`. It
+>    asserts a transform that no longer exists; with the field gone from the
+>    fixture, the assertion is vacuous rather than wrong, which is worse.
+> 3. Keep `assert "check_status" not in promoted_hub_fm` — `hubs/methods.md`
+>    is created by this run and never carried the field, so that assertion is
+>    about the writer's own output, not about admitting legacy input.
+>
+> The retired-field behavior this fixture meant to exercise is covered instead
+> by `tests/test_hub_candidates.py`'s
+> `test_write_refuses_retired_frontmatter_field_on_{unchecked,checked}_hub_without_writing`,
+> which assert the refusal *and* that nothing was written on either writer
+> boundary. Nothing else in this task changes.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:584-618` (the existing-hub
