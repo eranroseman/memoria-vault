@@ -1,6 +1,8 @@
 title: Memoria
 description: A standalone local research CLI and engine for checked knowledge work.
-remote_theme: just-the-docs/just-the-docs
+# Pinned so theme (and mermaid) behavior can't shift under the site without a
+# repo change; bump deliberately.
+remote_theme: just-the-docs/just-the-docs@v0.12.0
 
 url: https://eranroseman.github.io
 baseurl: /memoria-vault
@@ -32,10 +34,15 @@ color_scheme: light
 # Favicon
 favicon_ico: "/favicon.ico"
 
+# Mermaid diagrams (rendered natively by Just the Docs >= 0.4.0)
+mermaid:
+  version: "10.9.1"
+
 # Plugins whitelisted on GitHub Pages
 plugins:
   - jekyll-relative-links
   - jekyll-seo-tag
+  - jekyll-sitemap
 
 # Scratch dirs and working records under docs/ are never published.
 exclude:

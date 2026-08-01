@@ -4,38 +4,49 @@
 ![Status](https://img.shields.io/badge/status-v0.1--alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Memoria is a standalone local CLI and research engine for a single researcher.
-It builds a checked Markdown workspace from sources, interviews, digests, notes,
-projects, citations, and attention items.
+**The AI does the bookkeeping. You keep the judgment.**
 
-The engine owns requests, records, verdicts, and recovery state in SQLite. The
-Markdown workspace stays human-readable, while machine writes go through the
-request envelope, checks, quarantine, and read barrier before they are trusted.
+Memoria is a local research engine for one researcher: it turns what you read
+into checked notes, linked arguments, and drafts whose every citation must
+resolve against a real source before export. Your notes, claims, and drafts are
+plain Markdown; system state rides in a single SQLite database plus an
+append-only journal under `.memoria/`; the whole vault travels as a folder
+copy.
 
-> **Status: v0.1 alpha source install.** No formal release has been cut yet; the install commands below run from current `main`. Alpha checkpoints are internal milestones. Check the [milestones](https://github.com/eranroseman/memoria-vault/milestones) and [open issues](https://github.com/eranroseman/memoria-vault/issues) for current checkpoint state before installing.
+> **Status: v0.1 alpha source install.** No formal release has been cut yet; the install commands below run from current `main`. Alpha checkpoints are internal milestones. Check [Roadmap & status](https://eranroseman.github.io/memoria-vault/roadmap/), the [milestones](https://github.com/eranroseman/memoria-vault/milestones), and [open issues](https://github.com/eranroseman/memoria-vault/issues) for current state before installing.
 
----
+## Why it exists
 
-For the system model, start at [Home](docs/README.md). For the command surface,
-see [CLI](docs/reference/commands-and-transports/cli.md).
+Research vaults fail two ways: sources pile up and never connect, or synthesis
+drifts from what the papers actually said. Both are bookkeeping failures.
+Memoria gives the bookkeeping — filing, linking, checking, re-checking — to the
+engine and keeps every judgment call with the researcher. Nothing enters
+checked knowledge and nothing exports without passing through you.
 
-## How it works
+## What it guarantees
 
-The installer creates your chosen runtime folder (default `~/Memoria`,
-deliberately off OneDrive), creates a workspace-local venv, installs the
-`memoria` package, initializes the workspace from the packaged seed, and wires
-Git hooks. The seed includes Memoria's Obsidian adapter files and core Obsidian
-settings for users who open the workspace there. It does not install the
-Obsidian app, profiles, Zotero integration, a host scheduler, or
-external search tooling. Direct `memoria init --no-obsidian` is available for
-non-Obsidian workspaces. See
-[Installer (bootstrap)](docs/reference/system/installer.md) for exactly what it does.
+Shipped today:
 
-The CLI and thin transports call one engine API. Product reads return checked
-verdicts; product writes enqueue requests and land unchecked until the required
-checks pass.
+- **Export refuses when a citation does not resolve** — and the refusal names
+  the failing citation. No silent rot into deliverables.
+- **Provenance is recorded, not reconstructed** — notes link to the works they
+  came from; answers cite the corpus they were drawn from; machine writes land
+  through a single journaled write path.
+- **Return after months and pick up where you left off** — attention cards show
+  exactly what is waiting on you.
 
----
+Planned for the beta.1 milestone
+([roadmap](https://eranroseman.github.io/memoria-vault/roadmap/)):
+
+- **Every drafted sentence traces to a passage you can open** (grounded
+  synthesis).
+- **When a source falls, you see everything it was holding up** (typed
+  blast-radius propagation).
+
+Start at the published docs:
+[eranroseman.github.io/memoria-vault](https://eranroseman.github.io/memoria-vault/).
+For the system model, see [Home](docs/README.md); for the command surface,
+[CLI](docs/reference/commands-and-transports/cli.md).
 
 ## Install From Main
 
@@ -75,8 +86,6 @@ For the full flag list, see [Installer (bootstrap)](docs/reference/system/instal
 - Provider keys only for the flows you use; replay fixtures and local files cover
   offline development.
 
----
-
 ## After install
 
 The installer prints a **Next steps** checklist with vault-local Python commands
@@ -84,7 +93,25 @@ for `memoria doctor bundle`, `memoria workspace rebuild --search`, and
 `memoria ask`. For the exact flow, follow
 [Quickstart](docs/how-to-guides/setup/quickstart.md).
 
----
+## How it's built
+
+The CLI and thin transports call one engine API. The engine owns requests,
+records, verdicts, and recovery state in SQLite. The Markdown workspace stays
+human-readable, while machine writes go through the request envelope, checks,
+quarantine, and read barrier before they are trusted. Product reads return
+checked verdicts; product writes enqueue requests and land unchecked until the
+required checks pass.
+
+The installer creates your chosen runtime folder (default `~/Memoria`,
+deliberately off OneDrive), creates a workspace-local venv, installs the
+`memoria` package, initializes the workspace from the packaged seed, and wires
+Git hooks. The seed includes Memoria's Obsidian adapter files and core Obsidian
+settings for users who open the workspace there; it does not install the
+Obsidian app, profiles, Zotero integration, a host scheduler, or external
+search tooling.
+Direct `memoria init --no-obsidian` is available for non-Obsidian workspaces.
+See [Installer (bootstrap)](docs/reference/system/installer.md) for exactly
+what it does.
 
 ## Repo layout
 

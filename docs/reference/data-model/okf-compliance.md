@@ -20,7 +20,7 @@ conformance bar; the rationale lives in
   Concept's **internal id** (a ULID for `note`/`hub`/`project`; the source
   `work_id` for `digest`/`fulltext`; the artifact id for `code-artifact` —
   see [Frontmatter fields](frontmatter.md#other-universal-fields)) is
-  producer metadata, not OKF identity. (Planned: G3, alpha.22/B1.)
+  producer metadata, not OKF identity. (Planned: G3, beta.1/B1.)
 - OKF-facing relationships and citations use standard Markdown links
   (bundle-relative); wikilinks remain a local authoring affordance. **Planned
   beta.1 — K1.**

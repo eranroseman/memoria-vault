@@ -79,6 +79,35 @@ under `test-vault/`.
 - **Markdown:** `.markdownlint.json` holds the structural rules enforced locally
   and in CI. Editor-only style hints in `.vscode/settings.json` do not gate PRs.
 
+## Documentation authoring conventions
+
+For contributors editing the published docs under `docs/`. Generic Diátaxis
+craft is a separate, invoke-only skill; the rules below are the
+Memoria-specific ones.
+
+- **Routing:** tutorials teach, how-to guides direct, reference informs,
+  explanation discusses. Mixed-purpose content pages are wrong — split them.
+- **Portals:** the docs landing page and section `README.md` indexes are routing
+  portals. Their mixed link menus are intentional and exempt from the
+  single-quadrant rule.
+- **Onboarding exception:**
+  [Quickstart](docs/how-to-guides/setup/quickstart.md) is Tutorial 00, listed in
+  Setup so new users can install a vault before the numbered tutorials. It
+  intentionally does not assume prior Memoria knowledge.
+- **Links:** inside `docs/`, use relative links following the target's Pages
+  route. Link unpublished targets (root files, `design-history/`) by GitHub blob
+  URL. Never relative-link into `src/` (those 404 on the site) — cite a source
+  file as an inline-code path.
+- **Indexing:** every new page goes in its section README; each new how-to also
+  belongs in its section index. The intentionally shallow `how-to-guides/README.md`
+  lists sections rather than every guide. Set `nav_order` for a logical sequence.
+- **Citations:** new works go in
+  [the bibliography](docs/reference/evidence-and-integrations/bibliography.md)
+  (ACM author-date, `<a id>` anchor); link in-text mentions to the published
+  anchor.
+- **Spelling:** American English (`-ize`/`-or`); `cspell` is the gate. Add a real
+  unknown term to `project-words.txt` (lowercase, sorted) — never inline-suppress.
+
 ## Pull requests
 
 Keep one scope per branch and PR. Each session works in its own worktree (see

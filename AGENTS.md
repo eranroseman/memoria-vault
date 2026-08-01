@@ -48,9 +48,9 @@ judgment to the one human. It should feel like a co-PI, not a knowledge base.
 
 - `docs/` describes the current system (published to GitHub Pages, Diátaxis-
   structured: tutorials / how-to / reference / explanation); its repo-specific
-  authoring conventions live in `docs/README.md`. `design-history/` is the frozen
-  record of how it got there. `docs/superpowers/` holds working specs and plans
-  (tracked, not published).
+  authoring conventions live in `CONTRIBUTING.md` ("Documentation authoring
+  conventions"). `design-history/` is the frozen record of how it got there.
+  `docs/superpowers/` holds working specs and plans (tracked, not published).
 - Backlog and readiness live in GitHub issues and milestones (a milestone is a
   release) — no separate status/readiness fields, no release parent-issue ceremony.
 

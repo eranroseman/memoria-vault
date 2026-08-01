@@ -7,33 +7,143 @@ topic: overview
 
 # Memoria
 
-A local research operating system for one principal investigator: capture
-sources, turn them into checked knowledge, and draft from a review-gated
-workspace.
+**The AI does the bookkeeping. You keep the judgment.**
 
-The standalone CLI and engine handle capture, enrichment, mapping, verification,
-and checked retrieval. The PI keeps judgment: proposed changes and dispositions
-are recorded before material enters checked knowledge.
+Memoria is a local research engine for one researcher. It turns what you read
+into checked notes, linked arguments, and drafts whose every citation must
+resolve against a real source before anything leaves the workspace.
 
-If you want a guided first experience, install or set up a vault with the
-[Quickstart](how-to-guides/setup/quickstart.md), then begin with
-[01: System tour](tutorials/01-system-tour.md). If you need to _do_ something,
-see [How-to guides](how-to-guides/). If you need exact values, field names, or
-configuration formats, see [Reference](reference/).
+[Get started](how-to-guides/setup/quickstart.md) ·
+[See a first session](#a-first-session) ·
+[GitHub](https://github.com/eranroseman/memoria-vault)
 
-**Status: v0.1 alpha source install** — alpha.21 is the latest closed
-checkpoint; the formal package/tag release gate remains open. ·
-[GitHub](https://github.com/eranroseman/memoria-vault) ·
-[Install](https://github.com/eranroseman/memoria-vault#install-from-main) ·
-[Issues](https://github.com/eranroseman/memoria-vault/issues)
+**Status: v0.1 alpha source install** — what works today and what is still
+landing: [Roadmap & status](roadmap.md).
+
+---
+
+## The problem it solves
+
+Research vaults fail in one of two ways. **Capture without synthesis:** sources
+pile up in an inbox and never connect — the vault grows but does not compound.
+**Synthesis without rigor:** bullets replace citations, summaries drift from
+what the papers actually say, and six months later you are afraid to rely on
+your own notes.
+
+Both are bookkeeping failures, and
+[maintaining a knowledge base is a bookkeeping problem, not an intelligence
+problem](explanation/rationale/foundations/what-memoria-is.md). Memoria gives
+the bookkeeping — filing, linking, checking, re-checking — to the engine, and
+keeps every judgment call with you.
+
+## <a id="a-first-session"></a>A first session
+
+The shape of one traversal, start to finish, run from the vault folder
+(placeholders in angle brackets; the annotated walkthrough starts at
+[Tutorial 02](tutorials/02-first-source.md) and runs through the
+[tutorial sequence](tutorials/README.md)):
+
+```text
+$ memoria work add --workspace . --pdf <paper.pdf>
+# the paper lands in the catalog as a work: source bytes stored as
+# provenance blobs, full text extracted, the capture journaled
+
+$ memoria work update --workspace . <work-id> --check-status checked
+# the PI gate in one line: nothing counts as checked until you say so
+
+$ memoria work digest --workspace . <work-id>
+# a structured digest of the checked full text, for reading and linking
+
+$ memoria new note --workspace . "<claim title>" --mode claim \
+    --work-id <work-id> --body "<what the paper actually showed>"
+# one claim note, linked to the source it came from
+
+$ memoria ask --workspace . --question "<your question>"
+# the checked sources that answer it, ranked, with honest unknowns
+# (local BM25; no provider key needed)
+
+$ memoria project verify --workspace . projects/<project>/project.md
+# with a project draft in place (create, check, slice, compose — the
+# Tutorial 04 loop): draft findings are reported; you resolve each one
+
+$ memoria project export --workspace . projects/<project>/project.md --draft
+# the draft export refuses unless every citation resolves — and the
+# refusal names the failing citation
+```
+
+## What Memoria guarantees
+
+Each promise is backed by a named mechanism, and the docs never claim un-built
+behavior — anything not shipped is marked *planned* here and everywhere else.
+
+**Shipped today:**
+
+- **If a citation does not resolve, the export refuses.** Drafts leave the
+  workspace only when every citation resolves against a source in the catalog —
+  and the refusal names the failing citation, so nothing rots silently into
+  your deliverables.
+- **Provenance is recorded, not reconstructed.** Notes link to the works they
+  came from, answers cite the corpus they were drawn from, and every machine
+  write lands through a single journaled write path.
+- **Come back after three months and pick up where you left off.** Attention
+  cards show exactly what is waiting on you
+  ([Return to work](how-to-guides/inbox/return-to-work.md)); nothing important
+  lives only in a chat transcript.
+- **Your words stay yours, in the open.** Notes, claims, hubs, and drafts are
+  plain Markdown you can read with `cat`; system state rides in a single SQLite
+  database plus an append-only journal under `.memoria/`; the whole vault
+  travels as a folder copy.
+
+**Planned — beta.1 milestone** ([Roadmap & status](roadmap.md)):
+
+- **Every sentence in a draft will trace to a passage you can open** *(planned
+  — grounded synthesis, workstream R2)*.
+- **When a source falls, you will see everything it was holding up** *(planned
+  — typed blast-radius propagation, workstream G5)*.
+- **A first real answer from your own corpus in under 30 minutes** *(planned —
+  the onboarding bar, workstream O1; it ships with the telemetry that measures
+  it rather than asserting it)*.
+
+## Who it's for
+
+One researcher who reads a lot and has to defend what they write: a PhD
+student building a literature base that must survive to the dissertation; a
+principal investigator who returns to projects after months away; anyone who
+has thought *"I know I read this somewhere"* or *"can I actually still cite
+this?"*
+
+If you want an AI that writes your paper for you, this is not it — and that is
+the point. Memoria is not an autonomous researcher: nothing enters checked
+knowledge and nothing exports without passing through you.
+
+## Why not just…
+
+| …use | The gap Memoria closes |
+| --- | --- |
+| **Zotero alone** | Stores sources; does not turn them into connected claims. Memoria imports its BibTeX/CSL exports and picks up where it stops. |
+| **Obsidian alone** | Notes do not check themselves. Memoria keeps the plain-Markdown vault *and* checks links, citations, and structure. |
+| **A chat assistant** | Chat memory dies with the transcript. Memoria files useful answers into durable, linkable artifacts. |
+| **Deep Research tools** | One comprehensive report per query, then it forgets. Memoria curates a corpus that compounds across months. |
 
 ---
 
 ## The model
 
-Memoria is a single-researcher operating system for turning sources into defensible
-claims and drafts. It is not an autonomous researcher. The PI owns judgment; Memoria
-keeps the work visible, traceable, and review-gated.
+Memoria is a single-researcher operating system for turning sources into
+defensible claims and drafts. The engine proposes; the PI disposes.
+
+```mermaid
+flowchart LR
+    capture[Capture and enrich] --> digest[Digest]
+    digest --> candidates[Candidate claims and links]
+    candidates --> gate{PI review gate}
+    gate --> knowledge[Checked knowledge]
+    knowledge --> draft[Draft]
+    draft --> verify[Verify findings]
+    verify --> gate
+    gate --> export[Export]
+    export -. a citation fails to resolve .-> refused[Refused, finding named]
+```
 
 ### The five terms
 
@@ -47,7 +157,7 @@ keeps the work visible, traceable, and review-gated.
 
 ### The working loop
 
-1. Capture or find a source.
+1. Find a source.
 2. Capture and enrich it into the catalog.
 3. Distill checked Works into notes.
 4. Link claims into a project argument.
@@ -55,8 +165,8 @@ keeps the work visible, traceable, and review-gated.
 6. Verify the draft and resolve findings.
 7. Archive or revise as the project changes.
 
-The loop compounds because each step leaves a typed, linkable artifact in the vault.
-Nothing important depends only on chat history.
+The loop compounds because each step leaves a typed, linkable artifact in the
+vault. Nothing important depends only on chat history.
 
 ### The control rule
 
@@ -77,33 +187,8 @@ PI-directed and policy-gated.
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
 | **Understand how the system fits together** | [Explanation](explanation/README.md)                                                              |
 | **Understand why it is designed this way** | [Design rationale](explanation/rationale/README.md)                                                |
+| **See what is shipped vs. planned**         | [Roadmap & status](roadmap.md)                                                                    |
 | **Fix something broken**                    | [Failure modes](reference/system/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
-
----
-
-## New here?
-
-Install or set up a vault with [Quickstart](how-to-guides/setup/quickstart.md),
-then begin with [01: System tour](tutorials/01-system-tour.md). Continue through
-the [Tutorials](tutorials/README.md) in order. They use the standalone
-CLI/runtime path and point to task guides when you need more detail.
-
----
-
-## Reading path
-
-Use this path when you want the system model before doing a full workflow.
-
-1. [What Memoria is](explanation/rationale/foundations/what-memoria-is.md)
-2. [Architecture](explanation/architecture/README.md)
-3. [The vault](explanation/architecture/vault.md)
-4. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md)
-5. [The control plane](explanation/execution/control-plane/README.md)
-6. [Design rationale](explanation/rationale/README.md)
-
-Then use [Quickstart](how-to-guides/setup/quickstart.md) to set up a vault and
-begin [01: System tour](tutorials/01-system-tour.md) to learn the current
-workflow by doing it.
 
 ---
 
@@ -126,28 +211,18 @@ workflow by doing it.
 
 ---
 
-## Current status and limitations
+## Start
 
-Memoria is in the **v0.1 alpha source-install** phase: the installer and CLI
-engine are being validated as a standalone local product. What is not working today:
+Install or set up a vault with [Quickstart](how-to-guides/setup/quickstart.md),
+then begin with [01: System tour](tutorials/01-system-tour.md) and continue
+through the [Tutorials](tutorials/README.md) in order.
 
-- **Release-candidate validation is still pending** — the offline runtime gate
-  replays capture, enrich, digest, ask, project writing/export, recovery, and
-  seeded-error evidence (`scripts/verify`), but the RC still needs a live
-  provider/package run before release.
-- **Mobile capture is not available** — no push channel ships; inbound capture from a phone is out of scope for beta.1. See [Architecture](explanation/architecture/README.md#interaction-channels).
-- **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
-- **Broad writability scoring is not implemented** — the current alpha baseline
-  has structural draft verification and project export readiness, but it does not decide
-  whether developed claims are ready to become prose.
-- **Single-user only** — team and multi-user review are out of scope by design.
-- **macOS is not supported** — only Linux (including WSL2) and Windows are tested.
-Throughout the docs, unshipped capabilities are marked *planned* or *deferred*;
-nothing here implies they work yet.
-
----
-
-## Browse the docs
+Want the model before the workflow? Read
+[What Memoria is](explanation/rationale/foundations/what-memoria-is.md), then
+[Architecture](explanation/architecture/README.md),
+[The vault](explanation/architecture/vault.md),
+[The knowledge cycle](explanation/knowledge/knowledge-cycle.md), and
+[The control plane](explanation/execution/control-plane/README.md).
 
 [**Tutorials**](tutorials/README.md) — Guided first workflow over the current CLI/runtime.
 
@@ -157,29 +232,5 @@ nothing here implies they work yet.
 
 [**Explanation**](explanation/README.md) — Architecture, workflows, conceptual model, and design rationale.
 
----
-
-## Documentation conventions
-
-For contributors editing these docs. Generic Diátaxis craft is a separate,
-invoke-only skill; the rules below are the Memoria-specific ones.
-
-- **Routing:** tutorials teach, how-to guides direct, reference informs,
-  explanation discusses. Mixed-purpose content pages are wrong — split them.
-- **Portals:** the docs landing page and section `README.md` indexes are routing
-  portals. Their mixed link menus are intentional and exempt from the
-  single-quadrant rule.
-- **Onboarding exception:** [Quickstart](how-to-guides/setup/quickstart.md) is
-  Tutorial 00, listed in Setup so new users can install a vault before the
-  numbered tutorials. It intentionally does not assume prior Memoria knowledge.
-- **Links:** inside `docs/`, use relative links following the target's Pages
-  route. Link unpublished targets (root files, `design-history/`) by GitHub blob
-  URL. Never relative-link into `src/` (those 404 on the site) — cite a source
-  file as an inline-code path.
-- **Indexing:** every new page goes in its section README; each new how-to also
-  belongs in its section index. The intentionally shallow `how-to-guides/README.md`
-  lists sections rather than every guide. Set `nav_order` for a logical sequence.
-- **Citations:** new works go in `reference/evidence-and-integrations/bibliography.md`
-  (ACM author-date, `<a id>` anchor); link in-text mentions to the published anchor.
-- **Spelling:** American English (`-ize`/`-or`); `cspell` is the gate. Add a real
-  unknown term to `project-words.txt` (lowercase, sorted) — never inline-suppress.
+Editing these docs? The authoring conventions live in
+[Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md#documentation-authoring-conventions).
