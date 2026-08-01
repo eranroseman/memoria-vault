@@ -53,6 +53,11 @@ judgment to the one human. It should feel like a co-PI, not a knowledge base.
   `docs/superpowers/` holds working specs and plans (tracked, not published).
 - Backlog and readiness live in GitHub issues and milestones (a milestone is a
   release) — no separate status/readiness fields, no release parent-issue ceremony.
+- Canonical term definitions live in `docs/reference/data-model/glossary.md`
+  (one definition per term, usage rulings included) — read it before naming
+  things, add new rulings there, and never start a second glossary. Root
+  `CONTEXT.md` is a symlink to it for tools that look for that file by
+  convention.
 
 ## Cross-tool parity (Codex, Kilo)
 
