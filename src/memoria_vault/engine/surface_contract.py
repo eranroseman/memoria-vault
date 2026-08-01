@@ -139,6 +139,22 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
+        "id": "views.evidence_review",
+        "job": "review",
+        "summary": "Render the evidence-review queue view.",
+        "engine": "read_evidence_review_view",
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {
+            "routing_type": {"type": "string", "default": ""},
+            "project": {"type": "string", "default": ""},
+            "min_age_days": {"type": "integer", "default": 0},
+            "batch": {"type": "integer", "default": 10},
+        },
+        "http": {"method": "GET", "path": "/v1/views/evidence-review"},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
         "id": "concepts.list",
         "job": "read",
         "summary": "List scoped Concept summaries.",

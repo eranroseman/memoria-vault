@@ -1214,6 +1214,13 @@ ARG_TABLE: dict[str, dict] = {
         "http": ("GET", "/v1/views/attention"),
         "mcp": None,
     },
+    # No cli/mcp binding: views.evidence_review is HTTP-only in V2 slice 1; the
+    # CLI front (`memoria review`) is slice 4 and registers its own binding.
+    "views.evidence_review": {
+        "cli": None,
+        "http": ("GET", "/v1/views/evidence-review"),
+        "mcp": None,
+    },
     # No cli binding: the contract declares http+mcp only for exploration.list
     # (surface_contract.py has no "cli" key for this action).
     "exploration.list": {

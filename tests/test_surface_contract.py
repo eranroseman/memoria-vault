@@ -29,6 +29,7 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "attention.list",
         "attention.get",
         "views.attention",
+        "views.evidence_review",
         "concepts.list",
         "concepts.get",
         "work.get",
@@ -109,6 +110,33 @@ def test_surface_contract_views_attention_is_http_only_with_current_shape() -> N
     }
 
 
+def test_surface_contract_views_evidence_review_is_http_only_with_current_shape() -> None:
+    """The whole row, for the same reason `views.attention` pins its own.
+
+    Two extra stakes here: U2's cockpit may name only a *registered* id, and it
+    names this one; and the four params are the only declaration the generated
+    OpenAPI document has to describe the query string from.
+    """
+    action = actions_by_id()["views.evidence_review"]
+
+    assert action == {
+        "id": "views.evidence_review",
+        "job": "review",
+        "summary": "Render the evidence-review queue view.",
+        "engine": "read_evidence_review_view",
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {
+            "routing_type": {"type": "string", "default": ""},
+            "project": {"type": "string", "default": ""},
+            "min_age_days": {"type": "integer", "default": 0},
+            "batch": {"type": "integer", "default": 10},
+        },
+        "http": {"method": "GET", "path": "/v1/views/evidence-review"},
+        "response_version": engine_api.READ_API_VERSION,
+    }
+
+
 def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
     assert http_routes() == {
         ("GET", "/status"),
@@ -119,6 +147,7 @@ def test_surface_contract_matches_current_http_and_mcp_bindings() -> None:
         ("GET", "/attention"),
         ("GET", "/attention/card"),
         ("GET", "/v1/views/attention"),
+        ("GET", "/v1/views/evidence-review"),
         ("GET", "/concepts"),
         ("GET", "/concept"),
         ("GET", "/work"),
@@ -262,6 +291,7 @@ def test_surface_contract_job_mapping_is_pinned() -> None:
         "attention.list": "review",
         "attention.get": "review",
         "views.attention": "review",
+        "views.evidence_review": "review",
         "concepts.list": "read",
         "concepts.get": "read",
         "work.get": "read",
