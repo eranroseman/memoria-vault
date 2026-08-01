@@ -44,6 +44,15 @@ disposition set is folded from both event types in journal order rather than
 filtered from one. Every code path that removes an `inbox/*.md` card owes a release
 row; `compact_resolved_cards` is currently the only `.unlink()` in `src/` that
 touches `inbox/`, and nothing enforces the rest.
+
+**Nothing outside the runtime owes anything**, and `inbox/**` is the one write
+target the reference actor policy grants a non-PI actor. A card deleted in Obsidian,
+by `git restore`/`revert`, or by an adapter therefore leaves a hold no release row
+is coming for -- `inbox/` is outside every bundle root and `_pi_edit_targets` skips
+a path that is not a file, so no observer sees the deletion at all. The scan
+reconciles that by observation instead: `_reconcile_released_paths` releases each
+held path it finds empty. The review gate does not, and deliberately -- it stays a
+cheap probe over `inbox/` frontmatter with no journal read of its own.
 """
 
 from __future__ import annotations
@@ -98,10 +107,11 @@ def _held_disposition_targets(vault: Path) -> set[str]:
     grew would suppress that card's disposition and hand the gate back the silent
     clear this module exists to remove.
 
-    So it is an ordered fold, not a filter: a disposition claims the path, the
-    archival release row hands it back. `read_event_log` orders by `event_id`, and
-    the journal forbids UPDATE and DELETE, so the fold is deterministic and replays
-    identically forever.
+    So it is an ordered fold, not a filter: a disposition claims the path, a release
+    row hands it back -- written when compaction archives the card, or when a scan
+    observes that the card is gone from a path this still holds. `read_event_log`
+    orders by `event_id`, and the journal forbids UPDATE and DELETE, so the fold is
+    deterministic and replays identically forever.
 
     An acknowledgement is an `EVENT_RESOLVED` row too, but it closes nothing and
     leaves the card open -- a later edit closing it is still unrecorded. Note
@@ -230,6 +240,10 @@ COMPACTION_ACTOR = "integrity"
 # flag. A journal event type can never be renamed once rows carry it.
 EVENT_ATTENTION_ARCHIVED = "attention-card-archived"
 ARCHIVE_REASON = "appended this attention card to the monthly archive digest"
+# Says *that* the card left outside the runtime and stops there. `inbox/**` is
+# writable by the PI's hand, a `git restore`, and an adapter alike, and no observer
+# saw which -- so naming one would be the false attestation this module refuses.
+RECONCILE_REASON = "released a held inbox path whose card was removed outside the runtime"
 # A match is sliced to its first seven characters, so the month key is always
 # `\d{4}-\d{2}`: a card's own `resolved_at` picks which digest it lands in and can
 # never name a path outside the archive.
@@ -311,6 +325,63 @@ def _release_row(rel: str, digest_rel: str) -> dict[str, Any]:
     }
 
 
+def _reconcile_row(rel: str) -> dict[str, Any]:
+    """Return the row that hands back a held path whose card left without one.
+
+    The same event type as the archival release, because the fold reads one
+    transition and there is only one to read: the path is free. No `outputs` -- the
+    archival row names the digest that now holds the card, and there is no digest
+    here, because this card was not filed anywhere. It is gone.
+
+    `actor` is `JOURNAL_ACTOR`, not `COMPACTION_ACTOR`: the two constants are the
+    same string for opposite reasons, and the reason that applies here is the
+    disposition row's. The runtime is the author of this row and of nothing it
+    describes -- it observed a removal it did not cause and cannot attribute, so the
+    reason says exactly that much.
+    """
+    return {
+        "event": EVENT_ATTENTION_ARCHIVED,
+        "source": ATTENTION_SOURCE,
+        "target_id": rel,
+        "reason": RECONCILE_REASON,
+    }
+
+
+def _reconcile_released_paths(vault: Path, *, machine: str) -> list[str]:
+    """Release every held `inbox/` path whose card is no longer there.
+
+    The caller holds the workspace lock. Nothing in the runtime observes an `inbox/`
+    deletion: the directory sits outside every bundle root and `_pi_edit_targets`
+    skips a path that is not a file, so a card removed by the PI's hand in Obsidian,
+    by `git restore`/`revert`, or by an adapter leaves its claim folded open with no
+    release row coming. The hold then outlives the card, every later card at that
+    reused name is read as already-disposed, and the review gate honours a
+    disposition nothing recorded -- issue #1616, and the loudest producers are the
+    product's own fixed-slug integrity cards, which re-raise onto the identical path
+    forever.
+
+    Read and decided inside the caller's lock, like every other read/write pair
+    here: a path this reads as gone can carry the next card a moment later, and a
+    release row written after that un-holds a path that is legitimately claimed.
+
+    A held path that still carries a file is left alone whatever that file is. The
+    row's whole claim is that the card was removed, and a card re-raised onto a held
+    path is not a removal -- while a path released in error costs a duplicate
+    permanent disposition row on every review-gated write until something archives
+    the card, which for a `deferred` card is never.
+    """
+    missing = sorted(rel for rel in _held_disposition_targets(vault) if not (vault / rel).exists())
+    if not missing:
+        return []
+    append_explicit_event_batch(
+        vault,
+        [_reconcile_row(rel) for rel in missing],
+        actor=JOURNAL_ACTOR,
+        machine=_machine(machine),
+    )
+    return missing
+
+
 def _tracked(vault: Path, rel: str) -> bool:
     proc = subprocess.run(
         ["git", "ls-files", "--error-unmatch", "--", rel],
@@ -388,22 +459,33 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     already-disposed and is deleted with no record of its own -- silently, and
     whether the first card's row named the PI or named nobody.
 
+    **A hold whose card left outside the runtime is released by observation.** A
+    deletion in `inbox/` reaches no observer, so that path's release row can only
+    come from a scan noticing the card is gone; without it the hold outlives the
+    card and silences every successor at that name. Both paths through this function
+    reconcile, because the deletion is itself the reason a vault can have a poisoned
+    path and nothing to archive.
+
     The deciding read and the writes are one critical section, for the reason the
     journaling half took one: `workspace scan` is a file-watch tick as well as a
     command the PI runs, so two of them overlap, and a card both read is appended to
-    the digest twice and unlinked twice. The probe that decides whether to lock at
-    all stays outside, so the ordinary scan -- nothing resolved -- neither contends
-    on the lock nor needs a git repository.
+    the digest twice and unlinked twice. The probe that decides whether to *archive*
+    stays outside, so the ordinary scan -- nothing resolved -- still needs no git
+    repository; it takes the lock for the reconcile alone, which writes journal rows
+    and touches no file.
     """
     vault = Path(vault)
     result: dict[str, Any] = {
         "adopted": journal_unattributed_dispositions(vault, machine=machine),
         "archived": [],
         "digests": [],
+        "released": [],
         "commit": "",
     }
     inbox = vault / "inbox"
     if not _resolved_cards(inbox):
+        with state.workspace_lock(vault):
+            result["released"] = _reconcile_released_paths(vault, machine=machine)
         return result
     archived: list[str] = []
     digests: list[str] = []
@@ -425,6 +507,11 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
             *result["adopted"],
             *journal_unattributed_dispositions(vault, machine=machine),
         ]
+        # Before the unlinks, never after. Taken after them, the diff reads every
+        # card this run archived as gone and writes it a second release row saying
+        # it was removed outside the runtime -- permanently, and about the one
+        # removal the runtime did cause.
+        result["released"] = _reconcile_released_paths(vault, machine=machine)
         for path, frontmatter, body in _resolved_cards(inbox):
             rel = path.relative_to(vault).as_posix()
             month = _archive_month(frontmatter, today)

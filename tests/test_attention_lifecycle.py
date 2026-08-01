@@ -737,7 +737,25 @@ def test_a_tail_archived_between_the_probe_and_the_lock_is_not_archived_twice(
         # its presence marks this acquisition as compaction's, not journaling's.
         if not fired and _dispositions(vault):
             fired.append(True)
-            card.unlink()  # the winner archived it while this call waited
+            # The winner archived it while this call waited -- release row first,
+            # then the unlink, which is the order compaction guarantees. Simulated
+            # to that faithfulness because the loser's reconcile now reads exactly
+            # this state: a held path with no card on it and no release row is an
+            # out-of-band deletion, and a rival that skipped its row would produce
+            # one here that no real rival can.
+            append_explicit_journal_event(
+                vault,
+                {
+                    "event": lifecycle.EVENT_ATTENTION_ARCHIVED,
+                    "source": "attention",
+                    "target_id": "inbox/alert-done.md",
+                    "outputs": ["inbox/archive/2026-06.md"],
+                    "reason": lifecycle.ARCHIVE_REASON,
+                },
+                actor="integrity",
+                machine="rival",
+            )
+            card.unlink()
         with real_lock(vault):
             yield
 
@@ -750,8 +768,9 @@ def test_a_tail_archived_between_the_probe_and_the_lock_is_not_archived_twice(
     assert not (tmp_path / "inbox/archive").exists()
     assert git(tmp_path, "rev-parse", "HEAD") == head  # nothing moved, so nothing committed
     # A release row for a card this call did not archive would free the winner's
-    # slot on the loser's behalf, un-holding a path that is legitimately held.
-    assert _released(tmp_path) == []
+    # slot on the loser's behalf, un-holding a path that is legitimately held --
+    # whether it claimed to have archived the card or to have found it gone.
+    assert (result["released"], [row["machine"] for row in _released(tmp_path)]) == ([], ["rival"])
 
 
 def test_a_rival_scan_cannot_enter_the_archive_mid_compaction(
@@ -1261,6 +1280,193 @@ def test_a_reclaimed_slot_is_journaled_once_not_on_every_gated_write(tmp_path: P
     # The trajectory observed in motion rather than at its fixed point.
     assert (second, third) == ([], [])
     assert [event["outcome"] for event in _dispositions(tmp_path)] == ["reject", "apply"]
+
+
+def test_a_held_path_whose_card_vanished_is_released_and_its_successor_journals(
+    tmp_path: Path,
+) -> None:
+    """Issue #1616: nothing in the runtime observes an `inbox/` deletion.
+
+    `inbox/` sits outside every bundle root and `_pi_edit_targets` skips a path that
+    is not a file, so the PI deleting a card in Obsidian -- `inbox/**` is the one
+    write target the reference actor policy grants a non-PI actor -- reaches no
+    observer at all. The path stays held until some card at it is archived by the
+    runtime, which for a PI who deletes rather than resolves never happens: every
+    later card at that reused name is read as already-disposed, and the review gate
+    then honours a disposition nothing recorded. The scan reconciles the hold by
+    observation, and the successor's own close is journaled again.
+
+    No git repo, deliberately: the deletion is itself why there is nothing to
+    archive, so this heals on the early-return path, which commits nothing.
+    """
+    rel = "inbox/alert-slot.md"
+    _write_card(tmp_path, "alert-slot.md", "resolved", extra="resolution_outcome: reject\n")
+    lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    # The hold under test is produced, not assumed: the path suppresses a second row.
+    assert lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine") == []
+    (tmp_path / rel).unlink()
+
+    result = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+
+    assert result["released"] == [rel]
+    assert (result["adopted"], result["archived"], result["digests"], result["commit"]) == (
+        [],
+        [],
+        [],
+        "",
+    )
+    assert _attention_chain(tmp_path, rel) == [
+        ("resolved", "reject"),
+        (lifecycle.EVENT_ATTENTION_ARCHIVED, None),
+    ]
+    _write_card(tmp_path, "alert-slot.md", "resolved", extra="resolution_outcome: apply\n")
+
+    adopted = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+
+    assert [event["target_id"] for event in adopted] == [rel]
+    # The successor's decision, not the deleted card's -- the shape alone would also
+    # be produced by a run that journaled the first card's disposition twice.
+    assert adopted[0]["outcome"] == "apply"
+    assert _attention_chain(tmp_path, rel) == [
+        ("resolved", "reject"),
+        (lifecycle.EVENT_ATTENTION_ARCHIVED, None),
+        ("resolved", "apply"),
+    ]
+
+
+def test_a_vanished_cards_path_is_released_once_not_on_every_scan(tmp_path: Path) -> None:
+    """The release is a transition in the fold, not a standing property of a gap.
+
+    A deleted card stays deleted forever, so a reconcile keyed on "disposed and not
+    on disk" -- the order-blind reading of the same diff, which passes any fixture
+    that runs one scan -- appends another permanent, undeletable row on every
+    file-watch tick for the life of the vault. The trajectory has to be sampled in
+    motion -- released, then silent, then silent -- because at its fixed point the
+    two implementations look the same.
+    """
+    rel = "inbox/alert-slot.md"
+    _write_card(tmp_path, "alert-slot.md", "resolved")
+    lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    (tmp_path / rel).unlink()
+
+    first = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+    second = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+    third = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+
+    assert (first["released"], second["released"], third["released"]) == ([rel], [], [])
+    assert [event["target_id"] for event in _released(tmp_path)] == [rel]
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_reasons"),
+    [
+        # Archived by this very run: released once, by the row that names its digest.
+        ("resolved", [lifecycle.ARCHIVE_REASON]),
+        # A permanent resident: nothing archives a deferred card, so a reconcile that
+        # released an occupied path would re-journal its disposition on every
+        # review-gated write, forever.
+        ("deferred", []),
+        # Re-opened by hand. No card was removed, and a row saying one was is a
+        # permanent false statement in a log that forbids UPDATE and DELETE.
+        ("open", []),
+    ],
+)
+def test_a_held_path_that_still_carries_a_card_is_never_released(
+    tmp_path: Path, status: str, expected_reasons: list[str]
+) -> None:
+    """A vanished card is observed, never inferred from the hold."""
+    init_git(tmp_path, "pi@example.invalid", "PI")
+    _write_card(tmp_path, "alert-slot.md", "resolved")
+    assert lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    _write_card(tmp_path, "alert-slot.md", status)  # the card still on the path
+
+    result = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+
+    assert result["released"] == []
+    assert [row["reason"] for row in _released(tmp_path)] == expected_reasons
+    assert lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine") == []
+    assert len(_dispositions(tmp_path)) == 1
+
+
+def test_a_card_archived_in_the_same_run_is_not_released_twice(tmp_path: Path) -> None:
+    """The reconcile reads the filesystem before the unlinks, so this run's cards are there.
+
+    Taken after the unlink loop it would read every card this run archived as gone.
+    Each would then carry both an archival release row naming the digest that holds
+    it and a reconcile row saying it was removed outside the runtime -- and one of
+    those is permanently false about what happened to the card.
+    """
+    init_git(tmp_path, "pi@example.invalid", "PI")
+    gone, live = "inbox/alert-gone.md", "inbox/alert-live.md"
+    _write_card(tmp_path, "alert-gone.md", "resolved")
+    lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    (tmp_path / gone).unlink()
+    _write_card(tmp_path, "alert-live.md", "resolved", extra="resolved_at: 2026-06-30\n")
+
+    result = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+
+    assert (result["released"], result["archived"]) == ([gone], [live])
+    assert [event["target_id"] for event in result["adopted"]] == [live]
+    assert [(row["target_id"], row["reason"]) for row in _released(tmp_path)] == [
+        (gone, lifecycle.RECONCILE_REASON),
+        (live, lifecycle.ARCHIVE_REASON),
+    ]
+
+
+def test_every_vanished_held_path_is_released_not_just_the_first(tmp_path: Path) -> None:
+    """One diff, N rows, in a stable order -- and only for the paths that are gone.
+
+    A PI clearing a triage burst in Obsidian deletes several cards at once, so N is
+    routinely greater than one. A reconcile that released the first and stopped
+    would leave the rest held with nothing left to observe: the deletion it needed
+    to see has already happened, and it never happens again.
+    """
+    for name in ("alert-one.md", "alert-two.md", "alert-three.md"):
+        _write_card(tmp_path, name, "deferred")
+    lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    (tmp_path / "inbox/alert-one.md").unlink()
+    (tmp_path / "inbox/alert-two.md").unlink()
+
+    result = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+
+    assert result["released"] == ["inbox/alert-one.md", "inbox/alert-two.md"]
+    assert [row["target_id"] for row in _released(tmp_path)] == [
+        "inbox/alert-one.md",
+        "inbox/alert-two.md",
+    ]
+    # The third card is still on its path, so its disposition is still held.
+    assert lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine") == []
+
+
+def test_the_reconcile_row_claims_only_what_the_runtime_observed(tmp_path: Path) -> None:
+    """The runtime wrote this row about a removal it did not cause and cannot attribute.
+
+    So it names no author, no decision and no digest. `via`, `resolution` and
+    `outcome` name a judgment and its maker; `outputs` would say the card was filed
+    somewhere, and this card was not filed anywhere -- it is gone. `actor:
+    integrity` is the disposition row's "the runtime observed this", not
+    compaction's "the runtime did this", which is why the reason stops at *that* it
+    happened outside the runtime and says nothing about whose hand it was. And like
+    every release row it must stay out of the disposition query, or it would speak
+    for the card it says nothing about.
+    """
+    rel = "inbox/alert-slot.md"
+    _write_card(tmp_path, "alert-slot.md", "resolved")
+    lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    (tmp_path / rel).unlink()
+
+    lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+
+    (row,) = _released(tmp_path)
+    # Pinned on the durable row rather than the constant: `event_type` has no
+    # registry and rows carrying it can never be updated or deleted.
+    assert row["event"] == "attention-card-archived"
+    assert row["actor"] == "integrity"
+    assert row["target_id"] == rel
+    assert row["reason"] == lifecycle.RECONCILE_REASON
+    assert {"via", "resolution", "outcome", "resolution_outcome", "outputs"} & set(row) == set()
+    assert [event["target_id"] for event in _dispositions(tmp_path)] == [rel]
+    assert all(event["event"] == "resolved" for event in _dispositions(tmp_path))
 
 
 def test_a_gitlinked_vault_still_sees_a_held_index_lock(tmp_path: Path) -> None:

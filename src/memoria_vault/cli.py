@@ -2452,7 +2452,14 @@ def _compact_resolved_inbox(workspace: Path) -> dict[str, Any]:
     try:
         return lifecycle.compact_resolved_cards(workspace)
     except (OSError, RuntimeError, sqlite3.Error) as exc:
-        return {"adopted": [], "archived": [], "digests": [], "commit": "", "error": str(exc)}
+        return {
+            "adopted": [],
+            "archived": [],
+            "digests": [],
+            "released": [],
+            "commit": "",
+            "error": str(exc),
+        }
 
 
 def _workspace_change_signature(workspace: Path) -> str:

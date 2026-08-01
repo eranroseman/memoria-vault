@@ -2004,14 +2004,16 @@ def test_steering_and_vocabulary_writes_survive_a_failed_replace(
     )  # PI steering content lands byte-exact, never neutralized
 
 
-def _write_resolved_card(inbox: Path, name: str, resolved_at: str = "") -> None:
+def _write_resolved_card(
+    inbox: Path, name: str, resolved_at: str = "", status: str = "resolved"
+) -> None:
     inbox.mkdir(parents=True, exist_ok=True)
     (inbox / name).write_text(
         "---\n"
         "title: Old finding\n"
         "projection: attention\n"
         "attention_kind: alert\n"
-        "attention_status: resolved\n"
+        f"attention_status: {status}\n"
         "loudness: alert\n"
         f"{resolved_at}"
         "---\n\n# Finding\n\nHandled.\n",
@@ -2060,7 +2062,49 @@ def test_workspace_scan_reports_a_compaction_it_cannot_finish(
     assert scan["ok"] is False
     assert scan["inbox_compaction"]["error"]
     assert scan["inbox_compaction"]["archived"] == []
+    # The failure payload keeps the success payload's shape: a consumer reading
+    # `released` must not have to branch on whether the step got that far.
+    assert scan["inbox_compaction"]["released"] == []
     assert (inbox / "alert-old.md").is_file()  # the card is still there to retry
+
+
+def test_workspace_scan_releases_a_card_deleted_outside_the_runtime(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Issue #1616 through the seam the PI actually runs, not the lib.
+
+    A `deferred` card is a closed disposition the scan journals and nothing ever
+    archives, so its path stays held for as long as the card sits there. Deleting
+    that card in Obsidian -- `inbox/**` is the one write target the reference actor
+    policy grants a non-PI actor, and no observer watches it -- leaves the hold with
+    no release row coming, and every later card at that reused name is then read as
+    already-disposed and clears the review gate with nothing recorded. The scan
+    releases it by observation, and says so in its payload.
+    """
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    inbox = workspace / "inbox"
+    _write_resolved_card(inbox, "alert-old.md", status="deferred")
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
+    first = json.loads(capsys.readouterr().out)["inbox_compaction"]
+    assert [row["target_id"] for row in first["adopted"]] == ["inbox/alert-old.md"]
+    assert first["released"] == []  # the card is still there; nothing to reconcile
+    (inbox / "alert-old.md").unlink()
+
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
+    scan = json.loads(capsys.readouterr().out)
+
+    assert scan["ok"] is True
+    assert scan["inbox_compaction"]["released"] == ["inbox/alert-old.md"]
+    _write_resolved_card(inbox, "alert-old.md", status="deferred")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
+    again = json.loads(capsys.readouterr().out)["inbox_compaction"]
+
+    # The successor's own disposition, which the hold would have swallowed.
+    assert [row["target_id"] for row in again["adopted"]] == ["inbox/alert-old.md"]
+    assert again["released"] == []
 
 
 def test_workspace_scan_reports_a_compaction_git_refuses(
