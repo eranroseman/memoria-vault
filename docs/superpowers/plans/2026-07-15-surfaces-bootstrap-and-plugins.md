@@ -6958,11 +6958,12 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 - Consumes: stdlib `urllib.request`.
 - Produces:
   - `ZOTERO_CONNECTOR_URL: str = "http://127.0.0.1:23119/connector/ping"`
-  - `zotero_running(*, url_open: Callable[..., Any] = urllib.request.urlopen, timeout: float = 0.5) -> bool`
+  - `_open_zotero_probe(url: str, *, timeout: float) -> Any` — proxy-free, redirect-free opener (see the 2026-07-31 amendment below).
+  - `zotero_running(*, url_open: Callable[..., Any] = _open_zotero_probe, timeout: float = 0.5) -> bool`
 
 **Steps:**
 
-- [ ] Write the failing test. Append to `tests/test_onboarding.py`:
+- [x] Write the failing test. Append to `tests/test_onboarding.py`:
 
   ```python
   class FakeResponse:
@@ -6994,34 +6995,89 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       assert onboarding.zotero_running(url_open=url_open) is False
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_onboarding.py -v`
   Expected: `AttributeError: ... has no attribute 'zotero_running'`.
 
-- [ ] Write minimal implementation. Add `import urllib.request` and
-  `from typing import Any` to `onboarding.py` imports, then append:
+> **Adopted post-review amendment (2026-07-31):** `http.client.HTTPException`
+> is not an `OSError` (`HTTPException` → `Exception` directly — unlike
+> `URLError`/`HTTPError`/`TimeoutError`/`ConnectionRefusedError`, which are all
+> `OSError` subclasses), so the literal snippet below — `except OSError` only
+> — lets a malformed-response exception (e.g. a bad status line) escape and
+> crash onboarding, violating this task's own "must never raise" requirement.
+> The same `getattr(...)`/`int(status)` coercion can also raise `ValueError`
+> on a malformed status value, which `except OSError` likewise misses. Catch
+> `(OSError, ValueError, http.client.HTTPException)` and add `import
+> http.client` to the module imports. This is the same class of bug as
+> BOOT-D.2's *plan snippet* — `except OSError` around a
+> `subprocess.TimeoutExpired`, also not an `OSError` — which review caught
+> before it shipped (see BOOT-D.2's amendment above); BOOT-D.2 itself never
+> shipped with that bug. Found during BOOT-D.4 implementation on 2026-07-31,
+> before this snippet shipped.
+
+> **Adopted post-review amendment (2026-07-31):** `urllib.request.urlopen`
+> honors `http_proxy`/`https_proxy` even for a `127.0.0.1` target —
+> `urllib.request.proxy_bypass` does not exempt loopback addresses — so under
+> a common corporate or dev-container proxy the literal snippet's bare
+> `urlopen` call is attempted against the proxy, not loopback, and a proxy
+> answering any 2xx (captive portal, interstitial) makes `zotero_running`
+> report Zotero running with none present — defeating the loopback literal's
+> own stated purpose far more thoroughly than the hosts-file override it
+> guards against. The same unhardened opener also follows redirects:
+> `HTTPRedirectHandler.http_error_302` permits an `ftp` target, and an ftp
+> redirect yields an `addinfourl` whose `.status` is `None`, which the
+> snippet's `status is None` branch treats as success — a false positive.
+> This repo already solved exactly this for the same class of call — an
+> engine-issued loopback HTTP request — in
+> `rendezvous._open_lifecycle_request`
+> (`src/memoria_vault/runtime/rendezvous.py:302-305`), added by BOOT-A.6's
+> hardening of lifecycle requests "against proxies, redirects, stale boot
+> identities, and oversized responses": build the opener with
+> `urllib.request.ProxyHandler({})` plus a `_NoRedirect` handler that raises
+> instead of following. Reuse that shape rather than inventing a second one —
+> import `rendezvous._NoRedirect` and add `_open_zotero_probe(url, *,
+> timeout)` as the new default for `url_open`, keeping the parameter
+> injectable with the same keyword-only signature tests (and BOOT-D.5) depend
+> on. Separately, the `int(status)` coercion can also raise `TypeError` (not
+> just `ValueError`) on a non-numeric status — `int([])`, `int({})`,
+> `int(object())` all raise it — unreachable via the production default but
+> reachable via an injected fake; widened `except` to `(OSError, TypeError,
+> ValueError, http.client.HTTPException)` to keep this function's own "must
+> never raise" contract airtight regardless of what `url_open` is injected.
+> Found by review on 2026-07-31, after BOOT-D.4 shipped and before BOOT-D.5
+> wires this probe into `run_onboarding` with no injection.
+
+- [x] Write minimal implementation. Add `import http.client`, `import
+  urllib.request`, and `from typing import Any` to `onboarding.py` imports,
+  plus `from memoria_vault.runtime.rendezvous import _NoRedirect`, then
+  append:
 
   ```python
   ZOTERO_CONNECTOR_URL = "http://127.0.0.1:23119/connector/ping"
 
 
+  def _open_zotero_probe(url: str, *, timeout: float) -> Any:
+      opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+      return opener.open(url, timeout=timeout)
+
+
   def zotero_running(
       *,
-      url_open: Callable[..., Any] = urllib.request.urlopen,
+      url_open: Callable[..., Any] = _open_zotero_probe,
       timeout: float = 0.5,
   ) -> bool:
       try:
           with url_open(ZOTERO_CONNECTOR_URL, timeout=timeout) as response:
               status = getattr(response, "status", None)
               return status is None or 200 <= int(status) < 300
-      except OSError:
+      except (OSError, TypeError, ValueError, http.client.HTTPException):
           return False
   ```
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_onboarding.py -v` — all tests pass.
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
   git add src/memoria_vault/runtime/onboarding.py tests/test_onboarding.py
