@@ -1926,7 +1926,7 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     notes = {
         rel: frontmatter
         for rel, frontmatter in _checked_concepts(vault)
-        if frontmatter.get("type") == "note" and _is_current_note(vault, rel, frontmatter)
+        if frontmatter.get("type") == "note" and _is_current_note(vault, rel)
     }
     thesis = notes.get(thesis_path)
     if thesis is None:
@@ -3114,7 +3114,7 @@ def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
         if (
             frontmatter.get("type") == "hub"
             and _has_checked_verdict(vault, rel)
-            and _is_current_concept(vault, rel, frontmatter)
+            and _is_current_concept(vault, rel)
             and _frontmatter_mentions_project(frontmatter, project_rel)
         ):
             rows.append(
@@ -3197,7 +3197,7 @@ def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
         for path in iter_markdown(base, skip_dirs=frozenset()):
             frontmatter = read_frontmatter(path)
             rel = path.relative_to(vault).as_posix()
-            if _has_checked_verdict(vault, rel) and _is_current_concept(vault, rel, frontmatter):
+            if _has_checked_verdict(vault, rel) and _is_current_concept(vault, rel):
                 yield rel, frontmatter
 
 
@@ -3205,7 +3205,7 @@ def _checked_notes_by_path(vault: Path) -> dict[str, dict[str, Any]]:
     return {
         rel: frontmatter
         for rel, frontmatter in _checked_concepts(vault)
-        if frontmatter.get("type") == "note" and _is_current_note(vault, rel, frontmatter)
+        if frontmatter.get("type") == "note" and _is_current_note(vault, rel)
     }
 
 
@@ -3452,19 +3452,15 @@ def _link_target(value: Any) -> str:
         return ""
 
 
-def _is_current_concept(vault: Path, relpath: str, frontmatter: dict[str, Any]) -> bool:
-    if not _is_current_frontmatter(frontmatter):
-        return False
-    return not relpath.startswith("notes/") or _is_current_note(vault, relpath, frontmatter)
+def _is_current_concept(vault: Path, relpath: str) -> bool:
+    # Currency is the journaled curation status, never frontmatter: `lifecycle` is
+    # retired (vaultio.RETIRED_FRONTMATTER_FIELDS) and the type schemas validate
+    # closed, so no checked concept can carry it.
+    return not relpath.startswith("notes/") or _is_current_note(vault, relpath)
 
 
-def _is_current_frontmatter(frontmatter: dict[str, Any]) -> bool:
-    return frontmatter.get("lifecycle") not in {"retracted", "archived"}
-
-
-def _is_current_note(vault: Path, relpath: str, frontmatter: dict[str, Any]) -> bool:
-    status = state.note_curation_status(vault, relpath)
-    return _is_current_frontmatter(frontmatter) and status not in {"candidate", "rejected"}
+def _is_current_note(vault: Path, relpath: str) -> bool:
+    return state.note_curation_status(vault, relpath) not in {"candidate", "rejected"}
 
 
 def _digest_rel(path: str) -> str:
@@ -3899,8 +3895,6 @@ def _checked_concept(vault: Path, relpath: str) -> dict[str, Any]:
     frontmatter = read_frontmatter(path)
     if not _has_checked_verdict(vault, relpath):
         raise ValueError(f"{relpath} is not checked")
-    if not _is_current_frontmatter(frontmatter):
-        raise ValueError(f"{relpath} is not current")
     return frontmatter
 
 

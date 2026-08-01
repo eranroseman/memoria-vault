@@ -21,7 +21,6 @@ class Note:
     stem: str
     title: str
     note_type: str
-    lifecycle: str
     frontmatter: dict[str, Any]
 
 
@@ -48,7 +47,6 @@ def read_notes(vault: Path) -> dict[str, Note]:
             stem=path.stem,
             title=str(fm.get("title") or path.stem),
             note_type=str(fm.get("type") or ""),
-            lifecycle=str(fm.get("lifecycle") or ""),
             frontmatter=fm,
         )
     return notes

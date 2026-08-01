@@ -66,6 +66,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.subsystems.lib.loudness import attention_status
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_RESOLVED,
@@ -159,7 +160,7 @@ def _closed_cards(inbox: Path, vault: Path) -> list[tuple[str, str, Mapping[str,
         frontmatter = read_frontmatter(path)
         if str(frontmatter.get("projection") or "").strip().lower() != ATTENTION_PROJECTION:
             continue
-        status = str(frontmatter.get("attention_status") or "").strip().lower()
+        status = attention_status(frontmatter)
         if status not in CLOSED_STATUS_OUTCOMES:
             continue
         closed.append((path.relative_to(vault).as_posix(), status, frontmatter))
@@ -294,7 +295,7 @@ def _resolved_cards(inbox: Path) -> list[tuple[Path, dict[str, Any], str]]:
         frontmatter, body = split_frontmatter(safe_read(path))
         if str(frontmatter.get("projection") or "").strip().lower() != ATTENTION_PROJECTION:
             continue
-        if str(frontmatter.get("attention_status") or "").strip().lower() != RESOLUTION_RESOLVED:
+        if attention_status(frontmatter) != RESOLUTION_RESOLVED:
             continue
         cards.append((path, frontmatter, body))
     return cards

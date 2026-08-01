@@ -502,10 +502,10 @@ def _staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
 
 
 def _hard_staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
-    lifecycle = str(frontmatter.get("lifecycle") or "")
+    # `_memoria_note_status` is `_frontmatter_with_flags`' injection of the DB
+    # curation status, not authored frontmatter. Retired `lifecycle` is not read:
+    # the type schemas validate closed, so no searchable concept can carry it.
     status = str(frontmatter.get("_memoria_note_status") or "")
-    if lifecycle in {"retracted", "archived"}:
-        return {"path": path, "field": "lifecycle", "value": lifecycle}
     if status in {"candidate", "rejected"}:
         return {"path": path, "field": "note_curation_status", "value": status}
     return {}
