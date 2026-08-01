@@ -5697,6 +5697,34 @@ doc-claims check).
 
 ### Task ERP-A.6: Public identity-safe concept-edge path projections
 
+> **Inherited debt from NID-B.2's identity adoption (recorded 2026-07-31, review finding R1)
+> — ERP-C/ERP-D own the fix; ERP-A.6 owns the record.** NID-B.2 added
+> `_adopt_path_key_identity_conn`, which lets a provisionally path-keyed Concept take the
+> ULID its file later authors. That adoption is a **narrow, deliberately partial re-key**:
+> FKs carry `concept_verdicts`, `concept_flags` and `concept_edges` endpoints, but three
+> references are left pointing at the retired path key, because none carries a foreign key:
+>
+> | table | stale value after adoption | goes live at |
+> | --- | --- | --- |
+> | `derivations.input_id` | keeps `'notes/hand.md'`, naming no Concept (`schema.sql:407-412`) | ERP-C/ERP-D walk the derivation DAG |
+> | `passages.concept_id` | keeps `'notes/hand.md'` (`schema.sql:208-225`) | inert; cascades via the triggers' `OR path = …` and is rewritten on refresh |
+> | `concept_edges.edge_id` | keeps the pre-adoption digest, so `edge_id != concept_edge_id(source, relation, target)` | ERP-B/ERP-C/ERP-D consume `edge_id` |
+>
+> All three are inert today (`derivations` is write-only in `src/`; `edge_id` is recomputed
+> by the next full `replace_concept_edges`). Do not read NID-B.2's "no derivation, passage
+> or edge_id rewriting" as restraint — it is an **incomplete re-key whose residue is
+> deferred here**, and it must be closed before anything walks the derivation DAG or trusts
+> `edge_id` as a stable digest.
+>
+> **Residual, not a regression:** adoption can still move a verdict onto content that did
+> not earn it via *path reuse* — mirror an id-less `notes/old.md` as `checked`, rename the
+> file away, drop a brand-new ULID-carrying file at `notes/old.md`, then `workspace
+> rebuild`: the new file adopts the old row and reads `checked`. This is inherent to
+> provisional path keys (a path-keyed Concept *is* identified by its path, so path reuse is
+> identity reuse) and behaves identically under NID-B.1. The normal observe path demotes via
+> `record_observed_file_edit`; only `workspace rebuild` skips that. Recorded rather than
+> fixed — more machinery in B.2 is not the answer.
+
 **Preconditions:** NID-B v16 and the atomic ERP-A.1–.5 activation are merged.
 This task is the graph producer required by R2 G and every path-facing
 propagation/structural consumer; it is not optional prose in the A-section
