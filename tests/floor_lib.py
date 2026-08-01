@@ -904,6 +904,16 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "expect": "refused",
         "reason": "requires PI actor authority",
     },
+    # move-concept is PROTECTED_OPERATION_ACTORS "pi"-only (worker.py); the
+    # agent-actor sweep is refused on actor authority before the move runs.
+    "move-concept": {
+        "payload": {
+            "old_path": "notes/package-support.md",
+            "new_path": "notes/package-support-moved.md",
+        },
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
     # worker.py:65, 850-906. observe-pi-edits is a PROTECTED_OPERATION_ACTORS
     # entry whose required actor is the literal string "integrity" (not
     # "pi") — `_require_operation_actor`'s label is the required actor

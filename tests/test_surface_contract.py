@@ -163,6 +163,7 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria work update",
     "memoria work export",
     "memoria link",
+    "memoria mv",
     "memoria check",
     "memoria export",
     "memoria project ask",

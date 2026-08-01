@@ -927,7 +927,15 @@ def _journal_paths(payload: Any) -> list[str]:
     if not isinstance(payload, dict):
         return []
     paths = []
-    for key in ("output_id", "target_id", "target_path", "linked_id", "quarantined_id"):
+    # `new_path` is the move's destination; its `old_path` is already `target_id`.
+    for key in (
+        "output_id",
+        "target_id",
+        "target_path",
+        "new_path",
+        "linked_id",
+        "quarantined_id",
+    ):
         paths.append(str(payload.get(key) or ""))
     for key in ("outputs", "paths", "targets"):
         value = payload.get(key)
