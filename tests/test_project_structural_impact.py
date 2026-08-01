@@ -1,6 +1,9 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
+from memoria_vault.runtime.subsystems.lib.edges import thesis_rel
 from memoria_vault.runtime.subsystems.processing.project import structural_impact as impact
 from memoria_vault.runtime.subsystems.processing.project import (
     structural_impact_graph as impact_graph,
@@ -309,26 +312,42 @@ def test_build_edges_resolves_link_titles_that_are_not_path_shaped(tmp_path):
     }
 
 
-def test_structural_impact_resolves_a_thesis_whose_title_carries_a_colon(tmp_path):
-    """The `thesis:` value is an alias too: a colon in the title must not read as a URI."""
-    project(tmp_path, active="thesis")
-    # No `role: thesis` / `project:` pair, so the `thesis:` alias is the only
-    # route to this note: the fallback scan must not rescue the lookup.
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [("path", "notes/thesis.md"), ("wikilink", "'[[notes/thesis]]'"), ("stem", "thesis")],
+)
+def test_structural_impact_lands_on_the_same_note_as_the_one_thesis_normalizer(
+    tmp_path, name, value
+):
+    """`thesis:` is a path-space reference (issue #1623), so these are its shapes.
+
+    This family used to fixture the field as an alias — a note title carrying a
+    colon — which `project.yaml`'s `link` kind now refuses outright; alias-space
+    `links:` resolution keeps its own cover in
+    `test_build_edges_resolves_link_titles_that_are_not_path_shaped`. What has
+    to hold here is that this reader lands on the note `edges.thesis_rel` names,
+    the one normalizer the five path-space readers share.
+    """
+    vault = tmp_path / name
+    project(vault, active="thesis")
+    # No `role: thesis` / `project:` pair, so `thesis:` is the only route to this
+    # note: the fallback scan must not rescue the lookup.
     write(
-        tmp_path / "notes/thesis.md",
-        "---\ntype: note\ncheck_status: checked\ntitle: 'Toulmin: the warrant'\n"
+        vault / "notes/thesis.md",
+        "---\ntype: note\ncheck_status: checked\ntitle: Demo thesis\n"
         "description: Demo thesis\nstatus: accepted\nevidence_set: []\n---\n",
     )
     write(
-        tmp_path / "projects/demo/project.md",
-        (tmp_path / "projects/demo/project.md")
+        vault / "projects/demo/project.md",
+        (vault / "projects/demo/project.md")
         .read_text(encoding="utf-8")
-        .replace("thesis: '[[notes/thesis]]'", "thesis: '[[Toulmin: the warrant]]'"),
+        .replace("thesis: '[[notes/thesis]]'", f"thesis: {value}"),
     )
-    claim(tmp_path, "a", "supports", "thesis")
+    claim(vault, "a", "supports", "thesis")
 
-    payload = impact.run(tmp_path, "projects/demo/project")["payload"]
+    payload = impact.run(vault, "projects/demo/project")["payload"]
 
+    assert thesis_rel({"thesis": value.strip("'")}) == "notes/thesis.md"
     assert payload["active_thesis"] == "notes/thesis.md"
     assert payload["argument_stage"] == "developing"
     assert payload["relation_count"] == 1

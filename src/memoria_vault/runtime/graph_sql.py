@@ -24,6 +24,7 @@ from memoria_vault.runtime.subsystems.lib.edges import (
     concept_edge_path_pairs,
     normalize_link_target,
     projected_edge_endpoints,
+    thesis_rel,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -296,7 +297,7 @@ def _project_rel(vault: Path, project: str) -> str:
 def _links_closure(vault: Path, project_rel: str) -> list[str]:
     frontmatter = read_frontmatter(vault / project_rel)
     seeds = _link_targets(frontmatter)
-    thesis = _link_target(frontmatter.get("thesis"))
+    thesis = thesis_rel(frontmatter)
     if thesis:
         seeds.add(thesis)
     seen: set[str] = set()

@@ -192,6 +192,101 @@ def test_link_parser_and_validation_reject_invalid_local_targets(target: str, me
     assert any(message in error for error in schema.validate_frontmatter(frontmatter, note))
 
 
+@pytest.mark.parametrize(
+    ("label", "value", "expected"),
+    [
+        ("canonical path", "notes/thesis.md", "notes/thesis.md"),
+        ("wikilink-wrapped path", "[[notes/thesis]]", "notes/thesis.md"),
+        (
+            "wikilink with alias and anchor",
+            "[[notes/thesis.md#Claim|the thesis]]",
+            "notes/thesis.md",
+        ),
+        ("bare stem completing under notes/", "thesis", "notes/thesis.md"),
+        ("hub path", "hubs/sleep.md", "hubs/sleep.md"),
+        ("catalog source row", "catalog/sources/sleep", "catalog/sources/sleep"),
+        ("leading ./", "./notes/thesis.md", "notes/thesis.md"),
+        # Everything below is a namespace the ruling refuses: a title, a slug
+        # sentence, an escape, or a path outside the Concept roots.
+        ("title carrying a colon", "Toulmin: the warrant", ""),
+        ("prose sentence with a colon", "Claim: sleep drives plasticity", ""),
+        ("traversal", "notes/../secrets.md", ""),
+        ("absolute", "/notes/thesis.md", ""),
+        ("bracketed", "notes/a[1]", ""),
+        ("unbalanced wikilink", "[[notes/thesis", ""),
+        ("non-markdown suffix", "notes/thesis.txt", ""),
+        # `normalize_path('.')` is empty, and the `notes/` + `.md` completion
+        # would render `notes/.md` — one absorbing sink every junk value fell into.
+        ("bare dot", ".", ""),
+        ("outside the Concept roots", "projects/demo/project.md", ""),
+        ("catalog source with an extra segment", "catalog/sources/sleep/extra", ""),
+    ],
+)
+def test_thesis_rel_normalizes_every_thesis_shape_in_one_path_space(
+    label: str, value: str, expected: str
+) -> None:
+    """`thesis:` is path space with exactly one normalizer (issue #1623).
+
+    Namespace-conflated fixtures are what hid the split: five readers were only
+    ever shown values legal in both alias and path space. Every row here is a
+    shape that used to separate them.
+    """
+    assert edges_lib.thesis_rel({"thesis": value}) == expected, label
+
+
+def test_thesis_rel_reads_only_thesis_and_never_raises() -> None:
+    assert edges_lib.thesis_rel({}) == ""
+    assert edges_lib.thesis_rel({"thesis": None}) == ""
+    assert edges_lib.thesis_rel({"thesis": 42}) == ""
+    assert edges_lib.thesis_rel({"thesis": ["notes/thesis.md"]}) == ""
+    assert edges_lib.thesis_rel({"thesis": {"target": "[[notes/thesis]]"}}) == "notes/thesis.md"
+    assert edges_lib.thesis_rel("notes/thesis.md") == ""
+    # `active_thesis:` is retired by project.yaml, so no reader honours it.
+    assert edges_lib.thesis_rel({"active_thesis": "notes/thesis.md"}) == ""
+
+
+def _project_frontmatter(**extra: object) -> dict:
+    return {
+        "id": "01KBN6V6KX0000000000000001",
+        "type": "project",
+        "title": "T",
+        "tags": [],
+        "links": {},
+        **extra,
+    }
+
+
+@pytest.mark.parametrize(
+    ("value", "message"),
+    [
+        ("Toulmin: the warrant", "thesis: expected local Concept target"),
+        ("notes/../escape.md", "thesis: target must not escape the workspace"),
+        ("[[ ]]", "thesis: expected non-empty target string"),
+        ("notes/thesis.txt", "thesis: expected local Concept target"),
+        (42, "thesis: expected non-empty target string, got int"),
+    ],
+)
+def test_project_thesis_is_a_visible_validation_error_outside_path_space(
+    value: object, message: str
+) -> None:
+    """The `link` kind decides the namespace at the schema layer, not per reader."""
+    project = schema.load_types()["project"]
+
+    assert schema.validate_frontmatter(_project_frontmatter(thesis=value), project) == [message]
+
+
+def test_project_thesis_accepts_the_canonical_forms_and_retires_active_thesis() -> None:
+    project = schema.load_types()["project"]
+    assert project["optional"]["thesis"] == "link"
+
+    for value in ("notes/thesis.md", "[[notes/thesis]]", "thesis"):
+        assert schema.validate_frontmatter(_project_frontmatter(thesis=value), project) == []
+    assert schema.validate_frontmatter(_project_frontmatter(), project) == []
+    assert schema.validate_frontmatter(
+        _project_frontmatter(active_thesis="notes/thesis.md"), project
+    ) == ["active_thesis: field is retired"]
+
+
 def test_concept_edges_mirror_links_and_persist_across_reindex(tmp_path: Path) -> None:
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas")

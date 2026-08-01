@@ -475,6 +475,45 @@ def test_project_slice_falls_back_to_links_closure(tmp_path: Path) -> None:
     assert result["source"] == "links-closure"
 
 
+def test_project_slice_seeds_the_thesis_through_the_one_path_space_normalizer(
+    tmp_path: Path,
+) -> None:
+    """`thesis:` is path space with one normalizer (issue #1623).
+
+    The thesis note is reachable only through `thesis:` here, so this closure is
+    the sole observer of that seed. A bare stem completes under `notes/`; a
+    title does not resolve at all; and `.` no longer completes to `notes/.md`,
+    the absorbing sink every junk value used to be admitted as.
+    """
+    (tmp_path / "projects").mkdir(exist_ok=True)
+    (tmp_path / "notes").mkdir(exist_ok=True)
+    for name, thesis in (
+        ("bare", "thesis"),
+        ("wikilink", "'[[notes/thesis]]'"),
+        ("title", "'Toulmin: the warrant'"),
+        ("dot", "'.'"),
+    ):
+        (tmp_path / f"projects/{name}.md").write_text(
+            f"---\ntype: project\nthesis: {thesis}\n---\nbody\n", encoding="utf-8"
+        )
+    (tmp_path / "notes/thesis.md").write_text(
+        "---\ntype: note\nlinks:\n  extends:\n    - '[[support]]'\n---\nthesis\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "notes/support.md").write_text("---\ntype: note\n---\nsupport\n", encoding="utf-8")
+
+    assert graph_sql.project_slice(tmp_path, "bare")["ids"] == [
+        "notes/support.md",
+        "notes/thesis.md",
+    ]
+    assert graph_sql.project_slice(tmp_path, "wikilink")["ids"] == [
+        "notes/support.md",
+        "notes/thesis.md",
+    ]
+    assert graph_sql.project_slice(tmp_path, "title")["ids"] == []
+    assert graph_sql.project_slice(tmp_path, "dot")["ids"] == []
+
+
 def test_project_slice_prefers_active_project_slices_seam(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

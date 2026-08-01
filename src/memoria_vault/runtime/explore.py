@@ -8,7 +8,7 @@ from typing import Any
 from memoria_vault.runtime import graph_sql, retrieval_pipeline, state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.search_index import _bm25, _tokens, checked_search_universe
-from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs
+from memoria_vault.runtime.subsystems.lib.edges import concept_edge_path_pairs, thesis_rel
 
 SEED_K = 5
 DEPTH_CAP = 2
@@ -316,7 +316,7 @@ def _vetted_project_slice_ids(
 
     seen: set[str] = set()
     queue = sorted(_link_targets(_frontmatter(project_document)))
-    thesis = _link_target(_frontmatter(project_document).get("thesis"))
+    thesis = thesis_rel(_frontmatter(project_document))
     if thesis:
         queue.append(thesis)
     while queue:

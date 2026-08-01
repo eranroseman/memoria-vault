@@ -9,7 +9,9 @@ This module is the reader shared by the Linter, the pre-commit hook,
 `memoria init`, package-spine tests, and no-Bases seed tests, so a schema change is a
 one-file edit, never a hunt across hardcoded lists.
 
-Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.
+Field kinds: str | int | bool | date | list | map | link | links | ulid | literal:<value>
+| enum:<name>. `link` is one path-space Concept reference (a project's `thesis:`);
+`links` is the relation→targets map.
 `required_when` maps a field to {field, equals}; `forbidden` lists retired fields.
 """
 
@@ -165,11 +167,32 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
         return None if isinstance(value, list) else f"expected list, got {type(value).__name__}"
     if kind == "map":
         return None if isinstance(value, dict) else f"expected map, got {type(value).__name__}"
+    if kind == "link":
+        return _check_link(value)
     if kind == "links":
         return _check_links(value)
     if kind == "ulid":
         return None if isinstance(value, str) and is_ulid(value) else "expected ULID"
     return f"unknown kind {kind!r}"
+
+
+def _check_link(value) -> str | None:
+    """Validate one path-space Concept reference, in `_check_links`' wording.
+
+    The schema layer is where issue #1623 decided that `thesis:` is path space:
+    a title, slug, or prose sentence fails here, visibly, instead of resolving
+    to nothing in five readers that each missed it differently.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return f"expected non-empty target string, got {type(value).__name__}"
+    raw, reason = _normalized_link_target(value)
+    if raw:
+        return None
+    if reason == "traversal":
+        return "target must not escape the workspace"
+    if reason == "empty":
+        return "expected non-empty target string"
+    return "expected local Concept target"
 
 
 def _check_links(value) -> str | None:

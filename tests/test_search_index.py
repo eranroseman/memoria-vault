@@ -522,6 +522,39 @@ def test_answer_query_carries_project_context(tmp_path: Path) -> None:
     ]
 
 
+def test_project_context_resolves_the_thesis_through_the_one_path_space_normalizer(
+    tmp_path: Path,
+) -> None:
+    """This context builder is its own `thesis:` reader (issue #1623).
+
+    It used to carry an inline `[[…]]` stripper with no `notes/` completion, so
+    a bare stem became `thesis.md` here and `notes/thesis.md` everywhere else,
+    and a title became a phantom path the linked-terms lookup then missed.
+    """
+    vault = workspace(tmp_path)
+    project = vault / "projects/project-alpha/project.md"
+    project.parent.mkdir(parents=True, exist_ok=True)
+    note(vault, "thesis", "checked", "methods caveat")
+
+    def context(field: str) -> str:
+        project.write_text(
+            "---\ntype: project\ncheck_status: checked\ntitle: Framing project\n"
+            f"{field}\n---\nProject body.\n",
+            encoding="utf-8",
+        )
+        set_db_status(vault, project, "project", "checked")
+        return answer_query(vault, "what matters", project_id="project-alpha")["project_context"][
+            "thesis_path"
+        ]
+
+    assert context("thesis: thesis") == "notes/thesis.md"
+    assert context("thesis: '[[notes/thesis]]'") == "notes/thesis.md"
+    assert context("thesis: 'Toulmin: the warrant'") == ""
+    # `active_thesis:` is retired by project.yaml: this reader was the last one
+    # still falling back to it.
+    assert context("active_thesis: notes/thesis.md") == ""
+
+
 def test_project_answer_expands_bm25_query_with_project_and_thesis_terms(
     tmp_path: Path,
 ) -> None:
