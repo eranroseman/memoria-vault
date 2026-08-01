@@ -1193,7 +1193,16 @@ def _reconcile_renamed_output_conn(
     rename that reconciles ``concepts.path`` must move it, or the read barrier
     reads no checked output record at the new path and refuses content the PI did
     check. The sha256 comparison in ``is_consumable_checked_file`` is untouched, so
-    a rename-plus-edit is still refused.
+    a rename *and* edit arriving in one reindex pass is still refused. An edit made
+    after the rename has been indexed is a different case: ``indexing`` re-indexes
+    any path already recorded ``checked`` without re-running the barrier, which it
+    does for a never-renamed file too — this reconcile leaves a renamed file at
+    exactly that standing, neither creating nor widening the gap.
+
+    The FK to ``outputs`` from ``materialization_payloads`` is ``ON UPDATE
+    CASCADE`` (``schema.sql``) so this key move carries the writer's payload child
+    with it; without that the statement violates the constraint on any Concept
+    staged through ``record_file_output``.
     """
     resident = conn.execute(
         "SELECT path FROM concepts WHERE concept_id = ?", (concept_id,)

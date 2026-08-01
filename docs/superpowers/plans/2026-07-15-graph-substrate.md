@@ -2579,20 +2579,56 @@ whose target is a `target_path` for `replace_concept_edges` to resolve.
 > is untouched and still owns `output_id`.
 >
 > **The trust perimeter does not widen, and that is asserted.** The barrier's
-> sha256 comparison still runs against the file at its new path, so a
-> rename-plus-edit is still refused.
-> `test_rename_reconciliation_still_refuses_edited_content` guards it, proven
-> load-bearing by mutation (make the reconcile refresh `output_sha256` from the
-> file at the new path — the laundering bug — and only that test fails).
+> sha256 comparison still runs against the file at its new path, so a rename *and*
+> edit landing in **one** reindex pass is still refused.
+> `test_rename_reconciliation_still_refuses_edited_content` guards exactly that
+> one-pass case, proven load-bearing by mutation (make the reconcile refresh
+> `output_sha256` from the file at the new path — the laundering bug — and only
+> that test fails).
+>
+> **Corrected 2026-07-31 — the claim above was originally written without the
+> "one pass" qualifier, which overstated it.** A *two-pass* sequence (rename →
+> reindex → edit → reindex) is not refused: `indexing._previously_indexed_documents`
+> (`indexing.py:84-102`) re-indexes any path whose `concept_check_status` is
+> `checked` **without** calling `is_consumable_checked_file`, so no sha256
+> comparison happens. That bypass is pre-existing and identical on the pre-B.4
+> baseline — B.4 restores a renamed file to exactly the standing of a never-renamed
+> file, so the perimeter is genuinely unwidened; only the wording was too broad.
 >
 > **Two behavioural changes this task ships, recorded so they are not discovered
-> later:** (1) reindex now hard-depends on the seeded `.memoria/schemas` tree,
-> because `rebuild_concept_mirror_from_files` calls `_load_contract`, which raises
-> `ValueError("missing required concept-types.yaml")` without it; every `src/`
-> caller operates on an initialized workspace, but the passage index now has that
-> dependency. (2) `rebuild_file_concept_mirror`'s prune — deleting `store='file'`
-> Concepts absent from the batch that carry no verdict — now runs on **every**
-> reindex, not only on `memoria workspace rebuild`.
+> later:** (1) reindex now hard-depends on `.memoria/schemas/concept-types.yaml`,
+> because `rebuild_concept_mirror_from_files` calls `_load_contract` →
+> `schema.load_types`, which raises
+> `ValueError("missing required concept-types.yaml")` without it. (Corrected
+> 2026-07-31: this note originally said the dependency was on the seeded
+> `.memoria/schemas` tree as a whole. `search_index._bundle_roots`
+> (`search_index.py:525-528`) already read `.memoria/schemas/folders.yaml`
+> unconditionally before B.4, so the tree was already required; the registry file
+> is the new part.) (2) `rebuild_file_concept_mirror`'s prune — deleting
+> `store='file'` Concepts absent from the batch that carry no verdict — now runs on
+> **every** reindex, not only on `memoria workspace rebuild`.
+>
+> **Defect fixed 2026-07-31 — `materialization_payloads` needed `ON UPDATE
+> CASCADE`.** `_reconcile_renamed_output_conn` mutates the `outputs` primary key
+> while `materialization_payloads.output_id` still references the old value. That
+> FK (`schema.sql`) was declared `ON DELETE CASCADE` only, so its `ON UPDATE`
+> default of `NO ACTION` plus `PRAGMA foreign_keys = ON` (`state.py`) made the
+> reconcile raise `sqlite3.IntegrityError: FOREIGN KEY constraint failed` for any
+> file Concept written through `state.record_file_output` — i.e. every
+> machine-authored note, digest and hub, since `trusted_writer.stage_concept` is
+> that write and nothing ever deletes the payload row. Reindex stayed dead until
+> the file was renamed back, including `memoria workspace rebuild`, the repair verb
+> itself. The whole rename suite missed it because `tests/helpers`'
+> `write_checked_concept` builds its fixture through `record_observed_file_edit`,
+> which writes an `outputs` row and no payload child — the one shape where the
+> statement is safe. **Fix:** add `ON UPDATE CASCADE` to that FK. Fresh-schema-legal
+> (v16 is NID-B's own allocation, no installations exist, and the 2026-07-30
+> fresh-install amendment permits amending the current DDL in place), so no
+> `SCHEMA_VERSION` bump and no migration. Guarded by
+> `test_rename_reconciliation_carries_the_writer_materialization_payload`, whose
+> fixture goes through `stage_concept` → `promote_checked` → `mark_materialized`.
+> This also pre-fixes NID-B.5: its drafted `update_concept_path` issues the
+> byte-identical `UPDATE OR REPLACE outputs …` and would have failed identically.
 >
 > **Also modified beyond the Files list:** `src/memoria_vault/runtime/span_refs.py`
 > (`:51`). `resolve_span_ref` queried the fulltext passage by
@@ -2774,6 +2810,22 @@ a convenience, not a correctness requirement). Renames the file, rewrites inboun
 `links:` entries in every concept that references the old path (preserving the
 surface form — wikilink alias/anchor or bare path), updates the DB path columns in
 one transaction, and commits everything through the trusted writer.
+
+> **Note from NID-B.4 (2026-07-31) — the out-of-band reconcile is a strict subset,
+> so do not let a shared helper inherit the short version.** B.4's
+> `_reconcile_renamed_output_conn` moves `concepts.path` (via the mirror upsert)
+> and `outputs.output_id`/`target_path`, and that is all. `update_concept_path`
+> below moves those **plus** `concept_edges.target_path`/`source_path`,
+> `passages.path` and `file_index_state.path`. The one observable residue of the
+> difference: after an out-of-band rename a stale `file_index_state` row survives
+> at the *old* path. A full `rebuild_passage_index` pass self-heals it —
+> `replace_indexed_passages` with no `paths` argument wipes `file_index_state`
+> wholesale (`state.py:2058-2059`) — but `refresh_stale_passages` does not, because
+> it computes its `removed` set from `state.file_index_states` and only deletes the
+> paths it names (`indexing.py:53-63`). If B.5 refactors the two seams onto one
+> shared helper, the helper must be the **full** statement; regressing the in-band
+> path to B.4's subset would leave `passages`/`concept_edges` stranded at the old
+> path after `memoria mv`.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` — new `update_concept_path` next to

@@ -97,7 +97,8 @@ CREATE TABLE IF NOT EXISTS outputs (
     failure_reason TEXT
 );
 CREATE TABLE IF NOT EXISTS materialization_payloads (
-    output_id TEXT PRIMARY KEY REFERENCES outputs(output_id) ON DELETE CASCADE,
+    output_id TEXT PRIMARY KEY
+        REFERENCES outputs(output_id) ON UPDATE CASCADE ON DELETE CASCADE,
     expected_sha256 TEXT NOT NULL,
     payload_text TEXT NOT NULL
 );
