@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 17
+SCHEMA_VERSION = 18
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})

@@ -297,3 +297,11 @@ def test_empirical_event_operation_requires_event_id_idempotency_key(
     assert result["ok"] is False
     assert "requires idempotency_key=empirical-event:" in result["result"]["error"]
     assert list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl")) == []
+
+
+def test_workflows_roster_includes_attention() -> None:
+    from memoria_vault.engine.empirical_events import WORKFLOWS, validate_read_event
+
+    assert "attention" in WORKFLOWS
+    event = validate_read_event({"workflow": "attention", "staleness_hit": True})
+    assert event == {"workflow": "attention", "staleness_hit": True}

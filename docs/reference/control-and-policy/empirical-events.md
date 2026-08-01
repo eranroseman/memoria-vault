@@ -57,7 +57,7 @@ rejected.
 
 | Field | Values |
 | --- | --- |
-| `workflow` | `ask`, `capture`, `gap`, `evidence-review`, `canvas`, `draft`, `srd`, `export`, `session`, `connection`, `operation` |
+| `workflow` | `ask`, `attention`, `capture`, `gap`, `evidence-review`, `canvas`, `draft`, `srd`, `export`, `session`, `connection`, `operation` |
 | `decision` | `accept`, `reject`, `edit`, `defer`, `override`, `abandon` |
 | `outcome` | `connected`, `queued`, `flushed`, `kept-artifact`, `fallback`, `exported`, `blocked`, `failed`, `stopped` |
 | `reason_code` | `useful`, `not-useful`, `too-slow`, `missing-context`, `wrong-scope`, `duplicate`, `confusing`, `privacy`, `offline`, `external-tool`, `other` |
