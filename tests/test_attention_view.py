@@ -1,10 +1,15 @@
-"""Contract tests for the /v1/views/attention engine view payload (U3-ENG.1/.2/.3).
+"""Contract tests for the /v1/views/attention engine view payload and route.
 
 The producer here is read by two clients that must agree: the HTTP transport
 (U3-ENG.4) serializes the payload verbatim, and `packages/memoria-obsidian/
 viewspec.js` renders it. Assertions therefore pin the wire keys exactly, and one
 test parses the plugin's own catalog so a kind the renderer cannot draw fails
 here rather than in the pane.
+
+Three layers are exercised, deliberately not folded into each other: the
+producer (`api.read_attention_view`), the route gate plus dispatch
+(`http_transport._dispatch`, U3-ENG.4/.5), and a real socket-served
+`make_http_server` (U3-ENG.6) where the bearer check actually runs.
 """
 
 from __future__ import annotations
@@ -12,12 +17,19 @@ from __future__ import annotations
 import datetime
 import json
 import re
+import threading
+import urllib.error
+import urllib.request
+from collections.abc import Iterator
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
 
 from memoria_vault import __version__
 from memoria_vault.engine import api
+from memoria_vault.runtime import state
+from memoria_vault.runtime.http_transport import _dispatch, make_http_server
 from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from tests.cli_test_helpers import write_runner_provider_config
@@ -686,6 +698,9 @@ def test_attention_view_payload_matches_what_the_plugin_renderer_reads(
 ) -> None:
     """Contract 3, both halves: the kinds it dispatches and the fields it reads.
 
+    It is also where `api.VIEW_BLOCK_KINDS` is held to the dispatch, so the
+    engine-side catalog cannot drift from the switch that has to draw it.
+
     Comparing the two sides' declared catalogs is not enough -- a renderer that
     renames its read of `kind_line` draws every card with a blank kind line, no
     unknown-block box, nothing logged, and green suites on both sides. So this
@@ -730,7 +745,11 @@ def test_attention_view_payload_matches_what_the_plugin_renderer_reads(
     assert emitted == {"card", "evidence-list", "text", "action-row"}
     # Dispatchable, not merely cataloged: renaming a `case` label fails here.
     assert emitted <= dispatched
-    assert dispatched == set(catalog)
+    # One equality, three declarations: the switch that draws the kinds, the
+    # plugin's exported catalog, and the engine's. U3-ENG.5's `VIEW_BLOCK_KINDS`
+    # joins here rather than sitting beside it -- a fourth kind added to any one
+    # of the three, or renamed in any one of them, fails this line.
+    assert dispatched == set(catalog) == set(api.VIEW_BLOCK_KINDS)
     # Every field the card renderer reads is a field this producer emits. The
     # floor keeps the subset from passing vacuously if the regex stops matching.
     assert {"kind_line", "title", "loudness", "ref", "blocks"} <= card_reads
@@ -743,3 +762,335 @@ def test_attention_view_payload_matches_what_the_plugin_renderer_reads(
     # so a fifth band would silently tie unknown with it on the plugin side.
     assert fallback_band is not None, "viewspec.js no longer ranks unknown from LOUDNESS_RANK"
     assert plugin_rank[fallback_band.group(1)] + 1 == len(api.ATTENTION_LOUDNESS_RANK)
+
+
+# --- U3-ENG.4: the registered route, at the route-gate/dispatch layer --------
+
+
+def _seed_two_open_cards(workspace: Path) -> None:
+    """Two open cards, exactly one of them targeted.
+
+    The smallest fixture that separates the three ways this route's argument
+    wiring can be wrong: dropping `read_scope` leaves both cards, passing an
+    empty scope leaves neither, and only passing the real one leaves the
+    targeted card alone. Two cards also mean a truncated block list is visible.
+    """
+    inbox.write_proposal(
+        workspace, "candidate", "Capture", "act", "for", "against", "tip", "likely", "sweep"
+    )
+    inbox.write_finding(
+        workspace, "flag", "Broken citation", "finding", "integrity-sweep", target="notes/alpha.md"
+    )
+
+
+def _titles(payload: dict) -> list[str]:
+    return [card["title"] for card in payload["view"]["blocks"]]
+
+
+def _request_count(workspace: Path) -> int:
+    with state.connect(workspace) as conn:
+        return int(conn.execute("SELECT COUNT(*) AS n FROM operation_requests").fetchone()["n"])
+
+
+def test_http_dispatch_serves_attention_view(workspace: Path) -> None:
+    _seed_two_open_cards(workspace)
+
+    full, full_status = _dispatch(workspace, "GET", "/v1/views/attention", dict)
+    summary, summary_status = _dispatch(workspace, "GET", "/v1/views/attention?summary=true", dict)
+    scoped, scoped_status = _dispatch(
+        workspace, "GET", "/v1/views/attention?read_scope=notes/alpha.md", dict
+    )
+
+    assert full_status == HTTPStatus.OK
+    # Verbatim: the route serializes the producer's payload, never a reshaping
+    # of it, so the card grammar pinned above is the grammar that reaches HTTP.
+    assert full == api.read_attention_view(workspace)
+    assert full["view"]["version"] == "view-spec.v1"
+    assert [block["kind"] for block in full["view"]["blocks"]] == ["card", "card"]
+    assert _titles(full) == ["Broken citation", "Capture"]
+    assert [child["kind"] for child in full["view"]["blocks"][0]["blocks"]] == [
+        "evidence-list",
+        "text",
+        "action-row",
+    ]
+    assert summary_status == HTTPStatus.OK
+    assert "view" not in summary
+    assert summary["open"] == 2
+    assert summary["by_loudness"] == {"alert": 1, "notice": 1}
+    # Narrowed, not emptied -- see `_seed_two_open_cards`.
+    assert scoped_status == HTTPStatus.OK
+    assert _titles(scoped) == ["Broken citation"]
+
+
+def test_http_dispatch_reads_the_summary_flag_in_every_written_form(workspace: Path) -> None:
+    """The flag's producer states: absent (the pane's own render request),
+    an explicit `false` from a client that always sends the param, and the
+    capitalized `True` a naive client serializes -- the last one is why the
+    route lowercases before comparing. Scope reaches the summary mode too;
+    the poll pill must never count cards the boot scope hides."""
+    _seed_two_open_cards(workspace)
+
+    absent, _ = _dispatch(workspace, "GET", "/v1/views/attention", dict)
+    explicit_false, _ = _dispatch(workspace, "GET", "/v1/views/attention?summary=false", dict)
+    capitalized, _ = _dispatch(workspace, "GET", "/v1/views/attention?summary=True", dict)
+    scoped_summary, scoped_status = _dispatch(
+        workspace, "GET", "/v1/views/attention?summary=true&read_scope=notes/alpha.md", dict
+    )
+
+    assert _titles(absent) == ["Broken citation", "Capture"]
+    assert _titles(explicit_false) == ["Broken citation", "Capture"]
+    assert "view" not in capitalized
+    assert capitalized["open"] == 2
+    assert scoped_status == HTTPStatus.OK
+    assert scoped_summary["open"] == 1
+    assert scoped_summary["by_loudness"] == {"alert": 1}
+
+
+def test_http_dispatch_rejects_wrong_method_for_attention_view(workspace: Path) -> None:
+    response, status = _dispatch(workspace, "POST", "/v1/views/attention", dict)
+
+    assert status == HTTPStatus.METHOD_NOT_ALLOWED
+    assert response == {"ok": False, "error": "method not allowed: POST /v1/views/attention"}
+
+
+# --- U3-ENG.5: the block-kind catalog, and tolerance of additive blocks ------
+
+
+def _descendants(blocks: list[dict]) -> list[dict]:
+    found: list[dict] = []
+    for block in blocks:
+        found.append(block)
+        children = block.get("blocks")
+        if isinstance(children, list):
+            found.extend(_descendants(children))
+    return found
+
+
+def test_attention_view_emits_only_cataloged_block_kinds(workspace: Path) -> None:
+    """`VIEW_BLOCK_KINDS` is pinned twice, and never against itself.
+
+    Here against a literal, so narrowing or renaming the catalog fails; and in
+    `test_attention_view_payload_matches_what_the_plugin_renderer_reads`
+    against `viewspec.js`'s `renderBlock` dispatch, so it cannot become a third
+    declaration drifting from the switch that has to draw these kinds. The
+    subset below is the third leg: it is the emitted kinds that must stay
+    inside the catalog, so the exact difference is named rather than implied.
+    """
+    _seed_two_open_cards(workspace)
+
+    payload = api.read_attention_view(workspace)
+    emitted = {str(block["kind"]) for block in _descendants(payload["view"]["blocks"])}
+
+    assert api.VIEW_BLOCK_KINDS == ("card", "text", "badge", "action-row", "evidence-list")
+    assert emitted == {"card", "evidence-list", "text", "action-row"}
+    assert emitted <= set(api.VIEW_BLOCK_KINDS)
+    # `badge` is cataloged for other views (the loudness chip) and this producer
+    # never emits it. Naming it is what makes a silently widened catalog fail.
+    assert set(api.VIEW_BLOCK_KINDS) - emitted == {"badge"}
+
+
+def test_http_dispatch_passes_additive_unknown_blocks_through(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A deliberate regression pin: the transport imposes no block whitelist.
+
+    A later engine adds a block kind this route does not know; the transport
+    must carry it, and its unknown fields, verbatim rather than filtering the
+    payload down to today's catalog. The pane's half of the same claim -- an
+    additive block joins the view visibly instead of vanishing or displacing
+    its neighbours -- is pinned in
+    `packages/memoria-obsidian/scripts/test-viewspec.mjs`, because that is the
+    side that decides it.
+    """
+    _seed_two_open_cards(workspace)
+    real = api.read_attention_view
+    future_top_level = {"id": "future", "kind": "sparkline", "points": [1, 2, 3]}
+    future_child = {"id": "future-child", "kind": "timeline", "at": {"nested": True}}
+
+    def future_view(*args: object, **kwargs: object) -> dict[str, object]:
+        payload = real(*args, **kwargs)
+        view = dict(payload["view"])
+        cards = [dict(card) for card in view["blocks"]]
+        cards[0]["blocks"] = [*cards[0]["blocks"], future_child]
+        return {**payload, "view": {**view, "blocks": [*cards, future_top_level]}}
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.http_transport.engine_api.read_attention_view",
+        future_view,
+    )
+
+    response, status = _dispatch(workspace, "GET", "/v1/views/attention", dict)
+
+    assert status == HTTPStatus.OK
+    assert response["view"]["version"] == "view-spec.v1"
+    # The known cards keep their place ahead of the future block, and the
+    # future block arrives whole -- unknown keys and nesting included.
+    assert [block["kind"] for block in response["view"]["blocks"]] == [
+        "card",
+        "card",
+        "sparkline",
+    ]
+    assert response["view"]["blocks"][-1] == future_top_level
+    assert response["view"]["blocks"][0]["blocks"][-1] == future_child
+    assert [child["kind"] for child in response["view"]["blocks"][0]["blocks"]] == [
+        "evidence-list",
+        "text",
+        "action-row",
+        "timeline",
+    ]
+
+
+# --- U3-ENG.6: the same route through a real socket, where auth actually runs -
+
+
+LIVE_TOKEN = "view-token"
+
+
+def _serve(workspace: Path, read_scope: list[str] | None) -> Iterator[str]:
+    server = make_http_server(
+        workspace, host="127.0.0.1", port=0, token=LIVE_TOKEN, read_scope=read_scope
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_address[1]}"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+@pytest.fixture
+def live_server(workspace: Path) -> Iterator[str]:
+    """A real listener, not `_dispatch`: the bearer check lives in the request
+    handler, so nothing below the socket can prove a route is authenticated."""
+    yield from _serve(workspace, read_scope=None)
+
+
+@pytest.fixture
+def scoped_live_server(workspace: Path) -> Iterator[str]:
+    """The same server booted with `--read-scope notes/alpha.md`."""
+    yield from _serve(workspace, read_scope=["notes/alpha.md"])
+
+
+def _http(url: str, *, token: str | None = None, method: str = "GET") -> tuple[int, dict]:
+    request = urllib.request.Request(url, method=method)
+    if token is not None:
+        request.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return response.status, json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        return error.code, json.loads(error.read().decode("utf-8"))
+
+
+UNAUTHORIZED = {"ok": False, "error": "unauthorized: missing or invalid bearer token"}
+
+
+def test_live_server_refuses_the_attention_view_without_a_valid_bearer_token(
+    workspace: Path, live_server: str
+) -> None:
+    """Both modes, and every near miss. The seeded cards matter: a refusal that
+    only holds for an empty queue would say nothing about a real vault."""
+    _seed_two_open_cards(workspace)
+    view = f"{live_server}/v1/views/attention"
+    summary = f"{view}?summary=true"
+
+    assert _http(view) == (HTTPStatus.UNAUTHORIZED, UNAUTHORIZED)
+    assert _http(summary) == (HTTPStatus.UNAUTHORIZED, UNAUTHORIZED)
+    assert _http(view, token="other") == (HTTPStatus.UNAUTHORIZED, UNAUTHORIZED)
+    assert _http(view, token="") == (HTTPStatus.UNAUTHORIZED, UNAUTHORIZED)
+    # A prefix and an extension of the real token: a door that compared with
+    # `startswith` or `in` rather than the whole value would open for these.
+    assert _http(view, token=LIVE_TOKEN[:-1]) == (HTTPStatus.UNAUTHORIZED, UNAUTHORIZED)
+    assert _http(view, token=f"{LIVE_TOKEN}-extra") == (HTTPStatus.UNAUTHORIZED, UNAUTHORIZED)
+
+
+def test_live_server_serves_the_view_and_the_summary_with_the_token(
+    workspace: Path, live_server: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed_two_open_cards(workspace)
+    # A fresh vault's seeded runner provider names KILOCODE_API_KEY as
+    # required-for-operation, so clearing the environment pins the nagging
+    # state deterministically rather than depending on the developer's shell.
+    for name in CREDENTIAL_ENV_NAMES:
+        monkeypatch.delenv(name, raising=False)
+
+    view_code, view = _http(f"{live_server}/v1/views/attention", token=LIVE_TOKEN)
+    summary_code, summary = _http(
+        f"{live_server}/v1/views/attention?summary=true", token=LIVE_TOKEN
+    )
+
+    assert view_code == HTTPStatus.OK
+    assert view["ok"] is True
+    assert view["api_version"] == "engine-read-api.v1"
+    assert view["view"]["version"] == "view-spec.v1"
+    assert [block["kind"] for block in view["view"]["blocks"]] == ["card", "card"]
+    assert _titles(view) == ["Broken citation", "Capture"]
+    # The proposal is the card carrying every present-only field, so it is the
+    # one that shows JSON serialization did not flatten the nesting away.
+    card = view["view"]["blocks"][1]
+    assert [child["kind"] for child in card["blocks"]] == [
+        "evidence-list",
+        "text",
+        "action-row",
+    ]
+    assert card["argument_for"] == "for"
+    assert card["blocks"][2]["actions"][0] == {
+        "label": "Resolve",
+        "operation_id": "resolve-attention",
+        "payload": {"target_id": card["ref"]},
+        "primary": True,
+    }
+    assert summary_code == HTTPStatus.OK
+    assert "view" not in summary
+    assert summary["open"] == 2
+    assert summary["by_loudness"] == {"alert": 1, "notice": 1}
+    assert summary["as_of"].endswith("Z")
+    assert summary["engine_version"] == __version__
+    assert summary["link_relations"] == sorted(LINK_RELATIONS)
+    # Nonempty, and the same names the producer computed: the pill's nag has to
+    # survive the wire, and an empty list would prove nothing about that.
+    assert summary["missing_required_credentials"] == ["KILOCODE_API_KEY"]
+
+
+def test_live_server_attention_view_grants_a_read_and_nothing_else(
+    workspace: Path, live_server: str
+) -> None:
+    """SEAM.1 raised this door to PI authority, but the door is
+    `POST /operation/run`. The same token on the view route buys a GET; posting
+    to it is refused by the route gate and enqueues nothing on the way.
+    """
+    _seed_two_open_cards(workspace)
+    before = _request_count(workspace)
+
+    code, payload = _http(f"{live_server}/v1/views/attention", token=LIVE_TOKEN, method="POST")
+
+    assert code == HTTPStatus.METHOD_NOT_ALLOWED
+    assert payload == {"ok": False, "error": "method not allowed: POST /v1/views/attention"}
+    assert _request_count(workspace) == before
+
+
+def test_live_server_attention_view_cannot_widen_the_startup_read_scope(
+    workspace: Path, scoped_live_server: str
+) -> None:
+    """A boot read-scope is the PI's own narrowing of the pane. A valid token
+    does not lift it, and neither does asking for a wider scope in the query --
+    which is the one request a compromised pane would actually make."""
+    _seed_two_open_cards(workspace)
+    view = f"{scoped_live_server}/v1/views/attention"
+
+    scoped_code, scoped = _http(view, token=LIVE_TOKEN)
+    widened_code, widened = _http(f"{view}?read_scope=inbox", token=LIVE_TOKEN)
+    summary_code, summary = _http(f"{view}?summary=true", token=LIVE_TOKEN)
+
+    # The finding targets notes/alpha.md and survives; the proposal targets
+    # nothing and is already outside the boot scope.
+    assert scoped_code == HTTPStatus.OK
+    assert _titles(scoped) == ["Broken citation"]
+    # Asking for `inbox` does not add it -- it intersects to nothing.
+    assert widened_code == HTTPStatus.OK
+    assert _titles(widened) == []
+    assert summary_code == HTTPStatus.OK
+    assert summary["open"] == 1
+    assert summary["by_loudness"] == {"alert": 1}

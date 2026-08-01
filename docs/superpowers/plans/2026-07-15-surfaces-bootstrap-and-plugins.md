@@ -9575,6 +9575,123 @@ below is its canonical body, with the one hoist recorded in item 1.
    test failing on the absent attribute), one implementation, and one green
    stage of 21 tests in `tests/test_attention_view.py`.
 
+### Execution amendment — U3-ENG.4/.5/.6 as built (2026-08-01)
+
+Recorded by the executor of U3-ENG.4/.5/.6. It governs those three tasks only;
+the 2026-07-29 reconciliation amendment still governs the payload and the
+U3-ENG.1/.2/.3 execution amendment above is unchanged.
+
+1. **The drafted refusal literals are superseded, exactly as the U1 amendment
+   said they would be.** U1 M.3 has landed, so U3-ENG.4's
+   `{"ok": False, "error": "method not allowed"}` and U3-ENG.6's
+   `{"ok": False, "error": "unauthorized"}` executed as the named forms
+   `"method not allowed: POST /v1/views/attention"` and
+   `"unauthorized: missing or invalid bearer token"` — the 2026-07-29 "U1
+   transport, scope-walk, and CLI-parity handoffs" amendment, item 1.
+
+2. **The registered row carries `job: "review"`.** U1 J.1 has landed, so the
+   reconciliation amendment item 6's first branch applies: the drafted dict
+   gains `"job": "review"` — the queue `attention.list`/`attention.get`
+   already file under `review`, seen through another surface — and
+   `test_surface_contract_job_mapping_is_pinned` is updated in the same
+   change. No jobless row was left.
+
+3. **M.3's scope-walk probe landed with the route.**
+   `"views.attention": ("excluded", "{attention_path}")` reuses M.3's seeded
+   card and adds no second fixture; the registry-derived
+   `set(PROBES) == http_scoped_ids` assertion is untouched, so it is the row's
+   arrival that forces the probe.
+
+4. **`VIEW_BLOCK_KINDS` joined the existing cross-language equality instead of
+   becoming a third roster.** The catalog is declared in three places:
+   `viewspec.js`'s `KNOWN_BLOCK_KINDS`, the `case` labels of its `renderBlock`
+   switch, and `api.VIEW_BLOCK_KINDS`. U3-ENG.1/.2/.3's conformance test
+   already held the first two equal by parsing the dispatch; the Python
+   constant was added to that same line
+   (`dispatched == set(catalog) == set(api.VIEW_BLOCK_KINDS)`) rather than
+   given a test of its own beside it, so no pair of the three can drift.
+   U3-ENG.5's own test still pins the tuple against a literal — order
+   included — before anything iterates it, and names the one cataloged kind
+   this producer never emits (`badge`, the loudness chip other views draw), so
+   a silently widened catalog fails there too.
+
+5. **Additive-block tolerance is two-sided, and the plugin does not *ignore*
+   an unknown kind.** `viewspec.js` renders it as a labeled fallback box
+   carrying the raw JSON — what the section preamble already claims ("an
+   unknown renderer kind fails visibly"). The Python half (the transport
+   imposes no whitelist) is
+   `test_http_dispatch_passes_additive_unknown_blocks_through`, strengthened
+   to carry a future top-level block *and* a future card child through whole,
+   with the known cards keeping their places. The pane half is pinned by the
+   side that decides it: two new cases in
+   `packages/memoria-obsidian/scripts/test-viewspec.mjs` prove an additive
+   block joins a view *between* two known cards without displacing either, and
+   that an additive child fails visible in place rather than blanking its
+   card. That file is not a seeded release artifact
+   (`test_memoria_obsidian_seed_matches_release_artifacts` mirrors only
+   `main.js`, `schema.js`, `manifest.json`, `styles.css`), so **no floor
+   golden moved**: this task stays outside contract 10's serialized set.
+
+6. **The dispatch fixture is N=2 and its scope probe narrows rather than
+   empties.** A single card under a scope matching nothing cannot tell
+   "`read_scope` forwarded" from "`read_scope` hard-coded to nothing".
+   `_seed_two_open_cards` writes one targeted finding and one untargeted
+   proposal, so `?read_scope=notes/alpha.md` must leave exactly one card:
+   forwarding nothing leaves two, forwarding an empty scope leaves none.
+
+7. **The `summary` flag's unfixtured states are named and produced.** Absent
+   (the pane's render request), an explicit `false` from a client that always
+   sends the parameter, and the capitalized `True` a naive client serializes —
+   the state that makes the route's `.lower()` load-bearing. The summary mode
+   is also exercised under a read scope, because the poll pill must never
+   count cards the boot scope hides.
+
+8. **U3-ENG.6 pins the ceiling as well as the door.** Beyond the drafted
+   token/no-token pair it adds two near misses — a prefix of the real token
+   and an extension of it, which kill `startswith`-shaped comparisons — plus
+   two authority ceilings SEAM.1 makes worth stating: `POST` to the view route
+   is refused by the route gate and enqueues nothing (the door-wide PI grant
+   reaches `POST /operation/run` and no other path), and a boot-scoped server
+   serves the scoped view to a valid token while a `read_scope` query cannot
+   widen it. `missing_required_credentials` is asserted nonempty against a
+   cleared environment rather than as a bare key presence: a fresh vault's
+   seeded runner provider does declare a required credential, so the drafted
+   `"missing_required_credentials" in summary` would have passed on a payload
+   that dropped the names.
+
+9. **Two survivors were closed rather than reported, in the files that own
+   them.** `test_surface_contract_views_attention_is_http_only_with_current_shape`
+   pins the whole registered row, because `engine`, `response_version` and the
+   param schema had no other pin — the transport calls `read_attention_view`
+   directly rather than through the registry, and the floor sweep only checks
+   `api_version` for rows that *declare* a `response_version`, so dropping the
+   declaration removed the check instead of failing it.
+   `test_every_swept_http_binding_names_the_registry_route` (floor coverage)
+   holds every `ARG_TABLE` http binding to the route its action declares:
+   `/attention` and `/v1/views/attention` are both scoped attention list reads
+   over the same seeded card, so a mistyped binding kept the read sweep and
+   the scope walk green while never exercising the action they parametrize
+   over. That one guards every row, not only this task's.
+
+10. **One reference row.**
+    `docs/reference/commands-and-transports/local-http-transport.md` mirrors
+    every route in `http_routes()`; the new route joined that table in the same
+    change so the reference does not go stale. Nothing else in `docs/`
+    enumerates the route set, and `views.attention` has no MCP binding to
+    document.
+
+11. **Mutation sweep: 35 mutants, 0 survivors**, over the registered row, the
+    transport branch, the route gate, the bearer check, the scope plumbing,
+    the block catalog on both sides of the language boundary, and this task's
+    own floor/walk wiring. The sweep asserts a green baseline before and after
+    itself, after an earlier run reported every mutant "killed" from a
+    poisoned baseline. A separate 11-case attribution pass mutates one branch
+    and runs one named test, confirming the test whose *name* claims the
+    branch fails alone — including all four auth/authority cases.
+
+12. **The three `Commit:` boxes stay unticked.** The executing session was
+    directed to leave committing to its caller.
+
 ---
 
 ### Task U3-ENG.1: `read_attention_view` — sorted card blocks with present-only honesty fields
@@ -10183,7 +10300,7 @@ below is its canonical body, with the one hoist recorded in item 1.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_attention_view.py`:
+- [x] Write the failing tests — append to `tests/test_attention_view.py`:
 
   ```python
   def test_http_dispatch_serves_attention_view(workspace: Path) -> None:
@@ -10240,14 +10357,14 @@ below is its canonical body, with the one hoist recorded in item 1.
   U1 M.3 is re-anchored; do not create the scope-walk file early or replace
   its dynamic completeness assertion with a count.
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_http_dispatch_serves_attention_view tests/test_attention_view.py::test_http_dispatch_rejects_wrong_method_for_attention_view tests/test_surface_contract.py -v`
   Expected: dispatch tests fail with status `HTTPStatus.NOT_FOUND` (route not in
   registry); `test_surface_contract_registry_is_minimal_and_unique` and
   `test_surface_contract_matches_current_http_and_mcp_bindings` fail on the added
   entries.
 
-- [ ] Write the minimal implementation.
+- [x] Write the minimal implementation.
 
   In `src/memoria_vault/engine/surface_contract.py`, insert after the `attention.get`
   action dict (before the `concepts.list` entry):
@@ -10289,7 +10406,7 @@ below is its canonical body, with the one hoist recorded in item 1.
       },
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```bash
   python -m pytest tests/test_attention_view.py tests/test_surface_contract.py \
@@ -10334,7 +10451,7 @@ below is its canonical body, with the one hoist recorded in item 1.
 
 **Steps:**
 
-- [ ] Write the tests — append to `tests/test_attention_view.py`:
+- [x] Write the tests — append to `tests/test_attention_view.py`:
 
   ```python
   def test_attention_view_emits_only_cataloged_block_kinds(workspace: Path) -> None:
@@ -10390,21 +10507,21 @@ below is its canonical body, with the one hoist recorded in item 1.
       assert response["view"]["blocks"][-1] == {"id": "future", "kind": "sparkline"}
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_emits_only_cataloged_block_kinds tests/test_attention_view.py::test_http_dispatch_passes_additive_unknown_blocks_through -v`
   Expected: the first fails with `AttributeError: module 'memoria_vault.engine.api'
   has no attribute 'VIEW_BLOCK_KINDS'`. The second **passes immediately** — it is a
   deliberate regression pin proving the transport imposes no block-kind whitelist, so
   a future additive block type cannot break the contract; keep it.
 
-- [ ] Write the minimal implementation — in `src/memoria_vault/engine/api.py`, directly
+- [x] Write the minimal implementation — in `src/memoria_vault/engine/api.py`, directly
   after `VIEW_SPEC_VERSION = "view-spec.v1"`:
 
   ```python
   VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row", "evidence-list")
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 10 passed.
 
 - [ ] Commit:
@@ -10433,7 +10550,7 @@ below is its canonical body, with the one hoist recorded in item 1.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_attention_view.py`:
+- [x] Write the failing tests — append to `tests/test_attention_view.py`:
 
   ```python
   @pytest.fixture
@@ -10508,14 +10625,14 @@ below is its canonical body, with the one hoist recorded in item 1.
       assert "missing_required_credentials" in summary
   ```
 
-- [ ] Run to verify the tests exercise real sockets and fail only if the route were
+- [x] Run to verify the tests exercise real sockets and fail only if the route were
   absent: `python -m pytest tests/test_attention_view.py -k live_server -v`
   Expected: 2 passed (the route landed in U3-ENG.4; these tests bind the auth
   semantics end-to-end — to confirm they are live, temporarily change the fixture
   token to `"x"` and watch `test_live_server_serves_view_and_summary_with_token` fail
   with 401, then restore).
 
-- [ ] Run the full gate: `python scripts/verify`
+- [x] Run the full gate: `python scripts/verify`
   Expected: pass (lint, product gates, tests incl. the floor sweep entry from
   U3-ENG.4, offline smoke, syntax).
 
