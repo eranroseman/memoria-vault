@@ -56,8 +56,9 @@ def test_outline_membership_drives_edges_and_large_slice_canvas(tmp_path: Path) 
     assert project_slice["edges"] == [
         {"source": "notes/note-01.md", "target": "notes/note-02.md", "type": "supports"}
     ]
-    assert len(canvas["nodes"]) == 21
-    assert {node["file"] for node in canvas["nodes"]} == {
+    file_nodes = [node for node in canvas["nodes"] if node.get("type") == "file"]
+    assert len(file_nodes) == 21
+    assert {node["file"] for node in file_nodes} == {
         f"notes/note-{index:02d}.md" for index in range(1, 22)
     }
-    assert "notes/outside.md" not in {node["file"] for node in canvas["nodes"]}
+    assert "notes/outside.md" not in {node["file"] for node in file_nodes}

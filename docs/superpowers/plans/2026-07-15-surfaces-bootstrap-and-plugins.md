@@ -13544,6 +13544,87 @@ attention poll; (c) it follows the existing project-read pattern
 scope handling, OpenAPI, and floor-sweep coverage all come from existing
 machinery.
 
+### Execution amendment — U3-CANVAS.1/.2 as built (2026-08-01)
+
+Both tasks landed as specified in behaviour. Where the build deviated from the
+written steps, this section governs.
+
+1. **One more caller the Files list missed.** The banner breaks
+   `tests/test_test_env_harness.py:47` (`assert len(canvas["nodes"]) == 3`),
+   which neither task named. Filtered to file nodes, like the other two
+   pre-existing assertions. `scripts/test_vault/e2e_smoke.py:198`
+   (`node_count == 2`) and `tests/test_worker_product_jobs.py:490`
+   (`node_count == 3`) stayed green unchanged, as the task predicted.
+
+2. **Task .1's prescribed test was degenerate and was replaced, not trimmed.**
+   Two file nodes and one edge cannot see a layout or ordering regression: the
+   grid wraps every third node, so a banner counted into the enumerate index
+   moves every member and a two-node fixture never reaches the wrap. The
+   shipped `test_generated_canvas_carries_banner_and_stable_node_ids` uses four
+   members, pins the banner at `nodes[0]`, pins each member's `(x, y)`, pins
+   that the banner sits entirely above the grid (`y + height <= 0`), and
+   compares the written bytes against `projections.render_tracked_projection`
+   so the emitter, the file, and the tracked projection cannot drift apart.
+
+3. **The id scheme got its own test, with literal expected ids.** Contract 9
+   pins `n-<sha256(raw path)[:12]>` over the **raw** path. Every fixture in the
+   suite draws from already-normalized paths, which cannot tell a raw hash from
+   a normalized one. `test_canvas_node_ids_hash_the_raw_member_path` hands in
+   `notes/./thesis.md` and asserts the literal `n-93378973d8a1`, plus that the
+   normalized spelling would have produced a different id. There is no JS
+   replica of the scheme yet (U3-CANVAS.5 has not landed), so Python is the
+   sole implementation.
+
+4. **JSON Canvas 1.0 conformance is asserted from the spec, not the writer.**
+   The repo has no `.canvas` schema or validator, so
+   `assert_json_canvas_conformant` in `tests/test_project_knowledge.py` encodes
+   the spec's own requirements (required generic node keys, per-type required
+   key, integer geometry, preset-or-hex colour, unique ids across nodes and
+   edges, and every `fromNode`/`toNode` resolving). This is what makes "renders
+   in a fixture" and "Obsidian can open it" the same claim, and it is the
+   assertion that gives Task .2 its point: a dangling endpoint is a canvas the
+   spec rejects, so quarantining it is the only conformant outcome.
+
+5. **Task .2's prescribed generator test was also N=1 and was replaced.** The
+   shipped test drives three nodes and five edges through the seam in one pass:
+   one clean hit, an unknown source, an unknown target, both-unknown, and a
+   normalized edge over a raw member path — the dangling row the raw-path id
+   scheme actually produces. It asserts which edges survive and the full
+   quarantined list in order.
+
+6. **Three tests Task .2 did not ask for, each covering a state the written
+   steps leave unproduced.** `..._report_is_clean_on_the_analyze_branch` and
+   `..._report_quarantines_on_the_analyze_branch` cover the no-outline arm —
+   the arm every outline-less project takes, and the one whose rows nothing
+   else would notice being dropped, since `analyze_project_argument`
+   pre-filters and only a stub can make it dirty.
+   `..._omits_the_quarantine_field_when_clean` produces the clean-run state and
+   asserts the `run` event gains no field, which is the invariant that keeps
+   all 35 goldens still.
+
+7. **Golden regeneration ran once, after both tasks, not per task.** Task .1
+   changes the seeded canvas bytes; Task .2 changes none (the floor seed has no
+   dirty rows). Task .2's "confirm no golden drift" step was therefore
+   satisfied by accounting for the combined diff rather than by a separate
+   pass: 35 files, 35 insertions / 35 deletions, every changed line the
+   `projects/package-gate/argument.canvas` entry, in two old→new pairs
+   (`cbfa9c10c638 → 2b0941646313` ×34, and `8d92733003c4 → 123b2cfc5938` ×1 for
+   the post-outline render in `write-project-slice.json`). Both new hashes were
+   reproduced from a fresh seed, and deleting only the banner node from each
+   reproduces the prior hash byte-for-byte — so the whole golden movement is
+   one inserted text node. Every `db` block, every `journal_kinds` list, and
+   every other file hash held.
+
+8. **Known equivalent mutant, left in place.** `str(edge.get("source") or "")`
+   in the quarantine row survives replacement by `edge["source"]`: the loop
+   already indexes `edge["source"]` unconditionally two lines above, so a
+   missing key raises first, and for the declared `dict[str, str]` input both
+   forms agree. The coercion is the task's prescribed text and is kept; no test
+   manufactures a `None`-valued edge to kill it.
+
+9. **Not committed.** Both tasks' commit steps are left unticked; the work is
+   staged in the worktree for the owner to land.
+
 ---
 
 ### Task U3-CANVAS.1: Generated-canvas banner node + stable-node-id pin
@@ -13561,7 +13642,7 @@ machinery.
 
 Steps:
 
-- [ ] Write the failing test at the end of `tests/test_project_knowledge.py` (file already imports `json`, `Path`, `knowledge`, `_md`, and the `write_project_argument_canvas` wrapper at lines 1-56; add `import hashlib` to the import block at the top, after `import json`):
+- [x] Write the failing test at the end of `tests/test_project_knowledge.py` (file already imports `json`, `Path`, `knowledge`, `_md`, and the `write_project_argument_canvas` wrapper at lines 1-56; add `import hashlib` to the import block at the top, after `import json`):
 
   ```python
   def test_generated_canvas_carries_banner_and_stable_node_ids(tmp_path: Path) -> None:
@@ -13600,8 +13681,8 @@ Steps:
       }
   ```
 
-- [ ] Run test to verify it fails: `python -m pytest tests/test_project_knowledge.py::test_generated_canvas_carries_banner_and_stable_node_ids -v` — expected: `StopIteration` from the `next(...)` over a canvas with no `memoria-banner` node.
-- [ ] Write minimal implementation. In `src/memoria_vault/runtime/knowledge.py`, insert immediately above `def _canvas_from_nodes_edges` (line 1743):
+- [x] Run test to verify it fails: `python -m pytest tests/test_project_knowledge.py::test_generated_canvas_carries_banner_and_stable_node_ids -v` — expected: `StopIteration` from the `next(...)` over a canvas with no `memoria-banner` node.
+- [x] Write minimal implementation. In `src/memoria_vault/runtime/knowledge.py`, insert immediately above `def _canvas_from_nodes_edges` (line 1743):
 
   ```python
   CANVAS_BANNER_NODE_ID = "memoria-banner"
@@ -13633,12 +13714,12 @@ Steps:
           "node_count": sum(1 for node in canvas["nodes"] if node.get("type") == "file"),
   ```
 
-- [ ] Update the two pre-existing assertions the banner breaks (banner node has no `"file"` key):
+- [x] Update the two pre-existing assertions the banner breaks (banner node has no `"file"` key):
   - `tests/test_project_knowledge.py:167` and `:245` — change both `{node["file"] for node in canvas["nodes"]}` to `{node["file"] for node in canvas["nodes"] if node.get("type") == "file"}` (read the current lines first; the two call sites are inside `test_outline_membership...`-adjacent slice test at ~166 and `test_write_project_argument_canvas_projects_checked_note_links` at ~245).
   - `tests/test_slice_outline.py:59-63` — change `assert len(canvas["nodes"]) == 21` to `assert len([n for n in canvas["nodes"] if n.get("type") == "file"]) == 21`, and add the same `if node.get("type") == "file"` filter to the two set comprehensions on lines 60-63.
-- [ ] Run tests to verify they pass: `python -m pytest tests/test_project_knowledge.py tests/test_slice_outline.py tests/test_projections.py tests/test_worker_product_jobs.py -v` — all green (`test_projections` drift test and worker `node_count == 3` assertion confirm the compat decisions).
-- [ ] Regenerate floor goldens (the seeded `argument.canvas` content hash changes in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`, then review with `git diff --stat tests/fixtures/floor/goldens` — only file-hash lines for `projects/package-gate/argument.canvas` (and per-golden db/journal rows must be unchanged). Re-run the same pytest command **without** the env var to confirm green.
-- [ ] Run the gate: `python scripts/verify` — green (this catches `scripts/test_vault/e2e_smoke.py:198`, which must still pass because `node_count` semantics kept it at 2).
+- [x] Run tests to verify they pass: `python -m pytest tests/test_project_knowledge.py tests/test_slice_outline.py tests/test_projections.py tests/test_worker_product_jobs.py -v` — all green (`test_projections` drift test and worker `node_count == 3` assertion confirm the compat decisions).
+- [x] Regenerate floor goldens (the seeded `argument.canvas` content hash changes in every golden): `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest tests/test_floor_seed.py tests/test_floor_sweep_operations.py tests/test_floor_sweep_reads.py tests/test_floor_transports.py tests/test_floor_invariants.py tests/test_floor_coverage.py -q`, then review with `git diff --stat tests/fixtures/floor/goldens` — only file-hash lines for `projects/package-gate/argument.canvas` (and per-golden db/journal rows must be unchanged). Re-run the same pytest command **without** the env var to confirm green.
+- [x] Run the gate: `python scripts/verify` — green (this catches `scripts/test_vault/e2e_smoke.py:198`, which must still pass because `node_count` semantics kept it at 2).
 - [ ] Commit:
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_project_knowledge.py tests/test_slice_outline.py tests/fixtures/floor/goldens
@@ -13672,7 +13753,7 @@ module boundary to force a dirty row through the real journal path.
 
 Steps:
 
-- [ ] Write the failing tests at the end of `tests/test_project_knowledge.py`:
+- [x] Write the failing tests at the end of `tests/test_project_knowledge.py`:
 
   ```python
   def test_canvas_generator_quarantines_dangling_edges_instead_of_silent_drop() -> None:
@@ -13739,8 +13820,8 @@ Steps:
       ]
   ```
 
-- [ ] Run tests to verify they fail: `python -m pytest tests/test_project_knowledge.py::test_canvas_generator_quarantines_dangling_edges_instead_of_silent_drop tests/test_project_knowledge.py::test_write_project_argument_canvas_journals_quarantined_edges -v` — expected: first fails with `TypeError: cannot unpack non-sequence dict` (function still returns a dict); second fails with `KeyError: 'quarantined_edge_count'`.
-- [ ] Write minimal implementation in `src/memoria_vault/runtime/knowledge.py`:
+- [x] Run tests to verify they fail: `python -m pytest tests/test_project_knowledge.py::test_canvas_generator_quarantines_dangling_edges_instead_of_silent_drop tests/test_project_knowledge.py::test_write_project_argument_canvas_journals_quarantined_edges -v` — expected: first fails with `TypeError: cannot unpack non-sequence dict` (function still returns a dict); second fails with `KeyError: 'quarantined_edge_count'`.
+- [x] Write minimal implementation in `src/memoria_vault/runtime/knowledge.py`:
   - Replace `render_project_argument_canvas` (1732-1740) with a wrapper plus report function:
 
     ```python
@@ -13800,8 +13881,8 @@ Steps:
     ```
 
     (pass `run_event` to `append_journal_event`), and add `"quarantined_edge_count": len(report["quarantined_edges"]),` to the returned dict.
-- [ ] Run tests to verify they pass: `python -m pytest tests/test_project_knowledge.py tests/test_slice_outline.py tests/test_projections.py -v`.
-- [ ] Confirm no golden drift (floor seed has no dirty rows and the canvas bytes are unchanged from Task 1): `python -m pytest tests/test_floor_sweep_operations.py -q` — green without the update env var.
+- [x] Run tests to verify they pass: `python -m pytest tests/test_project_knowledge.py tests/test_slice_outline.py tests/test_projections.py -v`.
+- [x] Confirm no golden drift (floor seed has no dirty rows and the canvas bytes are unchanged from Task 1): `python -m pytest tests/test_floor_sweep_operations.py -q` — green without the update env var.
 - [ ] Commit:
   ```
   git add src/memoria_vault/runtime/knowledge.py tests/test_project_knowledge.py

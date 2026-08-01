@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import knowledge, state
+from memoria_vault.runtime import knowledge, projections, state
 from memoria_vault.runtime.knowledge import (
     analyze_project_argument,
     read_project_slice,
@@ -297,7 +298,7 @@ def test_read_project_slice_uses_outline_order_and_computed_edges(tmp_path: Path
 
     canvas_result = write_project_argument_canvas(tmp_path, "project-alpha")
     canvas = json.loads((tmp_path / canvas_result["canvas_path"]).read_text(encoding="utf-8"))
-    assert {node["file"] for node in canvas["nodes"]} == {
+    assert {node["file"] for node in canvas["nodes"] if node.get("type") == "file"} == {
         "notes/support.md",
         "notes/thesis.md",
     }
@@ -374,7 +375,7 @@ def test_write_project_argument_canvas_projects_checked_note_links(tmp_path: Pat
     assert result["node_count"] == 2
     assert result["edge_count"] == 1
     canvas = json.loads((tmp_path / result["canvas_path"]).read_text(encoding="utf-8"))
-    assert {node["file"] for node in canvas["nodes"]} == {
+    assert {node["file"] for node in canvas["nodes"] if node.get("type") == "file"} == {
         "notes/thesis.md",
         "notes/support.md",
     }
@@ -850,3 +851,307 @@ def test_analyze_project_argument_never_synthesizes_an_edge_into_the_dot_md_note
 
     assert result["relation_count"] == 1
     assert {node["path"] for node in result["nodes"]} == {"notes/thesis.md", "notes/.md"}
+
+
+# JSON Canvas 1.0 (https://jsoncanvas.org/spec/1.0/) — the format Obsidian opens.
+# Encoded from the spec, never from this writer's output: a canvas that reads
+# fine in a fixture but omits a required node key is one Obsidian refuses, and
+# nothing else in the suite would notice.
+_CANVAS_REQUIRED_NODE_KEYS = {"id", "type", "x", "y", "width", "height"}
+_CANVAS_TYPE_REQUIRED_KEY = {"text": "text", "file": "file", "link": "url", "group": ""}
+_CANVAS_COLOR_PRESETS = {"1", "2", "3", "4", "5", "6"}
+
+
+def assert_json_canvas_conformant(canvas: dict) -> None:
+    """Assert `canvas` satisfies JSON Canvas 1.0's required shape."""
+    ids: set[str] = set()
+    for node in canvas["nodes"]:
+        assert _CANVAS_REQUIRED_NODE_KEYS <= set(node), node
+        assert node["type"] in _CANVAS_TYPE_REQUIRED_KEY, node
+        required = _CANVAS_TYPE_REQUIRED_KEY[node["type"]]
+        assert not required or isinstance(node.get(required), str), node
+        for dimension in ("x", "y", "width", "height"):
+            assert isinstance(node[dimension], int), node
+        if "color" in node:
+            assert node["color"] in _CANVAS_COLOR_PRESETS or node["color"].startswith("#"), node
+        assert node["id"] not in ids, node["id"]
+        ids.add(node["id"])
+    for edge in canvas["edges"]:
+        assert {"id", "fromNode", "toNode"} <= set(edge), edge
+        assert edge["fromNode"] in ids, edge
+        assert edge["toNode"] in ids, edge
+        assert edge["id"] not in ids, edge["id"]
+        ids.add(edge["id"])
+
+
+def test_generated_canvas_carries_banner_and_stable_node_ids(tmp_path: Path) -> None:
+    """Four members, so the banner cannot hide a layout or ordering regression.
+
+    The grid wraps every third file node; a banner counted into that index would
+    move all of them, and a two-node fixture never reaches the wrap.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    for name in ("support", "extend", "refute"):
+        _md(
+            tmp_path / f"notes/{name}.md",
+            f"type: note\ncheck_status: checked\ntitle: {name.title()}\n"
+            "links:\n  supports:\n    - notes/thesis.md\n",
+        )
+
+    result = write_project_argument_canvas(tmp_path, "project-alpha")
+    canvas = json.loads((tmp_path / result["canvas_path"]).read_text(encoding="utf-8"))
+    assert_json_canvas_conformant(canvas)
+
+    assert canvas["nodes"][0]["id"] == "memoria-banner"
+    banner = canvas["nodes"][0]
+    assert banner["type"] == "text"
+    assert "read-only" in banner["text"]
+    assert "regenerated" in banner["text"]
+    assert "fork-project-canvas" in banner["text"]
+    # Entirely above the member grid, which starts at y=0: a banner sitting on
+    # top of the first note is a banner nobody reads.
+    assert banner["y"] + banner["height"] <= 0
+
+    file_nodes = [node for node in canvas["nodes"] if node.get("type") == "file"]
+    assert len(canvas["nodes"]) == 5
+    assert result["node_count"] == len(file_nodes) == 4
+    for node in file_nodes:
+        assert node["id"] == "n-" + hashlib.sha256(node["file"].encode()).hexdigest()[:12]
+    # Nodes are sorted by path, so the fourth is the one that wraps the grid.
+    assert [(node["x"], node["y"]) for node in file_nodes] == [
+        (0, 0),
+        (360, 0),
+        (720, 0),
+        (0, 240),
+    ]
+
+    rerendered = knowledge.render_project_argument_canvas(tmp_path, "project-alpha")
+    assert {node["id"] for node in rerendered["nodes"]} == {node["id"] for node in canvas["nodes"]}
+    assert projections.render_tracked_projection(tmp_path, result["canvas_path"]) == (
+        tmp_path / result["canvas_path"]
+    ).read_text(encoding="utf-8")
+
+
+def test_canvas_node_ids_hash_the_raw_member_path() -> None:
+    """The id is `n-sha256(raw path)[:12]` — the path as handed in, unnormalized.
+
+    A fixture drawn only from already-normalized paths cannot tell the two
+    apart, so this one hands in a path a normalizer would rewrite and pins the
+    literal id the raw bytes produce.
+    """
+    canvas, _ = knowledge._canvas_from_nodes_edges([{"path": "notes/./thesis.md"}], [])
+
+    assert canvas["nodes"][1]["id"] == "n-93378973d8a1"
+    assert "n-93378973d8a1" == "n-" + hashlib.sha256(b"notes/./thesis.md").hexdigest()[:12]
+    assert "n-93378973d8a1" != "n-" + hashlib.sha256(b"notes/thesis.md").hexdigest()[:12]
+
+
+def test_canvas_generator_quarantines_dangling_edges_instead_of_silent_drop() -> None:
+    """Every way an endpoint can miss the node set, in one pass, alongside a hit.
+
+    A one-node/one-edge fixture proves nothing about which rows survive, which
+    are quarantined, or the order they come back in. The third row is the shape
+    the raw-path id scheme actually produces: `notes/./thesis.md` and
+    `notes/thesis.md` hash differently, so a normalized edge over a raw member
+    dangles even though both name the same file.
+    """
+    canvas, quarantined = knowledge._canvas_from_nodes_edges(
+        [{"path": "notes/thesis.md"}, {"path": "notes/support.md"}, {"path": "notes/./raw.md"}],
+        [
+            {"source": "notes/support.md", "target": "notes/thesis.md", "type": "supports"},
+            {"source": "notes/ghost.md", "target": "notes/thesis.md", "type": "supports"},
+            {"source": "notes/raw.md", "target": "notes/thesis.md", "type": "extends"},
+            {"source": "notes/thesis.md", "target": "notes/ghost.md", "type": "contradicts"},
+            {"source": "notes/ghost.md", "target": "notes/phantom.md", "type": "refines"},
+        ],
+    )
+
+    assert [edge["label"] for edge in canvas["edges"]] == ["supports"]
+    assert (
+        canvas["edges"][0]["fromNode"]
+        == "n-" + hashlib.sha256(b"notes/support.md").hexdigest()[:12]
+    )
+    assert quarantined == [
+        {
+            "source": "notes/ghost.md",
+            "target": "notes/thesis.md",
+            "type": "supports",
+            "reason": "edge endpoint is not a canvas node",
+        },
+        {
+            "source": "notes/raw.md",
+            "target": "notes/thesis.md",
+            "type": "extends",
+            "reason": "edge endpoint is not a canvas node",
+        },
+        {
+            "source": "notes/thesis.md",
+            "target": "notes/ghost.md",
+            "type": "contradicts",
+            "reason": "edge endpoint is not a canvas node",
+        },
+        {
+            "source": "notes/ghost.md",
+            "target": "notes/phantom.md",
+            "type": "refines",
+            "reason": "edge endpoint is not a canvas node",
+        },
+    ]
+
+
+def test_render_project_argument_canvas_report_is_clean_on_the_analyze_branch(
+    tmp_path: Path,
+) -> None:
+    """The no-outline branch pre-filters, so its report must be an empty list.
+
+    Naming the state that produces `quarantined_edges == []` keeps the default
+    from being an untested fallback, and pins that the wrapper still hands back
+    a bare canvas.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(tmp_path / "notes/thesis.md", "type: note\ncheck_status: checked\ntitle: Thesis\n")
+    _md(
+        tmp_path / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+
+    report = knowledge.render_project_argument_canvas_report(tmp_path, "project-alpha")
+
+    assert report["quarantined_edges"] == []
+    assert len(report["canvas"]["edges"]) == 1
+    assert knowledge.render_project_argument_canvas(tmp_path, "project-alpha") == report["canvas"]
+
+
+def test_render_project_argument_canvas_report_quarantines_on_the_analyze_branch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A project with no outline takes the other branch — it must report too.
+
+    The lens pre-filters its own component edges today, so only a stub can
+    reach this arm. Without it, dropping the analyze branch's rows on the floor
+    is invisible, and that arm is the one every outline-less project takes.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    monkeypatch.setattr(
+        knowledge,
+        "analyze_project_argument",
+        lambda _vault, _project: {
+            "nodes": [{"path": "notes/thesis.md"}],
+            "edges": [
+                {"source": "notes/ghost.md", "target": "notes/thesis.md", "type": "supports"}
+            ],
+        },
+    )
+
+    report = knowledge.render_project_argument_canvas_report(tmp_path, "project-alpha")
+
+    assert report["canvas"]["edges"] == []
+    assert report["quarantined_edges"] == [
+        {
+            "source": "notes/ghost.md",
+            "target": "notes/thesis.md",
+            "type": "supports",
+            "reason": "edge endpoint is not a canvas node",
+        }
+    ]
+
+
+def _dirty_slice_vault(tmp_path: Path) -> Path:
+    vault = workspace(tmp_path)
+    _md(
+        vault / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(vault / "notes/thesis.md", "type: note\ncheck_status: checked\ntitle: Thesis\n")
+    outline = vault / "projects/project-alpha/outline.md"
+    outline.write_text("- 01ARZ3NDEKTSV4RRFFQ69G5FZZ -- Thesis\n", encoding="utf-8")
+    return vault
+
+
+def _slice_with_edges(edges: list[dict[str, str]]):
+    def read_slice(_vault: Path, _project: str) -> dict:
+        return {
+            "project_path": "projects/project-alpha/project.md",
+            "outline_path": "projects/project-alpha/outline.md",
+            "members": [{"path": "notes/thesis.md"}],
+            "edges": edges,
+            "missing": [],
+        }
+
+    return read_slice
+
+
+def _canvas_run_event(vault: Path) -> dict:
+    journal = (vault / ".memoria/journal/test-machine.jsonl").read_text(encoding="utf-8")
+    rows = [json.loads(line) for line in journal.splitlines() if line]
+    return next(row for row in rows if row.get("workflow") == "render-project-argument-canvas")
+
+
+def test_write_project_argument_canvas_journals_quarantined_edges(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = _dirty_slice_vault(tmp_path)
+    monkeypatch.setattr(
+        knowledge,
+        "read_project_slice",
+        _slice_with_edges(
+            [
+                {"source": "notes/ghost.md", "target": "notes/thesis.md", "type": "supports"},
+                {"source": "notes/thesis.md", "target": "notes/phantom.md", "type": "extends"},
+            ]
+        ),
+    )
+
+    result = write_project_argument_canvas(vault, "project-alpha", commit=True)
+
+    assert result["quarantined_edge_count"] == 2
+    assert result["edge_count"] == 0
+    assert _canvas_run_event(vault)["quarantined_edges"] == [
+        {
+            "source": "notes/ghost.md",
+            "target": "notes/thesis.md",
+            "type": "supports",
+            "reason": "edge endpoint is not a canvas node",
+        },
+        {
+            "source": "notes/thesis.md",
+            "target": "notes/phantom.md",
+            "type": "extends",
+            "reason": "edge endpoint is not a canvas node",
+        },
+    ]
+
+
+def test_write_project_argument_canvas_omits_the_quarantine_field_when_clean(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The clean run is the floor seed's own state — it must add no event field.
+
+    Every golden hashes the journal, so a `quarantined_edges: []` emitted here
+    would rewrite all 35 of them for a row that says nothing.
+    """
+    vault = _dirty_slice_vault(tmp_path)
+    monkeypatch.setattr(knowledge, "read_project_slice", _slice_with_edges([]))
+
+    result = write_project_argument_canvas(vault, "project-alpha", commit=True)
+
+    assert result["quarantined_edge_count"] == 0
+    assert "quarantined_edges" not in _canvas_run_event(vault)
