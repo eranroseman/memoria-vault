@@ -269,3 +269,86 @@ def zotero_running(
             return status is None or 200 <= int(status) < 300
     except (OSError, TypeError, ValueError, http.client.HTTPException):
         return False
+
+
+ZOTERO_HOWTO_URL = "https://eranroseman.github.io/memoria-vault/how-to-guides/setup/set-up-zotero"
+
+CREDENTIALS_NOTICE = (
+    "Optional: live-model operations need a provider key — set one with "
+    "`memoria secrets set <NAME>` (check `memoria doctor` for credential "
+    "status); offline and keyless modes need nothing."
+)
+
+
+def run_onboarding(
+    workspace: Path,
+    *,
+    sys_platform: str,
+    env: Mapping[str, str],
+    home: Path,
+    ask: AskFn,
+    say: SayFn,
+    run: RunFn = subprocess.run,
+    url_open: Callable[..., Any] = _open_zotero_probe,
+) -> dict[str, Any]:
+    """Run the full onboarding runway once (bootstrap spec section 7).
+
+    Sequences every BOOT-D.1-D.4 probe/action into one step log: detect or
+    offer to install Obsidian, open the vault when Obsidian is present, probe
+    for a running Zotero connector, and always surface the credentials
+    notice. ``url_open`` defaults to the hardened, proxy-free/redirect-free
+    ``_open_zotero_probe`` (not a bare ``urllib.request.urlopen``) and is
+    forwarded verbatim to ``zotero_running`` so a caller that does not
+    override it still gets BOOT-D.4's hardening rather than silently losing
+    it.
+
+    ``ok`` is unconditionally ``True``: every step status here is an honest
+    outcome (including a decline or a failed install) rather than a crash,
+    so a caller such as the future ``memoria onboard`` CLI's ``_emit`` never
+    prints a spurious FAILED for a normal manual-fallback path. ``completed``
+    is the one place that distinction actually matters: it is ``True`` only
+    when Obsidian is present/installed *and* the vault was actually opened.
+    """
+    steps: list[dict[str, str]] = []
+
+    if detect_obsidian(sys_platform, env=env, home=home, run=run):
+        obsidian_status = "present"
+    else:
+        try:
+            obsidian_status = offer_obsidian_install(sys_platform, ask=ask, say=say, run=run)
+        except (EOFError, RuntimeError):
+            # `ask` is not total. `offer_obsidian_install` only guards its
+            # own `ask()` call against `EOFError`, but a closed/detached
+            # stdin makes builtin `input()` raise `RuntimeError: input():
+            # lost sys.stdin` instead -- a different exception that would
+            # otherwise propagate out of this function and crash the whole
+            # onboarding sequence. An unreadable prompt is treated the same
+            # as a decline: an honest "no consent obtained" outcome.
+            say(f"Skipped. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
+            obsidian_status = "declined"
+    steps.append({"step": "obsidian", "status": obsidian_status})
+
+    if obsidian_status in ("present", "installed"):
+        open_status = open_vault_in_obsidian(workspace, sys_platform=sys_platform, run=run, say=say)
+    else:
+        open_status = "skipped"
+        say(MANUAL_OPEN_FALLBACK.format(path=workspace))
+    steps.append({"step": "open-vault", "status": open_status})
+
+    if zotero_running(url_open=url_open):
+        say(f"Zotero detected on 127.0.0.1:23119 — connect it: {ZOTERO_HOWTO_URL}")
+        zotero_status = "offered"
+    else:
+        zotero_status = "not-detected"
+    steps.append({"step": "zotero", "status": zotero_status})
+
+    say(CREDENTIALS_NOTICE)
+    steps.append({"step": "credentials", "status": "noticed"})
+
+    completed = obsidian_status in ("present", "installed") and open_status == "opened"
+    return {
+        "ok": True,
+        "workspace": str(workspace),
+        "completed": completed,
+        "steps": steps,
+    }

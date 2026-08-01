@@ -615,6 +615,186 @@ def test_zotero_probe_default_opener_ignores_ambient_proxy(monkeypatch: pytest.M
         proxy_server.server_close()
 
 
+def _fake_zotero(detected: bool):
+    def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
+        if not detected:
+            raise OSError("connection refused")
+        return FakeResponse(200)
+
+    return url_open
+
+
+def _linux_home_with_obsidian(tmp_path: Path) -> Path:
+    home = tmp_path / "home"
+    entry = home / ".local/share/applications/obsidian.desktop"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("[Desktop Entry]\n", encoding="utf-8")
+    return home
+
+
+def test_run_onboarding_full_runway_with_zotero_detected(tmp_path: Path) -> None:
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    (workspace / "Start here.md").write_text("# Start here\n", encoding="utf-8")
+    home = _linux_home_with_obsidian(tmp_path)
+    run = FakeRun(returncode=0)
+    said: list[str] = []
+
+    payload = onboarding.run_onboarding(
+        workspace,
+        sys_platform="linux",
+        env={},
+        home=home,
+        ask=lambda _prompt: "",
+        say=said.append,
+        run=run,
+        url_open=_fake_zotero(True),
+    )
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert payload["completed"] is True
+    assert payload["workspace"] == str(workspace)
+    assert statuses == {
+        "obsidian": "present",
+        "open-vault": "opened",
+        "zotero": "offered",
+        "credentials": "noticed",
+    }
+    assert any(onboarding.ZOTERO_HOWTO_URL in line for line in said)
+    assert onboarding.CREDENTIALS_NOTICE in said
+
+
+def test_run_onboarding_declined_install_skips_open_and_stays_honest(tmp_path: Path) -> None:
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    said: list[str] = []
+
+    payload = onboarding.run_onboarding(
+        workspace,
+        sys_platform="linux",
+        env={"XDG_DATA_HOME": str(tmp_path / "empty"), "XDG_DATA_DIRS": str(tmp_path / "none")},
+        home=tmp_path / "home",
+        ask=lambda _prompt: "n",
+        say=said.append,
+        run=FakeRun(returncode=1),
+        url_open=_fake_zotero(False),
+    )
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert payload["completed"] is False
+    assert statuses == {
+        "obsidian": "declined",
+        "open-vault": "skipped",
+        "zotero": "not-detected",
+        "credentials": "noticed",
+    }
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=workspace) in said
+    assert onboarding.CREDENTIALS_NOTICE in said
+
+
+def test_run_onboarding_install_failure_is_reported_and_open_is_skipped(tmp_path: Path) -> None:
+    # Proves the "failed" obsidian status (distinct from "declined"/"manual")
+    # is actually reachable through the orchestrator, and that a failed
+    # install still skips the open-vault step rather than attempting it.
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    said: list[str] = []
+
+    payload = onboarding.run_onboarding(
+        workspace,
+        sys_platform="linux",
+        env={"XDG_DATA_HOME": str(tmp_path / "empty"), "XDG_DATA_DIRS": str(tmp_path / "none")},
+        home=tmp_path / "home",
+        ask=lambda _prompt: "y",
+        say=said.append,
+        run=FakeRun(returncode=1),
+        url_open=_fake_zotero(False),
+    )
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert payload["completed"] is False
+    assert statuses["obsidian"] == "failed"
+    assert statuses["open-vault"] == "skipped"
+
+
+def test_run_onboarding_open_vault_failure_leaves_incomplete_even_when_obsidian_present(
+    tmp_path: Path,
+) -> None:
+    # Proves the "manual" open-vault status is reachable even when Obsidian
+    # is already present, and that `completed` correctly stays False: both
+    # legs of the AND (obsidian present/installed, vault opened) must hold.
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    home = _linux_home_with_obsidian(tmp_path)
+    said: list[str] = []
+
+    payload = onboarding.run_onboarding(
+        workspace,
+        sys_platform="linux",
+        env={},
+        home=home,
+        ask=lambda _prompt: "",
+        say=said.append,
+        run=FakeRun(returncode=1),
+        url_open=_fake_zotero(False),
+    )
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert payload["completed"] is False
+    assert statuses["obsidian"] == "present"
+    assert statuses["open-vault"] == "manual"
+    assert onboarding.MANUAL_OPEN_FALLBACK.format(path=workspace) in said
+
+
+def test_run_onboarding_ask_failure_is_treated_as_declined_not_a_crash(tmp_path: Path) -> None:
+    # `ask` is not total: builtin input() raises RuntimeError("input(): lost
+    # sys.stdin"), not EOFError, when stdin is closed/detached, and
+    # offer_obsidian_install only guards its own ask() call against EOFError.
+    # The orchestrator must not let this escape and crash the whole
+    # onboarding sequence -- an unreadable prompt is an honest "no consent"
+    # outcome, not a failure.
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    said: list[str] = []
+
+    def ask(_prompt: str) -> str:
+        raise RuntimeError("input(): lost sys.stdin")
+
+    payload = onboarding.run_onboarding(
+        workspace,
+        sys_platform="linux",
+        env={"XDG_DATA_HOME": str(tmp_path / "empty"), "XDG_DATA_DIRS": str(tmp_path / "none")},
+        home=tmp_path / "home",
+        ask=ask,
+        say=said.append,
+        run=FakeRun(returncode=1),
+        url_open=_fake_zotero(False),
+    )
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert payload["completed"] is False
+    assert statuses["obsidian"] == "declined"
+    assert statuses["open-vault"] == "skipped"
+    assert any(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said)
+
+
+def test_run_onboarding_default_zotero_opener_is_the_hardened_opener() -> None:
+    # Regression guard: the plan's BOOT-D.5 snippet listed a stale
+    # `urllib.request.urlopen` default for `url_open`, which -- since
+    # run_onboarding always forwards `url_open` explicitly to
+    # zotero_running -- would silently undo BOOT-D.4's proxy-free,
+    # redirect-free hardening whenever a caller (e.g. the future `memoria
+    # onboard` CLI) does not pass its own `url_open`. Pin the default
+    # explicitly, mirroring zotero_running's own regression guard.
+    default = inspect.signature(onboarding.run_onboarding).parameters["url_open"].default
+    assert default is onboarding._open_zotero_probe
+
+
 def test_zotero_probe_default_opener_does_not_follow_redirects() -> None:
     # An unhardened opener follows a 301/302/303/307/308 -- including to an
     # ftp:// target, whose addinfourl has status None, which this probe
