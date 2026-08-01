@@ -8441,9 +8441,33 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
 >    status` fails first. The reachable ones — a crashed git leaving `index.lock`,
 >    an unconfigured identity — passed it, appended the whole tail into a digest,
 >    unlinked every card and failed at the commit. `_uncommittable` now checks repo,
->    lock and `git var GIT_COMMITTER_IDENT` before the first write. It is racy by
->    nature, so the residual commit failure enriches its own message with the count
->    and digest path it already moved (the caller never receives a return value).
+>    lock and `git var GIT_COMMITTER_IDENT`. The lock check follows a `.git` *file*
+>    gitlink, because `Path(".git/index.lock").exists()` swallows `ENOTDIR` on a
+>    linked worktree or submodule and reports no lock.
+>
+>    The residual commit failure is **not** fixed by assignment order.
+>    `result["archived"]` already preceded the commit; moving it after changes
+>    nothing observable, because `cli._compact_resolved_inbox` returns a literal
+>    `{"archived": [], …}` on any catch and so cannot carry a count however the lib
+>    orders its assignments. The only real change is that the re-raised error names
+>    the count and the digest path. Closing it properly means changing the lib→CLI
+>    contract from "raise" to "return a partial payload with an error", which is a
+>    larger move than this fix should make.
+>
+> 7. **Journaling and archiving were two critical sections with a wide gap.** The
+>    journaling half took the workspace lock and released it; compaction then ran a
+>    probe, spawned git subprocesses, and waited for the lock again. A card the PI
+>    flipped to `resolved` anywhere in that window was absent from the journaling
+>    read and present in the in-lock archive read — digested, released and unlinked
+>    with no disposition row anywhere, which made the "no card leaves `inbox/`
+>    without a journaled disposition" claim false. Pre-existing, but this fix
+>    widened the window and newly asserted in prose that it could not happen.
+>    `compact_resolved_cards` now re-runs `journal_unattributed_dispositions` inside
+>    its own lock (re-entrant on the same thread) and merges the rows into
+>    `adopted`; the held set makes it a no-op for everything the outer call covered.
+>    `_uncommittable` moved inside the lock with it, so the window it closes cannot
+>    reopen during the lock wait. The outer call stays: a vault with nothing to
+>    archive must still journal its deferred closes without needing a git repo.
 >
 > **Costs, declared rather than mechanized.** A crash between the release row and
 > the unlink leaves a briefly-false row: the next scan re-journals the card and
@@ -8467,10 +8491,24 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
 > unconditionally and retires the no-lock pin.
 >
 > **Coverage note (`cli.py`).** The `OSError` and `RuntimeError` arms of
-> `_compact_resolved_inbox` have producer tests. `sqlite3.Error` has none and can
-> have none: a database this scan cannot write is one `verify_journal_chain` already
-> refused several steps earlier (verified — exit 2, no payload). It stays as named
-> defence-in-depth for the inter-step window, matching `policy/engine.py`.
+> `_compact_resolved_inbox` have producer tests. `sqlite3.Error` has none, and none
+> that meets the standard the other two are held to: a database this scan cannot
+> write is one `verify_journal_chain` already refused several steps earlier
+> (verified — exit 2, no payload). A barrier thread opening `BEGIN IMMEDIATE`
+> between the observe step and compaction *could* produce it, which is exactly the
+> stubbing this task rejected for the `RuntimeError` arm, so it is rejected here
+> too. The arm stays as named defence-in-depth — the inter-step window is real for
+> a non-Memoria writer, since the flock does not exclude one and `state.connect`
+> does not wrap the error — matching `policy/engine.py`.
+>
+> **Escape class carried forward.** The ordered fold and the two-lock window were
+> both found by *trajectory* coverage, not by fixture size: every fixture that
+> reached slot reuse archived the second card in the same `compact_resolved_cards`
+> call, so the re-claimed-and-still-held state — the ordinary production state,
+> because the policy hook journals without compacting — was never sampled. An
+> order-blind `disposed - released` passed the entire suite. This module now holds
+> two multi-step state machines; a fixture that runs one to its fixed point cannot
+> tell a correct implementation from a wrong one that converges there.
 
 **Steps:**
 

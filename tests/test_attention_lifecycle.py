@@ -435,7 +435,14 @@ def test_every_resolved_month_gets_its_own_digest(tmp_path: Path) -> None:
     # Every archived card is released, not just the first: a release loop that
     # stopped early would strand the rest of the tail's paths held forever, and the
     # next card at any of those names would be deleted with no record of its own.
-    assert sorted(event["target_id"] for event in _released(tmp_path)) == result["archived"]
+    # And each row names *its own* digest -- "which digest now holds it" is the
+    # row's whole reason for carrying `outputs`, and one shared value makes that
+    # claim false for every card but one whenever a run spans two months.
+    assert sorted((event["target_id"], *event["outputs"]) for event in _released(tmp_path)) == [
+        ("inbox/alert-jun-1.md", "inbox/archive/2026-06.md"),
+        ("inbox/alert-may-1.md", "inbox/archive/2026-05.md"),
+        ("inbox/alert-may-2.md", "inbox/archive/2026-05.md"),
+    ]
 
     for name in ("alert-may-1.md", "alert-jun-1.md"):  # both slots reusable again
         _write_card(tmp_path, name, "resolved", extra="resolution_outcome: reject\n")
@@ -1133,3 +1140,96 @@ def test_a_commit_that_fails_after_the_unlink_reports_what_it_lost(
 
     assert not (tmp_path / "inbox/alert-done.md").exists()
     assert "inbox/archive/2026-06.md" in str(_released(tmp_path)[0]["outputs"])
+
+
+def test_a_card_resolved_between_the_two_locks_is_still_journaled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Journaling and archiving are two acquisitions, and the gap between them is wide.
+
+    The journaling half takes the lock and releases it; compaction then runs a
+    probe, spawns a subprocess to ask git whether it can commit, and waits for the
+    lock again. A card the PI flips to `resolved` anywhere in that window is absent
+    from the journaling read and present in the in-lock archive read: appended to
+    the digest, released, unlinked -- with no disposition row anywhere. `serve
+    --watch` ticking while the PI works through a burst of cards in Obsidian is the
+    live producer.
+    """
+    init_git(tmp_path, "pi@example.invalid", "PI")
+    _write_card(tmp_path, "alert-a.md", "resolved")
+    real_lock = state.workspace_lock
+    fired: list[bool] = []
+
+    @contextlib.contextmanager
+    def resolve_b_in_the_gap(vault: Path) -> Any:
+        # A disposition row exists only after the journaling half committed one, so
+        # its presence marks this acquisition as compaction's rather than journaling's.
+        if not fired and _dispositions(vault):
+            fired.append(True)
+            _write_card(vault, "alert-b.md", "resolved")
+        with real_lock(vault):
+            yield
+
+    monkeypatch.setattr(state, "workspace_lock", resolve_b_in_the_gap)
+    result = lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+    monkeypatch.undo()
+
+    assert fired == [True]  # the window was opened, not assumed
+    assert result["archived"] == ["inbox/alert-a.md", "inbox/alert-b.md"]
+    assert sorted(event["target_id"] for event in result["adopted"]) == [
+        "inbox/alert-a.md",
+        "inbox/alert-b.md",
+    ]
+    assert sorted(event["target_id"] for event in _dispositions(tmp_path)) == [
+        "inbox/alert-a.md",
+        "inbox/alert-b.md",
+    ]
+
+
+def test_a_reclaimed_slot_is_journaled_once_not_on_every_gated_write(tmp_path: Path) -> None:
+    """The fold *holds* a re-claimed path; an order-blind `disposed - released` does not.
+
+    Every fixture that reaches the reuse path archives the second card in the same
+    `compact_resolved_cards` call, so the re-claimed-and-still-held state is never
+    sampled -- yet that is the ordinary production state, because
+    `journal_unattributed_dispositions` runs from `policy/engine.py` on every
+    `PreToolUse` hook and does not compact. Under a set difference the path is free
+    the moment any release row exists for it, so every hook call appends another
+    permanent, undeletable row for the same disposition until the next scan.
+    """
+    init_git(tmp_path, "pi@example.invalid", "PI")
+    rel = "inbox/alert-slot.md"
+    _write_card(tmp_path, "alert-slot.md", "resolved", extra="resolution_outcome: reject\n")
+    lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+    _write_card(tmp_path, "alert-slot.md", "resolved", extra="resolution_outcome: apply\n")
+
+    first = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    second = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    third = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+
+    assert [event["target_id"] for event in first] == [rel]
+    assert first[0]["outcome"] == "apply"
+    # The trajectory observed in motion rather than at its fixed point.
+    assert (second, third) == ([], [])
+    assert [event["outcome"] for event in _dispositions(tmp_path)] == ["reject", "apply"]
+
+
+def test_a_gitlinked_vault_still_sees_a_held_index_lock(tmp_path: Path) -> None:
+    """A linked worktree and a submodule both carry `.git` as a file, not a directory.
+
+    `Path(".git/index.lock").exists()` swallows the `ENOTDIR` there and reports no
+    lock, so the pre-flight would wave through the one state it exists to catch and
+    empty the tail into an uncommitted digest.
+    """
+    init_git(tmp_path, "pi@example.invalid", "PI")
+    real_git = tmp_path / "real-git"
+    (tmp_path / ".git").rename(real_git)
+    (tmp_path / ".git").write_text(f"gitdir: {real_git}\n", encoding="utf-8")
+    _write_card(tmp_path, "alert-done.md", "resolved")
+    (real_git / "index.lock").write_text("", encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match=r"index\.lock"):
+        lifecycle.compact_resolved_cards(tmp_path, machine="test-machine")
+
+    assert (tmp_path / "inbox/alert-done.md").is_file()
+    assert not (tmp_path / "inbox/archive").exists()

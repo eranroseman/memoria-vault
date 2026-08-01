@@ -321,6 +321,24 @@ def _tracked(vault: Path, rel: str) -> bool:
     return proc.returncode == 0
 
 
+def _git_dir(vault: Path) -> Path:
+    """Return the repository's git directory, following a `.git` *file* gitlink.
+
+    A linked worktree and a submodule both carry `.git` as a file holding
+    `gitdir: <path>`, and `Path(".git/index.lock").exists()` on one of those
+    swallows the `ENOTDIR` and reports no lock -- waving through the exact state
+    the caller exists to catch.
+    """
+    dot_git = vault / ".git"
+    if dot_git.is_dir():
+        return dot_git
+    link = safe_read(dot_git).strip()
+    if not link.startswith("gitdir:"):
+        return dot_git
+    target = Path(link.removeprefix("gitdir:").strip())
+    return target if target.is_absolute() else vault / target
+
+
 def _uncommittable(vault: Path) -> str:
     """Return why the trusted writer cannot commit here now, or `""` if it can.
 
@@ -336,7 +354,7 @@ def _uncommittable(vault: Path) -> str:
     """
     if not (vault / ".git").exists():
         return "it has no git repo"
-    if (vault / ".git/index.lock").exists():
+    if (_git_dir(vault) / "index.lock").exists():
         return "another git process holds .git/index.lock"
     proc = subprocess.run(
         ["git", "var", "GIT_COMMITTER_IDENT"],
@@ -356,12 +374,14 @@ def _uncommittable(vault: Path) -> str:
 def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     """Move resolved attention cards into the append-only monthly archive digest.
 
-    Journals unattributed dispositions first, so no card leaves `inbox/` without a
-    journaled disposition, and appends an `EVENT_ATTENTION_ARCHIVED` release row for
-    each card before unlinking it, so no card leaves `inbox/` without the journal
-    recording that it left and which digest now holds it. Each card file is then
-    deleted in the same trusted-writer commit that records the digest append.
-    Deferred and open cards stay put.
+    Journals unattributed dispositions first -- once before the lock so a vault with
+    nothing to archive still records its deferred closes without one, and again
+    inside it so a card closed during the lock wait is covered too -- and appends an
+    `EVENT_ATTENTION_ARCHIVED` release row for each card before unlinking it. So no
+    card leaves `inbox/` without a journaled disposition, and none leaves without
+    the journal recording that it left and which digest now holds it. Each card file
+    is then deleted in the same trusted-writer commit that records the digest
+    append. Deferred and open cards stay put.
 
     The release row is what makes an `inbox/` path reusable safely. Without it the
     disposition set only grows, so the second card to occupy a freed name is read as
@@ -385,15 +405,26 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     inbox = vault / "inbox"
     if not _resolved_cards(inbox):
         return result
-    blocked = _uncommittable(vault)
-    if blocked:
-        raise RuntimeError(f"cannot archive resolved attention cards: {blocked}")
     archived: list[str] = []
     digests: list[str] = []
     tracked: list[str] = []
     pending: list[tuple[Path, str, str]] = []
     today = datetime.date.today()
     with state.workspace_lock(vault):
+        blocked = _uncommittable(vault)
+        if blocked:
+            raise RuntimeError(f"cannot archive resolved attention cards: {blocked}")
+        # Journal again, inside *this* lock. The call above released its own before
+        # returning, and between the two sit a probe, a lock wait of unbounded
+        # length, and two git subprocesses -- a window in which the PI closes
+        # another card. Such a card is absent from the journaling read and present
+        # in the archive read below, so without this it would be digested,
+        # released and unlinked with no disposition row anywhere. The held set
+        # makes this a no-op for every card the call above already covered.
+        result["adopted"] = [
+            *result["adopted"],
+            *journal_unattributed_dispositions(vault, machine=machine),
+        ]
         for path, frontmatter, body in _resolved_cards(inbox):
             rel = path.relative_to(vault).as_posix()
             month = _archive_month(frontmatter, today)

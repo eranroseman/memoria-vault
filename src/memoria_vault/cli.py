@@ -2441,11 +2441,14 @@ def _compact_resolved_inbox(workspace: Path) -> dict[str, Any]:
     failed.
 
     `OSError` and `RuntimeError` both have producer tests at this seam. `sqlite3.Error`
-    does not, and cannot: a database this scan cannot write is a database
-    `verify_journal_chain` already refused several steps earlier. It stays because the
-    window between the observe step and this one is real on a live vault with an
-    external writer, and because `policy/engine.py` guards the same lib call the same
-    way -- defence in depth, named as such rather than left looking covered.
+    has none, and none that could be written without a stub: a database this scan
+    cannot write is a database `verify_journal_chain` already refused several steps
+    earlier, so reaching this arm means racing a barrier thread into the gap between
+    the observe step and this call -- the same stubbing this seam's other arms were
+    held back from. It stays because that gap is real on a live vault with a
+    non-Memoria writer (the flock does not exclude one), and because
+    `policy/engine.py` guards the same lib call the same way -- defence in depth,
+    named as such rather than left looking covered.
     """
     # Lazy, like the journal and projection imports above: the scan path is the only
     # caller and `memoria --help` should not pay for the trusted writer.
