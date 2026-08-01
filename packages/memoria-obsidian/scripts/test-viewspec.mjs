@@ -87,6 +87,54 @@ test("renderView renders every block of a known version in payload order", () =>
   );
 });
 
+// Producer state: the engine's forward-compat contract (U3-ENG.5) — a later
+// engine adds a block kind, and the HTTP transport carries it through
+// unfiltered (tests/test_attention_view.py::
+// test_http_dispatch_passes_additive_unknown_blocks_through). This is the
+// pane's half of that claim: the new block must join the view visibly, between
+// the known cards that keep their places, rather than vanish or displace them.
+test("an additive future block joins the view without displacing known ones", () => {
+  const trees = renderView({
+    version: "view-spec.v1",
+    blocks: [
+      { kind: "card", id: "c1", title: "First", kind_line: "flag", blocks: [] },
+      { kind: "sparkline", id: "future", points: [1, 2, 3] },
+      { kind: "card", id: "c2", title: "Second", kind_line: "flag", blocks: [] },
+    ],
+  });
+  assert.deepEqual(
+    trees.map((tree) => tree.cls),
+    ["memoria-card", "memoria-block-unknown", "memoria-card"],
+  );
+  assert.deepEqual(
+    [trees[0], trees[2]].map((tree) => tree.children[1].text),
+    ["First", "Second"],
+  );
+  assert.equal(trees[1].text, "Unknown block type: sparkline");
+  assert.ok(trees[1].children[0].text.includes('"points"'));
+});
+
+// ... and one nested inside a card, which is where the first additive kind
+// actually lands: renderCard maps every declared child through renderBlock, so
+// an unknown child must fail visible in place instead of blanking the card.
+test("an additive future child block fails visible inside its card", () => {
+  const tree = renderBlock({
+    kind: "card",
+    id: "c1",
+    title: "Card",
+    kind_line: "flag",
+    blocks: [
+      { kind: "text", id: "t1", text: "known" },
+      { kind: "timeline", id: "future-child", at: "2026-08-01" },
+    ],
+  });
+  assert.deepEqual(
+    tree.children.map((child) => child.cls),
+    ["memoria-card-kind", "memoria-card-title", "memoria-block-text", "memoria-block-unknown"],
+  );
+  assert.equal(tree.children[3].text, "Unknown block type: timeline");
+});
+
 test("card preserves declared semantic child order and appends present analysis", () => {
   const tree = renderBlock({
     kind: "card",

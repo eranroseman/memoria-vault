@@ -39,6 +39,12 @@ CONCEPT_HOMES = {
     "project": "projects",
 }
 VIEW_SPEC_VERSION = "view-spec.v1"
+# The closed catalog of view-spec block kinds. Held equal to `viewspec.js`'s
+# `KNOWN_BLOCK_KINDS` *and* to its `renderBlock` switch by
+# tests/test_attention_view.py, so this is a mirror of what the pane can draw,
+# never a third independent roster. Transports impose no whitelist: an additive
+# future block travels unfiltered and renders as a labeled fallback box.
+VIEW_BLOCK_KINDS = ("card", "text", "badge", "action-row", "evidence-list")
 # Ranks the four bands `inbox.LOUDNESS` writes; anything else ranks after them.
 ATTENTION_LOUDNESS_RANK = {"block": 0, "alert": 1, "notice": 2, "quiet": 3}
 # Frontmatter name -> public card name. Only nonblank text is carried, so a card

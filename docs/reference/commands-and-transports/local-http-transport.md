@@ -82,6 +82,7 @@ Only `GET` and `POST` are implemented.
 | `GET` | `/request` | `id`, `read_scope` or `scope` | `read_request(...)` |
 | `GET` | `/attention` | `status`, `kind`, `worklist=true`, `read_scope` or `scope` | `read_attention(...)` |
 | `GET` | `/attention/card` | `path`, `read_scope` or `scope` | `read_attention_card(...)` |
+| `GET` | `/v1/views/attention` | `summary=true`, `read_scope` or `scope` | `read_attention_view(...)` |
 | `GET` | `/concepts` | `type`, `read_scope` or `scope` | `read_concepts(...)` |
 | `GET` | `/concept` | `target`, `read_scope` or `scope` | `read_concept(...)` |
 | `GET` | `/work` | `id`, `read_scope` or `scope` | `read_work(...)` |
