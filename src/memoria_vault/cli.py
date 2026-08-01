@@ -2768,6 +2768,7 @@ def _active_seed_files(
 def _init_dry_run_report(
     workspace: Path, planned_dirs: list[str], *, include_obsidian: bool = True
 ) -> dict[str, Any]:
+    from memoria_vault.runtime import bundles
     from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
 
     seed_trees = [
@@ -2824,6 +2825,7 @@ def _init_dry_run_report(
             "journal_head": state.JOURNAL_HEAD_REL,
             "overrides": ".memoria/overrides.jsonl",
             "gitignore": ".gitignore",
+            "vault_manifest": bundles.MANIFEST_REL,
         },
     }
 
@@ -2998,12 +3000,14 @@ def _initialize_workspace_files(
     from memoria_vault.runtime.projections import write_tracked_projections_explicit
 
     write_tracked_projections_explicit(workspace, actor="operation", machine="memoria-init")
-    _ensure_git(workspace, commit_created_repository=commit_created_repository)
     if not overwrite and include_agent_bundle:
         from memoria_vault.runtime import bundles
 
         bundle_names = ["agent"] + (["obsidian"] if include_obsidian else [])
+        # Before _ensure_git so the created repository's first commit tracks
+        # .memoria/vault.json; otherwise a fresh vault starts dirty.
         bundles.seed_bundles(workspace, bundle_names=bundle_names)
+    _ensure_git(workspace, commit_created_repository=commit_created_repository)
 
 
 def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:

@@ -13,7 +13,7 @@ from memoria_vault import cli
 from memoria_vault.cli import main
 from memoria_vault.runtime import bundles
 from memoria_vault.runtime.policy.audit import sha256_file
-from tests.helpers import WORKSPACE_SEED
+from tests.helpers import WORKSPACE_SEED, git
 
 PERIMETER_MESSAGE = (
     "Memoria write perimeter: vault notes are engine-mediated — a direct edit "
@@ -28,13 +28,16 @@ PROTECTED_PATTERNS = (
     ".memoria/**",
     ".obsidian/**",
 )
-AGENT_BUNDLE_FILES = (
-    ".claude/hooks/write_perimeter.py",
-    ".claude/settings.json",
-    ".codex/hooks.json",
-    ".mcp.json",
-    "CLAUDE.md",
-)
+OBSIDIAN_PLUGIN_REL = ".obsidian/plugins/memoria-obsidian"
+
+
+def _packaged_agent_bundle_files() -> list[str]:
+    """Every packaged agent-bundle path, walked from the seed roster constants."""
+    targets: list[str] = []
+    for source_rel, target_rel in cli.AGENT_BUNDLE_SEED_TREES:
+        targets.extend(cli._seed_tree_file_targets(source_rel, target_rel))
+    targets.extend(target for _source, target in cli.AGENT_BUNDLE_SEED_FILES)
+    return sorted(targets)
 
 
 def test_seed_claude_settings_deny_rules_cover_every_protected_path():
@@ -161,13 +164,16 @@ def _read_manifest(workspace: Path) -> dict:
     return json.loads((workspace / bundles.MANIFEST_REL).read_text("utf-8"))
 
 
-def test_bundle_files_registry_matches_the_agent_bundle():
-    assert bundles.BUNDLE_FILES["agent"] == AGENT_BUNDLE_FILES
-    assert bundles.BUNDLE_FILES["obsidian"] == (
-        ".obsidian/plugins/memoria-obsidian/main.js",
-        ".obsidian/plugins/memoria-obsidian/manifest.json",
-        ".obsidian/plugins/memoria-obsidian/schema.js",
-        ".obsidian/plugins/memoria-obsidian/styles.css",
+def test_bundle_files_registry_covers_every_packaged_bundle_file():
+    """The manifest roster is derived from the package tree, not retyped.
+
+    A third hand-written roster silently under-records the manifest the first
+    time a file joins `workspace_seed/.claude/` or the plugin (U3-PLUG's
+    `viewspec.js`), so both rosters are compared against what actually ships.
+    """
+    assert sorted(bundles.BUNDLE_FILES["agent"]) == _packaged_agent_bundle_files()
+    assert sorted(bundles.BUNDLE_FILES["obsidian"]) == sorted(
+        cli._seed_tree_file_targets(OBSIDIAN_PLUGIN_REL, OBSIDIAN_PLUGIN_REL)
     )
 
 
@@ -202,3 +208,44 @@ def test_init_no_obsidian_seeds_only_the_agent_bundle_manifest(
         assert sha256_file(workspace / rel) == digest, rel
     assert not (workspace / ".obsidian").exists()
     assert (workspace / ".claude/settings.json").is_file()
+
+
+def test_init_tracks_the_vault_manifest_in_the_first_commit(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The manifest is seeded evidence, so it is tracked, not gitignored."""
+    workspace = _init(tmp_path, capsys)
+
+    assert git(workspace, "ls-files", bundles.MANIFEST_REL) == bundles.MANIFEST_REL
+    assert git(workspace, "status", "--porcelain") == ""
+
+
+def test_reinit_preserves_pi_edited_bundle_files_and_hashes_what_is_on_disk(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`scripts/install.sh` re-runs `memoria init --yes` as its upgrade path.
+
+    Two of these paths *are* the write perimeter, so an unconditional reseed
+    silently discards PI-owned policy; and once a file is preserved, hashing
+    the template bytes would record a digest for content not on disk.
+    """
+    workspace = _init(tmp_path, capsys)
+    edited = {
+        ".claude/settings.json": '{"PI_OWNED": true}\n',
+        "CLAUDE.md": "@AGENTS.md\n\nPI addendum.\n",
+        ".obsidian/plugins/memoria-obsidian/main.js": "// PI patch\n",
+    }
+    for rel, text in edited.items():
+        (workspace / rel).write_text(text, encoding="utf-8")
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    for rel, text in edited.items():
+        assert (workspace / rel).read_text(encoding="utf-8") == text, rel
+    manifest = _read_manifest(workspace)
+    for name, rels in bundles.BUNDLE_FILES.items():
+        recorded = manifest["bundles"][name]["files"]
+        assert sorted(recorded) == sorted(rels)
+        for rel, digest in recorded.items():
+            assert sha256_file(workspace / rel) == digest, rel

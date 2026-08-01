@@ -5167,6 +5167,36 @@ do not exist, while preserving the fresh vault's perimeter and hash evidence.
 Baseline verified at main `80e62bbd` (line refs below read from the actual
 files, not from specs).
 
+### Post-BOOT-C.2 review follow-ups (2026-08-01, each with an owner)
+
+BOOT-C.2's review accepted the fix for the re-init clobber (`seed_bundles` is
+now write-if-absent and hashes the file on disk) and left these open. Each is
+owned by **Task BOOT-C.6** below unless stated otherwise; BOOT-C.6 runs before
+U3-PLUG adds `viewspec.js` to the plugin bundle.
+
+1. **Two writers, one bundle (the real defect).** The nine bundle paths are
+   written twice on fresh init — by `cli._seed_workspace` via
+   `AGENT_BUNDLE_SEED_TREES`/`AGENT_BUNDLE_SEED_FILES` and the `.obsidian`
+   tree, then by `bundles.seed_bundles`. The redundancy is harmless (identical
+   package bytes, `_seed_workspace` unconditionally first); the **divergent
+   overwrite policy** was not, and only converged by hand. Collapse to one
+   writer with one policy, and let that writer feed the manifest.
+2. **`vault_id` is re-minted on every init.** With writes now conditional,
+   `seed_bundles` still rewrites `.memoria/vault.json` unconditionally, so a
+   re-run of the installer churns the vault identity published in
+   `runtime.json`. Not fixed here: reading the prior `vault_id` back is the
+   "preserve a prior manifest" surface the clean-slate amendment forbids.
+   BOOT-C.6's single writer decides where vault identity is minted and pinned.
+3. **Init's declared write-target set omits `.memoria/vault.json`.** `_cmd_init`
+   preflights `_repair_write_targets(...)`, which does not enumerate the
+   manifest. Not exploitable — `write_bytes_durable`'s `mkstemp` + `os.replace`
+   replaces a symlink rather than following it — but the set should be
+   complete once one writer owns the path.
+4. **Spec ↔ amendment contradiction.** `specs/2026-07-15-surfaces-bootstrap-design.md:23`
+   still specifies `schema_version` and per-bundle versions in the vault
+   manifest, which the 2026-07-30 clean-slate amendment retired. Owner: the
+   BOOT-C.6 slice reconciles the spec row with the shipped manifest shape.
+
 ---
 
 ### Task BOOT-C.1: Agent-bundle seed templates (perimeter + wiring)
@@ -6376,6 +6406,27 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
 )"
 ```
+
+---
+
+### Task BOOT-C.6: one writer, one policy for the agent bundle (OPEN)
+
+Owns every item in "Post-BOOT-C.2 review follow-ups" above. Not started; runs
+before U3-PLUG adds `viewspec.js` to the plugin bundle, because a second file
+joining the plugin is exactly the case the split writers get wrong.
+
+Scope: collapse `cli._seed_workspace`'s agent/Obsidian tree copy and
+`bundles.seed_bundles` into a single writer with a single overwrite policy
+(write-if-absent, matching `_seed_write_allowed`), have that writer feed
+`.memoria/vault.json`, decide where `vault_id` is minted and pinned so re-init
+stops churning it, add the manifest to init's declared write-target set, and
+reconcile `specs/2026-07-15-surfaces-bootstrap-design.md:23` with the shipped
+manifest shape. `doctor --repair` must still never touch the agent bundle, and
+its `.obsidian/plugins/*` reseed must either update the manifest or keep the
+docstring warning that the manifest is not authoritative post-repair.
+
+---
+
 # BOOT-D: Onboarding runway (`memoria onboard`, `Start here.md`, Zotero probe)
 
 Implements bootstrap spec §7 (onboarding runway), consumed by §9.5 and the

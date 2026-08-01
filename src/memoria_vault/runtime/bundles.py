@@ -1,10 +1,18 @@
 """Vault bundle manifest: seeded agent/Obsidian bundles and .memoria/vault.json.
 
-Fresh ``memoria init`` writes the static agent bundle (Claude/Codex perimeter
-config, the MCP wiring, and CLAUDE.md) and, unless ``--no-obsidian`` is set,
-the Obsidian plugin bundle, then records a content-hash manifest of exactly
-what it seeded. Nothing here regenerates or recovers an existing bundle —
-that is out of scope for this module (see BOOT-C.2's binding execution text).
+``memoria init`` writes the static agent bundle (Claude/Codex perimeter config,
+the MCP wiring, and CLAUDE.md) and, unless ``--no-obsidian`` is set, the
+Obsidian plugin bundle, then records a content-hash manifest of what is on
+disk. Writes are **write-if-absent**, mirroring ``cli._seed_write_allowed``: an
+existing file is PI-owned and is never overwritten, so re-running the installer
+(``scripts/install.sh`` runs ``memoria init --yes`` unconditionally) cannot
+destroy edited perimeter policy. Nothing here regenerates or recovers an
+existing bundle — that is out of scope for this module (see BOOT-C.2's binding
+execution text).
+
+The manifest is not authoritative after a repair: ``doctor --repair`` reseeds
+``.obsidian/plugins/*`` through ``cli._seed_workspace`` (``overwrite=True``)
+without updating ``.memoria/vault.json``.
 """
 
 from __future__ import annotations
@@ -15,8 +23,8 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime.policy.audit import sha256_bytes
-from memoria_vault.runtime.vaultio import write_text_durable
+from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
 WORKSPACE_SEED_PACKAGE = "memoria_vault.product.workspace_seed"
 MANIFEST_REL = ".memoria/vault.json"
@@ -62,20 +70,22 @@ def write_manifest(workspace: Path, manifest: dict[str, Any]) -> None:
 
 
 def seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None) -> dict[str, Any]:
-    """Write the named current bundle templates and the current-hash manifest.
+    """Write the named bundle templates that are absent and hash what is on disk.
 
-    Mints a fresh ``vault_id`` and records the SHA-256 of every file it just
-    wrote. Defaults to every registered bundle when ``bundle_names`` is
-    omitted.
+    Mints a fresh ``vault_id`` and records the SHA-256 of the file that is
+    actually present, never of the template that was skipped — hashing the
+    template bytes would make the manifest describe content the vault does not
+    hold. Defaults to every registered bundle when ``bundle_names`` is omitted.
     """
     names = bundle_names if bundle_names is not None else list(BUNDLE_FILES)
     bundles_manifest: dict[str, Any] = {}
     for name in names:
         file_hashes: dict[str, str] = {}
         for rel in BUNDLE_FILES[name]:
-            data = seed_bytes(rel)
-            write_text_durable(workspace / rel, data.decode("utf-8"), create_parent=True)
-            file_hashes[rel] = sha256_bytes(data)
+            target = workspace / rel
+            if not target.exists():
+                write_bytes_durable(target, seed_bytes(rel), create_parent=True)
+            file_hashes[rel] = sha256_file(target)
         bundles_manifest[name] = {"files": file_hashes}
     manifest = {
         "schema": MANIFEST_SCHEMA,
