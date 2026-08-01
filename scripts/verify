@@ -14,6 +14,10 @@ JSON/PowerShell syntax checks — and narrows pytest to the `static` marker
 (schema, docs-refs, design-history, spell). CI sets this only for PRs whose
 whole diff is documentation; local runs and the post-merge `main` run always
 execute the full roster.
+
+One run per checkout: the e2e smoke resets `<checkout>/test-vault` outright, so
+a second concurrent gate destroys the first one's fixture mid-run. See
+`_hold_single_run_lock`.
 """
 
 from __future__ import annotations
@@ -26,6 +30,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# Per-checkout, so parallel worktrees still run their gates at the same time.
+LOCK_PATH = ROOT / ".verify.lock"
 
 # CI sets this to "1" only for provably docs-only PRs (see the module docstring).
 DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
@@ -114,6 +121,40 @@ def _gates_for_run(docs_only: bool) -> list[list[str]]:
     return reduced
 
 
+def _hold_single_run_lock(path: Path = LOCK_PATH) -> object | None:
+    """Take this checkout's gate lock, or exit saying who already holds it.
+
+    `scripts/test_vault/e2e_smoke.py` resets `<checkout>/test-vault` outright at
+    its stage, so two gates in one checkout wipe each other's fixture mid-run
+    and neither result means anything. The lock is per-checkout rather than
+    global because #1568 deliberately made each worktree own its vault, and
+    running the gate in several worktrees at once is the point of having them.
+
+    flock is released by the kernel when the holder dies, so a killed run leaves
+    no stale lock to clear by hand. The returned handle must stay referenced for
+    the lifetime of the run; closing it releases the lock.
+    """
+    try:
+        import fcntl
+    except ImportError:  # no flock off POSIX; the gate simply goes unguarded
+        return None
+    # "a+" so a waiting run can read the holder's pid without truncating it.
+    handle = path.open("a+", encoding="utf-8")
+    try:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        handle.seek(0)
+        holder = handle.read().strip() or "unknown"
+        handle.close()
+        print(f"verify: already running in this checkout (pid {holder})", file=sys.stderr)
+        raise SystemExit(1) from None
+    handle.seek(0)
+    handle.truncate()
+    handle.write(str(os.getpid()))
+    handle.flush()
+    return handle
+
+
 def run(command: list[str]) -> int:
     print(f"== {' '.join(command)}")
     return subprocess.run(command, cwd=ROOT, check=False).returncode
@@ -156,6 +197,7 @@ def check_powershell() -> int:
 
 
 def main() -> int:
+    _lock = _hold_single_run_lock()  # held for the whole run; released on exit
     if DOCS_ONLY:
         print("== verify: docs-only scope — lint, product gates, and static tests only")
     for command in _gates_for_run(DOCS_ONLY):
