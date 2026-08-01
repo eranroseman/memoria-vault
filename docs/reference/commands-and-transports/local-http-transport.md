@@ -129,16 +129,31 @@ unscoped; that is appropriate only for a trusted local adapter.
 ```
 
 `operation_id` is required. `payload` must be an object; non-object payloads are
-treated as `{}`. The transport records every operation request with actor
-`agent`; callers cannot select another actor. `agent_identity`, when supplied,
-is provenance metadata. This adapter has no PI request-control or
-evidence-disposition endpoint. Because every request is bound to actor `agent`,
-`POST /operation/run` also cannot invoke the PI- or integrity-reserved
-operations in the
-[Actor Authority Guard](../control-and-policy/control-plane.md#actor-authority-guard):
-the worker fails such a request (`<operation_id> requires <label> actor
-authority`), surfaced through the `Operation ran but worker failed it` →
-`200 {ok: false}` row below. The transport records write provenance as:
+treated as `{}`. The transport records every operation request with actor `pi`;
+callers cannot select another actor, and an `actor` field in the request body is
+ignored. `agent_identity`, when supplied, is provenance metadata. This adapter
+has no dedicated request-control or evidence-disposition *endpoint*; the PI
+operations themselves are reachable through `POST /operation/run`.
+
+The door assigns `pi` because this surface is the PI's own hand: it binds only to
+loopback, admits only the `Host` and `Origin` values above, and requires the
+per-boot bearer token the user holds. That grant is door-wide, not per-operation
+— every operation reachable through `POST /operation/run` runs with PI
+authority, including every PI-reserved operation in the
+[Actor Authority Guard](../control-and-policy/control-plane.md#actor-authority-guard)
+(`cascade-rollback`, `resolve-evidence`, `promote-draft-passage` and
+`capture-remote-pdf-source` among them).
+The `integrity`-reserved operations remain refused here: the worker fails such a
+request (`<operation_id> requires <label> actor authority`), surfaced through the
+`Operation ran but worker failed it` → `200 {ok: false}` row below. The
+[MCP transport](mcp-transport.md), which has no such caller authentication,
+keeps actor `agent`.
+
+The grant is authority, not authorship. Every request the door enqueues is marked
+machine-authored, so Concept bodies posted here are neutralized before they are
+written — image embeds and raw HTML become inert and links become non-clickable
+code spans — exactly as they are for actor `agent`. Only the PI's own hand at the
+CLI writes a body verbatim. The transport records write provenance as:
 
 ```json
 {"surface": "memoria-http", "command": "http:<operation_id>"}

@@ -51,11 +51,31 @@ TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\
 
 @dataclass(frozen=True, slots=True)
 class OperationContext:
+    """Provenance for one claimed request: who authorized it, and who wrote it.
+
+    `actor` is *authority* — which operations the request may run. It is not
+    *authorship*: a transport door can hold PI authority (loopback bind, per-boot
+    bearer token) while the body it posts was composed by a machine. Doors set
+    `machine_authored` so the two stay separable; see `body_is_pi_authored`.
+    """
+
     actor: str
     run_id: str
     request_id: str
     operation_id: str
     machine: str
+    machine_authored: bool = False
+
+    @property
+    def body_is_pi_authored(self) -> bool:
+        """Whether Concept bodies on this request may be written verbatim.
+
+        Only the PI's own hand earns that: PI authority *and* PI authorship.
+        Every other combination — including a machine-authored body arriving
+        through a door that carries PI authority — is neutralized before it is
+        written, because content security follows authorship, not authority.
+        """
+        return self.actor == "pi" and not self.machine_authored
 
 
 _CONTEXT_EVENT_FIELDS = {
@@ -105,12 +125,17 @@ def operation_context_from_job(job: Mapping[str, Any], machine: str | None) -> O
         raise ValueError("request envelope run_id must be a string")
     run_id = run_value.strip() if isinstance(run_value, str) else ""
 
+    machine_authored = envelope.get("machine_authored", False)
+    if not isinstance(machine_authored, bool):
+        raise ValueError("request envelope machine_authored must be a boolean")
+
     return OperationContext(
         actor=actor,
         run_id=run_id or request_id,
         request_id=request_id,
         operation_id=operation_id,
         machine=safe_filename(machine or platform.node() or "local"),
+        machine_authored=machine_authored,
     )
 
 
@@ -125,14 +150,20 @@ def _required_context_identifier(source: Mapping[str, Any], key: str, label: str
     return value.strip()
 
 
-def operation_context_record(context: OperationContext) -> dict[str, str]:
-    """Return the exact persisted representation of one built context."""
+def operation_context_record(context: OperationContext) -> dict[str, Any]:
+    """Return the exact persisted representation of one built context.
+
+    `machine_authored` is part of the bound record for the same reason `actor`
+    is: it gates a security transform, so it has to be authenticated against the
+    persisted request rather than asserted by whoever holds the context object.
+    """
     return {
         "actor": context.actor,
         "run_id": context.run_id,
         "request_id": context.request_id,
         "operation_id": context.operation_id,
         "machine": context.machine,
+        "machine_authored": context.machine_authored,
     }
 
 
@@ -821,7 +852,7 @@ def stage_concept(
     _bundle_for_target(contract, target)
 
     frontmatter, body = split_frontmatter(content)
-    if context.actor != "pi":
+    if not context.body_is_pi_authored:
         body = neutralize_untrusted_markdown(body)
     _inherit_authored_identity(vault, target, frontmatter)
     _validate_concept(contract, target, frontmatter)
@@ -872,7 +903,7 @@ def promote_checked(
     if not staged_path.is_file():
         raise FileNotFoundError(staged_path)
     frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
-    if context.actor != "pi":
+    if not context.body_is_pi_authored:
         body = neutralize_untrusted_markdown(body)
     output_path = vault / target
     event = _write_checked(
@@ -910,7 +941,7 @@ def materialize_unchecked(
         raise ValueError(f"staged concept type does not match its output record: {target}")
     if output["check_status"] != "unchecked":
         raise ValueError(f"staged output is not unchecked: {target}")
-    if context.actor != "pi":
+    if not context.body_is_pi_authored:
         body = neutralize_untrusted_markdown(body)
     output_path = vault / target
     payload_text = frontmatter_doc(frontmatter, body)

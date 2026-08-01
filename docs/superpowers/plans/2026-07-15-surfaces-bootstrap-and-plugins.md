@@ -505,6 +505,54 @@ other task bodies remain unchanged.
 
 ### Task SEAM.1: Loopback operation door carries PI actor authority
 
+> **Coordinator rulings — 2026-07-31 (issue #1562).**
+>
+> **Ruling 1 — the door-wide grant is accepted, and recorded as a decision.**
+> The seam is a single `actor=` value, so the grant cannot be scoped to the two
+> pane operations: *every* operation reachable through the loopback door
+> inherits PI authority, including `cascade-rollback`, `resolve-evidence`,
+> `promote-draft-passage` and `capture-remote-pdf-source`. A per-operation
+> allowlist at the door was considered and rejected — such a roster drifts out
+> of date silently, the failure mode AGENTS.md's "prefer deletion > mechanism >
+> rule > checker" warns about. The boundary that holds is the door itself
+> (loopback-only bind, `Host`/`Origin` allowlists, per-boot bearer token). A
+> comment at the seam states this plainly so a later reader meets a decision
+> rather than an oversight.
+>
+> **Ruling 1 corrected — 2026-07-31 (issue #1596).** Ruling 1 reasoned about
+> `PROTECTED_OPERATION_ACTORS` alone. That was the wrong artifact: `actor` has a
+> second consumer. `trusted_writer` gates untrusted-Markdown neutralization on
+> it at three sites — `stage_concept`, `promote_checked`, `materialize_unchecked`
+> — so raising the door to `pi` also disabled the CS1 defusal for *every body
+> written through the door*, `create-concept` included. That removed an existing
+> control on an already-HTTP-reachable operation, and SEAM.1 gates U3-PLUG /
+> U3-CANVAS / U4, whose bodies are LLM-generated.
+>
+> The root cause is that `actor` conflated **authority** with **authorship**. The
+> corrected ruling separates them: `OperationContext` carries `machine_authored`,
+> the transport doors (HTTP *and* MCP) set it true, and the neutralizer gates on
+> `context.body_is_pi_authored` — PI authority *and* PI authorship — rather than
+> on `actor` alone. PI authority for the reserved operations is preserved intact;
+> machine-posted bodies stay neutralized. The grant is still door-wide and there
+> is still no per-operation allowlist.
+>
+> Two further consequences of the grant are recorded, not changed. (a)
+> `integrity.py:978` and `:1093` branch `cascade-rollback` descendant handling on
+> `event["actor"] == "pi"`, so subtrees written through the plugin now route to
+> `needs_human` review instead of automatic revert — conservative, and left
+> alone. (b) The shipped plugin still sends `actor: "agent"` in its request body
+> (`packages/memoria-obsidian/main.js:325` and the seeded copy). The field is
+> inert — the door never reads it — but a plugin reader would wrongly infer its
+> writes are journaled `agent`. U3-PLUG owns the removal.
+>
+> **Ruling 2 — the token comparison is fixed in the same commit.**
+> `is_authorized` compared the per-boot bearer token with `==`. That was
+> low-severity while the token carried only `agent` authority; this task
+> promotes the same token to gating PI authority — the level
+> `PROTECTED_OPERATION_ACTORS` reserves for destructive operations — so it now
+> uses `hmac.compare_digest` over UTF-8-encoded operands. Behaviour for correct
+> tokens is unchanged.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/http_transport.py:216` (the enqueue call's `actor="agent"`)
 - Modify: `tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope`
@@ -514,7 +562,7 @@ other task bodies remain unchanged.
 - Consumes: bootstrap spec §4 (token trust model), U3 spec §2/§4 (pane enqueues pi-protected ops).
 - Produces: HTTP `POST /operation/run` enqueues with `actor="pi"`; MCP stdio door unchanged (`mcp_transport.py:118` stays `agent`).
 
-- [ ] **Step 1: Write the failing tests.** In
+- [x] **Step 1: Write the failing tests.** In
   `test_http_transport_operation_run_uses_request_envelope`, leave its caller-supplied
   `"actor": "agent"` in the body and change its persisted-actor assertion to
   `assert row["actor"] == "pi"`. This proves the HTTP door, not the caller body,
@@ -558,18 +606,18 @@ def test_http_transport_operation_run_uses_pi_authority_without_caller_actor(
   caller-controlled-authority model. `state.request_row`, not the nonexistent
   `state.operation_request`, is the repository helper for the persisted envelope.
 
-- [ ] **Step 2: Run them** —
+- [x] **Step 2: Run them** —
   `python -m pytest tests/test_http_transport.py::test_http_transport_operation_run_uses_request_envelope tests/test_http_transport.py::test_http_transport_operation_run_uses_pi_authority_without_caller_actor -v`
   — Expected: both fail before the transport change (the first persists `agent`; the
   second is refused as lacking PI authority).
-- [ ] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to
+- [x] **Step 3: Implement** — at `http_transport.py:216`, change `actor="agent"` to
   `actor="pi"`, with the comment: `# Loopback surface = the PI's hand: human-driven,
   user-held per-boot token (bootstrap spec §4; plan contract 5).`
-- [ ] **Step 4: Run the file** — `python -m pytest tests/test_http_transport.py -v`.
+- [x] **Step 4: Run the file** — `python -m pytest tests/test_http_transport.py -v`.
   Expected: pass. The explicit caller `actor` fields in unrelated HTTP fixtures may
   remain as ignored-input coverage; only expectations of their persisted authority
   change to `pi`.
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/memoria_vault/runtime/http_transport.py tests/test_http_transport.py
@@ -578,7 +626,7 @@ git commit -m "feat(http): loopback operation door carries PI actor authority
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 7: Scan the authority diff.** Before Step 1, run
+- [x] **Step 7: Scan the authority diff.** Before Step 1, run
   `git rev-parse HEAD` and record its literal 40-character output as `SEAM1_BASE`
   in the task report. After the commit, use `codex-security:security-diff-scan`
   for `<the-recorded-40-character-SHA>..HEAD`, substituting that value directly

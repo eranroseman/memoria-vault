@@ -64,13 +64,7 @@ def _saved_operation_context(
             "job_id": context.request_id,
             "kind": "operation",
             "operation_id": context.operation_id,
-            "bound_context": {
-                "actor": context.actor,
-                "run_id": context.run_id,
-                "request_id": context.request_id,
-                "operation_id": context.operation_id,
-                "machine": context.machine,
-            },
+            "bound_context": trusted_writer.operation_context_record(context),
         },
     )
     saved["status"] = "running"
@@ -224,6 +218,51 @@ def test_context_rejects_non_string_run_id(run_id: Any) -> None:
         operation_context_from_job(_operation_job(run_id=run_id), "machine")
 
 
+@pytest.mark.parametrize(
+    ("actor", "machine_authored", "pi_authored"),
+    [
+        ("pi", False, True),
+        # PI authority over a machine-composed body: the loopback HTTP door.
+        ("pi", True, False),
+        ("agent", False, False),
+        ("agent", True, False),
+        ("integrity", False, False),
+    ],
+)
+def test_body_is_pi_authored_follows_authorship_not_authority(
+    actor: str, machine_authored: bool, pi_authored: bool
+) -> None:
+    """Content security follows who wrote the body, not what the door may run (#1596)."""
+    context = OperationContext(
+        actor=actor,
+        run_id="run-1",
+        request_id="request-1",
+        operation_id="create-concept",
+        machine="machine",
+        machine_authored=machine_authored,
+    )
+
+    assert context.body_is_pi_authored is pi_authored
+
+
+def test_context_defaults_machine_authored_false_and_carries_the_envelope_flag() -> None:
+    assert operation_context_from_job(_operation_job(), "machine").machine_authored is False
+
+    job = _operation_job()
+    job["request_envelope"]["machine_authored"] = True
+
+    assert operation_context_from_job(job, "machine").machine_authored is True
+
+
+@pytest.mark.parametrize("machine_authored", ["true", 1, None, []])
+def test_context_rejects_non_boolean_machine_authored(machine_authored: Any) -> None:
+    job = _operation_job()
+    job["request_envelope"]["machine_authored"] = machine_authored
+
+    with pytest.raises(ValueError, match="machine_authored"):
+        operation_context_from_job(job, "machine")
+
+
 def test_context_normalizes_explicit_and_platform_machine_once(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -333,13 +372,7 @@ def test_context_journal_rejects_non_mapping_request_provenance_before_mutation(
             "job_id": context.request_id,
             "kind": "operation",
             "operation_id": context.operation_id,
-            "bound_context": {
-                "actor": context.actor,
-                "run_id": context.run_id,
-                "request_id": context.request_id,
-                "operation_id": context.operation_id,
-                "machine": context.machine,
-            },
+            "bound_context": trusted_writer.operation_context_record(context),
         },
     )
     saved["status"] = "running"
@@ -499,6 +532,7 @@ def test_worker_binds_exact_context_to_running_request_before_dispatch(
         "request_id": "bound-request",
         "operation_id": "test-bound-context",
         "machine": "agent_laptop",
+        "machine_authored": False,
     }
 
 
@@ -510,12 +544,13 @@ def test_worker_binds_exact_context_to_running_request_before_dispatch(
         ("request_id", "missing-request"),
         ("operation_id", "forged-operation"),
         ("machine", "forged-machine"),
+        ("machine_authored", True),
     ],
 )
 def test_forged_or_nonexistent_context_rejected_without_journal_mutation(
     tmp_path: Path,
     field: str,
-    value: str,
+    value: object,
 ) -> None:
     context = _saved_operation_context(tmp_path)
     forged = replace(context, **{field: value})
