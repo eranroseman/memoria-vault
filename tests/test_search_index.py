@@ -82,6 +82,32 @@ def mark_note_candidate(vault: Path, path: Path) -> None:
     )
 
 
+def test_search_universe_admits_every_declared_searchable_type(tmp_path: Path) -> None:
+    """``SEARCHABLE_TYPES`` gates on frontmatter, so every member must name a
+    type a real vault file can carry — dropping one drops its document."""
+    vault = workspace(tmp_path)
+    concepts = {
+        "note": "notes/typed-note.md",
+        "digest": "digests/typed-digest.md",
+        "hub": "hubs/typed-hub.md",
+        "project": "projects/typed-project/project.md",
+    }
+    for concept_type, rel in concepts.items():
+        path = vault / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            f"---\ntype: {concept_type}\ncheck_status: checked\ntitle: {concept_type}\n"
+            "---\nsharedmarker body\n",
+            encoding="utf-8",
+        )
+        set_db_status(vault, path, concept_type, "checked")
+
+    universe = checked_search_universe(vault)
+
+    assert [row["path"] for row in universe["documents"]] == sorted(concepts.values())
+    assert {row["frontmatter"]["type"] for row in universe["documents"]} == set(concepts)
+
+
 def test_rebuild_checked_search_index_copies_only_checked_concepts(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     note(vault, "checked", "checked", "alpha beta")

@@ -76,6 +76,13 @@
     → ERP-A.6 (identity-safe path projection) → ERP-B.2 → ERP-D.5 → remaining
     ERP-B → ERP-C → remaining ERP-D → NID-C
     (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
+    **Early-run exception — ERP-D.3a (2026-08-01):** the stage-machine
+    recalibration may run at any point after ERP-A.1–.5, ahead of ERP-B,
+    ERP-C, and the rest of ERP-D. Its only graph prerequisite is that
+    activated roster, which is merged; it owns no schema version, writes no
+    journal event, and regenerates no golden, so it carries none of contract
+    8's serialization. It must land before ERP-D.3, whose finding hygiene
+    edits the same `no-support`/`no-refutation` family.
 
 ### Fresh-install schema amendment — direct DDL, no compatibility ladder (2026-07-30)
 
@@ -268,6 +275,16 @@ verbatim ruling text.
   --from-alpha15` CLI path; do not normalize, copy through, preserve `x.alpha15`,
   or otherwise implement compatibility for legacy documents. A legacy workspace is
   outside the supported fresh-install contract and is not mutated by Memoria.
+- **Graph-R11 — Y (2026-08-01; ERP-D): stage-role classification for the argument lens.**
+  support = `{supports}`; challenge = `{contradicts, rebuttal, tension}`; structure =
+  `{warrant, qualifier, extends}`. `argument_stage` is never `supported` without at
+  least one `supports` edge; any challenge edge in the component stages `contested`;
+  rebuttal-heavy projects get no new stage name. `mature_graph` remains connectivity
+  (≥3), with `has_support`/`has_refutation` carrying the sides; `has_refutation` and
+  displayed confidence read the challenge roster. **Qualifier is structure, not
+  challenge** — spec §4 defines it as bounding scope/strength, and ERP-C's
+  qualifier-regression semantics depend on that reading. Implemented by Task
+  ERP-D.3a (closes #1624).
 
 ---
 # Section NID-A — Concept-type registry + closed frontmatter validation
@@ -822,10 +839,29 @@ either order of later consumers.
 - [x] Run to verify pass:
   `python -m pytest tests/test_schemas.py -v`.
 
-- [ ] Add closure-boundary coverage: strict `stage_concept` rejects an undeclared
+- [x] Add closure-boundary coverage: strict `stage_concept` rejects an undeclared
   root field and accepts nested `x:` data; pre-commit and linter report the same
   root field; seeded contradiction/error, integrity, exploration, and search fixtures
   use `links.contradicts` while the answer-query response remains compatible.
+
+  *Landed 2026-08-01.* Three new boundary tests, one per closure layer, each
+  asserting the exact `"<field>: unknown field; declare it in the type schema or
+  nest under x:"` string and each proving the `x:` hatch produces no error in
+  the same run:
+  `tests/test_trusted_writer.py::test_stage_concept_rejects_undeclared_root_field_and_stages_nested_x`
+  (also asserts nothing is staged on rejection, and that nested `x:` data
+  survives verbatim rather than merely validating),
+  `tests/test_precommit_schema.py::test_undeclared_root_field_blocks_while_x_hatch_passes`,
+  and
+  `tests/test_detectors.py::test_schema_check_flags_undeclared_root_field_but_not_the_x_hatch`.
+  The last two check both files in one call and assert the full error/finding
+  list, so a hatch-file false positive fails too. The `links.contradicts`
+  half of this box was already satisfied by `4f370c04` and is verified, not
+  rewritten: `seeded_errors.py:396` writes the relation,
+  `tests/test_integrity.py:495-533` keeps a root-`contradictions:` document as
+  a negative reader contract, `tests/test_exploration_channel.py:38` and
+  `tests/test_search_index.py:340-375` seed the relation, and that last test
+  pins the public `answer["contradictions"]` payload key as still populated.
 
 - [x] Replace the root `contradictions` seeded error with
   `links: {contradicts: [<target>]}`, remove every active root-field reader, and
@@ -3646,9 +3682,46 @@ Section-wide constraints:
   `cli.py:158` (`--mode work` is a note *mode*), `cli.py:280`/`cli.py:3126`
   (concept listing types), `knowledge.py:98` (folder-term set).
 
+> **Amendment — measured offender list and the `SEARCHABLE_TYPES` ruling
+> (2026-08-01, applied).** Verified by content at `a582a510`, this task's
+> Files list and its regex guard are both stale:
+>
+> 1. **`integrity.py:640` was already fixed** before this task ran — the site
+>    (now `:641`) reads `!= "digest"`. Nothing to do there.
+> 2. **`search_index.py:380` became the named constant `SEARCHABLE_TYPES`**
+>    (`search_index.py:32`, consumed at `:146` and `:491`). The plan's
+>    line-oriented regex `frontmatter\.get\("type"\)[^\n]*"work"` cannot see it,
+>    so that guard would have gone green over the very literal this task
+>    exists to remove.
+> 3. **Ruling: the constant is in scope, not exempt.** `SEARCHABLE_TYPES` is
+>    consumed only as `frontmatter.get("type") not in SEARCHABLE_TYPES`, so it
+>    *is* a frontmatter type filter — the literal was hoisted, not retired.
+>    Its sibling frontmatter rosters already exclude `"work"`
+>    (`engine/api.py:34 CONCEPT_TYPES`, `vaultio.py:17
+>    UNIVERSAL_CONCEPT_TYPES`), and the catalog work documents that make the
+>    index searchable are generated by `_checked_work_documents`
+>    (`search_index.py:536-552`) carrying `type: fulltext` and appended
+>    *after* the filter — so `"work"` reaches no document either way. It is
+>    dropped, leaving `frozenset({"digest", "note", "hub", "project"})`.
+> 4. **The guard resolves operands instead of matching text.** It parses each
+>    `src`/`scripts` module, finds `Compare` nodes whose left side is
+>    `frontmatter.get("type")` (or a `str(... or "")` wrapper), and resolves a
+>    bare `Name` operand against module-level string rosters collected across
+>    every scanned module. Receiver-restricted to `frontmatter`/`fm` so that
+>    DB-row filters (`row.get("type")`, `source.get("type")`) — where
+>    `"work"` is live — stay untouched, honoring the Produces clause above.
+> 5. **True measured list: seven filter sites, not six.** `cli.py:1573`,
+>    `integrity.py:153`, `:607`, `:1393`, `knowledge.py:1504`, plus
+>    `search_index.py:146` and `:491` through the constant.
+> 6. **One extra test file:** `tests/test_search_index.py` gains
+>    `test_search_universe_admits_every_declared_searchable_type`. The guard
+>    only forbids a token; without this, narrowing `SEARCHABLE_TYPES` further
+>    would break no test. The new test writes one checked concept of each
+>    remaining member and asserts all four reach `checked_search_universe`.
+
 Steps:
 
-- [ ] Write the failing test. Add to `tests/test_identifier_renames.py` —
+- [x] Write the failing test. Add to `tests/test_identifier_renames.py` —
   extend the existing imports (`from pathlib import Path` is present; add
   `import re` below `from __future__ import annotations`) and append:
 
@@ -3671,35 +3744,38 @@ Steps:
       assert offenders == []
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_identifier_renames.py::test_frontmatter_type_filters_carry_no_dead_work_literal -v`
   — expected failure: `AssertionError` listing exactly six offenders
   (`src/memoria_vault/runtime/search_index.py:380`,
   `src/memoria_vault/runtime/integrity.py:152`, `:606`, `:640`, `:1387`,
   `src/memoria_vault/cli.py:1065`,
   `src/memoria_vault/runtime/knowledge.py:1287`).
+  *Measured: seven offenders, per the amendment above —* `cli.py:1573`,
+  `integrity.py:153`, `:607`, `:1393`, `knowledge.py:1504`,
+  `search_index.py:146`, `:491`.
 
-- [ ] Write minimal implementation — drop `"work"` from each filter
-  (singleton sets become `!=` comparisons, matching surrounding style):
-  - `search_index.py:380`:
-    `if frontmatter.get("type") not in {"digest", "note", "hub", "project"}:`
-  - `integrity.py:152`:
+- [x] Write minimal implementation — drop `"work"` from each filter
+  (singleton sets become `!=` comparisons, matching surrounding style).
+  *Applied at the current symbols:*
+  - `search_index.py:32` (`SEARCHABLE_TYPES`, serving `:146`/`:491`):
+    `frozenset({"digest", "note", "hub", "project"})`
+  - `integrity.py:153`:
     `if frontmatter.get("type") not in {"digest", "note"}:`
-  - `integrity.py:606`:
+  - `integrity.py:607`:
     `if frontmatter.get("type") != "note":`
-  - `integrity.py:640`:
-    `if frontmatter.get("type") != "digest" or not _is_checked_concept(vault, rel):`
-  - `integrity.py:1387`:
+  - `integrity.py:641`: already `!= "digest"` before this task — untouched.
+  - `integrity.py:1393`:
     `if frontmatter.get("type") != "note":`
-  - `cli.py:1065`:
+  - `cli.py:1573`:
     `if frontmatter.get("type") not in {"digest", "note"}:`
-  - `knowledge.py:1287`:
+  - `knowledge.py:1504`:
     `if frontmatter.get("type") != "digest":`
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_identifier_renames.py -v`
 
-- [ ] Verify no behavior regression in the touched modules:
+- [x] Verify no behavior regression in the touched modules:
   `python -m pytest tests/test_integrity.py tests/test_knowledge.py tests/test_search_index.py tests/test_cli.py tests/test_cli_honesty.py -q`
   — all pass. Any historical `type: work` importer fixture is unsupported under
   the clean-slate ruling and must be deleted rather than rewritten by a CLI path.
@@ -9510,7 +9586,18 @@ def _write_blast_radius_report(
 
 **Steps:**
 
-- [ ] Update the pinning test first (it pins the wrong behavior). In `tests/test_worker_product_jobs.py:818-839`, the PI-authored depth-1 descendant `pi_rel` must now receive the same epistemic mark as machine-derived ones. Replace lines 820 and 834-839:
+> **Amendment — the fixture needs a PI descendant at depth ≥ 2 too
+> (2026-08-01, applied).** Deleting the branch changes *two* arms, not one: a
+> PI descendant at depth 1 moves from `cascade-rollback`/`ask` to
+> `scan-demotion-propagation`/`act`, and a PI descendant at depth ≥ 2 moves
+> from `cascade-rollback`/`ask` to `scan-demotion-stale`/`log`. The fixture as
+> written holds exactly one PI descendant, at depth 1, so a mutant restoring
+> `if actor == "pi" and depth > 1:` would survive it. The test therefore also
+> seeds `notes/pi-depth-two.md` — PI-authored, input `digests/direct.md` — and
+> asserts it stays `checked` with a `stale` flag whose `trigger_id` is the
+> scanned source, plus its `scan-demotion-stale`/`log` event.
+
+- [x] Update the pinning test first (it pins the wrong behavior). In `tests/test_worker_product_jobs.py:818-839`, the PI-authored depth-1 descendant `pi_rel` must now receive the same epistemic mark as machine-derived ones. Replace lines 820 and 834-839:
 
 ```python
     assert state.concept_check_status(vault, pi_rel) == "unchecked"
@@ -9530,18 +9617,168 @@ def _write_blast_radius_report(
     assert not any(event.get("check") == "cascade-rollback" for event in event_log)
 ```
 
-- [ ] Run to verify it fails:
+- [x] Run to verify it fails:
   `python -m pytest tests/test_worker_product_jobs.py::test_observe_pi_edits_propagates_scan_side_demotion -v`
   Expected: `AssertionError` at `state.concept_check_status(vault, pi_rel) == "unchecked"` (currently `"checked"` because of the PI branch).
 
-- [ ] Write minimal implementation — in `src/memoria_vault/runtime/integrity.py` delete lines 973-984 (the `actor = str(event.get("actor") or "")` read, the `if actor == "pi":` arm with its `_flag_descendant(check="cascade-rollback", route="ask")` call, and `needs_human.append(output_id)`), changing the `elif depth == 1:` to `if depth == 1:`. Keep `needs_human: list[str] = []` (line 961) and the return key (line 1016) so the result shape is stable. Epistemic marks are now origin-blind; `cascade_rollback` (lines 1051-1124) is not touched.
+- [x] Write minimal implementation — in `src/memoria_vault/runtime/integrity.py` delete lines 973-984 (the `actor = str(event.get("actor") or "")` read, the `if actor == "pi":` arm with its `_flag_descendant(check="cascade-rollback", route="ask")` call, and `needs_human.append(output_id)`), changing the `elif depth == 1:` to `if depth == 1:`. Keep `needs_human: list[str] = []` (line 961) and the return key (line 1016) so the result shape is stable. Epistemic marks are now origin-blind; `cascade_rollback` (lines 1051-1124) is not touched.
 
-- [ ] Run to verify it passes, plus the untouched authority-gate pins:
+- [x] Run to verify it passes, plus the untouched authority-gate pins:
   `python -m pytest tests/test_worker_product_jobs.py tests/test_integrity_cascade_rollback.py tests/test_worker_knowledge_cycle.py tests/test_operation_context.py -v`
+  *Measured: 190 passed. The branch was verbatim at `integrity.py:977-988` (the plan's 973-984 had drifted); `elif depth == 1:` became `if depth == 1:` and `needs_human` stays declared and returned, always `[]`.*
 
 - [ ] Commit:
   `git add src/memoria_vault/runtime/integrity.py tests/test_worker_product_jobs.py`
   Message: `fix(integrity): scan-demotion marks are origin-blind — remove PI descendant exemption (EDGES section 7)` ending with
+  `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
+
+---
+
+### Task ERP-D.3a: stage-machine recalibration — implements Graph-R11, closes #1624
+
+**Early-run exception (contract 13, 2026-08-01):** this task's only graph
+prerequisite is ERP-A's activated roster, which is merged, so it runs ahead of
+ERP-B, ERP-C, and the rest of ERP-D. It must land before ERP-D.3, which edits
+the same `no-support`/`no-refutation` finding family.
+
+**Verified current state (read by content at `a582a510`).** The shipped
+`_argument_stage` (`knowledge.py:3269-3276`) is:
+
+```python
+def _argument_stage(counts: dict[str, int], relation_count: int) -> str:
+    if relation_count == 0:
+        return "cold-start"
+    if relation_count < 3:
+        return "developing"
+    if counts["contradicts"] > 0:
+        return "contested"
+    return "supported"
+```
+
+It reads `counts["contradicts"]` and `relation_count` and nothing else — never
+`supports`, `rebuttal`, `warrant`, or `qualifier`. So a component of three
+`rebuttal` edges returns `supported` while `saturation_conditions` on the same
+payload reports `{"mature_graph": True, "has_support": False,
+"has_refutation": False}`. **This is not a side effect of ERP-A.3 widening
+`relation_count`:** the machine never consulted a support count, so even the
+pre-widening triple staged three `extends` edges as `supported`. ERP-A.3 only
+enlarged the set of relations that can reach the threshold —
+`_note_edges` (`knowledge.py:3374-3382`) now iterates `sorted(LINK_RELATIONS)`.
+`_argument_confidence` (`:3306-3314`) is partially protected — it requires
+`supports > 0` for `supported` — but it too treats only `contradicts` as
+challenge, so three rebuttals render `below-threshold` rather than `contested`.
+
+**Not in scope — the second `argument_stage` producer.**
+`subsystems/processing/project/structural_impact.py` emits its own
+`argument_stage` over a different vocabulary (`cold-start`/`developing`/
+`mature`, `:276-285` and `:88-92`) with `READINESS_RELATION_THRESHOLD = 5`, and
+its trace mode already requires `support_count >= 1 and contradict_count >= 1`.
+It is a different lens, not a replica of `_argument_stage`, and Graph-R11 does
+not rule on it. Do not rename its stages or import the rosters into it; if a
+later task unifies the two lenses, that is its own ruling.
+
+**Files:**
+- Modify: `src/memoria_vault/runtime/subsystems/lib/edges.py` — add the three
+  Graph-R11 role rosters beside `EDGE_RELATIONS`/`LINK_RELATIONS`. Contract 2
+  makes `edges.py` the single roster owner, and `tests/test_edges.py:489`
+  (`test_single_roster_definition_repo_wide`) is the guard; do not spell these
+  sets as literals in `knowledge.py`.
+- Modify: `src/memoria_vault/runtime/knowledge.py` — `_argument_stage`
+  (`:3269-3276`), `_argument_confidence` (`:3306-3314`), and
+  `_argument_saturation_conditions` (`:3292-3298`). The
+  `analyze_project_argument` payload (`:1911-1927`) keeps its existing
+  `supports_count`/`contradicts_count`/`extends_count` keys unchanged — this
+  task changes classification, not the per-verb export.
+- Modify: `tests/test_project_knowledge.py` (stage/confidence/saturation
+  assertions, and the roster pin at `:505-535`).
+- Modify: `tests/test_edges.py` (pin the three new rosters and their
+  partition).
+
+**Interfaces:**
+- Consumes: `edges.EDGE_RELATIONS` / `edges.LINK_RELATIONS` (already merged);
+  nothing from ERP-B, ERP-C, or ERP-D.1/.2.
+- Produces: `edges.SUPPORT_RELATIONS = frozenset({"supports"})`,
+  `edges.CHALLENGE_RELATIONS = frozenset({"contradicts", "rebuttal", "tension"})`,
+  `edges.STRUCTURE_RELATIONS = frozenset({"warrant", "qualifier", "extends"})`.
+  The three partition `EDGE_RELATIONS` exactly (disjoint, union equal) — pin
+  that, so a seventh verb added to `EDGE_RELATIONS` without a role fails here
+  instead of silently classifying as structure.
+  `analyze_project_argument`'s `argument_stage` keeps its existing four values
+  (`cold-start`, `developing`, `contested`, `supported`) — Graph-R11 forbids a
+  new stage name.
+
+**Derived value the ruling does not spell verbatim.** A component at or above
+the connectivity threshold holding only structure edges (e.g. three
+`qualifier`s: no `supports`, no challenge) cannot be `supported` (no support
+edge) and gets no new name, so it is **`developing`**. Do not invent a fifth
+stage for it.
+
+**Fixture warning — `tension` cannot be produced at this seam.**
+`LINK_RELATIONS = EDGE_RELATIONS - {"tension"}` and `_note_edges` iterates
+`sorted(LINK_RELATIONS)`, so no frontmatter `links:` fixture can make a
+`tension` edge reach `_argument_stage` today. `tension` is in the challenge
+roster for the `concept_edges` consumers that ERP-B/D own. Prove the challenge
+arm with `rebuttal` (frontmatter-legal, and the verb #1624 was filed about);
+cover `tension` at the roster level in `tests/test_edges.py`, not with a
+`knowledge.py` fixture that cannot exist.
+
+**Steps:**
+
+- [ ] Write the failing tests first, in `tests/test_project_knowledge.py`.
+  Each must mutate exactly one arm:
+  - three `rebuttal` edges into the thesis component → `argument_stage ==
+    "contested"`, `displayed_confidence == "contested"`,
+    `saturation_conditions["has_refutation"] is True`,
+    `saturation_conditions["has_support"] is False`. Today all four are wrong
+    (`supported`, `below-threshold`, `False`, `False`).
+  - three `qualifier` edges → `argument_stage == "developing"` (today
+    `supported`); assert `has_support is False` and `has_refutation is False`
+    in the same payload, so the qualifier-is-structure half of Graph-R11 is
+    what the assertion observes and not the count.
+  - one `supports` + two `extends` (threshold met, no challenge) →
+    `argument_stage == "supported"` still, so the recalibration does not
+    demote a genuinely supported component.
+  - one `supports` + one `rebuttal` + one `extends` → `contested`, with
+    `has_support is True` — the two sides coexist rather than one masking the
+    other.
+  Use N ≥ 3 distinct edges per fixture (the threshold is 3; an N=1 fixture
+  only exercises the `developing` short-circuit and proves nothing about the
+  roster).
+
+- [ ] Run to verify failure:
+  `python -m pytest tests/test_project_knowledge.py -v` — expected: the
+  rebuttal and qualifier cases fail with `argument_stage == "supported"`.
+
+- [ ] Add the rosters to `edges.py` and pin them in `tests/test_edges.py`,
+  including the partition assertion against `EDGE_RELATIONS`.
+
+- [ ] Write the minimal implementation in `knowledge.py`: a private
+  `_challenge_count(counts)`/`_support_count(counts)` pair summing the
+  imported rosters, then
+  - `_argument_stage`: below threshold → unchanged; challenge present →
+    `contested`; support present → `supported`; otherwise `developing`.
+  - `_argument_confidence`: challenge → `contested`; support → `supported`;
+    otherwise `below-threshold`.
+  - `_argument_saturation_conditions`: `has_refutation` becomes the challenge
+    count; `has_support` and `mature_graph` are unchanged.
+  Leave `_argument_findings`, `_argument_gap_findings`, and
+  `_argument_advisories` alone — ERP-D.3 owns that family, and splitting the
+  edit across two tasks is what the ordering note above prevents.
+
+- [ ] Re-check the callers that re-export the stage without recomputing it:
+  `knowledge.py:788`, `worker.py:570`, `worker.py:606`. They pass the value
+  through; confirm by content that none re-derives it, and if one does, fix it
+  in this task rather than leaving a second stage machine.
+
+- [ ] Run to verify pass, including the surfaces that assert a stage string:
+  `python -m pytest tests/test_project_knowledge.py tests/test_edges.py tests/test_gap_analysis.py tests/test_cli_work_project.py tests/test_worker_product_jobs.py tests/test_project_structural_impact.py -v`
+  (the last file must pass **unmodified** — it pins the other lens).
+
+- [ ] Run the gate: `python scripts/verify`.
+
+- [ ] Commit:
+  `git add src/memoria_vault/runtime/subsystems/lib/edges.py src/memoria_vault/runtime/knowledge.py tests/test_project_knowledge.py tests/test_edges.py`
+  Message: `fix(graph): stage-role classification for the argument lens (Graph-R11, closes #1624)` ending with
   `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
 
 ---
