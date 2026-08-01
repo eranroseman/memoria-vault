@@ -3286,7 +3286,7 @@ def _block_text_sha256(vault: Path, block_ref: str) -> str | None:
     return _block_text_sha256_from_text(text, block_ref)
 
 
-def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
+def _block_canonical_text_from_text(text: str, block_ref: str) -> str | None:
     _rel, separator, anchor = str(block_ref).partition("#^")
     if not separator or not anchor:
         return None
@@ -3334,7 +3334,13 @@ def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
         reverse=True,
     ):
         canonical = canonical[:start] + canonical[end:]
-    canonical = canonical.strip()
+    return canonical.strip()
+
+
+def _block_text_sha256_from_text(text: str, block_ref: str) -> str | None:
+    canonical = _block_canonical_text_from_text(text, block_ref)
+    if canonical is None:
+        return None
     return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
