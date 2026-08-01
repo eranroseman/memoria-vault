@@ -1,0 +1,4 @@
+# Banned terms and aliases (Vale.Avoid): each entry errors on any occurrence
+# in docs prose. Seed from glossary usage rulings as they land — the glossary
+# (docs/reference/data-model/glossary.md) states the ruling, this file
+# mechanizes it, same PR for both.

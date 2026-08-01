@@ -1,0 +1,13 @@
+# Enforced casing (Vale.Terms): each entry errors unless this exact casing is
+# used in docs prose. Code spans and blocks are exempt by scope.
+#
+# Keep to terms that never legitimately appear lowercase — names that occur in
+# domains, permalinks, or package names (github, sqlite, obsidian, zotero) are
+# deliberately absent: Vale.Terms would fire on link text like zotero.org and
+# frontmatter slugs. TokenIgnores is not the fix — it disables Vale's markdown
+# scoping and floods code spans with false positives.
+Diátaxis
+Karpathy
+Luhmann
+Toulmin
+Zettelkasten

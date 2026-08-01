@@ -57,6 +57,16 @@ repos:
         files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
         stages: [manual]
 
+  - repo: https://github.com/errata-ai/vale
+    rev: v3.13.0
+    hooks:
+      # Terminology rulings over published docs prose (.vale.ini + the Memoria
+      # vocabulary). Spelling stays with cspell; Vale owns term/casing rulings.
+      - id: vale
+        files: ^docs/.*\.md$
+        exclude: ^docs/superpowers/
+        stages: [manual]
+
   - repo: local
     hooks:
       # markdownlint + cspell gate published docs prose (not the docs/superpowers
