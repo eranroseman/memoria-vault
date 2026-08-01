@@ -71,14 +71,22 @@ def neighborhood(
     relations_json = json.dumps(sorted(chosen))
     seeds_json = json.dumps(seed_ids)
     # Both endpoints are projected to path space exactly as
-    # `edges.concept_edge_path_pairs` projects them, because the walk, its seeds
-    # and its returned ids are all paths. It joins that projection in SQL rather
-    # than consuming the public one because the eligibility predicate below needs
-    # two columns the strict endpoint API deliberately withholds: the edge's own
-    # `source_path` (blank marks a PI-owned row, which no verdict gates) and the
-    # source Concept's verdict. Identity is matched against identity —
-    # `source_status.concept_id` against `edge.source_concept_id`, never against
-    # a path — which is the ERP-A.6 correction to the NID-B.2 join.
+    # `edges.concept_edge_path_pairs` projects them — same source rendering, same
+    # resolved/pending target COALESCE, and the same skip on *either* endpoint
+    # rendering blank — because the walk, its seeds and its returned ids are all
+    # paths. This is a sanctioned second copy of that projection, so every
+    # invariant `tests/test_edges.py` pins on the producer is re-pinned against
+    # this walk with the same fixture shape; a blank endpoint is the one that
+    # costs most here, because `''` would enter an undirected walk as a hub
+    # joining every blank-endpoint edge to every other.
+    #
+    # It joins the projection in SQL rather than consuming the public one because
+    # the eligibility predicate below needs two columns the strict endpoint API
+    # deliberately withholds: the edge's own `source_path` (blank marks a
+    # PI-owned row, which no verdict gates) and the source Concept's verdict.
+    # Identity is matched against identity — `source_status.concept_id` against
+    # `edge.source_concept_id`, never against a path — which is the ERP-A.6
+    # correction to the NID-B.2 join.
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
@@ -94,6 +102,7 @@ def neighborhood(
                 WHERE edge.check_status = 'checked'
                   AND edge.relation_type IN (SELECT value FROM json_each(?))
                   AND source_status.path != ''
+                  AND COALESCE(NULLIF(target.path, ''), edge.target_path) != ''
                   AND (
                       edge.source_path = ''
                       OR source_status.check_status = 'checked'

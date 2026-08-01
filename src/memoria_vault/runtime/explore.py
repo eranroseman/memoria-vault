@@ -230,8 +230,11 @@ def _edges_by_concept(vault: Path, ids: set[str]) -> dict[str, list[dict[str, st
     """Return only safe, displayed edges, treated as undirected for presentation."""
     # `ids` are path-space Concept ids (`_concept_id` above), so both endpoints
     # arrive already projected: the ERP-A.6 family renders a ULID source at its
-    # `concepts.path` and a catalog work at `catalog/sources/<work_id>`, which is
-    # exactly the rendering `_concept_id` produces for a work.
+    # `concepts.path` and a catalog work at `catalog/sources/<work_id>`, the
+    # rendering `_concept_id` produces for the synthesized fulltext document. The
+    # two agree for every document the catalog writes; `_concept_id` also fires
+    # on any other path under `fulltexts/`, where the work id is the file stem
+    # and nothing guarantees a catalog parent renders there.
     touching: dict[str, set[tuple[str, str]]] = {concept_id: set() for concept_id in ids}
     for edge in concept_edge_path_pairs(vault):
         source = str(edge["source_path"])

@@ -177,11 +177,32 @@ ULIDS = {
     "notes/b.md": "01JXBBBBBBBBBBBBBBBBBBBBBB",
     "notes/c.md": "01JXCCCCCCCCCCCCCCCCCCCCCC",
     "notes/d.md": "01JXDDDDDDDDDDDDDDDDDDDDDD",
+    "notes/z.md": "01JXZZZZZZZZZZZZZZZZZZZZZZ",
 }
 
 
+def _ulid_edge(
+    source: str, relation: str, target: str, *, pi_owned: bool = False
+) -> dict[str, str]:
+    return {
+        "source_concept_id": ULIDS.get(source, source),
+        "relation_type": relation,
+        "target_path": target,
+        "check_status": "checked",
+        "source_path": "" if pi_owned else source,
+    }
+
+
 def _seed_ulid_keyed_graph(vault: Path) -> None:
-    """Seed the normal v16 shape: identities are ULIDs, only `concepts.path` is a path."""
+    """Seed the normal v16 shape, carrying every endpoint shape the producer projects.
+
+    `neighborhood` re-implements `edges.concept_edge_path_records`'s projection in
+    SQL, so this fixture carries the same endpoint shapes `tests/test_edges.py`
+    seeds against the producer — a ULID source, a resolved target, a pending
+    target that no Concept claims, a resolved target whose Concept renders
+    nowhere, and a blank endpoint on each side. A sanctioned second
+    implementation inherits the claim, not the coverage.
+    """
     state.rebuild_file_concept_mirror(
         vault,
         [
@@ -189,9 +210,9 @@ def _seed_ulid_keyed_graph(vault: Path) -> None:
             for path, ulid in ULIDS.items()
         ],
     )
-    for path in ("notes/a.md", "notes/b.md"):
+    for path in ("notes/a.md", "notes/b.md", "notes/z.md"):
         state.set_concept_verdict(vault, path, "checked")
-    # A db-store Concept that renders nowhere. Its edge is PI-owned
+    # A db-store Concept that renders nowhere. Its own edge is PI-owned
     # (`source_path = ''`), so the verdict gate exempts it and only the
     # blank-path guard can keep `''` out of the walk.
     with state.connect(vault) as conn:
@@ -201,43 +222,28 @@ def _seed_ulid_keyed_graph(vault: Path) -> None:
     state.replace_concept_edges(
         vault,
         [
-            {
-                "source_concept_id": ULIDS["notes/a.md"],
-                "relation_type": "supports",
-                "target_path": "notes/b.md",
-                "check_status": "checked",
-                "source_path": "notes/a.md",
-            },
+            _ulid_edge("notes/a.md", "supports", "notes/b.md"),
             # Parallel relation between the same two Concepts: one neighbor.
-            {
-                "source_concept_id": ULIDS["notes/a.md"],
-                "relation_type": "contradicts",
-                "target_path": "notes/b.md",
-                "check_status": "checked",
-                "source_path": "notes/a.md",
-            },
-            {
-                "source_concept_id": ULIDS["notes/b.md"],
-                "relation_type": "extends",
-                "target_path": "notes/c.md",
-                "check_status": "checked",
-                "source_path": "notes/b.md",
-            },
-            # Same shape, but its source Concept carries no `checked` verdict.
-            {
-                "source_concept_id": ULIDS["notes/c.md"],
-                "relation_type": "supports",
-                "target_path": "notes/d.md",
-                "check_status": "checked",
-                "source_path": "notes/c.md",
-            },
-            {
-                "source_concept_id": "cap-mv",
-                "relation_type": "warrant",
-                "target_path": "notes/b.md",
-                "check_status": "checked",
-                "source_path": "",
-            },
+            _ulid_edge("notes/a.md", "contradicts", "notes/b.md"),
+            # A second distinct target, so `notes/a.md` — a source and never a
+            # target — has a degree no self-count can reach.
+            _ulid_edge("notes/a.md", "qualifier", "notes/c.md"),
+            _ulid_edge("notes/b.md", "extends", "notes/c.md"),
+            # Pending: no Concept claims this path, so only the durable
+            # `target_path` can render it.
+            _ulid_edge("notes/b.md", "warrant", "notes/pending.md"),
+            # Resolved onto a Concept that renders nowhere: the durable
+            # `target_path` is still the honest answer (the `NULLIF` arm).
+            _ulid_edge("notes/b.md", "rebuttal", "cap-mv"),
+            # Same shape as the others, but its source Concept carries no
+            # `checked` verdict.
+            _ulid_edge("notes/c.md", "supports", "notes/d.md"),
+            _ulid_edge("cap-mv", "warrant", "notes/b.md", pi_owned=True),
+            # Two blank targets from unrelated sources. Unguarded, `''` enters
+            # the undirected walk as a hub and joins `notes/a.md` to a
+            # `notes/z.md` it shares no edge with.
+            _ulid_edge("notes/a.md", "rebuttal", ""),
+            _ulid_edge("notes/z.md", "supports", ""),
         ],
     )
 
@@ -262,28 +268,50 @@ def test_graph_primitives_serve_ulid_keyed_concepts_at_their_paths(tmp_path: Pat
         ULIDS["notes/a.md"],
         ULIDS["notes/b.md"],
         ULIDS["notes/c.md"],
+        ULIDS["notes/z.md"],
         "cap-mv",
     }
 
     hood = graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)
 
-    assert hood["ids"] == ["notes/a.md", "notes/b.md", "notes/c.md"]
-    assert hood["counts"] == {"seeds": 1, "neighbors": 2, "returned": 3}
+    # Exact, so it is equally the proof of what is *not* here: no `''` hub, no
+    # `notes/z.md` reached through one, no `notes/d.md` behind the unvetted
+    # `notes/c.md`, and no raw identity.
+    assert hood["ids"] == [
+        "cap-mv",
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c.md",
+        "notes/pending.md",
+    ]
+    assert hood["counts"] == {"seeds": 1, "neighbors": 4, "returned": 5}
     assert not set(hood["ids"]) & set(ULIDS.values())
+    assert graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=1)["ids"] == [
+        "notes/a.md",
+        "notes/b.md",
+        "notes/c.md",
+    ]
     # The revoked-source gate still refuses, and in identity space: `notes/c.md`
     # holds no checked verdict, so its own mirrored edge to `notes/d.md` is not
-    # walked, while the checked `notes/b.md` edge that reaches it still is.
+    # walked, while the checked edges that reach it still are.
     assert graph_sql.neighborhood(tmp_path, ["notes/c.md"], depth=1)["ids"] == [
+        "notes/a.md",
         "notes/b.md",
         "notes/c.md",
     ]
 
     # No source gate here, as before ERP-A.6: `notes/d.md` keeps the degree its
-    # checked-but-unvetted inbound edge gives it.
-    assert graph_sql.degree_centrality(tmp_path, ["notes/a.md", "notes/b.md", "notes/d.md"]) == {
-        "notes/a.md": 1,
-        "notes/b.md": 2,
+    # checked-but-unvetted inbound edge gives it. `notes/a.md` is only ever a
+    # source and `notes/c.md` only ever reached from two, so neither count is
+    # satisfiable by counting the node itself.
+    assert graph_sql.degree_centrality(
+        tmp_path, ["notes/a.md", "notes/b.md", "notes/c.md", "notes/d.md", "notes/z.md"]
+    ) == {
+        "notes/a.md": 2,
+        "notes/b.md": 4,
+        "notes/c.md": 3,
         "notes/d.md": 1,
+        "notes/z.md": 0,
     }
 
     assert graph_sql.filter_ids(tmp_path, ["notes/a.md", "notes/c.md"], types={"note"})["ids"] == [
@@ -309,9 +337,11 @@ def test_graph_primitives_serve_ulid_keyed_concepts_at_their_paths(tmp_path: Pat
     )
 
     assert graph_sql.neighborhood(tmp_path, ["notes/a.md"], depth=2)["ids"] == [
+        "cap-mv",
         "notes/a.md",
         "notes/b.md",
         "notes/c-renamed.md",
+        "notes/pending.md",
     ]
 
 

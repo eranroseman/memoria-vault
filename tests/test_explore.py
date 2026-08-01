@@ -87,12 +87,9 @@ def _work(vault: Path, work_id: str, title: str, body: str) -> None:
     )
 
 
-def _insert_tensions(vault: Path) -> None:
-    # PI-owned rows: the mirror writer never persists a tension, so these are
-    # seeded directly — by identity, which is what the FK references.
+def _insert_tension_rows(vault: Path, rows: list[tuple[str, str, str]]) -> None:
+    """Seed PI-owned tension rows by identity — the mirror writer never persists one."""
     with state.connect(vault) as conn:
-        spacing = state.resolve_concept_id(conn, "notes/claim-spacing.md")
-        massed = state.resolve_concept_id(conn, "notes/claim-massed.md")
         conn.executemany(
             "INSERT INTO concept_edges("
             " source_concept_id, relation_type, target_concept_id, target_path,"
@@ -100,25 +97,33 @@ def _insert_tensions(vault: Path) -> None:
             " VALUES (?, ?, ?, ?, ?, ?, ?)",
             [
                 (
-                    spacing,
+                    state.resolve_concept_id(conn, source),
                     "tension",
-                    massed,
-                    "notes/claim-massed.md",
-                    "checked",
+                    state.resolve_concept_id(conn, target),
+                    target,
+                    status,
                     "",
                     "2026-07-17T00:00:00Z",
-                ),
-                (
-                    massed,
-                    "tension",
-                    spacing,
-                    "notes/claim-spacing.md",
-                    "checked",
-                    "",
-                    "2026-07-17T00:00:00Z",
-                ),
+                )
+                for source, target, status in rows
             ],
         )
+
+
+def _insert_tensions(vault: Path) -> None:
+    _insert_tension_rows(
+        vault,
+        [
+            ("notes/claim-spacing.md", "notes/claim-massed.md", "checked"),
+            ("notes/claim-massed.md", "notes/claim-spacing.md", "checked"),
+            # Unchecked, between two Concepts this topic displays: the only thing
+            # keeping it out of the `tensions` group is the checked gate. The
+            # unchecked `extends` row seeded with the mirror edges cannot stand in
+            # for it — `_tension_pairs` discards a non-tension relation before
+            # that gate is reached.
+            ("notes/question-spacing.md", "notes/claim-spacing.md", "unchecked"),
+        ],
+    )
 
 
 def _fixture_vault(tmp_path: Path, *, ulid_keyed: bool = False) -> Path:
@@ -355,6 +360,31 @@ def test_explore_serves_one_graph_whichever_space_keys_the_concepts(
         # so the same check there would forbid the answer.
         serialized = json.dumps(payload)
         assert not [identity for identity in stored if identity in serialized]
+
+
+def test_versus_crossing_tensions_exclude_a_same_side_pair(tmp_path: Path) -> None:
+    """A tension inside one side is not a *crossing* tension.
+
+    Seeded here rather than in the shared fixture on purpose: in this corpus side
+    B is a subset of side A, so any same-side pair is also a pair of the
+    single-topic run, and putting it in the fixture would rewrite that payload
+    instead of testing this gate. Both halves are asserted, so the exclusion is
+    provably the crossing test and not the safe-id gate that precedes it.
+    """
+    vault = _fixture_vault(tmp_path)
+    _insert_tension_rows(vault, [("hubs/memory.md", "notes/question-spacing.md", "checked")])
+
+    versus = explore.explore_topic(vault, "spacing", versus="massed")
+    solo = explore.explore_topic(vault, "spacing")
+
+    same_side = {"hubs/memory.md", "notes/question-spacing.md"}
+    assert same_side <= _returned_ids(versus["a"])
+    assert not same_side & _returned_ids(versus["b"])
+    assert versus["crossing_tensions"]["count"] == 1
+    assert [pair["pair"] for pair in solo["tensions"]] == [
+        ["hubs/memory.md", "notes/question-spacing.md"],
+        ["notes/claim-massed.md", "notes/claim-spacing.md"],
+    ]
 
 
 def test_explore_project_filter_depth_and_versus_share_one_universe(

@@ -199,14 +199,18 @@ def _edge(relation: str, target: str, **overrides: str) -> dict[str, str]:
 
 
 def _seed_projection_vault(vault: Path, *, with_unchecked: bool = False) -> None:
-    """Seed the v16 mirror through the NID-B trusted seam: ULID ids, path renderings."""
+    """Seed the v16 mirror through the NID-B trusted seam: ULID ids, path renderings.
+
+    Seeded out of sort order deliberately. `concept_edges` is a rowid table, so a
+    full scan comes back in insertion order; if that order were the answer — or
+    its exact reverse — a dropped or reversed sort would still read correct.
+    """
     state.rebuild_file_concept_mirror(vault, _mirror_rows())
-    rows = [
-        _edge("supports", "notes/resolved.md", attributes_json='{"warrant": "licensed"}'),
-        _edge("extends", "notes/pending.md", attributes_json='{"addressed": false}'),
-    ]
+    rows = []
     if with_unchecked:
         rows.append(_edge("contradicts", "notes/resolved.md", check_status="unchecked"))
+    rows.append(_edge("supports", "notes/resolved.md", attributes_json='{"warrant": "licensed"}'))
+    rows.append(_edge("extends", "notes/pending.md", attributes_json='{"addressed": false}'))
     state.replace_concept_edges(vault, rows)
 
 
