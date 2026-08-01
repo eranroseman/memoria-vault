@@ -16,7 +16,7 @@ from memoria_vault.runtime.projections import (
     write_tracked_projections as _write_tracked_projections,
 )
 from memoria_vault.runtime.search_index import answer_query as _answer_query
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes as _commit_writer_changes,
 )
@@ -1234,6 +1234,36 @@ def test_worker_runs_each_served_curate_note_link(tmp_path: Path, relation: str)
     assert done is not None and done["status"] == "done", done
     assert done["link_type"] == relation
     assert read_frontmatter(source)["links"] == {relation: ["notes/target.md"]}
+
+
+def test_worker_curate_note_link_carries_warrant_to_the_edge(tmp_path: Path) -> None:
+    """The queued path wires `payload.warrant` through; without it no edge is written."""
+    vault = workspace(tmp_path)
+    source = write_note(vault, "source", "checked", "Source body.")
+    write_note(vault, "target", "checked", "Target body.")
+    payload = {
+        "source_note_path": source.relative_to(vault).as_posix(),
+        "link_type": "supports",
+        "target_path": "notes/target.md",
+    }
+    enqueue_operation(
+        vault, "curate-note-link", payload=payload, idempotency_key="link-no-warrant", actor="pi"
+    )
+    bare = run_next_job(vault, machine="test-machine")
+    enqueue_operation(
+        vault,
+        "curate-note-link",
+        payload={**payload, "warrant": "the trial licenses this step"},
+        idempotency_key="link-warrant",
+        actor="pi",
+    )
+    warranted = run_next_job(vault, machine="test-machine")
+
+    assert bare is not None and bare["status"] == "done", bare
+    assert warranted is not None and warranted["status"] == "done", warranted
+    assert [
+        record["attributes"] for record in concept_edge_path_records(vault, checked_only=False)
+    ] == [{"warrant": "the trial licenses this step"}]
 
 
 def test_worker_rejects_tension_curate_note_link(tmp_path: Path) -> None:

@@ -346,12 +346,21 @@ def curate_note_link(
     *,
     context: OperationContext,
     reason: str = "",
+    warrant: str = "",
 ) -> dict[str, Any]:
-    """Record one PI-authored typed link on a checked note."""
+    """Record one PI-authored typed link on a checked note.
+
+    ``warrant`` is the license *text* for this inference (EDGES §4), not the
+    ``warrant`` relation — that one is an ordinary ``link_type`` naming a
+    license note. Non-blank text hangs on the identity-keyed edge as
+    ``attributes_json.warrant``; blank text writes no edge at all, so the
+    frontmatter link stays the whole write.
+    """
     validate_operation_context(vault, context)
     vault = Path(vault)
     source_rel = _note_rel(source_note_path)
     target_rel = _concept_rel(target_path)
+    warrant = warrant.strip()
     link_type = link_type.strip().lower()
     if link_type not in LINK_RELATIONS:
         raise ValueError(f"note link_type must be one of {', '.join(sorted(LINK_RELATIONS))}")
@@ -384,6 +393,18 @@ def curate_note_link(
             body=body,
         )
 
+    edge_id = ""
+    if warrant:
+        edge = state.insert_concept_edge(
+            vault,
+            source=source_rel,
+            relation_type=link_type,
+            target=target_rel,
+            attributes={"warrant": warrant},
+            context=context,
+        )
+        edge_id = str(edge["edge_id"])
+
     event = append_journal_event(
         vault,
         {
@@ -394,6 +415,7 @@ def curate_note_link(
             "target_sha256": sha256_file(source_note),
             "changed": changed,
             "reason": reason.strip(),
+            **({"warrant": warrant, "edge_id": edge_id} if warrant else {}),
         },
         context=context,
     )
@@ -405,6 +427,7 @@ def curate_note_link(
         "target_path": target_rel,
         "link_type": link_type,
         "changed": changed,
+        "edge_id": edge_id,
         "event": event,
         "commit": commit,
     }

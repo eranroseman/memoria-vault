@@ -6923,6 +6923,31 @@ procedure and include the regenerated goldens in that task's commit.
 > ERP-B.4 deletes by the same triple, so it inherits the same key function. See also
 > cross-section contract 4 for this function's call ordering.
 
+> **Execution amendment (2026-08-01) — what ERP-B.2 landed.** Three deviations from
+> the step text below, none of them contract changes.
+> **(1) Placement.** `insert_concept_edge` sits after `_concept_edge_target_path`
+> rather than literally adjacent to `replace_concept_edges`, so that function's
+> private helpers stay beside their only caller; it is still the public single-row
+> seam immediately before the public `concept_edges` reader.
+> **(2) A settled target survives a spelling that stopped resolving.** When a stored
+> row's `target_path` no longer resolves — its target moved out of band, so
+> `concepts.path` left the durable key behind — the upsert keeps the
+> `target_concept_id`/`edge_id` the row already holds instead of re-deriving NULL.
+> That is the same defense `replace_concept_edges` carries in SQL
+> (`COALESCE(excluded.target_concept_id, …)` / `CASE WHEN excluded.edge_id != ''`);
+> dropping it here un-resolves a live edge and breaks ERP-D.5's stable-`edge_id`
+> contract. Pinned by `test_insert_concept_edge_keeps_a_settled_target_whose_path_moved`.
+> **(3) Six tests, not two.** The drafted pair cannot see v16 keying at all. It is
+> joined by the four-spelling catalog fold this section's NID-B.7 blockquote
+> requires; a pending-row test proving `edge_id` stays `''` until the target
+> resolves and that **both** settlers — a re-upsert and B.7's resolution pass —
+> settle it (asserting storage between them, because B.7's pass is an absorbing
+> state that hides a re-upsert which resolved nothing); the out-of-band move above;
+> and an unbound-`OperationContext` refusal for the `validate_operation_context`
+> call the Interfaces list already required. The drafted body's local `source_id` is
+> renamed `source_concept`: `tests/test_identifier_renames.py` forbids that token
+> anywhere under `src/`.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (insert the new function
   directly after `replace_concept_edges`, i.e. after :2052 at the `9c77ba61`
@@ -6952,7 +6977,7 @@ procedure and include the regenerated goldens in that task's commit.
 
 **Steps:**
 
-- [ ] Write the failing tests (append to `tests/test_runtime_state.py`; first
+- [x] Write the failing tests (append to `tests/test_runtime_state.py`; first
   extend the import at :29 to
   `from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, operation_context`):
 
@@ -7023,12 +7048,12 @@ procedure and include the regenerated goldens in that task's commit.
           )
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_runtime_state.py -v -k insert_concept_edge`
   — expected: `AttributeError: module 'memoria_vault.runtime.state' has no
   attribute 'insert_concept_edge'`.
 
-- [ ] Write the minimal implementation (after `replace_concept_edges` in
+- [x] Write the minimal implementation (after `replace_concept_edges` in
   `src/memoria_vault/runtime/state.py`):
 
   ```python
@@ -7105,7 +7130,7 @@ procedure and include the regenerated goldens in that task's commit.
   the same triple. `OperationContext` is already TYPE_CHECKING-imported at
   `state.py:49`.)
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_runtime_state.py -v -k insert_concept_edge`
   — expected: 2 passed.
 
@@ -10222,6 +10247,25 @@ def _edge_key(path: str) -> str:
 > superseded by a rebuilt ULID mirror, the `insert_concept_edge` result, and
 > `edges.concept_edge_path_records` assertions.
 
+> **Execution amendment (2026-08-01) — what ERP-D.5 landed.** The test snippet below
+> is stale twice over and was rewritten, not copied: `check_status:` is a retired
+> frontmatter field `curate_note_link` now refuses outright
+> (`test_curate_note_link_rejects_invalid_source_without_mutation`), so the ULID
+> mirror is built with `tests/test_knowledge.py`'s own `checked_note` helper instead
+> of `_md`. Three tests beyond the drafted round trip, each pinning a branch the
+> round trip cannot: a blank `warrant` writes no edge row and no journal keys;
+> whitespace-only text is blank while padded text is stripped, and the record it
+> lands on is asserted **whole**, because an `attributes`-only assertion cannot tell
+> a warrant hung on `extends` from one hung on `supports`; and a refused link writes
+> no edge, since `insert_concept_edge` commits its own transaction and an edge
+> written before the target check would survive the refusal that follows it. The
+> worker payload wire is pinned in `tests/test_worker_product_jobs.py`, a file this
+> task's Files list does not name — nothing else observes that line. Deliberately
+> not done, as outside the task's Files list: no `memoria link --warrant` CLI flag,
+> and the worker *result* dict is unchanged (the task specifies the input wire
+> only). Floor goldens did not drift — no seeded file changed and the operation's
+> floor entry is `expect: refused` on actor authority before the payload is read.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/knowledge.py` (`curate_note_link`, lines 346-414)
 - Modify: `src/memoria_vault/runtime/worker.py` (`curate-note-link` handler, lines 471-497)
@@ -10233,7 +10277,7 @@ def _edge_key(path: str) -> str:
 
 **Steps:**
 
-- [ ] Write the failing round-trip test — append to `tests/test_knowledge.py`:
+- [x] Write the failing round-trip test — append to `tests/test_knowledge.py`:
 
 ```python
 def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
@@ -10311,11 +10355,11 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
     assert records[0]["attributes"]["warrant"] == "Updated license"
 ```
 
-- [ ] Run to verify it fails:
+- [x] Run to verify it fails:
   `python -m pytest tests/test_knowledge.py::test_curate_note_link_warrant_text_round_trips_to_edge_attribute -v`
   Expected: `TypeError: curate_note_link() got an unexpected keyword argument 'warrant'`.
 
-- [ ] Write minimal implementation in `knowledge.py`. Add `warrant: str = ""` to the signature (line 353, after `reason`), normalize it beside `link_type` (line 360): `warrant = warrant.strip()`. After the `if changed:` block (line 389) and before the journal event (line 391) add:
+- [x] Write minimal implementation in `knowledge.py`. Add `warrant: str = ""` to the signature (line 353, after `reason`), normalize it beside `link_type` (line 360): `warrant = warrant.strip()`. After the `if changed:` block (line 389) and before the journal event (line 391) add:
 
 ```python
     edge_id = ""
@@ -10339,13 +10383,13 @@ def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(
 
   and add `"edge_id": edge_id,` to the returned dict (lines 407-414).
 
-- [ ] Wire the worker payload — in `worker.py` add to the `curate_note_link(...)` call (lines 483-490):
+- [x] Wire the worker payload — in `worker.py` add to the `curate_note_link(...)` call (lines 483-490):
 
 ```python
             warrant=str(payload.get("warrant") or ""),
 ```
 
-- [ ] Run to verify it passes, plus the existing link pin:
+- [x] Run to verify it passes, plus the existing link pin:
   `python -m pytest tests/test_knowledge.py::test_curate_note_link_warrant_text_round_trips_to_edge_attribute tests/test_knowledge.py::test_curate_note_link_records_typed_link_on_checked_note -v`
 
 - [ ] Regenerate floor goldens if drifted (manifest note at top) and commit:
