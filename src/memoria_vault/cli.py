@@ -1570,7 +1570,7 @@ def _cmd_project_suggest_hubs(args: argparse.Namespace) -> int:
             for tag in _string_list(frontmatter.get("tags")):
                 existing.add(tag.lower())
             continue
-        if frontmatter.get("type") not in {"work", "digest", "note"}:
+        if frontmatter.get("type") not in {"digest", "note"}:
             continue
         for term in _concept_terms(frontmatter):
             counts[term] += 1

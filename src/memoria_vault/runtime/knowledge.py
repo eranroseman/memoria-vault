@@ -1501,7 +1501,7 @@ def _tag_candidates(vault: Path) -> list[dict[str, Any]]:
     counts: dict[str, int] = defaultdict(int)
     refs: dict[str, set[str]] = defaultdict(set)
     for rel, frontmatter in _checked_concepts(vault):
-        if frontmatter.get("type") not in {"work", "digest"}:
+        if frontmatter.get("type") != "digest":
             continue
         path = vault / rel
         _frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))

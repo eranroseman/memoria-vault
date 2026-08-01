@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 from memoria_vault.runtime import state
@@ -63,6 +64,100 @@ def test_old_identifier_tokens_do_not_remain_in_implementation() -> None:
                     offenders.append(f"{path.relative_to(ROOT)}: {token}")
 
     assert offenders == []
+
+
+def test_frontmatter_type_filters_carry_no_dead_work_literal() -> None:
+    """NODES spec §4: ``"work"`` is a DB-store concept type (catalog rows); no
+    markdown file carries ``type: work`` (no type yaml declares it), so any
+    frontmatter type filter naming ``"work"`` is dead code.
+
+    The comparison operand is resolved, not pattern-matched: a filter hoisted
+    into a named roster (``SEARCHABLE_TYPES``) is the same dead branch as an
+    inline set literal and must fail the same way. DB-row filters
+    (``row.get("type")``) are untouched — ``"work"`` is live there.
+    """
+    modules = {
+        path: ast.parse(path.read_text(encoding="utf-8"))
+        for root in (ROOT / "src", ROOT / "scripts")
+        for path in _text_files(root)
+        if path.suffix == ".py"
+    }
+    rosters: dict[str, set[str]] = {}
+    for tree in modules.values():
+        for name, members in _module_string_rosters(tree).items():
+            rosters.setdefault(name, set()).update(members)
+
+    offenders = []
+    for path, tree in sorted(modules.items()):
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Compare):
+                continue
+            operands = [node.left, *node.comparators]
+            if not any(_reads_frontmatter_type(operand) for operand in operands):
+                continue
+            for operand in operands:
+                if _reads_frontmatter_type(operand):
+                    continue
+                members = (
+                    rosters.get(operand.id, set())
+                    if isinstance(operand, ast.Name)
+                    else _string_members(operand)
+                )
+                if "work" in members:
+                    offenders.append(f"{path.relative_to(ROOT)}:{node.lineno}")
+                    break
+
+    assert offenders == []
+
+
+def _string_members(node: ast.AST) -> set[str]:
+    """The literal strings a comparison operand can match."""
+    if isinstance(node, ast.Constant):
+        return {node.value} if isinstance(node.value, str) else set()
+    if isinstance(node, ast.Set | ast.Tuple | ast.List):
+        return {member for elt in node.elts for member in _string_members(elt)}
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+        if node.func.id in {"frozenset", "set", "tuple", "list"}:
+            return {member for arg in node.args for member in _string_members(arg)}
+    return set()
+
+
+def _module_string_rosters(tree: ast.Module) -> dict[str, set[str]]:
+    """Module-level ``NAME = {...}`` string containers, by name."""
+    rosters: dict[str, set[str]] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            targets, value = node.targets, node.value
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            targets, value = [node.target], node.value
+        else:
+            continue
+        members = _string_members(value)
+        if members:
+            for target in targets:
+                if isinstance(target, ast.Name):
+                    rosters.setdefault(target.id, set()).update(members)
+    return rosters
+
+
+def _reads_frontmatter_type(node: ast.AST) -> bool:
+    """True for ``frontmatter.get("type")`` and its ``str(... or "")`` wrappers."""
+    if isinstance(node, ast.BoolOp):
+        return any(_reads_frontmatter_type(value) for value in node.values)
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    if (
+        isinstance(func, ast.Attribute)
+        and func.attr == "get"
+        and isinstance(func.value, ast.Name)
+        and func.value.id in {"frontmatter", "fm"}
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == "type"
+    ):
+        return True
+    return any(_reads_frontmatter_type(arg) for arg in node.args)
 
 
 def _columns(conn: object, table: str) -> dict[str, str]:

@@ -843,6 +843,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     direct_rel = "digests/direct.md"
     depth_two_rel = "digests/depth-two.md"
     pi_rel = "notes/pi-downstream.md"
+    pi_depth_two_rel = "notes/pi-depth-two.md"
 
     enqueue_trusted_write(
         vault, source_rel, note_text(), idempotency_key="write-source", actor="operation"
@@ -880,7 +881,22 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         machine="pi-machine",
     )
     mark_checked(vault, pi_rel, machine="pi-machine")
-    commit_writer_changes(vault, "observe pi downstream", [pi_rel], machine="pi-machine")
+
+    pi_depth_two_path = vault / pi_depth_two_rel
+    pi_depth_two_path.write_text(note_text(), encoding="utf-8")
+    depth_two_prior_sha = sha256_file(pi_depth_two_path)
+    pi_depth_two_path.write_text(note_text() + "\nPI two hops down.\n", encoding="utf-8")
+    observe_pi_edit(
+        vault,
+        pi_depth_two_rel,
+        depth_two_prior_sha,
+        inputs=[{"id": direct_rel, "sha256": sha256_file(vault / direct_rel)}],
+        machine="pi-machine",
+    )
+    mark_checked(vault, pi_depth_two_rel, machine="pi-machine")
+    commit_writer_changes(
+        vault, "observe pi downstream", [pi_rel, pi_depth_two_rel], machine="pi-machine"
+    )
 
     source_path = vault / source_rel
     source_path.write_text(note_text() + "\nEdited source.\n", encoding="utf-8")
@@ -897,9 +913,14 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     assert done["paths"] == [source_rel]
     assert state.concept_check_status(vault, source_rel) == "unchecked"
     assert state.concept_check_status(vault, direct_rel) == "unchecked"
-    assert state.concept_check_status(vault, pi_rel) == "checked"
+    # Epistemic marks are origin-blind (EDGES section 7): a PI-authored descendant
+    # takes the mark its depth earns, exactly like a machine-derived one. Depth 1
+    # demotes; depth 2+ goes stale.
+    assert state.concept_check_status(vault, pi_rel) == "unchecked"
     assert state.concept_check_status(vault, depth_two_rel) == "checked"
     assert state.concept_flags(vault, depth_two_rel)["stale"]["trigger_id"] == source_rel
+    assert state.concept_check_status(vault, pi_depth_two_rel) == "checked"
+    assert state.concept_flags(vault, pi_depth_two_rel)["stale"]["trigger_id"] == source_rel
 
     answer = answer_query(vault, "depthtwomarker", include_stale=True)
     assert [source["path"] for source in answer["sources"]] == [depth_two_rel]
@@ -912,11 +933,18 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         for event in event_log
     )
     assert any(
-        event.get("check") == "cascade-rollback"
+        event.get("check") == "scan-demotion-propagation"
         and event.get("target_id") == pi_rel
-        and event.get("route") == "ask"
+        and event.get("route") == "act"
         for event in event_log
     )
+    assert any(
+        event.get("check") == "scan-demotion-stale"
+        and event.get("target_id") == pi_depth_two_rel
+        and event.get("route") == "log"
+        for event in event_log
+    )
+    assert not any(event.get("check") == "cascade-rollback" for event in event_log)
 
 
 def test_observe_pi_edits_quarantines_changed_tracked_projection(tmp_path: Path) -> None:

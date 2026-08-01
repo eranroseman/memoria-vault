@@ -283,6 +283,35 @@ def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> Non
         )
 
 
+def test_stage_concept_rejects_undeclared_root_field_and_stages_nested_x(tmp_path: Path) -> None:
+    """Closed validation reaches the strict writer, not only `validate_frontmatter`.
+
+    An undeclared root field is refused before anything is staged; the declared
+    `x:` hatch carries arbitrary nested data through untouched.
+    """
+    vault = workspace(tmp_path)
+    staged = vault / ".memoria/staging/notes/alpha.md"
+
+    with pytest.raises(ValueError, match="surprise: unknown field"):
+        stage_concept(
+            vault,
+            "notes/alpha.md",
+            note_text().replace("links: {}\n", "links: {}\nsurprise: true\n"),
+            machine="test-machine",
+        )
+
+    assert not staged.exists()
+
+    stage_concept(
+        vault,
+        "notes/alpha.md",
+        note_text().replace("links: {}\n", "links: {}\nx:\n  local: ok\n  nested:\n    deep: 1\n"),
+        machine="test-machine",
+    )
+
+    assert read_frontmatter(staged)["x"] == {"local": "ok", "nested": {"deep": 1}}
+
+
 def test_mark_checked_rejects_retired_frontmatter_without_write_or_event(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     target = vault / "notes/alpha.md"

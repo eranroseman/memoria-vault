@@ -29,7 +29,7 @@ from memoria_vault.runtime.vaultio import (
 
 SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
 SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
-SEARCHABLE_TYPES = frozenset({"work", "digest", "note", "hub", "project"})
+SEARCHABLE_TYPES = frozenset({"digest", "note", "hub", "project"})
 
 
 def rebuild_checked_search_index(
