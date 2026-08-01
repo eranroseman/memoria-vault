@@ -658,8 +658,18 @@ def test_attention_honesty_fields_pin_the_wire_names() -> None:
     )
 
 
+def _js_code(source: str) -> str:
+    """Strip `//` comments so a scan reads code, never prose about code.
+
+    A read deleted but named in a passing comment is otherwise indistinguishable
+    from a read still made: the floor below is satisfied by the comment and the
+    subset never sees the removed field.
+    """
+    return re.sub(r"//.*", "", source)
+
+
 def _js_function(source: str, name: str) -> str:
-    """Return one top-level `viewspec.js` function's source.
+    """Return one top-level `viewspec.js` function's code, comments removed.
 
     Chunking on column-zero `function` is enough for that module's style and
     fails loudly if the name ever moves, which is the point: a silently empty
@@ -667,7 +677,7 @@ def _js_function(source: str, name: str) -> str:
     """
     for chunk in re.split(r"^function ", source, flags=re.MULTILINE):
         if chunk.startswith(f"{name}("):
-            return chunk
+            return _js_code(chunk)
     raise AssertionError(f"viewspec.js has no top-level function {name}")
 
 
@@ -679,28 +689,34 @@ def test_attention_view_payload_matches_what_the_plugin_renderer_reads(
     Comparing the two sides' declared catalogs is not enough -- a renderer that
     renames its read of `kind_line` draws every card with a blank kind line, no
     unknown-block box, nothing logged, and green suites on both sides. So this
-    parses `renderBlock`'s `switch` (the mechanism, not the declaration) and
-    `renderCard`'s `block.<field>` reads, and holds the payload to both.
+    parses `renderBlock`'s `switch` (the mechanism, not the declaration) and the
+    `block.<field>` reads of whatever function that switch actually reaches, and
+    holds the payload to both. Every scan is over comment-stripped code and is
+    reached by following the dispatch, never by naming a function: a scan that
+    trusted names would happily validate a renderer no card is routed to.
     """
     inbox.write_proposal(
         workspace, "candidate", "Capture", "act", "for", "against", "tip", "likely", "sweep"
     )
     inbox.write_finding(workspace, "flag", "Broken", "finding", "sweep", target="notes/alpha.md")
-    source = VIEWSPEC_JS.read_text(encoding="utf-8")
+    source = _js_code(VIEWSPEC_JS.read_text(encoding="utf-8"))
     catalog = json.loads(
         re.search(r"KNOWN_BLOCK_KINDS = (\[[^\]]*\])", source).group(1).replace("'", '"')
     )
-    dispatched = set(re.findall(r'case "([^"]+)":', _js_function(source, "renderBlock")))
-    card_reads = set(
-        re.findall(
-            r"\bblock\.(\w+)",
-            _js_function(source, "renderCard") + _js_function(source, "loudnessClass"),
-        )
-    )
+    dispatch = _js_function(source, "renderBlock")
+    dispatched = set(re.findall(r'case "([^"]+)":', dispatch))
+    # Follow `case "card":` to its callee, then that callee to the helpers it
+    # hands the whole block to, so the reads scanned are the reads on the path.
+    card_renderer = re.search(r'case "card":\s*return (\w+)\(', dispatch)
+    assert card_renderer is not None, 'viewspec.js no longer routes "card" to a renderer'
+    card_source = _js_function(source, card_renderer.group(1))
+    for helper in set(re.findall(r"\b(\w+)\(block\)", card_source)):
+        card_source += _js_function(source, helper)
+    card_reads = set(re.findall(r"\bblock\.(\w+)", card_source))
     plugin_rank = json.loads(
         re.sub(r"(\w+):", r'"\1":', re.search(r"LOUDNESS_RANK = (\{[^}]*\})", source).group(1))
     )
-    fallback_band = re.search(r"LOUDNESS_RANK\.(\w+) \+ 1", source)
+    fallback_band = re.search(r"LOUDNESS_RANK\.(\w+) \+ 1", _js_function(source, "sortCards"))
 
     payload = api.read_attention_view(workspace)
     emitted = set()

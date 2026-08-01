@@ -9287,34 +9287,57 @@ below is its canonical body, with the one hoist recorded in item 1.
    this payload to three things parsed out of that file: the `case` labels of
    `renderBlock`'s `switch` (the dispatch mechanism, not the
    `KNOWN_BLOCK_KINDS` declaration, which is separately asserted equal to it);
-   every `block.<field>` read in `renderCard`/`loudnessClass`, which must be a
-   subset of the emitted card's keys behind a five-name floor so the subset can
-   never pass vacuously; and the `LOUDNESS_RANK` map plus the *expression* of
-   its unknown-band fallback. Comparing only the two declared catalogs was the
-   weaker earlier form and missed a whole class: a renderer that renames its
-   read of `kind_line` or `title` draws every card with that line blank — no
-   unknown-block box, nothing logged, green suites on both sides. Confirmed by
-   mutation: renaming either read, renaming a `case` label, or changing the
-   fallback to `-1` or to `notice + 1` each fails this test now and none did
-   before. What this test does *not* own is that a dispatched kind renders
-   anything sensible — that chain closes in
+   every `block.<field>` read in the card renderer and its block-taking
+   helpers, which must be a subset of the emitted card's keys behind a
+   five-name floor so the subset can never pass vacuously; and the
+   `LOUDNESS_RANK` map plus the *expression* of its unknown-band fallback.
+   Comparing only the two declared catalogs was the weaker earlier form and
+   missed a whole class: a renderer that renames its read of `kind_line` or
+   `title` draws every card with that line blank — no unknown-block box,
+   nothing logged, green suites on both sides. Confirmed by mutation: renaming
+   either read, renaming a `case` label, or changing the fallback to `-1` or to
+   `notice + 1` each fails this test now and none did before. Two further
+   blindnesses were closed after review: every scan runs over
+   **comment-stripped** code, because a read deleted while a comment still
+   named it satisfied the floor and hid from the subset; and the scan
+   **follows the dispatch rather than naming a function** — `case "card":` to
+   its callee, then that callee to whatever helpers it hands the whole block to
+   — because a name-bound scan happily validates a renderer no card is routed
+   to. Both mutants die now, and the control that shows the binding is to
+   behaviour rather than to the identifier is that a *faithful* rename of the
+   renderer stays green. What this test does *not* own is that a dispatched
+   kind renders anything sensible — that chain closes in
    `packages/memoria-obsidian/scripts/test-viewspec.mjs` (which loops the
    catalog through `renderBlock` and asserts node text and attributes) run
    inside pytest by `tests/test_memoria_obsidian_package.py`. It is also not
    U3-ENG.5's `VIEW_BLOCK_KINDS` assertion, which stays inside Python and stays
    owed.
-4. **Knowingly unfixtured — five, all *equivalent-until*, none equivalent-forever.**
-   Survivors of a 57-mutation sweep of the new code, with the collaborator each
-   depends on. Stating that dependency is the point: every one of these is
-   equivalent only while some function this slice does not own keeps its current
-   behaviour, so "provably equivalent" here always means "given today's
-   collaborator", never "no input could distinguish them".
+4. **Knowingly unfixtured — ten, all *equivalent-until*, none equivalent-forever.**
+   This slice's own sweeps run 64 engine mutations (10 survive) and 16
+   cross-language ones plus a control (0 survive; the control is a *faithful*
+   renderer rename, which must stay green). Review sweeps ran 95 engine and 42
+   cross-language mutations across three rounds. The ten survivors are these,
+   each named with the collaborator it depends on.
+   Stating that dependency is the point: every one is equivalent only while some
+   function this slice does not own keeps its current behaviour, so "provably
+   equivalent" here always means "given today's collaborator", never "no input
+   could distinguish them". Anything that failed that test was deleted instead —
+   see the `TypeError` arm in item 5.
    - `str(card["loudness"] or "")` (both call sites),
-     `str(card["body_data"]["text"])`, and `str(card["path"])` — all three rest
-     on `_attention_card`, which normalizes falsy loudness to `""` and builds
-     `body_data` from `split_frontmatter`'s `str` body and `path` from
+     `str(card["body_data"]["text"])` (dropping the coercion, and reading
+     `card["body"]` instead), and `str(card["path"])` — all rest on
+     `_attention_card`, which normalizes falsy loudness to `""`, wraps
+     `split_frontmatter`'s `str` body into `body_data`, and builds `path` from
      `as_posix()`. Kept as defensive coercions precisely *because* that
      collaborator is not ours to hold still.
+   - `isinstance(value, datetime.date)` narrowed to `datetime.datetime` — a
+     plain `date` then falls to `str(value or "")`, and `str(date)` happens to
+     equal `date.isoformat()`. Equivalent until those two spellings diverge;
+     the `datetime` case is separately fixtured and does *not* survive, because
+     `str(datetime)` uses a space where `isoformat()` uses `T`.
+   - `Path(workspace)` dropped at either call site — equivalent until a caller
+     passes a `str`. Every caller in the tree passes a `Path`; the wrap is what
+     lets the public signature keep accepting either.
    - The `card["path"]` tiebreak in `_attention_view_sort_key` —
      `_attention_cards` already returns path-sorted cards and `list.sort` is
      stable, so removing it cannot reorder anything today. Kept so the total
@@ -9326,12 +9349,11 @@ below is its canonical body, with the one hoist recorded in item 1.
      built `row.get("name")` cannot be absent or blank. Mutating the filter
      clause instead, or both halves, is killed by a report row that carries no
      `name` key at all.
-   - Reported by review and confirmed: `len(ATTENTION_LOUDNESS_RANK)` → the
-     literal `4` also survives, and is equivalent-until in the sharpest sense —
-     it breaks the moment a fifth band lands. No fixture can kill it without
-     changing the constant under test, but item 3's fallback-expression
-     assertion now fails the instant a fifth band is added to either side, which
-     is when the divergence would otherwise become invisible.
+   - `len(ATTENTION_LOUDNESS_RANK)` → the literal `4`: equivalent-until in the
+     sharpest sense — it breaks the moment a fifth band lands. No fixture can
+     kill it without changing the constant under test, but item 3's
+     fallback-expression assertion fails the instant a fifth band is added to
+     either side, which is when the divergence would otherwise go invisible.
 5. **Engine order and plugin `sortCards` diverge on one input, deliberately
    fixtured rather than silently equal.** They agree for every non-future card:
    the engine sorts on the full `created` string ascending, the plugin on
@@ -9341,10 +9363,18 @@ below is its canonical body, with the one hoist recorded in item 1.
    the undated `"9999-12-31"` sentinel while the plugin sorts it behind every
    `age_s == 0` card. `test_attention_view_ages_cards_from_created` fixtures it
    (`age_s == -259_200`, `age_label == "-3d"`) and pins the engine's order, so
-   the behaviour is recorded rather than assumed. Clamping the age at zero was
-   rejected here: the reconciliation amendment fixes the formula, and the
-   reconciliation belongs to whichever of U3-PLUG or V2 owns the queue ordering,
-   not to this producer slice.
+   the behaviour cannot drift silently: `age_s = max(0, ...)` fails that test.
+   Clamping was rejected here because the reconciliation amendment fixes the
+   formula and the reconciliation belongs to whoever owns the queue's order.
+   **The debt is a checkbox, not this note:** U3-PLUG.7 carries it, because that
+   is the task where the divergence first becomes visible to the PI.
+   `_attention_age_days` also drops the drafted `TypeError` arm of its `except`.
+   `_attention_created` is its only producer and always returns a `str`, so
+   neither the slice nor `date.fromisoformat` can raise `TypeError` there; the
+   arm was unreachable, no fixture could name a producer for it, and AGENTS.md
+   prefers deletion to an unreachable guard. If V2's reuse of this helper
+   introduces a non-`str` caller, it re-adds the guard together with the fixture
+   that reaches it.
 6. **Three more declared symbols and one key died with Curate.** U3-ENG.2's
    Produces line still names `ATTENTION_PROPOSAL_KINDS`, `ATTENTION_CARD_ACTIONS`,
    and `ATTENTION_PROPOSAL_ACTION`, and gives the action row a `ref` key. None
@@ -12207,6 +12237,19 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     submitted anyway.
 
 **Steps:**
+
+- [ ] Reconcile queue order with the engine's, or record the divergence as
+  intended. Handed over by the U3-ENG.1/.2/.3 execution amendment (item 5),
+  which pinned the engine side rather than guessing the client's: the engine
+  orders on the full `created` string, `sortCards` on day-granular `age_s`, and
+  the two disagree for exactly one input — a hand-edited *future* `created`,
+  where `age_s` goes negative. The engine puts that card ahead of the undated
+  `"9999-12-31"` sentinel; the plugin puts it behind every `age_s == 0` card.
+  This is the task where a PI first sees the resulting row order, so it decides:
+  either make the pane follow payload order for equal ranks, or clamp/compare
+  differently and say so. `test_attention_view_ages_cards_from_created` already
+  pins the engine's half (`age_s == -259_200`, `age_label == "-3d"`), so
+  whichever way this goes, the fixture that would have to change is visible.
 
 - [ ] Add the post-SEAM.1 live HTTP integration proof to
   `tests/test_attention_view.py`, alongside the existing live-server tests.

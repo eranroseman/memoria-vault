@@ -801,9 +801,11 @@ def _attention_created(card: dict[str, Any]) -> str:
 
 
 def _attention_age_days(created: str) -> int | None:
+    # ValueError alone: `_attention_created` is the only producer and always
+    # returns a str, so slicing and `fromisoformat` have no TypeError to raise.
     try:
         return (datetime.date.today() - datetime.date.fromisoformat(created[:10])).days
-    except (TypeError, ValueError):
+    except ValueError:
         return None
 
 
