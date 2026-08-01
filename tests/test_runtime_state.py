@@ -292,6 +292,23 @@ def test_file_output_read_barrier_requires_checked_and_materialized(tmp_path: Pa
     assert row["output_id"] == "notes/barrier.md"
 
 
+def test_restaging_a_path_keeps_its_authored_identity(tmp_path: Path) -> None:
+    """One path, one Concept: re-authored id-less content inherits the resident ULID."""
+    vault = workspace(tmp_path)
+
+    stage_concept(vault, "notes/again.md", note_text("First"), machine="writer")
+    promote_checked(vault, "notes/again.md", machine="writer")
+    first_ulid = str(read_frontmatter(vault / "notes/again.md")["id"])
+
+    stage_concept(vault, "notes/again.md", note_text("Second"), machine="writer")
+    promote_checked(vault, "notes/again.md", machine="writer")
+
+    assert str(read_frontmatter(vault / "notes/again.md")["id"]) == first_ulid
+    with state.connect(vault) as conn:
+        rows = dict(conn.execute("SELECT concept_id, path FROM concepts").fetchall())
+    assert rows == {first_ulid: "notes/again.md"}
+
+
 def test_rebuild_concept_mirror_from_files_does_not_trust_frontmatter_status(
     tmp_path: Path,
 ) -> None:

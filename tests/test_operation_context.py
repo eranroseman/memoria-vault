@@ -13,6 +13,7 @@ from memoria_vault.runtime import state, trusted_writer, worker
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.knowledge import compose_project_draft
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_from_job
+from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, init_cli_workspace, write_checked_concept
 
 
@@ -864,6 +865,9 @@ def _run_input_backed_create(
     title: str,
 ) -> dict[str, Any]:
     target = "notes/context-owned.md"
+    # v16 derivation endpoints are canonical identities: the catalog input must
+    # exist for `catalog/sources/source-a/source.md` to resolve to its bare work id.
+    state.upsert_catalog_record(workspace, work_id="source-a", title="Source A")
     queued = worker.enqueue_operation(
         workspace,
         "create-concept",
@@ -899,13 +903,14 @@ def test_create_concept_preserves_context_end_to_end(
     )
 
     assert result["status"] == "done"
+    note_ulid = str(read_frontmatter(workspace / "notes/context-owned.md")["id"])
     with state.connect(workspace) as conn:
         request = conn.execute(
             "SELECT actor FROM operation_requests WHERE request_id = ?", (request_id,)
         ).fetchone()
         derivations = conn.execute(
-            "SELECT input_id, output_id, actor FROM derivations"
-            " WHERE output_id = 'notes/context-owned.md'"
+            "SELECT input_id, output_id, actor FROM derivations WHERE output_id = ?",
+            (note_ulid,),
         ).fetchall()
         event_rows = conn.execute(
             "SELECT machine, payload_json FROM event_log"
@@ -913,9 +918,7 @@ def test_create_concept_preserves_context_end_to_end(
             (request_id,),
         ).fetchall()
     assert request["actor"] == actor
-    assert [tuple(row) for row in derivations] == [
-        ("catalog/sources/source-a/source.md", "notes/context-owned.md", actor)
-    ]
+    assert [tuple(row) for row in derivations] == [("source-a", note_ulid, actor)]
     assert event_rows
     for event_row in event_rows:
         event = json.loads(event_row["payload_json"])
@@ -945,11 +948,11 @@ def test_repeated_edge_keeps_latest_actor_and_both_historical_events(
     )
 
     assert first["status"] == second["status"] == "done"
+    note_ulid = str(read_frontmatter(workspace / "notes/context-owned.md")["id"])
     with state.connect(workspace) as conn:
         derivations = conn.execute(
-            "SELECT actor FROM derivations"
-            " WHERE input_id = 'catalog/sources/source-a/source.md'"
-            " AND output_id = 'notes/context-owned.md'"
+            "SELECT actor FROM derivations WHERE input_id = 'source-a' AND output_id = ?",
+            (note_ulid,),
         ).fetchall()
         events = conn.execute(
             "SELECT payload_json FROM event_log"

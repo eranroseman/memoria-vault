@@ -1972,7 +1972,56 @@ green; the id-space emission itself is NID-B.2/NID-B.4.
 > `sqlite3.IntegrityError: FOREIGN KEY constraint failed`. Route it through the same
 > descriptive-error wording while you are in there.
 
-B.2 consumes B.1's safe v16 floor. It does not alter schema DDL, version pins,
+> **Binding amendment from NID-B.2's review (2026-07-31) — coordinator-authorized
+> DDL exception, plus two guard rulings.** B.2's decoupling silently invalidated
+> three `path == id` assumptions living outside its diff. All three close inside
+> B.2; none may be deferred.
+>
+> 1. **The verdict→edge demotion trigger (DDL, authorized).**
+>    `concept_verdicts_edge_demotion_insert`/`_update` demoted a Concept's outgoing
+>    mirror edges with `WHERE source_path = NEW.concept_id` — a **path** column
+>    compared against an **identity**. That held only while B.1 keyed file Concepts
+>    by path; every ULID-keyed Concept demoted nothing, so in a real vault each
+>    demotion or quarantine left its edges at `checked` — precisely the incremental
+>    window (no full `rebuild_passage_index`) the trigger exists to close. The
+>    predicate becomes `source_concept_id = NEW.concept_id`, keeping
+>    `source_path != ''` as the mirrored-edge scope. **The coordinator authorizes
+>    this one DDL change against B.2's "does not alter schema DDL" boundary:**
+>    amend `schema.sql` in place within v16 on the unmerged branch — no
+>    `SCHEMA_VERSION` bump, no `MIGRATIONS` entry, no backfill. Leaving a dead
+>    safety trigger in the floor for a later task to trip over was the worse
+>    option. Its test fixture must author a ULID: a fixture writing no `id` keys by
+>    path and can no longer prove the trigger fires.
+> 2. **Two files, one ULID (batch duplicate).** `cp` or Obsidian's "Make a copy"
+>    duplicates the frontmatter `id`. Per call each row reads as *same id,
+>    requested path unowned* — the rename the amendment above allows — so the
+>    duplicate is visible only in the batch, where the survivor is decided by
+>    directory order and the loser's PI verdict lands on unreviewed content.
+>    `rebuild_file_concept_mirror` refuses a repeated `concept_id` within one
+>    batch, naming both paths and the shared id. This is the dual of *two
+>    identities claiming one path*, which the guard already refuses, and it costs
+>    nothing in expressiveness.
+> 3. **Path key → ULID is identity assignment, not collision.** The mirror
+>    tolerantly observes an id-less file, which keys by its own path; when that
+>    same path later authors a valid ULID, the Execution replacement's no-re-key
+>    rule aborted the whole batch and left `memoria workspace rebuild` permanently
+>    failing with no supported command able to move the row. **Ruling:** when the
+>    resident row's `concept_id` equals its own `path` (a still-provisional B.1
+>    key) and the incoming row claims that same path with a valid ULID nothing else
+>    holds, the row takes that identity in place; the v16 FKs carry its verdict,
+>    flags and edges. Every genuine collision still refuses.
+>
+> **Known interim regression (owner: ERP-A.6).** `graph_sql.neighborhood` joins
+> `source_status.concept_id = edge.source_path`, mixing identity and path space, so
+> from B.2 until ERP-A.6 ("identity-safe path projection") lands, `memoria explore`
+> / the `explore.read` surface loses neighborhood expansion (`explore.py` →
+> `explore_topic` → `engine/api.py`) and edge display (`explore._edges_by_concept`)
+> for every ULID-keyed Concept. `graph_sql.filter_ids` carries the same defect with
+> no `src/` caller yet. Deliberately deferred, not fixed here; both sites carry the
+> in-source comment naming ERP-A.6.
+
+B.2 consumes B.1's safe v16 floor. Beyond the one authorized demotion-trigger
+predicate above it does not alter schema DDL, version pins,
 catalog-parent setup, mirror-pruning/tombstone rules, catalog status/verdict
 resolution, or scoped-edge semantics. Fresh file Concepts are keyed from their
 frontmatter ULIDs on first write; it performs no path-key re-key or reconciliation.
@@ -1998,7 +2047,7 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
 
 **Steps:**
 
-- [ ] Add RED tests proving that a note/hub/project row keyed by its provisional path
+- [x] Add RED tests proving that a note/hub/project row keyed by its provisional path
   re-keys to its valid frontmatter ULID on observation, carries verdicts/flags/edges
   through their required update paths, and retains its path. Verdicts and edges carry
   through FK `ON UPDATE CASCADE`; `_rekey_concept_conn` moves flags manually because
@@ -2018,13 +2067,13 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
   up the staged note's canonical frontmatter ULID, and assert the derivation pair is
   `("source-a", note_ulid)`.
 
-- [ ] Run the focused tests and confirm the ULID row is absent before implementation:
+- [x] Run the focused tests and confirm the ULID row is absent before implementation:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py tests/test_runtime_state.py tests/test_operation_context.py -v
   ```
 
-- [ ] Implement file-key derivation and collision-safe re-keying. A valid ULID wins;
+- [x] Implement file-key derivation and collision-safe re-keying. A valid ULID wins;
   otherwise keep the normalized path. The in-transaction re-key must reject a
   conflicting target id, flag, or derivation before changing rows:
 
@@ -2046,19 +2095,19 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
   `derivations.input_id` and `derivations.output_id` occurrences. `outputs` and
   materialization-payload tables remain path keyed and are not derivation endpoints.
 
-- [ ] Make trusted-writer mirror inputs registry-aware. `_load_contract` uses
+- [x] Make trusted-writer mirror inputs registry-aware. `_load_contract` uses
   `schema.load_types` / `schema.concept_type_for` rather than manually trusting the
   raw document `type`; mirror rows carry `concept_id`, mapped `concept_type`, and
   normalized `path`. Preserve `strict_writer=False` as tolerant observation behavior:
   it records an unchecked external file rather than treating that path as a valid
   authored write.
 
-- [ ] Route `record_file_output` and `record_observed_file_edit` through
+- [x] Route `record_file_output` and `record_observed_file_edit` through
   `_concept_key_for_file`; write/re-key **both** derivation endpoints through B.1's
   resolver, while keeping `outputs` and materialization payloads path-keyed. Do not move B.1's parent
   ensuring, pruning, catalog alias, or status semantics back into this task.
 
-- [ ] Run focused suites and the gate:
+- [x] Run focused suites and the gate:
 
   ```bash
   python -m pytest tests/test_schema_v16_identity.py tests/test_runtime_state.py tests/test_operation_context.py -v
@@ -2067,7 +2116,7 @@ frontmatter ULIDs on first write; it performs no path-key re-key or reconciliati
 
   Expected: all tests pass and `verify: OK`.
 
-- [ ] Commit only ULID-reconciliation changes:
+- [x] Commit only ULID-reconciliation changes:
 
   ```bash
   git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/trusted_writer.py \
@@ -5648,10 +5697,44 @@ doc-claims check).
 
 ### Task ERP-A.6: Public identity-safe concept-edge path projections
 
+> **Inherited debt from NID-B.2's identity adoption (recorded 2026-07-31, review finding R1)
+> — ERP-C/ERP-D own the fix; ERP-A.6 owns the record.** NID-B.2 added
+> `_adopt_path_key_identity_conn`, which lets a provisionally path-keyed Concept take the
+> ULID its file later authors. That adoption is a **narrow, deliberately partial re-key**:
+> FKs carry `concept_verdicts`, `concept_flags` and `concept_edges` endpoints, but three
+> references are left pointing at the retired path key, because none carries a foreign key:
+>
+> | table | stale value after adoption | goes live at |
+> | --- | --- | --- |
+> | `derivations.input_id` | keeps `'notes/hand.md'`, naming no Concept (`schema.sql:407-412`) | ERP-C/ERP-D walk the derivation DAG |
+> | `passages.concept_id` | keeps `'notes/hand.md'` (`schema.sql:208-225`) | inert; cascades via the triggers' `OR path = …` and is rewritten on refresh |
+> | `concept_edges.edge_id` | keeps the pre-adoption digest, so `edge_id != concept_edge_id(source, relation, target)` | ERP-B/ERP-C/ERP-D consume `edge_id` |
+>
+> All three are inert today (`derivations` is write-only in `src/`; `edge_id` is recomputed
+> by the next full `replace_concept_edges`). Do not read NID-B.2's "no derivation, passage
+> or edge_id rewriting" as restraint — it is an **incomplete re-key whose residue is
+> deferred here**, and it must be closed before anything walks the derivation DAG or trusts
+> `edge_id` as a stable digest.
+>
+> **Residual, not a regression:** adoption can still move a verdict onto content that did
+> not earn it via *path reuse* — mirror an id-less `notes/old.md` as `checked`, rename the
+> file away, drop a brand-new ULID-carrying file at `notes/old.md`, then `workspace
+> rebuild`: the new file adopts the old row and reads `checked`. This is inherent to
+> provisional path keys (a path-keyed Concept *is* identified by its path, so path reuse is
+> identity reuse) and behaves identically under NID-B.1. The normal observe path demotes via
+> `record_observed_file_edit`; only `workspace rebuild` skips that. Recorded rather than
+> fixed — more machinery in B.2 is not the answer.
+
 **Preconditions:** NID-B v16 and the atomic ERP-A.1–.5 activation are merged.
 This task is the graph producer required by R2 G and every path-facing
 propagation/structural consumer; it is not optional prose in the A-section
 amendment.
+
+> **Owns a live regression (from NID-B.2, 2026-07-31).** `graph_sql.neighborhood`
+> and `explore._edges_by_concept` join identity against path, so `memoria explore`
+> and the `explore.read` surface serve no neighbours and no edges for ULID-keyed
+> Concepts until this task lands. `graph_sql.filter_ids` has the same defect and no
+> `src/` caller yet. See NID-B.2's review amendment for the full statement.
 
 **Files:**
 
