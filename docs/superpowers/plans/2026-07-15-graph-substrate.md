@@ -7852,6 +7852,44 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
 
 ### Task ERP-C.1: The closure walk — grounding closure ∪ derivation DAG, one pure function
 
+> **Execution override — ERP-C.1 as built (2026-08-01):** the Interfaces block
+> below reads `state.concept_edges`; the 2026-07-29 path-projection amendment,
+> point 3, supersedes it. `closure_inputs` consumes
+> `edges.concept_edge_path_pairs(vault)`, and the pure walk reads that
+> projection's `source_path` / `relation_type` / `target_path` fields, never
+> `source_concept_id` / `target_concept_id`, so `ClosureInputs.grounding_edges`
+> is `tuple[dict[str, str], ...]`. Five further deviations from the code block
+> printed below, each because the printed line could not fail a test:
+>
+> 1. **The self-edge skip is dropped.** `if source == target: continue` cannot
+>    change an answer: a self-hop's dependent is always either already marked or
+>    a start, so the guard below absorbs it. The derivation DAG's real self-loop
+>    — `observed_external_edit` records the edited file as its own `prior-head`
+>    input — is covered by test instead.
+> 2. **The `expanded` visited set is dropped.** Nothing is queued twice, because
+>    a dependent is marked before it is queued. That leaves
+>    `if dependent in marked or dependent in starts` as the one guard carrying
+>    cycle safety, and removing it — or either half — is the only mutation in
+>    this task that never terminates.
+> 3. **`seed = depth == 0 and current not in marked` loses its first clause.**
+>    Every queued node above depth 0 is already marked, so `depth == 0` could
+>    not change the answer.
+> 4. **The `try`/`except ValueError` around `evidence_ref_kind` is dropped.**
+>    Every leaf `evidence_item_closure` returns has already parsed as one of the
+>    three ref kinds, exactly as `knowledge._evidence_source_standing_findings`
+>    reads them. The normalization that is live moved to `_journal_ref`, the one
+>    boundary where free-form payload (`output_id`, `inputs[].id`) enters path
+>    space; `block_ref` is normalized by `replace_evidence_sets` on write and is
+>    not normalized again here.
+> 5. **No `∪` in code prose.** ruff's RUF002 rejects that character in a
+>    docstring, so the module and its tests say "grounding closure and
+>    derivation DAG".
+>
+> `tests/conftest.py` registers `"test_propagation.py": "runtime"`. C.1 carries
+> no schema change of its own: `consequence` storage stays with C.3, which takes
+> `SCHEMA_VERSION + 1` per the 2026-08-01 amendment above — rung 18 went to the
+> I1 plan's `telemetry_events` table.
+
 **Files:**
 - Create: `src/memoria_vault/runtime/propagation.py`
 - Create: `tests/test_propagation.py`
