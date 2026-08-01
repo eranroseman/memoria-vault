@@ -4,7 +4,7 @@ This directory is the durable design-history record for released Memoria design.
 It preserves facts about what each alpha release claimed, changed, removed, and
 implemented.
 
-Latest completed checkpoint: [alpha.21](21-alpha.21.md)
+Latest completed checkpoint: [alpha.22](22-alpha.22.md)
 
 Open release work: `beta.1` (unreleased). Its working plans are not a
 frozen history chapter.
