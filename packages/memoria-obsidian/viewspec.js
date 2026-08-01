@@ -70,15 +70,15 @@ function renderBlock(block) {
 function renderCard(block) {
   const semanticChildren = (Array.isArray(block.blocks) ? block.blocks : []).map(renderBlock);
   const analysis = [];
-  const arguments = [];
+  const argumentNodes = [];
   if (block.argument_for) {
-    arguments.push(node("span", "memoria-card-for", String(block.argument_for)));
+    argumentNodes.push(node("span", "memoria-card-for", String(block.argument_for)));
   }
   if (block.argument_against) {
-    arguments.push(node("span", "memoria-card-against", String(block.argument_against)));
+    argumentNodes.push(node("span", "memoria-card-against", String(block.argument_against)));
   }
-  if (arguments.length) {
-    analysis.push(node("div", "memoria-card-arguments", "", arguments));
+  if (argumentNodes.length) {
+    analysis.push(node("div", "memoria-card-arguments", "", argumentNodes));
   }
   const tipping = [];
   if (block.tipped_by) {

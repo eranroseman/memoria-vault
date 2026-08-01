@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createRequire } from "node:module";
 
+// The pill states an "as of" in the PI's local time (U3 section 3). Under CI's
+// TZ=UTC the local and UTC clocks coincide and every local-vs-UTC assertion
+// below loses its power, so pin a zone that is neither: the half-hour offset
+// moves the hour *and* the minute, so a UTC read shows up in both fields.
+process.env.TZ = "Asia/Kolkata";
+assert.equal(new Date(0).getHours(), 5, "TZ pin did not take effect");
+
 const require = createRequire(import.meta.url);
 const { PILL_STATES, computeNextPollDelay, computePill, formatAsOf } = require("../pill.js");
 
@@ -75,7 +82,10 @@ test("a retained missing credential never masks a connection fault", () => {
 });
 
 test("formatAsOf zero-pads local HH:MM", () => {
-  assert.equal(formatAsOf(new Date(2026, 0, 2, 9, 5).getTime()), "09:05");
+  // The instant is stated in UTC and the expectation in local time, so the test
+  // cannot be satisfied by the same UTC call it is meant to reject: 03:35Z is
+  // 09:05 in the pinned zone, and both fields need their zero pad.
+  assert.equal(formatAsOf(Date.UTC(2026, 0, 2, 3, 35)), "09:05");
 });
 
 test("poll cadence is 30s active / 2m idle", () => {

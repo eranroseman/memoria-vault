@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const {
+  HANDSHAKE_TIMEOUT_MS,
   RESPAWN_LIMIT,
   buildHandshakeArgv,
   classifySpawnError,
@@ -113,6 +114,12 @@ test("parseHandshake refuses empty stdout instead of dereferencing it", () => {
   assert.throws(() => parseHandshake(undefined), /handshake: stdout is not JSON/);
 });
 
+// Producer state: main.js arms this timeout on the spawned handshake. Nothing
+// else pins it, so a drift to 100ms or 100s would otherwise ship unnoticed.
+test("the handshake spawn timeout is 10 seconds", () => {
+  assert.equal(HANDSHAKE_TIMEOUT_MS, 10000);
+});
+
 test("classifySpawnError maps ENOENT to engine-missing", () => {
   const enoent = Object.assign(new Error("spawn memoria ENOENT"), { code: "ENOENT" });
   assert.equal(classifySpawnError(enoent), "engine-missing");
@@ -132,6 +139,22 @@ test("respawn gate allows 3 attempts in 3 minutes, then reopens as the window sl
   assert.equal(gate.exhausted(), false);
   assert.equal(gate.tryAcquire(), true);
   assert.equal(RESPAWN_LIMIT, 3);
+});
+
+// A crash-loop throttle is only a throttle for as long as its window lasts, and
+// a single reopening clock past the end cannot tell three minutes from one
+// millisecond. Pin both sides of the boundary instead.
+test("respawn gate holds the full window and reopens exactly at its end", () => {
+  let clock = 0;
+  const gate = createRespawnGate(() => clock);
+  gate.tryAcquire();
+  gate.tryAcquire();
+  gate.tryAcquire();
+  clock = 179999;
+  assert.equal(gate.exhausted(), true);
+  assert.equal(gate.tryAcquire(), false);
+  clock = 180000;
+  assert.equal(gate.exhausted(), false);
 });
 
 // Producer state: the respawn path calls tryAcquire on every failed poll while

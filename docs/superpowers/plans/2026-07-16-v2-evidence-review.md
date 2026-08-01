@@ -5202,7 +5202,7 @@ Base: `main @ a525a81a`. Gate: `python scripts/verify`.
      `plugin.authedJson(path) -> Promise<object>`,
      `plugin.enqueueNamedOperation(operationId, payload) -> Promise<object|null>`,
      the `AttentionView` ItemView pattern, `formatAsOf`/`skewBanner` (U3-PLUG.3),
-     the `node --test scripts/` harness with its `plugin.views`/`plugin.commands`/
+     the `node --test` harness with its `plugin.views`/`plugin.commands`/
      `requests` mocks, and the seed-parity + floor-golden sync discipline
      (byte-identical copies under
      `src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian/`,
@@ -5627,7 +5627,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   ```
 
 - [ ] Run to verify failure:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   — expected: `TypeError: collapseAnalysis is not a function`.
 
 - [ ] Write the minimal implementation — in `packages/memoria-obsidian/viewspec.js`,
@@ -5675,7 +5675,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   Add `collapseAnalysis,` to `module.exports`.
 
 - [ ] Run to verify pass:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — all green.
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — all green.
 
 - [ ] Commit (seed copy travels with V2R-D.3's sync; the shipped module alone here):
 
@@ -5756,7 +5756,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   ```
 
 - [ ] Run to verify failure:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   — expected: `evidence review view registered` assertion failure.
 
 - [ ] Write the minimal implementation — in `packages/memoria-obsidian/main.js`:
@@ -5998,7 +5998,7 @@ a `git diff --stat tests/fixtures/floor/goldens/` review, and an explicit-path c
   `"open-attention",`).
 
 - [ ] Run tests:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   (all pass) then `python -m pytest tests/test_memoria_obsidian_package.py -v`
   — expected: green except `test_memoria_obsidian_seed_matches_release_artifacts`
   (seed stale) — fixed next step.

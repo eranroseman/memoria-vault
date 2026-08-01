@@ -65,6 +65,11 @@ test("an absent view renders the same labeled fallback", () => {
   assert.equal(trees[0].text, "Unknown view-spec version: undefined");
 });
 
+// Producer state: a view envelope serialized without its (empty) block list.
+test("a known-version view with no block list renders nothing, and does not throw", () => {
+  assert.deepEqual(renderView({ version: VIEW_SPEC_VERSION }), []);
+});
+
 test("renderView renders every block of a known version in payload order", () => {
   const trees = renderView({
     version: "view-spec.v1",
@@ -291,23 +296,72 @@ test("evidence rows survive an empty list and a labelless item", () => {
   );
 });
 
+// Producer state: any field a payload omits. The module renders payloads
+// verbatim, so an absent field must degrade to empty — printing the literal
+// word `undefined` invents content, and a `data-payload` of "undefined" throws
+// when the pane's click handler parses it.
+test("an omitted payload field renders empty, never the word undefined", () => {
+  assert.equal(renderBlock({ kind: "text", id: "t" }).text, "");
+  assert.equal(renderBlock({ kind: "badge", id: "b" }).text, "");
+  const row = renderBlock({
+    kind: "action-row",
+    id: "a",
+    actions: [{ operation_id: "resolve-attention" }],
+  });
+  assert.equal(row.children[0].text, "");
+  assert.deepEqual(JSON.parse(row.children[0].attrs["data-payload"]), {});
+});
+
+// Producer state: every kind the catalog dispatches. The pane walks
+// `tree.children` and reads `tree.attrs[...]`, so both slots must exist on
+// every tree the renderer can return, not only on the kinds that fill them.
+test("every rendered tree carries the declared attrs and children slots", () => {
+  for (const kind of [...KNOWN_BLOCK_KINDS, "table"]) {
+    const tree = renderBlock({ kind, id: `slots-${kind}` });
+    assert.ok(Array.isArray(tree.children), kind);
+    assert.equal(typeof tree.attrs, "object", kind);
+    assert.notEqual(tree.attrs, null, kind);
+  }
+});
+
+// Producer state: transport hands the pane whatever JSON arrived, so `blocks`
+// can be a non-array. The card must still render rather than blank the pane.
+test("a card whose blocks field is not a list still renders", () => {
+  const tree = renderBlock({
+    kind: "card",
+    id: "c1",
+    title: "Title",
+    kind_line: "unchecked-note",
+    blocks: "oops",
+  });
+  assert.deepEqual(
+    tree.children.map((child) => child.cls),
+    ["memoria-card-kind", "memoria-card-title"],
+  );
+});
+
 test("sortCards pins block, then loudness rank, then oldest first", () => {
+  // Every band the engine can write appears: `lib/inbox.py:21` defines
+  // ("quiet", "notice", "alert", "block") and validates it on write, and
+  // `notice` is the default for a written proposal, so a rank typo between
+  // `notice` and `alert` would misorder the commonest card in the queue.
   const cards = [
     { ref: "a", loudness: "quiet", age_s: 50 },
     { ref: "b", loudness: "block", age_s: 1 },
     { ref: "c", loudness: "alert", age_s: 10 },
     { ref: "d", loudness: "alert", age_s: 99 },
     { ref: "e", loudness: "weird", age_s: 5 },
+    { ref: "n", loudness: "notice", age_s: 7 },
   ];
   assert.deepEqual(
     sortCards(cards).map((card) => card.ref),
-    ["b", "d", "c", "a", "e"],
+    ["b", "d", "c", "n", "a", "e"],
   );
   // The pane re-sorts the cards it cached from the last poll, so sorting must
   // not reorder the caller's array.
   assert.deepEqual(
     cards.map((card) => card.ref),
-    ["a", "b", "c", "d", "e"],
+    ["a", "b", "c", "d", "e", "n"],
   );
 });
 

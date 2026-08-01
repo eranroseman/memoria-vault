@@ -9946,58 +9946,109 @@ Other fixed decisions (uniform across tasks): `manifest.json` flips `isDesktopOn
 ### Execution amendment — U3-PLUG.1–.4 as built (2026-08-01)
 
 Recorded by the executor of U3-PLUG.1–.4. It governs those four tasks only;
-U3-PLUG.5–.11 are untouched except where item 1 says otherwise.
+U3-PLUG.5–.11 keep every checkbox and body they had; the only edit made to
+them is the command repair recorded in item 1.
 
-1. **The harness command is bare `node --test`, not `node --test scripts/`.**
-   Node dropped directory arguments to `--test`: on the node in this
-   environment (v24.18.0) `node --test scripts/` resolves `scripts` as a module
-   path and dies with `Cannot find module …/scripts`, while `node --test .`
-   answers `Could not find '.'`. Bare `node --test` keeps the documented
-   recursive-discovery behaviour on both the CI-pinned node 22 and node 24, so
-   `package.json`'s `"test"` script and `tests/test_memoria_obsidian_package.py`
-   both use `["node", "--test"]` with the plugin package as the working
-   directory. The produced convention is unchanged — every
-   `packages/memoria-obsidian/scripts/test*.mjs` file runs under both `npm test`
-   and the Python contract test — so later U3-PLUG tasks (and the
+1. **The harness command is bare `node --test`; `node --test scripts/` never
+   worked.** The directory argument is not a newer-node regression — it fails on
+   the node this repo pins. Measured directly, same worktree, same four suites:
+
+   | command | node 22.20.0 (`mise.toml`, CI) | node 24.18.0 (local) |
+   | --- | --- | --- |
+   | `node --test scripts/` | **exit 1** | **exit 1** |
+   | `node --test` | 41 pass, exit 0 | 41 pass, exit 0 |
+
+   Both resolve `scripts` as a module path and die with
+   `Cannot find module …/scripts` (`node --test .` answers `Could not find
+   '.'`). Shipping the drafted command would therefore have been a red CI run on
+   the pinned runtime, not a near miss. Bare `node --test` keeps the documented
+   recursive-discovery behaviour on both majors, so `package.json`'s `"test"`
+   script and `tests/test_memoria_obsidian_package.py` both use `node --test`
+   with the plugin package as the working directory, and the produced convention
+   is unchanged: every `packages/memoria-obsidian/scripts/test*.mjs` file runs
+   under both `npm test` and the Python contract test. Every step in this plan
+   that quoted the directory form is repaired in place (U3-PLUG.5–.11 and
+   U3-CANVAS); the same substitution is still owed to the
    `node --test scripts/` quotations in
-   `docs/superpowers/plans/2026-07-16-v2-evidence-review.md`) read as bare
-   `node --test`. Two quotations of the *pre-switch* command survive further
-   down and are stale from U3-PLUG.1 onward: the "Context the executor must
+   `docs/superpowers/plans/2026-07-16-v2-evidence-review.md`, which this
+   execution did not touch. Two quotations of the *pre-switch* command survive
+   here and are stale from U3-PLUG.1 onward: the "Context the executor must
    know" note above, which records the harness this task replaces, and
    U3-CANVAS's "the Node schema harness (`node scripts/test.mjs`, untouched)"
    step, whose parenthetical now means `node --test`. Neither changes what that
    step must do.
-2. **`sortCards` loses its redundant `block` pin.** The drafted body ranked
+2. **The Python contract test pins how much ran, not just the exit code.**
+   `node --test` exits **0 when it discovers no files at all** (measured on both
+   majors). An outer test asserting only `returncode == 0` therefore stays green
+   after every inner suite stops being discovered — rename the four files out of
+   the runner's glob and all of the old assertions pass. Since this task
+   replaced a loud harness (`node scripts/test.mjs` → `MODULE_NOT_FOUND` →
+   exit 1) with a discovery-based one, the switch is only safe with a floor:
+   `test_memoria_obsidian_node_suite_still_discovers_every_file` parses
+   `# tests N` from a pinned `--test-reporter=tap` run, asserts
+   `N >= MIN_NODE_TESTS`, asserts the four known suite files are present, and
+   asserts no `scripts/*.mjs` file sits outside the runner's name patterns.
+   Later tasks that add a suite raise `MIN_NODE_TESTS` in the same change.
+3. **`sortCards` loses its redundant `block` pin.** The drafted body ranked
    `block` twice: once through `pinA`/`pinB` and again through
-   `LOUDNESS_RANK.block === 0`. The pin could never change an outcome, so the
-   prescribed test's claim to exercise it was satisfied by the rank branch
+   `LOUDNESS_RANK.block === 0`. Whenever `pinA !== pinB` exactly one card is
+   `block`, and `rank(block) = 0` is below every other rank, so the rank branch
+   already returns the same sign — the pin could never change an outcome, and
+   the prescribed test's claim to exercise it was satisfied by the rank branch
    instead. The pin is deleted and a comment records why the rank alone is
-   enough; the test's expectation (`["b", "d", "c", "a", "e"]`) is unchanged and
-   still fails if `LOUDNESS_RANK.block` stops ranking first.
-3. **Tests added beyond the drafted bodies.** Each names the producer state that
+   enough; the fixture still fails if `LOUDNESS_RANK.block` stops ranking first.
+4. **The loudness fixture carries every band the engine writes.** The drafted
+   fixture omitted `notice`, so swapping the `alert` and `notice` ranks stayed
+   green. `lib/inbox.py:21` defines `("quiet", "notice", "alert", "block")` and
+   validates it on write, and `notice` is the *default* for a written proposal
+   (`lib/inbox.py:39,138`) — the omitted band was the commonest card in the
+   queue. The `sortCards` fixture now spans all four bands plus an unrecognized
+   one, and expects `["b", "d", "c", "n", "a", "e"]`.
+5. **`renderCard`'s `arguments` local is renamed `argumentNodes`.** Legal in the
+   package's declared CommonJS, but nothing in this repo lints JS, so a reader
+   mis-parsing it as the arguments object would never be corrected by a tool.
+6. **`test-pill.mjs` pins `process.env.TZ`.** `formatAsOf` is specified in local
+   time, and its drafted test built the expected instant with the same local
+   API. Under CI's `TZ=UTC` the local and UTC clocks coincide, so both
+   `getHours → getUTCHours` and `getMinutes → getUTCMinutes` survived there
+   while dying elsewhere — coverage that depends on the developer's timezone.
+   The file now pins `Asia/Kolkata` (a half-hour offset moves the hour *and* the
+   minute), asserts the pin took effect, and states the `formatAsOf` instant in
+   UTC against a local expectation, so the test can no longer be satisfied by
+   the UTC call it exists to reject.
+7. **Tests added beyond the drafted bodies.** Each names the producer state that
    reaches the branch it covers, and each was confirmed to fail under a mutation
    of that branch alone:
    - `handshake.js`: an absent (not merely blank) engine-command setting; empty
      and null handshake stdout; a nonpositive or fractional port; a payload from
      an engine older than BOOT-A.8 that omits `pid` entirely; a respawn gate
      built with no injected clock (main.js's zero-argument call); a respawn gate
-     whose caller only ever calls `tryAcquire`.
+     whose caller only ever calls `tryAcquire`; both sides of the respawn
+     window's boundary, so a *shortened* window is caught and not only a
+     lengthened one; and `HANDSHAKE_TIMEOUT_MS`, which nothing else pinned.
    - `pill.js`: a retained `missing_required_credentials` name from the last
      good summary combined with a failing poll — the connection fault outranks
      the key nag for all four fault states.
    - `viewspec.js`: a non-object block; an absent `view` (the summary payload
-     has none); a known-version view actually rendering its blocks in order; a
-     card's loudness band on the card and its kind line; an empty evidence list
-     and a labelless evidence row; an unrecognized loudness band that is also
-     the oldest card; a card with no `age_s`; `sortCards` not reordering the
-     caller's array; a key that is neither `j` nor `k`; and a nested
+     has none); a versioned view whose block list is absent; a known-version
+     view actually rendering its blocks in order; a card's loudness band on the
+     card and its kind line; an empty evidence list and a labelless evidence
+     row; a card whose `blocks` is not a list; an unrecognized loudness band
+     that is also the oldest card; a card with no `age_s`; `sortCards` not
+     reordering the caller's array; a key that is neither `j` nor `k`; a nested
      `materialize` walk that pins child parentage, attributes, and the return
-     value.
-4. **Knowingly unfixtured.** `String(block.text || "")` and
-   `String(block.label || "")` in `viewspec.js` survive mutation: no producer
-   omits those fields, and the empty-string case is indistinguishable from the
-   coercion. They are kept as payload-boundary coercions rather than covered by
-   a fabricated fixture.
+     value; every tree carrying the declared `attrs`/`children` slots; and any
+     omitted payload field rendering empty rather than the literal word
+     `undefined`.
+8. **Knowingly unfixtured — one item, and it is provably equivalent.**
+   `Number(payload.pid || 0)` in `handshake.js` survives mutation to
+   `Number(payload.pid)`: every falsy input coerces to `0` or `NaN` and is
+   refused by the same `Number.isInteger(...) && > 0` guard with the identical
+   message, so no input distinguishes them. The `String(x || "")` coercions
+   first recorded here as unfixtured were **not** equivalent — `String(undefined)`
+   is `"undefined"`, and `JSON.stringify(undefined)` is `undefined`, which would
+   have put the string `"undefined"` in `data-payload` for the pane's click
+   handler to choke on. They are now covered by item 7's last entry.
 
 ---
 
@@ -10244,7 +10295,7 @@ U3-PLUG.5–.11 are untouched except where item 1 says otherwise.
     parseHandshake,
   };
   ```
-- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `# pass 10` (9 handshake tests per the 2026-08-01 amendment + test.mjs).
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `# pass 12` (11 handshake tests per the 2026-08-01 amendment + test.mjs).
 - [ ] Commit:
   `git add packages/memoria-obsidian/handshake.js packages/memoria-obsidian/scripts/test-handshake.mjs`
   `git commit -m "feat(obsidian): pure handshake-client module (argv, parse, ENOENT, respawn gate)` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10399,7 +10450,7 @@ U3-PLUG.5–.11 are untouched except where item 1 says otherwise.
     formatAsOf,
   };
   ```
-- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (14 after this task).
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (16 after this task).
 - [ ] Commit:
   `git add packages/memoria-obsidian/pill.js packages/memoria-obsidian/scripts/test-pill.mjs`
   `git commit -m "feat(obsidian): pure pill state machine and poll cadence` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10903,7 +10954,7 @@ U3-PLUG.5–.11 are untouched except where item 1 says otherwise.
     sortCards,
   };
   ```
-- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (35 after this task).
+- [x] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass (41 after this task).
 - [ ] Commit:
   `git add packages/memoria-obsidian/viewspec.js packages/memoria-obsidian/scripts/test-viewspec.mjs`
   `git commit -m "feat(obsidian): pure view-spec.v1 block rendering with labeled fallback` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -10991,7 +11042,7 @@ U3-PLUG.5–.11 are untouched except where item 1 says otherwise.
     );
   });
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `Cannot find module '../relate.js'`.
+- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `Cannot find module '../relate.js'`.
 - [ ] Write minimal implementation — create `packages/memoria-obsidian/relate.js`:
   ```js
   // Pure relate-control payload builder (U3 spec section 4). The relation
@@ -11025,7 +11076,7 @@ U3-PLUG.5–.11 are untouched except where item 1 says otherwise.
 
   module.exports = { buildRelateOperation };
   ```
-- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected all pass.
+- [ ] Run test to verify it passes: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected all pass.
 - [ ] Commit:
   `git add packages/memoria-obsidian/relate.js packages/memoria-obsidian/scripts/test-relate.mjs`
   `git commit -m "feat(obsidian): pure relate payload builder validated against server roster` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
@@ -11246,7 +11297,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   ```
 - [ ] Run test to verify it fails:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`
   Expected: `test.mjs` fails — `plugin.runHandshake is not a function`.
 - [ ] Write minimal implementation, part 1 — `packages/memoria-obsidian/main.js` header. Replace lines 1–15 with:
   ```js
@@ -11666,7 +11717,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
       assert "adapter.write(" not in source
   ```
 - [ ] Run tests to verify they pass:
-  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` (all pass) and
+  `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` (all pass) and
   `python -m pytest tests/test_memoria_obsidian_package.py -v` — expected: everything green **except** `test_memoria_obsidian_seed_matches_release_artifacts` (seed is stale) — fixed next step.
 - [ ] Sync the seed and regenerate goldens:
   ```
@@ -11842,7 +11893,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     assert.ok(result);
   ```
   Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name). The fixture deliberately leaves collection enabled: `enqueueNamedOperation` must issue the named operation **and** its `empirical-event-record` telemetry, so the assertion filters and verifies both rather than assuming the named operation is the final request.
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected `attention view registered` assertion failure.
+- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `attention view registered` assertion failure.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Add to the requires block: `const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");` and the constant `const VIEW_TYPE_ATTENTION = "memoria-attention";` (replace the string literal `"memoria-attention"` inside `activateAttentionView` with the constant).
   2. In `onload`, after the settings tab line, add:
@@ -12122,7 +12173,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
   ```
   7. In `tests/test_memoria_obsidian_package.py::test_memoria_obsidian_registers_minimal_proof_commands`, add `"open-attention",` to the command tuple.
-- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
+- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
 - [ ] Sync seed + regenerate goldens (same three commands as U3-PLUG.6's sync step; only `main.js` and `styles.css` changed this time), re-run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 - [ ] Commit:
   `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py tests/test_attention_view.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
@@ -12168,7 +12219,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
           "the selected edge."
       ) in _plugin_js_source()
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` — expected assertion failure on `relate`.
+- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected assertion failure on `relate`.
 - [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Requires: `const { buildRelateOperation } = require("./relate");`
   2. `onload` command:
@@ -12311,7 +12362,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   ```
   6. Add `"relate",` to the roster tuple in `tests/test_memoria_obsidian_package.py`.
-- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test scripts/` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test red until sync).
+- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test red until sync).
 - [ ] Sync seed + regenerate goldens (same commands as U3-PLUG.6; `main.js` + `styles.css`), re-run the pytest file — all green.
 - [ ] Commit:
   `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
@@ -13337,7 +13388,7 @@ Steps:
     U3-PLUG.6's shared Node `Plugin` mock must include both
     `workspace.on: () => ({})` and `registerEvent() {}` (already required by its
     revised fixture) so this onload path is exercised by the ordinary
-    `node --test scripts/` run rather than only by the static test.
+    `node --test` run rather than only by the static test.
 
   - Extend U3-PLUG.6's `renderPill()` after its normal pill-text span with:
 
