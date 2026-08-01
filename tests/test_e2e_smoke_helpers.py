@@ -30,11 +30,15 @@ def test_stage_labels_preserve_e2e_smoke_order() -> None:
     ]
 
 
-def test_final_verdict_accepts_pass_or_review_only() -> None:
-    e2e_smoke.assert_final_verdict("8 finding(s) -- verdict: REVIEW")
+def test_final_verdict_requires_a_clean_worked_vault() -> None:
+    # REVIEW used to pass here, because the smoke's own fixtures omitted `tags`
+    # and seeded MEDIUM findings. Any MEDIUM maps to REVIEW, so accepting it
+    # made a real schema regression indistinguishable from that noise.
     e2e_smoke.assert_final_verdict("0 finding(s) -- verdict: PASS")
-    with pytest.raises(AssertionError):
-        e2e_smoke.assert_final_verdict("1 finding(s) -- verdict: FAIL")
+    e2e_smoke.assert_final_verdict("10 finding(s) -- verdict: PASS")
+    for rejected in ("8 finding(s) -- verdict: REVIEW", "1 finding(s) -- verdict: FAIL"):
+        with pytest.raises(AssertionError):
+            e2e_smoke.assert_final_verdict(rejected)
 
 
 def test_assert_executable_reports_missing_path(tmp_path) -> None:

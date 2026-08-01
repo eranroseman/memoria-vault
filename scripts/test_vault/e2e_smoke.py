@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -164,20 +163,26 @@ def assert_typed_graph(root: Path, vault: Path) -> None:
     project = vault / "projects/package-gate/project.md"
     thesis = vault / "notes/package-thesis.md"
     support = vault / "notes/package-support.md"
+    # `tags` is required by note.yaml/project.yaml. These fixtures write
+    # frontmatter straight to disk instead of going through the product writers,
+    # so nothing else enforces it -- and omitting it put three MEDIUM
+    # schema-check findings into the vault this smoke then lints, which held the
+    # final verdict at REVIEW and made stage 8 unable to fail on schema drift.
     _write_note(
         project,
-        "type: project\nid: 01KBN6V6KX0000000000000001\nlinks: {}\ntitle: Package gate\n"
+        "type: project\nid: 01KBN6V6KX0000000000000001\ntags: []\nlinks: {}\n"
+        "title: Package gate\n"
         "description: Package gate project.\nthesis: notes/package-thesis.md\n",
         "Package gate project.",
     )
     _write_note(
         thesis,
-        "type: note\nid: 01KBN6V6KX0000000000000002\nlinks: {}\ntitle: Package thesis\n",
+        "type: note\nid: 01KBN6V6KX0000000000000002\ntags: []\nlinks: {}\ntitle: Package thesis\n",
         "Package thesis.",
     )
     _write_note(
         support,
-        "type: note\nid: 01KBN6V6KX0000000000000003\ntitle: Package support\n"
+        "type: note\nid: 01KBN6V6KX0000000000000003\ntags: []\ntitle: Package support\n"
         "links:\n  supports:\n    - notes/package-thesis.md\n",
         "Package support.",
     )
@@ -221,7 +226,15 @@ def assert_workflow_replay_artifacts(vault: Path) -> None:
 
 
 def assert_final_verdict(verdict: str) -> None:
-    assert re.search(r"PASS|REVIEW", verdict), f"worked vault verdict: {verdict}"
+    """The worked vault must lint clean, not merely non-fatally.
+
+    This used to accept REVIEW, because the fixtures above omitted `tags` and so
+    seeded their own MEDIUM findings. `verdict()` maps any MEDIUM to REVIEW, so
+    accepting REVIEW meant a real schema regression read exactly like the
+    fixtures' own noise and the stage could not fail. With the fixtures valid,
+    PASS is reachable and the stage means something again.
+    """
+    assert "PASS" in verdict, f"worked vault verdict: {verdict}"
 
 
 def _fail(message: str) -> None:
