@@ -1,4 +1,11 @@
-"""Server rendezvous state tests."""
+"""Server rendezvous state tests.
+
+Idle-monitor timing: a short `idle_exit_seconds` is safe when the assertion is
+held by a blocking primitive -- an Event, `serve_forever_started` -- and only
+sleeps run inside the window. It is a race when the window has to cover real
+work (connect, auth, dispatch), because that work stretches under load and the
+sleeps do not.
+"""
 
 from __future__ import annotations
 
