@@ -13,7 +13,9 @@ Two target namespaces, two functions — mixing them is a silent bug:
 `normalize_link_target` validates *path space* (a vault-relative Concept
 target, the only thing `links:` frontmatter may hold), while `strip_wikilink`
 strips `[[…]]` syntax in *alias space*, where the value may equally be a title,
-slug, or stem. Retrieval closures (`graph_sql`/`explore`) normalize each target
+slug, or stem. `thesis_rel` is the third boundary this module names: a
+project's `thesis:` is path space too, and it is the only reference whose
+resolution five separate readers used to own. Retrieval closures (`graph_sql`/`explore`) normalize each target
 through the path-space function but walk the raw `links:` map without a roster
 filter, deliberately: `neighborhood` admits every relation the live CHECK holds
 so that tensions stay first-class retrievable, and a fallback closure narrower
@@ -42,6 +44,8 @@ LINK_RELATIONS = EDGE_RELATIONS - {"tension"}
 TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\]\]")
 
 _LINK_TARGET_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+
+CONCEPT_ROOTS = ("catalog/sources/", "notes/", "hubs/", "digests/", "fulltexts/")
 
 
 def _normalized_link_target(target: str) -> tuple[str, str | None]:
@@ -100,6 +104,51 @@ def normalize_link_target(target: str) -> str:
     if not isinstance(target, str):
         return ""
     return _normalized_link_target(target)[0]
+
+
+def thesis_rel(frontmatter: object) -> str:
+    """Return a project's `thesis:` as one vault-relative Concept path, or `""`.
+
+    The third namespace boundary this module names, after `strip_wikilink`
+    (alias space) and `normalize_link_target` (path space). `thesis:` is **path
+    space**, exactly like `links:`: the canonical value is a vault-relative
+    Concept path, optionally `[[…]]`-wrapped, and a bare stem completes under
+    `notes/`. A title, slug, or prose sentence is refused here and reported by
+    the `link` kind in `project.yaml` — a visible validation error rather than
+    the silent miss five readers each used to produce differently. `graph_sql`,
+    `explore`, `search_index` and both `knowledge` argument readers call this and
+    nothing else (issue #1623).
+
+    Returns `""` rather than raising for every rejected value: an unresolvable
+    thesis is a reader's miss to report, not its crash. `active_thesis:` is not
+    consulted — `project.yaml` retires it.
+
+    `normalize_path` is imported inside the function because this module is
+    stdlib-only at module scope, the same reason `projected_edge_endpoints`
+    below does it. It cannot raise here: `_normalized_link_target` has already
+    rejected every `..` segment that `normalize_path` refuses.
+    """
+    from memoria_vault.runtime.policy.paths import normalize_path
+
+    value = frontmatter.get("thesis") if isinstance(frontmatter, dict) else None
+    if isinstance(value, dict):
+        value = value.get("target") or value.get("path") or value.get("id") or value.get("note")
+    raw = normalize_link_target(value) if isinstance(value, str) else ""
+    if not raw:
+        return ""
+    rel = normalize_path(raw)
+    if not rel:
+        # `normalize_path('.')` is empty and would complete to `notes/.md`, a
+        # file `iter_markdown` really can yield: one absorbing sink for junk.
+        return ""
+    if "/" not in rel:
+        rel = f"notes/{rel}"
+    if rel.startswith("catalog/sources/"):
+        if rel.count("/") != 2:
+            return ""
+    elif not rel.endswith(".md"):
+        rel += ".md"
+    return rel if rel.startswith(CONCEPT_ROOTS) else ""
 
 
 def parse_links(links: object) -> list[tuple[str, str]]:

@@ -120,6 +120,73 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
     assert [row["kind"] for row in result["advisories"]] == ["structural"]
 
 
+def _argument_vault(tmp_path: Path, thesis: str) -> Path:
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        f"description: Project\nthesis: {thesis}\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    return tmp_path
+
+
+@pytest.mark.parametrize(
+    ("label", "thesis", "expected_path", "expected_nodes"),
+    [
+        ("canonical path", "notes/thesis.md", "notes/thesis.md", 2),
+        # The shape structural impact's own fixture writes. `_concept_rel` ran on
+        # the raw value here and raised `unsupported note link target:
+        # [[notes/thesis]].md` straight out of the lens (issue #1623).
+        ("wikilink-wrapped path", "'[[notes/thesis]]'", "notes/thesis.md", 2),
+        ("bare stem", "thesis", "notes/thesis.md", 2),
+        # Path space refuses a title, so the lens reports a miss instead of
+        # naming a phantom `notes/Toulmin: the warrant.md` it never found.
+        ("title carrying a colon", "'Toulmin: the warrant'", "", 0),
+        ("traversal", "notes/../thesis.md", "", 0),
+    ],
+)
+def test_analyze_project_argument_reads_thesis_in_one_path_space(
+    tmp_path: Path, label: str, thesis: str, expected_path: str, expected_nodes: int
+) -> None:
+    vault = _argument_vault(tmp_path, thesis)
+
+    result = analyze_project_argument(vault, "project-alpha")
+
+    assert result["thesis_path"] == expected_path, label
+    assert result["node_count"] == expected_nodes, label
+
+
+def test_project_slice_query_reads_thesis_in_the_same_path_space(tmp_path: Path) -> None:
+    """The retrieval-query builder is its own `thesis:` reader (issue #1623).
+
+    Its `except ValueError` swallowed the wikilink shape and fell back to the
+    raw text, so the thesis note's own terms never reached the query. A value
+    path space refuses is still kept as a term: that is a schema error to
+    report, not a reason to narrow the slice with nothing.
+    """
+    vault = _argument_vault(tmp_path, "'[[notes/thesis]]'")
+    project = knowledge._checked_frontmatter(vault, "projects/project-alpha/project.md", "project")
+
+    def query(frontmatter: dict) -> str:
+        return knowledge._project_slice_query(
+            vault, "projects/project-alpha/project.md", frontmatter, "seed"
+        )
+
+    assert "Thesis" in query(project)
+    assert "[[notes/thesis]]" not in query(project)
+    assert "Toulmin: the warrant" in query({**project, "thesis": "Toulmin: the warrant"})
+    # `active_thesis:` is retired: no reader falls back to it any more.
+    assert "Thesis" not in query({"active_thesis": "notes/thesis.md"})
+
+
 def test_read_project_slice_uses_outline_order_and_computed_edges(tmp_path: Path) -> None:
     _md(
         tmp_path / "projects/project-alpha/project.md",

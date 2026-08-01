@@ -11,6 +11,7 @@ import pytest
 
 from memoria_vault.runtime import explore, graph_sql, state
 from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.search_index import checked_search_universe
 from tests.floor_lib import read_only_guard
 from tests.helpers import copy_memoria_dirs
 
@@ -36,6 +37,7 @@ def _concept(
     mode: str = "",
     status: str = "checked",
     links: list[str] | None = None,
+    thesis: str = "",
     ulid_keyed: bool = False,
 ) -> Path:
     path = vault / relpath
@@ -59,6 +61,8 @@ def _concept(
         frontmatter.append(f"id: {_ulid_for(relpath)}")
     if mode:
         frontmatter.append(f"mode: {mode}")
+    if thesis:
+        frontmatter.append(f"thesis: {thesis}")
     if links:
         frontmatter.extend(["links:", "  related:", *[f"    - {link}" for link in links]])
     frontmatter.append("---")
@@ -584,3 +588,33 @@ def test_project_slice_shares_one_links_resolver_with_graph_sql(tmp_path: Path) 
     payload = explore.explore_topic(vault, "spacing", project="escape")
 
     assert _stages(payload)["project-slice"] == 0
+
+
+def test_vetted_project_slice_seeds_the_thesis_through_the_shared_normalizer(
+    tmp_path: Path,
+) -> None:
+    """The vetted closure reads `thesis:` in path space too (issue #1623).
+
+    This is its own convergence site, not `graph_sql`'s: the two closures share
+    `_link_target` for `links:` but each call `thesis_rel` for the thesis seed.
+    `notes/claim-spacing.md` is reachable here only through `thesis:`.
+    """
+    vault = _fixture_vault(tmp_path)
+    _concept(vault, "projects/bare.md", "Bare thesis", "Body.", thesis="claim-spacing")
+    _concept(
+        vault, "projects/title.md", "Title thesis", "Body.", thesis="'Spacing: beats cramming'"
+    )
+    _concept(vault, "projects/dot.md", "Dot thesis", "Body.", thesis="'.'")
+
+    bare = explore.explore_topic(vault, "spacing", project="bare")
+    title = explore.explore_topic(vault, "spacing", project="title")
+
+    assert "notes/claim-spacing.md" in _returned_ids(bare)
+    assert _stages(bare)["project-slice"] == 1
+    assert _stages(title)["project-slice"] == 0
+    # The membership filter above cannot see a seed no document carries, so the
+    # closure itself is the only observer of `notes/.md` — the absorbing sink a
+    # `notes/` + `.md` completion over an empty path used to admit.
+    documents = checked_search_universe(vault)["documents"]
+    assert explore._vetted_project_slice_ids(vault, "dot", documents) == set()
+    assert explore._vetted_project_slice_ids(vault, "bare", documents) == {"notes/claim-spacing.md"}

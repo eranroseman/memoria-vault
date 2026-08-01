@@ -35,7 +35,11 @@ from memoria_vault.runtime.policy.paths import normalize_path, require_policy_pa
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.steering import effective_steering_tokens, relevance_tokens
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, normalize_link_target
+from memoria_vault.runtime.subsystems.lib.edges import (
+    LINK_RELATIONS,
+    normalize_link_target,
+    thesis_rel,
+)
 from memoria_vault.runtime.time import now_iso, parse_iso
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
@@ -1888,22 +1892,25 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     vault = Path(vault)
     project_rel = _project_rel(vault, project_path)
     project = _checked_frontmatter(vault, project_rel, "project")
-    thesis_raw = str(project.get("thesis") or "").strip()
-    if not thesis_raw:
+    # Path space, one normalizer (issue #1623). `_concept_rel` used to run here
+    # on the raw value: a `[[notes/thesis]]` project — the shape structural
+    # impact's own fixture writes — raised an uncaught ValueError out of this
+    # lens while every other reader resolved it.
+    thesis_path = thesis_rel(project)
+    if not thesis_path:
         return _project_argument_empty(project_rel, "", "missing-thesis")
 
-    thesis_rel = _concept_rel(thesis_raw)
     notes = {
         rel: frontmatter
         for rel, frontmatter in _checked_concepts(vault)
         if frontmatter.get("type") == "note" and _is_current_note(vault, rel, frontmatter)
     }
-    thesis = notes.get(thesis_rel)
+    thesis = notes.get(thesis_path)
     if thesis is None:
-        return _project_argument_empty(project_rel, thesis_rel, "missing-or-unchecked-thesis")
+        return _project_argument_empty(project_rel, thesis_path, "missing-or-unchecked-thesis")
 
     edges = _note_edges(notes)
-    component = _argument_component(thesis_rel, edges)
+    component = _argument_component(thesis_path, edges)
     component_edges = [
         edge for edge in edges if edge["source"] in component and edge["target"] in component
     ]
@@ -1916,7 +1923,7 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     saturation_conditions = _argument_saturation_conditions(counts, relation_count)
     return {
         "project_path": project_rel,
-        "thesis_path": thesis_rel,
+        "thesis_path": thesis_path,
         "argument_stage": _argument_stage(counts, relation_count),
         "evidence_saturation": _argument_saturation(saturation_conditions, relation_count),
         "displayed_confidence": _argument_confidence(counts, relation_count),
@@ -1933,7 +1940,7 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
             {
                 "path": rel,
                 "title": str(notes[rel].get("title") or Path(rel).stem),
-                "role": "thesis" if rel == thesis_rel else "note",
+                "role": "thesis" if rel == thesis_path else "note",
             }
             for rel in sorted(component)
         ],
@@ -3489,17 +3496,21 @@ def _project_slice_query(
         *list(_frontmatter_text_terms(frontmatter)),
         body,
     ]
-    thesis_raw = str(project.get("thesis") or project.get("active_thesis") or "").strip()
-    if thesis_raw:
+    thesis_raw = str(project.get("thesis") or "").strip()
+    thesis_path = thesis_rel(project)
+    if thesis_path:
         try:
-            thesis_rel = _concept_rel(thesis_raw)
-            thesis = _checked_frontmatter(vault, thesis_rel, "note")
+            thesis = _checked_frontmatter(vault, thesis_path, "note")
             _thesis_fm, thesis_body = split_frontmatter(
-                (vault / thesis_rel).read_text(encoding="utf-8")
+                (vault / thesis_path).read_text(encoding="utf-8")
             )
             terms.extend([*list(_frontmatter_text_terms(thesis)), thesis_body])
         except (FileNotFoundError, ValueError):
             terms.append(thesis_raw)
+    elif thesis_raw:
+        # A value path space refuses is a schema error, not a retrieval one:
+        # keep the author's words as a query term so the slice still narrows.
+        terms.append(thesis_raw)
     text = " ".join(str(term).strip() for term in terms if str(term).strip())
     return text or Path(project_rel).stem
 
