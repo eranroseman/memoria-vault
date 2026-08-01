@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from scripts.checks import doc_claims_gate as gate
@@ -37,6 +38,25 @@ def _init_fixture_repo(root: Path) -> None:
     )
 
     (root / "docs").mkdir()
+
+
+def test_reading_the_cli_surface_leaves_sys_path_as_it_found_it(tmp_path: Path) -> None:
+    """The stub package these fixtures build must not outlive the call that imports it.
+
+    `_init_fixture_repo` writes a `memoria_vault` with one module and no
+    submodules. This process would never notice it left on `sys.path` -- the real
+    package is already in `sys.modules` -- but every one of these tests prepends
+    another stub, and a process spawned later in the same pytest worker starts
+    clean, resolves `memoria_vault` to a stub, and dies on a missing submodule
+    with no signal beyond a queue timeout. That is #1613: a red `verify` on an
+    unrelated PR, reproducing only when the two files land in one worker.
+    """
+    _init_fixture_repo(tmp_path)
+    before = list(sys.path)
+
+    gate._load_cli_paths(tmp_path)
+
+    assert sys.path == before
 
 
 def test_flags_a_cli_path_and_operation_id_that_do_not_exist(tmp_path: Path) -> None:

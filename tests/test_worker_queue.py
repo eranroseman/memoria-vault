@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import contextlib
 import json
 import multiprocessing
-import os
 import queue
-import sys
 import threading
-from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -44,89 +40,6 @@ def _claim_workspace_lock(vault: Path, started, acquired) -> None:
         acquired.put("acquired")
 
 
-@contextlib.contextmanager
-def _importable_by_spawn_children() -> Iterator[None]:
-    """Publish this process's import path to spawned children through the environment.
-
-    A spawn child unpickles its target by re-importing the defining module, and
-    that happens inside `multiprocessing.spawn._main` *before* any of our code
-    runs -- so a child that cannot import `memoria_vault` fails with no signal
-    beyond the parent's queue timing out. `spawn` is supposed to hand `sys.path`
-    over in its preparation data, and locally it does; on CI it does not hold,
-    and the child dies on `from memoria_vault.runtime import state` while the
-    parent reports only `queue.Empty` (#1613).
-
-    `PYTHONPATH` is read by the child interpreter at startup, ahead of any
-    unpickling, so it does not depend on that handover. Tests import through
-    `pythonpath = ["src", "scripts"]`, which pytest inserts into this process's
-    `sys.path` and nowhere else; passing it on explicitly is what makes the
-    child's import environment stated rather than inherited.
-    """
-    previous = os.environ.get("PYTHONPATH")
-    entries = [entry for entry in sys.path if entry]
-    if previous:
-        entries.append(previous)
-    os.environ["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(entries))
-    try:
-        yield
-    finally:
-        if previous is None:
-            os.environ.pop("PYTHONPATH", None)
-        else:
-            os.environ["PYTHONPATH"] = previous
-
-
-def _report_child_import_environment(report) -> None:
-    report.put(
-        json.dumps(
-            {
-                "executable": sys.executable,
-                "sys_path": sys.path,
-                "pythonpath": os.environ.get("PYTHONPATH"),
-                "cwd": os.getcwd(),
-                "memoria_vault": getattr(__import__("memoria_vault"), "__file__", "<no __file__>"),
-                "memoria_vault_path": list(getattr(__import__("memoria_vault"), "__path__", [])),
-            }
-        )
-    )
-
-
-def test_zz_diagnose_spawn_child_import_environment() -> None:
-    """TEMPORARY (#1613): report the child's import environment, then fail loudly."""
-    context = multiprocessing.get_context("spawn")
-    report = context.Queue()
-    process = context.Process(target=_report_child_import_environment, args=(report,))
-    with _importable_by_spawn_children():
-        parent = json.dumps({"executable": sys.executable, "sys_path": sys.path})
-        process.start()
-    try:
-        payload = report.get(timeout=SPAWN_TIMEOUT)
-    except queue.Empty:
-        payload = "<child never reported>"
-    process.join(timeout=SPAWN_TIMEOUT)
-    raise AssertionError(f"PARENT={parent}\nCHILD={payload}\nEXITCODE={process.exitcode}")
-
-
-def test_spawn_children_are_handed_this_process_s_import_path() -> None:
-    """The path a child needs is stated in the environment, not left to inheritance.
-
-    Pins the two halves separately: that `pythonpath`'s entries are published at
-    all, and that a `PYTHONPATH` already set by the caller survives rather than
-    being replaced.
-    """
-    pytest_inserted = next(entry for entry in sys.path if entry.endswith("/src"))
-    os.environ["PYTHONPATH"] = "/caller/entry"
-
-    try:
-        with _importable_by_spawn_children():
-            published = os.environ["PYTHONPATH"].split(os.pathsep)
-            assert pytest_inserted in published
-            assert "/caller/entry" in published
-        assert os.environ["PYTHONPATH"] == "/caller/entry"
-    finally:
-        os.environ.pop("PYTHONPATH", None)
-
-
 def test_worker_workspace_lock_serializes_processes(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     # "spawn", not the Linux default "fork": under xdist the parent carries
@@ -139,7 +52,7 @@ def test_worker_workspace_lock_serializes_processes(tmp_path: Path) -> None:
     acquired = context.Queue()
     process = context.Process(target=_claim_workspace_lock, args=(vault, started, acquired))
     try:
-        with _workspace_lock(vault), _importable_by_spawn_children():
+        with _workspace_lock(vault):
             process.start()
             # Generous, because spawn makes the child re-import this module and
             # that is real work: 0.24s idle, but over 1s under load, where fork

@@ -14,8 +14,10 @@ that the shipped surface does not actually have.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import re
 import sys
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,9 +40,32 @@ class Violation:
     claim: str
 
 
+@contextlib.contextmanager
+def _importable(source_root: Path) -> Iterator[None]:
+    """Put `source_root` on `sys.path` for one import, then take it back off.
+
+    Run standalone this is cosmetic -- the process exits. Under pytest it is
+    not: `tests/test_doc_claims_gate.py` calls this with a `tmp_path` holding a
+    stub `memoria_vault` package (an `__init__.py` and a fixture `cli.py`, no
+    submodules). A permanent insert leaves those stubs ahead of the real
+    package on the worker's `sys.path` for the rest of the session. The pytest
+    process never notices, because it already holds `memoria_vault` in
+    `sys.modules` -- but any process it spawns afterwards starts clean, imports
+    the stub, and dies on a missing submodule with no signal beyond the
+    parent's queue timing out (#1613).
+    """
+    entry = str(source_root)
+    sys.path.insert(0, entry)
+    try:
+        yield
+    finally:
+        with contextlib.suppress(ValueError):
+            sys.path.remove(entry)
+
+
 def _load_cli_paths(root: Path) -> frozenset[str]:
-    sys.path.insert(0, str(root / "src"))
-    from memoria_vault.cli import _build_parser
+    with _importable(root / "src"):
+        from memoria_vault.cli import _build_parser
 
     def walk(parser: argparse.ArgumentParser, prefix: tuple[str, ...] = ()) -> set[str]:
         paths = {prefix} if prefix else set()
