@@ -1,7 +1,15 @@
 // Obsidian-compatible CommonJS; hand-authored (no build step).
-// `ItemView` (U3-PLUG.7) and `AbstractInputSuggest` (U3-PLUG.8) join this list
-// when the code that uses them lands, not before.
-const { Modal, Notice, Plugin, PluginSettingTab, Setting, requestUrl } = require("obsidian");
+// `AbstractInputSuggest` (U3-PLUG.8) joins this list when the code that uses it
+// lands, not before.
+const {
+  ItemView,
+  Modal,
+  Notice,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  requestUrl,
+} = require("obsidian");
 const { execFile } = require("child_process");
 const { sanitizeItemId, validateEvent } = require("./schema");
 const {
@@ -11,7 +19,8 @@ const {
   createRespawnGate,
   parseHandshake,
 } = require("./handshake");
-const { computeNextPollDelay, computePill } = require("./pill");
+const { computeNextPollDelay, computePill, formatAsOf } = require("./pill");
+const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");
 
 const DEFAULT_SETTINGS = {
   enabled: false,
@@ -25,6 +34,7 @@ const EMPTY_ENGINE = { port: 0, token: "", bootId: "", engineVersion: "", pid: 0
 const STATUS_PATH = "/v1/status";
 const ATTENTION_VIEW_PATH = "/v1/views/attention";
 const OPERATION_PATH = "/operation/run";
+const VIEW_TYPE_ATTENTION = "memoria-attention";
 
 module.exports = class MemoriaObsidianPlugin extends Plugin {
   async onload() {
@@ -57,6 +67,12 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       this.schedulePoll();
     }
     this.addSettingTab(new MemoriaSettingTab(this.app, this));
+    this.registerView(VIEW_TYPE_ATTENTION, (leaf) => new AttentionView(leaf, this));
+    this.addCommand({
+      id: "open-attention",
+      name: "Memoria: Open attention pane",
+      callback: () => this.activateAttentionView(),
+    });
     this.addCommand({
       id: "connect",
       name: "Memoria: Connect to local server",
@@ -421,6 +437,26 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
     });
   }
 
+  async enqueueNamedOperation(operationId, payload) {
+    try {
+      const result = await this.postOperation(operationId, payload, "");
+      const requestId = String((result.job && result.job.job_id) || "");
+      new Notice(`Memoria queued ${operationId}: ${requestId}`);
+      await this.recordEvent(
+        this.baseEvent("operation.queued", {
+          workflow: "operation",
+          item_type: "operation",
+          item_id: sanitizeItemId(operationId),
+          outcome: "queued",
+        }),
+      );
+      return result;
+    } catch (error) {
+      new Notice(`Memoria enqueue failed: ${error.message}`);
+      return null;
+    }
+  }
+
   async poll() {
     try {
       const summary = await this.authedJson(`${ATTENTION_VIEW_PATH}?summary=true`);
@@ -429,6 +465,13 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
       this.missingCredential = String((summary.missing_required_credentials || [])[0] || "");
       this.linkRelations = Array.isArray(summary.link_relations) ? summary.link_relations : [];
       this.connectionStatus = "connected";
+      for (const leaf of this.app.workspace.getLeavesOfType
+        ? this.app.workspace.getLeavesOfType(VIEW_TYPE_ATTENTION)
+        : []) {
+        if (leaf.view && typeof leaf.view.refresh === "function") {
+          leaf.view.refresh();
+        }
+      }
     } catch {
       if (this.connectionStatus === "connected") {
         this.connectionStatus = "stale";
@@ -528,21 +571,153 @@ module.exports = class MemoriaObsidianPlugin extends Plugin {
   }
 
   async activateAttentionView() {
-    // Registered by the attention pane (Task U3-PLUG.7).
     const existing = this.app.workspace.getLeavesOfType
-      ? this.app.workspace.getLeavesOfType("memoria-attention")
+      ? this.app.workspace.getLeavesOfType(VIEW_TYPE_ATTENTION)
       : [];
     const leaf =
       existing[0] || (this.app.workspace.getRightLeaf && this.app.workspace.getRightLeaf(false));
     if (!leaf) {
       return;
     }
-    await leaf.setViewState({ type: "memoria-attention", active: true });
+    await leaf.setViewState({ type: VIEW_TYPE_ATTENTION, active: true });
     if (this.app.workspace.revealLeaf) {
       this.app.workspace.revealLeaf(leaf);
     }
   }
 };
+
+class AttentionView extends ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+    this.view = null;
+    this.cards = [];
+    this.extras = [];
+    this.selected = 0;
+    this.expandedRef = "";
+  }
+
+  getViewType() {
+    return VIEW_TYPE_ATTENTION;
+  }
+
+  getDisplayText() {
+    return "Memoria Attention";
+  }
+
+  getIcon() {
+    return "bell";
+  }
+
+  async onOpen() {
+    this.contentEl.addClass("memoria-attention");
+    this.contentEl.tabIndex = 0;
+    this.registerDomEvent(this.contentEl, "keydown", (event) => this.onKey(event));
+    this.registerDomEvent(this.contentEl, "click", (event) => this.onClick(event));
+    await this.refresh();
+  }
+
+  async refresh() {
+    try {
+      const payload = await this.plugin.authedJson(ATTENTION_VIEW_PATH);
+      this.view = payload.view || null;
+    } catch (error) {
+      this.contentEl.empty();
+      this.contentEl.createDiv({
+        cls: "memoria-block-unknown",
+        text: `Memoria attention unavailable: ${String(error.message || error)}`,
+      });
+      return;
+    }
+    const blocks =
+      this.view && this.view.version === "view-spec.v1" ? this.view.blocks || [] : [];
+    this.cards = sortCards(blocks.filter((block) => block && block.kind === "card"));
+    this.extras = blocks.filter((block) => !block || block.kind !== "card");
+    this.selected = Math.max(0, Math.min(this.selected, this.cards.length - 1));
+    this.render();
+  }
+
+  render() {
+    const root = this.contentEl;
+    root.empty();
+    const header = root.createDiv({ cls: "memoria-attention-header" });
+    header.createSpan({ text: "ATTENTION" });
+    header.createSpan({
+      cls: "memoria-attention-age",
+      text: `${this.plugin.openCount} open · as of ${formatAsOf(this.plugin.lastPollAt)}`,
+    });
+    if (!this.view || this.view.version !== "view-spec.v1") {
+      for (const tree of renderView(this.view)) {
+        materialize(tree, root);
+      }
+      return;
+    }
+    for (const extra of this.extras) {
+      materialize(renderBlock(extra), root);
+    }
+    this.cards.forEach((card, index) => {
+      const row = root.createDiv({
+        cls: index === this.selected ? "memoria-row is-selected" : "memoria-row",
+      });
+      const loudness = String(card.loudness || "");
+      row.createSpan({
+        cls: loudness
+          ? `memoria-loudness-dot memoria-loudness-${loudness}`
+          : "memoria-loudness-dot",
+      });
+      row.createSpan({ cls: "memoria-row-title", text: String(card.title || "") });
+      row.createSpan({ cls: "memoria-row-age", text: String(card.age_label || "") });
+      row.setAttribute("data-row-index", String(index));
+      if (String(card.ref || "") === this.expandedRef) {
+        materialize(renderBlock(card), root);
+      }
+    });
+  }
+
+  toggleExpand(index) {
+    this.selected = index;
+    const ref = String((this.cards[index] || {}).ref || "");
+    this.expandedRef = this.expandedRef === ref ? "" : ref;
+    this.render();
+  }
+
+  onKey(event) {
+    if (event.key === "j" || event.key === "k") {
+      this.selected = moveSelection(this.cards.length, this.selected, event.key);
+      event.preventDefault();
+      this.render();
+      return;
+    }
+    if (event.key === "Enter") {
+      if (this.cards.length) {
+        event.preventDefault();
+        this.toggleExpand(this.selected);
+      }
+    }
+  }
+
+  async onClick(event) {
+    const actionEl = event.target.closest("button[data-operation-id]");
+    if (actionEl) {
+      const payload = JSON.parse(actionEl.getAttribute("data-payload") || "{}");
+      await this.plugin.enqueueNamedOperation(
+        actionEl.getAttribute("data-operation-id"),
+        payload,
+      );
+      await this.refresh();
+      return;
+    }
+    const linkEl = event.target.closest("a[data-ref]");
+    if (linkEl) {
+      this.plugin.app.workspace.openLinkText(linkEl.getAttribute("data-ref"), "", false);
+      return;
+    }
+    const rowEl = event.target.closest(".memoria-row");
+    if (rowEl) {
+      this.toggleExpand(Number(rowEl.getAttribute("data-row-index")));
+    }
+  }
+}
 
 class MemoriaSettingTab extends PluginSettingTab {
   constructor(app, plugin) {

@@ -10939,6 +10939,117 @@ first checkbox only; every other U3-PLUG.7–.11 checkbox and body is unchanged.
    case. `test.mjs` stays a single flat script (one `# tests` unit however many
    assertions it carries), so the additions in item 5 do not move the floor.
 
+### Execution amendment — U3-PLUG.7 as built, and why .8 could not start (2026-08-01)
+
+Recorded by the executor of U3-PLUG.7. It governs U3-PLUG.7 only; every
+U3-PLUG.8–.11 checkbox and body is unchanged.
+
+1. **U3-PLUG.8 did not start, because `relate.js` does not exist — U3-PLUG.5
+   has never executed.** The blocker named for `.8` in cross-section contract 13
+   (graph ERP-B.2 → ERP-D.5) *is* cleared: `knowledge.curate_note_link(...,
+   warrant=...)` hangs non-blank Warrant text on the identity-keyed edge as
+   `attributes_json.warrant` through `state.insert_concept_edge`, verified by
+   reading the function. But `.8`'s modal consumes `buildRelateOperation` from
+   `./relate`, and the package ships `handshake.js`, `main.js`, `pill.js`,
+   `schema.js`, `viewspec.js` and nothing else —
+   `tests/test_memoria_obsidian_package.py`'s own `SEED_PARITY_ARTIFACTS`
+   comment already says "`relate.js` joins when U3-PLUG.5 creates it".
+   Requiring a module the package does not have throws `MODULE_NOT_FOUND` in
+   the Node harness *and* in
+   `test_memoria_obsidian_seeded_plugin_loads_every_module_it_requires`, so
+   there is no way to ship the modal that leaves a working vault. Writing a
+   second inline payload builder inside `main.js` was considered and rejected:
+   it duplicates U3-PLUG.5's whole product (roster validation, the `warrant`
+   emission of contract 12), creates the second source that the relation-roster
+   decision above exists to prevent, and guarantees a conflict the moment .5
+   lands. **The `AbstractInputSuggest` obligation of the U3-PLUG.6 amendment's
+   item 10 therefore still stands, and moves to whoever executes .8**, together
+   with the Warrant help-text source pin — that assertion must land with the
+   modal that satisfies it, not before it.
+2. **`_http_get` is `_http` as built.** This task's drafted snippet names a
+   helper U3-ENG.6 did not create. The live helper in
+   `tests/test_attention_view.py` is `_http(url, *, token=None, method="GET")`,
+   and the token is the file's `LIVE_TOKEN` constant rather than a repeated
+   `"view-token"` literal. The added `_http_post` is otherwise verbatim, and
+   keeps the property the draft was written for: it takes no `actor` argument,
+   so this client *cannot* send one. Its `timeout` is **60s, not the drafted
+   10s**: this door runs the whole operation inline before answering, and the
+   drafted budget is a reader's. Measured 1.5s per request idle and 10s on a
+   saturated machine, where the test did fail once — for load, not behaviour.
+3. **No new module, so no roster moved and the floor goldens moved by exactly
+   two entries.** `viewspec.js` was already seeded by U3-PLUG.6, so `.7`'s new
+   `require("./viewspec")` needed no change to `bundles.BUNDLE_FILES`, the
+   provenance allowlist, or any test roster. Golden regeneration touched **35
+   goldens, 70 lines**, and every one of those lines is one of two hash entries
+   — `.obsidian/plugins/memoria-obsidian/main.js` and `styles.css`, the two
+   files this task edited — with the same new value in all 35. No other path in
+   any golden moved, and `.memoria/vault.json`'s `bundles.obsidian.files`
+   receipt is unchanged because no file joined the bundle.
+4. **`MIN_NODE_TESTS` stays 42.** No suite file was added and `test.mjs` remains
+   one flat unit, so the discovered count is unchanged (44 on node 24 locally).
+   The drafted assertion block is numbered `// 18)`, not `// 6)`: the U3-PLUG.6
+   amendment's item 7 already grew this file to seventeen sections.
+5. **Four mock changes, each because a pane decision is otherwise unassertable.**
+   (a) `ItemView` is no longer the inert `Base`: it is a stub owning `contentEl`
+   and `registerDomEvent`, which the host owns in production — without them
+   `onOpen` can be asserted *about* but never *run*. (b) A `makeEl` element stub
+   implements the subset of Obsidian's element API the pane uses, including a
+   `closest` that really walks parents and matches `.cls` and `tag[attr]`,
+   because "which control was clicked" is the decision `onClick` makes.
+   (c) `app.workspace.openLinkText` records its arguments. (d) `addCommand`
+   keeps the whole command object as well as its id — a command whose callback
+   is wired to the wrong thing has the right id, and an id roster cannot see it.
+   `SUMMARY_JSON` gains `job: {job_id: "req-123"}` as the task prescribes.
+6. **`test.mjs` pins `process.env.TZ` too.** The pane header states the poll
+   instant in local time through `formatAsOf`, so it inherits the trap the
+   U3-PLUG.1–.4 amendment's item 6 recorded: under CI's `TZ=UTC` a local-vs-UTC
+   mistake in the header is invisible. The file pins `Asia/Kolkata`, asserts the
+   pin took effect, and states the instant in UTC (`Date.UTC(2026, 0, 2, 3, 35)`)
+   against a local expectation (`09:05`).
+7. **Tests added beyond the drafted body.** The drafted block asserts
+   registration and one enqueue; it reaches none of the pane. Added, each from
+   the producer state that reaches it: a refused enqueue (Notice wording, `null`
+   return); the served view rendered end to end (rank order against a payload
+   deliberately listing `notice` first, the header's count and instant, row
+   title/age/loudness-dot/`data-row-index`, and an additive `sparkline` block
+   drawn as a labeled `memoria-block-unknown` box rather than dropped); j/k
+   clamping at both ends with `preventDefault` taken only for keys the pane
+   handles; Enter expanding and collapsing in place, and inert on an empty
+   queue; all four click targets (evidence link, action button with its
+   `data-payload` parsed and its re-read, a row *other than the first* so the
+   index comes from the attribute, and a click on no control); a failed refresh
+   replacing the rows with its reason; an unreadable view-spec version, and a
+   payload carrying no `view` at all; the selection clamping as the queue
+   shrinks; and the poll's leaf refresh, including a leaf that is not the pane
+   and a workspace with no `getLeavesOfType`.
+8. **Mutation result: 52 single mutations, 49 killed, 3 survivors, none of them
+   a coverage gap.** Five Python mutations exercised the live HTTP proof (the
+   door's `actor="pi"`, `tension`'s exclusion from `LINK_RELATIONS`, the
+   frontmatter write, the operation's roster guard, the command roster) and 47
+   exercised `main.js`. Four first-round survivors *were* real gaps and are now
+   closed: a poll leaf whose `refresh` is not callable (the refresh runs inside
+   the poll's `try`, so a foreign leaf was being swallowed as a failed poll and
+   shown as a stale pill on a live server — now pinned by asserting the
+   connection stays `connected`); `preventDefault` on a *handled* key; the
+   absent-`view` payload; and the enqueue's empty idempotency key. The three
+   that remain are behaviour-preserving under a single mutation:
+   - **`curate_note_link`'s `link_type not in LINK_RELATIONS` guard.** Removing
+     it still refuses `tension`, because the frontmatter schema refuses
+     `links.tension` on the way out ("unknown relation; expected [...]"). The
+     roster is enforced twice; the contract this task asserts is that the
+     submission is refused, and killing it would mean asserting *which layer*
+     refuses. Pre-existing engine code, untouched here.
+   - **`refresh`'s version condition and `render`'s early `return`** — one
+     redundancy seen from both sides. Each is provably inert while the other
+     stands: with `refresh` gating, `render`'s `return` skips two empty loops;
+     with `render` gating, `refresh`'s filtered lists are never drawn. Removing
+     **both** at once is caught (v2 blocks render as rows), which is the proof
+     that the pair is load-bearing and neither half is dead code. Both halves
+     are the plan's prescribed body and are kept: this is a fail-visible path,
+     and deleting `refresh`'s gate would leave `this.cards` holding blocks from
+     a view the pane cannot draw, so `j`/`Enter` would move a selection nothing
+     renders.
+
 ---
 
 ### Task U3-PLUG.1: Switch the plugin test harness to `node --test`
@@ -12674,7 +12785,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   pins the engine's half (`age_s == -259_200`, `age_label == "-3d"`), so
   whichever way this goes, the fixture that would have to change is visible.
 
-- [ ] Add the post-SEAM.1 live HTTP integration proof to
+- [x] Add the post-SEAM.1 live HTTP integration proof to
   `tests/test_attention_view.py`, alongside the existing live-server tests.
   Perform the separate Node-mock step only afterward. U3-ENG.6 already
   creates `live_server` and `_http_get`; extend its imports with
@@ -12773,7 +12884,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   Expected: PASS. This is a prereq integration contract, not a Node-mock
   replacement: it must stay green while the pane code below is developed.
 
-- [ ] Write the failing test — append to the `try` block of `packages/memoria-obsidian/scripts/test.mjs` (before `finally`):
+- [x] Write the failing test — append to the `try` block of `packages/memoria-obsidian/scripts/test.mjs` (before `finally`):
   ```js
     // 6) Attention pane registration + enqueue toast naming the request id.
     assert.ok(plugin.views && plugin.views["memoria-attention"], "attention view registered");
@@ -12795,8 +12906,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     assert.ok(result);
   ```
   Also extend the mock `requestUrl` json object with `job: { job_id: "req-123" }` (so the toast has a request id to name). The fixture deliberately leaves collection enabled: `enqueueNamedOperation` must issue the named operation **and** its `empirical-event-record` telemetry, so the assertion filters and verifies both rather than assuming the named operation is the final request.
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `attention view registered` assertion failure.
-- [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
+- [x] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected `attention view registered` assertion failure.
+- [x] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Add to the requires block: `const { materialize, moveSelection, renderBlock, renderView, sortCards } = require("./viewspec");` and the constant `const VIEW_TYPE_ATTENTION = "memoria-attention";` (replace the string literal `"memoria-attention"` inside `activateAttentionView` with the constant).
   2. In `onload`, after the settings tab line, add:
   ```js
@@ -13075,8 +13186,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   .memoria-block-unknown-raw { font-size: 10px; overflow-x: auto; }
   ```
   7. In `tests/test_memoria_obsidian_package.py::test_memoria_obsidian_registers_minimal_proof_commands`, add `"open-attention",` to the command tuple.
-- [ ] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
-- [ ] Sync seed + regenerate goldens (same three commands as U3-PLUG.6's sync step; only `main.js` and `styles.css` changed this time), re-run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
+- [x] Run tests to verify they pass: `python -m pytest tests/test_attention_view.py::test_live_server_runs_each_served_note_link_as_pi_and_rejects_tension -v`; then `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test`; then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test fails until sync below).
+- [x] Sync seed + regenerate goldens (same three commands as U3-PLUG.6's sync step; only `main.js` and `styles.css` changed this time), re-run `python -m pytest tests/test_memoria_obsidian_package.py -v` — all green.
 - [ ] Commit:
   `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py tests/test_attention_view.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
   `git commit -m "feat(obsidian): attention pane ItemView — rows, expand-in-place, j/k/Enter, enqueue actions` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`

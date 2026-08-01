@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import Module from "node:module";
 
+// The attention header states an "as of" in the PI's local time (U3 section 3),
+// so this file has the same footing as `test-pill.mjs`: under CI's TZ=UTC a
+// local-vs-UTC mistake is invisible, and the half-hour offset here moves the
+// hour *and* the minute.
+process.env.TZ = "Asia/Kolkata";
+assert.equal(new Date(0).getHours(), 5, "TZ pin did not take effect");
+
 const require = createRequire(import.meta.url);
 const { sanitizeItemId, validateEvent } = require("../schema.js");
 
@@ -31,6 +38,7 @@ assert.equal(sanitizeItemId("memoria-id-1"), "memoria-id-1");
 
 const requests = [];
 const notices = [];
+const opened = [];
 
 // The healthy poll payload. `open` — not `open_count` — is the wire field the
 // pill's count comes from (cross-section contract 2), and the two loudness
@@ -45,7 +53,139 @@ const SUMMARY_JSON = {
   missing_required_credentials: [],
   link_relations: ["contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant"],
   engine_version: "0.1.0-alpha.20",
+  // `POST /operation/run` answers through the same mock, and the enqueue toast
+  // has to name the request id it was handed rather than an empty string.
+  job: { job_id: "req-123" },
 };
+
+// The full view payload (cross-section contract 3). Its card order is the
+// *payload* order, deliberately not the row order: `block` arrives second, so a
+// pane that skipped `sortCards` would draw these two the other way round. The
+// unknown top-level block is here because U3-ENG.5 pinned additive blocks as
+// fail-visible — the pane must draw a labeled box, never drop it.
+const ATTENTION_VIEW_JSON = {
+  ok: true,
+  api_version: "engine-read-api.v1",
+  view: {
+    version: "view-spec.v1",
+    kind: "attention",
+    blocks: [
+      {
+        kind: "card",
+        id: "inbox_candidate.md",
+        ref: "inbox/candidate.md",
+        title: "Capture Smith 2024",
+        loudness: "notice",
+        kind_line: "candidate",
+        age_s: 259200,
+        age_label: "3d",
+        blocks: [
+          {
+            kind: "evidence-list",
+            id: "inbox_candidate.md-evidence",
+            items: [{ label: "notes/alpha.md", ref: "notes/alpha.md" }],
+          },
+          { kind: "text", id: "inbox_candidate.md-body", text: "Review the candidate." },
+          {
+            kind: "action-row",
+            id: "inbox_candidate.md-actions",
+            actions: [
+              {
+                label: "Resolve",
+                operation_id: "resolve-attention",
+                payload: { target_id: "inbox/candidate.md" },
+                primary: true,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        kind: "card",
+        id: "inbox_blocker.md",
+        ref: "inbox/blocker.md",
+        title: "Broken citation",
+        loudness: "block",
+        kind_line: "flag",
+        age_s: 0,
+        age_label: "0d",
+        blocks: [],
+      },
+      { kind: "sparkline", id: "future-block", points: [1, 2, 3] },
+    ],
+  },
+};
+
+// The subset of Obsidian's element API the pane uses. `closest` is real enough
+// to answer the three selectors the click handler asks for and to answer them
+// by walking parents, because "which control was clicked" is the decision that
+// handler makes.
+function makeEl(tag, options = {}, parent = null) {
+  const el = {
+    tag,
+    parent,
+    children: [],
+    cls: String((options && options.cls) || ""),
+    text: String((options && options.text) || ""),
+    attrs: {},
+    listeners: [],
+    createEl(childTag, childOptions) {
+      const child = makeEl(childTag, childOptions, el);
+      el.children.push(child);
+      return child;
+    },
+    createDiv(childOptions) {
+      return el.createEl("div", childOptions);
+    },
+    createSpan(childOptions) {
+      return el.createEl("span", childOptions);
+    },
+    empty() {
+      el.children = [];
+    },
+    addClass(name) {
+      el.cls = `${el.cls} ${name}`.trim();
+    },
+    removeClass(name) {
+      el.cls = el.cls
+        .split(/\s+/)
+        .filter((entry) => entry && entry !== name)
+        .join(" ");
+    },
+    hasClass(name) {
+      return el.cls.split(/\s+/).includes(name);
+    },
+    setAttribute(key, value) {
+      el.attrs[key] = value;
+    },
+    getAttribute(key) {
+      return Object.prototype.hasOwnProperty.call(el.attrs, key) ? el.attrs[key] : null;
+    },
+    addEventListener(event, handler) {
+      el.listeners.push({ event, handler });
+    },
+    matches(selector) {
+      const attribute = selector.match(/^(\w+)\[([\w-]+)\]$/);
+      if (attribute) {
+        return el.tag === attribute[1] && el.getAttribute(attribute[2]) !== null;
+      }
+      return selector.startsWith(".") && el.hasClass(selector.slice(1));
+    },
+    closest(selector) {
+      for (let node = el; node; node = node.parent) {
+        if (node.matches(selector)) {
+          return node;
+        }
+      }
+      return null;
+    },
+  };
+  return el;
+}
+
+const flatten = (el) => [el, ...el.children.flatMap(flatten)];
+const withClass = (el, cls) => flatten(el).filter((node) => node.hasClass(cls));
+const clickOn = (target) => ({ target, preventDefault() {} });
 
 // Scenarios that need a 401 ladder, an error body, or a probe verdict install
 // their own responder; `null` means "healthy summary".
@@ -83,6 +223,9 @@ Module._load = function load(request, parent, isMain) {
             getActiveFile: () => null,
             getLeavesOfType: () => [],
             on: () => ({}),
+            openLinkText: (...args) => {
+              opened.push(args);
+            },
           },
         };
         this.manifest = { version: "0.1.0-alpha.20" };
@@ -119,6 +262,9 @@ Module._load = function load(request, parent, isMain) {
 
       addCommand(command) {
         (this.commands = this.commands || []).push(command.id);
+        // Kept whole as well as by id: a command whose callback is wired to the
+        // wrong thing has the right id, and the id roster cannot see it.
+        (this.commandRoster = this.commandRoster || []).push(command);
       }
 
       registerView(type, factory) {
@@ -136,6 +282,20 @@ Module._load = function load(request, parent, isMain) {
     class Base {
       constructor() {}
     }
+    // The host owns `contentEl` and `registerDomEvent` on a leaf view, so the
+    // stub owns them here: without them the pane has nothing to draw into and
+    // `onOpen` could only be asserted about, never run.
+    class ItemViewStub {
+      constructor(leaf) {
+        this.leaf = leaf;
+        this.contentEl = makeEl("div");
+        this.domEvents = [];
+      }
+
+      registerDomEvent(target, event, handler) {
+        this.domEvents.push({ target, event, handler });
+      }
+    }
     class Notice {
       constructor(message) {
         notices.push(String(message));
@@ -143,7 +303,7 @@ Module._load = function load(request, parent, isMain) {
     }
     return {
       AbstractInputSuggest: Base,
-      ItemView: Base,
+      ItemView: ItemViewStub,
       Modal: Base,
       Notice,
       Plugin,
@@ -653,6 +813,278 @@ try {
   await layoutReady();
   await settle();
   assert.ok(requests.length > deferredFrom, "layout-ready runs the first poll");
+
+  // 18) Attention pane registration + enqueue toast naming the request id.
+  assert.ok(plugin.views && plugin.views["memoria-attention"], "attention view registered");
+  const view = plugin.views["memoria-attention"]({});
+  assert.equal(view.getViewType(), "memoria-attention");
+  assert.equal(view.getDisplayText(), "Memoria Attention");
+  assert.equal(view.getIcon(), "bell");
+  assert.ok(plugin.commands.includes("open-attention"));
+  const openCommand = plugin.commandRoster.find((command) => command.id === "open-attention");
+  assert.equal(openCommand.name, "Memoria: Open attention pane");
+  let opens = 0;
+  plugin.activateAttentionView = async () => {
+    opens += 1;
+  };
+  openCommand.callback();
+  assert.equal(opens, 1, "the command opens the pane");
+  mark = noticesFrom();
+  const result = await plugin.enqueueNamedOperation("resolve-attention", {
+    target_id: "inbox/x.md",
+  });
+  const operationBodies = requests
+    .filter((request) => request.url.endsWith("/operation/run"))
+    .map((request) => JSON.parse(request.body));
+  assert.deepEqual(
+    operationBodies.slice(-2).map((body) => body.operation_id),
+    ["resolve-attention", "empirical-event-record"],
+  );
+  assert.deepEqual(operationBodies.at(-2).payload, { target_id: "inbox/x.md" });
+  // No idempotency key: two Resolve clicks on the same card are two requests,
+  // and the engine's own dedupe is the one that decides, not the pane's.
+  assert.equal(operationBodies.at(-2).idempotency_key, "");
+  assert.ok(result);
+  // The toast names the id the server handed back; an enqueue the PI cannot
+  // trace to a request is the failure this wording exists to prevent.
+  assert.deepEqual(notices.slice(mark, mark + 1), ["Memoria queued resolve-attention: req-123"]);
+
+  // 19) A refused enqueue says so and returns nothing, so a card button (and
+  // U3-PLUG.8's modal) cannot treat a refusal as queued.
+  respond = () => ({ status: 200, json: { ok: false, error: "operation refused" } });
+  mark = noticesFrom();
+  assert.equal(await plugin.enqueueNamedOperation("resolve-attention", {}), null);
+  assert.deepEqual(notices.slice(mark), ["Memoria enqueue failed: operation refused"]);
+
+  // 20) The pane draws the served view: rank order, the header instant, and the
+  // unknown block as a labeled box.
+  respond = (options) =>
+    options.url.endsWith("/v1/views/attention")
+      ? { status: 200, json: ATTENTION_VIEW_JSON }
+      : { status: 200, json: SUMMARY_JSON };
+  plugin.openCount = 7;
+  plugin.lastPollAt = Date.UTC(2026, 0, 2, 3, 35); // 09:05 in the pinned zone
+  const viewFrom = requests.length;
+  await view.onOpen();
+  const root = view.contentEl;
+  assert.ok(root.hasClass("memoria-attention"));
+  assert.equal(root.tabIndex, 0);
+  assert.deepEqual(
+    view.domEvents.map((entry) => entry.event),
+    ["keydown", "click"],
+  );
+  assert.ok(view.domEvents.every((entry) => entry.target === root));
+  assert.deepEqual(
+    requests.slice(viewFrom).map((request) => request.url),
+    ["http://127.0.0.1:43210/v1/views/attention"],
+    "the pane reads the full view, never the summary",
+  );
+  assert.deepEqual(
+    withClass(root, "memoria-attention-header")[0].children.map((child) => child.text),
+    ["ATTENTION", "7 open · as of 09:05"],
+  );
+  const rowTitles = () => withClass(root, "memoria-row-title").map((node) => node.text);
+  const cardTitles = () => withClass(root, "memoria-card-title").map((node) => node.text);
+  const selectedTitles = () =>
+    withClass(root, "is-selected")
+      .flatMap((row) => withClass(row, "memoria-row-title"))
+      .map((node) => node.text);
+  // The payload lists the `notice` card first; the pane draws `block` first.
+  assert.deepEqual(rowTitles(), ["Broken citation", "Capture Smith 2024"]);
+  assert.deepEqual(
+    withClass(root, "memoria-row-age").map((node) => node.text),
+    ["0d", "3d"],
+  );
+  assert.deepEqual(
+    withClass(root, "memoria-loudness-dot").map((node) => node.cls),
+    [
+      "memoria-loudness-dot memoria-loudness-block",
+      "memoria-loudness-dot memoria-loudness-notice",
+    ],
+  );
+  assert.deepEqual(
+    withClass(root, "memoria-row").map((node) => node.getAttribute("data-row-index")),
+    ["0", "1"],
+  );
+  assert.deepEqual(
+    withClass(root, "memoria-block-unknown").map((node) => node.text),
+    ["Unknown block type: sparkline"],
+    "an additive block is drawn labeled, never dropped",
+  );
+
+  // 21) j/k/Enter: selection moves and clamps, Enter expands in place, and any
+  // other key is left to Obsidian.
+  assert.deepEqual(selectedTitles(), ["Broken citation"]);
+  view.onKey({ key: "j", preventDefault() {} });
+  assert.deepEqual(selectedTitles(), ["Capture Smith 2024"]);
+  view.onKey({ key: "j", preventDefault() {} });
+  assert.deepEqual(selectedTitles(), ["Capture Smith 2024"], "j stops at the last row");
+  view.onKey({ key: "k", preventDefault() {} });
+  assert.deepEqual(selectedTitles(), ["Broken citation"]);
+  let prevented = 0;
+  // j/k are the pane's own keys: leaving the default would also scroll the leaf.
+  view.onKey({
+    key: "j",
+    preventDefault() {
+      prevented += 1;
+    },
+  });
+  assert.equal(prevented, 1, "a handled key is taken from Obsidian");
+  view.onKey({ key: "k", preventDefault() {} });
+  view.onKey({
+    key: "x",
+    preventDefault() {
+      prevented += 1;
+    },
+  });
+  assert.equal(prevented, 1, "an unhandled key keeps its default");
+  assert.deepEqual(selectedTitles(), ["Broken citation"]);
+  assert.deepEqual(cardTitles(), [], "nothing is expanded until Enter");
+  view.onKey({ key: "Enter", preventDefault() {} });
+  assert.deepEqual(cardTitles(), ["Broken citation"]);
+  view.onKey({ key: "Enter", preventDefault() {} });
+  assert.deepEqual(cardTitles(), [], "Enter on the expanded row collapses it");
+  view.onKey({ key: "j", preventDefault() {} });
+  view.onKey({ key: "Enter", preventDefault() {} });
+  assert.deepEqual(cardTitles(), ["Capture Smith 2024"]);
+
+  // 22) Clicks: an evidence link opens the note, an action button enqueues and
+  // re-reads, a row toggles, and a click on nothing does nothing.
+  const link = withClass(root, "memoria-evidence-link")[0];
+  assert.equal(link.getAttribute("data-ref"), "notes/alpha.md");
+  await view.onClick(clickOn(link));
+  assert.deepEqual(opened.slice(-1), [["notes/alpha.md", "", false]]);
+  const button = withClass(root, "memoria-action")[0];
+  assert.equal(button.getAttribute("data-operation-id"), "resolve-attention");
+  const postedFrom = requests.length;
+  mark = noticesFrom();
+  await view.onClick(clickOn(button));
+  const posted = requests
+    .slice(postedFrom)
+    .filter((request) => request.url.endsWith("/operation/run"))
+    .map((request) => JSON.parse(request.body));
+  assert.deepEqual(
+    posted.map((body) => body.operation_id),
+    ["resolve-attention", "empirical-event-record"],
+  );
+  // The payload travels from the button's `data-payload`, parsed, not rebuilt.
+  assert.deepEqual(posted[0].payload, { target_id: "inbox/candidate.md" });
+  assert.deepEqual(notices.slice(mark, mark + 1), ["Memoria queued resolve-attention: req-123"]);
+  assert.ok(
+    requests.slice(postedFrom).some((request) => request.url.endsWith("/v1/views/attention")),
+    "a queued action re-reads the view rather than leaving a stale row",
+  );
+  await view.onClick(clickOn(withClass(root, "memoria-row-title")[0]));
+  assert.deepEqual(selectedTitles(), ["Broken citation"]);
+  assert.deepEqual(cardTitles(), ["Broken citation"], "clicking a row expands it");
+  // The second row, so the row a click lands on comes from `data-row-index`
+  // rather than from a default of 0 that only the first row can hide.
+  await view.onClick(clickOn(withClass(root, "memoria-row-title")[1]));
+  assert.deepEqual(selectedTitles(), ["Capture Smith 2024"]);
+  assert.deepEqual(cardTitles(), ["Capture Smith 2024"]);
+  await view.onClick(clickOn(root));
+  assert.deepEqual(cardTitles(), ["Capture Smith 2024"], "a click on no control changes nothing");
+
+  // 23) A refresh that fails says why, in place of the rows.
+  respond = () => ({ status: 503, json: { ok: true } });
+  await view.refresh();
+  assert.deepEqual(
+    withClass(root, "memoria-block-unknown").map((node) => node.text),
+    ["Memoria attention unavailable: HTTP 503"],
+  );
+  assert.deepEqual(withClass(root, "memoria-row"), [], "a failed refresh draws no stale rows");
+
+  // 24) A view-spec version the pane cannot read is a labeled box, not a blank
+  // pane: the header still says what the count was and when.
+  respond = () => ({
+    status: 200,
+    json: { ok: true, view: { version: "view-spec.v2", blocks: [{ kind: "card", ref: "x" }] } },
+  });
+  await view.refresh();
+  assert.deepEqual(
+    withClass(root, "memoria-block-unknown").map((node) => node.text),
+    ["Unknown view-spec version: view-spec.v2"],
+  );
+  assert.deepEqual(withClass(root, "memoria-row"), []);
+  assert.equal(withClass(root, "memoria-attention-header").length, 1);
+  // The same box for a payload carrying no `view` at all -- what an engine that
+  // answers this path with a summary-shaped body sends, and what a mis-wired
+  // caller would produce. It is labeled `null`, not `undefined`, because the
+  // pane normalizes an absent view before it renders one.
+  respond = () => ({ status: 200, json: { ok: true, api_version: "engine-read-api.v1" } });
+  await view.refresh();
+  assert.deepEqual(
+    withClass(root, "memoria-block-unknown").map((node) => node.text),
+    ["Unknown view-spec version: null"],
+  );
+
+  // 25) The queue shrinks under a selection. A stale index would select a row
+  // that is no longer there, or none at all.
+  respond = () => ({ status: 200, json: ATTENTION_VIEW_JSON });
+  await view.refresh();
+  view.onKey({ key: "j", preventDefault() {} });
+  assert.deepEqual(selectedTitles(), ["Capture Smith 2024"]);
+  respond = () => ({
+    status: 200,
+    json: {
+      ok: true,
+      view: { version: "view-spec.v1", blocks: [ATTENTION_VIEW_JSON.view.blocks[1]] },
+    },
+  });
+  await view.refresh();
+  assert.deepEqual(selectedTitles(), ["Broken citation"]);
+  respond = () => ({
+    status: 200,
+    json: { ok: true, view: { version: "view-spec.v1", blocks: [] } },
+  });
+  await view.refresh();
+  prevented = 0;
+  view.onKey({
+    key: "Enter",
+    preventDefault() {
+      prevented += 1;
+    },
+  });
+  assert.equal(view.selected, 0, "an empty queue selects nothing");
+  // Nothing to expand means the keystroke is not the pane's to swallow.
+  assert.equal(prevented, 0, "Enter on an empty queue keeps its default");
+  assert.deepEqual(withClass(root, "memoria-row"), []);
+
+  // 26) A successful poll re-reads every open pane; a failed one leaves them
+  // alone, and neither trips over a leaf that is not the pane.
+  respond = null;
+  const polled = new PluginClass();
+  await polled.onload();
+  polled._execFile = okHandshake();
+  assert.equal(await polled.runHandshake(), true);
+  let refreshed = 0;
+  polled.app.workspace.getLeavesOfType = (type) =>
+    type === "memoria-attention"
+      ? [
+          {
+            view: {
+              refresh: () => {
+                refreshed += 1;
+              },
+            },
+          },
+          { view: {} },
+          {},
+        ]
+      : [];
+  await polled.poll();
+  assert.equal(refreshed, 1, "a successful poll re-reads the open pane");
+  // The refresh runs inside the poll's `try`, so a leaf it cannot refresh would
+  // be swallowed as a failed poll and shown as a stale pill on a live server.
+  assert.equal(polled.connectionStatus, "connected", "a foreign leaf is not a poll failure");
+  respond = () => ({ status: 503, json: { ok: true } });
+  await polled.poll();
+  assert.equal(refreshed, 1, "a failed poll leaves the pane showing its last good rows");
+  // A workspace that predates `getLeavesOfType` must still poll.
+  respond = null;
+  delete polled.app.workspace.getLeavesOfType;
+  await polled.poll();
+  assert.equal(polled.connectionStatus, "connected");
 } finally {
   globalThis.setTimeout = realSetTimeout;
   delete globalThis.document;
