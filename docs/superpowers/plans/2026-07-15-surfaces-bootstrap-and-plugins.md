@@ -9253,6 +9253,71 @@ block is preserved inside `view.blocks`, and an unknown renderer kind fails visi
 
 No task here writes journal events, so no floor-golden regeneration is needed.
 
+### Execution amendment — U3-ENG.1/.2/.3 as built (2026-08-01)
+
+Recorded by the executor of the atomic U3-ENG.1/.2/.3 slice. It governs those
+three tasks only; U3-ENG.4–.6 keep every checkbox and body they had. The
+2026-07-29 reconciliation amendment still governs the payload; the producer
+below is its canonical body, with the one hoist recorded in item 1.
+
+1. **`ATTENTION_HONESTY_FIELDS` survives as the mapping, not a flat name list.**
+   U3-ENG.1's Produces line declares the constant, and the reconciliation
+   amendment's canonical body inlines the same data as a `(frontmatter, wire)`
+   pair tuple. Both are kept by hoisting that literal to the declared name:
+   `(("argument_for", "argument_for"), ("argument_against", "argument_against"),
+   ("what_tipped_it", "tipped_by"), ("certainty", "certainty"), ("raised_by",
+   "raised_by"))`. The payload is byte-identical to the inline form. The flat
+   nine-name tuple U3-ENG.1 drafted is gone with the flat card it served:
+   `action`, `finding`, `agent_recommendation`, and `what_happened` are no
+   longer public card fields, and `what_tipped_it` is renamed on the wire, so a
+   name list can no longer express the mapping. Hoisting rather than inlining is
+   what lets the test pin the wire names against a literal instead of looping
+   the constant under test.
+2. **Both constants are pinned against literals before anything iterates them.**
+   `ATTENTION_LOUDNESS_RANK` is asserted equal to
+   `{"block": 0, "alert": 1, "notice": 2, "quiet": 3}` and then cross-checked
+   against `inbox.LOUDNESS` — two independently owned constants, so a band
+   added to the writer without a rank fails. A separate fixture reaches every
+   band through its real writer (`write_proposal` defaults to `notice`,
+   the commonest card in the queue), so a rank swap cannot pass.
+3. **One cross-language conformance test.** `viewspec.js` is the producer of the
+   block-shape contract (Cross-section contract 3) and the only consumer that
+   draws it. `test_attention_view_block_kinds_are_all_known_to_the_plugin_renderer`
+   parses `KNOWN_BLOCK_KINDS` and `LOUDNESS_RANK` out of `viewspec.js` and
+   asserts every kind this producer emits — nested kinds included — is
+   dispatchable, and that both halves rank loudness identically. The recurring
+   failure it prevents: engine and plugin drift, and the pane either draws an
+   unknown-block box or orders the queue differently from the payload it was
+   handed, with green suites on both sides. It is not U3-ENG.5's
+   `VIEW_BLOCK_KINDS` assertion, which stays inside Python and stays owed.
+4. **Knowingly unfixtured — four, each provably equivalent.** Every survivor of
+   a 54-mutation sweep of the new code, with its equivalence proof:
+   `str(card["loudness"] or "")` (both call sites) — `_attention_card` already
+   normalizes every falsy loudness to `""`, so no input reaches the `or`;
+   `str(card["body_data"]["text"])` and `str(card["path"])` — `split_frontmatter`
+   returns a `str` body and `as_posix()` a `str` path, so neither coercion has a
+   non-`str` input; and the `card["path"]` tiebreak in `_attention_view_sort_key`
+   — `_attention_cards` already returns path-sorted cards and `list.sort` is
+   stable, so removing the component cannot reorder anything *today*. The
+   tiebreak is kept deliberately: it makes the total order a property of the
+   sort key rather than of an upstream glob's incidental ordering, which is
+   exactly the coupling a refactor of `_attention_cards` would break silently.
+5. **`_attention_card`'s projection read is left alone.** This slice consumes
+   `_attention_cards`; it does not touch the raw
+   `frontmatter.get("projection") != "attention"` comparison or the bare
+   `read_text(encoding="utf-8")` beside it. Both are issue #1617's, and adding a
+   fourth spelling of the comparison here would make that issue worse. A
+   non-UTF-8 file in `inbox/` therefore raises out of this view exactly as it
+   already raises out of `read_attention`.
+6. **The three `Commit:` boxes stay unticked.** The slice is one commit by the
+   reconciliation amendment, and the executing session was directed to leave
+   committing to its caller. Every other box below is ticked against the atomic
+   slice's equivalent, not against its superseded literal body: the drafted flat
+   assertions, the per-task red stages, and the drafted three-then-five-then-six
+   test counts are drafting history. What actually ran is one red stage (every
+   test failing on the absent attribute), one implementation, and one green
+   stage of 20 tests in `tests/test_attention_view.py`.
+
 ---
 
 ### Task U3-ENG.1: `read_attention_view` — sorted card blocks with present-only honesty fields
@@ -9283,14 +9348,14 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Register the new test file. In `tests/conftest.py`, above the line
+- [x] Register the new test file. In `tests/conftest.py`, above the line
   `    "test_bases.py": "contract",` insert:
 
   ```python
       "test_attention_view.py": "contract",
   ```
 
-- [ ] Write the failing tests — create `tests/test_attention_view.py`:
+- [x] Write the failing tests — create `tests/test_attention_view.py`:
 
   ```python
   """Contract tests for the /v1/views/attention engine view endpoints (U3)."""
@@ -9445,12 +9510,12 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert [card["title"] for card in cards] == ["In scope"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py -v`
   Expected: all three tests fail with
   `AttributeError: module 'memoria_vault.engine.api' has no attribute 'read_attention_view'`.
 
-- [ ] Write the minimal implementation in `src/memoria_vault/engine/api.py`.
+- [x] Write the minimal implementation in `src/memoria_vault/engine/api.py`.
 
   Add to the imports (top of file — `import datetime` above `import json` line 5;
   `now_iso` is used first in U3-ENG.3, so do NOT import it yet):
@@ -9548,7 +9613,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
   `yaml.safe_load`; `write_proposal`/`write_finding` persist it as a quoted string —
   `_attention_created` normalizes both.)
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 3 passed.
 
 - [ ] Commit:
@@ -9580,7 +9645,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_attention_view.py`:
+- [x] Write the failing tests — append to `tests/test_attention_view.py`:
 
   ```python
   def test_attention_view_action_rows_follow_cards_and_name_operations(
@@ -9653,12 +9718,12 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert named <= catalog
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_action_rows_follow_cards_and_name_operations tests/test_attention_view.py::test_attention_view_actions_name_cataloged_operation_ids -v`
   Expected: first fails on the `["card", "action-row", "card", "action-row"]`
   assertion (only card blocks exist); second fails on `assert named` (empty set).
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/engine/api.py`, extend the
+- [x] Write the minimal implementation. In `src/memoria_vault/engine/api.py`, extend the
   U3-ENG.1 constants block:
 
   ```python
@@ -9698,7 +9763,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       }
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 5 passed (U3-ENG.1 tests still green — they filter on `kind == "card"`).
 
 - [ ] Commit:
@@ -9728,7 +9793,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing test — add `from memoria_vault import __version__`
+- [x] Write the failing test — add `from memoria_vault import __version__`
   and `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`
   to `tests/test_attention_view.py`, then append:
 
@@ -9765,11 +9830,11 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert payload["missing_required_credentials"] == ["MODEL_KEY"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_summary_returns_cheap_counts -v`
   Expected: `TypeError: read_attention_view() got an unexpected keyword argument 'summary'`.
 
-- [ ] Write the minimal implementation. Alongside the existing U3 imports, add
+- [x] Write the minimal implementation. Alongside the existing U3 imports, add
   `from memoria_vault import __version__`,
   `from memoria_vault.runtime.secrets import credential_report`, and
   `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`;
@@ -9816,7 +9881,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       )
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 6 passed.
 
 - [ ] Commit:

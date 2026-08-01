@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 from pathlib import Path
 from typing import Any
 
+from memoria_vault import __version__
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
@@ -16,6 +18,9 @@ from memoria_vault.runtime.knowledge import read_project_slice as _read_project_
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.secrets import credential_report
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
     frontmatter_doc,
@@ -33,6 +38,17 @@ CONCEPT_HOMES = {
     "project": "projects",
 }
 VIEW_SPEC_VERSION = "view-spec.v1"
+# Ranks the four bands `inbox.LOUDNESS` writes; anything else ranks after them.
+ATTENTION_LOUDNESS_RANK = {"block": 0, "alert": 1, "notice": 2, "quiet": 3}
+# Frontmatter name -> public card name. Only nonblank text is carried, so a card
+# that never made a claim shows no empty slot where one would have been.
+ATTENTION_HONESTY_FIELDS = (
+    ("argument_for", "argument_for"),
+    ("argument_against", "argument_against"),
+    ("what_tipped_it", "tipped_by"),
+    ("certainty", "certainty"),
+    ("raised_by", "raised_by"),
+)
 
 
 def read_status(workspace: Path) -> dict[str, Any]:
@@ -184,6 +200,41 @@ def read_attention_card(
     if not _attention_in_scope(card, read_scope):
         raise FileNotFoundError(f"attention projection not found: {rel}")
     return _read_payload(attention=card, view=_attention_card_view(card))
+
+
+def read_attention_view(
+    workspace: Path, *, summary: bool = False, read_scope: list[str] | None = None
+) -> dict[str, Any]:
+    """The attention pane's payload: open cards, or the cheap poll counts."""
+    cards = [
+        card
+        for card in _attention_cards(Path(workspace))
+        if card["status"] == "open" and _attention_in_scope(card, read_scope)
+    ]
+    if summary:
+        by_loudness: dict[str, int] = {}
+        for card in cards:
+            loudness = str(card["loudness"] or "")
+            by_loudness[loudness] = by_loudness.get(loudness, 0) + 1
+        missing_required_credentials = sorted(
+            str(row.get("name") or "")
+            for row in credential_report(Path(workspace))
+            if row.get("class") == "required-for-operation"
+            and row.get("status") == "unset"
+            and str(row.get("name") or "")
+        )
+        return _read_payload(
+            open=len(cards),
+            by_loudness=by_loudness,
+            as_of=now_iso(),
+            engine_version=__version__,
+            link_relations=sorted(LINK_RELATIONS),
+            missing_required_credentials=missing_required_credentials,
+        )
+    cards.sort(key=_attention_view_sort_key)
+    return _read_payload(
+        view=_view("attention", [_attention_view_card_block(card) for card in cards])
+    )
 
 
 def read_concept(
@@ -734,6 +785,91 @@ def _attention_in_scope(card: dict[str, Any], read_scope: list[str] | None) -> b
     return read_scope is None or any(
         _scope_allows(str(card.get(key) or ""), read_scope) for key in ("path", "target")
     )
+
+
+def _attention_view_sort_key(card: dict[str, Any]) -> tuple[int, str, str]:
+    rank = ATTENTION_LOUDNESS_RANK.get(str(card["loudness"] or ""), len(ATTENTION_LOUDNESS_RANK))
+    created = _attention_created(card)
+    return (rank, created or "9999-12-31", card["path"])
+
+
+def _attention_created(card: dict[str, Any]) -> str:
+    value = card["frontmatter"].get("created")
+    if isinstance(value, datetime.date):
+        return value.isoformat()
+    return str(value or "")
+
+
+def _attention_age_days(created: str) -> int | None:
+    try:
+        return (datetime.date.today() - datetime.date.fromisoformat(created[:10])).days
+    except (TypeError, ValueError):
+        return None
+
+
+def _attention_view_card_block(card: dict[str, Any]) -> dict[str, Any]:
+    card_id = safe_filename(card["path"])
+    created = _attention_created(card)
+    age_days = _attention_age_days(created)
+    target = str(card["target"] or "")
+    frontmatter = card["frontmatter"]
+    block: dict[str, Any] = {
+        "id": card_id,
+        "kind": "card",
+        "ref": card["path"],
+        "title": str(card["title"]),
+        "kind_line": str(card["kind"]),
+        "loudness": str(card["loudness"]),
+        "age_s": age_days * 86_400 if age_days is not None else 0,
+        "age_label": f"{age_days}d" if age_days is not None else "",
+        "blocks": [
+            {
+                "id": f"{card_id}-evidence",
+                "kind": "evidence-list",
+                "items": [{"label": target, "ref": target}] if target else [],
+            },
+            {
+                "id": f"{card_id}-body",
+                "kind": "text",
+                "text": str(card["body_data"]["text"]),
+            },
+            _attention_view_action_row(card),
+        ],
+    }
+    for source, destination in ATTENTION_HONESTY_FIELDS:
+        value = frontmatter.get(source)
+        if isinstance(value, str) and value.strip():
+            block[destination] = value
+    if created:
+        block["raised_at"] = created
+    return block
+
+
+def _attention_view_action_row(card: dict[str, Any]) -> dict[str, Any]:
+    card_id = safe_filename(card["path"])
+    target_id = str(card["path"])
+    return {
+        "id": f"{card_id}-actions",
+        "kind": "action-row",
+        "actions": [
+            {
+                "label": "Resolve",
+                "operation_id": "resolve-attention",
+                "payload": {"target_id": target_id},
+                "primary": True,
+            },
+            {
+                "label": "Acknowledge",
+                "operation_id": "acknowledge-attention",
+                "payload": {"target_id": target_id},
+            },
+            {
+                "label": "Defer",
+                "operation_id": "resolve-attention",
+                "payload": {"target_id": target_id, "outcome": "defer"},
+            },
+        ],
+    }
 
 
 def _view(kind: str, blocks: list[dict[str, Any]]) -> dict[str, Any]:
