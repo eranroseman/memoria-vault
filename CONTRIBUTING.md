@@ -89,7 +89,8 @@ Memoria-specific ones.
   explanation discusses. Mixed-purpose content pages are wrong — split them.
 - **Portals:** the docs landing page and section `README.md` indexes are routing
   portals. Their mixed link menus are intentional and exempt from the
-  single-quadrant rule.
+  single-quadrant rule. A section with exactly one guide may collapse index and
+  guide into its `README.md` (currently: Using Obsidian).
 - **Onboarding exception:**
   [Quickstart](docs/how-to-guides/setup/quickstart.md) is Tutorial 00, listed in
   Setup so new users can install a vault before the numbered tutorials. It

@@ -62,7 +62,7 @@ arguments, building hubs) remains human.
 
 Stephen Toulmin's model of argument (1958) gives the knowledge graph its logical basis. An argument decomposes into six roles — Claim, Grounds, Warrant, Backing, Qualifier, and Rebuttal — and Memoria makes those roles the *types* of the graph rather than leaving argument structure implicit in prose.
 
-Typing the roles types the consequences: losing grounds, losing a warrant, a qualifier bounding a regression, and a rebuttal that strengthens when its target falls are different graph events with different blast radius. A graph that only stores "claim links to claim" cannot tell them apart; one that stores the Toulmin roles can. This is why Memoria assesses *grounding* rather than truth — the roles are the structure grounding is assessed against.
+Typing the roles types the consequences: when a node falls, its dependents experience different typed events with different blast radius — [Consequence propagation](../../knowledge/consequence-propagation.md) catalogs them. A graph that only stores "claim links to claim" cannot tell them apart; one that stores the Toulmin roles can. This is why Memoria assesses *grounding* rather than truth — the roles are the structure grounding is assessed against.
 
 ---
 

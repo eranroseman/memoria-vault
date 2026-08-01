@@ -85,29 +85,26 @@ writable runtime directories are created from `folders.yaml`:
 records this vault's identity and the SHA-256 of each agent and Obsidian bundle
 file **as the vault was created** - not a live inventory of what is on disk now:
 
-- A bundle file already present at init is adopted, not replaced, and its own
-  hash is recorded. A vault can therefore carry perimeter configuration it
-  never received from the package.
-- A bundle delivered by a later run is on disk but absent from the record. That
-  includes `memoria init --no-obsidian` followed by `memoria doctor --repair`
-  or a second `memoria init`, which installs the Obsidian plugin while the
-  record still lists the agent bundle alone.
-- The same holds one level down: a file a newer engine adds to a bundle the
-  record already lists arrives on disk, while that bundle's recorded file map
-  keeps the shorter list it had at creation.
-- After `memoria doctor --repair` on a newer engine, a reseeded
-  `.obsidian/plugins/` file no longer matches its recorded hash.
+| Situation | Record vs. disk |
+| --- | --- |
+| Bundle file already present at init | Adopted, not replaced; its own hash is recorded. A vault can therefore carry perimeter configuration it never received from the package. |
+| Bundle delivered by a later run — e.g. `memoria init --no-obsidian` followed by `memoria doctor --repair` or a second `memoria init` | On disk but absent from the record, which still lists the agent bundle alone. |
+| File a newer engine adds to a bundle the record already lists | On disk, while that bundle's recorded file map keeps the shorter list it had at creation. |
+| `.obsidian/plugins/` file reseeded by `memoria doctor --repair` on a newer engine | No longer matches its recorded hash. |
 
 No runtime reads these hashes. A future drift or tamper check needs its own
 record of what was seeded and must not read this one.
 
 The append-only, hash-chained `event_log` in `memoria.sqlite` is the journal of
-record. Trust-sensitive readers query it in event order. A journal append
-commits there first and advances the working-tree `journal-head`; its committed
-Git value must remain a prefix of the live chain. The per-machine JSONL files
-are derived exports for synchronization. `memoria workspace scan` holds the
-workspace writer lock while it verifies the chain and export subset, removes an
-incomplete final JSONL fragment, and re-emits any missing export rows.
+record; trust-sensitive readers query it in event order.
+
+- A journal append commits to `event_log` first, then advances the
+  working-tree `journal-head`; the committed Git value must remain a prefix of
+  the live chain.
+- The per-machine JSONL files are derived exports for synchronization.
+- `memoria workspace scan` holds the workspace writer lock while it verifies
+  the chain and export subset, removes an incomplete final JSONL fragment, and
+  re-emits any missing export rows.
 
 ### Schema versioning: fresh installs only
 

@@ -34,9 +34,9 @@ planned Drift watch would aggregate structural debt.
 Audit log is the append-only policy-gate event stream. It explains write
 decisions and preserves the evidence needed for forensic review.
 
-It is not editable. The audit log records before/after hash pairs for gated
-writes; editing the log would defeat the tamper signal. The field schema and
-hash-pairing contract live in [Policy audit log](../../../reference/control-and-policy/policy-audit-log.md).
+It is not editable — editing the log would defeat the tamper signal. The field
+schema and hash-pairing contract live in
+[Policy audit log](../../../reference/control-and-policy/policy-audit-log.md).
 
 ## Eval trend
 

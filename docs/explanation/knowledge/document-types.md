@@ -28,10 +28,13 @@ The schema YAML owns exhaustive fields. The reader-facing roster lives in
 
 ## Read state
 
-Read state is not frontmatter. Machine writes and promotions go through the
-worker path. PI edits are direct edits, then observed and backfilled. Foreign
-writes are quarantined by scan instead of silently accepted. The exact state
-values belong in the reference.
+Read state is not frontmatter — why it lives with the runtime record instead
+is argued in
+[Lifecycle and state](../rationale/knowledge-rationale/lifecycle-and-state.md).
+What this page adds is how writes travel: machine writes and promotions go
+through the worker path, PI edits are direct edits that are then observed and
+backfilled, and foreign writes are quarantined by scan instead of silently
+accepted. The exact state values belong in the reference.
 
 ---
 

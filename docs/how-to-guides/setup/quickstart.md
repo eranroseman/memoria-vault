@@ -9,7 +9,8 @@ nav_order: 1
 # Quickstart
 
 Three steps from zero to an installed standalone CLI/runtime workspace. For the
-full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
+full walkthrough (repo-clone install path, adding a remote), see
+[Set up the vault](set-up-the-vault.md).
 
 > **Tutorial 00 — onboarding exception.** This page stays in Setup so new users
 > can install a vault first. Unlike the other how-to guides, it assumes no
@@ -19,13 +20,8 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 - Git and Python 3.12+ with venv support on your `PATH`; sandbox images must include Git too.
 - Native Windows 10/11, Ubuntu/Debian, or WSL2. **macOS is not supported.**
-- Provider keys are optional and needed only for live model-backed operations.
-  `memoria ask` uses the local checked-only BM25 index and needs no provider key.
-- Obsidian is optional as an app; the workspace seed already includes Memoria's
-  Obsidian adapter files and core settings. Generic BibTeX/CSL files exported
-  from Zotero can be imported when you need them ([Set up Zotero](set-up-zotero.md)).
-- The initial workspace also receives agent/MCP host configuration, which does
-  not install an external agent runtime.
+- No provider keys are needed for anything in this walkthrough.
+- Obsidian and Zotero are optional apps; neither is needed here.
 
 ## Steps
 
@@ -41,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, seeds the Memoria Obsidian adapter/config and first-init agent/MCP host configuration, and wires local hooks. It does not install external search tooling, an external agent runtime, or the Obsidian app. Direct `memoria init --no-obsidian` skips only editor settings and root Base views; it still seeds the agent/MCP configuration.
+The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, and wires local hooks. Exactly what it seeds and skips is in the [Installer reference](../../reference/system/installer.md).
 
 **2. Verify the CLI runtime.**
 
@@ -59,15 +55,15 @@ The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%
 
 The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 
-On a fresh vault, empty results are normal. Start with the CLI commands above
-and the top-level workspace folders: `inbox/`, `digests/`, `fulltexts/`,
-`notes/`, `hubs/`, and `projects/`.
+On a fresh vault, empty results are normal.
 
 ## Verify
 
 - `~/Memoria/.memoria/.venv/bin/memoria status --workspace ~/Memoria` returns workspace status
 - `~/Memoria/.memoria/.venv/bin/memoria ask --workspace ~/Memoria --question "What needs attention?"` queries the local checked-only BM25 index without provider keys
 - The runtime vault has a `.git/` directory after install
+
+Next: [01: System tour](../../tutorials/01-system-tour.md).
 
 ## Related
 

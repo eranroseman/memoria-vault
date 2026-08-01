@@ -12,47 +12,54 @@ For the guarded operation ID list, see [System actions](system-actions.md).
 
 ## Request authority and retries
 
-Every request carries one validated actor. The worker reserves
-`acknowledge-attention`, `resolve-attention`, `record-copi-interview`,
-`curate-note-candidate`, `curate-note-link`, `move-concept`, `mark-checked`,
-`update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback`, and
-`capture-remote-pdf-source` for the `pi` actor. It reserves
-`trace-integrity-scan` and `observe-pi-edits` for the `integrity` actor.
+Every request carries one validated actor. The worker enforces the operation
+authority matrix before payload validation or domain mutation.
 
-An idempotency key binds the normalized request/job kind and complete request
-envelope. An exact retry with the same kind and envelope returns the existing
-request. Reusing a key with a different kind, operation, arguments, references,
-output intent, target, preconditions, causal references, actor, provenance, or
-schedule is rejected, including when submissions arrive concurrently. Identity
-is compared as canonical JSON: object key order does not matter, Python tuple
-and list inputs normalize to the same JSON array, and JSON booleans remain
-distinct from numbers.
+| Reserved for | Operations |
+| --- | --- |
+| `pi` | `acknowledge-attention`, `resolve-attention`, `record-copi-interview`, `curate-note-candidate`, `curate-note-link`, `move-concept`, `mark-checked`, `update-work`, `frame-paper`, `promote-draft-passage`, `cascade-rollback`, `capture-remote-pdf-source` — plus request controls, evidence-review dispositions, steering edits, and vocabulary mutations. |
+| `integrity` | `trace-integrity-scan`, `observe-pi-edits` |
 
-PI request answers and amendments create one unscheduled successor with a fresh
-key. They bind the source in provenance and causal references and do not alter
-the source envelope. An exact successor replay coalesces; a fork conflicts.
-Cancel accepts only pending work. Retry accepts failed or explicitly cancelled,
-non-superseded work. Resume accepts only pending work. Claim and supersession
-are competing atomic state transitions, so at most one can win. An exact repeat
-after an interrupted lifecycle-event append repairs the one missing event; it
-does not duplicate a successor or reopen work.
+Idempotency-key identity:
 
-Request controls, evidence-review dispositions, steering edits, and vocabulary
-mutations require PI authority. The worker enforces the operation authority
-matrix before payload validation or domain mutation.
+| Rule | Behavior |
+| --- | --- |
+| Key binding | A key binds the normalized request/job kind and the complete request envelope. |
+| Exact retry | The same kind and envelope returns the existing request. |
+| Key reuse | Rejected when any of kind, operation, arguments, references, output intent, target, preconditions, causal references, actor, provenance, or schedule differs — including concurrent submissions. |
+| Identity comparison | Canonical JSON: object key order does not matter, Python tuple and list inputs normalize to the same JSON array, and JSON booleans remain distinct from numbers. |
+
+Lifecycle transitions:
+
+| Transition | Rule |
+| --- | --- |
+| Answer / amend | Creates one unscheduled PI successor with a fresh key, binding the source in provenance and causal references without altering the source envelope. An exact successor replay coalesces; a fork conflicts. |
+| Cancel | Accepts only pending work. |
+| Retry | Accepts failed or explicitly cancelled, non-superseded work. |
+| Resume | Accepts only pending work. |
+| Claim vs. supersession | Competing atomic state transitions; at most one wins. |
+| Interrupted lifecycle append | An exact repeat repairs the one missing event; it does not duplicate a successor or reopen work. |
 
 ## Content neutralization boundary
 
 Code-owned Markdown insertions neutralize model- and provider-derived prose
-before apply. Markdown images and Obsidian embeds become inert, raw HTML is
-escaped, and external URLs become code spans. Vault wikilinks and ordinary
-literal code spans or top-level fences remain unchanged. Container-nested code
-is handled conservatively. Pandoc attribute lists, including raw-format
-attributes, become literal. Top-level fence attributes are stripped; ambiguous
-container-nested fence headers are made literal. Malformed or unclosed code
-candidates are treated as prose. This applies to prompt reports, digest and hub
-suggestions, note candidates, generated outlines and drafts, promoted draft
-passages, provider attention prompts, worklists, and extracted-edge prompts.
+before apply:
+
+| Construct | Neutralization |
+| --- | --- |
+| Markdown images and Obsidian embeds | Made inert. |
+| Raw HTML | Escaped. |
+| External URLs | Become code spans. |
+| Vault wikilinks; ordinary literal code spans; top-level fences | Unchanged. |
+| Container-nested code | Handled conservatively. |
+| Pandoc attribute lists, including raw-format attributes | Made literal. |
+| Top-level fence attributes | Stripped. |
+| Ambiguous container-nested fence headers | Made literal. |
+| Malformed or unclosed code candidates | Treated as prose. |
+
+This applies to prompt reports, digest and hub suggestions, note candidates,
+generated outlines and drafts, promoted draft passages, provider attention
+prompts, worklists, and extracted-edge prompts.
 
 `stage_concept` and the shared Inbox writers remain byte-preserving
 mixed-author seams. They cannot infer which substring a human authored. Their
@@ -63,19 +70,20 @@ rendered as code.
 ## Change witness
 
 `observe-pi-edits` seeds and reconciles baselines from file-byte snapshots for
-eligible bundle Concepts under the configured bundle roots. A direct PI edit
-gets a baseline only after its observed snapshot survives staging and commit; a
-later edit remains dirty for the next sweep. A later mismatch without a matching
-journaled current hash returns a `route: ask` `foreign-edit` finding; removing a
-tracked restriction key — the `superseded` or `local-only` frontmatter boolean
-recorded as `true` in the baseline — returns `restriction-key-removed`. These
-structured operation findings do not block the file or create an attention
-projection.
+eligible bundle Concepts under the configured bundle roots.
 
-A journal-backed current hash reconciles a baseline. A generic writer commit
-does not bless a disk edit with no journal record. `local-only: true` is
-recognized only as a change-detection key in this release. It does not enforce privacy,
-retrieval, export, or egress policy.
+| Observation | Result |
+| --- | --- |
+| Direct PI edit | Gets a baseline only after its observed snapshot survives staging and commit; a later edit remains dirty for the next sweep. |
+| Later mismatch with no matching journaled current hash | Returns a `route: ask` `foreign-edit` finding. |
+| Tracked restriction key removed — a `superseded` or `local-only` frontmatter boolean recorded `true` in the baseline | Returns `restriction-key-removed`. |
+| Journal-backed current hash | Reconciles the baseline. |
+| Generic writer commit with no journal record for the disk edit | Does not bless the edit. |
+
+These structured operation findings do not block the file or create an
+attention projection. `local-only: true` is recognized only as a
+change-detection key in this release. It does not enforce privacy, retrieval,
+export, or egress policy.
 
 ## Capture pipeline (`memoria_vault.runtime.capture`)
 
