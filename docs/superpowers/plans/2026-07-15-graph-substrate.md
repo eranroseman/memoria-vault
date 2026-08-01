@@ -2923,10 +2923,24 @@ one transaction, and commits everything through the trusted writer.
 >   scans `digests/` as the draft specified, so a checked digest linking to a moved
 >   note is re-signed through `mark_checked` against the digest schema. The mechanism
 >   is type-agnostic but only the note case has a test.
+>   **Closed in B.7:** `test_move_concept_rewrites_and_re_signs_a_checked_digest_linker`
+>   covers it; the mechanism was already correct, so this was a coverage gap and no
+>   product code changed.
 > - **Stale `edge_id` after a path-key re-key — owner NID-B.7.** Self-heals on the
 >   next `replace_concept_edges` pass; B.7 is the task that touches edge resolution,
 >   so it owns either recomputing it in the re-key or documenting the window for ERP
 >   consumers.
+>   **Closed in B.7 — it does *not* self-heal.** `edge_id` hashes the identity
+>   triple and `idx_concept_edges_edge_id` is UNIQUE, so the next file dropped at
+>   the vacated path recomputes the stale hash exactly and the whole mirror pass
+>   dies on an IntegrityError (`test_move_concept_leaves_no_stale_edge_id_for_the_`
+>   `vacated_path_to_collide_with` reproduces it). `_rekey_path_keyed_concept_conn`
+>   now blanks `edge_id` on every edge touching the re-keyed identity — `''` is the
+>   column's existing unresolved value and the partial index skips it — and B.7's
+>   resolution pass recomputes it over the live triple. **The window ERP consumers
+>   inherit:** between a `memoria mv` and the next reindex those rows read
+>   `edge_id = ''`. Blank, never wrong; `attributes_json` and the endpoints are
+>   untouched throughout.
 
 **Steps:**
 
@@ -3441,7 +3455,7 @@ end-to-end.
 
 **Steps:**
 
-- [ ] Append the failing lifecycle test to `tests/test_query_substrate.py`:
+- [x] Append the failing lifecycle test to `tests/test_query_substrate.py`:
 
   ```python
   def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
@@ -3499,12 +3513,12 @@ end-to-end.
 
   (Neither note carries a ULID `id:`, so both key by path — keeps the assertion
   literals readable; the id-space variant is covered by NID-B.4's rename test.)
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_query_substrate.py::test_pending_edges_resolve_when_target_appears -v`
   — expect FAIL on the **tension** assertions:
   `assert rows["tension"]["target_concept_id"] == "notes/future.md"` sees `None` —
   the mirror pass re-resolves only rows it inserts, never retained tension rows.
-- [ ] In `state.replace_concept_edges` (NID-B.1 body), add the resolution pass at
+- [x] In `state.replace_concept_edges` (NID-B.1 body), add the resolution pass at
   the end of the `with connect(vault) as conn:` block, after the insert loop:
 
   ```python
@@ -3543,12 +3557,12 @@ end-to-end.
               )
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_query_substrate.py -v`
   — expect PASS (the whole file: v13/v14 shape pins, G2S1.1 mirror test, NID-B.4
   rename test, this lifecycle test).
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/state.py tests/test_query_substrate.py
@@ -5930,6 +5944,19 @@ doc-claims check).
 > | --- | --- | --- |
 > | `derivations.input_id` | keeps `'notes/hand.md'`, naming no Concept (`schema.sql:407-412`) | ERP-C/ERP-D walk the derivation DAG |
 > | `concept_edges.edge_id` | keeps the pre-adoption digest, so `edge_id != concept_edge_id(source, relation, target)` | ERP-B/ERP-C/ERP-D consume `edge_id` |
+>
+> **Both rows are now closed — NID-B.7 (2026-08-01). ERP-A.6/ERP-C/ERP-D inherit
+> nothing from this table; do not re-add either row.** `_adopt_path_key_identity_conn`
+> no longer hand-writes its own one-statement re-key: it calls
+> `_rekey_path_keyed_concept_conn`, the identity-space enumeration B.6 made the single
+> home, so adoption carries `derivations.input_id`/`output_id` and `passages.concept_id`
+> exactly as a rename does. That helper also blanks `edge_id` on every edge touching the
+> re-keyed identity and B.7's resolution pass in `replace_concept_edges` recomputes it
+> over the live triple. The claim below that `edge_id` "is recomputed by the next full
+> `replace_concept_edges`" was **false for a durable `tension` row**, which the mirror
+> pass skips by design, and worse than false for the rest: a stale digest is a valid
+> UNIQUE key, so the next file dropped at the vacated path recomputes it exactly and
+> kills the whole rebuild on an IntegrityError.
 >
 > **`passages.concept_id` was the third row and is now closed — narrowed by NID-B.4
 > (2026-07-31), measured, not assumed.** This note previously claimed it was "rewritten on

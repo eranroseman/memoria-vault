@@ -837,6 +837,83 @@ def test_move_concept_does_not_re_sign_a_drifted_checked_linker(tmp_path: Path) 
     assert is_consumable_checked_file(vault, "notes/clean-linker.md", enqueue_scan=False)
 
 
+def test_move_concept_leaves_no_stale_edge_id_for_the_vacated_path_to_collide_with(
+    tmp_path: Path,
+) -> None:
+    """`edge_id` is a hash of the identity triple, so a re-key invalidates it.
+
+    `concept_edges` endpoints ride `ON UPDATE CASCADE`, but the stored `edge_id`
+    does not: after a path-keyed move the row still carries the hash of the *old*
+    source identity, and `idx_concept_edges_edge_id` is UNIQUE. The next file
+    dropped at the vacated path recomputes that very hash, so the mirror pass dies
+    on an IntegrityError and `memoria index` stays dead until the file is renamed
+    away — a stale hash the next pass "self-heals" is the one thing it cannot.
+    """
+    vault = workspace(tmp_path)
+    _md(vault / "notes/target.md", "type: note\ncheck_status: checked\ntitle: Target\n")
+    _md(
+        vault / "notes/mover.md",
+        "type: note\ncheck_status: checked\ntitle: Mover\n"
+        'links:\n  supports:\n    - "notes/target.md"\n',
+    )
+    commit_notes(vault)
+    rebuild_passage_index(vault)
+
+    # `notes/mover.md` sorts before `notes/zeta.md`, so the newcomer's insert is the
+    # statement that meets the stale hash.
+    move_concept(vault, "notes/mover.md", "notes/zeta.md", actor="pi", machine="curator")
+    _md(
+        vault / "notes/mover.md",
+        "type: note\ncheck_status: checked\ntitle: Newcomer\n"
+        'links:\n  supports:\n    - "notes/target.md"\n',
+    )
+    rebuild_passage_index(vault)
+
+    edges = {
+        (str(edge["source_concept_id"]), str(edge["edge_id"]))
+        for edge in state.concept_edges(vault, checked_only=False)
+    }
+    assert edges == {
+        ("notes/mover.md", state.concept_edge_id("notes/mover.md", "supports", "notes/target.md")),
+        ("notes/zeta.md", state.concept_edge_id("notes/zeta.md", "supports", "notes/target.md")),
+    }
+
+
+def test_move_concept_rewrites_and_re_signs_a_checked_digest_linker(tmp_path: Path) -> None:
+    """The inbound scan covers `digests/`, so the re-sign must survive a second schema.
+
+    `_plan_inbound_link_rewrites` walks four bundles and hands every hit to one
+    `mark_checked`, which re-validates the document against *its own* type. A note
+    fixture only ever exercises `note`, so a digest whose required `work_id` the
+    rewrite dropped — or any other type-specific field — would refuse every move
+    that a digest happens to link to, and nothing here would notice.
+    """
+    vault = workspace(tmp_path)
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000050")
+    digest = vault / "digests/source-alpha.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\ntype: digest\nid: source-alpha\ntitle: Alpha digest\ntags: []\n"
+        'work_id: source-alpha\nlinks:\n  supports:\n    - "[[notes/target|the target]]"\n'
+        "---\nDigest body.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, "digests/source-alpha.md", "digest")
+    commit_notes(vault)
+    assert is_consumable_checked_file(vault, "digests/source-alpha.md", enqueue_scan=False)
+
+    result = move_concept(
+        vault, "notes/target.md", "notes/target-moved.md", actor="pi", machine="curator"
+    )
+
+    assert result["rewritten"] == ["digests/source-alpha.md"]
+    frontmatter = read_frontmatter(digest)
+    assert frontmatter["links"]["supports"] == ["[[notes/target-moved|the target]]"]
+    # Re-signed against the digest schema, with its type-specific fields intact.
+    assert frontmatter["work_id"] == "source-alpha"
+    assert is_consumable_checked_file(vault, "digests/source-alpha.md", enqueue_scan=False)
+
+
 def test_move_concept_operation_dispatches_via_worker(tmp_path: Path) -> None:
     """`memoria mv` is a PI-protected worker operation, not a bare runtime helper.
 

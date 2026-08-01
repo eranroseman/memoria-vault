@@ -1285,11 +1285,27 @@ def _rekey_path_keyed_concept_conn(conn: sqlite3.Connection, old_id: str, new_id
 
     A conflicting id raises and rolls the caller's whole move back, which is the
     refusal it wants.
+
+    ``concept_edges.edge_id`` is a hash of the identity triple, so the cascade
+    invalidates it on every edge touching this Concept. It is blanked here rather
+    than recomputed in place: ``idx_concept_edges_edge_id`` is UNIQUE and checked
+    per statement, so a row recomputed to a value another affected row is still
+    carrying stale would raise mid-enumeration. ``''`` is already this column's
+    unresolved value and the partial index skips it, so the next
+    ``replace_concept_edges`` settles it over the live triple. A *stale* id instead
+    survives as a plausible-looking hash that the next file dropped at the vacated
+    path recomputes exactly — a UNIQUE violation that kills the whole mirror
+    rebuild, which is the one failure "it self-heals next pass" cannot cover.
     """
     conn.execute("UPDATE concepts SET concept_id = ? WHERE concept_id = ?", (new_id, old_id))
     conn.execute("UPDATE derivations SET input_id = ? WHERE input_id = ?", (new_id, old_id))
     conn.execute("UPDATE derivations SET output_id = ? WHERE output_id = ?", (new_id, old_id))
     conn.execute("UPDATE passages SET concept_id = ? WHERE concept_id = ?", (new_id, old_id))
+    conn.execute(
+        "UPDATE concept_edges SET edge_id = ''"
+        " WHERE source_concept_id = ? OR target_concept_id = ?",
+        (new_id, new_id),
+    )
 
 
 def _reconcile_renamed_output_conn(
@@ -2412,7 +2428,53 @@ def replace_concept_edges(
                     now_iso(),
                 ),
             )
+        _resolve_pending_concept_edges_conn(conn)
     return {"deleted": int(deleted), "inserted": len(prepared)}
+
+
+def _resolve_pending_concept_edges_conn(conn: sqlite3.Connection) -> None:
+    """Settle every retained edge row the upsert loop above never reached (NODES §1.6).
+
+    A forward link to a note that does not exist yet is legal Zettelkasten practice,
+    so the mirror parks it as a pending row instead of dropping it. The loop
+    re-resolves only the rows it (re)inserts, which leaves two kinds behind: a
+    PI-owned ``tension`` row, which the loop skips by design and no reindex ever
+    rewrites, and any pending row a scoped pass spared. Both have to resolve at the
+    reindex where their target materializes, or a dangling link stays dangling for
+    the life of the vault.
+
+    The same pass recomputes a blank ``edge_id``, which is what an identity re-key
+    leaves behind (``_rekey_path_keyed_concept_conn``). Resolution and recomputation
+    are one pass because they answer one question — does this row's stored identity
+    still agree with the id space — and write the answer the same way.
+    ``_lookup_concept_id`` is the module's one resolver, so a catalog reference
+    resolves here exactly as it does at insert.
+    """
+    unsettled = conn.execute(
+        "SELECT source_concept_id, relation_type, target_path, target_concept_id"
+        " FROM concept_edges WHERE target_concept_id IS NULL OR edge_id = ''"
+    ).fetchall()
+    for row in unsettled:
+        target_path = str(row["target_path"])
+        target_id = row["target_concept_id"] or _lookup_concept_id(conn, target_path)
+        if not target_id:
+            continue
+        source = str(row["source_concept_id"])
+        relation = str(row["relation_type"])
+        conn.execute(
+            """
+            UPDATE concept_edges
+            SET target_concept_id = ?, edge_id = ?
+            WHERE source_concept_id = ? AND relation_type = ? AND target_path = ?
+            """,
+            (
+                target_id,
+                concept_edge_id(source, relation, str(target_id)),
+                source,
+                relation,
+                target_path,
+            ),
+        )
 
 
 def _resolve_or_ensure_concept_conn(conn: sqlite3.Connection, ref: str) -> str:
@@ -4552,6 +4614,11 @@ def _adopt_path_key_identity_conn(
     to the caller's ``idx_concepts_path`` refusal — a resident that is already
     id-keyed, a non-ULID claim, a different ``store``, or an incoming identity that
     already lives at another path (which would merge two Concepts).
+
+    The re-key itself is ``_rekey_path_keyed_concept_conn``, never a second copy of
+    its statement: adoption moves the same identity a rename moves, so it owes the
+    same tables. Only the path is unchanged, and the path is exactly what the
+    identity-space enumeration does not touch.
     """
     _concept_type, store, path = wanted
     if not path or not is_ulid(concept_id):
@@ -4563,7 +4630,7 @@ def _adopt_path_key_identity_conn(
         return
     if conn.execute("SELECT 1 FROM concepts WHERE concept_id = ?", (concept_id,)).fetchone():
         return
-    conn.execute("UPDATE concepts SET concept_id = ? WHERE concept_id = ?", (concept_id, path))
+    _rekey_path_keyed_concept_conn(conn, path, concept_id)
 
 
 def _concept_shape_collision(

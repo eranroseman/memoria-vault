@@ -977,3 +977,55 @@ def test_rename_reconciliation_carries_the_writer_materialization_payload(
     assert payload["output_id"] == renamed
     assert (output["output_id"], output["target_path"]) == (renamed, renamed)
     assert {row["path"] for row in state.indexed_passages(vault)} == {renamed}
+
+
+def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/early.md",
+        'type: note\ntitle: Early\ntags: []\nlinks:\n  supports: ["[[notes/future]]"]\n',
+    )
+    rebuild_passage_index(vault)
+    # A durable tension row targeting the same future note, hung with attributes.
+    with state.connect(vault) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " edge_id, source_concept_id, relation_type, target_concept_id,"
+            " target_path, attributes_json, check_status, source_path, updated_at)"
+            " VALUES ('', 'notes/early.md', 'tension', NULL, 'notes/future.md',"
+            " '{\"warrant\": \"w9\"}', 'checked', '', '2026-07-15T00:00:00Z')"
+        )
+        pending = conn.execute(
+            "SELECT target_concept_id, edge_id FROM concept_edges"
+            " WHERE target_path = 'notes/future.md' AND relation_type = 'supports'"
+        ).fetchone()
+    # Dangling link is modeled, not dropped (clause 6).
+    assert pending["target_concept_id"] is None
+    assert pending["edge_id"] == ""
+
+    # The target appears; the next reindex resolves both rows to its id.
+    write_checked_concept(
+        vault, "notes/future.md", "type: note\ntitle: Future\ntags: []\nlinks: {}\n"
+    )
+    rebuild_passage_index(vault)
+
+    with state.connect(vault) as conn:
+        rows = {
+            str(row["relation_type"]): dict(row)
+            for row in conn.execute(
+                "SELECT relation_type, target_concept_id, edge_id, attributes_json"
+                " FROM concept_edges WHERE target_path = 'notes/future.md'"
+            )
+        }
+    assert rows["supports"]["target_concept_id"] == "notes/future.md"
+    assert rows["supports"]["edge_id"] == state.concept_edge_id(
+        "notes/early.md", "supports", "notes/future.md"
+    )
+    # The retained tension row resolves too — attributes still hanging on it.
+    assert rows["tension"]["target_concept_id"] == "notes/future.md"
+    assert rows["tension"]["edge_id"] == state.concept_edge_id(
+        "notes/early.md", "tension", "notes/future.md"
+    )
+    assert rows["tension"]["attributes_json"] == '{"warrant": "w9"}'
