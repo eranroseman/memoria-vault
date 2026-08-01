@@ -2,17 +2,29 @@
 
 ``memoria init`` writes the static agent bundle (Claude/Codex perimeter config,
 the MCP wiring, and CLAUDE.md) and, unless ``--no-obsidian`` is set, the
-Obsidian plugin bundle, then records a content-hash manifest of what is on
-disk. Writes are **write-if-absent**, mirroring ``cli._seed_write_allowed``: an
-existing file is PI-owned and is never overwritten, so re-running the installer
-(``scripts/install.sh`` runs ``memoria init --yes`` unconditionally) cannot
-destroy edited perimeter policy. Nothing here regenerates or recovers an
-existing bundle — that is out of scope for this module (see BOOT-C.2's binding
-execution text).
+Obsidian plugin bundle, then records what the vault was created with.
 
-The manifest is not authoritative after a repair: ``doctor --repair`` reseeds
-``.obsidian/plugins/*`` through ``cli._seed_workspace`` (``overwrite=True``)
-without updating ``.memoria/vault.json``.
+**One writer, one policy.** This module is the only writer of the bundle paths
+on the init path — ``cli._seed_write_allowed`` declines them, so the seed-class
+copy cannot write them a second time with a different policy — and everything
+it writes is **write-if-absent**, the bundle files and ``.memoria/vault.json``
+alike. An existing file is PI-owned and is never overwritten, so re-running the
+installer (``scripts/install.sh`` runs ``memoria init --yes`` unconditionally)
+can neither destroy edited perimeter policy nor churn the vault identity that
+``runtime.json`` publishes. ``doctor --repair`` never calls this module; it
+restores ``.obsidian/plugins/*`` as a runtime seed, which is the same package
+bytes the manifest recorded, so it cannot move disk away from the manifest.
+
+**The manifest is an as-created receipt** (BOOT-C.6, 2026-08-01): vault
+identity plus the SHA-256 of each bundle file as the vault received it. It is
+deliberately not refreshed by a later run — refreshing it re-minted the vault
+id and left a spurious ``' M .memoria/vault.json'`` in vault history on every
+installer re-run.
+
+**These hashes are not an as-seeded baseline.** A file already present when the
+vault was created records the PI's bytes, and a bundle seeded by a later run is
+not recorded at all. A future drift, skew, or tamper check needs its own
+as-seeded record and must not be pointed at this field.
 """
 
 from __future__ import annotations
@@ -45,6 +57,8 @@ BUNDLE_FILES: dict[str, tuple[str, ...]] = {
         ".obsidian/plugins/memoria-obsidian/styles.css",
     ),
 }
+# Membership test for the seed-class writer's one-writer refusal (cli.py).
+BUNDLE_PATHS: frozenset[str] = frozenset(rel for rels in BUNDLE_FILES.values() for rel in rels)
 
 
 def seed_bytes(rel: str) -> bytes:
@@ -52,12 +66,15 @@ def seed_bytes(rel: str) -> bytes:
     return files(WORKSPACE_SEED_PACKAGE).joinpath(*rel.split("/")).read_bytes()
 
 
-def read_manifest(workspace: Path) -> dict[str, Any] | None:
-    """Return the parsed vault manifest, or ``None`` when it does not exist."""
-    path = workspace / MANIFEST_REL
-    if not path.is_file():
-        return None
-    return json.loads(path.read_text("utf-8"))
+def bundle_files(bundle_names: list[str] | None = None) -> list[str]:
+    """Return the seeded paths of the named bundles, sorted."""
+    names = list(BUNDLE_FILES) if bundle_names is None else bundle_names
+    return sorted(rel for name in names for rel in BUNDLE_FILES[name])
+
+
+def bundle_write_targets(bundle_names: list[str] | None = None) -> list[str]:
+    """Return every workspace-relative path this module may write."""
+    return sorted({MANIFEST_REL, *bundle_files(bundle_names)})
 
 
 def write_manifest(workspace: Path, manifest: dict[str, Any]) -> None:
@@ -69,28 +86,30 @@ def write_manifest(workspace: Path, manifest: dict[str, Any]) -> None:
     )
 
 
-def seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None) -> dict[str, Any]:
-    """Write the named bundle templates that are absent and hash what is on disk.
+def seed_bundles(workspace: Path, *, bundle_names: list[str] | None = None) -> None:
+    """Write the absent bundle files, then the manifest when it too is absent.
 
-    Mints a fresh ``vault_id`` and records the SHA-256 of the file that is
-    actually present, never of the template that was skipped — hashing the
-    template bytes would make the manifest describe content the vault does not
-    hold. Defaults to every registered bundle when ``bundle_names`` is omitted.
+    Records the SHA-256 of the file that is actually present, never of a
+    template that was skipped. A manifest already on disk is this vault's
+    identity and creation receipt: it is left exactly as written, so the
+    ``vault_id`` in ``runtime.json`` is minted once and pinned.
     """
-    names = bundle_names if bundle_names is not None else list(BUNDLE_FILES)
-    bundles_manifest: dict[str, Any] = {}
+    names = list(BUNDLE_FILES) if bundle_names is None else bundle_names
     for name in names:
-        file_hashes: dict[str, str] = {}
         for rel in BUNDLE_FILES[name]:
             target = workspace / rel
             if not target.exists():
                 write_bytes_durable(target, seed_bytes(rel), create_parent=True)
-            file_hashes[rel] = sha256_file(target)
-        bundles_manifest[name] = {"files": file_hashes}
-    manifest = {
-        "schema": MANIFEST_SCHEMA,
-        "vault_id": uuid.uuid4().hex,
-        "bundles": bundles_manifest,
-    }
-    write_manifest(workspace, manifest)
-    return manifest
+    if (workspace / MANIFEST_REL).exists():
+        return
+    write_manifest(
+        workspace,
+        {
+            "schema": MANIFEST_SCHEMA,
+            "vault_id": uuid.uuid4().hex,
+            "bundles": {
+                name: {"files": {rel: sha256_file(workspace / rel) for rel in BUNDLE_FILES[name]}}
+                for name in names
+            },
+        },
+    )

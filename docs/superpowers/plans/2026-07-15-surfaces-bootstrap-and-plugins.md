@@ -6453,6 +6453,71 @@ manifest shape. `doctor --repair` must still never touch the agent bundle, and
 its `.obsidian/plugins/*` reseed must either update the manifest or keep the
 docstring warning that the manifest is not authoritative post-repair.
 
+### BOOT-C.6 decision — the manifest is an as-created receipt (2026-08-01, BINDING)
+
+**Decision.** `runtime.bundles` is the single init-path writer of all nine
+bundle paths, and **write-if-absent is its one policy — for the bundle files
+and for `.memoria/vault.json` alike**. `vault_id` is therefore minted exactly
+once, when the vault is created, and pinned for the life of the vault; the
+manifest records the SHA-256 of each bundle file *as the vault received it* and
+is never rewritten by a later run.
+
+Measured before/after on a pure installer re-run (`memoria init --yes` twice,
+zero PI edits): `' M .memoria/vault.json'` plus a new `vault_id` → clean tree,
+same `vault_id`. Nothing else in the vault was dirty either way, so the
+unconditional manifest write was the whole of the churn.
+
+**Why this and not the alternatives.**
+
+| Option | For | Against |
+| --- | --- | --- |
+| **Chosen: write-if-absent manifest** | One sentence describes the module; identity minted once and pinned; a re-run records nothing in vault history; no read-back, so it does not re-open the surface the 2026-07-30 clean-slate amendment deleted | Hashes are as-created, not as-on-disk: a bundle seeded by a *later* run (`--no-obsidian` then a plain re-init, or a future engine version adding a plugin file) is on disk but absent from the record |
+| Rejected: unconditional manifest, `vault_id` read back from the prior manifest | Keeps BOOT-C.2's as-on-disk hashes and a complete record for the current registry | Reading the prior `vault_id` *is* preserving a prior manifest, which the clean-slate amendment forbids in as many words ("Do not … preserve a prior manifest"), and it re-opens the permanent surface that deletion removed: corrupt/hostile/non-dict manifest handling, its fallbacks, and their tests. Cost lands on a **supported** path (`scripts/install.sh` re-runs `init --yes`) |
+| Rejected: mint `vault_id` in a separate write-if-absent file, keep the manifest unconditional | Would give both a pinned identity and as-on-disk hashes | Two artifacts for one record; the read-back objection only moves to the new file; a second tracked path to seed, document, and preflight — more surface bought for a field with no consumer |
+| Rejected: derive `vault_id` from the canonical vault path | No stored state at all | Duplicates the rendezvous state-dir key (`sha256(path)[:16]`) and changes when the vault moves, which is the opposite of an identity |
+
+The chosen cost is acceptable because **no code reads these hashes** (`cli._vault_id`
+reads `vault_id` only, and BOOT-C.3/.4/.5 are removed) and because, per the ledger
+item below, no future check may read them either. The rejected option's cost is
+paid on every installer run, in a repo where vault versioning is product behavior.
+
+**Carry forward — do not point a drift check at this field.** These hashes are
+not an as-seeded baseline: a file already present when the vault was created
+records the PI's bytes, and a bundle seeded by a later run is not recorded at
+all. A returning drift, skew, or tamper check needs its own as-seeded record.
+This constraint also lives in the `runtime/bundles.py` module docstring, where
+that implementer will read it.
+
+**One writer, proved.** `cli._seed_write_allowed` refuses every path in
+`bundles.BUNDLE_PATHS` on the init path, and `AGENT_BUNDLE_SEED_TREES` /
+`AGENT_BUNDLE_SEED_FILES` are deleted, so no seed-class roster names a bundle
+path any more. `tests/test_agent_bundle.py` silences `seed_bundles` and asserts
+`init` then delivers *none* of the nine paths and no manifest — a second writer
+reappearing fails that test rather than being papered over by identical bytes.
+Init reports the bundle separately as `package.bundle_files` in `--dry-run`
+(the agent paths left `package.seed_trees` / `seed_files` with the rosters).
+
+**`doctor --repair`.** Unchanged and now pinned by test: it never writes an
+agent-bundle path (they are in no roster it walks) and never writes the
+manifest (`bundle_write_targets` is declared only when `include_agent_bundle`,
+which only `init` passes). It still restores `.obsidian/plugins/*` as the
+runtime seed it has always been — the documented `--no-obsidian` → repair →
+Obsidian path in `docs/how-to-guides/setup/set-up-obsidian.md` depends on it.
+The BOOT-C.2 docstring warning that "the manifest is not authoritative
+post-repair" is **deleted rather than kept**: under an as-created receipt,
+repair rewrites those files with the same package bytes the receipt recorded,
+so it moves disk back onto the manifest instead of away from it (pinned:
+PI-patch `main.js`, repair, assert the file's hash equals the recorded hash).
+Under the rejected as-on-disk option the warning would still be needed — that
+asymmetry is itself an argument for the decision.
+
+**Spec.** `specs/2026-07-15-surfaces-bootstrap-design.md`'s decision row now
+carries the shipped shape (`schema`, `vault_id`, per-bundle file hashes, written
+once); `schema_version` and per-bundle versions were retired by the 2026-07-30
+amendment. That spec's §6 upgrade/skew story and §9.3 slice remain drafting
+history superseded wholesale by the same amendment; this task reconciled the
+decision row only.
+
 ---
 
 # BOOT-D: Onboarding runway (`memoria onboard`, `Start here.md`, Zotero probe)

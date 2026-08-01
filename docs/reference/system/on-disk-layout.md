@@ -68,7 +68,7 @@ writable runtime directories are created from `folders.yaml`:
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
 ├── overrides.jsonl          Git-tracked log of PI overrides recorded at init and beyond
-├── vault.json               Git-tracked init manifest: vault identity and the seeded agent/Obsidian bundle hashes
+├── vault.json               Git-tracked as-created receipt: vault identity and the agent/Obsidian bundle hashes, written once at init
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── code-runs/<run-id>/      gitignored recorded code-execution run artifacts
 ├── journal/                 derived per-machine JSONL synchronization exports
@@ -140,7 +140,7 @@ preferences, but preserves an existing PI-owned view preference.
 | `.obsidian/app.json` | Obsidian file/link defaults chosen to avoid root clutter and frontmatter UI rewriting. |
 | `.obsidian/core-plugins.json` | Core plugin settings for Memoria: navigation/read plugins on, workflow-mutating plugins off. |
 | `.obsidian/community-plugins.json` | Enables the bundled `memoria-obsidian` plugin. |
-| `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. |
+| `.obsidian/plugins/memoria-obsidian/` | Built proof adapter files; calls local HTTP and records empirical events through `/operation/run`. `memoria init` seeds them once and never overwrites an existing copy; `memoria doctor --repair` restores them from the package. |
 | `catalog.base`, `claims.base`, `inbox.base`, `projects.base`, `sources.base` | Root Base view preferences. `--no-obsidian` skips them; repair restores a missing file but preserves the PI's existing copy. |
 | `.obsidian/graph.json`, `.obsidian/types.json` | Obsidian graph and type view preferences. Repair restores a missing file but preserves the PI's existing copy. |
 | `.claude/`, `.codex/hooks.json`, `.mcp.json`, `CLAUDE.md` | First-init agent/MCP host configuration. It configures installed hosts but installs no external runtime. `memoria init`, including `--no-obsidian`, seeds it once; `memoria doctor --repair` never recreates or overwrites it, so it is PI-owned after bootstrap. |
