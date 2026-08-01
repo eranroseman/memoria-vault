@@ -29,10 +29,10 @@ classes), line 106 (Surface program — three rings, Ring 1).
 
 **Execution notes**
 
-- Per AGENTS.md session isolation: before editing, run
-  `git worktree add .worktrees/ring1-vault-ui -b wip/ring1-vault-ui origin/main`
-  then `EnterWorktree(path: ".worktrees/ring1-vault-ui")`. All paths below are
-  repo-relative inside that worktree.
+- Per AGENTS.md session isolation: before editing, run `git worktree add
+  .claude/worktrees/ring1-vault-ui -b wip/ring1-vault-ui origin/main` then
+  `EnterWorktree(path: ".claude/worktrees/ring1-vault-ui")`. All paths below
+  are repo-relative inside that worktree.
 - Correctness gate is `python scripts/verify`; run it at the end of each task.
 - This repo shares its git index per checkout: stage explicit paths only,
   never `git add -A`.
