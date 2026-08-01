@@ -120,6 +120,71 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
     assert [row["kind"] for row in result["advisories"]] == ["structural"]
 
 
+def test_analyze_project_argument_traverses_claim_to_work_bridge(tmp_path: Path) -> None:
+    """A claim grounded in a checked work stays connected to it in the argument graph.
+
+    Two works, one checked and one not: the bridge admits catalog targets, and the
+    filter it admits them through is `catalog_sources`' own checked scope, not the
+    mere shape of a `catalog/sources/*` string.
+    """
+    state.upsert_catalog_record(
+        tmp_path, work_id="source-alpha", title="Alpha Source", check_status="checked"
+    )
+    state.upsert_catalog_record(
+        tmp_path, work_id="source-beta", title="Beta Source", check_status="unchecked"
+    )
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  supports:\n    - notes/thesis.md\n"
+        "    - catalog/sources/source-alpha\n"
+        "    - catalog/sources/source-beta\n",
+    )
+
+    result = analyze_project_argument(tmp_path, "projects/project-alpha/project.md")
+
+    assert {
+        "source": "notes/support.md",
+        "target": "catalog/sources/source-alpha",
+        "type": "supports",
+    } in result["edges"]
+    assert "catalog/sources/source-beta" not in {edge["target"] for edge in result["edges"]} | {
+        node["path"] for node in result["nodes"]
+    }
+    # Whole node record: a role assertion alone cannot tell a work rendered by its
+    # work_id from one rendered as a blank or as its store path.
+    assert {
+        "path": "catalog/sources/source-alpha",
+        "title": "source-alpha",
+        "role": "work",
+    } in result["nodes"]
+    assert {"path": "notes/thesis.md", "title": "Thesis", "role": "thesis"} in result["nodes"]
+    assert {"path": "notes/support.md", "title": "Support", "role": "note"} in result["nodes"]
+    # Retraction blast radius: a walk rooted at the WORK reaches every
+    # transitively grounded claim through the bridge.
+    neighbors: dict[str, set[str]] = {}
+    for edge in result["edges"]:
+        neighbors.setdefault(edge["source"], set()).add(edge["target"])
+        neighbors.setdefault(edge["target"], set()).add(edge["source"])
+    seen = {"catalog/sources/source-alpha"}
+    queue = ["catalog/sources/source-alpha"]
+    while queue:
+        for neighbor in neighbors.get(queue.pop(), set()):
+            if neighbor not in seen:
+                seen.add(neighbor)
+                queue.append(neighbor)
+    assert {"notes/support.md", "notes/thesis.md"} <= seen
+
+
 def _argument_vault(tmp_path: Path, thesis: str) -> Path:
     _md(
         tmp_path / "projects/project-alpha/project.md",
