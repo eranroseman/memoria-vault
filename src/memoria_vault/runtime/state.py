@@ -1149,11 +1149,19 @@ def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> 
     and one without a ULID keeps its path key. Only absent file rows carrying no
     verdict are pruned: a verdict-bearing row is the PI's judgment and survives its
     file. Pruning a row cascades its outgoing edges and pends inbound ones through
-    the v16 foreign keys.
+    the v16 foreign keys. A reconciled rename also carries the path-keyed ``outputs``
+    row to the new path, so the read barrier still finds the PI's checked record
+    there (``_reconcile_renamed_output_conn``).
     """
     rows = list(rows)
     _refuse_duplicate_batch_identities(rows)
     with connect(vault) as conn:
+        for row in rows:
+            _reconcile_renamed_output_conn(
+                conn,
+                normalize_path(row["concept_id"]),
+                normalize_path(str(row.get("path") or row["concept_id"])),
+            )
         keep = [
             ensure_concept_parent_conn(
                 conn,
@@ -1174,6 +1182,29 @@ def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> 
             (_json(keep),),
         ).rowcount
     return {"deleted": int(deleted), "inserted": len(rows)}
+
+
+def _reconcile_renamed_output_conn(
+    conn: sqlite3.Connection, concept_id: str, new_path: str
+) -> None:
+    """Carry the path-keyed materialization ledger row along a reconciled rename.
+
+    ``outputs`` stays path-keyed (NID-B.2), but its key is the *current* path: a
+    rename that reconciles ``concepts.path`` must move it, or the read barrier
+    reads no checked output record at the new path and refuses content the PI did
+    check. The sha256 comparison in ``is_consumable_checked_file`` is untouched, so
+    a rename-plus-edit is still refused.
+    """
+    resident = conn.execute(
+        "SELECT path FROM concepts WHERE concept_id = ?", (concept_id,)
+    ).fetchone()
+    old_path = str(resident["path"]) if resident is not None else ""
+    if not old_path or not new_path or old_path == new_path:
+        return
+    conn.execute(
+        "UPDATE OR REPLACE outputs SET output_id = ?, target_path = ? WHERE output_id = ?",
+        (new_path, new_path, old_path),
+    )
 
 
 def _refuse_duplicate_batch_identities(rows: list[dict[str, str]]) -> None:

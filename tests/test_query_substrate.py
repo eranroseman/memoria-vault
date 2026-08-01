@@ -821,3 +821,90 @@ def test_refresh_removes_reverified_non_searchable_file(tmp_path: Path) -> None:
 
     assert state.indexed_passages(vault) == []
     assert "notes/alpha.md" not in state.file_index_states(vault)
+
+
+ULID_NOTE = "01BX5ZZKBKACTAV9WEVGEMMVRZ"
+
+
+def test_rename_out_of_band_reconciles_by_frontmatter_id(tmp_path: Path) -> None:
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/alpha.md",
+        f"type: note\nid: {ULID_NOTE}\ntitle: Alpha\ntags: []\n"
+        'links:\n  supports: ["[[notes/beta]]"]\n',
+    )
+    write_checked_concept(vault, "notes/beta.md", "type: note\ntitle: Beta\ntags: []\nlinks: {}\n")
+    rebuild_passage_index(vault)
+    with state.connect(vault) as conn:
+        before = conn.execute(
+            "SELECT concept_id, path FROM concepts WHERE concept_id = ?", (ULID_NOTE,)
+        ).fetchone()
+    assert before["path"] == "notes/alpha.md"
+
+    # Rename out-of-band: no writer, no observer — just the file move.
+    (vault / "notes/alpha.md").rename(vault / "notes/alpha-renamed.md")
+    rebuild_passage_index(vault)
+
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT path FROM concepts WHERE concept_id = ?", (ULID_NOTE,)
+        ).fetchone()
+        verdict = conn.execute(
+            "SELECT check_status FROM concept_verdicts WHERE concept_id = ?",
+            (ULID_NOTE,),
+        ).fetchone()
+        edges = conn.execute(
+            "SELECT source_concept_id, relation_type, target_path FROM concept_edges"
+        ).fetchall()
+        passage = conn.execute(
+            "SELECT concept_id FROM passages WHERE path = 'notes/alpha-renamed.md'"
+        ).fetchone()
+    # Every DB row survives id-keyed; the path column reconciled (spec §7).
+    assert row["path"] == "notes/alpha-renamed.md"
+    assert verdict["check_status"] == "checked"
+    assert (ULID_NOTE, "supports", "notes/beta.md") in {
+        (e["source_concept_id"], e["relation_type"], e["target_path"]) for e in edges
+    }
+    assert passage["concept_id"] == ULID_NOTE
+
+
+def test_rename_reconciliation_still_refuses_edited_content(tmp_path: Path) -> None:
+    """Reconciling the outputs path key must not launder an edit past the barrier.
+
+    The rename reconciliation moves `outputs.output_id` to the file's new path so a
+    pure move keeps its verdict (spec §7). The read barrier's sha256 comparison is
+    what actually authorizes consumption, and it must still run against the file at
+    that new path — otherwise renaming would become a way to smuggle unchecked
+    content into the searchable universe.
+    """
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/alpha.md",
+        f"type: note\nid: {ULID_NOTE}\ntitle: Alpha\ntags: []\nlinks: {{}}\n",
+        body="rarealpha the checked body",
+    )
+    rebuild_passage_index(vault)
+    assert {row["path"] for row in state.indexed_passages(vault)} == {"notes/alpha.md"}
+
+    # Rename AND edit out-of-band, in one move the PI never reviewed.
+    (vault / "notes/alpha.md").rename(vault / "notes/alpha-edited.md")
+    edited = vault / "notes/alpha-edited.md"
+    edited.write_text(
+        edited.read_text(encoding="utf-8").replace("rarealpha the checked body", "SMUGGLED"),
+        encoding="utf-8",
+    )
+    rebuild_passage_index(vault)
+
+    with state.connect(vault) as conn:
+        concept = conn.execute(
+            "SELECT path FROM concepts WHERE concept_id = ?", (ULID_NOTE,)
+        ).fetchone()
+    # The identity still reconciles its path — that half is the rename contract.
+    assert concept["path"] == "notes/alpha-edited.md"
+    # But the changed bytes are refused: no passage row, and the text is unreachable.
+    assert state.indexed_passages(vault) == []
+    assert call_with_context(retrieval.fts_search, vault, "SMUGGLED") == []
