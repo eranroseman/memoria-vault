@@ -21,7 +21,7 @@ from memoria_vault.runtime.knowledge import (
 )
 from memoria_vault.runtime.operations import compile_source_digest as _compile_source_digest
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
-from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, concept_edge_path_records
 from memoria_vault.runtime.trusted_writer import mark_checked as _mark_checked
 from memoria_vault.runtime.trusted_writer import observe_pi_edit_from_head
 from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
@@ -456,6 +456,156 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert event["reason"] == "PI linked claims"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/source.md"}
+
+
+def test_curate_note_link_without_warrant_writes_no_edge_row(tmp_path: Path) -> None:
+    """No warrant text, no attribute edge: the frontmatter link is the whole write."""
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+
+    result = curate_note_link(vault, "source", "supports", "target", actor="pi", machine="curator")
+
+    assert result["edge_id"] == ""
+    assert concept_edge_path_records(vault, checked_only=False) == []
+    event = list(iter_jsonl(vault / ".memoria/journal/curator.jsonl"))[-1]
+    assert "warrant" not in event
+    assert "edge_id" not in event
+
+
+def test_curate_note_link_warrant_text_round_trips_to_edge_attribute(tmp_path: Path) -> None:
+    """Warrant text hangs on the identity-keyed edge and is readable in path space."""
+    vault = workspace(tmp_path)
+    source_ulid = "01KBN6V6KX0000000000000001"
+    target_ulid = "01KBN6V6KX0000000000000002"
+    checked_note(vault, "source", "Source", source_ulid)
+    checked_note(vault, "target", "Target", target_ulid)
+
+    result = curate_note_link(
+        vault,
+        "source",
+        "supports",
+        "target",
+        warrant="RCTs in this population license the inference",
+        actor="pi",
+        reason="PI linked claims",
+        machine="curator",
+    )
+
+    edge_id = str(result["edge_id"])
+    assert edge_id
+    assert result["changed"] is True
+    assert concept_edge_path_records(vault, checked_only=False) == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/target.md",
+            "relation_type": "supports",
+            "attributes": {"warrant": "RCTs in this population license the inference"},
+        }
+    ]
+    # The edge is keyed in identity space; the projection publishes paths only.
+    assert source_ulid not in repr(concept_edge_path_records(vault, checked_only=False))
+    assert target_ulid not in repr(concept_edge_path_records(vault, checked_only=False))
+    event = list(iter_jsonl(vault / ".memoria/journal/curator.jsonl"))[-1]
+    assert event["warrant"] == "RCTs in this population license the inference"
+    assert event["edge_id"] == edge_id
+
+    # Upsert: re-curating the same triple with new warrant text updates in place.
+    updated = curate_note_link(
+        vault,
+        "source",
+        "supports",
+        "target",
+        warrant="Updated license",
+        actor="pi",
+        machine="curator",
+    )
+
+    assert updated["changed"] is False
+    assert updated["edge_id"] == edge_id
+    assert concept_edge_path_records(vault, checked_only=False) == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/target.md",
+            "relation_type": "supports",
+            "attributes": {"warrant": "Updated license"},
+        }
+    ]
+
+
+def test_curate_note_link_refuses_an_unchecked_target_before_writing_the_edge(
+    tmp_path: Path,
+) -> None:
+    """A refused link writes no edge either: the warrant upsert sits behind validation.
+
+    `insert_concept_edge` commits its own transaction, so an edge written before the
+    target check would survive the refusal that follows it — the one mutation this
+    file's existing refusal pin cannot see, because it raises earlier still.
+    """
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    target = vault / "notes/target.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "---\ntype: note\nid: 01KBN6V6KX0000000000000002\ntitle: Target\n"
+        "tags: []\nlinks: {}\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="not checked"):
+        curate_note_link(
+            vault,
+            "source",
+            "supports",
+            "target",
+            warrant="premature license",
+            actor="pi",
+            machine="curator",
+        )
+
+    assert concept_edge_path_records(vault, checked_only=False) == []
+    assert read_frontmatter(vault / "notes/source.md")["links"] == {}
+
+
+def test_curate_note_link_warrant_is_stripped_and_a_blank_one_writes_nothing(
+    tmp_path: Path,
+) -> None:
+    """Surrounding whitespace is not warrant text — a blank warrant stays silent."""
+    vault = workspace(tmp_path)
+    checked_note(vault, "source", "Source", "01KBN6V6KX0000000000000001")
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000002")
+
+    blank = curate_note_link(
+        vault, "source", "supports", "target", warrant="   \n ", actor="pi", machine="curator"
+    )
+
+    assert blank["edge_id"] == ""
+    assert concept_edge_path_records(vault, checked_only=False) == []
+
+    padded = curate_note_link(
+        vault,
+        "source",
+        "extends",
+        "target",
+        warrant="  bounded to adults \n",
+        actor="pi",
+        machine="curator",
+    )
+
+    assert padded["edge_id"]
+    # Whole records, not just their attributes: the relation the PI curated is what
+    # the warrant licenses, and an assertion that projects it away cannot tell this
+    # edge from one hung on the wrong verb.
+    assert concept_edge_path_records(vault, checked_only=False) == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/target.md",
+            "relation_type": "extends",
+            "attributes": {"warrant": "bounded to adults"},
+        }
+    ]
+    event = list(iter_jsonl(vault / ".memoria/journal/curator.jsonl"))[-1]
+    assert event["warrant"] == "bounded to adults"
 
 
 def test_curate_note_link_rejects_invalid_source_without_mutation(tmp_path: Path) -> None:
