@@ -35,7 +35,11 @@ from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
 from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter_field_errors
 
-SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
+# Host and tool state, not vault content. `memoria init` seeds .obsidian, .claude
+# and .codex, so leaving any of them out means the linter flags the product's own
+# output as a stray folder on every vault it creates. Also prunes the walk (see
+# iter_files), which is why the list is worth keeping tight.
+SKIP_DIRS = {".githooks", ".obsidian", ".claude", ".codex", ".git", ".memoria", "node_modules"}
 TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/", "inbox/")
 # A typed document legitimately leaves its type-home only while it is work-in-flight
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector

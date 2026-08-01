@@ -91,6 +91,11 @@ def test_detectors():
             (v / "70-misc/scratch.md").write_text("notes", encoding="utf-8")
             (v / ".githooks").mkdir(parents=True, exist_ok=True)
             (v / ".githooks/pre-commit").write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            # Agent-host config, seeded into every vault by `memoria init`.
+            (v / ".claude/hooks").mkdir(parents=True, exist_ok=True)
+            (v / ".claude/settings.json").write_text("{}\n", encoding="utf-8")
+            (v / ".codex").mkdir(parents=True, exist_ok=True)
+            (v / ".codex/hooks.json").write_text("{}\n", encoding="utf-8")
             import json as _json
             from datetime import datetime, timedelta
 
@@ -227,6 +232,10 @@ def test_detectors():
             check(
                 "misplaced-note ignores shipped hidden implementation folder",
                 not any(x.path == ".githooks" for x in by("misplaced-note")),
+            )
+            check(
+                "misplaced-note ignores seeded agent-host config",
+                not any(x.path in {".claude", ".codex"} for x in by("misplaced-note")),
             )
             check(
                 "misplaced-note flags retired spaces root",

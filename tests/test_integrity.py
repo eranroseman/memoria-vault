@@ -570,3 +570,27 @@ def test_link_targets_flag_missing_targets(tmp_path: Path) -> None:
     assert finding["target_id"] == target
     assert finding["reason"] == "unresolved link target: notes/missing.md"
     assert finding["route"] == "ask"
+
+
+def test_seeded_vault_has_no_stray_top_level_folders(tmp_path, capsys) -> None:
+    """Whatever `memoria init` seeds must not read as a stray folder.
+
+    SKIP_DIRS is a detector-side fact about product-side seeding, and nothing
+    otherwise keeps the two in sync -- which is how `.claude` and `.codex` came
+    to be flagged in every vault Memoria creates, permanently, as soon as they
+    were added to the workspace seed. This test is that sync: it fails for the
+    next agent host too, rather than shipping the noise and waiting for someone
+    to notice.
+    """
+    from memoria_vault.runtime.subsystems.integrity.linter import detectors
+    from tests.helpers import init_cli_workspace
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    stray = [
+        finding.path
+        for finding in detectors.misplaced_note(workspace)
+        if "stray top-level folder" in finding.message
+    ]
+
+    assert stray == []
