@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 from typing import Any
 
@@ -58,6 +59,30 @@ class PolicyEngine:
             },
         )
 
+    def _journal_honored_dispositions(self) -> dict[str, Any] | None:
+        """Record the closed attention cards this gate is about to honor.
+
+        Returns a deny response when the journal cannot take them, and `None` on
+        success. The gate must never honor a disposition it did not record, so an
+        unwritable journal (a read-only vault, a locked database) is a refusal and
+        not a traceback: this runs inside a `PreToolUse` hook whose caller reads a
+        JSON decision from stdout, and an exception there exits printing none.
+        """
+        # Lazy import: policy is imported by the trusted writer, so a module-level
+        # import of the journal path would close the cycle (same pattern as
+        # retraction.py, integrity.py).
+        from memoria_vault.runtime.subsystems.lib import lifecycle
+
+        try:
+            lifecycle.journal_unattributed_dispositions(self.workspace)
+        except (OSError, sqlite3.Error) as exc:
+            return {
+                "decision": "deny",
+                "policy_rule": "attention.journal-error",
+                "message": f"cannot journal the attention dispositions this gate honors: {exc}",
+            }
+        return None
+
     def check(
         self,
         actor: str,
@@ -80,7 +105,8 @@ class PolicyEngine:
             self._audit_traversal(actor, action, path, request_id, str(exc))
             return {"decision": "deny", "policy_rule": "path.traversal", "message": str(exc)}
 
-        if action in MUTATING_ACTIONS and is_review_gated(npath):
+        review_gated = action in MUTATING_ACTIONS and is_review_gated(npath)
+        if review_gated:
             blockers = loudness.open_blockers(self.workspace)
             if blockers:
                 message = loudness.blocker_message(blockers)
@@ -108,6 +134,9 @@ class PolicyEngine:
             policy = self.policy(actor)
         except (FileNotFoundError, KeyError, RuntimeError, ValueError) as exc:
             return {"decision": "deny", "policy_rule": "policy.load-error", "message": str(exc)}
+
+        if review_gated and (denial := self._journal_honored_dispositions()):
+            return denial
 
         skill_deny = self._session_skill_deny.get(request_id)
         dec = decide(actor, action, npath, policy, flags=flags, skill_deny_write=skill_deny)

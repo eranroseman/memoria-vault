@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.policy import (
     AUDIT_RELPATH,
     EMPTY_SHA256,
@@ -417,6 +418,96 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     unblocked = engine.check("operation", "write", "hubs/h.md", "REQ-OPEN")
     assert unblocked["decision"] == "dry_run"
     assert unblocked["policy_rule"] == "review_gated.dry_run"
+
+
+def _write_closed_blocker(vault):
+    (vault / "inbox").mkdir(exist_ok=True)
+    (vault / "inbox/block.md").write_text(
+        "---\n"
+        "title: Stop\n"
+        "projection: attention\n"
+        "attention_kind: alert\n"
+        "attention_status: resolved\n"
+        "loudness: block\n"
+        "resolved_at: 2026-06-15\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+
+def _write_operation_write_policy(vault):
+    config = vault / POLICY_CONFIG_RELPATH
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(
+        "version: 1\n"
+        "actors:\n"
+        "  operation:\n"
+        "    allow:\n"
+        '      write: ["hubs/**"]\n'
+        '    require: ["audit_log"]\n'
+        '    write_scope: ["hubs/"]\n',
+        encoding="utf-8",
+    )
+
+
+def test_gate_journals_the_disposition_it_honors_without_naming_an_author(tmp_path):
+    _write_operation_write_policy(tmp_path)
+    _write_closed_blocker(tmp_path)
+
+    engine = PolicyEngine(tmp_path)
+    resp = engine.check("operation", "write", "hubs/h.md", "REQ-1")
+
+    # The flip already cleared `open_blockers`; the gate honoring it is what has to
+    # leave a journal row behind. The row must not claim the PI made the flip: the
+    # reference actor policy grants the `adapter` actor `write: ["inbox/**"]`, so a
+    # machine can produce this exact state, and `machine` is `platform.node()`
+    # either way. UPDATE and DELETE are forbidden, so a wrong author is permanent.
+    assert resp["policy_rule"] != "loudness.block.active"
+    events = state.read_event_log(tmp_path, event_types=("resolved",))
+    assert [event["target_id"] for event in events] == ["inbox/block.md"]
+    assert events[0]["via"] == "unattributed-edit"
+    assert events[0]["actor"] != "pi"
+
+
+def test_gate_journals_nothing_when_it_refuses_before_loading_a_policy(tmp_path):
+    """The durable write follows authorization, it does not precede it.
+
+    `check` is reachable by any caller, including one whose actor has no policy at
+    all. Journaling ahead of `self.policy(actor)` let a refused request force
+    permanent rows into an append-only log.
+    """
+    _write_closed_blocker(tmp_path)  # no policy config at all
+
+    engine = PolicyEngine(tmp_path)
+    resp = engine.check("agent", "write", "hubs/h.md", "REQ-1")
+
+    assert resp["decision"] == "deny"
+    assert resp["policy_rule"] == "policy.load-error"
+    assert state.read_event_log(tmp_path, event_types=("resolved",)) == []
+
+
+def test_gate_denies_rather_than_raising_when_the_journal_is_unwritable(tmp_path):
+    """A read-only vault is a refusal, not a traceback.
+
+    The caller is a `PreToolUse` hook that reads one JSON decision from stdout;
+    `hook.main` does not wrap the handler, so an exception escaping `check` exits
+    printing nothing at all — a fail-open silence in a fail-closed gate.
+    """
+    _write_operation_write_policy(tmp_path)
+    _write_closed_blocker(tmp_path)
+    with state.connect(tmp_path):  # create the database, then take away the write bit
+        pass
+    db = tmp_path / ".memoria/memoria.sqlite"
+    db.chmod(0o444)
+
+    try:
+        engine = PolicyEngine(tmp_path)
+        resp = engine.check("operation", "write", "hubs/h.md", "REQ-1")
+    finally:
+        db.chmod(0o600)
+
+    assert resp["decision"] == "deny"
+    assert resp["policy_rule"] == "attention.journal-error"
 
 
 def test_split_policy_decision_core_imports_without_mcp_server():

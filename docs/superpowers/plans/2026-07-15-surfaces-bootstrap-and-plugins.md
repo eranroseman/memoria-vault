@@ -7958,12 +7958,103 @@ manual-edit`, actor `pi`); the policy gate calls it before evaluating blockers.
   - `read_frontmatter(path: Path) -> dict[str, Any]` (`runtime/vaultio.py:66`)
   - `resolve_attention`'s journal-event shape and `target_id` convention (relative posix path, `runtime/integrity.py:1150-1163`)
 - Produces:
-  - `lifecycle.adopt_manual_dispositions(vault: Path, *, machine: str = "") -> list[dict[str, Any]]` — returns the adopted journal rows (empty list when nothing to adopt). Adopts `inbox/*.md` cards with `projection: attention` and `attention_status` in `{"resolved", "deferred"}` that have no journaled `resolved` event for their relative path; the adopted event carries `via: "manual-edit"`, `resolution: "resolved"`, `outcome` = frontmatter `resolution_outcome` if present else `"defer"` for deferred / `"apply"` for resolved, `actor: "pi"`. Idempotent; never edits files, never commits.
-  - Gate behavior: every review-gated mutating `PolicyEngine.check` adopts before reading `open_blockers` (same `inbox/*.md` frontmatter scan cost `open_blockers` already pays; the journal DB is only touched when a closed-status card exists).
+  - `lifecycle.journal_unattributed_dispositions(vault: Path, *, machine: str = "") -> list[dict[str, Any]]` — returns the journaled rows (empty list when nothing is missing). Covers `inbox/*.md` cards with `projection: attention` and `attention_status` in `{"resolved", "deferred"}` that have no journaled `resolved` event for their relative path; the event carries `via: "unattributed-edit"`, `resolution: "resolved"`, `outcome` = frontmatter `resolution_outcome` if it is in the vocabulary else `"defer"` for deferred / `"apply"` for resolved, `actor: "integrity"`. Idempotent; never edits files, never commits.
+  - Gate behavior: every review-gated mutating `PolicyEngine.check` journals the missing rows after its actor policy loads and before it decides (same `inbox/*.md` frontmatter scan cost `open_blockers` already pays; the journal DB is only touched when a closed-status card exists). An unwritable journal is a `attention.journal-error` deny, not an exception.
+
+> **Adopted U3-SUB.1 execution amendment (2026-08-01):** three defects in the
+> drafted snippets below are superseded by what shipped.
+>
+> 1. **The idempotency predicate matched the wrong rows.** `resolved` is a shared
+>    event type with five producers (attention resolution *and* acknowledgement,
+>    note curation, `curate-note-link`, `move_concept`, quarantine rollback), so
+>    keying only on `target_id` was both too broad and too narrow. It is now
+>    `source == "attention" and resolution == "resolved"` — the pair that means
+>    *this card's closing disposition*. Too narrow mattered in practice:
+>    `acknowledge-attention` journals a `resolved` row that closes nothing and
+>    leaves the card open, so under the drafted check a PI who acknowledged a card
+>    and then closed it by hand was never adopted — the exact silent clear this
+>    task removes, one step later.
+> 2. **No card text reaches the append-only journal.** The drafted event copied
+>    frontmatter `resolution_outcome` and `routing_class` verbatim, which is the
+>    hazard graph NID-B.6 had to retract a field for: the triggers forbid UPDATE
+>    and DELETE, so an unbounded value is permanent. Both are now validated
+>    against the vocabularies `resolve_attention` itself enforces (`apply|reject`
+>    for a resolved card, `defer` for a deferred one; `act|ask|log`), falling back
+>    to the status-derived default. Every other field is a code constant, a
+>    timestamp, or the card's own path.
+> 3. **The gate test asserts what is observable.** Journaling cannot change what
+>    `open_blockers` sees — the card is already closed — so "before evaluating
+>    blockers" has no observable ordering. The shipped test
+>    (`test_gate_journals_the_disposition_it_honors_without_naming_an_author`)
+>    asserts that the same `check` call that honors the flip journals it. The
+>    drafted already-journaled fixture also emitted a row `resolve_attention` never
+>    emits; the shipped tests drive the real operations through `worker.run_request`
+>    instead of hand-rolling the producer's row.
+>
+> Scope held: one `resolved` row and no `disposition.v1` row. `resolve_attention`
+> emits that second row from inside an operation envelope, and a flip observed on
+> disk carries no envelope and no stated reasoning to attribute.
+
+> **Second U3-SUB.1 amendment (2026-08-01), after review:** the row no longer
+> claims an author, and the durable write no longer precedes authorization.
+>
+> 4. **`actor: "pi"` was a false attestation, not a conservative one.** The
+>    drafted design reasoned by analogy to `observe_pi_edit` ("a change the trusted
+>    writer did not make is the PI's hand"). That analogy inverts here.
+>    `observe_pi_edit` calls `_bundle_for_target`, so it only ever names the PI
+>    *inside bundle roots* — which the reference actor policy
+>    (`docs/reference/control-and-policy/policy-mcp.md`) explicitly denies every
+>    adapter. `inbox/**` is the one write target that policy *grants* an adapter,
+>    so review drove that policy verbatim through `PolicyEngine`: an adapter
+>    rewrote an open block card to `attention_status: resolved` under
+>    `allow_with_log`, and the gate then wrote a row naming the PI, on a machine
+>    name (`platform.node()`) identical to a hand edit. The journal forbids UPDATE
+>    and DELETE, so that row is permanent and uncorrectable — under "all trust is
+>    placed in inspectable grounding structure", inspection returning a false
+>    answer is worse than returning none. `via: "manual-edit"` does not mitigate
+>    it: it separates *journaled-after-the-fact* from *operation-issued*, never
+>    *PI-made* from *machine-made*. The row is now `via: "unattributed-edit"` under
+>    `actor: "integrity"` — the actor Memoria already uses for the runtime
+>    recording vault state it did not cause (`observe-pi-edits`,
+>    `trace-integrity-scan`, `read_barrier`). No new `state.ACTORS` member was
+>    added, so nothing widened: `ACTORS` also gates `operation_requests.actor`,
+>    whose SQL CHECK pins the same four names, and eight call sites validate
+>    against it. Authorship can be attached when the product grows a way to observe
+>    it; SEAM.1 on this branch already split authority from authorship
+>    (`actor="pi", machine_authored=True`) for envelope-carrying writes.
+> 5. **The read and the append are one critical section.** The journal read sat
+>    outside `state.workspace_lock` and only the append took it, so six concurrent
+>    processes against one closed card left five duplicate permanent rows. AGENTS.md
+>    documents several sessions per checkout and the call site is a per-write
+>    `PreToolUse` hook. The lock now spans the read and the append; the frontmatter
+>    scan stays outside it, so a vault with no closed card never contends.
+> 6. **The write follows authorization, and cannot escape as an exception.** The
+>    call sat at the top of the review-gated branch, ahead of `self.policy(actor)`
+>    — so a caller with no policy at all got `deny / policy.load-error` *and* still
+>    forced a permanent row. It now runs after the policy loads. On a read-only
+>    vault the SQLite write raised `OperationalError` straight through
+>    `PolicyEngine.check` and `hook.evaluate_pre` into `hook.main`, which does not
+>    wrap the handler — a fail-closed gate exiting with a traceback and no JSON
+>    decision at all. Journaling failure (`OSError`, `sqlite3.Error`) is now a
+>    `attention.journal-error` deny: the gate must not honor a disposition it
+>    cannot record. `hook.main` is deliberately left unwrapped — a blanket handler
+>    there would mask unrelated defects.
+>
+> One batch. `append_explicit_event_batch` takes the whole list, so N missing cards
+> cost one durable write cycle rather than N.
+
+> **Recorded, not fixed (2026-08-01):** `knowledge._annotate_discovery_candidate`
+> (`runtime/knowledge.py:1454-1467`) rewrites an existing inbox card with
+> `write_frontmatter_doc`, **preserving a pre-existing closed `attention_status`
+> without journaling it**. It cannot create a closed status, so it cannot produce
+> an unjournaled close on its own and does not weaken the guarantee above. It does
+> mean a closed card's bytes are not by themselves proof of an edit made outside
+> the trusted writer — a machine rewrite can carry one forward. Relevant if
+> authorship attribution is ever attempted from file state.
 
 **Steps:**
 
-- [ ] Write the failing tests. Create `tests/test_attention_lifecycle.py`:
+- [x] Write the failing tests. Create `tests/test_attention_lifecycle.py`:
 
 ```python
 """Attention-card lifecycle: manual-edit adoption and monthly compaction."""
@@ -8040,14 +8131,14 @@ def test_deferred_hand_edit_adopts_defer_outcome(tmp_path):
     assert (tmp_path / "inbox/alert-later.md").exists()  # adoption never moves files
 ```
 
-- [ ] Register the new file in `tests/conftest.py`. Edit `tests/conftest.py`, inserting above the `"test_bases.py"` entry (line 20):
+- [x] Register the new file in `tests/conftest.py`. Edit `tests/conftest.py`, inserting above the `"test_bases.py"` entry (line 20):
 
 ```python
     "test_attention_lifecycle.py": "contract",
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -v` — expected failure at collection: `ModuleNotFoundError: No module named 'memoria_vault.runtime.subsystems.lib.lifecycle'`.
-- [ ] Write the minimal implementation. Create `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`:
+- [x] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -v` — expected failure at collection: `ModuleNotFoundError: No module named 'memoria_vault.runtime.subsystems.lib.lifecycle'`.
+- [x] Write the minimal implementation. Create `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -8127,8 +8218,8 @@ def adopt_manual_dispositions(vault: Path, *, machine: str = "") -> list[dict[st
     return adopted
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all 4 tests pass.
-- [ ] Write the failing gate-wiring test. Append to `tests/test_runtime_policy.py` (after `test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`, line 419):
+- [x] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all 4 tests pass.
+- [x] Write the failing gate-wiring test. Append to `tests/test_runtime_policy.py` (after `test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`, line 419):
 
 ```python
 def test_gate_adopts_hand_edited_disposition_before_evaluating_blockers(tmp_path):
@@ -8168,8 +8259,8 @@ def test_gate_adopts_hand_edited_disposition_before_evaluating_blockers(tmp_path
     assert events[0]["via"] == "manual-edit"
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_runtime_policy.py::test_gate_adopts_hand_edited_disposition_before_evaluating_blockers -v` — expected failure: `AssertionError: assert [] == ['inbox/block.md']` (gate never journals the hand-edit).
-- [ ] Wire the gate. Edit `src/memoria_vault/runtime/policy/engine.py` (lines 83-84):
+- [x] Run to verify failure: `python -m pytest tests/test_runtime_policy.py::test_gate_adopts_hand_edited_disposition_before_evaluating_blockers -v` — expected failure: `AssertionError: assert [] == ['inbox/block.md']` (gate never journals the hand-edit).
+- [x] Wire the gate. Edit `src/memoria_vault/runtime/policy/engine.py` (lines 83-84):
 
 ```python
         if action in MUTATING_ACTIONS and is_review_gated(npath):
@@ -8182,9 +8273,9 @@ def test_gate_adopts_hand_edited_disposition_before_evaluating_blockers(tmp_path
 ```
 
   (Replace the two existing lines `if action in MUTATING_ACTIONS and is_review_gated(npath):` / `blockers = loudness.open_blockers(self.workspace)`; everything below is unchanged.)
-- [ ] Run to verify pass: `python -m pytest tests/test_runtime_policy.py -v` — the new test passes and the pre-existing blocker test (`test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`) still passes (its hand-flip is now also journaled; its assertions are unaffected).
-- [ ] Run the gate: `python scripts/verify` — clean.
-- [ ] Commit:
+- [x] Run to verify pass: `python -m pytest tests/test_runtime_policy.py -v` — the new test passes and the pre-existing blocker test (`test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`) still passes (its hand-flip is now also journaled; its assertions are unaffected).
+- [x] Run the gate: `python scripts/verify` — clean.
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/subsystems/lib/lifecycle.py src/memoria_vault/runtime/policy/engine.py tests/test_attention_lifecycle.py tests/test_runtime_policy.py tests/conftest.py
@@ -8230,7 +8321,7 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
 
 **Interfaces:**
 - Consumes:
-  - `lifecycle.adopt_manual_dispositions` (U3-SUB.1 — called first so no card leaves `inbox/` without a journaled disposition)
+  - `lifecycle.journal_unattributed_dispositions` (U3-SUB.1 — called first so no card leaves `inbox/` without a journaled disposition; renamed from `adopt_manual_dispositions` when the row stopped naming an author)
   - `commit_explicit_writer_changes(vault: Path, message: str, paths: Iterable[str | Path], *, actor: str, machine: str, expected_sha256s: Mapping[str, str] | None = None) -> str` (`runtime/trusted_writer.py:251`)
   - `append_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None`, `split_frontmatter(text) -> tuple[dict, str]` (`runtime/vaultio.py:194, 70`)
   - `tests/helpers.py`: `init_git(workspace, email, name)` (line 222), `git(workspace, *args)` (line 209)
@@ -8328,7 +8419,7 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import append_text_durable, read_frontmatter, split_frontmatter
 ```
 
-  (merging with the existing import lines: `datetime`, `re`, `subprocess` join `platform`; `commit_explicit_writer_changes` joins the existing `trusted_writer` import; `append_text_durable`, `split_frontmatter` join `read_frontmatter`), then append after `adopt_manual_dispositions`:
+  (merging with the existing import lines: `datetime`, `re`, `subprocess` join `platform`; `commit_explicit_writer_changes` joins the existing `trusted_writer` import; `append_text_durable`, `split_frontmatter` join `read_frontmatter`), then append after `journal_unattributed_dispositions`:
 
 ```python
 ARCHIVE_RELDIR = "inbox/archive"
@@ -8380,7 +8471,7 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     commit that records the digest append. Deferred and open cards stay put.
     """
     vault = Path(vault)
-    adopted = adopt_manual_dispositions(vault, machine=machine)
+    adopted = journal_unattributed_dispositions(vault, machine=machine)
     inbox = vault / "inbox"
     archived: list[str] = []
     digests: list[str] = []
