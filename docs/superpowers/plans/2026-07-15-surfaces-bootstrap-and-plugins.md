@@ -9253,6 +9253,166 @@ block is preserved inside `view.blocks`, and an unknown renderer kind fails visi
 
 No task here writes journal events, so no floor-golden regeneration is needed.
 
+### Execution amendment — U3-ENG.1/.2/.3 as built (2026-08-01)
+
+Recorded by the executor of the atomic U3-ENG.1/.2/.3 slice. It governs those
+three tasks only; U3-ENG.4–.6 keep every checkbox and body they had. The
+2026-07-29 reconciliation amendment still governs the payload; the producer
+below is its canonical body, with the one hoist recorded in item 1.
+
+1. **`ATTENTION_HONESTY_FIELDS` survives as the mapping, not a flat name list.**
+   U3-ENG.1's Produces line declares the constant, and the reconciliation
+   amendment's canonical body inlines the same data as a `(frontmatter, wire)`
+   pair tuple. Both are kept by hoisting that literal to the declared name:
+   `(("argument_for", "argument_for"), ("argument_against", "argument_against"),
+   ("what_tipped_it", "tipped_by"), ("certainty", "certainty"), ("raised_by",
+   "raised_by"))`. The payload is byte-identical to the inline form. The flat
+   nine-name tuple U3-ENG.1 drafted is gone with the flat card it served:
+   `action`, `finding`, `agent_recommendation`, and `what_happened` are no
+   longer public card fields, and `what_tipped_it` is renamed on the wire, so a
+   name list can no longer express the mapping. Hoisting rather than inlining is
+   what lets the test pin the wire names against a literal instead of looping
+   the constant under test.
+2. **Both constants are pinned against literals before anything iterates them.**
+   `ATTENTION_LOUDNESS_RANK` is asserted equal to
+   `{"block": 0, "alert": 1, "notice": 2, "quiet": 3}` and then cross-checked
+   against `inbox.LOUDNESS` — two independently owned constants, so a band
+   added to the writer without a rank fails. A separate fixture reaches every
+   band through its real writer (`write_proposal` defaults to `notice`,
+   the commonest card in the queue), so a rank swap cannot pass.
+3. **One cross-language conformance test — kinds *and* field names.**
+   `viewspec.js` is the producer of the block-shape contract (Cross-section
+   contract 3) and the only consumer that draws it, so
+   `test_attention_view_payload_matches_what_the_plugin_renderer_reads` holds
+   this payload to three things parsed out of that file: the `case` labels of
+   `renderBlock`'s `switch` (the dispatch mechanism, not the
+   `KNOWN_BLOCK_KINDS` declaration, which is separately asserted equal to it);
+   every `block.<field>` read in the card renderer and its block-taking
+   helpers, which must be a subset of the emitted card's keys behind a
+   five-name floor so the subset can never pass vacuously; and the
+   `LOUDNESS_RANK` map plus the *expression* of its unknown-band fallback.
+   Comparing only the two declared catalogs was the weaker earlier form and
+   missed a whole class: a renderer that renames its read of `kind_line` or
+   `title` draws every card with that line blank — no unknown-block box,
+   nothing logged, green suites on both sides. Confirmed by mutation: renaming
+   either read, renaming a `case` label, or changing the fallback to `-1` or to
+   `notice + 1` each fails this test now and none did before. Two further
+   blindnesses were closed after review: every scan runs over
+   **comment-stripped** code, because a read deleted while a comment still
+   named it satisfied the floor and hid from the subset; and the scan
+   **follows the dispatch rather than naming a function** — `case "card":` to
+   its callee, then that callee to whatever helpers it hands the whole block to
+   — because a name-bound scan happily validates a renderer no card is routed
+   to. Both mutants die now, and the control that shows the binding is to
+   behaviour rather than to the identifier is that a *faithful* rename of the
+   renderer stays green. What this test does *not* own is that a dispatched
+   kind renders anything sensible — that chain closes in
+   `packages/memoria-obsidian/scripts/test-viewspec.mjs` (which loops the
+   catalog through `renderBlock` and asserts node text and attributes) run
+   inside pytest by `tests/test_memoria_obsidian_package.py`. It is also not
+   U3-ENG.5's `VIEW_BLOCK_KINDS` assertion, which stays inside Python and stays
+   owed.
+4. **Knowingly unfixtured — ten, all *equivalent-until*, none equivalent-forever.**
+   This slice's own sweeps run 64 engine mutations (10 survive) and 16
+   cross-language ones plus a control (0 survive; the control is a *faithful*
+   renderer rename, which must stay green). Review sweeps ran 95 engine and 42
+   cross-language mutations across three rounds. The ten survivors are these,
+   each named with the collaborator it depends on.
+   Stating that dependency is the point: every one is equivalent only while some
+   function this slice does not own keeps its current behaviour, so "provably
+   equivalent" here always means "given today's collaborator", never "no input
+   could distinguish them". Anything that failed that test was deleted instead —
+   see the `TypeError` arm in item 5.
+   - `str(card["loudness"] or "")` (both call sites),
+     `str(card["body_data"]["text"])` (dropping the coercion, and reading
+     `card["body"]` instead), and `str(card["path"])` — all rest on
+     `_attention_card`, which normalizes falsy loudness to `""`, wraps
+     `split_frontmatter`'s `str` body into `body_data`, and builds `path` from
+     `as_posix()`. Kept as defensive coercions precisely *because* that
+     collaborator is not ours to hold still.
+   - `isinstance(value, datetime.date)` narrowed to `datetime.datetime` — a
+     plain `date` then falls to `str(value or "")`, and `str(date)` happens to
+     equal `date.isoformat()`. Equivalent until those two spellings diverge;
+     the `datetime` case is separately fixtured and does *not* survive, because
+     `str(datetime)` uses a space where `isoformat()` uses `T`.
+   - `Path(workspace)` dropped at either call site — equivalent until a caller
+     passes a `str`. Every caller in the tree passes a `Path`; the wrap is what
+     lets the public signature keep accepting either.
+   - The `card["path"]` tiebreak in `_attention_view_sort_key` —
+     `_attention_cards` already returns path-sorted cards and `list.sort` is
+     stable, so removing it cannot reorder anything today. Kept so the total
+     order is a property of the sort key rather than of an upstream glob's
+     incidental ordering.
+   - The `or ""` in the *value* half of the `missing_required_credentials`
+     comprehension — the filter clause already requires
+     `str(row.get("name") or "")` to be truthy, so by the time the value is
+     built `row.get("name")` cannot be absent or blank. Mutating the filter
+     clause instead, or both halves, is killed by a report row that carries no
+     `name` key at all.
+   - `len(ATTENTION_LOUDNESS_RANK)` → the literal `4`: equivalent-until in the
+     sharpest sense — it breaks the moment a fifth band lands. No fixture can
+     kill it without changing the constant under test, but item 3's
+     fallback-expression assertion fails the instant a fifth band is added to
+     either side, which is when the divergence would otherwise go invisible.
+5. **Engine order and plugin `sortCards` diverge on one input, deliberately
+   fixtured rather than silently equal.** They agree for every non-future card:
+   the engine sorts on the full `created` string ascending, the plugin on
+   `age_s` descending, and `Array.prototype.sort` is stable over the order the
+   engine already produced. A hand-edited *future* `created` breaks the
+   agreement — `age_days` goes negative, so the engine sorts the card ahead of
+   the undated `"9999-12-31"` sentinel while the plugin sorts it behind every
+   `age_s == 0` card. `test_attention_view_ages_cards_from_created` fixtures it
+   (`age_s == -259_200`, `age_label == "-3d"`) and pins the engine's order, so
+   the behaviour cannot drift silently: `age_s = max(0, ...)` fails that test.
+   Clamping was rejected here because the reconciliation amendment fixes the
+   formula and the reconciliation belongs to whoever owns the queue's order.
+   **The debt is a checkbox, not this note:** U3-PLUG.7 carries it, because that
+   is the task where the divergence first becomes visible to the PI.
+   `_attention_age_days` also drops the drafted `TypeError` arm of its `except`.
+   `_attention_created` is its only producer and always returns a `str`, so
+   neither the slice nor `date.fromisoformat` can raise `TypeError` there; the
+   arm was unreachable, no fixture could name a producer for it, and AGENTS.md
+   prefers deletion to an unreachable guard. If V2's reuse of this helper
+   introduces a non-`str` caller, it re-adds the guard together with the fixture
+   that reaches it.
+6. **Three more declared symbols and one key died with Curate.** U3-ENG.2's
+   Produces line still names `ATTENTION_PROPOSAL_KINDS`, `ATTENTION_CARD_ACTIONS`,
+   and `ATTENTION_PROPOSAL_ACTION`, and gives the action row a `ref` key. None
+   is produced. The reconciliation amendment removed the generic Curate button,
+   which was the only reason a row differed by card kind, so there is no
+   proposal-kind set and no per-kind action pair to hold; its canonical row
+   carries `id`, `kind`, and `actions` only, and the target path travels inside
+   each action's `payload.target_id`. Item 1 hoisted `ATTENTION_HONESTY_FIELDS`
+   because a real consumer contract still needed a name; these four have no
+   consumer and are recorded dead rather than resurrected. The V2 plan's
+   cross-reference to "U3-ENG's Produces"
+   (`2026-07-16-v2-evidence-review.md:1584-1590`) names only surviving symbols,
+   so nothing downstream breaks.
+7. **`_attention_card`'s projection read is left alone.** This slice consumes
+   `_attention_cards`; it does not touch the raw
+   `frontmatter.get("projection") != "attention"` comparison or the bare
+   `read_text(encoding="utf-8")` beside it. Both are issue #1617's, and adding a
+   fourth spelling of the comparison here would make that issue worse. A
+   non-UTF-8 file in `inbox/` therefore raises out of this view exactly as it
+   already raises out of `read_attention`.
+8. **`link_relations` is proved derived, not merely correct today.** Asserting
+   the served roster equals `sorted(LINK_RELATIONS)` is satisfied by any
+   producer that emits today's six, so a frozen literal passed the whole gate.
+   `test_attention_view_summary_derives_link_relations_from_the_edge_roster`
+   monkeypatches `api.LINK_RELATIONS` to a sentinel roster and asserts the
+   payload follows it, the same shape already used for `__version__`,
+   `now_iso`, and `credential_report`. This is the field graph ERP-A.5 pinned to
+   this slice: a seventh relation must reach the plugin's link picker through
+   the payload, and nothing else in the suite would have noticed if it did not.
+9. **The three `Commit:` boxes stay unticked.** The slice is one commit by the
+   reconciliation amendment, and the executing session was directed to leave
+   committing to its caller. Every other box below is ticked against the atomic
+   slice's equivalent, not against its superseded literal body: the drafted flat
+   assertions, the per-task red stages, and the drafted three-then-five-then-six
+   test counts are drafting history. What actually ran is one red stage (every
+   test failing on the absent attribute), one implementation, and one green
+   stage of 21 tests in `tests/test_attention_view.py`.
+
 ---
 
 ### Task U3-ENG.1: `read_attention_view` — sorted card blocks with present-only honesty fields
@@ -9283,14 +9443,14 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Register the new test file. In `tests/conftest.py`, above the line
+- [x] Register the new test file. In `tests/conftest.py`, above the line
   `    "test_bases.py": "contract",` insert:
 
   ```python
       "test_attention_view.py": "contract",
   ```
 
-- [ ] Write the failing tests — create `tests/test_attention_view.py`:
+- [x] Write the failing tests — create `tests/test_attention_view.py`:
 
   ```python
   """Contract tests for the /v1/views/attention engine view endpoints (U3)."""
@@ -9445,12 +9605,12 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert [card["title"] for card in cards] == ["In scope"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py -v`
   Expected: all three tests fail with
   `AttributeError: module 'memoria_vault.engine.api' has no attribute 'read_attention_view'`.
 
-- [ ] Write the minimal implementation in `src/memoria_vault/engine/api.py`.
+- [x] Write the minimal implementation in `src/memoria_vault/engine/api.py`.
 
   Add to the imports (top of file — `import datetime` above `import json` line 5;
   `now_iso` is used first in U3-ENG.3, so do NOT import it yet):
@@ -9548,7 +9708,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
   `yaml.safe_load`; `write_proposal`/`write_finding` persist it as a quoted string —
   `_attention_created` normalizes both.)
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 3 passed.
 
 - [ ] Commit:
@@ -9580,7 +9740,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing tests — append to `tests/test_attention_view.py`:
+- [x] Write the failing tests — append to `tests/test_attention_view.py`:
 
   ```python
   def test_attention_view_action_rows_follow_cards_and_name_operations(
@@ -9653,12 +9813,12 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert named <= catalog
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_action_rows_follow_cards_and_name_operations tests/test_attention_view.py::test_attention_view_actions_name_cataloged_operation_ids -v`
   Expected: first fails on the `["card", "action-row", "card", "action-row"]`
   assertion (only card blocks exist); second fails on `assert named` (empty set).
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/engine/api.py`, extend the
+- [x] Write the minimal implementation. In `src/memoria_vault/engine/api.py`, extend the
   U3-ENG.1 constants block:
 
   ```python
@@ -9698,7 +9858,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       }
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 5 passed (U3-ENG.1 tests still green — they filter on `kind == "card"`).
 
 - [ ] Commit:
@@ -9728,7 +9888,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
 
 **Steps:**
 
-- [ ] Write the failing test — add `from memoria_vault import __version__`
+- [x] Write the failing test — add `from memoria_vault import __version__`
   and `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`
   to `tests/test_attention_view.py`, then append:
 
@@ -9765,11 +9925,11 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       assert payload["missing_required_credentials"] == ["MODEL_KEY"]
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_attention_view.py::test_attention_view_summary_returns_cheap_counts -v`
   Expected: `TypeError: read_attention_view() got an unexpected keyword argument 'summary'`.
 
-- [ ] Write the minimal implementation. Alongside the existing U3 imports, add
+- [x] Write the minimal implementation. Alongside the existing U3 imports, add
   `from memoria_vault import __version__`,
   `from memoria_vault.runtime.secrets import credential_report`, and
   `from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS`;
@@ -9816,7 +9976,7 @@ No task here writes journal events, so no floor-golden regeneration is needed.
       )
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
+- [x] Run to verify pass: `python -m pytest tests/test_attention_view.py -v`
   Expected: 6 passed.
 
 - [ ] Commit:
@@ -12077,6 +12237,19 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
     submitted anyway.
 
 **Steps:**
+
+- [ ] Reconcile queue order with the engine's, or record the divergence as
+  intended. Handed over by the U3-ENG.1/.2/.3 execution amendment (item 5),
+  which pinned the engine side rather than guessing the client's: the engine
+  orders on the full `created` string, `sortCards` on day-granular `age_s`, and
+  the two disagree for exactly one input — a hand-edited *future* `created`,
+  where `age_s` goes negative. The engine puts that card ahead of the undated
+  `"9999-12-31"` sentinel; the plugin puts it behind every `age_s == 0` card.
+  This is the task where a PI first sees the resulting row order, so it decides:
+  either make the pane follow payload order for equal ranks, or clamp/compare
+  differently and say so. `test_attention_view_ages_cards_from_created` already
+  pins the engine's half (`age_s == -259_200`, `age_label == "-3d"`), so
+  whichever way this goes, the fixture that would have to change is visible.
 
 - [ ] Add the post-SEAM.1 live HTTP integration proof to
   `tests/test_attention_view.py`, alongside the existing live-server tests.
