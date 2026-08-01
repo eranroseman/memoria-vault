@@ -4813,7 +4813,7 @@ def _work_aspect_type(value: str) -> str:
 
 
 def _concept_edge_relation(value: str) -> str:
-    relation = value.strip().lower().replace("_", "-")
+    relation = value.strip().lower()
     if relation not in EDGE_RELATIONS:
         raise ValueError(f"unknown concept edge relation: {value}")
     return relation

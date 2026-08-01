@@ -500,3 +500,60 @@ def test_write_project_export_requires_pandoc_for_non_markdown(
         )
 
     assert not output_root.exists()
+
+
+def test_analyze_project_argument_reads_activated_relation_links(tmp_path: Path) -> None:
+    """The argument report counts every frontmatter-legal relation, not the old triple."""
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/license.md",
+        "type: note\ncheck_status: checked\ntitle: License\n"
+        "links:\n  warrant:\n    - notes/thesis.md\n",
+    )
+
+    result = analyze_project_argument(tmp_path, "project-alpha")
+
+    assert result["relation_count"] == 1
+    assert result["supports_count"] == 0
+    assert {node["path"] for node in result["nodes"]} == {
+        "notes/thesis.md",
+        "notes/license.md",
+    }
+
+
+def test_analyze_project_argument_ignores_a_link_target_that_escapes_its_folder(
+    tmp_path: Path,
+) -> None:
+    """The report follows only normalized local targets — `notes/../thesis.md` is not one.
+
+    Before the parsers converged on `lib.edges`, this note's link resolved back to
+    `notes/thesis.md` and counted as an edge, while the validator rejected the same
+    string as escaping the workspace.
+    """
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    _md(
+        tmp_path / "notes/escaping.md",
+        "type: note\ncheck_status: checked\ntitle: Escaping\n"
+        "links:\n  supports:\n    - notes/../thesis.md\n",
+    )
+
+    result = analyze_project_argument(tmp_path, "project-alpha")
+
+    assert result["relation_count"] == 0
+    assert {node["path"] for node in result["nodes"]} == {"notes/thesis.md"}

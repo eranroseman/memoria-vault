@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import re
+
 from memoria_vault.runtime.subsystems.lib import edges, schema
+from tests.helpers import ROOT
 
 
 def test_edge_relations_is_the_full_seven() -> None:
@@ -28,6 +31,13 @@ def test_normalize_link_target_strips_wikilink_alias_and_anchor() -> None:
     assert edges.normalize_link_target("[[ ]]") == ""
 
 
+def test_normalize_link_target_is_total_over_non_strings() -> None:
+    # The one isinstance guard left in the parser family: `parse_links` hands its
+    # raw YAML list entries straight here, so a non-str target is junk, not a crash.
+    assert edges.normalize_link_target(17) == ""
+    assert edges.normalize_link_target(None) == ""
+
+
 def test_parse_links_accepts_the_six_and_skips_tension_and_junk() -> None:
     pairs = edges.parse_links(
         {
@@ -38,13 +48,20 @@ def test_parse_links_accepts_the_six_and_skips_tension_and_junk() -> None:
             "tension": ["notes/t.md"],
             "related": ["notes/x.md"],
             "extends": "not-a-list",
+            # YAML admits non-str mapping keys; the roster test is the only skip
+            # they need, so `parse_links` carries no isinstance guard for them.
+            1: ["notes/n.md"],
+            None: ["notes/none.md"],
         }
     )
-    assert ("supports", "notes/a") in pairs
-    assert ("warrant", "notes/w.md") in pairs
-    assert ("qualifier", "notes/q") in pairs
-    assert ("rebuttal", "notes/r") in pairs
-    assert not [pair for pair in pairs if pair[0] in {"tension", "related", "extends"}]
+    # Equality, not membership: it is also the proof that `tension`, an unknown
+    # relation, a non-list value, and the two non-str keys all left nothing behind.
+    assert pairs == [
+        ("supports", "notes/a"),
+        ("warrant", "notes/w.md"),
+        ("qualifier", "notes/q"),
+        ("rebuttal", "notes/r"),
+    ]
 
 
 def test_parse_links_keeps_every_target_of_every_relation_in_authored_order() -> None:
@@ -112,3 +129,14 @@ def test_parse_typed_wikilinks_reads_every_typed_link_in_one_body() -> None:
         ("qualifier", "notes/q.md"),
         ("warrant", "notes/w.md"),
     ]
+
+
+def test_single_roster_definition_repo_wide() -> None:
+    """EDGES section 10's acceptance: grepping the repo finds one roster definition."""
+    roster_literal = re.compile(r"['\"]supports['\"]\s*,\s*['\"]contradicts['\"]")
+    offenders = [
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "src/memoria_vault").rglob("*.py")
+        if path.name != "edges.py" and roster_literal.search(path.read_text(encoding="utf-8"))
+    ]
+    assert offenders == []

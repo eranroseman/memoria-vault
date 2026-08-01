@@ -262,3 +262,20 @@ def test_survey_mode_uses_coverage_saturation(tmp_path):
 
     assert payload["evidence_saturation"] == "unsaturated"
     assert any(row["path"] == "notes/survey-gap.md" for row in payload["gap_findings"])
+
+
+def test_build_edges_includes_activated_relations(tmp_path):
+    """`build_edges` traverses every frontmatter-legal relation, not a two-value roster."""
+    write(
+        tmp_path / "notes/a.md",
+        "---\ntype: note\ntitle: A\nlinks:\n  rebuttal:\n    - notes/b\n---\nBody.\n",
+    )
+    write(tmp_path / "notes/b.md", "---\ntype: note\ntitle: B\n---\nBody.\n")
+
+    notes = impact_graph.read_notes(tmp_path)
+    resolver = impact_graph.build_resolver(notes)
+    built = impact_graph.build_edges(notes, resolver)
+
+    assert [(edge.source, edge.relation, edge.target) for edge in built] == [
+        ("notes/a", "rebuttal", "notes/b")
+    ]

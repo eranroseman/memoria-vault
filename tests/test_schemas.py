@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from memoria_vault.runtime.subsystems.lib import edges, schema
+from memoria_vault.runtime.subsystems.lib import schema
 
 SCHEMA_TYPES = {
     "code-artifact",
@@ -289,6 +289,10 @@ def test_note_links_are_typed_maps():
 
 
 def test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_tension():
+    # The six verbs are spelled out rather than read from `edges.LINK_RELATIONS`:
+    # a fixture derived from the roster it claims to cover stays green when the
+    # roster narrows. This is the independent statement the owner is held to.
+    served = ("contradicts", "extends", "qualifier", "rebuttal", "supports", "warrant")
     note = schema.load_types()["note"]
     frontmatter = {
         "id": "01KBN6V6KX0000000000000001",
@@ -297,7 +301,7 @@ def test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_ten
         "tags": [],
         "links": {
             relation: [f"notes/{relation}-one.md", f"[[notes/{relation}-two]]"]
-            for relation in sorted(edges.LINK_RELATIONS)
+            for relation in served
         },
     }
 
@@ -308,7 +312,8 @@ def test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_ten
         dict(frontmatter, links={"tension": ["notes/other.md"]}), note
     )
     assert any("links.tension: unknown relation" in error for error in tension)
-    assert any(str(sorted(edges.LINK_RELATIONS)) in error for error in tension)
+    # Catches a widening too: the rejection message names the whole roster.
+    assert any(str(list(served)) in error for error in tension)
 
 
 def test_okf_core_empty_workspace_validates(tmp_path):

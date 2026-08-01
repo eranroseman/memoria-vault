@@ -5410,6 +5410,70 @@ register or test a v16→v17 migration.
 
 ### Task ERP-A.3: parser + roster convergence — the remaining hardcoded sites become imports
 
+> **Execution amendment (2026-08-01, as landed):** the convergence itself landed
+> exactly as the table below specifies. It also settled the dead-defence audit
+> A.1 deferred and four review minors, because A.3 rewrites every one of those
+> call sites and has no verbatim-move constraint to protect.
+>
+> 1. **The seven surviving defences, settled — deleted or pinned, no third
+>    category.** *Deleted*, naming the producer state that cannot exist:
+>    `parse_links`' `isinstance(relation, str)` (a non-`str` YAML mapping key
+>    already fails `relation not in LINK_RELATIONS` and takes the same skip —
+>    this answers A.1's deferred question: `parse_links` needs no tolerance of
+>    its own); `parse_links`' per-target `isinstance(target, str)`
+>    (`normalize_link_target` is already total over non-strings);
+>    `parse_typed_wikilinks`' `.strip().lower()` on the relation capture (the
+>    group is `([a-z][a-z0-9-]*)` — it can emit neither whitespace nor
+>    uppercase); `state._concept_edge_relation`'s `.replace("_", "-")` (no
+>    `EDGE_RELATIONS` value contains `-` or `_`, so it can flip no accept/reject
+>    decision and alter no accepted value); and the redundant outer
+>    `frozenset()` around `EDGE_RELATIONS - {"tension"}`. *Pinned*, naming the
+>    producer state now created: `_normalized_link_target`'s two
+>    bracket-rejection arms and its `empty` sentinel, all three through
+>    `test_link_parser_and_validation_reject_invalid_local_targets`
+>    (`[[notes/a[b]]`, `notes/a[1]`, `[[ ]]`) — that test asserts the *validator
+>    message*, so it observes the reason code the public wrapper projects away,
+>    and the `empty` arm is therefore pinned from `schema.py`'s side, the only
+>    side that reads it; `normalize_link_target`'s `isinstance` guard, now the
+>    family's only one (`test_normalize_link_target_is_total_over_non_strings`);
+>    and `_concept_edge_relation`'s surviving `.strip().lower()`, through a
+>    `" Supports "` row in `test_replace_concept_edges_accepts_activated_relations`.
+> 2. **Review minors closed.** `tests/test_query_substrate.py`'s
+>    `_relation_check_roster` — a fourth copy of the roster-reading regex — is
+>    deleted in favour of `graph_sql.concept_edge_relations`, so the parity test
+>    doubles as that reader's pin. `tests/test_schemas.py`'s six-relation fixture
+>    no longer derives itself from `sorted(edges.LINK_RELATIONS)`: it names the
+>    six verbs and the expected message list, so dropping one from the roster now
+>    fails it. `tests/test_schema_v16_identity.py`'s
+>    `user_version == SCHEMA_VERSION` assertion is deleted as a tautology of
+>    `state._init`'s own raise.
+> 3. **`parse_typed_wikilinks` gains its first production caller**
+>    (`trusted_writer._write_edge_candidate_prompts`), which is what retires
+>    `ARGUMENT_EDGE_TYPES` and `TYPED_WIKILINK_RE`.
+> 4. **`knowledge._link_target` widens what it rejects.** Delegating to
+>    `normalize_link_target` sends URI, traversal, non-`.md`-suffix, and
+>    bracketed values to `""`, which reaches `_concept_rel("")` — that returns
+>    the phantom `notes/.md` rather than raising. Both call sites (`_note_edges`'
+>    `target in notes`, `move_concept`'s `!= old_rel`) reject the phantom exactly
+>    as they rejected `""`, so no new guard was added for an unobservable state.
+> 5. **Correction to A.1's amendment, item 1.** Its counterfactual is loud, not
+>    silent. Replacing the landed normalizer with the plan snippet's inline
+>    three-line body fails existing tests immediately — 9 at A.1's tree (six of
+>    them from the pre-existing parametrized
+>    `test_link_parser_and_validation_reject_invalid_local_targets`), and 12 at
+>    this one, nine of them from that same parametrized test. The deviation was
+>    still necessary, but it was never an undetectable escape and the amendment
+>    should not read as though it were.
+> 6. **One accepted mutation survivor.** Pointing `indexing.py` back at
+>    `lib.schema`'s `parse_links` re-export passes the whole suite, and must:
+>    `test_schema_reexports_the_moved_names` asserts the re-export *is* the same
+>    object, so no behavior can distinguish the two imports. The enforcement is
+>    the sweep discipline that deletes the re-export next release — that deletion
+>    turns a stale import into an `ImportError`, which is louder than any guard
+>    test, so none was added.
+>    A.1's item 2 is superseded here: both guards it left as declared escapes are
+>    now deleted.
+
 Mechanical convergence of the audit's parsers/rosters onto `edges.py`
 (EDGES §1). Sites and exact refs (verified at 9c77ba61; `schema.py:39` died
 in A.1, `state.py:3422` in A.2):
@@ -5451,7 +5515,7 @@ in A.1, `state.py:3422` in A.2):
 
 **Steps:**
 
-- [ ] Write the failing tests. At the end of
+- [x] Write the failing tests. At the end of
   `tests/test_project_structural_impact.py`:
 
   ```python
@@ -5525,13 +5589,13 @@ in A.1, `state.py:3422` in A.2):
       }
   ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest "tests/test_project_structural_impact.py::test_build_edges_includes_activated_relations" "tests/test_trusted_writer.py::test_commit_writer_extracts_rebuttal_candidate_and_skips_tension" "tests/test_project_knowledge.py::test_analyze_project_argument_reads_activated_relation_links" -v`
   Expected failures: structural-impact assertion sees `[]` (rebuttal filtered
   out by the two-value `RELATIONS`); trusted-writer sees `len(prompts) == 0`
   (rebuttal not in `ARGUMENT_EDGE_TYPES`); knowledge sees
   `relation_count == 0` (warrant not in the hardcoded triple).
-- [ ] Edit `structural_impact_graph.py`:
+- [x] Edit `structural_impact_graph.py`:
   1. Add after the existing `from memoria_vault.runtime.vaultio import ...`
      imports (lines 11-12):
 
@@ -5567,7 +5631,7 @@ in A.1, `state.py:3422` in A.2):
 
      (Bare-string `|`/`#` splitting is preserved; for wikilinks the extra
      splits are no-ops after `normalize_link_target`.)
-- [ ] Edit `knowledge.py`:
+- [x] Edit `knowledge.py`:
   1. Add next to the `schema_lib` import (line 34):
 
      ```python
@@ -5587,7 +5651,7 @@ in A.1, `state.py:3422` in A.2):
      ```
 
      → `raw = normalize_link_target(value)`.
-- [ ] Edit `trusted_writer.py`:
+- [x] Edit `trusted_writer.py`:
   1. Delete lines 48-49 (`ARGUMENT_EDGE_TYPES`, `TYPED_WIKILINK_RE`) and add
      to the import block (near the `lib import schema as schema_lib` import,
      line 27):
@@ -5613,7 +5677,7 @@ in A.1, `state.py:3422` in A.2):
      ```
 
      (the loop body below, lines 341-364, is unchanged).
-- [ ] Edit `indexing.py`: change the G2S1.1 import line
+- [x] Edit `indexing.py`: change the G2S1.1 import line
 
   ```python
   from memoria_vault.runtime.subsystems.lib.schema import parse_links
@@ -5625,10 +5689,10 @@ in A.1, `state.py:3422` in A.2):
   from memoria_vault.runtime.subsystems.lib.edges import parse_links
   ```
 
-- [ ] Run tests to verify they pass, plus the touched suites:
+- [x] Run tests to verify they pass, plus the touched suites:
   `python -m pytest tests/test_project_structural_impact.py tests/test_trusted_writer.py tests/test_project_knowledge.py tests/test_query_substrate.py -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```
@@ -5644,6 +5708,40 @@ in A.1, `state.py:3422` in A.2):
 ---
 
 ### Task ERP-A.4: six-verb acceptance — validator, curate-note-link, CLI + vim round-trip
+
+> **Execution amendment (2026-08-01, as landed):** the two production edits are
+> the plan's (`curate_note_link`'s roster gate, `cli.py`'s `--rel` choices, both
+> reading `edges.LINK_RELATIONS`). The test slice deviates in three places.
+>
+> 1. **No new `tests/test_schemas.py` case.** A.1 already landed the equivalent
+>    (`test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_tension`),
+>    and A.3 de-derived its fixture so it is a real roster pin. A second copy
+>    would have pinned nothing further.
+> 2. **The vim round-trip folded into A.2's landed mirror test** instead of
+>    becoming a third fixture over the same three verbs:
+>    `test_activated_links_round_trip_from_frontmatter_to_edge_rows` now reads
+>    the authored frontmatter *back off disk* — the same bytes the mirror reads —
+>    validates it, and then asserts the rows. That is a stronger round-trip than
+>    the plan's hand-built frontmatter dict, in one fixture rather than two.
+> 3. **The CLI gained a behavioural pin the plan's step list lacked**
+>    (`test_cli_link_offers_every_served_relation_and_refuses_tension`, in
+>    `tests/test_cli_work_project.py` beside the existing `link` coverage).
+>    Without it the only proof of `choices` was the roster-literal guard, which a
+>    widening to `tuple(sorted(EDGE_RELATIONS))` — serving `tension` from the
+>    CLI — passes untouched.
+>
+> **Deliberately not done, needs a follow-up:** three user-facing readers still
+> name the old three-verb roster —
+> `docs/how-to-guides/knowledge/link-checked-notes.md` (steps 2 and the Verify
+> list), `docs/reference/data-model/frontmatter.md` (the `links` row and the
+> `links` section), and
+> `src/memoria_vault/product/capabilities/operations/curate-note-link.md`. They
+> understate the roster rather than advertising a verb that cannot complete, so
+> they are not the dead-vocabulary window contract 11 forbids. The capability
+> manifest is the reason they are deferred together: its body text is hashed into
+> `capability-index.json`, so editing it forces a floor-golden regeneration that
+> this section's preamble explicitly promises not to do (and contract 8 sequences
+> against other plans).
 
 The EDGES §10 acceptance slice: writing a `rebuttal` (or `warrant`,
 `qualifier`) link in vim round-trips — validator accepts, edge row appears at
@@ -5688,7 +5786,7 @@ relation-roster definition").
 
 **Steps:**
 
-- [ ] Write the failing tests. At the end of `tests/test_schemas.py` (mirrors
+- [x] Write the failing tests. At the end of `tests/test_schemas.py` (mirrors
   `test_note_links_are_typed_maps`, line 174):
 
   ```python
@@ -5861,7 +5959,7 @@ relation-roster definition").
       assert offenders == []
   ```
 
-- [ ] Run tests to verify they fail:
+- [x] Run tests to verify they fail:
   `python -m pytest tests/test_schemas.py::test_note_links_accept_activated_toulmin_relations tests/test_knowledge.py::test_curate_note_link_accepts_each_served_relation tests/test_knowledge.py::test_curate_note_link_rejects_tension tests/test_worker_product_jobs.py::test_worker_runs_each_served_curate_note_link tests/test_worker_product_jobs.py::test_worker_rejects_tension_curate_note_link tests/test_query_substrate.py::test_activated_link_round_trips_to_edge_row tests/test_edges.py::test_single_roster_definition_repo_wide -v`
   Expected: the schemas test PASSES already (the roster widened in A.1 —
   it pins the behavior); the direct and worker parameterized groups pass for
@@ -5871,7 +5969,7 @@ relation-roster definition").
   the round-trip PASSES already (A.1 + A.2 + G2S1.1 — it pins §10's
   acceptance); the guard test fails listing `src/memoria_vault/cli.py` and
   `src/memoria_vault/runtime/knowledge.py`.
-- [ ] Edit `knowledge.py` `curate_note_link` (lines 360-362):
+- [x] Edit `knowledge.py` `curate_note_link` (lines 360-362):
 
   ```python
       link_type = link_type.strip().lower()
@@ -5879,7 +5977,7 @@ relation-roster definition").
           raise ValueError(f"note link_type must be one of {', '.join(sorted(LINK_RELATIONS))}")
   ```
 
-- [ ] Edit `cli.py`: add the import after line 27
+- [x] Edit `cli.py`: add the import after line 27
   (`from memoria_vault.runtime.paths import safe_filename`):
 
   ```python
@@ -5892,10 +5990,10 @@ relation-roster definition").
       link.add_argument("--rel", required=True, choices=tuple(sorted(LINK_RELATIONS)))
   ```
 
-- [ ] Run tests to verify they pass, plus the touched suites:
+- [x] Run tests to verify they pass, plus the touched suites:
   `python -m pytest tests/test_edges.py tests/test_schemas.py tests/test_knowledge.py tests/test_worker_product_jobs.py tests/test_query_substrate.py tests/test_cli.py -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```
@@ -5911,6 +6009,14 @@ relation-roster definition").
 ---
 
 ### Task ERP-A.5: plan amendments — served-verbs acceptance + `claims.base` glyph column
+
+> **Execution amendment (2026-08-01, as landed):** the surfaces-plan line-21 and
+> line-9580 edits and the alpha.23 `claims.base` glyph amendment had already
+> landed before this task ran; only the U3-PLUG.5/.8 "Relation-roster decision"
+> paragraph remained. Its appended amendment states the served roster in cross-
+> section contract 11's own terms — after this PR it is exactly
+> `edges.LINK_RELATIONS`, six verbs, still excluding `tension` — so no acceptance
+> text anywhere in the surfaces plan reads as a counted three.
 
 > **Execution override:** The 2026-07-29 cross-section contracts above now
 > own the surfaces changes, including the direct `edges.LINK_RELATIONS` import,
@@ -5952,7 +6058,7 @@ doc-claims check).
 
   `` `link_relations` from `edges.LINK_RELATIONS` (moved from `schema.LINK_RELATIONS` by the graph-edges plan ERP-A.1; the `schema` re-export stays valid for one release) ``
 
-- [ ] In the surfaces plan, line 7411, change
+- [x] In the surfaces plan, line 7411, change
 
   `` `LINK_RELATIONS` is defined once at `src/memoria_vault/runtime/subsystems/lib/schema.py:39` ``
 

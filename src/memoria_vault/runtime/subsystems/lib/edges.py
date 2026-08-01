@@ -22,7 +22,7 @@ from pathlib import Path
 EDGE_RELATIONS = frozenset(
     {"supports", "contradicts", "extends", "tension", "warrant", "qualifier", "rebuttal"}
 )
-LINK_RELATIONS = frozenset(EDGE_RELATIONS - {"tension"})
+LINK_RELATIONS = EDGE_RELATIONS - {"tension"}
 
 TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\]\]")
 
@@ -75,14 +75,12 @@ def parse_links(links: object) -> list[tuple[str, str]]:
     if not isinstance(links, dict):
         return pairs
     for relation, targets in links.items():
-        if (
-            not isinstance(relation, str)
-            or relation not in LINK_RELATIONS
-            or not isinstance(targets, list)
-        ):
+        # A non-str key (YAML `links: {1: [...]}`) needs no isinstance guard of its
+        # own: it is not in the roster, so it takes the same skip.
+        if relation not in LINK_RELATIONS or not isinstance(targets, list):
             continue
         for target in targets:
-            normalized = normalize_link_target(target) if isinstance(target, str) else ""
+            normalized = normalize_link_target(target)
             if normalized:
                 pairs.append((relation, normalized))
     return pairs
@@ -96,7 +94,8 @@ def parse_typed_wikilinks(body: str) -> list[tuple[str, str]]:
     """
     pairs: list[tuple[str, str]] = []
     for match in TYPED_WIKILINK_RE.finditer(body):
-        relation = match.group(1).strip().lower()
+        # The relation capture is `[a-z][a-z0-9-]*`: already lowercase, never padded.
+        relation = match.group(1)
         target = match.group(2).strip()
         if relation in LINK_RELATIONS and target:
             pairs.append((relation, target))

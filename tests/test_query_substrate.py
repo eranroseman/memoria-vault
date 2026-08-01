@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import re
 import sqlite3
 from pathlib import Path
 
@@ -14,7 +13,7 @@ from memoria_vault.runtime.subsystems.lib import edges as edges_lib
 from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
 from memoria_vault.runtime.trusted_writer import stage_concept as _stage_concept
-from memoria_vault.runtime.vaultio import safe_read
+from memoria_vault.runtime.vaultio import read_frontmatter, safe_read
 from tests.helpers import (
     call_with_context,
     copy_memoria_dirs,
@@ -168,6 +167,14 @@ def test_parse_links_normalizes_alias_anchor_and_keeps_bare_concept_targets() ->
         ("notes/target.txt", "expected local Concept target"),
         ("notes/target.md/", "expected local Concept target"),
         ("#Evidence", "expected local Concept target"),
+        # A wikilink whose braces close early, and a bare target carrying brackets:
+        # each has its own rejection arm inside the normalizer.
+        ("[[notes/a[b]]", "expected local Concept target"),
+        ("notes/a[1]", "expected local Concept target"),
+        # The one target that empties out only after the braces come off. Its
+        # distinct message is the sole observer of the normalizer's `empty`
+        # reason code — a bare blank target never reaches that arm.
+        ("[[ ]]", "expected non-empty target string"),
     ],
 )
 def test_link_parser_and_validation_reject_invalid_local_targets(target: str, message: str) -> None:
@@ -1126,20 +1133,14 @@ def test_a_pruned_target_relinks_when_its_concept_returns(tmp_path: Path) -> Non
     )
 
 
-def _relation_check_roster(conn: sqlite3.Connection) -> set[str]:
-    """Read the live concept_edges relation roster back out of the stored DDL."""
-    sql = conn.execute(
-        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'concept_edges'"
-    ).fetchone()[0]
-    match = re.search(r"relation_type IN \(([^)]*)\)", sql)
-    assert match is not None, sql
-    return {part.strip().strip("'") for part in match.group(1).split(",")}
-
-
 def test_concept_edges_relation_check_matches_edge_relations(tmp_path: Path) -> None:
-    """Parity, not a shared literal: the DB CHECK is read back and compared to the owner."""
-    with state.connect(tmp_path) as conn:
-        assert _relation_check_roster(conn) == set(edges_lib.EDGE_RELATIONS)
+    """Parity, not a shared literal: the DB CHECK is read back and compared to the owner.
+
+    The reader is `graph_sql.concept_edge_relations` — the same one `neighborhood`
+    traverses with — so this doubles as its pin instead of a fourth copy of the
+    roster-reading regex.
+    """
+    assert graph_sql.concept_edge_relations(tmp_path) == set(edges_lib.EDGE_RELATIONS)
 
 
 def test_replace_concept_edges_accepts_activated_relations(tmp_path: Path) -> None:
@@ -1164,6 +1165,25 @@ def test_replace_concept_edges_accepts_activated_relations(tmp_path: Path) -> No
     # PI-owned tension rows rather than writing them (that skip is pinned by
     # test_replace_concept_edges_preserves_direct_tension_and_ignores_tension_mirror_rows).
     assert {row["relation_type"] for row in rows} == set(edges_lib.LINK_RELATIONS)
+    # The gate's surface-form normalization, which nothing else observes: a padded,
+    # capitalized relation is stored canonically rather than rejected.
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            {
+                "source_concept_id": "notes/b.md",
+                "relation_type": " Supports ",
+                "target_concept_id": "notes/c.md",
+                "check_status": "checked",
+                "source_path": "notes/b.md",
+            }
+        ],
+    )
+    assert [
+        row["relation_type"]
+        for row in state.concept_edges(tmp_path, checked_only=True)
+        if row["source_path"] == "notes/b.md"
+    ] == ["supports"]
     with pytest.raises(ValueError, match="unknown concept edge relation: related"):
         state.replace_concept_edges(
             tmp_path,
@@ -1179,8 +1199,9 @@ def test_replace_concept_edges_accepts_activated_relations(tmp_path: Path) -> No
         )
 
 
-def test_reindex_mirrors_the_activated_link_relations_from_frontmatter(tmp_path: Path) -> None:
-    """The roster widening reaches the DB: warrant/qualifier/rebuttal links become edges."""
+def test_activated_links_round_trip_from_frontmatter_to_edge_rows(tmp_path: Path) -> None:
+    """EDGES section 10 acceptance: authored in an editor, accepted by the validator,
+    and a row at reindex — for warrant/qualifier/rebuttal, on the same bytes."""
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas")
     write_checked_concept(
@@ -1195,6 +1216,14 @@ def test_reindex_mirrors_the_activated_link_relations_from_frontmatter(tmp_path:
         write_checked_concept(
             vault, f"notes/{rel}.md", f"type: note\ntitle: {rel}\ntags: []\nlinks: {{}}\n"
         )
+
+    authored = read_frontmatter(vault / "notes/claim.md")
+    link_errors = [
+        error
+        for error in schema.validate_frontmatter(authored, schema.load_types()["note"])
+        if error.startswith("links")
+    ]
+    assert link_errors == []
 
     rebuild_passage_index(vault)
 

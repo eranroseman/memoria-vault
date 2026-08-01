@@ -26,6 +26,7 @@ from memoria_vault.engine import api as engine_api
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
 from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.worker import (
     PROTECTED_OPERATION_ACTORS,
@@ -356,7 +357,7 @@ def _lifecycle_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     _common(link)
     link.add_argument("source_path")
     link.add_argument("target_path")
-    link.add_argument("--rel", required=True, choices=("supports", "contradicts", "extends"))
+    link.add_argument("--rel", required=True, choices=tuple(sorted(LINK_RELATIONS)))
     link.add_argument("--reason", default="")
     link.set_defaults(handler=_cmd_link)
 

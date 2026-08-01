@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import re
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS, normalize_link_target
 from memoria_vault.runtime.vaultio import iter_markdown as iter_vault_markdown
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
-RELATIONS = ("supports", "contradicts")
+RELATIONS = tuple(sorted(LINK_RELATIONS))
 
 
 @dataclass(frozen=True)
@@ -54,9 +54,6 @@ def read_notes(vault: Path) -> dict[str, Note]:
     return notes
 
 
-_WIKI = re.compile(r"^\[\[(?P<target>[^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]$")
-
-
 def normalize_target(raw: Any) -> tuple[str, bool] | None:
     addressed = True
     value: Any = raw
@@ -75,11 +72,7 @@ def normalize_target(raw: Any) -> tuple[str, bool] | None:
             addressed = str(raw["status"]).lower() in {"addressed", "closed", "current", "done"}
     if not isinstance(value, str) or not value.strip():
         return None
-    value = value.strip()
-    match = _WIKI.match(value)
-    if match:
-        value = match.group("target")
-    value = value.split("|", 1)[0].split("#", 1)[0].strip()
+    value = normalize_link_target(value).split("|", 1)[0].split("#", 1)[0].strip()
     if value.endswith(".md"):
         value = value[:-3]
     return value.strip("/"), addressed

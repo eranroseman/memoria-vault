@@ -24,6 +24,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_bytes, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib import schema as schema_lib
+from memoria_vault.runtime.subsystems.lib.edges import parse_typed_wikilinks
 from memoria_vault.runtime.subsystems.lib.inbox import write_finding, write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
@@ -45,8 +46,6 @@ EVENT_CHECK_FIRED = "check-fired"
 EVENT_RESOLVED = "resolved"
 TRACE_OUTPUT_EVENTS = frozenset({EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT})
 SUPPORTED_PROMOTION_CHECKS = frozenset({"memoria-runtime"})
-ARGUMENT_EDGE_TYPES = frozenset({"supports", "contradicts", "extends"})
-TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\]\]")
 
 
 @dataclass(frozen=True, slots=True)
@@ -447,11 +446,7 @@ def _write_edge_candidate_prompts(vault: Path, output_rels: set[str]) -> list[st
         if frontmatter.get("type") not in {"note", "digest", "hub", "project"}:
             continue
         title = str(frontmatter.get("title") or Path(source_rel).stem)
-        for match in TYPED_WIKILINK_RE.finditer(body):
-            edge_type = match.group(1).strip().lower()
-            target = match.group(2).strip()
-            if edge_type not in ARGUMENT_EDGE_TYPES or not target:
-                continue
+        for edge_type, target in parse_typed_wikilinks(body):
             safe_title = neutralize_untrusted_markdown_fragment(title)
             safe_target = neutralize_untrusted_markdown_fragment(target)
             # ponytail: unchecked prompt per explicit edge; add DB edge rows only with act tuning.

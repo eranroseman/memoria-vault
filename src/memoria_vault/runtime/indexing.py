@@ -9,7 +9,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
-from memoria_vault.runtime.subsystems.lib.schema import parse_links
+from memoria_vault.runtime.subsystems.lib.edges import parse_links
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     rebuild_concept_mirror_from_files,
