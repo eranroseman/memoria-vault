@@ -9,7 +9,7 @@ from typing import Any
 
 from memoria_vault import __version__
 from memoria_vault.engine.surface_contract import ENGINE_READ_API_VERSION as READ_API_VERSION
-from memoria_vault.runtime import state
+from memoria_vault.runtime import evidence_review, state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.explore import explore_topic
 from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
@@ -242,6 +242,70 @@ def read_attention_view(
     return _read_payload(
         view=_view("attention", [_attention_view_card_block(card) for card in cards])
     )
+
+
+def evidence_review_queue(
+    workspace: Path,
+    *,
+    routing_type: str = "",
+    project: str = "",
+    min_age_days: int = 0,
+    batch: int = 10,
+    read_scope: list[str] | None = None,
+) -> dict[str, Any]:
+    """The engine-direct evidence-review queue: raw rows, never cards.
+
+    The discriminated union V2's own consumers switch on: an evidence-set row
+    carrying `kind`, `disposition`, `routing_type` and `project_path`, or
+    `{"kind": "srd-gap", "card_block": ...}`. The CLI front and U2's cockpit
+    read this; only `read_evidence_review_view` projects it into cards.
+    `batch=0` means every row, which is what an id lookup needs.
+    """
+    return {
+        "ok": True,
+        **_collect_evidence_review_queue(
+            workspace,
+            routing_type=routing_type,
+            project=project,
+            min_age_days=min_age_days,
+            batch=batch,
+            read_scope=read_scope,
+        ),
+    }
+
+
+def read_evidence_review_view(
+    workspace: Path,
+    *,
+    routing_type: str = "",
+    project: str = "",
+    min_age_days: int = 0,
+    batch: int = 10,
+    read_scope: list[str] | None = None,
+) -> dict[str, Any]:
+    """The same collection, projected into one nested view-spec card per row."""
+    if batch <= 0:
+        raise ValueError("batch must be positive")
+    collected = _collect_evidence_review_queue(
+        workspace,
+        routing_type=routing_type,
+        project=project,
+        min_age_days=min_age_days,
+        batch=batch,
+        read_scope=read_scope,
+    )
+    rows = collected["rows"]
+    # One top-level card per row, evidence first: `shown` counts rows, never the
+    # semantic children nested inside them.
+    blocks = evidence_review.evidence_review_blocks(rows)
+    facets = dict(collected["facet_totals"])
+    evidence_total = int(facets["total"])
+    srd_total = sum(1 for row in rows if row["kind"] == "srd-gap")
+    facets["kind"] = {"evidence-set": evidence_total, "srd-gap": srd_total}
+    facets["total"] = evidence_total + srd_total
+    facets["shown"] = len(blocks)
+    facets["batch"] = batch
+    return _read_payload(view=_view("evidence-review", blocks), facets=facets)
 
 
 def read_concept(
@@ -802,6 +866,106 @@ def _attention_in_scope(card: dict[str, Any], read_scope: list[str] | None) -> b
     return read_scope is None or any(
         _scope_allows(str(card.get(key) or ""), read_scope) for key in ("path", "target")
     )
+
+
+def _collect_evidence_review_queue(
+    workspace: Path,
+    *,
+    routing_type: str,
+    project: str,
+    min_age_days: int,
+    batch: int,
+    read_scope: list[str] | None,
+) -> dict[str, Any]:
+    """Discover, assemble, facet, filter, batch, and attach previews — once.
+
+    Scope defines the queue *universe*: an out-of-scope draft is dropped before
+    assembly, so it is absent from the denominators too, not merely hidden after
+    rendering. Routing/project/age filters then narrow only that scoped queue.
+    """
+    if batch < 0:
+        raise ValueError("batch must be nonnegative")
+    workspace = Path(workspace)
+    drafts = [
+        draft
+        for draft in _evidence_review_drafts(workspace)
+        if _scope_allows(draft["draft_path"], read_scope)
+    ]
+    queue = evidence_review.assemble_evidence_review_queue(
+        drafts,
+        evidence_review.evidence_dispositions(workspace),
+        minted_at=evidence_review.evidence_minted_at(workspace),
+        today=datetime.datetime.now(datetime.UTC).date(),
+    )
+    facet_totals = evidence_review.queue_facets(queue)
+    # `filter_queue` owns the facet vocabulary and the nonnegative-age refusal.
+    selected = evidence_review.filter_queue(
+        queue, routing_type=routing_type, project=project, min_age_days=min_age_days
+    )
+    shown = selected if batch == 0 else selected[:batch]
+    _attach_item_previews(workspace, shown)
+    # SRD gaps answer no evidence facet, so a filtered queue appends none rather
+    # than showing rows the filter never considered. Batch caps evidence only.
+    srd_rows = (
+        []
+        if routing_type or project or min_age_days
+        else [
+            {"kind": "srd-gap", "card_block": card}
+            for card in _evidence_review_srd_gap_cards(workspace, read_scope)
+        ]
+    )
+    return {
+        "rows": [*shown, *srd_rows],
+        "total": len(selected) + len(srd_rows),
+        "facet_totals": facet_totals,
+        "batch": batch,
+    }
+
+
+def _evidence_review_drafts(workspace: Path) -> list[dict[str, Any]]:
+    drafts = []
+    for rel in sorted(_evidence_review_project_rels(workspace)):
+        try:
+            drafts.append(_read_project_draft(workspace, rel))
+        except ValueError:
+            continue  # unchecked project frontmatter is not consumable by reads
+    return drafts
+
+
+def _evidence_review_project_rels(workspace: Path) -> set[str]:
+    projects_dir = workspace / "projects"
+    if not projects_dir.is_dir():
+        return set()
+    return {
+        path.relative_to(workspace).as_posix()
+        for path in [*projects_dir.glob("*.md"), *projects_dir.glob("*/project.md")]
+        if read_frontmatter(path).get("type") == "project"
+    }
+
+
+def _attach_item_previews(workspace: Path, rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        return
+    rows_by_id = {str(row["id"]): row for row in state.evidence_sets(workspace)}
+    span_sources = evidence_review.span_source_index(workspace)
+    for row in rows:
+        row["item_previews"] = evidence_review.resolve_item_previews(
+            workspace, row["items"], rows_by_id=rows_by_id, span_sources=span_sources
+        )
+
+
+def _evidence_review_srd_gap_cards(
+    workspace: Path, read_scope: list[str] | None
+) -> list[dict[str, Any]]:
+    """Open SRD-gap attention cards, normalized into the same U3 card shape the
+    attention pane renders. Resolved gaps are not review work."""
+    return [
+        _attention_view_card_block(card)
+        for card in _attention_cards(workspace)
+        if card["kind"] == "srd-gap"
+        and card["status"] == "open"
+        and _attention_in_scope(card, read_scope)
+    ]
 
 
 def _attention_view_sort_key(card: dict[str, Any]) -> tuple[int, str, str]:

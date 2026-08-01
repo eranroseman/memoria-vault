@@ -53,6 +53,13 @@ PROBES: dict[str, tuple[str, str | None]] = {
     # The pane's own view is a list read: a void scope leaves a 200 whose
     # `view.blocks` no longer names the seeded card.
     "views.attention": ("excluded", "{attention_path}"),
+    # Marker-less on purpose: the floor seed composes no project draft and
+    # raises no srd-gap card, so this view is honest-empty over it and there is
+    # nothing to watch disappear. What the walk still proves is the row's
+    # membership and its 200-with-a-void-scope shape; that a scope actually
+    # narrows both arms is proved against a real queue by
+    # test_evidence_review_view.py::test_evidence_review_http_scope_excludes_evidence_and_srd.
+    "views.evidence_review": ("excluded", None),
     "concepts.list": ("excluded", "{note_claim}"),
     "concepts.get": ("refused", "{note_claim}"),
     "work.get": ("refused", "{work_id}"),

@@ -349,6 +349,15 @@ def _read(
             summary=_one(query, "summary").lower() == "true",
             read_scope=read_scope,
         )
+    if path == "/v1/views/evidence-review":
+        return engine_api.read_evidence_review_view(
+            workspace,
+            routing_type=_one(query, "routing_type"),
+            project=_one(query, "project"),
+            min_age_days=_nonnegative_int_query(query, "min_age_days", 0),
+            batch=_int_query(query, "batch", 10),
+            read_scope=read_scope,
+        )
     if path == "/concepts":
         return engine_api.read_concepts(
             workspace, concept_type=_one(query, "type"), read_scope=read_scope
@@ -448,6 +457,24 @@ def _required_int(query: dict[str, list[str]], key: str) -> int:
 def _int_query(query: dict[str, list[str]], key: str, default: int) -> int:
     value = _one(query, key).strip()
     return default if not value else _int_value(value, key)
+
+
+def _nonnegative_int_query(query: dict[str, list[str]], key: str, default: int) -> int:
+    """`_int_query`'s zero-allowing twin, for a filter whose zero means "off".
+
+    `min_age_days=0` is a legitimate explicit request for no age filter, so the
+    positive-only parser cannot be reused: it would 400 on an honest zero.
+    """
+    value = _one(query, key).strip()
+    if not value:
+        return default
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{key} must be an integer") from exc
+    if parsed < 0:
+        raise ValueError(f"{key} must be nonnegative")
+    return parsed
 
 
 def _int_value(value: str, key: str) -> int:

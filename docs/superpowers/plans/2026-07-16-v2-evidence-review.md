@@ -657,6 +657,85 @@ replacement tasks below, and it records what V2R-B.1–.3 actually landed.
    lives in B.4, which must append none when any routing/project/age filter is
    active.
 
+## Execution amendment — V2R-B.4/.5 as built (2026-08-01)
+
+Recorded by the executor of B.4 and B.5, against `origin/main` @ `be6d317e`. It
+governs those two tasks only; the 2026-07-29 amendment stack and the
+2026-08-01 `row kind / disposition` amendment above are unchanged and were
+followed as written. §8's open contract question is answered in item 4.
+
+1. **Names as landed.** `engine_api.evidence_review_queue` is the public
+   engine-direct façade (the 2026-07-29 raw-queue amendment §1 name, and the one
+   `cockpit._review_panel` already calls); `read_evidence_review_view` is the
+   registered view engine. The B.4 body's `read_evidence_review_queue` alias was
+   **not** added — one façade, no second name for the same read. Both wrap one
+   private `_collect_evidence_review_queue`, which the view calls directly, so
+   the view never routes through the public façade.
+
+2. **No DTO renames, confirmed against the live consumer.** Raw evidence rows
+   keep `kind`, `disposition`, `routing_type`, `project_path`, and raw `items`.
+   `tests/test_evidence_review_view.py::test_evidence_review_queue_emits_the_raw_discriminated_union`
+   asserts `{"latest_decision", "routing", "project", "analysis"}` is disjoint
+   from every evidence row, and
+   `..._kind_and_disposition_reach_the_cockpit_panel` runs the seeded queue
+   through `cockpit.assemble_triage` with one *rejected* row, pinning
+   `{"open": 4, "counts": {"open": 4, "rejected": 1}, "srd_gaps": 2}` — so
+   `counts.get("open", 0)` is never taken as an unfixtured default.
+
+3. **`total` counts the union, `facet_totals` counts evidence.** The collector's
+   `total` is the filtered, pre-batch count of the rows it returns (evidence +
+   any appended SRD); `facet_totals` stays the scoped, unfiltered *evidence*
+   denominators `queue_facets` produces, which is what the view's merge formula
+   reads as `facets["total"]`. Batch caps evidence rows only, in the collector,
+   so the view inherits that rule rather than restating it.
+
+4. **§8 answered: SRD union lives in the collector.** `_collect_evidence_review_queue`
+   appends `{"kind": "srd-gap", "card_block": ...}` rows after filtering and
+   batching, and appends none when any of `routing_type`/`project`/`min_age_days`
+   is active. `filter_queue` therefore never sees an SRD row, exactly as §8
+   predicted.
+
+5. **Two deviations, both to remove an unproducible branch or an untestable
+   default.**
+
+   - **SRD selection is by kind *and* open status.** `_evidence_review_srd_gap_cards`
+     takes `attention_kind == "srd-gap"` **and** `attention_status == "open"`,
+     mirroring `read_attention_view`. The plan named only the kind. A resolved
+     gap is not review work, and without the status test it would sit in the
+     queue forever; the fixture carries a resolved gap and a `gap`-kind card,
+     and mutants dropping either predicate are killed.
+   - **The collector guards only `batch < 0` itself.** `min_age_days < 0` is
+     refused by `filter_queue`, which already owns that rule and its message
+     (B.2, tested). Duplicating it in the collector adds a branch with no
+     distinguishable behaviour. The HTTP boundary still refuses a negative age
+     before any read, via `_nonnegative_int_query`.
+
+6. **A fourth drafting-history defect.** The historical B.4 draft's
+   `_retarget_marker_items` writes `%%ev: <id> type=implicit state=…
+   review=true items=…%%`. Post-Plan-22 `parse_evidence_marker` accepts **only**
+   `items`, and raises `unknown evidence marker field: 'type'` — the whole
+   fixture is unparseable. The landed fixture rewrites only the `items=` field
+   and re-derives type/state/review through `verify_project_draft`, which is
+   also the only honest way to get them.
+
+7. **Scope walk: registered with a marker-less probe.** `views.evidence_review`
+   joins `PROBES` as `("excluded", None)`. The floor seed composes no project
+   draft and raises no srd-gap card, so this view is honest-empty over it and
+   there is no seeded marker to watch disappear. Seeding one would move the
+   floor goldens for a proof that belongs elsewhere; the real scope narrowing is
+   proved over a live queue by
+   `test_evidence_review_view.py::test_evidence_review_http_scope_excludes_evidence_and_srd`,
+   which pins the scoped `routing_type`/`project`/`kind`/`total`/`shown` facets.
+
+8. **Test files.** B.4/.5 tests live in the planned
+   `tests/test_evidence_review_view.py` (registered `"contract"`), including the
+   four vault-reading helpers' own coverage — they are B.4's, and their reads
+   need a real vault, which the `"unit"`-level `test_evidence_review_queue.py`
+   deliberately has none of. That file is unchanged by this task.
+
+9. **No golden movement.** No journal event was added or reshaped and the floor
+   seed is untouched, so `tests/fixtures/floor/goldens/` is byte-identical.
+
 ---
 
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1
@@ -2170,21 +2249,24 @@ the nested cards rather than a flat block list.
 
 **Executable TDD slice:**
 
-- [ ] **Files:** modify `src/memoria_vault/engine/api.py`; create or modify
+- [x] **Files:** modify `src/memoria_vault/engine/api.py`; create or modify
   `tests/test_evidence_review_view.py`; register its test level in
   `tests/conftest.py` if the repository's existing test registration requires it.
-- [ ] **Red:** add
+  (Also `src/memoria_vault/runtime/evidence_review.py`, which gained the four
+  vault-reading helpers amendment §5 left to this task.)
+- [x] **Red:** add
   `test_read_evidence_review_queue_scopes_before_assembly_and_facets`,
   `test_read_evidence_review_view_scopes_evidence_and_srd_before_counts`, and
   `test_evidence_review_view_merges_all_evidence_facets`; run
   `python -m pytest tests/test_evidence_review_view.py -q` and observe the direct
   collector/view failures.
-- [ ] **Green:** add exactly one collector and one view projection, with the scope
+- [x] **Green:** add exactly one collector and one view projection, with the scope
   filter before assembly and the literal facet merge above. Re-run
   `python -m pytest tests/test_evidence_review_queue.py tests/test_evidence_review_view.py -q`.
 - [ ] **Commit:** stage `engine/api.py`, the view test, and only any required
   `conftest.py` registration; commit
   `feat(engine): collect and project scoped evidence-review views`.
+  (Not done: the executing session was scoped to B.4/.5 without commit authority.)
 
 ### Task V2R-B.5: HTTP registration and nonnegative age parsing
 
@@ -2226,21 +2308,25 @@ must reflect only the in-scope queue universe.
 
 **Executable TDD slice:**
 
-- [ ] **Files:** modify `src/memoria_vault/engine/surface_contract.py` and
+- [x] **Files:** modify `src/memoria_vault/engine/surface_contract.py` and
   `src/memoria_vault/runtime/http_transport.py`; modify
-  `tests/test_surface_contract.py`, `tests/test_http_transport.py`, and
-  `tests/floor_lib.py`; modify `tests/test_evidence_review_view.py` for the
-  end-to-end response assertion.
-- [ ] **Red:** add `test_nonnegative_int_query_accepts_zero_and_rejects_negative`,
+  `tests/test_surface_contract.py` and `tests/floor_lib.py`; modify
+  `tests/test_evidence_review_view.py` for the end-to-end response assertion.
+  (`tests/test_http_transport.py` needed no edit — its route coverage is
+  registry-derived. `tests/test_read_api_scope_walk.py` did: see amendment §7.
+  `docs/reference/commands-and-transports/local-http-transport.md` gains the
+  route row, following U3-ENG.4's precedent.)
+- [x] **Red:** add `test_nonnegative_int_query_accepts_zero_and_rejects_negative`,
   `test_evidence_review_route_rejects_zero_batch`, and
   `test_evidence_review_http_scope_excludes_evidence_and_srd`; run the focused
   surface/transport/view tests and confirm the parser or route behavior fails first.
-- [ ] **Green:** register only the GET view contract and route, parse
+- [x] **Green:** register only the GET view contract and route, parse
   `min_age_days` with the local nonnegative helper, pass `read_scope` unchanged to
   the view, and update the floor route registry without adding a writer surface.
   Re-run `python -m pytest tests/test_surface_contract.py tests/test_http_transport.py tests/test_evidence_review_view.py -q`.
 - [ ] **Commit:** stage only the listed source/test/floor files and commit
   `feat(http): serve scoped evidence-review view`.
+  (Not done: the executing session was scoped to B.4/.5 without commit authority.)
 
 ---
 

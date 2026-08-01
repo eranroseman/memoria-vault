@@ -1,19 +1,30 @@
 """Evidence-review queue assembly, facets, and honesty-card blocks (V2 slice 1).
 
-Pure over its inputs: this module reads nothing and writes nothing. V2R-A owns
-every disposition write; the queue only *reads* the events A journals, and it
-restates its own accept-only clearing rule so the queue stays honest whether or
-not the verify-side flip has landed.
+The assembler, facets, filters and card projection are pure over their inputs.
+The four vault-reading helpers at the bottom — dispositions, minted timestamps,
+the span-source index and grounds previews — are the reads the engine collector
+(V2R-B.4) needs to *build* those inputs; they only read. V2R-A owns every
+disposition write; the queue only *reads* the events A journals, and it restates
+its own accept-only clearing rule so the queue stays honest whether or not the
+verify-side flip has landed.
 """
 
 from __future__ import annotations
 
 import datetime
 import hashlib
+import re
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.evidence import (
+    evidence_ref_kind,
+    parse_code_grounds_ref,
+    parse_source_span_ref,
+)
+from memoria_vault.runtime.policy.paths import normalize_path
 
 EVIDENCE_REVIEW_ROUTING_TYPES = ("implicit", "multi-hop", "incomplete")
 PERMANENT_BLOCK_CURE = "edit the draft or the grounds; no disposition clears a permanent block"
@@ -237,6 +248,129 @@ def analysis_fields(
     if certainty:
         fields["certainty"] = certainty
     return fields
+
+
+def evidence_dispositions(vault: Path) -> list[dict[str, Any]]:
+    """Read `resolve-evidence-review` disposition events in journal order."""
+    vault = Path(vault)
+    if not state.db_path(vault).is_file():
+        return []
+    return [
+        event
+        for event in state.read_event_log(vault, event_types=["resolved"])
+        if event.get("operation") == "resolve-evidence-review"
+    ]
+
+
+def evidence_minted_at(vault: Path) -> dict[str, str]:
+    """Map evidence ids to their *first* `evidence-minted` timestamp.
+
+    First, not latest: age is how long the claim has waited for a decision, and
+    a later re-mint of the same id does not reset that wait.
+    """
+    vault = Path(vault)
+    if not state.db_path(vault).is_file():
+        return {}
+    minted: dict[str, str] = {}
+    for event in state.read_event_log(vault, event_types=["evidence-minted"]):
+        evidence_id = str(event.get("evidence_id") or "")
+        timestamp = str(event.get("timestamp") or "")
+        if evidence_id and timestamp:
+            minted.setdefault(evidence_id, timestamp)
+    return minted
+
+
+def span_source_index(vault: Path) -> dict[str, tuple[set[str], str]]:
+    """Index catalog source content: work_id -> (resolvable pages, text).
+
+    Read once per collection: every shown row's span previews resolve and
+    excerpt against this one index rather than re-reading each blob.
+    """
+    vault = Path(vault)
+    index: dict[str, tuple[set[str], str]] = {}
+    for source in state.catalog_sources(vault, checked_only=False):
+        work_id = str(source["work_id"])
+        content_path = vault / normalize_path(str(source.get("content_path") or ""))
+        if not content_path.is_file():
+            index[work_id] = (set(), "")
+            continue
+        text = content_path.read_text(encoding="utf-8")
+        index[work_id] = ({page.removeprefix("^") for page in re.findall(r"\^p\d{4,}", text)}, text)
+    return index
+
+
+def resolve_item_previews(
+    vault: Path,
+    items: Iterable[str],
+    *,
+    rows_by_id: Mapping[str, Mapping[str, Any]],
+    span_sources: Mapping[str, tuple[set[str], str]],
+) -> list[dict[str, Any]]:
+    """Resolve one row's raw grounds refs into previews (spec §2 field 2).
+
+    Every preview says whether its ref `resolves`; the descriptive keys are
+    present-only, so an absent excerpt reads as absent rather than as empty text.
+    """
+    previews: list[dict[str, Any]] = []
+    for item in items:
+        kind = evidence_ref_kind(item)
+        if kind == "code-grounds":
+            ref = parse_code_grounds_ref(item)
+            resolves = _code_grounds_resolves(vault, ref)
+            previews.append(
+                {
+                    "ref": item,
+                    "kind": kind,
+                    "run_id": ref.run_id,
+                    "artifact_id": ref.artifact_id,
+                    "output_sha256": ref.output_sha256,
+                    "resolves": resolves,
+                    "state": "complete" if resolves else "evidence-incomplete",
+                }
+            )
+        elif kind == "evidence-set":
+            nested = rows_by_id.get(item)
+            preview: dict[str, Any] = {"ref": item, "kind": kind, "resolves": nested is not None}
+            if nested is not None:
+                preview["expansion"] = {
+                    "evidence_type": str(nested["type"]),
+                    "state": str(nested["state"]),
+                    "item_count": len(nested["items"]),
+                }
+            previews.append(preview)
+        else:
+            span = parse_source_span_ref(item)
+            pages, text = span_sources.get(span.work_id, (set(), ""))
+            preview = {
+                "ref": item,
+                "kind": kind,
+                "work_id": span.work_id,
+                "anchor": f"^{span.page}",
+                "resolves": span.page in pages,
+            }
+            excerpt = _span_excerpt(text, span.page)
+            if excerpt:
+                preview["excerpt"] = excerpt
+            previews.append(preview)
+    return previews
+
+
+def _code_grounds_resolves(vault: Path, ref: Any) -> bool:
+    from memoria_vault.runtime.code.runs import code_grounds_complete
+
+    return code_grounds_complete(
+        Path(vault),
+        run_id=ref.run_id,
+        artifact_id=ref.artifact_id,
+        output_sha256=ref.output_sha256,
+    )
+
+
+def _span_excerpt(text: str, page: str, *, limit: int = 240) -> str:
+    for line in text.splitlines():
+        if f"^{page}" in line:
+            return re.sub(r"\s*\^p\d{4,}\s*", " ", line).strip()[:limit]
+    return ""
 
 
 def _tipping_factor(row: Mapping[str, Any], previews: Sequence[Mapping[str, Any]]) -> str:
