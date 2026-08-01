@@ -7234,12 +7234,18 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 > **Adopted post-review amendment (2026-07-31):** `ask` is not total.
 > `offer_obsidian_install` (BOOT-D.2) only guards its own `ask()` call
-> against `EOFError`; a closed or detached stdin makes builtin `input()`
-> raise `RuntimeError: input(): lost sys.stdin` instead — a distinct
-> exception not caught there, which would propagate straight out of
-> `offer_obsidian_install` and out of `run_onboarding`, crashing the whole
-> onboarding sequence this task exists to run end to end without crashing.
-> Wrap the `offer_obsidian_install(...)` call in `run_onboarding` in
+> against `EOFError`. Some closed-stdin shapes raise something else
+> instead: fd 0 closed, or `sys.stdin = None`, makes builtin `input()` raise
+> `RuntimeError: input(): lost sys.stdin` — a distinct exception not caught
+> there, which would propagate straight out of `offer_obsidian_install` and
+> out of `run_onboarding`, crashing the whole onboarding sequence this task
+> exists to run end to end without crashing. (Other closed-stdin shapes
+> still escape uncaught even after this amendment — an in-process
+> `sys.stdin.close()` raises `ValueError: I/O operation on closed file`, and
+> a pytest-style capture raises `OSError` — neither is a
+> `RuntimeError`/`EOFError`; this amendment closes the one shape review
+> reproduced, not every unreadable-stdin shape.) Wrap the
+> `offer_obsidian_install(...)` call in `run_onboarding` in
 > `except (EOFError, RuntimeError):`, treat an unreadable prompt the same as
 > a decline (`obsidian_status = "declined"`, plus the same "Skipped.
 > Download Obsidian from ..." message the ordinary decline path prints), and

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import http.client
 import inspect
+import os
 import socket
 import subprocess
+import sys
 import threading
 import urllib.error
 import urllib.parse
@@ -16,20 +18,40 @@ import pytest
 
 from memoria_vault.runtime import onboarding
 
+_IS_ROOT = hasattr(os, "geteuid") and os.geteuid() == 0
+_needs_posix_permission_bits = pytest.mark.skipif(
+    sys.platform.startswith("win"), reason="POSIX permission bits only"
+)
+_skip_as_root = pytest.mark.skipif(
+    _IS_ROOT, reason="root bypasses directory permission bits (mode 000 does not block root)"
+)
+
 
 class FakeRun:
-    def __init__(self, returncode: int = 0, raises: Exception | None = None) -> None:
+    def __init__(
+        self,
+        returncode: int = 0,
+        raises: Exception | None = None,
+        returncodes: list[int] | None = None,
+    ) -> None:
         self.calls: list[list[str]] = []
         self.kwargs: list[dict[str, object]] = []
         self.returncode = returncode
         self.raises = raises
+        # Optional per-call sequence (e.g. [1, 0, 0]) for scenarios that
+        # drive several distinct `run()` call sites -- detect, install,
+        # open -- to different outcomes in one orchestrator test. Falls back
+        # to `self.returncode` once exhausted (or if never provided), so
+        # every existing single-returncode caller is unaffected.
+        self._returncodes = list(returncodes) if returncodes is not None else None
 
     def __call__(self, argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
         self.calls.append(list(argv))
         self.kwargs.append(kwargs)
         if self.raises is not None:
             raise self.raises
-        return subprocess.CompletedProcess(argv, self.returncode, stdout="", stderr="")
+        returncode = self._returncodes.pop(0) if self._returncodes else self.returncode
+        return subprocess.CompletedProcess(argv, returncode, stdout="", stderr="")
 
 
 def test_platform_key_normalizes_supported_platforms() -> None:
@@ -781,6 +803,122 @@ def test_run_onboarding_ask_failure_is_treated_as_declined_not_a_crash(tmp_path:
     assert statuses["obsidian"] == "declined"
     assert statuses["open-vault"] == "skipped"
     assert any(onboarding.OBSIDIAN_DOWNLOAD_URL in line for line in said)
+
+
+def test_run_onboarding_installed_leg_opens_vault_and_completes(tmp_path: Path) -> None:
+    # Review (Minor): `obsidian_status in ("present", "installed")` appears
+    # twice in the orchestrator -- gating open-vault, and inside `completed`
+    # -- and both are orchestrator-owned logic. Every other run_onboarding
+    # test only ever exercises "present"; drive the "installed" leg through
+    # explicitly so dropping "installed" from either tuple cannot pass the
+    # suite silently.
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    (workspace / "Start here.md").write_text("# Start here\n", encoding="utf-8")
+    said: list[str] = []
+    # [1, 0, 0]: the _detect_linux flatpak-info probe (not present, so we
+    # fall through to offer_obsidian_install), the install command itself,
+    # then open_vault_in_obsidian's opener -- three distinct `run()` call
+    # sites in one pass, each needing its own outcome.
+    run = FakeRun(returncodes=[1, 0, 0])
+
+    payload = onboarding.run_onboarding(
+        workspace,
+        sys_platform="linux",
+        env={"XDG_DATA_HOME": str(tmp_path / "empty"), "XDG_DATA_DIRS": str(tmp_path / "none")},
+        home=tmp_path / "home",
+        ask=lambda _prompt: "y",
+        say=said.append,
+        run=run,
+        url_open=_fake_zotero(False),
+    )
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert payload["completed"] is True
+    assert statuses == {
+        "obsidian": "installed",
+        "open-vault": "opened",
+        "zotero": "not-detected",
+        "credentials": "noticed",
+    }
+
+
+@_needs_posix_permission_bits
+@_skip_as_root
+def test_run_onboarding_survives_unreadable_xdg_data_home(tmp_path: Path) -> None:
+    # Review (Important): detect_obsidian's Linux probe stats paths via
+    # Path.is_file(), which only swallows ENOENT/ENOTDIR/EBADF/ELOOP and
+    # re-raises everything else -- including PermissionError (EACCES) from
+    # an unreadable ~/.local/share, review's reproduction of the exact
+    # failure. Before the _safe_is_file fix this escaped run_onboarding
+    # before a single step was recorded; it must instead report "not found".
+    home = tmp_path / "home"
+    data_home = home / ".local" / "share"
+    data_home.mkdir(parents=True)
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    said: list[str] = []
+
+    data_home.chmod(0o000)
+    try:
+        payload = onboarding.run_onboarding(
+            workspace,
+            sys_platform="linux",
+            # XDG_DATA_DIRS points off to a nonexistent directory so a real
+            # system-wide Obsidian install (an actual .desktop entry can be
+            # present on a dev machine) can't mask the locked XDG_DATA_HOME
+            # default this test means to exercise.
+            env={"XDG_DATA_DIRS": str(tmp_path / "none")},
+            home=home,
+            ask=lambda _prompt: "n",
+            say=said.append,
+            run=FakeRun(returncode=1),
+            url_open=_fake_zotero(False),
+        )
+    finally:
+        data_home.chmod(0o755)
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert statuses["obsidian"] in ("declined", "manual")
+    assert statuses["open-vault"] == "skipped"
+    assert statuses["zotero"] == "not-detected"
+    assert statuses["credentials"] == "noticed"
+
+
+@_needs_posix_permission_bits
+@_skip_as_root
+def test_run_onboarding_survives_unreadable_workspace_for_start_here_check(tmp_path: Path) -> None:
+    # Review (Important), second reach path: open_vault_in_obsidian stats
+    # `<workspace>/Start here.md` via Path.is_file(), which re-raises
+    # PermissionError just like the detect_obsidian call sites above. Lock
+    # the workspace itself (rather than the XDG data dir) so this exercises
+    # the other of the two escapes review found.
+    home = _linux_home_with_obsidian(tmp_path)
+    workspace = tmp_path / "vault"
+    workspace.mkdir()
+    said: list[str] = []
+
+    workspace.chmod(0o000)
+    try:
+        payload = onboarding.run_onboarding(
+            workspace,
+            sys_platform="linux",
+            env={},
+            home=home,
+            ask=lambda _prompt: "",
+            say=said.append,
+            run=FakeRun(returncode=1),
+            url_open=_fake_zotero(False),
+        )
+    finally:
+        workspace.chmod(0o755)
+
+    statuses = {step["step"]: step["status"] for step in payload["steps"]}
+    assert payload["ok"] is True
+    assert statuses["obsidian"] == "present"
+    assert statuses["open-vault"] in ("opened", "manual")
 
 
 def test_run_onboarding_default_zotero_opener_is_the_hardened_opener() -> None:

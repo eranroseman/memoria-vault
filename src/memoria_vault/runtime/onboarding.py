@@ -23,6 +23,10 @@ SayFn = Callable[[str], None]
 
 OBSIDIAN_DOWNLOAD_URL = "https://obsidian.md/download"
 
+# Shared verbatim so `offer_obsidian_install`'s own decline and
+# `run_onboarding`'s ask-failure fallback cannot silently drift apart.
+OBSIDIAN_SKIPPED_MESSAGE = f"Skipped. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}"
+
 # Frozen allowlist (bootstrap spec section 7.1): the command is shown
 # verbatim and run only on explicit yes. The engine never downloads
 # binaries itself; anything off this list is detect-and-direct.
@@ -48,6 +52,30 @@ def platform_key(sys_platform: str) -> str | None:
     return None
 
 
+def _safe_is_dir(path: Path) -> bool:
+    """``Path.is_dir`` that treats an unreadable path as "not found".
+
+    ``pathlib`` only swallows ``ENOENT``/``ENOTDIR``/``EBADF``/``ELOOP``
+    internally; every other ``OSError`` -- notably ``PermissionError``
+    (``EACCES``) from a directory in the path that exists but cannot be
+    traversed, e.g. an XDG data dir under a root-only mount -- propagates.
+    A detection probe that cannot read a directory should report "not
+    found", the truthful answer, rather than crash its caller.
+    """
+    try:
+        return path.is_dir()
+    except OSError:
+        return False
+
+
+def _safe_is_file(path: Path) -> bool:
+    """``Path.is_file`` counterpart to ``_safe_is_dir``; see its docstring."""
+    try:
+        return path.is_file()
+    except OSError:
+        return False
+
+
 def detect_obsidian(
     sys_platform: str,
     *,
@@ -66,12 +94,12 @@ def detect_obsidian(
 
 
 def _detect_macos(app_dirs: tuple[Path, ...]) -> bool:
-    return any((app_dir / "Obsidian.app").is_dir() for app_dir in app_dirs)
+    return any(_safe_is_dir(app_dir / "Obsidian.app") for app_dir in app_dirs)
 
 
 def _detect_windows(env: Mapping[str, str]) -> bool:
     local_appdata = env.get("LOCALAPPDATA", "")
-    if local_appdata and (Path(local_appdata) / "Obsidian" / "Obsidian.exe").is_file():
+    if local_appdata and _safe_is_file(Path(local_appdata) / "Obsidian" / "Obsidian.exe"):
         return True
     return _windows_registry_has_obsidian()
 
@@ -117,7 +145,9 @@ def _detect_linux(run: RunFn, data_dirs: tuple[Path, ...]) -> bool:
         return True
     entries = ("obsidian.desktop", "md.obsidian.Obsidian.desktop")
     return any(
-        (data_dir / "applications" / entry).is_file() for data_dir in data_dirs for entry in entries
+        _safe_is_file(data_dir / "applications" / entry)
+        for data_dir in data_dirs
+        for entry in entries
     )
 
 
@@ -147,7 +177,7 @@ def offer_obsidian_install(
     except EOFError:
         answer = ""
     if answer not in ("y", "yes"):
-        say(f"Skipped. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
+        say(OBSIDIAN_SKIPPED_MESSAGE)
         return "declined"
     try:
         result = run(list(command), check=False, timeout=_INSTALL_TIMEOUT_S)
@@ -189,7 +219,7 @@ def open_vault_in_obsidian(
     is always shown alongside a successful launch, not just on failure.
     """
     start_here = workspace / "Start here.md"
-    open_target = start_here if start_here.is_file() else workspace
+    open_target = start_here if _safe_is_file(start_here) else workspace
     uri = "obsidian://open?path=" + urllib.parse.quote(str(open_target), safe="")
     fallback = MANUAL_OPEN_FALLBACK.format(path=workspace)
     key = platform_key(sys_platform)
@@ -317,14 +347,19 @@ def run_onboarding(
         try:
             obsidian_status = offer_obsidian_install(sys_platform, ask=ask, say=say, run=run)
         except (EOFError, RuntimeError):
-            # `ask` is not total. `offer_obsidian_install` only guards its
-            # own `ask()` call against `EOFError`, but a closed/detached
-            # stdin makes builtin `input()` raise `RuntimeError: input():
-            # lost sys.stdin` instead -- a different exception that would
-            # otherwise propagate out of this function and crash the whole
-            # onboarding sequence. An unreadable prompt is treated the same
-            # as a decline: an honest "no consent obtained" outcome.
-            say(f"Skipped. Download Obsidian from {OBSIDIAN_DOWNLOAD_URL}")
+            # `ask` is not total. `offer_obsidian_install` only guards its own
+            # `ask()` call against `EOFError`. Some closed-stdin shapes raise
+            # something else instead: fd 0 closed, or `sys.stdin = None`,
+            # makes builtin `input()` raise `RuntimeError: input(): lost
+            # sys.stdin`, which this catches too so it cannot otherwise
+            # propagate out of this function and crash the whole onboarding
+            # sequence. Other closed-stdin shapes still escape uncaught --
+            # an in-process `sys.stdin.close()` raises `ValueError: I/O
+            # operation on closed file`, and a pytest-style capture raises
+            # `OSError` -- neither is a `RuntimeError`/`EOFError`. Whatever
+            # does land here is treated the same as a decline: an honest
+            # "no consent obtained" outcome.
+            say(OBSIDIAN_SKIPPED_MESSAGE)
             obsidian_status = "declined"
     steps.append({"step": "obsidian", "status": obsidian_status})
 
