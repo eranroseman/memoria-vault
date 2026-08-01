@@ -40,14 +40,15 @@ from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter
 # output as a stray folder on every vault it creates. Also prunes the walk (see
 # iter_files), which is why the list is worth keeping tight.
 SKIP_DIRS = {".githooks", ".obsidian", ".claude", ".codex", ".git", ".memoria", "node_modules"}
-TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/", "inbox/")
+# Only paths the walk can actually reach: `.memoria/` is in SKIP_DIRS, so
+# prefixes under it filter nothing (test_walk_never_reaches_skipped_dirs pins
+# that). `.memoria/staging/`, `.memoria/quarantine/` and a `.memoria/patterns/`
+# scaffolding tuple used to be listed here and read as live protection.
+TRANSIENT_PREFIXES = ("system/logs/", "inbox/")
 # A typed document legitimately leaves its type-home only while it is work-in-flight
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector
 # skips both so it never flags those moves.
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
-# Optional prompt scaffolding, not authored documents. Detectors that assert
-# things about real documents skip these when present.
-SCAFFOLD_PREFIXES = (".memoria/patterns/",)
 
 
 def is_untyped_infra(rp: str) -> bool:
@@ -263,9 +264,6 @@ def broken_wikilinks(vault: Path) -> list[Finding]:
     link_re = re.compile(r"\[\[([^\]|#]+)")
     out = []
     for p in notes:
-        rp = relpath(vault, p)
-        if rp.startswith(SCAFFOLD_PREFIXES):  # scaffolding: example/placeholder links
-            continue
         for m in link_re.finditer(read(p)):
             # rstrip a trailing "\" so a table-escaped pipe resolves: inside a
             # markdown table cell an aliased link must be written [[note\|alias]],
@@ -420,8 +418,6 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
     hubbed: set[str] = set()
     for p in iter_notes(vault):
         rp = relpath(vault, p)
-        if rp.startswith(SCAFFOLD_PREFIXES):
-            continue
         fm = parse_frontmatter(read(p))
         if fm.get("type") == "hub":
             for v in (fm.get("title"), *(fm.get("tags") or [])):
