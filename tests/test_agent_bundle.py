@@ -10,6 +10,9 @@ from pathlib import Path
 import pytest
 
 from memoria_vault import cli
+from memoria_vault.cli import main
+from memoria_vault.runtime import bundles
+from memoria_vault.runtime.policy.audit import sha256_file
 from tests.helpers import WORKSPACE_SEED
 
 PERIMETER_MESSAGE = (
@@ -145,3 +148,57 @@ def test_seed_codex_hooks_mirror_the_deny_rules():
     assert mirror["schema"] == 1
     assert mirror["deny"]["tools"] == ["edit", "write"]
     assert mirror["deny"]["paths"] == list(PROTECTED_PATTERNS)
+
+
+def _init(tmp_path: Path, capsys: pytest.CaptureFixture[str], *extra: str) -> Path:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json", *extra]) == 0
+    capsys.readouterr()
+    return workspace
+
+
+def _read_manifest(workspace: Path) -> dict:
+    return json.loads((workspace / bundles.MANIFEST_REL).read_text("utf-8"))
+
+
+def test_bundle_files_registry_matches_the_agent_bundle():
+    assert bundles.BUNDLE_FILES["agent"] == AGENT_BUNDLE_FILES
+    assert bundles.BUNDLE_FILES["obsidian"] == (
+        ".obsidian/plugins/memoria-obsidian/main.js",
+        ".obsidian/plugins/memoria-obsidian/manifest.json",
+        ".obsidian/plugins/memoria-obsidian/schema.js",
+        ".obsidian/plugins/memoria-obsidian/styles.css",
+    )
+
+
+def test_init_seeds_agent_and_obsidian_bundles_and_writes_current_hash_manifest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = _init(tmp_path, capsys)
+
+    for rel in bundles.BUNDLE_FILES["agent"] + bundles.BUNDLE_FILES["obsidian"]:
+        assert (workspace / rel).is_file(), rel
+        assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes(), rel
+
+    manifest = _read_manifest(workspace)
+    assert manifest["schema"] == bundles.MANIFEST_SCHEMA
+    assert manifest["vault_id"]
+    assert sorted(manifest["bundles"]) == ["agent", "obsidian"]
+    for name, rels in bundles.BUNDLE_FILES.items():
+        recorded = manifest["bundles"][name]["files"]
+        assert sorted(recorded) == sorted(rels)
+        for rel, digest in recorded.items():
+            assert sha256_file(workspace / rel) == digest, rel
+
+
+def test_init_no_obsidian_seeds_only_the_agent_bundle_manifest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = _init(tmp_path, capsys, "--no-obsidian")
+
+    manifest = _read_manifest(workspace)
+    assert sorted(manifest["bundles"]) == ["agent"]
+    for rel, digest in manifest["bundles"]["agent"]["files"].items():
+        assert sha256_file(workspace / rel) == digest, rel
+    assert not (workspace / ".obsidian").exists()
+    assert (workspace / ".claude/settings.json").is_file()

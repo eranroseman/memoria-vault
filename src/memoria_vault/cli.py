@@ -2999,6 +2999,11 @@ def _initialize_workspace_files(
 
     write_tracked_projections_explicit(workspace, actor="operation", machine="memoria-init")
     _ensure_git(workspace, commit_created_repository=commit_created_repository)
+    if not overwrite and include_agent_bundle:
+        from memoria_vault.runtime import bundles
+
+        bundle_names = ["agent"] + (["obsidian"] if include_obsidian else [])
+        bundles.seed_bundles(workspace, bundle_names=bundle_names)
 
 
 def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_rel: str) -> None:
