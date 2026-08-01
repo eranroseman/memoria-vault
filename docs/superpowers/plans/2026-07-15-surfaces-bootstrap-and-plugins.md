@@ -7527,7 +7527,7 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
 
 **Steps:**
 
-- [ ] Write the failing test. In `tests/test_cli.py`, add
+- [x] Write the failing test. In `tests/test_cli.py`, add
   `"memoria onboard",` to the exact set in
   `test_cli_command_surface_is_exact` (after the `"memoria init",` line),
   and append at end of file:
@@ -7588,13 +7588,90 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
       assert (workspace / "Start here.md").is_file()
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_cli.py::test_cli_command_surface_is_exact tests/test_cli.py::test_cli_onboard_runs_runway_and_is_non_interactive_under_json tests/test_cli.py::test_cli_init_onboard_flag_runs_onboarding_tail -v`
   Expected: surface-set mismatch (`memoria onboard` missing) and
   `SystemExit: 2` (argparse: `invalid choice: 'onboard'` /
   `unrecognized arguments: --onboard`).
 
-- [ ] Write minimal implementation. In `src/memoria_vault/cli.py`:
+> **Adopted post-review amendment (2026-07-31):** the U1 read-API plan's CLI
+> parity test (`tests/test_surface_contract.py::test_surface_contract_cli_parity_is_equality_with_named_exemptions`)
+> asserts strict equality between the parser's command set and
+> `SURFACE_ACTIONS` plus a named `CLI_ONLY_COMMANDS` exemption roster. Adding
+> `memoria onboard` to the parser without also updating one of those two
+> registries fails that test unconditionally — the brief above never mentions
+> either file, an omission this amendment closes rather than leaving to be
+> "discovered" as a second red bar. **Decision: exempt, do not register.**
+> `SURFACE_ACTIONS` rows are, without exception, a `job` + `kind: read|write`
+> + an `engine_api` callable bound the same way across CLI/HTTP/MCP, with a
+> `params` schema; `onboard` has none of that shape — it is local OS/process
+> orchestration (detect-or-install a native GUI app via a platform allowlist,
+> open an `obsidian://` deep link, probe `127.0.0.1:23119`, print a static
+> notice), meaningless over HTTP or MCP and bound to no `engine_api`
+> function. The U1 cross-plan amendment governing this exact case ("Parser
+> parity", 2026-07-29) already defaults to the exemption unless "the task
+> deliberately registers a full surface row" — this task's Produces section
+> never asks for one. `memoria handshake`, the only other command that same
+> amendment clause names by name, was exempted for the identical reason
+> (BOOT-A.8). `CLI_ONLY_COMMANDS`'s own header comment already lists "O1
+> onboard" among the future specs expected to move commands out of that list
+> — confirming a *later* task, not BOOT-D.7, owns any eventual full
+> registration. Add `"memoria onboard",` to `CLI_ONLY_COMMANDS` in
+> `tests/test_surface_contract.py`, immediately after `"memoria init",`
+> (mirroring the exact set ordering used in `test_cli_command_surface_is_exact`).
+> Found during BOOT-D.7 implementation on 2026-07-31, before this snippet
+> shipped.
+
+> **Adopted post-review amendment (2026-07-31):** the literal snippet below
+> for `_run_onboarding_for_args` omits `url_open` from the `run_onboarding(...)`
+> call entirely. `run_onboarding`'s own default for `url_open` is already the
+> hardened `_open_zotero_probe` (BOOT-D.5), so the omission is not a live bug
+> today — but this command is the first production caller of
+> `run_onboarding`, the exact call site BOOT-D.4's proxy-free/redirect-free
+> hardening exists to protect (a bare `urllib.request.urlopen` honors
+> `http_proxy`/`https_proxy` even for a `127.0.0.1` target, so an unguarded
+> loopback Zotero probe could otherwise leave the machine through an ambient
+> proxy, or a captive-portal proxy answering 2xx could report Zotero present
+> with none running). Relying on a same-module default staying correct
+> forever, silently, with no test pinning this call site specifically, is
+> exactly the shape of drift the earlier BOOT-D amendments in this file exist
+> to close off. Thread it explicitly instead —
+> `url_open=onboarding._open_zotero_probe` — and add
+> `test_cli_onboard_runs_runway_and_is_non_interactive_under_json`'s
+> `seen["url_open"] is onboarding._open_zotero_probe` assertion to pin it at
+> this call site, not only at `run_onboarding`'s signature (already pinned by
+> `test_run_onboarding_default_zotero_opener_is_the_hardened_opener`, BOOT-D.5).
+> Found during BOOT-D.7 implementation on 2026-07-31, before this snippet
+> shipped.
+
+> **Adopted post-review amendment (2026-07-31):** `ask` is still not total at
+> this call site. BOOT-D.5's own amendment above only wrapped
+> `offer_obsidian_install`'s call inside `run_onboarding` in
+> `except (EOFError, RuntimeError):`; it explicitly flagged that "an
+> in-process `sys.stdin.close()` raises `ValueError`... and a pytest-style
+> capture raises `OSError`... neither is caught" and left both unclosed as
+> out of that task's scope. This task supplies the real `input()`-based
+> `ask` for the first time, so those two shapes are no longer hypothetical —
+> a closed stdin fd 0 (e.g. a service manager, or `memoria onboard` run under
+> CI with `< /dev/null` piped through certain shells) raises `OSError` from
+> the underlying read, and neither `offer_obsidian_install` nor
+> `run_onboarding` catches it; it would propagate out of `run_onboarding`
+> itself and be turned into a generic `_fail` "ok": false error result by
+> `main`'s top-level catch-all — a worse, less honest outcome than the
+> ordinary declined-consent path every other closed-stdin shape already gets.
+> Fix it at this call site rather than in the already-reviewed, merged
+> `onboarding.py`: wrap the literal snippet's bare
+> `input(prompt) if interactive else ""` in
+> `try: return input(prompt) except (EOFError, RuntimeError, ValueError, OSError): return ""`,
+> so `ask` itself never raises and every unusable-stdin shape degrades to the
+> same honest "no consent obtained" outcome `run_onboarding` already gives
+> EOFError/RuntimeError. Add
+> `test_cli_onboard_ask_survives_unusable_stdin_without_a_traceback` (drives
+> both the `OSError` and `ValueError` shapes through the captured `ask`
+> closure) to prove it. Found during BOOT-D.7 implementation on 2026-07-31,
+> before this snippet shipped.
+
+- [x] Write minimal implementation. In `src/memoria_vault/cli.py`:
 
   1. Extend the init parser block (after line 82's `--no-obsidian`
      argument, before `init.set_defaults`):
@@ -7617,21 +7694,19 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
      onboard.set_defaults(handler=_cmd_onboard)
      ```
 
-  3. Replace the final line of `_cmd_init` (line 589) and add the handler
-     + helper after it:
+  3. Extend `_cmd_init`'s tail and add the handler + helper after it. (By
+     execution time BOOT-C's agent-bundle wiring had already landed inside
+     `_cmd_init`, ahead of this task and unrelated to it; the delta this
+     task actually adds is exactly the `payload`/`if args.onboard:` lines
+     before the final `return _emit(...)`, plus the two new functions
+     below — not a rewrite of the rest of the already-merged body):
 
      ```python
      def _cmd_init(args: argparse.Namespace) -> int:
-         workspace = Path(args.workspace or ".").resolve()
-         created = _workspace_plan(workspace)
-         include_obsidian = not args.no_obsidian
-         if args.dry_run:
-             return _emit(
-                 _init_dry_run_report(workspace, created, include_obsidian=include_obsidian), args
-             )
-         if not args.yes and workspace.exists() and any(workspace.iterdir()):
-             return _fail("init on a non-empty workspace requires --yes", json_output=args.json)
-         _initialize_workspace_files(workspace, include_obsidian=include_obsidian)
+         ...
+         _initialize_workspace_files(
+             workspace, include_obsidian=include_obsidian, include_agent_bundle=True
+         )
          payload: dict[str, Any] = {"ok": True, "workspace": str(workspace), "created": created}
          if args.onboard:
              payload["onboard"] = _run_onboarding_for_args(workspace, args)
@@ -7653,7 +7728,12 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
                  print(line)
 
          def ask(prompt: str) -> str:
-             return input(prompt) if interactive else ""
+             if not interactive:
+                 return ""
+             try:
+                 return input(prompt)
+             except (EOFError, RuntimeError, ValueError, OSError):
+                 return ""
 
          return onboarding.run_onboarding(
              workspace,
@@ -7662,20 +7742,28 @@ All process IO (prompts, subprocesses, HTTP) is injectable: `ask`, `say`,
              home=Path.home(),
              ask=ask,
              say=say,
+             url_open=onboarding._open_zotero_probe,
          )
      ```
 
-- [ ] Run test to verify it passes:
-  `python -m pytest tests/test_cli.py tests/test_onboarding.py -v` — all pass.
+  4. Add `"memoria onboard",` to `CLI_ONLY_COMMANDS` in
+     `tests/test_surface_contract.py`, immediately after `"memoria init",`
+     (see the CLI-registration amendment above for why this is an
+     exemption, not a registered row).
 
-- [ ] Run the full gate: `python scripts/verify` — green (this also runs the
+- [x] Run test to verify it passes:
+  `python -m pytest tests/test_cli.py tests/test_onboarding.py tests/test_surface_contract.py -v` — all pass.
+
+- [x] Run the full gate: `python scripts/verify` — green (this also runs the
   doc-claims gate, which only scans `docs/`, and the regenerated floor
   goldens from BOOT-D.6).
 
-- [ ] Commit:
+- [x] Commit:
 
   ```bash
-  git add src/memoria_vault/cli.py tests/test_cli.py
+  git add src/memoria_vault/cli.py tests/test_cli.py tests/test_onboarding.py \
+    tests/test_surface_contract.py \
+    docs/superpowers/plans/2026-07-15-surfaces-bootstrap-and-plugins.md
   git commit -m "feat(cli): memoria onboard command and init --onboard tail (bootstrap spec §7, §9.5)
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"

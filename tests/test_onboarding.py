@@ -926,9 +926,12 @@ def test_run_onboarding_default_zotero_opener_is_the_hardened_opener() -> None:
     # `urllib.request.urlopen` default for `url_open`, which -- since
     # run_onboarding always forwards `url_open` explicitly to
     # zotero_running -- would silently undo BOOT-D.4's proxy-free,
-    # redirect-free hardening whenever a caller (e.g. the future `memoria
-    # onboard` CLI) does not pass its own `url_open`. Pin the default
-    # explicitly, mirroring zotero_running's own regression guard.
+    # redirect-free hardening whenever a caller does not pass its own
+    # `url_open`. BOOT-D.7's `memoria onboard`/`init --onboard` CLI threads
+    # `_open_zotero_probe` explicitly anyway (belt-and-suspenders, pinned in
+    # tests/test_cli.py), but any other caller -- present or future -- still
+    # falls back to this default. Pin it explicitly, mirroring
+    # zotero_running's own regression guard.
     default = inspect.signature(onboarding.run_onboarding).parameters["url_open"].default
     assert default is onboarding._open_zotero_probe
 
