@@ -15,8 +15,8 @@ Where every file lives.
   agent/MCP host bundle, then creates writable runtime and content directories
   from `.memoria/schemas/folders.yaml`. It also initializes generated
   control/projection files such as `index.md`,
-  `bibliography.bib`, `.memoria/overrides.jsonl`, `.memoria/journal-head`, and
-  `system/manifest.jsonl`.
+  `bibliography.bib`, `.memoria/overrides.jsonl`, `.memoria/journal-head`,
+  `.memoria/vault.json`, and `system/manifest.jsonl`.
 - Product operation manifests ship inside the installed Python package, not the
   runtime vault.
 - The legal root categories come from `.memoria/schemas/folders.yaml`.
@@ -68,6 +68,7 @@ writable runtime directories are created from `folders.yaml`:
 ├── eval/                    seeded-error verdict bundle and last-run.md
 ├── patterns/_preamble.md    shared operation prompt preamble
 ├── overrides.jsonl          Git-tracked log of PI overrides recorded at init and beyond
+├── vault.json               Git-tracked init manifest: vault identity and the seeded agent/Obsidian bundle hashes
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── code-runs/<run-id>/      gitignored recorded code-execution run artifacts
 ├── journal/                 derived per-machine JSONL synchronization exports

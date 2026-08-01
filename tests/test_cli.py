@@ -882,6 +882,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "journal_head": state.JOURNAL_HEAD_REL,
         "overrides": ".memoria/overrides.jsonl",
         "gitignore": ".gitignore",
+        "vault_manifest": ".memoria/vault.json",
     }
     assert not workspace.exists()
 
