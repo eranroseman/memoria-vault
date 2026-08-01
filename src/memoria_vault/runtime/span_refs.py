@@ -48,7 +48,9 @@ def resolve_span_ref(vault: Path, ref: str) -> dict[str, str] | None:
                   AND concept_id = ?
                   AND path = ?
                 """,
-                (span.work_id, span.page, f"catalog/sources/{span.work_id}", path),
+                # v16 identity: a work's Concept key is its bare `work_id`;
+                # `catalog/sources/<work_id>` is only that identity's path rendering.
+                (span.work_id, span.page, span.work_id, path),
             ).fetchone()
         if row is not None:
             return {"work_id": span.work_id, "anchor": span.page, "path": str(row["path"])}

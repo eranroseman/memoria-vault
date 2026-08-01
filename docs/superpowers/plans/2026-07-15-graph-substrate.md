@@ -2551,6 +2551,59 @@ match before anything reads statuses), emits `passages.concept_id` in the new
 id-space, and derives concept-edge rows whose source is the frontmatter id and
 whose target is a `target_path` for `replace_concept_edges` to resolve.
 
+> **Amendment — the reconcile also carries the `outputs` path key (2026-07-31,
+> ruling recorded as issue #1584).** The three `indexing.py` edits below are not
+> sufficient for this task's own acceptance test. Rebuilding the mirror first
+> clears the identity-aware `state.concept_check_status` gate in
+> `search_index.checked_search_universe` (`search_index.py:134`) but not the read
+> barrier on the next line: `is_consumable_checked_file` → `state.output_record`
+> (`read_barrier.py:19`) looks up the **path-keyed** `outputs` table at the file's
+> **new** path, finds nothing after an out-of-band rename, and drops the renamed
+> file from the passage universe — so no passage row and no mirrored edge is
+> produced. Its refusal then enqueues `observe-pi-edits`, which
+> `record_observed_file_edit` would use to demote the surviving verdict to
+> `unchecked`. So the shipped behaviour was: an out-of-band rename strips a
+> checked note from search and then un-checks it.
+>
+> **Resolution:** `state.rebuild_file_concept_mirror` reconciles the `outputs`
+> path key alongside `concepts.path`, via `_reconcile_renamed_output_conn` — one
+> `UPDATE OR REPLACE outputs SET output_id = ?, target_path = ?`, the same
+> statement NID-B.5 issues in-band, applied to the out-of-band pass. Rationale:
+> NODES §7 ("a rename leaves every DB row, edge, and verdict attached") is the
+> product requirement, and §1.5 ("`memoria mv` is a convenience, not a correctness
+> requirement") *reinforces* fixing it here — fixing only NID-B.5's in-band seam
+> would satisfy `mv` while leaving the exact case §1.5 says must work broken.
+> NID-B.2's "outputs stay path-keyed" constrains the **key shape**, not whether
+> that key follows the file: updating a path key to the file's new path keeps the
+> table path-keyed and does not re-key it to an identity. NID-B.5's in-band seam
+> is untouched and still owns `output_id`.
+>
+> **The trust perimeter does not widen, and that is asserted.** The barrier's
+> sha256 comparison still runs against the file at its new path, so a
+> rename-plus-edit is still refused.
+> `test_rename_reconciliation_still_refuses_edited_content` guards it, proven
+> load-bearing by mutation (make the reconcile refresh `output_sha256` from the
+> file at the new path — the laundering bug — and only that test fails).
+>
+> **Two behavioural changes this task ships, recorded so they are not discovered
+> later:** (1) reindex now hard-depends on the seeded `.memoria/schemas` tree,
+> because `rebuild_concept_mirror_from_files` calls `_load_contract`, which raises
+> `ValueError("missing required concept-types.yaml")` without it; every `src/`
+> caller operates on an initialized workspace, but the passage index now has that
+> dependency. (2) `rebuild_file_concept_mirror`'s prune — deleting `store='file'`
+> Concepts absent from the batch that carry no verdict — now runs on **every**
+> reindex, not only on `memoria workspace rebuild`.
+>
+> **Also modified beyond the Files list:** `src/memoria_vault/runtime/span_refs.py`
+> (`:51`). `resolve_span_ref` queried the fulltext passage by
+> `concept_id = f"catalog/sources/{work_id}"`; the `_passage_row` re-key below makes
+> that column the bare `work_id` (NODES §1.7, cross-section contract 10), so the
+> reader had to follow the writer. A plan gap, not a scope violation.
+>
+> The Commit step's `git add` line below is therefore superseded: stage
+> `src/memoria_vault/runtime/{indexing,state,span_refs}.py`,
+> `tests/test_query_substrate.py`, and this plan file.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/indexing.py` — `_rebuild_passage_index`
   (`:34-38`), `_passage_row` (`:101-130`, `concept_id` at `:114`), `_concept_edges`
@@ -2573,7 +2626,7 @@ whose target is a `target_path` for `replace_concept_edges` to resolve.
 
 **Steps:**
 
-- [ ] Append the failing rename-reconciliation test to
+- [x] Append the failing rename-reconciliation test to
   `tests/test_query_substrate.py` (this is the spec §7 acceptance scenario):
 
   ```python
@@ -2626,13 +2679,13 @@ whose target is a `target_path` for `replace_concept_edges` to resolve.
       assert passage["concept_id"] == ULID_NOTE
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_query_substrate.py::test_rename_out_of_band_reconciles_by_frontmatter_id -v`
   — expect FAIL: `assert passage["concept_id"] == ULID_NOTE` never reached — the
   first block already fails on the edge assertion (`source_concept_id` is
   `'notes/alpha.md'`, not the ULID) because `_passage_row` still emits path-space
   ids; treat any of the id-space assertions failing as the expected failure.
-- [ ] In `src/memoria_vault/runtime/indexing.py`: extend the vaultio import
+- [x] In `src/memoria_vault/runtime/indexing.py`: extend the vaultio import
   (`:13`) to `from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read`
   and the trusted_writer import (`:12`) to include
   `rebuild_concept_mirror_from_files`. Rebuild the mirror first in
@@ -2653,7 +2706,7 @@ whose target is a `target_path` for `replace_concept_edges` to resolve.
       }
   ```
 
-- [ ] In `_passage_row` (`:101-130`), replace the `concept_id` line (`:114`) with
+- [x] In `_passage_row` (`:101-130`), replace the `concept_id` line (`:114`) with
   the id-space rule:
 
   ```python
@@ -2668,7 +2721,7 @@ whose target is a `target_path` for `replace_concept_edges` to resolve.
   and use `"concept_id": concept_id,` in the returned dict. (Fulltext passages key
   to the work's bare `work_id` — they inherit the work's verdict, matching the v16
   `catalog_sources` trigger; digests key by path per the SPEC GAP resolution.)
-- [ ] Replace `_concept_edges` (the G2S1.1 body) so edges carry the source id and a
+- [x] Replace `_concept_edges` (the G2S1.1 body) so edges carry the source id and a
   `target_path` (resolution is `replace_concept_edges`'s job — single owner):
 
   ```python
@@ -2696,14 +2749,14 @@ whose target is a `target_path` for `replace_concept_edges` to resolve.
       return edges
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_query_substrate.py -v`
   — expect PASS, including the updated G2S1.1 mirror test and the two v13/v14 shape
   tests. If `test_concept_edges_mirror_links_and_persist_across_reindex` fails on
   the tension row, the direct INSERT predates the mirror rows — its fixture already
   writes both notes first; re-check the INSERT's `target_path` column from NID-B.1.
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/indexing.py tests/test_query_substrate.py
@@ -5715,20 +5768,28 @@ doc-claims check).
 > — ERP-C/ERP-D own the fix; ERP-A.6 owns the record.** NID-B.2 added
 > `_adopt_path_key_identity_conn`, which lets a provisionally path-keyed Concept take the
 > ULID its file later authors. That adoption is a **narrow, deliberately partial re-key**:
-> FKs carry `concept_verdicts`, `concept_flags` and `concept_edges` endpoints, but three
-> references are left pointing at the retired path key, because none carries a foreign key:
+> FKs carry `concept_verdicts`, `concept_flags` and `concept_edges` endpoints, but two
+> references are left pointing at the retired path key, because neither carries a foreign key:
 >
 > | table | stale value after adoption | goes live at |
 > | --- | --- | --- |
 > | `derivations.input_id` | keeps `'notes/hand.md'`, naming no Concept (`schema.sql:407-412`) | ERP-C/ERP-D walk the derivation DAG |
-> | `passages.concept_id` | keeps `'notes/hand.md'` (`schema.sql:208-225`) | inert; cascades via the triggers' `OR path = …` and is rewritten on refresh |
 > | `concept_edges.edge_id` | keeps the pre-adoption digest, so `edge_id != concept_edge_id(source, relation, target)` | ERP-B/ERP-C/ERP-D consume `edge_id` |
 >
-> All three are inert today (`derivations` is write-only in `src/`; `edge_id` is recomputed
-> by the next full `replace_concept_edges`). Do not read NID-B.2's "no derivation, passage
-> or edge_id rewriting" as restraint — it is an **incomplete re-key whose residue is
-> deferred here**, and it must be closed before anything walks the derivation DAG or trusts
-> `edge_id` as a stable digest.
+> **`passages.concept_id` was the third row and is now closed — narrowed by NID-B.4
+> (2026-07-31), measured, not assumed.** This note previously claimed it was "rewritten on
+> refresh"; that was only half true, because the pre-B.4 `_passage_row` re-emitted the
+> *path* as `concept_id` unconditionally, so a refresh rewrote the row to the same retired
+> value. B.4's id-space rule emits the frontmatter ULID, and both convergence routes were
+> measured end to end: a full `rebuild_passage_index` wipes and reinserts every row, and the
+> incremental `refresh_stale_passages` rewrites the adopting file, which necessarily changed
+> when it gained its `id`. Do not re-add this row.
+>
+> Both remaining references are inert today (`derivations` is write-only in `src/`; `edge_id`
+> is recomputed by the next full `replace_concept_edges`). Do not read NID-B.2's "no
+> derivation, passage or edge_id rewriting" as restraint — it is an **incomplete re-key whose
+> residue is deferred here**, and it must be closed before anything walks the derivation DAG
+> or trusts `edge_id` as a stable digest.
 >
 > **Residual, not a regression:** adoption can still move a verdict onto content that did
 > not earn it via *path reuse* — mirror an id-less `notes/old.md` as `checked`, rename the
@@ -5749,6 +5810,14 @@ amendment.
 > and the `explore.read` surface serve no neighbours and no edges for ULID-keyed
 > Concepts until this task lands. `graph_sql.filter_ids` has the same defect and no
 > `src/` caller yet. See NID-B.2's review amendment for the full statement.
+>
+> **Shape note from NID-B.4 (2026-07-31) — this is what the rewrite must target.**
+> `indexing._concept_edges` now emits `source_concept_id` in **identity** space (the
+> frontmatter ULID) while `source_path` stays in **path** space. The two columns
+> therefore diverge for every ULID-keyed Concept, and `graph_sql.py:79`'s
+> `source_status.concept_id = edge.source_path` join is NULL for exactly those rows.
+> Join `concepts.path` to `source_path`, or `concepts.concept_id` to
+> `source_concept_id` — never one against the other. NID-B.4 did not touch this join.
 
 **Files:**
 

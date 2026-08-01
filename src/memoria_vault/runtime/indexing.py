@@ -10,8 +10,12 @@ from typing import Any
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib.schema import parse_links
-from memoria_vault.runtime.trusted_writer import OperationContext, validate_operation_context
-from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
+from memoria_vault.runtime.trusted_writer import (
+    OperationContext,
+    rebuild_concept_mirror_from_files,
+    validate_operation_context,
+)
+from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read
 
 EMBEDDING_MODEL_ID = "memoria-hash-test-v1"
 VECTOR_DIM = 16
@@ -33,10 +37,17 @@ def rebuild_passage_index_explicit(vault: Path, *, actor: str, machine: str) -> 
 
 
 def _rebuild_passage_index(vault: Path) -> dict[str, Any]:
+    # Reconcile the concept mirror first: a rename missed by any rewriter
+    # re-attaches by frontmatter id here, before statuses are read (NODES §1.3).
+    mirror_result = rebuild_concept_mirror_from_files(vault)
     rows = _passage_rows(vault)
     passage_result = state.replace_indexed_passages(vault, rows)
     edge_result = state.replace_concept_edges(vault, _concept_edges(rows))
-    return {"passages": passage_result, "concept_edges": edge_result}
+    return {
+        "concept_mirror": mirror_result,
+        "passages": passage_result,
+        "concept_edges": edge_result,
+    }
 
 
 def refresh_stale_passages(vault: Path, *, context: OperationContext) -> dict[str, Any]:
@@ -99,12 +110,14 @@ def _passage_row(vault: Path, document: dict[str, Any]) -> dict[str, Any]:
     )
     text_sha256 = "sha256:" + hashlib.sha256(text.encode()).hexdigest()
     work_id = _work_id(frontmatter, path)
+    raw_id = str(frontmatter.get("id") or "")
+    concept_id = work_id if path.startswith("fulltexts/") else (raw_id if is_ulid(raw_id) else path)
     return {
         "passage_id": hashlib.sha256(f"{path}\0{text_sha256}".encode()).hexdigest()[:24],
         "origin": "generated"
         if path.startswith(("fulltexts/", "graph-neighborhoods/"))
         else "file",
-        "concept_id": f"catalog/sources/{work_id}" if path.startswith("fulltexts/") else path,
+        "concept_id": concept_id,
         "work_id": work_id,
         "path": path,
         "anchor": _anchor(text),
@@ -131,11 +144,16 @@ def _concept_edges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if row.get("origin") != "file":
             continue
         for relation, target in parse_links(row.get("links")):
+            target_path = (
+                target
+                if target.endswith(".md") or target.startswith("catalog/sources/")
+                else f"{target}.md"
+            )
             edges.append(
                 {
-                    "source_concept_id": row["path"],
+                    "source_concept_id": row["concept_id"],
                     "relation_type": relation,
-                    "target_concept_id": target if target.endswith(".md") else f"{target}.md",
+                    "target_path": target_path,
                     "check_status": row["check_status"],
                     "source_path": row["path"],
                 }
