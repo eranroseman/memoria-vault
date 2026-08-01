@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import os
 import runpy
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -81,3 +84,41 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     assert not any("e2e_smoke.py" in d for d in docs)
     assert not any("compileall" in d for d in docs)
     assert not any(d.startswith("bash -n") for d in docs)
+
+
+def test_single_run_lock_admits_the_first_gate(tmp_path: Path) -> None:
+    handle = _verify_namespace()["_hold_single_run_lock"](tmp_path / "verify.lock")
+
+    assert handle is not None
+    assert (tmp_path / "verify.lock").read_text(encoding="utf-8") == str(os.getpid())
+
+
+def test_single_run_lock_refuses_a_second_gate_in_the_same_checkout(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    lock = tmp_path / "verify.lock"
+    namespace = _verify_namespace()
+    held = namespace["_hold_single_run_lock"](lock)
+
+    with pytest.raises(SystemExit) as exit_info:
+        namespace["_hold_single_run_lock"](lock)
+
+    assert exit_info.value.code == 1
+    assert f"already running in this checkout (pid {os.getpid()})" in capsys.readouterr().err
+    held.close()
+
+
+def test_single_run_lock_is_released_when_the_holder_lets_go(tmp_path: Path) -> None:
+    # flock lives on the open file description, so a dead run leaves no stale
+    # lock -- releasing has to let the next gate straight in.
+    lock = tmp_path / "verify.lock"
+    namespace = _verify_namespace()
+    namespace["_hold_single_run_lock"](lock).close()
+
+    assert namespace["_hold_single_run_lock"](lock) is not None
+
+
+def test_lock_is_per_checkout_not_global() -> None:
+    namespace = _verify_namespace()
+
+    assert namespace["LOCK_PATH"] == namespace["ROOT"] / ".verify.lock"
