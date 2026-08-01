@@ -631,6 +631,68 @@ def test_curate_note_link_rejects_invalid_source_without_mutation(tmp_path: Path
     assert state.concept_check_status(vault, "notes/source.md") == "checked"
 
 
+def test_curate_note_link_accepts_checked_catalog_source_target(tmp_path: Path) -> None:
+    """A catalog work is a legal link target: it is a DB row, never a file on disk."""
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about outcomes.",
+        machine="capture-machine",
+    )
+    checked_note(vault, "claim", "Claim", "01KBN6V6KX0000000000000003")
+    assert not (vault / "catalog/sources/source-alpha").exists()
+
+    result = curate_note_link(
+        vault,
+        "claim",
+        "supports",
+        "catalog/sources/source-alpha",
+        actor="pi",
+        reason="claim grounded in work",
+        machine="curator",
+    )
+
+    assert result["target_path"] == "catalog/sources/source-alpha"
+    assert result["changed"] is True
+    source_fm = read_frontmatter(vault / "notes/claim.md")
+    assert source_fm["links"] == {"supports": ["catalog/sources/source-alpha"]}
+
+
+def test_curate_note_link_rejects_unchecked_catalog_source_target(tmp_path: Path) -> None:
+    """The bridge reads the row's own check_status, not the absence of a file."""
+    vault = workspace(tmp_path)
+    state.upsert_catalog_record(
+        vault, work_id="source-beta", title="Beta Source", check_status="unchecked"
+    )
+    checked_note(vault, "claim", "Claim", "01KBN6V6KX0000000000000003")
+
+    with pytest.raises(ValueError, match="not checked"):
+        curate_note_link(
+            vault,
+            "claim",
+            "supports",
+            "catalog/sources/source-beta",
+            actor="pi",
+            machine="curator",
+        )
+
+    assert read_frontmatter(vault / "notes/claim.md")["links"] == {}
+
+
+def test_curate_note_link_missing_catalog_source_raises_file_not_found(tmp_path: Path) -> None:
+    """A work with no catalog row is missing, not unchecked — the two refusals differ."""
+    vault = workspace(tmp_path)
+    checked_note(vault, "claim", "Claim", "01KBN6V6KX0000000000000003")
+
+    with pytest.raises(FileNotFoundError):
+        curate_note_link(
+            vault, "claim", "supports", "catalog/sources/missing", actor="pi", machine="curator"
+        )
+
+
 def linked_note(vault: Path, name: str, note_id: str, link_type: str, target: str) -> Path:
     """A checked note holding one links: entry in the surface form it was written in."""
     path = vault / "notes" / f"{name}.md"

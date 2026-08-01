@@ -6745,6 +6745,32 @@ procedure and include the regenerated goldens in that task's commit.
 
 ### Task ERP-B.1: Virtual catalog targets in `_checked_concept` + claim→work edges in `_note_edges`
 
+> **Execution amendment (2026-08-01) — what ERP-B.1 landed.** Four deviations from
+> the step text below, none of them contract changes.
+> **(1) The drafted fixtures cannot run.** Every drafted note is written with
+> `_md(..., "type: note\ncheck_status: checked\n…")`, but `check_status` is a
+> **retired** frontmatter field (`vaultio.retired_frontmatter_field_errors`) and
+> `curate_note_link`'s own write path refuses it — pinned by
+> `test_curate_note_link_rejects_invalid_source_without_mutation`. The claim note is
+> staged with this file's `checked_note(vault, name, title, <ULID>)` helper instead.
+> The `tests/test_project_knowledge.py` fixtures are unaffected: nothing there passes
+> a note through a writer seam.
+> **(2) `_note_edges` iterates the roster, not three literals.** ERP-A's convergence
+> already replaced the drafted `("supports", "contradicts", "extends")` tuple with
+> `sorted(LINK_RELATIONS)`; only the target filter changes here. Likewise the
+> drafted `thesis_rel` local is `thesis_path` at HEAD — `thesis_rel` is now the
+> imported `edges.thesis_rel` function (issue #1623).
+> **(3) A second, unchecked work.** The drafted bridge test has one work, which
+> cannot tell the `works` filter from no filter at all, nor `catalog_sources`'
+> default `checked_only=True` from `False`. The fixture carries an unchecked
+> `source-beta` the support note also links, asserted absent from both `edges` and
+> `nodes`, and asserts whole node records rather than the drafted `role` projection.
+> **(4) No fourth pin on the check→write ordering.** `curate_note_link` validates the
+> target through the one `_checked_concept` call for both branches, and ERP-D.5's
+> `test_curate_note_link_refuses_an_unchecked_target_before_writing_the_edge`
+> already pins that the warrant upsert sits behind it. The catalog branch reuses
+> that call site, so a second ordering test would be a replica.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/knowledge.py`
   (`_checked_concept` :3406-3415, `_note_edges` :3001-3009,
@@ -6773,7 +6799,7 @@ procedure and include the regenerated goldens in that task's commit.
 
 **Steps — cycle 1 (bridge resolution):**
 
-- [ ] Write the failing tests (append to `tests/test_knowledge.py`; `pytest`,
+- [x] Write the failing tests (append to `tests/test_knowledge.py`; `pytest`,
   `state`, `_md`, `read_frontmatter`, `capture_source`, `curate_note_link`,
   `workspace` all already imported/defined in this file):
 
@@ -6841,14 +6867,14 @@ procedure and include the regenerated goldens in that task's commit.
           )
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest "tests/test_knowledge.py::test_curate_note_link_accepts_checked_catalog_source_target" -v`
   — expected: `FileNotFoundError: .../catalog/sources/source-alpha` raised
   from `_checked_concept`'s `is_file()` gate (`knowledge.py:3408-3409`).
   (The other two may pass incidentally — the missing-source case already
   raises FileNotFoundError for the wrong reason; keep them as pinning tests.)
 
-- [ ] Write the minimal implementation. In
+- [x] Write the minimal implementation. In
   `src/memoria_vault/runtime/knowledge.py` replace `_checked_concept`
   (:3406-3415) with:
 
@@ -6880,7 +6906,7 @@ procedure and include the regenerated goldens in that task's commit.
       }
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_knowledge.py -v -k catalog_source_target`
   — expected: 3 passed.
 
@@ -6896,7 +6922,7 @@ procedure and include the regenerated goldens in that task's commit.
 
 **Steps — cycle 2 (argument-graph claim→work traversal):**
 
-- [ ] Write the failing test (append to `tests/test_project_knowledge.py`;
+- [x] Write the failing test (append to `tests/test_project_knowledge.py`;
   `state`, `_md`, `analyze_project_argument` already imported):
 
   ```python
@@ -6944,13 +6970,13 @@ procedure and include the regenerated goldens in that task's commit.
       assert {"notes/support.md", "notes/thesis.md"} <= seen
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest "tests/test_project_knowledge.py::test_analyze_project_argument_traverses_claim_to_work_bridge" -v`
   — expected: AssertionError on the `in result["edges"]` membership
   (claim→work edge dropped by `_note_edges`' `target in notes` filter,
   `knowledge.py:3007`).
 
-- [ ] Write the minimal implementation in
+- [x] Write the minimal implementation in
   `src/memoria_vault/runtime/knowledge.py`:
 
   Replace `_note_edges` (:3001-3009) with:
@@ -7003,7 +7029,7 @@ procedure and include the regenerated goldens in that task's commit.
   (`read_project_slice`'s call at :2422 keeps the default `works=frozenset()`
   — its member-path filter drops work targets by design; unchanged.)
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest "tests/test_project_knowledge.py::test_analyze_project_argument_traverses_claim_to_work_bridge" tests/test_project_knowledge.py tests/test_knowledge.py tests/test_gap_analysis.py -v`
   — expected: all pass (gap analysis and existing argument tests guard
   against regressions from the `_note_edges` signature change).
@@ -7278,6 +7304,45 @@ procedure and include the regenerated goldens in that task's commit.
 
 ### Task ERP-B.3: `confirm-tension` outcome on resolve-attention + candidate prompt surface
 
+> **Execution amendment (2026-08-01) — what ERP-B.3 landed.** Five deviations from
+> the step text below, none of them contract changes.
+> **(1) The drafted `_tension_rows` helper reads pre-v16 storage.** It selects
+> `source_concept_id`/`target_concept_id` and compares them with paths, which after
+> NID-B are identities. Endpoints are asserted through
+> `edges.concept_edge_path_records(vault, checked_only=False)` (the 2026-07-29
+> amendment's rule), and "exactly one row" / "no row" are asserted with a raw
+> `COUNT(*)` — that projection drops a row whose endpoints render nowhere, so
+> counting through it would let a bad row hide behind a lossy accessor.
+> **(2) A pre-sorted fixture cannot see `sorted()`.** `_checked_tension_rows` walks
+> `iter_markdown`, which sorts within a directory, so a flat `notes/a.md` +
+> `notes/b.md` pair always arrives in lexical order and dropping the `sorted()` call
+> survives. `_unsorted_pair_vault` puts one note in a subdirectory (`notes/zzz.md`
+> beside `notes/aaa/x.md`), which `os.walk` yields in reverse lexical order, so
+> contract 6's ordering is load-bearing in the payload assertion.
+> **(3) Nine tests, not two.** The drafted refusal test reaches only the
+> `prompt_kind` branch, so the payload-shape and blank-endpoint refusals are
+> unpinned; they are one parametrization with a distinct fixture and message per
+> branch. Added alongside: dedupe across sweeps (the `dedupe_slug` digest and the
+> `prompt is not None` guard); a `commit=False` sweep writing nothing; an idempotent
+> second confirmation ("mints exactly one row"); the check→journal ordering below;
+> and `tension_edge` being absent for every other outcome, which is the key a caller
+> tests for.
+> **(4) The mint is ordered ahead of the journal, and that ordering is pinned.**
+> `insert_concept_edge`, `append_journal_event` and `emit_disposition_event` each
+> commit their own transaction, so a mint placed after them would leave an accepted
+> `disposition.v1` standing for a confirmation that raised.
+> `test_confirm_tension_refusal_precedes_the_disposition_it_would_record` reaches the
+> write and asserts the journal stayed empty.
+> **(5) No CLI verb, no key of its own.** `attention resolve` grows no
+> `--confirm-tension` flag — the plan's Files list scopes this task to `inbox.py` and
+> `integrity.py`, and the worker passes `payload["outcome"]` through unchanged, which
+> is the surface the Interfaces name. `_confirm_tension_edge` hands **paths** to
+> `insert_concept_edge` and derives no edge key at all, so cross-section contract 4's
+> `_concept_edge_target_path` requirement is met by delegation rather than by a
+> second copy of the fold. One consequence of the drafted commit restructure worth
+> naming: a passing-gate `commit=True` sweep now produces a `surface tension
+> candidates` commit where before it produced none.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/subsystems/lib/inbox.py`
   (`write_work_prompt` :116-172; imports :9-16)
@@ -7317,7 +7382,7 @@ procedure and include the regenerated goldens in that task's commit.
 
 **Steps — cycle 1 (candidate prompt surface):**
 
-- [ ] Write the failing test (append to
+- [x] Write the failing test (append to
   `tests/test_integrity_surface_tensions.py`):
 
   ```python
@@ -7340,11 +7405,11 @@ procedure and include the regenerated goldens in that task's commit.
       }
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest "tests/test_integrity_surface_tensions.py::test_surface_tensions_commit_writes_confirmable_tension_prompts" -v`
   — expected: `KeyError: 'tension_prompts'`.
 
-- [ ] Write the minimal implementation.
+- [x] Write the minimal implementation.
 
   In `src/memoria_vault/runtime/subsystems/lib/inbox.py`: add
   `from typing import Any` to the imports (:11 block), extend the
@@ -7432,7 +7497,7 @@ procedure and include the regenerated goldens in that task's commit.
   and add `"tension_prompts": tension_prompts,` to the return dict (:856-869,
   next to `"attention_path"`).
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_integrity_surface_tensions.py -v`
   — expected: all pass (existing degraded-path asserts only check
   `attention_path`, finding route, and untouched `links:` — preserved).
@@ -7449,7 +7514,7 @@ procedure and include the regenerated goldens in that task's commit.
 
 **Steps — cycle 2 (confirm-tension outcome + reindex survival):**
 
-- [ ] Write the failing tests (append to
+- [x] Write the failing tests (append to
   `tests/test_integrity_surface_tensions.py`; extend the file's imports with
   `import pytest`, `from memoria_vault.runtime.indexing import rebuild_passage_index_explicit`,
   `from memoria_vault.runtime.integrity import resolve_attention as _resolve_attention`,
@@ -7532,12 +7597,12 @@ procedure and include the regenerated goldens in that task's commit.
       assert _tension_rows(vault) == []
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest tests/test_integrity_surface_tensions.py -v -k confirm_tension`
   — expected: `ValueError: unsupported attention outcome for resolved:
   'confirm-tension'` (from `integrity.py:1145-1146`).
 
-- [ ] Write the minimal implementation in
+- [x] Write the minimal implementation in
   `src/memoria_vault/runtime/integrity.py`:
 
   1. Outcome vocab (:1142-1144):
@@ -7608,7 +7673,7 @@ procedure and include the regenerated goldens in that task's commit.
 
      (`read_frontmatter` is already imported in integrity.py — used at :885.)
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest tests/test_integrity_surface_tensions.py tests/test_feedback_instrumentation.py tests/test_integrity.py -v`
   — expected: all pass (the parametrized disposition test at
   `test_feedback_instrumentation.py:22-49` is untouched; DECISIONS enum

@@ -824,8 +824,38 @@ def surface_tensions(
         if len(candidates) >= max_pairs:
             break
     attention_path = ""
+    tension_prompts: list[str] = []
     finding: dict[str, Any] | None = None
     commit_hash = ""
+    commit_paths: list[str] = []
+    if commit:
+        # One confirmable card per candidate (EDGES §3). The aggregate degraded card
+        # below carries no pair, so the spec's confirm-tension flow had nothing to
+        # mint from; these do. Keyed by the sorted pair, so one unordered pair is one
+        # card and one deterministic edge whichever order the walk found it in.
+        for candidate in candidates:
+            pair = sorted((candidate["left"], candidate["right"]))
+            digest = _sha256_text("\0".join(pair))[:12]
+            prompt = write_work_prompt(
+                vault,
+                f"Confirm tension: {candidate['left_title']} vs {candidate['right_title']}",
+                (
+                    "Resolve this card with outcome confirm-tension to record "
+                    "the tension edge, or reject it."
+                ),
+                candidate["warrant"],
+                "surface-tensions",
+                target=candidate["left"],
+                posture="co-pi",
+                loudness="notice",
+                dedupe_slug=f"tension-{digest}",
+                prompt_kind="tension-candidate",
+                payload={"source": pair[0], "target": pair[1]},
+            )
+            if prompt is not None:
+                rel = prompt.relative_to(vault).as_posix()
+                tension_prompts.append(rel)
+                commit_paths.append(rel)
     if not gate["passed"]:
         finding = record_integrity_check(
             vault,
@@ -853,10 +883,15 @@ def surface_tensions(
                 dedupe_slug="contradiction-detection-degraded",
             )
             attention_path = path.relative_to(vault).as_posix() if path else ""
-            commit_paths = [attention_path] if attention_path else []
-            commit_hash = commit_writer_changes(
-                vault, "surface degraded contradiction detection", commit_paths, context=context
-            )
+            if attention_path:
+                commit_paths.append(attention_path)
+    if commit and (commit_paths or finding):
+        message = (
+            "surface degraded contradiction detection"
+            if not gate["passed"]
+            else "surface tension candidates"
+        )
+        commit_hash = commit_writer_changes(vault, message, commit_paths, context=context)
     return {
         "gate": gate,
         "degraded": not gate["passed"],
@@ -868,6 +903,7 @@ def surface_tensions(
         "tier2_abstain_count": tier2_abstain_count,
         "candidates": candidates,
         "attention_path": attention_path,
+        "tension_prompts": tension_prompts,
         "finding": finding,
         "commit": commit_hash,
     }
@@ -1132,7 +1168,9 @@ def resolve_attention(
         raise ValueError(f"unsupported attention resolution: {resolution!r}")
     outcome = outcome or resolution
     supported_outcomes = (
-        {"acknowledged"} if resolution == "acknowledged" else {"apply", "reject", "defer"}
+        {"acknowledged"}
+        if resolution == "acknowledged"
+        else {"apply", "reject", "defer", "confirm-tension"}
     )
     if outcome not in supported_outcomes:
         raise ValueError(f"unsupported attention outcome for {resolution}: {outcome!r}")
@@ -1141,6 +1179,13 @@ def resolve_attention(
     vault = Path(vault)
     target = normalize_path(target_id)
     decided_at = now_iso()
+    # Ahead of the journal on purpose. Both the `resolved` event and the disposition
+    # below commit before this function returns, so a mint placed after them would
+    # leave an accepted decision standing for a confirmation that raised — in the
+    # one log the schema makes append-only.
+    tension_edge: dict[str, Any] | None = None
+    if resolution == "resolved" and outcome == "confirm-tension":
+        tension_edge = _confirm_tension_edge(vault, target, context=context)
     event = {
         "event": EVENT_RESOLVED,
         "resolution": resolution,
@@ -1158,7 +1203,12 @@ def resolve_attention(
 
         emit_disposition_event(
             vault,
-            decision={"apply": "accept", "reject": "reject", "defer": "defer"}[outcome],
+            decision={
+                "apply": "accept",
+                "reject": "reject",
+                "defer": "defer",
+                "confirm-tension": "accept",
+            }[outcome],
             item_type="attention",
             item_id=target,
             context=context,
@@ -1186,7 +1236,42 @@ def resolve_attention(
         touched,
         context=context,
     )
-    return {"event": row, "commit": commit}
+    result: dict[str, Any] = {"event": row, "commit": commit}
+    if tension_edge is not None:
+        result["tension_edge"] = tension_edge
+    return result
+
+
+def _confirm_tension_edge(vault: Path, target: str, *, context: OperationContext) -> dict[str, Any]:
+    """Mint the one tension edge a `tension-candidate` card names (EDGES §3).
+
+    Existence is the confirmation — there is no status column and no tombstone — so
+    the card's structured `payload`, not its prose, is what the edge is minted from.
+    A card that names no confirmable pair is refused rather than guessed at.
+    """
+    path = vault / target
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    frontmatter = read_frontmatter(path)
+    if frontmatter.get("prompt_kind") != "tension-candidate":
+        raise ValueError(f"confirm-tension requires a tension-candidate prompt: {target}")
+    payload = frontmatter.get("payload")
+    if not isinstance(payload, dict):
+        raise ValueError(f"{target} is missing its tension payload")
+    source = str(payload.get("source") or "").strip()
+    edge_target = str(payload.get("target") or "").strip()
+    if not source or not edge_target:
+        raise ValueError(f"{target} tension payload must carry source and target")
+    # `insert_concept_edge` owns the v16 key functions for both endpoints — the
+    # source resolver and `_concept_edge_target_path`'s catalog fold. This writer
+    # supplies paths and derives no key of its own.
+    return state.insert_concept_edge(
+        vault,
+        source=source,
+        relation_type="tension",
+        target=edge_target,
+        context=context,
+    )
 
 
 def _flag_descendant(

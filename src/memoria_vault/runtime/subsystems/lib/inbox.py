@@ -176,6 +176,7 @@ def write_work_prompt(
     loudness: str = "notice",
     dedupe_slug: str = "",
     prompt_kind: str = "",
+    payload: dict[str, Any] | None = None,
 ) -> Path | None:
     """Write a `work-prompt` card.
 
@@ -183,6 +184,10 @@ def write_work_prompt(
     prompt must point somewhere: `target` (output path) and/or `request_id`.
     With `dedupe_slug` the filename is stable (`work-prompt-<slug>.md`) and an
     already-present card is left untouched — returns None instead of a path.
+
+    `payload` is the structured half of a card a resolver has to act on: prose
+    tells the PI what happened, the map tells the resolving verb which two
+    Concepts the decision is about. Blank/absent writes no key at all.
     """
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
@@ -205,6 +210,8 @@ def write_work_prompt(
         frontmatter["posture"] = posture
     if prompt_kind:
         frontmatter["prompt_kind"] = prompt_kind
+    if payload:
+        frontmatter["payload"] = payload
     frontmatter.update({"raised_by": raised_by, "loudness": loudness, "created": today})
     body = f"# Action\n\n{action}\n\n# What happened\n\n{what_happened}\n"
     where = " · ".join(filter(None, (target, request_id and f"request `{request_id}`")))

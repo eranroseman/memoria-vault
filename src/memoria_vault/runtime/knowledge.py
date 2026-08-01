@@ -1934,7 +1934,8 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     if thesis is None:
         return _project_argument_empty(project_rel, thesis_path, "missing-or-unchecked-thesis")
 
-    edges = _note_edges(notes)
+    works = {f"catalog/sources/{row['work_id']}" for row in state.catalog_sources(vault)}
+    edges = _note_edges(notes, works=works)
     component = _argument_component(thesis_path, edges)
     component_edges = [
         edge for edge in edges if edge["source"] in component and edge["target"] in component
@@ -1964,8 +1965,14 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
         "nodes": [
             {
                 "path": rel,
-                "title": str(notes[rel].get("title") or Path(rel).stem),
-                "role": "thesis" if rel == thesis_path else "note",
+                # A work has no frontmatter to carry a title, and its rel is exactly
+                # `catalog/sources/<work_id>`, so the name renders the work identity.
+                "title": (
+                    str(notes[rel].get("title") or Path(rel).stem)
+                    if rel in notes
+                    else Path(rel).name
+                ),
+                "role": ("thesis" if rel == thesis_path else ("note" if rel in notes else "work")),
             }
             for rel in sorted(component)
         ],
@@ -3419,13 +3426,24 @@ def _argument_advisories(counts: dict[str, int], relation_count: int) -> list[di
     return advisories
 
 
-def _note_edges(notes: dict[str, dict[str, Any]]) -> list[dict[str, str]]:
+def _note_edges(
+    notes: dict[str, dict[str, Any]],
+    *,
+    works: set[str] | frozenset[str] = frozenset(),
+) -> list[dict[str, str]]:
+    """Return the typed edges between the given notes, and into the given works.
+
+    ``works`` is the catalog bridge (EDGES §2): a checked work is a DB row with no
+    file, so it can never appear in ``notes`` and a claim grounded in one would
+    otherwise lose that edge here. Empty by default — a caller that has no work
+    scope keeps the note-only graph it always had.
+    """
     edges = []
     for source, frontmatter in notes.items():
         for link_type in sorted(LINK_RELATIONS):
             for raw in _link_values(frontmatter, link_type):
                 target = _link_target(raw)
-                if target in notes and target != source:
+                if target != source and (target in notes or target in works):
                     edges.append({"source": source, "target": target, "type": link_type})
     return edges
 
@@ -3911,6 +3929,8 @@ def _concept_rel(path: str) -> str:
 
 
 def _checked_concept(vault: Path, relpath: str) -> dict[str, Any]:
+    if relpath.startswith("catalog/sources/"):
+        return _checked_catalog_source(vault, relpath)
     path = vault / relpath
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -3920,6 +3940,26 @@ def _checked_concept(vault: Path, relpath: str) -> dict[str, Any]:
     if not _is_current_frontmatter(frontmatter):
         raise ValueError(f"{relpath} is not current")
     return frontmatter
+
+
+def _checked_catalog_source(vault: Path, relpath: str) -> dict[str, Any]:
+    """Resolve a virtual `catalog/sources/<work_id>` target through its DB row.
+
+    A catalog work is a SQLite row plus blobs, never a file on disk (EDGES §2), so
+    the `is_file()` gate above rejected every one of them and no claim could be
+    grounded in a work. The row's own `check_status` is the verdict here — the
+    verdict table keys file Concepts.
+    """
+    row = state.catalog_source(vault, relpath)
+    if row is None:
+        raise FileNotFoundError(vault / relpath)
+    if str(row.get("check_status") or "") != "checked":
+        raise ValueError(f"{relpath} is not checked")
+    return {
+        "type": "work",
+        "title": str(row.get("title") or row["work_id"]),
+        "work_id": str(row["work_id"]),
+    }
 
 
 def _has_checked_verdict(vault: Path, relpath: str) -> bool:
