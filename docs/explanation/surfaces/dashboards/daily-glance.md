@@ -23,19 +23,18 @@ list or vault audit.
 
 ## Inbox activity and action queue
 
-The shipped Inbox state is file-backed: attention items live under `inbox/` and
-the read API projects those files into table/card views. Request execution state
-lives separately in SQLite. An optional Inbox page may combine those views;
-activity remains status, not an action item.
+The shipped Inbox provides the signal today. Attention items and request
+execution state are kept separate so that activity reads as status, never as
+an action item; an optional Inbox page may combine the two views without
+merging the states. Where each state lives is catalogued in
+[Dashboards](../../../reference/analysis-and-surfaces/dashboards.md).
 
 ## Board-state support
 
 A planned Board dashboard may combine the maintenance/debugging reads under a
-compact Inbox Activity strip.
-
-It is read-only. Runtime request state lives in SQLite; attention lives in
-`inbox/*.md` and is projected by the read API. There is no file-backed board
-dashboard to edit.
+compact Inbox Activity strip. It is read-only: there is no file-backed board
+dashboard to edit, so the board can never become a second place where state
+is authored.
 
 ## Related
 

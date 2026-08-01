@@ -6,22 +6,25 @@ nav_order: 3
 
 # 03: Connect notes
 
-In this lesson, you will create two atomic notes, check them, and add one typed
-link between them.
+In this lesson, you will create two atomic notes, tie the first one to the
+source Work from Tutorial 02, check them, and add one typed link between them.
 
 ## Steps
 
-**1. Write one atomic claim-bearing note.**
+**1. Write one atomic claim-bearing note, tied to its source.**
 
 ```bash
 memoria new note "JITAI receptivity varies by burden" \
   --workspace . \
   --mode claim \
   --tag jitai \
+  --work-id <work-id> \
   --body "JITAI receptivity depends partly on current participant burden."
 ```
 
-Save the created note path from the command output.
+Replace `<work-id>` with the `work_id` you saved in Tutorial 02: the note
+records the source Work the claim came from. Save the created note path from
+the command output.
 Notice that the path is under `notes/`.
 
 **2. Write a second note that can relate to it.**
@@ -33,7 +36,9 @@ memoria new note "Burden is partly contextual" \
   --tag jitai \
   --body "Burden changes with context, recent prompts, and task demands."
 ```
-Save this note path too. The link command needs both paths.
+This note is your own synthesis rather than a reading of the captured source,
+so it takes no `--work-id`. Save this note path too. The link command needs
+both paths.
 
 **3. Check or repair the notes.**
 
@@ -64,6 +69,8 @@ receptivity note.
 ## What you should have seen
 
 - Notes are the durable synthesis unit.
+- A note can record the source Work it derives from, so claims trace back to
+  captured sources.
 - `check_status` is runtime state, not frontmatter.
 - Typed links make notes usable as a graph.
 

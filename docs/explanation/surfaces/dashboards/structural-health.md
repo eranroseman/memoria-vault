@@ -26,13 +26,15 @@ watch would be the structural layer over detectable integrity findings.
 ## Loose ends
 
 The planned Loose ends view is a weekly batch for `notice`-loudness `flag`
-attention items. The shipped weekly review considers those items alongside
-Linter findings; louder findings carry greater urgency.
+attention items: batching keeps low-urgency findings out of the daily signal
+without letting them vanish. The shipped weekly review considers those items
+alongside Linter findings; louder findings carry greater urgency.
 
 ## Board state
 
 Request and attention state are exposed by the standalone runtime. A planned
-Board view may combine those reads without becoming an editable state store.
+Board view may combine those reads while staying read-only — an editable
+board would become a second authoring surface for state the runtime owns.
 
 ## Weekly review
 

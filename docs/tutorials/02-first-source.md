@@ -31,7 +31,7 @@ The command creates a worker request, writes a catalog row, stores source blobs
 under `.memoria/blobs/source-content/`, and journals the capture. It does not
 create a legacy source-note Markdown file.
 In the JSON output, notice the `work_id`. You will use that stable ID in the
-next command.
+next command, and again in Tutorial 03 to tie a note back to this source.
 
 **3. Inspect the Work record.**
 
@@ -61,8 +61,7 @@ memoria work update --workspace . <work-id> --check-status checked
 memoria work digest --workspace . <work-id> --mode test
 ```
 
-The digest path uses the manifest-pinned runner for the selected mode. Use
-`--mode live` only after provider config and the seeded-error gate support it.
+The digest path uses the manifest-pinned runner for the selected mode.
 Notice the digest path or request result. The digest is the first source-derived
 artifact you can inspect.
 

@@ -29,8 +29,8 @@ experience different events:
 - **Rebuttal strengthened** — a counter-argument gains force when its target
   weakens.
 
-A graph that only stores "claim links to claim" cannot distinguish these; one
-that stores the roles can route each dependent to the right disposition.
+Typed roles are what let the graph route each dependent to the right
+disposition.
 
 ## Consequences are marked at write time
 
@@ -44,11 +44,9 @@ researcher's attention to what matters.
 
 ## Origin-blind, authority-gated
 
-Epistemic consequences are origin-blind: the blast radius of a wrong claim is
-identical whether a human or a machine authored it. Write and revert
-*authority* stays origin-gated — human-authored text is never auto-destroyed;
-machine material can auto-revert. See
-[Design principles](../rationale/foundations/design-principles.md), principles 11–12.
+Epistemic consequences are origin-blind while write and revert *authority*
+stays origin-gated; the full principle statements are
+[Design principles](../rationale/foundations/design-principles.md) 11–12.
 
 ## Related
 

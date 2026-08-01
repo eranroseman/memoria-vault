@@ -24,7 +24,10 @@ queryable, recoverable, and safe to resume without sharing profile memory.
 
 The key invariant: **request execution and PI attention are separate states**.
 The worker can finish a request as `done`; the human still decides whether any
-attention item raised by that work has been handled.
+attention item raised by that work has been handled. Why that separation is
+structural rather than advisory is argued in
+[Why the review gate is structural](../../rationale/boundaries/why-review-gate-is-structural.md);
+this page describes the state model it produces.
 
 ## The execution chain is the hidden mechanic
 

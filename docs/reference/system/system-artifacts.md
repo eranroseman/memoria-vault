@@ -36,3 +36,9 @@ Code execution is unavailable unless
 `memoria_vault.runtime.code.runner.execution_availability(vault)` reports a
 passing Linux/WSL `bwrap` sandbox proof. Without that proof, code artifacts can
 be recorded, but product execution fails closed.
+
+## Related
+
+- Runtime paths around these artifacts: [On-disk layout](on-disk-layout.md)
+- Installer seeding and repair: [Installer (bootstrap)](installer.md)
+- Vocabulary contents: [Vocabulary](../data-model/vocabulary.md)

@@ -29,20 +29,8 @@ memoria vocab list --workspace <workspace>
 
 The command reads `system/vocabulary.md`. The mutable lists are
 `research_area` and `methodology`; note `topics` inherit the `research_area`
-list:
-
-```markdown
-## research_area
-- receptivity-detection — Claims and Works about receptivity.
-- ema-experience-sampling — Claims and Works about in-situ sampling.
-
-## methodology
-- field-study — In-situ deployment study.
-- qualitative-interview — Interview-led qualitative inquiry.
-
-## topics
-Claim-bearing note topics draw from research_area above.
-```
+list. The canonical sections and current terms are in
+[Vocabulary](../../reference/data-model/vocabulary.md).
 
 Keep `research_area` to roughly 30 terms. Prefer renaming or merging before
 adding a near-duplicate to either mutable list.

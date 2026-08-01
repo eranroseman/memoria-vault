@@ -23,13 +23,12 @@ Link for usefulness, not completeness. Add a typed link only when "*what contrad
 
 **2. Pick the link type.**
 
-Six relations are legal. Use `supports` when one note strengthens another,
-`contradicts` when the notes disagree, and `extends` when one note elaborates
-another. The three Toulmin roles are narrower: `warrant` when the note licenses
-the inference the target makes, `qualifier` when it bounds the target's scope,
-and `rebuttal` when it names the condition under which the target fails.
-`tension` is not one of them — the machine surfaces tensions and you confirm
-them, so it is never authored in `links:`.
+Six relations are legal — `supports`, `contradicts`, `extends`, and the three
+narrower Toulmin roles `warrant`, `qualifier`, and `rebuttal`; their exact
+semantics are in
+[Frontmatter fields](../../reference/data-model/frontmatter.md#links-and-catalog-resources).
+Never author `tension` in `links:` — the machine surfaces tensions and you
+confirm them.
 
 **3. Record the link through the CLI or edit directly.**
 

@@ -7,12 +7,11 @@ nav_order: 6
 
 # Back up and restore the workspace
 
-`.memoria/memoria.sqlite`, `.memoria/blobs/`, and `.memoria/journal/` are
-gitignored. SQLite's `event_log` is the authoritative journal; the
-`.memoria/journal/` JSONL files are derived, per-machine exports. Together with
-the catalog, evidence bindings, and source blobs, this state does not reach a
-`git commit`. Backup and restore are the durability mechanism for everything
-Git does not carry.
+This guide makes the workspace state Git does not carry — the catalog
+database, source blobs, and event journal under `.memoria/`, all gitignored —
+durable with `memoria workspace backup`, and brings it back with `restore`.
+Which copy of each file is authoritative is documented in
+[On-disk layout](../../reference/system/on-disk-layout.md).
 
 ## When it runs without you
 
@@ -32,12 +31,9 @@ that failure as "back up now," not as a bug.
 memoria workspace backup --workspace . /path/to/backup-target
 ```
 
-This verifies and reconciles the journal, then publishes one snapshot
-(`manifest.json`, `memoria.sqlite`, `blobs/`, `journal-head`) outside the live
-vault. The target must not overlap the live vault; a missing target is
-created, an existing one is only replaced if it's itself a valid prior
-backup. Backup is PI-only — passing `--actor agent` fails before any
-filesystem effect.
+The target must not overlap the live vault. A missing target is created; an
+existing one is replaced only if it is itself a valid prior backup. Backup is
+PI-only — `--actor agent` fails.
 
 **2. Confirm doctor sees it.**
 

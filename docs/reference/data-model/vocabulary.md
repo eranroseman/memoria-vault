@@ -47,7 +47,6 @@ not validate catalog Work classifications or the vocabulary file itself.
 ### `research_area`
 
 *What the work is about.* Claim-bearing note `topics` draw from this same list.
-Kept to ~30 terms; consolidate drift at roughly fifty Works.
 
 | Term | Definition |
 | --- | --- |

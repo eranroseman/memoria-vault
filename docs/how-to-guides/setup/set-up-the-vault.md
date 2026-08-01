@@ -41,13 +41,13 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer creates the runtime vault folder (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, initializes the workspace from the package seed, including Obsidian defaults and first-init agent/MCP host configuration, wires local hooks, and prints the vault-local CLI commands.
-
-The installer is standalone-only. It does not install external search tooling,
-external agent runtimes, the Obsidian app, or Zotero integration. Direct
-`memoria init` calls can use `--no-obsidian` to skip only editor settings and
-root Base views; the first-init agent/MCP configuration is still seeded. The
-bootstrap path keeps the default.
+**2. Confirm each step.** The installer asks before each external step and
+creates the runtime vault folder (default `~/Memoria` on Linux/WSL,
+`%USERPROFILE%\Memoria` on Windows; keep it off OneDrive or any cloud-synced
+tree), then prints the vault-local CLI commands when it finishes. For exactly
+what it installs, seeds, skips, and refuses — including the `memoria init
+--no-obsidian` opt-out — see the
+[Installer reference](../../reference/system/installer.md).
 
 **3. Add a remote** (optional).
 

@@ -44,10 +44,11 @@ Notice the outline path printed by the command.
 
 **4. Edit the outline.**
 
-Open the outline and keep only the notes that belong in the draft. The line
-order is the draft order.
-For this tutorial, keep the two checked notes from Tutorial 03 and put the
-receptivity note first.
+Open `projects/<project>/outline.md`. The slice matched the two checked notes
+from Tutorial 03 — the only notes in this vault. Keep both note lines and
+order them so the receptivity note ("JITAI receptivity varies by burden") is
+first and the burden note second. The line order is the draft order.
+Notice that the outline holds exactly those two note lines, receptivity first.
 
 **5. Compose and verify.**
 

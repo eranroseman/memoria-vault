@@ -146,8 +146,17 @@ Documents use `work_id` to point at the SQLite catalog Work row. Backing
 resource URLs and external identifiers live in `.memoria/memoria.sqlite` and
 the generated `bibliography.bib` projection, not in human note frontmatter.
 `links` is the required relation field for Concepts. It is a map from one of
-the six frontmatter-legal relations — `supports`, `contradicts`, `extends`,
-`warrant`, `qualifier`, `rebuttal` — to lists of local Concept targets.
+the six frontmatter-legal relations to lists of local Concept targets.
+
+| Relation | The linking note… |
+| --- | --- |
+| `supports` | strengthens the target claim |
+| `contradicts` | disagrees with the target claim |
+| `extends` | elaborates the target claim |
+| `warrant` | licenses the inference the target makes (Toulmin role) |
+| `qualifier` | bounds the target's scope (Toulmin role) |
+| `rebuttal` | names the condition under which the target fails (Toulmin role) |
+
 `tension` is an edge relation the machine surfaces and the PI confirms; it is
 never authored here.
 

@@ -50,9 +50,10 @@ Then remove or rewrite the unsupported sentence and verify again.
 Reject records the PI disposition and keeps the export hold blocking; it does
 not silently rewrite the draft or remove its durable evidence marker.
 
-**4. Promote reusable prose deliberately.**
+**4. Promote one draft passage into a note.**
 
-If a draft passage should become durable knowledge:
+Promotion is the intentional path from draft prose back into durable
+knowledge. Promote the burden sentence the draft carries from Tutorial 03:
 
 ```bash
 memoria project promote --workspace . <project-path> \

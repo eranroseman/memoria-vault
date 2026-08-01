@@ -50,9 +50,10 @@ memoria list --workspace . --type note
 memoria list --workspace . --type work --json
 ```
 
-The durable file-backed Concept types are `note`, `hub`, `project`, `digest`,
-and `fulltext`; `fulltexts/` is the `fulltext` folder. Source catalog state
-lives in SQLite and blobs, not as source Markdown files.
+Each folder you listed holds one durable file-backed Concept type; the full
+catalog of types is in
+[Document types](../reference/data-model/document-types.md). Source catalog
+state lives in SQLite and blobs, not as source Markdown files.
 Notice that `notes`, `hubs`, and `projects` are visible folders, while Work
 records come from the runtime catalog. In a fresh vault, the Work command's
 catalog-backed result is:

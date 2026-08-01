@@ -176,43 +176,51 @@ the CLI concept writers.
 Most workspace commands accept `--workspace <path>` and `--json`. `--actor`
 records declared provenance; the raw local CLI does not authenticate its caller
 and must remain a PI-owned surface. Do not expose it to an untrusted agent.
-Without `--json`, a successful command prints an allowlisted path, identifier,
-count, or status when one is available. A detail-free success prints `ok`, and
-an opaque result points to `--json`; the generic presenter never prints a
-complete worker request, result payload, or Concept body. Use `--json` for full
-machine-readable operation details. When a command fails, the non-`--json`
-presenter prints `FAILED: <detail>` — the engine's error, evidence, or status,
-or `operation failed` when none is available — and the command exits nonzero;
-it never prints a path or success token for an operation the engine did not
-perform. In `--json` mode the payload carries `"ok": false` alongside the same
-failing detail.
-[MCP](mcp-transport.md) is the agent-facing adapter and always records request
-actor `agent`. The token-authenticated loopback
-[HTTP](local-http-transport.md) transport records request actor `pi`, because
-its caller is the PI's own editor plugin holding the per-boot token. Both doors
-mark their requests machine-authored, so Concept bodies posted through either
-one are neutralized before they are written; only the CLI writes a PI-typed body
-verbatim.
-`workspace scan`, `workspace check`, and scans performed by `serve --watch`
-always record actor `integrity`. `memoria mcp` has no `--json` mode, requires
-`--read-scope`, and uses `--actor` only as the concrete agent identity recorded
-in provenance.
 
-`memoria request answer` and `memoria request amend` are PI-only. Each requires
-a fresh `--idempotency-key`, creates a PI-attributed successor request, and
-cancels a pending source as superseded without changing its envelope. A
-terminal source stays terminal and is marked as superseded. The successor
-records the source in provenance and causal references, and it does not inherit
-the source schedule. One source can have one successor: an exact repeat with
-the same key and content reuses it; changed content or a second successor is
-rejected.
-An amendment cannot change scope-bearing ID, reference, path, or target fields;
-submit a new operation for a different scope.
-Integrity-only requests cannot be cloned by a PI request control.
-`cancel`, `retry`, and `resume` are PI-only lifecycle controls. Cancel accepts only
-`pending`; retry accepts `failed` or explicitly cancelled work that has not
-been superseded; resume claims and runs only `pending`. If a transition commits
-but its lifecycle event does not, an exact repeat repairs that one missing event
-without creating another successor or reopening finished work. `memoria project
-resolve-evidence`, `memoria steering edit`, and vocabulary mutations are also
-PI-only.
+## Output conventions
+
+Without `--json`:
+
+| Outcome | Printed |
+| --- | --- |
+| Success with a reportable detail | One allowlisted path, identifier, count, or status. |
+| Success with no detail | `ok` |
+| Success with an opaque result | A pointer to `--json`. |
+| Failure | `FAILED: <detail>` — the engine's error, evidence, or status, or `operation failed` when none is available — with a nonzero exit. Never a path or success token for an operation the engine did not perform. |
+
+The generic presenter never prints a complete worker request, result payload,
+or Concept body; use `--json` for full machine-readable operation details. In
+`--json` mode a failure carries `"ok": false` alongside the same failing
+detail.
+
+## Recorded actor by door
+
+| Door | Request actor | Concept bodies |
+| --- | --- | --- |
+| CLI | declared via `--actor` | PI-typed body written verbatim. |
+| [MCP](mcp-transport.md) | `agent` | Machine-authored; neutralized before write. |
+| Loopback [HTTP](local-http-transport.md) | `pi` — the caller is the PI's own editor plugin holding the per-boot token | Machine-authored; neutralized before write. |
+| `workspace scan`, `workspace check`, and `serve --watch` scans | `integrity` | — |
+
+`memoria mcp` has no `--json` mode, requires `--read-scope`, and uses
+`--actor` only as the concrete agent identity recorded in provenance.
+
+## Request controls
+
+All request controls are PI-only, as are `memoria project resolve-evidence`,
+`memoria steering edit`, and vocabulary mutations.
+
+| Control | Accepts | Effect |
+| --- | --- | --- |
+| `request answer` / `request amend` | A source request; each call requires a fresh `--idempotency-key`. | Creates a PI-attributed successor without changing the source envelope. A pending source is cancelled as superseded; a terminal source stays terminal and is marked superseded. The successor records the source in provenance and causal references and does not inherit the source schedule. |
+| `request cancel` | `pending` only | Cancels the request. |
+| `request retry` | `failed`, or explicitly cancelled work that has not been superseded | Re-runs the request. |
+| `request resume` | `pending` only | Claims and runs the request. |
+
+Successor rules: one source has one successor — an exact repeat with the same
+key and content reuses it; changed content or a second successor is rejected.
+An amendment cannot change scope-bearing ID, reference, path, or target
+fields; submit a new operation for a different scope. Integrity-only requests
+cannot be cloned by a PI request control. If a transition commits but its
+lifecycle event does not, an exact repeat repairs that one missing event
+without creating another successor or reopening finished work.

@@ -73,39 +73,56 @@ replace the backup and recompute those hashes.
 **Unshipped/deferred:** cryptographic backup authenticity, including signing or
 keyed verification for storage outside the operator's trust boundary.
 
+### Restore swap and rollback
+
 The live swap includes `memoria.sqlite`, stale WAL/SHM/rollback-journal
 sidecars, `blobs/`, `journal-head`, `journal/`, and the machine-local
 `last-backup` stamp. Before publishing the marker, Memoria durably preserves
-any live WAL or rollback journal in the bound rollback directory. On a failed
-swap, recovery attempts to restore every prior component. A successful swap
-appends a PI-attributed
-`workspace-restored` event, verifies the resulting chain, preserves the backup
-source, and removes staging data.
-If restoring the prior live components also fails, Memoria preserves the
-sibling `.<vault>.restore-rollback-*` directory as recovery material instead
-of deleting the only saved originals. A durable, Git-ignored
-`.memoria/restore-transaction.json` marker records which live components
-existed and binds the rollback directory and stage to the live vault with a
-transaction identity. While a swap is unresolved, `memoria workspace recover`
-preserves any original that was not moved before interruption, restores the
-saved live components and prior backup stamp, and, when a recovered database
-exists, verifies its journal before recording a cleanup phase. Cleanup removes
-directory contents before their transaction identities, so an interrupted
-cleanup can resume. Once a marker is in cleanup, recovery verifies the retained
-journal and completes cleanup only. A pre-swap workspace without a database
-remains without one after rollback. When it cannot determine the pre-swap
-state, it leaves the marker and sibling directories intact for the PI to
-inspect rather than guessing. A separate `.memoria/backup-transaction.json`
-marker covers every publication. Before the first rename, it identity-binds the
-staged replacement and, when present, the prior target to one random
-transaction. For an unresolved publication marker, recovery validates those
-identities and recognized backup material before it restores the prior target,
-removes an unpublished first snapshot, or retains a replacement whose publish
-rename completed. Once a backup marker is in cleanup, the retained target must
-keep its matching transaction identity while recovery writes the local backup
-stamp and removes sibling transaction material. Recovery then removes the marker
-and best-effort target identity cleanup follows. An interrupted identity cleanup
-may leave that inert metadata in an otherwise valid backup target.
+any live WAL or rollback journal in the bound rollback directory. A durable,
+Git-ignored `.memoria/restore-transaction.json` marker records which live
+components existed and binds the rollback directory and stage to the live
+vault with a transaction identity.
+
+- A successful swap appends a PI-attributed `workspace-restored` event,
+  verifies the resulting chain, preserves the backup source, and removes
+  staging data.
+- On a failed swap, recovery attempts to restore every prior component.
+- If restoring the prior live components also fails, Memoria preserves the
+  sibling `.<vault>.restore-rollback-*` directory as recovery material
+  instead of deleting the only saved originals.
+
+### Recovering an unresolved restore
+
+While a swap is unresolved, `memoria workspace recover`:
+
+- preserves any original that was not moved before interruption;
+- restores the saved live components and the prior backup stamp; and
+- when a recovered database exists, verifies its journal before recording a
+  cleanup phase.
+
+Cleanup removes directory contents before their transaction identities, so an
+interrupted cleanup can resume. Once a marker is in cleanup, recovery verifies
+the retained journal and completes cleanup only. A pre-swap workspace without
+a database remains without one after rollback. When recovery cannot determine
+the pre-swap state, it leaves the marker and sibling directories intact for
+the PI to inspect rather than guessing.
+
+### Backup publication transactions
+
+A separate `.memoria/backup-transaction.json` marker covers every publication.
+Before the first rename, it identity-binds the staged replacement and, when
+present, the prior target to one random transaction.
+
+- For an unresolved publication marker, recovery validates those identities
+  and recognized backup material before it restores the prior target, removes
+  an unpublished first snapshot, or retains a replacement whose publish
+  rename completed.
+- Once a backup marker is in cleanup, the retained target must keep its
+  matching transaction identity while recovery writes the local backup stamp
+  and removes sibling transaction material. Recovery then removes the marker,
+  and best-effort target identity cleanup follows.
+- An interrupted identity cleanup may leave that inert metadata in an
+  otherwise valid backup target.
 
 ## Doctor status
 
