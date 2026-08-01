@@ -602,6 +602,101 @@ def test_a_path_keyed_concept_adopts_the_ulid_its_file_later_authors(tmp_path: P
     assert flags == [ULID_A]
 
 
+def test_adoption_carries_every_identity_keyed_row_without_a_foreign_key(
+    tmp_path: Path,
+) -> None:
+    """Adoption is a re-key, so it owes the same enumeration a rename does.
+
+    ``passages.concept_id`` and ``derivations.input_id``/``output_id`` key by the
+    identity and declare no foreign key, so nothing carries them. The path does not
+    move here, so the verdict cascade still reaches the passages through its
+    ``OR path = ...`` clause — but every id-keyed read is left pointing at an
+    identity no ``concepts`` row holds any more, and a derivation graph that has
+    silently lost its input is not visible from either end.
+
+    ``concept_edges.edge_id`` is the third: the endpoint cascades, the hash of the
+    endpoint does not. A PI-owned ``tension`` row is where a stale one survives
+    longest, since the mirror pass never rewrites it — and it is stale from *either*
+    end, so the blanking is keyed on the source **or** the target. A source-only
+    blanking leaves the inbound row below carrying a digest over an identity that no
+    longer exists, and the resolution pass never sees it: its endpoint is live, so
+    only the blank ``edge_id`` would have selected it.
+    """
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, "notes/hand.md", concept_type="note", store="file", path="notes/hand.md"
+        )
+        state.ensure_concept_parent_conn(
+            conn, "notes/derived.md", concept_type="note", store="file", path="notes/derived.md"
+        )
+        conn.execute(
+            "INSERT INTO passages("
+            " passage_id, origin, concept_id, path, text_sha256, text, check_status, indexed_at)"
+            " VALUES ('p-hand', 'file', 'notes/hand.md', 'notes/hand.md', 'sha', 'Body.',"
+            " 'checked', '2026-07-15T00:00:00Z')"
+        )
+        conn.execute(
+            "INSERT INTO derivations(input_id, output_id, actor)"
+            " VALUES ('notes/hand.md', 'notes/derived.md', 'agent')"
+        )
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " edge_id, source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'notes/hand.md', 'tension', 'notes/derived.md', 'notes/derived.md',"
+            " 'checked', '', '2026-07-15T00:00:00Z')",
+            (state.concept_edge_id("notes/hand.md", "tension", "notes/derived.md"),),
+        )
+        # The same Concept as the *target* of a retained row: `target_concept_id`
+        # cascades, the digest over it does not.
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " edge_id, source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'notes/derived.md', 'tension', 'notes/hand.md', 'notes/hand.md',"
+            " 'checked', '', '2026-07-15T00:00:00Z')",
+            (state.concept_edge_id("notes/derived.md", "tension", "notes/hand.md"),),
+        )
+
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": ULID_A, "concept_type": "note", "path": "notes/hand.md"},
+            {"concept_id": "notes/derived.md", "concept_type": "note"},
+        ],
+    )
+
+    with state.connect(tmp_path) as conn:
+        passages = {
+            str(row["concept_id"]) for row in conn.execute("SELECT concept_id FROM passages")
+        }
+        inputs = {str(row["input_id"]) for row in conn.execute("SELECT input_id FROM derivations")}
+        edges = {
+            str(row["source_concept_id"]): str(row["edge_id"])
+            for row in conn.execute("SELECT source_concept_id, edge_id FROM concept_edges")
+        }
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+    assert passages == {ULID_A}
+    assert inputs == {ULID_A}
+    # The vacated identity's hashes are gone from both ends, not left to be
+    # recomputed by whatever keys by that path next.
+    assert set(edges) == {ULID_A, "notes/derived.md"}
+    assert edges[ULID_A] == ""
+    assert edges["notes/derived.md"] == ""
+
+    # The mirror pass settles them over the live triple, tension rows and all.
+    state.replace_concept_edges(tmp_path, [])
+    with state.connect(tmp_path) as conn:
+        settled = {
+            str(row["source_concept_id"]): str(row["edge_id"])
+            for row in conn.execute("SELECT source_concept_id, edge_id FROM concept_edges")
+        }
+    assert settled[ULID_A] == state.concept_edge_id(ULID_A, "tension", "notes/derived.md")
+    assert settled["notes/derived.md"] == state.concept_edge_id(
+        "notes/derived.md", "tension", ULID_A
+    )
+
+
 def test_a_ulid_already_living_elsewhere_still_collides_with_a_path_key(tmp_path: Path) -> None:
     """The adoption is scoped to an identity nothing else holds."""
     with state.connect(tmp_path) as conn:

@@ -32,7 +32,7 @@
 1. **Edge-table shape:** NID-B's v16 redefines `concept_edges` (adds `target_path`, target nullable ON DELETE SET NULL, PK `(source_concept_id, relation_type, target_path)`). ERP-A.2's v17 CREATE/INSERT column lists extend mechanically to this shape; ERP-B/C/D SQL is written against it.
 2. **Roster ownership:** ERP-A resolves the Plan-22 handoff as MOVE — `parse_links`/`normalize_link_target` relocate to `edges.py`, `schema.py` re-exports for one release. New code imports from `lib.edges`; a repo-wide guard test forbids roster literals outside it.
 3. **Consequence-engine symbols:** ERP-D consumes ERP-C's real names — `propagation.compute_consequences(vault, target_id, *, trigger) -> dict[str, dict]` for the report card and `propagate_consequences(..., trigger="decided-wrong")` for marks. ERP-D's assumed `derive_consequences`/`claim_work_edges` names are superseded: the structural-impact rewire reads the identity-safe `edges.concept_edge_path_records(vault, checked_only=False)` projection, whose `catalog/sources/*` targets are the ERP-B bridge at this boundary.
-4. **Insert hooks, no circularity:** ERP-B.2 lands `insert_concept_edge` bare; ERP-C.5 retrofits the `propagate_edge_change(..., added=True)` call; ERP-D.6 retrofits `emit_edge_write_event(..., write_path="insert-concept-edge")`. Final call order inside the function: insert → propagate → emit.
+4. **Insert hooks, no circularity:** ERP-B.2 lands `insert_concept_edge` bare; ERP-C.5 retrofits the `propagate_edge_change(..., added=True)` call; ERP-D.6 retrofits `emit_edge_write_event(..., write_path="insert-concept-edge")`. Final call order inside the function: insert → propagate → emit. **Its `target_path` key function is binding too** — `state._concept_edge_target_path`, never a bare `normalize_path`; see the NID-B.7 (2026-08-01) blockquote in the ERP-B.2 task section for why a second key function rolls back the whole mirror pass.
 5. **Outcome→decision dict** (`integrity.py:1169`): ERP-B adds `"confirm-tension": "accept"`, ERP-D adds `"decided-wrong": "override"` — merge, never overwrite.
 6. **Tension rows** store endpoints lexicographically sorted; ERP-C propagation and ERP-D counters must not assume direction.
 7. **Consequence-mark fields** (`stale: bool`, `consequence:` enum) are registered in the type yamls by NID-A's closed-validation task; ERP-C writes them, never touches yamls.
@@ -2923,10 +2923,29 @@ one transaction, and commits everything through the trusted writer.
 >   scans `digests/` as the draft specified, so a checked digest linking to a moved
 >   note is re-signed through `mark_checked` against the digest schema. The mechanism
 >   is type-agnostic but only the note case has a test.
+>   **Closed in B.7:** `test_move_concept_rewrites_and_re_signs_a_checked_digest_linker`
+>   covers it; the mechanism was already correct, so this was a coverage gap and no
+>   product code changed.
 > - **Stale `edge_id` after a path-key re-key — owner NID-B.7.** Self-heals on the
 >   next `replace_concept_edges` pass; B.7 is the task that touches edge resolution,
 >   so it owns either recomputing it in the re-key or documenting the window for ERP
 >   consumers.
+>   **Closed in B.7 — it does *not* self-heal.** `edge_id` hashes the identity
+>   triple and `idx_concept_edges_edge_id` is UNIQUE, so the next file dropped at
+>   the vacated path recomputes the stale hash exactly and the whole mirror pass
+>   dies on an IntegrityError (`test_move_concept_leaves_no_stale_edge_id_for_the_`
+>   `vacated_path_to_collide_with` reproduces it). `_rekey_path_keyed_concept_conn`
+>   now blanks `edge_id` on every edge touching the re-keyed identity — `''` is the
+>   column's existing unresolved value and the partial index skips it — and B.7's
+>   resolution pass recomputes it over the live triple. **The window ERP consumers
+>   inherit** (widened 2026-08-01 — the `memoria mv` framing was too narrow): the
+>   re-key runs from `update_concept_path` *and* from `_adopt_path_key_identity_conn`,
+>   which `ensure_concept_parent_conn` reaches, so **any** write path that first
+>   mirrors a file whose frontmatter now carries a ULID also leaves those rows at
+>   `edge_id = ''` until the next `replace_concept_edges`. Blank, never wrong;
+>   `attributes_json` and both endpoints are untouched throughout, and nothing in
+>   `src/` reads `edge_id` today (`explore.py` never projects it, no golden pins it),
+>   so the window is a contract only for the ERP consumers that will.
 
 **Steps:**
 
@@ -3441,7 +3460,7 @@ end-to-end.
 
 **Steps:**
 
-- [ ] Append the failing lifecycle test to `tests/test_query_substrate.py`:
+- [x] Append the failing lifecycle test to `tests/test_query_substrate.py`:
 
   ```python
   def test_pending_edges_resolve_when_target_appears(tmp_path: Path) -> None:
@@ -3499,12 +3518,12 @@ end-to-end.
 
   (Neither note carries a ULID `id:`, so both key by path — keeps the assertion
   literals readable; the id-space variant is covered by NID-B.4's rename test.)
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_query_substrate.py::test_pending_edges_resolve_when_target_appears -v`
   — expect FAIL on the **tension** assertions:
   `assert rows["tension"]["target_concept_id"] == "notes/future.md"` sees `None` —
   the mirror pass re-resolves only rows it inserts, never retained tension rows.
-- [ ] In `state.replace_concept_edges` (NID-B.1 body), add the resolution pass at
+- [x] In `state.replace_concept_edges` (NID-B.1 body), add the resolution pass at
   the end of the `with connect(vault) as conn:` block, after the insert loop:
 
   ```python
@@ -3543,12 +3562,12 @@ end-to-end.
               )
   ```
 
-- [ ] Run
+- [x] Run
   `python -m pytest tests/test_query_substrate.py -v`
   — expect PASS (the whole file: v13/v14 shape pins, G2S1.1 mirror test, NID-B.4
   rename test, this lifecycle test).
-- [ ] Run `python scripts/verify` — expect PASS.
-- [ ] Commit:
+- [x] Run `python scripts/verify` — expect PASS.
+- [x] Commit:
 
   ```
   git add src/memoria_vault/runtime/state.py tests/test_query_substrate.py
@@ -5931,6 +5950,19 @@ doc-claims check).
 > | `derivations.input_id` | keeps `'notes/hand.md'`, naming no Concept (`schema.sql:407-412`) | ERP-C/ERP-D walk the derivation DAG |
 > | `concept_edges.edge_id` | keeps the pre-adoption digest, so `edge_id != concept_edge_id(source, relation, target)` | ERP-B/ERP-C/ERP-D consume `edge_id` |
 >
+> **Both rows are now closed — NID-B.7 (2026-08-01). ERP-A.6/ERP-C/ERP-D inherit
+> nothing from this table; do not re-add either row.** `_adopt_path_key_identity_conn`
+> no longer hand-writes its own one-statement re-key: it calls
+> `_rekey_path_keyed_concept_conn`, the identity-space enumeration B.6 made the single
+> home, so adoption carries `derivations.input_id`/`output_id` and `passages.concept_id`
+> exactly as a rename does. That helper also blanks `edge_id` on every edge touching the
+> re-keyed identity and B.7's resolution pass in `replace_concept_edges` recomputes it
+> over the live triple. The claim below that `edge_id` "is recomputed by the next full
+> `replace_concept_edges`" was **false for a durable `tension` row**, which the mirror
+> pass skips by design, and worse than false for the rest: a stale digest is a valid
+> UNIQUE key, so the next file dropped at the vacated path recomputes it exactly and
+> kills the whole rebuild on an IntegrityError.
+>
 > **`passages.concept_id` was the third row and is now closed — narrowed by NID-B.4
 > (2026-07-31), measured, not assumed.** This note previously claimed it was "rewritten on
 > refresh"; that was only half true, because the pre-B.4 `_passage_row` re-emitted the
@@ -6426,6 +6458,32 @@ procedure and include the regenerated goldens in that task's commit.
 > path-projection amendment, point 5.  The historical path-as-ID INSERT,
 > target-id conflict key, and raw-ID fixtures below are superseded by the
 > source-resolution / durable-`target_path` triple contract.
+
+> **Binding constraint from NID-B.7 (2026-08-01) — `target_path` must be keyed by
+> `state._concept_edge_target_path`, not `normalize_path`.** Point 5 above says only
+> that `insert_concept_edge` "keeps a normalized `target_path`". That is not enough.
+> `replace_concept_edges` keys its rows through `_concept_edge_target_path`
+> (`state.py:2489`), which collapses the bare `work_id`, the rendered
+> `catalog/sources/<work_id>`, the `./`-prefixed and the `/source.md` forms of a
+> catalog reference onto **one** `target_path`; `normalize_path` collapses none of
+> them. Two rows admitted under different `target_path` spellings are distinct PK
+> triples, but they resolve to the same `target_concept_id`, so NID-B.7's
+> `_resolve_pending_concept_edges_conn` computes `concept_edge_id(source, relation,
+> target_id)` **twice** and the second `UPDATE` violates the UNIQUE
+> `idx_concept_edges_edge_id`. That raises inside `with connect(vault) as conn:` in
+> `replace_concept_edges`, so **the whole mirror pass rolls back** — the exact
+> failure mode B.7 removed from the re-key path, reintroduced through a second
+> producer, and it would take out `memoria index` vault-wide rather than the one bad
+> row. `insert_concept_edge` must therefore call `_concept_edge_target_path` with the
+> live `catalog_sources` id set (or an equivalent that is provably the same key
+> function), and ERP-B.2's tests must include two spellings of one catalog work
+> inserted through the public seam, followed by a `replace_concept_edges` pass that
+> does not raise. **That test discriminates only if the work is already in
+> `catalog_sources` at insert time** — `_concept_edge_target_path` collapses nothing
+> for a work it does not know, so against an absent work both spellings stay pending
+> under correct *and* incorrect code and the pass never raises. Seed the work first.
+> ERP-B.4 deletes by the same triple, so it inherits the same key function. See also
+> cross-section contract 4 for this function's call ordering.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (insert the new function
