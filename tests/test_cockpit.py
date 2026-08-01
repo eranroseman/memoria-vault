@@ -680,7 +680,14 @@ def test_findings_renderer_emits_its_contract_fields_in_contract_order() -> None
     what tipped it, then how sure, then where it came from. A card whose
     attribution floats above its own headline reads as a heading for the card
     below it. `finding` outranks `action` for the headline, and a card carrying
-    neither renders no bullet at all rather than an empty one."""
+    neither renders no bullet at all rather than an empty one.
+
+    Two cards, because the renderer returns one flat list and the panels splice
+    it straight into the screen: anything the loop emits *between* cards — a
+    separator, a rule, a blank line — is invisible to a one-card fixture, and a
+    blank line inside a panel body is what `_panel_body` reads as the end of the
+    panel.
+    """
     card = {
         "finding": "thin claim: ev-22222222 has 0 grounds items",
         "action": "quarantine the claim",
@@ -690,14 +697,17 @@ def test_findings_renderer_emits_its_contract_fields_in_contract_order() -> None
         "certainty": "low",
         "source_action": "project.draft.read",
     }
+    second = {"action": "attach a source span to claim two", "certainty": "likely"}
 
-    assert cockpit.render_findings([card]) == [
+    assert cockpit.render_findings([card, second]) == [
         "  - thin claim: ev-22222222 has 0 grounds items",
         "    for: reads as a synthesis claim",
         "    against: no grounds item was ever attached",
         "    tipped by: items=",
         "    certainty: low",
         "    from: project.draft.read",
+        "  - attach a source span to claim two",
+        "    certainty: likely",
     ]
     assert cockpit.render_findings([{"what_tipped_it": "items="}]) == ["    tipped by: items="]
 
@@ -807,24 +817,93 @@ def test_deep_screen_renders_panels_in_fixed_order(vault: Path) -> None:
 
 def test_deep_screen_never_wraps_an_identifier_mid_token(vault: Path) -> None:
     """The keep-test rule (spec §2) has to hold for the screen, not only for the
-    findings renderer: a panel line that interpolates a path without going
-    through the wrapper would truncate it and no other assertion would notice."""
+    findings renderer: a panel line that interpolates a value without going
+    through the wrapper emits an over-long line, and no other assertion notices.
+
+    The fixture is the whole test. `_fit(prefix, value)` and
+    `f"{prefix}{value}"` are byte-identical for every line that already fits, so
+    a value that *cannot* exceed the layout cannot tell the wrapper from a bare
+    f-string — which is how a `Study Long` title left every interpolated line
+    below 80 and made this assertion unfailable.
+
+    The vault supplies the over-long path, title and thesis. The other four
+    interpolated values arrive as an explicit payload because today's *producers*
+    hold them under the layout — `_note_edges` knows three edge types, the
+    deriver two evidence states, and the two placeholder lines are constants —
+    while the *renderer* bounds none of them. That gap is exactly what routing
+    `edges:` and `evidence states:` through `_fit` was for, and it is not
+    hypothetical: `_review_panel`'s own pending string is 91 characters today.
+    """
     project_rel = f"projects/study-{'y' * 100}/project.md"
     draft_rel = f"projects/study-{'y' * 100}/draft.md"
-    write_checked_concept(vault, project_rel, "type: project\ntitle: Study Long\n", "project")
-
-    out = cockpit.render_deep(
-        {
-            "screen": "deep",
-            "project": project_rel,
-            "panels": cockpit.assemble_deep(vault, project_rel),
-        }
+    title = "Sleep restriction and the durable decay of recall over consecutive study nights"
+    thesis = (
+        "Restricting sleep degrades declarative consolidation in a dose dependent way "
+        "that survives a night of recovery sleep"
     )
+    assert len(f"  title: {title}") > cockpit.LAYOUT_COLUMNS
+    assert len(f"  thesis: {thesis}") > cockpit.LAYOUT_COLUMNS
+    write_checked_concept(
+        vault, project_rel, f"type: project\ntitle: {title}\nthesis: {thesis}\n", "project"
+    )
+    panels = cockpit.assemble_deep(vault, project_rel)
+
+    out = cockpit.render_deep({"screen": "deep", "project": project_rel, "panels": panels})
     lines = out.splitlines()
 
     assert any(line.strip() == project_rel for line in lines)
     assert any(line.strip() == draft_rel for line in lines)
-    for line in lines:
+
+    # The same rule over the four values only the payload can lengthen. The
+    # vocabulary is deliberately wider than today's producers emit — the
+    # renderer is what is under test, and it declares no bound on either
+    # breakdown or on what a pending/reserved line may say.
+    wide = cockpit.render_deep(
+        {
+            "screen": "deep",
+            "project": project_rel,
+            "panels": {
+                **panels,
+                "slice": {
+                    **panels["slice"],
+                    "edges_by_type": {
+                        "contradicts": 12,
+                        "extends": 34,
+                        "qualifies": 5,
+                        "rebuts": 6,
+                        "refines": 7,
+                        "supports": 89,
+                        "undercuts": 10,
+                    },
+                },
+                "draft": {
+                    **panels["draft"],
+                    "evidence_states": {
+                        "complete": 12,
+                        "evidence-incomplete": 34,
+                        "quote-drifted": 5,
+                        "source-withdrawn": 6,
+                    },
+                },
+                "trace": {
+                    "source_action": "journal.list",
+                    "pending": (
+                        "engine_api.evidence_review_queue + the views.evidence_review "
+                        "registry row (V2 plan V2R-B.4)"
+                    ),
+                },
+                "context": {
+                    "source_action": "context.read",
+                    "reserved": (
+                        "context.read is declared by U1 and has no engine binding in the "
+                        "surface-contract registry yet"
+                    ),
+                },
+            },
+        }
+    )
+
+    for line in lines + wide.splitlines():
         assert len(line) <= cockpit.LAYOUT_COLUMNS or line.strip() in {project_rel, draft_rel}
 
 
@@ -961,6 +1040,12 @@ def test_trace_lines_render_every_summary_field_and_survive_a_partial_builder(
     escaped); an event the journal gave no summary fields says so rather than
     rendering a bare `ref N:`; and the shown-of-total line needs *both* counts —
     a builder that carries one must still render, not raise.
+
+    The first event's summary is deliberately longer than the layout. A `ref`
+    line whose three fields all fit is byte-identical whether it goes through
+    `_fit` or straight into an f-string, so a short-summary fixture cannot see
+    the wrapper at all — and an `output_id` that names the file the run wrote is
+    the ordinary case, not a contrived one.
     """
     monkeypatch.setattr(
         cockpit,
@@ -972,7 +1057,7 @@ def test_trace_lines_render_every_summary_field_and_survive_a_partial_builder(
                     "event_id": 5,
                     "timestamp": "2026-07-30T09:00:00Z",
                     "event_type": "derived-output",
-                    "output_id": "out-2f9c",
+                    "output_id": "projects/study-alpha/draft.md#ev-22222222",
                 },
                 {"event_id": 9},
             ],
@@ -993,9 +1078,13 @@ def test_trace_lines_render_every_summary_field_and_survive_a_partial_builder(
         "recent machine changes (journal.list)",
     )
 
-    assert body[0] == "  ref 5: 2026-07-30T09:00:00Z derived-output out-2f9c"
-    assert body[1] == "  ref 9: (no summary fields)"
-    assert body[2] == "  showing 2 of 4"
+    assert body == [
+        "  ref 5: 2026-07-30T09:00:00Z derived-output",
+        "         projects/study-alpha/draft.md#ev-22222222",
+        "  ref 9: (no summary fields)",
+        "  showing 2 of 4",
+        "  refs preview via trace.revert_preview",
+    ]
 
     monkeypatch.setattr(
         cockpit,
@@ -1025,13 +1114,8 @@ def test_both_screens_open_with_their_banner_and_one_blank_between_panels(vault:
     screen then names the project it opened, and panels are separated by exactly
     one blank line. Plain sequential text is the whole layout contract, so the
     separators are part of it."""
-    out = cockpit.render_deep(
-        {
-            "screen": "deep",
-            "project": PROJECT_REL,
-            "panels": cockpit.assemble_deep(vault, PROJECT_REL),
-        }
-    )
+    panels = cockpit.assemble_deep(vault, PROJECT_REL)
+    out = cockpit.render_deep({"screen": "deep", "project": PROJECT_REL, "panels": panels})
     lines = out.splitlines()
 
     assert lines[0] == "memoria cockpit: deep work"
@@ -1047,6 +1131,30 @@ def test_both_screens_open_with_their_banner_and_one_blank_between_panels(vault:
     ):
         assert lines[lines.index(heading) - 1] == "", f"no separator above {heading}"
     assert "\n\n\n" not in out
+
+    # `_buffer` terminates the screen, and collapsing the blank separators
+    # `render_deep` appends between panels is the whole of its job. Editing the
+    # last line is not: panel 6 ends on a string the composer took from the
+    # registry and printed for the researcher to paste, and a command stub that
+    # ends where its argument begins is a value, not stray whitespace. `memoria
+    # cockpit | cat` is byte-identical by construction (module docstring), and
+    # every screen above ends on a line that a wider strip would leave alone.
+    stub = cockpit.render_deep(
+        {
+            "screen": "deep",
+            "project": PROJECT_REL,
+            "panels": {
+                **panels,
+                "context": {
+                    "source_action": "context.read",
+                    "bundle": {"project": PROJECT_REL},
+                    "invocation": "memoria context --project ",
+                },
+            },
+        }
+    )
+
+    assert stub.endswith("  invocation: memoria context --project \n")
 
     resolution = cockpit.render_deep(
         {"screen": "deep", "resolution": "ambiguous", "projects": []}
@@ -1162,14 +1270,26 @@ def test_context_bundle_renders_in_fixed_key_order_with_the_invocation_last(
     the reserved row: "a short fixed-order block, one item per line, a one-line
     invocation of the underlying action beneath it for pasting" (spec §1 panel
     6). The bundle arrives as a mapping, so the block's order has to be the
-    renderer's, not whatever insertion order the transport happened to use."""
+    renderer's, not whatever insertion order the transport happened to use.
+
+    Nothing in the block is short by construction: the transport owns the bundle
+    values and the registry owns the command string, so one value runs past the
+    layout, one carries a character outside ASCII, and the invocation is a real
+    scoped command rather than a two-word stub. A block that fits in 80 columns
+    and stays in ASCII cannot distinguish `_fit` from an f-string, nor
+    `ensure_ascii=False` from the json default — the researcher pastes these
+    lines, so both are the difference between a value and a mangling of it.
+    """
 
     def probe_context(workspace: Path, *, read_scope: list[str] | None = None) -> dict[str, Any]:
         return {
             "ok": True,
             "api_version": 1,
             "project": "projects/study-alpha/project.md",
-            "attention": {"open": 3, "kinds": ["candidate", "gap"]},
+            "attention": {"open": 3, "kinds": ["candidate", "gap"], "tipped": "gap — one"},
+            "open_question": (
+                "does the 2019 review supersede the meta-analysis the draft leans on"
+            ),
         }
 
     monkeypatch.setattr(engine_api, "read_context_probe", probe_context, raising=False)
@@ -1181,7 +1301,12 @@ def test_context_bundle_renders_in_fixed_key_order_with_the_invocation_last(
             "context.read": {
                 "id": "context.read",
                 "engine": "read_context_probe",
-                "cli": {"commands": ["memoria context"]},
+                "cli": {
+                    "commands": [
+                        "memoria context --project projects/study-alpha/project.md "
+                        "--scope notes,projects"
+                    ]
+                },
             },
         },
     )
@@ -1191,12 +1316,15 @@ def test_context_bundle_renders_in_fixed_key_order_with_the_invocation_last(
     section = out[out.index("context handoff (context.read)") :].rstrip().splitlines()
 
     assert [line.strip() for line in section[1:]] == [
-        # `attention` before `project` although the transport emitted the
-        # reverse, and a non-scalar value rendered as data rather than as a
-        # Python repr.
-        'attention: {"kinds": ["candidate", "gap"], "open": 3}',
+        # `attention` before `open_question` before `project` although the
+        # transport emitted `project` first, and a non-scalar value rendered as
+        # data — sorted keys, `—` intact — rather than as a Python repr.
+        'attention: {"kinds": ["candidate", "gap"], "open": 3, "tipped": "gap — one"}',
+        "open_question: does the 2019 review supersede the meta-analysis the draft",
+        "leans on",
         "project: projects/study-alpha/project.md",
-        "invocation: memoria context",
+        "invocation: memoria context --project projects/study-alpha/project.md --scope",
+        "notes,projects",
     ]
 
 
