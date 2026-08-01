@@ -80,7 +80,7 @@
 4. **Operation endpoint** stays `POST /operation/run` (response keeps `job.job_id`); any `/v1` route migration belongs to the future U1 gate. `/v1/*` today = lifecycle (`status`, `shutdown`) + views only.
 5. **Loopback actor authority** (resolves U3-CANVAS's escalated gap): the HTTP operation door changes `actor="agent"` → `actor="pi"` (Task SEAM.1 below) — the Obsidian plugin is the PI's hand, human-driven and authenticated by the user-held per-boot token; the MCP stdio door keeps `actor="agent"`. Without this, `resolve-attention`/`curate-note-link` enqueues from the pane are refused as pi-protected.
 6. **BOOT-C ↔ U4-A interface**: fresh `memoria init` iterates `(relpath, content_provider)` pairs; U4-A registers via `copi_bundle_files()`. `memoria doctor --json --quick` may emit the current engine version and credential rows, but it emits no bundle-version or skew result. U4-A's hook consumes credential rows defensively.
-7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces).
+7. **U4-A ↔ U4-C interface**: SKILL.md composes zero-arg section providers (`Callable[[], str]`); U4-A imports `conversational_ask_section` verbatim. `HONEST_EMPTY_PREFIX` and `PRIORS_REFUSAL` are single-source constants — consumers import, never retype (a scan test enforces). **Amended 2026-08-01:** `HONEST_EMPTY_PREFIX` is struck — the honest-empty sentence is engine-rendered per query by `retrieval_pipeline.honest_empty`, so `PRIORS_REFUSAL` is the one single-source constant and the scan test (a U4-C.2 deliverable; it has never shipped) guards only it. See the amendment above the U4-C section header.
 8. **Plugin settings**: fresh settings omit `serverUrl` and token settings;
    the empirical-recorder settings (`enabled`, `defaultProjectId`,
    `retentionDays`, `showPrivacyPreview`) remain. This plan does not migrate
@@ -16081,6 +16081,19 @@ floor_lib.py:258-279).
 
   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   ```
+
+**Plan-reconciliation amendment — honest-empty is engine-rendered, not templated (2026-08-01, BINDING)**
+
+R2 P.2 (#1556) replaced the `search_index.py:243` literal this section was written against: the honest-empty sentence is now computed per query by `retrieval_pipeline.honest_empty(pipeline_counts, strata)` (`retrieval_pipeline.py:85-91`) — counts vary per query and the query string never appears, so no `<prefix><query>` shape exists to hoist and single-sourcing under `src/` is already achieved (every emission site calls the one function). Consequences, task by task:
+
+- **U4-C.1: removed as satisfied.** Its deliverable (`HONEST_EMPTY_PREFIX` hoisted from an inline f-string) has no subject; the anchoring literal and its byte-identical test assertion are gone.
+- **U4-C.2:** keeps its module and `PRIORS_REFUSAL`. Its retrieval-empty paragraph is retargeted: the method text instructs the agent to **voice the payload's `unknowns[0]` verbatim** — never a template, never re-rendered counts. The scan test drops the `HONEST_EMPTY_PREFIX` half of contract 7 and keeps the refusal half.
+- **U4-C.4:** the MCP pin retargets from wording equality to **payload structure** — assert the operation payload carries `pipeline_counts`, `excluded_strata` and `unknowns` through worker dispatch intact (the dict already flows whole; `search_index.py:346-357`, `worker.py:767+`).
+- **U4-A.1:** `HONEST_EMPTY_WORDING`, its pinned-literal test, and the "substituting the actual query" instruction are struck. The SKILL.md empty-results section says: quote `unknowns[0]` verbatim; the engine computed those denominators and the agent must not re-derive or restate them.
+- **Refusal-wording fork, resolved:** contract 7 makes C.2's module the single source, so **C.2's `PRIORS_REFUSAL` wording wins**; U4-A.1's variant (`PRIORS_REFUSAL_WORDING = "I cannot answer that from my own knowledge…"`) is struck and A.1 imports the C.2 constant, per the consumers-import-never-retype rule.
+
+Contract 7 is amended accordingly (**one** single-source constant remains: `PRIORS_REFUSAL`); contract 13's ordering is unchanged.
+
 # U4-C · Conversational-ask grounding contract (U4 spec §4)
 
 > SPEC GAP: U4 §4's last bullet ("I1's `read-observed`/staleness telemetry fires

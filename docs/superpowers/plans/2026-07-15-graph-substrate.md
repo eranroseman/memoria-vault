@@ -13,6 +13,12 @@
 - Correctness gate: `python scripts/verify`; `main` needs PR + `verify`/`gitleaks`; squash merge; explicit-path staging only; disposable vaults only.
 - **Executes AFTER Plan 22's current fresh schema with G2S1.1–.3 (+S12.2) lands** — this plan consumes `concept_edge_id`, upsert-and-prune sparing tension, and edge-id/attribute fields, but no migration mechanism. All line refs are main @ `9c77ba61` and WILL shift after Plan 22 — re-anchor by symbol, not line.
 - **Fresh-schema allocation (binding):** v16 = NID-B identity-safe DDL · v17 = ERP-A roster CHECK · v18 = ERP-C consequence storage. Each schema task updates current `schema.sql`, its trailing `PRAGMA user_version`, `SCHEMA_VERSION`, and fresh-schema assertions in one commit. There is no `MIGRATIONS` entry, backfill, re-key, legacy fixture, or compatibility branch. A nonzero database at any other version is rejected before mutation.
+  **Amended 2026-08-01:** the *ordering* is binding; the *integers* are not reserved
+  across plans. With no `MIGRATIONS` registry and no upgrade path, a bump only declares
+  incompatibility, so a rung is claimed by whichever schema task lands next — including
+  tasks in other plans (the I1 plan's `telemetry_events` T.1 is the live case). Each
+  schema task therefore reads `SCHEMA_VERSION` and takes `current + 1` rather than
+  asserting a pre-agreed number. See Task ERP-C.3's amendment.
 
 ## Execution status — 2026-07-17
 
@@ -8074,6 +8080,19 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
 ---
 
 ### Task ERP-C.3: Schema v18 direct DDL — `consequence` column on `concept_verdicts` + DB mirror helpers
+
+> **Schema-rung amendment (2026-08-01, BINDING).** `18` here is **positional, not
+> allocated**: it is "the next free rung", and it reads 18 only for as long as
+> `SCHEMA_VERSION` on `main` is 17. The I1 plan's Task T.1 (`telemetry_events`) previously
+> gated on `SCHEMA_VERSION == 18`, which pinned this task ahead of the whole telemetry
+> tree for bookkeeping rather than dependency; that gate is now "current + 1" (I1 plan
+> T.1, 2026-08-01), so I1 T.1 may claim 18 and this task 19. Neither task reads the
+> other's storage, so either order is correct. **Before executing:** read
+> `SCHEMA_VERSION`, take `current + 1`, and substitute it for every `18` in this task —
+> the Files list, Produces, the DDL, the `PRAGMA user_version`, the renamed test
+> functions and the three pinned assertions. Do **not** stop because the current value is
+> not 17; stop only if a `MIGRATIONS` symbol has appeared, which would mean the
+> fresh-schema rule above no longer holds.
 
 **Direct DDL is needed:** the current verdict row is
 `concept_verdicts(concept_id TEXT PRIMARY KEY, check_status TEXT NOT NULL CHECK(...))`

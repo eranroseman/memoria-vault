@@ -26,6 +26,7 @@ from memoria_vault.runtime.vaultio import (
     frontmatter_doc,
     iter_markdown,
     read_frontmatter,
+    safe_read,
     split_frontmatter,
 )
 from memoria_vault.runtime.worker import enqueue_operation, run_request
@@ -760,10 +761,20 @@ def _attention_cards(workspace: Path) -> list[dict[str, Any]]:
 
 
 def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
+    """Return the card payload for an `inbox/` file, or None if it is not one.
+
+    Reads the way `lifecycle` and `loudness` read -- `safe_read`, then
+    `.strip().lower()` on `projection`. `inbox/**` is the one write target the
+    reference actor policy grants a non-PI actor, so both assumptions this drops
+    were reachable through the documented perimeter: a raw `!=` made a card written
+    `projection: Attention` gate writes through `loudness` while staying invisible to
+    `memoria attention list`, and a raw `read_text` made one non-UTF-8 file in
+    `inbox/` fail the whole listing instead of being skipped.
+    """
     if not path.is_file():
         return None
-    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    if frontmatter.get("projection") != "attention":
+    frontmatter, body = split_frontmatter(safe_read(path))
+    if str(frontmatter.get("projection") or "").strip().lower() != "attention":
         return None
     rel = path.resolve().relative_to(workspace.resolve()).as_posix()
     return {

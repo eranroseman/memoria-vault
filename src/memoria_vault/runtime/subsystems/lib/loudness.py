@@ -18,10 +18,18 @@ OPEN_ATTENTION_STATUS = "open"
 
 
 def is_open_blocker(frontmatter: dict[str, Any]) -> bool:
+    """Read the three gating fields the way `lifecycle` reads them: `.strip().lower()`.
+
+    One unstripped read is all it took for the gate and the journal to disagree about
+    what an attention card is. `inbox/**` is the one write target the reference actor
+    policy grants a non-PI actor, so `projection: " attention "` -- an ordinary YAML
+    quoting accident, not an exotic input -- is reachable through the documented
+    perimeter, and an unstripped read makes it a `block` card that gates nothing.
+    """
     return (
-        str(frontmatter.get("projection") or "").lower() == ATTENTION_PROJECTION
-        and str(frontmatter.get("attention_status") or "").lower() == OPEN_ATTENTION_STATUS
-        and str(frontmatter.get("loudness") or "").lower() == BLOCK_LOUDNESS
+        str(frontmatter.get("projection") or "").strip().lower() == ATTENTION_PROJECTION
+        and str(frontmatter.get("attention_status") or "").strip().lower() == OPEN_ATTENTION_STATUS
+        and str(frontmatter.get("loudness") or "").strip().lower() == BLOCK_LOUDNESS
     )
 
 

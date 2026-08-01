@@ -24,7 +24,7 @@
 ## Cross-section contracts (BINDING)
 
 1. **Telemetry sink** (T.2 produces; T.3/T.4, A.3/A.4, H.1 and the graph plan's ERP-D.6 consume): `record_telemetry_event(vault: Path, event_type: str, payload: dict) -> str` in **`src/memoria_vault/runtime/telemetry.py`** — validates, inserts one `telemetry_events` row, returns the event id. No journal append, no git effect, callable from read paths.
-2. **`telemetry_events` schema (v19, T.1):** `(event_id TEXT PRIMARY KEY, ts TEXT NOT NULL, event_type TEXT NOT NULL, session_id TEXT, surface TEXT, payload_json TEXT NOT NULL)` + index `idx_telemetry_type_ts (event_type, ts)`.
+2. **`telemetry_events` schema (T.1, at the next free schema rung — see T.1's 2026-08-01 amendment; not pinned to v19):** `(event_id TEXT PRIMARY KEY, ts TEXT NOT NULL, event_type TEXT NOT NULL, session_id TEXT, surface TEXT, payload_json TEXT NOT NULL)` + index `idx_telemetry_type_ts (event_type, ts)`.
 3. **Native telemetry event types** (no client schema): `attention-admitted` `{card_path, kind, loudness, raised_by}`; `producer-run-skipped` `{producer, reason}`. Validated field-for-field by `record_telemetry_event` itself.
 4. **`proposal_ref` provenance gate (section D):** optional string on the operation payload (card path or proposing request id). Present → exactly one `disposition.v1` via the shipped `emit_disposition_event` (`runtime/operations.py:146`) inside the caller's transaction, `item_id = proposal_ref`. Absent → zero events. Unconditional sites: `curate-note-candidate` (item_type `note-candidate`), `mark-checked` (item_type = promoted doc's frontmatter type). Never: `promote-draft-passage`.
 5. **Attention config** (A.2 produces the module; A.1/A.4 consume): **`src/memoria_vault/runtime/attention_config.py`** — `attention_order_by(vault) -> tuple[str, ...]` (default `("priority", "loudness", "impact", "staleness", "age")`; the `block` pin is NOT a factor) and `producer_mode(vault, raised_by) -> str` (`active | quiet | paused`, fail-safe `active`). One config file: `.memoria/config/attention.yaml` (`order_by:` list + `producers:` map).
@@ -98,7 +98,23 @@ called from the CLI, engine, or HTTP.
 
 Line refs at `a4da8aa3`: `state.SCHEMA_VERSION` (`state.py:53`), `_init` (`state.py:2406-2413`), `verify_journal_chain` (`state.py:834` — reads **only** `event_log`, so the telemetry exclusion is a proven no-op, not a code change), `record_empirical_event` (`operations.py:111-143`), `now_iso` (`runtime/time.py:17`).
 
-### Task T.1: v19 direct current DDL — the `telemetry_events` table
+### Task T.1: next-rung direct current DDL — the `telemetry_events` table
+
+> **Schema-rung amendment (2026-08-01, BINDING).** The literal `18` in Step 1 and the
+> literal `19` throughout this task are struck. The rung is **current `SCHEMA_VERSION` +
+> 1**, recorded as whatever integer is free when this lands.
+>
+> *Why.* The literals put the graph plan's ERP-C.1 and ERP-C.3 on the critical path ahead
+> of the entire telemetry tree (I1 → O1 → O2 → V2R-C → alpha23 LOOP.13) for bookkeeping,
+> not dependency: nothing in `telemetry_events` reads, joins, or orders by anything ERP-C
+> stores, and the Global Constraints' fresh-install rule means a bump only *declares
+> incompatibility* — there is no upgrade path and no `MIGRATIONS` registry, so the
+> specific integer carries no meaning beyond ordering. Which schema task claims which rung
+> is a scheduling artifact, so the gate should test what T.1 actually needs (a clean
+> fail-closed current schema and no migration registry) rather than an integer.
+> `SCHEMA_VERSION` is **17** on `main` (ERP-A.2 took it there), so this lands at 18 if it
+> goes first and at 19 if ERP-C.3 does. The graph plan's ERP-C.3 carries the mirror of
+> this note.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (`SCHEMA_VERSION` at `:53`; do not add a migration registry)
@@ -107,16 +123,17 @@ Line refs at `a4da8aa3`: `state.SCHEMA_VERSION` (`state.py:53`), `_init` (`state
 - Test: `tests/test_telemetry_events.py` (new; register `"test_telemetry_events.py": "contract"` in `tests/conftest.py` `TEST_LEVELS`)
 
 **Interfaces:**
-- Consumes: the direct current graph schema at v18 and its fail-closed version gate.
-- Produces: the `telemetry_events` table (contract 2) at `PRAGMA user_version = 19`; `SCHEMA_VERSION = 19`.
+- Consumes: the direct current graph schema at whatever version `main` carries, and its fail-closed version gate.
+- Produces: the `telemetry_events` table (contract 2) at `PRAGMA user_version = N`; `SCHEMA_VERSION = N`, where `N` is the current value + 1 (18 on `main` today).
 
 - [ ] **Step 1: Precondition check (fresh-schema handoff).** Run:
 
 ```bash
 grep -n "^SCHEMA_VERSION" src/memoria_vault/runtime/state.py
+grep -rn "MIGRATIONS" src/memoria_vault/runtime/state.py
 ```
 
-Required: `SCHEMA_VERSION = 18` (the graph plan's direct DDL landed). **If it fails, STOP and report** — T.1 must not renumber another schema task. Confirm that no `MIGRATIONS` symbol or private migration helper remains.
+Read the current `SCHEMA_VERSION` and record `N = current + 1` — that is this task's rung, whatever integer it turns out to be. **Stop only if the second grep finds a `MIGRATIONS` symbol or a private migration helper**, which would mean the fresh-install rule no longer holds and this task's whole shape is wrong. Do not stop because the current value is not some particular number: T.1 does not depend on any other schema task's storage, so it renumbers nothing by taking the next free rung. Record `N` in the commit message so the rung the task actually claimed is on the record.
 
 - [ ] **Step 2: Write the failing tests** — create `tests/test_telemetry_events.py`:
 
@@ -132,14 +149,17 @@ import pytest
 from memoria_vault.runtime import state
 
 
-def test_v19_creates_telemetry_events_table(tmp_path: Path) -> None:
+def test_telemetry_events_table_lands_at_the_current_schema_version(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         cols = {row[1] for row in conn.execute("PRAGMA table_info(telemetry_events)")}
         version = int(conn.execute("PRAGMA user_version").fetchone()[0])
         indexes = {row[1] for row in conn.execute("PRAGMA index_list(telemetry_events)")}
 
     assert cols == {"event_id", "ts", "event_type", "session_id", "surface", "payload_json"}
-    assert version == 19
+    # Not a literal: the rung is whichever integer was free when this landed, and a
+    # pinned number here is exactly what put an unrelated schema task on the critical
+    # path. What has to hold is that a fresh install carries the table *and* the version.
+    assert version == state.SCHEMA_VERSION
     assert "idx_telemetry_type_ts" in indexes
 
 
@@ -163,8 +183,9 @@ Run: `python -m pytest tests/test_telemetry_events.py -v`
 Expected: FAIL — `cols == set()` (no such table) on the first test.
 
 - [ ] **Step 4: Implement.** In `src/memoria_vault/runtime/state.py`, set
-  `SCHEMA_VERSION = 19`. In `runtime/schema.sql`, add this table and index beside
-  the other current DDL, then set the trailing `PRAGMA user_version = 19;`:
+  `SCHEMA_VERSION = N`. In `src/memoria_vault/runtime/schema.sql` — the one
+  `schema.sql` under `src/`, and the file `_schema_sql()` reads — add this table and
+  index beside the other current DDL, then set the trailing `PRAGMA user_version = N;`:
 
   ```sql
   CREATE TABLE IF NOT EXISTS telemetry_events (
@@ -178,7 +199,7 @@ Expected: FAIL — `cols == set()` (no such table) on the first test.
   CREATE INDEX IF NOT EXISTS idx_telemetry_type_ts ON telemetry_events(event_type, ts);
   ```
 
-  Update fresh-schema assertions from `18` to `19` and register the new test file
+  Update fresh-schema assertions from the previous value to `N` and register the new test file
   in `tests/conftest.py` `TEST_LEVELS` (alphabetical position):
   `"test_telemetry_events.py": "contract",`. Do not register a transition,
   backfill rows, or create an old-version fixture.
@@ -190,14 +211,25 @@ Expected: PASS. (`verify_journal_chain` reads only `event_log` — `state.py:836
 
 - [ ] **Step 6: Commit**
 
+> **Stale-path amendment (2026-08-01).** The staging list below previously named
+> `src/memoria_vault/product/workspace_seed/.memoria/schema.sql`. **That path does not
+> exist** — the product seed carries no `.memoria/` directory, and the only `schema.sql`
+> under `src/` is `src/memoria_vault/runtime/schema.sql`, which is the file Step 4 edits.
+> Because this repo stages explicit paths and never `git add -A`, following the old list
+> verbatim committed the `state.py` bump with **no DDL beside it**: every fresh install
+> would then declare a version whose table does not exist, and the `verify` gate would
+> fail on a diff that looks complete.
+
 ```bash
-git add src/memoria_vault/runtime/state.py src/memoria_vault/product/workspace_seed/.memoria/schema.sql \
+git add src/memoria_vault/runtime/state.py src/memoria_vault/runtime/schema.sql \
     tests/test_telemetry_events.py tests/test_schema_version.py tests/test_schema_v10.py \
     tests/test_query_substrate.py tests/conftest.py
-git commit -m "feat(state): v19 telemetry_events table — non-chained analytics plane (I1 spec §1)
+git commit -m "feat(state): vN telemetry_events table — non-chained analytics plane (I1 spec §1)
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+(Substitute the rung actually claimed for `vN` in the subject line.)
 
 ### Task T.2: `runtime/telemetry.py` — the one telemetry writer (+ `attention` workflow member)
 
