@@ -42,6 +42,16 @@ Use `--reject` when the proposed action should not land, or `--defer --reason
 command records the PI disposition and stamps resolution metadata, so the Inbox
 converges to empty; empty is success.
 
+Prefer the command over editing the card. Setting `attention_status` to
+`resolved` or `deferred` by hand does clear the item, but the runtime has no way
+to see who made that edit — `inbox/` is the one place an adapter may write, and
+the machine name on a hand edit and a perimeter write are identical. So the next
+review-gated operation records the closed card in the append-only journal as an
+**unattributed** disposition (`via: unattributed-edit`) before it honors it: the
+outcome comes from the status you wrote, and no author is named. The gate refuses
+rather than honoring a closed card it cannot record. Resolving through the
+command is what attaches your reason and your authorship to the decision.
+
 **4. Reject cleanly when the proposal is wrong.**
 
 Rejecting costs one decision and leaves nothing behind — the proposed write

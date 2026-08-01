@@ -1,8 +1,9 @@
-"""Attention-card lifecycle: adopting hand-edited dispositions into the journal."""
+"""Attention-card lifecycle: journaling unattributed dispositions."""
 
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -14,16 +15,24 @@ from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from tests.helpers import init_cli_workspace
 
 
-def _write_card(vault: Path, name: str, status: str, extra: str = "") -> Path:
+def _write_card(
+    vault: Path,
+    name: str,
+    status: str,
+    extra: str = "",
+    *,
+    projection: str = "attention",
+    loudness: str = "block",
+) -> Path:
     path = vault / "inbox" / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "---\n"
         "title: Stop\n"
-        "projection: attention\n"
+        f"projection: {projection}\n"
         "attention_kind: alert\n"
         f"attention_status: {status}\n"
-        "loudness: block\n"
+        f"loudness: {loudness}\n"
         f"{extra}"
         "---\n\n# Finding\n\nBody.\n",
         encoding="utf-8",
@@ -49,70 +58,95 @@ def _run(workspace: Path, operation_id: str, payload: dict[str, Any]) -> dict[st
     return result
 
 
-def test_adopt_journals_hand_edited_resolution(tmp_path: Path) -> None:
+def test_a_closed_card_is_journaled_without_naming_an_author(tmp_path: Path) -> None:
+    """The row records the disposition and claims nothing about who made it.
+
+    `platform.node()` is identical for the PI's hand and for a machine, and
+    `inbox/**` is the one write target the reference actor policy grants a non-PI
+    actor -- so a perimeter write lands on exactly the cards this scan reads. The
+    journal forbids UPDATE and DELETE, so `actor: "pi"` here would be a permanent
+    false attestation that inspection could never correct.
+    """
     _write_card(tmp_path, "alert-stop.md", "resolved")
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
-    assert [event["target_id"] for event in adopted] == ["inbox/alert-stop.md"]
+    assert [event["target_id"] for event in journaled] == ["inbox/alert-stop.md"]
     events = _dispositions(tmp_path)
     assert len(events) == 1
-    assert events[0]["via"] == "manual-edit"
-    assert events[0]["actor"] == "pi"
+    assert events[0]["via"] == "unattributed-edit"
+    assert events[0]["actor"] != "pi"
+    assert events[0]["actor"] == "integrity"
     assert events[0]["outcome"] == "apply"
     assert events[0]["resolution"] == "resolved"
 
 
-def test_adopt_is_idempotent(tmp_path: Path) -> None:
+def test_journaling_is_idempotent(tmp_path: Path) -> None:
     _write_card(tmp_path, "alert-stop.md", "resolved")
-    lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
-    again = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    again = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
     assert again == []
     assert len(_dispositions(tmp_path)) == 1
 
 
-def test_open_cards_are_not_adopted(tmp_path: Path) -> None:
+def test_open_cards_are_not_journaled(tmp_path: Path) -> None:
     _write_card(tmp_path, "alert-open.md", "open")
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
-    assert adopted == []
+    assert journaled == []
     assert _dispositions(tmp_path) == []
 
 
-def test_deferred_hand_edit_adopts_defer_outcome(tmp_path: Path) -> None:
-    _write_card(tmp_path, "alert-later.md", "deferred")
+def test_a_deferred_notice_card_journals_a_defer_outcome(tmp_path: Path) -> None:
+    """`loudness` is not the trigger -- the closed status is.
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    Only a `block` card can gate anything, but every closed card the gate walks past
+    is a disposition the journal is missing, so a `notice` card is journaled too.
+    """
+    _write_card(tmp_path, "alert-later.md", "deferred", loudness="notice")
 
-    assert adopted[0]["outcome"] == "defer"
-    assert (tmp_path / "inbox/alert-later.md").exists()  # adoption never moves files
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+
+    assert journaled[0]["outcome"] == "defer"
+    assert (tmp_path / "inbox/alert-later.md").exists()  # journaling never moves files
+
+
+def test_projection_matching_is_case_folded(tmp_path: Path) -> None:
+    """`loudness.is_open_blocker` case-folds `projection`, so `Attention` can block.
+
+    Journaling has to fold the same way, or such a card blocks the gate while it is
+    open and then clears it silently once closed -- the exact hole this closes.
+    """
+    _write_card(tmp_path, "alert-stop.md", "resolved", projection="Attention")
+
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+
+    assert [event["target_id"] for event in journaled] == ["inbox/alert-stop.md"]
 
 
 @pytest.mark.parametrize(
-    ("status", "hand_written_outcome", "expected"),
+    ("status", "written_outcome", "expected"),
     [
         ("resolved", "reject", "reject"),
         ("resolved", "defer", "apply"),
         ("deferred", "apply", "defer"),
     ],
 )
-def test_adopted_outcome_keeps_status_and_outcome_consistent(
-    tmp_path: Path, status: str, hand_written_outcome: str, expected: str
+def test_journaled_outcome_keeps_status_and_outcome_consistent(
+    tmp_path: Path, status: str, written_outcome: str, expected: str
 ) -> None:
-    _write_card(
-        tmp_path, "alert-stop.md", status, extra=f"resolution_outcome: {hand_written_outcome}\n"
-    )
+    _write_card(tmp_path, "alert-stop.md", status, extra=f"resolution_outcome: {written_outcome}\n")
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
-    assert adopted[0]["outcome"] == expected
-    assert adopted[0]["resolution_outcome"] == expected
+    assert journaled[0]["outcome"] == expected
+    assert journaled[0]["resolution_outcome"] == expected
 
 
-def test_adopted_event_carries_no_card_text(tmp_path: Path) -> None:
+def test_journaled_event_carries_no_card_body_text(tmp_path: Path) -> None:
     unbounded = "x" * 50_000
     _write_card(
         tmp_path,
@@ -121,19 +155,19 @@ def test_adopted_event_carries_no_card_text(tmp_path: Path) -> None:
         extra=f"resolution_outcome: {unbounded}\nrouting_class: {unbounded}\n",
     )
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
     # The journal forbids UPDATE and DELETE: card text that lands here is permanent.
     assert unbounded not in json.dumps(_dispositions(tmp_path))
-    assert adopted[0]["outcome"] == "apply"
-    assert adopted[0]["routing_class"] == "ask"
+    assert journaled[0]["outcome"] == "apply"
+    assert journaled[0]["routing_class"] == "ask"
 
 
 def test_a_foreign_resolved_event_does_not_speak_for_a_card(tmp_path: Path) -> None:
     """`resolved` is a shared event type: note curation, moves, and rollbacks emit it too.
 
     Only an attention row that resolved the card records its disposition. Matching a
-    foreign row would suppress the adoption and hand the gate back its silent clear.
+    foreign row would suppress the write and hand the gate back its silent clear.
     """
     _write_card(tmp_path, "alert-stop.md", "resolved")
     append_explicit_journal_event(
@@ -148,12 +182,12 @@ def test_a_foreign_resolved_event_does_not_speak_for_a_card(tmp_path: Path) -> N
         machine="test-machine",
     )
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
-    assert [event["via"] for event in adopted] == ["manual-edit"]
+    assert [event["via"] for event in journaled] == ["unattributed-edit"]
 
 
-def test_non_attention_projections_are_not_adopted(tmp_path: Path) -> None:
+def test_non_attention_projections_are_not_journaled(tmp_path: Path) -> None:
     path = tmp_path / "inbox/digest.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -161,12 +195,12 @@ def test_non_attention_projections_are_not_adopted(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
-    assert adopted == []
+    assert journaled == []
 
 
-def test_nested_inbox_files_are_not_adopted(tmp_path: Path) -> None:
+def test_nested_inbox_files_are_not_journaled(tmp_path: Path) -> None:
     nested = tmp_path / "inbox/archive/alert-stop.md"
     nested.parent.mkdir(parents=True, exist_ok=True)
     nested.write_text(
@@ -174,12 +208,12 @@ def test_nested_inbox_files_are_not_adopted(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    adopted = lifecycle.adopt_manual_dispositions(tmp_path, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
 
-    assert adopted == []
+    assert journaled == []
 
 
-def test_operation_resolved_card_is_not_re_adopted(
+def test_operation_resolved_card_is_not_journaled_again(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = init_cli_workspace(tmp_path, capsys)
@@ -190,13 +224,13 @@ def test_operation_resolved_card_is_not_re_adopted(
     assert "attention_status: resolved" in (workspace / "inbox/alert-done.md").read_text()
     assert [event["resolution"] for event in before] == ["resolved"]
 
-    adopted = lifecycle.adopt_manual_dispositions(workspace, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(workspace, machine="test-machine")
 
-    assert adopted == []
+    assert journaled == []
     assert _dispositions(workspace) == before
 
 
-def test_acknowledged_card_hand_edited_to_resolved_is_adopted(
+def test_acknowledged_card_closed_outside_the_writer_is_journaled(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = init_cli_workspace(tmp_path, capsys)
@@ -205,9 +239,51 @@ def test_acknowledged_card_hand_edited_to_resolved_is_adopted(
     # An acknowledgement is a `resolved` event that closed nothing: same event type,
     # same target, card still open. Matching on the target alone would skip it.
     assert [event["resolution"] for event in _dispositions(workspace)] == ["acknowledged"]
-    _write_card(workspace, "alert-ack.md", "resolved")  # the PI closes it by hand
+    _write_card(workspace, "alert-ack.md", "resolved")  # closed outside the trusted writer
 
-    adopted = lifecycle.adopt_manual_dispositions(workspace, machine="test-machine")
+    journaled = lifecycle.journal_unattributed_dispositions(workspace, machine="test-machine")
 
-    assert [event["target_id"] for event in adopted] == ["inbox/alert-ack.md"]
-    assert adopted[0]["via"] == "manual-edit"
+    assert [event["target_id"] for event in journaled] == ["inbox/alert-ack.md"]
+    assert journaled[0]["via"] == "unattributed-edit"
+
+
+def test_a_rival_session_cannot_read_the_journal_mid_decision(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two sessions racing one closed card leave one permanent row, not two.
+
+    AGENTS.md documents several sessions per checkout and the caller is a per-write
+    policy hook, so the read that decides which rows are missing and the append that
+    writes them have to sit in one critical section. A rival is launched from inside
+    the first session's read and given time to finish: if it can get through, both
+    sessions see an empty journal and the append-only log keeps both rows.
+    """
+    _write_card(tmp_path, "alert-stop.md", "resolved")
+    with state.connect(tmp_path):  # build the schema before the race, not during it
+        pass
+    real_read = state.read_event_log
+    rival: list[threading.Thread] = []
+    rival_errors: list[BaseException] = []
+
+    def rival_session() -> None:
+        try:
+            lifecycle.journal_unattributed_dispositions(tmp_path, machine="rival")
+        except BaseException as exc:  # noqa: BLE001 - reported on the main thread
+            rival_errors.append(exc)
+
+    def racing_read(vault: Path, **kwargs: Any) -> list[dict[str, Any]]:
+        rows = real_read(vault, **kwargs)
+        if not rival:  # the rival's own read must not start a third session
+            thread = threading.Thread(target=rival_session)
+            rival.append(thread)
+            thread.start()
+            thread.join(timeout=0.5)  # finishes only if nothing held it out
+        return rows
+
+    monkeypatch.setattr(state, "read_event_log", racing_read)
+    lifecycle.journal_unattributed_dispositions(tmp_path, machine="test-machine")
+    rival[0].join(timeout=30)
+    monkeypatch.undo()
+
+    assert rival_errors == []
+    assert [event["target_id"] for event in _dispositions(tmp_path)] == ["inbox/alert-stop.md"]
