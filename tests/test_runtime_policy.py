@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.policy import (
     AUDIT_RELPATH,
     EMPTY_SHA256,
@@ -417,6 +418,44 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     unblocked = engine.check("operation", "write", "hubs/h.md", "REQ-OPEN")
     assert unblocked["decision"] == "dry_run"
     assert unblocked["policy_rule"] == "review_gated.dry_run"
+
+
+def test_gate_journals_the_hand_edited_disposition_it_honors(tmp_path):
+    config = tmp_path / POLICY_CONFIG_RELPATH
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        "version: 1\n"
+        "actors:\n"
+        "  operation:\n"
+        "    allow:\n"
+        '      write: ["hubs/**"]\n'
+        '    require: ["audit_log"]\n'
+        '    write_scope: ["hubs/"]\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "inbox").mkdir()
+    (tmp_path / "inbox/block.md").write_text(
+        "---\n"
+        "title: Stop\n"
+        "projection: attention\n"
+        "attention_kind: alert\n"
+        "attention_status: resolved\n"
+        "loudness: block\n"
+        "resolved_at: 2026-06-15\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+    engine = PolicyEngine(tmp_path)
+    resp = engine.check("operation", "write", "hubs/h.md", "REQ-1")
+
+    # The hand flip already cleared `open_blockers`; the gate honoring it is what
+    # has to leave a journal row behind.
+    assert resp["policy_rule"] != "loudness.block.active"
+    events = state.read_event_log(tmp_path, event_types=("resolved",))
+    assert [event["target_id"] for event in events] == ["inbox/block.md"]
+    assert events[0]["via"] == "manual-edit"
+    assert events[0]["actor"] == "pi"
 
 
 def test_split_policy_decision_core_imports_without_mcp_server():

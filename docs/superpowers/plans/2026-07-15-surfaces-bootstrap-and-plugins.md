@@ -7961,9 +7961,43 @@ manual-edit`, actor `pi`); the policy gate calls it before evaluating blockers.
   - `lifecycle.adopt_manual_dispositions(vault: Path, *, machine: str = "") -> list[dict[str, Any]]` — returns the adopted journal rows (empty list when nothing to adopt). Adopts `inbox/*.md` cards with `projection: attention` and `attention_status` in `{"resolved", "deferred"}` that have no journaled `resolved` event for their relative path; the adopted event carries `via: "manual-edit"`, `resolution: "resolved"`, `outcome` = frontmatter `resolution_outcome` if present else `"defer"` for deferred / `"apply"` for resolved, `actor: "pi"`. Idempotent; never edits files, never commits.
   - Gate behavior: every review-gated mutating `PolicyEngine.check` adopts before reading `open_blockers` (same `inbox/*.md` frontmatter scan cost `open_blockers` already pays; the journal DB is only touched when a closed-status card exists).
 
+> **Adopted U3-SUB.1 execution amendment (2026-08-01):** three defects in the
+> drafted snippets below are superseded by what shipped.
+>
+> 1. **The idempotency predicate matched the wrong rows.** `resolved` is a shared
+>    event type with five producers (attention resolution *and* acknowledgement,
+>    note curation, `curate-note-link`, `move_concept`, quarantine rollback), so
+>    keying only on `target_id` was both too broad and too narrow. It is now
+>    `source == "attention" and resolution == "resolved"` — the pair that means
+>    *this card's closing disposition*. Too narrow mattered in practice:
+>    `acknowledge-attention` journals a `resolved` row that closes nothing and
+>    leaves the card open, so under the drafted check a PI who acknowledged a card
+>    and then closed it by hand was never adopted — the exact silent clear this
+>    task removes, one step later.
+> 2. **No card text reaches the append-only journal.** The drafted event copied
+>    frontmatter `resolution_outcome` and `routing_class` verbatim, which is the
+>    hazard graph NID-B.6 had to retract a field for: the triggers forbid UPDATE
+>    and DELETE, so an unbounded value is permanent. Both are now validated
+>    against the vocabularies `resolve_attention` itself enforces (`apply|reject`
+>    for a resolved card, `defer` for a deferred one; `act|ask|log`), falling back
+>    to the status-derived default. Every other field is a code constant, a
+>    timestamp, or the card's own path.
+> 3. **The gate test asserts what is observable.** Adoption cannot change what
+>    `open_blockers` sees — the card is already closed — so "adopts before
+>    evaluating blockers" has no observable ordering. The shipped test
+>    (`test_gate_journals_the_hand_edited_disposition_it_honors`) asserts that the
+>    same `check` call that honors the flip journals it. The drafted
+>    already-journaled fixture also emitted a row `resolve_attention` never emits;
+>    the shipped tests drive the real operations through `worker.run_request`
+>    instead of hand-rolling the producer's row.
+>
+> Scope held: adoption journals one `resolved` row and no `disposition.v1` row.
+> `resolve_attention` emits that second row from inside an operation envelope, and
+> an adopted hand edit carries no envelope and no stated reasoning to attribute.
+
 **Steps:**
 
-- [ ] Write the failing tests. Create `tests/test_attention_lifecycle.py`:
+- [x] Write the failing tests. Create `tests/test_attention_lifecycle.py`:
 
 ```python
 """Attention-card lifecycle: manual-edit adoption and monthly compaction."""
@@ -8040,14 +8074,14 @@ def test_deferred_hand_edit_adopts_defer_outcome(tmp_path):
     assert (tmp_path / "inbox/alert-later.md").exists()  # adoption never moves files
 ```
 
-- [ ] Register the new file in `tests/conftest.py`. Edit `tests/conftest.py`, inserting above the `"test_bases.py"` entry (line 20):
+- [x] Register the new file in `tests/conftest.py`. Edit `tests/conftest.py`, inserting above the `"test_bases.py"` entry (line 20):
 
 ```python
     "test_attention_lifecycle.py": "contract",
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -v` — expected failure at collection: `ModuleNotFoundError: No module named 'memoria_vault.runtime.subsystems.lib.lifecycle'`.
-- [ ] Write the minimal implementation. Create `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`:
+- [x] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -v` — expected failure at collection: `ModuleNotFoundError: No module named 'memoria_vault.runtime.subsystems.lib.lifecycle'`.
+- [x] Write the minimal implementation. Create `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -8127,8 +8161,8 @@ def adopt_manual_dispositions(vault: Path, *, machine: str = "") -> list[dict[st
     return adopted
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all 4 tests pass.
-- [ ] Write the failing gate-wiring test. Append to `tests/test_runtime_policy.py` (after `test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`, line 419):
+- [x] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all 4 tests pass.
+- [x] Write the failing gate-wiring test. Append to `tests/test_runtime_policy.py` (after `test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`, line 419):
 
 ```python
 def test_gate_adopts_hand_edited_disposition_before_evaluating_blockers(tmp_path):
@@ -8168,8 +8202,8 @@ def test_gate_adopts_hand_edited_disposition_before_evaluating_blockers(tmp_path
     assert events[0]["via"] == "manual-edit"
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_runtime_policy.py::test_gate_adopts_hand_edited_disposition_before_evaluating_blockers -v` — expected failure: `AssertionError: assert [] == ['inbox/block.md']` (gate never journals the hand-edit).
-- [ ] Wire the gate. Edit `src/memoria_vault/runtime/policy/engine.py` (lines 83-84):
+- [x] Run to verify failure: `python -m pytest tests/test_runtime_policy.py::test_gate_adopts_hand_edited_disposition_before_evaluating_blockers -v` — expected failure: `AssertionError: assert [] == ['inbox/block.md']` (gate never journals the hand-edit).
+- [x] Wire the gate. Edit `src/memoria_vault/runtime/policy/engine.py` (lines 83-84):
 
 ```python
         if action in MUTATING_ACTIONS and is_review_gated(npath):
@@ -8182,9 +8216,9 @@ def test_gate_adopts_hand_edited_disposition_before_evaluating_blockers(tmp_path
 ```
 
   (Replace the two existing lines `if action in MUTATING_ACTIONS and is_review_gated(npath):` / `blockers = loudness.open_blockers(self.workspace)`; everything below is unchanged.)
-- [ ] Run to verify pass: `python -m pytest tests/test_runtime_policy.py -v` — the new test passes and the pre-existing blocker test (`test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`) still passes (its hand-flip is now also journaled; its assertions are unaffected).
-- [ ] Run the gate: `python scripts/verify` — clean.
-- [ ] Commit:
+- [x] Run to verify pass: `python -m pytest tests/test_runtime_policy.py -v` — the new test passes and the pre-existing blocker test (`test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged`) still passes (its hand-flip is now also journaled; its assertions are unaffected).
+- [x] Run the gate: `python scripts/verify` — clean.
+- [x] Commit:
 
 ```
 git add src/memoria_vault/runtime/subsystems/lib/lifecycle.py src/memoria_vault/runtime/policy/engine.py tests/test_attention_lifecycle.py tests/test_runtime_policy.py tests/conftest.py

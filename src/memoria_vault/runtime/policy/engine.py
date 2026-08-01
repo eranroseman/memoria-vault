@@ -81,6 +81,12 @@ class PolicyEngine:
             return {"decision": "deny", "policy_rule": "path.traversal", "message": str(exc)}
 
         if action in MUTATING_ACTIONS and is_review_gated(npath):
+            # Lazy import: policy is imported by the trusted writer, so a module-level
+            # import of the journal path would close the cycle (same pattern as
+            # retraction.py, integrity.py).
+            from memoria_vault.runtime.subsystems.lib import lifecycle
+
+            lifecycle.adopt_manual_dispositions(self.workspace)
             blockers = loudness.open_blockers(self.workspace)
             if blockers:
                 message = loudness.blocker_message(blockers)
