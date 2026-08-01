@@ -683,6 +683,56 @@ def test_verdict_demotion_revokes_mirror_edges_before_passage_refresh(
     ]
 
 
+@pytest.mark.parametrize("revoked_status", ["unchecked", "quarantined"])
+def test_verdict_demotion_revokes_mirror_edges_of_a_ulid_keyed_concept(
+    tmp_path: Path, revoked_status: str
+) -> None:
+    """The demotion trigger matches identity, not path.
+
+    v16 decouples a file Concept's id from its path, so a trigger comparing the
+    verdict's ``concept_id`` against the edge's ``source_path`` demotes nothing
+    for a ULID-keyed Concept — leaving every revoked edge at ``checked`` in
+    exactly the incremental window (no full rebuild) this trigger exists to close.
+    """
+    ulid_a = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    ulid_b = "01BX5ZZKBKACTAV9WEVGEMMVRZ"
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/a.md",
+        f"type: note\nid: {ulid_a}\ntitle: A\ntags: []\nlinks: {{}}\n",
+        body="alpha endpoint",
+    )
+    write_checked_concept(
+        vault,
+        "notes/b.md",
+        f"type: note\nid: {ulid_b}\ntitle: B\ntags: []\nlinks:\n  supports:\n    - notes/a.md\n",
+        body="bridge endpoint",
+    )
+    rebuild_passage_index(vault)
+
+    with state.connect(vault) as conn:
+        keys = dict(conn.execute("SELECT path, concept_id FROM concepts").fetchall())
+        # A PI-owned tension row on the same identity, which demotion never touches.
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'tension', ?, 'notes/a.md', 'checked', '', '2026-07-31T00:00:00Z')",
+            (ulid_b, ulid_a),
+        )
+    assert keys == {"notes/a.md": ulid_a, "notes/b.md": ulid_b}
+
+    state.set_concept_verdict(vault, "notes/b.md", revoked_status)
+
+    assert {
+        (edge["relation_type"], edge["check_status"])
+        for edge in state.concept_edges(vault, checked_only=False)
+        if edge["source_concept_id"] == ulid_b
+    } == {("supports", revoked_status), ("tension", "checked")}
+
+
 def test_refresh_drops_passages_for_removed_files(tmp_path: Path) -> None:
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas")

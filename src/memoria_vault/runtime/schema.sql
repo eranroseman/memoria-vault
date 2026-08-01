@@ -284,13 +284,18 @@ BEGIN
        OR work_id = NEW.concept_id
        OR path = (SELECT path FROM concepts WHERE concept_id = NEW.concept_id);
 END;
+-- Demotion matches the verdict's identity against the edge's identity: v16
+-- decouples a file Concept's id from its path, so `source_path` (path space)
+-- and `concept_id` (identity space) coincide only for a path-keyed Concept.
+-- `source_path != ''` still scopes the demotion to mirrored link edges, leaving
+-- PI-owned rows alone.
 CREATE TRIGGER IF NOT EXISTS concept_verdicts_edge_demotion_insert
 AFTER INSERT ON concept_verdicts
 WHEN NEW.check_status IN ('unchecked', 'quarantined')
 BEGIN
     UPDATE concept_edges
     SET check_status = NEW.check_status
-    WHERE source_path = NEW.concept_id
+    WHERE source_concept_id = NEW.concept_id
       AND source_path != ''
       AND relation_type != 'tension';
 END;
@@ -300,7 +305,7 @@ WHEN NEW.check_status IN ('unchecked', 'quarantined')
 BEGIN
     UPDATE concept_edges
     SET check_status = NEW.check_status
-    WHERE source_path = NEW.concept_id
+    WHERE source_concept_id = NEW.concept_id
       AND source_path != ''
       AND relation_type != 'tension';
 END;

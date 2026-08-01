@@ -538,6 +538,89 @@ def test_a_batch_rename_does_not_roll_back_the_whole_mirror_pass(tmp_path: Path)
     assert rows == {ULID_A: "notes/new.md", "notes/plain.md": "notes/plain.md"}
 
 
+def test_two_files_sharing_one_id_refuse_the_whole_mirror_batch(tmp_path: Path) -> None:
+    """A copied file duplicates its frontmatter id; one id must not own two paths.
+
+    Per call each row is "same id, requested path unowned" — a rename — so the
+    batch is the only place the duplicate is visible. Left unchecked the second
+    row silently moves the first row's path (and its verdict) onto content the PI
+    never reviewed, with directory order picking the survivor.
+    """
+    _mirror(tmp_path, "notes/keep.md")
+
+    with pytest.raises(RuntimeError) as excinfo:
+        state.rebuild_file_concept_mirror(
+            tmp_path,
+            [
+                {"concept_id": ULID_A, "concept_type": "note", "path": "notes/alpha.md"},
+                {"concept_id": ULID_A, "concept_type": "note", "path": "notes/copy.md"},
+            ],
+        )
+
+    message = str(excinfo.value)
+    assert ULID_A in message
+    assert "notes/alpha.md" in message and "notes/copy.md" in message
+    with state.connect(tmp_path) as conn:
+        rows = dict(conn.execute("SELECT concept_id, path FROM concepts").fetchall())
+    # Refused before any write: neither duplicate landed.
+    assert rows == {"notes/keep.md": "notes/keep.md"}
+
+
+def test_a_path_keyed_concept_adopts_the_ulid_its_file_later_authors(tmp_path: Path) -> None:
+    """First identity assignment, not a collision: same path, still-provisional key.
+
+    A hand-written or externally dropped note is observed before it carries a
+    ULID, so it keys by its own path. When that same path presents a valid ULID
+    nothing else holds, the row takes it in place — the FKs carry the verdict and
+    the flags — instead of aborting every other row in the batch.
+    """
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, "notes/hand.md", concept_type="note", store="file", path="notes/hand.md"
+        )
+        state._set_concept_verdict_conn(conn, "notes/hand.md", "checked")
+    state.set_concept_flag(tmp_path, "notes/hand.md", "stale", reason="upstream demoted")
+
+    state.rebuild_file_concept_mirror(
+        tmp_path,
+        [
+            {"concept_id": ULID_A, "concept_type": "note", "path": "notes/hand.md"},
+            {"concept_id": ULID_B, "concept_type": "note", "path": "notes/healthy.md"},
+        ],
+    )
+
+    with state.connect(tmp_path) as conn:
+        rows = dict(conn.execute("SELECT concept_id, path FROM concepts").fetchall())
+        verdicts = dict(conn.execute("SELECT concept_id, check_status FROM concept_verdicts"))
+        flags = [
+            str(row["concept_id"]) for row in conn.execute("SELECT concept_id FROM concept_flags")
+        ]
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    assert rows == {ULID_A: "notes/hand.md", ULID_B: "notes/healthy.md"}
+    assert verdicts == {ULID_A: "checked"}
+    assert flags == [ULID_A]
+
+
+def test_a_ulid_already_living_elsewhere_still_collides_with_a_path_key(tmp_path: Path) -> None:
+    """The adoption is scoped to an identity nothing else holds."""
+    with state.connect(tmp_path) as conn:
+        state.ensure_concept_parent_conn(
+            conn, "notes/hand.md", concept_type="note", store="file", path="notes/hand.md"
+        )
+        state.ensure_concept_parent_conn(
+            conn, ULID_A, concept_type="note", store="file", path="notes/other.md"
+        )
+        with pytest.raises(RuntimeError, match="concept identity collision") as excinfo:
+            state.ensure_concept_parent_conn(
+                conn, ULID_A, concept_type="note", store="file", path="notes/hand.md"
+            )
+        rows = dict(conn.execute("SELECT concept_id, path FROM concepts").fetchall())
+
+    assert ULID_A in str(excinfo.value) and "notes/hand.md" in str(excinfo.value)
+    assert rows == {"notes/hand.md": "notes/hand.md", ULID_A: "notes/other.md"}
+
+
 def test_flagging_an_unmirrored_concept_raises_a_descriptive_error(tmp_path: Path) -> None:
     """A missing FK parent is named, not surfaced as a bare IntegrityError."""
     with pytest.raises(RuntimeError) as excinfo:

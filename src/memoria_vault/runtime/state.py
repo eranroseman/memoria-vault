@@ -1152,6 +1152,7 @@ def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> 
     the v16 foreign keys.
     """
     rows = list(rows)
+    _refuse_duplicate_batch_identities(rows)
     with connect(vault) as conn:
         keep = [
             ensure_concept_parent_conn(
@@ -1173,6 +1174,30 @@ def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> 
             (_json(keep),),
         ).rowcount
     return {"deleted": int(deleted), "inserted": len(rows)}
+
+
+def _refuse_duplicate_batch_identities(rows: list[dict[str, str]]) -> None:
+    """Refuse a mirror batch in which two files claim one Concept identity.
+
+    Copying a file (``cp``, Obsidian's "Make a copy") duplicates its frontmatter
+    ``id``. Per row that reads as *same identity, requested path unowned* — a
+    rename, which the guard allows — so the batch is the only place the duplicate
+    is visible. Left unchecked the later row moves the Concept's path onto content
+    the PI never reviewed and hands it the verdict rendered over the original,
+    with directory order deciding the survivor. This is the dual of two identities
+    claiming one path, which ``ensure_concept_parent_conn`` already refuses.
+    """
+    seen: dict[str, str] = {}
+    for row in rows:
+        concept_id = normalize_path(str(row["concept_id"]))
+        path = normalize_path(str(row.get("path") or row["concept_id"]))
+        if concept_id in seen:
+            raise RuntimeError(
+                f"duplicate Concept identity in one mirror batch: concept_id={concept_id!r}"
+                f" is claimed by both {seen[concept_id]!r} and {path!r}; give each file its"
+                " own frontmatter id before mirroring"
+            )
+        seen[concept_id] = path
 
 
 def record_file_output(
@@ -4332,6 +4357,8 @@ def ensure_concept_parent_conn(
     if resident is not None and str(resident["store"]) != wanted[1]:
         found = (str(resident["concept_type"]), str(resident["store"]), str(resident["path"]))
         raise _concept_shape_collision(ref, concept_id, found, concept_id, wanted)
+    if resident is None:
+        _adopt_path_key_identity_conn(conn, concept_id, wanted)
     try:
         conn.execute(
             """
@@ -4360,6 +4387,35 @@ def ensure_concept_parent_conn(
         owner_id = str(owner["concept_id"]) if owner is not None else "<unknown>"
         raise _concept_shape_collision(ref, owner_id, found, concept_id, wanted) from exc
     return concept_id
+
+
+def _adopt_path_key_identity_conn(
+    conn: sqlite3.Connection,
+    concept_id: str,
+    wanted: tuple[str, str, str],
+) -> None:
+    """Let the still-provisional row at one path take the ULID its file now carries.
+
+    v16 mirrors an id-less file — hand-written, externally dropped — under its own
+    path as a provisional key, so the moment that file authors a ULID the same path
+    presents a new identity. That is this Concept's first real identity, not a
+    second Concept claiming the path: the row takes it in place and the v16 foreign
+    keys carry its verdict, flags and edges along. Every genuine collision is left
+    to the caller's ``idx_concepts_path`` refusal — a resident that is already
+    id-keyed, a non-ULID claim, a different ``store``, or an incoming identity that
+    already lives at another path (which would merge two Concepts).
+    """
+    _concept_type, store, path = wanted
+    if not path or not is_ulid(concept_id):
+        return
+    owner = conn.execute(
+        "SELECT concept_id, store FROM concepts WHERE path = ?", (path,)
+    ).fetchone()
+    if owner is None or str(owner["concept_id"]) != path or str(owner["store"]) != store:
+        return
+    if conn.execute("SELECT 1 FROM concepts WHERE concept_id = ?", (concept_id,)).fetchone():
+        return
+    conn.execute("UPDATE concepts SET concept_id = ? WHERE concept_id = ?", (concept_id, path))
 
 
 def _concept_shape_collision(

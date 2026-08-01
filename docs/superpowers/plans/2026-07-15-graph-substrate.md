@@ -1972,7 +1972,56 @@ green; the id-space emission itself is NID-B.2/NID-B.4.
 > `sqlite3.IntegrityError: FOREIGN KEY constraint failed`. Route it through the same
 > descriptive-error wording while you are in there.
 
-B.2 consumes B.1's safe v16 floor. It does not alter schema DDL, version pins,
+> **Binding amendment from NID-B.2's review (2026-07-31) — coordinator-authorized
+> DDL exception, plus two guard rulings.** B.2's decoupling silently invalidated
+> three `path == id` assumptions living outside its diff. All three close inside
+> B.2; none may be deferred.
+>
+> 1. **The verdict→edge demotion trigger (DDL, authorized).**
+>    `concept_verdicts_edge_demotion_insert`/`_update` demoted a Concept's outgoing
+>    mirror edges with `WHERE source_path = NEW.concept_id` — a **path** column
+>    compared against an **identity**. That held only while B.1 keyed file Concepts
+>    by path; every ULID-keyed Concept demoted nothing, so in a real vault each
+>    demotion or quarantine left its edges at `checked` — precisely the incremental
+>    window (no full `rebuild_passage_index`) the trigger exists to close. The
+>    predicate becomes `source_concept_id = NEW.concept_id`, keeping
+>    `source_path != ''` as the mirrored-edge scope. **The coordinator authorizes
+>    this one DDL change against B.2's "does not alter schema DDL" boundary:**
+>    amend `schema.sql` in place within v16 on the unmerged branch — no
+>    `SCHEMA_VERSION` bump, no `MIGRATIONS` entry, no backfill. Leaving a dead
+>    safety trigger in the floor for a later task to trip over was the worse
+>    option. Its test fixture must author a ULID: a fixture writing no `id` keys by
+>    path and can no longer prove the trigger fires.
+> 2. **Two files, one ULID (batch duplicate).** `cp` or Obsidian's "Make a copy"
+>    duplicates the frontmatter `id`. Per call each row reads as *same id,
+>    requested path unowned* — the rename the amendment above allows — so the
+>    duplicate is visible only in the batch, where the survivor is decided by
+>    directory order and the loser's PI verdict lands on unreviewed content.
+>    `rebuild_file_concept_mirror` refuses a repeated `concept_id` within one
+>    batch, naming both paths and the shared id. This is the dual of *two
+>    identities claiming one path*, which the guard already refuses, and it costs
+>    nothing in expressiveness.
+> 3. **Path key → ULID is identity assignment, not collision.** The mirror
+>    tolerantly observes an id-less file, which keys by its own path; when that
+>    same path later authors a valid ULID, the Execution replacement's no-re-key
+>    rule aborted the whole batch and left `memoria workspace rebuild` permanently
+>    failing with no supported command able to move the row. **Ruling:** when the
+>    resident row's `concept_id` equals its own `path` (a still-provisional B.1
+>    key) and the incoming row claims that same path with a valid ULID nothing else
+>    holds, the row takes that identity in place; the v16 FKs carry its verdict,
+>    flags and edges. Every genuine collision still refuses.
+>
+> **Known interim regression (owner: ERP-A.6).** `graph_sql.neighborhood` joins
+> `source_status.concept_id = edge.source_path`, mixing identity and path space, so
+> from B.2 until ERP-A.6 ("identity-safe path projection") lands, `memoria explore`
+> / the `explore.read` surface loses neighborhood expansion (`explore.py` →
+> `explore_topic` → `engine/api.py`) and edge display (`explore._edges_by_concept`)
+> for every ULID-keyed Concept. `graph_sql.filter_ids` carries the same defect with
+> no `src/` caller yet. Deliberately deferred, not fixed here; both sites carry the
+> in-source comment naming ERP-A.6.
+
+B.2 consumes B.1's safe v16 floor. Beyond the one authorized demotion-trigger
+predicate above it does not alter schema DDL, version pins,
 catalog-parent setup, mirror-pruning/tombstone rules, catalog status/verdict
 resolution, or scoped-edge semantics. Fresh file Concepts are keyed from their
 frontmatter ULIDs on first write; it performs no path-key re-key or reconciliation.
@@ -5652,6 +5701,12 @@ doc-claims check).
 This task is the graph producer required by R2 G and every path-facing
 propagation/structural consumer; it is not optional prose in the A-section
 amendment.
+
+> **Owns a live regression (from NID-B.2, 2026-07-31).** `graph_sql.neighborhood`
+> and `explore._edges_by_concept` join identity against path, so `memoria explore`
+> and the `explore.read` surface serve no neighbours and no edges for ULID-keyed
+> Concepts until this task lands. `graph_sql.filter_ids` has the same defect and no
+> `src/` caller yet. See NID-B.2's review amendment for the full statement.
 
 **Files:**
 
