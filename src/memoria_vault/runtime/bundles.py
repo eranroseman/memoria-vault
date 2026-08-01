@@ -20,7 +20,10 @@ here refreshes the record.
 
 Files this module creates land 0600 (``write_bytes_durable``'s ``mkstemp``),
 matching the other engine-written control files rather than the seed-class
-copy's 0644. A file it adopts keeps the mode the PI's copy already had.
+copy's 0644. A file it adopts keeps the mode the PI's copy already had. The
+mode is a property of the *writer*, never of the path: the same bundle path is
+0644 when ``doctor --repair`` recreates a deleted ``.obsidian/plugins/*`` file
+through the seed-class copy. Nothing reads the mode.
 
 **The manifest is an as-created receipt** (BOOT-C.6, 2026-08-01): vault
 identity plus the SHA-256 of each bundle file as the vault received it. It is

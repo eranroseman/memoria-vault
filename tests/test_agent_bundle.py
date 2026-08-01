@@ -191,7 +191,10 @@ def test_init_seeds_agent_and_obsidian_bundles_and_writes_the_as_created_manifes
         assert (workspace / rel).read_bytes() == (WORKSPACE_SEED / rel).read_bytes(), rel
         # Durably written, so 0600 like the other engine-written control files
         # (`.memoria/vault.json`, `.memoria/overrides.jsonl`) rather than the
-        # 0644 the seed-class copy leaves.
+        # 0644 the seed-class copy leaves. This is a property of *this writer*
+        # on a fresh vault, not of the path: an adopted file keeps the PI's
+        # mode (next test), and `doctor --repair` recreates a deleted plugin
+        # file at 0644 through the seed-class copy.
         assert (workspace / rel).stat().st_mode & 0o777 == 0o600, rel
 
     manifest = _read_manifest(workspace)
@@ -290,7 +293,10 @@ def test_init_records_the_hash_of_an_adopted_file_not_of_the_skipped_template(
         assert recorded[rel] != sha256_file(WORKSPACE_SEED / rel), rel
         # Adoption touches neither the bytes nor the mode the PI's file had.
         assert (workspace / rel).stat().st_mode == modes[rel], rel
-    # A path the vault did not already carry is seeded, so both agree there.
+    # Anti-overfit anchor, not a discriminator: a path the vault did not carry
+    # is seeded, so on-disk and template bytes are the same bytes and every
+    # candidate implementation agrees. It stops the loop above being read as
+    # "the record is never the template hash".
     assert recorded[".codex/hooks.json"] == sha256_file(WORKSPACE_SEED / ".codex/hooks.json")
 
 
@@ -349,6 +355,35 @@ def test_reinit_adding_the_obsidian_bundle_keeps_the_as_created_manifest(
     assert (workspace / f"{OBSIDIAN_PLUGIN_REL}/main.js").is_file()
     assert (workspace / bundles.MANIFEST_REL).read_bytes() == as_created
     assert sorted(_read_manifest(workspace)["bundles"]) == ["agent"]
+
+
+def test_reinit_adding_a_file_to_a_recorded_bundle_leaves_the_file_map_short(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The case BOOT-C.6 had to land before: a file joins an existing bundle.
+
+    U3-PLUG adds `viewspec.js` to the plugin. The newer engine puts it on disk
+    on the next `init --yes`, but the receipt was written at creation, so its
+    file map still lists what the bundle held then — the bundle *is* recorded
+    and under-lists itself, which the whole-bundle case above does not cover.
+    """
+    older = bundles.BUNDLE_FILES["obsidian"][:-1]
+    newer_rel = bundles.BUNDLE_FILES["obsidian"][-1]
+    monkeypatch.setitem(bundles.BUNDLE_FILES, "obsidian", older)
+
+    workspace = _init(tmp_path, capsys)
+    as_created = (workspace / bundles.MANIFEST_REL).read_bytes()
+    assert not (workspace / newer_rel).exists()
+
+    monkeypatch.undo()
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    assert (workspace / newer_rel).is_file()
+    assert (workspace / bundles.MANIFEST_REL).read_bytes() == as_created
+    recorded = _read_manifest(workspace)["bundles"]["obsidian"]["files"]
+    assert sorted(recorded) == sorted(older)
+    assert newer_rel not in recorded
 
 
 def test_the_bundle_writer_is_the_only_writer_of_bundle_paths_on_init(

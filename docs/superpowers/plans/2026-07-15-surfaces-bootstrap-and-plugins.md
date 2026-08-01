@@ -6492,14 +6492,29 @@ item below, no future check may read them either. The rejected option's cost is
 paid on every installer run, in a repo where vault versioning is product behavior.
 
 **If that last row is ever taken up**, the question to settle first is whether
-the vault records *any* creation evidence. The receipt's one defensible
-remaining use is human/forensic — it is the only on-disk sign that a vault
+the vault records *any* creation evidence, and in what form. The receipt's one
+defensible remaining use is that it is the only on-disk sign that a vault
 **adopted** a pre-existing perimeter file instead of receiving the shipped one
-— and even that is unusable today, because the manifest does not record the
-engine version the hashes came from. So the real choice is `{schema, vault_id}`
-versus `{schema, vault_id, engine_version, bundles}`; keeping `bundles` without
-`engine_version`, which is what ships, is the one combination that cannot
-answer a question later.
+— a vault can carry a `.claude/settings.json` the engine never wrote. A hash
+answers that only by inference and only with archaeology: `recorded[rel] !=
+sha256(current package[rel])` is ambiguous between "adopted" and "seeded by an
+older engine", and disambiguating it means fetching that engine's package and
+hashing its seed out of band. Stamping `engine_version` makes the archaeology
+possible but still off-vault, so it is dominated.
+
+The direct form is **one bit per file, `"adopted": true|false`**, which
+`seed_bundles` already computes at `if not target.exists()` and which is an
+as-created fact, so it survives write-if-absent cleanly. So the real choice is
+`{schema, vault_id}` versus `{schema, vault_id, bundles: {…: {files: {<rel>:
+{adopted: bool}}}}}` — the shipped `bundles`-without-provenance shape answers
+nothing on its own, and `engine_version` is dominated by both. One caveat for
+whoever takes it: the bit is not a strict superset of the hash. It records how
+the file arrived, never that it still holds those bytes, so a shape that keeps
+a per-file map should keep both — the bit is the security fact, the hash the
+forensic one, and that is one bool, not a trade. Both remain as-created: a file
+adopted at creation and later replaced by `doctor --repair` leaves the bit as
+stale as the hash. (Sharpened by the 2026-08-01 re-review; the earlier draft of
+this paragraph named `engine_version`, which is the weaker fix.)
 
 **Carry forward — do not point a drift check at this field.** These hashes are
 not an as-seeded baseline: a file already present when the vault was created

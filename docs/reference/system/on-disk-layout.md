@@ -92,6 +92,9 @@ file **as the vault was created** - not a live inventory of what is on disk now:
   includes `memoria init --no-obsidian` followed by `memoria doctor --repair`
   or a second `memoria init`, which installs the Obsidian plugin while the
   record still lists the agent bundle alone.
+- The same holds one level down: a file a newer engine adds to a bundle the
+  record already lists arrives on disk, while that bundle's recorded file map
+  keeps the shorter list it had at creation.
 - After `memoria doctor --repair` on a newer engine, a reseeded
   `.obsidian/plugins/` file no longer matches its recorded hash.
 

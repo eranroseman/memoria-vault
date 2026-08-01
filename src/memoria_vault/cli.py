@@ -3007,6 +3007,12 @@ def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool, target_re
     if not source.is_dir():
         return
     if target.exists() and any(target.iterdir()) and not overwrite:
+        # Standing debt (flagged 2026-08-01, not BOOT-C.6's to fix): a
+        # non-empty tree is skipped whole on the init path, so a file missing
+        # from inside it is not restored — dropping this branch would restore
+        # per-file instead, and no test covers the difference. BOOT-C.6 moved
+        # the bundle paths out of the seed rosters, leaving `.obsidian` as the
+        # only tree here that carries any.
         return
     target.mkdir(parents=True, exist_ok=True)
     for child in source.iterdir():
