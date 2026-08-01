@@ -252,7 +252,10 @@ CREATE TABLE IF NOT EXISTS concept_edges (
     source_concept_id TEXT NOT NULL
         REFERENCES concepts(concept_id) ON UPDATE CASCADE ON DELETE CASCADE,
     relation_type TEXT NOT NULL CHECK (
-        relation_type IN ('supports', 'contradicts', 'extends', 'tension')
+        relation_type IN (
+            'supports', 'contradicts', 'extends', 'tension',
+            'warrant', 'qualifier', 'rebuttal'
+        )
     ),
     target_concept_id TEXT
         REFERENCES concepts(concept_id) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -419,4 +422,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 16;
+PRAGMA user_version = 17;

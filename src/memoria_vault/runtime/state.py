@@ -36,6 +36,7 @@ from memoria_vault.runtime.evidence import (
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import is_ulid, parse_frontmatter, safe_read, write_text_durable
 
@@ -54,7 +55,7 @@ if TYPE_CHECKING:
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 16
+SCHEMA_VERSION = 17
 ACTORS = frozenset({"pi", "agent", "operation", "integrity"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -4813,7 +4814,7 @@ def _work_aspect_type(value: str) -> str:
 
 def _concept_edge_relation(value: str) -> str:
     relation = value.strip().lower().replace("_", "-")
-    if relation not in {"supports", "contradicts", "extends", "tension"}:
+    if relation not in EDGE_RELATIONS:
         raise ValueError(f"unknown concept edge relation: {value}")
     return relation
 

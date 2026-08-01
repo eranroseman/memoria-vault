@@ -50,6 +50,7 @@ TEST_LEVELS = {
     "test_draft_verification.py": "runtime",
     "test_draft_writeback.py": "runtime",
     "test_e2e_smoke_helpers.py": "package",
+    "test_edges.py": "unit",
     "test_eval.py": "contract",
     "test_empirical_events.py": "contract",
     "test_engine_api.py": "contract",

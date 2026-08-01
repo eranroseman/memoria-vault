@@ -4866,6 +4866,35 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
 
 ### Task ERP-A.1: `edges.py` owner module — two rosters + one parser family
 
+> **Execution amendment (2026-08-01, as landed):** the module was written from
+> the code as landed, not from the pre-G2S1.1 sketch in the snippet below.
+>
+> 1. **The private target normalizer moved with the public pair.** Landed
+>    `normalize_link_target` is a two-line wrapper over
+>    `_normalized_link_target(target) -> (target, reason)` (plus
+>    `_LINK_TARGET_URI_RE`), and `_check_links` calls that private helper
+>    directly for its `traversal` / `empty` / `invalid` reason codes. The
+>    snippet's inline three-line body would have dropped URI, traversal,
+>    `.md`-suffix, and unbalanced-brace rejection. Both private names therefore
+>    moved to `edges.py` verbatim, and `schema.py` imports
+>    `_normalized_link_target` back beside the three re-exports. Leaving the
+>    normalizer in `schema.py` was rejected: `edges.py` must stay stdlib-only
+>    (`state.py`, `cli.py`, `structural_impact_graph.py` import it), while
+>    `schema.py` imports `yaml` and `vaultio` — the dependency can only run
+>    schema → edges.
+> 2. **`parse_links` moved with its landed guards** (`isinstance(relation, str)`,
+>    `isinstance(targets, list)`, per-target `isinstance(target, str)`) rather
+>    than the shorter body below. Two of those are redundant with a second
+>    guard and no fixture can distinguish them: a non-`str` relation key already
+>    fails `relation not in LINK_RELATIONS`, and a non-`str` target already
+>    returns `""` from `normalize_link_target`'s own `isinstance` check. They
+>    are verbatim-moved dead defence, deliberately left as escapes rather than
+>    covered by a test that would credit the wrong branch.
+> 3. **Tests beyond the six listed:** multi-target/multi-relation `parse_links`
+>    ordering, the per-target skip that keeps a relation's usable siblings, the
+>    non-map `links:` value, a whitespace-only typed-wikilink target, and a
+>    multi-link body — the listed cases are all N=1 on at least one axis.
+
 **Files:**
 - Create: `src/memoria_vault/runtime/subsystems/lib/edges.py`
 - Create: `tests/test_edges.py`
@@ -4914,7 +4943,7 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
 
 **Steps:**
 
-- [ ] Write the failing test file `tests/test_edges.py`:
+- [x] Write the failing test file `tests/test_edges.py`:
 
   ```python
   """Single owner of the concept-relation rosters and links parsing (EDGES spec section 1)."""
@@ -4977,18 +5006,18 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
       ]
   ```
 
-- [ ] Register the file in `tests/conftest.py` TEST_LEVELS (insert
+- [x] Register the file in `tests/conftest.py` TEST_LEVELS (insert
   alphabetically, after `"test_e2e_smoke_helpers.py": "package",` at line 40):
 
   ```python
       "test_edges.py": "unit",
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_edges.py -v`
   Expected failure: `ImportError: cannot import name 'edges' from
   'memoria_vault.runtime.subsystems.lib'`.
-- [ ] Write `src/memoria_vault/runtime/subsystems/lib/edges.py` (the two
+- [x] Write `src/memoria_vault/runtime/subsystems/lib/edges.py` (the two
   function bodies are G2S1.1's, moved verbatim except `parse_links`' roster
   comment; the regex is trusted_writer.py:49's, moved verbatim):
 
@@ -5060,7 +5089,7 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
       return pairs
   ```
 
-- [ ] In `src/memoria_vault/runtime/subsystems/lib/schema.py`: delete the
+- [x] In `src/memoria_vault/runtime/subsystems/lib/schema.py`: delete the
   `LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})` line
   (line 39 at 9c77ba61) and the `normalize_link_target` + `parse_links`
   function definitions G2S1.1 placed directly above `_check_links` (re-locate
@@ -5079,9 +5108,9 @@ lines naming `schema.py:39` (lines 21 and 7411). ERP-A.5 edits all three.
 
   `_check_links` (lines 141-142) and its error message (`sorted(LINK_RELATIONS)`)
   pick up the six-value roster with no further edit.
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_edges.py -v` — expect PASS (7 tests).
-- [ ] Run the schema-validation neighbors to prove the move changed nothing
+- [x] Run the schema-validation neighbors to prove the move changed nothing
   but the roster width:
   `python -m pytest tests/test_schemas.py tests/test_frontmatter_contract.py tests/test_query_substrate.py -v`
   — expect PASS (`links.related: unknown relation` still fires; `related` is
@@ -5148,9 +5177,48 @@ register or test a v16→v17 migration.
 > following v16 fixture, table-copy, and migration-entry instructions are historical
 > only and must not be executed.
 
+> **Execution amendment (2026-08-01, as landed):**
+>
+> 1. **The `legacy` arm of the parity test is one of the retired instructions.**
+>    It hand-builds a v16-shaped `concept_edges`, stamps
+>    `PRAGMA user_version = 16`, and then expects `state.connect` to return an
+>    upgraded, row-preserving table — a migration assertion in test clothing.
+>    `state._init` rejects any nonzero version other than `SCHEMA_VERSION`
+>    before touching the file, so with v17 landed that arm asserts an upgrade
+>    the product refuses to perform. Only the fresh-schema arm was written.
+> 2. **`test_replace_concept_edges_accepts_activated_relations` asserts
+>    `set(edges.LINK_RELATIONS)`, not `EDGE_RELATIONS`.** `replace_concept_edges`
+>    skips `tension` rows by design (Plan 22 G2S1.1's tension sparing, pinned by
+>    `test_replace_concept_edges_preserves_direct_tension_and_ignores_tension_mirror_rows`),
+>    so feeding all seven lands exactly the six link relations; the snippet
+>    below would fail against landed behaviour. A `pytest.raises` arm keeps the
+>    gate's rejection of a non-roster relation pinned.
+> 3. **No `MIGRATIONS` entry** — sub-step 3 of the `state.py` checkbox is
+>    retired by the Execution replacement above, and
+>    `tests/test_schema_version.py::test_state_has_no_schema_migration_ladder`
+>    fails if one is added.
+> 4. **A third version pin existed.** NID-B's `tests/test_schema_v16_identity.py`
+>    carried its own literal `16`; it now compares the applied pragma to
+>    `state.SCHEMA_VERSION` (its subject is the identity *shape*), leaving the
+>    literal pin in `tests/test_schema_version.py` alone, at 17.
+> 5. **Two consumer-behaviour tests were added for the widening**, because a
+>    roster-equality assertion does not produce the state that changed:
+>    `tests/test_schemas.py::test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_tension`
+>    (`_check_links` now validates six relations and still refuses `tension`)
+>    and
+>    `tests/test_query_substrate.py::test_reindex_mirrors_the_activated_link_relations_from_frontmatter`
+>    (`indexing._concept_edges` now mirrors authored `warrant` / `qualifier` /
+>    `rebuttal` links into real edge rows).
+> 6. **Docs still describe the three-relation roster**
+>    (`docs/reference/data-model/frontmatter.md:40,149`;
+>    `docs/reference/data-model/wikilink-and-link-conventions.md:24-46,76`).
+>    A.1/.2 deliberately left them: the six-verb prose belongs with A.3–A.5,
+>    which make the write paths and the served roster agree, and contract 11
+>    forbids merging A.1/.2 without them.
+
 **Steps:**
 
-- [ ] Write the failing tests at the end of `tests/test_query_substrate.py`
+- [x] Write the failing tests at the end of `tests/test_query_substrate.py`
   (add `import re` to the file's stdlib imports and
   `from memoria_vault.runtime.subsystems.lib import edges` to its package
   imports):
@@ -5233,13 +5301,13 @@ register or test a v16→v17 migration.
   (NID-B shape caveat from the preamble: if v16 changed `concept_edges`
   columns, mirror v16's landed column list in the legacy CREATE + INSERT
   here and in the migration below.)
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest "tests/test_query_substrate.py::test_concept_edges_relation_check_matches_edge_relations" "tests/test_query_substrate.py::test_replace_concept_edges_accepts_activated_relations" -v`
   Expected failures: the first asserts
   `{'supports', 'contradicts', 'extends', 'tension'} == {...seven...}`; the
   second raises `ValueError: unknown concept edge relation: qualifier` from
   `_concept_edge_relation`.
-- [ ] In `src/memoria_vault/runtime/schema.sql`, extend the roster inside the
+- [x] In `src/memoria_vault/runtime/schema.sql`, extend the roster inside the
   `concept_edges` CREATE (re-locate by content):
 
   ```sql
@@ -5252,7 +5320,7 @@ register or test a v16→v17 migration.
   ```
 
   and bump the trailing pragma to `PRAGMA user_version = 17;`.
-- [ ] In `src/memoria_vault/runtime/state.py`:
+- [x] In `src/memoria_vault/runtime/state.py`:
   1. Add to the import block:
 
      ```python
@@ -5316,16 +5384,16 @@ register or test a v16→v17 migration.
          return relation
      ```
 
-- [ ] Bump the two version pins: in `tests/test_schema_version.py` rename the
+- [x] Bump the two version pins: in `tests/test_schema_version.py` rename the
   pin test to `test_schema_lands_at_user_version_17` and change both `16`s to
   `17`; in `tests/test_query_substrate.py` change the
   `state.SCHEMA_VERSION == 16` pin to `== 17`. Verify
   `tests/test_schema_v10.py` already compares against
   `state.SCHEMA_VERSION` (G2S1.2) — no edit.
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_query_substrate.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_edges.py -v`
   — expect PASS.
-- [ ] Run `python scripts/verify` — expect PASS.
+- [x] Run `python scripts/verify` — expect PASS.
 - [ ] Commit:
 
   ```

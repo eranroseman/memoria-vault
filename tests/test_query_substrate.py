@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sqlite3
 from pathlib import Path
 
@@ -9,6 +10,7 @@ import pytest
 from memoria_vault.runtime import graph_sql, indexing, retrieval, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import answer_query as _answer_query
+from memoria_vault.runtime.subsystems.lib import edges as edges_lib
 from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
 from memoria_vault.runtime.trusted_writer import stage_concept as _stage_concept
@@ -47,7 +49,7 @@ def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert state.SCHEMA_VERSION == 16
+    assert state.SCHEMA_VERSION == 17
     assert {
         "passages",
         "passage_fts",
@@ -386,7 +388,7 @@ def test_concept_edges_fresh_schema_exposes_reader_fields(tmp_path: Path) -> Non
     with state.connect(fresh) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(concept_edges)")}
         assert {"edge_id", "target_path", "attributes_json"}.issubset(columns)
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 16
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 17
 
     # v16 edges are FK-backed and resolve targets, so seed both endpoints.
     state.rebuild_file_concept_mirror(
@@ -1122,3 +1124,86 @@ def test_a_pruned_target_relinks_when_its_concept_returns(tmp_path: Path) -> Non
     assert str(relinked["edge_id"]) == state.concept_edge_id(
         "notes/early.md", "tension", "notes/gone.md"
     )
+
+
+def _relation_check_roster(conn: sqlite3.Connection) -> set[str]:
+    """Read the live concept_edges relation roster back out of the stored DDL."""
+    sql = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'concept_edges'"
+    ).fetchone()[0]
+    match = re.search(r"relation_type IN \(([^)]*)\)", sql)
+    assert match is not None, sql
+    return {part.strip().strip("'") for part in match.group(1).split(",")}
+
+
+def test_concept_edges_relation_check_matches_edge_relations(tmp_path: Path) -> None:
+    """Parity, not a shared literal: the DB CHECK is read back and compared to the owner."""
+    with state.connect(tmp_path) as conn:
+        assert _relation_check_roster(conn) == set(edges_lib.EDGE_RELATIONS)
+
+
+def test_replace_concept_edges_accepts_activated_relations(tmp_path: Path) -> None:
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            {
+                "source_concept_id": "notes/a.md",
+                "relation_type": relation,
+                "target_concept_id": f"notes/{relation}.md",
+                "check_status": "checked",
+                "source_path": "notes/a.md",
+            }
+            for relation in sorted(edges_lib.EDGE_RELATIONS)
+        ],
+    )
+
+    rows = state.concept_edges(tmp_path, checked_only=True)
+
+    # Every EDGE_RELATIONS value clears the `_concept_edge_relation` gate and the
+    # DB CHECK; `tension` then lands nowhere because the mirror writer spares
+    # PI-owned tension rows rather than writing them (that skip is pinned by
+    # test_replace_concept_edges_preserves_direct_tension_and_ignores_tension_mirror_rows).
+    assert {row["relation_type"] for row in rows} == set(edges_lib.LINK_RELATIONS)
+    with pytest.raises(ValueError, match="unknown concept edge relation: related"):
+        state.replace_concept_edges(
+            tmp_path,
+            [
+                {
+                    "source_concept_id": "notes/a.md",
+                    "relation_type": "related",
+                    "target_concept_id": "notes/b.md",
+                    "check_status": "checked",
+                    "source_path": "notes/a.md",
+                }
+            ],
+        )
+
+
+def test_reindex_mirrors_the_activated_link_relations_from_frontmatter(tmp_path: Path) -> None:
+    """The roster widening reaches the DB: warrant/qualifier/rebuttal links become edges."""
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    write_checked_concept(
+        vault,
+        "notes/claim.md",
+        "type: note\ntitle: Claim\ntags: []\n"
+        'links:\n  warrant: ["[[notes/license]]", "notes/second-license.md"]\n'
+        '  qualifier: ["[[notes/scope|Scope]]"]\n'
+        '  rebuttal: ["notes/counter.md"]\n',
+    )
+    for rel in ("license", "second-license", "scope", "counter"):
+        write_checked_concept(
+            vault, f"notes/{rel}.md", f"type: note\ntitle: {rel}\ntags: []\nlinks: {{}}\n"
+        )
+
+    rebuild_passage_index(vault)
+
+    mirrored = state.concept_edges(vault, checked_only=True)
+    assert {
+        (edge["relation_type"], edge["target_path"], edge["target_concept_id"]) for edge in mirrored
+    } == {
+        ("warrant", "notes/license.md", "notes/license.md"),
+        ("warrant", "notes/second-license.md", "notes/second-license.md"),
+        ("qualifier", "notes/scope.md", "notes/scope.md"),
+        ("rebuttal", "notes/counter.md", "notes/counter.md"),
+    }

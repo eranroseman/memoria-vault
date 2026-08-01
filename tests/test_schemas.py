@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.subsystems.lib import edges, schema
 
 SCHEMA_TYPES = {
     "code-artifact",
@@ -286,6 +286,29 @@ def test_note_links_are_typed_maps():
         "target must not escape the workspace" in e
         for e in schema.validate_frontmatter(dict(good, links={"supports": ["../target"]}), note)
     )
+
+
+def test_note_links_accept_every_frontmatter_legal_relation_and_still_refuse_tension():
+    note = schema.load_types()["note"]
+    frontmatter = {
+        "id": "01KBN6V6KX0000000000000001",
+        "type": "note",
+        "title": "T",
+        "tags": [],
+        "links": {
+            relation: [f"notes/{relation}-one.md", f"[[notes/{relation}-two]]"]
+            for relation in sorted(edges.LINK_RELATIONS)
+        },
+    }
+
+    assert schema.validate_frontmatter(frontmatter, note) == []
+    # `tension` is machine-surfaced and PI-confirmed: an edge relation that
+    # frontmatter may never author, so it fails validation like any non-relation.
+    tension = schema.validate_frontmatter(
+        dict(frontmatter, links={"tension": ["notes/other.md"]}), note
+    )
+    assert any("links.tension: unknown relation" in error for error in tension)
+    assert any(str(sorted(edges.LINK_RELATIONS)) in error for error in tension)
 
 
 def test_okf_core_empty_workspace_validates(tmp_path):
