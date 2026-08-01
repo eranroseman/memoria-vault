@@ -6411,6 +6411,34 @@ EOF
 
 ### Task BOOT-C.6: one writer, one policy for the agent bundle (OPEN)
 
+> **Ledger additions from BOOT-C.2's re-review (2026-08-01) — three things this task must
+> not have to rediscover.**
+>
+> 1. **The `vault_id` re-mint now has a measured cost, not just "identity churn".** M5's
+>    *track* decision made `.memoria/vault.json` tracked, so a **pure installer re-run with
+>    zero PI edits** now leaves the vault's own git tree dirty:
+>    `porcelain: ' M .memoria/vault.json'`. In a repo where vault versioning is product
+>    behavior, that is a spurious modification in vault history on every installer re-run.
+>    Before BOOT-C.2 the churn was invisible; it is now visible on every upgrade.
+>
+> 2. **An option neither the implementer nor the reviewer weighed: apply write-if-absent to
+>    the manifest itself.** It needs no read-back of a prior value, so it does not touch the
+>    "preserve a prior manifest" surface the 2026-07-30 clean-slate amendment deleted — no
+>    more than write-if-absent on a bundle file "recovers a bundle". It would make the module
+>    one uniform policy and close both the `vault_id` churn and the dirty tree. **Its cost is
+>    the real tension:** after a PI edit plus re-init the recorded hashes would go stale
+>    rather than refreshing to match disk, which cuts against the as-on-disk semantics
+>    BOOT-C.2 deliberately chose. That trade is this task's call.
+>
+> 3. **These hashes can no longer serve as an as-seeded baseline.** A PI-edited file now
+>    records its own hash and would read as *unmodified* to the drift/skew check
+>    BOOT-C.3/.4/.5 would have built. Those consumers are retired so nothing breaks — but if
+>    such a check ever returns, it needs a **separate** as-seeded record and must not be
+>    pointed at this field.
+>
+> Also folded in: `write_manifest` is unconditional while the nine bundle writes are not
+> (the asymmetry that produces the dirty tree above — one decision with item 1, not two).
+
 Owns every item in "Post-BOOT-C.2 review follow-ups" above. Not started; runs
 before U3-PLUG adds `viewspec.js` to the plugin bundle, because a second file
 joining the plugin is exactly the case the split writers get wrong.
