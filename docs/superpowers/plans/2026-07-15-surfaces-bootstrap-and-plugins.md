@@ -8891,10 +8891,100 @@ resolution/archival writes a fresh open card.
   - `write_finding(vault: Path, card_type: str, title: str, finding: str, raised_by: str, agent_recommendation: str = "issues-found", target: str = "", citekey: str = "", loudness: str = "alert", evidence: str = "", dedupe_slug: str = "", fingerprint: str = "") -> Path | None` — with `fingerprint`: if an `inbox/*.md` card has `projection: attention`, `attention_status: open`, and the same `fingerprint`, its `last_seen` is set to today and `None` is returned (no new card, no push); otherwise the new card carries `fingerprint` and `last_seen` frontmatter. The fingerprint check runs before the `dedupe_slug` existence check; the two are orthogonal.
   - Retraction-sweep alert cards carry `fingerprint: "retraction:<normalized-doi>"`.
 
+> **Adopted U3-SUB.3 execution amendment (2026-08-01):** the signature, the
+> semantics, and the sweep wiring are exactly as drafted. Six things below differ,
+> five of them because the drafted snippets predate U3-SUB.1/.2 and one because the
+> drafted sweep fixture seeds a catalog route the sweep no longer reads.
+>
+> 1. **The decision and the write it drives are one `state.workspace_lock`
+>    section.** The drafted code reads `inbox/`, decides, and writes with nothing
+>    serializing it — the same check-then-act U3-SUB.2's amendment 2 closed for
+>    compaction. Two overlapping sweeps both read an inbox with no standing card and
+>    both write one, which is the duplicate this task exists to stop, narrowed to a
+>    window rather than removed. Worse, `_touch_last_seen` renames a temp file into
+>    place: a touch racing compaction's unlink would resurrect a card the journal has
+>    already recorded as archived, and the drafted `path.read_text()` would raise
+>    `FileNotFoundError` out of the sweep if it lost the race the other way.
+>    Compaction takes the same lock, so under this one it cannot. **No probe outside
+>    the lock**, unlike both halves of `lifecycle`: the probe there keeps the ordinary
+>    *no-op* scan off the lock, and there is no no-op case here — every fingerprinted
+>    call intends to write or to touch. The lock is scoped to `if fingerprint:`, so
+>    `write_finding`'s other callers keep their footprint and their timing (pinned:
+>    an unfingerprinted call still creates only `inbox/`).
+> 2. **The two new frontmatter reads normalize like `lifecycle`, and the
+>    fingerprint deliberately does not.** The drafted helper compares `projection`
+>    with neither `.strip()` nor `.lower()` and `attention_status` with `.lower()`
+>    alone — a fourth and fifth spelling in a module family where an unstripped
+>    `projection` already cost a card its journal row (U3-SUB.2 review amendment 5,
+>    and issue #1617 for the two still open). Both vocabulary fields now read
+>    `str(... or "").strip().lower()`, character for character as
+>    `lifecycle._closed_cards` and `_resolved_cards` read them. `fingerprint` is
+>    `.strip()`ed on both sides and **not** case-folded: it is an identity like the
+>    journal's `target_id`, not a term from a fixed vocabulary, and folding it would
+>    merge conditions whose producer distinguishes them — the retraction sweep folds
+>    case itself, in `normalize_doi`, which is the producer's call to make. The
+>    argument is canonicalized once at the top so producers that disagree about
+>    padding still match and a whitespace-only fingerprint is no fingerprint.
+> 3. **The card is read once.** `_open_fingerprint_match` returns
+>    `(path, frontmatter, body)` and `_touch_last_seen(path, frontmatter, body)`
+>    consumes it, instead of the drafted re-read inside the touch — `_resolved_cards`'
+>    discipline, so the read that decides and the write it drives cannot disagree.
+>    The read is `safe_read`, so an `inbox/` file that is gone or is not text parses
+>    as no card rather than raising out of a monthly sweep.
+> 4. **The drafted `if not inbox.is_dir(): return None` guard is gone.**
+>    `Path.glob` on a missing directory yields nothing, so the guard only restated
+>    the loop's own answer.
+> 5. **The drafted sweep test's fixture cannot reach the sweep.** It seeds
+>    `catalog/sources/w1/source.md`, but `sweep` iterates `state.catalog_sources`
+>    (SQLite) and never reads that file, so the drafted test asserts
+>    `{"checked": 1, ...}` against a vault the sweep sees as empty. Shipped with
+>    `state.upsert_catalog_record` and the file's own `capture_workspace` idiom, like
+>    every other sweep test here.
+> 6. **`fingerprint` needed nothing in `lifecycle`:** `_DIGEST_FIELDS` already
+>    carries it, so an archived card's fingerprint lands in the digest and survives
+>    only there — no frontmatter, below a directory no `inbox/` reader descends into,
+>    which is what makes the re-raise possible at all. Nor does this task owe a
+>    release row: it adds no `.unlink()`, and a touch leaves the card on its path.
+>
+> **What the fingerprint is, next to the three identities already here.** It is
+> orthogonal to all of them. To the *path*: the scan finds the standing card wherever
+> it sits, and a re-raise after archival lands back on the archived card's freed name
+> through `_write`'s collision loop — the journal reads that second card as its own,
+> because compaction's release row un-held the path (pinned end to end, and the
+> chain `resolved/reject → archived → resolved/apply → archived` is asserted with
+> distinguishable outcomes so a run that journals one card twice cannot produce it).
+> To `dedupe_slug`: the slug suppresses while the *file* is there whatever its status,
+> the fingerprint suppresses while an *open card* is there whatever its filename;
+> checked first, and pinned by passing both with the slot free. To the journal's
+> `target_id`: nothing fingerprinted is journaled, and the fingerprint never reaches
+> a row.
+>
+> **The two drafted tests shipped essentially verbatim** (the re-raise test also ages
+> the resolved card, to show the re-raise does not touch it), joined by fourteen more:
+> the five one-field-at-a-time normalization cases, the deliberate non-fold, the four
+> non-open producer states (`resolved`, `deferred`, empty, `projection: note`), the
+> ordering against `dedupe_slug`, an N>1 inbox where two cards match, the
+> no-fingerprint default arm, the non-recursive glob against a whole card under
+> `archive/`, argument stripping, the whitespace-only argument, an undecodable
+> `inbox/` file, and two races — one proving the section is closed, one proving the
+> lock is the workspace lock and not a private one. At the sweep layer: an N>1
+> two-retracted-DOI fixture (one card per condition, both touched), and the two
+> trajectory tests that sample every state of `open → re-observed → resolved →
+> archived → re-raised → re-observed → resolved → archived` at each step rather than
+> at rest.
+>
+> **Declared, not fixed.** A `deferred` card does not suppress a re-raise: the
+> contract says `open`, `deferred` cards are the ones compaction leaves in `inbox/`
+> forever, so each deferral costs one fresh card — bounded, because that card is
+> open and suppresses the next sweep, and re-raising is the safe direction. Passing
+> `dedupe_slug` and `fingerprint` together where a *resolved* card still occupies the
+> slot returns `None` from the slug arm; no caller does both, and the ordering
+> contract is what is pinned.
+
 **Steps:**
 
-- [ ] Confirm the 21.1 precondition: `grep -n "dedupe_slug" src/memoria_vault/runtime/subsystems/lib/inbox.py` shows a `dedupe_slug` parameter on `write_finding` (not only on `write_work_prompt`). If not, STOP and land Plan 21 Task 21.1 first.
-- [ ] Write the failing contract tests. Append to `tests/test_inbox_cards.py`:
+- [x] Confirm the 21.1 precondition: `grep -n "dedupe_slug" src/memoria_vault/runtime/subsystems/lib/inbox.py` shows a `dedupe_slug` parameter on `write_finding` (not only on `write_work_prompt`). If not, STOP and land Plan 21 Task 21.1 first.
+- [x] Write the failing contract tests. Append to `tests/test_inbox_cards.py`:
 
 ```python
 def test_finding_fingerprint_dedupes_against_open_card_and_touches_last_seen(tmp_path):
@@ -8950,8 +9040,8 @@ def test_finding_fingerprint_reraises_after_resolution(tmp_path):
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 2
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_inbox_cards.py -k fingerprint -v` — expected failure: `TypeError: write_finding() got an unexpected keyword argument 'fingerprint'`.
-- [ ] Write the minimal implementation in `src/memoria_vault/runtime/subsystems/lib/inbox.py`:
+- [x] Run to verify failure: `python -m pytest tests/test_inbox_cards.py -k fingerprint -v` — expected failure: `TypeError: write_finding() got an unexpected keyword argument 'fingerprint'`.
+- [x] Write the minimal implementation in `src/memoria_vault/runtime/subsystems/lib/inbox.py`:
   1. Extend the vaultio import (line 16) to `from memoria_vault.runtime.vaultio import frontmatter_doc, read_frontmatter, split_frontmatter, write_frontmatter_doc, write_text_durable`.
   2. Add `fingerprint: str = ""` as the last parameter of `write_finding` (after the post-21.1 `dedupe_slug: str = ""`).
   3. Immediately after the `if card_type == "flag" and not (target or citekey):` validation block (currently ends line 95), insert:
@@ -8996,8 +9086,8 @@ def _touch_last_seen(path: Path) -> None:
     write_frontmatter_doc(path, frontmatter, body)
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_inbox_cards.py -v` — all tests pass (including the pre-existing and 21.1 tests).
-- [ ] Write the failing sweep test. Append to `tests/test_sweeps_retraction.py`:
+- [x] Run to verify pass: `python -m pytest tests/test_inbox_cards.py -v` — all tests pass (including the pre-existing and 21.1 tests).
+- [x] Write the failing sweep test. Append to `tests/test_sweeps_retraction.py`:
 
 ```python
 def test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived(
@@ -9052,15 +9142,15 @@ def test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived(
         _m._RW_INDEX = None
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_sweeps_retraction.py::test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived -v` — expected failure: `assert len(open_cards) == 1` fails with 2 (the duplicate-alert-per-sweep bug, live).
-- [ ] Wire the sweep. In `src/memoria_vault/runtime/subsystems/integrity/retraction/retraction.py`, add one argument to the `inbox_writer.write_finding` call (lines 321-333), after `loudness="alert",`:
+- [x] Run to verify failure: `python -m pytest tests/test_sweeps_retraction.py::test_sweep_dedupes_open_alert_and_reraises_after_resolved_card_is_archived -v` — expected failure: `assert len(open_cards) == 1` fails with 2 (the duplicate-alert-per-sweep bug, live).
+- [x] Wire the sweep. In `src/memoria_vault/runtime/subsystems/integrity/retraction/retraction.py`, add one argument to the `inbox_writer.write_finding` call (lines 321-333), after `loudness="alert",`:
 
 ```python
                     fingerprint=f"retraction:{normalize_doi(doi)}",
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_sweeps_retraction.py -v` — all tests pass.
-- [ ] Run the gate: `python scripts/verify` — clean.
+- [x] Run to verify pass: `python -m pytest tests/test_sweeps_retraction.py -v` — all tests pass.
+- [x] Run the gate: `python scripts/verify` — clean.
 - [ ] Commit:
 
 ```
