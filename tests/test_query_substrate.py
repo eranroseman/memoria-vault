@@ -10,10 +10,13 @@ from memoria_vault.runtime import graph_sql, indexing, retrieval, state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import answer_query as _answer_query
 from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.trusted_writer import promote_checked as _promote_checked
+from memoria_vault.runtime.trusted_writer import stage_concept as _stage_concept
 from memoria_vault.runtime.vaultio import safe_read
 from tests.helpers import (
     call_with_context,
     copy_memoria_dirs,
+    init_git,
     mark_file_status,
     write_checked_concept,
 )
@@ -25,6 +28,14 @@ def answer_query(vault: Path, *args, **kwargs):
 
 def rebuild_passage_index(vault: Path, *args, **kwargs):
     return call_with_context(indexing.rebuild_passage_index, vault, *args, **kwargs)
+
+
+def stage_concept(vault: Path, *args, **kwargs):
+    return call_with_context(_stage_concept, vault, *args, **kwargs)
+
+
+def promote_checked(vault: Path, *args, **kwargs):
+    return call_with_context(_promote_checked, vault, *args, **kwargs)
 
 
 def test_schema_creates_query_tables_and_rejects_v7(tmp_path: Path) -> None:
@@ -871,13 +882,21 @@ def test_rename_out_of_band_reconciles_by_frontmatter_id(tmp_path: Path) -> None
 
 
 def test_rename_reconciliation_still_refuses_edited_content(tmp_path: Path) -> None:
-    """Reconciling the outputs path key must not launder an edit past the barrier.
+    """Reconciling the outputs path key must not launder a same-pass edit past the barrier.
 
     The rename reconciliation moves `outputs.output_id` to the file's new path so a
     pure move keeps its verdict (spec §7). The read barrier's sha256 comparison is
     what actually authorizes consumption, and it must still run against the file at
     that new path — otherwise renaming would become a way to smuggle unchecked
     content into the searchable universe.
+
+    Scope: this proves the one-pass case it exercises — rename and edit both landing
+    before the next reindex. A rename indexed first and edited afterwards is *not*
+    refused: `indexing._previously_indexed_documents` re-indexes any path whose
+    `concept_check_status` is `checked` without calling `is_consumable_checked_file`,
+    so no sha256 comparison runs. That bypass predates this reconcile and is
+    identical for a file that was never renamed, so the perimeter is unchanged — it
+    is simply not what this test proves.
     """
     vault = tmp_path
     copy_memoria_dirs(vault, "schemas")
@@ -908,3 +927,53 @@ def test_rename_reconciliation_still_refuses_edited_content(tmp_path: Path) -> N
     # But the changed bytes are refused: no passage row, and the text is unreachable.
     assert state.indexed_passages(vault) == []
     assert call_with_context(retrieval.fts_search, vault, "SMUGGLED") == []
+
+
+def test_rename_reconciliation_carries_the_writer_materialization_payload(
+    tmp_path: Path,
+) -> None:
+    """A machine-authored file survives reindex after a rename, payload row and all.
+
+    `stage_concept` is the ledger write behind every machine-authored note, digest
+    and hub, and it lands *two* rows: the `outputs` parent and a path-keyed
+    `materialization_payloads` child that nothing ever deletes. Reconciling a rename
+    repoints the parent key, so without `ON UPDATE CASCADE` on that child the second
+    reindex dies on a FOREIGN KEY violation and every caller of
+    `rebuild_file_concept_mirror` — `memoria capture`, the search-index worker, and
+    `memoria workspace rebuild`, the repair verb itself — stays dead until the file
+    is renamed back. The path-only fixture in `write_checked_concept` never writes
+    that child, which is why the rest of the rename suite cannot see this.
+    """
+    vault = tmp_path
+    copy_memoria_dirs(vault, "schemas")
+    init_git(vault, "index@example.invalid", "Index Tests")
+    rel = "notes/writer-authored.md"
+    stage_concept(
+        vault,
+        rel,
+        "---\ntype: note\ntitle: Writer authored\ntags: []\nlinks: {}\n---\n"
+        "# Writer authored\n\nrarealpha the machine-authored body.\n",
+        machine="writer",
+    )
+    promote_checked(vault, rel, machine="writer")
+    state.mark_materialized(vault, rel)
+    with state.connect(vault) as conn:
+        assert [
+            row["output_id"]
+            for row in conn.execute("SELECT output_id FROM materialization_payloads")
+        ] == [rel]
+    rebuild_passage_index(vault)
+    assert {row["path"] for row in state.indexed_passages(vault)} == {rel}
+
+    renamed = "notes/writer-renamed.md"
+    (vault / rel).rename(vault / renamed)
+    rebuild_passage_index(vault)
+
+    with state.connect(vault) as conn:
+        payload = conn.execute("SELECT output_id FROM materialization_payloads").fetchone()
+        output = conn.execute("SELECT output_id, target_path FROM outputs").fetchone()
+    # The payload child rides the parent key across the rename, and the file stays
+    # consumable at its new path.
+    assert payload["output_id"] == renamed
+    assert (output["output_id"], output["target_path"]) == (renamed, renamed)
+    assert {row["path"] for row in state.indexed_passages(vault)} == {renamed}
