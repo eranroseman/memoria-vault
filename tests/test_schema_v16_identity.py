@@ -823,27 +823,35 @@ def test_concept_flags_are_fk_backed_and_cascade_on_prune(tmp_path: Path) -> Non
 
 
 def test_ulid_identity_required_for_note_hub_project() -> None:
+    """Exercises both layers for all three ULID-required types, not just hub.
+
+    Review found that widening (or dropping) the exclusion set in
+    ``universal_concept_frontmatter_errors`` to also cover ``note`` or
+    ``project`` passed every test in this file, because only ``hub`` was ever
+    driven through that validator. ``schema.load_types``/``validate_frontmatter``
+    would still catch a bad id from the yaml, so the two layers could silently
+    disagree. Looping over all three closes that gap.
+    """
     from memoria_vault.runtime.subsystems.lib.schema import load_types, validate_frontmatter
     from memoria_vault.runtime.vaultio import universal_concept_frontmatter_errors
 
     types = load_types()
-    for type_name in ("note", "hub", "project"):
+    rel_paths = {"note": "notes/x.md", "hub": "hubs/x.md", "project": "projects/x.md"}
+    for type_name, rel_path in rel_paths.items():
         assert types[type_name]["required"]["id"] == "ulid", type_name
-        errors = validate_frontmatter(
-            {
-                "type": type_name,
-                "id": "not-a-ulid",
-                "title": "T",
-                "tags": [],
-                "links": {},
-                **({"tag": "t"} if type_name == "hub" else {}),
-            },
-            types[type_name],
-        )
+        frontmatter = {
+            "type": type_name,
+            "id": "not-a-ulid",
+            "title": "T",
+            "tags": [],
+            "links": {},
+            **({"tag": "t"} if type_name == "hub" else {}),
+        }
+        errors = validate_frontmatter(frontmatter, types[type_name])
         assert any("expected ULID" in error for error in errors), type_name
-    assert universal_concept_frontmatter_errors(
-        {"type": "hub", "id": "not-a-ulid", "links": {}}, "hubs/x.md"
-    ) == ["id must be a ULID"]
+        assert universal_concept_frontmatter_errors(frontmatter, rel_path) == [
+            "id must be a ULID"
+        ], type_name
 
 
 def test_digest_and_fulltext_accept_non_ulid_ids() -> None:
