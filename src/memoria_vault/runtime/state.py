@@ -1195,7 +1195,10 @@ def update_concept_path(vault: Path, concept_id: str, old_path: str, new_path: s
     ``refresh_stale_passages`` computes its removed set from. The reconcile
     statement is *called*, never re-issued: it shipped a Critical once already
     (``materialization_payloads`` had no ``ON UPDATE CASCADE``) and a second copy
-    is a second place for the next one to hide.
+    is a second place for the next one to hide. For the same reason the identity
+    side of a path-keyed move lives entirely in ``_rekey_path_keyed_concept_conn``:
+    the statements below are path space, that helper is identity space, and neither
+    enumeration is duplicated here.
 
     Nothing here touches ``output_sha256``. A rename does not change a byte, so
     the barrier keeps hashing the same content at the new path and edited content
@@ -1205,21 +1208,7 @@ def update_concept_path(vault: Path, concept_id: str, old_path: str, new_path: s
     new_rel = normalize_path(new_path)
     with connect(vault) as conn:
         if concept_id == new_rel:
-            # Path-keyed Concept (no frontmatter ULID): the path *is* the key, so
-            # it moves too. Left behind, the next file dropped at the vacated path
-            # resolves onto this row and inherits the PI's verdict. The v16 foreign
-            # keys carry the verdict, flags and edges; `derivations` has no FK by
-            # design and moves by hand. A conflicting id raises and rolls the whole
-            # move back, which is the refusal the caller wants.
-            conn.execute(
-                "UPDATE concepts SET concept_id = ? WHERE concept_id = ?", (new_rel, old_rel)
-            )
-            conn.execute(
-                "UPDATE derivations SET input_id = ? WHERE input_id = ?", (new_rel, old_rel)
-            )
-            conn.execute(
-                "UPDATE derivations SET output_id = ? WHERE output_id = ?", (new_rel, old_rel)
-            )
+            _rekey_path_keyed_concept_conn(conn, old_rel, new_rel)
         # Reads `concepts.path` for the old key, so it runs before that column moves.
         _reconcile_renamed_output_conn(conn, concept_id, new_rel)
         conn.execute("UPDATE concepts SET path = ? WHERE concept_id = ?", (new_rel, concept_id))
@@ -1234,6 +1223,32 @@ def update_concept_path(vault: Path, concept_id: str, old_path: str, new_path: s
         conn.execute(
             "UPDATE OR REPLACE file_index_state SET path = ? WHERE path = ?", (new_rel, old_rel)
         )
+
+
+def _rekey_path_keyed_concept_conn(conn: sqlite3.Connection, old_id: str, new_id: str) -> None:
+    """Move a path-keyed Concept's identity, and every row that keys by it without an FK.
+
+    A Concept with no frontmatter ULID keys by its path, so a rename moves its
+    identity too. Left behind, the next file dropped at the vacated path resolves
+    onto this row and inherits the PI's verdict.
+
+    ``concept_verdicts``, ``concept_flags`` and ``concept_edges``' endpoint ids all
+    declare ``REFERENCES concepts(concept_id) ON UPDATE CASCADE``, so they ride the
+    first statement. **Everything below keys by the same identity with no foreign
+    key to carry it, and this is the whole enumeration** — the reason it lives in
+    one named place is that the first pass at it stopped one table short and left
+    ``passages.concept_id`` at the vacated path, where the verdict-cascade triggers
+    (``WHERE concept_id = NEW.concept_id``) hand the *moved* Concept's passages to
+    whatever lands there next while its verdict still reads ``checked``. Add here,
+    never at a call site.
+
+    A conflicting id raises and rolls the caller's whole move back, which is the
+    refusal it wants.
+    """
+    conn.execute("UPDATE concepts SET concept_id = ? WHERE concept_id = ?", (new_id, old_id))
+    conn.execute("UPDATE derivations SET input_id = ? WHERE input_id = ?", (new_id, old_id))
+    conn.execute("UPDATE derivations SET output_id = ? WHERE output_id = ?", (new_id, old_id))
+    conn.execute("UPDATE passages SET concept_id = ? WHERE concept_id = ?", (new_id, old_id))
 
 
 def _reconcile_renamed_output_conn(

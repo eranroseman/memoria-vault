@@ -648,7 +648,9 @@ def test_move_concept_rolls_back_when_an_inbound_rewrite_refuses(tmp_path: Path)
     The second linker carries a retired frontmatter field, so re-signing it through
     the trusted writer refuses — after the rename and the first linker's rewrite have
     already landed. Nothing may survive that: not the rename, not the first rewrite,
-    not the DB path move, not a commit.
+    not the DB path move, not a commit. The refusal has to name the offending *file*
+    too: the writer's own message carries only the field, and a move plans its
+    rewrites from a vault-wide scan the PI never named a file to.
     """
     vault = workspace(tmp_path)
     target = checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000030")
@@ -667,7 +669,10 @@ def test_move_concept_rolls_back_when_an_inbound_rewrite_refuses(tmp_path: Path)
     head = git(vault, "rev-parse", "HEAD")
     before = {path: path.read_bytes() for path in (target, first, doomed)}
 
-    with pytest.raises(ValueError, match="retired frontmatter field is ignored: status"):
+    with pytest.raises(
+        ValueError,
+        match=r"notes/z-linker\.md: retired frontmatter field is ignored: status",
+    ):
         move_concept(
             vault, "notes/target.md", "notes/target-moved.md", actor="pi", machine="curator"
         )
@@ -727,3 +732,104 @@ def test_move_concept_rekeys_a_path_keyed_concept_off_the_vacated_path(
     }
     assert state.concept_check_status(vault, "notes/hand-moved.md") == "checked"
     assert state.concept_check_status(vault, "notes/hand-written.md") == "unchecked"
+
+
+def test_move_concept_rekeys_every_identity_keyed_row_without_a_foreign_key(
+    tmp_path: Path,
+) -> None:
+    """`concepts.concept_id` is not the only column keyed by a path-keyed identity.
+
+    `passages.concept_id` and `derivations.input_id` key by the same identity and
+    neither declares a foreign key, so nothing carries them. Strand
+    `passages.concept_id` at the vacated path and the verdict-cascade triggers
+    (`WHERE concept_id = NEW.concept_id`) hand the *moved* note's passages to
+    whatever file lands there next, while `concept_check_status` still reads
+    `checked` — the layers disagree, and only a full `rebuild_passage_index` heals
+    it, never `refresh_stale_passages`.
+    """
+    vault = workspace(tmp_path)
+    _md(
+        vault / "notes/hand-written.md",
+        "type: note\ncheck_status: checked\ntitle: Hand written\n",
+    )
+    # A path-keyed note used as a derivation input: the one live writer of
+    # `derivations.input_id` at a path rather than a ULID.
+    stage_concept(
+        vault,
+        "notes/derived.md",
+        "---\ntype: note\ntitle: Derived\ntags: []\nlinks: {}\n---\n# Derived\n\nDerived body.\n",
+        inputs=["notes/hand-written.md"],
+        machine="writer",
+    )
+    rebuild_passage_index(vault)
+    commit_notes(vault)
+
+    move_concept(
+        vault, "notes/hand-written.md", "notes/hand-moved.md", actor="pi", machine="curator"
+    )
+
+    with state.connect(vault) as conn:
+        passages = {
+            (str(row["concept_id"]), str(row["path"]), str(row["check_status"]))
+            for row in conn.execute("SELECT concept_id, path, check_status FROM passages")
+        }
+        inputs = {str(row["input_id"]) for row in conn.execute("SELECT input_id FROM derivations")}
+    assert ("notes/hand-moved.md", "notes/hand-moved.md", "checked") in passages
+    assert not [row for row in passages if "notes/hand-written.md" in row]
+    assert inputs == {"notes/hand-moved.md"}
+
+    # The vacated path is now a different Concept. Its verdict must not reach the
+    # moved note's passages.
+    _md(
+        vault / "notes/hand-written.md",
+        "type: note\ncheck_status: unchecked\ntitle: Newcomer\n",
+    )
+    with state.connect(vault) as conn:
+        moved_status = {
+            str(row["check_status"])
+            for row in conn.execute(
+                "SELECT check_status FROM passages WHERE path = 'notes/hand-moved.md'"
+            )
+        }
+    assert moved_status == {"checked"}
+    assert state.concept_check_status(vault, "notes/hand-moved.md") == "checked"
+
+
+def test_move_concept_does_not_re_sign_a_drifted_checked_linker(tmp_path: Path) -> None:
+    """A `checked` verdict is not the trust gate; `is_consumable_checked_file` is.
+
+    A linker whose bytes changed out of band still holds a `checked` verdict while
+    the sha256 read barrier already refuses it. `mark_checked` re-validates the
+    schema and nothing about the content — unlike `promote_checked`, it has no
+    content-integrity check — so gating the re-sign on the raw verdict launders the
+    out-of-band edit straight back into consumption. `curate_note_link` re-signs one
+    file the PI named; a move re-signs every linker a vault-wide scan finds, on an
+    action having nothing to do with them.
+    """
+    vault = workspace(tmp_path)
+    checked_note(vault, "target", "Target", "01KBN6V6KX0000000000000040")
+    drifted = linked_note(
+        vault, "drifted-linker", "01KBN6V6KX0000000000000041", "supports", "notes/target.md"
+    )
+    linked_note(vault, "clean-linker", "01KBN6V6KX0000000000000042", "supports", "notes/target.md")
+    # Out-of-band edit: the bytes change, the recorded hash does not.
+    drifted.write_text(
+        drifted.read_text(encoding="utf-8") + "\nSmuggled body text.\n", encoding="utf-8"
+    )
+    commit_notes(vault)
+    assert state.concept_check_status(vault, "notes/drifted-linker.md") == "checked"
+    assert not is_consumable_checked_file(vault, "notes/drifted-linker.md", enqueue_scan=False)
+
+    result = move_concept(
+        vault, "notes/target.md", "notes/target-moved.md", actor="pi", machine="curator"
+    )
+
+    # The move proceeds and rewrites both linkers...
+    assert result["rewritten"] == ["notes/clean-linker.md", "notes/drifted-linker.md"]
+    assert read_frontmatter(drifted)["links"]["supports"] == ["notes/target-moved.md"]
+    # ...but the drifted one stays exactly as unconsumable as it already was, with
+    # the smuggled text still sitting in it unsigned.
+    assert "Smuggled body text." in drifted.read_text(encoding="utf-8")
+    assert not is_consumable_checked_file(vault, "notes/drifted-linker.md", enqueue_scan=False)
+    # A linker that really is checked is still re-signed, so the move demotes nothing.
+    assert is_consumable_checked_file(vault, "notes/clean-linker.md", enqueue_scan=False)

@@ -2860,31 +2860,73 @@ one transaction, and commits everything through the trusted writer.
 > each proven by a mutation that fails a shipped test.** Consumers NID-B.6/.7
 > should read the shipped seam, not the draft.
 >
-> 1. **A checked linker's rewrite is re-signed, not written raw.** The draft's
+> 1. **A checked linker's rewrite is re-signed, not written raw — and only if the
+>    read barrier, not the verdict, says it is checked.** The draft's
 >    `_rewrite_inbound_links` writes with `write_frontmatter_doc`, which changes a
 >    `checked` file's bytes out of band: `is_consumable_checked_file` then fails the
 >    sha256 comparison and every note that linked to the moved one silently drops
 >    out of consumption. Shipped: `_write_link_rewrite` routes a checked linker
 >    through `trusted_writer.mark_checked` — the same seam `curate_note_link` uses —
->    which re-validates *and* re-records the hash. Consequence: a linker carrying a
->    retired frontmatter field refuses the move instead of being rewritten.
-> 2. **Plan-then-apply, with a byte-exact undo.** The draft renames first and then
->    mutates while it scans, so a mid-scan failure strands a half-applied move.
->    Shipped: `_plan_inbound_link_rewrites` is pure reads and replaces
->    `_rewrite_inbound_links`; `move_concept` snapshots the files it will touch and,
->    on any exception, reverses `update_concept_path`, restores each written linker
->    byte-for-byte (`_restore_link_rewrite`) and renames the file back.
-> 3. **The path-key re-key is inline, not `_rekey_concept_conn`.** NID-B.2's
->    execution replacement did not add that helper ("do not add
->    `_rekey_concept_conn`"). `update_concept_path` re-keys `concepts.concept_id`
->    directly and hand-moves `derivations` (the one identity-keyed table with no FK);
->    verdicts, flags and edges ride the v16 `ON UPDATE CASCADE`. `edge_id` is left
->    stale after a re-key — the next `replace_concept_edges` pass recomputes it.
+>    which re-validates *and* re-records the hash. The gate on that re-sign is
+>    `is_consumable_checked_file(vault, rel, enqueue_scan=False)`, never the raw
+>    `concept_check_status`: `mark_checked` re-validates the schema and nothing about
+>    the content (unlike `promote_checked`), so gating on the verdict alone would
+>    re-sign a linker whose bytes drifted out of band and launder the edit back into
+>    consumption — N files found by a vault-wide scan, on an action having nothing to
+>    do with them. A drifted linker falls to the raw write and stays exactly as
+>    unconsumable as it already was; the move still proceeds. Consequence of the
+>    re-sign: a linker carrying a retired frontmatter field refuses the move instead
+>    of being rewritten, and the refusal names the rel path (the writer's own message
+>    carries only the field, which is useless after a vault-wide scan).
+> 2. **Plan-then-apply, with a byte-exact undo for the *files*.** The draft renames
+>    first and then mutates while it scans, so a mid-scan failure strands a
+>    half-applied move. Shipped: `_plan_inbound_link_rewrites` is pure reads and
+>    replaces `_rewrite_inbound_links`; `move_concept` snapshots the files it will
+>    touch and, on any exception, renames the file back *first*, then reverses
+>    `update_concept_path`, then restores each written linker byte-for-byte
+>    (`_restore_link_rewrite`). The rename goes first because it is the one step
+>    nothing else can redo — a restore raising after the DB was reversed would leave
+>    the row at the old path and the file at the new one. The **DB** reverse is not
+>    byte-exact: `update_concept_path` moves `file_index_state` and `outputs` with
+>    `UPDATE OR REPLACE`, which drops a conflicting row already at the destination,
+>    and reversing the update cannot resurrect it.
+> 3. **The path-key re-key is `_rekey_path_keyed_concept_conn`, not
+>    `_rekey_concept_conn`.** NID-B.2's execution replacement did not add that
+>    helper ("do not add `_rekey_concept_conn`"), and its shape (mirror-observation
+>    re-key) is not this one. `update_concept_path` splits cleanly: the statements in
+>    its own body are path space, and the helper is identity space — it re-keys
+>    `concepts.concept_id` and hand-moves **every** table keyed by that identity with
+>    no FK to carry it (`derivations.input_id`/`output_id`, `passages.concept_id`).
+>    That enumeration lives in exactly one named place because the first pass at it
+>    stopped one table short: `passages.concept_id` left at the vacated path lets the
+>    verdict-cascade triggers (`WHERE concept_id = NEW.concept_id`) hand the *moved*
+>    note's passages to the next file dropped there, while `concept_check_status`
+>    still reads `checked`. It self-heals on a full `rebuild_passage_index`, never on
+>    `refresh_stale_passages`. Verdicts, flags and edges ride the v16
+>    `ON UPDATE CASCADE`. `edge_id` is left stale after a re-key — the next
+>    `replace_concept_edges` pass recomputes it.
 > 4. **`update_concept_path` calls `_reconcile_renamed_output_conn`,** never
 >    re-issues it, and runs it *after* the re-key and *before* `concepts.path` moves,
 >    since it reads the old path off the row. `move_concept` names the vacated path
 >    to the writer only when git tracks it (`_committable`): `git add` exits 128 on a
 >    pathspec matching nothing, which would kill every move of an uncommitted file.
+>
+> **Carried forward, with owners (review of `fe308225..aaf2bb3e`, 2026-07-31):**
+>
+> - **Journal residue on a rolled-back move — owner NID-B.6.** The `resolved`/
+>   `moved_from` event and every per-linker `check-fired` event are appended before
+>   `commit_writer_changes`, and the `except` block compensates none of them: a
+>   refused move still journals as having happened. Append-only journals cannot be
+>   rewound, so B.6 has to pick one — append the move event *after* the commit, or
+>   emit a compensating event — before `memoria mv` puts this in a PI's hands.
+> - **Digest linkers are mechanism-only — owner NID-B.7.** `_plan_inbound_link_rewrites`
+>   scans `digests/` as the draft specified, so a checked digest linking to a moved
+>   note is re-signed through `mark_checked` against the digest schema. The mechanism
+>   is type-agnostic but only the note case has a test.
+> - **Stale `edge_id` after a path-key re-key — owner NID-B.7.** Self-heals on the
+>   next `replace_concept_edges` pass; B.7 is the task that touches edge resolution,
+>   so it owns either recomputing it in the re-key or documenting the window for ERP
+>   consumers.
 
 **Steps:**
 

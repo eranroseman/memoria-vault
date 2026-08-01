@@ -419,9 +419,12 @@ def move_concept(
 ) -> dict[str, Any]:
     """Rename a concept file, rewriting inbound links in one writer transaction.
 
-    Every inbound rewrite is planned by pure reads before anything moves, and the
-    apply phase is undone byte-for-byte if any step of it refuses: a partial move
-    that commits is worse than a refusal.
+    Every inbound rewrite is planned by pure reads before anything moves, and on
+    any refusal the *files* go back byte-for-byte: a partial move that commits is
+    worse than a refusal. The DB reverse is not byte-exact — ``update_concept_path``
+    moves ``file_index_state`` and ``outputs`` with ``UPDATE OR REPLACE``, which
+    drops a conflicting row already sitting at the destination, and reversing the
+    update cannot resurrect it.
     """
     validate_operation_context(vault, context)
     vault = Path(vault)
@@ -447,7 +450,13 @@ def move_concept(
     try:
         for rel in rewritten:
             frontmatter, body, checked = rewrites[rel]
-            _write_link_rewrite(vault, rel, frontmatter, body, checked=checked, context=context)
+            try:
+                _write_link_rewrite(vault, rel, frontmatter, body, checked=checked, context=context)
+            except ValueError as error:
+                # The writer's refusals name the offending field, not the file. A
+                # move plans its rewrites from a vault-wide scan, so without the rel
+                # path the PI is handed a field name and no offender to go fix.
+                raise ValueError(f"inbound link rewrite refused for {rel}: {error}") from error
             applied.append(rel)
         state.update_concept_path(vault, concept_id, old_rel, new_rel)
         moved = True
@@ -469,13 +478,16 @@ def move_concept(
             context=context,
         )
     except Exception:
+        # The rename goes back first. It is the one step nothing else can redo: a
+        # restore that raises after the DB is already reversed would otherwise leave
+        # the row at the old path and the file at the new one.
+        destination.rename(source)
         if moved:
             state.update_concept_path(
                 vault, raw_id if is_ulid(raw_id) else old_rel, new_rel, old_rel
             )
         for rel in applied:
             _restore_link_rewrite(vault, rel, undo[rel], checked=rewrites[rel][2])
-        destination.rename(source)
         raise
     return {
         "old_path": old_rel,
@@ -498,7 +510,7 @@ def _movable_rel(path: str) -> str:
 def _plan_inbound_link_rewrites(
     vault: Path, old_rel: str, new_rel: str
 ) -> dict[str, tuple[dict[str, Any], str, bool]]:
-    """Return rel -> (rewritten frontmatter, body, holds a checked verdict).
+    """Return rel -> (rewritten frontmatter, body, is consumable as checked).
 
     Pure reads. An unreadable or malformed linker refuses the move before a single
     byte has moved, rather than stranding it half-applied.
@@ -527,7 +539,13 @@ def _plan_inbound_link_rewrites(
                     changed = True
             if changed:
                 frontmatter["links"] = links
-                checked = state.concept_check_status(vault, rel) == "checked"
+                # The read barrier, not the raw verdict. A linker whose bytes drifted
+                # out of band still holds a `checked` verdict while the barrier already
+                # refuses it; re-signing on the verdict alone would hand `mark_checked`
+                # — which re-validates the schema and nothing about the content — a
+                # file the PI never checked in its current form, and launder it back
+                # into consumption on a scan that has nothing to do with it.
+                checked = is_consumable_checked_file(vault, rel, enqueue_scan=False)
                 plan[rel] = (frontmatter, body, checked)
     return plan
 
@@ -557,7 +575,7 @@ def _write_link_rewrite(
     checked: bool,
     context: OperationContext,
 ) -> None:
-    """Write one rewritten linker, re-signing it if it holds a checked verdict.
+    """Write one rewritten linker, re-signing it if it is consumable as checked.
 
     A checked file whose bytes change out of band fails the sha256 read barrier and
     falls out of consumption, so a mechanical ``links:`` rewrite has to go back
