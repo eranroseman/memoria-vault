@@ -88,7 +88,7 @@
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
-12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
+12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers — non-recursive `inbox/*.md` globs at `loudness.py:30` and `engine/api.py:706`, and a direct single-path existence check (not a glob) in both `inbox.py` dedupe writers at `:120-124` and `:179-183`. No task may add recursive inbox globs or frontmatter to digests. **Corollary (U3-SUB.2):** because a digest removes the card, an `inbox/` filename is reusable, so any path-keyed judgement about a card must be released when the card is archived — see `lifecycle._held_disposition_targets`.
 13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
     U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
     U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
@@ -8436,9 +8436,190 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
   - `lifecycle.compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]` — returns `{"adopted": list[dict], "archived": list[str], "digests": list[str], "commit": str}` (rel posix paths; `commit` empty when nothing archived). Archives only `projection: attention` + `attention_status: resolved` cards in `inbox/*.md`; `deferred` and `open` stay. Month key = `resolved_at[:7]` when it matches `YYYY-MM`, else the compaction date's month. Digest sections are append-only; deletions of git-tracked cards are staged in the same commit (actor `integrity`). Requires the vault git repo every real vault has (vault versioning is product behavior) only when there is something to archive.
   - Scan payload gains key `"inbox_compaction"` = that return dict (`memoria workspace scan --json`).
 
+> **Adopted U3-SUB.2 execution amendment (2026-08-01):** the drafted snippets
+> below archive before they check whether the vault can record the archive, and
+> they run unserialized. What shipped differs in five places; the returned keys,
+> the digest format, and the trigger seam are unchanged.
+>
+> 1. **The git repo is checked before the first write, not discovered at the
+>    commit.** The drafted body appends each digest section and unlinks each card
+>    and only then calls `commit_explicit_writer_changes`, so a vault with no
+>    `.git` loses its whole resolved tail out of `inbox/` into an uncommitted file
+>    the vault's history cannot describe — and `_tracked` silently reports
+>    `False` for every card there, so nothing even looks wrong until git fails.
+>    `compact_resolved_cards` now raises before the loop when there is something
+>    to archive and no repo to archive it into, leaving the cards where a later
+>    scan can retry them. "Only when there is something to archive" is unchanged
+>    and now pinned: the probe returns first, so an ordinary scan of a vault with
+>    nothing resolved neither needs a repo nor takes a lock.
+> 2. **The read that decides and the writes it drives are one critical section**,
+>    for the reason U3-SUB.1's amendment 5 gave for the journaling half. `workspace
+>    scan` is the file-watch tick *and* a command the PI runs, so two overlap on a
+>    live vault; unserialized, both read the same card, both append it to the
+>    digest, and the second `unlink` raises `FileNotFoundError` out of a hygiene
+>    pass. `state.workspace_lock` now spans the in-lock read, the appends, the
+>    unlinks, and the commit. The probe stays outside it (same shape as the
+>    journaling half), and because the in-lock read is authoritative, the loser of
+>    a race archives nothing and commits nothing rather than committing a tail
+>    that moved nowhere.
+> 3. **Compaction failures are contained at the CLI seam, not in the lib.** The
+>    call sits inside `_workspace_scan_payload`, whose caller reads one JSON
+>    payload from stdout and whose watch loop dies on an exception; a vault with no
+>    git repo, a read-only tree, or a busy journal must not raise out of `memoria
+>    workspace scan`. `cli._compact_resolved_inbox` catches `(OSError,
+>    RuntimeError, sqlite3.Error)` and returns the same dict with an `error` key —
+>    the U3-SUB.1 shape, where the lib raises and the call site decides (the gate
+>    turned the same failures into an `attention.journal-error` deny). The scan's
+>    `ok` carries that error, as it already carries the observe/quarantine/
+>    regeneration steps': a scan that reported success over a step that failed
+>    would be the silent clear this section exists to remove.
+> 4. **`_resolved_cards` reads the card once, through `safe_read`.** It returns
+>    `(path, frontmatter, body)` triples instead of the drafted in-loop
+>    `path.read_text()` plus inline projection/status tests, so the probe and the
+>    authoritative in-lock read are the same function, and a card that vanished
+>    between them parses as no card rather than raising. Status and projection are
+>    case-folded, as `loudness.is_open_blocker` and the journaling half both fold
+>    them — otherwise a `projection: Attention` card can block the gate, be
+>    journaled when it closes, and then never leave `inbox/`.
+> 5. **The commit actor is its own constant.** `COMPACTION_ACTOR = "integrity"`
+>    rather than reuse of `JOURNAL_ACTOR`: same name, opposite justification. The
+>    journaling half names `integrity` because it *cannot* say who caused the
+>    change; compaction names it because the runtime *is* the cause.
+>
+> Two smaller things. The docstring's untouched-by-construction argument names
+> what each consumer actually does: `loudness.open_blockers` and
+> `engine.api._attention_cards` glob `inbox/*.md` non-recursively, but the
+> work-prompt dedupe checks one direct path in `inbox/` (it never globs), and the
+> seeded `inbox.base` view selects a *folder* — for which only the belt-and-braces
+> half (no frontmatter, so no `projection` match) holds. Each clause has a test.
+> And the four drafted tests shipped verbatim as the floor, joined by twelve more:
+> a two-month multi-card fixture, the month-key fallback's producer states
+> (missing, empty, unparseable, and YAML's `int` for a bare year) plus a hostile
+> `resolved_at` that cannot steer the write out of `inbox/archive/`, the title
+> fallback, case-variant frontmatter, second-run idempotence, non-attention
+> `inbox/` files (compaction deletes what it archives — the projection test is all
+> that stands between a hand-written note and a file the PI never gets back), the
+> two git-repo cases, the two consumers the plan's tests did not reach, and two
+> races.
+
+> **Adopted U3-SUB.2 review amendment — the archival release row (2026-08-01):**
+> compaction as first shipped deleted a card and recorded nothing, which broke a
+> guarantee U3-SUB.1 had been getting for free. Returned keys, digest format and
+> trigger seam are unchanged; five edits in `lifecycle.py` and one in `cli.py`.
+>
+> 1. **An `inbox/` filename is reusable now, and nothing knew that.** Both writers
+>    in `inbox.py` refuse an occupied name (`:120-124` dedupe slot, `:193-195`
+>    collision loop) and take a freed one, so before compaction a resolved card sat
+>    on its path forever and `_journaled_disposition_targets` — a set keyed on that
+>    path — only ever grew. Once compaction deletes the card, the *second* card at
+>    that name is read as already-disposed: no row, and compaction deletes it too.
+>    Reproduced through `write_finding(dedupe_slug=…)`, through `_write`'s collision
+>    loop, and — worse — through `integrity.resolve_attention`, whose row carries
+>    `source: attention` + `resolution: resolved` and so poisons the slot while
+>    making the journal *look* properly attributed.
+> 2. **Fix: an archival release row.** `EVENT_ATTENTION_ARCHIVED =
+>    "attention-card-archived"`, local to `lifecycle.py` (`event_log.event_type` is
+>    bare TEXT with no CHECK or registry, `runtime/schema.sql:30`; house precedent
+>    is an inline literal in the owning module, `knowledge.py:513`,
+>    `backup.py:792`). Bare `archived` is taken four times over. The row carries
+>    `source`, `target_id`, `outputs: [digest]`, `reason` — no `via`, `resolution`
+>    or `outcome`, because it records a removal and not a judgment, and no
+>    `archived_at`, because `_prepare_explicit_journal_event` already stamps
+>    `timestamp` and the log forbids UPDATE. `outputs` so `_journal_paths`
+>    (`engine/api.py:940`) scopes it like any other output.
+> 3. **`_journaled_disposition_targets` → `_held_disposition_targets`**: one
+>    `read_event_log` widened to both types, `source` guard hoisted, `add` on a
+>    disposition and `discard` on a release — an ordered fold, not a filter. The
+>    rename is load-bearing: it returns "journaled and not released".
+> 4. **The card read moves inside the lock.** `journal_unattributed_dispositions`
+>    read `_closed_cards` outside its lock. At HEAD that was inert because the held
+>    set only grew, so a stale entry was always already held. Under a fold the set
+>    shrinks and the stale entry *wins*: it writes a permanent disposition built
+>    from a deleted card's frontmatter and re-claims the slot, reproducing the very
+>    bug for the successor. The outside call stays as the cheap probe that keeps
+>    every gated write off the lock.
+> 5. **A `.strip()` at `_closed_cards`.** Journaling folded `projection` but did not
+>    strip it; compaction did both. `projection: " attention "` was therefore
+>    invisible to journaling and visible to compaction — archived and deleted with
+>    zero journal rows, sequentially, in one process. (`loudness.is_open_blocker`
+>    has the same unstripped read; out of scope here, filed separately.)
+> 6. **The git pre-flight tested the wrong thing.** `(vault / ".git").exists()` is
+>    the one git failure `workspace scan` can never reach — the scan's own `git
+>    status` fails first. The reachable ones — a crashed git leaving `index.lock`,
+>    an unconfigured identity — passed it, appended the whole tail into a digest,
+>    unlinked every card and failed at the commit. `_uncommittable` now checks repo,
+>    lock and `git var GIT_COMMITTER_IDENT`. The lock check follows a `.git` *file*
+>    gitlink, because `Path(".git/index.lock").exists()` swallows `ENOTDIR` on a
+>    linked worktree or submodule and reports no lock.
+>
+>    The residual commit failure is **not** fixed by assignment order.
+>    `result["archived"]` already preceded the commit; moving it after changes
+>    nothing observable, because `cli._compact_resolved_inbox` returns a literal
+>    `{"archived": [], …}` on any catch and so cannot carry a count however the lib
+>    orders its assignments. The only real change is that the re-raised error names
+>    the count and the digest path. Closing it properly means changing the lib→CLI
+>    contract from "raise" to "return a partial payload with an error", which is a
+>    larger move than this fix should make.
+>
+> 7. **Journaling and archiving were two critical sections with a wide gap.** The
+>    journaling half took the workspace lock and released it; compaction then ran a
+>    probe, spawned git subprocesses, and waited for the lock again. A card the PI
+>    flipped to `resolved` anywhere in that window was absent from the journaling
+>    read and present in the in-lock archive read — digested, released and unlinked
+>    with no disposition row anywhere, which made the "no card leaves `inbox/`
+>    without a journaled disposition" claim false. Pre-existing, but this fix
+>    widened the window and newly asserted in prose that it could not happen.
+>    `compact_resolved_cards` now re-runs `journal_unattributed_dispositions` inside
+>    its own lock (re-entrant on the same thread) and merges the rows into
+>    `adopted`; the held set makes it a no-op for everything the outer call covered.
+>    `_uncommittable` moved inside the lock with it, so the window it closes cannot
+>    reopen during the lock wait. The outer call stays: a vault with nothing to
+>    archive must still journal its deferred closes without needing a git repo.
+>
+> **Costs, declared rather than mechanized.** A crash between the release row and
+> the unlink leaves a briefly-false row: the next scan re-journals the card and
+> appends a duplicate digest section (the duplicate half is HEAD's behaviour
+> already). A persistent unlink failure on a read-only `inbox/` now costs ~2
+> permanent rows per file-watch tick where HEAD already spammed a duplicate section
+> per tick. And the invariant "every code path that removes an `inbox/*.md` card
+> owes a release row" is load-bearing and unenforced — `lifecycle.py`'s is today the
+> only `.unlink()` in `src/` touching `inbox/`; U3-SUB.3's re-raise work is the
+> nearest risk.
+>
+> **Not claimed:** this does not make the digest checkable against a
+> non-forgeable index. `_digest_section` heads sections with attacker-controlled
+> `title` plus a basename, the row keys on the full relpath, and slot reuse is
+> deliberate — a forged section naming any genuinely archived basename matches. The
+> honest claim is the whole point: the runtime was deleting a PI-visible file and
+> recording nothing; it now records which card left, when, and which digest holds
+> it. **Out-of-band deletion** (PI in Obsidian, `git checkout`/`restore`/`revert`,
+> an adapter) still poisons a slot permanently — issue #1616, which also records why
+> a release sweep was rejected: it puts a DB read on the `PreToolUse` hot path
+> unconditionally and retires the no-lock pin.
+>
+> **Coverage note (`cli.py`).** The `OSError` and `RuntimeError` arms of
+> `_compact_resolved_inbox` have producer tests. `sqlite3.Error` has none, and none
+> that meets the standard the other two are held to: a database this scan cannot
+> write is one `verify_journal_chain` already refused several steps earlier
+> (verified — exit 2, no payload). A barrier thread opening `BEGIN IMMEDIATE`
+> between the observe step and compaction *could* produce it, which is exactly the
+> stubbing this task rejected for the `RuntimeError` arm, so it is rejected here
+> too. The arm stays as named defence-in-depth — the inter-step window is real for
+> a non-Memoria writer, since the flock does not exclude one and `state.connect`
+> does not wrap the error — matching `policy/engine.py`.
+>
+> **Escape class carried forward.** The ordered fold and the two-lock window were
+> both found by *trajectory* coverage, not by fixture size: every fixture that
+> reached slot reuse archived the second card in the same `compact_resolved_cards`
+> call, so the re-claimed-and-still-held state — the ordinary production state,
+> because the policy hook journals without compacting — was never sampled. An
+> order-blind `disposed - released` passed the entire suite. This module now holds
+> two multi-step state machines; a fixture that runs one to its fixed point cannot
+> tell a correct implementation from a wrong one that converges there.
+
 **Steps:**
 
-- [ ] Write the failing lib tests. Append to `tests/test_attention_lifecycle.py` (extends the imports at the top of the file with `from memoria_vault.runtime.subsystems.lib import loudness` and `from memoria_vault.runtime.vaultio import read_frontmatter` and `from tests.helpers import git, init_git`):
+- [x] Write the failing lib tests. Append to `tests/test_attention_lifecycle.py` (extends the imports at the top of the file with `from memoria_vault.runtime.subsystems.lib import loudness` and `from memoria_vault.runtime.vaultio import read_frontmatter` and `from tests.helpers import git, init_git`):
 
 ```python
 def test_compact_moves_resolved_cards_to_monthly_archive(tmp_path):
@@ -8499,8 +8680,8 @@ def test_compact_commits_deletion_of_tracked_cards(tmp_path):
     assert "inbox/alert-done.md" not in git(tmp_path, "ls-files")
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -k compact -v` — expected failure: `AttributeError: module 'memoria_vault.runtime.subsystems.lib.lifecycle' has no attribute 'compact_resolved_cards'`.
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`: extend the module docstring's second paragraph with:
+- [x] Run to verify failure: `python -m pytest tests/test_attention_lifecycle.py -k compact -v` — expected failure: `AttributeError: module 'memoria_vault.runtime.subsystems.lib.lifecycle' has no attribute 'compact_resolved_cards'`.
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/subsystems/lib/lifecycle.py`: extend the module docstring's second paragraph with:
 
 ```
 Resolved cards are compacted into an append-only monthly digest under
@@ -8619,8 +8800,8 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     return {"adopted": adopted, "archived": archived, "digests": digests, "commit": commit}
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all tests pass.
-- [ ] Write the failing scan-wiring test. Append to `tests/test_cli_workspace_requests.py` (file already imports `json`, `main`; uses inline init like its first test at line 29-30):
+- [x] Run to verify pass: `python -m pytest tests/test_attention_lifecycle.py -v` — all tests pass.
+- [x] Write the failing scan-wiring test. Append to `tests/test_cli_workspace_requests.py` (file already imports `json`, `main`; uses inline init like its first test at line 29-30):
 
 ```python
 def test_workspace_scan_compacts_resolved_inbox_cards(
@@ -8651,8 +8832,8 @@ def test_workspace_scan_compacts_resolved_inbox_cards(
     assert (inbox / "archive/2026-07.md").is_file()
 ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v` — expected failure: `KeyError: 'inbox_compaction'`.
-- [ ] Wire the scan seam. In `src/memoria_vault/cli.py` `_workspace_scan_payload`, immediately after `observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})` (line 1850) insert:
+- [x] Run to verify failure: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v` — expected failure: `KeyError: 'inbox_compaction'`.
+- [x] Wire the scan seam. In `src/memoria_vault/cli.py` `_workspace_scan_payload`, immediately after `observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})` (line 1850) insert:
 
 ```python
     from memoria_vault.runtime.subsystems.lib import lifecycle
@@ -8666,8 +8847,8 @@ def test_workspace_scan_compacts_resolved_inbox_cards(
     payload["inbox_compaction"] = inbox_compaction
 ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v`, then the neighboring scan tests: `python -m pytest tests/test_cli_workspace_requests.py -k scan -v`.
-- [ ] Run the gate: `python scripts/verify` — clean (watch the floor level; expected unaffected, see section note).
+- [x] Run to verify pass: `python -m pytest tests/test_cli_workspace_requests.py::test_workspace_scan_compacts_resolved_inbox_cards -v`, then the neighboring scan tests: `python -m pytest tests/test_cli_workspace_requests.py -k scan -v`.
+- [x] Run the gate: `python scripts/verify` — clean (watch the floor level; expected unaffected, see section note).
 - [ ] Commit:
 
 ```

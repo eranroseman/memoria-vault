@@ -2002,3 +2002,90 @@ def test_steering_and_vocabulary_writes_survive_a_failed_replace(
     assert steering.read_text(encoding="utf-8") == (
         "Steering with [link](https://example.org).\n"
     )  # PI steering content lands byte-exact, never neutralized
+
+
+def _write_resolved_card(inbox: Path, name: str, resolved_at: str = "") -> None:
+    inbox.mkdir(parents=True, exist_ok=True)
+    (inbox / name).write_text(
+        "---\n"
+        "title: Old finding\n"
+        "projection: attention\n"
+        "attention_kind: alert\n"
+        "attention_status: resolved\n"
+        "loudness: alert\n"
+        f"{resolved_at}"
+        "---\n\n# Finding\n\nHandled.\n",
+        encoding="utf-8",
+    )
+
+
+def test_workspace_scan_compacts_resolved_inbox_cards(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    inbox = workspace / "inbox"
+    _write_resolved_card(inbox, "alert-old.md", "resolved_at: 2026-07-01T00:00:00Z\n")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
+    scan = json.loads(capsys.readouterr().out)
+
+    assert scan["inbox_compaction"]["archived"] == ["inbox/alert-old.md"]
+    assert not (inbox / "alert-old.md").exists()
+    assert (inbox / "archive/2026-07.md").is_file()
+
+
+def test_workspace_scan_reports_a_compaction_it_cannot_finish(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A hygiene failure is a scan result, never a traceback out of the CLI.
+
+    Producer state: `inbox/archive` is occupied by a file, so the first digest
+    write raises `FileExistsError` from inside the scan. `workspace scan` is the
+    file-watch tick and the PI's own command; an exception escaping here kills the
+    watch loop and prints no JSON at all, and a scan that reported `ok` while a
+    step failed would be the silent clear this whole area exists to remove.
+    """
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    inbox = workspace / "inbox"
+    _write_resolved_card(inbox, "alert-old.md")
+    (inbox / "archive").write_text("not a directory\n", encoding="utf-8")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 1
+    scan = json.loads(capsys.readouterr().out)
+
+    assert scan["ok"] is False
+    assert scan["inbox_compaction"]["error"]
+    assert scan["inbox_compaction"]["archived"] == []
+    assert (inbox / "alert-old.md").is_file()  # the card is still there to retry
+
+
+def test_workspace_scan_reports_a_compaction_git_refuses(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The `RuntimeError` arm, from a producer state and not from a raised stub.
+
+    Every git failure compaction can hit arrives as `RuntimeError` -- the
+    pre-flight's own refusal, and `trusted_writer._git`'s. A crashed git leaving
+    `.git/index.lock` is the ordinary way to reach it on a live vault, and `.git`
+    missing is not: the scan's own `git status` fails long before compaction. Drop
+    this arm and `memoria workspace scan` tracebacks, prints no JSON, and takes the
+    watch loop with it.
+    """
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    inbox = workspace / "inbox"
+    _write_resolved_card(inbox, "alert-old.md")
+    (workspace / ".git/index.lock").write_text("", encoding="utf-8")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 1
+    scan = json.loads(capsys.readouterr().out)
+
+    assert scan["ok"] is False
+    assert "index.lock" in scan["inbox_compaction"]["error"]
+    assert (inbox / "alert-old.md").is_file()  # kept, not emptied into an orphan digest
+    assert not (inbox / "archive").exists()
