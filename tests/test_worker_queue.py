@@ -25,6 +25,10 @@ from memoria_vault.runtime.worker import (
 from tests.helpers import git, work_text, write_note
 from tests.helpers import worker_workspace as workspace
 
+# Failsafe against a stuck child, not a performance budget: it bounds a process
+# spawn plus a full re-import of this module, which stretches under load.
+SPAWN_TIMEOUT = 30
+
 
 def note_text() -> str:
     return "---\ntype: note\ntitle: Worker note\ntags: []\nlinks: {}\n---\nBody.\n"
@@ -38,23 +42,34 @@ def _claim_workspace_lock(vault: Path, started, acquired) -> None:
 
 def test_worker_workspace_lock_serializes_processes(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    context = multiprocessing.get_context()
+    # "spawn", not the Linux default "fork": under xdist the parent carries
+    # execnet's threads, and forking a multi-threaded process is deprecated in
+    # 3.12 and can deadlock the child. 3.14 moves the Linux default to
+    # forkserver anyway, and spawn is already the default on macOS and Windows,
+    # so naming it makes this test behave the same everywhere.
+    context = multiprocessing.get_context("spawn")
     started = context.Queue()
     acquired = context.Queue()
     process = context.Process(target=_claim_workspace_lock, args=(vault, started, acquired))
     try:
         with _workspace_lock(vault):
             process.start()
-            assert started.get(timeout=2) == "started"
+            # Generous, because spawn makes the child re-import this module and
+            # that is real work: 0.24s idle, but over 1s under load, where fork
+            # cost nothing. These waits return as soon as the child reports, so
+            # a wide bound only ever costs time when something is truly stuck.
+            assert started.get(timeout=SPAWN_TIMEOUT) == "started"
+            # Stays short on purpose: this asserts the lock is NOT granted, and
+            # a slow child only makes that more true, never falsely true.
             with pytest.raises(queue.Empty):
                 acquired.get(timeout=0.2)
-        assert acquired.get(timeout=2) == "acquired"
-        process.join(timeout=2)
+        assert acquired.get(timeout=SPAWN_TIMEOUT) == "acquired"
+        process.join(timeout=SPAWN_TIMEOUT)
         assert process.exitcode == 0
     finally:
         if process.is_alive():
             process.terminate()
-            process.join(timeout=2)
+            process.join(timeout=SPAWN_TIMEOUT)
 
 
 def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: Path) -> None:
