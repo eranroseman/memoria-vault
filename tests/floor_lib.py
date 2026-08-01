@@ -383,13 +383,13 @@ def run_http(vault: Path, method: str, path: str, body: dict | None = None) -> d
 
 
 def run_mcp(vault: Path, tool: str, arguments: dict) -> dict:
-    """Call an MCP tool in-process via the FastMCP tool manager."""
+    """Call an MCP tool in-process; returns the engine payload the tool returned."""
     import asyncio
 
     from memoria_vault.runtime.mcp_transport import make_mcp_app
 
     app = make_mcp_app(vault, read_scope=MCP_READ_SCOPE, agent_identity="floor")
-    return asyncio.run(app._tool_manager.call_tool(tool, arguments, convert_result=False))
+    return asyncio.run(app.call_tool(tool, arguments)).structured_content
 
 
 def _fill(template, manifest: dict):
@@ -1331,7 +1331,7 @@ VARIANTS: dict[str, list[dict]] = {
 # bindings already encode that same split (cli ["--type", ...], http
 # "?type=...", mcp {"concept_type": ...}). VARIANTS above spells the
 # overlay key "type" (matching two of three transports); verified live that
-# FastMCP's generated pydantic arg model defaults to `extra="ignore"`, so an
+# MCPServer's generated pydantic arg model defaults to `extra="ignore"`, so an
 # un-aliased "type" key would be silently dropped rather than raising —
 # `_overlay`'s mcp branch would then pass the *base* concept_type through
 # unchanged and never actually exercise the overlay. This is the one place

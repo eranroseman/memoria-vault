@@ -27,6 +27,15 @@ updates:
     groups:
       dev-python:
         patterns: ["*"]
+    # This ecosystem also sees pyproject.toml's runtime extras, where `mcp`'s
+    # upper bound is an API-compatibility bound rather than a version pin: the
+    # transport is written against one major's server API (2.x `MCPServer`), so
+    # crossing a major is a code change, not a bump. #1620 proposed `<3` while
+    # the code still used 1.x `FastMCP` and took 33 tests red. Minor and patch
+    # updates still flow.
+    ignore:
+      - dependency-name: mcp
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: pre-commit
     directory: /

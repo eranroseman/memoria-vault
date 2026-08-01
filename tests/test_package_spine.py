@@ -59,7 +59,12 @@ def test_stack_dependencies_stay_small_and_no_orm():
     assert dependencies.isdisjoint({"click", "typer"})
     assert dependencies.isdisjoint({"alembic", "django", "peewee", "sqlalchemy"})
     assert "mcp" not in dependencies
-    assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=1.27,<2"]
+    # Not a Dependabot version mirror (cf. #1642): the upper bound is an API-
+    # compatibility bound. mcp_transport builds on `mcp.server.mcpserver.MCPServer`,
+    # which is 2.x-only -- 1.x served `mcp.server.fastmcp.FastMCP` and 3.x may move
+    # again. Widening this is a code change, not a bump, so the bound is asserted
+    # exactly and Dependabot ignores the major (.github/dependabot.yml).
+    assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=2,<3"]
 
 
 def test_runtime_sqlite_schema_is_packaged_resource():
