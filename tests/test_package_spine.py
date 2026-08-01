@@ -43,6 +43,7 @@ def test_pyproject_declares_installable_memoria_package():
         "CLAUDE.md",
         "*.base",
         ".gitignore",
+        "Start here.md",
         "steering.md",
         "system/*.md",
     ]
@@ -99,6 +100,7 @@ def test_workspace_seed_is_packaged_runtime_minimum():
     for rel in (
         ".githooks/pre-commit",
         ".gitignore",
+        "Start here.md",
         ".memoria/config/providers.yaml",
         ".memoria/eval/alpha15-seeded-errors.json",
         ".memoria/patterns/_preamble.md",

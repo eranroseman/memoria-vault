@@ -29,6 +29,7 @@ Where every file lives.
 ```text
 <vault>/
 ├── index.md                 generated workspace index
+├── Start here.md            seeded front door: tutorial links, CLI/co-PI entry points
 ├── steering.md              watch/mute override; effective steering derives from active projects, hubs, and unresolved question notes
 ├── bibliography.bib         generated portable bibliography
 ├── notes/                   claim and question notes
@@ -128,6 +129,7 @@ preferences, but preserves an existing PI-owned view preference.
 | --- | --- |
 | `.githooks/pre-commit` | Installer copies it to `.git/hooks/pre-commit`; the hook runs schema/frontmatter checks before commit. |
 | `.gitignore` | `memoria init` installs it so generated DBs, journals, indexes, blobs, and local caches stay out of git. |
+| `Start here.md` | Vault-root front door: tutorial links, the CLI-first entry point, and the co-PI variant pointer. The onboarding runway's Obsidian opener deep-links to it when present, else opens the vault root. |
 | `.memoria/config/providers.yaml` | Provider config for enrichment and operation runners. |
 | `.memoria/config/feedback.yaml` | Shadow-first I1 feedback flag (`production_enabled`, default false), read by `feedback_production_enabled` and surfaced read-only in `memoria doctor bundle`. |
 | `.memoria/eval/alpha15-seeded-errors.json` | Seeded-error verdict bundle read by CLI, worker, and seeded-error runtime tests. |

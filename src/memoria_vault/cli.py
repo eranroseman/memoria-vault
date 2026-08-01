@@ -48,6 +48,7 @@ SEED_TREES = (
 )
 SEED_FILES = (
     (".gitignore", ".gitignore"),
+    ("Start here.md", "Start here.md"),
     ("steering.md", "steering.md"),
     ("system/vocabulary.md", "system/vocabulary.md"),
     ("catalog.base", "catalog.base"),
