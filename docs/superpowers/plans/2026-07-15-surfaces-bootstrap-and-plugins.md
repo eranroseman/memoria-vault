@@ -88,7 +88,7 @@
 9. **Canvas markers**: banner node id `memoria-banner`; file-node ids `n-<sha256(raw path)[:12]>`; scratch canvases `projects/*/scratch-*.canvas`, never tracked projections. Plugin rewrites carry the two canvas commands + staleness badge (seed parity test enforces).
 10. **Journal/goldens serialization**: golden-touching tasks land sequentially, never in parallel worktrees — BOOT-D.6, U3-SUB.1 (adoption events, actor `pi`, `via: manual-edit`), U3-CANVAS.1/.3/.5, U4-B (one new golden; its floor-coverage red closes within the same PR). Cross-plan: not concurrent with Plan 21 COV.* or Plan 22 S68.3/COST.4.
 11. **Cross-plan dependencies**: U3-SUB.3 is written against Plan 21 Task 21.1's `write_finding(..., evidence="", dedupe_slug="") -> Path | None` — land 21.1 first if not merged. U4-A.3 requires Plan 23 R1NG.4's `_vault_agents_md()`/`render_tracked_projection` — land R1NG.4 first. BOOT-D's `SEED_FILES` insertion rebases against Plan 23 R1NG.1's insertions (whichever lands second rebases).
-12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers (non-recursive `inbox/*.md` globs at `loudness.py:41`, `engine/api.py:682`, `inbox.py:164`) — no task may add recursive inbox globs or frontmatter to digests.
+12. **Inbox invariants** (U3-SUB): `inbox/archive/` digests carry no YAML frontmatter and are invisible to all attention consumers — non-recursive `inbox/*.md` globs at `loudness.py:30` and `engine/api.py:706`, and a direct single-path existence check (not a glob) in both `inbox.py` dedupe writers at `:120-124` and `:179-183`. No task may add recursive inbox globs or frontmatter to digests. **Corollary (U3-SUB.2):** because a digest removes the card, an `inbox/` filename is reusable, so any path-keyed judgement about a card must be released when the card is archived — see `lifecycle._held_disposition_targets`.
 13. **Execution order**: BOOT-A → BOOT-B → BOOT-C → {BOOT-D, U3-SUB};
     U3-ENG additionally waits for graph ERP-A.1–.5, then U3-ENG → SEAM.1 →
     U3-PLUG → U3-CANVAS → {U4-A, U4-B, U4-C}. U3-PLUG.5/.8 additionally
@@ -8394,6 +8394,83 @@ even a recursive frontmatter scan sees `projection` absent and skips it.
 > that stands between a hand-written note and a file the PI never gets back), the
 > two git-repo cases, the two consumers the plan's tests did not reach, and two
 > races.
+
+> **Adopted U3-SUB.2 review amendment — the archival release row (2026-08-01):**
+> compaction as first shipped deleted a card and recorded nothing, which broke a
+> guarantee U3-SUB.1 had been getting for free. Returned keys, digest format and
+> trigger seam are unchanged; five edits in `lifecycle.py` and one in `cli.py`.
+>
+> 1. **An `inbox/` filename is reusable now, and nothing knew that.** Both writers
+>    in `inbox.py` refuse an occupied name (`:120-124` dedupe slot, `:193-195`
+>    collision loop) and take a freed one, so before compaction a resolved card sat
+>    on its path forever and `_journaled_disposition_targets` — a set keyed on that
+>    path — only ever grew. Once compaction deletes the card, the *second* card at
+>    that name is read as already-disposed: no row, and compaction deletes it too.
+>    Reproduced through `write_finding(dedupe_slug=…)`, through `_write`'s collision
+>    loop, and — worse — through `integrity.resolve_attention`, whose row carries
+>    `source: attention` + `resolution: resolved` and so poisons the slot while
+>    making the journal *look* properly attributed.
+> 2. **Fix: an archival release row.** `EVENT_ATTENTION_ARCHIVED =
+>    "attention-card-archived"`, local to `lifecycle.py` (`event_log.event_type` is
+>    bare TEXT with no CHECK or registry, `runtime/schema.sql:30`; house precedent
+>    is an inline literal in the owning module, `knowledge.py:513`,
+>    `backup.py:792`). Bare `archived` is taken four times over. The row carries
+>    `source`, `target_id`, `outputs: [digest]`, `reason` — no `via`, `resolution`
+>    or `outcome`, because it records a removal and not a judgment, and no
+>    `archived_at`, because `_prepare_explicit_journal_event` already stamps
+>    `timestamp` and the log forbids UPDATE. `outputs` so `_journal_paths`
+>    (`engine/api.py:940`) scopes it like any other output.
+> 3. **`_journaled_disposition_targets` → `_held_disposition_targets`**: one
+>    `read_event_log` widened to both types, `source` guard hoisted, `add` on a
+>    disposition and `discard` on a release — an ordered fold, not a filter. The
+>    rename is load-bearing: it returns "journaled and not released".
+> 4. **The card read moves inside the lock.** `journal_unattributed_dispositions`
+>    read `_closed_cards` outside its lock. At HEAD that was inert because the held
+>    set only grew, so a stale entry was always already held. Under a fold the set
+>    shrinks and the stale entry *wins*: it writes a permanent disposition built
+>    from a deleted card's frontmatter and re-claims the slot, reproducing the very
+>    bug for the successor. The outside call stays as the cheap probe that keeps
+>    every gated write off the lock.
+> 5. **A `.strip()` at `_closed_cards`.** Journaling folded `projection` but did not
+>    strip it; compaction did both. `projection: " attention "` was therefore
+>    invisible to journaling and visible to compaction — archived and deleted with
+>    zero journal rows, sequentially, in one process. (`loudness.is_open_blocker`
+>    has the same unstripped read; out of scope here, filed separately.)
+> 6. **The git pre-flight tested the wrong thing.** `(vault / ".git").exists()` is
+>    the one git failure `workspace scan` can never reach — the scan's own `git
+>    status` fails first. The reachable ones — a crashed git leaving `index.lock`,
+>    an unconfigured identity — passed it, appended the whole tail into a digest,
+>    unlinked every card and failed at the commit. `_uncommittable` now checks repo,
+>    lock and `git var GIT_COMMITTER_IDENT` before the first write. It is racy by
+>    nature, so the residual commit failure enriches its own message with the count
+>    and digest path it already moved (the caller never receives a return value).
+>
+> **Costs, declared rather than mechanized.** A crash between the release row and
+> the unlink leaves a briefly-false row: the next scan re-journals the card and
+> appends a duplicate digest section (the duplicate half is HEAD's behaviour
+> already). A persistent unlink failure on a read-only `inbox/` now costs ~2
+> permanent rows per file-watch tick where HEAD already spammed a duplicate section
+> per tick. And the invariant "every code path that removes an `inbox/*.md` card
+> owes a release row" is load-bearing and unenforced — `lifecycle.py`'s is today the
+> only `.unlink()` in `src/` touching `inbox/`; U3-SUB.3's re-raise work is the
+> nearest risk.
+>
+> **Not claimed:** this does not make the digest checkable against a
+> non-forgeable index. `_digest_section` heads sections with attacker-controlled
+> `title` plus a basename, the row keys on the full relpath, and slot reuse is
+> deliberate — a forged section naming any genuinely archived basename matches. The
+> honest claim is the whole point: the runtime was deleting a PI-visible file and
+> recording nothing; it now records which card left, when, and which digest holds
+> it. **Out-of-band deletion** (PI in Obsidian, `git checkout`/`restore`/`revert`,
+> an adapter) still poisons a slot permanently — issue #1616, which also records why
+> a release sweep was rejected: it puts a DB read on the `PreToolUse` hot path
+> unconditionally and retires the no-lock pin.
+>
+> **Coverage note (`cli.py`).** The `OSError` and `RuntimeError` arms of
+> `_compact_resolved_inbox` have producer tests. `sqlite3.Error` has none and can
+> have none: a database this scan cannot write is one `verify_journal_chain` already
+> refused several steps earlier (verified — exit 2, no payload). It stays as named
+> defence-in-depth for the inter-step window, matching `policy/engine.py`.
 
 **Steps:**
 

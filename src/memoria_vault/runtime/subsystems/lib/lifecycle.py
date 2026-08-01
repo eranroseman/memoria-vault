@@ -35,6 +35,15 @@ and never descend into `archive/`, and the work-prompt dedupe checks one direct 
 in `inbox/`. Belt and braces for a reader that does descend -- the seeded
 `inbox.base` view selects a folder -- the digest carries no YAML frontmatter, so no
 `projection: attention` match is possible even for a recursive scan.
+
+**Removing a card is itself journaled.** `inbox/` filenames are reused -- both
+writers in `inbox.py` refuse an occupied name and take the freed one -- so "this
+path was disposed of" stops being true the moment compaction deletes the card. Each
+archived card therefore gets an `EVENT_ATTENTION_ARCHIVED` release row, and the
+disposition set is folded from both event types in journal order rather than
+filtered from one. Every code path that removes an `inbox/*.md` card owes a release
+row; `compact_resolved_cards` is currently the only `.unlink()` in `src/` that
+touches `inbox/`, and nothing enforces the rest.
 """
 
 from __future__ import annotations
@@ -79,20 +88,39 @@ def _machine(machine: str) -> str:
     return machine or platform.node() or "local"
 
 
-def _journaled_disposition_targets(vault: Path) -> set[str]:
-    """Return the cards whose closing disposition the journal already holds.
+def _held_disposition_targets(vault: Path) -> set[str]:
+    """Return the paths whose closing disposition the journal holds *and has not released*.
+
+    A path, not a card: `inbox/` filenames are reused. `inbox.py`'s dedupe slot and
+    its collision loop both refuse an occupied name, so before compaction a resolved
+    card sat on its path forever and this set only ever grew. Compaction deletes the
+    card, so the same path can carry a second, different card -- and a set that only
+    grew would suppress that card's disposition and hand the gate back the silent
+    clear this module exists to remove.
+
+    So it is an ordered fold, not a filter: a disposition claims the path, the
+    archival release row hands it back. `read_event_log` orders by `event_id`, and
+    the journal forbids UPDATE and DELETE, so the fold is deterministic and replays
+    identically forever.
 
     An acknowledgement is an `EVENT_RESOLVED` row too, but it closes nothing and
     leaves the card open -- a later edit closing it is still unrecorded. Note
     curation, moves, and rollbacks emit that event type with their own `resolution`
-    vocabulary. Only an attention row that resolved the card already speaks for it.
+    vocabulary, and `EVENT_ATTENTION_ARCHIVED` is this module's own, so the `source`
+    guard is hoisted over both: only attention rows speak for an attention card.
     """
-    return {
-        str(event.get("target_id") or "")
-        for event in state.read_event_log(vault, event_types=(EVENT_RESOLVED,))
-        if event.get("source") == ATTENTION_SOURCE
-        and event.get("resolution") == RESOLUTION_RESOLVED
-    }
+    held: set[str] = set()
+    for event in state.read_event_log(
+        vault, event_types=(EVENT_RESOLVED, EVENT_ATTENTION_ARCHIVED)
+    ):
+        if event.get("source") != ATTENTION_SOURCE:
+            continue
+        target = str(event.get("target_id") or "")
+        if event.get("event") == EVENT_ATTENTION_ARCHIVED:
+            held.discard(target)
+        elif event.get("resolution") == RESOLUTION_RESOLVED:
+            held.add(target)
+    return held
 
 
 def _closed_outcome(status: str, frontmatter: Mapping[str, Any]) -> str:
@@ -119,7 +147,7 @@ def _closed_cards(inbox: Path, vault: Path) -> list[tuple[str, str, Mapping[str,
     closed: list[tuple[str, str, Mapping[str, Any]]] = []
     for path in sorted(inbox.glob("*.md")):
         frontmatter = read_frontmatter(path)
-        if str(frontmatter.get("projection") or "").lower() != ATTENTION_PROJECTION:
+        if str(frontmatter.get("projection") or "").strip().lower() != ATTENTION_PROJECTION:
             continue
         status = str(frontmatter.get("attention_status") or "").strip().lower()
         if status not in CLOSED_STATUS_OUTCOMES:
@@ -147,25 +175,38 @@ def _disposition_row(
 
 
 def journal_unattributed_dispositions(vault: Path, *, machine: str = "") -> list[dict[str, Any]]:
-    """Journal every closed `attention_status` the journal does not already hold."""
+    """Journal every closed `attention_status` the journal does not currently hold.
+
+    "Currently", not "already": compaction can hand a path back, so a second card at
+    a reused `inbox/` name gets its own row. See `_held_disposition_targets`.
+    """
     vault = Path(vault)
     inbox = vault / "inbox"
     if not inbox.is_dir():
         return []
-    closed = _closed_cards(inbox, vault)
-    if not closed:  # no closed card, so nothing to record and no reason to lock
+    if not _closed_cards(inbox, vault):  # nothing to record, so no reason to lock
         return []
-    # One critical section over the read that decides what is missing and the write
-    # that fills it. Reading outside it let concurrent sessions -- AGENTS.md
-    # documents several per checkout, and the call site is a per-write hook -- each
-    # see an empty journal and append the same permanent row.
+    # One critical section over *both* reads that decide what is missing and the
+    # write that fills it. Reading the journal outside it let concurrent sessions --
+    # AGENTS.md documents several per checkout, and the call site is a per-write
+    # hook -- each see an empty journal and append the same permanent row.
+    #
+    # The card read is inside for a reason that only exists once compaction can
+    # delete a card: the held set is a fold now, so it shrinks. A card list read
+    # before the lock and used inside it can name a path a rival journaled,
+    # archived, and unlinked while this call waited -- and because the release row
+    # un-held that path, the stale entry is no longer suppressed. It would append a
+    # permanent disposition built from the deleted card's frontmatter and re-claim
+    # the slot, so the live card that now sits there never gets one. That is the
+    # exact defect the release row exists to fix, reintroduced through the back door.
     with state.workspace_lock(vault):
-        journaled = _journaled_disposition_targets(vault)
+        closed = _closed_cards(inbox, vault)
+        held = _held_disposition_targets(vault)
         decided_at = now_iso()
         rows = [
             _disposition_row(rel, status, frontmatter, decided_at)
             for rel, status, frontmatter in closed
-            if rel not in journaled
+            if rel not in held
         ]
         if not rows:
             return []
@@ -180,6 +221,15 @@ COMPACT_COMMIT_MESSAGE = "compact resolved attention cards"
 # The scan that runs compaction is already actor `integrity`; this is the runtime's
 # own hygiene write, so it names itself rather than borrowing the card's author.
 COMPACTION_ACTOR = "integrity"
+# Subsystem-named and local to this module. `event_log.event_type` is bare TEXT with
+# no CHECK and no registry (`runtime/schema.sql:30`), and the house precedent for a
+# subsystem transition is an inline literal in the owning module (`move-reverted` at
+# `runtime/knowledge.py:513`, `workspace-restored` at `runtime/backup.py:792`). Bare
+# `archived` was rejected: it already names a note lifecycle (`integrity.py:1782`), a
+# source standing (`:1800`), a worklist decision (`worklists.py:30`) and a steering
+# flag. A journal event type can never be renamed once rows carry it.
+EVENT_ATTENTION_ARCHIVED = "attention-card-archived"
+ARCHIVE_REASON = "appended this attention card to the monthly archive digest"
 # A match is sliced to its first seven characters, so the month key is always
 # `\d{4}-\d{2}`: a card's own `resolved_at` picks which digest it lands in and can
 # never name a path outside the archive.
@@ -236,6 +286,31 @@ def _resolved_cards(inbox: Path) -> list[tuple[Path, dict[str, Any], str]]:
     return cards
 
 
+def _release_row(rel: str, digest_rel: str) -> dict[str, Any]:
+    """Return the row that hands a card's `inbox/` path back to the next card.
+
+    No `via`, `resolution`, or `outcome`: those fields name a decision and its
+    maker, and this row records neither. `actor: integrity` is the whole truth,
+    because unlike the disposition it sits beside, the runtime *is* the author of
+    the removal. No `archived_at` either -- `_prepare_explicit_journal_event`
+    already stamps `timestamp`, and a second time field in a log that forbids
+    UPDATE and DELETE could never be corrected.
+
+    `outputs` rather than a bespoke key so the digest travels the same scoping path
+    as any other written output: `_journal_paths` sweeps it (`engine/api.py:940`)
+    and `_journal_in_scope` requires *all* swept paths in scope (`:923`), so an
+    `inbox/**` reader sees this row and a `notes/**` reader does not -- and
+    `memoria journal --path inbox/alert-x.md` returns that path's whole life.
+    """
+    return {
+        "event": EVENT_ATTENTION_ARCHIVED,
+        "source": ATTENTION_SOURCE,
+        "target_id": rel,
+        "outputs": [digest_rel],
+        "reason": ARCHIVE_REASON,
+    }
+
+
 def _tracked(vault: Path, rel: str) -> bool:
     proc = subprocess.run(
         ["git", "ls-files", "--error-unmatch", "--", rel],
@@ -246,12 +321,52 @@ def _tracked(vault: Path, rel: str) -> bool:
     return proc.returncode == 0
 
 
+def _uncommittable(vault: Path) -> str:
+    """Return why the trusted writer cannot commit here now, or `""` if it can.
+
+    Checked before the first durable write, because a digest is durable only once
+    committed. `.git` existing is neither necessary nor sufficient: a vault with no
+    repo cannot reach compaction through `workspace scan` at all (the scan's own
+    `git status` fails first), while the failures that *are* reachable -- a crashed
+    git leaving `index.lock`, an unconfigured identity -- all pass an existence
+    check and then blow up at the commit, with the tail already appended to an
+    uncommitted digest and unlinked from `inbox/`. Racy by nature, so the commit
+    still guards itself; this only stops the two states that are already true when
+    compaction starts.
+    """
+    if not (vault / ".git").exists():
+        return "it has no git repo"
+    if (vault / ".git/index.lock").exists():
+        return "another git process holds .git/index.lock"
+    proc = subprocess.run(
+        ["git", "var", "GIT_COMMITTER_IDENT"],
+        cwd=vault,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode:
+        # `splitlines()[0]` on an empty stderr would raise IndexError, which is not
+        # in the caller's catch and would take the watch loop down with it.
+        detail = next(iter(proc.stderr.strip().splitlines()), "git var failed")
+        return f"git has no committer identity: {detail}"
+    return ""
+
+
 def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     """Move resolved attention cards into the append-only monthly archive digest.
 
     Journals unattributed dispositions first, so no card leaves `inbox/` without a
-    journaled disposition; each card file is then deleted in the same trusted-writer
-    commit that records the digest append. Deferred and open cards stay put.
+    journaled disposition, and appends an `EVENT_ATTENTION_ARCHIVED` release row for
+    each card before unlinking it, so no card leaves `inbox/` without the journal
+    recording that it left and which digest now holds it. Each card file is then
+    deleted in the same trusted-writer commit that records the digest append.
+    Deferred and open cards stay put.
+
+    The release row is what makes an `inbox/` path reusable safely. Without it the
+    disposition set only grows, so the second card to occupy a freed name is read as
+    already-disposed and is deleted with no record of its own -- silently, and
+    whether the first card's row named the PI or named nobody.
 
     The deciding read and the writes are one critical section, for the reason the
     journaling half took one: `workspace scan` is a file-watch tick as well as a
@@ -270,13 +385,13 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
     inbox = vault / "inbox"
     if not _resolved_cards(inbox):
         return result
-    if not (vault / ".git").exists():
-        # Checked before the first append: a digest is durable only once committed,
-        # so a vault the trusted writer cannot commit to keeps its cards instead.
-        raise RuntimeError(f"cannot archive resolved attention cards: {vault} has no git repo")
+    blocked = _uncommittable(vault)
+    if blocked:
+        raise RuntimeError(f"cannot archive resolved attention cards: {blocked}")
     archived: list[str] = []
     digests: list[str] = []
     tracked: list[str] = []
+    pending: list[tuple[Path, str, str]] = []
     today = datetime.date.today()
     with state.workspace_lock(vault):
         for path, frontmatter, body in _resolved_cards(inbox):
@@ -289,19 +404,40 @@ def compact_resolved_cards(vault: Path, *, machine: str = "") -> dict[str, Any]:
             append_text_durable(digest_path, _digest_section(rel, frontmatter, body))
             if _tracked(vault, rel):
                 tracked.append(rel)  # an untracked deletion has nothing to stage
-            path.unlink()
-            archived.append(rel)
+            pending.append((path, rel, digest_rel))
             if digest_rel not in digests:
                 digests.append(digest_rel)
-        if not archived:  # a rival compacted the tail between the probe and the lock
+        if not pending:  # a rival compacted the tail between the probe and the lock
             return result
-        result["archived"] = archived
-        result["digests"] = digests
-        result["commit"] = commit_explicit_writer_changes(
+        # Release rows before the unlinks, never after. A crash between them costs
+        # one redundant disposition row on the next scan, which inspection can see
+        # and the journal can carry; the other order costs whichever card lands on
+        # the freed path next its disposition, permanently and invisibly.
+        append_explicit_event_batch(
             vault,
-            COMPACT_COMMIT_MESSAGE,
-            [*digests, *tracked],
+            [_release_row(rel, digest_rel) for _, rel, digest_rel in pending],
             actor=COMPACTION_ACTOR,
             machine=_machine(machine),
         )
+        for path, rel, _digest_rel in pending:
+            path.unlink()
+            archived.append(rel)
+        result["archived"] = archived
+        result["digests"] = digests
+        try:
+            result["commit"] = commit_explicit_writer_changes(
+                vault,
+                COMPACT_COMMIT_MESSAGE,
+                [*digests, *tracked],
+                actor=COMPACTION_ACTOR,
+                machine=_machine(machine),
+            )
+        except RuntimeError as exc:
+            # The cards are already gone and the digest already holds them; the
+            # caller's payload cannot report a return value it never receives, so
+            # the loss goes in the message it does report.
+            raise RuntimeError(
+                f"{exc} -- {len(archived)} card(s) already archived into "
+                f"{', '.join(digests)} and removed from inbox/; commit them by hand"
+            ) from exc
     return result

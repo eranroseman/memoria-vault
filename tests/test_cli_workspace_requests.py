@@ -2061,3 +2061,31 @@ def test_workspace_scan_reports_a_compaction_it_cannot_finish(
     assert scan["inbox_compaction"]["error"]
     assert scan["inbox_compaction"]["archived"] == []
     assert (inbox / "alert-old.md").is_file()  # the card is still there to retry
+
+
+def test_workspace_scan_reports_a_compaction_git_refuses(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The `RuntimeError` arm, from a producer state and not from a raised stub.
+
+    Every git failure compaction can hit arrives as `RuntimeError` -- the
+    pre-flight's own refusal, and `trusted_writer._git`'s. A crashed git leaving
+    `.git/index.lock` is the ordinary way to reach it on a live vault, and `.git`
+    missing is not: the scan's own `git status` fails long before compaction. Drop
+    this arm and `memoria workspace scan` tracebacks, prints no JSON, and takes the
+    watch loop with it.
+    """
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    inbox = workspace / "inbox"
+    _write_resolved_card(inbox, "alert-old.md")
+    (workspace / ".git/index.lock").write_text("", encoding="utf-8")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 1
+    scan = json.loads(capsys.readouterr().out)
+
+    assert scan["ok"] is False
+    assert "index.lock" in scan["inbox_compaction"]["error"]
+    assert (inbox / "alert-old.md").is_file()  # kept, not emptied into an orphan digest
+    assert not (inbox / "archive").exists()

@@ -2439,6 +2439,13 @@ def _compact_resolved_inbox(workspace: Path) -> dict[str, Any]:
     repo, a read-only tree, or a busy journal is therefore a reported `error`, which
     the payload's `ok` carries -- a scan never reports success over a step that
     failed.
+
+    `OSError` and `RuntimeError` both have producer tests at this seam. `sqlite3.Error`
+    does not, and cannot: a database this scan cannot write is a database
+    `verify_journal_chain` already refused several steps earlier. It stays because the
+    window between the observe step and this one is real on a live vault with an
+    external writer, and because `policy/engine.py` guards the same lib call the same
+    way -- defence in depth, named as such rather than left looking covered.
     """
     # Lazy, like the journal and projection imports above: the scan path is the only
     # caller and `memoria --help` should not pay for the trusted writer.
