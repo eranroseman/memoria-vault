@@ -77,6 +77,7 @@ TEST_LEVELS = {
     "test_gate_calibration.py": "unit",
     "test_grounded_synthesis.py": "contract",
     "test_graph_sql.py": "contract",
+    "test_hub_candidates.py": "contract",
     "test_hub_handoff.py": "contract",
     "test_identifier_renames.py": "contract",
     "test_http_transport.py": "contract",
