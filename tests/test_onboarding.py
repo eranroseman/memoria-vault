@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import http.client
+import inspect
 import socket
 import subprocess
+import threading
 import urllib.error
 import urllib.parse
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
@@ -498,9 +501,10 @@ def test_zotero_probe_is_false_on_socket_timeout_alias() -> None:
 def test_zotero_probe_is_false_on_http_client_exception_not_an_oserror() -> None:
     # http.client.HTTPException is NOT an OSError subclass (unlike
     # ConnectionRefusedError/TimeoutError/URLError) -- catching only OSError
-    # would let this one escape and crash onboarding. This is the exact class
-    # of bug BOOT-D.2 shipped with `except OSError` around a
-    # subprocess.TimeoutExpired (also not an OSError).
+    # would let this one escape and crash onboarding. This is the same class
+    # of bug BOOT-D.2's *plan snippet* had -- `except OSError` around a
+    # subprocess.TimeoutExpired (also not an OSError) -- which review caught
+    # before it shipped; BOOT-D.2 itself never shipped with that bug.
     def url_open(_url: str, timeout: float = 0.0) -> FakeResponse:
         raise http.client.BadStatusLine("garbage")
 
@@ -512,3 +516,146 @@ def test_zotero_probe_is_false_on_malformed_status_value_error() -> None:
         return MalformedStatusResponse()
 
     assert onboarding.zotero_running(url_open=url_open) is False
+
+
+class NonNumericStatusResponse:
+    """A response whose ``status`` cannot be coerced to ``int`` via ``TypeError``.
+
+    ``int([])``/``int({})``/``int(object())`` raise ``TypeError``, a distinct
+    failure mode from ``MalformedStatusResponse``'s ``ValueError``. Only
+    reachable via an injected fake -- the production default's ``urlopen``
+    response never returns a non-numeric ``status`` -- but the function's own
+    "must never raise" contract does not carve out an exception for it.
+    """
+
+    status = object()
+
+    def __enter__(self) -> NonNumericStatusResponse:
+        return self
+
+    def __exit__(self, *exc: object) -> bool:
+        return False
+
+
+def test_zotero_probe_is_false_on_non_numeric_status_type_error() -> None:
+    def url_open(_url: str, timeout: float = 0.0) -> NonNumericStatusResponse:
+        return NonNumericStatusResponse()
+
+    assert onboarding.zotero_running(url_open=url_open) is False
+
+
+def test_zotero_probe_default_opener_is_the_hardened_opener() -> None:
+    # Regression guard: a future edit reverting the default back to bare
+    # urllib.request.urlopen would not fail any of the tests above, since
+    # they all inject their own fake. Pin the default explicitly.
+    default = inspect.signature(onboarding.zotero_running).parameters["url_open"].default
+    assert default is onboarding._open_zotero_probe
+
+
+def test_zotero_probe_default_opener_ignores_ambient_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
+    # urllib.request.urlopen honors http_proxy/https_proxy even for a
+    # 127.0.0.1 target (urllib.request.proxy_bypass does not exempt
+    # loopback), so under a corporate/dev-container proxy the probe would
+    # leave the machine. Prove the default opener instead reaches the real
+    # loopback target directly and never touches the configured proxy.
+    target_seen = threading.Event()
+
+    class TargetHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            target_seen.set()
+            self.send_response(200)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, *_args: object) -> None:
+            return
+
+    target_server = ThreadingHTTPServer(("127.0.0.1", 0), TargetHandler)
+    target_port = int(target_server.server_address[1])
+    target_thread = threading.Thread(target=target_server.serve_forever, daemon=True)
+    target_thread.start()
+
+    proxy_seen = threading.Event()
+
+    class ProxyStubHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            proxy_seen.set()
+            self.send_response(200)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, *_args: object) -> None:
+            return
+
+    proxy_server = ThreadingHTTPServer(("127.0.0.1", 0), ProxyStubHandler)
+    proxy_port = int(proxy_server.server_address[1])
+    proxy_thread = threading.Thread(target=proxy_server.serve_forever, daemon=True)
+    proxy_thread.start()
+
+    monkeypatch.setenv("http_proxy", f"http://127.0.0.1:{proxy_port}")
+    monkeypatch.delenv("no_proxy", raising=False)
+    try:
+        with onboarding._open_zotero_probe(
+            f"http://127.0.0.1:{target_port}/connector/ping", timeout=2.0
+        ) as response:
+            assert response.status == 200
+        assert target_seen.is_set()
+        assert not proxy_seen.is_set()
+    finally:
+        target_server.shutdown()
+        target_thread.join(timeout=5)
+        target_server.server_close()
+        proxy_server.shutdown()
+        proxy_thread.join(timeout=5)
+        proxy_server.server_close()
+
+
+def test_zotero_probe_default_opener_does_not_follow_redirects() -> None:
+    # An unhardened opener follows a 301/302/303/307/308 -- including to an
+    # ftp:// target, whose addinfourl has status None, which this probe
+    # would otherwise treat as success. Prove the default opener raises
+    # instead of following, and never reaches the redirect target.
+    target_seen = threading.Event()
+
+    class TargetHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            target_seen.set()
+            self.send_response(200)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, *_args: object) -> None:
+            return
+
+    target_server = ThreadingHTTPServer(("127.0.0.1", 0), TargetHandler)
+    target_port = int(target_server.server_address[1])
+    target_thread = threading.Thread(target=target_server.serve_forever, daemon=True)
+    target_thread.start()
+
+    class RedirectHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            self.send_response(302)
+            self.send_header("Location", f"http://127.0.0.1:{target_port}/connector/ping")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, *_args: object) -> None:
+            return
+
+    redirect_server = ThreadingHTTPServer(("127.0.0.1", 0), RedirectHandler)
+    redirect_port = int(redirect_server.server_address[1])
+    redirect_thread = threading.Thread(target=redirect_server.serve_forever, daemon=True)
+    redirect_thread.start()
+    try:
+        with pytest.raises(urllib.error.HTTPError):
+            onboarding._open_zotero_probe(
+                f"http://127.0.0.1:{redirect_port}/connector/ping", timeout=2.0
+            )
+        assert not target_seen.is_set()
+    finally:
+        redirect_server.shutdown()
+        redirect_thread.join(timeout=5)
+        redirect_server.server_close()
+        target_server.shutdown()
+        target_thread.join(timeout=5)
+        target_server.server_close()

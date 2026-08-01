@@ -15,6 +15,8 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.rendezvous import _NoRedirect
+
 RunFn = Callable[..., subprocess.CompletedProcess[str]]
 AskFn = Callable[[str], str]
 SayFn = Callable[[str], None]
@@ -221,27 +223,49 @@ def open_vault_in_obsidian(
 ZOTERO_CONNECTOR_URL = "http://127.0.0.1:23119/connector/ping"
 
 
+def _open_zotero_probe(url: str, *, timeout: float) -> Any:
+    """Open the Zotero probe without ambient proxy or redirect policy.
+
+    Same shape as ``rendezvous._open_lifecycle_request``: a bare ``urlopen``
+    honors ``http_proxy``/``https_proxy`` even for a ``127.0.0.1`` target
+    (``urllib.request.proxy_bypass`` does not exempt loopback addresses), so
+    under a corporate or dev-container proxy this request would leave the
+    machine, and a proxy answering any 2xx (captive portal, interstitial)
+    would report Zotero running with none present — defeating the loopback
+    literal far more thoroughly than the hosts-file override it guards
+    against. ``ProxyHandler({})`` forces the direct connection the literal
+    was meant to guarantee; ``_NoRedirect`` stops a redirected connector
+    endpoint from being followed to another host.
+    """
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+    return opener.open(url, timeout=timeout)
+
+
 def zotero_running(
     *,
-    url_open: Callable[..., Any] = urllib.request.urlopen,
+    url_open: Callable[..., Any] = _open_zotero_probe,
     timeout: float = 0.5,
 ) -> bool:
     """Probe the local Zotero Connector on 127.0.0.1:23119 (bootstrap spec §7.4).
 
     ``127.0.0.1`` is used verbatim rather than ``localhost``, which can
     resolve to IPv6 ``::1`` or hit a hosts-file override and silently miss
-    the connector. Must never raise: a probe that crashes onboarding is the
-    failure mode this section keeps hitting. ``urlopen`` collapses to
-    ``OSError`` subclasses (``URLError``, ``HTTPError``, ``TimeoutError`` —
-    ``socket.timeout`` is its alias —, ``ConnectionRefusedError``, ...), but
+    the connector; the default ``url_open`` additionally opens through a
+    proxy-free, redirect-free opener (see ``_open_zotero_probe``) so an
+    ambient proxy cannot intercept or redirect the loopback request. Must
+    never raise: a probe that crashes onboarding is the failure mode this
+    section keeps hitting. ``urlopen`` collapses to ``OSError`` subclasses
+    (``URLError``, ``HTTPError``, ``TimeoutError`` — ``socket.timeout`` is
+    its alias —, ``ConnectionRefusedError``, ...), but
     ``http.client.HTTPException`` (a malformed response, e.g. a bad status
     line) is a plain ``Exception``, not an ``OSError`` subclass, and the
     ``int(status)`` coercion below can raise ``ValueError`` on a malformed
-    status value; all three branches are caught explicitly.
+    status value or ``TypeError`` on a non-numeric status type; all branches
+    are caught explicitly.
     """
     try:
         with url_open(ZOTERO_CONNECTOR_URL, timeout=timeout) as response:
             status = getattr(response, "status", None)
             return status is None or 200 <= int(status) < 300
-    except (OSError, ValueError, http.client.HTTPException):
+    except (OSError, TypeError, ValueError, http.client.HTTPException):
         return False
