@@ -99,6 +99,7 @@ fulltexts
 funders
 gameable
 gantt
+genai
 gguf
 gitleaks
 glanceable
