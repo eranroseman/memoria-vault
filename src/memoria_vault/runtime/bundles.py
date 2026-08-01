@@ -60,11 +60,17 @@ BUNDLE_FILES: dict[str, tuple[str, ...]] = {
         ".mcp.json",
         "CLAUDE.md",
     ),
+    # `main.js` requires every sibling module by relative path, so a module
+    # missing from this roster is not merely absent from the vault -- the
+    # entrypoint throws MODULE_NOT_FOUND and the plugin does not load at all.
     "obsidian": (
+        ".obsidian/plugins/memoria-obsidian/handshake.js",
         ".obsidian/plugins/memoria-obsidian/main.js",
         ".obsidian/plugins/memoria-obsidian/manifest.json",
+        ".obsidian/plugins/memoria-obsidian/pill.js",
         ".obsidian/plugins/memoria-obsidian/schema.js",
         ".obsidian/plugins/memoria-obsidian/styles.css",
+        ".obsidian/plugins/memoria-obsidian/viewspec.js",
     ),
 }
 # Membership test for the seed-class writer's one-writer refusal (cli.py).

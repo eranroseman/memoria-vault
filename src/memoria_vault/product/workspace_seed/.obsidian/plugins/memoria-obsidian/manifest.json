@@ -3,7 +3,7 @@
   "name": "Memoria",
   "version": "0.1.0-alpha.20",
   "minAppVersion": "1.5.0",
-  "description": "Minimal local Memoria control surface and empirical-use recorder.",
+  "description": "Memoria attention pane, status pill, and relate control — a thin renderer over the local engine.",
   "author": "Memoria",
-  "isDesktopOnly": false
+  "isDesktopOnly": true
 }

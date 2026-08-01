@@ -478,9 +478,10 @@ def test_attention_view_ages_cards_from_created(workspace: Path) -> None:
     unparseable = _write_view_card(
         workspace, "unparseable", loudness="alert", created="last Tuesday"
     )
-    # A hand-edited future date is the one input that makes age negative. It is
-    # fixtured rather than clamped because it is where this producer's order and
-    # the plugin's `sortCards` disagree -- see the plan amendment.
+    # A hand-edited future date is the one input that makes age negative. The
+    # producer keeps the signed value (the label must show `-3d`, not `0d`);
+    # U3-PLUG.7 reconciled the divergence on the plugin side, where `sortCards`
+    # now clamps a negative `age_s` to 0 so both orders agree.
     future = _write_view_card(workspace, "future", loudness="alert", created=_days_ago(-3))
 
     payload = api.read_attention_view(workspace)
@@ -496,8 +497,9 @@ def test_attention_view_ages_cards_from_created(workspace: Path) -> None:
     assert "raised_at" not in cards[undated]
     assert cards[unparseable]["raised_at"] == "last Tuesday"
     # The engine orders on the full `created` string, so the future card sorts
-    # ahead of the undated sentinel; the plugin's day-granular `age_s` puts it
-    # behind every `age_s == 0` card instead.
+    # ahead of the undated sentinel. `sortCards` reproduces exactly this row
+    # order -- see `test-viewspec.mjs`, "a future-dated card keeps the engine's
+    # row order".
     assert _refs(payload) == [aged, today, future, undated, unparseable]
 
 
