@@ -126,7 +126,7 @@ Line refs at `a4da8aa3`: `state.SCHEMA_VERSION` (`state.py:53`), `_init` (`state
 - Consumes: the direct current graph schema at whatever version `main` carries, and its fail-closed version gate.
 - Produces: the `telemetry_events` table (contract 2) at `PRAGMA user_version = N`; `SCHEMA_VERSION = N`, where `N` is the current value + 1 (18 on `main` today).
 
-- [ ] **Step 1: Precondition check (fresh-schema handoff).** Run:
+- [x] **Step 1: Precondition check (fresh-schema handoff).** Run:
 
 ```bash
 grep -n "^SCHEMA_VERSION" src/memoria_vault/runtime/state.py
@@ -135,7 +135,7 @@ grep -rn "MIGRATIONS" src/memoria_vault/runtime/state.py
 
 Read the current `SCHEMA_VERSION` and record `N = current + 1` — that is this task's rung, whatever integer it turns out to be. **Stop only if the second grep finds a `MIGRATIONS` symbol or a private migration helper**, which would mean the fresh-install rule no longer holds and this task's whole shape is wrong. Do not stop because the current value is not some particular number: T.1 does not depend on any other schema task's storage, so it renumbers nothing by taking the next free rung. Record `N` in the commit message so the rung the task actually claimed is on the record.
 
-- [ ] **Step 2: Write the failing tests** — create `tests/test_telemetry_events.py`:
+- [x] **Step 2: Write the failing tests** — create `tests/test_telemetry_events.py`:
 
 ```python
 """Contract tests for the non-chained telemetry_events table and its writer."""
@@ -177,12 +177,12 @@ def test_journal_verification_ignores_telemetry_rows(tmp_path: Path) -> None:
     assert verdict["events"] == 0
 ```
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `python -m pytest tests/test_telemetry_events.py -v`
 Expected: FAIL — `cols == set()` (no such table) on the first test.
 
-- [ ] **Step 4: Implement.** In `src/memoria_vault/runtime/state.py`, set
+- [x] **Step 4: Implement.** In `src/memoria_vault/runtime/state.py`, set
   `SCHEMA_VERSION = N`. In `src/memoria_vault/runtime/schema.sql` — the one
   `schema.sql` under `src/`, and the file `_schema_sql()` reads — add this table and
   index beside the other current DDL, then set the trailing `PRAGMA user_version = N;`:
@@ -204,7 +204,7 @@ Expected: FAIL — `cols == set()` (no such table) on the first test.
   `"test_telemetry_events.py": "contract",`. Do not register a transition,
   backfill rows, or create an old-version fixture.
 
-- [ ] **Step 5: Run to verify pass**
+- [x] **Step 5: Run to verify pass**
 
 Run: `python -m pytest tests/test_telemetry_events.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_query_substrate.py -v`
 Expected: PASS. (`verify_journal_chain` reads only `event_log` — `state.py:836-844` — so the second test passes with no verification-code change; that is the proof the spec's "excluded from journal verification" claim is structural.)
@@ -242,7 +242,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: T.1's table; `validate_empirical_event` / `validate_read_event` (`engine/empirical_events.py:104/:168`); `validate_edge_write_event` **only if present** (graph ERP-D.6 adds it later — `hasattr` guard); `now_iso` (`runtime/time.py:17`).
 - Produces: contract 1's `record_telemetry_event(vault, event_type, payload) -> str`; contract 3's native-type validation; `WORKFLOWS` gains `"attention"`.
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_telemetry_events.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_telemetry_events.py`:
 
 ```python
 def test_record_telemetry_event_inserts_validated_native_rows(tmp_path: Path) -> None:
@@ -301,12 +301,12 @@ def test_workflows_roster_includes_attention() -> None:
     assert event == {"workflow": "attention", "staleness_hit": True}
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `python -m pytest tests/test_telemetry_events.py tests/test_empirical_events.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'memoria_vault.runtime.telemetry'` and `assert "attention" in WORKFLOWS` fails.
 
-- [ ] **Step 3: Implement.** Add `"attention",` to `WORKFLOWS` (`engine/empirical_events.py:17-31`, alphabetical position). Create `src/memoria_vault/runtime/telemetry.py`:
+- [x] **Step 3: Implement.** Add `"attention",` to `WORKFLOWS` (`engine/empirical_events.py:17-31`, alphabetical position). Create `src/memoria_vault/runtime/telemetry.py`:
 
 ```python
 """Non-chained telemetry sink (I1 spec §1): analytics-only events, never the journal."""
@@ -373,7 +373,7 @@ def _validated(event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
 
 (The `edge-write.v1` branch tolerates the graph plan's ERP-D.6 landing later: before it lands nothing emits that type, and the `hasattr` guard routes an early call to the honest `unknown telemetry event type` error.)
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `python -m pytest tests/test_telemetry_events.py tests/test_empirical_events.py -v`
 Expected: PASS.
@@ -387,6 +387,30 @@ git commit -m "feat(telemetry): record_telemetry_event writer + native flow even
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
+
+> **T.1/T.2 landing record (2026-08-01).** The rung claimed is **18**
+> (`SCHEMA_VERSION` was 17; no other schema task had taken it). Four things the
+> next reader needs, none of which change contract 1 or 2:
+>
+> 1. **`event_id` is nullable at the DDL layer.** SQLite's `TEXT PRIMARY KEY` does
+>    not imply `NOT NULL` on a rowid table, so contract 2's DDL — kept verbatim —
+>    accepts a NULL `event_id` from raw SQL. `record_telemetry_event` is the only
+>    writer and always mints a `uuid4().hex`, so nothing reachable produces one.
+>    `tests/test_telemetry_events.py` therefore asserts `NOT NULL` on `ts`,
+>    `event_type` and `payload_json` only; do not "fix" that test by adding
+>    `event_id` to the loop without also adding `NOT NULL` to the DDL here, in
+>    O1's mirror of it, and in every plan that quotes contract 2.
+> 2. **The native normalizer drops the draft snippet's `sorted(fields)`.** It was a
+>    no-op — `json.dumps(..., sort_keys=True)` already fixes key order — and a no-op
+>    survives every mutation, so it read as coverage that was not there.
+> 3. **T.2 also edits `docs/reference/control-and-policy/empirical-events.md`.**
+>    Its `workflow` enum table lists the `WORKFLOWS` roster verbatim, so adding
+>    `attention` without it leaves a doc that contradicts the validator. No gate
+>    catches this today; the file belongs in T.2's staging list.
+> 4. **Floor goldens did not move.** `tests/floor_lib.py`'s `_DIGEST_TABLES` is a
+>    fixed roster that does not include `telemetry_events`, and the digest skips
+>    `*.sqlite`, so a new table is invisible to the goldens. A schema rung is not
+>    automatically golden work.
 
 ### Task T.3: `record_empirical_event` sink rewire (journal → telemetry)
 

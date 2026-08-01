@@ -422,4 +422,18 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 17;
+-- Analytics-only telemetry (I1 spec section 1). Never chained, never journaled:
+-- these rows carry no hash link and no git effect, so losing them costs measurement
+-- and nothing else. The journal remains the only authoritative record.
+CREATE TABLE IF NOT EXISTS telemetry_events (
+    event_id TEXT PRIMARY KEY,
+    ts TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    session_id TEXT,
+    surface TEXT,
+    payload_json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_telemetry_type_ts
+    ON telemetry_events(event_type, ts);
+
+PRAGMA user_version = 18;

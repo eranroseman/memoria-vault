@@ -17,6 +17,7 @@ SURFACES = frozenset({"cli", "rest", "mcp", "obsidian", "vscode", "manual"})
 WORKFLOWS = frozenset(
     {
         "ask",
+        "attention",
         "capture",
         "gap",
         "evidence-review",
