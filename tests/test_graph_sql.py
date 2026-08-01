@@ -246,6 +246,17 @@ def _seed_ulid_keyed_graph(vault: Path) -> None:
             _ulid_edge("notes/z.md", "supports", ""),
         ],
     )
+    # PI-owned, and written outside the mirror pass exactly as a confirmed
+    # tension is — which is the one seam that can store an unnormalized durable
+    # `target_path`. `notes/unwritten.md` is the id every consumer holds.
+    with state.connect(vault) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'tension', NULL, './notes/unwritten.md', 'checked', '', ?)",
+            (ULIDS["notes/z.md"], "2026-08-01T00:00:00Z"),
+        )
 
 
 def test_graph_primitives_serve_ulid_keyed_concepts_at_their_paths(tmp_path: Path) -> None:
@@ -299,6 +310,12 @@ def test_graph_primitives_serve_ulid_keyed_concepts_at_their_paths(tmp_path: Pat
         "notes/b.md",
         "notes/c.md",
     ]
+    # The stored `./notes/unwritten.md` reaches the walk through the one endpoint
+    # rule, so it is walked — and returned — as the id consumers hold.
+    assert graph_sql.neighborhood(tmp_path, ["notes/z.md"], depth=1)["ids"] == [
+        "notes/unwritten.md",
+        "notes/z.md",
+    ]
 
     # No source gate here, as before ERP-A.6: `notes/d.md` keeps the degree its
     # checked-but-unvetted inbound edge gives it. `notes/a.md` is only ever a
@@ -311,7 +328,7 @@ def test_graph_primitives_serve_ulid_keyed_concepts_at_their_paths(tmp_path: Pat
         "notes/b.md": 4,
         "notes/c.md": 3,
         "notes/d.md": 1,
-        "notes/z.md": 0,
+        "notes/z.md": 1,
     }
 
     assert graph_sql.filter_ids(tmp_path, ["notes/a.md", "notes/c.md"], types={"note"})["ids"] == [

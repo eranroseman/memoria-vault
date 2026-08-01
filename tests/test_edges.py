@@ -199,12 +199,7 @@ def _edge(relation: str, target: str, **overrides: str) -> dict[str, str]:
 
 
 def _seed_projection_vault(vault: Path, *, with_unchecked: bool = False) -> None:
-    """Seed the v16 mirror through the NID-B trusted seam: ULID ids, path renderings.
-
-    Seeded out of sort order deliberately. `concept_edges` is a rowid table, so a
-    full scan comes back in insertion order; if that order were the answer — or
-    its exact reverse — a dropped or reversed sort would still read correct.
-    """
+    """Seed the v16 mirror through the NID-B trusted seam: ULID ids, path renderings."""
     state.rebuild_file_concept_mirror(vault, _mirror_rows())
     rows = []
     if with_unchecked:
@@ -396,6 +391,79 @@ def test_a_pathless_endpoint_is_skipped_while_its_durable_target_path_survives(
             "target_path": "notes/resolved.md",
             "relation_type": "supports",
         },
+    ]
+
+
+def test_an_unnormalized_stored_endpoint_projects_into_the_one_path_space(
+    tmp_path: Path,
+) -> None:
+    """Neither `concepts.path` nor the durable `target_path` is self-normalizing.
+
+    `state.replace_concept_edges` keys every row it writes through
+    `_concept_edge_target_path`, and contract 4 binds `insert_concept_edge` to the
+    same function — but a PI-owned `tension` row is written outside that pass by
+    design (`graph_sql`'s module docstring names the seam, and ERP-B.3's writer is
+    bound to no key function yet). So `./notes/pending.md` is a reachable stored
+    value, and unnormalized it is a second id for a Concept every consumer holds
+    as `notes/pending.md`. The source arm has no writer that can reach it at all;
+    the direct `UPDATE` below is the only way in, and it is here because a
+    projection that repairs one endpoint and not the other still answers twice.
+    """
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows())
+    state.replace_concept_edges(tmp_path, [_edge("supports", "notes/resolved.md")])
+    with state.connect(tmp_path) as conn:
+        conn.execute(
+            "INSERT INTO concept_edges("
+            " source_concept_id, relation_type, target_concept_id, target_path,"
+            " check_status, source_path, updated_at)"
+            " VALUES (?, 'tension', NULL, './notes/pending.md', 'checked', '', ?)",
+            (SOURCE_ULID, "2026-08-01T00:00:00Z"),
+        )
+        conn.execute(
+            "UPDATE concepts SET path = './notes/source.md' WHERE concept_id = ?",
+            (SOURCE_ULID,),
+        )
+
+    assert edges.concept_edge_path_pairs(tmp_path) == [
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/resolved.md",
+            "relation_type": "supports",
+        },
+        {
+            "source_path": "notes/source.md",
+            "target_path": "notes/pending.md",
+            "relation_type": "tension",
+        },
+    ]
+
+
+def test_records_sort_by_source_then_relation_then_target(tmp_path: Path) -> None:
+    """Ordering, pinned where the insertion order can disprove it.
+
+    `concept_edges` is a rowid table, so a full scan comes back in insertion
+    order. With two rows there are only two possible orders — the answer and its
+    reverse — so a two-row fixture structurally cannot tell a real sort from a
+    `records.reverse()`. These three are seeded so that neither the scan
+    (`supports, extends, warrant`) nor its reverse is the answer.
+    """
+    state.rebuild_file_concept_mirror(tmp_path, _mirror_rows())
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            _edge("supports", "notes/resolved.md"),
+            _edge("extends", "notes/pending.md"),
+            _edge("warrant", "notes/resolved.md"),
+        ],
+    )
+
+    assert [
+        (record["relation_type"], record["target_path"])
+        for record in edges.concept_edge_path_records(tmp_path)
+    ] == [
+        ("extends", "notes/pending.md"),
+        ("supports", "notes/resolved.md"),
+        ("warrant", "notes/resolved.md"),
     ]
 
 

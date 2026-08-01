@@ -178,7 +178,6 @@ def concept_edge_path_records(vault: Path, *, checked_only: bool = True) -> list
     graph-internal consumers that deliberately walk unchecked/pending topology.
     """
     from memoria_vault.runtime import state
-    from memoria_vault.runtime.policy.paths import normalize_path
 
     if not state.db_path(vault).is_file():
         return []
@@ -198,10 +197,10 @@ def concept_edge_path_records(vault: Path, *, checked_only: bool = True) -> list
         ).fetchall()
     records: list[dict[str, Any]] = []
     for row in rows:
-        source_path = normalize_path(str(row["source_path"] or ""))
-        target_path = normalize_path(str(row["target_path"] or ""))
-        if not source_path or not target_path:
+        endpoints = projected_edge_endpoints(row["source_path"], row["target_path"])
+        if endpoints is None:
             continue
+        source_path, target_path = endpoints
         records.append(
             {
                 "source_path": source_path,
@@ -214,6 +213,30 @@ def concept_edge_path_records(vault: Path, *, checked_only: bool = True) -> list
         key=lambda record: (record["source_path"], record["relation_type"], record["target_path"])
     )
     return records
+
+
+def projected_edge_endpoints(source_path: object, target_path: object) -> tuple[str, str] | None:
+    """Return one edge's two endpoints in path space, or ``None`` if it has no rendering.
+
+    The single home for the endpoint rule, and it is public for one reason:
+    `graph_sql.neighborhood` reimplements this projection's SQL because its
+    eligibility predicate needs columns the public API withholds, so it would
+    otherwise carry a second copy of the rule. Two copies is how one Concept ends
+    up with two ids in a single path-space answer — a blank endpoint entering an
+    undirected walk as a hub, or a stored ``./notes/x.md`` sitting beside the
+    ``notes/x.md`` every consumer holds. Both escaped a review here.
+
+    Normalization is not decoration. ``state.replace_concept_edges`` keys every
+    row it writes through ``_concept_edge_target_path`` and contract 4 binds
+    ``insert_concept_edge`` to the same function, but a PI-owned ``tension`` row
+    is written outside that pass by design, so an unnormalized durable
+    ``target_path`` is reachable and must project to the one path space.
+    """
+    from memoria_vault.runtime.policy.paths import normalize_path
+
+    source = normalize_path(str(source_path or ""))
+    target = normalize_path(str(target_path or ""))
+    return None if not source or not target else (source, target)
 
 
 def _edge_attributes(raw: object) -> dict[str, Any]:

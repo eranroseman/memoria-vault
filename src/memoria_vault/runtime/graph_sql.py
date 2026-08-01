@@ -23,6 +23,7 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib.edges import (
     concept_edge_path_pairs,
     normalize_link_target,
+    projected_edge_endpoints,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -70,43 +71,55 @@ def neighborhood(
         return {"ids": [], "counts": {"seeds": 0, "neighbors": 0, "returned": 0}}
     relations_json = json.dumps(sorted(chosen))
     seeds_json = json.dumps(seed_ids)
-    # Both endpoints are projected to path space exactly as
-    # `edges.concept_edge_path_pairs` projects them — same source rendering, same
-    # resolved/pending target COALESCE, and the same skip on *either* endpoint
-    # rendering blank — because the walk, its seeds and its returned ids are all
-    # paths. This is a sanctioned second copy of that projection, so every
-    # invariant `tests/test_edges.py` pins on the producer is re-pinned against
-    # this walk with the same fixture shape; a blank endpoint is the one that
-    # costs most here, because `''` would enter an undirected walk as a hub
-    # joining every blank-endpoint edge to every other.
-    #
-    # It joins the projection in SQL rather than consuming the public one because
-    # the eligibility predicate below needs two columns the strict endpoint API
-    # deliberately withholds: the edge's own `source_path` (blank marks a
-    # PI-owned row, which no verdict gates) and the source Concept's verdict.
-    # Identity is matched against identity — `source_status.concept_id` against
+    # Eligibility in SQL, endpoints through the one projection rule. The first
+    # query is the part `edges.concept_edge_path_pairs` cannot serve: it needs the
+    # edge's own `source_path` (blank marks a PI-owned row, which no verdict
+    # gates) and the source Concept's verdict, two columns the strict endpoint API
+    # deliberately withholds, and it cannot re-derive them from a projected triple
+    # because two edge rows can project to the same one. Identity is matched
+    # against identity — `source_status.concept_id` against
     # `edge.source_concept_id`, never against a path — which is the ERP-A.6
     # correction to the NID-B.2 join.
+    #
+    # Everything after that is `edges.projected_edge_endpoints`, the same call the
+    # producer makes on every row it returns. It is a call and not a second copy
+    # of the rule because both escapes this walk shipped were exactly that: a
+    # blank endpoint the producer dropped and this copy did not, and a stored
+    # `./notes/x.md` the producer normalized and this copy did not — each one
+    # putting a second id for one Concept into a path-space answer.
     with state.connect(vault) as conn:
+        eligible = conn.execute(
+            """
+            SELECT source_status.path AS source_path,
+                   COALESCE(NULLIF(target.path, ''), edge.target_path) AS target_path
+            FROM concept_edges AS edge
+            JOIN concept_status AS source_status
+              ON source_status.concept_id = edge.source_concept_id
+            LEFT JOIN concepts AS target
+              ON target.concept_id = edge.target_concept_id
+            WHERE edge.check_status = 'checked'
+              AND edge.relation_type IN (SELECT value FROM json_each(?))
+              AND (
+                  edge.source_path = ''
+                  OR source_status.check_status = 'checked'
+              )
+            """,
+            (relations_json,),
+        ).fetchall()
+        adjacency = json.dumps(
+            [
+                list(endpoints)
+                for row in eligible
+                if (endpoints := projected_edge_endpoints(row["source_path"], row["target_path"]))
+                is not None
+            ]
+        )
         rows = conn.execute(
             """
             WITH RECURSIVE
             eligible_edges(origin_id, target_id) AS (
-                SELECT source_status.path,
-                       COALESCE(NULLIF(target.path, ''), edge.target_path)
-                FROM concept_edges AS edge
-                JOIN concept_status AS source_status
-                  ON source_status.concept_id = edge.source_concept_id
-                LEFT JOIN concepts AS target
-                  ON target.concept_id = edge.target_concept_id
-                WHERE edge.check_status = 'checked'
-                  AND edge.relation_type IN (SELECT value FROM json_each(?))
-                  AND source_status.path != ''
-                  AND COALESCE(NULLIF(target.path, ''), edge.target_path) != ''
-                  AND (
-                      edge.source_path = ''
-                      OR source_status.check_status = 'checked'
-                  )
+                SELECT json_extract(value, '$[0]'), json_extract(value, '$[1]')
+                FROM json_each(?)
             ),
             edges(origin_id, target_id) AS (
                 SELECT origin_id, target_id
@@ -125,7 +138,7 @@ def neighborhood(
             )
             SELECT DISTINCT concept_id FROM walk ORDER BY concept_id
             """,
-            (relations_json, seeds_json, depth),
+            (adjacency, seeds_json, depth),
         ).fetchall()
     ids = [str(row["concept_id"]) for row in rows]
     return {

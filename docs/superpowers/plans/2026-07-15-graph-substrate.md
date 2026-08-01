@@ -6297,32 +6297,46 @@ amendment.
 > 2. **`explore._edges_by_concept` and `_tension_pairs` consume
 >    `concept_edge_path_pairs`**, and `degree_centrality` builds its adjacency
 >    from it. `state.concept_edges` now has no `src/` consumer at all.
-> 3. **`neighborhood` keeps its own SQL, and it is a sanctioned replica of the
->    projection.** It renders the source from `concepts.path`, the target from
->    `COALESCE(NULLIF(target.path, ''), edge.target_path)`, joins
->    `concept_status.concept_id` to `edge.source_concept_id`, and — since the
->    2026-08-01 review — skips *either* endpoint that renders blank, which the
->    producer has always done and this copy did not. It does not consume the
->    strict projection: R2's "solely from `edges.concept_edge_path_pairs`" would
->    silently delete the revoked-source gate, which needs the edge's own
->    `source_path` (blank = PI-owned, no verdict gates it) and the source
->    Concept's verdict — two columns the three-field public API deliberately
->    withholds, and which no consumer can reconstruct from a projected triple.
-> 4. **A sanctioned replica inherits the claim, never the test — so every
->    producer invariant is re-pinned against the copy with the same fixture
->    shape.** This is the failure the review named: a mutation killed in
->    `edges.py` surviving verbatim in the SQL copy, because the fixtures attached
->    to the named producer only. The `neighborhood` fixture therefore carries the
->    same endpoint alphabet `tests/test_edges.py` seeds — ULID source, resolved
->    target, pending target, resolved-but-pathless target, blank source, blank
->    target — and the blank-target case is the one that had escaped: unguarded,
->    `''` enters an undirected walk as a hub that joins every blank-target edge's
->    source to every other, inflating the `neighbors` denominator R2 §4 requires
->    be built where the set is built. The same rule found one more: the checked
->    gate in `_tension_pairs` was pinned only through its sibling
->    `_edges_by_concept`, whose fixture edge is an `extends` row that
->    `_tension_pairs` discards before reaching that gate; it now has an unchecked
->    *tension* between two displayed Concepts.
+> 3. **`neighborhood` keeps its own SQL for eligibility only; the endpoint rule
+>    is one function, not a replica.** It cannot consume the strict projection:
+>    R2's "solely from `edges.concept_edge_path_pairs`" would silently delete the
+>    revoked-source gate, which needs the edge's own `source_path` (blank =
+>    PI-owned, no verdict gates it) and the source Concept's verdict — two columns
+>    the three-field API withholds and which no consumer can re-derive from a
+>    projected triple, since two edge rows can project to the same one. So the
+>    first query selects eligible rows with their source/target renderings, and
+>    everything after it is `edges.projected_edge_endpoints`, the same call the
+>    producer makes on every row it returns: normalize both, drop the edge if
+>    either renders blank. The recursive walk then runs over that adjacency.
+> 4. **A sanctioned replica inherits the claim, never the test — which is why the
+>    endpoint rule stopped being a replica.** This is the failure the reviews
+>    named twice: a mutation killed in `edges.py` surviving verbatim in the SQL
+>    copy, because the fixtures attached to the named producer only. Two escapes
+>    came out of it, both the same shape — one Concept with two ids in a single
+>    path-space answer. **Blank endpoint:** unguarded, `''` enters the undirected
+>    walk as a hub joining every blank-target edge's source to every other,
+>    inflating the `neighbors` denominator R2 §4 requires be built where the set
+>    is built. **Unnormalized endpoint:** a stored `./notes/x.md` sat beside the
+>    `notes/x.md` every consumer holds; the producer normalized and the copy did
+>    not, and *neither side was tested* — removing either `normalize_path` passed
+>    the full suite. It is reachable because a PI-owned `tension` row is written
+>    outside the mirror pass by design, so `_concept_edge_target_path` never keys
+>    it; contract 4 binds ERP-B.2's `insert_concept_edge` to that function and
+>    **ERP-B.3's confirm-tension writer must be bound to it too**. Collapsing the
+>    two copies into one call is the fix that cannot drift again; both sides are
+>    pinned anyway, at the producer (`tests/test_edges.py`, an unnormalized
+>    durable `target_path` and an unnormalized `concepts.path`) and at the walk
+>    (`tests/test_graph_sql.py`, the same stored row returned as the normalized
+>    id). The `neighborhood` fixture carries the producer's whole endpoint
+>    alphabet: ULID source, resolved target, pending target, resolved-but-pathless
+>    target, blank source, blank target, unnormalized target. The same rule found
+>    one more, one layer out: the checked gate in `_tension_pairs` was pinned only
+>    through its sibling `_edges_by_concept`, whose fixture edge is an `extends`
+>    row that `_tension_pairs` discards before reaching that gate; it now has an
+>    unchecked *tension* between two displayed Concepts. And ordering is now
+>    pinned on three rows rather than two — with two rows the scan order is either
+>    the answer or its exact reverse, so no two-row fixture can tell a sort from a
+>    `reverse()`.
 > 5. **`filter_ids` is not an edge reader.** Its defect is the same namespace
 >    error one table over: path-space ids matched against
 >    `concept_status.concept_id`. It now looks a Concept up by `path` and keys
@@ -6333,13 +6347,14 @@ amendment.
 > 6. **Not done, deliberately.** No consumer outside these two modules was
 >    touched. `structural_impact_graph` reads frontmatter, not `concept_edges`,
 >    and its rewire onto `concept_edge_path_records` stays ERP-D.4's.
->    `_tension_pairs`'s safe-endpoint gate is left in place although it is
->    provably dead — the crossing gate two lines below it admits only edges whose
->    endpoints are both in `left ∪ right`, so no edge can reach one and fail the
->    other. Deleting it is the repo's stated preference, but it is pre-existing
->    code outside this task's defect and its sibling `titles[pair[0]]` lookup
->    depends on the same membership; it belongs to whoever reworks the tension
->    surface in ERP-B.3.
+>    `_tension_pairs`'s safe-endpoint gate is left in place **and is dead, with
+>    nothing behind it**: for any `left`/`right`, the crossing gate two lines
+>    below admits only edges with one endpoint in each, which implies membership
+>    in `left ∪ right`, so no edge can reach one gate and fail the other — and
+>    deleting it outright passes the full suite, `titles` lookups included.
+>    Deleting it is the repo's stated preference; it is left only because it is
+>    pre-existing code outside this task's defect, and it belongs to whoever
+>    reworks the tension surface in ERP-B.3.
 
 **Files:**
 
