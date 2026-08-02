@@ -1184,10 +1184,11 @@ def revert_preview(vault: Path, event_id: int) -> dict[str, Any]:
 
     What it reports is exactly what the shipped records support: the event's
     own derivation facts, the descendant split the ``cascade_rollback`` loop
-    above would decide — mirrored read-only in the same order (actor `pi` ->
-    would_flag, absent file -> would_skip, else would_quarantine), never
-    re-decided — the output's materialized commit, the owning explicit
-    operation, and whether a whole-workspace backup exists.
+    above would decide — mirrored read-only in the same order (actor `pi` and
+    not `machine_authored` -> would_flag, absent file -> would_skip, else
+    would_quarantine), never re-decided — the output's materialized commit,
+    the owning explicit operation, and whether a whole-workspace backup
+    exists.
 
     Mutates nothing: it opens no database that is not already there, writes no
     file, appends no journal row, and runs no git command.
