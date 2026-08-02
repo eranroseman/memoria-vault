@@ -26,7 +26,8 @@ from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
 from memoria_vault.engine import cockpit as engine_cockpit
 from memoria_vault.engine.surface_contract import SURFACE_ACTIONS, SURFACE_JOBS, actions_by_id
-from memoria_vault.runtime import state
+from memoria_vault.runtime import evidence_review, state
+from memoria_vault.runtime.evidence_review import EVIDENCE_REVIEW_ROUTING_TYPES
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.subsystems.lib.edges import LINK_RELATIONS
 from memoria_vault.runtime.time import now_iso
@@ -235,6 +236,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _request_commands(sub)
     _attention_commands(sub)
     _operation_commands(sub)
+    _review_commands(sub)
     _simple_resource(sub, "steering", {"show", "edit"})
     _simple_resource(sub, "vocab", {"list", "add", "merge", "rename"})
     _simple_resource(sub, "journal", {"show", "tail", "verify"})
@@ -549,6 +551,33 @@ def _operation_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     payload.add_argument("--payload-json", default="{}")
     payload.add_argument("--payload-file")
     run.set_defaults(handler=_cmd_operation_run)
+
+
+def _nonnegative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be nonnegative")
+    return parsed
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be positive")
+    return parsed
+
+
+def _review_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    review = sub.add_parser("review")
+    review_sub = review.add_subparsers(dest="review_command", required=True)
+    list_cmd = review_sub.add_parser("list")
+    _common(list_cmd)
+    list_cmd.add_argument("--type", choices=EVIDENCE_REVIEW_ROUTING_TYPES, default="")
+    list_cmd.add_argument("--project", default="")
+    # Stricter than the collector: `batch=0` is the engine-direct id lookup.
+    list_cmd.add_argument("--min-age-days", type=_nonnegative_int, default=0)
+    list_cmd.add_argument("--batch", type=_positive_int, default=10)
+    list_cmd.set_defaults(handler=_cmd_review_list)
 
 
 def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -2210,6 +2239,85 @@ def _cmd_attention_resolve(args: argparse.Namespace) -> int:
 
 def _cmd_attention_worklist(args: argparse.Namespace) -> int:
     return _emit(engine_api.read_attention(_workspace(args), worklist=True), args)
+
+
+# Presentation-only, and never renamed: the raw queue's own spellings
+# (`routing_type`, `disposition`) are the CLI's too (V2 plan, 2026-07-29
+# raw-queue amendment §3). `items` and analysis are deliberately absent —
+# a list row is claim + item count + routing reason (spec §3).
+_REVIEW_SUMMARY_FIELDS = (
+    "evidence_id",
+    "claim_text",
+    "item_count",
+    "routing_type",
+    "reviewable",
+    "cure",
+    "age_days",
+    "disposition",
+    "warrant",
+)
+
+
+def _review_summary_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Project one raw queue row into its list summary.
+
+    Both arms of the queue's discriminated union keep their `kind`, so an SRD
+    gap stays a distinct read-only entry rather than an evidence row missing
+    its fields.
+    """
+    if row["kind"] == "srd-gap":
+        card = row["card_block"]
+        return {"kind": "srd-gap", "title": str(card["title"]), "ref": str(card["ref"])}
+    summary = {key: row[key] for key in _REVIEW_SUMMARY_FIELDS if key in row}
+    summary["kind"] = "evidence-set"
+    summary["project"] = row["project_path"]
+    summary["routing_reason"] = evidence_review.routing_reason(row, row["item_previews"])
+    return summary
+
+
+def _truncate(text: str, width: int = 60) -> str:
+    text = " ".join(str(text).split())
+    return text if len(text) <= width else text[: width - 1] + "…"
+
+
+def _review_summary_line(row: dict[str, Any]) -> str:
+    if row["kind"] == "srd-gap":
+        return f"{row['ref']}  {'srd-gap':<9}  {_truncate(row['title'])}  — read-only"
+    if not row["reviewable"]:
+        marker = f"  [read-only: {row['cure']}]"
+    elif row["disposition"] != "open":
+        marker = f"  [{row['disposition']}]"
+    else:
+        marker = ""
+    return (
+        f"{row['evidence_id']}  {row['routing_type'] or '-':<9}  "
+        f"{row['item_count']} item(s)  {_truncate(row['claim_text'])}"
+        f"  — {row['routing_reason']}{marker}"
+    )
+
+
+def _cmd_review_list(args: argparse.Namespace) -> int:
+    queue = engine_api.evidence_review_queue(
+        _workspace(args),
+        routing_type=args.type,
+        project=args.project,
+        min_age_days=args.min_age_days,
+        batch=args.batch,
+    )
+    rows = [_review_summary_row(row) for row in queue["rows"]]
+    payload = {
+        "ok": True,
+        "rows": rows,
+        "total": queue["total"],
+        "batch": args.batch,
+        "facet_totals": queue["facet_totals"],
+    }
+    if args.json or args.quiet:
+        return _emit(payload, args)
+    for row in rows:
+        print(_review_summary_line(row))
+    print(f"{len(rows)} of {queue['total']} row(s) shown (batch {args.batch})")
+    return 0
 
 
 def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:

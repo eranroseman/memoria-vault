@@ -186,6 +186,7 @@ def test_cli_command_surface_is_exact() -> None:
         "memoria attention show",
         "memoria attention resolve",
         "memoria attention worklist",
+        "memoria review list",
         "memoria operation list",
         "memoria operation run",
         "memoria steering show",

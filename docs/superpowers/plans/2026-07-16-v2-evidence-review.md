@@ -736,6 +736,78 @@ followed as written. §8's open contract question is answered in item 4.
 9. **No golden movement.** No journal event was added or reshaped and the floor
    seed is untouched, so `tests/fixtures/floor/goldens/` is byte-identical.
 
+## Execution amendment — V2R-C.1 as built, and where V2R-C stops (2026-08-01)
+
+Recorded by the executor of V2R-C.1, against `origin/main` @ `b5040047`. It
+governs C.1 only. The 2026-07-29 amendment stack and the 2026-08-01
+`row kind / disposition` amendment above are unchanged and were followed as
+written; every C.1 body snippet that contradicts them is drafting history.
+
+1. **V2R-C stops after C.1: V2R-C.2 is blocked on I1 T.3.** The nested-collector
+   amendment §6 makes `I1 T.1/T.2/T.3` a hard precondition for *all* C telemetry
+   implementation and tests, and requires every client-event assertion to query
+   `telemetry_events`. T.1 and T.2 have landed (`runtime/schema.sql`'s
+   `telemetry_events` at the current rung; `runtime/telemetry.py`'s
+   `record_telemetry_event`), but **T.3 has not**: `operations.record_empirical_event`
+   still calls `append_journal_event` and returns `journal_event_id`/`commit`,
+   and `tests/test_empirical_events.py` still pins
+   `event_log WHERE event_type = 'empirical-event'`. C.2's `view.opened` would
+   therefore land in the journal, which §6 forbids asserting against, and
+   routing the CLI around the `empirical-event-record` operation to reach
+   `record_telemetry_event` directly would invent a seam C.2/C.3's failure
+   contract (raw-queue amendment §5) does not have. C.2–C.5 resume once T.3
+   lands; no part of them was stubbed.
+
+2. **Consumed name.** C.1 calls `engine_api.evidence_review_queue(...)` — the
+   one façade B.4 landed. The C.1 body's `read_evidence_review_queue` was never
+   built (B.4/.5 execution amendment §1) and its DTO field names
+   (`routing`, `latest_decision`, preview-shaped raw `items`, nested `analysis`)
+   belong to the superseded layer.
+
+3. **The summary keeps `kind`, because `total` counts the union.** The raw-queue
+   amendment §3 enumerates the *evidence* projection; §4 additionally requires an
+   unfiltered `srd-gap` variant in the same list, and B.4's `total` is
+   `len(selected) + len(srd_rows)`. A `rows` list without a discriminator could
+   not carry both arms and still agree with its own `total`, so `kind` rides both
+   arms verbatim — the same field the cockpit's `_review_panel` switches on. The
+   §3 prohibitions are honored exactly: no `items`, no `item_previews`, no
+   analysis field, and no `routing`/`latest_decision`/`project_path` spelling
+   reaches a row (asserted disjoint per row).
+
+4. **SRD summary shape, decided here.** `{"kind": "srd-gap", "title", "ref"}`
+   from the normalized U3 card, and nothing else: no evidence column to
+   misread, no action, no `reviewable` key claiming a decision that cannot be
+   made. The human render is `<ref>  srd-gap  <title>  — read-only`.
+
+5. **Two display rules the plan left open.** A row with no routing type (the
+   permanently blocked one) renders `-` in the routing column rather than a run
+   of spaces; and when a row is *both* non-reviewable and disposed, the
+   read-only cure outranks the disposition, because the cure is the only thing
+   the PI can act on. Both have a fixture producer and a killed mutant.
+
+6. **`--type` binds `EVIDENCE_REVIEW_ROUTING_TYPES`,** not a literal tuple: one
+   routing vocabulary, shared with `filter_queue`'s own refusal.
+
+7. **Parity: parked, not registered (U1 M.4).** `memoria review list` joins
+   `CLI_ONLY_COMMANDS` in `tests/test_surface_contract.py`. It is deliberately
+   *not* bound to `views.evidence_review`: that row's engine returns nested
+   cards while the CLI is engine-direct over raw rows (spec §8 keep-test), so one
+   row claiming both would describe a projection neither side performs. Follow
+   the `memoria cockpit` precedent — an exemption a later registration removes,
+   not a permanent one — if V2 ever registers a queue read of its own.
+
+8. **A fixture fact worth keeping.** An accept whose `items_sha256` matches the
+   row's current items clears the row *out* of the queue, so the only queued row
+   that can carry a `warrant` is one that came back — a permanently blocked row,
+   or one whose items changed after the accept. C.1's fixture accepts a
+   source-backed row with a warrant and then drifts its draft text, which is the
+   cheaper of the two and also exercises `cure` and `warrant` on one row.
+
+9. **No golden movement.** No journal event, no operation id, no floor-seed
+   change; `tests/fixtures/floor/goldens/` is byte-identical and the floor
+   sweep is untouched (`memoria review list` has no registry row, so it needs no
+   `ARG_TABLE` entry).
+
 ---
 
 # V2R-A — The disposition seam: reject flip, defer/edit, warrant, disposition.v1
@@ -4132,14 +4204,14 @@ or HTTP contract.
 
 **Steps:**
 
-- [ ] Register the test file. In `tests/conftest.py`, below the line
+- [x] Register the test file. In `tests/conftest.py`, below the line
   `    "test_cli_workspace_requests.py": "contract",` (line 29) insert:
 
   ```python
       "test_cli_review.py": "contract",
   ```
 
-- [ ] Write the failing tests. Create `tests/test_cli_review.py`:
+- [x] Write the failing tests. Create `tests/test_cli_review.py`:
 
   ```python
   from __future__ import annotations
@@ -4259,7 +4331,7 @@ or HTTP contract.
       assert "argument" not in out.lower()  # no machine analysis in list mode
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
 
   ```
   python -m pytest tests/test_cli_review.py -v
@@ -4267,7 +4339,7 @@ or HTTP contract.
 
   Expected: all 4 tests error with `SystemExit: 2` (argparse: `invalid choice: 'review'`).
 
-- [ ] Minimal implementation in `src/memoria_vault/cli.py`.
+- [x] Minimal implementation in `src/memoria_vault/cli.py`.
 
   (a) In `_build_parser`, after `    _operation_commands(sub)` (line 138) insert:
 
@@ -4354,14 +4426,14 @@ or HTTP contract.
       return 0
   ```
 
-- [ ] In `tests/test_cli.py` `test_cli_command_surface_is_exact` (line 73), add to the set
+- [x] In `tests/test_cli.py` `test_cli_command_surface_is_exact` (line 73), add to the set
   (after `"memoria attention worklist",` line 122):
 
   ```python
           "memoria review list",
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
 
   ```
   python -m pytest tests/test_cli_review.py tests/test_cli.py -v
@@ -4381,6 +4453,13 @@ or HTTP contract.
 ---
 
 ### Task V2R-C.2: `memoria review show <ev-id>` — evidence-first detail, `--show-analysis` fold, `view.opened` emission
+
+> **BLOCKED on I1 T.3 (2026-08-01).** See the C.1 execution amendment §1 at the
+> top of this file: the nested-collector amendment §6 makes I1 T.1/T.2/T.3 a
+> hard precondition for every C telemetry task, and T.3 (the
+> `record_empirical_event` journal → `telemetry_events` rewire) has not landed.
+> C.2–C.5 resume once `grep -n "telemetry_id" src/memoria_vault/runtime/operations.py`
+> hits. Do not implement the `view.opened` emission against the journal sink.
 
 **Files:**
 - Modify: `src/memoria_vault/cli.py` (`_review_commands` from V2R-C.1; handlers block

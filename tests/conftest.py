@@ -36,6 +36,7 @@ TEST_LEVELS = {
     "test_cli_honesty.py": "contract",
     "test_cli_doctor_eval.py": "contract",
     "test_cli_work_project.py": "contract",
+    "test_cli_review.py": "contract",
     "test_cli_workspace_requests.py": "contract",
     "test_cockpit.py": "contract",
     "test_cockpit_trace.py": "runtime",
