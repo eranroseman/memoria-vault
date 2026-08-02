@@ -1,1 +1,1 @@
-"""Runtime subsystems: linter modules (CLI entry points) and lib (direct imports)."""
+"""Runtime subsystems: integrity auditors (linter and retraction), lib helpers, processing stages, and telemetry."""

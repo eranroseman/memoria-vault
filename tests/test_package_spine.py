@@ -166,10 +166,10 @@ def test_every_import_chain_directory_is_an_explicit_package():
     namespaces=true; an explicit package list, namespaces=false, or a move
     drops them from the wheel silently. Scope: directories whose every path
     segment under src/ is a Python identifier and that either lead to a .py
-    file or are named as a dotted package-data key. Data directories such as
-    product/workspace_seed/.claude/hooks are excluded by the identifier rule
-    (dot-prefixed names fail isidentifier()) -- an __init__.py there would be
-    seeded into user vaults.
+    file or are named as a dotted package-data key. The identifier check
+    excludes dot-prefixed names only: product/workspace_seed/.claude/hooks
+    is out of scope (dot-prefixed), but workspace_seed/system/templates/ would
+    demand __init__.py at each segment.
     """
     src = ROOT / "src"
     src_root = src / "memoria_vault"

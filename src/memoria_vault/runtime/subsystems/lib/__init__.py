@@ -1,1 +1,1 @@
-"""Shared helpers used across the runtime."""
+"""Shared helpers used across the package."""

@@ -25,7 +25,7 @@ memoria = "memoria_vault.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["memoria_vault*"]
-namespaces = false  # Guard: implicit namespace packages silently drop tracked .py files from wheel
+namespaces = false  # Guard: makes implicit namespace package drops loud instead of silent
 
 [tool.setuptools.package-data]
 memoria_vault = ["runtime/*.sql"]
