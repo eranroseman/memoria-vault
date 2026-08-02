@@ -40,6 +40,8 @@ def test_surface_contract_registry_is_minimal_and_unique() -> None:
         "project.slice.read",
         "project.draft.read",
         "context.read",
+        "cockpit.read",
+        "trace.revert_preview",
         "operation.run",
     }
 
@@ -220,10 +222,6 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria link",
     "memoria mv",
     "memoria check",
-    # Parked by the U2 plan (section C): `memoria cockpit` lands before its
-    # cockpit.read registry row; U2 section T.3 registers the row and moves
-    # this entry out.
-    "memoria cockpit",
     "memoria export",
     "memoria project ask",
     "memoria project trace",
@@ -306,6 +304,8 @@ def test_surface_contract_job_mapping_is_pinned() -> None:
         "project.slice.read": "project",
         "project.draft.read": "project",
         "context.read": "read",
+        "cockpit.read": "project",
+        "trace.revert_preview": "project",
         "operation.run": "upkeep",
     }
 
@@ -329,27 +329,62 @@ def test_surface_contract_status_paths_maps_to_status_read(
     assert "reserved" not in action
 
 
-def test_surface_contract_reserved_context_read_row_is_declared_untransported() -> None:
+def test_surface_contract_context_read_row_is_wired() -> None:
+    """U2 T.3 (spec §1 panel 6): U1 reserved this row for its first-needing
+    surface and U2's context handoff is that surface, so the row is now live
+    with a CLI transport. U1 keeps the ownership narrative; U2 added only the
+    engine binding and the command."""
     action = actions_by_id()["context.read"]
 
+    assert "reserved" not in action
     assert action["job"] == "read"
     assert action["kind"] == "read"
-    assert action["reserved"] == "U2"
-    assert action["engine"] is None
     assert action["scope"] == "optional-read-scope"
+    assert action["engine"] == "read_context"
     assert action["params"] == {}
+    assert action["cli"] == {"commands": ["memoria context"]}
     assert "http" not in action
     assert "mcp" not in action
-    assert "cli" not in action
 
 
-def test_surface_contract_reserved_rows_stay_out_of_transport_projections() -> None:
-    """Negative guard: reserving a row must not leak a route, tool, command,
-    or openapi path. Passes vacuously before the row lands and must KEEP
-    passing after it does."""
+def test_surface_contract_cockpit_rows_follow_the_registry_grammar() -> None:
+    """U2 spec §5: cockpit.read + trace.revert_preview, post-U1 grammar. Both
+    are cli-only, and both declare optional-read-scope — the scope walk's
+    cli-only complement pins that there is no http binding to walk."""
+    actions = actions_by_id()
+
+    cockpit = actions["cockpit.read"]
+    assert cockpit["job"] == "project"
+    assert cockpit["kind"] == "read"
+    assert cockpit["scope"] == "optional-read-scope"
+    assert cockpit["engine"] == "read_cockpit"
+    assert cockpit["params"] == {
+        "project_path": {"type": "string", "default": ""},
+        "triage": {"type": "boolean", "default": False},
+    }
+    assert cockpit["cli"] == {"commands": ["memoria cockpit"]}
+    assert "http" not in cockpit and "mcp" not in cockpit  # cli-only (spec §5)
+
+    preview = actions["trace.revert_preview"]
+    assert preview["job"] == "project"
+    assert preview["kind"] == "read"
+    assert preview["scope"] == "optional-read-scope"
+    assert preview["engine"] == "read_revert_preview"
+    # `event_id`, never `ref`/`output_id` (U2 scoped-trace amendment §2).
+    assert preview["params"] == {"event_id": {"type": "integer", "required": True}}
+    assert preview["cli"] == {"commands": ["memoria journal revert-preview"]}
+    assert "http" not in preview and "mcp" not in preview
+
+
+def test_surface_contract_wired_context_read_serves_cli_only() -> None:
+    """The J.3 projections guard, kept as a guard after the row went live: U2
+    T.3 registered the CLI transport deliberately (spec §1 panel 6); http and
+    mcp stay unserved until an owning surface registers them."""
     from memoria_vault.runtime.http_transport import openapi_schema
 
     assert not any(path.startswith("/context") for _method, path in http_routes())
     assert not any(tool.startswith("context") for tool in mcp_tools())
-    assert not any(command.startswith("memoria context") for command in cli_commands())
     assert not any(path.startswith("/context") for path in openapi_schema()["paths"])
+    assert {command for command in cli_commands() if command.startswith("memoria context")} == {
+        "memoria context"
+    }

@@ -16,8 +16,16 @@ from memoria_vault.engine import api as engine_api
 from memoria_vault.engine import cockpit
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime import state
+from memoria_vault.runtime.knowledge import compose_project_draft as _compose_project_draft
+from memoria_vault.runtime.knowledge import resolve_evidence_review as _resolve_evidence_review
 from memoria_vault.runtime.subsystems.lib import inbox
-from tests.helpers import ROOT, git, init_cli_workspace, write_checked_concept
+from tests.helpers import (
+    ROOT,
+    call_with_context,
+    git,
+    init_cli_workspace,
+    write_checked_concept,
+)
 
 PROJECT_REL = "projects/study-alpha/project.md"
 
@@ -957,19 +965,34 @@ def test_deep_screen_never_wraps_an_identifier_mid_token(vault: Path) -> None:
                         "registry row (V2 plan V2R-B.4)"
                     ),
                 },
+                # T.3 wired context.read, so panel 6's widest producer is a
+                # long bundle value plus the pasteable invocation, not the
+                # deleted reserved line.
                 "context": {
                     "source_action": "context.read",
-                    "reserved": (
-                        "context.read is declared by U1 and has no engine binding in the "
-                        "surface-contract registry yet"
-                    ),
+                    "bundle": {
+                        "attention_open": 3,
+                        "steering_unavailable": (
+                            "steering tokens are a whole-vault read; a bounded "
+                            "read_scope cannot include them"
+                        ),
+                    },
+                    "invocation": "memoria context --workspace /a/deeply/nested/vault --json",
                 },
             },
         }
     )
 
     for line in lines + wide.splitlines():
-        assert len(line) <= cockpit.LAYOUT_COLUMNS or line.strip() in {project_rel, draft_rel}
+        # T.3 wired context.read, so panel 6's bundle now carries real paths
+        # inside a json scalar — quoted, comma-separated. The pinned rule is
+        # that an over-long line holds exactly one whole identifier and never
+        # a mid-token break, so the json decoration is stripped before the
+        # comparison rather than the rule being widened.
+        assert len(line) <= cockpit.LAYOUT_COLUMNS or line.strip().strip('",') in {
+            project_rel,
+            draft_rel,
+        }
 
 
 def test_deep_screen_states_the_archived_and_draft_facts_its_panels_carry(vault: Path) -> None:
@@ -2281,9 +2304,10 @@ def test_flow_panel_stays_pending_unless_a_registered_row_binds_a_live_engine(
 ) -> None:
     """Registered-only composition, in both directions (amendment §2/§3).
 
-    A reserved row is not a producer: U1's registry can carry a row with no
-    engine — `context.read` does today — and a panel that named `dashboard.read`
-    on the strength of the row alone would claim a read that cannot run. And an
+    A reserved row is not a producer: U1's registry grammar allows a row with
+    no engine (`context.read` was one until U2 T.3 wired it), and a panel that
+    named `dashboard.read` on the strength of the row alone would claim a read
+    that cannot run — which is why the row is simulated here. And an
     engine with no row is not a producer either: I1 ships `assemble_dashboard`
     and `memoria dashboard` long before T.3 registers U2's CLI-only row, and
     consuming it then would be the reaching-past-the-registry the amendment
@@ -2489,3 +2513,170 @@ def test_cli_cockpit_reads_leave_tree_clean(
     capsys.readouterr()
 
     assert git(vault, "status", "--porcelain") == before
+
+
+# --- INT.1: post-seam triage integration -------------------------------------
+
+INT_PROJECT = "projects/int-review/project.md"
+INT_SCOPE = ["projects", "inbox"]
+
+
+def _int_note(vault: Path, index: int) -> str:
+    stem = f"int-claim-{index:02d}"
+    write_checked_concept(
+        vault,
+        f"notes/{stem}.md",
+        f"type: note\ncheck_status: checked\ntitle: Claim {index}\nid: int-note-{index:02d}\n",
+        "note",
+        body=f"An implicit synthesis claim number {index}.",
+    )
+    return f"int-note-{index:02d}"
+
+
+def _int_review_vault(vault: Path) -> dict[str, str]:
+    """Thirteen composed evidence sets over one checked project, dispositioned
+    into the only queue states V2's row builder can produce, plus one open
+    SRD-gap attention card.
+
+    Thirteen, not eleven: `accept` and `defer` are *not* dispositions a queued
+    row can carry (see the INT.1 counts note in the test below), so the two
+    rows carrying them leave the queue entirely and eleven remain — one more
+    than the ten-row presentation batch.
+    """
+    write_checked_concept(
+        vault,
+        INT_PROJECT,
+        "type: project\ncheck_status: checked\ntitle: Int review\n",
+        "project",
+    )
+    ids = [_int_note(vault, index) for index in range(13)]
+    (vault / "projects/int-review/outline.md").write_text(
+        "".join(f"- {note_id} — claim\n" for note_id in ids), encoding="utf-8"
+    )
+    call_with_context(_compose_project_draft, vault, "int-review", machine="compose-machine")
+
+    text = (vault / "projects/int-review/draft.md").read_text(encoding="utf-8")
+    evidence_ids = [str(row["id"]) for row in state.evidence_sets(vault)]
+    assert len(evidence_ids) == 13, evidence_ids
+    assert all(f"^blk-{eid.removeprefix('ev-')}" in text for eid in evidence_ids)
+
+    for evidence_id in evidence_ids[:5]:
+        _resolve_evidence_review(
+            vault, evidence_id, actor="pi", machine="int", decision="reject", reason="not grounded"
+        )
+    _resolve_evidence_review(vault, evidence_ids[5], actor="pi", machine="int", decision="accept")
+    _resolve_evidence_review(vault, evidence_ids[6], actor="pi", machine="int", decision="defer")
+
+    card = vault / "inbox/int-srd-gap.md"
+    card.parent.mkdir(parents=True, exist_ok=True)
+    card.write_text(
+        "---\nprojection: attention\ntitle: SRD gap\nattention_kind: srd-gap\n"
+        "attention_status: open\nrouting_class: ask\nloudness: notice\n"
+        "target: projects/int-review/draft.md\n---\nGap body.\n",
+        encoding="utf-8",
+    )
+    return {"rejected": evidence_ids[:5], "accepted": evidence_ids[5], "deferred": evidence_ids[6]}
+
+
+def test_post_seam_triage_review_uses_the_registered_raw_queue(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """U2 INT.1 (review half): with V2R-B.4/B.5 landed, triage panel 2 counts the
+    raw queue engine-direct and the named-pending form is gone.
+
+    **Corrected counts expectation.** The plan's `{"accept": 5, "defer": 5,
+    "open": 1}` is unreachable against V2's shipped row builder. A queue row's
+    disposition is written by exactly one expression —
+    `"rejected" if decision == "reject" else "open"`
+    (`runtime/evidence_review.py::_queue_entry`) — so `accept` and `defer` are
+    never written to one. Both decisions instead *remove* the row: an accept
+    bound to the row's items digest clears its holds and, with no permanent
+    block, drops it; a defer stays active through its suppression date and
+    drops it too. The fixture therefore disposes thirteen rows and asserts what
+    the collector really emits: five `rejected`, six `open`, and the accepted
+    and deferred rows absent from the queue altogether.
+
+    The spy proves exactly one unfiltered all-row (`batch=0`) request under the
+    caller's own `read_scope`; the poisoned view proves the panel never reaches
+    for V2's card projection; thirteen rows past the ten-row presentation batch
+    prove the count is the cockpit's own and not an inherited UI page.
+    """
+    vault = init_cli_workspace(tmp_path, capsys)
+    disposed = _int_review_vault(vault)
+
+    calls: list[dict[str, object]] = []
+    real_queue = engine_api.evidence_review_queue
+
+    def observed_queue(
+        workspace: Path,
+        *,
+        batch: int = 10,
+        read_scope: list[str] | None = None,
+        **filters: object,
+    ) -> dict[str, object]:
+        calls.append(
+            {
+                "workspace": workspace,
+                "batch": batch,
+                "read_scope": read_scope,
+                "filters": filters,
+            }
+        )
+        return real_queue(workspace, batch=batch, read_scope=read_scope, **filters)
+
+    monkeypatch.setattr(engine_api, "evidence_review_queue", observed_queue)
+    monkeypatch.setattr(
+        engine_api,
+        "read_evidence_review_view",
+        lambda *_args, **_kwargs: pytest.fail("cockpit must not call the evidence-review view"),
+        raising=False,
+    )
+
+    panels = cockpit.assemble_triage(vault, read_scope=INT_SCOPE)
+
+    assert calls == [{"workspace": Path(vault), "batch": 0, "read_scope": INT_SCOPE, "filters": {}}]
+    review = panels["review"]
+    assert review["source_action"] == "views.evidence_review"
+    assert review["counts"] == {"open": 6, "rejected": 5}
+    assert review["open"] == review["counts"]["open"] == 6
+    assert review["srd_gaps"] == 1
+    assert "pending" not in review
+
+    # The evidence for the corrected expectation, read off the producer itself.
+    rows = real_queue(vault, batch=0, read_scope=INT_SCOPE)["rows"]
+    evidence = [row for row in rows if row["kind"] == "evidence-set"]
+    assert len(evidence) == 11
+    assert {row["disposition"] for row in evidence} == {"open", "rejected"}
+    queued = {str(row["evidence_id"]) for row in evidence}
+    assert disposed["accepted"] not in queued
+    assert disposed["deferred"] not in queued
+    assert set(disposed["rejected"]) <= queued
+
+    rendered = cockpit.render_triage({"screen": "triage", "panels": panels})
+    review_section = rendered[rendered.index("review queue (") : rendered.index("flow (")]
+    assert "pending:" not in review_section
+    assert "open: 6" in review_section
+
+
+def test_post_seam_review_counts_the_raw_rows_not_the_view_cards(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The row shape U2 depends on, asserted against the real producer rather
+    than a simulated one: `kind` must survive onto the *evidence* arm and the
+    decision key must still be spelled `disposition`. The superseded V2 DTO
+    layer renamed both, and either rename alone turns this panel's honest
+    breakdown into a confident wrong one — a missing `kind` reads as a shape
+    mismatch, a missing `disposition` reports every row as open."""
+    vault = init_cli_workspace(tmp_path, capsys)
+    _int_review_vault(vault)
+
+    rows = engine_api.evidence_review_queue(vault, batch=0, read_scope=INT_SCOPE)["rows"]
+
+    kinds = {str(row["kind"]) for row in rows}
+    assert kinds == {"evidence-set", "srd-gap"}
+    assert kinds <= cockpit.QUEUE_ROW_KINDS
+    for row in rows:
+        if row["kind"] != "evidence-set":
+            continue
+        assert "disposition" in row
+        assert {"latest_decision", "routing", "project"}.isdisjoint(row)

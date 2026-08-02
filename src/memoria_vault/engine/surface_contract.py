@@ -286,19 +286,50 @@ SURFACE_ACTIONS: tuple[dict[str, Any], ...] = (
         "response_version": ENGINE_READ_API_VERSION,
     },
     {
-        # context-read-set-action / situated-context-read (U1 spec §3):
-        # RESERVED — declared in the registry with no transports. U2 owns
-        # the conditional engine binding and transports; U4 consumes the
-        # eventual context bundle. The parity fabric skips reserved rows (see
-        # tests/test_floor_coverage.py and tests/test_floor_sweep_reads.py).
+        # context-read-set-action / situated-context-read: U1 spec §3 RESERVED
+        # this row for its first-needing surface; U2 spec §1 panel 6 is that
+        # surface, so U2 T.3 wired it. U1 still owns the ownership narrative —
+        # U2 added only the engine binding and the CLI transport, and U4
+        # consumes the same bundle. The situated-context bundle is computed
+        # from shipped reads only (engine/api.py read_context).
         "id": "context.read",
         "job": "read",
         "summary": "Read the situated context bundle for the active session.",
-        "engine": None,
+        "engine": "read_context",
         "kind": "read",
         "scope": "optional-read-scope",
         "params": {},
-        "reserved": "U2",
+        "cli": {"commands": ["memoria context"]},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
+        # U2 spec §5: the cockpit composer's own row — cli-only; --triage is
+        # a flag documented on this same row (one composer, two screens).
+        "id": "cockpit.read",
+        "job": "project",
+        "summary": "Compose the deep-work or triage cockpit screens from registry reads.",
+        "engine": "read_cockpit",
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {
+            "project_path": {"type": "string", "default": ""},
+            "triage": {"type": "boolean", "default": False},
+        },
+        "cli": {"commands": ["memoria cockpit"]},
+        "response_version": ENGINE_READ_API_VERSION,
+    },
+    {
+        # U2 spec §3: read-only cascade-rollback preview over a trace ref. The
+        # ref is a journal event id — the datum `cockpit.trace_panel` puts on
+        # every line (U2 scoped-trace amendment §2).
+        "id": "trace.revert_preview",
+        "job": "project",
+        "summary": "Preview what cascade-rollback would quarantine or flag for a journal event.",
+        "engine": "read_revert_preview",
+        "kind": "read",
+        "scope": "optional-read-scope",
+        "params": {"event_id": {"type": "integer", "required": True}},
+        "cli": {"commands": ["memoria journal revert-preview"]},
         "response_version": ENGINE_READ_API_VERSION,
     },
     {

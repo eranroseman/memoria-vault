@@ -10,12 +10,15 @@ uses. Walked over HTTP _dispatch: the one transport with a per-request
 scope seam; MCP session-scope refusal stays pinned by
 test_mcp_transport.py::test_mcp_reads_are_engine_scoped.
 
-Reserved-scope amendment (2026-07-29): the registry also carries one
-reserved, non-HTTP optional-read-scope row (`context.read`, U2-owned — no
-transport keys). Per the amendment, this walk partitions optional-scope read
-rows by transport: the HTTP walk/probes cover only rows with a dict `http`
-binding, and the reserved row is asserted as the explicit non-HTTP
-complement rather than silently omitted.
+Reserved-scope amendment (2026-07-29): not every optional-read-scope row
+serves HTTP. U2 T.3 registered three cli-only ones (`cockpit.read`,
+`trace.revert_preview`, and the wired `context.read`), so this walk partitions
+optional-scope read rows by transport: the HTTP walk/probes cover only rows
+with a dict `http` binding, and the cli-only rows are asserted as the explicit
+non-HTTP complement rather than silently omitted. Their out-of-scope refusals
+are pinned at their own engine seams instead — see
+tests/test_revert_preview.py, tests/test_context_read.py and
+tests/test_cockpit_trace.py.
 """
 
 from __future__ import annotations
@@ -32,12 +35,13 @@ from tests.floor_lib import ARG_TABLE, _fill, seed_vault
 # A syntactically valid, non-root scope matching nothing in the seed.
 VOID_SCOPE = ["scope-walk-void"]
 
-# Reserved, non-HTTP optional-read-scope rows (2026-07-29 amendment): the
-# explicit complement to the registry-derived HTTP set below. There is no
-# permanent numeric assertion on either set — a new HTTP route joins
-# SCOPED_READ_ROWS/PROBES automatically, and a new reserved row would need
-# adding here deliberately.
-RESERVED_NON_HTTP_SCOPED_IDS = {"context.read"}
+# Non-HTTP optional-read-scope rows (2026-07-29 amendment): the explicit
+# complement to the registry-derived HTTP set below. There is no permanent
+# numeric assertion on either set — a new HTTP route joins
+# SCOPED_READ_ROWS/PROBES automatically, and a new cli-only or reserved row
+# needs adding here deliberately. A future http/mcp transport on any of these
+# ids must delete its entry here and join PROBES.
+CLI_ONLY_SCOPED_IDS = {"cockpit.read", "trace.revert_preview", "context.read"}
 
 # action id -> (expectation, marker template).
 # "refused":  the void-scoped dispatch 404s and the error names the target
@@ -99,15 +103,16 @@ def test_scope_walk_covers_every_scope_declaring_read_row() -> None:
     probe entry (or, if non-HTTP, without a reserved-set entry) fails here,
     forcing a deliberate walk extension. Per the 2026-07-29 reserved-scope
     amendment there is no permanent numeric HTTP-row assertion: the
-    registry-derived HTTP set plus the reserved non-HTTP set must equal
-    every optional-scope read row, and PROBES must equal the live HTTP set."""
+    registry-derived HTTP set plus the cli-only set must equal every
+    optional-scope read row, and PROBES must equal the live HTTP set."""
     scoped_ids = {
         str(action["id"])
         for action in SURFACE_ACTIONS
         if action["kind"] == "read" and action["scope"] == "optional-read-scope"
     }
     http_scoped_ids = {str(action["id"]) for action in SCOPED_READ_ROWS}
-    assert http_scoped_ids | RESERVED_NON_HTTP_SCOPED_IDS == scoped_ids
+    assert http_scoped_ids | CLI_ONLY_SCOPED_IDS == scoped_ids
+    assert http_scoped_ids.isdisjoint(CLI_ONLY_SCOPED_IDS)
     assert set(PROBES) == http_scoped_ids
 
 

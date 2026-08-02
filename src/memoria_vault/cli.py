@@ -145,6 +145,10 @@ def _build_parser() -> argparse.ArgumentParser:
     _common(status)
     status.set_defaults(handler=_cmd_status)
 
+    context = sub.add_parser("context", **_surface_help("context.read"))
+    _common(context)
+    context.set_defaults(handler=_cmd_context)
+
     doctor = sub.add_parser("doctor")
     doctor_sub = doctor.add_subparsers(dest="doctor_command")
     _common(doctor, workspace_required=False)
@@ -220,8 +224,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     help_cmd.set_defaults(handler=_cmd_help)
 
-    cockpit_help = "Compose the deep-work or triage cockpit screen (read-only)."
-    cockpit_cmd = sub.add_parser("cockpit", help=cockpit_help, description=cockpit_help)
+    # U2 T.3 registered cockpit.read, so the help comes from the row rather
+    # than the literal C.4 parked here while the command had no registry entry.
+    cockpit_cmd = sub.add_parser("cockpit", **_surface_help("cockpit.read"))
     _common(cockpit_cmd)
     cockpit_cmd.add_argument("--project", default="")
     cockpit_cmd.add_argument("--triage", action="store_true")
@@ -237,7 +242,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _operation_commands(sub)
     _simple_resource(sub, "steering", {"show", "edit"})
     _simple_resource(sub, "vocab", {"list", "add", "merge", "rename"})
-    _simple_resource(sub, "journal", {"show", "tail", "verify"})
+    _simple_resource(sub, "journal", {"revert-preview", "show", "tail", "verify"})
     _workspace_commands(sub)
     _eval_commands(sub)
     return parser
@@ -659,6 +664,10 @@ def _simple_resource(
         elif name == "journal" and action == "verify":
             cmd.description = "Verify the authoritative journal chain and head anchor."
             cmd.set_defaults(handler=_cmd_journal_verify)
+        elif name == "journal" and action == "revert-preview":
+            cmd.description = _surface_summary("trace.revert_preview")
+            cmd.add_argument("event_id", type=int)
+            cmd.set_defaults(handler=_cmd_journal_revert_preview)
         else:
             raise ValueError(f"unsupported resource action: {name} {action}")
 
@@ -668,6 +677,8 @@ def _resource_action_help(name: str, action: str) -> dict[str, str]:
         return _surface_help("journal.list")
     if name == "journal" and action == "show":
         return _surface_help("journal.get")
+    if name == "journal" and action == "revert-preview":
+        return _surface_help("trace.revert_preview")
     return {}
 
 
@@ -813,6 +824,10 @@ def _run_onboarding_for_args(workspace: Path, args: argparse.Namespace) -> dict[
 
 def _cmd_status(args: argparse.Namespace) -> int:
     return _emit(engine_api.read_status(_workspace(args)), args)
+
+
+def _cmd_context(args: argparse.Namespace) -> int:
+    return _emit(engine_api.read_context(_workspace(args)), args)
 
 
 def _cmd_cockpit(args: argparse.Namespace) -> int:
@@ -2712,6 +2727,13 @@ def _cmd_journal_show(args: argparse.Namespace) -> int:
         return _emit(engine_api.read_journal_event(_workspace(args), args.event_id), args)
     except FileNotFoundError:
         return _fail(f"journal event not found: {args.event_id}", json_output=args.json)
+
+
+def _cmd_journal_revert_preview(args: argparse.Namespace) -> int:
+    try:
+        return _emit(engine_api.read_revert_preview(_workspace(args), args.event_id), args)
+    except FileNotFoundError as exc:
+        return _fail(str(exc), json_output=args.json)
 
 
 def _cmd_journal_verify(args: argparse.Namespace) -> int:
