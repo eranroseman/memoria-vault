@@ -10,28 +10,97 @@ import pytest
 pytestmark = pytest.mark.static
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / "src" / "memoria_vault" / "runtime"
+SRC = ROOT / "src"
+RUNTIME = SRC / "memoria_vault" / "runtime"
 
 # Entry-point transports: zero fan-in from src/ (nothing imports them), so an
 # engine import there is a door binding, not an inversion. Anything else under
 # runtime/ importing the engine at module level makes a surface module a
 # dependency of a domain module (audit §2.3).
-ENTRY_POINTS = {"http_transport.py", "mcp_transport.py"}
-
-# cli.py is the registered console-script entry point itself
-# ([project.scripts] memoria = "memoria_vault.cli:main"); its two subcommand
-# handlers (_cmd_serve_http, _cmd_mcp) defer-import the transports to start
-# them. That is the same entry-point chain one hop further out, not a domain
-# module reaching into a transport — so it is exempt from the fan-in scan
-# below, the same way the transports are exempt from importing themselves.
-CLI_ENTRY_POINT = "cli.py"
+#
+# Matched by path relative to src/ (see _is_entry_point below), not by
+# basename — a future src/memoria_vault/plugins/http_transport.py must not
+# silently inherit this exemption just because its filename matches.
+ENTRY_POINTS = {"memoria_vault/runtime/http_transport.py", "memoria_vault/runtime/mcp_transport.py"}
 
 
-def _module_level_engine_imports(path: Path) -> list[int]:
+def _is_entry_point(path: Path) -> bool:
+    return path.relative_to(SRC).as_posix() in ENTRY_POINTS
+
+
+def _is_type_checking_guard(test: ast.expr) -> bool:
+    """Whether an ``if`` test is (roughly) ``TYPE_CHECKING`` or ``typing.TYPE_CHECKING``.
+
+    An import inside such a guard never executes at runtime — it must not
+    count as a module-level dependency. See ``runtime/state.py:53-54`` for the
+    live idiom this exists to leave alone.
+    """
+    if isinstance(test, ast.Name):
+        return test.id == "TYPE_CHECKING"
+    if isinstance(test, ast.Attribute):
+        return test.attr == "TYPE_CHECKING"
+    return False
+
+
+def _import_time_statements(body: list[ast.stmt]) -> list[ast.stmt]:
+    """Statements in ``body`` that execute at module-import time.
+
+    Recurses into ``try``/``if``/``with`` blocks (and try's handlers/else/
+    finally) — an import nested there still runs when the module is imported;
+    it is just invisible to a direct-children-of-``tree.body`` scan. Does
+    *not* recurse into function or class bodies: a deferred import there is
+    the sanctioned idiom for breaking a layering cycle and must stay
+    uncaught. Does not recurse into an ``if TYPE_CHECKING:`` body, which never
+    executes; its ``else`` branch (if any) still does and is included.
+    """
+    statements: list[ast.stmt] = []
+    for node in body:
+        statements.append(node)
+        if isinstance(node, ast.Try):
+            statements.extend(_import_time_statements(node.body))
+            for handler in node.handlers:
+                statements.extend(_import_time_statements(handler.body))
+            statements.extend(_import_time_statements(node.orelse))
+            statements.extend(_import_time_statements(node.finalbody))
+        elif isinstance(node, ast.If):
+            if not _is_type_checking_guard(node.test):
+                statements.extend(_import_time_statements(node.body))
+            statements.extend(_import_time_statements(node.orelse))
+        elif isinstance(node, ast.With):
+            statements.extend(_import_time_statements(node.body))
+    return statements
+
+
+def _module_dotted_name(path: Path, root: Path) -> str:
+    """Dotted module name ``path`` would have if imported from under ``root``."""
+    parts = path.relative_to(root).with_suffix("").parts
+    if parts[-1] == "__init__":
+        parts = parts[:-1]
+    return ".".join(parts)
+
+
+def _resolve_import_from(path: Path, node: ast.ImportFrom, root: Path = SRC) -> str:
+    """Absolute dotted module ``node`` imports from.
+
+    ``node.level`` dots (``from .foo import x``, ``from ...foo import x``) are
+    resolved against ``path``'s own package position under ``root`` — the same
+    rule ``importlib`` uses at runtime — so a relative import of the engine is
+    recognised as such and not missed just because ``node.module`` is
+    ``"engine"`` rather than ``"memoria_vault.engine"``.
+    """
+    if node.level == 0:
+        return node.module or ""
+    dotted = _module_dotted_name(path, root)
+    package = dotted if path.name == "__init__.py" else dotted.rsplit(".", 1)[0]
+    base = package.rsplit(".", node.level - 1)[0]
+    return f"{base}.{node.module}" if node.module else base
+
+
+def _module_level_engine_imports(path: Path, root: Path = SRC) -> list[int]:
     tree = ast.parse(path.read_text(encoding="utf-8"))
     lines = []
-    for node in tree.body:  # module level only: deferred imports are the sanctioned idiom
-        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
+    for node in _import_time_statements(tree.body):
+        if isinstance(node, ast.ImportFrom) and _resolve_import_from(path, node, root).startswith(
             "memoria_vault.engine"
         ):
             lines.append(node.lineno)
@@ -42,28 +111,27 @@ def _module_level_engine_imports(path: Path) -> list[int]:
     return lines
 
 
-def _imports_transport(path: Path, name: str) -> bool:
-    """Whether ``path`` imports the named transport module, at any depth.
+def _imports_transport(path: Path, name: str, root: Path = SRC) -> bool:
+    """Whether ``path`` imports the named transport module at module level.
 
-    Walks the whole tree (not just ``tree.body``) so a deferred import inside
-    a function counts just as much as a module-level one — a deferred import
-    of a transport would still be a fan-in hole for the entry-point exemption
-    below. AST-based, matching ``_module_level_engine_imports``, so a comment
-    or docstring that merely mentions the transport's name can't false-positive
-    the way a substring match on the raw file text would.
+    Same import-time reach as ``_module_level_engine_imports`` above — module
+    level, including nested ``try``/``if``/``with`` blocks, never function or
+    class bodies — so both tests in this file apply one consistent notion of
+    "depends on." A deferred import inside e.g. ``cli.py``'s subcommand
+    handlers is therefore invisible here, the same as any other deferred
+    import; no separate exemption for an entry-point *file* is needed on top
+    of the module-level-only reach.
     """
     tree = ast.parse(path.read_text(encoding="utf-8"))
-    for node in ast.walk(tree):
+    for node in _import_time_statements(tree.body):
         if isinstance(node, ast.ImportFrom):
-            module = node.module or ""
+            module = _resolve_import_from(path, node, root)
             if module == name or module.endswith(f".{name}"):
                 return True
             if any(alias.name == name for alias in node.names):
                 return True
         if isinstance(node, ast.Import):
-            if any(
-                alias.name == name or alias.name.endswith(f".{name}") for alias in node.names
-            ):
+            if any(alias.name == name or alias.name.endswith(f".{name}") for alias in node.names):
                 return True
     return False
 
@@ -71,7 +139,7 @@ def _imports_transport(path: Path, name: str) -> bool:
 def test_runtime_never_imports_the_engine_at_module_level() -> None:
     offenders = {}
     for path in sorted(RUNTIME.rglob("*.py")):
-        if "__pycache__" in path.parts or path.name in ENTRY_POINTS:
+        if "__pycache__" in path.parts or _is_entry_point(path):
             continue
         lines = _module_level_engine_imports(path)
         if lines:
@@ -86,12 +154,8 @@ def test_the_entry_point_exemption_is_still_earned() -> None:
     a hole, not a door binding — this is the check that notices.
     """
     importers = []
-    for path in sorted((ROOT / "src").rglob("*.py")):
-        if (
-            "__pycache__" in path.parts
-            or path.name in ENTRY_POINTS
-            or path.name == CLI_ENTRY_POINT
-        ):
+    for path in sorted(SRC.rglob("*.py")):
+        if "__pycache__" in path.parts or _is_entry_point(path):
             continue
         for name in ("http_transport", "mcp_transport"):
             if _imports_transport(path, name):
@@ -99,14 +163,64 @@ def test_the_entry_point_exemption_is_still_earned() -> None:
     assert importers == [], importers
 
 
-def test_the_guard_itself_can_fail() -> None:
+def test_the_guard_itself_can_fail(tmp_path: Path) -> None:
     """Kill-check: the detector flags a synthetic module-level engine import."""
     bad = "from memoria_vault.engine import api as engine_api\n"
     tree = ast.parse(bad)
     assert isinstance(tree.body[0], ast.ImportFrom)
-    probe = Path(__file__).parent / "_layering_probe.py"
+    probe = tmp_path / "_layering_probe.py"
     probe.write_text(bad, encoding="utf-8")
-    try:
-        assert _module_level_engine_imports(probe) == [1]
-    finally:
-        probe.unlink()
+    assert _module_level_engine_imports(probe) == [1]
+
+
+def test_try_except_wrapped_engine_import_is_caught(tmp_path: Path) -> None:
+    """A module-level import inside try/except still executes at import time.
+
+    Live idiom (with a harmless target) at runtime/rendezvous.py:24-31 and
+    runtime/state.py:43-50 — a direct-children-of-tree.body scan would miss an
+    engine import shaped like this.
+    """
+    bad = (
+        "try:\n"
+        "    from memoria_vault.engine import api as engine_api\n"
+        "except ImportError:\n"
+        "    engine_api = None\n"
+    )
+    probe = tmp_path / "_layering_probe.py"
+    probe.write_text(bad, encoding="utf-8")
+    assert _module_level_engine_imports(probe) == [2]
+
+
+def test_relative_engine_import_is_caught(tmp_path: Path) -> None:
+    """A relative import resolving to the engine package is caught too.
+
+    ``from ...engine import api`` has ``node.module == "engine"``, which does
+    not start with "memoria_vault.engine" as plain text — it only resolves to
+    the engine package once ``node.level`` is resolved against the probe's own
+    package position. Mirrors the depth of a file directly under
+    runtime/policy/ (the live relative-import idiom, e.g.
+    runtime/policy/decision.py), three packages below src/.
+    """
+    src_root = tmp_path / "src"
+    probe = src_root / "memoria_vault" / "runtime" / "policy" / "probe.py"
+    probe.parent.mkdir(parents=True)
+    probe.write_text("from ...engine import api\n", encoding="utf-8")
+    assert _module_level_engine_imports(probe, root=src_root) == [1]
+
+
+def test_type_checking_import_is_not_caught(tmp_path: Path) -> None:
+    """An import under ``if TYPE_CHECKING:`` must stay uncaught.
+
+    It never executes at runtime, so it is not a real import-time dependency —
+    live idiom at runtime/state.py:53-54. Recursing into ``if`` bodies for the
+    two shapes above must not start flagging this one.
+    """
+    probe = tmp_path / "_layering_probe.py"
+    probe.write_text(
+        "from typing import TYPE_CHECKING\n"
+        "\n"
+        "if TYPE_CHECKING:\n"
+        "    from memoria_vault.engine import api as engine_api\n",
+        encoding="utf-8",
+    )
+    assert _module_level_engine_imports(probe) == []
