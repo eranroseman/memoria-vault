@@ -34,6 +34,24 @@ def fts5_capability() -> Capability:
 
 
 def sqlite_vec_capability() -> Capability:
+    """Whether the optional `[vector]` extra is installed.
+
+    Nothing loads sqlite-vec yet, and this probe deliberately outlives that:
+    the dense path is a stub end to end, and R3 is the workstream that makes
+    it real. `hash_embedding` is a SHA-256 digest sliced into 16 floats (its
+    own docstring says "test embedder"), so `vector_search` scores cosine over
+    vectors carrying no semantic signal, in Python, with no extension loaded.
+
+    Read the reporting split accordingly: this returns False on a default
+    install while `vector_search` still runs. That is not a bug to fix by
+    deleting the probe — beta.1 requirements mark the query mechanism
+    "Preserve" and name `sqlite-vec` beta.1 substrate, and R3's first unit is
+    `real-embeddings` ("replace hash test-embedder"). Dense/graph *default
+    activation* is beta.2, gated on a pre-registered spike beating BM25.
+
+    Ruled on in #1528: the substrate question was already answered by scope,
+    so neither the extra nor this probe is removed on tidiness grounds.
+    """
     if importlib.util.find_spec("sqlite_vec") is None:
         return Capability(False, "sqlite-vec optional extra is not installed")
     return Capability(True)
