@@ -28,6 +28,7 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
         "python3 scripts/checks/checked_terminology_gate.py",
         "python3 scripts/checks/plugin_provenance_doctor.py",
         "python3 scripts/checks/doc_claims_gate.py",
+        "python3 scripts/checks/control_plane_actor_gate.py",
         "python3 scripts/test_vault/e2e_smoke.py",
     ):
         assert gate in flat
@@ -77,6 +78,7 @@ def test_docs_only_scope_narrows_the_roster() -> None:
         "python3 scripts/checks/checked_terminology_gate.py",
         "python3 scripts/checks/plugin_provenance_doctor.py",
         "python3 scripts/checks/doc_claims_gate.py",
+        "python3 scripts/checks/control_plane_actor_gate.py",
     ):
         assert gate in docs
 
