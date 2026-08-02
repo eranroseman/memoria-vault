@@ -30,7 +30,7 @@ repo tree copy.
 | --- | --- |
 | `--vault DIR` / `-Vault DIR` | Install the runtime workspace here (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows). Pick a folder outside any cloud-synced tree. |
 | `--dry-run` / `-DryRun` | Print commands that would run; change nothing where practical. |
-| `--yes` / `-Yes` | Non-interactive: accept defaults and run guided installs. |
+| `--yes` | Non-interactive: accept defaults instead of prompting. Linux/WSL only; the Windows installer never prompts. |
 
 ## Flow
 

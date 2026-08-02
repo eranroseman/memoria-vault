@@ -37,6 +37,9 @@ LOCK_PATH = ROOT / ".verify.lock"
 # CI sets this to "1" only for provably docs-only PRs (see the module docstring).
 DOCS_ONLY = os.environ.get("VERIFY_DOCS_ONLY") == "1"
 
+# Every registered marker except `live` and `slow`, which the gate never runs.
+PYTEST_MARKERS = "static or unit or contract or runtime or package or floor"
+
 # Source of truth for what "verified" means; tests/test_verify_script.py mirrors
 # this roster. Lint runs the manual-stage pre-commit hooks (ruff, ruff-format,
 # yamllint, shellcheck, cspell, markdownlint); the commit-stage hooks
@@ -66,7 +69,7 @@ GATES: list[list[str]] = [
         "-p",
         "xdist",
         "-m",
-        "static or unit or contract or runtime or package or floor",
+        PYTEST_MARKERS,
     ],
     ["python3", "scripts/test_vault/e2e_smoke.py"],
     [
@@ -113,10 +116,7 @@ def _gates_for_run(docs_only: bool) -> list[list[str]]:
         if any(marker in joined for marker in _DOCS_SKIP):
             continue
         if "pytest" in joined:
-            command = [
-                "static" if arg == "static or unit or contract or runtime or package or floor" else arg
-                for arg in command
-            ]
+            command = ["static" if arg == PYTEST_MARKERS else arg for arg in command]
         reduced.append(command)
     return reduced
 

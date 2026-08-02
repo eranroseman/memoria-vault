@@ -20,9 +20,6 @@
 .PARAMETER DryRun
     Print commands without changing the machine where practical.
 
-.PARAMETER Yes
-    Non-interactive: accept defaults and run guided installs.
-
 #>
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
@@ -30,8 +27,7 @@
 [CmdletBinding()]
 param(
     [string]$Vault = (Join-Path $env:USERPROFILE 'Memoria'),
-    [switch]$DryRun,
-    [switch]$Yes
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'

@@ -8,7 +8,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/test-vault}"
 VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT}"
 BASE_URL="${MEMORIA_TEST_LLM_BASE_URL:-http://127.0.0.1:11434/v1}"
-MODEL="${MEMORIA_TEST_LLM_MODEL:-memoria-qwen2.5:7b-64k}"
 CHECK_LOCAL_LLM=0
 
 say() { printf '%s\n' "$*"; }
@@ -29,12 +28,10 @@ Options:
   --vault DIR         Workspace path; must be at or below --root (default: DIR)
   --check-local-llm   Check the configured OpenAI-compatible endpoint
   --base-url URL      Endpoint used by --check-local-llm (default: http://127.0.0.1:11434/v1)
-  --model NAME        Model label printed with --check-local-llm
   -h, --help          Show this help
 
 Environment overrides mirror the flags:
-  MEMORIA_TEST_ROOT, MEMORIA_TEST_VAULT, MEMORIA_TEST_LLM_BASE_URL,
-  MEMORIA_TEST_LLM_MODEL
+  MEMORIA_TEST_ROOT, MEMORIA_TEST_VAULT, MEMORIA_TEST_LLM_BASE_URL
 EOF
 }
 
@@ -89,11 +86,6 @@ while [ "$#" -gt 0 ]; do
       BASE_URL="$2"
       shift 2
       ;;
-    --model)
-      [ "$#" -ge 2 ] || die "--model needs a model name"
-      MODEL="$2"
-      shift 2
-      ;;
     -h|--help)
       usage
       exit 0
@@ -126,7 +118,6 @@ if [ "$CHECK_LOCAL_LLM" -eq 1 ]; then
   need curl
   hdr "Local LLM preflight"
   say "  endpoint: $BASE_URL"
-  say "  model: $MODEL"
   run curl -fsS --max-time 5 "$(models_url)" >/dev/null
 fi
 

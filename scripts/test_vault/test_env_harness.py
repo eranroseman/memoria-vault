@@ -9,6 +9,7 @@ and asserts artifact shape without a live model, GPU, Obsidian GUI, or screensho
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 import tempfile
@@ -62,13 +63,6 @@ def load_cassette(path: Path) -> dict[str, Any]:
         if arg_shape(step.get("args", {})) != step.get("arg_shape"):
             raise HarnessError(f"cassette step {step.get('id')} arg_shape does not match args")
     return data
-
-
-def add_operation_paths(root: Path) -> None:
-    for rel in ("src",):
-        path = str(root / rel)
-        if path not in sys.path:
-            sys.path.insert(0, path)
 
 
 def populate_vault(root: Path, vault: Path) -> None:
@@ -226,7 +220,6 @@ def assert_final(vault: Path, final: dict[str, Any]) -> None:
 def replay(root: Path, vault: Path, cassette_path: Path) -> dict[str, Any]:
     root = root.resolve()
     vault = vault.resolve()
-    add_operation_paths(root)
     cassette = load_cassette(cassette_path)
     populate_vault(root, vault)
     steps: list[dict[str, Any]] = []
@@ -246,7 +239,6 @@ def replay(root: Path, vault: Path, cassette_path: Path) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("replay",), nargs="?", default="replay")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--vault", type=Path)
     parser.add_argument("--cassette", type=Path, default=DEFAULT_CASSETTE)
@@ -256,13 +248,14 @@ def main(argv: list[str] | None = None) -> int:
     root = args.root.resolve()
     cassette_path = args.cassette if args.cassette.is_absolute() else root / args.cassette
 
-    if args.vault is None:
-        with tempfile.TemporaryDirectory(prefix="memoria-test-env-") as tmp:
-            result = replay(root, Path(tmp), cassette_path)
-            print(json.dumps(result, indent=2) if args.json else "test-env-harness: PASS")
-            return 0
-    result = replay(root, args.vault, cassette_path)
-    print(json.dumps(result, indent=2) if args.json else "test-env-harness: PASS")
+    with contextlib.ExitStack() as stack:
+        vault = args.vault
+        if vault is None:
+            vault = Path(
+                stack.enter_context(tempfile.TemporaryDirectory(prefix="memoria-test-env-"))
+            )
+        result = replay(root, vault, cassette_path)
+        print(json.dumps(result, indent=2) if args.json else "test-env-harness: PASS")
     return 0
 
 

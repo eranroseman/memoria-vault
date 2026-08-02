@@ -8,17 +8,7 @@ from scripts.test_vault import e2e_smoke
 
 
 def test_stage_labels_preserve_e2e_smoke_order() -> None:
-    assert e2e_smoke.STAGE_ORDER == (
-        "vault-assembly-1",
-        "vault-assembly-2",
-        "vault-assembly-3",
-        "commit-gate",
-        "offline-ingest-1",
-        "offline-ingest-2",
-        "workflow-replay",
-        "final-integrity",
-    )
-    assert [e2e_smoke.STAGE_LABELS[name].split(":", 1)[0] for name in e2e_smoke.STAGE_ORDER] == [
+    assert [label.split(":", 1)[0] for label in e2e_smoke.STAGE_LABELS.values()] == [
         "1. vault-assembly",
         "2. vault-assembly",
         "3. vault-assembly",
