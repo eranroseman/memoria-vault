@@ -5,9 +5,13 @@ import re
 import tomllib
 from pathlib import Path
 
+import pytest
 import yaml
 
-# A release tag, not a moving ref: "v6.0.0", "0.16.0", "v0.11.0.1".
+pytestmark = pytest.mark.static
+
+# A release tag, not a moving ref: "v6.0.0", "0.16.0", "v0.11.0.1". Doubles as
+# an exact npm version -- "10.0.1" passes, "^10.0.1" and "latest" do not.
 RELEASE_TAG = re.compile(r"v?\d+(?:\.\d+)*")
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,6 +39,15 @@ def _hook(hook_id: str) -> dict:
     return hooks[0]
 
 
+def _assert_pinned_npm_tool(hook: dict, tool: str) -> None:
+    """Assert the hook installs `tool` alone, pinned to an exact release."""
+    dependencies = hook["additional_dependencies"]
+    assert len(dependencies) == 1, f"{tool} must be the hook's only dependency: {dependencies}"
+    package, _, version = dependencies[0].rpartition("@")
+    assert package == tool, f"expected the {tool} package, got {package}"
+    assert RELEASE_TAG.fullmatch(version), f"{tool} is not pinned to a release: {version}"
+
+
 def test_required_node_checks_use_pinned_local_tools():
     package = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
 
@@ -42,15 +55,19 @@ def test_required_node_checks_use_pinned_local_tools():
     assert "scripts" not in package
     assert not PACKAGE_LOCK.exists()
 
+    # Same reasoning as the roster below: the shape of the pin is the invariant,
+    # the version is Dependabot's to move. Each node check installs one tool at
+    # an exact release, so an upgrade stays a reviewable diff and never becomes
+    # a range or a floating tag.
     cspell = _hook("cspell")
     assert cspell["language"] == "node"
     assert cspell["entry"] == "cspell lint --no-progress --no-must-find-files"
-    assert cspell["additional_dependencies"] == ["cspell@10.0.1"]
+    _assert_pinned_npm_tool(cspell, "cspell")
 
     markdownlint = _hook("markdownlint-structural")
     assert markdownlint["language"] == "node"
     assert markdownlint["entry"] == "markdownlint --config .markdownlint.json"
-    assert markdownlint["additional_dependencies"] == ["markdownlint-cli@0.49.1"]
+    _assert_pinned_npm_tool(markdownlint, "markdownlint-cli")
 
 
 def test_precommit_hooks_use_pinned_tool_environments():

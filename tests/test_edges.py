@@ -6,9 +6,13 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib import edges, schema
 from tests.helpers import ROOT
+
+pytestmark = pytest.mark.unit
 
 
 def test_edge_relations_is_the_full_seven() -> None:

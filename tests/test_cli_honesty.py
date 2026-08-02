@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import argparse
 
+import pytest
+
 from memoria_vault.cli import _emit
+
+pytestmark = pytest.mark.contract
 
 
 def _args(*, json: bool = False, quiet: bool = False) -> argparse.Namespace:

@@ -11,6 +11,8 @@ from memoria_vault.runtime import integrity, state
 from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.policy.audit import sha256_file
 
+pytestmark = pytest.mark.runtime
+
 
 def test_exploration_channel_surfaces_uncaptured_citation_candidate(tmp_path: Path) -> None:
     state.upsert_catalog_record(

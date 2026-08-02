@@ -7,6 +7,8 @@ import pytest
 
 from memoria_vault.runtime import state
 
+pytestmark = pytest.mark.runtime
+
 
 def test_evidence_sets_schema_lands_at_current_user_version(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:

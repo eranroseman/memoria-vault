@@ -11,6 +11,10 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.static
+
 ROOT = Path(__file__).resolve().parents[1]
 SEED = ROOT / "src/memoria_vault/product/workspace_seed"
 

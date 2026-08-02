@@ -40,6 +40,8 @@ from memoria_vault.runtime.http_transport import (
 )
 from tests.helpers import init_cli_workspace
 
+pytestmark = pytest.mark.runtime
+
 
 def test_vault_key_is_sha256_prefix_of_canonical_path(tmp_path: Path) -> None:
     vault = tmp_path / "vault"

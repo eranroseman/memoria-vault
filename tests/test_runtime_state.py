@@ -38,6 +38,8 @@ from tests.helpers import (
     operation_context,
 )
 
+pytestmark = pytest.mark.runtime
+
 
 def capture_source(vault: Path, *args, **kwargs):
     return call_with_context(_capture_source, vault, *args, **kwargs)

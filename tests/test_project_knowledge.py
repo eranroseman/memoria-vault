@@ -41,6 +41,8 @@ from tests.helpers import (
     mark_file_status,
 )
 
+pytestmark = pytest.mark.runtime
+
 ULID_THESIS = "01JXTTTTTTTTTTTTTTTTTTTTTT"
 ULID_SUPPORT = "01JXPPPPPPPPPPPPPPPPPPPPPP"
 ULID_ELSEWHERE_LICENSE = "01JXLLLLLLLLLLLLLLLLLLLLLL"

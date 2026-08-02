@@ -3,6 +3,10 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.package
+
 ROOT = Path(__file__).resolve().parent.parent
 HARNESS = ROOT / "scripts" / "test_vault" / "test_env_harness.py"
 CASSETTE = ROOT / "tests" / "fixtures" / "test-env" / "cassettes" / "package-gate-golden-path.json"

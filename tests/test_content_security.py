@@ -42,6 +42,8 @@ from tests.helpers import (
     write_checked_concept,
 )
 
+pytestmark = pytest.mark.runtime
+
 
 def _write_export_unready(vault, *args, **kwargs):
     kwargs.setdefault("allow_unready", True)

@@ -22,6 +22,8 @@ from memoria_vault.runtime.seeded_errors import (
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import WORKSPACE_SEED, operation_context
 
+pytestmark = pytest.mark.runtime
+
 
 def prepare_seeded_error_fixture(vault: Path, template_root: Path):
     return _prepare_seeded_error_fixture(

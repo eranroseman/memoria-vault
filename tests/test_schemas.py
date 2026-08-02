@@ -8,6 +8,8 @@ import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
 
+pytestmark = pytest.mark.contract
+
 SCHEMA_TYPES = {
     "code-artifact",
     "digest",

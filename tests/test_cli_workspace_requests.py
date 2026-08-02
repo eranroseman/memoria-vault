@@ -18,6 +18,8 @@ from memoria_vault.runtime.worker import (
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import mark_file_status
 
+pytestmark = pytest.mark.contract
+
 
 def append_journal_event(vault: Path, event: dict, *, machine: str):
     return append_explicit_journal_event(vault, event, actor="operation", machine=machine)

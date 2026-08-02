@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from scripts.checks.schema_doc_drift import check_schema_docs
+
+pytestmark = pytest.mark.static
 
 ROOT = Path(__file__).resolve().parents[1]
 

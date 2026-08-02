@@ -18,6 +18,8 @@ from memoria_vault.runtime.secrets import (
 )
 from tests.cli_test_helpers import write_runner_provider_config
 
+pytestmark = pytest.mark.unit
+
 ALL_REGISTRY_NAMES = (
     "KILOCODE_API_KEY",
     "OPENALEX_API_KEY",

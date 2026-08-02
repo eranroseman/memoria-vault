@@ -13,6 +13,8 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch, eval_score
 
+pytestmark = pytest.mark.contract
+
 
 def _vault(tmp_path: Path) -> Path:
     """A minimal vault: two gold tasks, a small catalog, one superseded note."""

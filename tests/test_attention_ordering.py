@@ -30,6 +30,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import propagation
@@ -45,6 +47,8 @@ from memoria_vault.runtime.vaultio import (
     split_frontmatter,
     write_frontmatter_doc,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _aged(days: int) -> str:

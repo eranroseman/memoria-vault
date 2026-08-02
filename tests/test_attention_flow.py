@@ -18,6 +18,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib.inbox import (
     write_finding,
@@ -25,6 +27,8 @@ from memoria_vault.runtime.subsystems.lib.inbox import (
     write_work_prompt,
 )
 from memoria_vault.runtime.vaultio import split_frontmatter
+
+pytestmark = pytest.mark.contract
 
 
 def _rows(vault: Path, event_type: str) -> list[dict[str, str]]:

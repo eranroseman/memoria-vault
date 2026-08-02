@@ -3,12 +3,16 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.search_index import (
     rebuild_checked_search_index as _rebuild_checked_search_index,
 )
 from tests.helpers import ROOT, call_with_context, copy_memoria_dirs
+
+pytestmark = pytest.mark.contract
 
 
 def rebuild_checked_search_index(vault: Path, *args, **kwargs):

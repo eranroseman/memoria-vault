@@ -53,6 +53,8 @@ from memoria_vault.runtime.operations import emit_explicit_disposition_event
 from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from memoria_vault.runtime.telemetry import record_telemetry_event
 
+pytestmark = pytest.mark.contract
+
 # The pre-registration itself, pinned as a literal: this list is the promise that
 # every beta.1 §4 blocker has a written-down rule, so it must break when a rule is
 # renamed, dropped, or quietly added rather than be re-derived from the registry.

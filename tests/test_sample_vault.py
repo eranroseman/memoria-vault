@@ -1,6 +1,10 @@
 """The retired sample vault is not shipped in the workspace skeleton."""
 
+import pytest
+
 from tests.helpers import ROOT, WORKSPACE_SEED
+
+pytestmark = pytest.mark.package
 
 SAMPLE = WORKSPACE_SEED / ".memoria" / "samples" / "mediterranean-diet"
 FOLDERS = WORKSPACE_SEED / ".memoria" / "schemas" / "folders.yaml"

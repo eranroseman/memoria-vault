@@ -25,7 +25,7 @@ def write_runner_provider_config(
     )
 
 
-def _cli_command_surface() -> set[str]:
+def cli_command_surface() -> set[str]:
     parser = _build_parser()
     command_action = next(
         action for action in parser._actions if getattr(action, "dest", None) == "command"

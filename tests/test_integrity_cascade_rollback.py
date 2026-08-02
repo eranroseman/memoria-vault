@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.integrity import cascade_rollback as _cascade_rollback
@@ -27,6 +29,8 @@ from memoria_vault.runtime.trusted_writer import (
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+pytestmark = pytest.mark.runtime
 
 
 def _call(function, vault: Path, *args, **kwargs):

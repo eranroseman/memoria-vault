@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -9,6 +11,8 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write, run_next_job
 from tests.helpers import git, mark_file_status
 from tests.helpers import worker_workspace as workspace
+
+pytestmark = pytest.mark.runtime
 
 
 def note_text() -> str:

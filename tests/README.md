@@ -5,10 +5,13 @@ PR*). Tests live here as standalone files, not inline in shipped modules, so the
 deployed vault carries no test code.
 
 - `test_*.py` — behavior, contract, or subsystem tests. Name files for the
-  current behavior they protect, not for the release that introduced it.
+  current behavior they protect, not for the release that introduced it. Each
+  file declares its own level with a module-level
+  `pytestmark = pytest.mark.<level>`, placed after the imports; a file that
+  already carries another module mark combines them in a list. A new test file
+  without one runs in no selection, so `test_testing_levels.py` fails it.
 - `pyproject.toml` — declares install metadata for `memoria.*` plus pytest
   `pythonpath` entries and registered level markers.
-- `tests/conftest.py` — assigns every `test_*.py` file to exactly one level.
 - `tests/helpers.py` and `tests/cli_test_helpers.py` — shared fixture builders
   and CLI-surface helpers used by several test modules.
 

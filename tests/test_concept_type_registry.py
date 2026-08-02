@@ -12,7 +12,11 @@ import re
 import sys
 from importlib.resources import files
 
+import pytest
+
 from memoria_vault.runtime.subsystems.lib import schema
+
+pytestmark = pytest.mark.contract
 
 
 def _check_roster() -> set[str]:

@@ -16,6 +16,8 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.trusted_writer import OperationContext, rebuild_concept_mirror_from_files
 from tests.helpers import copy_memoria_dirs
 
+pytestmark = pytest.mark.contract
+
 CONTEXT = OperationContext(
     actor="operation",
     run_id="v16",

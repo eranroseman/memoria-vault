@@ -5,7 +5,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 from scripts.checks import doc_claims_gate as gate
+
+pytestmark = pytest.mark.static
 
 _MINIMAL_CLI = '''
 """Minimal fixture CLI for doc_claims_gate tests."""

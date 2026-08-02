@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.steering import (
     RELEVANCE_STOPWORDS,
     effective_steering_provenance,
@@ -12,6 +14,8 @@ from memoria_vault.runtime.steering import (
     steering_overrides,
 )
 from tests.helpers import WORKSPACE_SEED
+
+pytestmark = pytest.mark.contract
 
 
 def _write(path: Path, text: str) -> None:

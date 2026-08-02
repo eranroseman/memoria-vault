@@ -8,6 +8,8 @@ import pytest
 
 from tests.floor_lib import assert_invariants, read_only_guard, seed_vault, vault_digest
 
+pytestmark = pytest.mark.floor
+
 
 def test_invariants_pass_on_seed(tmp_path: Path) -> None:
     vault, _ = seed_vault(tmp_path)

@@ -8,6 +8,8 @@ import pytest
 
 from memoria_vault.runtime import state
 
+pytestmark = pytest.mark.runtime
+
 _EVIDENCE_ID = "ev-11111111"
 _BLOCK_REF = "projects/project-alpha/draft.md#^blk-11111111"
 _MARKER = "%%ev: ev-11111111 items=%%"

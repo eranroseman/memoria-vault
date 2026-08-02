@@ -10,8 +10,9 @@ import pytest
 
 from memoria_vault.cli import main
 
+pytestmark = pytest.mark.live
 
-@pytest.mark.live
+
 def test_live_runner_doctor_dispatches(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     base_url = os.environ.get("MEMORIA_MODEL_BASE_URL") or os.environ.get("OPENAI_BASE_URL")
     if not base_url:

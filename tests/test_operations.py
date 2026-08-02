@@ -38,6 +38,8 @@ from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git, patch_pydantic_ai
 
+pytestmark = pytest.mark.contract
+
 
 def capture_source(vault: Path, *args, **kwargs):
     return call_with_context(_capture_source, vault, *args, **kwargs)

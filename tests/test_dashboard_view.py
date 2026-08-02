@@ -52,6 +52,8 @@ from memoria_vault.runtime.telemetry import record_telemetry_event
 from memoria_vault.runtime.vaultio import frontmatter_doc
 from tests.helpers import init_cli_workspace
 
+pytestmark = pytest.mark.contract
+
 PANELS = {
     "attention_flow",
     "dispositions",

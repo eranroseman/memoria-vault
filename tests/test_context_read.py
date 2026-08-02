@@ -18,6 +18,8 @@ from memoria_vault.cli import main
 from memoria_vault.engine import api as engine_api
 from tests.helpers import init_cli_workspace, write_checked_concept
 
+pytestmark = pytest.mark.contract
+
 OPEN_CARD = "inbox/open-gap.md"
 RESOLVED_CARD = "inbox/resolved-gap.md"
 

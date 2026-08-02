@@ -17,6 +17,8 @@ from memoria_vault.runtime.evidence import (
     serialize_evidence_marker,
 )
 
+pytestmark = pytest.mark.unit
+
 
 def test_evidence_marker_v2_has_only_id_and_items_fields() -> None:
     marker = EvidenceMarker(evidence_id="ev-deadbeef", items=())

@@ -12,9 +12,13 @@ from memoria_vault.runtime import vaultio
 
 # The production contract deliberately tolerates unavailable directory fsync on
 # Windows; these tests pin the complementary POSIX failure behavior.
-pytestmark = pytest.mark.skipif(
-    os.name == "nt", reason="POSIX directory-fsync failures are intentionally tolerated on Windows"
-)
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.skipif(
+        os.name == "nt",
+        reason="POSIX directory-fsync failures are intentionally tolerated on Windows",
+    ),
+]
 
 
 def _fail_directory_fsync(real_fsync):

@@ -6,7 +6,11 @@ import re
 from importlib.resources import files
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import graph_sql, propagation, state
+
+pytestmark = pytest.mark.contract
 
 SHIPPED_RELATIONS = {"supports", "contradicts", "extends", "tension"}
 

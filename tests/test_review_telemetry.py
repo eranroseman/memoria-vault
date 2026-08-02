@@ -29,6 +29,8 @@ from memoria_vault.runtime.knowledge import review_telemetry_summary
 from memoria_vault.runtime.time import now_iso
 from tests.helpers import call_with_context, write_checked_concept
 
+pytestmark = pytest.mark.contract
+
 NOTE_IDS = (
     "01ARZ3NDEKTSV4RRFFQ69G5FA1",
     "01ARZ3NDEKTSV4RRFFQ69G5FA2",

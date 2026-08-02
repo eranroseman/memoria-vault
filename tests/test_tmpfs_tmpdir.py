@@ -8,6 +8,8 @@ from pathlib import Path
 import conftest as test_config
 import pytest
 
+pytestmark = pytest.mark.static
+
 
 @pytest.fixture
 def _tmpfs_env(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -13,6 +13,8 @@ from memoria_vault.runtime.worker import enqueue_operation, run_next_job, run_re
 from tests.helpers import git
 from tests.helpers import worker_workspace as workspace
 
+pytestmark = pytest.mark.runtime
+
 
 def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)

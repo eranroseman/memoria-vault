@@ -12,6 +12,8 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib import schema
 from memoria_vault.runtime.vaultio import UNIVERSAL_CONCEPT_TYPES
 
+pytestmark = pytest.mark.contract
+
 DB_CONCEPT_TYPES = {
     "work",
     "digest",

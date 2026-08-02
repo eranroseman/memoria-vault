@@ -15,6 +15,8 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
 
+pytestmark = pytest.mark.runtime
+
 
 def promote_draft_passage(vault: Path, *args, **kwargs):
     return call_with_context(_promote_draft_passage, vault, *args, **kwargs)

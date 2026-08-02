@@ -24,6 +24,8 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 from tests.helpers import WORKSPACE_SEED, git, worker_workspace
 
+pytestmark = pytest.mark.runtime
+
 
 @pytest.fixture(autouse=True)
 def _no_ambient_provider_keys(monkeypatch):

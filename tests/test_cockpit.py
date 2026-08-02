@@ -32,6 +32,8 @@ from tests.helpers import (
     write_checked_concept,
 )
 
+pytestmark = pytest.mark.contract
+
 PROJECT_REL = "projects/study-alpha/project.md"
 
 

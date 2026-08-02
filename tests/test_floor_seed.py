@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tests.floor_lib import seed_vault, vault_digest
+
+pytestmark = pytest.mark.floor
 
 
 def test_floor_seed_builds_and_passes_detectors(tmp_path: Path) -> None:

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import re
 
+import pytest
+
 from memoria_vault.product.seed_corpus import (
     SEED_FETCH_METHODS,
     SEED_LICENSE_FLOOR,
@@ -17,6 +19,8 @@ from memoria_vault.product.seed_corpus import (
     parse_seed_manifest,
 )
 from memoria_vault.runtime.paths import safe_filename
+
+pytestmark = pytest.mark.contract
 
 EXPECTED_IDS = [
     "chen-2018-undesirable-difficulty",

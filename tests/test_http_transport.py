@@ -27,6 +27,8 @@ from memoria_vault.runtime.http_transport import (
 from memoria_vault.runtime.jsonl import iter_jsonl
 from tests.helpers import init_cli_workspace, write_checked_note
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.fixture
 def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:

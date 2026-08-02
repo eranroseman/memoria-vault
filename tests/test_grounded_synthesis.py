@@ -21,6 +21,8 @@ from memoria_vault.runtime.search_index import answer_query as _answer_query
 from memoria_vault.runtime.span_refs import resolve_span_ref
 from tests.helpers import call_with_context, copy_memoria_dirs
 
+pytestmark = pytest.mark.contract
+
 WORK_ID = "settles-2016-spaced-repetition"
 
 # The full key set an ask payload may carry. query/engine/sources/unknowns/

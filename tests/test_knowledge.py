@@ -38,6 +38,8 @@ from tests.helpers import (
     write_checked_concept,
 )
 
+pytestmark = pytest.mark.runtime
+
 
 def _call(function, vault: Path, *args, **kwargs):
     return call_with_context(function, vault, *args, **kwargs)

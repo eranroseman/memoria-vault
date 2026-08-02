@@ -47,6 +47,8 @@ from memoria_vault.runtime.trusted_writer import (
 )
 from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
 
+pytestmark = pytest.mark.runtime
+
 TARGET = "notes/root-claim.md"
 CHILD = "notes/machine-child.md"
 GONE = "notes/machine-deleted.md"

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.integrity import (
@@ -39,6 +41,8 @@ from tests.helpers import (
     note_text,
     sync_file_verdicts,
 )
+
+pytestmark = pytest.mark.runtime
 
 
 def _context_wrapper(function):

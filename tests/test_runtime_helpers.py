@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 
+import pytest
+
 from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
 from memoria_vault.runtime.paths import resolve_vault
 from memoria_vault.runtime.time import parse_iso, utc_z
@@ -12,6 +14,8 @@ from memoria_vault.runtime.vaultio import (
     read_frontmatter,
     safe_read,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def test_parse_frontmatter_accepts_nested_yaml() -> None:

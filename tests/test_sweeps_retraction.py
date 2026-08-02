@@ -2,6 +2,8 @@
 
 import datetime
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.subsystems.integrity.retraction import retraction as _m
@@ -12,6 +14,8 @@ from memoria_vault.runtime.vaultio import (
     split_frontmatter,
 )
 from tests.helpers import call_with_context, copy_memoria_dirs, init_git
+
+pytestmark = pytest.mark.contract
 
 Path = _m.Path
 build_rw_index = _m.build_rw_index

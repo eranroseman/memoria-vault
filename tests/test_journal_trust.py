@@ -16,6 +16,8 @@ from memoria_vault.runtime import state, trusted_writer
 from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
 from tests.helpers import init_cli_workspace, operation_context
 
+pytestmark = pytest.mark.runtime
+
 
 def _seed_events(vault, count: int = 3) -> None:
     for index in range(count):

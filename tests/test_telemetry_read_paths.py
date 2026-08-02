@@ -14,6 +14,8 @@ from memoria_vault.runtime.subsystems.lib.inbox import write_finding
 from memoria_vault.runtime.vaultio import frontmatter_doc
 from tests.helpers import git, init_git
 
+pytestmark = pytest.mark.runtime
+
 # Only the DB and its sidecars are allowed to appear or change during a read: they are
 # gitignored (`product/workspace_seed/.gitignore`) and excluded from the floor digest.
 _SQLITE_SUFFIXES = (".sqlite", ".sqlite-wal", ".sqlite-shm", ".sqlite-journal")

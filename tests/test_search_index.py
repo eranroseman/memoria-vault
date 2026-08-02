@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import (
@@ -20,6 +22,8 @@ from memoria_vault.runtime.search_index import (
 )
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from tests.helpers import call_with_context, copy_memoria_dirs
+
+pytestmark = pytest.mark.contract
 
 
 def answer_query(vault: Path, *args, **kwargs):

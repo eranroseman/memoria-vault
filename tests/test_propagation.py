@@ -21,6 +21,8 @@ from memoria_vault.runtime.propagation import (
 from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 
+pytestmark = pytest.mark.runtime
+
 CLAIM_ULID = "01JXCCCCCCCCCCCCCCCCCCCCCC"
 THESIS_ULID = "01JXTTTTTTTTTTTTTTTTTTTTTT"
 SPAN_SHA = "sha256:" + "a" * 64

@@ -32,6 +32,8 @@ from tests.retrieval_fixtures import (
     validate_retrieval_fixture_rows,
 )
 
+pytestmark = pytest.mark.contract
+
 GOLD_TENSION_IDS = [
     "catalog/sources/chen-2018-undesirable-difficulty",
     "catalog/sources/moreira-2019-retrieval-practice",

@@ -11,8 +11,10 @@ from memoria_vault.cli import main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.cli_test_helpers import _cli_command_surface
+from tests.cli_test_helpers import cli_command_surface
 from tests.helpers import mark_file_status
+
+pytestmark = pytest.mark.contract
 
 ADAPTER_ENV_VARS = (
     "OBSIDIAN_API_KEY",
@@ -136,7 +138,7 @@ def test_palette_actions_have_standalone_cli_parity(
 
 
 def test_startup_shell_restore_is_adapter_only_not_core_cli() -> None:
-    surface = _cli_command_surface()
+    surface = cli_command_surface()
 
     assert "memoria restore shell" not in surface
     assert "memoria workspace run" in surface

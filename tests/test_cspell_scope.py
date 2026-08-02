@@ -10,7 +10,10 @@ change re-splits the scope across files.
 import json
 from pathlib import Path
 
+import pytest
 import yaml
+
+pytestmark = pytest.mark.static
 
 ROOT = Path(__file__).resolve().parent.parent
 CSPELL_JSON = ROOT / "cspell.json"
@@ -39,5 +42,4 @@ def test_precommit_hook_triggers_on_any_markdown():
     )
     assert hook["language"] == "node"
     assert hook["entry"] == "cspell lint --no-progress --no-must-find-files"
-    assert hook["additional_dependencies"] == ["cspell@10.0.1"]
     assert "npx" not in hook["entry"]

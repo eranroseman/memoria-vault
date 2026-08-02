@@ -5,9 +5,13 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
 from tests.helpers import WORKSPACE_SEED, call_with_context, init_cli_workspace
+
+pytestmark = pytest.mark.contract
 
 
 def dispatch(vault: Path, *args, **kwargs):

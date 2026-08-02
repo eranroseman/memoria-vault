@@ -10,6 +10,8 @@ import pytest
 from memoria_vault.runtime import state
 from tests.helpers import ROOT
 
+pytestmark = pytest.mark.contract
+
 
 def test_schema_lands_at_user_version_19(tmp_path: Path) -> None:
     # Both sides are literal on purpose: comparing the applied version to

@@ -3,11 +3,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.knowledge import read_project_slice
 from memoria_vault.runtime.knowledge import (
     write_project_argument_canvas as _write_project_argument_canvas,
 )
 from tests.helpers import call_with_context, write_checked_concept
+
+pytestmark = pytest.mark.runtime
 
 
 def write_project_argument_canvas(vault: Path, *args, **kwargs):

@@ -16,6 +16,8 @@ from memoria_vault.runtime.trusted_writer import OperationContext, operation_con
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import call_with_context, init_cli_workspace, write_checked_concept
 
+pytestmark = pytest.mark.runtime
+
 
 def _operation_job(
     *,

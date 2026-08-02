@@ -37,6 +37,8 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.cli_test_helpers import write_runner_provider_config
 from tests.helpers import init_cli_workspace, write_checked_note
 
+pytestmark = pytest.mark.contract
+
 PLUGIN = Path(__file__).resolve().parent.parent / "packages" / "memoria-obsidian"
 VIEWSPEC_JS = PLUGIN / "viewspec.js"
 RELATE_JS = PLUGIN / "relate.js"

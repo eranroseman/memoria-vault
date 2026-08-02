@@ -10,6 +10,8 @@ from memoria_vault.runtime.knowledge import compose_project_draft as _compose_pr
 from memoria_vault.runtime.knowledge import read_project_draft
 from tests.helpers import call_with_context, write_checked_concept
 
+pytestmark = pytest.mark.runtime
+
 
 def compose_project_draft(vault: Path, *args, **kwargs):
     return call_with_context(_compose_project_draft, vault, *args, **kwargs)

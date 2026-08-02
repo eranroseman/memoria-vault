@@ -21,6 +21,8 @@ from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from memoria_vault.runtime.vaultio import frontmatter_doc, read_frontmatter, split_frontmatter
 from tests.helpers import git, init_cli_workspace, init_git
 
+pytestmark = pytest.mark.contract
+
 
 def _write_card(
     vault: Path,

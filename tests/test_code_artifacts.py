@@ -3,10 +3,14 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.code.records import create_code_artifact
 from memoria_vault.runtime.code.runner import Availability, run_artifact
 from memoria_vault.runtime.policy.audit import sha256_file
+
+pytestmark = pytest.mark.runtime
 
 
 def test_code_artifact_default_purpose_is_grounds_in_database_and_markdown(

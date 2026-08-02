@@ -20,8 +20,10 @@ from memoria_vault.engine.surface_contract import (
     mcp_tools,
 )
 from memoria_vault.runtime.subsystems.lib.inbox import write_finding
-from tests.cli_test_helpers import _cli_command_surface
+from tests.cli_test_helpers import cli_command_surface
 from tests.helpers import init_cli_workspace
+
+pytestmark = pytest.mark.contract
 
 
 def test_surface_contract_registry_is_minimal_and_unique() -> None:
@@ -294,7 +296,7 @@ def test_surface_contract_cli_parity_is_equality_with_named_exemptions() -> None
 
     assert "memoria surface schema" in registered
     assert registered.isdisjoint(CLI_ONLY_COMMANDS)
-    assert registered | CLI_ONLY_COMMANDS == _cli_command_surface()
+    assert registered | CLI_ONLY_COMMANDS == cli_command_surface()
 
 
 def test_surface_contract_job_vocabulary_is_closed() -> None:

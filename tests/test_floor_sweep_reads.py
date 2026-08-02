@@ -20,6 +20,8 @@ from tests.floor_lib import (
     seed_vault,
 )
 
+pytestmark = pytest.mark.floor
+
 ACTIONS_BY_ID = actions_by_id()
 READ_ACTIONS = sorted(
     a for a, d in ACTIONS_BY_ID.items() if d["kind"] == "read" and not d.get("reserved")
@@ -39,18 +41,11 @@ def _assert_response_envelope(action_id: str, payload: dict) -> None:
         assert payload.get("api_version") == expected_version
 
 
-# Real, pre-existing contract/implementation mismatches uncovered by
-# completing the ARG_TABLE (Task 7a) — not ARG_TABLE binding errors. Empty
-# for now (surface.openapi's response_version/api_version gap, formerly
-# registered here, was fixed by dropping response_version from that action's
-# surface_contract entry — its http handler intentionally returns a raw
-# OpenAPI document, not a Memoria read-API envelope). When the sweep
-# uncovers a genuine contract/implementation gap, register it here as
-# (action_id, transport) -> reason; the test below marks it
-# `xfail(strict=True)`, following the same "found a real bug, don't fake the
-# assertion, flag if it's ever silently fixed" convention
-# `tests/test_floor_sweep_operations.py` set for `check-falsifiability`
-# (task-6-report.md). `strict=True` means an unexpected pass fails the
+# Real, pre-existing contract/implementation mismatches the sweep uncovers —
+# not ARG_TABLE binding errors. Register a genuine gap here as
+# (action_id, transport) -> reason and the test below marks it
+# `xfail(strict=True)`: a real bug gets flagged rather than papered over by a
+# weakened assertion, and `strict=True` means an unexpected pass fails the
 # suite, so resolving a registered gap requires removing its entry here.
 KNOWN_CONTRACT_GAPS: dict[tuple[str, str], str] = {}
 
@@ -87,7 +82,7 @@ def test_read_action(vault, action_id: str, transport: str, request: pytest.Fixt
     entry = ARG_TABLE.get(action_id)
     if entry is None:
         # Not yet registered — completeness is enforced by
-        # test_floor_coverage.py (Task 7), not by an erroring sweep case.
+        # test_floor_coverage.py, not by an erroring sweep case.
         pytest.skip(f"{action_id} not yet in ARG_TABLE")
     binding = entry.get(transport)
     if binding is None:
@@ -95,9 +90,9 @@ def test_read_action(vault, action_id: str, transport: str, request: pytest.Fixt
     _dispatch_and_check(v, action_id, binding, transport, manifest)
 
 
-# Task 9: (action_id, overlay) pairs flattened out of VARIANTS, one case per
-# hand-picked pairwise combination — see floor_lib.py's VARIANTS docstring
-# for the corrections this table needed vs. the original brief.
+# (action_id, overlay) pairs flattened out of VARIANTS, one case per
+# hand-picked pairwise combination — see floor_lib.py's VARIANTS notes for
+# why individual overlay values have the shapes they do.
 VARIANT_CASES = [
     (action_id, index, overlay)
     for action_id, overlays in VARIANTS.items()

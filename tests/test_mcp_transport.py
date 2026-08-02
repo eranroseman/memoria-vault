@@ -15,6 +15,8 @@ from memoria_vault.runtime import mcp_transport, retrieval_pipeline, state, work
 from memoria_vault.runtime.mcp_transport import make_mcp_app
 from tests.helpers import init_cli_workspace, write_checked_note
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.fixture
 def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:

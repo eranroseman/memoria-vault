@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import render_references_bib
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -20,6 +22,8 @@ from memoria_vault.runtime.projections import (
 )
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 from tests.helpers import call_with_context, copy_memoria_dirs, git, init_git
+
+pytestmark = pytest.mark.contract
 
 
 def write_tracked_projections(vault: Path, *args, **kwargs):

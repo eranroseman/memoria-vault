@@ -1,10 +1,6 @@
 """Completeness meta-tests: every catalog entry has a floor registry entry.
 
 Spec: docs/superpowers/specs/2026-07-13-development-pipeline-spec.md §3.4.
-
-Task 7a seeded only the read-action coverage test (ARG_TABLE). Task 7b
-(7b-1 + 7b-2) completed OPERATION_REGISTRY for every cataloged operation id,
-so the operation-registry coverage tests are added here now.
 """
 
 from __future__ import annotations
@@ -14,6 +10,8 @@ import pytest
 from memoria_vault.engine.surface_contract import actions_by_id
 from memoria_vault.runtime.capabilities import iter_capability_manifests
 from tests.floor_lib import ARG_TABLE, OPERATION_REGISTRY
+
+pytestmark = pytest.mark.floor
 
 
 def test_every_read_action_covers_every_declared_transport() -> None:

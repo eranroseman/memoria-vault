@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -13,6 +15,8 @@ from memoria_vault.runtime.worker import (
     run_request,
 )
 from tests.helpers import copy_memoria_dirs, init_git
+
+pytestmark = pytest.mark.runtime
 
 
 def workspace(tmp_path: Path) -> Path:

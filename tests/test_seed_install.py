@@ -25,6 +25,8 @@ from tests.helpers import (
     init_git,
 )
 
+pytestmark = pytest.mark.contract
+
 PDF_BYTES = b"%PDF-1.4 seed fixture bytes\n"
 PDF_URL = "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
 PMC_RECORD_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=PMC6099118"

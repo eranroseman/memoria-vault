@@ -10,6 +10,8 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.lib import schema
 
+pytestmark = pytest.mark.contract
+
 
 def test_bundle_roots_and_fulltexts_schema() -> None:
     folders = schema.load_folders()

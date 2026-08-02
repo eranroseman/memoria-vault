@@ -30,6 +30,8 @@ from memoria_vault.runtime.time import parse_iso
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event, append_journal_event
 from tests.helpers import call_with_context, operation_context, write_checked_concept
 
+pytestmark = pytest.mark.runtime
+
 
 def compose_project_draft(vault: Path, *args, **kwargs):
     return call_with_context(_compose_project_draft, vault, *args, **kwargs)

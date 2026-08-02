@@ -39,6 +39,8 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
 from tests.helpers import call_with_context, write_checked_concept
 
+pytestmark = pytest.mark.contract
+
 ALPHA = "projects/project-alpha/project.md"
 BETA = "projects/project-beta/project.md"
 ALPHA_SCOPE = ["projects/project-alpha"]

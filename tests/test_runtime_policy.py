@@ -21,6 +21,8 @@ from memoria_vault.runtime.policy import (
 )
 from tests.helpers import WORKSPACE_SEED
 
+pytestmark = pytest.mark.contract
+
 
 def test_runtime_policy_core():
     import tempfile

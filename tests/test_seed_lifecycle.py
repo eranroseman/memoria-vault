@@ -19,6 +19,8 @@ from memoria_vault.runtime.projections import (
 )
 from tests.helpers import WORKSPACE_SEED, git, write_checked_concept
 
+pytestmark = pytest.mark.contract
+
 
 def _init(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
     workspace = tmp_path / "workspace"

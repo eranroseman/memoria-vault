@@ -14,6 +14,8 @@ from tests.floor_lib import run_cli, run_http, seed_vault
 pytest.importorskip("mcp")
 from tests.floor_lib import run_mcp
 
+pytestmark = pytest.mark.floor
+
 
 def test_status_parity_across_transports(tmp_path: Path) -> None:
     vault, _ = seed_vault(tmp_path)

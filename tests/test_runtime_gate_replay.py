@@ -20,6 +20,8 @@ from memoria_vault.runtime.trusted_writer import (
 )
 from tests.helpers import call_with_context, operation_context, patch_pydantic_ai
 
+pytestmark = pytest.mark.runtime
+
 
 def stage_concept(vault: Path, *args, **kwargs):
     context = operation_context(
