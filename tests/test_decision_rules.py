@@ -75,6 +75,7 @@ SHIPPED_RULE_IDS = [
     "warrant-touch-budget",
     "two-window-friction",
     "canvas-authoring",
+    "staged-import",
 ]
 AUTO_RULE_IDS = {
     "evidence-review-sizing",
@@ -152,7 +153,7 @@ def _would_fire(vault: Path) -> list[dict[str, Any]]:
 # --- H.3: the registry -------------------------------------------------------
 
 
-def test_shipped_registry_arms_all_sixteen_rules_with_four_auto(tmp_path: Path) -> None:
+def test_shipped_registry_arms_all_seventeen_rules_with_four_auto(tmp_path: Path) -> None:
     """A vault with no registry file loads the shipped pre-registration.
 
     Producer state named: this *is* the state that ships. `.memoria/config/` files
@@ -273,7 +274,7 @@ def test_update_rule_status_materializes_the_file_and_round_trips(tmp_path: Path
     assert path.is_file()
     rules = {rule["id"]: rule for rule in load_decision_rules(tmp_path)}
     assert rules["attention-throttle"]["status"] == "fired"
-    # The flip is one rule's, not the registry's: the other fifteen stay armed and
+    # The flip is one rule's, not the registry's: the other sixteen stay armed and
     # the roster is unchanged.
     assert list(rules) == SHIPPED_RULE_IDS
     assert [rule_id for rule_id, rule in rules.items() if rule["status"] != "armed"] == [
@@ -306,6 +307,30 @@ def test_update_rule_status_refuses_an_unknown_rule_or_status(
         update_rule_status(tmp_path, rule_id, status)
 
     assert not (tmp_path / RULES_CONFIG).exists()
+
+
+# --- O2 W.3: the staged-import stop rule -------------------------------------
+
+
+def test_staged_import_rule_is_seeded_manual_and_armed(tmp_path: Path) -> None:
+    """O2 spec §7's stop rule is pre-registered before Phase 1's first staged run.
+
+    Manual by construction: its evidence is whether the PI's own triage session
+    fit, which no counter observes, so `AUTO_PREDICATES` must stay at four.
+    """
+    rules = {rule["id"]: rule for rule in load_decision_rules(tmp_path)}
+
+    rule = rules["staged-import"]
+    assert rule["check"] == "manual"
+    assert rule["status"] == "armed"
+    assert rule["recommendation"] == (
+        "After each stage (10 works, then 100): if the run's triage worklist did not fit "
+        "one session, or rebuild/query latency broke the session's flow, stop the protocol "
+        "and record the observation in the diary and this rule — the observation IS the "
+        "finding."
+    )
+    assert "import-run" in rule["metric"]
+    assert "Shape-1/Shape-2 query latency" in rule["metric"]
 
 
 # --- H.4: assessment ---------------------------------------------------------

@@ -19,7 +19,7 @@ writes yet, so each stays a real query over the real table rather than a stub th
 later task has to find and replace.
 
 `decision_rules` is the one panel that is *not* empty on a fresh vault: the
-sixteen-rule pre-registration ships with the product (`runtime.decision_rules`),
+seventeen-rule pre-registration ships with the product (`runtime.decision_rules`),
 so a PI sees every blocker armed on day one and `would_fire` empty. Assembly stays
 pure -- assessment reports, `apply-decision-rule-notices` applies.
 """
