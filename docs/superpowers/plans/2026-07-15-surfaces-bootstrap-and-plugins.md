@@ -11163,6 +11163,107 @@ belongs to `.8`.
    endpoints): no caller can act on it, `.8` shows one `Notice` either way, and
    pinning it would freeze an incidental internal.
 
+### Execution amendment — U3-PLUG.8 as built (2026-08-02)
+
+Recorded by the executor of U3-PLUG.8. It governs U3-PLUG.8 only; every
+U3-PLUG.9–.11 checkbox and body is unchanged. The `AbstractInputSuggest`
+obligation carried forward by the U3-PLUG.6 amendment's item 10 and the
+U3-PLUG.7 amendment's item 1 is discharged here, together with the Warrant
+help-text source pin.
+
+1. **The body shipped is the drafted body, with two departures.** (a) The two
+   endpoint `.trim()` calls in the `onChange` handlers are deleted, on the
+   precedent of the U3-PLUG.1–.4 amendment's item 3 and the U3-PLUG.6
+   amendment's item 8: `buildRelateOperation` trims the same two fields on the
+   way to the payload, so for *every* string input trim-then-trim is trim, and
+   the modal's copy could not change an outcome. A comment at the site records
+   why. (b) `Queue edge` closes the form only when the enqueue succeeds. The
+   drafted body closes unconditionally, which throws away a typed From /
+   relation / To / Warrant on the refusal `curate_note_link` gives most often
+   (an unchecked endpoint); U3-PLUG.7 built `enqueueNamedOperation`'s `null`
+   return for exactly this consumer — its own test says so — and using it is one
+   `if`. `plugin.linkRelations || []` is **kept** and is the one knowing
+   survivor (item 6).
+2. **The end-to-end `warrant` proof over the wire is closed.**
+   `test_live_server_carries_the_modal_warrant_text_to_the_edge_attribute` in
+   `tests/test_attention_view.py` runs the plugin's own `buildRelateOperation`
+   under node, posts what it returns through the PI-authenticated
+   `/operation/run` socket with no `actor`, and reads the edge back: the
+   annotated submission lands as `attributes_json.warrant`, and both
+   submissions land in `links`. The payload is *produced by the plugin*, not
+   retyped in Python, because a hand-written copy keeps passing after the
+   plugin renames `warrant` to the legacy `reason` alias — it would prove only
+   that the engine accepts a key nothing sends. The fixture also separates the
+   two senses of the word rather than asserting about them: the `warrant`
+   **relation** is sent with blank text and the Warrant **text** rides a
+   `supports` edge, so exactly one attribute row exists and its relation is not
+   `warrant`. Mutation-checked from both ends (item 6): renaming the builder's
+   key, sending a blank `warrant` instead of omitting it, and dropping or
+   misreading `payload.warrant` in `worker.py` each kill it.
+3. **No new module, so no roster moved and the floor goldens moved by exactly
+   two entries.** `relate.js` was already packaged, seeded and rostered by
+   U3-PLUG.5, so `bundles.BUNDLE_FILES["obsidian"]`, the provenance allowlist,
+   the four test rosters and `test_plugin_provenance.py`'s interloper are all
+   untouched. Golden regeneration moved **36 goldens, 72 lines**, and every one
+   of those lines is one of two hash entries —
+   `.obsidian/plugins/memoria-obsidian/main.js` and `styles.css`, the two files
+   this task edited — with the same new value in all 36. Verified over the
+   parsed JSON rather than by reading the diff: no other path in any golden
+   moved, and `.memoria/vault.json` is unchanged because no file joined the
+   bundle. (The count is 36, not the 35 of the last three tasks: a golden was
+   added by graph NID-C.5 in between.)
+4. **`MIN_NODE_TESTS` stays 49.** No suite file was added: `test.mjs` remains
+   one flat unit however many assertions it carries, so the discovered count is
+   unchanged (51 on node 24 locally). The new block is numbered `// 27)`.
+5. **Three mock changes, each because a modal decision is otherwise
+   unassertable.** (a) `Modal` is no longer the inert `Base`: it owns `app`,
+   `contentEl`, `open()` (which really calls `onOpen`) and `close()`, without
+   which the form the PI fills in never exists. (b) `Setting` records the
+   controls it builds and lets a test do what the PI does — type, pick, click;
+   its `setValue` deliberately does **not** fire `onChange`, as Obsidian's does
+   not, so a modal that never reads what was typed cannot pass. (c)
+   `AbstractInputSuggest` records its instances, because the modal does not
+   store the two suggesters it constructs and a picker bound to the wrong input
+   is otherwise invisible. Two existing assertions moved with the product: the
+   pane header's children now include `Relate…`, and section 22 selects the
+   card's action button by `data-operation-id` rather than by position, because
+   the header's button shares the `memoria-action` class the plan gives it.
+6. **Mutation result: 47 single mutations, 44 killed, 3 survivors, none of them
+   a coverage gap.** Thirty-nine mutated `main.js` (the require, the command id
+   / name / callback, the header button and its wiring, the active-note
+   default, the modal class, the empty-roster warning and its wording, the
+   roster source, the segmented control's exclusive selection and what a click
+   records, both suggesters' target fields, the To field's read, the warrant
+   read, the help text, the builder's arguments including the legacy `reason`
+   alias and a local roster, both build-failure exits, the operation id, an
+   added `actor`, both close conditions, and all five `getSuggestions` /
+   `renderSuggestion` / `selectSuggestion` behaviours); two mutated `relate.js`;
+   two mutated `worker.py`'s warrant wire; three mutated the shipped artifact
+   (a forgotten seed copy of either file, a seeded `main.js` that does not
+   load); and one mutated a floor golden. Two first-round survivors were real
+   and are closed: the From suggester writing the To field (the From pick was
+   asserted to exist but never *taken*; the picks are now ordered so the second
+   one cannot hide the first), and `renderSuggestion` drawing nothing. A third
+   first-round survivor was not a survivor at all but a mis-targeted run — the
+   goldens are asserted by `test_floor_sweep_operations.py`, not
+   `test_floor_coverage.py`; re-run against their owner, the stale hash dies.
+   The three that remain:
+   - **`this.plugin.linkRelations || []`.** Unreachable rather than
+     behaviour-preserving: `onload` sets the field to `[]` before any command
+     or pane exists and `poll` only ever assigns an array, so no fixture can
+     reach the nullish input without building a plugin state the product cannot
+     produce. Unlike the U3-PLUG.6 `|| {}` case it is *not* inert for that
+     input — it is the difference between the warning and a throw — so it is
+     kept, and it matches this file's existing idiom for plugin/settings fields
+     (`this.settings.queuedEvents || []`).
+   - **`tests/test_memoria_obsidian_package.py`'s `"relate"` roster entry and
+     its Warrant help-text pin.** Both are one-directional pins, so deleting an
+     entry deletes an assertion rather than failing one — the shape the
+     U3-PLUG.5 amendment's item 7 recorded. The *product* regression each
+     exists for is caught in the node suite, which asserts the registered
+     command roster and the help text on the built control; these two are the
+     source-side copy that keeps a `main.js` rewrite honest.
+
 ---
 
 ### Task U3-PLUG.1: Switch the plugin test harness to `node --test`
@@ -13332,7 +13433,7 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
 
 **Steps:**
 
-- [ ] Write the failing test — in `packages/memoria-obsidian/scripts/test.mjs`, next to the `open-attention` assertion add:
+- [x] Write the failing test — in `packages/memoria-obsidian/scripts/test.mjs`, next to the `open-attention` assertion add:
   ```js
     assert.ok(plugin.commands.includes("relate"));
   ```
@@ -13345,8 +13446,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
           "the selected edge."
       ) in _plugin_js_source()
   ```
-- [ ] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected assertion failure on `relate`.
-- [ ] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
+- [x] Run test to verify it fails: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` — expected assertion failure on `relate`.
+- [x] Write minimal implementation — in `packages/memoria-obsidian/main.js`:
   1. Requires: `const { buildRelateOperation } = require("./relate");`
   2. `onload` command:
   ```js
@@ -13488,8 +13589,8 @@ Pill click behaviors (wordings fixed here): **connected** → `activateAttention
   }
   ```
   6. Add `"relate",` to the roster tuple in `tests/test_memoria_obsidian_package.py`.
-- [ ] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test red until sync).
-- [ ] Sync seed + regenerate goldens (same commands as U3-PLUG.6; `main.js` + `styles.css`), re-run the pytest file — all green.
+- [x] Run tests to verify they pass: `cd /home/eranr/memoria-vault/packages/memoria-obsidian && node --test` then `python -m pytest tests/test_memoria_obsidian_package.py -v` (seed test red until sync).
+- [x] Sync seed + regenerate goldens (same commands as U3-PLUG.6; `main.js` + `styles.css`), re-run the pytest file — all green.
 - [ ] Commit:
   `git add packages/memoria-obsidian/main.js packages/memoria-obsidian/styles.css packages/memoria-obsidian/scripts/test.mjs tests/test_memoria_obsidian_package.py src/memoria_vault/product/workspace_seed/.obsidian/plugins/memoria-obsidian tests/fixtures/floor/goldens`
   `git commit -m "feat(obsidian): relate modal — single form, server roster, queue edge toast with request id` (blank line) `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"`
