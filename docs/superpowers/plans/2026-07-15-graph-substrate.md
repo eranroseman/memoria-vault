@@ -42,7 +42,7 @@
 5. **Outcome→decision dict** (`integrity.py:1169`): ERP-B adds `"confirm-tension": "accept"`, ERP-D adds `"decided-wrong": "override"` — merge, never overwrite.
 6. **Tension rows** store endpoints lexicographically sorted; ERP-C propagation and ERP-D counters must not assume direction.
 7. **Consequence-mark fields** (`stale: bool`, `consequence:` enum) are registered in the type yamls by NID-A's closed-validation task; ERP-C writes them, never touches yamls.
-8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5/.6 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks.
+8. **Floor-golden serialization:** NID-B.6, NID-C.2/.5/.6, ERP-D.1/.5/.6 regenerate goldens — land sequentially, never in parallel worktrees, and not concurrently with other plans' golden tasks. **Outstanding (2026-08-02):** NID-C.6 landed its runtime change without the golden token, so one golden-moving edit it owns is still unapplied — the `compile-source-digest.md` manifest text plus the `regenerate-capability-index` golden. The next holder of this plan's token should clear it; the exact edit and expected one-line diff are in NID-C.6's 2026-08-02 execution amendment.
 9. **Execution order:** NID-A → NID-B → ERP-A → ERP-B → ERP-C → ERP-D → NID-C (NID-C.1/.2 may run any time; its golden tasks obey contract 8).
 10. **Catalog↔Concept FK (v16):** `catalog_sources.work_id` is the sole
     catalog↔Concept join and references `concepts.concept_id` immediately as the
@@ -4902,6 +4902,78 @@ Steps:
 > which assert the refusal *and* that nothing was written on either writer
 > boundary. Nothing else in this task changes.
 
+> **Execution amendment — the doc half is split, and four assertions were added
+> (2026-08-02, as landed).** Verified by content at `a1d815c9`:
+>
+> 1. **The runtime change landed whole; the manifest edit did not.** The wave's
+>    floor-golden token (contract 8) was held by another session, so the two
+>    steps that move `tests/fixtures/floor/goldens/` were deliberately not
+>    executed. Measured, not assumed: with the manifest edit applied,
+>    `test_operation[regenerate-capability-index]` drifts and
+>    `test_operation[compile-source-digest]` stays green — exactly the split the
+>    Files list predicts. The manifest edit was then reverted, and the landed
+>    tree leaves `tests/fixtures/floor/goldens/` byte-identical with the full
+>    `python scripts/verify` green.
+>
+>    **Remaining obligation for the next golden-token holder** (the whole of it;
+>    no other file is involved): apply the two text replacements to
+>    `src/memoria_vault/product/capabilities/operations/compile-source-digest.md`
+>    exactly as the "Update the operation doc" step below writes them, then
+>    `MEMORIA_FLOOR_UPDATE_GOLDENS=1 python -m pytest
+>    "tests/test_floor_sweep_operations.py::test_operation[regenerate-capability-index]"`.
+>    The expected diff is one line: the `.memoria/index/capability-index.json`
+>    hash. Until then the manifest's `description` and its Pattern tail still say
+>    "curated hub changes stay as suggestions", which the code no longer does.
+> 2. **The `docs/reference` half of that step *was* applied** — the
+>    `system-actions-operations.md` row is a published-docs edit with no golden
+>    coupling, so leaving it stale had no upside. The step below stays unticked
+>    because only half of it ran.
+> 3. **The fixture rewrite followed the 2026-08-01 blocking amendment, not the
+>    Step-1 snippet.** `check_status: checked` is absent from `curated_text` and
+>    the `assert "check_status" not in read_frontmatter(curated_hub)` line is
+>    replaced by `assert read_frontmatter(curated_hub)["description"] ==
+>    "Human curation."` — the curated *frontmatter* survives the block write,
+>    which is the property that assertion was reaching for and which the
+>    retired-field version could not state. The step's printed snippet is
+>    non-executable; it is left verbatim so the amendment above still has
+>    something to point at.
+> 4. **`assert curated_hub.read_text(...) == curated_text` is gone.** The plan's
+>    replacement block drops it silently; recorded here because it was the old
+>    test's whole "curated hubs are not overwritten" claim, and it is now
+>    carried by `curated_body == "# Framing\n\nHuman text.\n"` out of
+>    `split_candidates_section` — a stronger statement, since it survives the
+>    file being rewritten.
+> 5. **Four assertions beyond the plan's, each added to kill a measured
+>    survivor:** `events[4]["output_id"]`, the full `events[4]["inputs"]` rows
+>    (both `id` *and* `sha256`, cross-checked against the digest's own check
+>    event and the digest-stage event — the id-only projection let three
+>    `hub_inputs` mutants live), `result["hub_events"][0]["output_id"]`, and
+>    `len(result["hub_events"]) == 5`. `hub_events` has no reader outside
+>    `operations.py`, so without the last two the block-write event could be
+>    dropped from the result contract undetected.
+> 6. **Reader audit of the changed field (per the recurring two-reader
+>    divergence class, issue #1670): four readers, all checked before the writer
+>    changed.** `hub_suggestions` leaves `compile_source_digest` by three routes
+>    — the `run/done` journal event's `"suggestions"` key
+>    (`operations.py`), the result dict, and the worker's result passthrough
+>    (`worker.py`) — plus one indirect reader, `cli.py`'s generic result
+>    summariser, which reads `container.get("suggestions")` for its **length
+>    only** and so cannot observe the domain change. No reader interprets the
+>    value as a staging id. The values additionally take on a **fourth role**
+>    this task creates: they are now spliced into `commit_writer_changes`' path
+>    list, so the domain had to move from staging id to vault-relative path for
+>    that splice to be correct — the two are not interchangeable, which is why
+>    `M08` (append a `.memoria/staging/...` shape) is a killed mutant rather
+>    than a stylistic one.
+> 7. **Mutation-tested: 22 mutants, 21 killed, 1 survivor.** The survivor is
+>    `checks=promotion_checks` → `checks=None` on the `write_hub_candidates`
+>    call — provably equivalent, and the same survivor NID-C.5 judged:
+>    `required_promotion_checks` resolves this manifest's singleton
+>    `required_checks` to `["memoria-runtime"]`, which is exactly what
+>    `normalize_promotion_checks(None)` defaults to. It is doubly unobservable
+>    here, because the fixture's curated hub is unchecked and `checks` reaches
+>    only the `mark_checked` branch.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/operations.py:584-618` (the existing-hub
   branch of `compile_source_digest`'s hub loop) and `:631-633` (commit paths)
@@ -4930,7 +5002,7 @@ Steps:
 
 Steps:
 
-- [ ] Update the test first. In `tests/test_operations.py:159-165`, replace
+- [x] Update the test first. In `tests/test_operations.py:159-165`, replace
   the curated-hub fixture text with a schema-valid curated hub (hub.yaml
   requires `tag`; the retired `check_status:` field is kept deliberately to
   exercise the writer's retired-field pop):
@@ -4992,13 +5064,13 @@ Steps:
       }
   ```
 
-- [ ] Run test to verify it fails:
+- [x] Run test to verify it fails:
   `python -m pytest tests/test_operations.py::test_compile_source_digest_traces_model_call_and_stages_hub_suggestions -v`
   — expected failure: `assert result["hub_suggestions"] == ["hubs/framing.md"]`
   (current code returns the staging id, and the curated hub file carries no
   Candidates section).
 
-- [ ] Write minimal implementation. In `operations.py:584-618`, replace the
+- [x] Write minimal implementation. In `operations.py:584-618`, replace the
   hub loop's existing-hub handling (imports were added in NID-C.5):
 
   ```python
@@ -5068,7 +5140,7 @@ Steps:
   `"outputs": [digest_rel, *hub_paths]` and
   `"suggestions": hub_suggestions` — only the values change.)
 
-- [ ] Run test to verify it passes:
+- [x] Run test to verify it passes:
   `python -m pytest tests/test_operations.py -v`
 
 - [ ] Update the operation doc. In
@@ -5097,7 +5169,7 @@ Steps:
   hash line changing (`compile-source-digest.json` must be untouched: the
   sweep's five topic hubs never pre-exist in the seed).
 
-- [ ] Verify the other compile consumers still pass:
+- [x] Verify the other compile consumers still pass:
   `python -m pytest tests/test_content_security.py tests/test_integrity_cascade_rollback.py tests/test_worker_knowledge_cycle.py tests/test_runtime_gate_replay.py tests/test_cli_work_project.py -q`
   then the full gate: `python scripts/verify`.
 
