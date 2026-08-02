@@ -5,14 +5,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.propagation import (
     CONSEQUENCE_TYPES,
     HOP_DERIVED,
     HOP_EVIDENCE,
+    HOP_KINDS,
     TRIGGERS,
     closure_inputs,
     consequence_closure,
+    hop_consequence,
 )
 from memoria_vault.runtime.subsystems.lib.edges import EDGE_RELATIONS
 from memoria_vault.runtime.trusted_writer import append_explicit_journal_event
@@ -694,3 +698,187 @@ def test_the_walk_over_vault_inputs_marks_path_members_not_identities(tmp_path: 
         "notes/thesis.md": {"consequence": "grounds-lost", "via": "supports", "depth": 2},
     }
     assert CLAIM_ULID not in json.dumps(marked)
+
+
+# --- C.2: the trigger x hop decision table -------------------------------------
+
+_FALLING_TRIGGERS = ("claim-retracted", "standing-changed", "decided-wrong")
+
+
+def test_hop_kinds_is_the_edge_roster_plus_the_two_non_edge_hops() -> None:
+    """The roster literal first, then the partition that makes an eighth verb fail here.
+
+    Set equality, not containment: a hop kind the decision table answers for but
+    no relation produces would be a table row nothing can reach, and a relation
+    with no table row would raise `unknown hop kind` mid-walk.
+    """
+    assert HOP_KINDS == (
+        "supports",
+        "extends",
+        "warrant",
+        "qualifier",
+        "rebuttal",
+        "contradicts",
+        "tension",
+        "evidence",
+        "derived",
+    )
+    assert len(set(HOP_KINDS)) == len(HOP_KINDS)
+    assert set(HOP_KINDS) == set(EDGE_RELATIONS) | {HOP_EVIDENCE, HOP_DERIVED}
+
+
+def test_hop_consequence_encodes_spec_parentheticals() -> None:
+    for trigger in _FALLING_TRIGGERS:
+        assert hop_consequence(trigger, "supports", seed=True) == "grounds-lost"
+        assert hop_consequence(trigger, "extends", seed=True) == "grounds-lost"
+        assert hop_consequence(trigger, "warrant", seed=True) == "warrant-lost"
+        assert hop_consequence(trigger, "qualifier", seed=True) == "qualifier-regression"
+        assert hop_consequence(trigger, "rebuttal", seed=True) is None
+        assert hop_consequence(trigger, "contradicts", seed=True) is None
+        assert hop_consequence(trigger, "tension", seed=True) is None
+        assert hop_consequence(trigger, HOP_EVIDENCE, seed=True) == "grounds-lost"
+        assert hop_consequence(trigger, HOP_DERIVED, seed=True) == "grounds-lost"
+
+    # `claim-changed` differs from a falling trigger on exactly one hop: an
+    # exception note that changed strengthens the rebuttal rather than falling.
+    assert hop_consequence("claim-changed", "rebuttal", seed=True) == "rebuttal-strengthened"
+    assert hop_consequence("claim-changed", "supports", seed=True) == "grounds-lost"
+    assert hop_consequence("claim-changed", "qualifier", seed=True) == "qualifier-regression"
+    assert hop_consequence("claim-changed", HOP_EVIDENCE, seed=True) == "grounds-lost"
+
+    assert hop_consequence("edge-added", "rebuttal", seed=True) == "rebuttal-strengthened"
+    assert hop_consequence("edge-added", "supports", seed=True) is None
+    assert hop_consequence("edge-added", "extends", seed=True) is None
+    assert hop_consequence("edge-added", "warrant", seed=True) is None
+    assert hop_consequence("edge-added", "qualifier", seed=True) is None
+
+    assert hop_consequence("edge-removed", "supports", seed=True) == "grounds-lost"
+    assert hop_consequence("edge-removed", "extends", seed=True) == "grounds-lost"
+    assert hop_consequence("edge-removed", "warrant", seed=True) == "warrant-lost"
+    assert hop_consequence("edge-removed", "qualifier", seed=True) == "qualifier-regression"
+    assert hop_consequence("edge-removed", "rebuttal", seed=True) is None
+
+    # `evidence` and `derived` are never an edge trigger's own hop — no concept
+    # edge is added to or removed from an evidence set or a derivation — so both
+    # edge triggers answer None there instead of inheriting falling semantics.
+    for hop in (HOP_EVIDENCE, HOP_DERIVED):
+        assert hop_consequence("edge-added", hop, seed=True) is None
+        assert hop_consequence("edge-removed", hop, seed=True) is None
+
+    # Transitive hops are uniform falling semantics for every trigger: the seed
+    # overrides describe what the trigger did to the seed's own neighbours only.
+    for trigger in ("claim-changed", "edge-added", "edge-removed", *_FALLING_TRIGGERS):
+        assert hop_consequence(trigger, "supports", seed=False) == "grounds-lost"
+        assert hop_consequence(trigger, "extends", seed=False) == "grounds-lost"
+        assert hop_consequence(trigger, "warrant", seed=False) == "warrant-lost"
+        assert hop_consequence(trigger, "qualifier", seed=False) == "qualifier-regression"
+        assert hop_consequence(trigger, "rebuttal", seed=False) is None
+        assert hop_consequence(trigger, "contradicts", seed=False) is None
+        assert hop_consequence(trigger, "tension", seed=False) is None
+        assert hop_consequence(trigger, HOP_EVIDENCE, seed=False) == "grounds-lost"
+        assert hop_consequence(trigger, HOP_DERIVED, seed=False) == "grounds-lost"
+
+
+def test_the_decision_table_is_total_and_answers_only_rostered_consequences() -> None:
+    """Every cell of TRIGGERS x HOP_KINDS x seed, exhaustively — no cell may escape.
+
+    Exact set equality both ways: `<=` would still pass if a whole consequence
+    type had dropped out of the table, and totality is what proves no pair
+    raises where the walk would meet it.
+    """
+    answers = {
+        (trigger, hop, seed): hop_consequence(trigger, hop, seed=seed)
+        for trigger in TRIGGERS
+        for hop in HOP_KINDS
+        for seed in (True, False)
+    }
+
+    assert len(answers) == len(TRIGGERS) * len(HOP_KINDS) * 2
+    assert set(answers.values()) == {None, *CONSEQUENCE_TYPES}
+
+
+def test_adding_an_edge_can_only_ever_strengthen_a_rebuttal() -> None:
+    """The `edge-added` row read across the whole roster, not hop by hop.
+
+    A relation added to the roster but forgotten in the seed-override table
+    would inherit falling semantics and report grounds-lost for an edge that was
+    *gained*; only a roster-wide assertion catches that.
+    """
+    assert {hop: hop_consequence("edge-added", hop, seed=True) for hop in HOP_KINDS} == {
+        **dict.fromkeys(HOP_KINDS),
+        "rebuttal": "rebuttal-strengthened",
+    }
+
+
+def test_rebuttal_strengthened_is_reachable_only_as_a_seed() -> None:
+    """The one consequence type no transitive hop may ever produce.
+
+    `rebuttal-strengthened` is a statement about the edge the trigger touched;
+    propagating it onwards would relabel unrelated dependents.
+    """
+    assert {
+        hop_consequence(trigger, hop, seed=False) for trigger in TRIGGERS for hop in HOP_KINDS
+    } == {None, "grounds-lost", "warrant-lost", "qualifier-regression"}
+
+
+def test_hop_consequence_rejects_unknown_trigger_and_hop() -> None:
+    with pytest.raises(ValueError, match="unknown propagation trigger"):
+        hop_consequence("made-up", "supports", seed=True)
+    with pytest.raises(ValueError, match="unknown hop kind"):
+        hop_consequence("claim-changed", "made-up", seed=True)
+    # `seed` is the walk's own label for a start node's own hops, not a hop kind:
+    # feeding it in as one has to be rejected rather than answered.
+    with pytest.raises(ValueError, match="unknown hop kind"):
+        hop_consequence("claim-changed", "seed", seed=True)
+
+
+def test_hop_consequence_is_the_closure_typer_for_a_real_vault_walk(tmp_path: Path) -> None:
+    """The table wired into the walk, on the substrate fixture, at both seed depths.
+
+    `notes/thesis.md` is reached transitively through the claim's `supports`
+    edge, so a table that answered only for seeds would leave it unmarked; the
+    `rebuttal` edge is the reverse, marked at depth 1 and dead at depth 2.
+    """
+    _seed_graph(tmp_path)
+    state.replace_concept_edges(
+        tmp_path,
+        [
+            {
+                "source_concept_id": CLAIM_ULID,
+                "relation_type": "supports",
+                "target_path": "notes/thesis.md",
+                "check_status": "checked",
+                "source_path": "notes/claim.md",
+            },
+            {
+                "source_concept_id": THESIS_ULID,
+                "relation_type": "rebuttal",
+                "target_path": "notes/rebutted.md",
+                "check_status": "checked",
+                "source_path": "notes/thesis.md",
+            },
+        ],
+    )
+    inputs = closure_inputs(tmp_path)
+    arguments = {
+        "grounding_edges": inputs.grounding_edges,
+        "evidence_dependents": inputs.evidence_dependents,
+        "derivation_children": inputs.derivation_children,
+        "typer": hop_consequence,
+    }
+
+    # A retraction falls through `supports` and stops at the rebuttal.
+    assert consequence_closure(["notes/claim.md"], trigger="claim-retracted", **arguments) == {
+        "notes/thesis.md": {"consequence": "grounds-lost", "via": "supports", "depth": 1}
+    }
+    # An edge added to the thesis strengthens its own rebuttal and nothing else.
+    assert consequence_closure(["notes/thesis.md"], trigger="edge-added", **arguments) == {
+        "notes/rebutted.md": {
+            "consequence": "rebuttal-strengthened",
+            "via": "rebuttal",
+            "depth": 1,
+        }
+    }
+    # From the claim, the same `edge-added` reaches the thesis through `supports`
+    # — a gained ground, no mark — so the rebuttal one hop further stays dark.
+    assert consequence_closure(["notes/claim.md"], trigger="edge-added", **arguments) == {}

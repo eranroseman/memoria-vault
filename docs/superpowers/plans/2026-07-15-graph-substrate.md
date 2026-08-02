@@ -8320,6 +8320,45 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
 
 ### Task ERP-C.2: Consequence typing rules — the trigger × hop decision table
 
+> **Landing amendment (2026-08-01, ERP-C.2 as built).** The decision table is the
+> printed one, cell for cell, and every cell is pinned. Three deviations, each
+> because the printed line could not fail a test:
+>
+> 1. **`HOP_KINDS` is derived, not a second literal:**
+>    `HOP_KINDS = tuple(_TRANSITIVE_CONSEQUENCE)`. Two literals can drift into a
+>    roster the table cannot answer for (`unknown hop kind` mid-walk) or a table
+>    row nothing reaches, and holding them in parity needs a test that reaches into
+>    a private symbol. Deriving deletes the failure instead of checking for it
+>    (AGENTS.md: deletion > mechanism > rule > checker). The published order is
+>    therefore the table's declaration order — `supports, extends, warrant,
+>    qualifier, rebuttal, contradicts, tension, evidence, derived` — not the
+>    printed one; nothing consumes the order, and the test pins it as a literal.
+> 2. **`test_hop_kinds_cover_the_edge_roster` used `⊆`, which is lossy.** A
+>    `HOP_KINDS` truncated to just the seven verbs satisfies
+>    `set(EDGE_RELATIONS) <= set(HOP_KINDS)` and survives. Replaced by set
+>    equality against `EDGE_RELATIONS | {HOP_EVIDENCE, HOP_DERIVED}` plus a
+>    duplicate check, which is what an eighth relation verb fails against.
+> 3. **The dispatch keeps `hop in overrides`, never `overrides.get(hop) or …`.**
+>    Every `edge-added` override is `None`, so the falsy-`or` form silently falls
+>    through to the transitive answer and reports `grounds-lost` for an edge that
+>    was *gained*. Written as `overrides = _SEED_OVERRIDES.get(trigger, {}) if seed
+>    else {}` then `overrides[hop] if hop in overrides else _TRANSITIVE_CONSEQUENCE[hop]`.
+>
+> Four tests the printed body did not have, each named for the escape it closes:
+> `test_the_decision_table_is_total_and_answers_only_rostered_consequences` (the
+> whole TRIGGERS × HOP_KINDS × seed cartesian, with exact set equality both ways),
+> `test_adding_an_edge_can_only_ever_strengthen_a_rebuttal` (the `edge-added` row
+> read across the whole roster, so a verb missing from `_SEED_OVERRIDES` fails),
+> `test_rebuttal_strengthened_is_reachable_only_as_a_seed`, and
+> `test_hop_consequence_is_the_closure_typer_for_a_real_vault_walk` (the table
+> wired into `consequence_closure` over `closure_inputs`, at seed and transitive
+> depth). The printed `edge-removed` block was itself a lossy projection of its
+> table row — it omitted the `evidence`/`derived` cells, and dropping the whole
+> `edge-removed` override survived until those two assertions were added.
+>
+> The `Commit` step is left unticked: C.2 and C.3 were built together and the
+> session was directed to leave both uncommitted.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/propagation.py` (created in C.1 — add table below `HOP_DERIVED`)
 - Modify: `tests/test_propagation.py` (append)
@@ -8344,7 +8383,7 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_propagation.py`:
+- [x] Write the failing tests. Append to `tests/test_propagation.py`:
 
   ```python
   def test_hop_consequence_encodes_spec_parentheticals() -> None:
@@ -8401,9 +8440,9 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
       assert set(EDGE_RELATIONS) <= set(HOP_KINDS)
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_propagation.py::test_hop_consequence_encodes_spec_parentheticals -v` — expected: `ImportError: cannot import name 'hop_consequence'`.
+- [x] Run to verify failure: `python -m pytest tests/test_propagation.py::test_hop_consequence_encodes_spec_parentheticals -v` — expected: `ImportError: cannot import name 'hop_consequence'`.
 
-- [ ] Write the minimal implementation. In `src/memoria_vault/runtime/propagation.py`, below `HOP_DERIVED`:
+- [x] Write the minimal implementation. In `src/memoria_vault/runtime/propagation.py`, below `HOP_DERIVED`:
 
   ```python
   HOP_KINDS = (
@@ -8454,7 +8493,7 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
       return _TRANSITIVE_CONSEQUENCE[hop]
   ```
 
-- [ ] Run to verify pass: `python -m pytest tests/test_propagation.py -v`.
+- [x] Run to verify pass: `python -m pytest tests/test_propagation.py -v`.
 - [ ] Commit:
 
   ```
@@ -8480,6 +8519,66 @@ the spec; C.6 defines it as: every `type: project` note whose frontmatter
 > functions and the three pinned assertions. Do **not** stop because the current value is
 > not 17; stop only if a `MIGRATIONS` symbol has appeared, which would mean the
 > fresh-schema rule above no longer holds.
+
+> **Landing amendment (2026-08-01, ERP-C.3 as built).**
+>
+> 1. **The rung taken is 19.** `SCHEMA_VERSION` on `main` read 18 (I1 T.1's
+>    `telemetry_events`), so `current + 1 = 19` per the binding amendment above.
+>    No `MIGRATIONS` symbol exists —
+>    `tests/test_schema_version.py::test_state_has_no_schema_migration_ladder`
+>    asserts its absence — so the printed step 2 (`MIGRATIONS` entry), the printed
+>    `test_v17_to_v18_adds_consequence_column`, and the printed "verify failure"
+>    expectation (`unsupported Memoria DB schema version: 17`) are historical and
+>    were not executed. The fresh schema is asserted instead, as the task's own
+>    Execution replacement directs.
+> 2. **The printed C.3 tests cannot run against the shipped schema, and the
+>    printed negative case would have passed for the wrong reason.** Since v16
+>    (NID-B) `concept_verdicts.concept_id` carries
+>    `REFERENCES concepts(concept_id)`, and `state.connect` sets
+>    `PRAGMA foreign_keys = ON`. Every printed fixture inserts a verdict for a
+>    Concept with no `concepts` row: the positive inserts raise
+>    `IntegrityError: FOREIGN KEY constraint failed`, and the printed
+>    `pytest.raises(sqlite3.IntegrityError)` around the `'made-up'` value would
+>    have been satisfied by that same FK rather than by the new CHECK. As built,
+>    every fixture seeds its Concept parent (`state.rebuild_file_concept_mirror`,
+>    `state.upsert_catalog_record`) and the negative case matches on
+>    `"CHECK constraint failed"`.
+> 3. **The mirror keys identity space, not path space.** The printed helper bodies
+>    use `normalize_path`; as built both resolve through `resolve_concept_id`, the
+>    way `set_concept_verdict` and `set_concept_flag` already do. `normalize_path`
+>    returns a ULID and a bare `work_id` unchanged, so the printed body would fail
+>    the FK for every ULID-identified file Concept and every catalog work reached
+>    by its `catalog/sources/…` rendering — which is exactly what the propagation
+>    walk hands it, since C.1 marks in path space.
+> 4. **`set_concept_consequence` refuses a parentless Concept descriptively**, via
+>    `_concept_missing_parent`, as `set_concept_flag` does. C.1 proved the walk
+>    reaches unwritten notes (`test_the_walk_reaches_a_pending_target_that_owns_no_
+>    concept_row`), so C.4 will meet this refusal and needs it to name the Concept.
+> 5. **Parity is read out of `sqlite_master`, not shared between two literals.**
+>    `tests/test_runtime_state.py::test_consequence_check_mirrors_the_propagation_roster`
+>    parses the live `consequence IN (…)` CHECK back out of the stored DDL and
+>    compares it to the imported `CONSEQUENCE_TYPES`, asserting `''` is in the
+>    column's roster and out of the propagation one. The literal that pins what
+>    the members actually *are* stays in
+>    `tests/test_propagation.py::test_the_consequence_roster_is_the_four_spec_types`,
+>    in a second file, because a parity test alone survives a rename applied to
+>    both sides at once.
+> 6. **A fourth pinned assertion exists that the Files list does not name:**
+>    `tests/test_query_substrate.py` carries a literal `PRAGMA user_version`
+>    assertion in `test_concept_edges_fresh_schema_exposes_reader_fields` as well
+>    as the `state.SCHEMA_VERSION` one. `tests/test_schema_v10.py` needed no edit —
+>    it now compares to `state.SCHEMA_VERSION` and is a consistency check, not a
+>    pin. Literal pins therefore live in two files (`test_schema_version.py`,
+>    `test_query_substrate.py`), which is what kills a mutant drifting the DDL and
+>    the constant together.
+> 7. **Goldens did not move.** `tests/floor_lib.py`'s `_DIGEST_TABLES` is a fixed
+>    seven-table roster that does not include `concept_verdicts`, it stores
+>    `COUNT(*)` rather than table shape, and the file digest skips `*.sqlite`. No
+>    file under `tests/fixtures/floor/goldens/` changed.
+>
+> The `Commit` step is left unticked: the session was directed to leave the work
+> uncommitted. The one-commit rule still binds whoever commits it — DDL, trailing
+> `PRAGMA user_version`, `SCHEMA_VERSION` and the pinned assertions are one change.
 
 **Direct DDL is needed:** the current verdict row is
 `concept_verdicts(concept_id TEXT PRIMARY KEY, check_status TEXT NOT NULL CHECK(...))`
@@ -8510,7 +8609,7 @@ fresh schema; do not transform an older database.
 
 **Steps:**
 
-- [ ] Write the failing tests. Append to `tests/test_runtime_state.py`:
+- [x] Write the failing tests. Append to `tests/test_runtime_state.py`:
 
   ```python
   def test_v17_to_v18_adds_consequence_column(tmp_path: Path) -> None:
@@ -8569,9 +8668,9 @@ fresh schema; do not transform an older database.
       assert state.concept_consequence(tmp_path, "notes/c.md") == "warrant-lost"
   ```
 
-- [ ] Run to verify failure: `python -m pytest tests/test_runtime_state.py::test_v17_to_v18_adds_consequence_column -v` — expected: `RuntimeError: unsupported Memoria DB schema version: 17` (no registered 17→18 path yet).
+- [x] Run to verify failure: `python -m pytest tests/test_runtime_state.py::test_v17_to_v18_adds_consequence_column -v` — expected: `RuntimeError: unsupported Memoria DB schema version: 17` (no registered 17→18 path yet).
 
-- [ ] Implement, all in one commit:
+- [x] Implement, all in one commit:
   1. `state.py` line 53: `SCHEMA_VERSION = 18`.
   2. Add to the `MIGRATIONS` dict:
 
@@ -8637,8 +8736,8 @@ fresh schema; do not transform an older database.
 
   6. Bump the three pinned assertions from 17 to 18: `tests/test_schema_version.py` (assertion pair at lines 14-17, rename the test to `test_schema_lands_at_user_version_18`), `tests/test_schema_v10.py:39-41` (rename to `test_user_version_is_18`), `tests/test_query_substrate.py:31`.
 
-- [ ] Run to verify pass: `python -m pytest tests/test_runtime_state.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_query_substrate.py -v`.
-- [ ] Run the gate: `python scripts/verify`.
+- [x] Run to verify pass: `python -m pytest tests/test_runtime_state.py tests/test_schema_version.py tests/test_schema_v10.py tests/test_query_substrate.py -v`.
+- [x] Run the gate: `python scripts/verify`.
 - [ ] Commit (the version chain rule — MIGRATIONS entry, DDL + PRAGMA, SCHEMA_VERSION, pinned tests in ONE commit):
 
   ```

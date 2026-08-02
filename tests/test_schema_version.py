@@ -11,12 +11,12 @@ from memoria_vault.runtime import state
 from tests.helpers import ROOT
 
 
-def test_schema_lands_at_user_version_18(tmp_path: Path) -> None:
+def test_schema_lands_at_user_version_19(tmp_path: Path) -> None:
     # Both sides are literal on purpose: comparing the applied version to
     # `state.SCHEMA_VERSION` alone passes when the constant and the DDL drift together.
     with state.connect(tmp_path) as conn:
-        assert state.SCHEMA_VERSION == 18
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 18
+        assert state.SCHEMA_VERSION == 19
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 19
 
 
 def test_rejects_incompatible_schema_version(tmp_path: Path) -> None:

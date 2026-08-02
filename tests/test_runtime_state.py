@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from memoria_vault.runtime.capture import write_references_bib as _write_referen
 from memoria_vault.runtime.indexing import rebuild_passage_index_explicit
 from memoria_vault.runtime.integrity import check_citation_survival as _check_citation_survival
 from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.propagation import CONSEQUENCE_TYPES
 from memoria_vault.runtime.trusted_writer import (
     OperationContext,
     rebuild_concept_mirror_from_files,
@@ -1169,3 +1171,158 @@ def test_delete_concept_edge_reads_the_relation_by_the_insert_rule(tmp_path: Pat
     assert survived == written
     assert retracted == {"deleted": 1}
     assert _edge_triples(vault) == []
+
+
+# --- ERP-C.3: the `consequence` mirror on the verdict row ----------------------
+
+_CONSEQUENCE_ULID = "01JXCCCCCCCCCCCCCCCCCCCCCC"
+_CONSEQUENCE_CHECK_RE = re.compile(r"consequence\s+IN\s*\(([^)]*)\)", re.IGNORECASE)
+
+
+def _consequence_check_roster(vault: Path) -> set[str]:
+    """Read the live `concept_verdicts.consequence` CHECK back out of `sqlite_master`."""
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'concept_verdicts'"
+        ).fetchone()
+    match = _CONSEQUENCE_CHECK_RE.search(str(row["sql"])) if row is not None else None
+    assert match is not None, "concept_verdicts.consequence CHECK not found in the live schema"
+    return {value.strip().strip("'\"") for value in match.group(1).split(",") if value.strip()}
+
+
+def _mirror_note(vault: Path, concept_id: str, path: str) -> None:
+    state.rebuild_file_concept_mirror(
+        vault, [{"concept_id": concept_id, "concept_type": "note", "path": path}]
+    )
+
+
+def test_consequence_check_mirrors_the_propagation_roster(tmp_path: Path) -> None:
+    """Parity, not a shared literal: the CHECK is read back and compared to its owner.
+
+    A test asserting both sides against one hardcoded list passes when the DDL
+    and `CONSEQUENCE_TYPES` drift together; `tests/test_propagation.py` holds the
+    literal that pins what the roster's members actually are.
+    """
+    roster = _consequence_check_roster(tmp_path)
+
+    # `''` is the unset sentinel, not a fifth consequence: it has to be in the
+    # column's roster and out of the propagation one, or an unmarked verdict row
+    # would be unwritable on one side and a legal mark on the other.
+    assert "" in roster
+    assert "" not in CONSEQUENCE_TYPES
+    assert roster - {""} == set(CONSEQUENCE_TYPES)
+
+
+def test_consequence_column_defaults_to_unset_and_admits_only_the_roster(
+    tmp_path: Path,
+) -> None:
+    _mirror_note(tmp_path, "notes/a.md", "notes/a.md")
+
+    with state.connect(tmp_path) as conn:
+        conn.execute(
+            "INSERT INTO concept_verdicts(concept_id, check_status)"
+            " VALUES ('notes/a.md', 'unchecked')"
+        )
+        # A writer that names no consequence leaves the row unset, never NULL —
+        # which is what lets `concept_consequence` return a plain string.
+        assert _stored_consequence(conn) == ""
+
+        for value in CONSEQUENCE_TYPES:
+            conn.execute(
+                "UPDATE concept_verdicts SET consequence = ? WHERE concept_id = 'notes/a.md'",
+                (value,),
+            )
+            assert _stored_consequence(conn) == value
+
+        # Matched on the constraint name: the FK to `concepts` raises
+        # `IntegrityError` too, so an unparented fixture would pass this for the
+        # wrong reason.
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            conn.execute(
+                "UPDATE concept_verdicts SET consequence = 'made-up'"
+                " WHERE concept_id = 'notes/a.md'"
+            )
+        with pytest.raises(sqlite3.IntegrityError, match="NOT NULL constraint failed"):
+            conn.execute(
+                "UPDATE concept_verdicts SET consequence = NULL WHERE concept_id = 'notes/a.md'"
+            )
+        assert _stored_consequence(conn) == CONSEQUENCE_TYPES[-1]
+
+
+def _stored_consequence(conn: sqlite3.Connection) -> str:
+    row = conn.execute(
+        "SELECT consequence FROM concept_verdicts WHERE concept_id = 'notes/a.md'"
+    ).fetchone()
+    return str(row["consequence"])
+
+
+def test_set_concept_consequence_upserts_and_recheck_clears(tmp_path: Path) -> None:
+    _mirror_note(tmp_path, "notes/c.md", "notes/c.md")
+
+    # The Concept exists and carries no verdict row at all: the mark has to mint
+    # one at the default status rather than invent a judgment the PI never made.
+    assert state.concept_consequence(tmp_path, "notes/c.md") == ""
+    state.set_concept_consequence(tmp_path, "notes/c.md", "grounds-lost")
+    assert state.concept_consequence(tmp_path, "notes/c.md") == "grounds-lost"
+    assert state.concept_check_status(tmp_path, "notes/c.md") == "unchecked"
+
+    # `quarantined`, not `unchecked`: re-asserting the status the upsert already
+    # inserts could not tell a preserved verdict from a reset one.
+    state.set_concept_verdict(tmp_path, "notes/c.md", "quarantined")
+    assert state.concept_consequence(tmp_path, "notes/c.md") == "grounds-lost"
+
+    state.set_concept_verdict(tmp_path, "notes/c.md", "checked")
+    assert state.concept_consequence(tmp_path, "notes/c.md") == ""
+    assert state.concept_check_status(tmp_path, "notes/c.md") == "checked"
+
+    # Marking a checked Concept preserves the verdict: the mark is a consequence
+    # of something upstream, not a re-judgment of this note.
+    state.set_concept_consequence(tmp_path, "notes/c.md", "warrant-lost")
+    assert state.concept_check_status(tmp_path, "notes/c.md") == "checked"
+    assert state.concept_consequence(tmp_path, "notes/c.md") == "warrant-lost"
+
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+        state.set_concept_consequence(tmp_path, "notes/c.md", "made-up")
+    assert state.concept_consequence(tmp_path, "notes/c.md") == "warrant-lost"
+
+
+def test_the_consequence_mirror_is_keyed_by_concept_identity_not_path(tmp_path: Path) -> None:
+    """The propagation walk marks path space; the verdict row keys identity space.
+
+    v16 gives a file Concept a ULID and a catalog work a bare `work_id`, and
+    `normalize_path` returns both unchanged — so a mirror that stored the marked
+    path verbatim would write a second, orphaned row per Concept instead of
+    updating the one the PI's verdict lives on.
+    """
+    _mirror_note(tmp_path, _CONSEQUENCE_ULID, "notes/claim.md")
+    state.upsert_catalog_record(
+        tmp_path, work_id="settles-2016", title="Settles 2016", check_status="unchecked"
+    )
+
+    state.set_concept_consequence(tmp_path, "notes/claim.md", "grounds-lost")
+    state.set_concept_consequence(tmp_path, "catalog/sources/settles-2016", "warrant-lost")
+
+    with state.connect(tmp_path) as conn:
+        stored = dict(conn.execute("SELECT concept_id, consequence FROM concept_verdicts"))
+    assert stored == {_CONSEQUENCE_ULID: "grounds-lost", "settles-2016": "warrant-lost"}
+
+    # Both spellings of each Concept read back the one row the write landed on.
+    assert state.concept_consequence(tmp_path, _CONSEQUENCE_ULID) == "grounds-lost"
+    assert state.concept_consequence(tmp_path, "notes/claim.md") == "grounds-lost"
+    assert state.concept_consequence(tmp_path, "settles-2016") == "warrant-lost"
+    assert state.concept_consequence(tmp_path, "catalog/sources/settles-2016") == "warrant-lost"
+
+
+def test_set_concept_consequence_refuses_a_concept_that_owns_no_parent_row(
+    tmp_path: Path,
+) -> None:
+    """A forward link to an unwritten note is legal, so the walk really does mark one."""
+    with pytest.raises(RuntimeError, match="unknown Concept for consequence"):
+        state.set_concept_consequence(tmp_path, "notes/unwritten.md", "grounds-lost")
+
+    assert state.concept_consequence(tmp_path, "notes/unwritten.md") == ""
+
+
+def test_concept_consequence_is_unset_before_any_database_exists(tmp_path: Path) -> None:
+    assert state.concept_consequence(tmp_path, "notes/none.md") == ""
+    assert not state.db_path(tmp_path).exists()
