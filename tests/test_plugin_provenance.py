@@ -5,10 +5,9 @@ from pathlib import Path
 import pytest
 
 from scripts.checks import plugin_provenance_doctor as doctor
+from tests.helpers import REPO_ROOT as ROOT
 
 pytestmark = pytest.mark.static
-
-ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_plugin_scope_doctor_accepts_standalone_repo():

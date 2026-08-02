@@ -7,10 +7,9 @@ from pathlib import Path
 import pytest
 
 from scripts.checks.schema_doc_drift import check_schema_docs
+from tests.helpers import REPO_ROOT as ROOT
 
 pytestmark = pytest.mark.static
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def _write_fixture(root: Path, *, enum_values: str = "claim, question") -> tuple[Path, Path]:

@@ -15,7 +15,11 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import OperationContext, operation_context_record
 from memoria_vault.runtime.vaultio import read_frontmatter
 
-ROOT = Path(__file__).resolve().parents[1]
+# The one place test code derives the repo root. Everything else imports this:
+# a file that computes the root from its own __file__ breaks silently when it
+# moves (audit §4.6).
+REPO_ROOT = Path(__file__).resolve().parents[1]
+ROOT = REPO_ROOT  # back-compat alias for existing `from tests.helpers import ROOT` call sites
 WORKSPACE_SEED = ROOT / "src/memoria_vault/product/workspace_seed"
 
 LIVE_USAGE = {

@@ -13,9 +13,10 @@ from pathlib import Path
 
 import pytest
 
+from tests.helpers import REPO_ROOT as ROOT
+
 pytestmark = pytest.mark.static
 
-ROOT = Path(__file__).resolve().parents[1]
 SEED = ROOT / "src/memoria_vault/product/workspace_seed"
 
 PAGES_URL = "https://eranroseman.github.io/memoria-vault"

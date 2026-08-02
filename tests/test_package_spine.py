@@ -14,10 +14,9 @@ import pytest
 import memoria_vault
 import memoria_vault.runtime.policy as packaged_policy
 from memoria_vault.runtime import state
+from tests.helpers import REPO_ROOT as ROOT
 
 pytestmark = pytest.mark.package
-
-ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_pyproject_declares_installable_memoria_package():

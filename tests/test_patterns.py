@@ -8,13 +8,11 @@ import yaml
 
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
-from tests.helpers import WORKSPACE_SEED
+from tests.helpers import REPO_ROOT, WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract
 
-OPERATIONS = (
-    Path(__file__).resolve().parent.parent / "src/memoria_vault/product/capabilities/operations"
-)
+OPERATIONS = REPO_ROOT / "src/memoria_vault/product/capabilities/operations"
 
 
 def _frontmatter(path: Path) -> dict:

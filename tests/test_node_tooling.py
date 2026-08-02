@@ -3,10 +3,11 @@
 import json
 import re
 import tomllib
-from pathlib import Path
 
 import pytest
 import yaml
+
+from tests.helpers import REPO_ROOT as ROOT
 
 pytestmark = pytest.mark.static
 
@@ -14,7 +15,6 @@ pytestmark = pytest.mark.static
 # an exact npm version -- "10.0.1" passes, "^10.0.1" and "latest" do not.
 RELEASE_TAG = re.compile(r"v?\d+(?:\.\d+)*")
 
-ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_JSON = ROOT / "package.json"
 PACKAGE_LOCK = ROOT / "package-lock.json"
 PYPROJECT = ROOT / "pyproject.toml"

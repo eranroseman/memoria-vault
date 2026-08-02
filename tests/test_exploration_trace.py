@@ -8,10 +8,10 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import DEFAULT_RUNNER_POLICY, read_capability_manifest
 from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.vaultio import read_frontmatter
+from tests.helpers import REPO_ROOT as ROOT
 
 pytestmark = pytest.mark.contract
 
-ROOT = Path(__file__).resolve().parent.parent
 OPERATIONS = ROOT / "src/memoria_vault/product/capabilities/operations"
 
 

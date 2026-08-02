@@ -1,14 +1,11 @@
 """The standalone runtime ships no installed Hermes profiles or lane overrides."""
 
-from pathlib import Path
-
 import pytest
 
+from tests.helpers import REPO_ROOT as ROOT
 from tests.helpers import WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract
-
-ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_installed_profile_packages_are_not_shipped():
