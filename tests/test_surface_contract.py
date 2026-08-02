@@ -217,6 +217,10 @@ CLI_ONLY_COMMANDS: set[str] = {
     "memoria work interview",
     "memoria work update",
     "memoria work export",
+    # O1 M.3: `memoria seed install` drives the PI-only `seed-install` worker
+    # operation. Onboarding-only and PI-only, so it gets no registry row for an
+    # agent-reachable transport to bind.
+    "memoria seed install",
     "memoria link",
     "memoria mv",
     "memoria check",

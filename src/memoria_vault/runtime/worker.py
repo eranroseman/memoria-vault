@@ -63,6 +63,7 @@ PROTECTED_OPERATION_ACTORS = {
     "frame-paper": "pi",
     "promote-draft-passage": "pi",
     "cascade-rollback": "pi",
+    "seed-install": "pi",
     "capture-remote-pdf-source": "pi",
     "trace-integrity-scan": "integrity",
     "observe-pi-edits": "integrity",
@@ -1101,6 +1102,22 @@ def _run_operation_job(
         return _run_capture_pdf_source_operation(vault, payload, context)
     if operation_id == "capture-remote-pdf-source":
         return _run_capture_remote_pdf_source_operation(vault, payload, policy, context)
+    if operation_id == "seed-install":
+        from memoria_vault.runtime.operations import require_allowed_network
+        from memoria_vault.runtime.seed_install import seed_install
+
+        # The fetch is never implicit. Every other network-touching operation
+        # validates its payload before reaching the resolver, so a generic
+        # `operation run <id> --payload-json {}` sweep (tests/test_parity_
+        # fixture.py runs one over the whole catalog as actor=pi) cannot start
+        # eight third-party downloads; `memoria seed install` always sends this.
+        if payload.get("install") is not True:
+            raise ValueError("seed-install requires install: true")
+        return seed_install(
+            vault,
+            context=context,
+            authorize_url=lambda url: require_allowed_network(policy, url),
+        )
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
 

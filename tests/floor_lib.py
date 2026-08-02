@@ -1086,6 +1086,16 @@ OPERATION_REGISTRY: dict[str, dict] = {
         "payload": {},
         "expect": "done",
     },
+    # seed-install is PROTECTED_OPERATION_ACTORS "pi"-only (worker.py) and the
+    # sweep enqueues as actor="agent", so - like curate-note-link above - the
+    # actor-authority check refuses deterministically before the operation
+    # body (and its https fetches, which this offline harness must never
+    # depend on) ever runs.
+    "seed-install": {
+        "payload": {},
+        "expect": "refused",
+        "reason": "requires PI actor authority",
+    },
     # worker.py:936-952, same run_prompt_operation path as red-team-argument
     # above. input_text stands in for this op's own "selection_or_note"
     # io_schema input. Confirmed live: identical #1391 gitignored-staging

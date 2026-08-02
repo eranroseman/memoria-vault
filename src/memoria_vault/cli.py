@@ -230,6 +230,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _surface_commands(sub)
     _new_commands(sub)
     _work_commands(sub)
+    _seed_commands(sub)
     _lifecycle_commands(sub)
     _project_commands(sub)
     _request_commands(sub)
@@ -353,6 +354,15 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     export.add_argument("work_id")
     export.add_argument("--output")
     export.set_defaults(handler=_cmd_work_export)
+
+
+def _seed_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    seed = sub.add_parser("seed")
+    seed_sub = seed.add_subparsers(dest="seed_command", required=True)
+
+    install = seed_sub.add_parser("install")
+    _common(install)
+    install.set_defaults(handler=_cmd_seed_install)
 
 
 def _lifecycle_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -1429,6 +1439,17 @@ def _cmd_work_export(args: argparse.Namespace) -> int:
         )
         payload["output_path"] = args.output
     return _emit(payload, args)
+
+
+def _cmd_seed_install(args: argparse.Namespace) -> int:
+    output = _enqueue_and_run(args, "seed-install", {"install": True})
+    result = output.get("result") if isinstance(output.get("result"), dict) else {}
+    if not args.json and not args.quiet:
+        for notice in result.get("notices") or []:
+            print(f"notice: {notice}", file=sys.stderr)
+        for entry in result.get("failed") or []:
+            print(f"failed row {entry.get('id')}: {entry.get('error')}", file=sys.stderr)
+    return _emit(output, args)
 
 
 def _cmd_work_import(args: argparse.Namespace) -> int:

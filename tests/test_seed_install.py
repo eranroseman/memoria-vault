@@ -7,14 +7,23 @@ byte-to-byte seam, not permission to reach the network during verification.
 from __future__ import annotations
 
 import io
+import json
 import re
 import tarfile
 from http.client import IncompleteRead
+from pathlib import Path
 from urllib.error import HTTPError
 
 import pytest
 
-from memoria_vault.runtime import seed_install
+from memoria_vault.runtime import seed_install, state
+from tests.helpers import (
+    call_with_context,
+    copy_memoria_dirs,
+    git,
+    init_cli_workspace,
+    init_git,
+)
 
 PDF_BYTES = b"%PDF-1.4 seed fixture bytes\n"
 PDF_URL = "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/pdf"
@@ -559,3 +568,411 @@ def test_resolve_fetch_ignores_a_nonregular_pdf_member() -> None:
 
     with pytest.raises(ValueError, match=re.escape(PMC_TGZ_URL)):
         seed_install.resolve_fetch(_pmc_row(), opener=opener, authorize_url=_allow_url)
+
+
+# --- M.3: seed_install engine, worker operation, CLI ------------------------
+
+
+def _workspace(tmp_path: Path) -> Path:
+    copy_memoria_dirs(tmp_path, "schemas")
+    init_git(tmp_path, "seed@example.invalid", "Seed")
+    return tmp_path
+
+
+def _patch_pdf_pages(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "memoria_vault.runtime.capture._extract_pdf_pages",
+        lambda _raw: [{"page": 1, "text": "The seed fixture reports one anchored finding."}],
+    )
+
+
+def _seed_row() -> dict:
+    """A manifest-shaped pdf-url row (id/title/identifier/license_evidence/fetch)."""
+    return {
+        "id": "moreira-2019-retrieval-practice",
+        "title": "Retrieval Practice in Classroom Settings",
+        "identifier": "doi:10.3389/feduc.2019.00005",
+        "license": "CC BY",
+        "license_evidence": "https://www.frontiersin.org/articles/10.3389/feduc.2019.00005/full",
+        "fetch": {"method": "pdf-url", "url": PDF_URL},
+    }
+
+
+def _seed_pmc_row() -> dict:
+    return {
+        "id": "chen-2018-undesirable-difficulty",
+        "title": "Undesirable Difficulty Effects",
+        "identifier": "doi:10.3389/fpsyg.2018.01483",
+        "license": "CC BY 4.0",
+        "license_evidence": "https://www.frontiersin.org/articles/10.3389/fpsyg.2018.01483/full",
+        "fetch": {"method": "pmc-oa", "url": PMC_RECORD_URL},
+    }
+
+
+def _seed_arxiv_row() -> dict:
+    return {
+        "id": "asai-2024-openscholar",
+        "title": "OpenScholar",
+        "identifier": "arxiv:2411.14199v1",
+        "license": "CC BY 4.0",
+        "license_evidence": "https://arxiv.org/abs/2411.14199v1",
+        "fetch": {"method": "arxiv-pdf", "url": "https://export.arxiv.org/pdf/2411.14199v1"},
+    }
+
+
+def _run_seed_install(vault: Path, **kwargs):
+    kwargs.setdefault("authorize_url", _allow_url)
+    return call_with_context(seed_install.seed_install, vault, **kwargs)
+
+
+def _telemetry_steps(vault: Path) -> list[str]:
+    with state.connect(vault) as conn:
+        return [
+            json.loads(row["payload_json"])["step"]
+            for row in conn.execute(
+                "SELECT payload_json FROM telemetry_events WHERE event_type = 'onboarding-step'"
+                " ORDER BY ts"
+            )
+        ]
+
+
+def _refuse_telemetry_inserts(vault: Path) -> None:
+    # Produced, not mocked, and surgical: only inserts into telemetry_events fail.
+    # (A dropped table is not durable -- state._init re-runs schema.sql per connect.)
+    with state.connect(vault) as conn:
+        conn.execute(
+            "CREATE TRIGGER telemetry_sink_offline BEFORE INSERT ON telemetry_events"
+            " BEGIN SELECT RAISE(ABORT, 'telemetry sink offline'); END"
+        )
+
+
+def test_seed_install_admits_rows_through_the_pdf_capture_seam(tmp_path, monkeypatch) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    pdf_row, pmc_row = _seed_row(), _seed_pmc_row()
+    opener = _opener(
+        {
+            PDF_URL: PDF_BYTES,
+            PMC_RECORD_URL: _pmc_xml(("pdf", "ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/x.pdf")),
+            "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/x.pdf": PDF_BYTES,
+        }
+    )
+
+    result = _run_seed_install(vault, rows=[pdf_row, pmc_row], opener=opener)
+
+    assert result["admitted"] == [pdf_row["id"], pmc_row["id"]]
+    assert result["skipped"] == []
+    assert result["failed"] == []
+    source = state.catalog_source(vault, pdf_row["id"])
+    assert source is not None
+    assert source["check_status"] == "unchecked"
+    assert source["identifiers"]["doi"] == "10.3389/feduc.2019.00005"
+    assert source["resource"] == "https://doi.org/10.3389/feduc.2019.00005"
+    assert source["csl_json"]["DOI"] == "10.3389/feduc.2019.00005"
+    assert source["csl_json"]["title"] == pdf_row["title"]
+    assert state.catalog_source(vault, pmc_row["id"]) is not None
+
+
+def test_seed_install_carries_arxiv_identifiers_into_the_catalog(tmp_path, monkeypatch) -> None:
+    # The arXiv branch of the identifier/resource mapping: without this row only the
+    # DOI branch is covered, and an arXiv-blind mapper passes every other test here.
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    row = _seed_arxiv_row()
+
+    result = _run_seed_install(vault, rows=[row], opener=_opener({row["fetch"]["url"]: PDF_BYTES}))
+
+    assert result["admitted"] == [row["id"]]
+    source = state.catalog_source(vault, row["id"])
+    assert source is not None
+    assert source["identifiers"] == {"arxiv": "2411.14199v1"}
+    assert source["resource"] == "https://arxiv.org/abs/2411.14199v1"
+    assert source["csl_json"]["URL"] == "https://arxiv.org/abs/2411.14199v1"
+    assert "DOI" not in source["csl_json"]
+
+
+def test_seed_install_falls_back_to_license_evidence_without_an_identifier(
+    tmp_path, monkeypatch
+) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    row = _seed_row()
+    row.pop("identifier")
+
+    result = _run_seed_install(vault, rows=[row], opener=_opener({PDF_URL: PDF_BYTES}))
+
+    assert result["admitted"] == [row["id"]]
+    source = state.catalog_source(vault, row["id"])
+    assert source is not None
+    assert source["identifiers"] == {}
+    assert source["resource"] == row["license_evidence"]
+
+
+def test_seed_install_rerun_skips_without_fetch_journal_or_commit(tmp_path, monkeypatch) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    row = _seed_row()
+    first = _run_seed_install(vault, rows=[row], opener=_opener({PDF_URL: PDF_BYTES}))
+    assert first["admitted"] == [row["id"]]
+    journal = vault / ".memoria/journal/test-machine.jsonl"
+    events_before = journal.read_text(encoding="utf-8").count("\n")
+    head_before = git(vault, "rev-parse", "HEAD")
+
+    rerun = _run_seed_install(vault, rows=[row], opener=_poisoned_opener)
+
+    assert rerun["admitted"] == []
+    assert rerun["failed"] == []
+    assert rerun["skipped"] == [row["id"]]
+    assert journal.read_text(encoding="utf-8").count("\n") == events_before
+    assert git(vault, "rev-parse", "HEAD") == head_before
+
+
+def test_seed_install_continues_past_a_failed_row(tmp_path, monkeypatch) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    bad, good = _seed_pmc_row(), _seed_row()
+    xml = b'<OA><error code="idIsNotOpenAccess">nope</error></OA>'
+    opener = _opener({PMC_RECORD_URL: xml, PDF_URL: PDF_BYTES})
+
+    result = _run_seed_install(vault, rows=[bad, good], opener=opener)
+
+    assert result["admitted"] == [good["id"]]
+    assert [entry["id"] for entry in result["failed"]] == [bad["id"]]
+    assert "idIsNotOpenAccess" in result["failed"][0]["error"]
+    assert result["skipped"] == []
+    # The failed row left no catalog residue; the good row after it still landed.
+    assert state.catalog_source(vault, bad["id"]) is None
+    assert state.catalog_source(vault, good["id"]) is not None
+
+
+def test_seed_install_fails_only_when_zero_rows_present(tmp_path, monkeypatch) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    row = _seed_row()
+    opener = _opener({PDF_URL: b"<html>outage page</html>"})
+
+    with pytest.raises(ValueError, match="zero rows present") as exc:
+        _run_seed_install(vault, rows=[row], opener=opener)
+
+    assert row["id"] in str(exc.value)
+    assert _telemetry_steps(vault) == []
+
+
+def test_seed_install_survives_a_failed_row_when_another_row_is_present(
+    tmp_path, monkeypatch
+) -> None:
+    # Emptiness is the failure exit, not failure itself: one skipped row is enough
+    # to keep a run successful even when every other row failed.
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    present, broken = _seed_row(), _seed_pmc_row()
+    _run_seed_install(vault, rows=[present], opener=_opener({PDF_URL: PDF_BYTES}))
+
+    result = _run_seed_install(
+        vault,
+        rows=[present, broken],
+        opener=_opener({PMC_RECORD_URL: b'<OA><error code="idIsNotOpenAccess"/></OA>'}),
+    )
+
+    assert result["skipped"] == [present["id"]]
+    assert [entry["id"] for entry in result["failed"]] == [broken["id"]]
+
+
+def test_frame_first_notice_tracks_active_projects(tmp_path, monkeypatch) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    row = _seed_row()
+
+    result = _run_seed_install(vault, rows=[row], opener=_opener({PDF_URL: PDF_BYTES}))
+    assert any("frame your" in notice for notice in result["notices"])
+
+    archived = vault / "projects/old/project.md"
+    archived.parent.mkdir(parents=True)
+    archived.write_text(
+        "---\ntype: project\ntitle: Old project\nlifecycle: archived\n"
+        "tags: []\nlinks: {}\n---\n# Old project\n",
+        encoding="utf-8",
+    )
+    rerun = _run_seed_install(vault, rows=[row], opener=_poisoned_opener)
+    assert any("frame your" in notice for notice in rerun["notices"])
+
+    active = vault / "projects/tutorial/project.md"
+    active.parent.mkdir(parents=True)
+    active.write_text(
+        "---\ntype: project\ntitle: Tutorial project\ntags: []\nlinks: {}\n"
+        "---\n# Tutorial project\n",
+        encoding="utf-8",
+    )
+    final = _run_seed_install(vault, rows=[row], opener=_poisoned_opener)
+    assert final["notices"] == []
+
+
+def test_frame_first_notice_ignores_non_project_markdown(tmp_path, monkeypatch) -> None:
+    # A note that merely lives under projects/ is not a framed project, and a
+    # retracted project is not an active one.
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    row = _seed_row()
+    for rel, frontmatter in (
+        ("projects/notes/stray.md", "type: note\ntitle: Stray note\n"),
+        ("projects/dropped/project.md", "type: project\ntitle: Dropped\nlifecycle: retracted\n"),
+    ):
+        path = vault / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"---\n{frontmatter}tags: []\nlinks: {{}}\n---\n# x\n", encoding="utf-8")
+
+    result = _run_seed_install(vault, rows=[row], opener=_opener({PDF_URL: PDF_BYTES}))
+
+    assert any("frame your" in notice for notice in result["notices"])
+
+
+def test_seed_installed_step_emits_on_first_install(tmp_path, monkeypatch) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    row = _seed_row()
+
+    result = _run_seed_install(vault, rows=[row], opener=_opener({PDF_URL: PDF_BYTES}))
+
+    # The real helper, the real sink: a first successful install records the step.
+    assert result["telemetry"]["status"] == "emitted"
+    assert result["telemetry"]["event_id"]
+    assert _telemetry_steps(vault) == ["seed-installed"]
+    with state.connect(vault) as conn:
+        row_out = conn.execute(
+            "SELECT event_type, session_id, surface FROM telemetry_events WHERE event_id = ?",
+            (result["telemetry"]["event_id"],),
+        ).fetchone()
+    assert row_out["event_type"] == "onboarding-step"
+    # Server-side emit: the client envelope columns stay NULL (their producer is a
+    # client-submitted empirical event, fixtured in tests/test_telemetry_events.py).
+    assert row_out["session_id"] is None
+    assert row_out["surface"] is None
+
+
+def test_seed_install_completes_when_the_telemetry_sink_refuses(tmp_path, monkeypatch) -> None:
+    vault = _workspace(tmp_path)
+    _patch_pdf_pages(monkeypatch)
+    _refuse_telemetry_inserts(vault)
+    row = _seed_row()
+
+    result = _run_seed_install(vault, rows=[row], opener=_opener({PDF_URL: PDF_BYTES}))
+
+    # Never raises into its caller: the install completed and reported honestly.
+    assert result["telemetry"] == {"status": "unavailable"}
+    assert result["admitted"] == [row["id"]]
+    assert state.catalog_source(vault, row["id"]) is not None
+    assert _telemetry_steps(vault) == []
+
+
+def test_memoria_seed_install_cli_end_to_end_offline(tmp_path, capsys, monkeypatch) -> None:
+    from memoria_vault.cli import main
+    from memoria_vault.product.seed_corpus import load_seed_manifest
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    _patch_pdf_pages(monkeypatch)
+    responses: dict[str, bytes] = {}
+    for row in load_seed_manifest():
+        url = row["fetch"]["url"]
+        if row["fetch"]["method"] == "pmc-oa":
+            pmcid = url.rsplit("=", 1)[-1]
+            href = f"ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/{pmcid}.pdf"
+            responses[url] = _pmc_xml(("pdf", href))
+            responses[f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_pdf/{pmcid}.pdf"] = PDF_BYTES
+        else:
+            responses[url] = PDF_BYTES
+    monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", _opener(responses))
+
+    rc = main(["seed", "install", "--workspace", str(workspace), "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert payload["ok"] is True
+    all_ids = sorted(row["id"] for row in load_seed_manifest())
+    assert sorted(payload["result"]["admitted"]) == all_ids
+    assert any("frame your" in notice for notice in payload["result"]["notices"])
+    assert _telemetry_steps(workspace) == ["seed-installed"]
+
+    # Acceptance-criteria idempotence: the re-run admits nothing new, exits
+    # clean, and performs zero fetches (a fetch would raise loudly).
+    monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", _poisoned_opener)
+    rc = main(["seed", "install", "--workspace", str(workspace), "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert payload["result"]["admitted"] == []
+    assert sorted(payload["result"]["skipped"]) == all_ids
+
+
+def test_seed_install_worker_authorizes_every_url_against_the_operation_policy(
+    tmp_path, capsys, monkeypatch
+) -> None:
+    # The worker supplies require_allowed_network as the authorizer; a row outside
+    # the manifest's finite allowlist must be refused before any opener call.
+    from memoria_vault.cli import main
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    _patch_pdf_pages(monkeypatch)
+    allowed, off_policy = _seed_row(), _seed_row()
+    off_policy["id"] = "off-policy-row"
+    off_policy["fetch"] = {"method": "pdf-url", "url": "https://example.invalid/off-policy.pdf"}
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seed_install.load_seed_manifest",
+        lambda: [allowed, off_policy],
+    )
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seed_install._default_opener", _opener({PDF_URL: PDF_BYTES})
+    )
+
+    rc = main(["seed", "install", "--workspace", str(workspace), "--json"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert payload["result"]["admitted"] == [allowed["id"]]
+    # Refused by the policy, before the opener (which has no entry for that URL
+    # and would have raised its own "unexpected fetch" instead).
+    assert [entry["id"] for entry in payload["result"]["failed"]] == ["off-policy-row"]
+    assert "not authorized" in payload["result"]["failed"][0]["error"]
+    assert "https://example.invalid/off-policy.pdf" in payload["result"]["failed"][0]["error"]
+
+
+def test_seed_install_requires_pi_actor(tmp_path, capsys) -> None:
+    from memoria_vault.cli import main
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+
+    rc = main(["seed", "install", "--workspace", str(workspace), "--actor", "agent", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert payload["ok"] is False
+    assert "requires PI actor authority" in str(payload["result"]["error"])
+
+
+def test_seed_install_operation_never_fetches_on_an_unconfirmed_payload(
+    tmp_path, capsys, monkeypatch
+) -> None:
+    # A generic `operation run` sweep over the catalog (tests/test_parity_fixture.py
+    # runs one as actor=pi) must not start the seed corpus download: the poisoned
+    # opener below turns any fetch into a loud failure, and the refusal must arrive
+    # without one.
+    from memoria_vault.cli import main
+
+    workspace = init_cli_workspace(tmp_path, capsys)
+    monkeypatch.setattr("memoria_vault.runtime.seed_install._default_opener", _poisoned_opener)
+
+    rc = main(
+        [
+            "operation",
+            "run",
+            "--workspace",
+            str(workspace),
+            "seed-install",
+            "--payload-json",
+            "{}",
+            "--json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert payload["ok"] is False
+    assert "seed-install requires install: true" in str(payload["result"]["error"])
+    assert state.catalog_source(workspace, "asai-2024-openscholar") is None

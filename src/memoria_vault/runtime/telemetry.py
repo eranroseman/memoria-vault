@@ -14,6 +14,7 @@ from memoria_vault.runtime.time import now_iso
 # field-for-field itself. Later sections add entries here rather than a second registry.
 NATIVE_EVENT_FIELDS = {
     "attention-admitted": frozenset({"card_path", "kind", "loudness", "raised_by"}),
+    "onboarding-step": frozenset({"step"}),
     "producer-run-skipped": frozenset({"producer", "reason"}),
 }
 

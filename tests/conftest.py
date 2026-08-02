@@ -98,6 +98,7 @@ TEST_LEVELS = {
     "test_loudness.py": "unit",
     "test_node_tooling.py": "static",
     "test_onboarding.py": "unit",
+    "test_onboarding_steps.py": "contract",
     "test_operations.py": "contract",
     "test_parity_fixture.py": "contract",
     "test_package_spine.py": "package",
