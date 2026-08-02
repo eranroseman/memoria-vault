@@ -30,6 +30,7 @@ def test_roster_covers_lint_tests_and_product_gates() -> None:
         "python3 scripts/checks/doc_claims_gate.py",
         "python3 scripts/checks/control_plane_actor_gate.py",
         "python3 scripts/test_vault/e2e_smoke.py",
+        "memoria --version",
     ):
         assert gate in flat
     assert any(
@@ -88,6 +89,7 @@ def test_docs_only_scope_narrows_the_roster() -> None:
     assert not any("e2e_smoke.py" in d for d in docs)
     assert not any("compileall" in d for d in docs)
     assert not any(d.startswith("bash -n") for d in docs)
+    assert not any("memoria --version" in d for d in docs)
 
 
 def test_single_run_lock_admits_the_first_gate(tmp_path: Path) -> None:

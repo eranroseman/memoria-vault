@@ -90,6 +90,11 @@ GATES: list[list[str]] = [
         "scripts/test_vault/refresh-test-vault.sh",
         "scripts/test_vault/install-test-vault-local-llm.sh",
     ],
+    # 1689: the installed console script is the one surface no other gate
+    # exercises through PATH — pytest resolves src/ via path config, so a
+    # stale editable install (e.g. pointing at a deleted worktree) keeps
+    # every gate green while `memoria` is dead for every CLI-consuming task.
+    ["memoria", "--version"],
 ]
 
 # Self-skips when the analyzer module is absent (exit 2), so a machine with pwsh
@@ -104,7 +109,7 @@ PSSA_COMMAND = (
 
 
 # Gates a docs-only diff cannot affect: they exercise code, not documentation.
-_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n")
+_DOCS_SKIP = ("e2e_smoke.py", "-m compileall", "bash -n", "memoria --version")
 
 
 def _gates_for_run(docs_only: bool) -> list[list[str]]:
