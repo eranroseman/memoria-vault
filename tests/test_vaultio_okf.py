@@ -1,6 +1,10 @@
 """OKF v0.2 actor grammar (spec §7): human:<id>, <producer>/<version>, process:<id>."""
 
+import pytest
+
 from memoria_vault.runtime.vaultio import okf_actor, okf_verified_actor
+
+pytestmark = pytest.mark.unit
 
 
 def test_pi_hand_authored_is_human_actor() -> None:
@@ -12,7 +16,10 @@ def test_pi_authority_machine_authored_is_not_human() -> None:
 
 
 def test_operation_actor_is_process_with_operation_id() -> None:
-    assert okf_actor("operation", operation_id="capture-bibtex-source") == "process:capture-bibtex-source"
+    assert (
+        okf_actor("operation", operation_id="capture-bibtex-source")
+        == "process:capture-bibtex-source"
+    )
 
 
 def test_integrity_actor_without_operation_id_falls_back_to_actor() -> None:
@@ -20,7 +27,10 @@ def test_integrity_actor_without_operation_id_falls_back_to_actor() -> None:
 
 
 def test_agent_identity_with_slash_passes_through() -> None:
-    assert okf_actor("agent", agent_identity="reference_agent/gemini-2.5-pro") == "reference_agent/gemini-2.5-pro"
+    assert (
+        okf_actor("agent", agent_identity="reference_agent/gemini-2.5-pro")
+        == "reference_agent/gemini-2.5-pro"
+    )
 
 
 def test_agent_identity_without_slash_gets_unversioned() -> None:
