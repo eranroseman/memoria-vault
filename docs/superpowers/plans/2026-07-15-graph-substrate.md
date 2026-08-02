@@ -7699,6 +7699,39 @@ procedure and include the regenerated goldens in that task's commit.
 > `(source_concept_id, relation_type, target_path)` triple; it never deletes by
 > a nullable target ID.
 
+> **Execution amendment (2026-08-01) — what ERP-B.4 landed.** Four deviations
+> from the step text below, none of them contract changes.
+> **(1) Both endpoint keys come from ERP-B.2's functions, not from
+> `normalize_path`.** The drafted body keys `source` and `target` through
+> `normalize_path` and deletes by `target_concept_id`; all three are superseded.
+> The source resolves through `resolve_concept_id` (a ULID-mirrored note keys its
+> row in identity space, so a path-spelled delete would retract nothing), and the
+> durable target key comes from `_concept_edge_target_path` with the live
+> `catalog_sources` id set — the binding constraint the NID-B.7 blockquote in
+> ERP-B.2 states and this task inherits. `delete_concept_edge` is now the third
+> caller of that one key function, not a second spelling of it.
+> **(2) The relation goes through `_concept_edge_relation`,** not the drafted
+> `.strip().lower().replace("_", "-")`. One roster rule across both writers: it
+> normalizes the same and it refuses an out-of-roster verb the same, so a typo
+> raises instead of returning `{"deleted": 0}` — indistinguishable from "already
+> retracted".
+> **(3) Five tests, not one.** The drafted test cannot see either key function.
+> It is joined by the catalog fold (every pair crosses the bare `work_id`, the
+> one spelling `normalize_path` returns unchanged, with the work seeded into
+> `catalog_sources` first per ERP-B.2's lesson); an identity-space source test;
+> an exact-triple test carrying one neighbour row per key column; and the
+> relation-rule test above. The drafted reindex assertion also gained a real
+> `supports` link on the source note, so "the tension row did not come back" is
+> no longer equally true of a mirror pass that did nothing.
+> **(4) No ordering pin for the roster refusal.** The refusal is ordered before
+> the DELETE, but the schema CHECK on `concept_edges.relation_type`
+> (`schema.sql:254-259`) means no stored row can carry an out-of-roster verb, so
+> moving the refusal after the DELETE changes no row and the mutant survives.
+> Its one real difference is that the check-first form refuses on a
+> not-yet-a-vault path without `connect()` minting a database — a filesystem side
+> effect, not this seam's contract, so nothing pins it. B.2's transaction trap
+> does not reach this function.
+
 **Files:**
 - Modify: `src/memoria_vault/runtime/state.py` (insert directly after
   `insert_concept_edge` from ERP-B.2)
@@ -7717,7 +7750,7 @@ procedure and include the regenerated goldens in that task's commit.
 
 **Steps:**
 
-- [ ] Write the failing test (append to `tests/test_runtime_state.py`; add
+- [x] Write the failing test (append to `tests/test_runtime_state.py`; add
   `from memoria_vault.runtime.indexing import rebuild_passage_index_explicit`
   to the imports):
 
@@ -7752,13 +7785,15 @@ procedure and include the regenerated goldens in that task's commit.
       assert count == 0
   ```
 
-- [ ] Run to verify failure:
+- [x] Run to verify failure:
   `python -m pytest "tests/test_runtime_state.py::test_delete_concept_edge_retracts_confirmed_tension_row" -v`
   — expected: `AttributeError: module 'memoria_vault.runtime.state' has no
   attribute 'delete_concept_edge'`.
+  *Measured: all five new tests failed with exactly that `AttributeError`.*
 
-- [ ] Write the minimal implementation (after `insert_concept_edge` in
-  `src/memoria_vault/runtime/state.py`):
+- [x] Write the minimal implementation (after `insert_concept_edge` in
+  `src/memoria_vault/runtime/state.py`) — see amendment (1)/(2) above for the
+  three key-function corrections to the block below:
 
   ```python
   def delete_concept_edge(
@@ -7782,12 +7817,30 @@ procedure and include the regenerated goldens in that task's commit.
       return {"deleted": int(deleted)}
   ```
 
-- [ ] Run to verify pass:
+- [x] Run to verify pass:
   `python -m pytest "tests/test_runtime_state.py::test_delete_concept_edge_retracts_confirmed_tension_row" -v`
   — expected: 1 passed.
+  *Measured: 33 passed in `tests/test_runtime_state.py` (5 new).*
 
-- [ ] Run the full gate: `python scripts/verify` — expected: green (lint,
+- [x] Run the full gate: `python scripts/verify` — expected: green (lint,
   product gates, tests, offline smoke, syntax).
+  *Measured: `verify: OK`.*
+
+- [x] Mutation-test both key functions and the WHERE clause. *Measured: 13
+  implementation mutants, 12 killed. The one survivor is the roster-refusal
+  reordering, equivalent per amendment (4). Each of the five tests uniquely
+  kills the mutant its name claims: the fold test alone kills the
+  `normalize_path` target key and an emptied catalog id set; the source test
+  alone kills a path-space-only source resolver; the triple test alone kills
+  each of the three dropped WHERE conjuncts; the relation test alone kills both
+  the dropped roster refusal and the dropped normalization; the retraction test
+  alone kills a constant `rowcount`. Six test-direction mutants confirm each
+  fixture choice is load-bearing: unseeding the catalog makes the fold test fail
+  under correct **and** mutated code (no discrimination either way), pairing two
+  `catalog/sources/...` renderings instead of crossing the bare `work_id` lets
+  the `normalize_path` mutant survive, dropping the path spelling from the
+  source test lets its mutant survive, and dropping the `supports` link makes
+  the reindex assertion pass against a mirror pass that wrote nothing.*
 
 - [ ] Commit:
   `git add src/memoria_vault/runtime/state.py tests/test_runtime_state.py`
@@ -9616,6 +9669,26 @@ tests/fixtures/floor/goldens`, and include the regenerated goldens in that task'
 ---
 
 ### Task ERP-D.1: `decided-wrong` claim disposition → blast-radius report card
+
+> **Blocked, not started (2026-08-01) — this task needs ERP-C.2 and ERP-C.5.**
+> Attempted alongside ERP-B.4 and stopped before any edit. The deliverable *is*
+> the typed count (`grounds-lost: 2`, `warrant-lost: 1`), so the report cannot be
+> written without a consequence **typer**. At this commit `runtime/propagation.py`
+> holds only ERP-C.1: `consequence_closure` (which takes `typer` as a required
+> argument), `closure_inputs`, `CONSEQUENCE_TYPES`, `TRIGGERS`, `HOP_EVIDENCE`,
+> `HOP_DERIVED`. `hop_consequence` (ERP-C.2) and `compute_consequences`
+> (ERP-C.5 — cross-section contract 3 names it as *this* task's report input,
+> superseding the `consequences.derive_consequences` the Interfaces block below
+> still assumes) are both absent, and `memoria_vault.runtime.subsystems.integrity`
+> has no `consequences` module for the drafted `monkeypatch.setattr` target to
+> resolve against. Supplying a local typer here would be a second copy of the
+> §5 decision table living in `integrity.py` — the replica-exempt-invariant class
+> ERP-A.6's review named — and it would collide with C.2 on landing. Landing only
+> the `item_type`/`decided-wrong`→`override` half would also drift floor goldens
+> ahead of its own report path, against contract 8's serialization. **Run this
+> task after ERP-C.2 and ERP-C.5, and rewrite its Interfaces block and both
+> drafted tests onto `propagation.compute_consequences` at that point.** No file
+> was touched; the checkboxes below stay unchecked.
 
 **Files:**
 - Modify: `src/memoria_vault/runtime/integrity.py` (`resolve_attention`, lines 1127-1191; new private helper below it)

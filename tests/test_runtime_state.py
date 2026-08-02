@@ -10,6 +10,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source as _capture_source
 from memoria_vault.runtime.capture import check_references_bib
 from memoria_vault.runtime.capture import write_references_bib as _write_references_bib
+from memoria_vault.runtime.indexing import rebuild_passage_index_explicit
 from memoria_vault.runtime.integrity import check_citation_survival as _check_citation_survival
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
@@ -943,3 +944,228 @@ def test_insert_concept_edge_keeps_a_settled_target_whose_path_moved(tmp_path: P
     assert [(row["edge_id"], row["target_concept_id"]) for row in _edge_rows(vault)] == [
         (first["edge_id"], EDGE_ULID_RIGHT)
     ]
+
+
+# --- state.delete_concept_edge (ERP-B.4) -------------------------------------
+
+
+def _edge_triples(vault: Path) -> list[tuple[str, str, str]]:
+    """The stored PK triples — the exact key `delete_concept_edge` deletes by.
+
+    Read from storage, never from a projection: `concept_edge_path_records` drops
+    a row whose endpoints do not render, which is the one class of row a delete
+    keyed wrong would leave behind.
+    """
+    return [
+        (row["source_concept_id"], row["relation_type"], row["target_path"])
+        for row in _edge_rows(vault)
+    ]
+
+
+def _checked_note(vault: Path, rel: str, title: str, concept_id: str, links: str = "{}") -> None:
+    """A real on-disk checked note, so a reindex has a mirror pass to run.
+
+    The ULID is written into frontmatter rather than minted, because the reindex
+    re-keys the concept mirror from these files and a minted id would make the
+    edge triples this module asserts on unrepeatable.
+    """
+    body = (
+        f"---\ntype: note\nid: {concept_id}\ntitle: {title}\ntags: []\n"
+        f"links: {links}\n---\n# {title}\n\nBody.\n"
+    )
+    stage_concept(vault, rel, body, machine="writer")
+    promote_checked(vault, rel, machine="writer")
+    state.mark_materialized(vault, rel)
+
+
+def test_delete_concept_edge_retracts_confirmed_tension_row(tmp_path: Path) -> None:
+    """Row absence is the entire retraction, and reindex never puts the row back.
+
+    The notes are real and the source carries a `supports` link, so the reindex
+    below runs a mirror pass that provably writes. Without that, "the tension row
+    did not come back" would be equally true of a pass that did nothing at all.
+    Storage is read on both sides of the pass because the pass is an absorbing
+    state: the second call's `{"deleted": 0}` is computed, not read back.
+    """
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _checked_note(vault, "notes/right.md", "Right", EDGE_ULID_RIGHT)
+    _checked_note(
+        vault, "notes/left.md", "Left", EDGE_ULID_LEFT, links="{supports: [notes/right.md]}"
+    )
+    state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/right.md",
+        context=context,
+    )
+    assert _edge_triples(vault) == [(EDGE_ULID_LEFT, "tension", "notes/right.md")]
+
+    first = state.delete_concept_edge(
+        vault, source="notes/left.md", relation_type="tension", target="notes/right.md"
+    )
+    second = state.delete_concept_edge(
+        vault, source="notes/left.md", relation_type="tension", target="notes/right.md"
+    )
+
+    assert first == {"deleted": 1}
+    assert second == {"deleted": 0}
+    assert _edge_triples(vault) == []
+
+    # Retraction is final: tension has no frontmatter mirror to regenerate from,
+    # while the `supports` link beside it does — that row is what proves the pass
+    # ran rather than skipped.
+    rebuild_passage_index_explicit(vault, actor="operation", machine="reindex")
+
+    assert _edge_triples(vault) == [(EDGE_ULID_LEFT, "supports", "notes/right.md")]
+
+
+def test_delete_concept_edge_folds_every_catalog_spelling_onto_the_written_row(
+    tmp_path: Path,
+) -> None:
+    """Retract by any spelling of the work the edge was written under.
+
+    B.4 deletes by the triple B.2 inserts by, so it inherits B.2's key function:
+    `_concept_edge_target_path`, never a bare `normalize_path`. Every pair below
+    crosses the bare `work_id`, the one spelling `normalize_path` returns
+    unchanged — pairing two `catalog/sources/...` renderings against each other
+    would be collapsed by `normalize_path` too and could not fail. The work is
+    seeded into `catalog_sources` *first* on purpose: the fold knows only a work
+    the catalog already holds, so against an absent work every spelling stays its
+    own key under correct and incorrect code alike and this test would prove
+    nothing.
+    """
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(vault, **{EDGE_ULID_LEFT: "notes/left.md"})
+    state.upsert_catalog_record(vault, work_id="smith-2020", title="Smith 2020")
+    bare, *rendered = CATALOG_EDGE_FORMS
+    pairs = [(form, bare) for form in rendered] + [(bare, form) for form in rendered]
+
+    observed = []
+    for written, retracted in pairs:
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="tension",
+            target=written,
+            context=context,
+        )
+        result = state.delete_concept_edge(
+            vault, source="notes/left.md", relation_type="tension", target=retracted
+        )
+        observed.append((written, retracted, result["deleted"], _edge_triples(vault)))
+
+    assert observed == [(written, retracted, 1, []) for written, retracted in pairs]
+
+
+def test_delete_concept_edge_resolves_its_source_the_way_the_insert_did(
+    tmp_path: Path,
+) -> None:
+    """A ULID-mirrored source keys the row in identity space, so the delete must too.
+
+    The path spelling is the discriminating half: `normalize_path("notes/left.md")`
+    returns itself, which is not the ULID the row is keyed under, so a delete that
+    skipped `resolve_concept_id` would silently retract nothing.
+    """
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(
+        vault,
+        **{EDGE_ULID_LEFT: "notes/left.md", EDGE_ULID_RIGHT: "notes/right.md"},
+    )
+
+    observed = []
+    for source in ("notes/left.md", EDGE_ULID_LEFT):
+        state.insert_concept_edge(
+            vault,
+            source="notes/left.md",
+            relation_type="tension",
+            target="notes/right.md",
+            context=context,
+        )
+        assert _edge_triples(vault) == [(EDGE_ULID_LEFT, "tension", "notes/right.md")]
+        result = state.delete_concept_edge(
+            vault, source=source, relation_type="tension", target="notes/right.md"
+        )
+        observed.append((source, result["deleted"], _edge_triples(vault)))
+
+    assert observed == [("notes/left.md", 1, []), (EDGE_ULID_LEFT, 1, [])]
+
+
+def test_delete_concept_edge_takes_only_the_named_triple(tmp_path: Path) -> None:
+    """Exact-triple delete: each of the three key columns is load-bearing.
+
+    One neighbour per column — same source and relation but another target, same
+    source and target but another relation, same relation and target but another
+    source — so dropping any conjunct from the WHERE clause takes a row that must
+    survive.
+    """
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(
+        vault,
+        **{
+            EDGE_ULID_LEFT: "notes/left.md",
+            EDGE_ULID_RIGHT: "notes/right.md",
+            EDGE_ULID_OTHER: "notes/other.md",
+        },
+    )
+    for source, relation, target in (
+        ("notes/left.md", "tension", "notes/right.md"),
+        ("notes/left.md", "tension", "notes/other.md"),
+        ("notes/left.md", "supports", "notes/right.md"),
+        ("notes/other.md", "tension", "notes/right.md"),
+    ):
+        state.insert_concept_edge(
+            vault, source=source, relation_type=relation, target=target, context=context
+        )
+
+    result = state.delete_concept_edge(
+        vault, source="notes/left.md", relation_type="tension", target="notes/right.md"
+    )
+
+    assert result == {"deleted": 1}
+    assert _edge_triples(vault) == [
+        (EDGE_ULID_LEFT, "supports", "notes/right.md"),
+        (EDGE_ULID_LEFT, "tension", "notes/other.md"),
+        (EDGE_ULID_OTHER, "tension", "notes/right.md"),
+    ]
+
+
+def test_delete_concept_edge_reads_the_relation_by_the_insert_rule(tmp_path: Path) -> None:
+    """One roster rule across both writers: it normalizes the same, it refuses the same.
+
+    The refusal is asserted against a row the triple would otherwise have matched,
+    so a delete that answered `{"deleted": 0}` for a typo instead of raising —
+    indistinguishable from "already retracted" — fails here.
+    """
+    vault = workspace(tmp_path)
+    context = operation_context(vault)
+    _mirror_notes(
+        vault,
+        **{EDGE_ULID_LEFT: "notes/left.md", EDGE_ULID_RIGHT: "notes/right.md"},
+    )
+    state.insert_concept_edge(
+        vault,
+        source="notes/left.md",
+        relation_type="tension",
+        target="notes/right.md",
+        context=context,
+    )
+    written = _edge_triples(vault)
+
+    with pytest.raises(ValueError, match="relation"):
+        state.delete_concept_edge(
+            vault, source="notes/left.md", relation_type="refutes", target="notes/right.md"
+        )
+    survived = _edge_triples(vault)
+    retracted = state.delete_concept_edge(
+        vault, source="notes/left.md", relation_type="  TENSION  ", target="notes/right.md"
+    )
+
+    assert written == [(EDGE_ULID_LEFT, "tension", "notes/right.md")]
+    assert survived == written
+    assert retracted == {"deleted": 1}
+    assert _edge_triples(vault) == []
