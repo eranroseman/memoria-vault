@@ -2,8 +2,7 @@
 
 import pytest
 
-from tests.helpers import REPO_ROOT as ROOT
-from tests.helpers import WORKSPACE_SEED
+from tests.helpers import ROOT, WORKSPACE_SEED
 
 pytestmark = pytest.mark.contract
 

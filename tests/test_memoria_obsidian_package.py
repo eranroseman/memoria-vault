@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime.bundles import seed_bundles
-from tests.helpers import REPO_ROOT as ROOT
+from tests.helpers import ROOT
 
 pytestmark = pytest.mark.contract
 

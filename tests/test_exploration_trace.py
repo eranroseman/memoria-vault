@@ -8,7 +8,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import DEFAULT_RUNNER_POLICY, read_capability_manifest
 from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.vaultio import read_frontmatter
-from tests.helpers import REPO_ROOT as ROOT
+from tests.helpers import ROOT
 
 pytestmark = pytest.mark.contract
 

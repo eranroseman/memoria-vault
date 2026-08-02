@@ -14,7 +14,7 @@ import pytest
 import memoria_vault
 import memoria_vault.runtime.policy as packaged_policy
 from memoria_vault.runtime import state
-from tests.helpers import REPO_ROOT as ROOT
+from tests.helpers import ROOT
 
 pytestmark = pytest.mark.package
 

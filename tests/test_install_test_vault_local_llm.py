@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from tests.helpers import REPO_ROOT as ROOT
+from tests.paths import ROOT
 
 pytestmark = pytest.mark.package
 

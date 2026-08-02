@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from tests.helpers import REPO_ROOT as ROOT
+from tests.helpers import ROOT
 
 pytestmark = pytest.mark.package
 

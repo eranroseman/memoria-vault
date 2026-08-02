@@ -16,7 +16,7 @@ import sqlite3
 import tempfile
 from pathlib import Path
 
-from tests.helpers import REPO_ROOT as ROOT
+from tests.helpers import ROOT
 
 _SEED_CACHE: Path | None = None
 

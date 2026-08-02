@@ -14,7 +14,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import backup, state, trusted_writer
-from tests.helpers import init_cli_workspace
+from tests.helpers import ROOT, init_cli_workspace
 
 pytestmark = pytest.mark.runtime
 
@@ -1017,7 +1017,7 @@ def test_workspace_recover_restores_live_components_after_interrupted_restore(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1085,7 +1085,7 @@ def test_workspace_recover_preserves_wal_when_restore_stops_after_marker(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1202,7 +1202,7 @@ def test_workspace_recover_restores_previous_target_after_interrupted_backup_rep
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1244,7 +1244,7 @@ def test_workspace_recover_writes_stamp_after_completed_backup_publish_crash(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1287,7 +1287,7 @@ def test_workspace_recover_writes_stamp_after_first_backup_publish_crash(
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )
@@ -1363,7 +1363,7 @@ def test_workspace_recover_preserves_originals_after_interrupted_in_process_roll
         ),
         encoding="utf-8",
     )
-    env = {**os.environ, "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
     interrupted = subprocess.run(
         [sys.executable, str(crash_script)], env=env, check=False, capture_output=True, text=True
     )

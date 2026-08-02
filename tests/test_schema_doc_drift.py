@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from scripts.checks.schema_doc_drift import check_schema_docs
-from tests.helpers import REPO_ROOT as ROOT
+from tests.helpers import ROOT
 
 pytestmark = pytest.mark.static
 

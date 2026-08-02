@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.helpers import REPO_ROOT as ROOT
+from tests.paths import ROOT
 
 pytestmark = pytest.mark.static
 
@@ -52,4 +52,5 @@ def test_each_pytest_file_declares_exactly_one_testing_level() -> None:
 
 
 def test_pytest_files_are_named_by_behavior_not_release_checkpoint() -> None:
+    assert (ROOT / "tests").is_dir(), "ROOT is wrong; this assert would otherwise pass vacuously"
     assert not list((ROOT / "tests").rglob("test_alpha*.py"))
