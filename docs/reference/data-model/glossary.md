@@ -43,9 +43,20 @@ runtime state.
 Optional editors open this root; the top-level bundle roots are the checked
 corpus homes.
 
-**<a id="open-knowledge-format-okf"></a>Open Knowledge Format (OKF)** — the plain-files bundle format Memoria produces: a self-contained, tool-agnostic Knowledge Bundle readable without Memoria present. The vault (excluding `.memoria/`) is one OKF bundle; each project is a nested one. **Planned beta.1 — K1.**
+**<a id="open-knowledge-format-okf"></a>Open Knowledge Format (OKF)** — the plain-files bundle format Memoria targets, at **v0.2**: a self-contained, tool-agnostic Knowledge Bundle readable without Memoria present. The vault (excluding `.memoria/`) is one OKF bundle; each project is a nested one.
 
 **Knowledge Bundle** — an OKF unit of distribution: the plain-file tree holding the researcher's knowledge, separable from the `.memoria/` engine state. **Planned beta.1 — K1.**
+
+**generated** — OKF v0.2 provenance frontmatter (`{ by, at }`) stamped by the
+trusted writer at staging; `by` uses the OKF actor grammar. Records
+authorship, not judgment.
+
+**sources** — OKF v0.2 provenance entries derived from derivation inputs at
+staging, or authored for external material. The portable face of grounding.
+
+**verified** — OKF v0.2 confirmation events (`{ by, at }`) stamped at
+promotion; a projection of engine judgment state, stripped on re-staging.
+Not a field name to reuse for other meanings.
 
 **Toulmin roles** — the six argument components (Claim, Grounds, Warrant, Backing, Qualifier, Rebuttal) that type the knowledge graph and its consequence propagation. **Planned G4/G5, beta.1/B1.**
 

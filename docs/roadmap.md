@@ -87,7 +87,7 @@ into lettered workstreams; per-package readiness lives in the
 | O2 | Import pipeline | Staged BibTeX/CSL bulk import: admit to the catalog, flag duplicates, one quiet worklist per run. |
 | I1 | Event plumbing + dispositions | Telemetry planes, disposition capture, the loudness policy, and the raw-counts dashboard. |
 | E1 | Call-site ledger + gates | The LLM call-site ledger, runtime-mode boundary, and frozen-eval promotion gates. |
-| K1 | OKF conformance + export/import | Frontmatter conformance; export is a bundle-folder copy; import re-enters as unchecked. |
+| K1 | OKF v0.2 conformance + export/import | v0.2 families stamped by the trusted writer; whole-tree conformance; export is a bundle-folder copy; import re-enters through the normal gates. |
 | K2 | Fulltext v2 | Retiring `fulltexts/` as a bundle root in favor of blob + catalog storage. |
 | K3 | Crash consistency + backup/restore | Crash-boundary tests, recovery reconciliation, the restore matrix. |
 | K4 | Config / secrets / drift | Parameter ownership, fail-closed secrets, schema–doc drift checks. |

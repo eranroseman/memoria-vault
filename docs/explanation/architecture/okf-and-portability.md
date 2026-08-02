@@ -7,7 +7,11 @@ nav_order: 5
 
 # OKF and portability
 
-> **Planned (beta.1 — K1):** Strict OKF production, folder-copy export, and unchecked foreign-bundle import described below are target-state.
+> **Shipped:** OKF v0.2 targeting, trust/provenance stamping (`generated`,
+> `sources`, `verified`), reserved-file structure, and whole-tree conformance
+> checking. **Planned (beta.1 — K1):** standard-Markdown links discipline for
+> OKF-facing relationships, the foreign-bundle import path, and the
+> folder-copy export unit.
 
 Memoria's durability promise is structural: the knowledge outlives the tool.
 
